@@ -2213,9 +2213,10 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2241,7 +2242,7 @@ Page({
         message: (result && result.message) || '身份确认结果待核对，请勿重复提交',
       } });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认结果待核对，请勿重复提交', canRetry: true } });
     });
   },
@@ -2258,6 +2259,21 @@ Page({
     const memberId = this._playOwner;
     return memberId === null || memberId === undefined || memberId === '' || !this.data.activityId
       ? '' : 'game_player_pending_m' + memberId + '_a' + this.data.activityId;
+  },
+
+  _playerPendingContext() {
+    const module = this.data.gameModule || {};
+    return { pending: this._playerPendingWrite, activityId: Number(this.data.activityId),
+      moduleActivityId: module.activityId, sessionId: module.sessionId };
+  },
+
+  _isPlayerPendingContextCurrent(context) {
+    const module = this.data.gameModule || {};
+    return this._isPlayAccountCurrent() && !!context.pending
+      && Number(this.data.activityId) === context.activityId
+      && module.activityId === context.moduleActivityId && module.sessionId === context.sessionId
+      && this._playerPendingWrite === context.pending
+      && module.write && module.write.requestId === context.pending.requestId;
   },
 
   _savePlayerPending(input, preserveMemoryCommand) {
@@ -2337,9 +2353,15 @@ Page({
     if (!this._isPlayAccountCurrent()) return;
     const activityId = Number(this.data.activityId) || 0;
     if (!activityId || this.data.isPreview || this.data.isMock) return;
+    const sequence = this._playerProjectionSequence = (this._playerProjectionSequence || 0) + 1;
+    const sessionId = (this.data.gameModule || {}).sessionId;
+    const isCurrent = () => this._isPlayAccountCurrent()
+      && sequence === this._playerProjectionSequence
+      && Number(this.data.activityId) === activityId
+      && (this.data.gameModule || {}).sessionId === sessionId;
     this.setData({ 'gameModule.loading': true, 'gameModule.error': '' });
     gameSessionClient.loadProjection('player', activityId).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!isCurrent()) return;
       if (!result || result.status !== 'ready') {
         const absent = result && ['GAME_SESSION_NOT_FOUND', 'GAME_SESSION_NOT_PREPARED', 'GAME_MODULE_DISABLED'].includes(result.reasonCode);
         const current = this.data.gameModule || {};
@@ -2353,6 +2375,8 @@ Page({
         });
         return;
       }
+      if (Number(result.data && result.data.activityId) !== activityId
+          || (sessionId && Number(result.data && result.data.sessionId) !== Number(sessionId))) return;
       if (result.data && result.data.player && result.data.player.playMode === 'ROUTE') {
         if (['FINISHED', 'CANCELLED'].includes(result.data.status)) this._applyServerRunSessionEnd();
         this.setData({ 'gameModule.loading': false, 'gameModule.enabled': false,
@@ -2365,6 +2389,12 @@ Page({
           'gameModule.loading': false, 'gameModule.enabled': false,
           'gameModule.stale': false, 'gameModule.error': '',
         });
+        return;
+      }
+      const current = this.data.gameModule || {};
+      if (Number(current.activityId) === activityId && current.sessionId === projection.sessionId
+          && Number(current.revision) > projection.revision) {
+        this.setData({ 'gameModule.loading': false });
         return;
       }
       // R9-21:服务端会话已经结束(通关/取消)时,本地兜底的暂停快照不能把玩家拉回一局已结束的计时。
@@ -2398,13 +2428,22 @@ Page({
         const pendingKey = this._playerPendingKey();
         savedPending = pendingKey ? (wx.getStorageSync(pendingKey) || null) : null;
       } catch (e) { savedPending = null; }
-      const pending = normalizePlayerPendingReceiptIndex(savedPending, activityId);
+      const restoredPending = normalizePlayerPendingReceiptIndex(savedPending, activityId);
+      const memory = this._playerPendingWrite;
+      const memoryIndex = memory && normalizePlayerPendingReceiptIndex(memory.command || memory, activityId);
+      // Same receipt identity keeps its original command in memory; storage stays a redacted index.
+      const pending = restoredPending && memoryIndex
+        && ['activityId', 'nodeId', 'requestId', 'expectedRevision', 'action']
+          .every(key => restoredPending[key] === memoryIndex[key]) ? memory : restoredPending;
       this._playerPendingWrite = pending;
       if (savedPending && !pending) this._clearPlayerPending();
       if (pending) {
-        projection.write = {
+        projection.write = pending === memory && current.write
+          && current.write.requestId === pending.requestId && current.write.status === 'submitting'
+          ? current.write : {
           status: 'unknown', requestId: pending.requestId,
-          message: '正在核对上次操作；不会自动重发现场内容', canRetry: false,
+          message: pending.command ? '正在核对上次操作' : '正在核对上次操作；不会自动重发现场内容',
+          canRetry: !!pending.command,
         };
       }
       const projectedByNode = {};
@@ -2447,7 +2486,7 @@ Page({
         if (pending) this.reconcilePlayerChoice();
       });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!isCurrent()) return;
       const current = this.data.gameModule || {};
       const retainedSnapshot = current.enabled === true
         && typeof current.snapshotAt === 'string' && !!current.snapshotAt;
@@ -2485,9 +2524,10 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2507,7 +2547,7 @@ Page({
         status: 'unknown', requestId, message: (result && result.message) || '结果待核对，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待核对，请勿重复提交', canRetry: true } });
     });
   },
@@ -2545,9 +2585,10 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2576,7 +2617,7 @@ Page({
         status: 'unknown', requestId, message: (result && result.message) || '提交结果待核对，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待核对，请勿重复提交', canRetry: true } });
     });
   },
@@ -2590,9 +2631,10 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2619,7 +2661,7 @@ Page({
         message: (result && result.message) || labels.unknown,
       } });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: labels.unknown, canRetry: true } });
     });
   },
@@ -2768,17 +2810,22 @@ Page({
     const gameModule = this.data.gameModule || {};
     const requestId = gameModule.write && gameModule.write.requestId;
     const pendingWrite = this._playerPendingWrite;
-    if (!requestId || gameModule.write.status !== 'unknown') return;
+    if (!requestId || !pendingWrite || pendingWrite.requestId !== requestId
+        || gameModule.write.status !== 'unknown') return;
+    const context = this._playerPendingContext();
+    const isCurrent = () => this._isPlayerPendingContextCurrent(context)
+      && this.data.gameModule.write.status === 'unknown';
     this.setData({ 'gameModule.write.message': '正在确认操作结果…' });
     gameSessionClient.readReceipt(gameModule.activityId, requestId).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!isCurrent()) return;
       const applied = result && result.status === 'matched'
         && matchingPlayerTerminalReceipt(result, pendingWrite, 'APPLIED');
       const failed = result && result.status === 'business-error'
         && matchingPlayerTerminalReceipt(result, pendingWrite, 'FAILED');
       if (applied) {
-        const merged = mergeConfirmedReceipt(gameModule, result.receipt);
-        if (merged !== gameModule) {
+        const current = this.data.gameModule;
+        const merged = mergeConfirmedReceipt(current, result.receipt);
+        if (merged !== current) {
           try {
             this._rememberPlayerReveal(result.receipt, pendingWrite);
             this._clearPlayerPending();
@@ -2788,7 +2835,7 @@ Page({
             }
           } catch (error) {}
           this.setData({
-            gameModule: Object.assign({}, merged, { sheetShow: gameModule.sheetShow, loading: false, error: '' }),
+            gameModule: Object.assign({}, merged, { nodes: this.data.gameModule.nodes, sheetShow: current.sheetShow, loading: false, error: '' }),
             'roleCard.show': result.receipt.action === 'CONFIRM_ROLE' ? false : this.data.roleCard.show,
           }, () => this._loadPlayerGameModule());
           return;
@@ -2808,7 +2855,7 @@ Page({
         ? (restored ? '结果仍在核对；不会自动重发现场内容' : '结果仍在核对，请稍后再试')
         : (restored ? '暂时无法核对；不会自动重发现场内容' : '暂时无法核对，请保留本页稍后重试') });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!isCurrent()) return;
       this.setData({ 'gameModule.write.message': pendingWrite && !pendingWrite.command
         ? '暂时无法核对；不会自动重发现场内容'
         : '暂时无法核对，请保留本页稍后重试' });
@@ -2826,8 +2873,9 @@ Page({
     this.setData({ 'gameModule.write': {
       status: 'submitting', requestId: pending.requestId, message: '正在用原请求号重试…',
     } });
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', pending.command).then((result) => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2859,7 +2907,7 @@ Page({
         status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
       } });
     }).catch(() => {
-      if (!this._isPlayAccountCurrent()) return;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': {
         status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
       } });

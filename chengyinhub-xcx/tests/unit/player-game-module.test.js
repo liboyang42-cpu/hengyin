@@ -821,3 +821,11 @@ test('D05/F06 unknown 写同页内存只保留精确 PLAYER_HINT/PLAYER_REVEAL �
     },
   }, 7), null)
 })
+
+test('confirmed old receipt never lowers an existing newer projection revision', () => {
+  const current = { revision: 12, nodes: [{ nodeId: 31 }], write: { status: 'unknown', requestId: 'req-old' } }
+  const merged = mergeConfirmedReceipt(current, { requestId: 'req-old', outcome: 'APPLIED', revision: 10 })
+  assert.equal(merged.revision, 12)
+  assert.equal(merged.write.status, 'confirmed')
+  assert.equal(merged.nodes, current.nodes)
+})
