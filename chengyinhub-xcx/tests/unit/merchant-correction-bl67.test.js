@@ -96,4 +96,5 @@ test('入口只在他人商家主页「更多」里', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/profile/index.wxml'), 'utf8')
   assert.match(wxml, /wx:if="\{\{!isSelf && subjectIsMerchant && subjectMerchant\.id\}\}" title="信息纠错"/)
   assert.match(wxml, /<cy-merchant-correction-sheet wx:if="\{\{!isSelf\}\}"/)
+  assert.match(wxml, /<view class="\{\{isMerchantView \? 'theme-merchant' : ''\}\}"><cy-merchant-correction-sheet /, '主题包裹同 cy-coop-invite-sheet')
 })
