@@ -2842,7 +2842,9 @@ Page({
     const nodeId = Number(e.currentTarget && e.currentTarget.dataset.node) || 0;
     const node = ((this.data.gameModule && this.data.gameModule.nodes) || []).find((item) => item.nodeId === nodeId);
     if (!node || !node.playerTask || node.playerTask.inputType !== 'PHOTO') return;
+    const context = this._playerTaskEvidenceContext(node);
     app.chooseImage((urls) => {
+      if (!this._isPlayerTaskEvidenceCurrent(context)) return;
       const evidenceUrls = (Array.isArray(urls) ? urls : [])
         .map((url) => String(url || '').trim())
         .filter((url) => url.toLowerCase().startsWith('https://'))
