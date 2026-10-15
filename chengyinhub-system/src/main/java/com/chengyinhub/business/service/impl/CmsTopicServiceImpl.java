@@ -540,10 +540,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         if (copyType >= 2) {
             Map<Long, Long> npcIdMap = new LinkedHashMap<Long, Long>();
-            Map<Long, Long> chapterIdMap = copyChaptersAndNodes(id, newTopic, npcIdMap);
+            RouteNodeMaps copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap);
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
-            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), chapterIdMap, npcIdMap);
+            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
             preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
         }
         if (copyType >= 3) {
@@ -665,7 +665,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      *
      * @param npcIdMap 出参:源节点 NPC id → 副本 NPC id(供剧情 / 块配置按 old→new 重映射)
      */
-    private Map<Long, Long> copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+    private RouteNodeMaps copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+        RouteNodeMaps copiedMaps = new RouteNodeMaps();
         Long newTopicId = newTopic.getId();
         // 查询原主题的章节
         CmsTopicChapter chapterQuery = new CmsTopicChapter();
@@ -673,7 +674,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         List<CmsTopicChapter> originalChapters = cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery);
 
         if (CollectionUtils.isEmpty(originalChapters)) {
-            return Collections.emptyMap();
+            return copiedMaps;
         }
 
         // 章节ID映射：旧章节ID -> 新章节ID
@@ -787,7 +788,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (String warning : chapterNpcWarnings) {
             logger.warn("复制主题 {} -> {}:{}", originalTopicId, newTopicId, warning);
         }
-        return chapterIdMap;
+        copiedMaps.chapterOldToNew.putAll(chapterIdMap);
+        copiedMaps.oldToNew.putAll(nodeIdMap);
+        return copiedMaps;
     }
 
     /** 复制同样是新写入，不能把历史脏招商配置扩散成新的章节。 */
@@ -3492,13 +3495,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 门店分身不随复制,映射不到的 npcId 置空并告警(fail-closed,不静默指向来源主题)。
      */
     private void remapCopiedJourneyStory(Long sourceTopicId, Long newTopicId, String story,
-                                         Map<Long, Long> chapterIdMap, Map<Long, Long> npcIdMap) {
+                                         Map<Long, Long> chapterIdMap, Map<Long, Long> nodeIdMap, Map<Long, Long> npcIdMap) {
         if (StringUtils.isBlank(story)) {
             return;
         }
         List<String> npcWarnings = new ArrayList<String>();
         String remapped = JourneyStory.remapNpcIds(
-                JourneyStory.remapChapterIds(story, chapterIdMap), npcIdMap, npcWarnings);
+                JourneyStory.remapChapterIds(JourneyStory.remapNodeIds(story, nodeIdMap), chapterIdMap), npcIdMap, npcWarnings);
         for (String warning : npcWarnings) {
             logger.warn("复制主题 {} -> {}:{}", sourceTopicId, newTopicId, warning);
         }
