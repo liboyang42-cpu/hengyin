@@ -18,6 +18,9 @@ required=(
   CHENGYIN_TENCENT_MAP_KEY
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL
   CHENGYIN_WXPAY_NOTIFY_URL
+  # 短信发送接口没有独立关闭开关；这两个凭据没有 sys_config 回退。
+  CHENGYIN_SMS_ACCESS_KEY_ID
+  CHENGYIN_SMS_ACCESS_KEY_SECRET
 )
 missing=()
 
@@ -28,12 +31,12 @@ case "${1:---service}" in
     pid="$(systemctl show --property=MainPID --value "$service")" || exit 1
     [[ "$pid" =~ ^[1-9][0-9]*$ && -r "/proc/$pid/environ" ]] || { echo "无法读取运行服务的有效环境" >&2; exit 1; }
     # 丢弃 shell 中同名变量，避免把未注入服务的密钥误判为已配置。
-    while IFS= read -r name; do unset "$name"; done < <(compgen -v | grep -E "^(CHENGYIN_|ALARM_)")
+    while IFS= read -r name; do unset "$name"; done < <(compgen -v | grep -E "^(CHENGYIN_|ALARM_|AI_)")
     unset COUPON_QR_SECRET TZ JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
     while IFS= read -r -d "" entry; do
       name="${entry%%=*}"
       case "$name" in
-        CHENGYIN_*|ALARM_*|COUPON_QR_SECRET|TZ|JAVA_TOOL_OPTIONS|JDK_JAVA_OPTIONS)
+        CHENGYIN_*|ALARM_*|AI_*|COUPON_QR_SECRET|TZ|JAVA_TOOL_OPTIONS|JDK_JAVA_OPTIONS)
           [[ "$name" =~ ^[A-Z_][A-Z0-9_]*$ ]] && printf -v "$name" "%s" "${entry#*=}" ;;
       esac
     done < "/proc/$pid/environ"
@@ -51,10 +54,57 @@ case "${1:---service}" in
 esac
 
 for name in "${required[@]}"; do
-  if [[ -z "${!name:-}" ]]; then
+  value="${!name:-}"
+  if [[ -z "${value//[[:space:]]/}" ]]; then
     missing+=("$name")
   fi
 done
+
+# 与 application.yml / AiVoiceConfig 的默认值和环境覆盖保持一致。
+# 关闭的可选能力不索要凭据；只报告变量名，不输出值。
+require_capability_key() {
+  local names="$1" value="$2"
+  [[ -n "${value//[[:space:]]/}" ]] || missing+=("$names")
+}
+is_enabled() {
+  local enabled="$1"
+  enabled="${enabled#"${enabled%%[![:space:]]*}"}"
+  enabled="${enabled%"${enabled##*[![:space:]]}"}"
+  case "${enabled,,}" in
+    true|on|yes|1) return 0 ;;
+    false|off|no|0) return 1 ;;
+    *) echo 'AI 能力启用开关必须为布尔值' >&2; exit 1 ;;
+  esac
+}
+if is_enabled "${AI_MODEL_ENABLED-true}"; then
+  require_capability_key 'AI_MODEL_APIKEY/CHENGYIN_AI_API_KEY/CHENGYIN_DEEPSEEK_API_KEY' \
+    "${AI_MODEL_APIKEY-${CHENGYIN_AI_API_KEY-${CHENGYIN_DEEPSEEK_API_KEY-}}}"
+fi
+if is_enabled "${AI_VISION_ENABLED-true}"; then
+  require_capability_key 'AI_VISION_APIKEY/CHENGYIN_DEEPSEEK_API_KEY' \
+    "${AI_VISION_APIKEY-${CHENGYIN_DEEPSEEK_API_KEY-}}"
+fi
+if is_enabled "${AI_PROVIDERS_MINIMAX_ENABLED-false}"; then
+  require_capability_key 'AI_PROVIDERS_MINIMAX_APIKEY/CHENGYIN_MINIMAX_API_KEY' \
+    "${AI_PROVIDERS_MINIMAX_APIKEY-${CHENGYIN_MINIMAX_API_KEY-}}"
+fi
+if is_enabled "${AI_IMAGESEG_ENABLED-${CHENGYIN_IMAGESEG_ENABLED-false}}"; then
+  require_capability_key 'AI_IMAGESEG_ACCESSKEYID/CHENGYIN_ALIYUN_VIAPI_AK_ID' \
+    "${AI_IMAGESEG_ACCESSKEYID-${CHENGYIN_ALIYUN_VIAPI_AK_ID-}}"
+  require_capability_key 'AI_IMAGESEG_ACCESSKEYSECRET/CHENGYIN_ALIYUN_VIAPI_AK_SECRET' \
+    "${AI_IMAGESEG_ACCESSKEYSECRET-${CHENGYIN_ALIYUN_VIAPI_AK_SECRET-}}"
+fi
+voice_enabled=false
+asr_enabled=false
+if is_enabled "${AI_VOICE_ENABLED-false}"; then voice_enabled=true; fi
+if is_enabled "${AI_VOICE_ASRENABLED-${CHENGYIN_ASR_ENABLED-false}}"; then asr_enabled=true; fi
+if is_enabled "$voice_enabled" || is_enabled "$asr_enabled"; then
+  require_capability_key 'AI_VOICE_APIKEY/CHENGYIN_DASHSCOPE_API_KEY' \
+    "${AI_VOICE_APIKEY-${CHENGYIN_DASHSCOPE_API_KEY-}}"
+fi
+if is_enabled "$voice_enabled" || { is_enabled "$asr_enabled" && [[ "${AI_VOICE_REGION-cn-beijing}" != cn-beijing ]]; }; then
+  require_capability_key AI_VOICE_WORKSPACEID "${AI_VOICE_WORKSPACEID-}"
+fi
 
 if [[ ${#missing[@]} -gt 0 ]]; then
   printf '缺少必填环境变量: %s\n' "${missing[*]}" >&2
@@ -113,6 +163,12 @@ fi
 if [[ "$(printf '%s' "${CHENGYIN_LOG_LEVEL:-info}" | tr '[:upper:]' '[:lower:]')" == "debug" ]]; then
   echo '生产发布禁止使用 debug 业务日志级别' >&2
   exit 1
+fi
+
+sms_sign="${CHENGYIN_SMS_SIGN_NAME-}"
+sms_template="${CHENGYIN_SMS_TEMPLATE_CODE-}"
+if [[ -z "${sms_sign//[[:space:]]/}" || -z "${sms_template//[[:space:]]/}" ]]; then
+  echo '短信签名/模板未全部从环境注入；仍须核验 sys_config 的 sms.aliyun.signName、sms.aliyun.templateCode。'
 fi
 
 echo '生产配置预检通过；仍须人工核验密钥轮换、生产 migration、支付与微信平台证据。'
