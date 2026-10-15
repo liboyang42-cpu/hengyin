@@ -6,6 +6,7 @@ const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 const { openScene } = require('../../../utils/scene-entry.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { marketView } = require('../../../utils/template-market.js');
+const modal = require('../../../utils/modal.js');
 
 // C6 重组(发布域重构 §3C):唯一管理容器,主结构=类型三 tab(主题/活动/模板)。
 // 身份和状态在卡片展示，列表只按主题 / 活动 / 模板切换。
@@ -68,7 +69,7 @@ Page({
     /* 稿 260:277 把上下架 / 删除赶出了卡面,这个面板是它们的新家(长按卡片打开)。
        只存这张卡自己的判定结果,不存整条 item —— 面板开着的时候列表可能已经刷新了。 */
     opsSheet: { show: false, title: '', id: '', biz: '', online: false,
-                canToggle: false, canDelete: false, canViewApplies: false, toggleLabel: '' },
+                canToggle: false, canDelete: false, canViewApplies: false, canSaveAsTemplate: false, toggleLabel: '' },
     loading: false,
     loaded: false,
     projectState: 'loading', // loading | error | ready
@@ -272,7 +273,8 @@ Page({
   onCardLong(e) {
     const item = e.currentTarget.dataset.item;
     if (!item) return;
-    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel) return;
+    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
+      && !item._canSaveAsTemplate) return;
     this.setData({
       opsSheet: {
         show: true,
@@ -285,6 +287,7 @@ Page({
         canViewApplies: !!item._canViewApplies,
         canEdit: !!item._canEdit,
         canCancel: !!item._canCancel,
+        canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
     });
@@ -307,6 +310,47 @@ Page({
       return p.biz === 'topic' ? this.cancelTopic(cancelDs) : this.cancelActivity(cancelDs);
     }
     if (k === 'delete') return this.deleteItem({ currentTarget: { dataset: ds } });
+    if (k === 'saveAsTemplate') return this.saveAsTemplate({ currentTarget: { dataset: ds } });
+  },
+
+  // BL-120 另存为模板:POST /api/template/topic-template/save-as(id, scope)。
+  // 后端把本主题置 is_template=1(不复制),只认本人(商家 scope 认店主)且审核通过的主题,
+  // 其余按后端文案如实提示;回包无 topicId,成功后回读列表。
+  saveAsTemplate(e) {
+    const ds = e.currentTarget.dataset;
+    const id = ds.id;
+    if (!id) return;
+    const that = this;
+    modal.show({
+      title: '另存为模板',
+      content: '「' + (ds.title || '这个主题') + '」会出现在主题模板货架上，其他人可以复制它作为草稿起点。',
+      confirmText: '另存为模板',
+      success(r) {
+        if (r && r.confirm) that._postSaveAsTemplate(id);
+      }
+    });
+  },
+
+  _postSaveAsTemplate(id) {
+    const inflight = this._savingTplIds || (this._savingTplIds = {});
+    if (inflight[id]) return;
+    inflight[id] = true;
+    const that = this;
+    const release = function () { if (that._savingTplIds) delete that._savingTplIds[id]; };
+    try {
+      app.sendRequest({
+        hideLoading: true, silentError: true,
+        url: '/api/template/topic-template/save-as', method: 'POST',
+        data: { id: id, scope: this.data.operationScope },
+        success(res) {
+          release();
+          if (res && res.code == '200') { toast((res && res.msg) || '已另存为主题模板'); that.reload(); }
+          else toast(app.getRequestErrorMessage(res, '另存为模板失败'));
+        },
+        fail(res) { release(); toast(app.getRequestErrorMessage(res, '网络异常，请重试')); },
+        complete: release
+      });
+    } catch (error) { release(); toast('网络异常，请重试'); }
   },
 
   goCreate() {
@@ -681,6 +725,9 @@ function decorate(p) {
   const showPendingVerify = Number.isFinite(pendingVerify);
   // 未承接=去看申请;已承接=去看合作现状(候选池同页展示已接受邀约),满足「每卡有下一步 CTA」
   const canViewApplies = p.bizType === 'topic' && (p.acceptStatus === 'clubOpen' || p.acceptStatus === 'merchantOpen' || acceptAccented);
+  // BL-120:后端只放行审核通过(status=1)的主题;draft/pending/rejected 以外的主题 state 都是审核通过后的派生态。
+  const canSaveAsTemplate = p.bizType === 'topic'
+    && (online || p.state === 'offline' || p.state === 'completed');
   return Object.assign({}, p, {
     _stateClass: stateClass, _stateVariant: stateVariant(stateClass),
     // _online = 渲染这一刻的上架态,随按钮一起下发给 toggleStatus 当 CAS 的期望态。
@@ -690,6 +737,7 @@ function decorate(p) {
     _canDelete: merchantActivity ? false : canDelete,
     _canEdit: canEdit,
     _canCancel: canCancel,
+    _canSaveAsTemplate: canSaveAsTemplate,
     _sold: sold,
     _showAccept: showAccept, _acceptAccented: acceptAccented, _canViewApplies: canViewApplies,
     _showPendingVerify: showPendingVerify, _pendingVerifyText: showPendingVerify ? ('待核销 ' + pendingVerify) : '',
