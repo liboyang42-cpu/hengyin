@@ -46,6 +46,8 @@ Component({
     },
   lifetimes: {
     attached() {
+      this._detailDisposed = false;
+      this._detailGeneration = (this._detailGeneration || 0) + 1;
       this._cancelDisposed = false;
       this._cancelGeneration = (this._cancelGeneration || 0) + 1;
       this._syncCancellationAccount();
@@ -63,6 +65,8 @@ Component({
       this._applyRecordId(id)
     },
     detached() {
+      this._detailDisposed = true;
+      this._detailGeneration = (this._detailGeneration || 0) + 1;
       this._invalidateParticipationCancellation();
       this._cancelDisposed = true;
       if (this._verificationWorkflow) this._verificationWorkflow.destroy();
@@ -205,16 +209,23 @@ Component({
     // 获取数据
     getData: function () {
       const that = this;
+      if (that._detailDisposed) return;
+      const generation = that._detailGeneration;
+      const member = app.getUserID && app.getUserID();
+      const id = that.data.id;
       const requestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._detailRequestEpoch = requestEpoch;
+      const isCurrent = () => !that._detailDisposed && generation === that._detailGeneration
+        && requestEpoch === that._detailRequestEpoch
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
       app.sendRequest({
         hideLoading: true,
         silentError: true,
         url: '/api/registration/info',
-        data: { id: that.data.id },
+        data: { id },
         method: "POST",
         success: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
             const info = res.data;
             that._cancelRecordPending = false;
@@ -237,7 +248,7 @@ Component({
           }
         },
         fail: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           const fallback = '网络异常，请重试';
           const msg = app.getRequestErrorMessage
             ? app.getRequestErrorMessage(res, fallback)
