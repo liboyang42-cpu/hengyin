@@ -259,6 +259,11 @@
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
           <text class="rv-more-label">退款售后</text>
         </view>
+        <!-- BL-76:核销员(MERCHANT_CHECKIN)只有核销与核销记录权限,原先「更多」里没有任何可进的项。 -->
+        <view class="rv-more-item" wx:if="{{merchantAccess.canReadVerifyRecords}}" bindtap="onMoreItem" data-action="verifyRecords" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
+          <image class="rv-more-ico" src="/pages/merchant/images/icon_calendar.svg" mode="aspectFit" />
+          <text class="rv-more-label">核销记录</text>
+        </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
           <text class="rv-more-label">管理优惠券</text>
