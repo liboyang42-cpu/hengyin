@@ -2437,43 +2437,55 @@
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": {
       "owner": "ANALYTICS_THIRD/AN01",
-      "worker": null,
-      "thread_id": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/stat",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
-      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock"
+      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java": {
       "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "thread_id": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/grow",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
-      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock"
+      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java": {
       "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "thread_id": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/grow",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
-      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock"
+      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml": {
       "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "thread_id": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/grow",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
-      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock"
+      "original_conflicts": "No matching current64openPR change or C00/CORE/EXTRA/Claude lock",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     }
   },
   "reserved_not_transferred": [
@@ -2519,17 +2531,25 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java": "CORE/C05",
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java": {
       "owner": "ANALYTICS_THIRD/AN01",
-      "worker": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/stat",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN"
+      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java": {
       "owner": "ANALYTICS_THIRD/AN02",
-      "worker": null,
-      "state": "RESERVED_PENDING_THREAD_ACK",
+      "worker": "/root/grow",
+      "state": "ACTIVE_CHILD_ACK_RECEIVED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN"
+      "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "source_branch": "codex/mini-forward-source-20261015"
     }
   },
   "analytics_third_pending": {
@@ -2538,8 +2558,8 @@
       "AN01",
       "AN02"
     ],
-    "thread_id": null,
-    "running_claim": false,
+    "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+    "running_claim": true,
     "held_extra_scope": [
       {
         "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
@@ -2568,6 +2588,19 @@
       "STAT": "AN01",
       "GROW": "AN02"
     },
-    "no_new_regression_files_yet": true
+    "no_new_regression_files_yet": true,
+    "host_id": "durable",
+    "thread_title": "修复日期边界与成长并发一致性",
+    "status": "ACTIVE_CHILD_ACK_RECEIVED",
+    "observed_child_writer_count": 2,
+    "child_workers": {
+      "AN01": "/root/stat",
+      "AN02": "/root/grow"
+    },
+    "source_branch": "codex/mini-forward-source-20261015",
+    "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+    "running_count_basis": "Actual third-team coordinator per-child ACK; snapshot only, not inferred from thread creation",
+    "verification": "NOT_RUN"
   }
 }

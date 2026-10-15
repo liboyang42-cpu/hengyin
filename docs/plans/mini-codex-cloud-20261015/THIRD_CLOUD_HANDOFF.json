@@ -1,8 +1,8 @@
 {
   "protocol": "CY-THIRD-CLOUD-EXACT-HANDOFF-20261015-v1",
   "team": "ANALYTICS_THIRD",
-  "thread_id": null,
-  "state": "PENDING_THREAD_NOT_CREATED_BY_C00",
+  "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+  "state": "ACTIVE_CHILD_ACK_RECEIVED",
   "global_source_owner": "C00 global register maintainer; local coordinator owns new team scheduling and VPS",
   "local_workflow_and_validation_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
@@ -15,7 +15,7 @@
     {
       "id": "AN01",
       "title": "既有后台漏斗查询的提供日期与顺序校验",
-      "status": "RESERVED_PENDING_THREAD_ACK",
+      "status": "IN_PROGRESS_SOURCE_ONLY",
       "production_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java"
       ],
@@ -39,12 +39,16 @@
         "Actual caller is existing admin Vue; no mini caller found, no UI changes"
       ],
       "original_author": "header/history author not a current source assignment; no active exact path lock or change in64openPR snapshots",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "worker": "/root/stat",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354"
     },
     {
       "id": "AN02",
       "title": "玩家成长聚合并发覆盖：不同主题合法通关丢累计里程/节点数",
-      "status": "RESERVED_PENDING_THREAD_ACK",
+      "status": "IN_PROGRESS_SOURCE_ONLY",
       "production_paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
@@ -113,7 +117,11 @@
         "current_exact_owner": "Not listed in LONGRUN_SOURCE_OWNERS files/reserved arrays at audit time; no ownership transfer performed. C00 must grant exact files to a new worker before edits.",
         "runtime_or_git_authorship_claim": "No Git history command run; source-header author is not represented as verified commit authorship."
       },
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "worker": "/root/grow",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354"
     }
   ],
   "additional_requested_scope_read_only": [
@@ -567,5 +575,18 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
   ],
-  "ungranted_path_note": "PR70 TASKS has these new_regression_file fields, but latest explicit local scope is6 existing files; specific mismatch reported PR70 comment6198978444. Existing2 test files may directly add necessary source regression; no general approval hold, extra files only if explicitly expanded."
+  "ungranted_path_note": "PR70 TASKS has these new_regression_file fields, but latest explicit local scope is6 existing files; specific mismatch reported PR70 comment6198978444. Existing2 test files may directly add necessary source regression; no general approval hold, extra files only if explicitly expanded. Actual ACK6199048354 mentions GrowthConcurrencyMySqlIT; C00 explicitly restricted extra path in PR16 comment6199096494, no hold on six authorized files.",
+  "host_id": "durable",
+  "thread_title": "修复日期边界与成长并发一致性",
+  "status": "ACTIVE_CHILD_ACK_RECEIVED",
+  "running_claim": true,
+  "observed_child_writer_count": 2,
+  "child_workers": {
+    "AN01": "/root/stat",
+    "AN02": "/root/grow"
+  },
+  "source_branch": "codex/mini-forward-source-20261015",
+  "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+  "running_count_basis": "Actual third-team coordinator per-child ACK; snapshot only, not inferred from thread creation",
+  "verification": "NOT_RUN"
 }

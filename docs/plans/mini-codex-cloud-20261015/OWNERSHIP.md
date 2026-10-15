@@ -233,8 +233,14 @@ CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e
 
 已完整读回PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee公开README/summary：f7e源码编译PASS，但83类483项470PASS/5FAIL/8ERROR/0skip为FAIL，8 gated/JDBC另未测。C03/C04/C06原写者依次占唯一修复槽，前人停写才交下一人；新公共链b423114b→603dab12→最终 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，8测试文件及证据修正，生产零变更。nullable Long/mock求值/HTTP异常边界/精确现金原行/CAS当前读夹具问题未通过弱化断言掩盖。新SHA未编译/测试，NOT_RUN。完整13方法历史、原堆栈引用、157源声明聚焦清单见VPS_REPAIR_ROUND_1.json/md。本地独占验证，Cloud无手动运行/CI/环境替代，其他独立源继续。
 
-## 第三Cloud pending_thread精确保留
+## 第三Cloud实际child归属（已读ACK）
 
-用户授权新增第三Cloud，当前未创建/未运行；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。
+用户授权新增第三Cloud，现已收到真实thread及两child启动ACK；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。
 
-第三队最新精确收口：本地总控，新队初始仅6源码/既有测试路径（AnalyticsController+AnalyticsControllerTest；PlayerProgressionServiceImpl+PlayerGrowthMapper Java/XML+PlayerProgressionServiceImplTest）。SOURCE_OWNERS已保留pending_thread，不分给CORE/EXTRA，先前两个新增GrowthConcurrency测试路径在无worker激活时撤销；更大埋点/聚合源及其他Mapper/DTO/CI/DDL仍只读。新队真实thread/child逐路径ACK即在清单内开工，无需重复general批准；有反证不改。C00仍唯一控制账维护者。
+第三队最新精确收口：本地总控，新队初始仅6源码/既有测试路径（AnalyticsController+AnalyticsControllerTest；PlayerProgressionServiceImpl+PlayerGrowthMapper Java/XML+PlayerProgressionServiceImplTest）。SOURCE_OWNERS已登记真实thread及两child，不分给CORE/EXTRA，先前两个新增GrowthConcurrency测试路径在无worker激活时撤销；更大埋点/聚合源及其他Mapper/DTO/CI/DDL仍只读。新队真实thread/child逐路径ACK即在清单内开工，无需重复general批准；有反证不改。C00仍唯一控制账维护者。
+
+## 实际第三队接入回执
+
+第三队真实聊天 `01a140c1-6379-71fd-8711-f0b55889c01b` / durable（修复日期边界与成长并发一致性）已创建；C00主动读取[PR16实际启动ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354)，据实登记 `/root/stat`（AN01/F3-STAT-01）与 `/root/grow`（AN02/F3-GROW-01）两名child及其六条既有文件，各一写者，基线0d63043ad06775bc3dc52fb925620ef36d1081a7、源码分支codex/mini-forward-source-20261015。运行数2仅为该ACK快照，不由thread存在推断持续运行。清单内授权已生效，不需再次一般批准；原CORE/EXTRA/Claude继续只读这些文件。本地总控三队调度与VPS，C00唯一维护全局账。全部源码/回归NOT_RUN，未合并部署。
+
+ACK另提PlayerGrowthConcurrencyMySqlIT.java超出本地最后明确的初始6路径，仍未授写；已在PR16 comment6199096494明确转交本地精确扩权对齐。既有PlayerProgressionServiceImplTest.java可追加必要回归，不暂停已获准两条源码线。更大analytics域仍只读。

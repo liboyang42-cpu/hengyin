@@ -934,8 +934,8 @@
     "analytics_third_pending": {
       "packet": "THIRD_CLOUD_HANDOFF.json",
       "real_tasks": 2,
-      "thread_id": null,
-      "status": "PENDING_THREAD_ACK",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "status": "ACTIVE_CHILD_ACK_RECEIVED",
       "global_maintainer": "C00",
       "local_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
       "startup_pr": 70,
@@ -945,7 +945,20 @@
         "STAT": "AN01",
         "GROW": "AN02"
       },
-      "no_new_regression_files_yet": true
+      "no_new_regression_files_yet": true,
+      "host_id": "durable",
+      "thread_title": "修复日期边界与成长并发一致性",
+      "running_claim": true,
+      "observed_child_writer_count": 2,
+      "child_workers": {
+        "AN01": "/root/stat",
+        "AN02": "/root/grow"
+      },
+      "source_branch": "codex/mini-forward-source-20261015",
+      "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "running_count_basis": "Actual third-team coordinator per-child ACK; snapshot only, not inferred from thread creation",
+      "verification": "NOT_RUN"
     },
     "extra_vps_regression": {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
