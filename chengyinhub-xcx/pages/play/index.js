@@ -709,9 +709,17 @@ Page({
     return true;
   },
   refreshRouteState() {
-    if (this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+    const params = this._sessionParams();
+    const sessionKey = JSON.stringify(params);
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._routeReadSequence = (this._routeReadSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && !this._themeHidden
+      && sequence === this._routeReadSequence && loadEpoch === this._playLoadEpoch
+      && sessionKey === JSON.stringify(this._sessionParams());
     this._failClosedRouteState('正在同步路线…', true);
-    return req('/api/play/route-state', 'GET', this._sessionParams()).then((response) => {
+    return req('/api/play/route-state', 'GET', params).then((response) => {
+      if (!isCurrent()) return false;
       if (response.code == 200 || response.code == '200') {
         const data = response.data && response.data.routeState ? response.data.routeState : response.data;
         return this._applyRouteState(data || {});
@@ -719,6 +727,7 @@ Page({
       this._failClosedRouteState(response.msg || '路线状态暂未同步，请稍后重试', false);
       return false;
     }).catch(() => {
+      if (!isCurrent()) return false;
       this._failClosedRouteState('路线状态暂未同步，请稍后重试', false);
       return false;
     });
