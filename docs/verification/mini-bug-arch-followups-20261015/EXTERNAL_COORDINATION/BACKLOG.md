@@ -237,3 +237,13 @@ PR16 comment6199117749与PR24 comment6199118000已交本地精确6路径/依赖/
 ## e72针对性PASS公开证据链接已补
 
 已实际读取PR24公共提交0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7的[EXTRA e72 README](https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/README.md)及[summary](https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/summary.json)。仅固定e72eff7e9ec6309262e55c7cdca56afdcdb86dc0两原失败类56实际PASS，2fresh XML/类集数量及55+1报告哈希、212 exit0/completed均有公开索引；原474e305失败历史保持，未重跑其余32类，23gated/JDBC与后续129d源、第三PR72不继承。此次只补本队交付链接，不写C00总账，不运行验证或修改源码。
+
+## ed598新失败闭环源码交付：仅原E06一条修复线
+
+已实际读[失败README](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md)、[selection](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/selection.json)、[summary](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/summary.json)，公共77cb3320fbbf47ef061db811fdc51a0a07c462f8。ed598完整编译PASS，11fresh精确类76实际=75PASS/1FAIL/0ERROR/0skip，212exit1 child_command_failed；静态75不替代实际76。唯一E06_17无关Controller隔离负控msg失败，E03_18五方法及E06其余4仅在ed598已通过，不称Share503失败或全76通过。
+
+唯一原external_e06已freeze并交childa9d1dcda7d9944ace6c89000fc2aa5696018fdff，rolling完整修复候选b45664de6136eb97c46ed0c86e95fc25686dc1b7（直接父ed598）。精确2文件仅E06_17Test与E06-17.md；无关Controller fixture增加既有Error querying database诊断前缀，原SQL子串保留，原HTTP200/body500/generic/no mapper及Share503全部负控不动，并加响应不含两段SQL文本断言；方法数仍5。生产/共享Advice/脱敏器/旧测试/依赖0改，依据原GlobalExceptionHandlerErrorMappingTest既有查询异常fixture。修后SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。
+
+PR16#6202097241和PR24#6202097477已回完整SHA/两路径/无新依赖/聚焦命令，仅E06_17Test计划5方法，不再重全76或扩旧Share类。未来本地mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test；本Cloud未执行。
+
+原裸SQL未脱敏疑点独立[packet](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202070194)保存：合成MVC形状确有原文本返回，但真实业务JDBC裸形状可达性未证，不当新已确认业务bug入池；C00核共享owner/合同，EXTRA不改共享源，不以fixture加前缀称该疑点已修。109历史项计数不因fixture修复增加，READY0/源码worker0/目标50缺50；真实再失败恢复一槽，其他真实独占开发无需等复测，无项不加泛审计填数。

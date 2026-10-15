@@ -631,7 +631,7 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "5730f267c6fc489021fb30333ad5be12ff501faa",
+  "control_latest_read_sha": "4d5ba311e8653635717ac603fdb560c35650748f",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
     "E02": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
@@ -681,7 +681,7 @@
       "slot": "E06",
       "task": null,
       "worker": "/root/external_e06",
-      "mode": "SOURCE_DELIVERED_IDLE_OR_TARGETED_DISCOVERY_ONLY",
+      "mode": "SOURCE_DELIVERED_IDLE_PENDING_LOCAL_TARGETED_RETEST",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
@@ -883,6 +883,59 @@
           "read_scope": "Public README and summary actually read; exact e72 two-class56 targeted PASS only, no later SHA inheritance"
         }
       }
+    },
+    {
+      "id": "VPS_EXTRA_ed598258_20261015",
+      "status": "SOURCE_DELIVERED_AWAITING_LOCAL_RETEST",
+      "priority": 1,
+      "candidate_sha": "ed598258c0f614385940f326099b9626531fab02",
+      "actual_results": {
+        "tests": 76,
+        "passed": 75,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "xml_classes": 11,
+        "exact_class_set_match": true,
+        "all_reports_fresh": true,
+        "compile": "PASS_REACHED_SUREFIRE",
+        "guard_exit_code": 1,
+        "guard_reason": "child_command_failed",
+        "finished_at_utc": "2026-10-15T20:51:23Z"
+      },
+      "published_evidence": {
+        "evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md",
+        "selection_url": "https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/selection.json",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/summary.json",
+        "read_scope": "Public README/selection/summary actually read; no original VPS logs/XML independently fetched",
+        "log_sha256": "d42d6bc3d47e480b7b88e6928d6bdee5052846004b5482bb6e6ee4e3baa05c1f",
+        "source_archive_sha256": "9f46ec9b90b040063f86d3ba126e69b0f0453cebc8589a15c5b39e8c0312ede7",
+        "failed_xml_sha256": "0a99f30f0f9209b83441e35f96818660cf62da3f0d4d77b79f8beac6002881d9"
+      },
+      "writer": "/root/external_e06",
+      "failure_cases": [
+        "com.chengyinhub.business.longrun.E06_17Test.unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice"
+      ],
+      "root_cause": "Synthetic unrelated-controller diagnostic omitted existing global sanitizer technical marker; baseline ErrorMappingTest uses Error querying database/java.sql shape. Share GET503 path itself passed.",
+      "allowed_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md"
+      ],
+      "production_files_changed": 0,
+      "repair_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+      "child_repair_sha": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
+      "repair_verification": "NOT_RUN",
+      "planned_static_methods": 5,
+      "actual_retest_count": null,
+      "focused_future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test",
+      "dependencies": "Direct rolling parent ed598; no production, old tests, pom, configuration, shared UserSafeMessage/GlobalAdvice or dependency changes; no MySQL/Redis required",
+      "assertion_contract": "Keep HTTP200/body500/generic/no mapper and all Share503/SQL-leak negatives; add two no-SQL response assertions;5 methods unchanged",
+      "delivery_comments": {
+        "PR16": 6202097241,
+        "PR24": 6202097477
+      },
+      "independent_shared_packet": "SHARED_SQL_DIAGNOSTIC_PATTERN; not fixed by fixture prefix and not closed"
     }
   ],
   "external_dependency_requests": {
@@ -894,10 +947,25 @@
     "E04-07": {
       "consumer_owned": "EXTRA6/E04",
       "blocked_on": "original completion producer receipt contract and unknown legacy identity"
+    },
+    "SHARED_SQL_DIAGNOSTIC_PATTERN": {
+      "status": "PENDING_C00_ORIGINAL_OWNER_REVIEW",
+      "confirmed_business_bug": false,
+      "evidence_source_sha": "ed598258c0f614385940f326099b9626531fab02",
+      "failure_evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+      "packet_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202070194",
+      "files_read_only_to_extra": [
+        "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
+        "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java"
+      ],
+      "observation": "Synthetic MVC runtime exception short naked SQL text passes existing pattern unchanged; actual real-business JDBC shape reachability not demonstrated",
+      "not_claimed": "No production exploit confirmed; no shared-source repair or policy tightening authorized; fixture prefix does not resolve packet"
     }
   },
-  "pending_local_failure_retests": [],
-  "latest_repair_candidate_sha": "4793f2b3acf887b2ccb1da085e08ccf872a7eab3",
+  "pending_local_failure_retests": [
+    "VPS_EXTRA_ed598258_20261015"
+  ],
+  "latest_repair_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "actual_failed_validation_repairs": 0,
   "actual_new_development_workers": 0,
   "external_team_read_only_reservations": [
@@ -948,7 +1016,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
+  "latest_application_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
