@@ -25,7 +25,7 @@
       "lane": "GROW",
       "task_id": "F3-GROW-01",
       "child": "/root/grow",
-      "state": "ACTIVE_SOURCE_ONLY",
+      "state": "FROZEN_SOURCE_DELIVERED",
       "files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
@@ -33,12 +33,15 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ],
-      "new_file_authority": "TASKS.json items[F3-GROW-01].new_regression_file"
+      "new_file_authority": "TASKS.json items[F3-GROW-01].new_regression_file",
+      "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd"
     }
   ],
   "coordinator_owned_files": [
     "docs/verification/mini-forward-cloud-20261015/QUEUE.json",
     "docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
     "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
-  ]
+  ],
+  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "active_source_writers": 0
 }

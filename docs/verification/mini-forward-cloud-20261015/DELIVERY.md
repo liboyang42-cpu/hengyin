@@ -13,8 +13,8 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 ## 当前进度
 
 - F3-STAT-01：已公共交付并冻结，`add1534cd63c6ffd95467795126246c8d3581594`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。
-- F3-GROW-01：调用者、事务锁及唯一约束核实中；有反证不造缺陷，不新增奖励/幂等身份政策。
-- 公共源码交付 SHA：STAT `add1534cd63c6ffd95467795126246c8d3581594`；[草稿 PR72](https://github.com/liboyang42-cpu/hengyin/pull/72)，base 为计划分支。GROW 尚在独立编写，未将 WIP 当交付。
+- F3-GROW-01：已公共交付并冻结，`2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。
+- 公共源码交付 SHA：STAT `add1534cd63c6ffd95467795126246c8d3581594`；[草稿 PR72](https://github.com/liboyang42-cpu/hengyin/pull/72)，base 为计划分支。GROW 完整提交 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`；该 SHA 是两项合并后的冻结源码候选，后续仅交付账本更新不需要按新源码重复运行。
 
 ## 恢复
 
@@ -25,3 +25,52 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 原因：funnel 原样转发任意非 blank 日期且未拒反向区间。只改 AnalyticsController.java 与 AnalyticsControllerTest.java，Mapper/UI保持只读。补丁在 Mapper 前解析合法日历、正四位年份并拒反向；保留 null/清空/blank/单边、原响应、完整 rows，无新增最大跨度或分页。pilot 生产逻辑不变。
 
 测试类 `com.chengyinhub.web.controller.business.AnalyticsControllerTest`：原 2 声明保留，新增 10，共 12 个 `@Test` 源码声明；非法日期 15 值×4端组合共60个断言组合，并非实际执行数。覆盖闰日/同日、0001–9999四位年、长区间150行同对象、空值/单边和pilot 1/62/63天边界。全部 NOT_RUN。无新依赖、无跨lane依赖；全历史查询规模保护范围外，仍待本地编译和真实执行。
+
+## F3-GROW-01 源码交付
+
+唯一原作者 `/root/grow`，冻结提交 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。本项与 STAT 无直接源码依赖，公共父链保留两项独立小提交。
+
+精确五路径：
+
+- `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java`
+- `chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java`
+- `chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml`
+- `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java`
+- `chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`（TASKS 指定 new_regression_file；未另扩目录授权）
+
+### 调用者与约束反证
+
+`ApiPlayProgressController.java:2999` 调节点成长；外层 READ_COMMITTED 事务按报名/活动/节点保护，跨主题不能证明整个玩家串行。积分锁仅在实际发正积分且未发过时成立，策略跳过时不能充当共同锁。`TopicCompletionAwardServiceImpl.java:91` 是主题成长唯一实际调用者：先插 `TOPIC_FINISH_<topic>`，既有 `uk_member_badge(member_id,badge_code,source_id)` 裁定首次事实，只有 firstCompletion 才调用成长，故同主题本已有外层去重。
+
+`sql/base_schema_20260818.sql` 的 player_growth 为 InnoDB，已有 `uk_member(member_id)`。未新增表/索引/迁移。成长 Mapper 的实际累计写者仅这两个服务入口；只靠原普通读后更新，跨主题或节点与主题交错仍会覆盖累计与无关字段，首次普通查后插也会争抢唯一键。
+
+### 最小修复与兼容
+
+两入口采用 REQUIRED 事务延续调用者边界；`ensureGrowthRow` 使用现有唯一键 upsert，重复时只作 member_id 自赋值，不刷新旧累计或时间。随后 `selectByMemberForUpdate` 当前读，同玩家写入串行，且绕开 RR 旧成长快照；锁查询 useCache=false/flushCache=true。先 upsert 再锁读已有行，避免缺失成长行的 gap-lock 后争插。异常向外抛出，建行后读不到行明确失败，不返回未持久化默认行。
+
+节点 sparse 更新只含打卡数、等级、连续天数、打卡时间和更新时间；主题只含里程及更新时间，均不回写无关旧字段。保留每次有效节点调用计次、checkins/5+1、现有 LocalDate/default timezone、章节里程及配置驱动徽章规则。普通 getGrowth/批量等级查询不加锁、不建行。
+
+锁序：原上游报名/积分会员或 TOPIC_FINISH 事实锁 → 成长行 → 成长徽章写入，持有至外层提交。保留 TOPIC_CLEAR 普通 guard；没有对缺失徽章新增 FOR UPDATE，避免 RR next-key/gap 锁与外层先写不同主题事实造成额外锁环。同主题实际调用仍由外层唯一事实负责。
+
+### 待执行回归
+
+- `com.chengyinhub.business.service.PlayerProgressionServiceImplTest`：原 3 项断言保留，必要 fixture 对齐锁读；新增 9，共 12 个 @Test 声明。
+- `com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT`：新增 11 个 @Test 声明，真实 MyBatis XML、Spring 服务事务、从既有 base_schema 提取 player_growth/player_badge 两表及真实唯一键。
+
+GROW 合计 23 声明/净增 20；与 STAT 合计 35 声明/净增 30。全部 NOT_RUN，执行数未知，不称通过。IT 覆盖首次竞争、node/node、双向 node/topic、跨主题累计、显式 RR 旧快照、真实 TopicCompletionAwardServiceImpl 外层不同 marker 锁序及同 topic 唯一 marker、既有徽章不改字段、失败整体回滚、普通读不等待写锁；非成长奖励协作者 mock，不声称全奖励集成已验。
+
+IT 必须由本地在批准的临时 MySQL 8+ 环境执行：`CHENGYIN_FUNDS_MYSQL_IT=1`；显式绑定 `CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD` 六变量（密码可空但绑定不可缺，suffix 非空）。配置生成的库名前缀≤47字符，追加16位 UUID 唯一后缀，需要临时建删库权限；只建自己的独占 schema，从未在 Cloud 连接数据库。线程异常通过 Future 返回，屏障/等待有界，未终止线程时禁止删 schema 并保留供总控排查。缺 opt-in 的条件跳过不是通过。
+
+本地可按已批准 Maven 入口选择 `AnalyticsControllerTest,PlayerProgressionServiceImplTest` 普通用例与显式 `PlayerGrowthConcurrencyMySqlIT` 真库用例；本文件未执行任何命令，不能以源码声明数代替新鲜 XML 报告。
+
+### 依赖与剩余风险
+
+无新库依赖，无 DDL、共享会员/积分/资金 Mapper、DTO/接口、CI/pom/hook 或 UI 修改。依赖原数据库两唯一键存在，并通过 Spring 代理调用事务入口。
+
+缺 TOPIC_CLEAR 配置时不伪造幂等徽章；人为绕过唯一实际 caller，在外层预建 RR 旧快照后裸调用同主题重放，不新增幂等保证。现有节点/主题上游会员与成长的锁顺序差异仍可能要求整事务回滚重试，本补丁不声称消除全部奖励事务死锁或完成数据库验收。
+
+## 范围收口与总控下一步
+
+两项已交付，两个 child 均冻结，实际源码 writer 0，READY 0。没有新增授权范围，未凑六条或额外任务。总控按冻结源码候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 验证；后续仅账本文档提交不替换该源码 SHA。
+
+后续可读线索仅作为总控待裁定事项，不领取新路径：全历史漏斗规模保护需要产品/API合同；`ApiPlayProgressController.java` 与 `TopicCompletionAwardServiceImpl.java` 的既有会员/成长锁顺序需要完整奖励路径证据及原所有者精确移交。没有把这些线索命名成已复现缺陷。验证失败只占对应原作者一条修复线，其他已授权独立任务可继续。PR 不合并、不部署，所有执行由本地总控统一完成。

@@ -6,7 +6,7 @@
   "branch": "codex/mini-forward-source-20261015",
   "verification": "NOT_RUN",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
-  "active_source_writers": 1,
+  "active_source_writers": 0,
   "initial_independent_lanes": 2,
   "items": [
     {
@@ -24,12 +24,41 @@
       "id": "F3-GROW-01",
       "lane": "GROW",
       "writer": "/root/grow",
-      "state": "IN_PROGRESS_SOURCE_ONLY",
-      "commit_sha": null
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "verification": "NOT_RUN",
+      "test_classes": [
+        {
+          "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+          "test_declarations": 12,
+          "new_test_declarations": 9
+        },
+        {
+          "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+          "test_declarations": 11,
+          "new_test_declarations": 11
+        }
+      ],
+      "dependencies": [
+        "Existing InnoDB uk_member(member_id)",
+        "Existing player_badge uk_member_badge(member_id,badge_code,source_id)",
+        "Existing outer grantOnce TOPIC_FINISH identity; no new reward policy"
+      ]
     }
   ],
   "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
   "next_scope_policy": "No new source scope without exact local coordinator transfer.",
   "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72"
+  "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72",
+  "ready_source_items": 0,
+  "scope_state": "INITIAL_SCOPE_DELIVERED_AWAITING_LOCAL_VALIDATION",
+  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "declarations": {
+    "total": 35,
+    "new": 30,
+    "executed": null,
+    "status": "NOT_RUN",
+    "note": "Static @Test declarations only; counts do not establish execution or pass."
+  },
+  "next_action": "Local coordinator validates frozen source candidate; any failure uses only original author repair lane. No new authorized source item remains."
 }
