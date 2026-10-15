@@ -85,8 +85,10 @@
            稿 N1b 47:2 / N3 20:137 都没有,而且两条都是重复的 ——
            邀请成员在概览 tab 的成员分节右侧已经有一个,管理项目就是「管理」那个 tab 本身。
            「退出俱乐部」留着:全仓只有这一个入口,删了成员就没路退。 -->
-      <view class="profile-links" wx:if="{{club.isJoined && !club.isOwner}}">
-        <text class="profile-link" bindtap="onQuit" aria-role="button" aria-label="退出俱乐部" hover-class="cy-pressed" hover-stay-time="80">退出俱乐部</text>
+      <!-- BL-34:非主理人可举报俱乐部(targetType=CLUB),与「退出俱乐部」同一行文字链。 -->
+      <view class="profile-links" wx:if="{{club && !club.isOwner}}">
+        <text class="profile-link" wx:if="{{club.isJoined}}" bindtap="onQuit" aria-role="button" aria-label="退出俱乐部" hover-class="cy-pressed" hover-stay-time="80">退出俱乐部</text>
+        <text class="profile-link" bindtap="onReportClub" aria-role="button" aria-label="举报俱乐部" hover-class="cy-pressed" hover-stay-time="80">举报</text>
       </view>
     </view>
 
@@ -1064,5 +1066,6 @@
 <view class="theme-dark">
 <view wx:if="{{club && canInviteCoop && !club.isOwner}}" class="club-coop-floating"><view class="join-btn cy-btn cy-btn--primary" bindtap="goClubCoop" aria-role="button" aria-label="向该俱乐部发起合作" hover-class="cy-pressed">发起合作</view></view>
 <cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{clubId}}" target-name="{{club.name}}" invite-type="{{1}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName}}" operation-scope="{{coopInviteScope}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" />
+<cy-report-sheet wx:if="{{club && !club.isOwner}}" show="{{reportShow}}" target-type="CLUB" target-id="{{reportClubId}}" title="举报这个俱乐部" bind:close="onReportClose" />
 
 </view>

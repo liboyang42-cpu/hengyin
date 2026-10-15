@@ -459,6 +459,8 @@ Page({
     sceneDirty: false,
     sceneConfirm: false,
     clubId: null,
+    reportShow: false,
+    reportClubId: '',
     club: null,
     manageTopics: [],
     topicsLoaded: false,
@@ -2436,6 +2438,16 @@ Page({
     wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + clubId + '&recurrence=ONCE' });
   },
 
+  // BL-34:举报俱乐部,走共用举报半屏(targetType=CLUB)。
+  onReportClub() {
+    const club = this.data.club || {};
+    const clubId = club.id || this.data.clubId;
+    if (clubId == null || clubId === '') return;
+    this.setData({ reportShow: true, reportClubId: String(clubId) });
+  },
+  onReportClose() {
+    this.setData({ reportShow: false });
+  },
   // 退出俱乐部(成员;群主不可退,后端拦)。退出同步移出团群。
   // CU-C-71:重入代价由 club.join_policy 决定(policy≠1 即时加入,后端 ClubMemberServiceImpl),
   // 文案必须跟着策略走 —— 全团统一写「重新申请并等主理人通过」对公开团是假话。
