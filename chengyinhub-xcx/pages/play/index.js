@@ -6723,8 +6723,16 @@ Page({
   // ⚠️ 拿不到就整条轴不渲染(milestone=null),不拿本章数据冒充累计、也不填 0 凑一个「第 1 档」。
   //   这条与成长中心「失败不把数据伪装为零」的既有约定一致。
   loadFinishRouteRecommendation() {
+    if (!this._isPlayAccountCurrent() || !this.data.showFinish) return Promise.resolve(null);
     const requestEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._finishRecommendationEpoch = requestEpoch;
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const activityId = this.data.activityId, topicId = this.data.topicId, mode = this.data.mode;
+    const loadEpoch = this._playLoadEpoch;
+    const isCurrent = () => this._isPlayAccountCurrent() && this.data.showFinish
+      && requestEpoch === this._finishRecommendationEpoch && loadEpoch === this._playLoadEpoch
+      && sessionKey === JSON.stringify(this._sessionParams())
+      && activityId === this.data.activityId && topicId === this.data.topicId && mode === this.data.mode;
     this.setData({ finishRouteRecommendation: null });
     if (!finishRouteRecommendation.isEnabled(app.globalData && app.globalData.features)
         || this.data.isPreview || this.data.isMock) return Promise.resolve(null);
@@ -6738,16 +6746,16 @@ Page({
       longitude: origin.longitude,
       latitude: origin.latitude
     }).then((response) => {
-      if (requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return null;
+      if (!isCurrent()) return null;
       const rows = response && response.code == 200 && response.data && response.data.rows;
       const card = finishRouteRecommendation.pickCandidate(
-        Array.isArray(rows) ? rows : [], this.data.activityId, this.data.topicId
+        Array.isArray(rows) ? rows : [], activityId, topicId
       );
       this.setData({ finishRouteRecommendation: card }, () => {
-        if (!card || requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return;
+        if (!card || !isCurrent()) return;
         analytics.track('finish_route_recommendation_shown', {
           bizType: 'activity', bizId: card.id,
-          properties: { mode: this.data.mode, placement: 'play_finish' }
+          properties: { mode, placement: 'play_finish' }
         });
       });
       return card;
