@@ -55,7 +55,7 @@
           <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount || 0}}</text><text class="ccl-metric-label">频控跳过</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{(detail.failedCount || 0) + (detail.retryableCount || 0)}}</text><text class="ccl-metric-label">未送达</text></view>
         </view>
-        <text class="ccl-note">客户名称已脱敏</text>
+        <text class="ccl-note">名单不含联系方式</text>
         <view class="fin-card ccl-card" wx:if="{{detail.recipients.length}}">
           <view class="fin-row ccl-row" wx:for="{{detail.recipients}}" wx:key="key"
                 aria-label="{{item.nameText}}，{{item.statusText}}{{item.reasonText ? '，' + item.reasonText : ''}}">

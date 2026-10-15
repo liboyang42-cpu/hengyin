@@ -1,7 +1,7 @@
 // BL-100 商家触达任务记录(只读)。
 // GET /api/merchant/crm/campaigns          → MerchantCrmCampaignVO[](最近 20 条,recipients 为空)
-// GET /api/merchant/crm/campaigns/{id}     → MerchantCrmCampaignVO(含逐人脱敏回执 recipients)
-// 状态取自 MerchantCrmCampaign / MerchantCrmCampaignRecipient 常量与 mapper 真值;未知状态如实写「其他状态」。
+// GET /api/merchant/crm/campaigns/{id}     → MerchantCrmCampaignVO(含逐人回执 recipients;不含联系方式,客户名为昵称原文)
+// 状态取自 MerchantCrmCampaign / MerchantCrmCampaignRecipient 常量;未知状态如实写「其他状态」。
 const CAMPAIGN_STATUS = {
   READY: { text: '待投递', tone: 'neutral' },
   PROCESSING: { text: '投递中', tone: 'neutral' },
@@ -12,13 +12,10 @@ const CAMPAIGN_STATUS = {
 
 const RECIPIENT_STATUS = {
   PENDING: { text: '待投递', tone: 'neutral' },
-  RESERVED: { text: '投递中', tone: 'neutral' },
-  DISPATCHING: { text: '投递中', tone: 'neutral' },
   DELIVERED: { text: '已送达', tone: 'success' },
   SKIPPED_NO_CONSENT: { text: '未同意接收', tone: 'neutral' },
   SKIPPED_FREQUENCY: { text: '今日已触达，跳过', tone: 'neutral' },
   RETRYABLE_BUSY: { text: '暂未送达', tone: 'warning' },
-  FAILED_UNCERTAIN: { text: '结果待确认', tone: 'warning' },
   FAILED: { text: '投递失败', tone: 'warning' },
 };
 

@@ -43,12 +43,12 @@ test('shapeCampaignDetail 逐人回执只用 VO 字段,失败原因只在未送�
   const d = vm.shapeCampaignDetail({
     id: 3, status: 'SUCCESS', recipientCount: 2, deliveredCount: 1,
     recipients: [
-      { recipientId: 11, customerName: '张**', status: 'DELIVERED', failureMessage: 'ignored', deliveredAt: '2026-10-15 09:01:00' },
+      { recipientId: 11, customerName: '张三', status: 'DELIVERED', failureMessage: 'ignored', deliveredAt: '2026-10-15 09:01:00' },
       { recipientId: null, customerName: '', status: 'FAILED', failureMessage: '优惠券库存不足' },
     ],
   });
   assert.equal(d.recipients.length, 2);
-  assert.deepEqual(d.recipients[0], { key: 'r11', nameText: '张**', statusText: '已送达', statusTone: 'success', reasonText: '', timeText: '2026-10-15 09:01' });
+  assert.deepEqual(d.recipients[0], { key: 'r11', nameText: '张三', statusText: '已送达', statusTone: 'success', reasonText: '', timeText: '2026-10-15 09:01' });
   assert.equal(d.recipients[1].key, 'i1');
   assert.equal(d.recipients[1].nameText, '客户');
   assert.equal(d.recipients[1].reasonText, '优惠券库存不足');
