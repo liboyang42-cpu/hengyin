@@ -179,3 +179,16 @@
 | 121 | 俱乐部按合作主题开一场 | 俱乐部主理人现有活动/开团入口：`POST /api/club/open-session-topics`（`{clubId}`）列可开主题，选主题+日期后 `POST /api/club/open-session`（`ClubSessionOpenRequest` 字段为准），成功按返回 `activityId` 跳现有活动详情回读；二次确认；非主理人/无主题诚实空态；没有现成入口或需产品决定就 BLOCKED | `pages/club/**`；不碰排期/`ApiClubEventOpsController`（Codex）；不涉及费用 |
 | 122 | 单测与合同测试·第十批 | BL-116–121 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
 | 123 | 验收清单更新·第九至十批 | 把 BL-108–121 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-107 #151、BL-115） | docs |
+
+## 第十一批（124–131）：监督线补充（零调用接口已基本核完；以口径核对与协调者整合文档为主；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 124 | 商家公开详情口径核对 | 对照 `GET /api/merchant/ops/public-detail`（`@Anonymous`，`merchantId`，`detailService.getPublicDetail` 返回为准）与小程序现用 `POST /api/merchant/public-detail` / `public-home` 的字段；现有商家主页/漫游 POI 详情已有的信息行若缺数据而 ops 接口能提供，只补数据不改样式；等价则 BLOCKED 并附字段对照表 | `pages/merchant/profile/**`、`scene-roam-poi-detail`；只读 |
+| 125 | 模板库分类分组口径核对 | 对照 `POST /api/template/groupByCategory`（`CategoryTemplatesVO`）与现用 `/api/template/homeData`；现有模板库若已有等价分类分区则 BLOCKED 并附对照表；否则只在现有分区内改用后端分组数据，**不改货架 UI 与卡片样式** | `pages/template/**`；不碰 fabu/pro-editor（Codex） |
+| 126 | 协调者补丁汇总 | 新建 `COORDINATOR-PATCHES.md`：逐个列出所有 open 的 `claude/bl-*`/`claude/cl*` PR 正文里交协调者的补丁（app.json 页面、route-matrix、action-ledger `controlCount`、get-auth-matrix 直接 GET 计数、silentError 白名单、`nav-page-title` 计数、ui-integrity-baseline 键），给出**全部合入后的累计期望值**与需要按合并后树重算的项；只写文档，不改这些文件 | docs |
+| 127 | PR 依赖与建议合并顺序 | 新建 `MERGE-ORDER.md`：列出 PR 间依赖（如 #166←#164、#158←#152、#74/#77/#95←#73、BL-31/52/62←CL2 #25、BL-35/56/65←CL4 #27），重复认领与可关闭项，给出建议合并顺序；只写文档 | docs |
+| 128 | 待产品决定汇总 | 新建 `DECISIONS-NEEDED.md`：把所有标题含 BLOCKED 且原因为「需产品决定」的 PR（如 #61、#75、#111、#129、#153、#162、#165）各写成一行问题 + 可选项 + 各选项影响的文件，供用户一次性拍板；Codex 宿主类 BLOCKED 另列一表交协调者 | docs |
+| 129 | 监督未决意见汇总 | 新建 `REVIEW-OPEN.md`：列出最新一条 `supervisor sha=` 结论为 CHANGES NEEDED、或 head 已变但仍有未处理 nit 的 PR，逐条写 file:line 与状态；只汇总不改代码 | docs |
+| 130 | 单测与合同测试·第十一批 | BL-124–125 若有代码改动，补纯函数单测 + 接口合同测试（路径/方法/字段对照 Java 源码）；均 BLOCKED 则 BLOCKED | tests |
+| 131 | 验收清单更新·第十一批 | 把 BL-124–129 已开 PR 的本地验收清单补进 `ACCEPTANCE-BATCH11.md`（依赖 BL-123 #167） | docs |
