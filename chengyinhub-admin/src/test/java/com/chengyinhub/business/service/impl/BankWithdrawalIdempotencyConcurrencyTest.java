@@ -233,6 +233,8 @@ class BankWithdrawalIdempotencyConcurrencyTest {
                 new WithdrawalPiiProtector("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="));
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
+        ReflectionTestUtils.setField(service, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(memberMapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
         return service;
     }
 

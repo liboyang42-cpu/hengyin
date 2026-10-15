@@ -92,6 +92,8 @@ class CashWithdrawStateMachineTest {
                 .thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(svc, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
+        ReflectionTestUtils.setField(svc, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(svc, "frozenAmountResolver")));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
         when(mapper.selectById(1L)).thenAnswer(i -> pendingRecord());
         when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
@@ -182,6 +184,7 @@ class CashWithdrawStateMachineTest {
     // ④ 扣款抛异常(DB 未知异常,余额可能已扣)→ 置待人工(status=3)+告警,不假称已退款,不转账
     @Test
     void deductThrows_marksFailed_noZombie_noTransfer() {
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
         when(mapper.countPendingByMember(9L)).thenReturn(0);
         stubMemberWithOpenid();
         doThrow(new RuntimeException("扣款状态不明")).when(umsMemberService).deductWithdrawableBalance(eq(9L), any(), any());
@@ -191,7 +194,7 @@ class CashWithdrawStateMachineTest {
         verify(wechatPayService, never()).transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString());
         // 未知异常 → STATUS_FAILED_MANUAL=3(非 FAILED_REFUNDED),且触发告警
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
         boolean markedManual = cap.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(v.getStatus()));
         assertTrue(markedManual, "扣款异常应置待人工(3),不可假称已退款");
