@@ -845,6 +845,14 @@
       SELECT comment_id,member_id,action_type FROM community_post_comment_action
       WHERE member_id=#{memberId} AND request_id=#{requestId}
     </select>
+    <select id="selectCommentLikeActionForUpdate" resultType="map" useCache="false" flushCache="true">
+      SELECT comment_id,member_id,action_type,request_id FROM community_post_comment_action
+      WHERE comment_id=#{commentId} AND member_id=#{memberId} AND action_type='LIKE' FOR UPDATE
+    </select>
+    <select id="selectCommandReceiptForUpdate" resultType="map" useCache="false" flushCache="true">
+      SELECT id,member_id,request_id,command_type,aggregate_id,result_json,create_time
+      FROM community_post_command_receipt WHERE member_id=#{memberId} AND request_id=#{requestId} FOR UPDATE
+    </select>
     <delete id="deleteCommentAction">
       DELETE FROM community_post_comment_action WHERE comment_id=#{commentId} AND member_id=#{memberId} AND action_type='LIKE'
     </delete>

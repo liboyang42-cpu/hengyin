@@ -773,7 +773,7 @@ class CommunityPostServiceImplTest {
         Map<String, Object> comment = new HashMap<>();
         comment.put("post_id", 7L);
         when(mapper.selectCommentForAudit(17L)).thenReturn(comment);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-1")).thenReturn(null);
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L)).thenReturn(null);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-1"), any())).thenReturn(1);
         when(mapper.deleteCommentAction(17L, 9L)).thenReturn(1);
 
@@ -788,7 +788,8 @@ class CommunityPostServiceImplTest {
     void concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox() {
         Map<String, Object> replay = new HashMap<>();
         replay.put("comment_id", 17L);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-race"))
+        replay.put("request_id", "like-comment-race");
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L))
                 .thenReturn(null, replay);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-race"), any()))
                 .thenThrow(new DuplicateKeyException("duplicate request"));

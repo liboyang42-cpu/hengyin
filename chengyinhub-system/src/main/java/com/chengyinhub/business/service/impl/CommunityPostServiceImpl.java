@@ -600,19 +600,27 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public void likeComment(Long memberId, Long commentId, String requestId) {
         requirePrincipal(memberId);
         requireRequestId(requestId);
-        Map<String, Object> replay = mapper.selectCommentActionByRequest(memberId, requestId);
-        if (replay != null) {
-            if (!commentId.equals(number(value(replay, "comment_id")))) throw error("请求号已被其他评论互动使用", 409);
+        // Keep the same action -> receipt lock order as UNLIKE, including legacy migration.
+        Map<String, Object> action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt != null) {
+            requireCommentLikeReceipt(receipt, commentId, false);
             return;
         }
         Date now = new Date();
+        if (action != null) {
+            if (!requestId.equals(value(action, "request_id"))) throw error("评论已点赞或请求号冲突", 409);
+            preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
+            return;
+        }
         try {
             if (mapper.insertCommentAction(commentId, memberId, requestId, now) != 1) throw error("评论不存在或不可互动", 404);
         } catch (DuplicateKeyException e) {
-            replay = mapper.selectCommentActionByRequest(memberId, requestId);
-            if (replay == null || !commentId.equals(number(value(replay, "comment_id")))) {
+            action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+            if (action == null || !requestId.equals(value(action, "request_id"))) {
                 throw error("评论已点赞或请求号冲突", 409);
             }
+            preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
             return;
         }
         Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
@@ -624,6 +632,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             notifyMember(commentAuthorId, postId, memberId, "INTERACTION", "COMMENT_LIKE", commentId, now);
         }
         outbox(postId, "COMMENT_LIKED", payload("commentId", commentId), now);
+        preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
     }
 
     @Override
@@ -631,11 +640,31 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public void unlikeComment(Long memberId, Long commentId, String requestId) {
         requirePrincipal(memberId);
         requireRequestId(requestId);
-        if (isCommandReplay(memberId, requestId, "COMMENT_UNLIKE", commentId)) return;
+        Map<String, Object> action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+        String originalRequestId = action == null ? null : (String) value(action, "request_id");
+        // Two legacy actions may cross-use request IDs. Lock all receipt keys in a stable order.
+        if (originalRequestId != null && originalRequestId.compareTo(requestId) < 0) {
+            mapper.selectCommandReceiptForUpdate(memberId, originalRequestId);
+        }
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (originalRequestId != null && originalRequestId.compareTo(requestId) > 0) {
+            mapper.selectCommandReceiptForUpdate(memberId, originalRequestId);
+        }
+        if (receipt != null) {
+            if (!"COMMENT_UNLIKE".equals(String.valueOf(value(receipt, "command_type")))
+                    || !commentId.equals(number(value(receipt, "aggregate_id")))) {
+                throw error("同一请求号不能用于不同命令", 409);
+            }
+            return;
+        }
         Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
         Long postId = comment == null ? null : number(value(comment, "post_id"));
         if (!positive(postId)) throw error("评论不存在", 404);
         Date now = new Date();
+        if (action != null) {
+            if (blank(originalRequestId)) throw error("原评论点赞身份缺失", 500);
+            preserveCommentLikeReceipt(memberId, commentId, originalRequestId, now, true);
+        }
         int deleted = mapper.deleteCommentAction(commentId, memberId);
         mapper.recomputeCommentLikes(commentId);
         if (deleted > 0) outbox(postId, "COMMENT_UNLIKED", payload("commentId", commentId), now);
@@ -1409,6 +1438,32 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 aggregateId, type, payload, now) != 1) {
             throw error("社区事件保存失败", 500);
         }
+    }
+
+    private void requireCommentLikeReceipt(Map<String, Object> receipt, Long commentId, boolean legacyUnlike) {
+        if (!"COMMENT_LIKE".equals(String.valueOf(value(receipt, "command_type")))
+                || !commentId.equals(number(value(receipt, "aggregate_id")))) {
+            // A legacy action must not overwrite an existing immutable command or prevent its owner's UNLIKE.
+            if (!legacyUnlike) throw error("同一请求号不能用于不同命令", 409);
+        }
+    }
+
+    private void preserveCommentLikeReceipt(Long memberId, Long commentId, String requestId,
+                                             Date now, boolean legacyUnlike) {
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt != null) {
+            requireCommentLikeReceipt(receipt, commentId, legacyUnlike);
+            return;
+        }
+        try {
+            if (mapper.insertCommandReceipt(memberId, requestId, "COMMENT_LIKE", commentId,
+                    payload("aggregateId", commentId), now) == 1) return;
+        } catch (DuplicateKeyException duplicate) {
+            // Only a known duplicate is classified below. Deadlocks and unknown writes must roll back.
+        }
+        receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt == null) throw error("评论点赞回执保存失败", 500);
+        requireCommentLikeReceipt(receipt, commentId, legacyUnlike);
     }
 
     private boolean isCommandReplay(Long memberId, String requestId, String commandType, Long aggregateId) {

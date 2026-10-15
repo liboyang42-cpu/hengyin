@@ -228,6 +228,10 @@ public interface CommunityPostMapper {
                             @Param("requestId") String requestId, @Param("now") Date now);
     Map<String, Object> selectCommentActionByRequest(@Param("memberId") Long memberId,
                                                      @Param("requestId") String requestId);
+    Map<String, Object> selectCommentLikeActionForUpdate(@Param("commentId") Long commentId,
+                                                         @Param("memberId") Long memberId);
+    Map<String, Object> selectCommandReceiptForUpdate(@Param("memberId") Long memberId,
+                                                      @Param("requestId") String requestId);
     int deleteCommentAction(@Param("commentId") Long commentId, @Param("memberId") Long memberId);
     int recomputeCommentLikes(Long commentId);
     List<Map<String, Object>> selectComments(@Param("postId") Long postId,
