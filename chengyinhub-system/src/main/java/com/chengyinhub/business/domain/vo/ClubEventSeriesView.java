@@ -10,6 +10,8 @@ public class ClubEventSeriesView {
     private Long topicId;
     private String recurrenceType;
     private String timezone;
+    /** 既有未来场次共同的上海集合时刻(HH:mm)；无场次或时刻不一致时为 null。 */
+    private String startTime;
     private Long defaultLeadMemberId;
     private Integer defaultCapacity;
     private Boolean waitlistEnabled;
@@ -28,6 +30,8 @@ public class ClubEventSeriesView {
     public void setRecurrenceType(String recurrenceType) { this.recurrenceType = recurrenceType; }
     public String getTimezone() { return timezone; }
     public void setTimezone(String timezone) { this.timezone = timezone; }
+    public String getStartTime() { return startTime; }
+    public void setStartTime(String startTime) { this.startTime = startTime; }
     public Long getDefaultLeadMemberId() { return defaultLeadMemberId; }
     public void setDefaultLeadMemberId(Long defaultLeadMemberId) { this.defaultLeadMemberId = defaultLeadMemberId; }
     public Integer getDefaultCapacity() { return defaultCapacity; }

@@ -304,6 +304,8 @@ function normalizeSeries(value, clubId) {
   return {
     id, clubId: rowClubId, topicId, leadMemberId, version, offerMinutes,
     recurrenceType, capacity, waitlistEnabled: value.waitlistEnabled,
+    startTime: typeof value.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value.startTime)
+      ? value.startTime : '',
     futureDates: Array.isArray(value.futureDates)
       ? Array.from(new Set(value.futureDates.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(String(item))))).sort()
       : [],
@@ -656,8 +658,8 @@ Page({
           editingTopicId: series.topicId,
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
-          // 后端读模型只回日期,不回每场时刻;编辑态默认 09:00,改后的时刻只作用于本次新增日期。
-          startTime: '09:00',
+          // 未知或混合时刻保持空值，由既有必填校验要求显式选择。
+          startTime: series.startTime,
           occurrenceCount: dates.length,
           customDates: dates,
           capacity: series.capacity === null ? '' : String(series.capacity),

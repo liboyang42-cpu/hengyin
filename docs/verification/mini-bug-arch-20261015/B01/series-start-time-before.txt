@@ -1,0 +1,162 @@
+✖ detail and date reschedule preserve 00:30 (10.058439ms)
+✖ detail and date reschedule preserve 18:45 (0.916148ms)
+✖ mixed future times clears previous edit time and refuses a silent write (2.602564ms)
+✖ no future occurrences clears previous edit time and refuses a silent write (0.786513ms)
+✖ omitted field clears previous edit time and refuses a silent write (0.766903ms)
+✖ invalid clock clears previous edit time and refuses a silent write (0.897941ms)
+✖ un-padded clock clears previous edit time and refuses a silent write (0.65797ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 0
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94.805834
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:33:45
+✖ detail and date reschedule preserve 00:30 (10.058439ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '09:00' !== '00:30'
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:36:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '09:00',
+    expected: '00:30',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:33:45
+✖ detail and date reschedule preserve 18:45 (0.916148ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '09:00' !== '18:45'
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:36:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '09:00',
+    expected: '18:45',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:51:3
+✖ mixed future times clears previous edit time and refuses a silent write (2.602564ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:51:3
+✖ no future occurrences clears previous edit time and refuses a silent write (0.786513ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:51:3
+✖ omitted field clears previous edit time and refuses a silent write (0.766903ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:51:3
+✖ invalid clock clears previous edit time and refuses a silent write (0.897941ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:51:3
+✖ un-padded clock clears previous edit time and refuses a silent write (0.65797ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-series-start-time.test.js:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -113,7 +113,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         List<ClubEventSeriesView> result = new ArrayList<>();
         for (ClubEventSeries row : rows) {
             validateReadableSeries(row, clubId);
-            result.add(toSeriesView(row, java.util.Collections.<String>emptyList()));
+            List<ClubEventOccurrence> future = clubEventOpsMapper.selectFutureOccurrences(
+                    row.getId(), clubId, now());
+            result.add(toSeriesView(row, java.util.Collections.<String>emptyList(), future));
         }
         return result;
     }
@@ -125,7 +127,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         ClubEventSeries series = clubEventOpsMapper.selectActiveSeriesByIdAndClub(seriesId, clubId);
         validateReadableSeries(series, clubId);
         List<ClubEventOccurrence> rows = clubEventOpsMapper.selectFutureOccurrences(
-                seriesId, clubId, new Date());
+                seriesId, clubId, now());
         List<String> dates = new ArrayList<>();
         if (rows != null) for (ClubEventOccurrence row : rows) {
             if (row == null || !seriesId.equals(row.getSeriesId()) || !positive(row.getActivityId())
@@ -136,7 +138,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             dates.add(row.getOccurrenceAt().toInstant()
                     .atZone(ZoneId.of("Asia/Shanghai")).toLocalDate().toString());
         }
-        return toSeriesView(series, dates);
+        return toSeriesView(series, dates, rows);
     }
 
     @Override
@@ -149,7 +151,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         List<ClubEventOccurrenceRowVO> rows = clubEventOpsMapper.selectSeriesOccurrenceRows(seriesId, clubId);
         List<Map<String, Object>> out = new ArrayList<>();
         if (rows == null) return out;
-        long now = System.currentTimeMillis();
+        long now = now().getTime();
         for (ClubEventOccurrenceRowVO row : rows) {
             if (row == null || row.getOccurrenceAt() == null) continue;
             boolean cancelled = ClubEventOccurrence.STATUS_CANCELLED.equals(row.getStatus());
@@ -157,7 +159,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             Integer signup = row.getSignupCount();
             // ⚠️ 报名数算不出来时 editable 必须是 false:不知道有没有人报名就不能放开编辑。
             //    这条比「显示成 0」更要紧 —— 前者只是显示错,后者会让人真的改掉一场有人的活动。
-            boolean editable = !cancelled && !past && signup != null && signup == 0;
+            // 与 FUTURE_ONLY 写口共用同一事实判据：成功报名为 0 不代表没有候补、退款历史或结算。
+            boolean protectedHistory = !positive(row.getActivityId())
+                    || clubEventOpsMapper.countProtectedActivityHistory(row.getActivityId()) != 0;
+            boolean editable = !cancelled && !past && signup != null && signup == 0 && !protectedHistory;
 
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("occurrenceId", row.getOccurrenceId());
@@ -171,7 +176,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             item.put("lockReason", cancelled ? "本场已取消"
                     : (past ? "已结束"
                     : (signup == null ? "报名数待确认"
-                    : (signup > 0 ? "不可编辑" : null))));
+                    : (signup > 0 ? "不可编辑"
+                    : (protectedHistory ? "已有报名、候补或结算事实" : null)))));
             out.add(item);
         }
         return out;
@@ -897,13 +903,15 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
     }
 
-    private ClubEventSeriesView toSeriesView(ClubEventSeries series, List<String> futureDates) {
+    private ClubEventSeriesView toSeriesView(ClubEventSeries series, List<String> futureDates,
+                                             List<ClubEventOccurrence> futureOccurrences) {
         ClubEventSeriesView view = new ClubEventSeriesView();
         view.setId(series.getId());
         view.setClubId(series.getClubId());
         view.setTopicId(series.getTopicId());
         view.setRecurrenceType(series.getRecurrenceType());
         view.setTimezone(series.getTimezone());
+        view.setStartTime(seriesStartTime(series.getId(), futureOccurrences));
         view.setDefaultLeadMemberId(series.getDefaultLeadMemberId());
         view.setDefaultCapacity(series.getDefaultCapacity());
         view.setWaitlistEnabled(series.getWaitlistEnabled());
@@ -912,6 +920,24 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         view.setVersion(series.getVersion());
         view.setFutureDates(futureDates);
         return view;
+    }
+
+    /** 系列未另存默认时刻；只从现有未来场次的上海时刻还原，空/混合时刻不能猜成 09:00。 */
+    private String seriesStartTime(Long seriesId, List<ClubEventOccurrence> occurrences) {
+        String shared = null;
+        if (occurrences == null) return null;
+        for (ClubEventOccurrence row : occurrences) {
+            if (row == null || !seriesId.equals(row.getSeriesId()) || !positive(row.getActivityId())
+                    || row.getOccurrenceAt() == null
+                    || !ClubEventOccurrence.STATUS_ACTIVE.equals(row.getStatus())) {
+                throw conflict("未来场次状态不完整");
+            }
+            String time = row.getOccurrenceAt().toInstant().atZone(ZoneId.of("Asia/Shanghai"))
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
+            if (shared != null && !shared.equals(time)) return null;
+            shared = time;
+        }
+        return shared;
     }
 
     private String safeUsername(String username, Long actorMemberId) {
