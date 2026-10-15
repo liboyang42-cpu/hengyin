@@ -448,7 +448,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         List<Map<String, Object>> appliedAssignments = new ArrayList<>();
         Set<Long> seenMembers = new HashSet<>();
         boolean changed = false;
-        boolean concurrentAssignmentObserved = false;
         for (Object item : (List<?>) raw) {
             if (!(item instanceof Map)) throw error("GAME_BAD_REQUEST", "角色分配格式不正确");
             Map<String, Object> assignmentMap = (Map<String, Object>) item;
@@ -485,7 +484,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     throw error("GAME_STATE_CONFLICT", "角色分配失败");
                 }
                 unchanged = true;
-                concurrentAssignmentObserved = true;
             }
             changed |= !unchanged;
             Map<String, Object> applied = new LinkedHashMap<>();
@@ -497,8 +495,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (changed) {
             String next = readinessStatus(session);
             bumpSession(session, next, session.getCurrentChapterId(), actor.getMemberId(), clock.now());
-        } else if (concurrentAssignmentObserved) {
-            GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+        } else {
+            GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (current != null) session = current;
         }
         Map<String, Object> data = new LinkedHashMap<>();
