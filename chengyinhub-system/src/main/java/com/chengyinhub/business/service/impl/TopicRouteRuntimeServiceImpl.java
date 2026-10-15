@@ -968,7 +968,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(readOnly = true)
     public Map<String, Integer> vitals(Long memberId, Long topicId, Long activityId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return null;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return null;
         final TopicRouteEngine.State state;
         try {
@@ -984,7 +984,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public boolean conditionsPass(Long memberId, Long topicId, Long activityId, JsonNode conditions) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || conditions == null || !conditions.isArray() || conditions.size() == 0) return false;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return false;
         try {
             return engine.conditionsPass(conditions, readEngineState(session.getStateJson()));
@@ -997,7 +997,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(readOnly = true)
     public java.util.Set<String> tags(Long memberId, Long topicId, Long activityId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return java.util.Collections.emptySet();
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return java.util.Collections.emptySet();
         try {
             return new java.util.LinkedHashSet<String>(readEngineState(session.getStateJson()).getTags());
@@ -1070,7 +1070,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 || nodeId == null || nodeId <= 0L) {
             return null;
         }
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return null;
         return NodeJourneySnapshot.answer(session.getConfigSnapshotJson(), nodeId);
     }
@@ -2857,6 +2857,24 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (session == null || !member.equals(session.getMemberId())) return null;
         return session.getStatus() == null || Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())
                 ? session : null;
+    }
+
+    /** Resolve old omitted-activity requests by their original unique scope, then select that scope's current run. */
+    private TopicRouteSession currentScopedSession(Long memberId, Long topicId, Long activityId) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0
+                || (activityId != null && activityId < 0)) throw new IllegalArgumentException("场次参数有误");
+        Long resolvedActivity = activityId;
+        if (resolvedActivity == null) {
+            TopicRouteSession legacy = TopicRouteSessionScope.find(routeMapper, memberId, topicId, null);
+            if (legacy == null) return null;
+            resolvedActivity = legacy.getActivityId();
+        }
+        TopicRouteSession session = currentSession(memberId, topicId, resolvedActivity);
+        if (session != null && (!memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())
+                || !java.util.Objects.equals(resolvedActivity, session.getActivityId()))) {
+            throw new ServiceException("无权访问这一局");
+        }
+        return session;
     }
 
     private TopicRouteSession currentSession(Long member, Long topic, Long activity) {
