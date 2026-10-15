@@ -879,6 +879,7 @@ Page({
   _restoreRunSession(d, routeState, nodes) {
     if (!this._isPlayAccountCurrent() || this._runStarted || this.data.isPreview || this.data.isMock) return false;
     const scope = this._runSessionScope();
+    const sessionKey = JSON.stringify(this._sessionParams());
     const openingPending = routeState && routeState.opening && !routeState.opening.complete;
     const allDone = !openingPending && (nodes || []).length > 0 && nodes.every((n) => n && n.done);
     if (allDone || this._serverRunSessionEnded(d, routeState)) {
@@ -889,7 +890,8 @@ Page({
     const restored = stored ? this._applyRestoredRun(stored) : false;
     const epoch = this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     readServerPausedRun(req, scope).then((result) => {
-      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch || !result.ok) return;
+      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch || !result.ok
+          || sessionKey !== JSON.stringify(this._sessionParams())) return;
       // 等服务端期间玩家已经自己开了新局 / 点了继续:那一局归玩家,服务端这份不再覆盖或撤销它。
       const untouched = !this._runStarted || (this._restoredRun && this._sessionClock && this._sessionClock.isPaused());
       if (!untouched) return;
@@ -1619,7 +1621,7 @@ Page({
    * 那一段已经不在(作者改过、或本章还没解锁到那)就留在章首,不乱跳。
    */
   _resumeStory() {
-    if (this._resumeTried || this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this._resumeTried || this.data.isPreview || this.data.isMock) return;
     this._resumeTried = true;
     const saved = storyResume.read(this._runSessionScope());
     const paras = this.data.chapterParas || [];
@@ -1634,7 +1636,15 @@ Page({
     const hit = pos.nodeId ? paras.find((p) => String(p.nodeId) === pos.nodeId) : paras.find((p) => p.i === Number(pos.i));
     if (!hit || hit.i === 0) return;
     const anchor = hit.nodeId ? 'chapter-game-' + hit.nodeId : 'chapter-block-' + hit.i;
-    this.setData({ chapterGameAnchor: '' }, () => this.setData({ chapterGameAnchor: anchor }));
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const chapterId = String((this.data.chapter || {}).id || '');
+    const epoch = this._runRestoreEpoch;
+    this.setData({ chapterGameAnchor: '' }, () => {
+      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch
+          || sessionKey !== JSON.stringify(this._sessionParams())
+          || chapterId !== String((this.data.chapter || {}).id || '')) return;
+      this.setData({ chapterGameAnchor: anchor });
+    });
   },
 
   /** 场景的光:径向光晕 / 斜光束 / 散景(原型 cosmos 引擎的前三层,底色交给章节氛围的 CSS)。 */
