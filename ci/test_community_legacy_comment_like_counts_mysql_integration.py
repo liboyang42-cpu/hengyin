@@ -137,6 +137,95 @@ class CommunityLegacyCommentLikesMysqlIntegrationTest(unittest.TestCase):
         expressions = ['9' if col == 'id' else '102' if col == 'author_id' else "'native-collision'" if col == 'client_request_id' else col for col in columns]
         self.execute('INSERT INTO community_post (' + ','.join(columns) + ') SELECT ' + ','.join(expressions) + ' FROM community_post WHERE id=1')
 
+    def edited_reference(self):
+        # The real edit mapper deletes/rebuilds snapshots from an eligible owned
+        # route without a legacy flag; it does not change migrated post identity.
+        self.execute('UPDATE ums_creative_square SET data_type=3,data_id=10 WHERE id=1')
+        self.execute('DELETE FROM community_post_reference WHERE post_id=1')
+        self.execute("INSERT INTO community_post_reference(post_id,reference_type,reference_id,snapshot_json,privacy_snapshot,create_time) "
+                     "SELECT 1,'ROUTE',r.id,JSON_OBJECT('reference_id',r.id,'reference_type','ROUTE',"
+                     "'title','synthetic route','subtitle',CONCAT(COALESCE(r.distance_m,0),' m'),"
+                     "'distance_m',r.distance_m,'tiles_revealed',r.tiles_revealed,'pois_found',r.pois_found,"
+                     "'finished_at',r.finished_at),'PUBLIC_SAFE','2026-10-10' "
+                     "FROM roam_session r WHERE r.id=10 AND r.member_id=101 AND r.status=1")
+        self.assertEqual(((1,),), self.execute("SELECT COUNT(*) FROM community_post_reference WHERE post_id=1 "
+                                              "AND JSON_EXTRACT(snapshot_json,'$.reference_id')=10 "
+                                              "AND JSON_EXTRACT(snapshot_json,'$.legacy') IS NULL"))
+
+    def test_counter_scope_preserves_legitimate_edited_reference_snapshots(self):
+        self.edited_reference()
+        before = self.snapshot()
+        self.stopped_without_writes(self.run_sql(OLD), before)
+        self.passed(self.run_sql(FIX, True))
+        after = self.snapshot()
+        self.assertEqual(((20, 1), (21, 0)), self.execute('SELECT id,like_count FROM community_post_comment ORDER BY id'))
+        for table in before.keys() - {'community_post_comment'}:
+            self.assertEqual(before[table], after[table], table)
+        self.assertEqual(before['community_post_comment'][0], after['community_post_comment'][0])
+        self.assertEqual([row[:10] + row[11:] for row in before['community_post_comment'][1]],
+                         [row[:10] + row[11:] for row in after['community_post_comment'][1]])
+        renamed = pathlib.Path(self.private.name) / 'counter-copy.sql'
+        renamed.write_text(FIX.read_text())
+        self.passed(self.run_sql(renamed, True))
+        self.assertEqual(after, self.snapshot())
+
+    def test_counter_scope_uses_current_likes_after_normal_unlike_and_relike(self):
+        self.edited_reference()
+        self.execute("DELETE FROM community_post_comment_action WHERE comment_id=20 AND member_id=102 AND action_type='LIKE'")
+        self.execute('UPDATE community_post_comment SET like_count=9 WHERE id=20')
+        self.assertEqual(((40, 102, 20),), self.execute('SELECT id,member_id,comment_id FROM ums_comment_like'))
+        self.passed(self.run_sql(FIX, True))
+        self.assertEqual(((0,),), self.execute('SELECT like_count FROM community_post_comment WHERE id=20'))
+        self.execute("INSERT INTO community_post_comment_action(comment_id,member_id,action_type,request_id,create_time) "
+                     "VALUES(20,102,'LIKE','native-reaction-after-unlike','2026-10-10')")
+        before = self.snapshot()
+        self.passed(self.run_sql(FIX, True))
+        after = self.snapshot()
+        self.assertEqual(((1,),), self.execute('SELECT like_count FROM community_post_comment WHERE id=20'))
+        for table in before.keys() - {'community_post_comment'}:
+            self.assertEqual(before[table], after[table], table)
+        self.passed(self.run_sql(FIX, True))
+        self.assertEqual(after, self.snapshot())
+
+    def test_counter_scope_retains_owner_comment_and_explicit_legacy_like_provenance(self):
+        wrong = (
+            'UPDATE community_post SET author_id=999 WHERE id=1',
+            'UPDATE community_post_comment SET author_id=999 WHERE id=20',
+            'UPDATE ums_comment SET owner_id=999 WHERE id=20',
+            "UPDATE community_post_comment_action SET comment_id=21 WHERE request_id='legacy-comment-like-40'",
+        )
+        for mutation in wrong:
+            with self.subTest(mutation=mutation.split(' SET ')[0]):
+                self.setUp()
+                self.edited_reference()
+                self.execute(mutation)
+                before = self.snapshot()
+                self.stopped_without_writes(self.run_sql(FIX, True), before)
+
+    def test_counter_scope_unknown_or_added_reference_writes_keep_strict_preflight(self):
+        self.edited_reference()
+        changes = (
+            FIX.read_text() + '\nSELECT 1;\n',
+            FIX.read_text() + '\nDELETE FROM community_post_reference WHERE post_id=1;\n',
+            FIX.read_text().replace("action_type='LIKE'", "action_type='BOOKMARK'"),
+            FIX.read_text().replace('UPDATE community_post_comment', 'UPDATE unapproved_schema.community_post_comment', 1),
+        )
+        for index, text in enumerate(changes):
+            with self.subTest(index=index):
+                changed = pathlib.Path(self.private.name) / ('counter-unknown-%s.sql' % index)
+                changed.write_text(text)
+                before = self.snapshot()
+                result = self.run_sql(changed, True)
+                if index < 2:
+                    self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                    self.assertIn('不在 --transaction 安全白名单，已在连接数据库前拒绝', result.stderr)
+                    self.assertNotIn('[1/', result.stdout)
+                    self.assertEqual(before, self.snapshot())
+                else:
+                    self.stopped_without_writes(result, before)
+        before = self.snapshot()
+        self.stopped_without_writes(self.run_sql(None, inline=executable_statement(split_statements(FIX.read_text())[0])), before)
+
     def test_counter_repair_replays_and_preserves_native_comments(self):
         self.execute("INSERT INTO community_post_comment(id,post_id,author_id,client_request_id,body,lifecycle,like_count,create_time,update_time) "
                      "VALUES(200,1,102,'native-comment','native comment','PUBLISHED',9,'2026-10-09','2026-10-09')")

@@ -33,7 +33,9 @@
   --sql 模式会去仓库里加载它;加载不到就【响亮地失败】,绝不退回裸 split。理由见 load_split_statements()。
 """
 import argparse
+import hashlib
 import importlib.util
+import json
 import os
 import re
 import subprocess
@@ -634,6 +636,20 @@ def requires_community_legacy_owner_guard(statements):
     return False
 
 
+def exact_community_comment_counter_scope(statements, transaction):
+    """Only the complete reviewed counter transaction may omit unrelated replay checks.
+
+    Pin executable statements, not a filename. Preserve every literal, statement order
+    and internal whitespace; extracts or added/changed statements retain the full guard.
+    Immutable source SQL SHA256: 373013576832089c0240da8c695a268d4ef6194991b0de097d1e6b00adbfb32d.
+    """
+    if transaction is not True:
+        return False
+    executable = [executable_statement(statement).strip() for statement in statements]
+    encoded = json.dumps(executable, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest() == '4d875edc25ab45fb2121ed9ae7a80a62a9111f0ddd7f1fc116ee0fa0e82d3be9'
+
+
 def assert_community_legacy_statement_scope(statements, db):
     for statement in statements:
         sql = _mask_literals_and_comments(executable_statement(statement)).lower()
@@ -643,7 +659,7 @@ def assert_community_legacy_statement_scope(statements, db):
                 raise ValueError("legacy owner preflight rejects cross-schema source/target")
 
 
-def assert_community_legacy_counter_preflight(cur, db, statements):
+def assert_community_legacy_counter_preflight(cur, db, statements, comment_counter=False):
     """Predict the retained broad prefix assertions, without weakening them."""
     text = "\n".join(executable_statement(statement).lower() for statement in statements)
     prefixes = (
@@ -664,7 +680,9 @@ def assert_community_legacy_counter_preflight(cur, db, statements):
                 AND BINARY a.request_id=BINARY CONCAT('legacy-comment-like-',l.id)))"""),
     )
     for prefix, target, query in prefixes:
-        if not re.search(r"request_id\s+like\s+'" + re.escape(prefix) + "'", text):
+        if comment_counter and target != 'community_post_comment_action':
+            continue
+        if not comment_counter and not re.search(r"request_id\s+like\s+'" + re.escape(prefix) + "'", text):
             continue
         cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_name=%s", (db, target))
         if cur.fetchone() == (0,):
@@ -674,7 +692,7 @@ def assert_community_legacy_counter_preflight(cur, db, statements):
             raise ValueError("legacy owner preflight counter provenance ambiguous: " + target)
 
 
-def assert_community_legacy_owner_preflight(cur, db):
+def assert_community_legacy_owner_preflight(cur, db, comment_counter=False):
     """Read all legacy identity conflicts before *any* statement can commit."""
     cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema=%s", (db,))
     tables = {row[0].lower() for row in cur.fetchall()}
@@ -687,6 +705,9 @@ def assert_community_legacy_owner_preflight(cur, db):
         'community_post_comment_action': ('comment_id', 'member_id', 'action_type', 'request_id'),
         'community_post_reference': ('post_id', 'reference_type', 'reference_id'),
     }
+    if comment_counter:
+        identity_columns = {name: columns for name, columns in identity_columns.items()
+                            if name in {'community_post', 'community_post_comment', 'community_post_comment_action'}}
     for table, columns in identity_columns.items():
         if table in tables:
             nulls = ' OR '.join('`' + column + '` IS NULL' for column in columns)
@@ -794,6 +815,20 @@ def assert_community_legacy_owner_preflight(cur, db):
               (p.author_id=s.member_id AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)
                AND (JSON_EXTRACT(r.snapshot_json,'$.legacy') <=> TRUE)))"""),
     ]
+    if comment_counter:
+        # Author edits legitimately rebuild reference snapshots; unlike/re-like replaces
+        # old LIKE request IDs. Neither is a replay target of the count-only UPDATE.
+        checks = [check for check in checks if check[0] in {'comment-target', 'post', 'comment'}]
+        checks.append(("counter-comment-source", {
+            "ums_comment", "ums_creative_square", "community_post", "community_post_comment"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_comment n
+            WHERE BINARY n.client_request_id=BINARY CONCAT('legacy-square-comment-',n.id)
+              AND NOT EXISTS(SELECT 1 FROM ums_comment old_comment
+                JOIN community_post p ON p.id=old_comment.owner_id
+                JOIN ums_creative_square s ON s.id=p.id AND s.member_id=p.author_id
+                WHERE old_comment.id=n.id AND old_comment.owner_type=3
+                  AND old_comment.member_id=n.author_id AND old_comment.owner_id=n.post_id
+                  AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',p.id)))"""))
     for label, required, query in checks:
         targets = {name for name in required if name.startswith("community_")}
         if not targets.issubset(tables):
@@ -850,8 +885,12 @@ def run_connected(args, statements, splitter_src, conn, db):
                   "Without that locked window do not execute; read-only preflight is not a concurrency lock.")
             try:
                 assert_community_legacy_statement_scope(statements, db)
-                assert_community_legacy_owner_preflight(cur, db)
-                assert_community_legacy_counter_preflight(cur, db, statements)
+                if exact_community_comment_counter_scope(statements, args.transaction):
+                    assert_community_legacy_owner_preflight(cur, db, comment_counter=True)
+                    assert_community_legacy_counter_preflight(cur, db, statements, comment_counter=True)
+                else:
+                    assert_community_legacy_owner_preflight(cur, db)
+                    assert_community_legacy_counter_preflight(cur, db, statements)
             except Exception as error:
                 print(f"legacy owner preflight failed before all DDL/DML: {error}")
                 sys.exit(1)

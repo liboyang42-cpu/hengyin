@@ -115,8 +115,8 @@ if [ "$MODE" = "atomic-migration" ]; then
     echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(应至少 41 条，fail-closed)" >&2
     exit 1
   fi
-  if [ "$atomic_ran" -lt 64 ]; then
-    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(原49条加社区计数与身份边界15条，应至少64条)" >&2
+  if [ "$atomic_ran" -lt 68 ]; then
+    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(原49条加社区计数与身份边界19条，应至少68条)" >&2
     exit 1
   fi
   echo "✅ 原子迁移 IT 实际执行 $atomic_ran 条，skipped=0，回读通过"
