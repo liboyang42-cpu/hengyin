@@ -42,4 +42,11 @@ function recoverReadSession(host, app, res, reset, reload, statusCode) {
   }
   return true;
 }
-module.exports = { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession };
+// PR10 F-W1-12 / F-R2U-01:读失败时区分「未登录」与普通加载失败。
+// 鉴权码(HTTP/业务 401、历史 code=2 —— request-client 静默重登失败后原样回传),或当前根本没有会话
+// ⇒ 页面给登录引导(cy-empty no-permission + 「登录」,点后走 retryLogin);其余失败仍按加载失败留白。
+function isLoginRequired(app, res, statusCode) {
+  const code = failureStatus(res, statusCode);
+  return code === 401 || code === 2 || !memberId(app);
+}
+module.exports = { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession, isLoginRequired };

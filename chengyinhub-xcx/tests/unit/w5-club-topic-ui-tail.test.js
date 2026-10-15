@@ -265,6 +265,8 @@ test('F-W5-08 接下来:排除已取消/已过去,按集合时刻升序,缺时�
     { id: 1, name: '明天', startDate: future(1, '19:00'), endDate: future(1, '23:59') },
     { id: 4, name: '已取消', cancelTime: '2026-01-01 00:00:00', startDate: future(1, '08:00'), endDate: future(1, '23:59') },
     { id: 5, name: '已过去', startDate: '2020-01-01 10:00:00', endDate: '2020-01-01 23:59:00' },
+    // F-W5-08:主题自办活动壳(后端标 selfHostShell)不是俱乐部场次,不进「接下来」。
+    { id: 6, name: '自办壳', selfHostShell: true, startDate: future(1, '00:00'), endDate: future(3, '23:59') },
   ] })
   assert.deepEqual(rows.map((r) => r.id), [1, 3, 9])
   assert.match(rows[0].whenText, /^\d+月\d+日 19:00$/)

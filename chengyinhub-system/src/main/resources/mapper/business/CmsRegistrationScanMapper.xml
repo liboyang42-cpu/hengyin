@@ -49,8 +49,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="questionAnswer != null  and questionAnswer != ''"> and question_answer = #{questionAnswer}</if>
             <if test="feedbackText != null  and feedbackText != ''"> and feedback_text = #{feedbackText}</if>
             <if test="status != null "> and status = #{status}</if>
+            <!-- status=2 = 整单核销已被后台撤销(PR10 复审)。默认不列出,计数/台账/幂等探针都不再把它当核销;
+                 只读证据台显式带 params.includeReversed 才看得到。 -->
+            <if test="status == null and params.includeReversed == null"> and ifnull(status, 0) &lt;&gt; 2</if>
         </where>
     </select>
+
+    <update id="markWholeOrderScansReversed">
+        update cms_registration_scan
+           set status = 2, update_time = sysdate()
+         where registration_id = #{registrationId}
+           and registration_type = 1
+           and ifnull(status, 0) &lt;&gt; 2
+    </update>
     
     <select id="selectCmsRegistrationScanById" parameterType="String" resultMap="CmsRegistrationScanResult">
         <include refid="selectCmsRegistrationScanVo"/>

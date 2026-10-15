@@ -157,6 +157,9 @@ test('拍板1:带 clubId 进页就拉 topic-manage-stats,进导演台后按这�
   assert.equal(again.length, 2, '进了这一场,本场人数要换成这一场的口径');
   assert.equal(JSON.parse(again[1].data).activityId, 702);
   assert.equal(vm.data.topic.structureText, '2 章 · 5 站', '站数读 nodeCount 真值');
+  // PR10 F-W5-08(b):activityId=null 时的人数是全部场次之和,不能叫「本场」;按这一场重拉回来后才出。
+  assert.deepEqual(vm.data.topic.chips, []);
+  again[1].success({ code: 200, data: { canDirect: true, canManageSessions: true, canViewVerify: true, nodeCount: 5, sessionHeadcount: 3, pendingVerifyCount: 1, verifiedByMeCount: 2 } });
   assert.deepEqual(vm.data.topic.chips, ['本场 3 人']);
   assert.deepEqual(vm.data.topic.statusChips, [], 'gameConfiguredCount 没下发就不出「玩法 0/5」');
 });

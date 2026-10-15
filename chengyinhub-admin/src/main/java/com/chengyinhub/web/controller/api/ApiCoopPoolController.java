@@ -193,8 +193,8 @@ public class ApiCoopPoolController extends BaseController {
         String message = body.get("message") == null ? null : String.valueOf(body.get("message"));
         // F-L5C-02:申请留言给主题发布者看,与 /coop/invite 留言同一道内容安全闸。
         if (message != null && !message.trim().isEmpty()) {
-            UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
-            String risk = wxContentSecurityService.checkText(message, actor == null ? null : actor.getWxOpenId());
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, message);
             if (risk != null) return error(risk);
         }
 

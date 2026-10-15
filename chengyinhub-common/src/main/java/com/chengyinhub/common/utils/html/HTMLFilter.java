@@ -44,6 +44,15 @@ public final class HTMLFilter
     private static final Pattern P_LEFT_ARROW = Pattern.compile("<");
     private static final Pattern P_RIGHT_ARROW = Pattern.compile(">");
     private static final Pattern P_BOTH_ARROWS = Pattern.compile("<>");
+    /**
+     * 能被当成真标签的完整写法:ASCII 标签名 + 只由 ASCII 属性(可带值)组成的属性区 + '>'。
+     * 属性区里混了正文(如 {@code a<b 且 c>d} 的「且 c」)就不是标签,整段按文本处理,而不是被当成
+     * {@code <b>} 把「且 c」当非法属性删掉。占有量词防回溯。
+     */
+    private static final Pattern P_REAL_START_TAG = Pattern.compile(
+            "<[A-Za-z][A-Za-z0-9-]*+(?:[\\s/]++[A-Za-z_:@][-A-Za-z0-9_:.@]*+"
+                    + "(?:\\s*+=\\s*+(?:\"[^\"]*+\"|'[^']*+'|[^\\s\"'=<>`]++))?)*+[\\s/]*+>");
+    private static final Pattern P_REAL_END_TAG = Pattern.compile("</[A-Za-z][A-Za-z0-9-]*+\\s*+>");
 
     // @xxx could grow large... maybe use sesat's ReferenceMap
     private static final ConcurrentMap<String, Pattern> P_REMOVE_PAIR_BLANKS = new ConcurrentHashMap<>();
@@ -251,6 +260,18 @@ public final class HTMLFilter
         return isAsciiLetter(next) || (next == '/' && isAsciiLetter(afterSlash)) || next == '!' || next == '?';
     }
 
+    /**
+     * '<' 之后是否真是一个标签/注释/处理指令。注释与处理指令沿用原口径交给后续清洗;
+     * 起止标签必须整段符合 ASCII 标签语法并有收尾的 '>',否则按正文处理(PR10 复审 F-W5-12)。
+     */
+    private static boolean formsRealTag(String input, int at, char next)
+    {
+        if (next == '!' || next == '?') return true;
+        Matcher m = (next == '/' ? P_REAL_END_TAG : P_REAL_START_TAG).matcher(input);
+        m.region(at, input.length());
+        return m.lookingAt();
+    }
+
     private String protectTextBrackets(String input, String marker)
     {
         StringBuilder text = new StringBuilder(input.length());
@@ -260,7 +281,9 @@ public final class HTMLFilter
             if (c == '<') {
                 char next = i + 1 < input.length() ? input.charAt(i + 1) : 0;
                 char afterSlash = i + 2 < input.length() ? input.charAt(i + 2) : 0;
-                if (startsTag(next, afterSlash)) { tag = true; text.append(c); }
+                if (startsTag(next, afterSlash) && formsRealTag(input, i, next)) { tag = true; text.append(c); }
+                // 不成标签的 '<'(含 a<b 且 c>d、x<y 这类紧跟字母的比较号)一律按文本保护;
+                // 还原时紧跟字母的落成 &lt;,浏览器不会把它解析成标签,正文一个字都不丢。
                 else text.append(marker).append("left");
             } else if (c == '>') {
                 if (tag) { tag = false; text.append(c); }

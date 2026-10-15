@@ -16,6 +16,7 @@ required=(
   CHENGYIN_OSS_ACCESS_KEY_SECRET
   CHENGYIN_OSS_BUCKET_NAME
   CHENGYIN_TENCENT_MAP_KEY
+  CHENGYIN_WXPAY_REFUND_NOTIFY_URL
 )
 missing=()
 
@@ -61,6 +62,12 @@ fi
 
 if [[ ! "$CHENGYIN_WITHDRAWAL_PII_KEY" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
   echo 'CHENGYIN_WITHDRAWAL_PII_KEY 必须是 Base64 编码的 32 字节 AES-256 密钥' >&2
+  exit 1
+fi
+
+# 退款结果通知默认留空(application.yml);生产必须显式给出 HTTPS 回调,且指向退款回调端点。
+if [[ ! "$CHENGYIN_WXPAY_REFUND_NOTIFY_URL" =~ ^https://[^[:space:]]+/api/registration/refund-callback$ ]]; then
+  echo 'CHENGYIN_WXPAY_REFUND_NOTIFY_URL 必须是指向 /api/registration/refund-callback 的 HTTPS 地址' >&2
   exit 1
 fi
 

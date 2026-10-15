@@ -42,8 +42,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     /** F-L5C-02:申请留言、邀请留言、审核备注都给对方看,写入前送检;审不了按 fail-close 拦截。 */
     private String textRisk(Long actorMemberId, String text) {
         if (text == null || text.trim().isEmpty()) return null;
-        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
-        return wxContentSecurityService.checkText(text, actor == null ? null : actor.getWxOpenId());
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                actorMemberId, text);
     }
 
     @Operation(summary = "申请承接一个章节（商家）")

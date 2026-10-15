@@ -458,13 +458,16 @@ page { background: var(--cy-bg-page); }
    都是 32rpx(16px)—— 五个圆钮比下面的卡各往外突出约 12px,而且因为 space-between,
    圆钮间距被撑开。稿 78:5423 的 Actions 帧 x=20。归位到页边同档。 */
 .quick-acts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; padding: var(--cy-space-3) var(--cy-space-4) var(--cy-space-4); }
-/* CU-C-61:「分享」这一格是原生 <button open-type="share">,button 自带的盒模型要清零。 */
-.quick-act {
+/* CU-C-61:「分享」这一格是原生 <button open-type="share">,button 自带的盒模型要清零。
+   ⚠️ PR10 F-W5-11:必须带 .quick-acts 祖先(0,2,0)。微信内置 `wx-button:not([size=mini])
+   {width:184px;margin:auto}` 特异度 (0,1,1),压过裸 .quick-act (0,1,0) —— DevTools 实测分享格
+   184px 宽挤在 72px 栏里,叠住「结算」、在「出示二维码」后空出一格(l1-03b)。同 club/notify `.page .send-btn`。 */
+.quick-acts .quick-act {
   display: flex; flex-direction: column; align-items: center; gap: 16rpx; width: 100%; min-width: 0;
   margin: 0; padding: 0; border: 0; line-height: normal;
   background: transparent; border-radius: 0; overflow: visible;
 }
-.quick-act::after { border: 0; }
+.quick-acts .quick-act::after { border: 0; }
 .quick-act-circle {
   width: 98rpx; height: 98rpx; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;

@@ -57,6 +57,7 @@ python3 scripts/db-backup-restore.py restore \
 - `CHENGYIN_JWT_SECRET`：变更后全部登录态失效。
 - `COUPON_QR_SECRET`：变更后已发出的券出示码失效。
 - `CHENGYIN_DB_PASSWORD`、`SPRING_DATA_REDIS_PASSWORD`、`CHENGYIN_WXPAY_APIV3_KEY`、`CHENGYIN_WXMINI_SECRET`、`CHENGYIN_OSS_ACCESS_KEY_*`、`ALARM_WEBHOOK`。
+- `CHENGYIN_WXPAY_REFUND_NOTIFY_URL`(非密钥,但生产必填):退款结果通知地址,`application.yml` 默认留空(=不下发 notify_url、由商户平台默认回调兜底),生产须显式注入指向 `/api/registration/refund-callback` 的 HTTPS 地址,`scripts/production-preflight.sh` 会校验。
 
 要求（需用户落实，仓库无法代办）：把上述密钥放入离机托管（云 KMS 或密码库），写明谁能取用；演练时用托管副本 + 备份恢复出可用应用，才算恢复演练通过。不要把密钥放进备份文件、回执或本仓库。
 

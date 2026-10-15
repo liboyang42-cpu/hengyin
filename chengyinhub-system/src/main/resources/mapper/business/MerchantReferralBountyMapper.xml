@@ -126,6 +126,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -152,6 +153,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -178,6 +180,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -210,6 +213,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
       )
   </select>
 

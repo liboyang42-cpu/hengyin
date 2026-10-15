@@ -6,7 +6,9 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page ctd-page">
-  <cy-nav-bar overlay custom-back bind:back="goBack" />
+  <!-- PR10 F-W5-08(c):overlay 只管封面那一屏;滚过封面后 scrolled 转实底(底色铺满状态栏 + 导航),
+       否则「商家/更多」圆钮会滚到时钟底下、返回键压在「主题」标题上(l1-08)。 -->
+  <cy-nav-bar overlay scrolled="{{navScrolled}}" custom-back bind:back="goBack" />
 
   <!-- ⚠️ cy-nav-bar 是 overlay(透明浮层,为了压在 Hero 封面上)。正常态有封面垫着没问题,
        但错误态/骨架态没有封面 —— 不让开导航高度就会整块滑到微信胶囊底下,

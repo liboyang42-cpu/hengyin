@@ -156,6 +156,8 @@ Page({
     modal.show({
       title: '拒绝原因（选填）',
       editable: true,
+      // PR10 F-L3-09:500 字原因用多行框,不再挤在单行 input 里
+      multiline: true,
       maxlength: 500,
       placeholderText: '会随未通过通知告诉对方，可不填',
       confirmText: '确认拒绝',

@@ -31,10 +31,17 @@ public class MemberLegacyPasswordHashService {
      * @return 扫描/改写/跳过计数
      */
     public Result hashLegacyPasswords(int limit) {
+        return hashLegacyPasswords(0L, limit);
+    }
+
+    /**
+     * 从 id &gt; afterId 续扫一批(后台分批任务用);返回值的 lastId 是下一批的起点。
+     */
+    public Result hashLegacyPasswords(long afterId, int limit) {
         int hashed = 0;
         int skipped = 0;
         int scanned = 0;
-        long cursor = 0L;
+        long cursor = Math.max(0L, afterId);
         while (scanned < limit) {
             List<UmsMember> page = memberMapper.selectLegacyPlaintextPasswords(cursor,
                     Math.min(PAGE_SIZE, limit - scanned));
@@ -65,22 +72,29 @@ public class MemberLegacyPasswordHashService {
                 }
             }
         }
-        return new Result(scanned, hashed, skipped);
+        return new Result(scanned, hashed, skipped, cursor);
     }
 
     public static final class Result {
         private final int scanned;
         private final int hashed;
         private final int skipped;
+        private final long lastId;
 
         public Result(int scanned, int hashed, int skipped) {
+            this(scanned, hashed, skipped, 0L);
+        }
+
+        public Result(int scanned, int hashed, int skipped, long lastId) {
             this.scanned = scanned;
             this.hashed = hashed;
             this.skipped = skipped;
+            this.lastId = lastId;
         }
 
         public int getScanned() { return scanned; }
         public int getHashed() { return hashed; }
         public int getSkipped() { return skipped; }
+        public long getLastId() { return lastId; }
     }
 }

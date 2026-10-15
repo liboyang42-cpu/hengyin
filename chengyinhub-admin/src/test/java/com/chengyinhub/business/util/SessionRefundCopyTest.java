@@ -83,6 +83,31 @@ class SessionRefundCopyTest {
         assertTrue(text.contains("可免费取消至"), "实际:" + text);
     }
 
+    /** F-W5-07:¥0 免费单只说「免费报名,可免费取消至…」,不挂收费票的全额退/未到场不退规则;收费单不变。 */
+    @Test
+    void freeZeroYuanOrderShowsOnlyFreeCancelWording() {
+        CmsRegistration r = new CmsRegistration();
+        r.setOwnerType(2L);
+        r.setPurchaseKind(PurchaseKind.GUIDED_TICKET);
+        r.setPaymentStatus(2);
+        r.setPayableAmount(java.math.BigDecimal.ZERO);
+        Date deadline = new Date(now.getTime() + 3 * H);
+        RefundPolicy.Verdict v = new RefundPolicy.Verdict(true, "可全额退款", deadline);
+        java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("M月d日 HH:mm");
+        fmt.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
+
+        assertEquals("免费报名，可免费取消至 " + fmt.format(deadline), RegistrationDetailDisplay.refundDeadlineDisplay(v, r));
+
+        r.setPayableAmount(new java.math.BigDecimal("19.90"));
+        String paid = RegistrationDetailDisplay.refundDeadlineDisplay(v, r);
+        assertTrue(paid.startsWith(RefundPolicy.SESSION_REFUND_RULE_TEXT), "收费单不变:" + paid);
+
+        r.setPayableAmount(java.math.BigDecimal.ZERO);
+        r.setPointUsed(100L);
+        assertTrue(RegistrationDetailDisplay.refundDeadlineDisplay(v, r).startsWith(RefundPolicy.SESSION_REFUND_RULE_TEXT),
+                "积分全额抵扣不是免费单");
+    }
+
     /** 存量单购买类型缺失 ⇒ 仍按场次票(ownerType=2)展示,别把老单的承诺吞掉。 */
     @Test
     void legacyActivityOrderAlsoCarriesRuleText() {

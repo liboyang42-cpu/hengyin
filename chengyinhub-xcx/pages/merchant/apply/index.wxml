@@ -57,7 +57,7 @@
     <view class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}">
       <cy-state-shell kind="{{bootstrapErrorKind || 'error'}}"
                       title="{{bootstrapErrorKind === 'no-permission' ? '登录后申请商家入驻' : bootstrapErrorKind === 'network' ? '网络没连上' : '暂时无法确认申请状态'}}"
-                      sub="{{bootstrapError}}" primary="重新检查" theme="merchant"
+                      sub="{{bootstrapError}}" primary="{{bootstrapErrorKind === 'no-permission' ? '登录' : '重新检查'}}" theme="merchant"
                       bind:primary="retryBootstrap" auto-back="{{!everSettled}}" />
     </view>
 

@@ -185,6 +185,24 @@ class NearbyRunnerShopsMybatisIntegrationTest {
         }
     }
 
+    /** PR10 复审:瞬移基线只读本场会话;别的会话(哪怕更新)不参与,新会话无基线。 */
+    @Test
+    void latestPresenceFixIsScopedToTheReportingSession() throws Exception {
+        execute("insert into roam_session values(21,2,1,from_unixtime(" + (NOW / 1000 - 30)
+                + "),39.9,116.4,10,from_unixtime(" + (NOW / 1000 - 600) + "),null,1)");
+        execute("insert into roam_session(id,member_id,status,started_at,presence_visible) values(22,2,0,from_unixtime("
+                + (NOW / 1000) + "),1)");
+        try (SqlSession session = factory.openSession(true)) {
+            RoamMapper mapper = session.getMapper(RoamMapper.class);
+            Date since = new Date(NOW - 7_200_000L);
+            RoamSession own = mapper.selectLatestPresenceFix(2L, 20L, since);
+            assertNotNull(own);
+            assertEquals(0, new java.math.BigDecimal("31").compareTo(own.getLastLat()), "只取本场会话 20 的上一跳");
+            assertNull(mapper.selectLatestPresenceFix(2L, 22L, since), "新会话没有基线");
+            assertNull(mapper.selectLatestPresenceFix(1L, 20L, since), "别人的会话不是本人的基线");
+        }
+    }
+
     private List<String> images(List<RunnerShopVO> rows) {
         return rows.stream().map(RunnerShopVO::getShopImage).sorted().collect(Collectors.toList());
     }

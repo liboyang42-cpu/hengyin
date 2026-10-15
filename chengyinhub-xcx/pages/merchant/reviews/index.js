@@ -70,7 +70,8 @@ Page({
       pageState: 'loading',
     });
     if (mode === 'public' && !this._merchantRowId) {
-      this.setData({ pageState: 'error', errorMessage: '商家信息不完整' });
+      // PR10 F-W1-12:缺商家参数不是「加载失败」(load-failure 留白),是缺参 —— 给可见说明和返回。
+      this.setData({ pageState: 'missing', errorMessage: '商家信息不完整' });
       return;
     }
     // 管理态是商家页面:未登录先静默登录,失败只留页内错误态,不整屏拦。

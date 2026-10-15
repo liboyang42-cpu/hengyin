@@ -397,8 +397,8 @@ public class ApiCoopController extends BaseController {
 
     private String textRisk(Long principalMemberId, String content) {
         if (content == null || content.trim().isEmpty()) return null;
-        UmsMember actor = umsMemberService.selectUmsMemberById(principalMemberId);
-        return wxContentSecurityService.checkText(content, actor == null ? null : actor.getWxOpenId());
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                principalMemberId, content);
     }
 
     /**
