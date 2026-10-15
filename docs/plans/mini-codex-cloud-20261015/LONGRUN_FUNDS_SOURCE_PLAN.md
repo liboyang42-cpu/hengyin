@@ -19,3 +19,11 @@ C05-25：rewrite冷却时长从Redis读before，两个并发管理员可能均�
 两DRAFT原source仍C00，C05/C04仅源码阅读给方案，不写、不测试。后续冻结合同和精确转交另发，不把DRAFT称SOURCE_READY或TEST_DEPLOYED。两项不可被三个小修的交付自动关闭。
 
 C01-51静态盘点仅需旧 FundActionPreflightServiceImplTest.java 的 exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt 单stub接新增owned当前读；原等价成功/不同intent BINDING_MISMATCH断言保留。已精确转交，其他旧fixture不动，无手写Mapper实现需适配。
+
+## C00冻结实施合同：源边界与并行作者
+
+C05-24方案归一成唯一实现C04-21，不把同源余额/冻结/ledger问题重复计数。精确9生产路径转CORE/C04，旧13必要fixture如SOURCE_OWNERS和任务列表；C05不写这些源。原intent/提现行→member→bounty→cooldown，各赏金写者凡可能碰member余额均须在bounty操作前取inviter member锁（不只payBounty末端）。真实caller未能遵守时交精确阻塞，不给生产fail-open。原普通resolve给展示保留，只提现专用current读取参与锁序。可以选原谓词的逐行FOR UPDATE再Java求和，避免未经核实的聚合锁行为；NULL金额沿原SUM忽略，不改时间/负值政策。bank加入原TX，流水取锁后真实before/after；cash短财务TX必须结束后再provider，数据库未知仍原人工路径，不能自动退。撤销/驳回保提现行→member并锁读真实before。
+
+C05-25精确5生产路径转CORE/C05，三旧fixture单写者C05，C04不得碰同PlayerWithdrawalCooldownServiceTest；如需适配先交原writer。只资金专用key当前before锁/审计/写、提交后删除cache防回调倒序；一般配置/API/权限不变。业务小时权威读取须避免失效失败造成永久Redis旧值，选择专用DB语义并如实区分普通RR读与锁定当前读；若采用锁读需追所有caller无config→member反序/锁跨provider。默认48与非法配置原规则保留，不改任何值政策。
+
+两个实现均仅源码和必要回归NOT_RUN。C04/C05先静态盘点实际旧fixture，无必要不改；所有旧断言保留。确需表外路径向C00给准确理由再转交，不批量改旧fixture或为mock保留生产fallback。不执行测试/编译/DB/provider/VPS，交付未验证，不提前合并/部署。

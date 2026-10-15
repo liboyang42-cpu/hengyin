@@ -611,6 +611,246 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
       "transfer_evidence": "Only exactConsumedIntentCanReplayButChangedPayloadCannotReuseIt stub changes to selectOwnedByIdForUpdate; equivalent replay and mismatched fingerprint assertions unchanged. Original C00 writer stopped; no other writer."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReferralBountyService.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": null,
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReferralBountyMapper.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapper.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/MerchantReferralBountyMapper.xml": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/PlayerWithdrawalCooldownMapper.xml": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFailureRecoveryTransactionTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownMybatisIntegrationTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReferralBountyTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPiiStorageTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MemberFundsStageServiceTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BankWithdrawalIdempotencyConcurrencyTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "231f201e7edf4cc3d2bc211b121ee3df57d3a056",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java": {
+      "owner": "CORE/C04",
+      "worker": "CORE/C04",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWithdrawalCooldownServiceImpl.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/system/service/ISysConfigService.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/system/mapper/SysConfigMapper.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-system/src/main/resources/mapper/system/SysConfigMapper.xml": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownControllerTest.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java": {
+      "owner": "CORE/C05",
+      "worker": "CORE/C05",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "05d307ec0466988f212187666d7f1e5c3274f434",
+      "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+      "transfer_evidence": "C00 reviewed bounded funds concurrency contract in LONGRUN_FUNDS_SOURCE_PLAN.md. Original C00 stopped; only this owner writes. Preserve policy/old assertions; no verification/provider under locks. New source requires exact task deliverable."
     }
   },
   "reserved_not_transferred": [
