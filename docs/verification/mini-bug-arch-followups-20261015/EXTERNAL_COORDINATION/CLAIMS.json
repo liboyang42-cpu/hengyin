@@ -631,7 +631,7 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "8533507d637199e3143356509de3e384a74c57be",
+  "control_latest_read_sha": "e2163ab8fdd93c9548c74949604c9668c97f03ad",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
     "E02": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
@@ -726,5 +726,16 @@
     "real_capacity": "If no genuine authorized independent task is actionable, disclose actual idle count/shortfall; do not fabricate tasks to make five or50"
   },
   "active_failure_repair": null,
-  "failure_repair_queue": []
+  "failure_repair_queue": [],
+  "external_dependency_requests": {
+    "E01-19": {
+      "source_owner": "CORE/C03",
+      "comment": 6198507537,
+      "extra_write_allowed": false
+    },
+    "E04-07": {
+      "consumer_owned": "EXTRA6/E04",
+      "blocked_on": "original completion producer receipt contract and unknown legacy identity"
+    }
+  }
 }

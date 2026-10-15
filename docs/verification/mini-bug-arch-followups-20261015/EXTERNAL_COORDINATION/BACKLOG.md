@@ -3,7 +3,7 @@
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
 已读控制8533507d637199e3143356509de3e384a74c57be。分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。本协议前完整源码候选 `ff7cddb9093951a5da68a87e033a67bb015cfe66`，待编译/回归，不是可编译通过声明。
 
-历史105项：源码/回归交付55、反证40、阻塞6、其余委派/他队处理；当前READY0/模型执行0，目标剩余50缺50。恢复3项均已完成，额外两个真实caller新范围请求6198338004待C00精确转交，不计为已确认bug或已授权任务。
+历史106项：源码/回归交付55、反证40、阻塞7、其余委派/他队处理；当前READY0/模型执行0，目标剩余50缺50。恢复3项均已完成，额外两个真实caller新范围请求6198338004待C00精确转交，不计为已确认bug或已授权任务。
 
 ## 持久调度协议：1修复+5开发
 
@@ -170,3 +170,9 @@ E02真库组须显式CHENGYIN_E02_22_MYSQL_IT=1、六个CHENGYIN_TEST_MYSQL_HOST
 |E06-15|分享撤销与发布交错反证|NO_CHANGE_SOURCE_REVIEW|
 |E06-16|匿名分享读取GONE与隐私闸反证|NO_CHANGE_SOURCE_REVIEW|
 |E03-17|同一账号旅程归档按实际局实例隔离|SOURCE_DELIVERED_UNVERIFIED|
+
+## 新线索与合同澄清
+
+E01-19已按CORE公共f7e0实际读取证实显式取消DELETE0仍返回失败，精确交原C03（PR16 comment6198507537），不依赖数据库唯一索引或猜重复插入；未改其源、未写新测试、未执行。仅真实新缺陷作为BLOCKED_DEPENDENCY入账，不当可行动项。原leaf范围请求已收窄为原Controller owner修或精确转交。ShopDay RR假设由真实checkin/arrive/photo READ_COMMITTED反证，不作为新任务或随意更改隔离。
+
+E04-07消费源RedemptionRewardClawbackService本就归EXTRA/E04，阻塞现准确为BLOCKED_CONTRACT：发放侧没有持久原historyId、旧日志关联未知；需TopicCompletionCouponReward producer/receipt与旧数据边界，不是再申请消费源，不靠ASC/DESC猜原ID。E02-13同样依赖审核任务内容版本生产者，不能用当前post CAS冒充所审版本绑定。
