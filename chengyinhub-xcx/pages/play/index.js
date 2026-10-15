@@ -5346,46 +5346,69 @@ Page({
         if (this._preferenceWriteIntent === intent) this._preferenceWriteIntent = null;
       });
   },
+  _preferenceTagContext(tag) {
+    return { preference: this._preferenceContext, tag };
+  },
+  _isPreferenceTagContextCurrent(context) {
+    return !!context && this._isPreferenceContextCurrent(context.preference)
+      && this.data.preference.pendingTag === context.tag;
+  },
+  _hasPreferenceTagWrite() {
+    return !!this._preferenceTagIntent && this._isPreferenceTagContextCurrent(this._preferenceTagIntent.context);
+  },
+  _finishPreferenceTagWrite(intent) {
+    if (this._preferenceTagIntent !== intent) return;
+    this._preferenceTagIntent = null; this._preferenceTagWrite = false;
+  },
   confirmPreferenceTag() {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
     const tag = this.data.preference.pendingTag;
-    if (!tag || !tag.id || this._preferenceTagWrite) return;
-    const that = this;
-    const epoch = this._preferenceEpoch;
-    this._preferenceTagWrite = true;
+    const context = this._preferenceTagContext(tag);
+    if (!tag || !tag.id || !this._isPreferenceTagContextCurrent(context) || this._hasPreferenceTagWrite()) return;
+    const intent = { context };
+    this._preferenceTagIntent = intent; this._preferenceTagWrite = true;
     req('/api/play/tag/' + tag.id + '/confirm', 'POST', {}).then((r) => {
-      that._preferenceTagWrite = false;
-      if (that._preferenceEpoch !== epoch || !that.data.preference.pendingTag || that.data.preference.pendingTag.id !== tag.id) return;
-      if (r.code == 200 || r.code == '200') that.setData({ 'preference.pendingTag': r.data });
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(context);
+      this._finishPreferenceTagWrite(intent);
+      if (!current) return;
+      if (r.code == 200 || r.code == '200') this.setData({ 'preference.pendingTag': r.data });
       else cyToast(r.msg || '标签没有确认成功');
+    }).catch(() => {
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(context);
+      this._finishPreferenceTagWrite(intent);
+      if (current) cyToast('标签没有确认成功');
     });
   },
-  /* 2026-09-02:原来弹 wx.showActionSheet(系统弹层,设计体系外)。改标签值属于「一次选择」,
-     走 cy-option-sheet 默认形态。⚠️ 这处在玩法主流程里,写闸 _preferenceTagWrite 与
-     _preferenceEpoch 的判断一条不动,只把「怎么问」换掉。 */
   correctPreferenceTag() {
     const tag = this.data.preference.pendingTag;
     const values = this.data.preference.availableTagValues || [];
-    if (!tag || !tag.id || !values.length || this._preferenceTagWrite) return;
+    const context = this._preferenceTagContext(tag);
+    if (!tag || !tag.id || !values.length || !this._isPreferenceTagContextCurrent(context) || this._hasPreferenceTagWrite()) return;
+    this._preferenceTagSheet = { context, values: values.slice() };
     this.setData({ tagSheetShow: true, tagSheetItems: values });
   },
-  onTagSheetCancel() { this.setData({ tagSheetShow: false }); },
+  onTagSheetCancel() { this._preferenceTagSheet = null; this.setData({ tagSheetShow: false }); },
   onTagSheetSelect(e) {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
-    const tag = this.data.preference.pendingTag;
-    const values = this.data.preference.availableTagValues || [];
-    const value = values[e.detail.index];
+    const sheet = this._preferenceTagSheet;
+    this._preferenceTagSheet = null;
     this.setData({ tagSheetShow: false });
-    if (!tag || !tag.id || !value || value === tag.tagValue || this._preferenceTagWrite) return;
-    const epoch = this._preferenceEpoch;
-    this._preferenceTagWrite = true;
+    if (!sheet || !this._isPreferenceTagContextCurrent(sheet.context)) return;
+    const tag = sheet.context.tag, value = sheet.values[e.detail.index];
+    if (!tag.id || !value || value === tag.tagValue || this._hasPreferenceTagWrite()) return;
+    const intent = { context: sheet.context };
+    this._preferenceTagIntent = intent; this._preferenceTagWrite = true;
     req('/api/play/tag/' + tag.id + '/correct', 'POST', { tagValue: value }).then((r) => {
-      this._preferenceTagWrite = false;
-      if (this._preferenceEpoch !== epoch || !this.data.preference.pendingTag || this.data.preference.pendingTag.id !== tag.id) return;
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(sheet.context);
+      this._finishPreferenceTagWrite(intent);
+      if (!current) return;
       if (r.code == 200 || r.code == '200') {
-        this.setData({ 'preference.pendingTag': r.data });
-        cyToast('已改为 ' + value);
+        this.setData({ 'preference.pendingTag': r.data }); cyToast('已改为 ' + value);
       } else cyToast(r.msg || '结果没有改成功');
+    }).catch(() => {
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(sheet.context);
+      this._finishPreferenceTagWrite(intent);
+      if (current) cyToast('结果没有改成功');
     });
   },
   skipPreferenceTag() { this.setData({ 'preference.pendingTag': null }); },
