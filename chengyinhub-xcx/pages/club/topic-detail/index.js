@@ -638,7 +638,7 @@ Page({
     // E-06(2026-09-16):真源是 VO 里的 activityList(PublicActivitySummaryVO:id/name/startDate/endDate/addressName)。
     const now = Date.now();
     const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
-      .filter((s) => !s.cancelTime && toTimestamp(s.endDate || s.startDate) > now)
+      .filter((s) => !s.cancelTime && s.selfHostShell !== true && toTimestamp(s.endDate || s.startDate) > now)
       // 缺集合时刻的场次排在最后:NaN 参与比较会让 sort 结果不确定。
       .sort((a, b) => {
         const ta = toTimestamp(a.startDate), tb = toTimestamp(b.startDate);
