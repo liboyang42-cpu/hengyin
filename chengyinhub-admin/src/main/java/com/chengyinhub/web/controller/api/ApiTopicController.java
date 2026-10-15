@@ -1185,21 +1185,13 @@ public class ApiTopicController extends BaseController {
 
 
         List<CmsTopicLike> list = cmsTopicLikeService.selectCmsTopicLikeList(cmsTopicLike);
-        if (list.size() > 0) {
-            //取消点赞
-            // 提取ID集合
-            Long[] ids = list.stream()
-                    .map(CmsTopicLike::getId)
-                    .toArray(Long[]::new);
-
-            // 调用批量删除方法
-            int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
-            if (rows > 0) {
-                return success("取消点赞成功");
-            } else {
-                return error("取消点赞失败");
+        // B4:type 缺省(旧调用方)保留切换语义;显式 type=1 点赞 / type=0 取消均幂等
+        boolean legacyToggle = StringUtils.isBlank(type);
+        boolean wantLike = legacyToggle ? list.isEmpty() : likeType != 0;
+        if (wantLike) {
+            if (!list.isEmpty()) {
+                return success("点赞成功");
             }
-        } else {
             //新增
             cmsTopicLike.setLikeType(likeType);
             int rows = cmsTopicLikeService.insertCmsTopicLike(cmsTopicLike);
@@ -1208,6 +1200,19 @@ public class ApiTopicController extends BaseController {
             } else {
                 return error("点赞失败");
             }
+        }
+        if (list.isEmpty()) {
+            return success("取消点赞成功");
+        }
+        //取消点赞
+        Long[] ids = list.stream()
+                .map(CmsTopicLike::getId)
+                .toArray(Long[]::new);
+        int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
+        if (rows > 0) {
+            return success("取消点赞成功");
+        } else {
+            return error("取消点赞失败");
         }
     }
 

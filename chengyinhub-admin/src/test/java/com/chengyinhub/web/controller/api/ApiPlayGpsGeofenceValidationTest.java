@@ -277,6 +277,57 @@ class ApiPlayGpsGeofenceValidationTest
         verifyNoProgressAndNoReward();
     }
 
+    private AjaxResult arriveWithAccuracy(String accuracy)
+    {
+        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, NODE_LAT, null, null, null, accuracy);
+    }
+
+    @Test
+    void blankAccuracyIsAllowedForLegacyClients()
+    {
+        assertEquals(200, arriveWithAccuracy(null).get("code"));
+        assertEquals(200, arriveWithAccuracy("  ").get("code"));
+    }
+
+    @Test
+    void accuracyWithinLimitStillAdvances()
+    {
+        assertEquals(200, arriveWithAccuracy("30").get("code"));
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void accuracyAboveLimitIsRejectedBeforeDistanceCheckWithoutProgressOrReward()
+    {
+        AjaxResult result = arriveWithAccuracy("81");
+
+        assertNotEquals(200, result.get("code"));
+        assertEquals("定位精度不足，请到开阔处或扫码完成", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void invalidAccuracyIsRejectedAsInvalidLocation()
+    {
+        for (String bad : new String[] { "NaN", "Infinity", "-1", "abc" }) {
+            AjaxResult result = arriveWithAccuracy(bad);
+            assertNotEquals(200, result.get("code"), "非法精度不得通过:" + bad);
+            assertEquals("定位无效", result.get("msg"));
+        }
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void accuracyIsIgnoredWhenNodeHasNoCoordinate()
+    {
+        node.setLongitude(null);
+        node.setLatitude(null);
+
+        assertEquals(200, controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
+    }
+
     private void stubGpsValidationNode()
     {
         node.setTemplateId(60L);
