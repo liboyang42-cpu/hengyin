@@ -28,6 +28,7 @@ mvn -B clean test
 # ⚠️ 不在此清单里的两套 Explore*RealDbIT 连的是 chengyin_explore_it,
 #   由自托管的 ci/funds-mysql-it-gate.sh 负责;CoopServiceRealDbIT 已烂透,见其类注释。
 MYBATIS_ITS=(
+  WechatMemberRegistrationMySqlIT
   # 合成账号/内容：真实HTTP角色幂等与撤权、公开节点计数一致性及分页SQL预算。
   ClubRoleHttpMySqlIT
   PublicTopicStationCountMySqlIT

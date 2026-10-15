@@ -50,6 +50,49 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class CommunityTrustServiceImplTest {
+    @Test
+    void reportRecoveryUsesOnlyTheCurrentOwnerAndPublicProjection() {
+        CommunityReportCase row = new CommunityReportCase();
+        row.setId(REPORT);
+        row.setTargetType("COMMENT");
+        row.setTargetId(17L);
+        row.setReporterMemberId(MEMBER);
+        row.setRequestId(REPORT_REQUEST);
+        row.setPayloadHash("internal-digest");
+        row.setStage("CLOSED");
+        when(mapper.selectReportsForOwner(MEMBER, null, REPORT_REQUEST)).thenReturn(List.of(row));
+
+        var result = service.listMyReports(MEMBER, null, " " + REPORT_REQUEST + " ");
+
+        assertEquals(1, result.size());
+        assertEquals(REPORT, result.get(0).getId());
+        assertEquals("CLOSED", result.get(0).getStage());
+        Map<String, Object> wire = com.alibaba.fastjson2.JSON.parseObject(
+                com.alibaba.fastjson2.JSON.toJSONString(result.get(0)));
+        for (String internal : List.of("reporterMemberId", "requestId", "payloadHash", "prioritySnapshot")) {
+            assertFalse(wire.containsKey(internal));
+        }
+        assertTrue(service.listMyReports(SUBJECT, null, REPORT_REQUEST).isEmpty());
+        verify(mapper).selectReportsForOwner(SUBJECT, null, REPORT_REQUEST);
+    }
+
+    @Test
+    void invalidRecoveryKeysNeverFallBackToAnUnfilteredOwnerList() {
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.listMyReports(null, null, REPORT_REQUEST)).getCode());
+        for (String key : List.of("", "   ", "short", "x".repeat(97))) {
+            assertEquals(400, assertThrows(ServiceException.class,
+                    () -> service.listMyReports(MEMBER, null, key)).getCode());
+        }
+        org.mockito.Mockito.verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void oldOwnerListAndStageFilteringRemainAvailableWithoutARecoveryKey() {
+        assertTrue(service.listMyReports(MEMBER, " resolved ").isEmpty());
+        verify(mapper).selectReportsForOwner(MEMBER, "RESOLVED", null);
+    }
+
     private static final long MEMBER = 101L;
     private static final long SUBJECT = 102L;
     private static final long MERCHANT = 201L;

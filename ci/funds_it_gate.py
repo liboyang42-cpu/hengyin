@@ -89,6 +89,7 @@ def enforce_trigger_contract(workflow_text):
 # ⚠️ 这个数字曾经手滑数错(把 @TestInstance 当成 @Test 算了一遍,50/9/30 错写成 51/10/31)——
 # 见 count_test_methods() 和 ci/test_funds_it_gate.py 里的自测,直接从源码正则数,不再手记。
 EXPECTED = {
+    "CommunityPostCommentIdempotencyMySqlIT": 2,
     "CoopListReadOnlyMybatisIntegrationTest": 5,
     # 2026-08-17 R9-P1:59 → 60,+1 = forgedClubMarkerFromPublicCreateCannotSurviveIntoPaymentFreeze
     # (自报 sourceClubId 经真实 create 落库后,真实冻结 SQL 仍必须归平台)。
@@ -177,7 +178,7 @@ EXPECTED = {
     # +3 真实领取:最后一张并发不超发、不限量正常计数、领取记录失败回滚库存后可重试。
     # +2 撤销状态 1/2 保留历史事实，以及初读后撤销由真实 CAS/当前读识别。
     # 2026-09-15 F1 +1:selectSmsCouponHistoryList 的 delFlag 条件经真实 XML 排除软删行,不传则不过滤。
-    "CouponLifecycleMybatisIntegrationTest": 12,
+    "CouponLifecycleMybatisIntegrationTest": 16,
     # 2026-09-16 并入支付回调 fencing 真库 IT(5 条 @Test)。
     # 病象:它自己发明了门控变量 CHENGYIN_PAYMENT_MYSQL_IT(全仓真库 IT 统一用
     # CHENGYIN_FUNDS_MYSQL_IT),又不在 EXPECTED/-Dtest 里 ⇒ CI 里这 5 条永远 skip、永远算绿。
@@ -258,6 +259,7 @@ EXPECTED = {
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
+    "CommunityPostCommentIdempotencyMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CommunityPostCommentIdempotencyMySqlIT.java",
     "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
     "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
     "SignupNoticeAfterCommitPersistenceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",

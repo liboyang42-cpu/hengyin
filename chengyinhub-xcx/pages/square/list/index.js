@@ -324,6 +324,7 @@ Page({
     const index = feedIndexFromEvent(e);
     const item = this.data.list[index] || {};
     this._actionIndex = index;
+    this._actionContext = { id: String(item.id || ''), owner: String(app.getUserID() || '') };
     this.setData({
       postActionShow: true,
       currentActionId: item.id == null ? '' : String(item.id),
@@ -345,18 +346,19 @@ Page({
 
   // H050/H051:三合一弹层的分发。delete 到这里时确认闸已在组件内部过完,不再自建第二道。
   onPostAction: function (e) {
-    const action = ((e || {}).detail || {}).action;
-    if (action === 'edit') { this.editCurrentSquarePost(); return; }
-    if (action === 'delete') { this.deleteCurrentSquarePost(); return; }
-    if (action === 'report') { this.reportSquare(); return; }
+    const detail = ((e || {}).detail || {}), context = this._actionContext;
+    if (!context || !detail.id || String(detail.id) !== context.id || context.owner !== String(app.getUserID() || '') || this._unloaded) return;
+    if (detail.action === 'edit') { this.editCurrentSquarePost(detail.id); return; }
+    if (detail.action === 'delete') { this.deleteCurrentSquarePost(detail.id); return; }
+    if (detail.action === 'report') { this.reportSquare(detail.id); return; }
   },
 
   // 删除(H051):软删 + 归属校验都在后端;成功后本地摘掉这一行(与举报同一口径)。
-  deleteCurrentSquarePost: function () {
-    const index = this._actionIndex;
-    const item = this.data.list[index];
-    if (!item || !item.id || this._deletingPost) return;
+  deleteCurrentSquarePost: function (id = this.data.currentActionId) {
+    const item = this.data.list.find(row => String(row.id) === String(id));
+    if (!item || !item.id || this._deletingPost || String(item.memberId) !== String(app.getUserID() || '')) return;
     const that = this;
+    const owner = String(app.getUserID() || ''), current = () => !that._unloaded && owner === String(app.getUserID() || '');
     const pa = this.selectComponent && this.selectComponent('#post-actions');
     this._deletingPost = true;
     community.request({
@@ -365,11 +367,11 @@ Page({
       method: 'POST',
       data: { id: item.id },
       success(res) {
+        if (!current()) return;
         that._deletingPost = false;
         if (res && res.code == '200') {
           if (pa) pa.deleteDone();
-          const list = that.data.list.slice();
-          list.splice(index, 1);
+          const list = that.data.list.filter(row => String(row.id) !== String(item.id));
           that.setData({ list: list, nodata: list.length < 1 });
           that.closePostActions();
         } else if (pa) {
@@ -377,6 +379,7 @@ Page({
         }
       },
       fail() {
+        if (!current()) return;
         that._deletingPost = false;
         if (pa) pa.deleteFailed('网络异常，请重试');
       }
@@ -384,11 +387,10 @@ Page({
   },
 
   // 编辑(H050):行数据直接进新建面板的编辑态,正文预填、关联带上(不发图片/地点,后端保留原值)
-  editCurrentSquarePost: function () {
+  editCurrentSquarePost: function (id = this.data.currentActionId) {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) return;
-    const index = this._actionIndex;
-    const item = this.data.list[index];
-    if (!item || !item.id) { this.closePostActions(); return; }
+    const item = this.data.list.find(row => String(row.id) === String(id));
+    if (!item || !item.id || String(item.memberId) !== String(app.getUserID() || '')) { this.closePostActions(); return; }
     this.closePostActions();
     // editPost 先落地、show 后翻:组件的 show 观察器要读到编辑数据(两次 setData 顺序确定)
     this.setData({ composeEdit: {
@@ -403,10 +405,10 @@ Page({
   onReportReasonSelect(e) { reportSheet.select(this, e); },
   onReportReasonCancel() { reportSheet.cancel(this); },
 
-  reportSquare: function () {
+  reportSquare: function (id = this.data.currentActionId) {
     const that = this;
-    const index = that._actionIndex;
-    const item = that.data.list[index];
+    const owner = String(app.getUserID() || ''), current = () => !that._unloaded && owner === String(app.getUserID() || '');
+    const item = that.data.list.find(row => String(row.id) === String(id));
     if (!item || !item.id) {
       that.closePostActions();
       return;
@@ -416,21 +418,22 @@ Page({
       content: '确认举报这条内容？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
         community.request({
           hideLoading: true,
           url: '/api/creativesquare/report',
+          current,
           selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
             id: item.id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.slice();
-              list.splice(index, 1);
+              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
               that.setData({
                 list: list,
                 nodata: list.length < 1
@@ -441,9 +444,11 @@ Page({
             }
           },
           fail() {
+            if (!current()) return;
             toast('网络异常，请重试');
           },
           complete() {
+            if (!current()) return;
             that.closePostActions();
           }
         });
@@ -902,12 +907,15 @@ Page({
       payload: [data.contents, data.pics, data.file_url, data.address, data.longitude, data.latitude, data.is_crowdfunding, data.data_id, data.data_type, data.route_preview_img]
     });
     data.request_id = intent.key;
+    const submissionSnapshot = JSON.stringify([that.data.valCont, that.data.picList, that.data.fileList, that.data.address, that.data.latitude, that.data.longitude, that.data.selectedActivity]);
     if (intent.previousUnknown) toast('上次结果未确认，重试不重复发');
 
     community.request({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/action',
+      intentScope: 'square:list',
+      current: () => !that._unloaded && publishMemberId === String(app.getUserID() || ''),
       data: data,
       method: "POST",
       success: function (res) {
@@ -922,7 +930,7 @@ Page({
               why: '', duration: RESULT_SHEET_MS,
             },
           });
-          that.resetForm();
+          if (res.recoveredPrevious !== true && submissionSnapshot === JSON.stringify([that.data.valCont, that.data.picList, that.data.fileList, that.data.address, that.data.latitude, that.data.longitude, that.data.selectedActivity])) that.resetForm();
           that.refreshList();
         } else {
           if (res && res.intentDiscarded === true) {

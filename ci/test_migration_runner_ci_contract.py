@@ -652,6 +652,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_migration_historical_schema_forward_fix_mysql_integration.py",
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
             "ci/test_community_legacy_owner_mysql_integration.py",
+            "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
             "ci/test_migration_runner_ci_contract.py",
             "ci/funds-mysql-it-gate.sh",
         )
@@ -669,6 +670,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_migration_historical_schema_forward_fix_mysql_integration.py",
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
             "ci/test_community_legacy_owner_mysql_integration.py",
+            "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
             "ci/test_migration_*.py",
             "scripts/e2e/**",
             "sql/base_schema_20260818.sql",
@@ -729,7 +731,8 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             gate,
         )
         self.assertIn("ci.test_community_legacy_owner_mysql_integration.CommunityLegacyOwnerMysqlIntegrationTest", gate)
-        self.assertIn('"$atomic_ran" -lt 49', gate)
+        self.assertIn("ci.test_community_legacy_comment_like_counts_mysql_integration.CommunityLegacyCommentLikesMysqlIntegrationTest", gate)
+        self.assertIn('"$atomic_ran" -lt 68', gate)
         self.assertIn('"$atomic_ran" -lt 41', gate)
         self.assertIn("bash ci/funds-mysql-it-gate.sh atomic-migration", workflow)
         self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", workflow)
@@ -824,19 +827,21 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(test_methods), 7)
 
-    def test_atomic_gate_accepts_forty_nine_unskipped_tests_and_rejects_skips(self):
+    def test_atomic_gate_accepts_sixty_eight_unskipped_tests_and_rejects_skips(self):
         result = self.run_atomic_gate_with_unittest_result(
-            "Ran 49 tests in 0.001s\n\nOK\n", 0)
+            "Ran 68 tests in 0.001s\n\nOK\n", 0)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("实际执行 49 条", result.stdout + result.stderr)
-        skipped = self.run_atomic_gate_with_unittest_result(
-            "Ran 41 tests in 0.001s\n\nOK (skipped=41)\n", 0)
-        self.assertNotEqual(0, skipped.returncode)
-        self.assertIn("skipped=0", skipped.stdout + skipped.stderr)
+        self.assertIn("实际执行 68 条", result.stdout + result.stderr)
+        for count, skips in ((41, 41), (68, 1), (68, 68)):
+            with self.subTest(count=count, skipped=skips):
+                skipped = self.run_atomic_gate_with_unittest_result(
+                    "Ran %d tests in 0.001s\n\nOK (skipped=%d)\n" % (count, skips), 0)
+                self.assertNotEqual(0, skipped.returncode)
+                self.assertIn("skipped=0", skipped.stdout + skipped.stderr)
 
     def test_atomic_gate_rejects_old_thirty_five_and_incomplete_forty_tests(self):
-        for count in (35, 40, 41, 48):
+        for count in (35, 40, 41, 48, 49, 56, 63, 64, 67):
             with self.subTest(count=count):
                 result = self.run_atomic_gate_with_unittest_result(
                     "Ran %d tests in 0.001s\n\nOK\n" % count, 0)
@@ -854,6 +859,19 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         self.assertNotIn("SkipTest", source)
         self.assertNotIn("skipUnless", source)
         self.assertIn("cy_community_legacy_owner_it_", source)
+
+    def test_community_comment_likes_mysql_it_keeps_nineteen_unskipped_native_tests(self):
+        source = (REPO / "ci/test_community_legacy_comment_like_counts_mysql_integration.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        suite = next(node for node in tree.body if isinstance(node, ast.ClassDef)
+                     and node.name == "CommunityLegacyCommentLikesMysqlIntegrationTest")
+        tests = [node.name for node in suite.body if isinstance(node, ast.FunctionDef)
+                 and node.name.startswith("test_")]
+        self.assertEqual(19, len(tests))
+        self.assertNotIn("SkipTest", source)
+        self.assertNotIn("skipUnless", source)
+        self.assertNotIn("skipIf", source)
+        self.assertIn("cy_community_legacy_it_", source)
 
     def test_offer_withdrawal_mysql_it_keeps_six_discoverable_tests(self):
         source = (REPO / "ci" / "test_merchant_offer_withdrawal_columns_mysql_integration.py").read_text(

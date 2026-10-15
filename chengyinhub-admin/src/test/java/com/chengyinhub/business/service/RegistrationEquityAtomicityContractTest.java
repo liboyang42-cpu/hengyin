@@ -75,7 +75,7 @@ class RegistrationEquityAtomicityContractTest {
 
         assertTrue(service.contains("expireUnusedCoupon(historyId, now) == 0"));
         assertTrue(service.contains("selectSmsCouponHistoryByIdForUpdate(historyId)"));
-        assertTrue(service.contains("incrementReceiveCount(coupon.getId()) != 1"));
+        assertTrue(service.contains("tryIncrementIssuableReceiveCount(coupon.getId()) == 0"));
         assertTrue(service.contains("insertSmsCouponHistory(h) != 1"));
         int grantById = service.indexOf("public boolean grantCouponById");
         assertTrue(service.substring(Math.max(0, grantById - 180), grantById)

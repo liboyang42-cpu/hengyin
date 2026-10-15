@@ -25,7 +25,8 @@ function mount(canonical = false) {
       return task;
     },
   };
-  const wx = { getWindowInfo: () => ({ windowWidth: 375 }), showModal: options => modals.push(options) };
+  const storage = new Map();
+  const wx = { getStorageSync:key=>storage.get(key),setStorageSync:(key,value)=>storage.set(key,clone(value)),removeStorageSync:key=>storage.delete(key), getWindowInfo: () => ({ windowWidth: 375 }), showModal: options => modals.push(options) };
   vm.runInNewContext(fs.readFileSync(path.join(root, component), 'utf8'), {
     getApp: () => app, Component: value => { definition = value; }, wx, console,
     require(id) {

@@ -82,6 +82,9 @@ public interface IUmsMemberService
      */
     public int insertUmsMember(UmsMember umsMember);
 
+    /** 查询唯一微信会员；首次创建与注册赠送原子提交。 */
+    UmsMember getOrCreateWechatMember(String openid);
+
     /**
      * 修改用户
      * 

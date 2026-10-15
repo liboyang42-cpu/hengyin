@@ -17,6 +17,24 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommunityTrustMapperSqlTest {
+    @Test
+    void recoveryKeyOnlyNarrowsTheExistingOwnerQueryWithoutTakingAWriteLock() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("reporterMemberId", 101L);
+        params.put("stage", null);
+        params.put("requestId", "report-recovery-key");
+        String filtered = sql("selectReportsForOwner", params);
+        assertTrue(filtered.contains("where reporter_member_id = ? and request_id = ?"));
+        assertFalse(filtered.contains("report-recovery-key"));
+        assertFalse(filtered.contains("for update"));
+        params.put("stage", "CLOSED");
+        assertTrue(sql("selectReportsForOwner", params).contains("request_id = ? and stage = ?"));
+        params.put("requestId", null);
+        String original = sql("selectReportsForOwner", params);
+        assertTrue(original.contains("where reporter_member_id = ? and stage = ?"));
+        assertFalse(original.contains("and request_id ="));
+    }
+
     private static final String XML = "mapper/business/CommunityTrustMapper.xml";
     private static final String NS = "com.chengyinhub.business.mapper.CommunityTrustMapper.";
     private static final String REPORTER_COLUMN = "reporter_member_id";

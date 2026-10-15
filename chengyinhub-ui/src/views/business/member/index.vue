@@ -144,8 +144,7 @@
     <el-dialog title="修改状态" :visible.sync="dialogStatus" width="600px" append-to-body :close-on-click-modal="false">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="状态" prop="status">
-          <DictRadio v-model="form.status" :radioData="dict.type.sys_user_status" size="small" :show-all="'false'"
-            :filter="['1,2']">
+          <DictRadio v-model="form.status" :radioData="memberStatusOptions" size="small" :show-all="'false'">
           </DictRadio>
         </el-form-item>
       </el-form>
@@ -193,7 +192,7 @@ import CyStatusTag from '@/components/CyStatusTag'
 export default {
   components: { PointsDetail, BalanceDetail, CyPageHeader, CyStatusTag },
   name: "Member",
-  dicts: ['sys_user_status','sys_user_type','sys_user_level','sys_user_sex'],
+  dicts: ['sys_user_type','sys_user_level','sys_user_sex'],
   data() {
     return {
       // 遮罩层
@@ -219,6 +218,10 @@ export default {
         name: null,
         status: null
       },
+      memberStatusOptions: [
+        { value: 1, label: '启用' },
+        { value: 2, label: '禁用' }
+      ],
       // 表单参数
       form: {},
       // 会员等级表单参数
@@ -230,6 +233,12 @@ export default {
       },
       // 表单校验
       rules: {
+        status: [{
+          validator: (rule, value, callback) => callback(
+            value === 1 || value === 2 ? undefined : new Error('请选择启用或禁用')
+          ),
+          trigger: 'change'
+        }]
       },
       // 会员等级表单校验
       levelRules: {
@@ -241,13 +250,13 @@ export default {
   },
   computed: {
     memberOverview() {
-      const active = this.memberList.filter(item => Number(item.status) === 0).length
-      const restricted = this.memberList.filter(item => Number(item.status) !== 0).length
+      const active = this.memberList.filter(item => this.memberStatusValue(item.status) === 1).length
+      const restricted = this.memberList.filter(item => this.memberStatusValue(item.status) === 2).length
       const balance = this.memberList.reduce((sum, item) => sum + Number(item.balance || 0), 0)
       return [
         { label: '当前页用户', value: this.memberList.length, note: `筛选共 ${this.total} 人` },
-        { label: '正常状态', value: active, note: '当前页可用账号' },
-        { label: '受限 / 注销', value: restricted, note: '当前页需关注' },
+        { label: '启用状态', value: active, note: '当前页状态为启用' },
+        { label: '禁用状态', value: restricted, note: '当前页需关注' },
         { label: '用户余额合计', value: `¥${balance.toFixed(2)}`, note: '仅当前页只读汇总' }
       ]
     },
@@ -306,11 +315,16 @@ export default {
       }
       this.getList()
     },
+    memberStatusValue(status) {
+      if (status === 1 || status === '1') return 1
+      if (status === 2 || status === '2') return 2
+      return null
+    },
     memberStatusLabel(status) {
-      return { 0: '正常', 1: '停用', 2: '注销' }[Number(status)] || '未知状态'
+      return { 1: '启用', 2: '禁用' }[this.memberStatusValue(status)] || '未知状态'
     },
     memberStatusTone(status) {
-      return { 0: 'success', 1: 'warning', 2: 'danger' }[Number(status)] || 'neutral'
+      return { 1: 'success', 2: 'danger' }[this.memberStatusValue(status)] || 'neutral'
     },
     openMemberDetail(row) {
       this.detailOpen = true
@@ -397,7 +411,7 @@ export default {
     
     /** 修改用户状态 */
     handleStatus(row) {
-      this.form = { id: row.id, status: row.status }
+      this.form = { id: row.id, status: this.memberStatusValue(row.status) }
       this.dialogStatus = true
     },
 
@@ -441,7 +455,7 @@ export default {
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
-        if (valid) {
+        if (valid && (this.form.status === 1 || this.form.status === 2)) {
           updateMember({ id: this.form.id, status: this.form.status }).then(() => {
             this.$modal.msgSuccess("修改成功")
             this.dialogStatus = false

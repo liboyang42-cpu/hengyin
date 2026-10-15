@@ -7,6 +7,7 @@ import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
 import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
 import com.chengyinhub.business.service.CommunityTrustService;
 import com.chengyinhub.business.service.IAuditTaskService;
@@ -541,7 +542,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             mapper.insertComment(postId, memberId, rootId, parentId, repliedToMemberId,
                     request.getClientRequestId(), request.getBody().trim(), "CHECKING", approval, now);
         } catch (DuplicateKeyException e) {
-            replay = mapper.selectCommentByAuthorRequest(memberId, request.getClientRequestId());
+            replay = mapper.selectCommentByAuthorRequestForUpdate(memberId, request.getClientRequestId());
             if (replay == null || !postId.equals(number(value(replay, "post_id")))
                     || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
                 throw error("回复请求号已被使用", 409);
@@ -584,7 +585,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         detail(viewerId, postId);
         int rootLimit = boundedLimit(limit);
-        List<Map<String, Object>> rows = mapper.selectComments(postId, viewerId, cursor, rootLimit + 1);
+        List<Map<String, Object>> rows = visibleCommentThreadRows(
+                mapper.selectComments(postId, viewerId, cursor, rootLimit + 1));
         Long nextCursor = null;
         int roots = 0;
         boolean hasMore = false;
@@ -604,6 +606,38 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         result.put("hasMore", hasMore);
         result.put("nextCursor", nextCursor);
         return result;
+    }
+
+    private List<Map<String, Object>> visibleCommentThreadRows(List<Map<String, Object>> rows) {
+        Map<Long, Map<String, Object>> byId = new HashMap<>();
+        Set<Long> neededDeletedIds = new HashSet<>();
+        for (Map<String, Object> row : rows) byId.put(number(value(row, "id")), row);
+        for (Map<String, Object> row : rows) {
+            if ("DELETED".equals(value(row, "lifecycle"))) continue;
+            Long rootId = number(value(row, "root_id"));
+            Map<String, Object> root = byId.get(rootId);
+            if (root != null && "DELETED".equals(value(root, "lifecycle"))) neededDeletedIds.add(rootId);
+            Long parentId = number(value(row, "parent_id"));
+            Map<String, Object> parent = byId.get(parentId);
+            while (parent != null && "DELETED".equals(value(parent, "lifecycle"))
+                    && neededDeletedIds.add(parentId)) {
+                parentId = number(value(parent, "parent_id"));
+                parent = byId.get(parentId);
+            }
+        }
+        List<Map<String, Object>> visibleRows = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            if (!"DELETED".equals(value(row, "lifecycle"))) {
+                visibleRows.add(row);
+            } else if (neededDeletedIds.contains(number(value(row, "id")))) {
+                Map<String, Object> placeholder = new HashMap<>(row);
+                placeholder.keySet().removeIf(key -> "body".equalsIgnoreCase(key));
+                placeholder.put("body", "");
+                placeholder.put("deletedPlaceholder", true);
+                visibleRows.add(placeholder);
+            }
+        }
+        return visibleRows;
     }
 
     @Override
@@ -789,7 +823,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             }
             request.setTargetType("CONTENT");
         }
-        return communityTrustService.submitReport(memberId, request);
+        return CommunityReportVO.from(communityTrustService.submitReport(memberId, request));
     }
 
     @Override

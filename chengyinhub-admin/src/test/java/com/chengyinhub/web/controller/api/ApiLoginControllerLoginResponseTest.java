@@ -48,6 +48,7 @@ class ApiLoginControllerLoginResponseTest {
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
+        when(memberService.getOrCreateWechatMember("existing-openid")).thenReturn(member);
         AppLoginService loginService = mock(AppLoginService.class);
         when(loginService.login("13800000000", "password", "existing-openid"))
                 .thenReturn("password-token");
