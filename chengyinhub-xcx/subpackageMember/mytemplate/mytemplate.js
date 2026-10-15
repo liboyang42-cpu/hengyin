@@ -7,6 +7,7 @@ const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { marketView } = require('../../utils/template-market.js');
 const { gameTemplateCover } = require('../../utils/template-display.js');
+const { decodeDisplayFields } = require('../../utils/display-text.js');
 
 Page({
   data: {
@@ -44,6 +45,8 @@ Page({
 
   // 已授权补齐七款旧玩法的图标封面；其它缺图仍用标题首字，不借用内容图。
   decorateItem(item) {
+    // 列表卡片按纯文本展示作者文字与审核反馈:服务端过滤会把 x<y 存成 x&lt;y,在这里解码一次。
+    item = decodeDisplayFields(item, ['title', 'name', 'description', 'reason', 'marketReason']);
     const title = String(item && (item.title || item.name) || '玩法').trim();
     return Object.assign({}, item, marketView(item), {
       drop: false,

@@ -125,7 +125,7 @@
           <text wx:if="{{item.timeDivider}}" class="msg-time">{{item.timeDivider}}</text>
           <view class="bubble me {{item.failed?'failed':''}}">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
         <view wx:if="{{item.sending}}" class="sending"></view>
@@ -141,7 +141,7 @@
           <text wx:if="{{item.displayName || item.timeDivider}}" class="sender-name">{{item.displayName}}{{item.displayName && item.timeDivider ? ' · ' : ''}}{{item.timeDivider}}</text>
           <view class="bubble other">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
       </view>
