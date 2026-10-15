@@ -6101,9 +6101,29 @@ Page({
     }).catch(() => {});
   },
 
-  /** 上局已结算过:掷骰会被拒,而 settle 是幂等的 —— 回读那份回执补上最终文案,别把玩家卡在掷不了 */
-  _recoverSettledCheck(payload) {
+  _releaseJourneyCheckIntent(intent) {
+    const pending = this._checkPendingByKey;
+    if (intent && pending && pending[intent.key] === intent) delete pending[intent.key];
+  },
+
+  _isJourneyCheckIntentCurrent(intent) {
+    const kit = this.data.journeyCheck || {};
+    return !!intent && this._isPlayAccountCurrent() && this._checkWriteIntent === intent
+      && intent.loadEpoch === this._playLoadEpoch && kit.show
+      && intent.payload.topicId === this.data.topicId
+      && intent.payload.activityId === (this.data.activityId || 0)
+      && String(intent.payload.nodeId) === String(kit.nodeId)
+      && intent.payload.checkId === kit.checkId;
+  },
+
+  /** 上局已结算过时只回读原检定；旧回包不得写入新检定。 */
+  _recoverSettledCheck(payload, intent) {
+    if (!this._isJourneyCheckIntentCurrent(intent)) return;
     req('/api/play/check/settle', 'POST', payload).then((r) => {
+      this._releaseJourneyCheckIntent(intent);
+      if (!this._isJourneyCheckIntentCurrent(intent)) return;
+      this._checkActing = false;
+      this._checkWriteIntent = null;
       if ((r.code == 200 || r.code == '200') && r.data) {
         this.setData({ 'journeyCheck.receipt': checkReceiptView(r.data) });
         return;
@@ -6113,41 +6133,50 @@ Page({
   },
 
   onJourneyCheckAction(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const action = (e.detail && e.detail.action) || '';
     const kit = this.data.journeyCheck;
-    if (!kit.show || !kit.checkId || this._checkActing) return;
+    if (!kit.show || !kit.checkId || !['roll', 'reroll', 'settle'].includes(action)
+        || (this._checkActing && this._isJourneyCheckIntentCurrent(this._checkWriteIntent))) return;
     const payload = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: kit.nodeId, checkId: kit.checkId };
+    const key = JSON.stringify([this._playOwner, payload.topicId, payload.activityId, payload.nodeId, payload.checkId]);
+    const pending = this._checkPendingByKey = this._checkPendingByKey || Object.create(null);
+    if (pending[key]) return;
+    const intent = this._checkWriteIntent = { payload, key, loadEpoch: this._playLoadEpoch };
+    pending[key] = intent;
     this._checkActing = true;
-    // 触感在组件里(掷/结算各一次);这里只管请求与把回执搬进视图。
-    // ⚠️ 三条路径各写各的字面 URL:U1 门禁要能枚举出所有 /api 端点,把 URL 包成参数它认不出。
+    // 保留三条字面URL和原操作；本地意图只用于回包归属，不是新的服务端请求身份。
     if (action === 'roll') {
-      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload));
+      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload, intent));
       return;
     }
     if (action === 'reroll') {
-      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload));
+      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload, intent));
       return;
     }
-    if (action === 'settle') {
-      req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload));
-      return;
-    }
-    this._checkActing = false;
+    req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload, intent));
   },
 
-  /** 检定回包的统一落点:成功搬回执;「已结算」用幂等 settle 回读;其余给可恢复提示。 */
-  _afterCheck(action, r, payload) {
-    this._checkActing = false;
+  /** 检定回包只能收尾发起它的意图；原幂等settle回读继续沿同一意图。 */
+  _afterCheck(action, r, payload, intent) {
+    if (!this._isJourneyCheckIntentCurrent(intent)) { this._releaseJourneyCheckIntent(intent); return; }
     const res = r || {};
     const ok = res.code == 200 || res.code == '200';
+    if (action === 'roll' && !ok && /已结算/.test(res.msg || '')) {
+      this._recoverSettledCheck(payload, intent);
+      return;
+    }
+    this._releaseJourneyCheckIntent(intent);
+    this._checkActing = false;
+    this._checkWriteIntent = null;
     const FAIL = { roll: '掷骰没成功，再试一次', reroll: '重掷没成功，再试一次', settle: '结算没成功，再试一次' };
     if (ok && res.data) { this.setData({ 'journeyCheck.receipt': checkReceiptView(res.data) }); return; }
-    if (action === 'roll' && /已结算/.test(res.msg || '')) { this._recoverSettledCheck(payload); return; }
     cyToast(res.msg || FAIL[action] || '操作没成功，再试一次');
   },
 
   /** 检定屏退出。结算前后都能关 —— 失败也推进是产品口径,这里不设任何通关闸。 */
   closeJourneyCheck() {
+    this._checkWriteIntent = null; this._checkActing = false;
     const inline = this.data.journeyCheck.present === 'inline';
     this.setData({ 'journeyCheck.show': false });
     if (inline && this.data.chapterFull) {
