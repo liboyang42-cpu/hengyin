@@ -819,13 +819,14 @@ Page({
   },
 
   _clearDraftEnvelope() {
-    if (this._draftStorageUnavailable) return;
+    if (this._draftStorageUnavailable) return false;
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity) return;
+    if (!identity) return true;
     try {
       proEditorDraft.removeDraft(wx, identity, { memberId });
-    } catch (error) {}
+      return true;
+    } catch (error) { return false; }
   },
 
   clearLocalDraft() {
@@ -848,7 +849,11 @@ Page({
             || memberId !== String(this.data.draftMemberId || '')
             || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
         this._draftAutosaveReady = false;
-        this._clearDraftEnvelope();
+        if (!this._clearDraftEnvelope()) {
+          this._draftAutosaveReady = true;
+          cyToast('本地草稿清空失败，请稍后重试');
+          return;
+        }
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
         const club = this.data.formData.clubId ? ('&clubId=' + encodeURIComponent(this.data.formData.clubId)) : '';
         wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club });
