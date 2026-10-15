@@ -38,7 +38,7 @@
   <!-- BL-05 收到的邮票详情:只列接口已有字段;作者不在接口里(换到的票对收件人匿名),不编造 -->
   <cy-sheet show="{{!!detail}}" title="收到的邮票" handle closable maskClosable bind:close="closeDetail">
     <view class="stkdetail" wx:if="{{detail}}">
-      <image class="stkdetail__img" src="{{detail.picUrl}}" mode="aspectFit" bindtap="previewDetail" aria-role="button" aria-label="查看大图" />
+      <image class="stkdetail__img" src="{{detail.picUrl}}" mode="aspectFit" bindtap="previewDetail" aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80" />
       <text class="stkdetail__cap" wx:if="{{detail.caption}}">{{detail.caption}}</text>
       <view class="stkdetail__row"><text class="stkdetail__k">来源</text><text class="stkdetail__v">投一张自己的票换回 · 对方匿名</text></view>
       <view class="stkdetail__row" wx:if="{{detail.kindLabel}}"><text class="stkdetail__k">类型</text><text class="stkdetail__v">{{detail.kindLabel}}</text></view>
