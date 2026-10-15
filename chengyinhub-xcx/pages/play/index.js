@@ -4651,24 +4651,42 @@ Page({
 
   // D-9 队长全团结算:一次核销=全团入结算(到场∩已付)。资金动作,二次确认。
   leadSettle() {
-    const that = this;
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    if (this._leadSettleIntent && this._isLeadOperationContextCurrent(this._leadSettleIntent.context)) return;
+    const intent = { context };
+    this._leadSettleIntent = intent;
+    const current = () => this._leadSettleIntent === intent && this._isLeadOperationContextCurrent(context, true);
+    const release = () => { if (this._leadSettleIntent === intent) this._leadSettleIntent = null; };
+    let settled = false, loading = false;
+    const hideLoading = () => { if (loading) { loading = false; cyLoading.hide(); } };
     cyModal.show({
       title: '全团结算',
       content: '将为到场已购票的全体队员核销并入结算,确认结算?',
       confirmText: '结算全团',
-      success(res) {
-        if (!res.confirm) { that.diegetic('已取消结算'); return; }
-        cyLoading.show('正在结算');
-        req('/api/club/lead/settle', 'POST', { activityId: that.data.activityId }).then((r) => {
-          cyLoading.hide();
+      success: (res) => {
+        if (settled) return;
+        settled = true;
+        if (!current()) { release(); return; }
+        if (!res.confirm) { release(); this.diegetic('已取消结算'); return; }
+        cyLoading.show('正在结算'); loading = true;
+        req('/api/club/lead/settle', 'POST', { activityId: context.activityId }).then((r) => {
+          hideLoading();
+          const owned = current(); release();
+          if (!owned) return;
           const ok = r.code == 200 || r.code == '200';
-          that.diegetic(r.msg || (ok ? '全团结算完成' : '整团结算失败，请重试'));
-          if (!ok) return;
-          that.loadTeamProgress();
+          this.diegetic(r.msg || (ok ? '全团结算完成' : '整团结算失败，请重试'));
+          if (ok) this.loadTeamProgress();
+        }).catch(() => {
+          hideLoading(); const owned = current(); release();
+          if (owned) this.diegetic('整团结算失败，请重试');
         });
       },
-      fail() { that.diegetic('结算确认未打开，请重试'); }
+      fail: () => {
+        if (settled) return;
+        settled = true; const owned = current(); release();
+        if (owned) this.diegetic('结算确认未打开，请重试');
+      }
     });
   },
 
