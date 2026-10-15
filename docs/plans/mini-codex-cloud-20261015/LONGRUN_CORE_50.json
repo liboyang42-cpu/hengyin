@@ -2006,7 +2006,8 @@
       "status": "AUDIT_THEN_FIX",
       "title": "网关输出审核错误携带内部调用阶段事实",
       "source_files": [
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java"
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderResultReceivedException.java"
       ],
       "source_anchor": "generate output moderation",
       "trigger": "模型已生成但审核不可用仍抛普通UPSTREAM_UNAVAILABLE",
@@ -2018,7 +2019,8 @@
       "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_18Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C05-18.md",
-      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim",
+      "internal_contract": "AiProviderResultReceivedException extends AiServiceException; existing Reason/message only; no modelText field; marker solely three output-review throws after modelText returned; C04 instanceof internal marker after producer public SHA"
     },
     {
       "id": "OWN-C06-11",
@@ -2107,10 +2109,230 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C06-15.md",
       "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C01-16",
+      "lane": "C01",
+      "owner": "b01_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "检查写回包归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ],
+      "source_anchor": "onJourneyCheckAction/_afterCheck/_recoverSettledCheck",
+      "trigger": "旧roll/reroll/settle写回包清新acting或落新receipt",
+      "invariant": "原账号/scope/node/checkId与写意图归属，保留检查政策",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-16.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C01-17",
+      "lane": "C01",
+      "owner": "b01_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "微信步数授权原节点归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ],
+      "source_anchor": "_submitSteps",
+      "trigger": "wx.login到getWeRunData期间节点/账号变化",
+      "invariant": "只原节点意图提交原授权密文，保留授权顺序",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-17.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-17.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C01-18",
+      "lane": "C01",
+      "owner": "b01_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "店铺NPC文本语音回包归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ],
+      "source_anchor": "_askShopNpc/_sendVoice",
+      "trigger": "旧店问答落到新node聊天并停止新动画",
+      "invariant": "绑定原node和对话seq，不动后端或收费",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-18.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-18.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C01-19",
+      "lane": "C01",
+      "owner": "b01_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "结束推荐原账号活动归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ],
+      "source_anchor": "loadFinishRouteRecommendation",
+      "trigger": "结束页不变但账号/活动已切换",
+      "invariant": "保留算法，旧回包不能应用或上报为新上下文",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-19.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-19.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C01-20",
+      "lane": "C01",
+      "owner": "b01_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "伴行文案原导航目标归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/play/index.js"
+      ],
+      "source_anchor": "_fetchCompanionLine",
+      "trigger": "导航目标/活动/账号换后旧文案显示",
+      "invariant": "绑定原目标与请求序列，不动E06基础模块",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c01-20.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C01-20.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C02-16",
+      "lane": "C02",
+      "owner": "publish_unknown_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "故事插图原章定位",
+      "source_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ],
+      "source_anchor": "insertStoryImageAt",
+      "trigger": "选择图片上传期间切章",
+      "invariant": "插图只回原章/原意图，不按新chapterIndex落图",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-16.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-16.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C02-17",
+      "lane": "C02",
+      "owner": "publish_unknown_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "故事音频元数据原块归属",
+      "source_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ],
+      "source_anchor": "_fillStoryAudioMeta",
+      "trigger": "块/章重排删除或unload后canplay回调",
+      "invariant": "按稳定章块身份和当前音频定位，不能写另块",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-17.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-17.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C02-18",
+      "lane": "C02",
+      "owner": "publish_unknown_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "票种零库存编辑保真",
+      "source_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ],
+      "source_anchor": "openTicketEditor/saveTicket",
+      "trigger": "totalStock为0被||100默认覆盖",
+      "invariant": "先核原0合同，仅保真或沿既有拒绝，不新增库存政策",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-18.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-18.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C02-19",
+      "lane": "C02",
+      "owner": "publish_unknown_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "票种集合坐标编辑保真",
+      "source_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ],
+      "source_anchor": "applyEditingTopic/openTicketEditor/saveTicket",
+      "trigger": "OmsTicket原gatherLng/Lat映射缺失导致保存清空",
+      "invariant": "保留已有集合坐标，字段/API政策不变",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-19.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-19.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
+    },
+    {
+      "id": "OWN-C02-20",
+      "lane": "C02",
+      "owner": "publish_unknown_sol",
+      "state": "READY_SOURCE_ONLY",
+      "status": "AUDIT_THEN_FIX",
+      "title": "旧账号页面新开清空确认保护",
+      "source_files": [
+        "chengyinhub-xcx/pages/publish/fabu/index.js"
+      ],
+      "source_anchor": "clearLocalDraft",
+      "trigger": "账号B在留存的A页面新开框后清掉A草稿",
+      "invariant": "入口校验页面draftMemberId原owner与当前账号，复用原隔离合同",
+      "repair_boundary": "只本lane已授源文件，保留既有合同；表外依赖先交所有者，不盲引用",
+      "policy_hold": "鉴权/RBAC、新收费/额度/留存政策、DDL/依赖/生产操作BLOCKED换项，不猜",
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-own-c02-20.test.js",
+      "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C02-20.md",
+      "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim"
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
-  "total_created_items": 93,
+  "total_created_items": 103,
   "delivered_items": 54,
   "refill_progress": "Initial 50 retained historically; actual new nonduplicate source slices appended in waves. Counts reflect delivered history and live remainder, not a claim all tasks were bugs."
 }

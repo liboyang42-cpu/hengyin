@@ -400,6 +400,13 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderResultReceivedException.java": {
+      "owner": "CORE/C05",
+      "worker": "feature_coorganizer_sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+      "transfer_evidence": "C00 grants internal marker for provider result received after model text; preserves existing Reason/message, no result payload; C04 consumes only after public producer commit"
     }
   },
   "reserved_not_transferred": [
