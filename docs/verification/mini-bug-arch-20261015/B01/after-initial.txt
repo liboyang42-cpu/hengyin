@@ -1,0 +1,17 @@
+✔ interruption → page hide → interruption end cannot replay background audio (1.649513ms)
+✔ topic unlike removes stable ID after a refresh reorders rows (4.78254ms)
+✔ favorites old account list and unlike callbacks cannot change the new account (1.129861ms)
+✔ team progress late response after onHide cannot restart polling (17.990555ms)
+✔ team progress late response after onUnload cannot restart polling (2.446063ms)
+✔ play load response and pause snapshot from A cannot enter B account (7.618981ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelRegistration (5.280841ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelOrder (1.423403ms)
+✔ refund subscription starts on confirmed gesture and rejection does not block cancelParticipation (1.834692ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.046466

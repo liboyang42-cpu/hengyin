@@ -43,6 +43,7 @@ Page({
    */
   onShow() {
     this.syncViewTheme();
+    if (this._syncFavoriteAccount()) { this.loadLikeData(); this._hasShown = true; return; }
     if (!this._hasShown) {
       this._hasShown = true;
       return;
@@ -52,7 +53,34 @@ Page({
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { this._favoritesDisposed = true; this._favoriteGeneration = (this._favoriteGeneration || 0) + 1; merchantTheme.merchantPageRestore(); },
+
+  _favoriteMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  _syncFavoriteAccount() {
+    const member = this._favoriteMember();
+    if (this._favoriteOwner === undefined) { this._favoriteOwner = member; return false; }
+    if (this._favoriteOwner === member) return false;
+    this._favoriteOwner = member;
+    this._favoriteGeneration = (this._favoriteGeneration || 0) + 1;
+    this._unlikeRequests = Object.create(null); this._postUnlikeRequests = Object.create(null);
+    this._stopPullWithCurrent = false;
+    this.setData({ postList: [], ztList1: [], loading: false, refreshing: false, errorMsg: '',
+      hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
+    return true;
+  },
+  _favoriteRequest(options) {
+    this._syncFavoriteAccount();
+    const member = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const guarded = Object.assign({}, options);
+    ['success', 'fail', 'successStatusAbnormal', 'complete'].forEach(key => {
+      if (typeof options[key] !== 'function') return;
+      guarded[key] = (...args) => {
+        if (this._favoritesDisposed || member !== this._favoriteMember() || generation !== this._favoriteGeneration) return;
+        return options[key](...args);
+      };
+    });
+    return app.sendRequest(guarded);
+  },
 
   syncViewTheme() {
     const isMerchantView = policy.isMerchantView({
@@ -69,6 +97,7 @@ Page({
    * 加载点赞数据
    */
   loadLikeData: function(fromPullDown) {
+    this._syncFavoriteAccount();
     const that = this;
     const stopPullAfterComplete = fromPullDown === true;
     if (that.data.loading) {
@@ -102,7 +131,7 @@ Page({
       const message = app.getRequestErrorMessage(res, fallback);
       that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message });
     };
-    app.sendRequest({
+    that._favoriteRequest({
       hideLoading: true,
       silentError: true,
       auth: true,
@@ -156,7 +185,7 @@ Page({
       }
     };
     
-    app.sendRequest({
+    that._favoriteRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/topic/like_list',
@@ -231,8 +260,10 @@ Page({
    */
   topicUnlike: function(e) {
     const that = this;
-    const index = e.currentTarget.dataset.index;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const id = e.currentTarget.dataset.id;
+    if (id == null || id === '') return;
     const requestKey = String(id);
     // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
     // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
@@ -244,9 +275,10 @@ Page({
       content: '确定要取消点赞吗？',
       success: function (res) {
         if (res.confirm) {
+          if (owner !== that._favoriteMember() || generation !== that._favoriteGeneration || that._favoritesDisposed) return;
           if (that._unlikeRequests[requestKey]) return;
           that._unlikeRequests[requestKey] = true;
-          app.sendRequest({
+          that._favoriteRequest({
             url: '/api/topic/like',
             method: "POST",
             data: {
@@ -258,8 +290,7 @@ Page({
                 toast.success('取消点赞成功');
                 
                 // 从列表中移除
-                const ztList1 = [...that.data.ztList1];
-                ztList1.splice(index, 1);
+                const ztList1 = that.data.ztList1.filter(item => String(item.id) !== requestKey);
                 that.setData({ ztList1 });
               } else {
                 toast(res.msg || '操作失败');
@@ -278,6 +309,7 @@ Page({
   },
 
   postUnlike: function(e) {
+    this._syncFavoriteAccount();
     const index = e.detail && e.detail.index;
     const item = this.data.postList[index];
     if (!item || !item.id) return;
@@ -285,7 +317,7 @@ Page({
     this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
     if (this._postUnlikeRequests[requestKey]) return;
     this._postUnlikeRequests[requestKey] = true;
-    app.sendRequest({
+    this._favoriteRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/bookmark',

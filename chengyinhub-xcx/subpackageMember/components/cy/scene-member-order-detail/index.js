@@ -1,3 +1,4 @@
+const subscribe = require('../../../../utils/subscribe.js');
 const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
@@ -531,6 +532,7 @@ Component({
           if (!finishCancelPrompt() || !isCurrent()) return;
           if (!res.confirm) return;
           if (that.data.cancelling) return;
+          if (paid) subscribe.request(['refund', 'refundRejected']);
           that.setData({ cancelling: true });
           cyLoading.show('处理中...');
           // 请求拥有的 loading/锁须释放；账号校验只限制业务回执更新。

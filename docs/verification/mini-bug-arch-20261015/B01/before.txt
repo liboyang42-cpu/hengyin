@@ -1,0 +1,209 @@
+✖ interruption → page hide → interruption end cannot replay background audio (2.850902ms)
+✖ topic unlike removes stable ID after a refresh reorders rows (5.616856ms)
+✖ favorites old account list and unlike callbacks cannot change the new account (0.858473ms)
+✖ team progress late response after onHide cannot restart polling (22.951751ms)
+✖ team progress late response after onUnload cannot restart polling (2.506003ms)
+✖ play load response and pause snapshot from A cannot enter B account (9.242203ms)
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelRegistration (4.31745ms)
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelOrder (1.548821ms)
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelParticipation (3.839316ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 0
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4096.183124
+
+✖ failing tests:
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:32:1
+✖ interruption → page hide → interruption end cannot replay background audio (2.850902ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'pause',
+  +   'play'
+    ]
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:38:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'pause', 'play' ],
+    expected: [ 'pause' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:42:1
+✖ topic unlike removes stable ID after a refresh reorders rows (5.616856ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   1,
+  -   2,
+      3
+    ]
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:48:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 1, 3 ],
+    expected: [ 2, 3 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:51:1
+✖ favorites old account list and unlike callbacks cannot change the new account (0.858473ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     id: 111,
+  +     picList: []
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:56:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { id: 111, picList: [] } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:64:49
+✖ team progress late response after onHide cannot restart polling (22.951751ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:69:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:64:49
+✖ team progress late response after onUnload cannot restart polling (2.506003ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:69:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:73:1
+✖ play load response and pause snapshot from A cannot enter B account (9.242203ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to:
+  
+  'needPass'
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:76:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'needPass',
+    expected: 'needPass',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:85:4
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelRegistration (4.31745ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:91:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:85:4
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelOrder (1.548821ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:91:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:85:4
+✖ refund subscription starts on confirmed gesture and rejection does not block cancelParticipation (3.839316ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/b01-lifecycle-account.test.js:91:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

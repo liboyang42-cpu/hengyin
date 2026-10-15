@@ -15,6 +15,8 @@ function createAudioSession(wxApi) {
   const isPlaying = (ctx) => ctx.paused === false;
 
   function pauseEntry(ctx, ent, byInterrupt) {
+    // 页面主动暂停优先于系统打断，即使 context 已被打断暂停也要撤销自动恢复。
+    if (!byInterrupt) ent.interrupted = false;
     if (!isPlaying(ctx)) return;
     ent.wasPlaying = true;
     if (byInterrupt) ent.interrupted = true;

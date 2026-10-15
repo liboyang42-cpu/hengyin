@@ -500,6 +500,8 @@ Page({
   },
 
   onLoad(options) {
+    this._playOwner = this._playMember();
+    this._playUnloaded = false;
     options = options || {};
     this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
     this._routeState = normalizeRouteState(null);
@@ -548,6 +550,7 @@ Page({
   },
 
   _consumeInviteCode() {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve();
     const code = this._pendingInviteCode;
     if (!code) return Promise.resolve();
     this._pendingInviteCode = '';
@@ -560,10 +563,11 @@ Page({
         data: JSON.stringify({ inviteCode: code }),
         header: { 'Content-Type': 'application/json' },
         success(res) {
+          if (!that._isPlayAccountCurrent()) { resolve(); return; }
           if (res && (res.code == 200 || res.code == '200')) {
             const sessionId = res.data && res.data.id;
             if (sessionId && that.data.topicId) {
-              const memberId = app.getUserID && app.getUserID();
+              const memberId = that._playOwner;
               const key = memberId === null || memberId === undefined || memberId === ''
                 ? '' : 'circle_session_m' + memberId + '_t' + that.data.topicId;
               try {
@@ -576,19 +580,29 @@ Page({
           }
           resolve();
         },
-        successStatusAbnormal(res) { cyToast((res && res.msg) || '无法加入同行探索'); resolve(); },
-        fail() { cyToast('无法加入同行探索'); resolve(); },
+        successStatusAbnormal(res) { if (that._isPlayAccountCurrent()) cyToast((res && res.msg) || '无法加入同行探索'); resolve(); },
+        fail() { if (that._isPlayAccountCurrent()) cyToast('无法加入同行探索'); resolve(); },
       });
     });
   },
+  _playMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  _isPlayAccountCurrent() {
+    if (this._playOwner === undefined) this._playOwner = this._playMember();
+    return !this._playUnloaded && this._playOwner === this._playMember();
+  },
   onShow() {
+    if (!this._isPlayAccountCurrent()) {
+      this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
+      wx.reLaunch({ url: '/pages/index/index' });
+      return;
+    }
     this._themeHidden = false; this._startThemePoll();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
     if (this.data.chapterFull) audioSession.keepAwake('chapterFull', true);
     if (this.data.chapStory.show) audioSession.keepAwake('chapStory', true);
     this._resetPackFx();   // onHide 清掉定时器后,四拍/拖拽的中间态标志必须归零,否则包把自己挡死
-    if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && !this.data.loading) this.loadData(false);
+    if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && (!this.data.loading || this._playReloadOnShow)) { this._playReloadOnShow = false; this.loadData(false); }
   },
 
   // M2 会话参数:活动会话带 activityId,自玩会话带 topicId(后端二选一,活动优先)
@@ -733,6 +747,7 @@ Page({
   },
 
   onUnload() {
+    this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
@@ -746,6 +761,7 @@ Page({
     this._stopLeadPoll();
     // R9-21:先落盘再销毁时钟 —— 暂停/返回页面不算主动离场,未结束的会话要能回来。
     this._persistRunSession();
+    this._playUnloaded = true;
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;   // 页面已走,在途的服务端恢复不再回写
     this._destroySessionClock();
     // 开卡包的三个 timeout 都会在销毁后写 UI,必须跟着卸载清掉。
@@ -771,6 +787,9 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    this._playReloadOnShow = true;
+    this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
@@ -804,12 +823,13 @@ Page({
   // ===== R9-21 暂停会话恢复 =====
   /** 快照作用域:先按账号隔离，再按 activityId/topicId 隔离；身份未确定时不碰个人快照。 */
   _runSessionScope() {
-    return { memberId: app.getUserID(), activityId: this.data.activityId, topicId: this.data.topicId };
+    this._isPlayAccountCurrent();
+    return { memberId: this._playOwner, activityId: this.data.activityId, topicId: this.data.topicId };
   },
   /** 暂停/离页时落盘。只记「已开始未结束」的行程;结束(通关/退出/服务端判结束)会 clear,
    *  所以重进读到的快照一定是可继续的暂停态,不是一个幽灵计时。 */
   _persistRunSession() {
-    if (!this._runStarted || this.data.isPreview || this.data.isMock) return false;
+    if (!this._isPlayAccountCurrent() || !this._runStarted || this.data.isPreview || this.data.isMock) return false;
     if (this._sessionClock && !this._sessionClock.isPaused()) this._sessionClock.pause();
     const elapsed = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
     const now = Date.now();
@@ -821,6 +841,7 @@ Page({
   /** 本机快照作废 + 服务端留结束墓碑:只清本机的话,换台设备又会把已结束的一局恢复回来。
    *  同时作废在途的服务端恢复读 —— 迟到的旧会话不能把刚结束的局拉回暂停态。 */
   _clearRunSessionEverywhere() {
+    if (!this._isPlayAccountCurrent()) return false;
     const scope = this._runSessionScope();
     const now = Date.now();
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
@@ -829,7 +850,11 @@ Page({
   },
   /** 同一页的服务端 save/clear 串行发出:先暂停再结束时,迟到的 save 不能把已结束的会话写回。 */
   _queueRunSync(send) {
-    this._runSyncChain = (this._runSyncChain || Promise.resolve()).then(send);
+    const member = this._playOwner;
+    this._runSyncChain = (this._runSyncChain || Promise.resolve()).then(() => {
+      if (member !== this._playMember()) return false;
+      return send();
+    });
     return this._runSyncChain;
   },
   /** 服务端权威态说这场已经不能继续(时间窗关闭 / 路线终态)时不恢复。 */
@@ -843,7 +868,7 @@ Page({
   /** 重进页面:读暂停快照,投影回 paused(不重开、不偷跑)。服务端说结束就不恢复并清快照。
    *  第二轮拍板 22:本机快照先同步恢复;再读服务端那份,本机没有(换了手机)或服务端更新时改用服务端的。 */
   _restoreRunSession(d, routeState, nodes) {
-    if (this._runStarted || this.data.isPreview || this.data.isMock) return false;
+    if (!this._isPlayAccountCurrent() || this._runStarted || this.data.isPreview || this.data.isMock) return false;
     const scope = this._runSessionScope();
     const openingPending = routeState && routeState.opening && !routeState.opening.complete;
     const allDone = !openingPending && (nodes || []).length > 0 && nodes.every((n) => n && n.done);
@@ -855,7 +880,7 @@ Page({
     const restored = stored ? this._applyRestoredRun(stored) : false;
     const epoch = this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     readServerPausedRun(req, scope).then((result) => {
-      if (epoch !== this._runRestoreEpoch || !result.ok) return;
+      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch || !result.ok) return;
       // 等服务端期间玩家已经自己开了新局 / 点了继续:那一局归玩家,服务端这份不再覆盖或撤销它。
       const untouched = !this._runStarted || (this._restoredRun && this._sessionClock && this._sessionClock.isPaused());
       if (!untouched) return;
@@ -2170,6 +2195,7 @@ Page({
   closeRoleCard() { this.setData({ 'roleCard.show': false }); },
 
   confirmPlayerRole() {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.roleCard.confirmed) { this.closeRoleCard(); return; }
     if (this.data.gameModule.write.status === 'unknown') { this.reconcilePlayerChoice(); return; }
     if (this.data.gameModule.write.status === 'submitting') return;
@@ -2188,6 +2214,7 @@ Page({
       return false;
     }
     gameSessionClient.submitAction('player', input).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const pending = this._playerPendingWrite;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
@@ -2214,18 +2241,21 @@ Page({
         message: (result && result.message) || '身份确认结果待核对，请勿重复提交',
       } });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认结果待核对，请勿重复提交', canRetry: true } });
     });
   },
 
   _roleSeenKey(scope) {
-    const memberId = app.getUserID && app.getUserID();
+    if (!this._isPlayAccountCurrent()) return '';
+    const memberId = this._playOwner;
     return memberId === null || memberId === undefined || memberId === '' || !scope
       ? '' : 'role_seen_m' + memberId + '_s' + scope;
   },
 
   _playerPendingKey() {
-    const memberId = app.getUserID && app.getUserID();
+    if (!this._isPlayAccountCurrent()) return '';
+    const memberId = this._playOwner;
     return memberId === null || memberId === undefined || memberId === '' || !this.data.activityId
       ? '' : 'game_player_pending_m' + memberId + '_a' + this.data.activityId;
   },
@@ -2272,6 +2302,7 @@ Page({
   },
 
   _clearPlayerPending() {
+    if (!this._isPlayAccountCurrent()) return;
     this._playerPendingWrite = null;
     try {
       const key = this._playerPendingKey();
@@ -2303,10 +2334,12 @@ Page({
   },
 
   _loadPlayerGameModule() {
+    if (!this._isPlayAccountCurrent()) return;
     const activityId = Number(this.data.activityId) || 0;
     if (!activityId || this.data.isPreview || this.data.isMock) return;
     this.setData({ 'gameModule.loading': true, 'gameModule.error': '' });
     gameSessionClient.loadProjection('player', activityId).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       if (!result || result.status !== 'ready') {
         const absent = result && ['GAME_SESSION_NOT_FOUND', 'GAME_SESSION_NOT_PREPARED', 'GAME_MODULE_DISABLED'].includes(result.reasonCode);
         const current = this.data.gameModule || {};
@@ -2414,6 +2447,7 @@ Page({
         if (pending) this.reconcilePlayerChoice();
       });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       const current = this.data.gameModule || {};
       const retainedSnapshot = current.enabled === true
         && typeof current.snapshotAt === 'string' && !!current.snapshotAt;
@@ -2433,6 +2467,7 @@ Page({
   retryGameModule() { this._loadPlayerGameModule(); },
 
   submitPlayerChoice(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     const nodeId = Number(e.currentTarget.dataset.node) || 0;
@@ -2451,6 +2486,7 @@ Page({
       return false;
     }
     gameSessionClient.submitAction('player', input).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const pending = this._playerPendingWrite;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
@@ -2471,11 +2507,13 @@ Page({
         status: 'unknown', requestId, message: (result && result.message) || '结果待核对，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待核对，请勿重复提交', canRetry: true } });
     });
   },
 
   submitPlayerTask(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_SUBMIT')) return;
@@ -2508,6 +2546,7 @@ Page({
       return false;
     }
     gameSessionClient.submitAction('player', input).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const pending = this._playerPendingWrite;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
@@ -2537,11 +2576,13 @@ Page({
         status: 'unknown', requestId, message: (result && result.message) || '提交结果待核对，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待核对，请勿重复提交', canRetry: true } });
     });
   },
 
   _submitPlayerAssist(input, labels) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     const requestId = input.requestId;
     this.setData({ 'gameModule.write': { status: 'submitting', requestId, message: labels.submitting } });
@@ -2550,6 +2591,7 @@ Page({
       return false;
     }
     gameSessionClient.submitAction('player', input).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const pending = this._playerPendingWrite;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
@@ -2577,6 +2619,7 @@ Page({
         message: (result && result.message) || labels.unknown,
       } });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: labels.unknown, canRetry: true } });
     });
   },
@@ -2721,12 +2764,14 @@ Page({
   },
 
   reconcilePlayerChoice() {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     const requestId = gameModule.write && gameModule.write.requestId;
     const pendingWrite = this._playerPendingWrite;
     if (!requestId || gameModule.write.status !== 'unknown') return;
     this.setData({ 'gameModule.write.message': '正在确认操作结果…' });
     gameSessionClient.readReceipt(gameModule.activityId, requestId).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const applied = result && result.status === 'matched'
         && matchingPlayerTerminalReceipt(result, pendingWrite, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2763,6 +2808,7 @@ Page({
         ? (restored ? '结果仍在核对；不会自动重发现场内容' : '结果仍在核对，请稍后再试')
         : (restored ? '暂时无法核对；不会自动重发现场内容' : '暂时无法核对，请保留本页稍后重试') });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write.message': pendingWrite && !pendingWrite.command
         ? '暂时无法核对；不会自动重发现场内容'
         : '暂时无法核对，请保留本页稍后重试' });
@@ -2770,6 +2816,7 @@ Page({
   },
 
   retryPlayerUnknownWrite() {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     const pending = this._playerPendingWrite;
     if (!pending || !pending.command || !gameModule.write || gameModule.write.status !== 'unknown') return false;
@@ -2780,6 +2827,7 @@ Page({
       status: 'submitting', requestId: pending.requestId, message: '正在用原请求号重试…',
     } });
     gameSessionClient.submitAction('player', pending.command).then((result) => {
+      if (!this._isPlayAccountCurrent()) return;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2811,6 +2859,7 @@ Page({
         status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
       } });
     }).catch(() => {
+      if (!this._isPlayAccountCurrent()) return;
       this.setData({ 'gameModule.write': {
         status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
       } });
@@ -3423,6 +3472,9 @@ Page({
 
   // ---------- 数据 ----------
   loadData(first) {
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const loadEpoch = this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && loadEpoch === this._playLoadEpoch;
     const that = this;
     if (this.data.isPreview || this.data.isMock) { this.setData({ loading: false }); return; }
     this._loadCommitted = false;   // 每轮加载重新武装:上一轮的成功不能替这一轮的失败背书
@@ -3430,6 +3482,7 @@ Page({
     // 物理上永远回到同一状态的假按钮。单独落 missing,只留真的走得通的出口(回活动详情)。
     if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'missing' }); return; }
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {
+      if (!isCurrent()) return;
       if (res.code == 402 || res.code == '402') {
         // C-26:未购/过期自玩通行证 → needPass 空态 + 「获取通行证」按钮(goGetPass 跳主题详情)。
         // 不再落 registered=false 的「你还没有报名这个场次」——自玩没有报名这个动作,那句指引是错的。
@@ -3512,6 +3565,7 @@ Page({
         // 2026-09-22 删起始页后首屏直接落卡包,first 不再切屏,保持当前 screen。
         screen: that.data.screen
       }, () => {
+        if (!isCurrent()) return;
         that.rebuild();
         that._ensureSessionClock();
         that._syncIdleStats(d.chapters, nodes);
@@ -3530,6 +3584,7 @@ Page({
         that._loadPlayerGameModule();
       });
     }).catch(() => {
+      if (!isCurrent()) return;
       // 网络层 reject(超时/断网/req 抛错):落加载失败态,复用「重新加载」(reloadPlay),避免 loading 死转。
       // 已经落地的成功首屏不在这里被覆盖(见上面的 _loadCommitted)。
       if (that._loadCommitted) {
@@ -4051,7 +4106,8 @@ Page({
     const that = this;
     const options = arguments[0];
     // 返回 promise:true=本次成功(或被更新的响应顶替,不算失败),false=失败 —— 轮询器据此退避
-    if (!this.data.activityId || this.data.isPreview || this.data.isMock) return Promise.resolve(true);
+    if (!this._isPlayAccountCurrent() || this._themeHidden || !this.data.activityId || this.data.isPreview || this.data.isMock) return Promise.resolve(true);
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;
     const requestEpoch = (this._leadProgressEpoch || 0) + 1;
     this._leadProgressEpoch = requestEpoch;
     const explicitAuditToken = options && options.unlockAuditToken;
@@ -4061,6 +4117,7 @@ Page({
     const claimResponse = () => {
       // 只拒绝比「已落地」结果更旧的响应，不能以「最新已发起」为准。
       // 否则当 GET 持续慢于 4s 轮询间隔时，每个响应都会被下一请求提前作废而永不刷新。
+      if (!that._isPlayAccountCurrent() || that._themeHidden || lifecycleEpoch !== (that._leadLifecycleEpoch || 0)) return false;
       if (requestEpoch < (that._leadProgressAppliedEpoch || 0)) return false;
       that._leadProgressAppliedEpoch = requestEpoch;
       return true;
@@ -4113,12 +4170,14 @@ Page({
   },
   // 带领场进度轮询:setTimeout 链(utils/poller.js),上一发没回来不叠发;连续失败 4s→8s→10s 退避,成功复位。
   _startLeadPoll() {
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
     if (!this._leadPoller) {
       this._leadPoller = createPoller({ run: () => this.loadTeamProgress(), interval: 4000, maxInterval: 10000 });
     }
     this._leadPoller.start();
   },
   _stopLeadPoll() {
+    this._leadLifecycleEpoch = (this._leadLifecycleEpoch || 0) + 1;
     if (this._leadPoller) this._leadPoller.stop();
   },
   retryLeadProgress() {
