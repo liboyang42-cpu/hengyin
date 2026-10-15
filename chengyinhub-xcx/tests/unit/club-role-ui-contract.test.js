@@ -33,6 +33,7 @@ function createHarness() {
       if (request === '../../../utils/response-shape.js') {
         return require(path.join(ROOT, 'utils/response-shape.js'))
       }
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -93,6 +94,7 @@ function createDetailHarness(storage = {}) {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (Object.prototype.hasOwnProperty.call(modules, request)) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
