@@ -51,7 +51,6 @@ class B03CouponLifecycleMySqlIT {
 
     private DataSource dataSource;
     private ISmsCouponHistoryService couponHistoryService;
-    private SmsCouponHistoryMapper historyMapper;
     private SmsCouponHistoryServiceImpl target;
     private boolean databaseCreated;
 
@@ -86,7 +85,6 @@ class B03CouponLifecycleMySqlIT {
         ReflectionTestUtils.setField(target, "couponSourceGrantMapper", template.getMapper(com.chengyinhub.business.mapper.CouponSourceGrantMapper.class));
         ReflectionTestUtils.setField(target, "rewardDropLogMapper", template.getMapper(com.chengyinhub.business.mapper.RewardDropLogMapper.class));
         couponHistoryService = transactionalProxy(target, ISmsCouponHistoryService.class, tx);
-        historyMapper = template.getMapper(SmsCouponHistoryMapper.class);
     }
 
     @BeforeEach
@@ -188,14 +186,10 @@ class B03CouponLifecycleMySqlIT {
 
     @Test
     void concurrentReverseCasDeletesOnlyUnbatchedPendingSettlementOnce() throws Exception {
-        installReadBarrier("smsCouponHistoryMapper", SmsCouponHistoryMapper.class,
-                historyMapper, "selectSmsCouponHistoryById", true);
-        java.util.List<Boolean> results;
-        try {
-            results = race(() -> couponHistoryService.reverseRedemption(14L,"E04 synthetic reversal",77L));
-        } finally {
-            ReflectionTestUtils.setField(target, "smsCouponHistoryMapper", historyMapper);
-        }
+        // reverse now locks the history before reading its association, so only one contender
+        // may read the used state at a time; keep the concurrent start and all once-only facts.
+        java.util.List<Boolean> results = race(
+                () -> couponHistoryService.reverseRedemption(14L,"E04 synthetic reversal",77L));
         assertEquals(1, (results.get(0) ? 1 : 0) + (results.get(1) ? 1 : 0));
         assertEquals(0, number("SELECT use_status FROM sms_coupon_history WHERE id=14"));
         assertEquals(0, number("SELECT use_count FROM sms_coupon WHERE id=30"));
@@ -222,7 +216,7 @@ class B03CouponLifecycleMySqlIT {
     }
 
     // Instrument timing only: every read/write still invokes the production MyBatis mapper.
-    // Source contenders both reach the receipt lock; reverse contenders both read used=1 before CAS.
+    // Source contenders both reach the receipt lock; reverse uses its own current history lock.
     private void installReadBarrier(String field, Class<?> mapperType, Object real,
                                     String methodName, boolean afterRead) {
         java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(2);

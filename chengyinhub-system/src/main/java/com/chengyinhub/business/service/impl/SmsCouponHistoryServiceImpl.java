@@ -185,7 +185,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (reason == null || reason.trim().isEmpty()) {
             throw new IllegalArgumentException("撤销原因不能为空");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 先锁当前历史关联，避免后台并发编辑coupon_id后仍回退旧模板；沿用history→coupon锁序。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null) {
             throw new IllegalStateException("核销记录不存在");
         }
