@@ -107,3 +107,13 @@ test('活跃新草稿指针按账号隔离，删除草稿会同时清掉当前�
   assert.equal(readActiveNewDraft(storage, 1), '')
   assert.equal(readActiveNewDraft(storage, 2), 'draft-two')
 })
+
+test('UNKNOWN marker roundtrips without extra payload fields and remains account fenced', () => {
+  const storage = makeStorage()
+  saveDraft(storage, input({ publishAttempt: { status: 'UNKNOWN', topicId: 77, token: 'discard' } }))
+  const restored = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 })
+  assert.deepEqual(restored.envelope.publishAttempt, { status: 'UNKNOWN', topicId: '77' })
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 43 }).status, 'member_mismatch')
+  saveDraft(storage, input())
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.publishAttempt, undefined)
+})

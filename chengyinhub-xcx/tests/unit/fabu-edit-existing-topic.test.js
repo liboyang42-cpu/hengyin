@@ -26,7 +26,9 @@ global.getApp = () => ({
   tips: (m) => { toasts.push(m); },
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
-  getUserID: () => 0,
+  getUserID: () => 42,
+  getNickname: () => '登录作者',
+  getAvatar: () => '',
   getUserInfo: () => null,
   getToken: () => '',
 });
@@ -61,6 +63,8 @@ beforeEach(() => {
 function makePage() {
   const inst = Object.assign({}, pageConfig);
   inst.data = JSON.parse(JSON.stringify(pageConfig.data));
+  inst.data.draftUuid = 'logged-in-test-draft';
+  inst.data.draftMemberId = 42;
   inst.setData = function (patch, cb) {
     Object.keys(patch).forEach((k) => {
       const parts = k.replace(/\[(\d+)\]/g, '.$1').split('.');
@@ -351,6 +355,7 @@ test('自由探索编辑伏笔后随原主题保存，重开保留资源和应�
 
 test('普通自由探索的章节故事流保存走 V2，保留正文、节点引用和计酬条款', () => {
   for (const editingId of ['77', '']) {
+    storage = {}; // Independent create/update fixtures must not restore the previous in-flight write.
     const page = openForEdit('FULL');
     page.data.editingTopicId = editingId;
     page.data.formData.productType = 2;
@@ -378,6 +383,7 @@ test('普通自由探索的章节故事流保存走 V2，保留正文、节点�
 
 test('普通自由探索服务器回填还原无需地点的故事玩法，保留故事块位置', () => {
   const page = makePage();
+  page.data.editingTopicId = '77';
   const detail = editDetailFixture('FULL');
   detail.topic.productType = 2;
   detail.chapters[0].cmsTopicNodeList[0].templateId = 71;
