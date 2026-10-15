@@ -52,6 +52,7 @@ function readActiveNewDraft(storage, memberId) {
   function ownedDraft(candidate) {
     if (!candidate) return null;
     var result = loadDraft(storage, { draftUuid: candidate }, { memberId: memberId });
+    if (result.status === 'storage_unavailable') throw new Error('本地草稿暂时无法读取');
     return result.status === 'ready' && value(result.envelope.draftUuid) === candidate
       ? result.envelope : null;
   }
@@ -112,11 +113,16 @@ function saveDraft(storage, input) {
 function loadDraft(storage, identity, options) {
   options = options || {};
   if (!storage || typeof storage.getStorageSync !== 'function') {
-    return { status: 'missing', envelope: null };
+    return { status: 'storage_unavailable', envelope: null };
   }
-  var stored = storage.getStorageSync(draftKeyFor(identity, options.memberId));
-  // Older installs used an unscoped key; read it without moving or deleting another account's data.
-  if (!stored) stored = storage.getStorageSync(draftKeyFor(identity));
+  var stored;
+  try {
+    stored = storage.getStorageSync(draftKeyFor(identity, options.memberId));
+    // A failed read is not proof that a previous UNKNOWN envelope does not exist.
+    if (!stored) stored = storage.getStorageSync(draftKeyFor(identity));
+  } catch (error) {
+    return { status: 'storage_unavailable', envelope: null };
+  }
   if (!stored || typeof stored !== 'object') return { status: 'missing', envelope: null };
   var envelope = clone(stored);
   if (value(envelope.memberId) !== value(options.memberId)) {

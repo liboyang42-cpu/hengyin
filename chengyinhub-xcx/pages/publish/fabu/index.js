@@ -644,7 +644,7 @@ Page({
   _persistDraftEnvelope() {
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity || !memberId || this._publishPageUnloaded
+    if (this._draftStorageUnavailable || !identity || !memberId || this._publishPageUnloaded
         || String(memberId) !== String(app.getUserID() || '')) return false;
     try {
       proEditorDraft.saveDraft(wx, {
@@ -717,10 +717,20 @@ Page({
 
   _bootstrapNewLocalDraft(options) {
     const memberId = app.getUserID() || '';
-    let draftUuid = this._newDraftUuid(options || {}, memberId);
+    let draftUuid;
+    try {
+      draftUuid = this._newDraftUuid(options || {}, memberId);
+    } catch (error) {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
     this.setData({ draftUuid, draftMemberId: memberId });
     if (!memberId) return false;
     const restored = proEditorDraft.loadDraft(wx, { draftUuid }, { memberId });
+    if (restored.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
     if (restored.status === 'member_mismatch') {
       draftUuid = proEditorDraft.createDraftUuid();
       this.setData({ draftUuid });
@@ -759,6 +769,10 @@ Page({
       memberId,
       currentBaseRevision: baseRevision,
     });
+    if (result.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return;
+    }
     if (result.envelope && result.envelope.publishAttempt) {
       this._publishAttempt = result.envelope.publishAttempt;
     }
@@ -792,7 +806,14 @@ Page({
     finish();
   },
 
+  _markDraftStorageUnavailable() {
+    this._draftStorageUnavailable = true;
+    this._draftAutosaveReady = true; // Keep the existing unsaved-exit warning active.
+    this.setData({ submitting: false, submitError: '本地草稿暂时无法读取，请稍后重新进入再发布，已有草稿不会被覆盖。' });
+  },
+
   _clearDraftEnvelope() {
+    if (this._draftStorageUnavailable) return;
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
     if (!identity) return;
@@ -802,6 +823,7 @@ Page({
   },
 
   clearLocalDraft() {
+    if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
     modal.show({
       title: '清空本地草稿？',
       content: '当前未发布的章节和待编排素材都会从本机删除。',
@@ -6519,6 +6541,10 @@ Page({
   sendData(data) {
     let that = this;
     if (this._publishPageUnloaded) return;
+    if (this._draftStorageUnavailable) {
+      this._markDraftStorageUnavailable();
+      return;
+    }
     const memberId = String(app.getUserID() || '');
     if (!memberId || (this.data.draftMemberId && String(this.data.draftMemberId) !== memberId)) return;
     const workflow = that.getPublishWorkflow();
