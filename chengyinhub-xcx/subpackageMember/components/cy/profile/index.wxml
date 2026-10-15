@@ -668,7 +668,7 @@
 </view>
 <view class="member-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'share-invite'}}" catchtouchmove="blockSceneTouch">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneCurrent.dirty}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="requestSceneClose" bind:back="backScene">
-    <cy-scene-share-invite theme="{{sceneCurrent.theme}}" />
+    <cy-scene-share-invite theme="{{sceneCurrent.theme}}" player-code="{{isSelf}}" />
   </cy-scene-sheet>
 </view>
 <view class="member-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'qr-coupon'}}" catchtouchmove="blockSceneTouch">
