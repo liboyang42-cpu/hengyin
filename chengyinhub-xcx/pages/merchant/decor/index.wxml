@@ -281,6 +281,17 @@
               <text wx:if="{{checkoutState === 'unknown'}}" class="dc-muted">
                 支付结果待确认，请勿重复支付。
               </text>
+              <!-- BL-108 已生效权益(只读):不展示价格、不做续费入口 -->
+              <block wx:if="{{activeSubs.length}}">
+                <text class="dc-muted">已开通</text>
+                <view class="dc-choice" wx:for="{{activeSubs}}" wx:key="key">
+                  <view>
+                    <text>{{item.name}}</text>
+                    <view class="dc-muted">{{item.period}}{{item.usage ? ' · ' + item.usage : ''}}</view>
+                  </view>
+                </view>
+                <text class="dc-muted">可开通</text>
+              </block>
               <view
                 class="dc-choice"
                 wx:for="{{tiers}}"

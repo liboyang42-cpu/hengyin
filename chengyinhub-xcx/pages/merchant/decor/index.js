@@ -12,6 +12,7 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
+const { buildActiveSubscriptions } = require('../../../utils/merchant-subscription-view.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
@@ -104,6 +105,8 @@ Page({
     perkTypes: ['礼品', '优惠券', '折扣'],
     // E4 升级权益(先做能力,收费开关默认关)
     chargeEnabled: false,
+    // BL-108 已生效权益(只读,/api/merchant/subscription);空列表不展示
+    activeSubs: [],
 
     checkoutBusy: false,
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
@@ -477,7 +480,21 @@ Page({
         }
       }
     });
+    this.loadActiveSubs();
 
+  },
+  loadActiveSubs() {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/merchant/subscription', method: 'POST',
+      success(res) {
+        if (res && (res.code == '200' || res.code == 200)) {
+          that.setData({ activeSubs: buildActiveSubscriptions(res.data, that.data.tiers) });
+        }
+      },
+      fail() {}
+    });
   },
   _initCommerceWorkflow() {
     if (this._commerceWorkflow) return this._commerceWorkflow;
