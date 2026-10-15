@@ -28,4 +28,17 @@ class GrowthBadgeMapperXmlTest
         assertTrue(sql.contains("status = '0'") && sql.contains("club_id is null"),
                 "平台墙只取 club_id 为空的徽章定义: " + sql);
     }
+
+    @Test
+    void ownedClubQueryOnlyReturnsClubBadgesByCode() throws Exception
+    {
+        Path path = Paths.get(XML);
+        if (!Files.exists(path)) path = Paths.get("..").resolve(XML);
+        String xml = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        Matcher m = Pattern.compile("<select id=\"selectActiveClubByCodes\".*?</select>", Pattern.DOTALL).matcher(xml);
+        assertTrue(m.find(), "selectActiveClubByCodes 必须存在");
+        String sql = m.group().replaceAll("\\s+", " ");
+        assertTrue(sql.contains("club_id is not null") && sql.contains("badge_code in") && sql.contains("status = '0'"),
+                "只取启用中、编码在已获得集合内的俱乐部徽章: " + sql);
+    }
 }

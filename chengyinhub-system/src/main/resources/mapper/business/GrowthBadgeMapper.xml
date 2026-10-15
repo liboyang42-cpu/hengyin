@@ -57,4 +57,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where status = '0' and club_id is null
         order by sort_no
     </select>
+
+    <select id="selectActiveClubByCodes" resultMap="GrowthBadgeResult">
+        select id, badge_code, badge_name, badge_desc, icon_url, unlock_rule, status, sort_no, club_id, create_time,
+               asset_type, badge_style, category, trigger_event, unlock_rule_json, rule_version, rarity, badge_family, name_en, statement,
+               unlock_hint
+        from growth_badge
+        where status = '0' and club_id is not null
+          and badge_code in
+        <foreach collection="codes" item="code" open="(" separator="," close=")">#{code}</foreach>
+        order by sort_no
+    </select>
 </mapper>
