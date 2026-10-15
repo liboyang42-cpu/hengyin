@@ -860,6 +860,24 @@ class ApiRegistrationVerifyGateTest {
         verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
     }
 
+    /** PR10 复审:时间窗在权限之后 —— 无权扫码方对提前的俱乐部场次拿到的是权限拒绝,不是开场时间提示。 */
+    @Test
+    void clubSessionScanByUnauthorizedMerchant_getsPermissionDenialBeforeTimingHint() {
+        givenActivityRegistration();
+        CmsActivity club = new CmsActivity();
+        club.setId(ACTIVITY);
+        club.setMemberId(OWNER);
+        club.setClubId(CLUB);
+        club.setStartDate(new java.util.Date(System.currentTimeMillis() + 2L * 24 * 3600 * 1000));
+        when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(club);
+
+        AjaxResult r = controller.scanQrCode("activity", CODE);
+
+        assertEquals("该店无权核销本场玩家票；俱乐部带队请扫描领队团码", r.get("msg"));
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any(), anyLong(), any());
+    }
+
     /** 窗口内(含已开场)与非俱乐部活动照常核销。 */
     @Test
     void clubSessionVerificationWindowBoundary() {
