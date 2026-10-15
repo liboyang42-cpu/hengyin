@@ -4383,30 +4383,50 @@ Page({
     const lead = this.data.lead;
     return !!(lead && lead.exists && lead.isLeader);
   },
+  _leadOperationContext() {
+    return { owner: this._playOwner, activityId: this.data.activityId,
+      sessionKey: JSON.stringify(this._sessionParams()) };
+  },
+  _isLeadOperationContextCurrent(context, requireLeader) {
+    return !!context && this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.activityId === this.data.activityId && context.sessionKey === JSON.stringify(this._sessionParams())
+      && (!requireLeader || this._canUseLeadTools());
+  },
   // 规则 1：带队主题的玩家票必须从当前 activity 入口核销。不能复用商家首页的通用扫码，
   // 否则请求没有场次身份，后端会 fail closed，结算也无法区分同主题的不同团。
   leadVerifyMemberTicket() {
     const that = this;
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    const sequence = this._leadTicketScanSequence = (this._leadTicketScanSequence || 0) + 1;
+    const isCurrent = () => that._isLeadOperationContextCurrent(context, true)
+      && sequence === that._leadTicketScanSequence;
+    let scanSettled = false, loadingShown = false;
+    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
     wx.scanCode({
       onlyFromCamera: true,
       success(scan) {
+        if (!isCurrent() || scanSettled) return;
+        scanSettled = true;
         const ticket = resolveLeadMemberTicket(scan.result);
         if (ticket.error) {
           that.diegetic(ticket.error);
           return;
         }
-        cyLoading.show('正在核销');
+        loadingShown = true; cyLoading.show('正在核销');
         req('/api/registration/scan_group_member_ticket', 'POST', {
-          code: ticket.code, activityId: that.data.activityId
+          code: ticket.code, activityId: context.activityId
         }).then((r) => {
-          cyLoading.hide();
+          finishLoading();
+          if (!isCurrent()) return;
           const verified = r.code == 200 || r.code == '200';
           if (verified) motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
           that.diegetic(r.msg || (verified ? '核销成功' : '核销失败'));
-        });
+        }).catch(() => { finishLoading(); if (isCurrent()) that.diegetic('核销失败'); });
       },
       fail(error) {
+        if (!isCurrent() || scanSettled) return;
+        scanSettled = true;
         that.diegetic(isScanCancelled(error) ? '已取消扫码' : '扫码未完成，请重试');
       }
     });
