@@ -22,6 +22,14 @@ var waiters = [];
 // has cleared owners. Reusing a key must never revive its previous callback.
 var notifying = [];
 
+function cancelNotifications(key, force) {
+  notifying.forEach(function (batch) {
+    batch.forEach(function (item) {
+      if (force || item.key === key) item.cancelled = true;
+    });
+  });
+}
+
 function notify(batch, callback, value) {
   var hasError = false;
   var firstError;
@@ -144,6 +152,9 @@ function beginStart() {
 function acquire(key, opts) {
   opts = opts || {};
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
+  // A failure batch has already cleared owners. A fresh acquisition replaces
+  // that key's old notification even when the consumer did not release first.
+  cancelNotifications(key, false);
   var owner = { key: key, opts: opts, cancelled: false };
   owners[key] = owner;
   if (started) { opts.success && opts.success(usingBackground); return; }
@@ -153,11 +164,7 @@ function acquire(key, opts) {
 
 /** 释放一个持有者;归零才真停。传 force=true 用于「无论如何都收干净」的兜底。 */
 function release(key, force) {
-  notifying.forEach(function (batch) {
-    batch.forEach(function (item) {
-      if (force || item.key === key) item.cancelled = true;
-    });
-  });
+  cancelNotifications(key, force);
   delete owners[key];
   waiters = waiters.filter(function (item) { return item.key !== key; });
   if (!force && count() > 0) return;
