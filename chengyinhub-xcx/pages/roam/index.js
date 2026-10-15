@@ -104,9 +104,7 @@ const RUNNER_MK_BASE = 800000;
    走不满一格的上报是同一个值。 */
 const PRESENCE_MS = 30000;
 /* 拉别人的位置:45 s 一次。别人也是 30 s 一报,拉得更勤只会拿到同一批。 */
-const RUNNERS_MS = 45000;
-// /api/roam/pois 与 /api/roam/nearby-runners 共用的查询半径(米)
-const ROAM_POI_RADIUS_M = 3000;
+const RUNNERS_MS = 45000; const ROAM_POI_RADIUS_M = 3000; // 后者:/api/roam/pois 与 nearby-runners 共用查询半径(米)
 const NEAR_M = 80;       // 略放宽,GPS 不准时仍能提示
 /* 用户拍板(9-16)「漫游打卡不存在失败态:距离不够就是不能打卡(只提示)」:
    打卡按钮的可用半径必须与后端 /api/roam/shop/visit 的判定同一口径 ——
@@ -2584,8 +2582,7 @@ Page({
   /** 起始页右侧「拍照」= 直接开始漫游并立刻开相机。
    *  照片是绑在 session 上的(roam_sessions[].photos → 邮票),所以必须先真的开起来,
    *  不能在没有 session 的起始页单独拍 —— 那张照片会无处安放。 */
-  openOfficialRoutes() { wx.navigateTo({ url: '/subpackageRoam/official-routes/index' }); },
-  goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
+  openOfficialRoutes() { wx.navigateTo({ url: '/subpackageRoam/official-routes/index' }); }, goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
     const { introCards, introCardIdx } = this.data;
