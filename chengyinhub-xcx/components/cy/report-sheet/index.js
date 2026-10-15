@@ -18,6 +18,8 @@ Component({
     stage: 'loading', // loading | loadfail | pick | form | busy | ok | fail | unknown
     reasonLabels: [],
     reasonLabel: '',
+    reasonResponse: '',
+    reasonEmergency: '',
     description: '',
     descriptionError: '',
     maxLength: model.DESCRIPTION_MAX,
@@ -33,7 +35,7 @@ Component({
       this._reasonCode = ''
       this._requestId = ''
       this._busy = false
-      this.setData({ stage: 'loading', reasonLabels: [], reasonLabel: '', description: '', descriptionError: '', receipt: '', failText: '' })
+      this.setData({ stage: 'loading', reasonLabels: [], reasonLabel: '', reasonResponse: '', reasonEmergency: '', description: '', descriptionError: '', receipt: '', failText: '' })
       this.loadTaxonomy()
     },
     loadTaxonomy() {
@@ -52,6 +54,7 @@ Component({
           }
           this._reasons = taxonomy.reasons
           this._policyVersion = taxonomy.policyVersion
+          this._guidanceCode = taxonomy.emergencyGuidanceCode
           this.setData({ stage: 'pick', reasonLabels: taxonomy.reasons.map((r) => r.label) })
         },
         fail: () => { this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
@@ -64,7 +67,8 @@ Component({
       if (!reason) return
       if (reason.code !== this._reasonCode) this._requestId = ''
       this._reasonCode = reason.code
-      this.setData({ stage: 'form', reasonLabel: reason.label, descriptionError: '' })
+      const note = model.reasonNote(reason, this._guidanceCode)
+      this.setData({ stage: 'form', reasonLabel: reason.label, reasonResponse: note.response, reasonEmergency: note.emergency, descriptionError: '' })
     },
     onDescriptionInput(e) {
       const value = (e.detail && e.detail.value) || ''

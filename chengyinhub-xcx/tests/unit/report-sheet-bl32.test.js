@@ -14,7 +14,7 @@ test('BL-32: taxonomy 只认后端给的原因与规则版本', () => {
   assert.equal(model.normalizeTaxonomy({ reasons: [{ code: 'SPAM', label: '垃圾' }] }), null)
   assert.equal(model.normalizeTaxonomy({ policyVersion: 'v2', reasons: [] }), null)
   const t = model.normalizeTaxonomy({ policyVersion: ' v2 ', reasons: [{ code: 'SPAM', label: '垃圾', priority: 'P2' }, { code: '', label: 'x' }, null] })
-  assert.deepEqual(t.reasons, [{ code: 'SPAM', label: '垃圾' }])
+  assert.deepEqual(t.reasons, [{ code: 'SPAM', label: '垃圾', firstResponseMinutes: 0, emergency: false }])
   assert.equal(t.policyVersion, 'v2')
 })
 
