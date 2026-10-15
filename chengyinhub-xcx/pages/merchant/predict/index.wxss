@@ -86,14 +86,13 @@ page { background: var(--cy-bg-page); }
   gap: var(--cy-space-2);
   margin-top: var(--cy-space-2);
   padding: var(--cy-space-3);
-  border: 2rpx solid var(--cy-color-border-subtle);
   border-radius: var(--cy-radius-md);
+  background: var(--cy-color-bg-surface-subtle); /* BL-15 无描边:选项统一灰底,选中/未选同底色 */
   color: var(--cy-text-body);
   font-size: var(--cy-font-body);
 }
-/* 选中不是换底色,是描边加粗 + 右边一个勾:底色一换,没选中的几条看着像被禁用了 */
+/* 选中不是换底色,是字重加粗 + 右边一个勾:底色一换,没选中的几条看着像被禁用了(BL-15 起不再靠描边) */
 .pdm-opt.is-on {
-  border-color: var(--cy-text-title);
   color: var(--cy-text-title);
   font-weight: 600;
 }

@@ -7,8 +7,8 @@
 .mcs__search { display: flex; gap: var(--cy-space-2); align-items: center; }
 .mcs__input, .mcs__area {
   box-sizing: border-box; width: 100%; padding: var(--cy-space-2) var(--cy-space-3);
-  border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md);
-  font-size: var(--cy-font-body); background: var(--cy-color-bg-surface);
+  border-radius: var(--cy-radius-md); /* BL-15 浅色页输入框无描边,靠灰底与白卡区分 */
+  font-size: var(--cy-font-body); background: var(--cy-color-bg-surface-subtle);
 }
 .mcs__search .mcs__input { flex: 1; }
 .mcs__area { height: 180rpx; }
