@@ -14,11 +14,12 @@
       "lane": "STAT",
       "task_id": "F3-STAT-01",
       "child": "/root/stat",
-      "state": "ACTIVE_SOURCE_ONLY",
+      "state": "FROZEN_SOURCE_DELIVERED",
       "files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
-      ]
+      ],
+      "commit_sha": "add1534cd63c6ffd95467795126246c8d3581594"
     },
     {
       "lane": "GROW",

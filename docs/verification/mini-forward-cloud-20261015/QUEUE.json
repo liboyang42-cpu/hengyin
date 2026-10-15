@@ -6,15 +6,19 @@
   "branch": "codex/mini-forward-source-20261015",
   "verification": "NOT_RUN",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
-  "active_source_writers": 2,
+  "active_source_writers": 1,
   "initial_independent_lanes": 2,
   "items": [
     {
       "id": "F3-STAT-01",
       "lane": "STAT",
       "writer": "/root/stat",
-      "state": "IN_PROGRESS_SOURCE_ONLY",
-      "commit_sha": null
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "add1534cd63c6ffd95467795126246c8d3581594",
+      "verification": "NOT_RUN",
+      "test_class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "test_declarations": 12,
+      "new_test_declarations": 10
     },
     {
       "id": "F3-GROW-01",
@@ -26,5 +30,6 @@
   ],
   "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
   "next_scope_policy": "No new source scope without exact local coordinator transfer.",
-  "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local"
+  "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72"
 }

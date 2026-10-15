@@ -12,10 +12,16 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 ## 当前进度
 
-- F3-STAT-01：源码审计后修复中；保留空值/单边与响应、pilot 旧合同。
+- F3-STAT-01：已公共交付并冻结，`add1534cd63c6ffd95467795126246c8d3581594`，SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。
 - F3-GROW-01：调用者、事务锁及唯一约束核实中；有反证不造缺陷，不新增奖励/幂等身份政策。
-- 公共源码交付 SHA：尚无；完成一项即按精确路径提交、push 草稿 PR。
+- 公共源码交付 SHA：STAT `add1534cd63c6ffd95467795126246c8d3581594`；[草稿 PR72](https://github.com/liboyang42-cpu/hengyin/pull/72)，base 为计划分支。GROW 尚在独立编写，未将 WIP 当交付。
 
 ## 恢复
 
 先读本目录 QUEUE/CLAIMS/DELIVERY 与 PR16 最新反馈，核远端分支和工作树，不能覆盖 WIP。保留两 lane 单写者；本地失败仅一条原作者修复线。范围完成后交接候选，不能自行扩域。公共源码交付均标 `SOURCE_DELIVERED_UNVERIFIED`，待本地总控集中验证。
+
+## F3-STAT-01 源码交付
+
+原因：funnel 原样转发任意非 blank 日期且未拒反向区间。只改 AnalyticsController.java 与 AnalyticsControllerTest.java，Mapper/UI保持只读。补丁在 Mapper 前解析合法日历、正四位年份并拒反向；保留 null/清空/blank/单边、原响应、完整 rows，无新增最大跨度或分页。pilot 生产逻辑不变。
+
+测试类 `com.chengyinhub.web.controller.business.AnalyticsControllerTest`：原 2 声明保留，新增 10，共 12 个 `@Test` 源码声明；非法日期 15 值×4端组合共60个断言组合，并非实际执行数。覆盖闰日/同日、0001–9999四位年、长区间150行同对象、空值/单边和pilot 1/62/63天边界。全部 NOT_RUN。无新依赖、无跨lane依赖；全历史查询规模保护范围外，仍待本地编译和真实执行。
