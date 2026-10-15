@@ -15,6 +15,12 @@ function timeText(value) {
   return m ? `${m[1]} ${m[2]}` : text
 }
 
+// BL-04 月份分组键:取 createTime 的 YYYY-MM;读不出时间的行归入「时间未知」组,不丢行。
+function monthKey(value) {
+  const m = (value == null ? '' : String(value).trim()).match(/^(\d{4})-(\d{2})/)
+  return m ? `${m[1]}-${m[2]}` : ''
+}
+
 function normalizeRow(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const change = toInt(raw.changePoints)
@@ -30,6 +36,7 @@ function normalizeRow(raw) {
     income: delta >= 0,
     afterText: after === null ? '' : `余额 ${after}`,
     timeText: timeText(raw.createTime),
+    month: monthKey(raw.createTime),
   }
 }
 
@@ -45,4 +52,35 @@ function normalizeRows(list) {
   return rows
 }
 
-module.exports = { PAGE_SIZE, normalizeRows, timeText }
+// BL-04 全部/获得/使用:对一次全量列表在端上筛选(接口不支持类型参数)。
+const FILTERS = [
+  { key: 'all', label: '全部' },
+  { key: 'income', label: '获得' },
+  { key: 'expense', label: '使用' },
+]
+
+function filterRows(rows, kind) {
+  const list = Array.isArray(rows) ? rows : []
+  if (kind === 'income') return list.filter((row) => row.delta > 0)
+  if (kind === 'expense') return list.filter((row) => row.delta < 0)
+  return list
+}
+
+function monthLabel(key) {
+  const m = String(key || '').match(/^(\d{4})-(\d{2})$/)
+  return m ? `${m[1]}年${Number(m[2])}月` : '时间未知'
+}
+
+// 按出现顺序分组(接口已按 id 倒序),相邻同月合成一组。
+function groupByMonth(rows) {
+  const groups = []
+  ;(Array.isArray(rows) ? rows : []).forEach((row) => {
+    const key = row.month || ''
+    const last = groups[groups.length - 1]
+    if (last && last.month === key) last.rows.push(row)
+    else groups.push({ month: key, key: (key || 'unknown') + '-' + groups.length, label: monthLabel(key), rows: [row] })
+  })
+  return groups
+}
+
+module.exports = { PAGE_SIZE, FILTERS, normalizeRows, timeText, monthKey, filterRows, monthLabel, groupByMonth }
