@@ -18,17 +18,17 @@ function recapPatch(value) {
   return { items, hasMore: value.hasMore, counts: value.counts, coverage: COVERAGE, weeks, weekPicked: -1, weeksLabel: weeks.map(w => w.label + ' ' + w.count + ' 次').join('，') };
 }
 Page(page({
-  data: {"month": "", "kindIndex": 0, "kinds": ["路线", "首次地点", "城市签"], "counts": null, "coverage": "", "monthLabel": "", "isCurrentMonth": true, "weeks": [], "weekPicked": -1, "weeksLabel": ""},
+  data: {"kindIndex": 0, "kinds": ["路线", "首次地点", "城市签"], "counts": null, "coverage": "", "monthLabel": "", "isCurrentMonth": true, "weeks": [], "weekPicked": -1, "weeksLabel": ""},
   client: createMonthlyRecapClient,
   show(query) { const month = /^\d{4}-\d{2}$/.test(query.month || '') && query.month <= thisMonth() ? query.month : thisMonth(); this.setMonth(month); },
   methods: {
-    chooseMonth(event) { this.setData({ month: event.detail.value.slice(0, 7) }); this.refresh(); },
+    chooseMonth(event) { this._month = event.detail.value.slice(0, 7); this.refresh(); },
     chooseKind(event) { const index = Number(event.detail.value); this.setData({ kindIndex: index }); this.refresh(); },
-    refresh() { return this.run(() => this.client.load(this.data.month, ['routes', 'places', 'stamps'][this.data.kindIndex]), recapPatch); },
+    refresh() { return this.run(() => this.client.load(this._month, ['routes', 'places', 'stamps'][this.data.kindIndex]), recapPatch); },
     next() { return this.run(() => this.client.next(), recapPatch); },
-    setMonth(month) { const [y, m] = month.split('-'); this.setData({ month, monthLabel: y + ' 年 ' + Number(m) + ' 月', isCurrentMonth: month >= thisMonth() }); this.refresh(); },
-    prevMonth() { if (!this.data.busy) this.setMonth(shift(this.data.month, -1)); },
-    nextMonth() { if (!this.data.busy && !this.data.isCurrentMonth) this.setMonth(shift(this.data.month, 1)); },
+    setMonth(month) { const [y, m] = month.split('-'); this._month = month; this.setData({ monthLabel: y + ' 年 ' + Number(m) + ' 月', isCurrentMonth: month >= thisMonth() }); this.refresh(); },
+    prevMonth() { if (!this.data.busy) this.setMonth(shift(this._month, -1)); },
+    nextMonth() { if (!this.data.busy && !this.data.isCurrentMonth) this.setMonth(shift(this._month, 1)); },
     pickKind(event) { const index = Number(event.currentTarget.dataset.index); if (this.data.busy || index === this.data.kindIndex) return; this.setData({ kindIndex: index }); this.refresh(); },
     pickWeek(event) { this.setData({ weekPicked: Number(event.currentTarget.dataset.index) }); }
   }

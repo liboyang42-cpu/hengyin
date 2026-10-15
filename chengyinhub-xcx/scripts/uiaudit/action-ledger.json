@@ -974896,7 +974896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:65"
+        "staticSource": "subpackageTools/lib/runtime.js:66"
       }
     },
     {
@@ -975835,7 +975835,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "封存中，还有 {{item.daysLeft}} 天开启",
+        "ariaLabelExpression": "封存中，还有 {{item.daysLeft || 0}} 天开启",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -976150,7 +976150,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:10"
+        "staticSource": "subpackageTools/exploration-export/index.js:11"
       }
     },
     {
@@ -976192,32 +976192,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "other",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "other",
       "effectClasses": [
-        "state"
+        "other"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:50"
+        "staticSource": "subpackageTools/exploration-export/index.js:10"
       }
     },
     {
@@ -976259,32 +976262,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "other",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "other",
       "effectClasses": [
-        "state"
+        "other"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:50"
+        "staticSource": "subpackageTools/exploration-export/index.js:10"
       }
     },
     {
@@ -976351,7 +976357,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:12"
+        "staticSource": "subpackageTools/exploration-export/index.js:13"
       }
     },
     {
@@ -976418,7 +976424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:19"
+        "staticSource": "subpackageTools/exploration-export/index.js:20"
       }
     },
     {
@@ -976485,7 +976491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:19"
+        "staticSource": "subpackageTools/exploration-export/index.js:20"
       }
     },
     {
@@ -976552,7 +976558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:13"
+        "staticSource": "subpackageTools/exploration-export/index.js:14"
       }
     },
     {
@@ -976619,7 +976625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:11"
+        "staticSource": "subpackageTools/exploration-export/index.js:12"
       }
     },
     {
@@ -976686,7 +976692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:12"
+        "staticSource": "subpackageTools/exploration-export/index.js:13"
       }
     },
     {
@@ -976753,7 +976759,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-export/index.js:13"
+        "staticSource": "subpackageTools/exploration-export/index.js:14"
       }
     },
     {
@@ -976820,7 +976826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:61"
+        "staticSource": "subpackageTools/lib/runtime.js:62"
       }
     },
     {
@@ -976887,7 +976893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:37"
+        "staticSource": "subpackageTools/exploration-goals/index.js:38"
       }
     },
     {
@@ -976955,7 +976961,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:39"
+        "staticSource": "subpackageTools/exploration-goals/index.js:40"
       }
     },
     {
@@ -977265,32 +977271,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "other",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "other",
       "effectClasses": [
-        "state"
+        "other"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:50"
+        "staticSource": "subpackageTools/exploration-goals/index.js:32"
       }
     },
     {
@@ -977332,32 +977341,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "other",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "other",
       "effectClasses": [
-        "state"
+        "other"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:50"
+        "staticSource": "subpackageTools/exploration-goals/index.js:32"
       }
     },
     {
@@ -977424,7 +977436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:33"
+        "staticSource": "subpackageTools/exploration-goals/index.js:34"
       }
     },
     {
@@ -977493,7 +977505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:35"
+        "staticSource": "subpackageTools/exploration-goals/index.js:36"
       }
     },
     {
@@ -977627,7 +977639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:36"
+        "staticSource": "subpackageTools/exploration-goals/index.js:37"
       }
     },
     {
@@ -977694,7 +977706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:34"
+        "staticSource": "subpackageTools/exploration-goals/index.js:35"
       }
     },
     {
@@ -977828,7 +977840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/exploration-goals/index.js:32"
+        "staticSource": "subpackageTools/exploration-goals/index.js:33"
       }
     },
     {
@@ -977897,7 +977909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageTools/lib/runtime.js:61"
+        "staticSource": "subpackageTools/lib/runtime.js:62"
       }
     },
     {
@@ -978063,7 +978075,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{item.label}} {{item.count}} 次",
+        "ariaLabelExpression": "{{item.label}} {{item.count || 0}} 次",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,

@@ -1,4 +1,4 @@
-const { runtime, safeNumber, stateName } = require('../lib/runtime');
+const { runtime, safeNumber, stateName, fieldChange } = require('../lib/runtime');
 const modal = require('../../utils/modal');
 // 页面只加展示用字段;接口、请求号与原操作重试沿用归档实现
 const METRIC = { DISTINCT_ROUTES: ['不同路线数', '条路线'], EXPLORATION_DAYS: ['探索自然日数', '个探索日'] };
@@ -29,6 +29,7 @@ Page(runtime('goals', { data: { target: '5', startDate: '', endDate: '', metricI
   usePeriod(index) { const list = periods(); const p = list[index]; this.setData({ periods: list, periodIndex: index, startDate: p.start, endDate: p.end, today: list[2].start }); },
   pickPeriod(e) { if (!this.data.pending && !this.data.busy) this.usePeriod(Number(e.currentTarget.dataset.index)); },
   toggleCreate() { if (this.data.busy) return; this.usePeriod(this.data.periodIndex); this.setData({ creating: !this.data.creating, error: '' }); },
+  onField(e) { fieldChange(this, e); },
   loadList() { this.run(() => refresh.call(this)); },
   dismissError() { this.setData({ error: '' }); },
   nextPage() { this.run(() => this.client.list(this._next, 20), v => { this._next = v.nextBeforeId; this.setData({ rows: this.data.rows.concat(v.items.map(decorate)), hasMore: v.hasMore }); }); },

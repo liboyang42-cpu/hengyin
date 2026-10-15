@@ -12,7 +12,7 @@
   <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" bindtap="loadMemories" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
   <view class="tu-loading" wx:if="{{busy && !rows.length}}">正在翻往年记录…</view>
   <view class="an-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{rows}}" wx:key="id">
-    <view class="an-cover"><text class="an-years">{{item.yearsAgo}} 年前</text></view>
+    <view class="an-cover"><text class="an-years">{{item.yearsAgo || 0}} 年前</text></view>
     <view class="an-body">
       <text class="an-t">{{item.title}}</text>
       <text class="an-m">{{item.completedText}} 完成</text>

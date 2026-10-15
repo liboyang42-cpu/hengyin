@@ -19,7 +19,7 @@ function members(t) { const j = Number(t && t.joinedCount) || 0; const m = Numbe
 function dateText(v) { if (!v) return ''; const s = String(v).replace('T', ' '); return s.slice(5, 16).replace('-', '/'); }
 
 Page({
-  data: { reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false, openError: '', busy: false },
+  data: { reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false, openError: '' },
 
   onLoad(options) { this._seq = 0; this.setData({ reducedMotion: readReducedMotion() }); if (options && options.tab === 'open') this.setData({ tab: 'open' }); },
   onShow() { this.reload(); },
@@ -96,16 +96,16 @@ Page({
   _row(e) { const ds = e.currentTarget.dataset; const g = (this._rows || {})[ds.group] || []; return g[Number(ds.index)]; },
   openRow(e) { const row = this._row(e); if (!row) return; if (row.tone === 'bad') { this.openMap(); return; } wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); },
   onRowAction(e) {
-    const row = this._row(e); if (!row || this.data.busy) return;
+    const row = this._row(e); if (!row || this._busy) return;
     if (row.action.act === 'enter') { wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); return; }
     if (row.action.act === 'nearby') { this.openMap(); return; }
     const that = this;
     modal.show({ title: '撤回申请？', content: '撤回后可以重新申请。', confirmText: '撤回', cancelText: '不撤回', danger: true, success(r) {
       if (!r.confirm) return;
-      that.setData({ busy: true });
+      that._busy = true;
       app.sendRequest({ url: '/api/team/withdraw', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({ teamId: Number(row.teamId) }), header: JSON_HEADER,
-        success(res) { that.setData({ busy: false }); if (res && res.code == 200) { cyToast('已撤回申请'); that.reload(); return; } const f = T.resolveTeamError('withdraw', res); cyToast(f.title || '没能撤回，请重试'); },
-        fail() { that.setData({ busy: false }); cyToast('网络不太稳定，请重试'); } });
+        success(res) { that._busy = false; if (res && res.code == 200) { cyToast('已撤回申请'); that.reload(); return; } const f = T.resolveTeamError('withdraw', res); cyToast(f.title || '没能撤回，请重试'); },
+        fail() { that._busy = false; cyToast('网络不太稳定，请重试'); } });
     } });
   },
   openNearbyTeam(e) { const row = this.data.openRows[Number(e.currentTarget.dataset.index)]; if (row) wx.navigateTo({ url: '/subpackageRoam/nearby/index?radius=' + RADIUS + '&teamId=' + encodeURIComponent(row.teamId) }); },

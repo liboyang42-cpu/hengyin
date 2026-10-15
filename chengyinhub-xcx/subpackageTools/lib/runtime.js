@@ -11,6 +11,8 @@ function member(app) { return String(app.getUserID() || ''); }
 function epoch(app) { return String(wx.getStorageSync('authorization_issued_at') || '') + ':' + String(app.globalData.authorization || ''); }
 function identity(app) { return member(app) && app.globalData.authorization && app.globalData.authorization !== 'dev-token' ? member(app) + ':' + epoch(app) : ''; }
 const stateNames = { CLEAR: '未发现固定场次冲突', SCHEDULE: '账户报名日程', ACTIVE: '进行中', SCHEDULED: '尚未开始', ACHIEVED: '已达成', ENDED: '已结束', CANCELLED: '已取消', DELETED: '已删除', UNAVAILABLE: '当前不可查看', VISIBLE: '当前可查看', UNKNOWN: '结果待确认', APPLIED: '已应用', CONFLICT: '存在冲突，请核对或读取最新版本', NOT_FOUND: '记录不存在', ITEM_NOT_FOUND: '事项不存在', LIMIT: '达到数量上限', VERSION_CONFLICT: '版本冲突，请重新读取', LEDGER_LIMIT: '账本数量达到上限', LEDGER_NOT_FOUND: '账本不存在', EXPENSE_LIMIT: '支出数量达到上限', EXPENSE_NOT_FOUND: '支出不存在', REJECTED: '操作未应用', CREATED: '创建已确认', UPDATED: '修改已确认', SAME: '相同', DIFFERENT: '不同', COMPLETE: '全部读取完成', MORE: '尚有后续数据', SOURCE_CHANGED: '来源已变化，请重新准备', NO_CONFLICT: '未发现固定场次冲突', CONFLICT_FOUND: '存在冲突', INCOMPLETE: '时间资料不完整，不能断言无冲突' };
+// 日期等表单字段:只有用到的页面(探索目标/导出)才挂 onField,别的页不带这个 handler
+function fieldChange(page, e) { const key = e.currentTarget.dataset.field; if (!Object.prototype.hasOwnProperty.call(page.data, key) || page.data.pending || page.data.busy) return; page.setData({ [key]: e.detail.value }); }
 function stateName(value) { return stateNames[value] || value || '未知'; }
 function runtime(kind, spec) {
   const initial = () => Object.assign({ reducedMotion: readReducedMotion(), busy: false, error: '', message: '', rows: [], detail: null, pending: false, hasMore: false, fileReady: false, referencePicker: false, referenceKind: 'ROUTE' }, JSON.parse(JSON.stringify(spec.data || {})));
@@ -47,7 +49,6 @@ function runtime(kind, spec) {
       finally { if (this.current(generation, who)) { this.setData({ busy: false }); this.syncPending(); if (this._hidden) { this._hiddenData = JSON.parse(JSON.stringify(this.data)); this.setData(initial()); } } else if (!this._closed && generation === this._generation && identity(this._app) !== who) this.clearPrivate(); }
     },
     syncPending() { if (!this.client) return; try { const value = this.client.pendingRequestId ? this.client.pendingRequestId() : this.client.pending ? this.client.pending() : null; this.setData({ pending: Array.isArray(value) ? value.length > 0 : !!value }); } catch (_) { this.setData({ pending: false }); } },
-    onField(e) { const key = e.currentTarget.dataset.field; if (!Object.prototype.hasOwnProperty.call(this.data, key) || (this.data.pending && !spec.allowPendingInput) || this.data.busy) return; this.setData({ [key]: e.detail.value, message: '' }); },
     fresh() { if (this.data.pending) throw new Error('请先恢复原操作，不能提交其他内容'); return requestId(); },
     confirm(task, title) { if (this.data.busy || !this.client) return; const generation = this._generation, who = this._identity; modal.show({ title: title || '确认删除？', content: '此操作会修改你的私人记录。', success: result => { if (result.confirm && this.current(generation, who)) task(); } }); },
     resetEditor() { if (this.data.pending || this.data.busy) { this.setData({ error: '请先恢复原操作' }); return; } this.setData({ detail: null, message: '', error: '' }); if (spec.reset) spec.reset.call(this); },
@@ -65,4 +66,4 @@ function runtime(kind, spec) {
     openRoute(e) { const id = e.currentTarget.dataset.id; if (id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + encodeURIComponent(id) }); }
   }, spec.methods || {});
 }
-module.exports = { runtime, requestId, safeNumber, identity, stateName };
+module.exports = { runtime, requestId, safeNumber, identity, stateName, fieldChange };

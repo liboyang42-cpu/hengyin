@@ -13,7 +13,7 @@
   <view class="tu-card gl-detail" wx:if="{{detail && detail.target}}">
     <text class="gl-k">{{detail.metricText}} · {{detail.stateText}}</text>
     <text class="gl-big">{{detail.progress || 0}}<text class="gl-of"> / {{detail.target}}</text></text>
-    <view class="tu-bar"><view class="tu-bar__f" style="width:{{detail.pct}}%"></view></view>
+    <view class="tu-bar"><view class="tu-bar__f" style="width:{{detail.pct || 0}}%"></view></view>
     <text class="gl-m">{{detail.startDate}} 至 {{detail.endDateExclusive}}（不含）</text>
     <view class="gl-acts">
       <view class="tu-sbtn" bindtap="closeDetail" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80">收起</view>
@@ -49,14 +49,14 @@
     </view>
   </block>
 
-  <view class="tu-sec">我的目标<text class="tu-sec__aside" wx:if="{{rows.length}}">{{rows.length}} 个</text></view>
+  <view class="tu-sec">我的目标<text class="tu-sec__aside" wx:if="{{rows.length || 0}}">{{rows.length || 0}} 个</text></view>
   <view class="tu-loading" wx:if="{{busy && !rows.length}}">正在读取…</view>
   <view class="tu-card gl-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openRecord" aria-role="button" aria-label="查看目标 {{item.target}} {{item.metricText}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="gl-row__top">
       <text class="gl-row__t">{{item.progressText}}{{item.target}} {{item.unit}}</text>
       <text class="tu-badge {{item.badge}}">{{item.stateText}}</text>
     </view>
-    <view class="tu-bar" wx:if="{{item.pct >= 0}}"><view class="tu-bar__f" style="width:{{item.pct}}%"></view></view>
+    <view class="tu-bar" wx:if="{{item.pct >= 0}}"><view class="tu-bar__f" style="width:{{item.pct || 0}}%"></view></view>
     <text class="gl-m">{{item.startDate}} – {{item.endDateExclusive}} · {{item.metricText}}</text>
   </view>
   <view class="tu-empty" wx:if="{{!busy && !rows.length && !error}}"><text class="tu-empty__t">还没有探索目标</text></view>

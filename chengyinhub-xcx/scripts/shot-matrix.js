@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 326
- *   按 priority 计全部行：P0 133 / P1 183 / P2 10
+ *   total 332
+ *   按 priority 计全部行：P0 133 / P1 189 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 176 / P2 2 = 302
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 182 / P2 2 = 308
  *   按域：A 53 / B 67 / C 54 / D 39 / E 27 / F 86
- *   按 control：setData 166 / identity+setData 116 / real-data 37 / real-device 7
+ *   按 control：setData 171 / identity+setData 116 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -542,6 +542,13 @@ const RAW = [
   //   2026-09-12 并 master:俱乐部已占用 F53/F54/F56-F62,玩法行改挂 F55/F63-F80,禁止撞号。
   //   传感器三个(变色就点 / 弹球 / 安静挑战)拍的都是**已出结果**那一态:进行态是随时间变的
   //   瞬时态,截图对不上,由各自的纯算法单测覆盖。
+  // 2026-10-15 漫游上线新增 6 条路由:我的队伍 + 漫游护照 5 个工具页(fixture 用页面真实 data 字段)
+  ['F96', 'F96-my-teams-approved.png', '/subpackageRoam/my-teams/index', 'player', 'normal', { loading: false, mineError: false, tab: 'mine', stats: [{ k: '已通过', v: 1 }, { k: '审核中', v: 0 }, { k: '带队', v: 0 }, { k: '未通过', v: 0 }], groups: [{ key: 'ok', title: '已通过', rows: [{ key: 'j1', teamId: 1, name: '一起出发的玩家队伍', avatars: [{ k: 0, src: '/images/d_profile.png' }, { k: 1, src: '/images/d_profile.png' }], members: '已组 2/4', sub: '10/20 10:00 开始', badge: '已通过', tone: 'ok', action: { text: '进入队伍', kind: 'primary', act: 'enter' } }] }] }, undefined, { selector: '.mt-card', min: 1 }, 'setData', 'P1', '', '我的队伍:Memoji 头像叠层 + 已通过分组。'],
+  ['F97', 'F97-capsule-list.png', '/subpackageTools/capsule/index', 'player', 'normal', { status: 'ready', busy: false, composing: false, items: [{ id: '1', state: 'LOCKED', createdText: '2026-10-15', unlockText: '2026-11-14', daysLeft: 30 }, { id: '2', state: 'OPEN', createdText: '2025-10-14', unlockText: '2026-10-14', daysLeft: 0 }] }, undefined, { selector: '.cp-card', min: 2 }, 'setData', 'P1', '', '时光胶囊:封存中倒计时卡 + 已到开启日卡。'],
+  ['F98', 'F98-monthly-recap.png', '/subpackageTools/monthly-recap/index', 'player', 'normal', { monthLabel: '2026 年 10 月', isCurrentMonth: true, counts: { routes: 5, places: 4, stamps: 2 }, kindIndex: 0 }, undefined, { selector: '.mr-month', min: 1 }, 'setData', 'P1', '', '月度回顾:月份切换、三项读数。'],
+  ['F99', 'F99-exploration-goals.png', '/subpackageTools/exploration-goals/index', 'player', 'normal', { busy: false, creating: false, rows: [{ id: '1', metric: 'DISTINCT_ROUTES', target: 5, progress: 2, state: 'ACTIVE', stateText: '进行中', metricText: '不同路线数', unit: '条路线', badge: 'tu-badge--wait', progressText: '2 / ', pct: 40, startDate: '2026-10-15', endDateExclusive: '2026-11-01' }] }, undefined, { selector: '.gl-row', min: 1 }, 'setData', 'P1', '', '探索目标:进行中目标卡与进度条。'],
+  ['F100', 'F100-anniversary.png', '/subpackageTools/anniversary/index', 'player', 'normal', { busy: false, dateLabel: '10.15', rows: [{ id: '1', topicId: '1', title: '外滩夜行', yearsAgo: 1, completedText: '2025-10-15 14:00' }] }, undefined, { selector: '.an-card', min: 1 }, 'setData', 'P1', '', '那年今日:往年同日完成记录卡。'],
+  ['F101', 'F101-exploration-export.png', '/subpackageTools/exploration-export/index', 'player', 'normal', null, undefined, { selector: '.tu-chip', min: 3 }, 'real-data', 'P1', '', '导出探索记录:三档范围 + 准备导出。'],
   ['F95', 'F95-playkit-album.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'album', title: '梦', images: [{ url: '/images/index-figma/nearby-card.jpg', line: '那天的风' }, { url: '/images/index-figma/reco-hero.jpg', line: '走过的街角' }] } }, undefined, { selector: 'cy-playkit-album', min: 1 }, 'setData', 'P1', '', '相册展示型模板：共用已有玻璃全屏，没有通关或奖励。', 'cy-playkit'],
   ['F72', 'F72-playkit-coinflip.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'coinflip', kicker: '抛一次,认结果', headsLabel: '正面', headsAction: '这杯店家请', tailsLabel: '反面', tailsAction: '这杯你请', face: 'HEADS' } }, undefined, { selector: 'cy-playkit-coinflip', min: 1 }, 'setData', 'P1', '', '抛硬币:抛之前两面的约定就摆在屏上,结果落在正面。', 'cy-playkit'],
   ['F73', 'F73-playkit-diceroll.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'diceroll', kicker: '掷到几就做第几件事', faces: ['跟店员说一句今天的天气', '把桌上的花挪个位置', '给同行的人读一段菜单', '找出店里最旧的那件东西', '换一个座位坐下', '替下一位客人点一杯'], values: [5, 4] } }, undefined, { selector: 'cy-playkit-diceroll', min: 1 }, 'setData', 'P1', '', '掷骰子:两颗同色,只报点数和;六个面的任务在摇之前就看得见。', 'cy-playkit'],
@@ -624,11 +631,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // identity+setData；同步 total/P1/actionable/F/control 的冻结真值。
 // 2026-09-30：PR与master合并后按现有矩阵行实算，fixture证据不晋级。
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
+// 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
+// total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
 const STATS = {
-  "total": 326,
+  "total": 332,
   "byPriority": {
     "P0": 133,
-    "P1": 183,
+    "P1": 189,
     "P2": 10
   },
   "blockedByPriority": {
@@ -638,9 +647,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 176,
+    "P1": 182,
     "P2": 2,
-    "total": 302
+    "total": 308
   },
   "blocked": 24,
   "domains": {
@@ -649,12 +658,12 @@ const STATS = {
     "C": 54,
     "D": 39,
     "E": 27,
-    "F": 86
+    "F": 92
   },
   "control": {
-    "setData": 166,
+    "setData": 171,
     "identity+setData": 116,
-    "real-data": 37,
+    "real-data": 38,
     "real-device": 7
   },
   "fixtureVerified": 16

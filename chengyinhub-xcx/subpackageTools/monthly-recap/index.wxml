@@ -30,8 +30,8 @@
   <block wx:if="{{weeks.length}}">
     <view class="tu-sec">每周{{kinds[kindIndex]}}<text class="tu-sec__aside">次</text></view>
     <view class="mr-chart" aria-role="img" aria-label="{{weeksLabel}}">
-      <view class="mr-col" wx:for="{{weeks}}" wx:key="label" data-index="{{index}}" bindtap="pickWeek" aria-role="button" aria-label="{{item.label}} {{item.count}} 次" hover-class="cy-pressed" hover-stay-time="80">
-        <text class="mr-val {{item.isMax || weekPicked === index ? 'is-on' : ''}}">{{item.count}}</text>
+      <view class="mr-col" wx:for="{{weeks}}" wx:key="label" data-index="{{index}}" bindtap="pickWeek" aria-role="button" aria-label="{{item.label}} {{item.count || 0}} 次" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="mr-val {{item.isMax || weekPicked === index ? 'is-on' : ''}}">{{item.count || 0}}</text>
         <view class="mr-bar {{item.isMax ? 'is-max' : ''}}" style="height:{{item.height}}rpx"></view>
         <text class="mr-lab">{{item.label}}</text>
       </view>

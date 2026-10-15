@@ -55,16 +55,16 @@
 
   <!-- 打开/删除某一枚时 run() 会清空列表(只呈现这一次的结果);此时不画列表与空态,「收好了」后重读 -->
   <block wx:if="{{!(result && (result.state === 'OPEN' || result.state === 'DELETED'))}}">
-  <view class="tu-sec">我的胶囊<text class="tu-sec__aside" wx:if="{{items.length}}">{{items.length}} 枚</text></view>
+  <view class="tu-sec">我的胶囊<text class="tu-sec__aside" wx:if="{{items.length || 0}}">{{items.length || 0}} 枚</text></view>
   <view class="tu-loading" wx:if="{{busy && !items.length}}">正在读取…</view>
   <block wx:for="{{items}}" wx:key="id">
     <view wx:if="{{item.state === 'OPEN'}}" class="cp-card cp-card--open cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="detail" aria-role="button" aria-label="打开今天开启的胶囊" hover-class="cy-pressed" hover-stay-time="80">
       <text class="cp-k cp-k--ok">已到开启日 · {{item.createdText}} 封存</text>
       <text class="cp-t">打开看看</text>
     </view>
-    <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{item.daysLeft}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
+    <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{item.daysLeft || 0}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
       <text class="cp-k">封存中 · {{item.createdText}} 写下</text>
-      <text class="cp-days">{{item.daysLeft}} 天</text>
+      <text class="cp-days">{{item.daysLeft || 0}} 天</text>
       <text class="cp-m">{{item.unlockText}} 开启</text>
     </view>
   </block>
