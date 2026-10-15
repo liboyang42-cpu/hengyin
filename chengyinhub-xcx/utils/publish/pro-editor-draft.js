@@ -68,6 +68,9 @@ function saveDraft(storage, input) {
     pendingMaterials: clone(input.pendingMaterials || []),
     savedAt: input.savedAt == null ? Date.now() : input.savedAt,
   };
+  if (input.publishAttempt && input.publishAttempt.status === 'UNKNOWN') {
+    envelope.publishAttempt = { status: 'UNKNOWN', topicId: value(input.publishAttempt.topicId) };
+  }
   if (input.editorMeta) envelope.editorMeta = clone(input.editorMeta);
   if (value(input.topicId)) envelope.topicId = input.topicId;
   else envelope.draftUuid = value(input.draftUuid);

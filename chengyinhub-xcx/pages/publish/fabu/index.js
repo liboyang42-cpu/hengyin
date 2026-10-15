@@ -644,13 +644,15 @@ Page({
   _persistDraftEnvelope() {
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity || !memberId) return false;
+    if (!identity || !memberId || this._publishPageUnloaded
+        || String(memberId) !== String(app.getUserID() || '')) return false;
     try {
       proEditorDraft.saveDraft(wx, {
         memberId,
         topicId: identity.topicId,
         draftUuid: identity.draftUuid,
         baseRevision: this.data.baseRevision,
+        publishAttempt: this._publishAttempt,
         formData: this.data.formData,
         pendingMaterials: this.data.pendingMaterials,
         editorMeta: {
@@ -673,6 +675,7 @@ Page({
 
   _applyDraftEnvelope(envelope) {
     if (!envelope) return;
+    this._publishAttempt = envelope.publishAttempt || null;
     this._localDraftRestored = true;
     const formData = this._withEndingChapters(envelope.formData || Object.assign({}, this.data.formData, {
       chapters: envelope.chapters || [],
@@ -743,6 +746,10 @@ Page({
     const topic = (detail && detail.topic) || {};
     const memberId = app.getUserID() || topic.memberId || '';
     const baseRevision = topic.updateTime || topic.createTime || '';
+    const requestToken = this._editLoadToken;
+    const isCurrent = () => !this._publishPageUnloaded
+      && String(memberId) === String(app.getUserID() || '')
+      && requestToken === this._editLoadToken;
     this.setData({ baseRevision, draftMemberId: memberId });
     if (!memberId) {
       this._draftAutosaveReady = true;
@@ -752,7 +759,10 @@ Page({
       memberId,
       currentBaseRevision: baseRevision,
     });
-    const finish = () => { this._draftAutosaveReady = true; };
+    if (result.envelope && result.envelope.publishAttempt) {
+      this._publishAttempt = result.envelope.publishAttempt;
+    }
+    const finish = () => { if (isCurrent()) this._draftAutosaveReady = true; };
     if (result.status === 'ready') {
       this._applyDraftEnvelope(result.envelope);
       finish();
@@ -765,8 +775,15 @@ Page({
         confirmText: '使用本地草稿',
         cancelText: '使用已保存版本',
         success: (res) => {
+          if (!isCurrent()) return;
           if (res.confirm) this._applyDraftEnvelope(result.envelope);
-          else proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId });
+          else {
+            proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId });
+            this._publishAttempt = null;
+            if (this._publishWorkflow) this._publishWorkflow.destroy();
+            this._publishWorkflow = null;
+            this._persistDraftEnvelope();
+          }
           finish();
         },
       });
@@ -2254,6 +2271,10 @@ Page({
   /** [B3b] 带 ?id= 进来 → 拉本人主题全量详情回填表单。 */
   loadEditingTopic(id) {
     const that = this;
+    const memberId = String(app.getUserID() || '');
+    const isCurrent = () => !that._publishPageUnloaded
+      && memberId === String(app.getUserID() || '')
+      && requestToken === that._editLoadToken;
     const requestToken = (this._editLoadToken || 0) + 1;
     this._editLoadToken = requestToken;
     this.setData({ editLoading: true, editLoadError: '' });
@@ -2264,7 +2285,7 @@ Page({
       silentError: true,
       data: { id, scope: this.data.operationScope },
       success(res) {
-        if (requestToken !== that._editLoadToken) return;
+        if (!isCurrent()) return;
         if (res.code != '200' || !isEditingTopicPayload(res.data)) {
           that.setData({
             editLoading: false,
@@ -2274,11 +2295,13 @@ Page({
           });
           return;
         }
+        // Keep the local envelope intact until the existing conflict decision is resolved.
+        that._draftAutosaveReady = false;
         that.applyEditingTopic(res.data);
         that.setData({ editLoading: false, editLoadError: '' });
       },
       fail(res) {
-        if (requestToken !== that._editLoadToken) return;
+        if (!isCurrent()) return;
         that.setData({
           editLoading: false,
           editLoadError: app.getRequestErrorMessage
@@ -2287,7 +2310,7 @@ Page({
         });
       },
       complete() {
-        if (requestToken === that._editLoadToken && that.data.editLoading) {
+        if (isCurrent() && that.data.editLoading) {
           that.setData({ editLoading: false });
         }
       }
@@ -2589,6 +2612,7 @@ Page({
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onUnload() {
+    this._publishPageUnloaded = true;
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
@@ -6452,10 +6476,19 @@ Page({
   getPublishWorkflow() {
     if (!this._publishWorkflow) {
       this._publishWorkflow = createPublishWorkflow({
+        networkFailureState: 'unknown',
         request: (payload, cb) => {
           // 编辑既有主题走 update(带 id),新建才走 create。
           // 在 request 里读而不是建 workflow 时读:workflow 是懒建且只建一次,建它那一刻回填可能还没到。
           const editingId = this.data.editingTopicId;
+          const memberId = String(app.getUserID() || '');
+          const draftUuid = this.data.draftUuid;
+          const editLoadToken = this._editLoadToken;
+          const isCurrent = () => !this._publishPageUnloaded
+            && memberId === String(app.getUserID() || '')
+            && editingId === this.data.editingTopicId
+            && draftUuid === this.data.draftUuid
+            && editLoadToken === this._editLoadToken;
           const professionalStory = payload.publishMode === 'pro'
             && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
               || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0)));
@@ -6469,10 +6502,12 @@ Page({
               'Content-Type': 'application/json'
             },
             success: (res) => {
-              if (res.code == "200") cb({ ok: true, data: res.data });
-              else cb({ ok: false, msg: res.msg });
+              if (!isCurrent()) return;
+              if (res && res.code == "200") cb({ ok: true, data: res.data });
+              else if (res && /^4\d\d$/.test(String(res.code))) cb({ ok: false, msg: res.msg });
+              else cb({ ok: false, networkError: true });
             },
-            fail: () => cb({ ok: false, networkError: true })
+            fail: () => { if (isCurrent()) cb({ ok: false, networkError: true }); }
           });
         }
       });
@@ -6483,7 +6518,21 @@ Page({
   // 发送数据到API
   sendData(data) {
     let that = this;
-    const started = that.getPublishWorkflow().submit(data, {
+    if (this._publishPageUnloaded) return;
+    const memberId = String(app.getUserID() || '');
+    if (!memberId || (this.data.draftMemberId && String(this.data.draftMemberId) !== memberId)) return;
+    const workflow = that.getPublishWorkflow();
+    if (workflow.getState() === 'submitting' || workflow.getState() === 'done') return;
+    if (this._publishAttempt || workflow.getState() === 'unknown') {
+      this._showPublishUnknown();
+      return;
+    }
+    this._publishAttempt = { status: 'UNKNOWN', topicId: String(this.data.editingTopicId || '') };
+    if (!this._persistDraftEnvelope()) {
+      this._publishAttempt = null;
+      return;
+    }
+    const started = workflow.submit(data, {
       onSuccess: (resData) => {
         const tid = resData && typeof resData === 'object' ? resData.topicId : resData;
         const pendingReview = !!(resData && !resData.published && ['PENDING', 'ESCALATED'].includes(resData.reviewState));
@@ -6544,9 +6593,14 @@ Page({
         });
       },
       onFail: (res) => {
-        const reason = res && res.networkError
-          ? '网络暂时不可用，当前草稿仍在本机，请重试'
-          : ((res && res.msg) || '保存失败，当前内容已保留，请重试');
+        if (res && res.networkError) {
+          that._showPublishUnknown();
+          return;
+        }
+        that._publishAttempt = null;
+        const persisted = that._persistDraftEnvelope();
+        const reason = ((res && res.msg) || '发布失败，当前内容已保留，请重试')
+          + (persisted ? '' : '；本机存储暂时不可用，请检查后重试');
         that.setData({
           submitting: false,
           submitError: reason,
@@ -6565,6 +6619,15 @@ Page({
     if (started) {
       that.setData({ submitting: true, submitError: '' });
     }
+  },
+
+  _showPublishUnknown() {
+    const reason = this.data.editingTopicId
+      ? '发布结果暂时无法确认，请到项目列表核对原主题。采用服务器版本前不会再次发布，本地草稿已保留。'
+      : '发布结果暂时无法确认，请到项目列表核对。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
+    this.setData({ submitting: false, submitError: reason,
+      resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
+        sub: '请先核对项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
   },
 
   /* 面板收掉才跳走 —— 落点由各成功路径事先写进 _resultSheetNext。
