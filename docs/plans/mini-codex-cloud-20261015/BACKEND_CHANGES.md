@@ -325,3 +325,11 @@ BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED
 CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e61e8a06b4279f0303`，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。每队只占1条失败修复线，优先原文件作者；多失败串行，移交写者必须先停止和逐路径登记。其他5条做真正独立的现有bug/后端源码，完成即push，不等待测试/CI；耗尽不凑数或假称运行。实际VPS复测由本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`独占，Cloud不再新增手动编译/测试/CI触发/专门配置，不尝试VPS或Cloud替代，既有CI自然运行。CORE15测试fixture修复未复编译，不改生产/断言；EXTRA五fixture及E02合同已解除授权阻塞、实际ACK6198215180已收到，E03/E05新小提交已公共，E02后续另SHA。完整候选依赖、矩阵、门禁、预期源码声明数和原Cloud诊断路径见BACKEND_VALIDATION_VPS_HANDOFF.json/md。未获实际VPS结果不签收，旧231不继承，未合并/部署/业务迁移。
 
 最新本地VPS反馈：CORE f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c 已按212离线test-compile退出0，02:35，7 reactor模块成功、1392测试源编译通过。此为本地验证者回报，公共原日志尚待其发布；仅COMPILE_PASS，不是业务/真实MySQL/Redis/设备/部署验收，C00不重跑验证。
+
+## 首轮VPS483失败与原作者串行修复
+
+已完整读回PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee公开README/summary：f7e源码编译PASS，但83类483项470PASS/5FAIL/8ERROR/0skip为FAIL，8 gated/JDBC另未测。C03/C04/C06原写者依次占唯一修复槽，前人停写才交下一人；新公共链b423114b→603dab12→最终 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，8测试文件及证据修正，生产零变更。nullable Long/mock求值/HTTP异常边界/精确现金原行/CAS当前读夹具问题未通过弱化断言掩盖。新SHA未编译/测试，NOT_RUN。完整13方法历史、原堆栈引用、157源声明聚焦清单见VPS_REPAIR_ROUND_1.json/md。本地独占验证，Cloud无手动运行/CI/环境替代，其他独立源继续。
+
+## 第三Cloud pending_thread精确保留
+
+用户授权新增第三Cloud，当前未创建/未运行；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。

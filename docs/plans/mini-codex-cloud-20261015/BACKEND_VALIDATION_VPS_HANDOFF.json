@@ -7,17 +7,19 @@
     "CORE": {
       "pr": 44,
       "branch": "codex/mini-longrun-core-20261015",
-      "sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "parent": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
       "integration_order": [
-        "2b1984b59a0929a360e8095d5fc1955a1aed7964",
-        "b810b5056c9d12abdb939df648e2435f7f63d029",
-        "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c"
+        "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+        "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
+        "603dab127d850e8ac0b131522bb2f4351b508385",
+        "0d63043ad06775bc3dc52fb925620ef36d1081a7"
       ],
-      "known_original_compile_failures": "18 fixture diagnostics in old2b, all addressed by source only; no other confirmed compile blockers; new f7 NOT_RUN",
+      "known_original_compile_failures": "Old2b compile18 fixed by f7 and public VPS compilePASS. At f7 offline483 failed13; fixture-only source repaired to0d, new0d not compiled/tested.",
       "matrix": "BACKEND_VALIDATION_CORE_MATRIX.json",
       "source_classes": 91,
-      "source_test_annotations": 510
+      "source_test_annotations": 510,
+      "source_review_status": "SOURCE_DELIVERED_UNVERIFIED_NEW_SHA"
     },
     "EXTRA": {
       "pr": 36,
@@ -129,7 +131,7 @@
   ],
   "local_vps_compile_feedback": {
     "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
-    "status": "COMPILE_PASS_REPORTED_BY_LOCAL_VPS_COORDINATOR",
+    "status": "COMPILE_PASS_PUBLIC_EVIDENCE_READ",
     "location": "VPS",
     "reporter_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
     "resource_entry": "budget212 guard/shared lock, reported",
@@ -140,7 +142,7 @@
     "business_tests_executed": 0,
     "integration_tests_executed": 0,
     "guard_container_cleanup": "reported auto cleaned",
-    "public_raw_evidence": "PENDING_LOCAL_PUBLICATION",
+    "public_raw_evidence": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
     "evidence_level": "local verifier delegated result; C00 has not read public raw log yet",
     "not_accepted": [
       "business regression",
@@ -151,5 +153,86 @@
       "merge",
       "migration"
     ]
-  }
+  },
+  "latest_regression_history": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "result": "FAIL",
+    "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "evidence_pr": 24,
+    "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "C00_read_public_evidence": true,
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "fresh_reports": true,
+    "exact_selected_class_set_match": true,
+    "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+    "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+    "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "new_candidate_verification": "NOT_RUN",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
+  },
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "focus_classes": [
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "source_test_annotations": 4,
+      "owner": "CORE/C03",
+      "repair": "nullable Long stub",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "source_test_annotations": 6,
+      "owner": "CORE/C03",
+      "repair": "real global exception advice boundary",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "source_test_annotations": 7,
+      "owner": "CORE/C04",
+      "repair": "precise two current reads, preserve ordering/rollback",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "source_test_annotations": 3,
+      "owner": "CORE/C04",
+      "repair": "precompute mocked Frozen/Admission",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "source_test_annotations": 5,
+      "owner": "CORE/C06",
+      "repair": "noninvoking restub, preserve receipt-write error",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "source_test_annotations": 4,
+      "owner": "CORE/C06",
+      "repair": "minimal valid schemaVersion1, no validator change",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "source_test_annotations": 6,
+      "owner": "CORE/C04",
+      "repair": "actual inserted cash original, preserve real admission/debit",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "source_test_annotations": 122,
+      "owner": "CORE/C06",
+      "repair": "specific CAS-success and current-lock fixtures",
+      "status": "NOT_RUN_AFTER_FIX"
+    }
+  ],
+  "focus_command_template": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_22Test,com.chengyinhub.business.longrun.OWN_C03_24Test,com.chengyinhub.business.longrun.OWN_C04_21Test,com.chengyinhub.business.longrun.OWN_C04_22Test,com.chengyinhub.business.longrun.OWN_C06_25Test,com.chengyinhub.business.longrun.OWN_C06_29Test,com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest,com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest test"
 }

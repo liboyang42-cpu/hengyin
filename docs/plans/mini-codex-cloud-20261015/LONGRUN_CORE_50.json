@@ -4992,7 +4992,7 @@
   "refill_progress": "178 cumulative concrete source slices/reviews; actual actionable0, target50 shortfall50; no invented filler",
   "actual_actionable_or_in_progress_items": 0,
   "counts_note": "Initial50 and cumulative history are concrete source slices/reviews, not remaining actionable bugs or passed cases. Actual current READY/inflight0, target50 shortfall50 disclosed. Source delivered remains unverified.",
-  "current_public_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "current_public_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "actual_state_counts": {
     "SOURCE_DELIVERED_UNVERIFIED": 135,
     "NO_CHANGE_SOURCE_REVIEW": 38,
@@ -5027,7 +5027,7 @@
     "repair_slot_limit": 1,
     "repair_policy": "Prioritize original exact file owner; transfer repair role after prior repair worker stops; multiple failures serial queue. Others do independent authorized source tasks and push without waiting for tests/CI. No fabricated tasks or simultaneous writers.",
     "core_actual_source_writers_now": 0,
-    "core_repair_slot": "IDLE_FIXTURE_SOURCE_DELIVERED_LOCAL_RECOMPILE_PENDING",
+    "core_repair_slot": "IDLE_SOURCE_REPAIRS_DELIVERED_LOCAL_RETEST_PENDING",
     "extra_last_actual_ack": {
       "comment": 6198215180,
       "dispatched": 3,
@@ -5037,5 +5037,37 @@
       "new_public_source": "a37ce191756ab11896faf4e61e8a06b4279f0303",
       "not_claimed": "6 workers running"
     }
+  },
+  "post_delivery_repairs": [
+    {
+      "owner": "CORE/C03",
+      "worker": "feature_points_rules_sol",
+      "sha": "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
+      "parent": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "test_files": 2
+    },
+    {
+      "owner": "CORE/C04",
+      "worker": "a02_sol",
+      "sha": "603dab127d850e8ac0b131522bb2f4351b508385",
+      "parent": "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
+      "test_files": 3
+    },
+    {
+      "owner": "CORE/C06",
+      "worker": "final_review_sol",
+      "sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "parent": "603dab127d850e8ac0b131522bb2f4351b508385",
+      "test_files": 3
+    }
+  ],
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "analytics_third_pending": {
+    "packet": "THIRD_CLOUD_HANDOFF.json",
+    "real_tasks": 2,
+    "thread_id": null,
+    "status": "PENDING_THREAD_ACK",
+    "global_maintainer": "C00",
+    "local_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59"
   }
 }

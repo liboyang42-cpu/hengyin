@@ -816,7 +816,7 @@
         "SUPERSEDED_DUPLICATE": 1,
         "DELEGATED_SOURCE_IMPLEMENTATION": 1
       },
-      "core_current_public_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "core_current_public_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "core_source_pr": "https://github.com/liboyang42-cpu/hengyin/pull/44",
       "core_actionable_actual": 0,
       "target_actionable_per_team": 50,
@@ -848,7 +848,7 @@
         "repair_slot_limit": 1,
         "repair_policy": "Prioritize original exact file owner; transfer repair role after prior repair worker stops; multiple failures serial queue. Others do independent authorized source tasks and push without waiting for tests/CI. No fabricated tasks or simultaneous writers.",
         "core_actual_source_writers_now": 0,
-        "core_repair_slot": "IDLE_FIXTURE_SOURCE_DELIVERED_LOCAL_RECOMPILE_PENDING",
+        "core_repair_slot": "IDLE_SOURCE_REPAIRS_DELIVERED_LOCAL_RETEST_PENDING",
         "extra_last_actual_ack": {
           "comment": 6198215180,
           "dispatched": 3,
@@ -861,7 +861,7 @@
       }
     },
     "current_source_delivery": {
-      "core_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "core_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "core_pr": 44,
       "extra_last_read_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303",
       "extra_pr": 36,
@@ -878,7 +878,7 @@
       "extra_latest_grant_ack": "RECEIVED_6198215180_NEW_SOURCE_a37ce191"
     },
     "manual_validation_current_mode": "LOCAL_VPS_ONLY; C00/two Cloud teams source-only; no new manual compile/test/CI/setup; automatic CI natural",
-    "active_source_candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "active_source_candidate_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
     "active_source_record_kind": "SOURCE_DELIVERED_UNVERIFIED_NOT_THE_HISTORICAL_VALIDATED_CANDIDATE",
     "claude_handoff_intake": "CLAUDE_HANDOFF_INTAKE.json",
     "backend_validation_handoff": "BACKEND_VALIDATION_VPS_HANDOFF.json",
@@ -886,7 +886,7 @@
     "remaining_development": "LONGRUN_REMAINING.json",
     "longrun_vps_compile": {
       "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
-      "status": "COMPILE_PASS_REPORTED_BY_LOCAL_VPS_COORDINATOR",
+      "status": "COMPILE_PASS_PUBLIC_EVIDENCE_READ",
       "location": "VPS",
       "reporter_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
       "resource_entry": "budget212 guard/shared lock, reported",
@@ -897,8 +897,8 @@
       "business_tests_executed": 0,
       "integration_tests_executed": 0,
       "guard_container_cleanup": "reported auto cleaned",
-      "public_raw_evidence": "PENDING_LOCAL_PUBLICATION",
-      "evidence_level": "local verifier delegated result; C00 has not read public raw log yet",
+      "public_raw_evidence": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+      "evidence_level": "C00 read public independent summary/log and XML hashes; actual logs remain VPS",
       "not_accepted": [
         "business regression",
         "real MySQL/Redis suites",
@@ -908,6 +908,48 @@
         "merge",
         "migration"
       ]
+    },
+    "longrun_vps_regression": {
+      "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "result": "FAIL",
+      "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+      "evidence_pr": 24,
+      "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+      "C00_read_public_evidence": true,
+      "tests": 483,
+      "passed": 470,
+      "failures": 5,
+      "errors": 8,
+      "skipped": 0,
+      "classes": 83,
+      "fresh_reports": true,
+      "exact_selected_class_set_match": true,
+      "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+      "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+      "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "new_candidate_verification": "NOT_RUN",
+      "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
+    },
+    "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+    "analytics_third_pending": {
+      "packet": "THIRD_CLOUD_HANDOFF.json",
+      "real_tasks": 2,
+      "thread_id": null,
+      "status": "PENDING_THREAD_ACK",
+      "global_maintainer": "C00",
+      "local_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59"
+    },
+    "extra_vps_regression": {
+      "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+      "status": "FAIL_REPORTED_BY_LOCAL",
+      "tests": 305,
+      "passed": 302,
+      "failures": 1,
+      "errors": 2,
+      "skipped": 0,
+      "classes": 34,
+      "repair_owner": "EXTRA6/E02 single slot",
+      "C00_source_edits": false
     }
   },
   "followup_lanes": [

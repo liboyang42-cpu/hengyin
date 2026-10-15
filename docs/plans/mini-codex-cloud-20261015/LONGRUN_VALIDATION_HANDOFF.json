@@ -1,9 +1,9 @@
 {
   "protocol": "CY-LONGRUN-VALIDATION-HANDOFF-20261015-v1",
-  "source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "source_pr": 44,
   "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-  "status": "NOT_RUN_LOCAL_VPS_HANDOFF",
+  "status": "NOT_RUN_NEW_REPAIR_SHA_LOCAL_VPS_PENDING",
   "generation": "static filename/content inventory only; no compiler/parser/test/lint/DB execution",
   "entries": [
     {
@@ -1278,5 +1278,27 @@
       "merge",
       "migration"
     ]
+  },
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "historical_f7_regression": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "result": "FAIL",
+    "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "evidence_pr": 24,
+    "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "C00_read_public_evidence": true,
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "fresh_reports": true,
+    "exact_selected_class_set_match": true,
+    "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+    "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+    "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "new_candidate_verification": "NOT_RUN",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
   }
 }

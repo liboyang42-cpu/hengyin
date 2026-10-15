@@ -1,0 +1,551 @@
+{
+  "protocol": "CY-THIRD-CLOUD-EXACT-HANDOFF-20261015-v1",
+  "team": "ANALYTICS_THIRD",
+  "thread_id": null,
+  "state": "PENDING_THREAD_NOT_CREATED_BY_C00",
+  "global_source_owner": "C00 only",
+  "local_workflow_and_validation_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "model": "gpt-6.1-sol",
+  "initial_real_tasks": 2,
+  "parallel_task_writers": 2,
+  "not_a_six_item_pool": "Do not split these shared-file tasks to fill6; at most6 if real independently owned new tasks subsequently approved",
+  "activation": "New coordinator posts real thread/child/branch/full base SHA/exact per-worker files ACK to PR16. Listed whitelist allocation then effective immediately; no second general approval or Mac relay required. C00 records actual receipt. Before named child ACK no source writer claimed running.",
+  "items": [
+    {
+      "id": "AN01",
+      "title": "既有后台漏斗查询的提供日期与顺序校验",
+      "status": "RESERVED_PENDING_THREAD_ACK",
+      "production_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java"
+      ],
+      "test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+      ],
+      "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN01.md",
+      "basis": {
+        "admin_api": "chengyinhub-ui/src/api/business/analytics.js:3 listFunnel -> GET /business/analytics/funnel",
+        "admin_page": "chengyinhub-ui/src/views/business/analytics/index.vue:49 queryParams null/null; created→getList; reset→clear/query; independently clearable start/end date pickers; no disabledDate or reverse-order guard",
+        "reachable_trigger": "Admin chooses start2026-07-02/end2026-07-01 then Search; valid picker strings passed unchanged and server returns success(empty rows) instead of rejecting invalid range. Authenticated API caller may supply impossible day2026-02-30 or arbitrary date string, which currently reaches DB comparison.",
+        "mini": "No /business/analytics/funnel or selectBizFunnelDailyList caller found in xcx. /api/merchant/funnel is separate windowDays read model, must not merge contracts.",
+        "response": "AjaxResult data={startDate,endDate,rows}; full array, no total/page metadata; frontend consumes response.data.rows directly. Null/null initial and cleared query intentionally requests whole result. Single-bound filters currently supported.",
+        "permission": "business:analytics:list unchanged"
+      },
+      "implementation_contract": "Only nonblank supplied endpoints get strict ISO yyyy-MM-dd true-calendar parsing before Mapper. If both present reject start>end; same day accepted. Invalid input returns existing BaseController.error style; mapper must not be called. Keep null/empty/whitespace absent according to current StringUtils semantics, one-sided queries, unlimited valid range and unpaged complete rows; keep original response echo strings and permission. Do not silently trim malformed supplied dates or normalize them into other days.",
+      "existing_tests_to_preserve": "Existing AnalyticsControllerTest two qualified-pilot cases untouched, add funnel cases here; P3AdminControllersTest untouched. Final whitelist uses existing AnalyticsControllerTest, supersedes earlier proposed new AnalyticsFunnelDateValidationTest filename.",
+      "acceptance": "Malformed/non-calendar/reversed provided dates do not reach mapper; omitted/blank/one-sided/same-day/leap-day/wide range and complete rows envelope remain. No pagination/default interval/62day cap.",
+      "dependencies": [
+        "BizFunnelDailyMapper Java/XML read-only; AnalyticsEventService/ApiAnalytics/Task read-only",
+        "Actual caller is existing admin Vue; no mini caller found, no UI changes"
+      ],
+      "original_author": "header/history author not a current source assignment; no active exact path lock or change in64openPR snapshots",
+      "verification": "NOT_RUN"
+    },
+    {
+      "id": "AN02",
+      "title": "玩家成长聚合并发覆盖：不同主题合法通关丢累计里程/节点数",
+      "status": "RESERVED_PENDING_THREAD_ACK",
+      "production_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml"
+      ],
+      "test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerGrowthConcurrencyMySqlIT.java"
+      ],
+      "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN02.md",
+      "basis": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+          "line": 1473,
+          "fact": "Real exploration redemption entry invokes redeemExploreChapterAndRecord."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "line": 2999,
+          "fact": "Transactional exploration redemption locks its own activity and registration, not a shared player growth row; :3077 calls topicCompletionAwardService.grantOnce after genuine required-chapter completion."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+          "line": 91,
+          "fact": "First completion invokes playerProgressionService.onTopicComplete before event-13 points awarding. Different topics claim different TOPIC_FINISH badges, so that unique key does not serialize this player aggregate."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+          "line": 160,
+          "fact": "ensureGrowth uses ordinary selectByMember; onTopicComplete :143-147 computes a new absolute mileage in Java, then updates the aggregate."
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+          "line": 53,
+          "fact": "updatePlayerGrowth overwrites every non-null aggregate field under only WHERE member_id; no version predicate or atomic increment. selectByMember :17 is an ordinary cached read."
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+          "line": 2999,
+          "fact": "A second real writer calls onNodeDone; onNodeDone :121 also writes the full aggregate from an ordinary read, allowing unrelated mileage/checkin fields to overwrite one another."
+        }
+      ],
+      "trigger": {
+        "preconditions": "Existing player_growth row; same player completes two distinct topics through distinct activity/registration redemptions in concurrent valid requests. Choose merchants with no active referral relationship to that player so unrelated referral activation cannot incidentally lock this player. No new API/authentication policy is required.",
+        "interleaving": [
+          "A and B claim different topic completion badge keys and both ordinary-read total_mileage=0.",
+          "A computes topic X mileage 10; B computes topic Y mileage 20.",
+          "A UPDATE writes 10 and holds the growth-row write lock until commit. B waits at its UPDATE, then writes its stale absolute 20 after A commits.",
+          "Both real first-completion badges remain, but mileage is 20 instead of 30. Existing transaction boundaries do not make the earlier ordinary read current. Whole-row payload can also revert total_checkins when a node-completion writer overlaps."
+        ],
+        "counterprotections_checked": [
+          "Topic-specific badge unique keys do not conflict across X and Y.",
+          "Per-activity/per-registration locks differ across the two valid requests.",
+          "Node event-12 points can lock a member on some classic routes; this is not a universal guard, and the explored redemption route reaches progression before event-13 points.",
+          "No other PlayerGrowthMapper insert/update writer was found outside PlayerProgressionServiceImpl in current production Java."
+        ]
+      },
+      "implementation_contract": "Inside PlayerProgressionServiceImpl and PlayerGrowthMapper Java/XML, make growth mutation a single transaction with real current member-growth row read (cache disabled/flushed) before computing and persisting the aggregate; handle existing unique member initialization without DDL. Keep all growth writers on that same current-read protocol, including onNodeDone and onTopicComplete, and retain existing first-completion/badge guards. An atomic delta plus authoritative readback is an alternative only if unchanged level/streak/threshold semantics are preserved. No caller/source-owned controller needs editing.",
+      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local.",
+      "dependencies": [
+        "Existing player_growth uk_member; no DDL",
+        "TopicCompletionAward/Registration/Progress controllers read-only",
+        "No PointsAward/PointsMapper/UmsMemberMapper or shared member source edits; need any extra file first request C00"
+      ],
+      "original_author": {
+        "source_header_author": "cy, 2026-06-21 on PlayerProgressionServiceImpl and PlayerGrowthMapper",
+        "current_exact_owner": "Not listed in LONGRUN_SOURCE_OWNERS files/reserved arrays at audit time; no ownership transfer performed. C00 must grant exact files to a new worker before edits.",
+        "runtime_or_git_authorship_claim": "No Git history command run; source-header author is not represented as verified commit authorship."
+      },
+      "verification": "NOT_RUN"
+    }
+  ],
+  "additional_requested_scope_read_only": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+      "prior": "foundation B / PR4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/BizFunnelDailyMapper.java",
+      "prior": "No active lock, but no justified modification inAN01; read-only until concrete new task claimed"
+    }
+  ],
+  "test_scope": "Only listed own test files. Existing ApiAnalyticsControllerTest/AnalyticsEventServiceImplTest/AnalyticsAggregationTaskTest/BizFunnelDailyMapperMyBatisTest remain prior owner, no generic directory rights",
+  "evidence_and_queue_scope": [
+    "docs/verification/mini-analytics-cloud-20261015/AN01.md",
+    "docs/verification/mini-analytics-cloud-20261015/AN02.md",
+    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/QUEUE.json",
+    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/CLAIMS.json",
+    "docs/verification/mini-analytics-cloud-20261015/COORDINATION/README.md"
+  ],
+  "conflict_readback": {
+    "observed_open_pr_count": 64,
+    "open_pr_heads": [
+      {
+        "pr": 69,
+        "sha": "5773e779b323e7f945970e8e472a654c3ea359e5",
+        "changed_file_count": 68
+      },
+      {
+        "pr": 68,
+        "sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+        "changed_file_count": 17
+      },
+      {
+        "pr": 67,
+        "sha": "6a65324557aab652ff351aca6710f4eba292e800",
+        "changed_file_count": 12
+      },
+      {
+        "pr": 66,
+        "sha": "5af31c9ad8ed57c35555e31f5e912744df3ef7f9",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 65,
+        "sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 64,
+        "sha": "4f1462dd6b7703f5031124fff5417cbb456602b6",
+        "changed_file_count": 1
+      },
+      {
+        "pr": 63,
+        "sha": "4646683a7f905f45023d8f65bf2822600b5be610",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 62,
+        "sha": "b82447950dd3eed6bb1f9468d7aac76d12198b3d",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 61,
+        "sha": "6c3bb33c7f720a64d175d1b6a552ebf0289507ad",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 60,
+        "sha": "3cbbd6494f85a4734329577cdfbcdc516ebeb200",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 59,
+        "sha": "f55170581c905a017e76eea825457fb7c1b73cb5",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 58,
+        "sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+        "changed_file_count": 16
+      },
+      {
+        "pr": 57,
+        "sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+        "changed_file_count": 9
+      },
+      {
+        "pr": 56,
+        "sha": "da18d2d7d5a03ac77dd48eea950d8a58853a0206",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 55,
+        "sha": "c393bc64e87c9fbc3ef2b53d34ce79f398655fbb",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 54,
+        "sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 53,
+        "sha": "25fdcb1b2d9fca756f8905bff1bc846f6f089b22",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 52,
+        "sha": "6342022edae65217ddad21bd9a3de130e71b7421",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 51,
+        "sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 50,
+        "sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+        "changed_file_count": 12
+      },
+      {
+        "pr": 49,
+        "sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+        "changed_file_count": 11
+      },
+      {
+        "pr": 48,
+        "sha": "0804977273f608e2a34b0614638f95eab867f197",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 47,
+        "sha": "f3326594305e096a11913cb75204b71968c12a6d",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 46,
+        "sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+        "changed_file_count": 24
+      },
+      {
+        "pr": 45,
+        "sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+        "changed_file_count": 23
+      },
+      {
+        "pr": 44,
+        "sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+        "changed_file_count": 405
+      },
+      {
+        "pr": 43,
+        "sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 42,
+        "sha": "38c993a432d27cfe0966f77d7413262d1af88f42",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 41,
+        "sha": "bf7c63e57e77b93d6be3fa098c657e565ebe1cb0",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 40,
+        "sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+        "changed_file_count": 6
+      },
+      {
+        "pr": 39,
+        "sha": "20144d1076fab628f19451c79ca86958cf65dd31",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 38,
+        "sha": "e6e46fed81e086c4ab39c374fbc4468410d43970",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 37,
+        "sha": "dbe1cef6deb38ef72bb417515ecb1970e0fe81c8",
+        "changed_file_count": 8
+      },
+      {
+        "pr": 36,
+        "sha": "700e754be0a49431638246036a2298d1d5f3e23e",
+        "changed_file_count": 219
+      },
+      {
+        "pr": 35,
+        "sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+        "changed_file_count": 7
+      },
+      {
+        "pr": 34,
+        "sha": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad",
+        "changed_file_count": 33
+      },
+      {
+        "pr": 33,
+        "sha": "f01b5c06657cfb654a0cdc86dc77159ac53b6940",
+        "changed_file_count": 40
+      },
+      {
+        "pr": 32,
+        "sha": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+        "changed_file_count": 37
+      },
+      {
+        "pr": 31,
+        "sha": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
+        "changed_file_count": 32
+      },
+      {
+        "pr": 30,
+        "sha": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
+        "changed_file_count": 38
+      },
+      {
+        "pr": 29,
+        "sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+        "changed_file_count": 37
+      },
+      {
+        "pr": 28,
+        "sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+        "changed_file_count": 31
+      },
+      {
+        "pr": 27,
+        "sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+        "changed_file_count": 33
+      },
+      {
+        "pr": 26,
+        "sha": "78c9b38903397b573eea722b7daa28731648dc76",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 25,
+        "sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+        "changed_file_count": 28
+      },
+      {
+        "pr": 24,
+        "sha": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+        "changed_file_count": 13
+      },
+      {
+        "pr": 23,
+        "sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+        "changed_file_count": 25
+      },
+      {
+        "pr": 22,
+        "sha": "9ff0edc372fbf5c6d31e3d9115e4b7b9639e4ab4",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 21,
+        "sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 20,
+        "sha": "2b0bc025783d349f9c2b80118eb7ba218263fa0d",
+        "changed_file_count": 132
+      },
+      {
+        "pr": 18,
+        "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+        "changed_file_count": 603
+      },
+      {
+        "pr": 17,
+        "sha": "c2f43d0caf55ca63ea4a9e4468b09f90f6592f5a",
+        "changed_file_count": 27
+      },
+      {
+        "pr": 16,
+        "sha": "e2163ab8fdd93c9548c74949604c9668c97f03ad",
+        "changed_file_count": 46
+      },
+      {
+        "pr": 15,
+        "sha": "8884a678ea30f21205d9dedda0cf5bc685a0f019",
+        "changed_file_count": 61
+      },
+      {
+        "pr": 14,
+        "sha": "6a96477142867e20bc6f9f87c7813182ba8a1d0f",
+        "changed_file_count": 64
+      },
+      {
+        "pr": 13,
+        "sha": "d6cd231e9354ae6d95aee82d7a262df771a999fa",
+        "changed_file_count": 11
+      },
+      {
+        "pr": 12,
+        "sha": "a5af41f57fa3771a151f8f662241e432b9233944",
+        "changed_file_count": 10
+      },
+      {
+        "pr": 11,
+        "sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+        "changed_file_count": 317
+      },
+      {
+        "pr": 9,
+        "sha": "e65d5f79fbd0505716d387b4970025e99b571eb6",
+        "changed_file_count": 99
+      },
+      {
+        "pr": 8,
+        "sha": "f99745260b24e45dbc38d1366287cbdc70e920be",
+        "changed_file_count": 97
+      },
+      {
+        "pr": 7,
+        "sha": "aaf6a7be657921c9ffaaa352ea778de096e6a320",
+        "changed_file_count": 73
+      },
+      {
+        "pr": 4,
+        "sha": "138f1cd65c4abc3e0e8e75fade682382f2a6b903",
+        "changed_file_count": 446
+      },
+      {
+        "pr": 3,
+        "sha": "0f0c32f1edc955f6117108daecbb492652212931",
+        "changed_file_count": 31
+      },
+      {
+        "pr": 2,
+        "sha": "41dfcee04da0ce7e24a9bdc25228e43dbfac25b1",
+        "changed_file_count": 1
+      }
+    ],
+    "errors": [],
+    "direct_package_hits": [],
+    "expanded_analytics_hits": [
+      {
+        "pr": 18,
+        "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 11,
+        "sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 7,
+        "sha": "aaf6a7be657921c9ffaaa352ea778de096e6a320",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 4,
+        "sha": "138f1cd65c4abc3e0e8e75fade682382f2a6b903",
+        "files": [
+          "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml"
+        ]
+      }
+    ],
+    "master_sha": "cbcc44261939cb9972e05929e8f73f8cf8862d6b",
+    "master_blob_comparison": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "remote_master_blob": "7e5e475f1535e245b4428523c8c295ecd7cbca92",
+        "core_blob": "7e5e475f1535e245b4428523c8c295ecd7cbca92",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "remote_master_blob": "066939e5f13c1827bac6a47e5989077013fcd47b",
+        "core_blob": "066939e5f13c1827bac6a47e5989077013fcd47b",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "remote_master_blob": "cae824ea99fadab5af1ad3486bfd1e0c5a11b3dd",
+        "core_blob": "cae824ea99fadab5af1ad3486bfd1e0c5a11b3dd",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+        "remote_master_blob": "632ab4e1d66080330c9fb7a92b4a87b14e68f93b",
+        "core_blob": "632ab4e1d66080330c9fb7a92b4a87b14e68f93b",
+        "same": true
+      }
+    ],
+    "scope": "Actual all-pages filename tool checked every open PR; summary retains exact heads/counts and target hits rather than all unrelated filenames"
+  },
+  "default_boundary": [
+    "Existing bugs/shared backend only; no UI/new features/iOS/Flutter",
+    "No new reward/fee/date-window/pagination/auth policy, no DDL/new dependency/CI/deploy/production",
+    "Cloud source development only, no Java/Maven/Node/DB/manual CI/alternative environments",
+    "Preserve original assertions; necessary new regression source NOT_RUN; source delivery not acceptance",
+    "One file one writer; each task small commits/push fullSHA/paths/dependencies/test sources to PR16 and local coordinator",
+    "One repair slot per team; independent other tasks continue without waiting for tests/CI, real task exhaustion honest"
+  ],
+  "future_package_note": "Source-based candidates not run/reproduced on DB; actual implementation and local validation remain pending. Whole P048 unbounded-query performance issue not declared solved."
+}

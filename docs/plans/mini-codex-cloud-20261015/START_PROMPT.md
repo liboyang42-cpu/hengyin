@@ -1,3 +1,5 @@
+> 新增第三队：ANALYTICS_THIRD当前pending_thread，只有THIRD_CLOUD_HANDOFF.json中的AN01/AN02精确路径保留；实际thread/child ACK后直接按清单单写者开发。勿把analytics目录、旧foundation B文件或未证实事项泛派给新队。原两队及VPS分工继续，C00仍唯一全局源账。
+
 > 最新用户分工：两队各最多6名gpt-6.1-sol，按“1条失败修复线＋5条独立开发线”滚动；多个失败串行给原写者，其余源码完成即push，不等验证/CI，不重复开发。真实后端验证仅由本地协调者执行VPS212/批准真库入口；C00及Cloud worker不得新增手动编译/测试/CI触发或专门验证配置，原有自动CI自然运行。NOT_RUN不称通过；无合并/部署/迁移。恢复先读[LONGRUN_CURRENT](LONGRUN_CURRENT.md)、[后端移交](BACKEND_VALIDATION_VPS_HANDOFF.md)、精确源表和两队实际队列。真实池不足如实EXHAUSTED，不凑50或冒称满载。
 
 # Codex最终提示词

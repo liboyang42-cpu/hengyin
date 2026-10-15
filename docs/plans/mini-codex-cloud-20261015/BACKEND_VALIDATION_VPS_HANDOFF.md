@@ -16,3 +16,7 @@ C01_51 gate=true、loopback强要求，nested XML单列；C04_19门禁=1用MYBAT
 每队1修复+5开发：本地失败回原写者，多个失败串行占一个修复槽，其他独立源码完成即push，不等验证；换人需原写者停止与精确路径移交。NOT_RUN照实保留；不足真实任务不凑数、不冒称五线满载。无部署/合并/业务迁移授权。
 
 最新本地VPS反馈：CORE f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c 已按212离线test-compile退出0，02:35，7 reactor模块成功、1392测试源编译通过。此为本地验证者回报，公共原日志尚待其发布；仅COMPILE_PASS，不是业务/真实MySQL/Redis/设备/部署验收，C00不重跑验证。
+
+## 首轮VPS483失败与原作者串行修复
+
+已完整读回PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee公开README/summary：f7e源码编译PASS，但83类483项470PASS/5FAIL/8ERROR/0skip为FAIL，8 gated/JDBC另未测。C03/C04/C06原写者依次占唯一修复槽，前人停写才交下一人；新公共链b423114b→603dab12→最终 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，8测试文件及证据修正，生产零变更。nullable Long/mock求值/HTTP异常边界/精确现金原行/CAS当前读夹具问题未通过弱化断言掩盖。新SHA未编译/测试，NOT_RUN。完整13方法历史、原堆栈引用、157源声明聚焦清单见VPS_REPAIR_ROUND_1.json/md。本地独占验证，Cloud无手动运行/CI/环境替代，其他独立源继续。

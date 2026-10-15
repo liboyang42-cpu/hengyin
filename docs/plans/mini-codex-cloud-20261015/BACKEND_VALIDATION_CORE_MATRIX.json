@@ -2376,9 +2376,31 @@
     "output": "/tmp/backend-validation-core-matrix.json",
     "execution_destination": "Local VPS thread01a13eed only; no Cloud or manual CI"
   },
-  "target_validation_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "target_validation_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "inventory_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
-  "inventory_note": "91-class/510-method catalog was read at exact2b1984b; parent reports fixture-only compile corrections published through f7e0e523. No method/intent deletion by this worker; target recompile/run must bind reports to f7e or subsequent explicit approved SHA.",
+  "inventory_note": "91classes/510 source declarations preserved after fixture-only fixes. 83/483 failed at f7,8gated/JDBC deferred. New0d source not tested; focus8/157 source declarations. C06_29 one method renamed versionedFrozenObject.",
   "execution_owner": "LOCAL_VPS_COORDINATOR/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-  "status": "NOT_RUN_VPS_HANDOFF"
+  "status": "NOT_RUN_VPS_HANDOFF",
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "latest_regression_history": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "result": "FAIL",
+    "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "evidence_pr": 24,
+    "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "C00_read_public_evidence": true,
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "fresh_reports": true,
+    "exact_selected_class_set_match": true,
+    "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+    "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+    "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "new_candidate_verification": "NOT_RUN",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
+  }
 }

@@ -1,6 +1,12 @@
+# 当前VPS失败闭环状态（覆盖下文旧快照）
+
+CORE新公共候选 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，原作者串行完成3个fixture-only小提交，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。原f7已编译PASS，但普通83类483项=470PASS/5FAIL/8ERROR/0skip，FAIL，不是业务Ready；8gated/JDBC类另未测。C00已读独立PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee README/summary完整13堆栈和报告哈希。
+
+本地唯一实际验证者按212/批准入口复测；C00/Cloud不编译测试/手动CI/访问VPS。精确失败与修复链/8类157源声明聚焦命令见[VPS_REPAIR_ROUND_1](VPS_REPAIR_ROUND_1.md)及JSON。单修复槽依次C03→C04→C06，现在已冻结停写等真实反馈，其他独立源码不受阻。原断言、负控、500 UNKNOWN、current读和CAS失败语义不变；未改生产，没有伪报通过。
+
 # 当前最高优先执行状态
 
-- CORE最新公共源码 `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`（15测试fixture最小修复，NOT_RUN）；EXTRA最新 `a37ce191756ab11896faf4e61e8a06b4279f0303`（E03/E05及5旧fixture已公共，NOT_RUN）。原2b/25ede验证冻结记录保留历史，不覆盖旧结果。
+- CORE最新公共源码 `0d63043ad06775bc3dc52fb925620ef36d1081a7`（15测试fixture最小修复，NOT_RUN）；EXTRA最新 `a37ce191756ab11896faf4e61e8a06b4279f0303`（E03/E05及5旧fixture已公共，NOT_RUN）。原2b/25ede验证冻结记录保留历史，不覆盖旧结果。
 - 后端实际复测仅由本地 `01a13eed-e4d9-77f3-b875-c72d26ea7d59` 按最新212/批准真库入口执行；C00与两队不再手动编译、测试、触发CI或新增专用验证配置，不尝试VPS/Cloud替代。
 - 每队最多6名6.1-sol，1条修复线串行接失败，另5条继续独立源码、完成即push、不等CI/本地签收；原写者优先，换人先精确移交。无真实任务不凑数，实际运行数照实。
 - EXTRA恢复ACK6198215180已收到，之前“五fixture待授权”阻塞已解除；E03/E05已有新公共小提交，不再列未ACK。E02当时已派，后续独立交付另SHA。CORE池仍178历史/实际可行动0，fixture补丁不另算新bug。
@@ -47,3 +53,7 @@ CORE六个源码作者均已交付并停止写入，锁保留；本次六路仅�
 Claude新接收37份精确PR快照见CLAUDE_HANDOFF_INTAKE.json/.md，保留原所有者与共享文件锁。PR21/23/25/27当前来源已更新，原测试声称不当本队验证。master同步仅待评审，无合并。
 
 恢复：读取本页→START_PROMPT最新模式→ROLLING/源表→两队真实队列→PR16/21新CY-HANDOFF。优先收EXTRA对c79d2886授权ACK及E03-16/E05-17/E02-22公共小提交；只能原作者应用prepared_patch，先核新base，不重复写。集中验证用LONGRUN_VALIDATION_HANDOFF当前2b1984 SHA清单，仍NOT_RUN。CI自然结束不等待，禁止手动重跑。平台停止时以GitHub公共进度恢复，不承诺永久运行。
+
+## 第三Cloud pending_thread精确保留
+
+用户授权新增第三Cloud，当前未创建/未运行；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。

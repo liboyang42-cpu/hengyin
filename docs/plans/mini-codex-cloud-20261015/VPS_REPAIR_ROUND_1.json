@@ -1,0 +1,393 @@
+{
+  "protocol": "CY-VPS-REPAIR-ROUND-1-20261015",
+  "failed_candidate": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "current_source_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "historical_result": {
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "status": "FAIL",
+    "compile": "PASS",
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "log_sha256": "7023cb5ff16334246b8fb551ebce64036809dfb1434dc826caf78c0957a20f43"
+  },
+  "evidence": {
+    "pr": 24,
+    "commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "readme": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/README.md",
+    "summary": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "read_by_C00": true,
+    "xml_hashes": "In local verifier's summary; original logs/XML retained on VPS"
+  },
+  "failures": [
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "test": "nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite",
+      "kind": "failure",
+      "exception": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown ==> expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>",
+      "relevant_frames": [
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite(OWN_C03_22Test.java:113)",
+        "Caused by: java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\"",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite$8(OWN_C03_22Test.java:110)",
+        "at com.chengyinhub.business.mapper.CmsTopicNodeMapper$MockitoMock$227156912.insertCmsTopicNode(Unknown Source)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyNodes(CmsTopicServiceImpl.java:910)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyChaptersAndNodes(CmsTopicServiceImpl.java:757)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopicWithContentOwner(CmsTopicServiceImpl.java:543)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopic(CmsTopicServiceImpl.java:454)",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite$9(OWN_C03_22Test.java:113)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "test": "chapterInsertMustSucceedAndGenerateIdentityBeforeNodes",
+      "kind": "failure",
+      "exception": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown ==> expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>",
+      "relevant_frames": [
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.chapterInsertMustSucceedAndGenerateIdentityBeforeNodes(OWN_C03_22Test.java:101)",
+        "Caused by: java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\"",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$chapterInsertMustSucceedAndGenerateIdentityBeforeNodes$6(OWN_C03_22Test.java:98)",
+        "at com.chengyinhub.business.mapper.CmsTopicChapterMapper$MockitoMock$205511788.insertCmsTopicChapter(Unknown Source)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyChaptersAndNodes(CmsTopicServiceImpl.java:746)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopicWithContentOwner(CmsTopicServiceImpl.java:543)",
+        "at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.copyCmsTopic(CmsTopicServiceImpl.java:454)",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
+        "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$chapterInsertMustSucceedAndGenerateIdentityBeforeNodes$7(OWN_C03_22Test.java:101)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "test": "mediaFailureAfterWriteRemainsUncertain",
+      "kind": "error",
+      "exception": "java.lang.IllegalStateException",
+      "message": "媒体失败",
+      "relevant_frames": [
+        "at com.chengyinhub.web.controller.api.ApiTopicController.updateTopic(ApiTopicController.java:690)",
+        "at com.chengyinhub.web.controller.api.ApiTopicController.updateTopic(ApiTopicController.java:611)",
+        "at com.chengyinhub.business.longrun.OWN_C03_24Test.mediaFailureAfterWriteRemainsUncertain(OWN_C03_24Test.java:97)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "test": "bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock",
+      "kind": "failure",
+      "exception": "org.mockito.exceptions.verification.VerificationInOrderFailure",
+      "message": "\nVerification in order failure:\nmerchantReferralBountyMapper.selectByMerchantMemberIdForUpdate(\n    9L\n);\nWanted 1 time:\n-> at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)\nBut was 2 times:\n-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.lambda$withInviterLock$0(MerchantReferralBountyService.java:152)\n-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.tryActivate(MerchantReferralBountyService.java:167)\n\n",
+      "relevant_frames": [
+        "-> at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)",
+        "-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.lambda$withInviterLock$0(MerchantReferralBountyService.java:152)",
+        "-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.tryActivate(MerchantReferralBountyService.java:167)",
+        "at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "test": "lateAcceptedAndAmbiguousReturnOriginalTerminalOrFrozenFacts",
+      "kind": "error",
+      "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+      "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+      "relevant_frames": [
+        "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+        "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test.lateAcceptedAndAmbiguousReturnOriginalTerminalOrFrozenFacts(OWN_C04_22Test.java:24)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "test": "unchangedProcessingReceiptCanLegitimatelyReportZeroAffectedRows",
+      "kind": "error",
+      "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+      "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+      "relevant_frames": [
+        "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+        "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test.unchangedProcessingReceiptCanLegitimatelyReportZeroAffectedRows(OWN_C04_22Test.java:51)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "test": "staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot",
+      "kind": "error",
+      "exception": "org.mockito.exceptions.misusing.UnfinishedStubbingException",
+      "message": "\nUnfinished stubbing detected here:\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)\n\nE.g. thenReturn() may be missing.\nExamples of correct stubbing:\n    when(mock.isOk()).thenReturn(true);\n    when(mock.isOk()).thenThrow(exception);\n    doThrow(exception).when(mock).someVoidMethod();\nHints:\n 1. missing thenReturn()\n 2. you are trying to stub a final method, which is not supported\n 3. you are stubbing the behaviour of another mock inside before 'thenReturn' instruction is completed\n",
+      "relevant_frames": [
+        "-> at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:111)",
+        "at com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver.resolve(WithdrawalFrozenAmountResolver.java:58)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
+        "at com.chengyinhub.business.longrun.OWN_C04_22Test.staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot(OWN_C04_22Test.java:63)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "test": "journeyReceiptWriteFailureStillThrows",
+      "kind": "error",
+      "exception": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+      "relevant_frames": [
+        "java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+        "at com.chengyinhub.business.longrun.OWN_C06_25Test.lambda$setup$3(OWN_C06_25Test.java:54)",
+        "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
+        "at com.chengyinhub.business.longrun.OWN_C06_25Test.journeyReceiptWriteFailureStillThrows(OWN_C06_25Test.java:82)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "test": "checkReceiptWriteFailureStillThrows",
+      "kind": "error",
+      "exception": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+      "relevant_frames": [
+        "java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.domain.TopicRouteAction.setResponseJson(String)\" because \"this.saved\" is null",
+        "at com.chengyinhub.business.longrun.OWN_C06_25Test.lambda$setup$3(OWN_C06_25Test.java:54)",
+        "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
+        "at com.chengyinhub.business.longrun.OWN_C06_25Test.checkReceiptWriteFailureStillThrows(OWN_C06_25Test.java:77)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "test": "emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled",
+      "kind": "error",
+      "exception": "java.lang.IllegalArgumentException",
+      "message": "旅程数值规则版本不支持",
+      "relevant_frames": [
+        "at com.chengyinhub.business.service.support.JourneyRulesValidator.validateAndNormalize(JourneyRulesValidator.java:84)",
+        "at com.chengyinhub.business.domain.JourneyRules.parse(JourneyRules.java:56)",
+        "at com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl.sessionRules(TopicRouteRuntimeServiceImpl.java:1063)",
+        "at com.chengyinhub.business.longrun.OWN_C06_29Test.read(OWN_C06_29Test.java:40)",
+        "at com.chengyinhub.business.longrun.OWN_C06_29Test.emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled(OWN_C06_29Test.java:59)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "test": "bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction",
+      "kind": "failure",
+      "exception": "Wanted but not invoked",
+      "message": "\nWanted but not invoked:\niUmsMemberService.deductWithdrawableBalance(\n    900002L,\n    80.00,\n    20\n);\n-> at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)\n\nHowever, there was exactly 1 interaction with this mock:\niUmsMemberService.selectUmsMemberById(\n    900002L\n);\n-> at com.chengyinhub.business.service.impl.CashWithdrawServiceImpl.withdraw(CashWithdrawServiceImpl.java:89)\n\n",
+      "relevant_frames": [
+        "-> at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)",
+        "-> at com.chengyinhub.business.service.impl.CashWithdrawServiceImpl.withdraw(CashWithdrawServiceImpl.java:89)",
+        "at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "test": "existingPhotoSubmissionReplayDoesNotReverifyStorage",
+      "kind": "error",
+      "exception": "com.chengyinhub.business.service.GameSessionException",
+      "message": "游戏状态已变化，请刷新后重试",
+      "relevant_frames": [
+        "com.chengyinhub.business.service.GameSessionException: 游戏状态已变化，请刷新后重试",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.error(GameSessionRuntimeServiceImpl.java:3290)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.bumpSession(GameSessionRuntimeServiceImpl.java:1780)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.recoverSubmissionOutcome(GameSessionRuntimeServiceImpl.java:2450)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.playerSubmit(GameSessionRuntimeServiceImpl.java:932)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.dispatch(GameSessionRuntimeServiceImpl.java:360)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.command(GameSessionRuntimeServiceImpl.java:294)",
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.existingPhotoSubmissionReplayDoesNotReverifyStorage(GameSessionRuntimeServiceImplTest.java:1312)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "test": "concurrentRoleInsertCollisionReadsActiveWinnerAndCurrentRevision",
+      "kind": "failure",
+      "exception": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <3> but was: <2>",
+      "relevant_frames": [
+        "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.concurrentRoleInsertCollisionReadsActiveWinnerAndCurrentRevision(GameSessionRuntimeServiceImplTest.java:1750)"
+      ],
+      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
+    }
+  ],
+  "serial_repairs": [
+    {
+      "owner": "CORE/C03",
+      "worker": "feature_points_rules_sol",
+      "sha": "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
+      "parent": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "test_files": 2
+    },
+    {
+      "owner": "CORE/C04",
+      "worker": "a02_sol",
+      "sha": "603dab127d850e8ac0b131522bb2f4351b508385",
+      "parent": "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
+      "test_files": 3
+    },
+    {
+      "owner": "CORE/C06",
+      "worker": "final_review_sol",
+      "sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "parent": "603dab127d850e8ac0b131522bb2f4351b508385",
+      "test_files": 3
+    }
+  ],
+  "repair_slot": {
+    "limit": 1,
+    "current_status": "IDLE_SOURCE_DELIVERED_LOCAL_RETEST_PENDING",
+    "overlap": "none; each original writer stopped before next gained write rights",
+    "other_five": "independent authorized development continues; actual tasks required, no fabricated full utilization"
+  },
+  "changed_production_paths": [],
+  "focus_classes": [
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "source_test_annotations": 4,
+      "owner": "CORE/C03",
+      "repair": "nullable Long stub",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "source_test_annotations": 6,
+      "owner": "CORE/C03",
+      "repair": "real global exception advice boundary",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "source_test_annotations": 7,
+      "owner": "CORE/C04",
+      "repair": "precise two current reads, preserve ordering/rollback",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "source_test_annotations": 3,
+      "owner": "CORE/C04",
+      "repair": "precompute mocked Frozen/Admission",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "source_test_annotations": 5,
+      "owner": "CORE/C06",
+      "repair": "noninvoking restub, preserve receipt-write error",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "source_test_annotations": 4,
+      "owner": "CORE/C06",
+      "repair": "minimal valid schemaVersion1, no validator change",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "source_test_annotations": 6,
+      "owner": "CORE/C04",
+      "repair": "actual inserted cash original, preserve real admission/debit",
+      "status": "NOT_RUN_AFTER_FIX"
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "source_test_annotations": 122,
+      "owner": "CORE/C06",
+      "repair": "specific CAS-success and current-lock fixtures",
+      "status": "NOT_RUN_AFTER_FIX"
+    }
+  ],
+  "source_declared_focus_count": 157,
+  "count_note": "Source declarations not executed count; 8 old failed classes retained. C06_29 method emptyFrozenObject renamed versionedFrozenObject, no method deletion.",
+  "command_template": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_22Test,com.chengyinhub.business.longrun.OWN_C03_24Test,com.chengyinhub.business.longrun.OWN_C04_21Test,com.chengyinhub.business.longrun.OWN_C04_22Test,com.chengyinhub.business.longrun.OWN_C06_25Test,com.chengyinhub.business.longrun.OWN_C06_29Test,com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest,com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest test",
+  "command_is": "Documentation for local approved 212 runner only; not executed by Cloud",
+  "deferred_classes": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+      "declared_test_annotations": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+      "declared_test_annotations": 5
+    }
+  ],
+  "truth_correction": "JourneyRules {} without schemaVersion is invalid by existing validator. Corrected test/evidence to minimal schemaVersion1; production validator unchanged.",
+  "not_accepted": [
+    "new SHA compile",
+    "new SHA focused/full regression",
+    "real MySQL/Redis",
+    "runtime HTTP identity acceptance",
+    "devices",
+    "merge",
+    "deploy",
+    "business migrations"
+  ],
+  "manual_runs_after_repair": 0,
+  "extra_independent_report": {
+    "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+    "compile": "PASS_REPORTED_BY_LOCAL",
+    "classes": 34,
+    "tests": 305,
+    "passed": 302,
+    "failures": 1,
+    "errors": 2,
+    "skipped": 0,
+    "result": "FAIL_REPORTED_PUBLIC_RAW_EVIDENCE_PENDING_READBACK",
+    "repair_owner": "EXTRA6/E02 only; external coordinator controls single repair slot",
+    "note": "C00 does not edit EXTRA sources; new repairs/new source SHA independent of CORE0d. Local already notified original E02."
+  }
+}
