@@ -6192,19 +6192,31 @@ Page({
    * 前端不解密也不上报步数本身,只把密文原样转交。
    */
   _submitSteps() {
+    if (!this._isPlayAccountCurrent()) return;
     const game = this.selectComponent('#advancedGame');
     if (!game) { cyToast('玩法未就绪，请退出后重进'); return; }
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const kit = this._kit();
+    const nodeKey = () => String(this._playKitNodeId || (this.data.advancedPlay && this.data.advancedPlay.node
+      && this.data.advancedPlay.node.nodeId) || '');
+    const nodeId = nodeKey();
+    const sequence = this._stepsSubmitSequence = (this._stepsSubmitSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._stepsSubmitSequence
+      && sessionKey === JSON.stringify(this._sessionParams()) && nodeId === nodeKey()
+      && this._kit() === kit && this.selectComponent('#advancedGame') === game;
     wx.login({
       success: (login) => {
+        if (!isCurrent()) return;
         if (!login || !login.code) { cyToast('微信登录态获取失败'); return; }
         wx.getWeRunData({
-          success: (run) => game.action('SUBMIT_STEPS', {
-            code: login.code, encryptedData: run.encryptedData, iv: run.iv,
-          }),
-          fail: () => cyToast('需要授权微信运动才能计步'),
+          success: (run) => {
+            if (!isCurrent()) return;
+            game.action('SUBMIT_STEPS', { code: login.code, encryptedData: run.encryptedData, iv: run.iv });
+          },
+          fail: () => { if (isCurrent()) cyToast('需要授权微信运动才能计步'); },
         });
       },
-      fail: () => cyToast('微信登录态获取失败'),
+      fail: () => { if (isCurrent()) cyToast('微信登录态获取失败'); },
     });
   },
   /** 治愈音乐角:音频归页面持有,弹窗收起后还能继续放(这一站的玩法就是"听完") */
