@@ -1,0 +1,5 @@
+.rs { display: flex; flex-direction: column; gap: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); }
+.rs__reason { font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.rs__note { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.rs__row { display: flex; gap: var(--cy-space-3); }
+.rs__row cy-btn { flex: 1; }
