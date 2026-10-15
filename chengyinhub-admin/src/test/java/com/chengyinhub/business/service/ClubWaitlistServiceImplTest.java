@@ -62,6 +62,7 @@ class ClubWaitlistServiceImplTest {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(policy(true));
         when(mapper.isActiveParticipant(CLUB, MEMBER)).thenReturn(1);
         when(mapper.selectClubOwnerForUpdate(CLUB)).thenReturn(999L);
+        when(mapper.selectPromotableActivityForUpdate(eq(ACTIVITY), eq(CLUB), any(Date.class))).thenReturn(ACTIVITY);
         when(mapper.selectActiveClubMemberForUpdate(CLUB, MEMBER)).thenReturn(MEMBER);
         when(mapper.countActiveRegistration(MEMBER, ACTIVITY, TICKET)).thenReturn(0);
     }
