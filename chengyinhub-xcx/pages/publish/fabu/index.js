@@ -7013,16 +7013,26 @@ Page({
      每次打开面板都重拉 —— 刚存的那条要马上看得到。拉不到就不出这一段,不塞占位。 */
   getStoryDraftList: function () {
     const that = this;
+    const memberId = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = (this._storyDraftListEpoch || 0) + 1;
+    this._storyDraftListEpoch = epoch;
+    const isCurrent = () => !that._publishPageUnloaded
+      && epoch === that._storyDraftListEpoch
+      && memberId === String(app.getUserID() || '')
+      && scope === that.data.operationScope;
+    this.setData({ storyDraftList: [] });
     app.sendRequest({
       hideLoading: true,
       url: '/api/template/my-list',
       method: 'POST',
       data: { draft_status: 0, scope: that.data.operationScope },
       success: function (res) {
+        if (!isCurrent()) return;
         const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
         that.setData({ storyDraftList: rows });
       },
-      fail: function () { that.setData({ storyDraftList: [] }); },
+      fail: function () { if (isCurrent()) that.setData({ storyDraftList: [] }); },
     });
   },
 
