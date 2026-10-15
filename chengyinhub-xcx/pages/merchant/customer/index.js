@@ -86,6 +86,7 @@ Page({
     toolsOpen: false,
     canSegment: false,
     canExport: false,
+    canCampaigns: false,
     sourceType: '',
     sourceStart: '',
     sourceEnd: '',
@@ -175,6 +176,7 @@ Page({
       noPermission: false,
       canSegment: false,
       canExport: false,
+      canCampaigns: false,
     });
     app.sendRequest({
       hideLoading: true,
@@ -197,6 +199,7 @@ Page({
         this.setData({
           canSegment: access.canSegmentCrm,
           canExport: access.canExportCrm,
+          canCampaigns: access.canReadMarketing,
         });
         this.load();
         this.loadSavedSegments();
@@ -230,6 +233,12 @@ Page({
   },
 
   toggleTools() { this.setData({ toolsOpen: !this.data.toolsOpen }); },
+  // BL-100:触达任务记录只读页;页内自己再按 access/me 判 MARKETING_READ。
+  goCampaigns() {
+    if (!this.data.canCampaigns) return;
+    this.setData({ toolsOpen: false });
+    wx.navigateTo({ url: '/pages/merchant/crm-campaigns/index' });
+  },
 
   closeTools() { this.setData({ toolsOpen: false }); },
   closeFilters() { this.setData({ filterOpen: false }); },
@@ -349,6 +358,7 @@ Page({
         exportError: '',
         canSegment: false,
         canExport: false,
+        canCampaigns: false,
     });
   },
 
