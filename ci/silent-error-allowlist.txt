@@ -190,3 +190,4 @@ chengyinhub-xcx/subpackageMember/points-history/index.js 1  # 积分明细首次
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 线路详情失败落页内 error/notfound 可见态并给重试
 chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 线路列表失败落页内 cy-error 并给重试
 chengyinhub-xcx/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
+chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js 3  # 2026-10-15 BL-89 安全感受评价半屏:选项读取/商家 ID 换取/提交失败均落半屏内 cy-inline-error(含后端资格报错原文)，保留输入可重试，关闭全局 toast 免双弹

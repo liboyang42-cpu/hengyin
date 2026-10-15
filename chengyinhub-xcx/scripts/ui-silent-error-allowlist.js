@@ -58,6 +58,7 @@ module.exports = [
   { file: 'pages/merchant/team/index.js', count: 7, reason: '经营团队的权限、名单、邀请和角色写操作均落页内 error/result 状态或明确 toast。' },
   { file: 'pages/mylike/mylike.js', count: 3, reason: '帖文与主题收藏列表失败落到 errorMsg 页内错误态；取消帖文收藏失败由动作自己的精确 toast 承接，通用 toast 会双弹。' },
   { file: 'pages/play/index.js', count: 1, reason: '已完成记录是非阻断附属区块，失败由页面空错态承接。' },
+  { file: 'pages/play/merchant/components/safety-rating-sheet/index.js', count: 3, reason: 'BL-89 安全感受评价半屏:选项读取失败落半屏内 cy-inline-error 可重试；商家 ID 换取与提交失败落半屏内提交错误并保留输入可重试，关闭全局 toast 免双弹。' },
   { file: 'components/cy/scene-qr-ticket/index.js', count: 1, reason: '入场动态码签发失败会切换 state=error 并渲染 errorText 与重试操作。' },
   { file: 'pages/publish/activity/index.js', count: 4, reason: '发布身份失败落到 accessState/accessError，编辑回填失败落到 activityLoadError，发起人失败落到 ownerLoadError，模板列表失败落到 templateError/templateStaleError，四路均可见可重试。' },
   { file: 'pages/publish/fabu/index.js', count: 3, reason: '编辑内容加载失败写入 editLoadError，AI 安全预检失败由表单内提示承接，公开模板增强失败明确回退空列表。' },

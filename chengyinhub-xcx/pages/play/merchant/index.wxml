@@ -120,9 +120,12 @@
       <view wx:elif="{{!node.arrived}}" class="mp-cta__main {{busy ? 'is-disabled' : ''}}" bindtap="scanArrival" aria-role="button" aria-label="扫描门店码" aria-disabled="{{busy}}" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '记录中…' : '扫描门店码'}}</view>
       <view wx:elif="{{!node.selfReported}}" class="mp-cta__main {{busy ? 'is-disabled' : ''}}" bindtap="uploadProof" aria-role="button" aria-label="拍摄到店凭证" aria-disabled="{{busy}}" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '上传中…' : '拍摄到店凭证'}}</view>
       <view wx:elif="{{!node.done}}" class="mp-cta__main {{consentBusy ? 'is-disabled' : ''}}" bindtap="openVerifyCode" aria-role="button" aria-label="出示核销码" aria-disabled="{{consentBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{consentBusy ? '确认授权中…' : '出示核销码'}}</view>
+      <!-- BL-89:已核销后照「地址」同款按钮加「评价安全感受」;资格由后端判定 -->
+      <view wx:if="{{receipt !== 'unknown' && node.arrived && node.selfReported && node.done && node.merchantId}}" class="mp-cta__ghost" bindtap="openSafetyRating" aria-role="button" aria-label="评价安全感受" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="34" /><text>评价</text></view>
       <view wx:else class="mp-cta__main is-dead" aria-role="status">已核销</view>
       </view>
     </view>
   </block>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+<cy-safety-rating-sheet show="{{safetyRatingShow}}" merchant-member-id="{{node.merchantId ? node.merchantId + '' : ''}}" bind:close="closeSafetyRating" />
