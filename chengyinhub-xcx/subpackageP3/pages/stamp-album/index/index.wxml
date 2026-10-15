@@ -3,9 +3,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="al-root">
-  <cy-nav-bar />
+  <cy-nav-bar title="集邮册" />
   <!-- .al-root 本身有横向 padding,cy-page-title 不 flush 会被推成双倍缩进(2026-07-31 组件统一清单) -->
-  <cy-page-title title="集邮册" flush="{{true}}" />
   <!-- 计数是权威口吻的大字:数据没回来就别先说「0 枚」(截图 057 把「0 枚」和「加载中…」同屏了) -->
   <view class="al-hd" wx:if="{{loaded}}">
     <text class="al-n">{{total}}</text>

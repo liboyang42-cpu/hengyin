@@ -4,7 +4,6 @@
   "disableScroll": true,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-spin-card": "/components/cy/spin-card/index",
     "cy-sheet": "/components/cy/sheet/index",

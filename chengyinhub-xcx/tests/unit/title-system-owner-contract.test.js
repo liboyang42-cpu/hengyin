@@ -92,7 +92,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
      2026-09-11 那一页整块摘回 master 的 #1058 ⇒ 它的标题形态也回到 master 的居中 nav 标题,
      这里跟着摘除;上面 EXPECTED_NAV_ROUTES 里那一条仍然在,两份盘点不重复登记。 */
   'subpackageRoam/official-routes/index', 'subpackageRoam/official-route/index', 'subpackageMember/points-history/index',
-  'subpackageRoam/history/index',   // 同上:收口后大标题由 cy-page-title 出
+  // 2026-10-15 BL-11:漫游历史改为 cy-nav-bar 居中标题,撤出本清单。
   'pages/activity/detail/index',    // 活动详情正文收进 scene，深链壳改用统一 L1 标题
   // 2026-08-07 用户裁决:广场帖文流不设大标题,从 EXPECTED_PAGE_TITLE_ROUTES 摘除
   'pages/search2/index',
@@ -111,7 +111,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
   'subpackageP3/pages/growthcenter/index/index',
-  'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
+  // 2026-10-15 BL-11:排行榜、集邮册改为 cy-nav-bar 居中标题,撤出本清单。
   'pages/publish/activity/index',
   'pages/publish/templateadd/templateadd',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
@@ -129,7 +129,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/coop/withdraw/index', 'pages/coop/withdraw/records/index',
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
-  'subpackageP3/pages/object-cards/index/index',
+  // 2026-10-15 BL-11:藏品册改为 cy-nav-bar 居中标题,撤出本清单。
 ]
 
 // 2026-09-03 入职流重做:apply 与 create 统一成 cy-nav-bar + cy-h1 的向导形态,

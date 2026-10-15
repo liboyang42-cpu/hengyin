@@ -52,7 +52,8 @@ function assertPortContract(files) {
   const historyPageJson = JSON.parse(files.historyPageJson)
   assert.equal(historyPageJson.usingComponents['cy-scene-roam-history'], '/components/cy/scene-roam-history/index')
   assert.match(files.historyPageWxml, /<cy-nav-bar\b/)
-  assert.match(files.historyPageWxml, /<cy-page-title[^>]*title="漫游历史"/)
+  // 2026-10-15 BL-11:二级页统一 cy-nav-bar 返回 + 居中标题,宿主标题移入导航条。
+  assert.match(files.historyPageWxml, /<cy-nav-bar title="漫游历史"[^>]*custom-back/)
   assert.match(files.historyPageWxml, /<cy-scene-roam-history\b/)
   assert.doesNotMatch(files.historyPageWxml, /wx:for|class="rc|class="hs-sum/, '深链页不得复制 RunCard 正文')
   assert.doesNotMatch(files.historyPageJs, /roam_sessions/, '漫游历史深链页不得复制列表取数与整形')

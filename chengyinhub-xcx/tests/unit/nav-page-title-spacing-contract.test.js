@@ -23,6 +23,11 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/merchant/decor/ai-npc/index.wxml',
   // 2026-09-05 漫游·附近的局:全屏地图页,nav overlay 居中标题,正文是地图 + 抽屉,没有 L1 大标题行。
   'subpackageRoam/nearby/index.wxml',
+  // 2026-10-15 BL-11 用户决定:漫游/P3 分包无副标题的二级页统一 cy-nav-bar 返回 + 居中标题。
+  'subpackageP3/pages/growthcenter/leaderboard/index.wxml',
+  'subpackageP3/pages/object-cards/index/index.wxml',
+  'subpackageP3/pages/stamp-album/index/index.wxml',
+  'subpackageRoam/history/index.wxml',
   // 2026-09-02 剧情与玩法(Figma J1-A/B/C):标题只在 cy-nav-bar 居中,不挂 cy-page-title。
   'pages/club/topic-story/index.wxml',
   // 2026-08-27 精准停表玩一局:沉浸玩法屏,标题只在 cy-nav-bar 居中,正文首屏是刻度轮,
@@ -475,7 +480,7 @@ function assertSelfDrawnTitleSpacing(rel, cssOverride) {
 //   (editorPage 1 创作 / 2 票务,靠底部 sheet 切屏),全页没有 cy-nav-bar ——
 //   返回是页面级浮钮 .slopes-back,离开的是整个编辑器。所以「nav → canonical spacer → 标题」
 //   这一段结构在这里不成立,它走 assertEditorStepTitleSpacing(见下面那张名单)。
-test('全仓 71 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
+test('全仓 67 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
   assertSharedTitleSpacing()
   const files = pageTitleFiles()
   /* 2026-09-08 +1:pages/coop/invite-detail(02d 协作详情)。自定义导航 + 实底顶栏无标题,
@@ -484,7 +489,8 @@ test('全仓 71 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   /* 2026-09-11 并 github/master:本分支把 club/apply 从自绘 cy-h1 改回共享 cy-page-title,
      master 的 68 不含这一页 ⇒ 68+1=69。 */
   // 2026-10-15 +3:官方路线列表/详情、积分明细,均为 cy-nav-bar + 共享 cy-page-title 标准二级页,68 → 71。
-  assert.equal(files.length, 71, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-10-15 BL-11 -4:排行榜/藏品册/集邮册/漫游历史改为 cy-nav-bar 居中标题(见 NAV_WITHOUT_L1_TITLE),71 → 67。
+  assert.equal(files.length, 67, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

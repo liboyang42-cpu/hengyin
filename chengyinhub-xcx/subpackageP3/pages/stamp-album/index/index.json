@@ -4,7 +4,6 @@
   "onReachBottomDistance": 120,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-skeleton": "/components/cy/skeleton/index",

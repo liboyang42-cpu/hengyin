@@ -4,8 +4,7 @@
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <view class="oc-root">
-    <cy-nav-bar plain />
-    <cy-page-title title="藏品册" />
+    <cy-nav-bar title="藏品册" plain />
     <view class="oc-bar">
       <cy-tabs class="oc-chips" variant="chip" tabs="{{cats}}" active="{{filter}}" bind:change="onFilter" />
       <view class="oc-gather {{ball ? 'is-on' : ''}}" wx:if="{{cards.length > 1}}" bindtap="onGather"

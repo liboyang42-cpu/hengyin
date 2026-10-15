@@ -4,8 +4,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="hs-shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <cy-nav-bar plain custom-back bind:back="goBack" />
-  <cy-page-title title="漫游历史" safe-top="{{false}}" />
+  <cy-nav-bar title="漫游历史" plain custom-back bind:back="goBack" />
   <view class="hs-shell__body">
     <cy-scene-roam-history id="roamHistory" bind:open="openSession" bind:close="goBack" />
   </view>

@@ -3,8 +3,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="gc-page {{reducedMotion ? 'gc--reduced' : ''}}">
-  <cy-nav-bar />
-  <cy-page-title title="完整排行榜" />
+  <cy-nav-bar title="完整排行榜" />
 
   <!-- period tabs:走 cy-tabs chip 变体(ccc 标准,与 roam/history、income-detail 同一套视觉语言)。
        default 变体的选中下划线默认色是 --cy-tabs-accent 兜底 --cy-brand(紫),chip 变体选中态

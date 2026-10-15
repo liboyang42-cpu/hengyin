@@ -6,7 +6,6 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-page-title": "/components/cy/page-title/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
