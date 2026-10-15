@@ -14,11 +14,10 @@ Component({
     reasons: REASONS,
     stage: 'pick', // pick | busy | ok | fail
     taskId: '',
-    failText: '',
-    reasonLabel: '',
+    failedText: '',
   },
   observers: {
-    show(visible) { if (visible) this.setData({ stage: 'pick', taskId: '', failText: '' }) },
+    show(visible) { if (visible) this.setData({ stage: 'pick', taskId: '', failedText: '' }) },
   },
   methods: {
     onSelect(e) {
@@ -28,26 +27,33 @@ Component({
       const teamId = Number(this.properties.teamId)
       if (!reason || !Number.isSafeInteger(teamId) || teamId <= 0) return
       this._busy = true
-      this.setData({ stage: 'busy', reasonLabel: reason })
-      const finish = (patch) => { this._busy = false; this.setData(patch) }
+      this.setData({ stage: 'busy' })
       app.sendRequest({
         url: '/api/team/report', method: 'POST', hideLoading: true, silentError: true,
         data: JSON.stringify({ teamId, reason }),
         header: { 'Content-Type': 'application/json' },
         success(res) {
           if (!isBizOk(res)) {
-            finish({ stage: 'fail', failText: (res && res.msg) || '举报没有提交成功，请稍后再试' })
+            this._busy = false
+            this.setData({ stage: 'fail', failedText: (res && res.msg) || '举报没有提交成功，请稍后再试' })
             return
           }
           const raw = res.data && res.data.taskId
-          finish({ stage: 'ok', taskId: raw == null ? '' : String(raw) })
+          this._busy = false
+          this.setData({ stage: 'ok', taskId: raw == null ? '' : String(raw) })
         },
-        fail() { finish({ stage: 'fail', failText: '网络不太稳定，举报没有提交成功，可以再试一次' }) },
-        successStatusAbnormal() { finish({ stage: 'fail', failText: '网络不太稳定，举报没有提交成功，可以再试一次' }) },
+        fail: () => {
+          this._busy = false
+          this.setData({ stage: 'fail', failedText: '网络不太稳定，举报没有提交成功，可以再试一次' })
+        },
+        successStatusAbnormal: () => {
+          this._busy = false
+          this.setData({ stage: 'fail', failedText: '网络不太稳定，举报没有提交成功，可以再试一次' })
+        },
       })
     },
     onPickCancel() { if (!this._busy) this.triggerEvent('close') },
     onResultClose() { if (!this._busy) this.triggerEvent('close') },
-    onRetry() { this.setData({ stage: 'pick', failText: '' }) },
+    onRetry() { this.setData({ stage: 'pick', failedText: '' }) },
   },
 })

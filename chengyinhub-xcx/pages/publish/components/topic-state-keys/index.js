@@ -24,6 +24,7 @@ Component({
     formError: '',
     saving: false,
     deleting: '',
+    deleteError: '',
     notice: '',
   },
   observers: {
@@ -54,7 +55,13 @@ Component({
     onAddOpen() { this.setData({ adding: true, formError: '', suffix: '', label: '', initialValue: '' }) },
     onAddCancel() { if (!this.data.saving) this.setData({ adding: false, formError: '' }) },
     onPrefix(e) { this.setData({ prefixIndex: Number(e.currentTarget.dataset.index) || 0, formError: '' }) },
-    onInput(e) { this.setData({ [e.currentTarget.dataset.field]: e.detail.value, formError: '' }) },
+    onInput(e) {
+      const value = e.detail.value
+      const field = e.currentTarget.dataset.field
+      if (field === 'suffix') this.setData({ suffix: value, formError: '' })
+      else if (field === 'label') this.setData({ label: value, formError: '' })
+      else if (field === 'initialValue') this.setData({ initialValue: value, formError: '' })
+    },
     onSave() {
       if (this.data.saving) return
       const built = buildKey(this.data.prefixIndex, this.data.suffix, this.data.label, this.data.initialValue)
@@ -64,18 +71,17 @@ Component({
         return
       }
       this.setData({ saving: true, formError: '' })
-      const failed = (text) => this.setData({ saving: false, formError: text })
       app.sendRequest({
         url: '/api/topic/state-keys', method: 'POST', hideLoading: true, silentError: true,
         data: JSON.stringify({ topicId: Number(this.properties.topicId), scope: this.properties.scope, keys: [built.key] }),
         header: { 'Content-Type': 'application/json' },
         success: (res) => {
-          if (!isBizOk(res)) { failed((res && res.msg) || '注册失败，请稍后再试'); return }
+          if (!isBizOk(res)) { this.setData({ saving: false, formError: (res && res.msg) || '注册失败，请稍后再试' }); return }
           this.setData({ saving: false, adding: false, notice: '已注册，发布前请确认节点引用都已配置' })
           this.load()
         },
-        fail: () => failed('网络不太稳定，没有注册成功，可以再试一次'),
-        successStatusAbnormal: () => failed('网络不太稳定，没有注册成功，可以再试一次'),
+        fail: () => { this.setData({ saving: false, formError: '网络不太稳定，没有注册成功，可以再试一次' }) },
+        successStatusAbnormal: () => { this.setData({ saving: false, formError: '网络不太稳定，没有注册成功，可以再试一次' }) },
       })
     },
     onAskDelete(e) {
@@ -88,9 +94,9 @@ Component({
       const dc = this.selectComponent && this.selectComponent('#sk-dc')
       const key = e.detail && e.detail.params && e.detail.params.key
       if (!dc || !key || this.data.deleting) return
-      this.setData({ deleting: key })
+      this.setData({ deleting: key, deleteError: '' })
       dc.busyOn()
-      const fail = (text) => { this.setData({ deleting: '' }); dc.failed(text) }
+      const fail = (text) => { this.setData({ deleting: '', deleteError: text }); dc.failed(text) }
       app.sendRequest({
         // 参数放 query:DELETE 的 body 后端 @RequestParam 读不到
         url: `/api/topic/state-keys?${this._qs()}&key=${encodeURIComponent(key)}`,
@@ -101,7 +107,7 @@ Component({
           dc.done()
           this.load()
         },
-        fail: () => fail('网络不太稳定，没有删除成功，可以再试一次'),
+        fail: () => { this.setData({ deleting: '', deleteError: '网络不太稳定，没有删除成功，可以再试一次' }); dc.failed('网络不太稳定，没有删除成功，可以再试一次') },
         successStatusAbnormal: () => fail('网络不太稳定，没有删除成功，可以再试一次'),
       })
     },

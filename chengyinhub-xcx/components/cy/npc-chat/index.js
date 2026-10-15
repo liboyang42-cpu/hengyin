@@ -51,6 +51,7 @@ Component({
     isThinking: false,
     canSend: false,
     scrollIntoView: '',
+    clearError: '',
   },
 
   lifetimes: {
@@ -126,8 +127,9 @@ Component({
       this._clearing = true;
       // 删除期间不能再有在途提问:迟到的回答会在服务端重新写出一条刚删掉的记录
       this._invalidate(false);
+      this.setData({ clearError: '' });
       dc.busyOn();
-      const fail = () => { this._clearing = false; dc.failed('网络异常，对话记录还在，请重试'); };
+      const failMsg = '清除没有成功，对话记录还在，请重试';
       getApp().sendRequest({
         url: '/api/ai/npc/chat/data/delete',
         method: 'POST',
@@ -135,15 +137,15 @@ Component({
         hideLoading: true,
         silentError: true,
         success: (res) => {
-          if (!res || (res.code != 200 && res.code != '200')) { fail(); return; }
+          if (!res || (res.code != 200 && res.code != '200')) { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg); return; }
           this._clearing = false;
           // 本地列表只是服务端记录的镜像,服务端删成功后同步清空
           this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
           const deleted = res.data && Number(res.data.deleted);
           dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条服务器上的对话记录，当前对话也已清空。' : '');
         },
-        fail: fail,
-        successStatusAbnormal: fail,
+        fail: () => { this._clearing = false; this.setData({ clearError: '清除没有成功，对话记录还在，请重试' }); dc.failed(failMsg) },
+        successStatusAbnormal: () => { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg) },
       });
     },
 

@@ -47,7 +47,10 @@ Component({
       const d = this.data
       cache[d.tab] = { items: d.items, total: d.total, pageNum: d.pageNum, loaded: d.loaded, error: d.error, noMore: d.noMore }
       const restored = cache[next] || { items: [], total: 0, pageNum: 1, loaded: false, error: false, noMore: false }
-      this.setData(Object.assign({ tab: next, loading: false }, restored), () => {
+      this.setData({
+        tab: next, loading: false, items: restored.items, total: restored.total, pageNum: restored.pageNum,
+        loaded: restored.loaded, error: restored.error, noMore: restored.noMore,
+      }, () => {
         if (!restored.loaded) this.load()
       })
     },
