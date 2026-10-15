@@ -21,6 +21,11 @@ function parseImgUrls(raw) {
 }
 
 const { gameTemplateCover } = require('../../../utils/template-display.js');
+const { decodeDisplayFields } = require('../../../utils/display-text.js');
+
+// 详情页按纯文本展示的作者文字(含规则 ruleInstructions)。服务端过滤会把 x<y 存成 x&lt;y,在归一化这一处解码。
+var DISPLAY_TEXT_FIELDS = ['title', 'name', 'description', 'ruleInstructions', 'storyText', 'requiredMaterials',
+  'questionName', 'questionA', 'questionB', 'questionC', 'questionD', 'usageLocation', 'reason'];
 
 function buildGallery(info) {
   info = info || {};
@@ -57,7 +62,7 @@ function buildGalleryColumns(urls) {
 }
 
 function normalizeTemplateDetail(info) {
-  info = info || {};
+  info = decodeDisplayFields(info || {}, DISPLAY_TEXT_FIELDS);
   var gallery = buildGallery(info);
   return {
     info: info,

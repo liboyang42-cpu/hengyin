@@ -1,4 +1,5 @@
 const toast = require('../../../utils/toast.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 const app = getApp();
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
@@ -106,14 +107,15 @@ Component({
               return;
             }
             that._nonOwnerMemberCount = Number(c.nonOwnerMemberCount) || 0;
+            // 回填的是纯文本输入框:服务端过滤存下的 &lt; 等先解码,保存时提交的就是用户原文。
             that.setData({
-              name: c.name || '',
+              name: decodeDisplayText(c.name || ''),
               clubType: c.clubType || '',
               activityPrefs: c.activityPrefs ? c.activityPrefs.split(',') : [],
               city: c.city || c.address || '',
               keywords: c.keywords || '',
               style: c.style || '',
-              description: c.description || '',
+              description: decodeDisplayText(c.description || ''),
               logo: c.logo || '',
               cover: c.cover || '',
               prioritySignupEnabled: Number(c.prioritySignupEnabled) === 1,

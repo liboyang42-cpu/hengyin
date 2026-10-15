@@ -1,6 +1,7 @@
 const toast = require('../../../../utils/toast.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
 const app = getApp();
@@ -227,8 +228,9 @@ Page({
   fmtPreview(c) {
     const t = c.lastMsgType;
     if (t == 2) return '[图片]';
-    if (t == 3) return String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' ');
-    return String(c.lastMsgText || '').replace(/[\r\n]+/g, ' ');
+    // 预览是纯文本:服务端过滤存下的 &lt; 等在这里解码一次
+    if (t == 3) return decodeDisplayText(String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' '));
+    return decodeDisplayText(String(c.lastMsgText || '').replace(/[\r\n]+/g, ' '));
   },
 
   fmtTime(v) {

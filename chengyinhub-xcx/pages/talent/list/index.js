@@ -8,6 +8,7 @@ const policy = require('../../../utils/identity/identity-policy.js');
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 // variant 判定与广场、俱乐部页共用同一份,别在这里写第二套(两套迟早分叉)。
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -122,7 +123,7 @@ Page({
             return Object.assign({}, p, {
               memberNickname: p.nickname,
               memberAvatar: p.avatar,
-              contents: p.content,
+              contents: decodeDisplayText(p.content),
               picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
               formattedCreateTime: String(p.createTime || '').slice(5, 16),
               isCompletionShare: isCompletedShare(ref),
