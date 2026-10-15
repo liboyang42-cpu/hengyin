@@ -11,3 +11,6 @@
   flex: 1; min-width: 0; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* isolated 组件内全局 .cy-pressed 进不来,本地定义一份 */
+.cy-pressed { opacity: .88; }

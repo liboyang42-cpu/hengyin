@@ -32,7 +32,7 @@
       </view>
 
       <block wx:else>
-        <view class="mcs__picked"><text>已选：{{picked.name}}</text><text class="mcs__link" bindtap="clearPick">换一家</text></view>
+        <view class="mcs__picked"><text>已选：{{picked.name}}</text><text class="mcs__link" bindtap="clearPick" aria-role="button" aria-label="换一家门店" hover-class="cy-pressed" hover-stay-time="80">换一家</text></view>
         <input class="mcs__input" value="{{contactName}}" placeholder="联系人" maxlength="64" bindinput="onContactName" />
         <input class="mcs__input" value="{{contactPhone}}" placeholder="联系电话" type="number" maxlength="32" bindinput="onContactPhone" />
         <textarea class="mcs__area" value="{{statement}}" placeholder="补充说明（选填，说明你与这家门店的关系）" maxlength="1000" bindinput="onStatement" />
@@ -40,9 +40,9 @@
         <view class="mcs__proofs">
           <view wx:for="{{proofUrls}}" wx:key="index" class="mcs__proof">
             <image class="mcs__proof-img" src="{{item}}" mode="aspectFill" />
-            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张">×</view>
+            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
           </view>
-          <view wx:if="{{proofUrls.length < 10}}" class="mcs__proof mcs__proof--add" bindtap="addProof" aria-role="button" aria-label="添加证明图片">＋</view>
+          <view wx:if="{{proofUrls.length < 10}}" class="mcs__proof mcs__proof--add" bindtap="addProof" aria-role="button" aria-label="添加证明图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="48" /></view>
         </view>
         <view wx:if="{{formError}}" class="mcs__error" aria-role="alert">{{formError}}</view>
         <cy-btn disabled="{{submitting}}" bindtap="submit">{{submitting ? '提交中…' : '提交认领'}}</cy-btn>
