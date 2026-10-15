@@ -627,9 +627,9 @@
     "scope": "Two new source repairs and directly affected original classes",
     "selected_classes_reported": 11,
     "source_declared_tests_reported": 75,
-    "status": "RUNNING_LOCAL_VPS_REPORTED_RESULT_PENDING",
-    "actual_executed_tests": null,
-    "result": null,
+    "status": "FAIL_PUBLIC_EVIDENCE_READ_ORIGINAL_E06_REPAIR_ACK",
+    "actual_executed_tests": 76,
+    "result": "FAIL",
     "not_inherited_from": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0 targeted56PASS",
     "execution_not_inferred_from_scheduling": true,
     "execution_basis": "Latest local coordinator explicitly reports11 classes under validation; result pending"
@@ -666,12 +666,18 @@
       "no_api_change_label_correction": "Path/parameters/envelope unchanged is narrower than no API change; HTTP200->503 is an observable client transport contract change",
       "validation": {
         "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-        "status": "LOCAL_11_CLASSES_RUNNING_REPORTED_RESULT_PENDING",
+        "status": "FAIL_ONE_UNRELATED_ISOLATION_NEGATIVE_CONTROL",
         "source_declarations": 75,
-        "actual_tests": null,
+        "actual_tests": 76,
         "real_http_acceptance": "NOT_RUN",
         "database_business_device_acceptance": "NOT_ACCEPTED",
-        "no_inherited_results": "Not covered by e72 targeted56PASS"
+        "no_inherited_results": "Not covered by e72 targeted56PASS",
+        "passed": 75,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "Share503_and_GONE_privacy_success_passed": 4,
+        "evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8"
       },
       "client_receipts": {
         "Claude": "ACK_PENDING",
@@ -682,5 +688,207 @@
       "client_acceptance": "NOT_DONE",
       "authority_boundary": "Documentation synchronization only; no backend duplicate implementation, shared request-module write grant, UI/native task expansion or product policy"
     }
+  },
+  "extra_ed598_impact_result": {
+    "candidate_sha": "ed598258c0f614385940f326099b9626531fab02",
+    "previous_candidate_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+    "result": "FAIL",
+    "compile": "PASS",
+    "classes": 11,
+    "source_declarations": 75,
+    "tests": 76,
+    "passed": 75,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "count_difference": "PlayJourneyStoryServiceImplTest actual26 vs source@Test25; use actual XML count76",
+    "exact_class_set_match": true,
+    "fresh_reports": true,
+    "guard_exit_code": 1,
+    "guard_reason": "child_command_failed",
+    "started_at": "2026-10-15T20:48:40.733990+00:00",
+    "finished_at": "2026-10-15T20:51:23.130334+00:00",
+    "source_archive_sha256": "9f46ec9b90b040063f86d3ba126e69b0f0453cebc8589a15c5b39e8c0312ede7",
+    "log_sha256": "d42d6bc3d47e480b7b88e6928d6bdee5052846004b5482bb6e6ee4e3baa05c1f",
+    "class_reports": [
+      {
+        "class": "com.chengyinhub.business.longrun.E03_16Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_16Test.xml",
+        "sha256": "3d297c4d877c2238b67c410f6ded23ca4b50cdb00915cd383302ee9c7a762032",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest.xml",
+        "sha256": "ed14840ff3cecad652922fe79c062e708873d600ef1036e64e11cc42dec3e778",
+        "fresh": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.JourneyPublishFreezeTest.xml",
+        "sha256": "3ed10e5cfb410b6dc43631621099c8c6bd246fc84d31cadd86b0af5da9b40d46",
+        "fresh": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E03_01Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_01Test.xml",
+        "sha256": "454174c1496e6e5db8b33ebb5568ae855cec5342ce7cdc0d269344b64baae12e",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
+        "sha256": "115a73a714ddb73c5451bdb726564a5487d6ed7deab1db83afa500182bb4dc83",
+        "fresh": true,
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E03_17Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_17Test.xml",
+        "sha256": "5a4019714fb7cdfe524dc9be9a57bdda77df459a6c95194871ce756bce461c76",
+        "fresh": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.support.SeventhPierFixtureTest.xml",
+        "sha256": "ee26c0335980e9048af0a40a5ec1e4ad2d12e59bfdf921da503fdb4379670dbe",
+        "fresh": true,
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E03_02Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_02Test.xml",
+        "sha256": "3d5756b0c7a3f92b5b7ca40cfad0d6655011f14174af2014913a7daae2fde05b",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiRoamShareControllerTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiRoamShareControllerTest.xml",
+        "sha256": "43c1fff513c07f23dce7d9c1806ab9e56b431743db14ab142356e7b32af9048d",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E03_18Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_18Test.xml",
+        "sha256": "c5bf6c57b4552662c8d8fb8080123fb18470238cdcba1ba45b401dd0f55eccb6",
+        "fresh": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E06_17Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E06_17Test.xml",
+        "sha256": "0a99f30f0f9209b83441e35f96818660cf62da3f0d4d77b79f8beac6002881d9",
+        "fresh": true,
+        "tests": 5,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "failed_methods": [
+      {
+        "class": "com.chengyinhub.business.longrun.E06_17Test",
+        "method": "unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice",
+        "kind": "failure",
+        "type": "java.lang.AssertionError",
+        "message": "JSON path \"$.msg\" expected:<系统繁忙，请稍后重试> but was:<SQL SELECT private unrelated table>"
+      }
+    ],
+    "evidence_pr": 24,
+    "evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/",
+    "C00_read_public_evidence": true,
+    "repair_owner": "EXTRA6/E06 external_e06",
+    "repair_status": "ORIGINAL_AUTHOR_ACK_RECEIVED_ONE_REPAIR_SLOT",
+    "repair_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607",
+    "authorized_repair_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java",
+      "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md"
+    ],
+    "repair_guard": "Keep generic/no-leak/HTTP200-unrelated isolation and new503 assertions, no skip/delete/weaken. Shared production remains read-only. New complete SHA for local targeted retest.",
+    "E03_18_actual_passed": 5,
+    "E06_17_share_behavior_actual_passed": 4,
+    "share503_failure": false,
+    "not_accepted": [
+      "whole76PASS",
+      "real database/Redis",
+      "running HTTP",
+      "devices/business",
+      "merge/deploy/migrations"
+    ],
+    "cloud_manual_runs": 0,
+    "targeted_retest_policy": {
+      "test_only_repair": "If only E06_17Test.java and repair docs change, select com.chengyinhub.business.longrun.E06_17Test (5 source declarations; execution count from fresh XML), no new full76 run.",
+      "source_change": "Any actual production dependency change requires original-owner scope and only directly affected classes; new full SHA, no old-results inheritance.",
+      "local_only": true,
+      "command_template_for_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test",
+      "executed_by_Cloud": false
+    }
+  },
+  "shared_safe_message_observation": {
+    "id": "SHARED-SAFE-MESSAGE-BARE-SQL",
+    "status": "OPEN_BASELINE_SANITIZER_GAP_OBSERVATION_NOT_CLOSED_BY_FIXTURE_REPAIR",
+    "severity_not_inferred_from_synthetic_endpoint": true,
+    "paths": [
+      "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
+      "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java"
+    ],
+    "source_readback": {
+      "ed598": "ed598258c0f614385940f326099b9626531fab02",
+      "previous": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+      "UserSafeMessage_identical_between_candidates": true,
+      "GlobalExceptionHandler_identical_between_candidates": true
+    },
+    "observed_input": "SQL SELECT private unrelated table",
+    "observed_mockmvc_output": "same raw SQL in AjaxResult.msg",
+    "static_cause": "Global RuntimeException advice passes e.getMessage() to UserSafeMessage.of; existing pattern matches bad SQL grammar/Error querying database/java.sql etc, not this short bare SQL string, then returns trimmed raw.",
+    "contract_basis": "UserSafeMessage class comment says SQL/internal technical detail must be masked, while preserving ordinary business messages.",
+    "evidence": {
+      "pr": 24,
+      "commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+      "failure_method": "E06_17Test.unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice"
+    },
+    "evidence_limit": "Synthetic unrelated test Controller supplied the bare string; not evidence of production endpoint SQL leak or real DB failure payload. Need real caller/exception-shape and legacy regression contract before deciding shared source change.",
+    "write_authorized_to_E06": false,
+    "original_writer_identification": "Not recorded in current exact source-owner entries; unresolved, no transfer performed",
+    "coordination_owner": "C00",
+    "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking."
   }
 }

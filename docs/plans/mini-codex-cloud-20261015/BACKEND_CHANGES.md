@@ -1,3 +1,11 @@
+## 当前EXTRA影响面失败与唯一原作者修复线
+
+EXTRA候选 `ed598258c0f614385940f326099b9626531fab02` 已据[PR24@77cb3320fbbf47ef061db811fdc51a0a07c462f8](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md)完整读回：编译PASS，11类76实际项=75PASS/1FAIL/0ERROR/0skip，exact fresh XML，guard1/child_command_failed。75源码声明不能当实际执行数；PlayJourneyStoryServiceImplTest实际26，合计76。唯一失败为E06_17Test无关Controller脱敏隔离负控:111，预期generic、实际裸SQL。E03_18新5项通过；E06 Share503/GONE/隐私/成功4项通过，不得说Share503失效或整组通过。
+
+已收到[EXTRA原E06实际接收ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607)：external_e06只占一条修复线，沿自有E06_17Test/E06-17文档核旧全局Advice支持的真实异常形状，保generic/不泄漏/隔离/503全部断言，不删负控/跳过/期待泄漏。其他真实独立工作继续；无READY不造任务。修复必须新完整SHA、路径/依赖交本地针对性复测；Cloud不手动跑。共享UserSafeMessage/GlobalExceptionHandler未授E06写权，先核归属再正式转交，C00不替其改原测试。
+
+裸SQL疑点独立保留为[SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json](SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json)：C00已直接比较ed598与e72，UserSafeMessage/GlobalAdvice内容完全相同。原pattern未覆盖该短裸SQL，of返回原消息；这是既有脱敏覆盖缺口的静态/MockMvc证据，不是已证明生产端点真实泄漏。待真实caller/驱动异常形状、旧合同与原owner核清，未改任何共享生产文件；即使隔离fixture修正通过也不关闭该疑点。真实HTTP/DB/设备/业务/合并部署继续未验。
+
 ## E06-17 运输合同同步：分享读库异常 HTTP200 → 503
 
 **源码候选 `ed598258c0f614385940f326099b9626531fab02` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)，原源码所有者EXTRA6/E06；SOURCE_DELIVERED_UNVERIFIED。** C00已读该SHA的[Controller](https://github.com/liboyang42-cpu/hengyin/blob/ed598258c0f614385940f326099b9626531fab02/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java)、[E06_17Test源码](https://github.com/liboyang42-cpu/hengyin/blob/ed598258c0f614385940f326099b9626531fab02/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java)及原交付说明。原说明的`NO_API_CHANGE`仅指路径、参数、AjaxResult形状不变；**HTTP状态变化属于可观察的客户端运输合同变化**，不能按无接口变化处理。
@@ -10,7 +18,7 @@
 
 此wrapper只在该GET的mapper catch创建；Controller局部handler处理它。POST发布/revoke、其他Controller、全局Advice、权限与请求参数没有更改。Claude/iOS阅读并保留两类失败语义：503为未读到的错误，不能等同服务端明确GONE。此记录不授予共享请求模块、产品策略、自动重试任务或新端点写权；后端问题仍交EXTRA6/E06，客户端不要另做一份后端修复。
 
-当前本地协调者明确回报**新候选11类正在验证**，75仅源码声明、结果尚未回；E06的5个MockMvc源码向量不等同运行中服务/真实网络验收，**真实HTTP未验**。e72旧两类56PASS不覆盖此候选。TEST_DEPLOYED=NO；合并、迁移/部署、真实数据库/身份业务、两端设备验收另列未完成。客户端已收到/合同接收ACK均待回执，不假定看见此索引。
+当前本地11类已回76实际75PASS/1FAIL，75仅源码声明；唯一失败为无关Controller脱敏隔离负控；E06的5个MockMvc源码向量不等同运行中服务/真实网络验收，**真实HTTP未验**。e72旧两类56PASS不覆盖此候选。TEST_DEPLOYED=NO；合并、迁移/部署、真实数据库/身份业务、两端设备验收另列未完成。客户端已收到/合同接收ACK均待回执，不假定看见此索引。
 
 第三队兼容索引：`2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`日期修复保留null/空/blank/单边查询、完整rows及原pilot口径，只拒非法/反向日期，不加62天/分页要求；这是既有后台漏斗接口，不要求iOS新增调用。成长聚合修复不新增字段、DDL、奖励/等级/里程语义。VPS普通24PASS证据已独立签收；11真MySQL仍NOT_RUN，不能据普通通过宣布成长并发已验收。具体见[第三队交接](THIRD_CLOUD_HANDOFF.md)。
 

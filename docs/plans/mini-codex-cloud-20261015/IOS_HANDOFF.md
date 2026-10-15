@@ -1,3 +1,11 @@
+## 当前EXTRA影响面失败与唯一原作者修复线
+
+EXTRA候选 `ed598258c0f614385940f326099b9626531fab02` 已据[PR24@77cb3320fbbf47ef061db811fdc51a0a07c462f8](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md)完整读回：编译PASS，11类76实际项=75PASS/1FAIL/0ERROR/0skip，exact fresh XML，guard1/child_command_failed。75源码声明不能当实际执行数；PlayJourneyStoryServiceImplTest实际26，合计76。唯一失败为E06_17Test无关Controller脱敏隔离负控:111，预期generic、实际裸SQL。E03_18新5项通过；E06 Share503/GONE/隐私/成功4项通过，不得说Share503失效或整组通过。
+
+已收到[EXTRA原E06实际接收ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607)：external_e06只占一条修复线，沿自有E06_17Test/E06-17文档核旧全局Advice支持的真实异常形状，保generic/不泄漏/隔离/503全部断言，不删负控/跳过/期待泄漏。其他真实独立工作继续；无READY不造任务。修复必须新完整SHA、路径/依赖交本地针对性复测；Cloud不手动跑。共享UserSafeMessage/GlobalExceptionHandler未授E06写权，先核归属再正式转交，C00不替其改原测试。
+
+裸SQL疑点独立保留为[SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json](SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json)：C00已直接比较ed598与e72，UserSafeMessage/GlobalAdvice内容完全相同。原pattern未覆盖该短裸SQL，of返回原消息；这是既有脱敏覆盖缺口的静态/MockMvc证据，不是已证明生产端点真实泄漏。待真实caller/驱动异常形状、旧合同与原owner核清，未改任何共享生产文件；即使隔离fixture修正通过也不关闭该疑点。真实HTTP/DB/设备/业务/合并部署继续未验。
+
 # iOS独立agent优化与共用后端交接
 
 > 三方统一协作规则：[CY-COORD-20261015-v1](COORDINATION.md)。当前文件归属与候选见[OWNERSHIP.md](OWNERSHIP.md)；初始规划不等于已领单。最终提示词：[Codex](START_PROMPT.md)、[Claude](CLAUDE_START_PROMPT.md)、[iOS](IOS_START_PROMPT.md)。
@@ -13,7 +21,7 @@
 本节同步已交付源码合同，不是新增原生/后端开发权限或部署通知。最新完整说明见[后端总账E06-17](BACKEND_CHANGES.md#e06-17-运输合同同步分享读库异常-http200--503)。
 
 - EXTRA/PR36固定源码 `ed598258c0f614385940f326099b9626531fab02`：GET `/api/roam/share/snapshot` 有效token读库抛DataAccessException时，由HTTP200改为**HTTP503**，body仍AjaxResult.code500/通用文案且无data。非法token/无行/坏存储/隐私失败仍HTTP200及既有GONE，成功读取与匿名隐私闸不变。路径、参数和body形状相同不能掩盖HTTP状态变化，旧`NO_API_CHANGE`标签不代表运输合同不变。
-- 源码状态 **SOURCE_DELIVERED_UNVERIFIED**；本地新11类正在验，尚无结果，**真实HTTP未验**；旧e72两类56PASS不覆盖。TEST_DEPLOYED=NO、合并/部署/两端验收未完成。iOS若实际使用此分享读面，保留既有错误与GONE区别，不因503认定服务端已撤回；不在未部署版本上宣称已可联调，不新增共享请求策略或自动重试政策。
+- 源码状态 **SOURCE_DELIVERED_UNVERIFIED**；本地11类已回76实际75PASS/1FAIL，唯一隔离负控失败，见当前状态，**真实HTTP未验**；旧e72两类56PASS不覆盖。TEST_DEPLOYED=NO、合并/部署/两端验收未完成。iOS若实际使用此分享读面，保留既有错误与GONE区别，不因503认定服务端已撤回；不在未部署版本上宣称已可联调，不新增共享请求策略或自动重试政策。
 - 第三队PR72/2babbe28：后台漏斗日期保null/空/blank/单边查询和完整rows，不增加必填/62天/分页；不要求iOS新增后台接口调用。成长修复无新字段/DDL/奖励语义，普通24PASS仅属普通回归，11真MySQL仍NOT_RUN，真实并发/HTTP/业务另验。
 
 Claude/iOS不重复修后端，后端缺陷仍交EXTRA6/E06或第三队原作者；原生源归独立iOS所有者，本文不扩共享请求模块/产品政策写权。此索引已发布不等于对端已读，Claude/iOS合同接收ACK待收。

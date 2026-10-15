@@ -1,6 +1,14 @@
+## 当前EXTRA影响面失败与唯一原作者修复线
+
+EXTRA候选 `ed598258c0f614385940f326099b9626531fab02` 已据[PR24@77cb3320fbbf47ef061db811fdc51a0a07c462f8](https://github.com/liboyang42-cpu/hengyin/blob/77cb3320fbbf47ef061db811fdc51a0a07c462f8/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_ed598258/README.md)完整读回：编译PASS，11类76实际项=75PASS/1FAIL/0ERROR/0skip，exact fresh XML，guard1/child_command_failed。75源码声明不能当实际执行数；PlayJourneyStoryServiceImplTest实际26，合计76。唯一失败为E06_17Test无关Controller脱敏隔离负控:111，预期generic、实际裸SQL。E03_18新5项通过；E06 Share503/GONE/隐私/成功4项通过，不得说Share503失效或整组通过。
+
+已收到[EXTRA原E06实际接收ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202056607)：external_e06只占一条修复线，沿自有E06_17Test/E06-17文档核旧全局Advice支持的真实异常形状，保generic/不泄漏/隔离/503全部断言，不删负控/跳过/期待泄漏。其他真实独立工作继续；无READY不造任务。修复必须新完整SHA、路径/依赖交本地针对性复测；Cloud不手动跑。共享UserSafeMessage/GlobalExceptionHandler未授E06写权，先核归属再正式转交，C00不替其改原测试。
+
+裸SQL疑点独立保留为[SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json](SHARED_SAFE_MESSAGE_SQL_OBSERVATION.json)：C00已直接比较ed598与e72，UserSafeMessage/GlobalAdvice内容完全相同。原pattern未覆盖该短裸SQL，of返回原消息；这是既有脱敏覆盖缺口的静态/MockMvc证据，不是已证明生产端点真实泄漏。待真实caller/驱动异常形状、旧合同与原owner核清，未改任何共享生产文件；即使隔离fixture修正通过也不关闭该疑点。真实HTTP/DB/设备/业务/合并部署继续未验。
+
 ## 跨端合同同步
 
-ed598候选E06-17存在HTTP200→503运输变化，SOURCE_DELIVERED_UNVERIFIED/本地11类正在验/真实HTTP未验，见[BACKEND_CHANGES](BACKEND_CHANGES.md)与[IOS_HANDOFF](IOS_HANDOFF.md)。75仅声明、未得结果；Claude/iOS接收ACK待收，不派重复后端实现。第三队普通24PASS、真MySQL11未验继续独立。
+ed598候选E06-17存在HTTP200→503运输变化，SOURCE_DELIVERED_UNVERIFIED/本地11类76实际75PASS/1FAIL/真实HTTP未验，见[BACKEND_CHANGES](BACKEND_CHANGES.md)与[IOS_HANDOFF](IOS_HANDOFF.md)。75仅声明、未得结果；Claude/iOS接收ACK待收，不派重复后端实现。第三队普通24PASS、真MySQL11未验继续独立。
 
 ## 第三队当前普通回归签收：24PASS／真MySQL11未运行
 
