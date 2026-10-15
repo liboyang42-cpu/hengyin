@@ -4740,6 +4740,7 @@ Page({
 
   getUserData: function () {
     let that = this;
+    const memberId = String(app.getUserID() || '');
     if (app.getUserID() && !that._localDraftRestored) {
       that.setData({
         'formData.collaboratorList': [{
@@ -4760,6 +4761,7 @@ Page({
       },
       method: "POST",
       success: function (res) {
+        if (that._publishPageUnloaded || memberId !== String(app.getUserID() || '')) return;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           let userData = {
             name: res.data.nickname,
@@ -4780,7 +4782,7 @@ Page({
           };
           // 完整本地信封里可能有多位合作者；恢复后这里只刷新当前用户展示信息，
           // 不能把已恢复列表重置成 owner 一人并立刻覆盖保存。
-          if (!that._localDraftRestored) {
+          if (!that._localDraftRestored && !that.data.editingTopicId) {
             patch['formData.collaboratorList'] = collaboratorList;
             patch['formData.collaboratorIds'] = collaboratorIds;
           }
