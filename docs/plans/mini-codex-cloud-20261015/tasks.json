@@ -57,7 +57,7 @@
       ],
       "claude_boundary": "不会费/群聊/群投票，不启动原四任务；UI/new-feature增量仍归Claude。",
       "hold_if": "父PR含无法审查的变更则该依赖保持待处理；无网络不做假的合并/CI成功。",
-      "state": "待新Cloud核基线并领取"
+      "state": "公共候选已冻结，PR11–15复用与来源已核"
     },
     {
       "id": "B01",
@@ -101,7 +101,7 @@
       ],
       "claude_boundary": "只改既有JS行为与必要测试；新提示、布局、页面、WXML/WXSS由Claude。pages/play交叉变更需C00串行整合。",
       "hold_if": "",
-      "state": "待新Cloud核基线并领取"
+      "state": "源码与相关Node回归通过，候选CI及设备待验"
     },
     {
       "id": "B02",
@@ -137,7 +137,7 @@
       ],
       "claude_boundary": "作者页面、保存反馈、状态键UI与预演交Claude；Codex只修后端既有行为，不新增产品规则。",
       "hold_if": "新增字段/DDL或变更发布政策先出具体方案，不能以新表补洞。",
-      "state": "待新Cloud核基线并领取"
+      "state": "配置保真已修，Java回归交候选CI；首次create丢响应限制保留"
     },
     {
       "id": "B03",
@@ -181,7 +181,7 @@
       ],
       "claude_boundary": "积分明细/资金中心UI、新领券/储值/提现或支付产品交Claude另行范围；本单不新增业务。",
       "hold_if": "政策单位未定则先证据/方案；需要新唯一索引/DDL或改变鉴权/RBAC另行确认，不改历史迁移。",
-      "state": "待新Cloud核基线并领取"
+      "state": "积分锁读与应付CAS已修，真库独立读回待验"
     },
     {
       "id": "B04",
@@ -217,7 +217,7 @@
       ],
       "claude_boundary": "官方草稿/邀请转交/暂停恢复等新入口及排期UI归Claude；本单仅既有bug。",
       "hold_if": "",
-      "state": "待新Cloud核基线并领取"
+      "state": "时刻读回与既有JS消费、候补保护已修，Java/设备待验"
     },
     {
       "id": "B05",
@@ -254,7 +254,7 @@
       ],
       "claude_boundary": "举报/申诉新页面、媒体审核工作台、新内容链切换均归Claude；本单只恢复现有政策。",
       "hold_if": "AGENTS规定的鉴权/RBAC逻辑改变必须另批；可先完成取证、回归和方案，不擅自落授权变更。",
-      "state": "待新Cloud核基线并领取"
+      "state": "最小读取修复已获用户批准并应用，候选CI/读回待验"
     },
     {
       "id": "A01",
@@ -298,7 +298,7 @@
       ],
       "claude_boundary": "待核对/恢复/人工协助等新UI交Claude；已有必要JS bug修复由B01所有者整合，A01不写页面文件。",
       "hold_if": "如必须新增持久化字段/索引，先提交合同与兼容方案；本批不执行DDL。",
-      "state": "待新Cloud核基线并领取"
+      "state": "结局正文新局快照与既有请求合同已交，候选CI/读回待验"
     },
     {
       "id": "A02",
@@ -339,7 +339,7 @@
       ],
       "claude_boundary": "AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共用网关合同由本单维护。",
       "hold_if": "价格/留存/付费行为与新依赖须明确决策；无真实usage字段能力就标估算，不伪造。",
-      "state": "待新Cloud核基线并领取",
+      "state": "配置/审核/未知额度修复已交；删除屏障、语音池政策与后台未知展示未闭合",
       "phase_split": {
         "bugfix": "C00后即复核/修缺配置mock成功和完整输入审核缺口，不等其他架构",
         "architecture": "B01–B05有修复或明确证据处置后，再整理用量/额度/留存合同；同一A02所有者串行继续"
@@ -388,7 +388,7 @@
       ],
       "claude_boundary": "状态键面板、条件编辑器、结果卡、预演和新玩法归Claude；本单仅后端兼容底层。",
       "hold_if": "新结局选择语义、旧内容迁移或新表字段须先确认；不自动采用新策略。",
-      "state": "待新Cloud核基线并领取"
+      "state": "结局写校验与快照读侧已交，历史缺键兼容限制保留"
     },
     {
       "id": "C99",
@@ -424,7 +424,7 @@
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
-      "state": "待新Cloud核基线并领取"
+      "state": "候选PR18与逐层证据已交，CI见PR当前Checks；VPS/设备未验证"
     }
   ],
   "parallel_policy": {
@@ -509,5 +509,15 @@
       "checks_returned": 0
     }
   ],
-  "as_of": "2026-10-15 America/Los_Angeles"
+  "as_of": "2026-10-15 America/Los_Angeles",
+  "execution": {
+    "candidate_branch": "codex/mini-bug-arch-integration-20261015",
+    "frozen_worker_baseline": "d551c6babd018d41aec90dad2c0acaf1c534644d",
+    "source_candidate_sha": "3ee0fd017c964d11525bc44f70aa23f425e591ff",
+    "draft_pr": "https://github.com/liboyang42-cpu/hengyin/pull/18",
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015",
+    "worker_limit": 4,
+    "worker_model_after_user_selection": "gpt-6.1-sol",
+    "readiness": "SOURCE_CANDIDATE_NOT_BUSINESS_READY"
+  }
 }

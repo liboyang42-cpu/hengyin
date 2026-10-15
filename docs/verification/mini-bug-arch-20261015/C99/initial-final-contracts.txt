@@ -1,0 +1,456 @@
+TAP version 13
+# Subtest: 重建台账夹具每次返回独立副本，单项修改不污染后续断言
+ok 1 - 重建台账夹具每次返回独立副本，单项修改不污染后续断言
+  ---
+  duration_ms: 29042.484631
+  type: 'test'
+  ...
+# Subtest: 分类只看代码:注释与字符串里的 wx.* 不算能力(A)
+ok 2 - 分类只看代码:注释与字符串里的 wx.* 不算能力(A)
+  ---
+  duration_ms: 0.426482
+  type: 'test'
+  ...
+# Subtest: 分类跟得进 require 来的模块级 helper(B)
+ok 3 - 分类跟得进 require 来的模块级 helper(B)
+  ---
+  duration_ms: 73.001282
+  type: 'test'
+  ...
+# Subtest: action ledger 区分导航、写操作、读操作、页内状态与外部能力
+ok 4 - action ledger 区分导航、写操作、读操作、页内状态与外部能力
+  ---
+  duration_ms: 0.330177
+  type: 'test'
+  ...
+# Subtest: 同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
+ok 5 - 同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
+  ---
+  duration_ms: 68.111472
+  type: 'test'
+  ...
+# Subtest: 导航失败回调的 toast 不得污染 success 为 state 复合效果
+ok 6 - 导航失败回调的 toast 不得污染 success 为 state 复合效果
+  ---
+  duration_ms: 1.446127
+  type: 'test'
+  ...
+# Subtest: 每类动作都有对端回读，不把 success/toast 当作完成
+ok 7 - 每类动作都有对端回读，不把 success/toast 当作完成
+  ---
+  duration_ms: 0.266441
+  type: 'test'
+  ...
+# Subtest: 必跑分支按动作副作用生成，不强迫纯页内状态伪造 timeout
+ok 8 - 必跑分支按动作副作用生成，不强迫纯页内状态伪造 timeout
+  ---
+  duration_ms: 0.189365
+  type: 'test'
+  ...
+# Subtest: 只有当前 tap handler 直接出现可取消确认框才生成 modal 分支
+ok 9 - 只有当前 tap handler 直接出现可取消确认框才生成 modal 分支
+  ---
+  duration_ms: 0.381955
+  type: 'test'
+  ...
+# Subtest: 确认框合同沿同步 helper 展开，但截断异步回调与互斥 variant
+ok 10 - 确认框合同沿同步 helper 展开，但截断异步回调与互斥 variant
+  ---
+  duration_ms: 71.864471
+  type: 'test'
+  ...
+# Subtest: 确认框深度判定先屏蔽字符串/注释/正则，不得记下假事实
+ok 11 - 确认框深度判定先屏蔽字符串/注释/正则，不得记下假事实
+  ---
+  duration_ms: 0.599372
+  type: 'test'
+  ...
+# Subtest: 真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击
+not ok 12 - 真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击
+  ---
+  duration_ms: 1.799148
+  type: 'test'
+  location: '/workspace/hengyin/chengyinhub-xcx/tests/unit/action-ledger.test.js:276:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1792 !== 1796
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1796
+  actual: 1792
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/hengyin/chengyinhub-xcx/tests/unit/action-ledger.test.js:554:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: external 分支按微信能力定义，振动不伪造取消/拒权，选择器必须覆盖取消/拒权
+ok 13 - external 分支按微信能力定义，振动不伪造取消/拒权，选择器必须覆盖取消/拒权
+  ---
+  duration_ms: 0.138499
+  type: 'test'
+  ...
+# Subtest: 漫游拍照启动的取消事实必须绑定 chooseMedia，不能由定位能力冒充
+ok 14 - 漫游拍照启动的取消事实必须绑定 chooseMedia，不能由定位能力冒充
+  ---
+  duration_ms: 77.159102
+  type: 'test'
+  ...
+# Subtest: 持久化 authority/requestTrace 必须与控制面签名 facts 等值
+ok 15 - 持久化 authority/requestTrace 必须与控制面签名 facts 等值
+  ---
+  duration_ms: 1.2891
+  type: 'test'
+  ...
+# Subtest: 真机签名必须覆盖逐分支 readback，人工篡改 pending URL 必须变红
+ok 16 - 真机签名必须覆盖逐分支 readback，人工篡改 pending URL 必须变红
+  ---
+  duration_ms: 0.861276
+  type: 'test'
+  ...
+# Subtest: 真机 capture 的签名起点也必须在 freshness 窗内，不能只刷新 unsigned 结束时间
+ok 17 - 真机 capture 的签名起点也必须在 freshness 窗内，不能只刷新 unsigned 结束时间
+  ---
+  duration_ms: 0.852613
+  type: 'test'
+  ...
+# Subtest: external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径
+ok 18 - external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径
+  ---
+  duration_ms: 61.04213
+  type: 'test'
+  ...
+# Subtest: 互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游
+ok 19 - 互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游
+  ---
+  duration_ms: 72.170763
+  type: 'test'
+  ...
+# Subtest: 动作分类追踪本文件调用闭包，不能漏掉间接微信外部能力
+ok 20 - 动作分类追踪本文件调用闭包，不能漏掉间接微信外部能力
+  ---
+  duration_ms: 0.196826
+  type: 'test'
+  ...
+# Subtest: 动作分类追踪 app 全局 helper，图片选择不能落回本地 state
+ok 21 - 动作分类追踪 app 全局 helper，图片选择不能落回本地 state
+  ---
+  duration_ms: 26.473186
+  type: 'test'
+  ...
+# Subtest: 用户授权与系统能力必须进入真机门，不能伪装成本地 state/write
+ok 22 - 用户授权与系统能力必须进入真机门，不能伪装成本地 state/write
+  ---
+  duration_ms: 0.16621
+  type: 'test'
+  ...
+# Subtest: 传感器、相机与微信身份能力必须进入真机门
+ok 23 - 传感器、相机与微信身份能力必须进入真机门
+  ---
+  duration_ms: 0.147092
+  type: 'test'
+  ...
+# Subtest: App 登录续期不能把全部 sendRequest 读写动作污染成真机能力
+ok 24 - App 登录续期不能把全部 sendRequest 读写动作污染成真机能力
+  ---
+  duration_ms: 23.07734
+  type: 'test'
+  ...
+# Subtest: 写操作与动态 URL 合同不能降级成普通读取
+ok 25 - 写操作与动态 URL 合同不能降级成普通读取
+  ---
+  duration_ms: 85.074226
+  type: 'test'
+  ...
+# Subtest: 前端 API method 必须与后端 Controller annotation 真源一致
+ok 26 - 前端 API method 必须与后端 Controller annotation 真源一致
+  ---
+  duration_ms: 68.205353
+  type: 'test'
+  ...
+# Subtest: 结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单
+ok 27 - 结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单
+  ---
+  duration_ms: 61.988404
+  type: 'test'
+  ...
+# Subtest: 按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入
+ok 28 - 按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入
+  ---
+  duration_ms: 75.141644
+  type: 'test'
+  ...
+# Subtest: 评价举报与团队危险操作按页面状态拆成互斥单写 variant
+ok 29 - 评价举报与团队危险操作按页面状态拆成互斥单写 variant
+  ---
+  duration_ms: 67.479821
+  type: 'test'
+  ...
+# Subtest: 当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页
+ok 30 - 当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页
+  ---
+  duration_ms: 63.389914
+  type: 'test'
+  ...
+# Subtest: 服务端写入叠加设备能力时同时保留两类验收事实
+ok 31 - 服务端写入叠加设备能力时同时保留两类验收事实
+  ---
+  duration_ms: 72.996135
+  type: 'test'
+  ...
+# Subtest: Beta 转正式按作者归属写操作验收，不能误归只读
+ok 32 - Beta 转正式按作者归属写操作验收，不能误归只读
+  ---
+  duration_ms: 64.36373
+  type: 'test'
+  ...
+# Subtest: 合并后可达动作 variant 全部进入台账且 handler 真源可定位
+ok 33 - 合并后可达动作 variant 全部进入台账且 handler 真源可定位
+  ---
+  duration_ms: 65.24679
+  type: 'test'
+  ...
+# Subtest: 动作角色必须来自当前 route-matrix，俱乐部与商家页不得默认成 player
+ok 34 - 动作角色必须来自当前 route-matrix，俱乐部与商家页不得默认成 player
+  ---
+  duration_ms: 1.674
+  type: 'test'
+  ...
+# Subtest: release 前重建 inventory，漏掉新增/修改控件必须变红
+ok 35 - release 前重建 inventory，漏掉新增/修改控件必须变红
+  ---
+  duration_ms: 59596.892994
+  type: 'test'
+  ...
+# Subtest: 动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继续假绿
+ok 36 - 动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继续假绿
+  ---
+  duration_ms: 17.080822
+  type: 'test'
+  ...
+# Subtest: 动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧
+ok 37 - 动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧
+  ---
+  duration_ms: 11.297036
+  type: 'test'
+  ...
+# Subtest: inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果
+ok 38 - inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果
+  ---
+  duration_ms: 1443.004135
+  type: 'test'
+  ...
+# Subtest: external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件
+ok 39 - external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件
+  ---
+  duration_ms: 5585.041605
+  type: 'test'
+  ...
+# Subtest: 截图录屏证据必须有真实媒体签名，文本改后缀不能通过
+ok 40 - 截图录屏证据必须有真实媒体签名，文本改后缀不能通过
+  ---
+  duration_ms: 1.484094
+  type: 'test'
+  ...
+# Subtest: GET 矩阵窗口覆盖完整当前调用且不跨到下一请求
+ok 41 - GET 矩阵窗口覆盖完整当前调用且不跨到下一请求
+  ---
+  duration_ms: 3.570685
+  type: 'test'
+  ...
+# Subtest: 全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵
+ok 42 - 全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵
+  ---
+  duration_ms: 744.450612
+  type: 'test'
+  ...
+# Subtest: 后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权
+ok 43 - 后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权
+  ---
+  duration_ms: 1.772017
+  type: 'test'
+  ...
+# Subtest: legacy DSL 正例保留全部 15 条权限规则
+ok 44 - legacy DSL 正例保留全部 15 条权限规则
+  ---
+  duration_ms: 0.349786
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official POST 改写 GET 必须判红
+ok 45 - legacy DSL 负面控制：official POST 改写 GET 必须判红
+  ---
+  duration_ms: 1.391515
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 移除 GET 限制 必须判红
+ok 46 - legacy DSL 负面控制：official 移除 GET 限制 必须判红
+  ---
+  duration_ms: 0.527514
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 额外 POST 放行 必须判红
+ok 47 - legacy DSL 负面控制：official 额外 POST 放行 必须判红
+  ---
+  duration_ms: 0.477439
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 扩大通配符 必须判红
+ok 48 - legacy DSL 负面控制：official 扩大通配符 必须判红
+  ---
+  duration_ms: 0.532472
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：city nodes GET 放行 必须判红
+ok 49 - legacy DSL 负面控制：city nodes GET 放行 必须判红
+  ---
+  duration_ms: 0.503428
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：city nodes 所有方法放行 必须判红
+ok 50 - legacy DSL 负面控制：city nodes 所有方法放行 必须判红
+  ---
+  duration_ms: 0.512602
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：roam share POST 放行 必须判红
+ok 51 - legacy DSL 负面控制：roam share POST 放行 必须判红
+  ---
+  duration_ms: 0.411649
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：roam share 扩大通配符 必须判红
+ok 52 - legacy DSL 负面控制：roam share 扩大通配符 必须判红
+  ---
+  duration_ms: 0.452921
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：兜底匿名 必须判红
+ok 53 - legacy DSL 负面控制：兜底匿名 必须判红
+  ---
+  duration_ms: 0.914367
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：GET 正例藏入注释 必须判红
+ok 54 - legacy DSL 负面控制：GET 正例藏入注释 必须判红
+  ---
+  duration_ms: 0.47849
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 正例保留全部 15 条权限规则
+ok 55 - boot4 DSL 正例保留全部 15 条权限规则
+  ---
+  duration_ms: 0.156245
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official POST 改写 GET 必须判红
+ok 56 - boot4 DSL 负面控制：official POST 改写 GET 必须判红
+  ---
+  duration_ms: 0.392812
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 移除 GET 限制 必须判红
+ok 57 - boot4 DSL 负面控制：official 移除 GET 限制 必须判红
+  ---
+  duration_ms: 0.311128
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 额外 POST 放行 必须判红
+ok 58 - boot4 DSL 负面控制：official 额外 POST 放行 必须判红
+  ---
+  duration_ms: 0.340052
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 扩大通配符 必须判红
+ok 59 - boot4 DSL 负面控制：official 扩大通配符 必须判红
+  ---
+  duration_ms: 0.275805
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：city nodes GET 放行 必须判红
+ok 60 - boot4 DSL 负面控制：city nodes GET 放行 必须判红
+  ---
+  duration_ms: 0.334243
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：city nodes 所有方法放行 必须判红
+ok 61 - boot4 DSL 负面控制：city nodes 所有方法放行 必须判红
+  ---
+  duration_ms: 0.308414
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：roam share POST 放行 必须判红
+ok 62 - boot4 DSL 负面控制：roam share POST 放行 必须判红
+  ---
+  duration_ms: 0.278169
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：roam share 扩大通配符 必须判红
+ok 63 - boot4 DSL 负面控制：roam share 扩大通配符 必须判红
+  ---
+  duration_ms: 0.27914
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：兜底匿名 必须判红
+ok 64 - boot4 DSL 负面控制：兜底匿名 必须判红
+  ---
+  duration_ms: 0.714045
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：GET 正例藏入注释 必须判红
+ok 65 - boot4 DSL 负面控制：GET 正例藏入注释 必须判红
+  ---
+  duration_ms: 0.3123
+  type: 'test'
+  ...
+# Subtest: team-progress 后端必须同时校验登录身份与本场资源归属
+ok 66 - team-progress 后端必须同时校验登录身份与本场资源归属
+  ---
+  duration_ms: 0.334404
+  type: 'test'
+  ...
+# Subtest: 偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实
+ok 67 - 偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实
+  ---
+  duration_ms: 1.29513
+  type: 'test'
+  ...
+# Subtest: 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证
+ok 68 - 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证
+  ---
+  duration_ms: 1.178724
+  type: 'test'
+  ...
+# Subtest: roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois 是全局读取+本人 found 投影
+ok 69 - roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois 是全局读取+本人 found 投影
+  ---
+  duration_ms: 0.500183
+  type: 'test'
+  ...
+# Subtest: route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一致
+ok 70 - route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一致
+  ---
+  duration_ms: 775.759619
+  type: 'test'
+  ...
+# Subtest: route-matrix 少一页或角色被改写必须判为过期
+ok 71 - route-matrix 少一页或角色被改写必须判为过期
+  ---
+  duration_ms: 566.972497
+  type: 'test'
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 70
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 97169.438417

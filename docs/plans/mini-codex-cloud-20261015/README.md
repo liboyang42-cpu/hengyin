@@ -2,7 +2,7 @@
 
 2026年10月15日。**只做小程序相关的既有bug与共用后端底层；整体不做原生iOS、Flutter。** Codex Cloud负责修bug和后端架构，Claude负责UI设计、新功能及其专属后端。共用后端只维护一套合同和业务真源。
 
-本分支只增加任务文档，业务代码尚未在本次任务中修改。它不是已集成的运行候选。
+计划PR #16仍只包含文档。执行候选已在 [草稿PR #18](https://github.com/liboyang42-cpu/hengyin/pull/18) 组合公共PR并提交最小修复；共同worker基线 `d551c6b`，源码候选 `3ee0fd0`。最新逐层证据与未闭合项见 [C99](../../verification/mini-bug-arch-20261015/C99/README.md)。源码候选不代表业务READY。
 
 ## 启动方式
 
