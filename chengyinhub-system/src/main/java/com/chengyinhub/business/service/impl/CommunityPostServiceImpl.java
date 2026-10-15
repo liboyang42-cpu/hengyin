@@ -530,6 +530,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> comments(Long viewerId, Long postId, Long cursor, Integer limit) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         detail(viewerId, postId);
