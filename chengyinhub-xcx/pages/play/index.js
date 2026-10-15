@@ -1783,6 +1783,7 @@ Page({
 
   closeShopNpc() {
     if (!this.data.shopNpc.show) return;
+    this._shopNpcConversationEpoch = (this._shopNpcConversationEpoch || 0) + 1;
     if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
     this._stopThinkBeat();
     this._stopShopNpcVoice();
@@ -1830,8 +1831,26 @@ Page({
    *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
    *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
    *  返回的是分身的回答。 */
+  _shopNpcRequestContext() {
+    const conversation = this.data.shopNpc;
+    if (!this._isPlayAccountCurrent() || !conversation || !conversation.show || conversation.open === false) return null;
+    const sequence = this._shopNpcRequestSequence = (this._shopNpcRequestSequence || 0) + 1;
+    return { conversation, nodeId: conversation.nodeId, sequence, epoch: this._shopNpcConversationEpoch,
+      sessionKey: JSON.stringify(this._sessionParams()), settled: false };
+  },
+
+  _isShopNpcRequestCurrent(context) {
+    const conversation = this.data.shopNpc;
+    return !!context && !context.settled && this._isPlayAccountCurrent()
+      && context.sequence === this._shopNpcRequestSequence && context.epoch === this._shopNpcConversationEpoch
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && conversation === context.conversation
+      && conversation.show && conversation.open !== false && conversation.nodeId === context.nodeId;
+  },
+
   _sendVoice(filePath) {
-    const s = this.data.shopNpc;
+    const context = this._shopNpcRequestContext();
+    if (!context) return;
+    const s = context.conversation;
     const that = this;
     this.setData({ 'shopNpc.thinking': true });
     this._startThinkBeat();
@@ -1839,6 +1858,8 @@ Page({
       path: '/api/ai/npc/voice-chat',
       formData: { nodeId: s.nodeId, requestId: uuid4() },
       onDone(r) {
+        if (!that._isShopNpcRequestCurrent(context)) return;
+        context.settled = true;
         if (!r.ok) { that._pushShopNpcReply(r.msg || '没听清，再说一次'); return; }
         const d = r.data;
         // 先把识别出的原话作为我方消息补上 —— 玩家要能看见自己被听成了什么
@@ -1870,9 +1891,13 @@ Page({
   /** 真正发问那一段。打字与「重答」共用 —— 兜底文案的口径只能有一份。
    *  @param replaceIdx 传了就改写这一条(重答),不传则追加一条(正常问答)。 */
   _askShopNpc(text, replaceIdx) {
+    const context = this._shopNpcRequestContext();
+    if (!context) return;
     const that = this;
     const requestId = uuid4();
-    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: this.data.shopNpc.nodeId, message: text }).then((r) => {
+    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: context.nodeId, message: text }).then((r) => {
+      if (!that._isShopNpcRequestCurrent(context)) return;
+      context.settled = true;
       const d = (r && r.data) || {};
       // safeText 是后端在拒绝/失败时给的安全兜底文案;正常回答也走同一个字段。
       const reply = d.safeText || d.text || '';
