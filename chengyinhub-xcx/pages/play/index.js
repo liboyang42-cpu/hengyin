@@ -768,6 +768,7 @@ Page({
   },
 
   onUnload() {
+    this._cancelShopRecording();
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
@@ -1785,6 +1786,7 @@ Page({
   onNpcTouchEnd() { this._npcX = null; },
 
   closeShopNpc() {
+    this._cancelShopRecording();
     if (!this.data.shopNpc.show) return;
     this._shopNpcConversationEpoch = (this._shopNpcConversationEpoch || 0) + 1;
     if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
@@ -1803,31 +1805,83 @@ Page({
    *  所以「点了语音就回不了打字」在结构上不成立:输入框一直在,语音只是它旁边的另一个入口。
    *  ⚠️ 这里直连 wx.uploadFile 而不走 app.getUploadClient():那条通道的契约要求返回
    *  文件 URL(它是给要落 OSS 的资产用的),而语音片段是临时的、刻意不持久化。 */
+  _isShopRecordingCurrent(intent) {
+    const conversation = this.data.shopNpc;
+    return !!intent && this._shopRecordingIntent === intent && !intent.cancelled
+      && this._isPlayAccountCurrent() && intent.owner === this._playOwner
+      && intent.sessionKey === JSON.stringify(this._sessionParams())
+      && intent.epoch === this._shopNpcConversationEpoch && conversation === intent.conversation
+      && conversation.show && conversation.open !== false && conversation.nodeId === intent.nodeId;
+  },
+  _releaseShopRecording(intent) {
+    if (intent.rec) {
+      try { if (intent.rec.offStop) intent.rec.offStop(intent.onStop); } catch (e) {}
+      try { if (intent.rec.offError) intent.rec.offError(intent.onError); } catch (e) {}
+    }
+    if (this._shopRecordingIntent === intent) this._shopRecordingIntent = null;
+  },
+  _cancelShopRecording() {
+    const intent = this._shopRecordingIntent;
+    if (!intent) return;
+    const current = this._isShopRecordingCurrent(intent);
+    intent.cancelled = true;
+    if (current) this.setData({ 'shopNpc.recording': false });
+    if (!intent.rec) { this._releaseShopRecording(intent); return; }
+    // Keep its terminal listener until stop settles; a new press must not consume this stop event.
+    if (intent.stopping) return;
+    intent.stopping = true;
+    try { intent.rec.stop(); } catch (e) { this._releaseShopRecording(intent); }
+  },
   onVoiceStart() {
     const s = this.data.shopNpc;
-    if (!s.show || s.thinking) return;
-    const that = this;
+    if (!this._isPlayAccountCurrent() || !s.show || s.open === false || s.thinking || this._shopRecordingIntent) return;
+    const intent = { owner: this._playOwner, conversation: s, nodeId: s.nodeId,
+      epoch: this._shopNpcConversationEpoch, sessionKey: JSON.stringify(this._sessionParams()) };
+    this._shopRecordingIntent = intent;
     wx.authorize({ scope: 'scope.record' })
-      .then(() => that._beginRecord())
-      .catch(() => cyToast('没有录音权限，先在设置里打开'));
+      .then(() => {
+        if (this._isShopRecordingCurrent(intent)) this._beginRecord(intent);
+        else this._releaseShopRecording(intent);
+      })
+      .catch(() => {
+        const current = this._isShopRecordingCurrent(intent);
+        this._releaseShopRecording(intent);
+        if (current) cyToast('没有录音权限，先在设置里打开');
+      });
   },
 
-  _beginRecord() {
+  _beginRecord(intent) {
+    if (!this._isShopRecordingCurrent(intent)) return;
     const rec = wx.getRecorderManager();
-    this._rec = rec;
-    rec.onStop((res) => {
+    this._rec = rec; intent.rec = rec;
+    intent.onStop = (res) => {
+      const current = this._isShopRecordingCurrent(intent);
+      this._releaseShopRecording(intent);
+      if (!current) return;
       this.setData({ 'shopNpc.recording': false });
-      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;   // 误触:不到半秒不算一句话
+      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;
       this._sendVoice(res.tempFilePath);
-    });
-    rec.onError(() => { this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了'); });
-    rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
-    this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
+    };
+    intent.onError = () => {
+      const current = this._isShopRecordingCurrent(intent);
+      this._releaseShopRecording(intent);
+      if (!current) return;
+      this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了');
+    };
+    rec.onStop(intent.onStop); rec.onError(intent.onError);
+    try {
+      rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
+      this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
+    } catch (e) { intent.onError(); }
   },
 
   onVoiceEnd() {
-    if (!this.data.shopNpc.recording) return;
-    try { this._rec && this._rec.stop(); } catch (e) { this.setData({ 'shopNpc.recording': false }); }
+    const intent = this._shopRecordingIntent;
+    if (!intent) return;
+    if (!intent.rec) { intent.cancelled = true; this._releaseShopRecording(intent); return; }
+    if (intent.stopping) return;
+    intent.stopping = true;
+    try { intent.rec.stop(); } catch (e) { intent.onError(); }
   },
 
   /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
