@@ -1081,8 +1081,22 @@ Page({
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
     const index = Number(e.currentTarget.dataset.index);
+    const editor = this.data.storyEditor;
+    const chapter = (this.data.formData.chapters || [])[editor.chapterIndex];
+    if (!chapter) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    const blocks = chapter.blocks || [];
+    const beforeKey = blocks[index - 1] && blocks[index - 1].key;
+    const afterKey = blocks[index] && blocks[index].key;
     this.setData({ 'storyEditor.insertMenuAt': -1 });
     app.chooseImage((res) => {
+      const current = (this.data.formData.chapters || [])[editor.chapterIndex];
+      if (this._publishPageUnloaded || this.data.storyEditor !== editor || !editor.show
+          || memberId !== String(app.getUserID() || '') || !current || current._localId !== chapterId) return;
+      const currentBlocks = current.blocks || [];
+      if ((currentBlocks[index - 1] && currentBlocks[index - 1].key) !== beforeKey
+          || (currentBlocks[index] && currentBlocks[index].key) !== afterKey) return;
       const url = res && res[0];
       if (!url) return;
       this._insertStoryMedia('image', index, { url });
