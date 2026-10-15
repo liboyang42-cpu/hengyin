@@ -47,7 +47,7 @@ function loadPlayPage() {
 function stubAudio(page) {
   const rec = { src: '', plays: 0, pauses: 0 };
   global.wx.createInnerAudioContext = () => ({
-    onTimeUpdate() {}, onEnded() {}, onError() {},
+    onTimeUpdate() {}, onEnded() {}, onError() {}, onPlay() {}, onPause() {}, onStop() {},
     play() { rec.src = this.src; rec.plays += 1; },
     pause() { rec.pauses += 1; },
     stop() {}, destroy() {},

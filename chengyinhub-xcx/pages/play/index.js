@@ -348,6 +348,7 @@ Page({
     // 底部运行栈三态(Figma 3957:12602 / 3962:14212 / 3962:14341)。
     // idle = 进了地图但还没按「开始」;running / paused 跟着 _sessionClock 走,不另存一份真值。
     runState: 'idle',
+    runHoldLeft: 0,         // 长按结束时还没完成的站数(>0 才在按住时提示)
     runHoldPct: 0,          // 主键长按结束的进度环 0–100
     chapterCount: 0,   // 本主题章节数(开始前读数)
     searchPlaces: [],   // 顶部输入地址的候选,见 _searchPlaces
@@ -961,7 +962,7 @@ Page({
     this._runHoldDelay = setTimeout(() => {
       this._runHoldDelay = null;
       const t0 = Date.now();
-      this.setData({ runHoldPct: 0 });
+      this.setData({ runHoldPct: 0, runHoldLeft: (this.data.nodes || []).filter((n) => !n.done).length });
       this._runHoldTimer = setInterval(() => {
         const pct = Math.min(100, Math.round(((Date.now() - t0) / RUN_HOLD_MS) * 100));
         this.setData({ runHoldPct: pct });
@@ -981,7 +982,7 @@ Page({
   _cancelRunHold() {
     if (this._runHoldDelay) { clearTimeout(this._runHoldDelay); this._runHoldDelay = null; }
     if (this._runHoldTimer) { clearInterval(this._runHoldTimer); this._runHoldTimer = null; }
-    if (this.data.runHoldPct) this.setData({ runHoldPct: 0 });
+    if (this.data.runHoldPct || this.data.runHoldLeft) this.setData({ runHoldPct: 0, runHoldLeft: 0 });
   },
   /** 结束:交给既有通关/结算路径,不在这里另写一套收尾 */
   _finishRun() {
@@ -3978,9 +3979,10 @@ Page({
         wx.getLocation({
           type: 'gcj02', isHighAccuracy: true,
           success(loc) {
-            that._loc = { longitude: loc.longitude, latitude: loc.latitude };
+            that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
             that._locationRequesting = false;
             that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+              that._noteLocAccuracy(loc.accuracy);
               that.rebuild();
               that.watchLocation();
             });
@@ -3990,6 +3992,13 @@ Page({
       },
       fail() { unavailable('定位暂不可用 · 可扫码完成到达'); }
     });
+  },
+  /** 定位精度提示:只在「不足/恢复」翻转时 setData,不随每次定位回调刷新 */
+  _noteLocAccuracy(accuracy) {
+    const low = playAccuracy.isLowAccuracy(accuracy);
+    if (low === !!this.data.gpsLowAcc) return;
+    this.setData(low ? { gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT }
+      : { gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
   },
   watchLocation() {
     const that = this;
@@ -4006,7 +4015,8 @@ Page({
       },
       success() {
         wx.onLocationChange((loc) => {
-          that._loc = { longitude: loc.longitude, latitude: loc.latitude };
+          that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+          that._noteLocAccuracy(loc.accuracy);
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
@@ -4029,7 +4039,8 @@ Page({
             const d = that.haversine(that._loc.latitude, that._loc.longitude, node.lat, node.lng);
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5)) that.arrive(node.nodeId, 'gps');
+            // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
+            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && !playAccuracy.isLowAccuracy(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         });
       }
@@ -4493,7 +4504,7 @@ Page({
     if (!this.beginArrivalWrite()) return;
     const that = this;
     const loc = this._loc || {};
-    this._withThoughtSync(() => req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude })))
+    this._withThoughtSync(() => req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) })))
       .then((r) => {
         that._arrivalWriteInFlight = false;
         if (r.code == 200 || r.code == '200') {
@@ -4504,7 +4515,11 @@ Page({
         else if (that._handleRouteConflict(r, 'arrive', nodeId)) return;
         else if (r.httpFail) that.recordArrivalHttpUnknown(r.msg, nodeId);
         else if (r.netFail) that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
-        else { that._resolveRouteAction('arrive', nodeId); that.diegetic(r.msg || '还没到这一站附近'); }
+        else {
+          that._resolveRouteAction('arrive', nodeId);
+          if (playAccuracy.isLowAccuracyMsg(r.msg)) that.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
+          that.diegetic(r.msg || '还没到这一站附近');
+        }
       }).catch(() => {
         that._arrivalWriteInFlight = false;
         that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
