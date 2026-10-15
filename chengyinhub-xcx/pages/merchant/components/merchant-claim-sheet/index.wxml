@@ -38,7 +38,7 @@
         <view class="mcs__proofs">
           <view wx:for="{{proofUrls}}" wx:key="index" class="mcs__proof">
             <image class="mcs__proof-img" src="{{item}}" mode="aspectFill" />
-            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{index + 1}}张" hover-class="cy-pressed" hover-stay-time="80"><view class="mcs__proof-dot"><cy-icon name="close-sm" size="32" /></view></view>
+            <view class="mcs__proof-x" data-i="{{index}}" bindtap="removeProof" aria-role="button" aria-label="删除第{{(index + 1) || 1}}张" hover-class="cy-pressed" hover-stay-time="80"><view class="mcs__proof-dot"><cy-icon name="close-sm" size="32" /></view></view>
           </view>
           <view wx:if="{{proofUrls.length < 10}}" class="mcs__proof mcs__proof--add" bindtap="addProof" aria-role="button" aria-label="添加证明图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="48" /></view>
         </view>

@@ -667136,7 +667136,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "删除第{{index + 1}}张",
+        "ariaLabelExpression": "删除第{{(index + 1) || 1}}张",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
