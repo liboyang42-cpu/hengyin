@@ -961981,7 +961981,7 @@
       }
     },
     {
-      "id": "subpackageMember/coupon/coupon.wxml:12:bindtap:tpClick:1",
+      "id": "subpackageMember/coupon/coupon.wxml:14:bindtap:tpClick:1",
       "route": "subpackageMember/coupon/coupon",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962004,7 +962004,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tpClick",
-        "line": 12,
+        "line": 14,
         "selectorHint": ".david_tkb_li",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962044,11 +962044,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:150"
+        "staticSource": "subpackageMember/coupon/coupon.js:167"
       }
     },
     {
-      "id": "subpackageMember/coupon/coupon.wxml:46:bindtap:GoAdd:2",
+      "id": "subpackageMember/coupon/coupon.wxml:48:bindtap:GoAdd:2",
       "route": "subpackageMember/coupon/coupon",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962071,7 +962071,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "GoAdd",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962114,11 +962114,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:201"
+        "staticSource": "subpackageMember/coupon/coupon.js:218"
       }
     },
     {
-      "id": "subpackageMember/coupon/coupon.wxml:49:bind:close:tpClose:3",
+      "id": "subpackageMember/coupon/coupon.wxml:51:bind:close:tpClose:3",
       "route": "subpackageMember/coupon/coupon",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962141,7 +962141,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "tpClose",
-        "line": 49,
+        "line": 51,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962181,11 +962181,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:159"
+        "staticSource": "subpackageMember/coupon/coupon.js:176"
       }
     },
     {
-      "id": "subpackageMember/coupon/coupon.wxml:72:catchtap:stopCoupon:4",
+      "id": "subpackageMember/coupon/coupon.wxml:74:catchtap:stopCoupon:4",
       "route": "subpackageMember/coupon/coupon",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962208,7 +962208,7 @@
         "tag": "cy-btn",
         "event": "catchtap",
         "handler": "stopCoupon",
-        "line": 72,
+        "line": 74,
         "selectorHint": "cy-btn[catchtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962289,7 +962289,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:168"
+        "staticSource": "subpackageMember/coupon/coupon.js:185"
       }
     },
     {
@@ -962346,10 +962346,12 @@
         "apis": [
           "/api/coupon/mypublishlist",
           "/api/login/code",
+          "/api/merchant/coupon-summary",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/coupon/mypublishlist"
+          "/api/coupon/mypublishlist",
+          "/api/merchant/coupon-summary"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -962364,6 +962366,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coupon-summary",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -962388,7 +962396,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:147"
+        "staticSource": "subpackageMember/coupon/coupon.js:150"
       }
     },
     {

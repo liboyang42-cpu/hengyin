@@ -258,7 +258,8 @@ module.exports = {
     // 2026-09-17 同批:接收方匿名 GET 改为单独字面量调用(GET 权限矩阵只认字面量 sendRequest),同文件再 +1,24 → 25(冻结上限 25 不变)。
     // 2026-09-17 release-0917 第三阶段 C:总控裁定营销同意入口附属读取静默(唯一允许的 U5 放宽),25 → 26。
     // 2026-09-19 定价页接合作方入口(批复1-a=2):loadLineupNames 补名读取新增一条 u5Silent 登记,26 → 27。
-    "u5Silent": 28,
+    // 2026-10-15 BL-77 商家券统计卡读取静默(coupon.js:157,理由见登记项),28 → 29(冻结上限 29 不变)。
+    "u5Silent": 29,
     "keyDigest": {
       // 2026-09-24 卡包底图:play/index.js data 里加 topicCover 一行,u5Silent 那条已完成里程碑读取 5444→5445,
       //   新旧行内容一致、理由一字未改,u5Silent digest 按同算法显式重算(旧值复算吻合)。
@@ -960,7 +961,7 @@ module.exports = {
       // 2026-09-21 端到端收口合入上传重试与账号隔离，既有调用仅位移，理由与数量不变。
       // 2026-09-25 CU-M-183/185/186 同批:merchantinfo.js 那条 info-to-user silentError 调用点 2530→2532,
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
-"6da2f9eac8f63031130c4ba17e260d411a1bc80daa5d9f961e83bf211915d93c"
+"01797986056ee1272aff730c4d6072093ba53f9fc757ce735247d6a559516edc"
 
     }
   },
@@ -1372,6 +1373,7 @@ module.exports = {
       "chengyinhub-xcx/pages/play/index.js:6451": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:415": "广场选活动报名列表读取:失败落组件 activityError,由选活动层呈现并给重试,关掉自动 toast 避免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:428": "广场选活动「我主办的」列表读取:失败汇总进同一 activityError,同上;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31"
+    "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/subpackageMember/coupon/coupon.js:157": "BL-77 商家券领取/核销统计卡是辅助只读信息:读取失败或无券即不展示、不挡券列表(列表有自己的 cy-state-shell 错误态与重试),通用 toast 会打断券列表;owner=小程序,复核=2026-12-31"
   }
 };
