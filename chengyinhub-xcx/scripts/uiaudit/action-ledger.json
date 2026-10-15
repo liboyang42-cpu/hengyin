@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4510,
+  "controlCount": 4499,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -3093,74 +3093,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -3349,74 +3281,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -3460,24 +3324,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "cy-btn.oo-btn",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-btn.oo-btn",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -3498,24 +3344,6 @@
             {
               "selector": "cy-btn",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 4
             }
           ]
         },
@@ -71218,23 +71046,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -71270,23 +71081,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -85856,15 +85650,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -85884,15 +85669,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -88227,15 +88003,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -88255,15 +88022,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -90597,15 +90355,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -90625,15 +90374,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -92967,15 +92707,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -92995,15 +92726,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -95337,15 +95059,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -95365,15 +95078,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -97707,15 +97411,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             }
@@ -97735,15 +97430,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             }
           ]
@@ -137742,69 +137428,6 @@
           ]
         },
         {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
-            }
-          ]
-        },
-        {
           "route": "pages/gerenziliao/gerenziliao",
           "segments": [
             {
@@ -137973,69 +137596,6 @@
             {
               "selector": "cy-field",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
             }
           ]
         },
@@ -138211,69 +137771,6 @@
           ]
         },
         {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
-            }
-          ]
-        },
-        {
           "route": "pages/gerenziliao/gerenziliao",
           "segments": [
             {
@@ -138441,69 +137938,6 @@
             {
               "selector": "cy-field",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
             }
           ]
         },
@@ -138679,69 +138113,6 @@
           ]
         },
         {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
-            }
-          ]
-        },
-        {
           "route": "pages/gerenziliao/gerenziliao",
           "segments": [
             {
@@ -138909,69 +138280,6 @@
             {
               "selector": "cy-field",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
             }
           ]
         },
@@ -139147,69 +138455,6 @@
           ]
         },
         {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
-            }
-          ]
-        },
-        {
           "route": "pages/gerenziliao/gerenziliao",
           "segments": [
             {
@@ -139377,69 +138622,6 @@
             {
               "selector": "cy-field",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 4
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 7
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-field",
-              "index": 8
             }
           ]
         },
@@ -141781,24 +140963,6 @@
             {
               "selector": "cy-inline-error",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 4
             }
           ]
         },
@@ -155133,32 +154297,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -155225,32 +154363,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -164635,32 +163747,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -164727,32 +163813,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -174137,32 +173197,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -174229,32 +173263,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -183639,32 +182647,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -183731,32 +182713,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -193141,32 +192097,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -193233,32 +192163,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -203864,7 +202768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:184"
+        "staticSource": "components/cy/npc-chat/index.js:181"
       }
     },
     {
@@ -204054,7 +202958,7 @@
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "复制可读文本",
+        "ariaLabel": "复制全部对话文本",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -204100,118 +203004,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:173"
+        "staticSource": "components/cy/npc-chat/index.js:171"
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:35:bindtap:onCopyExport:6",
-      "route": "component:components/cy/npc-chat/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-npc-chat",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-npc-chat",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/npc-chat/index.wxml",
-        "js": "components/cy/npc-chat/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onCopyExport",
-        "line": 35,
-        "selectorHint": ".npc-chat__send",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "复制完整 JSON",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "setClipboardData"
-      ],
-      "successCapabilities": [
-        "setClipboardData"
-      ],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:173"
-      }
-    },
-    {
-      "id": "components/cy/npc-chat/index.wxml:61:bindconfirm:onSend:8",
+      "id": "components/cy/npc-chat/index.wxml:60:bindconfirm:onSend:7",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -204264,7 +203061,7 @@
         "tag": "textarea",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 61,
+        "line": 60,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -204363,7 +203160,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:61:bindinput:onInput:7",
+      "id": "components/cy/npc-chat/index.wxml:60:bindinput:onInput:6",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -204416,7 +203213,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 61,
+        "line": 60,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -204460,7 +203257,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:64:bindtap:onSend:9",
+      "id": "components/cy/npc-chat/index.wxml:63:bindtap:onSend:8",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -204513,7 +203310,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 64,
+        "line": 63,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -204612,7 +203409,7 @@
       }
     },
     {
-      "id": "components/cy/npc-chat/index.wxml:67:bind:confirm:onConfirmClearData:10",
+      "id": "components/cy/npc-chat/index.wxml:66:bind:confirm:onConfirmClearData:9",
       "route": "component:components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -204665,7 +203462,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmClearData",
-        "line": 67,
+        "line": 66,
         "selectorHint": "#npc-dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -204748,7 +203545,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:191"
+        "staticSource": "components/cy/npc-chat/index.js:187"
       }
     },
     {
@@ -204856,7 +203653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/npc-chat/index.js:220"
+        "staticSource": "components/cy/npc-chat/index.js:216"
       }
     },
     {
@@ -216371,19 +215168,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -216411,19 +215195,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -227441,19 +226212,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -227481,19 +226239,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -238511,19 +237256,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -238551,19 +237283,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -249581,19 +248300,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -249621,19 +248327,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -260651,19 +259344,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -260691,19 +259371,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -317232,40 +315899,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -317352,40 +315985,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -349221,40 +347820,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -349341,40 +347906,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -381210,40 +379741,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -381330,40 +379827,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -413199,40 +411662,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -413319,40 +411748,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -445188,40 +443583,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -445308,40 +443669,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -477178,40 +475505,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -477298,40 +475591,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -509168,40 +507427,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -509288,40 +507513,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -541158,40 +539349,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -541278,40 +539435,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -573148,40 +571271,6 @@
           "route": "pages/activity/official-organizer/index",
           "segments": [
             {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-invite",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
               "selector": "#dc-pause",
               "index": 0
             },
@@ -573268,40 +571357,6 @@
           "segments": [
             {
               "selector": "#dc-schedule",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "#dc-transfer",
               "index": 0
             },
             {
@@ -618432,122 +616487,6 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:100:bind:confirm:onConfirmResume:22",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "onConfirmResume",
-        "line": 100,
-        "selectorHint": "#dc-resume",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/login/code",
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/events/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/my-published",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/v2/events/{param}/publish-check",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:241"
-      }
-    },
-    {
       "id": "pages/activity/official-organizer/index.wxml:11:bind:primary:onBack:0",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
@@ -618614,7 +616553,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:81"
+        "staticSource": "pages/activity/official-organizer/index.js:84"
       }
     },
     {
@@ -618684,7 +616623,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:81"
+        "staticSource": "pages/activity/official-organizer/index.js:84"
       }
     },
     {
@@ -618799,7 +616738,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:88"
+        "staticSource": "pages/activity/official-organizer/index.js:91"
       }
     },
     {
@@ -618866,11 +616805,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:340"
+        "staticSource": "pages/activity/official-organizer/index.js:350"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:50:bindtap:onAction:4",
+      "id": "pages/activity/official-organizer/index.wxml:51:bindtap:onAction:4",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618893,7 +616832,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 50,
+        "line": 51,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.schedule.enabled || !check.pass || !!busyAction}}",
@@ -618933,11 +616872,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:209"
+        "staticSource": "pages/activity/official-organizer/index.js:233"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:57:bind:input:onFieldInput:5",
+      "id": "pages/activity/official-organizer/index.wxml:58:bind:input:onFieldInput:5",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618960,7 +616899,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFieldInput",
-        "line": 57,
+        "line": 58,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{!!busyAction}}",
@@ -619000,11 +616939,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
+        "staticSource": "pages/activity/official-organizer/index.js:197"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:60:bindtap:onAction:6",
+      "id": "pages/activity/official-organizer/index.wxml:61:bindtap:onAction:6",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619027,7 +616966,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 60,
+        "line": 61,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.resume.enabled || !!busyAction}}",
@@ -619067,11 +617006,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:209"
+        "staticSource": "pages/activity/official-organizer/index.js:233"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:63:bind:input:onFieldInput:7",
+      "id": "pages/activity/official-organizer/index.wxml:67:bindtap:onPickPreset:7",
+      "route": "pages/activity/official-organizer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/activity/official-organizer/index.wxml",
+        "js": "pages/activity/official-organizer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPickPreset",
+        "line": 67,
+        "selectorHint": ".oo-chip",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{sec.label}}：{{preset}}{{forms.pause[sec.key].preset === preset ? '，已选' : ''}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/official-organizer/index.js:205"
+      }
+    },
+    {
+      "id": "pages/activity/official-organizer/index.wxml:69:bind:input:onFieldInput:8",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619094,7 +617100,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFieldInput",
-        "line": 63,
+        "line": 69,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{!!busyAction}}",
@@ -619134,212 +617140,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
+        "staticSource": "pages/activity/official-organizer/index.js:197"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:64:bind:input:onFieldInput:8",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 64,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:65:bind:input:onFieldInput:9",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 65,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:66:bind:input:onFieldInput:10",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 66,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:69:bindtap:onAction:11",
+      "id": "pages/activity/official-organizer/index.wxml:73:bindtap:onAction:9",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619362,7 +617167,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 69,
+        "line": 73,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.pause.enabled || !!busyAction}}",
@@ -619402,413 +617207,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:209"
+        "staticSource": "pages/activity/official-organizer/index.js:233"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:77:bind:input:onFieldInput:12",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 77,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:78:bind:input:onFieldInput:13",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 78,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:81:bindtap:onAction:14",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onAction",
-        "line": 81,
-        "selectorHint": ".oo-btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{!avail.invite.enabled || !!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:209"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:87:bind:input:onFieldInput:15",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 87,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:88:bind:input:onFieldInput:16",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-field",
-        "event": "bind:input",
-        "handler": "onFieldInput",
-        "line": 88,
-        "selectorHint": "cy-field[bind:input]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:194"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:91:bindtap:onAction:17",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onAction",
-        "line": 91,
-        "selectorHint": ".oo-btn",
-        "visibleCondition": null,
-        "disabledCondition": "{{!avail.transfer.enabled || !!busyAction}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:209"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:96:bind:confirm:onConfirmSchedule:18",
+      "id": "pages/activity/official-organizer/index.wxml:79:bind:confirm:onConfirmSchedule:10",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619831,7 +617234,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmSchedule",
-        "line": 96,
+        "line": 79,
         "selectorHint": "#dc-schedule",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619920,243 +617323,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:237"
+        "staticSource": "pages/activity/official-organizer/index.js:256"
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:97:bind:confirm:onConfirmInvite:19",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "onConfirmInvite",
-        "line": 97,
-        "selectorHint": "#dc-invite",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/login/code",
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/events/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/my-published",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/v2/events/{param}/publish-check",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:238"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:98:bind:confirm:onConfirmTransfer:20",
-      "route": "pages/activity/official-organizer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/activity/official-organizer/index.wxml",
-        "js": "pages/activity/official-organizer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "onConfirmTransfer",
-        "line": 98,
-        "selectorHint": "#dc-transfer",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/login/code",
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/official/events/",
-          "/api/official/my-published",
-          "/api/official/v2/events/{param}/publish-check"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/events/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/my-published",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/v2/events/{param}/publish-check",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:239"
-      }
-    },
-    {
-      "id": "pages/activity/official-organizer/index.wxml:99:bind:confirm:onConfirmPause:21",
+      "id": "pages/activity/official-organizer/index.wxml:80:bind:confirm:onConfirmPause:11",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -620179,7 +617350,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmPause",
-        "line": 99,
+        "line": 80,
         "selectorHint": "#dc-pause",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -620268,7 +617439,123 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:240"
+        "staticSource": "pages/activity/official-organizer/index.js:257"
+      }
+    },
+    {
+      "id": "pages/activity/official-organizer/index.wxml:81:bind:confirm:onConfirmResume:12",
+      "route": "pages/activity/official-organizer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/activity/official-organizer/index.wxml",
+        "js": "pages/activity/official-organizer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:confirm",
+        "handler": "onConfirmResume",
+        "line": 81,
+        "selectorHint": "#dc-resume",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/login/code",
+          "/api/official/events/",
+          "/api/official/my-published",
+          "/api/official/v2/events/{param}/publish-check",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/official/events/",
+          "/api/official/my-published",
+          "/api/official/v2/events/{param}/publish-check"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/events/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/my-published",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/v2/events/{param}/publish-check",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/official-organizer/index.js:258"
       }
     },
     {

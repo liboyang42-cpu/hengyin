@@ -8,7 +8,7 @@
  *   NpcChatLog = { id, userId, profileId, activityId, userMsg, npcReply, safetyFlag,
  *                  model, latencyMs, tokenIn, tokenOut, createTime }
  * 服务端已按登录态归属过滤、按 create_time 升序。本端不落任何存储:只在内存里拼两份文本,
- * 由用户自己选择复制「可读文本」或「完整 JSON 原文」(后者即服务端返回的全部字段,一字不改)。
+ * 由用户复制「可读文本」(2026-10-15 用户决定:导出 = 复制文本)。
  */
 
 const PREVIEW_LIMIT = 50;
@@ -66,11 +66,6 @@ function formatReadable(vo) {
   return head.join('\n') + '\n\n' + vo.records.map(recordLines).join('\n\n');
 }
 
-/** 完整 JSON:服务端回包原样(仅美化缩进),包含模型、用量等全部字段。 */
-function formatJson(rawData) {
-  return JSON.stringify(rawData, null, 2);
-}
-
 /** 预览:只渲染前 PREVIEW_LIMIT 条,复制内容始终是全部。 */
 function previewRows(vo) {
   return vo.records.slice(0, PREVIEW_LIMIT).map((record, index) => ({
@@ -81,4 +76,4 @@ function previewRows(vo) {
   }));
 }
 
-module.exports = { PREVIEW_LIMIT, normalizeExport, formatReadable, formatJson, previewRows, timeText };
+module.exports = { PREVIEW_LIMIT, normalizeExport, formatReadable, previewRows, timeText };

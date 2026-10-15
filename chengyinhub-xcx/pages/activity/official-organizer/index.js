@@ -1,4 +1,5 @@
-// 官方活动 V2 · 主办控制台(排期 / 邀请候任主办 / 受控转交 / 暂停 / 恢复)。
+// 官方活动 V2 · 主办控制台(发布 / 暂停 / 恢复)。
+// 2026-10-15 用户决定:邀请候任主办 / 转交暂不做;「提交排期」对用户叫「发布活动」;暂停用「预设 + 补充文字」。
 //
 // 入口:官方活动详情页与「我发布的」里,仅在服务端 publish-check 放行时出现。
 // 权限真源在服务端:本页先打 publish-check,非 200 一律落「无权」态,不渲染任何控件;
@@ -10,26 +11,27 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const rules = require('./organizer-rules.js');
 const app = getApp();
 
-const ACTION_LABEL = {
-  schedule: '提交排期', invite: '邀请候任主办', transfer: '转交主办', pause: '暂停活动', resume: '恢复活动',
-};
+const ACTION_LABEL = { schedule: '发布活动', pause: '暂停活动', resume: '恢复活动' };
 const CONFIRM_KEY = {
   schedule: 'official.organizer.schedule',
-  invite: 'official.organizer.invite',
-  transfer: 'official.organizer.transfer',
   pause: 'official.organizer.pause',
   resume: 'official.organizer.resume',
 };
+const PAUSE_FIELD_LABEL = { reason: '暂停原因', impactScope: '影响范围', alternativePlan: '替代方案', notificationPlan: '通知策略' };
 const CONTROL_TEXT = { NORMAL: '正常运行', PAUSED: '已暂停' };
 
 function emptyForms() {
-  return {
-    invite: { memberId: '', reason: '' },
-    transfer: { partyId: '', reason: '' },
-    pause: { reason: '', impactScope: '', alternativePlan: '', notificationPlan: '' },
-    resume: { reason: '' },
-  };
+  const pause = {};
+  rules.PAUSE_FIELDS.forEach((key) => { pause[key] = { preset: '', extra: '' }; });
+  return { pause, resume: { reason: '' } };
 }
+
+// 暂停四项的渲染清单(标签 + 预设选项),只读常量,页面按它循环出「选项 + 补充文字」
+const PAUSE_SECTIONS = rules.PAUSE_FIELDS.map((key) => ({
+  key,
+  label: PAUSE_FIELD_LABEL[key],
+  presets: rules.PAUSE_PRESETS[key],
+}));
 
 function isOk(res) {
   return !!res && (res.code == 200 || res.code == '200');
@@ -50,6 +52,7 @@ Page({
     check: { known: false, pass: false, blockers: [], risks: [] },
     avail: rules.actionAvailability(null),
     forms: emptyForms(),
+    pauseSections: PAUSE_SECTIONS,
     formError: { action: '', text: '' },
     busyAction: '',
     result: null,
@@ -193,14 +196,35 @@ Page({
 
   onFieldInput(e) {
     const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    const forms = this.data.forms;
-    if (!forms[ds.form] || !Object.prototype.hasOwnProperty.call(forms[ds.form], ds.key)) return;
     const value = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : '';
-    const nextForm = Object.assign({}, forms[ds.form]);
-    nextForm[ds.key] = value;
-    const nextForms = Object.assign({}, forms);
-    nextForms[ds.form] = nextForm;
-    if (this.data.formError.action === ds.form) this.setData({ forms: nextForms, formError: { action: '', text: '' } });
+    if (ds.form === 'pause') this._setPauseEntry(ds.key, 'extra', value);
+    else if (ds.form === 'resume' && ds.key === 'reason') this._setForms('resume', { reason: value });
+  },
+
+  // 暂停预设:再点一次已选中的预设 = 取消选择
+  onPickPreset(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const entry = this.data.forms.pause[ds.key];
+    if (!entry || this.data.busyAction) return;
+    const presets = rules.PAUSE_PRESETS[ds.key] || [];
+    if (presets.indexOf(ds.value) < 0) return;
+    this._setPauseEntry(ds.key, 'preset', entry.preset === ds.value ? '' : ds.value);
+  },
+
+  _setPauseEntry(key, part, value) {
+    const pause = this.data.forms.pause;
+    if (!pause[key]) return;
+    const nextEntry = Object.assign({}, pause[key]);
+    nextEntry[part] = value;
+    const nextPause = Object.assign({}, pause);
+    nextPause[key] = nextEntry;
+    this._setForms('pause', nextPause);
+  },
+
+  _setForms(name, value) {
+    const nextForms = Object.assign({}, this.data.forms);
+    nextForms[name] = value;
+    if (this.data.formError.action === name) this.setData({ forms: nextForms, formError: { action: '', text: '' } });
     else this.setData({ forms: nextForms });
   },
 
@@ -226,17 +250,10 @@ Page({
     }
     const dc = this.selectComponent && this.selectComponent('#dc-' + action);
     if (!dc) return; // 拿不到确认组件就什么都不做,绝不绕过确认直接提交
-    const form = this.data.forms[action] || {};
-    dc.open(CONFIRM_KEY[action], {
-      name: (this.data.view && this.data.view.title) || '这场活动',
-      memberId: form.memberId ? String(form.memberId).trim() : '',
-      partyId: form.partyId ? String(form.partyId).trim() : '',
-    });
+    dc.open(CONFIRM_KEY[action], { name: (this.data.view && this.data.view.title) || '这场活动' });
   },
 
   onConfirmSchedule() { this._submit('schedule'); },
-  onConfirmInvite() { this._submit('invite'); },
-  onConfirmTransfer() { this._submit('transfer'); },
   onConfirmPause() { this._submit('pause'); },
   onConfirmResume() { this._submit('resume'); },
 
@@ -248,12 +265,10 @@ Page({
     this.setData({ busyAction: action, result: null });
     const id = this._id;
     app.sendRequest({
-      // 五个字面量逐条写在 url 里,供 UI-GATE U1 与后端 Mapping 一一核对;action 已在 onAction 收敛为五个键
+      // 三个字面量逐条写在 url 里,供 UI-GATE U1 与后端 Mapping 一一核对;action 已在 onAction 收敛为三个键
       url: action === 'schedule' ? `/api/official/v2/events/${id}/schedule`
-        : action === 'invite' ? `/api/official/v2/events/${id}/organizer-invites`
-          : action === 'transfer' ? `/api/official/v2/events/${id}/organizer-transfer`
-            : action === 'pause' ? `/api/official/v2/events/${id}/pause`
-              : `/api/official/v2/events/${id}/resume`,
+        : action === 'pause' ? `/api/official/v2/events/${id}/pause`
+          : `/api/official/v2/events/${id}/resume`,
       method: 'POST',
       data: rules.buildPayload(action, this.data.forms[action]),
       header: { 'content-type': 'application/json' },
@@ -299,19 +314,19 @@ Page({
     this.load();
   },
 
-  // 回读结束(stillOrganizer: true=仍可读控制台, false=已被拒绝, null=回读本身失败)
-  _readBackDone(stillOrganizer) {
+  // 回读结束(readable: true=读到最新状态, false=控制台已被拒绝, null=回读本身失败)
+  _readBackDone(readable) {
     const pending = this._pendingVerify;
     if (!pending) return;
     this._pendingVerify = null;
     this._busy = false;
     const { action, dc, unknown } = pending;
     const label = ACTION_LABEL[action];
-    const verdict = stillOrganizer === null ? 'unread' : rules.verifyReadBack(action, this._state, stillOrganizer);
+    const verdict = readable === true ? rules.verifyReadBack(action, this._state) : (readable === null ? 'unread' : 'mismatch');
     if (verdict === 'confirmed') {
       if (action !== 'schedule') this.setData({ forms: this._withClearedForm(action) });
       this.setData({ busyAction: '', result: { action, tone: 'success', title: label + '已生效', sub: '已按平台最新记录刷新。' } });
-      dc.done(stillOrganizer === false ? '主办权已转出，你不再能操作这场活动。' : '');
+      dc.done('');
       return;
     }
     dc.close();
@@ -320,14 +335,9 @@ Page({
       result = verdict === 'unread'
         ? { action, tone: 'unknown', title: label + '结果未确认', sub: '网络中断，暂时不知道平台是否已执行，也没读到最新状态。请稍后下拉刷新核对，再决定是否重新操作。' }
         : { action, tone: 'unknown', title: label + '结果未确认', sub: '这次提交没有收到明确答复，当前显示的是刚读到的平台记录，请以它为准再决定是否重新操作。' };
-    } else if (verdict === 'unverifiable') {
-      result = action === 'invite'
-        ? { action, tone: 'info', title: '主办邀约已发送', sub: '对方需在「官方活动邀约」里接受后才成为候任主办；小程序暂不能读取主办关系列表，接受情况请向对方确认。' }
-        : { action, tone: 'info', title: label + '已受理', sub: '平台已受理，但这里读不到主办关系列表，无法核对是否已生效，请联系平台确认。' };
     } else {
       result = { action, tone: 'unknown', title: label + '已受理，但状态未刷新', sub: verdict === 'unread' ? '回读最新状态失败，请下拉刷新核对。' : '回读到的活动状态与预期不一致，请下拉刷新；仍不一致请联系平台处理。' };
     }
-    if (verdict !== 'mismatch' && action !== 'schedule' && !unknown) this.setData({ forms: this._withClearedForm(action) });
     this.setData({ busyAction: '', result });
   },
 

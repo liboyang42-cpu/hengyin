@@ -129,7 +129,7 @@ Page({
     wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id });
   },
 
-  // 草稿在公开详情里不可见,排期等主办操作统一从控制台进
+  // 草稿在公开详情里不可见,发布等主办操作统一从控制台进
   openOrganizer(e) {
     wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + e.currentTarget.dataset.id });
   },

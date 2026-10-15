@@ -51,7 +51,7 @@
   margin-top: var(--cy-space-2);
   padding: 0 var(--cy-space-2);
   border-radius: var(--cy-radius-md);
-  border: 1rpx solid var(--cy-border);
+  background: var(--cy-bg-card-2);
   color: var(--cy-text-title);
   font-size: var(--cy-font-label);
   font-weight: 600;

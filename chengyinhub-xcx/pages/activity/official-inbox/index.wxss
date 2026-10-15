@@ -92,4 +92,3 @@
   font-size: var(--cy-type-caption);
   text-align: center;
 }
-.oi-party-no { display: block; margin-top: var(--cy-space-1); color: var(--cy-color-text-primary); font-weight: 600; }

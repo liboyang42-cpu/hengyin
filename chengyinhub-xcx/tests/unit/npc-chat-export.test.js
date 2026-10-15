@@ -48,7 +48,7 @@ function sampleVo() {
   };
 }
 
-test('格式化:可读文本含条数、保留说明与逐条对话;JSON 是回包原样', () => {
+test('格式化:可读文本含条数、保留说明与逐条对话', () => {
   const raw = sampleVo();
   const vo = exp.normalizeExport(raw);
   const text = exp.formatReadable(vo);
@@ -56,7 +56,7 @@ test('格式化:可读文本含条数、保留说明与逐条对话;JSON 是回�
   assert.match(text, /保留说明：聊天原文最长保留 90 天/);
   assert.match(text, /\[2026-10-01 12:00:00\]\n我：下一站去哪\?\nAI：往南走两百米。/);
   assert.match(text, /\[时间未记录\]\n我：（无内容）\nAI：（没有回复）/);
-  assert.deepEqual(JSON.parse(exp.formatJson(raw)), raw, '完整 JSON 不增删字段');
+  assert.equal(exp.formatJson, undefined, '用户决定:导出 = 复制文本,不提供 JSON');
 });
 
 test('格式化:畸形回包返回 null,不当成空记录', () => {
@@ -74,7 +74,7 @@ test('预览最多 50 条,复制内容包含全部', () => {
   assert.match(exp.formatReadable(vo), /共 60 条[\s\S]*q59/);
 });
 
-test('组件:导出 → 预览 → 复制文本/JSON,全程不写本地存储', () => {
+test('组件:导出 → 预览 → 复制文本,全程不写本地存储', () => {
   const requests = [];
   const storageWrites = [];
   const clipboard = [];
@@ -96,15 +96,14 @@ test('组件:导出 → 预览 → 复制文本/JSON,全程不写本地存储', 
   assert.equal(chat.data.exportState, 'ready');
   assert.equal(chat.data.exportCount, 2);
   assert.equal(chat.data.exportPreview.length, 2);
-  chat.onCopyExport({ currentTarget: { dataset: { format: 'text' } } });
+  chat.onCopyExport();
   assert.match(clipboard[0], /城瘾 · 我的 AI 对话记录/);
-  assert.match(chat.data.exportCopied, /已复制可读文本/);
-  chat.onCopyExport({ currentTarget: { dataset: { format: 'json' } } });
-  assert.deepEqual(JSON.parse(clipboard[1]), raw);
+  assert.equal(clipboard.length, 1);
+  assert.match(chat.data.exportCopied, /已复制全部对话文本/);
   assert.equal(storageWrites.length, 0, '导出不落本地存储');
   chat.onCloseExport();
   assert.equal(chat.data.exportState, '');
-  assert.equal(chat._exportJson, '', '关闭面板即释放内存里的导出文本');
+  assert.equal(chat._exportReadable, '', '关闭面板即释放内存里的导出文本');
 });
 
 test('组件:空记录 / 业务失败 / 断网 / 畸形回包 各有诚实状态', () => {
@@ -146,7 +145,8 @@ test('模板:导出与清除并排;导出面板打开时隐藏输入区', () => 
   assert.match(wxml, /bindtap="onExportData"[^>]*>导出我的对话记录</);
   assert.match(wxml, /bindtap="onAskClearData"[^>]*>清除我的对话记录</);
   assert.match(wxml, /wx:if="\{\{!exportState\}\}" class="npc-chat__composer"/);
-  assert.match(wxml, /data-format="json" bindtap="onCopyExport"/);
+  assert.match(wxml, /bindtap="onCopyExport"[^>]*>复制全部文本</);
+  assert.doesNotMatch(wxml, /JSON/);
 });
 
 test('组件:导出不打断在途提问,返回对话后回答照常呈现', () => {

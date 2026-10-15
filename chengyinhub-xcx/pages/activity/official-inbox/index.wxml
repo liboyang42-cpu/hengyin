@@ -22,7 +22,7 @@
         <view class="oi-btn accept {{actionBusyPartyKey || refreshing ? 'is-busy' : ''}}" catchtap="act" data-id="{{item.partyId}}" data-action="accept" aria-role="button" aria-label="接受本场职责" aria-disabled="{{actionBusyPartyKey || refreshing ? true : false}}" hover-class="{{actionBusyPartyKey || refreshing ? true : false ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{actionBusyPartyKey === item._partyKey && actionBusyAction === 'accept' ? '正在接受…' : '接受职责'}}</view>
       </view>
       <view wx:elif="{{item.status==='ACCEPTED'||item.status==='ACTIVE'}}" class="oi-actions">
-        <view wx:if="{{item.partyType==='OFFICIAL'&&item.role==='ORGANIZER'}}" class="oi-summary">主办关系变更必须先邀请并接受候任主办，再由当前主办受控转交。<text wx:if="{{item.organizerAuthority === 0}}" class="oi-party-no" user-select>你是候任主办，关系编号 {{item.partyId}}（当前主办在控制台转交时需要填这个编号）</text></view>
+        <view wx:if="{{item.partyType==='OFFICIAL'&&item.role==='ORGANIZER'}}" class="oi-summary">主办关系变更必须先邀请并接受候任主办，再由当前主办受控转交。</view>
         <view wx:else class="oi-btn secondary {{actionBusyPartyKey || refreshing ? 'is-busy' : ''}}" catchtap="act" data-id="{{item.partyId}}" data-action="withdraw" aria-role="button" aria-label="退出本场职责" aria-disabled="{{actionBusyPartyKey || refreshing ? true : false}}" hover-class="{{actionBusyPartyKey || refreshing ? true : false ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{actionBusyPartyKey === item._partyKey && actionBusyAction === 'withdraw' ? '正在退出…' : '退出本场职责'}}</view>
       </view>
       <text wx:if="{{actionBusyPartyKey === item._partyKey}}" class="oi-action-status" aria-role="status" aria-live="polite">正在提交，请稍候</text>

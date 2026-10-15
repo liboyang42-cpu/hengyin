@@ -129,14 +129,13 @@ Component({
       if (dc) dc.open('ai.npc.chatData.delete', {});
     },
 
-    /** 「导出我的对话记录」:拉服务端全量记录,给预览 + 复制文本/JSON;不写任何本地存储。 */
+    /** 「导出我的对话记录」:拉服务端全量记录,给预览 + 复制文本(用户决定:导出 = 复制文本);不写任何本地存储。 */
     onExportData: function () {
       if (this._clearing || this.data.exportState === 'loading') return;
       // 不打断在途提问:导出是只读快照,只含已落库的记录;回答照常在后台逐字呈现,返回对话即可看到
       const seq = (this._exportSeq || 0) + 1;
       this._exportSeq = seq;
       this._exportReadable = '';
-      this._exportJson = '';
       this.setData({ exportState: 'loading', exportError: '', exportCopied: '', exportPreview: [], exportCount: 0, exportPolicy: '' });
       const failMsg = '对话记录没导出来，请重试';
       const current = () => this.properties.show && seq === this._exportSeq;
@@ -155,7 +154,6 @@ Component({
             return;
           }
           this._exportReadable = chatExport.formatReadable(vo);
-          this._exportJson = chatExport.formatJson(res.data);
           this.setData({
             exportState: vo.records.length ? 'ready' : 'empty',
             exportCount: vo.records.length,
@@ -170,13 +168,12 @@ Component({
       });
     },
 
-    onCopyExport: function (event) {
-      const format = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.format;
-      const data = format === 'json' ? this._exportJson : this._exportReadable;
+    onCopyExport: function () {
+      const data = this._exportReadable;
       if (!data || this.data.exportState !== 'ready') return;
       wx.setClipboardData({
         data: data,
-        success: () => this.setData({ exportCopied: format === 'json' ? '已复制完整 JSON（含模型、用量等全部字段）' : '已复制可读文本，可以粘贴到备忘录或发给自己' }),
+        success: () => this.setData({ exportCopied: '已复制全部对话文本，可以粘贴到备忘录或发给自己' }),
         fail: () => this.setData({ exportCopied: '', exportState: 'error', exportError: '复制没有成功，可以再试一次' }),
       });
     },
@@ -184,7 +181,6 @@ Component({
     onCloseExport: function () {
       this._exportSeq = (this._exportSeq || 0) + 1;
       this._exportReadable = '';
-      this._exportJson = '';
       this.setData({ exportState: '', exportError: '', exportCopied: '', exportPreview: [], exportCount: 0, exportPolicy: '' });
     },
 

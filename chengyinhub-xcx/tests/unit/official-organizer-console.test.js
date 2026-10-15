@@ -101,7 +101,7 @@ function openPage(app, query) {
 
 function wireConfirms(page) {
   const stubs = {};
-  for (const action of ['schedule', 'invite', 'transfer', 'pause', 'resume']) {
+  for (const action of ['schedule', 'pause', 'resume']) {
     const name = 'onConfirm' + action[0].toUpperCase() + action.slice(1);
     stubs[action] = attachDangerConfirm(page, { id: '#dc-' + action, confirmHandler: name });
   }
@@ -119,7 +119,7 @@ test('规则:状态门槛与服务端一一对应,状态未知时全部置灰', 
   const draft = rules.actionAvailability({ status: 0, controlState: 'NORMAL' });
   assert.equal(draft.schedule.enabled, true);
   assert.equal(draft.pause.enabled, false, '草稿不能暂停(服务端 status<SCHEDULED 拒绝)');
-  assert.equal(draft.invite.enabled, true);
+  assert.deepEqual(Object.keys(draft).sort(), ['pause', 'resume', 'schedule'], '用户决定:邀请/转交暂不做');
   const live = rules.actionAvailability({ status: 3, controlState: 'NORMAL' });
   assert.equal(live.schedule.enabled, false);
   assert.equal(live.pause.enabled, true);
@@ -128,24 +128,30 @@ test('规则:状态门槛与服务端一一对应,状态未知时全部置灰', 
   assert.equal(paused.resume.enabled, true);
   assert.equal(paused.pause.enabled, false);
   const settling = rules.actionAvailability({ status: 4, controlState: 'NORMAL' });
-  assert.equal(settling.invite.enabled, false);
-  assert.equal(settling.transfer.enabled, false);
   assert.equal(settling.pause.enabled, false);
   const unknown = rules.actionAvailability(rules.normalizeEventState({ status: '3', controlState: 'WEIRD' }));
   for (const key of Object.keys(unknown)) assert.equal(unknown[key].enabled, false, key + ' 状态未知必须置灰');
 });
 
-test('规则:必填与编号校验,请求体字段对齐 DTO', () => {
-  assert.match(rules.validateForm('invite', { memberId: 'abc', reason: 'x' }), /会员编号/);
-  assert.match(rules.validateForm('invite', { memberId: '12', reason: '   ' }), /授权说明/);
-  assert.equal(rules.validateForm('invite', { memberId: '12', reason: '负责现场' }), '');
-  assert.deepEqual(rules.buildPayload('invite', { memberId: ' 12 ', reason: ' 负责现场 ' }), { memberId: 12, reason: '负责现场' });
-  assert.match(rules.validateForm('transfer', { partyId: '0', reason: 'x' }), /关系编号/);
-  assert.deepEqual(rules.buildPayload('transfer', { partyId: '88', reason: '换人' }), { partyId: 88, reason: '换人' });
-  assert.match(rules.validateForm('pause', { reason: 'a', impactScope: 'b', alternativePlan: '', notificationPlan: 'd' }), /原因、影响范围、替代方案和通知策略/);
-  assert.deepEqual(Object.keys(rules.buildPayload('pause', { reason: 'a', impactScope: 'b', alternativePlan: 'c', notificationPlan: 'd' })),
-    ['reason', 'impactScope', 'alternativePlan', 'notificationPlan']);
+test('规则:暂停四项=预设+补充文字合成文本;恢复必填说明', () => {
+  const pause = {
+    reason: { preset: '天气或安全原因', extra: '暴雨预警' },
+    impactScope: { preset: '全部已报名玩家', extra: '' },
+    alternativePlan: { preset: '', extra: '改到下周六' },
+    notificationPlan: { preset: '站内通知全部已报名玩家', extra: '' },
+  };
+  assert.equal(rules.validateForm('pause', pause), '');
+  assert.deepEqual(rules.buildPayload('pause', pause), {
+    reason: '天气或安全原因：暴雨预警',
+    impactScope: '全部已报名玩家',
+    alternativePlan: '改到下周六',
+    notificationPlan: '站内通知全部已报名玩家',
+  });
+  const missing = Object.assign({}, pause, { alternativePlan: { preset: '', extra: '   ' } });
+  assert.match(rules.validateForm('pause', missing), /都要选一项或写几句/);
+  for (const key of rules.PAUSE_FIELDS) assert.ok(rules.PAUSE_PRESETS[key].length >= 2, key + ' 需要预设选项');
   assert.match(rules.validateForm('resume', { reason: '' }), /风险处理说明/);
+  assert.deepEqual(rules.buildPayload('resume', { reason: ' 已处理 ' }), { reason: '已处理' });
   assert.equal(rules.isPositiveId('1234567890123456'), false, '超过 JS 安全整数的编号不能以数字提交');
 });
 
@@ -206,9 +212,11 @@ test('暂停:先确认再提交;200 后回读到 PAUSED 才宣称生效', () => 
   page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
   assert.equal(dc.pause.opens.length, 0);
   assert.equal(page.data.formError.action, 'pause');
-  for (const key of ['reason', 'impactScope', 'alternativePlan', 'notificationPlan']) {
-    page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key } }, detail: { value: key + ' 内容' } });
+  for (const key of rules.PAUSE_FIELDS) {
+    page.onPickPreset({ currentTarget: { dataset: { key, value: rules.PAUSE_PRESETS[key][0] } } });
   }
+  page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'reason' } }, detail: { value: '暴雨预警' } });
+  page.onPickPreset({ currentTarget: { dataset: { key: 'reason', value: '不在预设里的值' } } });
   const before = app.requests.length;
   page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
   assert.equal(dc.pause.opens.length, 1, '必须先弹确认');
@@ -218,7 +226,12 @@ test('暂停:先确认再提交;200 后回读到 PAUSED 才宣称生效', () => 
   const req = app.requests[app.requests.length - 1];
   assert.equal(req.url, '/api/official/v2/events/7/pause');
   assert.equal(req.method, 'POST');
-  assert.deepEqual(req.data, { reason: 'reason 内容', impactScope: 'impactScope 内容', alternativePlan: 'alternativePlan 内容', notificationPlan: 'notificationPlan 内容' });
+  assert.deepEqual(req.data, {
+    reason: rules.PAUSE_PRESETS.reason[0] + '：暴雨预警',
+    impactScope: rules.PAUSE_PRESETS.impactScope[0],
+    alternativePlan: rules.PAUSE_PRESETS.alternativePlan[0],
+    notificationPlan: rules.PAUSE_PRESETS.notificationPlan[0],
+  });
   assert.equal(dc.pause.busyCount, 1);
   req.success(ok());
   assert.equal(dc.pause.doneCalls.length, 0, '回读前不给成功回执');
@@ -226,7 +239,7 @@ test('暂停:先确认再提交;200 后回读到 PAUSED 才宣称生效', () => 
   assert.equal(dc.pause.doneCalls.length, 1);
   assert.equal(page.data.result.tone, 'success');
   assert.equal(page.data.view.paused, true);
-  assert.equal(page.data.forms.pause.reason, '', '确认生效后清空表单');
+  assert.deepEqual(page.data.forms.pause.reason, { preset: '', extra: '' }, '确认生效后清空表单');
 });
 
 test('回读与预期不符:不宣称成功,提示刷新核对', () => {
@@ -249,21 +262,20 @@ test('业务拒绝:服务端原话留在确认框可重试,不刷新、不假成
   const app = makeApp();
   const { page } = openPage(app);
   const dc = wireConfirms(page);
-  finishLoad(app, { check: PASS, detail: ok(LIVE) });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'invite', key: 'memberId' } }, detail: { value: '101' } });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'invite', key: 'reason' } }, detail: { value: '负责现场' } });
-  page.onAction({ currentTarget: { dataset: { action: 'invite' } } });
-  dc.invite.confirm();
+  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED' })) });
+  page.onFieldInput({ currentTarget: { dataset: { form: 'resume', key: 'reason' } }, detail: { value: '已处理' } });
+  page.onAction({ currentTarget: { dataset: { action: 'resume' } } });
+  dc.resume.confirm();
   const req = app.requests[app.requests.length - 1];
-  assert.equal(req.url, '/api/official/v2/events/7/organizer-invites');
-  assert.deepEqual(req.data, { memberId: 101, reason: '负责现场' });
+  assert.equal(req.url, '/api/official/v2/events/7/resume');
+  assert.deepEqual(req.data, { reason: '已处理' });
   const count = app.requests.length;
-  req.success({ code: 500, msg: '被邀请账号不是有效官方发布会员' });
-  assert.deepEqual(dc.invite.failedCalls, ['被邀请账号不是有效官方发布会员']);
+  req.success({ code: 500, msg: '恢复前检查未通过：缺少有效主办方' });
+  assert.deepEqual(dc.resume.failedCalls, ['恢复前检查未通过：缺少有效主办方']);
   assert.equal(page.data.result.tone, 'error');
   assert.equal(page.data.busyAction, '');
   assert.equal(app.requests.length, count, '明确失败不触发回读');
-  assert.equal(page.data.forms.invite.memberId, '101', '失败保留输入');
+  assert.equal(page.data.forms.resume.reason, '已处理', '失败保留输入');
 });
 
 test('断网/5xx:落「结果未确认」并先回读,不当成失败也不当成成功', () => {
@@ -283,10 +295,9 @@ test('断网/5xx:落「结果未确认」并先回读,不当成失败也不当�
   assert.equal(page.data.result.tone, 'success');
 
   // 另一次:断网且回读也失败 → 结果未确认
-  page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'reason' } }, detail: { value: 'a' } });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'impactScope' } }, detail: { value: 'b' } });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'alternativePlan' } }, detail: { value: 'c' } });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'notificationPlan' } }, detail: { value: 'd' } });
+  for (const key of rules.PAUSE_FIELDS) {
+    page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key } }, detail: { value: key[0] } });
+  }
   page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
   dc.pause.confirm();
   app.requests[app.requests.length - 1].fail({});
@@ -295,7 +306,7 @@ test('断网/5xx:落「结果未确认」并先回读,不当成失败也不当�
   check.fail({});
   assert.equal(page.data.result.tone, 'unknown');
   assert.match(page.data.result.title, /结果未确认/);
-  assert.equal(page.data.forms.pause.reason, 'a', '结果未知时保留输入');
+  assert.equal(page.data.forms.pause.reason.extra, 'r', '结果未知时保留输入');
 });
 
 test('4xx 是明确失败,不走未知分支', () => {
@@ -305,30 +316,12 @@ test('4xx 是明确失败,不走未知分支', () => {
   assert.equal(rules.isUnknownOutcome(undefined), true);
 });
 
-test('转交:成功后 publish-check 拒绝 = 已转出的服务端证据', () => {
-  const app = makeApp();
-  const { page } = openPage(app);
-  const dc = wireConfirms(page);
-  finishLoad(app, { check: PASS, detail: ok(LIVE) });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'transfer', key: 'partyId' } }, detail: { value: '88' } });
-  page.onFieldInput({ currentTarget: { dataset: { form: 'transfer', key: 'reason' } }, detail: { value: '交给新同事' } });
-  page.onAction({ currentTarget: { dataset: { action: 'transfer' } } });
-  assert.equal(dc.transfer.opens[0].action.irreversible, true);
-  assert.match(dc.transfer.opens[0].action.content, /关系编号 88/);
-  dc.transfer.confirm();
-  const req = app.requests[app.requests.length - 1];
-  assert.equal(req.url, '/api/official/v2/events/7/organizer-transfer');
-  assert.deepEqual(req.data, { partyId: 88, reason: '交给新同事' });
-  req.success(ok());
-  app.requests[app.requests.length - 1].success({ code: 500, msg: '无权查看该活动发布检查' });
-  assert.equal(dc.transfer.doneCalls.length, 1);
-  assert.match(dc.transfer.doneCalls[0], /主办权已转出/);
-  assert.equal(page.data.phase, 'denied');
-});
-
 test('危险确认文案已登记;不可逆的写明不可撤销', () => {
-  for (const action of ['schedule', 'invite', 'transfer', 'pause', 'resume']) {
-    const a = getDangerAction('official.organizer.' + action, { name: 'x', memberId: '1', partyId: '2' });
+  assert.equal(getDangerAction('official.organizer.invite', {}), null, '邀请/转交暂不做,确认文案不应残留');
+  assert.equal(getDangerAction('official.organizer.transfer', {}), null);
+  assert.equal(getDangerAction('official.organizer.schedule', { name: 'x' }).confirmText, '发布活动');
+  for (const action of ['schedule', 'pause', 'resume']) {
+    const a = getDangerAction('official.organizer.' + action, { name: 'x' });
     assert.ok(a, action + ' 未登记');
     assert.ok(a.consequences.length >= 2);
     if (a.irreversible) assert.ok(a.consequences.some((c) => c.text.includes('此操作不可撤销')), action);
@@ -358,11 +351,12 @@ test('官方活动详情:只有 publish-check 放行才出现主办入口', () =
   assert.match(wxml, /wx:if="\{\{organizerEntry\}\}"/);
 });
 
-test('我发布的:V2 活动挂控制台入口;邀约页给候任主办显示关系编号', () => {
+test('我发布的:V2 活动挂控制台入口;页面不再有邀请/转交', () => {
   const mine = read('pages/activity/official-mine/index.wxml');
   assert.match(mine, /wx:if="\{\{item\._isV2\}\}"[^>]*catchtap="openOrganizer"/);
-  const inbox = read('pages/activity/official-inbox/index.wxml');
-  assert.match(inbox, /item\.organizerAuthority === 0[\s\S]*关系编号 \{\{item\.partyId\}\}/);
+  assert.doesNotMatch(read('pages/activity/official-organizer/index.js'), /organizer-invites|organizer-transfer/);
+  assert.doesNotMatch(read('pages/activity/official-organizer/index.wxml'), /转交|候任|邀请/);
+  assert.match(read('pages/activity/official-organizer/index.wxml'), /发布活动[\s\S]*通过发布检查后对报名可见/);
   const appJson = JSON.parse(read('app.json'));
   const activity = appJson.subPackages.find((p) => p.root === 'pages/activity');
   assert.ok(activity.pages.includes('official-organizer/index'));

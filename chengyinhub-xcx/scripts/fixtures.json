@@ -15959,15 +15959,7 @@
    "avail": {
     "schedule": {
      "enabled": false,
-     "hint": "活动已排期，只有草稿可以提交排期"
-    },
-    "invite": {
-     "enabled": true,
-     "hint": ""
-    },
-    "transfer": {
-     "enabled": true,
-     "hint": ""
+     "hint": "活动已发布，只有草稿需要发布"
     },
     "pause": {
      "enabled": true,

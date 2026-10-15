@@ -31,8 +31,7 @@
       <block wx:else>
         <text class="npc-chat__export-meta">共 {{exportCount || 0}} 条，范围是你账号下所有 AI 对话（漫游向导和店铺形象）。{{exportPolicy}}</text>
         <view class="npc-chat__export-actions">
-          <view class="npc-chat__send" data-format="text" bindtap="onCopyExport" aria-role="button" aria-label="复制可读文本" hover-class="cy-pressed" hover-stay-time="80">复制文本</view>
-          <view class="npc-chat__send npc-chat__send--ghost" data-format="json" bindtap="onCopyExport" aria-role="button" aria-label="复制完整 JSON" hover-class="cy-pressed" hover-stay-time="80">复制完整 JSON</view>
+          <view class="npc-chat__send" bindtap="onCopyExport" aria-role="button" aria-label="复制全部对话文本" hover-class="cy-pressed" hover-stay-time="80">复制全部文本</view>
         </view>
         <text wx:if="{{exportCopied}}" class="npc-chat__export-meta" aria-role="status" aria-live="polite">{{exportCopied}}</text>
         <text wx:if="{{exportCount > exportPreview.length}}" class="npc-chat__export-meta">下面预览前 {{exportPreview.length || 0}} 条，复制包含全部 {{exportCount || 0}} 条。</text>

@@ -1,5 +1,5 @@
 <!-- 主办控制台:只有 publish-check 放行(服务端认定可读本场受控数据)才渲染任何控件。
-     每个命令:前端按状态置灰 + 必填校验 → cy-danger-confirm 确认 → 服务端回包 → 回读核对。 -->
+     每个命令(发布/暂停/恢复):前端按状态置灰 + 必填校验 → cy-danger-confirm 确认 → 服务端回包 → 回读核对。 -->
 <view class="oo-page theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -23,7 +23,7 @@
       <text class="oo-meta">生命周期：{{view.statusText}}</text>
       <text wx:if="{{view.paused && view.pausedReason}}" class="oo-meta">暂停原因：{{view.pausedReason}}</text>
       <text wx:if="{{!view.paused && view.resumeNote}}" class="oo-meta">最近恢复说明：{{view.resumeNote}}</text>
-      <text class="oo-note">以下操作只有本场有效主办能完成；协办方也能打开这里，但提交会被平台拒绝。</text>
+      <text class="oo-note">发布、暂停、恢复只有本场有效主办能完成；协办方也能打开这里，但提交会被平台拒绝。</text>
     </view>
 
     <view wx:if="{{result}}" class="oo-result">
@@ -34,9 +34,10 @@
       <cy-inline-error wx:else kind="{{result.tone === 'error' ? 'data' : 'error'}}" title="{{result.title}}" sub="{{result.sub}}" action="知道了" bind:action="onDismissResult" />
     </view>
 
-    <!-- 排期:仅草稿;发布检查阻塞项必须清零 -->
-    <view class="oo-sec">提交排期</view>
+    <!-- 发布活动(后端 schedule):仅草稿;发布检查阻塞项必须清零 -->
+    <view class="oo-sec">发布活动</view>
     <view class="oo-card">
+      <text class="oo-meta">通过发布检查后对报名可见。</text>
       <block wx:if="{{check.known}}">
         <text wx:if="{{check.pass}}" class="oo-meta">发布检查已通过。</text>
         <view wx:else>
@@ -47,10 +48,10 @@
       </block>
       <text wx:else class="oo-meta">发布检查结果没读到，下拉刷新后再试。</text>
       <text wx:if="{{!avail.schedule.enabled}}" class="oo-hint">{{avail.schedule.hint}}</text>
-      <cy-btn class="oo-btn" variant="primary" disabled="{{!avail.schedule.enabled || !check.pass || !!busyAction}}" loading="{{busyAction === 'schedule'}}" data-action="schedule" bindtap="onAction">提交排期</cy-btn>
+      <cy-btn class="oo-btn" variant="primary" disabled="{{!avail.schedule.enabled || !check.pass || !!busyAction}}" loading="{{busyAction === 'schedule'}}" data-action="schedule" bindtap="onAction">发布活动</cy-btn>
     </view>
 
-    <!-- 暂停 / 恢复 -->
+    <!-- 暂停 / 恢复:暂停四项 = 预设选项 + 补充文字,合成后按文本提交 -->
     <view class="oo-sec">暂停与恢复</view>
     <view class="oo-card">
       <block wx:if="{{view.paused}}">
@@ -60,42 +61,22 @@
         <cy-btn class="oo-btn" variant="primary" disabled="{{!avail.resume.enabled || !!busyAction}}" loading="{{busyAction === 'resume'}}" data-action="resume" bindtap="onAction">恢复活动</cy-btn>
       </block>
       <block wx:else>
-        <cy-field variant="textarea" label="暂停原因" required placeholder="为什么要暂停" value="{{forms.pause.reason}}" maxlength="300" show-count data-form="pause" data-key="reason" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-        <cy-field variant="textarea" label="影响范围" required placeholder="影响哪些玩家、点位或人数" value="{{forms.pause.impactScope}}" maxlength="300" show-count data-form="pause" data-key="impactScope" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-        <cy-field variant="textarea" label="替代方案" required placeholder="暂停期间玩家可以怎么做" value="{{forms.pause.alternativePlan}}" maxlength="300" show-count data-form="pause" data-key="alternativePlan" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-        <cy-field variant="textarea" label="通知策略" required placeholder="打算如何通知受影响的人" value="{{forms.pause.notificationPlan}}" maxlength="300" show-count data-form="pause" data-key="notificationPlan" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
+        <view wx:for="{{pauseSections}}" wx:for-item="sec" wx:key="key" class="oo-pause">
+          <text class="oo-pause-label">{{sec.label}}</text>
+          <view class="oo-chips">
+            <view wx:for="{{sec.presets}}" wx:for-item="preset" wx:key="*this" class="oo-chip {{forms.pause[sec.key].preset === preset ? 'is-on' : ''}}" data-key="{{sec.key}}" data-value="{{preset}}" bindtap="onPickPreset" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{sec.label}}：{{preset}}{{forms.pause[sec.key].preset === preset ? '，已选' : ''}}">{{preset}}</view>
+          </view>
+          <cy-field variant="textarea" placeholder="补充说明（没有合适选项时必填）" value="{{forms.pause[sec.key].extra}}" maxlength="200" show-count data-form="pause" data-key="{{sec.key}}" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
+        </view>
         <cy-inline-error wx:if="{{formError.action === 'pause'}}" kind="data" title="还不能提交" sub="{{formError.text}}" />
         <text wx:if="{{!avail.pause.enabled}}" class="oo-hint">{{avail.pause.hint}}</text>
         <cy-btn class="oo-btn" variant="danger" disabled="{{!avail.pause.enabled || !!busyAction}}" loading="{{busyAction === 'pause'}}" data-action="pause" bindtap="onAction">暂停活动</cy-btn>
       </block>
     </view>
-
-    <!-- 主办关系:先邀请候任主办,对方接受后再受控转交 -->
-    <view class="oo-sec">邀请候任主办</view>
-    <view class="oo-card">
-      <text class="oo-note">对方必须是有效的官方发布会员。接受后成为候任主办，主办权仍在你手上，直到你执行转交。</text>
-      <cy-field label="对方会员编号" required placeholder="例如 10086" value="{{forms.invite.memberId}}" maxlength="15" data-form="invite" data-key="memberId" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-      <cy-field variant="textarea" label="授权说明" required placeholder="为什么邀请对方、负责什么" value="{{forms.invite.reason}}" maxlength="200" show-count data-form="invite" data-key="reason" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-      <cy-inline-error wx:if="{{formError.action === 'invite'}}" kind="data" title="还不能提交" sub="{{formError.text}}" />
-      <text wx:if="{{!avail.invite.enabled}}" class="oo-hint">{{avail.invite.hint}}</text>
-      <cy-btn class="oo-btn" variant="secondary" disabled="{{!avail.invite.enabled || !!busyAction}}" loading="{{busyAction === 'invite'}}" data-action="invite" bindtap="onAction">发送主办邀约</cy-btn>
-    </view>
-
-    <view class="oo-sec">转交主办</view>
-    <view class="oo-card">
-      <text class="oo-note">只能转给已接受邀约的候任主办。关系编号由对方在「官方活动邀约」里查看后告诉你；小程序暂时读不到主办关系列表。</text>
-      <cy-field label="候任主办关系编号" required placeholder="对方邀约卡片上的关系编号" value="{{forms.transfer.partyId}}" maxlength="15" data-form="transfer" data-key="partyId" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-      <cy-field variant="textarea" label="转交原因" required placeholder="为什么转交" value="{{forms.transfer.reason}}" maxlength="200" show-count data-form="transfer" data-key="reason" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
-      <cy-inline-error wx:if="{{formError.action === 'transfer'}}" kind="data" title="还不能提交" sub="{{formError.text}}" />
-      <text wx:if="{{!avail.transfer.enabled}}" class="oo-hint">{{avail.transfer.hint}}</text>
-      <cy-btn class="oo-btn" variant="danger" disabled="{{!avail.transfer.enabled || !!busyAction}}" loading="{{busyAction === 'transfer'}}" data-action="transfer" bindtap="onAction">转交主办</cy-btn>
-    </view>
     <view class="oo-bottom"></view>
   </scroll-view>
 
   <cy-danger-confirm id="dc-schedule" bind:confirm="onConfirmSchedule" />
-  <cy-danger-confirm id="dc-invite" bind:confirm="onConfirmInvite" />
-  <cy-danger-confirm id="dc-transfer" bind:confirm="onConfirmTransfer" />
   <cy-danger-confirm id="dc-pause" bind:confirm="onConfirmPause" />
   <cy-danger-confirm id="dc-resume" bind:confirm="onConfirmResume" />
 </view>
