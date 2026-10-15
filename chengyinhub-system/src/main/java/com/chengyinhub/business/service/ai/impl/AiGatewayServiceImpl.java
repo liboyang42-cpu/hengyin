@@ -231,7 +231,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
-            retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
@@ -239,7 +239,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
             {
-                retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+                retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
                 saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
                         0, latencyMs, tokenIn, tokenOut);
                 throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
@@ -248,7 +248,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
-            retainQuota(memberId,bizType,reservation,"OUTPUT_REJECTED");
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
                     AiServiceException.Reason.UNKNOWN, "生成内容未通过安全检测,请调整后重试");
         }
@@ -256,7 +256,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         // 5. 落日志
         saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
 
-        retainQuota(memberId,bizType,reservation,"SUCCESS");
+        retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
         return new AiGatewayResult(traceId, modelText, modelName, 0);
     }
 
@@ -379,6 +379,16 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public void retainQuota(Long memberId,String bizType,String reservation,String reason) {
         String receipt=receiptOf(memberId,bizType,reservation);
         if(quotaRecovery!=null && receipt!=null) quotaRecovery.retain(receipt,reason);
+    }
+
+    private void retainQuotaAfterResult(Long memberId, String bizType, String reservation, String reason) {
+        try {
+            retainQuota(memberId, bizType, reservation, reason);
+        } catch (RuntimeException persistenceFailure) {
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                    AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", persistenceFailure);
+        }
     }
 
     private String receiptOf(Long memberId,String bizType,String token) {
