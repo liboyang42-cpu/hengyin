@@ -50,7 +50,7 @@
     <view class="shzlbox_li_left">
       <view class="shzlbox_li_left_name">探索作品</view>
       <view class="shzlbox_li_left_ntu" wx:if="{{casePicsList.length > 0}}">
-        <view class="shzlbox_li_left_ntu_li" wx:for="{{casePicsList}}" wx:key="*this">
+        <view class="shzlbox_li_left_ntu_li" wx:for="{{casePicsList}}" wx:key="index">
           <image lazy-load="true" src="{{item}}" mode="aspectFill" />
         </view>
       </view>
@@ -126,7 +126,7 @@
   <view class="pop-model pop-temp">
     <view class="david_tk">
       <view class="david_tk_con">
-        <view class="david_tk_con_sc" wx:for="{{tempCasePics}}" wx:key="*this" wx:for-item="pic" wx:for-index="index">
+        <view class="david_tk_con_sc" wx:for="{{tempCasePics}}" wx:key="index" wx:for-item="pic" wx:for-index="index">
           <image lazy-load="true" src="{{pic}}" mode="aspectFill" />
           <view class="david_del-hit" bindtap="deleteCasePic" aria-role="button" aria-label="删除这张作品图" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/images/del.png" mode="aspectFill" /></view>
         </view>

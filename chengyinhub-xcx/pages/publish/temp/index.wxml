@@ -1346,7 +1346,7 @@
                 <text class="pgrid-count">{{ beat.imgs.length }}/6</text>
               </view>
               <view class="pgrid">
-                <block wx:for="{{ beat.imgs }}" wx:key="*this" wx:for-item="img" wx:for-index="ii">
+                <block wx:for="{{ beat.imgs }}" wx:key="index" wx:for-item="img" wx:for-index="ii">
                   <view class="pgrid-cell">
                     <image src="{{ img }}" mode="aspectFill" class="pgrid-cell-img" />
                     <view class="pgrid-del" catchtap="removeStoryBeatImg" data-index="{{ bi }}" data-imgindex="{{ ii }}" aria-role="button" aria-label="删除剧情配图 {{ii + 1}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -1470,7 +1470,7 @@
         <view class="cg-pv-panel" wx:if="{{ pvStepKey === 'story' }}">
           <view class="cg-pv-beat" wx:for="{{ pvBeats }}" wx:key="id" wx:for-item="pb">
             <view class="cg-pv-beat-tag"><view class="cg-pv-beat-line"></view>{{ pb.label }}</view>
-            <view class="cg-pv-beat-img" wx:for="{{ pb.imgs }}" wx:key="*this" wx:for-item="pimg"><image src="{{ pimg }}" mode="aspectFill" class="cg-pv-beat-img-pic" /></view>
+            <view class="cg-pv-beat-img" wx:for="{{ pb.imgs }}" wx:key="index" wx:for-item="pimg"><image src="{{ pimg }}" mode="aspectFill" class="cg-pv-beat-img-pic" /></view>
             <view class="cg-pv-beat-text">{{ pb.text }}</view>
           </view>
           <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" bindtap="pvNext">继续</cy-btn>

@@ -6,7 +6,7 @@
   <view wx:if="{{merchant}}" class="poi-hero">
     <image wx:if="{{merchant.coverImage}}" class="poi-cover" src="{{merchant.coverImage}}" mode="aspectFill" />
     <view class="poi-identity"><cy-avatar class="poi-logo" size="96" src="{{merchant.logo || ''}}" name="{{merchant.displayName}}" /><view class="poi-identity__copy"><text class="poi-name">{{merchant.displayName}}</text><text class="poi-status">{{merchant.businessStatusText}}</text><text wx:if="{{merchant.cityRole}}" class="poi-role">{{merchant.cityRole}}</text></view></view>
-    <view class="poi-tags" wx:if="{{tags.length}}"><text wx:for="{{tags}}" wx:key="*this" class="poi-tag">{{item}}</text></view>
+    <view class="poi-tags" wx:if="{{tags.length}}"><text wx:for="{{tags}}" wx:key="index" class="poi-tag">{{item}}</text></view>
   </view>
   <view wx:if="{{featured}}" class="poi-section">
     <text class="poi-section__title">招牌主推</text>
@@ -36,7 +36,7 @@
     </view>
   </view>
   <view wx:if="{{merchantError}}" class="poi-recovery"><cy-error title="商家信息暂时打不开" sub="{{merchantError}}" retry="重试" bind:retry="retryMerchant" /></view>
-  <view wx:if="{{gallery.length}}" class="poi-section"><text class="poi-section__title">店铺相册</text><scroll-view scroll-x class="poi-gallery"><image wx:for="{{gallery}}" wx:key="*this" class="poi-gallery__image" src="{{item}}" mode="aspectFill" bindtap="previewGallery" data-src="{{item}}" aria-role="button" aria-label="预览店铺照片"  hover-class="cy-pressed" hover-stay-time="80"/></scroll-view></view>
+  <view wx:if="{{gallery.length}}" class="poi-section"><text class="poi-section__title">店铺相册</text><scroll-view scroll-x class="poi-gallery"><image wx:for="{{gallery}}" wx:key="index" class="poi-gallery__image" src="{{item}}" mode="aspectFill" bindtap="previewGallery" data-src="{{item}}" aria-role="button" aria-label="预览店铺照片"  hover-class="cy-pressed" hover-stay-time="80"/></scroll-view></view>
   <view wx:if="{{merchant && (merchant.storyTitle || merchant.description)}}" class="poi-section"><text class="poi-section__title">{{merchant.storyTitle || '品牌故事'}}</text><text class="poi-story">{{merchant.description}}</text></view>
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
   <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" title="选择答案" items="{{choiceSheetItems}}" confirm-text="提交"

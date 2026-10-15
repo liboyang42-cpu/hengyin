@@ -43,7 +43,7 @@
       <text class="psub">{{current.sub}}</text>
       <view class="mt-members">
         <view class="avs" wx:if="{{current.faces.length}}">
-          <view class="avs__i" wx:for="{{current.faces}}" wx:key="*this"><cy-avatar size="sm" src="{{item}}" bordered /></view>
+          <view class="avs__i" wx:for="{{current.faces}}" wx:key="index"><cy-avatar size="sm" src="{{item}}" bordered /></view>
         </view>
         <text class="mt-members__t">{{current.membersLine}}</text>
       </view>
@@ -107,7 +107,7 @@
   <block wx:if="{{sheet === 'topic' && topic}}">
   <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭主题" hover-class="cy-pressed" hover-stay-time="80"></view>
   <scroll-view class="tstrip {{sheetIn ? 'is-in' : ''}}" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topic.pics.length}}">
-    <image class="tstrip__i" wx:for="{{topic.pics}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
+    <image class="tstrip__i" wx:for="{{topic.pics}}" wx:key="index" src="{{item}}" mode="aspectFill" />
   </scroll-view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
     <view class="psheet__grab"></view>

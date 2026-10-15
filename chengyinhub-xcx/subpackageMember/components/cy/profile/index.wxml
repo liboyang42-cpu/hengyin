@@ -241,7 +241,7 @@
             </view>
             <view class="pc-post-body" bindtap="jumpDetail" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80">{{item.contents}}</view>
             <scroll-view wx:if="{{item.picList && item.picList.length}}" scroll-x class="pc-post-pics">
-              <image wx:for="{{item.picList}}" wx:for-item="pic" wx:key="*this" src="{{pic}}" mode="aspectFill" lazy-load="true"
+              <image wx:for="{{item.picList}}" wx:for-item="pic" wx:key="index" src="{{pic}}" mode="aspectFill" lazy-load="true"
                      class="pc-post-pic" data-piclist="{{item.picList}}" data-index="{{index}}" catchtap="previewImage"  aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80"/>
             </scroll-view>
             <view class="pc-post-tools">
@@ -405,7 +405,7 @@
             <view class="pc-sec-tit">门店相册</view>
             <scroll-view class="pc-hscroll" scroll-x enhanced show-scrollbar="{{false}}">
               <view class="pc-hscroll-inner">
-                <image wx:for="{{merchantGallery}}" wx:key="*this" class="pc-mgimg" src="{{item}}" mode="aspectFill" lazy-load="true"
+                <image wx:for="{{merchantGallery}}" wx:key="index" class="pc-mgimg" src="{{item}}" mode="aspectFill" lazy-load="true"
                        data-src="{{item}}" bindtap="previewMerchantGallery"  aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80"/>
               </view>
             </scroll-view>
@@ -423,7 +423,7 @@
           <block wx:if="{{merchantTags.length}}">
             <view class="pc-sec-tit">特色标签</view>
             <view class="pc-tags">
-              <text class="pc-tag" wx:for="{{merchantTags}}" wx:key="*this">{{item}}</text>
+              <text class="pc-tag" wx:for="{{merchantTags}}" wx:key="index">{{item}}</text>
             </view>
           </block>
 
@@ -501,7 +501,7 @@
 
         <view class="pc-sec-tit" wx:if="{{casePicsList.length}}">探索作品</view>
         <view class="pc-works" wx:if="{{casePicsList.length}}">
-          <image wx:for="{{casePicsList}}" wx:key="*this" src="{{item}}" mode="aspectFill" lazy-load="true" class="pc-work-pic"
+          <image wx:for="{{casePicsList}}" wx:key="index" src="{{item}}" mode="aspectFill" lazy-load="true" class="pc-work-pic"
                  data-url="{{item}}" bindtap="previewWork"  aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80"/>
         </view>
 

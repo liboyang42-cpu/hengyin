@@ -27,7 +27,7 @@
         <view class="rc__st"><text class="rc__v">{{item.time}}</text><text class="rc__l">用时</text></view>
       </view>
       <view class="rc__badges" wx:if="{{item.medals.length || item.stamps}}">
-        <view class="rc__hex" wx:for="{{item.medals}}" wx:for-item="medal" wx:key="*this" aria-label="{{medal}}">
+        <view class="rc__hex" wx:for="{{item.medals}}" wx:for-item="medal" wx:key="index" aria-label="{{medal}}">
           <cy-icon name="star" size="31" />
         </view>
         <view class="rc__stamps" wx:if="{{item.stamps}}"><cy-icon name="star" size="22" /><text>{{item.stamps || 0}} 枚邮票</text></view>
