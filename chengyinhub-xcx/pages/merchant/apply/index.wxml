@@ -177,7 +177,7 @@
       <view class="sec-label mt">品牌形象图（选填）</view>
       <cy-card class="apply-card wizard-card">
         <view class="imgs">
-          <view class="img-item" wx:for="{{derivatives}}" wx:key="*this">
+          <view class="img-item" wx:for="{{derivatives}}" wx:key="index">
             <image lazy-load="true" src="{{item}}" mode="aspectFill" />
             <view class="img-del" catchtap="removeDerivative" data-i="{{index}}" aria-role="button" aria-label="删除品牌形象图 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="img-del__glyph"><cy-icon name="close-sm" size="28" /></view>
@@ -210,7 +210,7 @@
       <view class="sec-label mt" wx:if="{{derivatives.length}}">品牌形象图</view>
       <cy-card class="apply-card wizard-card" wx:if="{{derivatives.length}}">
         <view class="imgs">
-          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
+          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="index" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
         </view>
       </cy-card>
       <!-- RUN-52 经营者实名:用户裁定这一段【不套白卡】,字段直接铺在灰页底上。

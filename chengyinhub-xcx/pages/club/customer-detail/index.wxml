@@ -82,7 +82,7 @@
 
     <view wx:if="{{!editing}}" class="cd-tagcard">
       <view class="cd-tags" wx:if="{{detail.tags.length}}">
-        <text class="cd-tag" wx:for="{{detail.tags}}" wx:key="*this">{{item}}</text>
+        <text class="cd-tag" wx:for="{{detail.tags}}" wx:key="index">{{item}}</text>
       </view>
       <view class="cd-tagcard-foot">
         <text class="cd-remark">{{detail.remarkText}}</text>
@@ -93,7 +93,7 @@
 
     <view wx:else class="cd-tagcard">
       <view class="cd-tags" wx:if="{{draftTags.length}}">
-        <view class="cd-tag cd-tag--editable" wx:for="{{draftTags}}" wx:key="*this" data-index="{{index}}"
+        <view class="cd-tag cd-tag--editable" wx:for="{{draftTags}}" wx:key="index" data-index="{{index}}"
               bindtap="removeTag" aria-role="button" aria-label="移除标签 {{item}}" hover-class="cy-pressed" hover-stay-time="80">
           <text>{{item}}</text><text class="cd-tag-x">×</text>
         </view>

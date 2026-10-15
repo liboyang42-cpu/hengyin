@@ -156,7 +156,7 @@
       </view>
       <view class="cont">
         <view class="row1">
-          <text wx:for="{{ info.sysCategoryList }}" wx:key="*this">{{item.categoryName}}</text>
+          <text wx:for="{{ info.sysCategoryList }}" wx:key="index">{{item.categoryName}}</text>
         </view>
       </view>
     </view>
@@ -171,7 +171,7 @@
             <text class="statbar__label">{{item.label}}</text>
             <text class="statbar__value">{{item.value}}</text>
             <view class="statbar__stars" wx:if="{{item.starList.length}}">
-              <cy-icon wx:for="{{item.starList}}" wx:for-item="s" wx:key="*this" name="star-filled" size="24" />
+              <cy-icon wx:for="{{item.starList}}" wx:for-item="s" wx:key="index" name="star-filled" size="24" />
             </view>
             <text class="statbar__sub" wx:elif="{{item.sub}}">{{item.sub}}</text>
           </view>
@@ -243,7 +243,7 @@
                    却从来没在详情页露过面的字段。一条都没有整块不出。 -->
               <view class="topic-includes" wx:if="{{info.contentIncludes.length}}">
                 <view class="topic-includes__t">活动内容</view>
-                <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="*this">{{item}}</view>
+                <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="index">{{item}}</view>
               </view>
           </view>
         </view>
@@ -272,7 +272,7 @@
               <view class="guide-divider"><text>{{part.step}}</text></view>
               <view class="guide-place-photo" wx:if="{{part.images.length}}">
                 <swiper class="guide-gallery" indicator-dots="{{part.images.length > 1}}">
-                  <swiper-item wx:for="{{part.images}}" wx:key="*this" wx:for-item="url">
+                  <swiper-item wx:for="{{part.images}}" wx:key="index" wx:for-item="url">
                     <image src="{{url}}" mode="aspectFill" data-url="{{url}}" data-urls="{{part.images}}" bindtap="previewGuideImage" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看{{part.title}}图片" />
                   </swiper-item>
                 </swiper>
