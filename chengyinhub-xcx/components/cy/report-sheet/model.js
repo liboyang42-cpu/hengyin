@@ -35,13 +35,13 @@ function minutesText(minutes) {
   return Math.floor(n / 60) + ' 小时 ' + (n % 60) + ' 分钟'
 }
 
-// 后端 CommunityReportPolicy:URGENT 15 分钟首响、STANDARD 24 小时首响(publicReasons 原样下发)。
+// 后端 CommunityReportPolicy:URGENT 15 分钟、STANDARD 24 小时首响目标(publicReasons 原样下发)。
 function reasonResponseText(r) {
   const span = minutesText(r && r.firstResponseMinutes)
   if (!span) return ''
   return r.emergency === true
-    ? '此类举报会优先处理，平台首次响应时限 ' + span + '。'
-    : '平台首次响应时限 ' + span + '。'
+    ? '此类举报会优先处理，平台目标在约 ' + span + '内首次响应。'
+    : '平台目标在约 ' + span + '内首次响应。'
 }
 
 function validTarget(targetType, targetId) {

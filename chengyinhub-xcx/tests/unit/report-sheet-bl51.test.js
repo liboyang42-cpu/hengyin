@@ -9,12 +9,12 @@ const model = require('../../components/cy/report-sheet/model.js')
 const root = path.join(__dirname, '..', '..')
 
 test('BL-51 时效文案:紧急 15 分钟 / 标准 24 小时,字段缺失或非法不显示', () => {
-  assert.equal(model.reasonResponseText({ firstResponseMinutes: 15, emergency: true }), '此类举报会优先处理，平台首次响应时限 15 分钟。')
-  assert.equal(model.reasonResponseText({ firstResponseMinutes: 1440, emergency: false }), '平台首次响应时限 24 小时。')
-  assert.equal(model.reasonResponseText({ firstResponseMinutes: 90 }), '平台首次响应时限 1 小时 30 分钟。')
+  assert.equal(model.reasonResponseText({ firstResponseMinutes: 15, emergency: true }), '此类举报会优先处理，平台目标在约 15 分钟内首次响应。')
+  assert.equal(model.reasonResponseText({ firstResponseMinutes: 1440, emergency: false }), '平台目标在约 24 小时内首次响应。')
+  assert.equal(model.reasonResponseText({ firstResponseMinutes: 90 }), '平台目标在约 1 小时 30 分钟内首次响应。')
   assert.equal(model.reasonResponseText({ emergency: true }), '')
   assert.equal(model.reasonResponseText({ firstResponseMinutes: 0 }), '')
-  assert.equal(model.reasonResponseText({ firstResponseMinutes: '15' }), '平台首次响应时限 15 分钟。')
+  assert.equal(model.reasonResponseText({ firstResponseMinutes: '15' }), '平台目标在约 15 分钟内首次响应。')
   assert.equal(model.reasonResponseText(null), '')
 })
 
@@ -26,7 +26,7 @@ test('BL-51 normalizeTaxonomy 带出 responseText,缺字段的原因不带', () 
       { code: 'SPAM', label: '垃圾广告或站外导流' },
     ],
   })
-  assert.equal(t.reasons[0].responseText, '此类举报会优先处理，平台首次响应时限 15 分钟。')
+  assert.equal(t.reasons[0].responseText, '此类举报会优先处理，平台目标在约 15 分钟内首次响应。')
   assert.equal('responseText' in t.reasons[1], false)
 })
 
