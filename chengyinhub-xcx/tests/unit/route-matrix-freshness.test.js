@@ -31,8 +31,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   /* 2026-09-22 +1:Phase 3 藏品册页 subpackageP3/pages/object-cards/index(玩家侧卡片墙,个人页入口)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131(按脚本重建实测)。 */
   /* 2026-10-15 +3:官方路线列表/详情、积分明细三页 ⇒ 130+3 = 133(按脚本重建实测)。 */
-  assert.equal(current.routes.length, 133)
-  assert.equal(matrix.counts.routes, 133)
+  /* 2026-10-15 +1:BL-76 商家核销记录页 pages/merchant/verify-records/index ⇒ 133+1 = 134(按脚本重建实测)。 */
+  assert.equal(current.routes.length, 134)
+  assert.equal(matrix.counts.routes, 134)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是
