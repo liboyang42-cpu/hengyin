@@ -349,6 +349,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> feed(Long viewerId, CommunityPostFeedQuery query) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         if (query == null) query = new CommunityPostFeedQuery();
