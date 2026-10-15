@@ -177,3 +177,5 @@ PR23共享PATCH_PROPOSED给C00（尚未合入）：`chengyinhub-xcx/app.json`、
 交接只给公共分支、完整SHA、套件/命令与隔离数据库前提；由本地验证协调者按SHA复测并回报。身份/密钥不进GitHub，VPS测试与部署/设备/业务验收继续分层。
 
 B03修复已推送1e403b135206844a34219753a36e2dee39c7dd59，详见[VPS复测交付](VPS_RETEST_1e403b13.md)。已完整读独立PR24 ccbcf93236e386aaf37a1c7ab0d45b6df5fb5ba6，两份文档仅为69c281af首轮setup失败证据，不移植到新SHA当通过。原写者停止/补丁/提交证据齐，仍原锁不转交验证者；本地只读公共候选执行。Cloud临时SSH身份已清理，本地连接独立保留，无需改网络。
+
+B03 1e403b13真实VPS套件已读PR24 f30057dd的独立JSON/README签收7/0/0/0，见[证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)。原代码锁仍保留，无文件转交或部署；本地验证者继续其余202+22项，C00不占VPS资源。

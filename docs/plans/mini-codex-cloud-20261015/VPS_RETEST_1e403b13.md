@@ -18,6 +18,10 @@ setup改用项目ItSchema.readStatements/WxPaymentCallbackFencingMySqlIT既有�
 
 实际轻量检查仅Python读取当前base schema并核三段完整CREATE TABLE：ums_member3386字符、points_detail1581字符、merchant_batch1929字符，旧首分号算法只会截断merchant_batch；每段恰好一个CREATE并保留ENGINE尾，diff --check成功。**这不是Java/MySQL执行；新SHA的七项仍待VPS复测。**
 
+## 本轮结果更新
+
+已读[PR24 f30057dd独立证据](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)：1e403b13 B03实跑7/7、零失败/错误/跳过，退出0/无OOM。原失败记录保留；本套无需重复跑。以下命令保留供审查/必要复现，不是要求再跑。其余普通202+AI存储22按矩阵串行，TEST_DEPLOYED及设备/业务仍未验。
+
 ## 第一优先：原套件复测
 
 沿用验证者已获准的独占MySQL8.0.45/Java21/Maven3.9.11、单Maven容器串行资源限额。先核归档来源SHA和哈希，源码不在VPS修改、不依赖旧项目jar；任务专属schema及无宿主发布端口保持。

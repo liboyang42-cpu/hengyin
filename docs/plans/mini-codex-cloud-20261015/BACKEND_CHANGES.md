@@ -266,3 +266,11 @@ iOS影响：原生WalletCommerce已区别assetPoints非分页与另一个分页p
 精确命令、测试实例/唯一schema、Java21/Maven3.9.11、单Maven容器堆限额、Surefire期望7/0/0/0见[VPS_RETEST_1e403b13.md](VPS_RETEST_1e403b13.md)。新SHA待本地验证协调者复测，不能把Python静态检查/原SHA CI当7项运行通过。测试部署/设备/真实业务/合并仍未签收；本Cloud网络状态不再阻塞授权VPS验证通道。
 
 后续已发布[231项最小VPS测试矩阵](VPS_TEST_MATRIX_1e403b13.md)：7项B03真实MySQL、202普通/H2、22项AI真实MySQL/Redis（计划数非通过数）。AI回环及独占namespace前提已明确，不改测试host校验，不额外纳入旧跳过套件或Claude暂缓功能；运行时与设备未验证项逐条保留。
+
+## B03专用VPS复测签收（已读独立证据）
+
+候选 **1e403b135206844a34219753a36e2dee39c7dd59**。已完整读取独立PR24新HEAD f30057ddc3e7812849121ab0d3d400bc68b0cb0e的[README](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/README.md)和[evidence.json](https://github.com/liboyang42-cpu/hengyin/blob/f30057ddc3e7812849121ab0d3d400bc68b0cb0e/docs/verification/mini-bug-arch-20261015/VPS_EXTERNAL_1e403b13/evidence.json)，逐方法确认7个不同业务case均passed，Surefire **tests=7/failures=0/errors=0/skipped=0**，BUILD SUCCESS、容器退出0/无OOM，源码未改。归档SHA256=1362acc7a4b42b7e3b5972838903d0f66b8da9745ead1292d19791635760b2dd；MySQL8.0.45、Java21/Maven3.9.11、独占内部容器/任务schema，无宿主发布端口。
+
+签收仅B03真实MyBatis/MySQL集成范围：旧快照/缓存后锁读、不同事件并发积分守恒/连续流水、同事件一次奖励、空余额/缺会员拒虚账、应付被冲减至非正时三类推进均拦截、冻结禁止开蓝票、正常正额流程。规则值仍用原stub，并发窗口由测试控制，不是HTTP或真实付款业务验收。原69c281af setup失败证据原样保留，未覆盖或改成业务失败。
+
+BK-ASSET源码修复为SOURCE_READY，新增VPS套件已通过；**TEST_DEPLOYED仍NO**，未部署应用/核运行包绑定。其余普通202项与AI真实存储22项继续待VPS报告，矩阵原计划231不直接写231通过。微信/iOS/业务/迁移/合并/发布层继续未验证。验证者按资源限额串行，不重跑已过B03；失败交C00继续原写者修复。

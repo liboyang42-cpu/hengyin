@@ -183,7 +183,7 @@
       ],
       "claude_boundary": "积分明细/资金中心UI、新领券/储值/提现或支付产品交Claude另行范围；本单不新增业务。",
       "hold_if": "政策单位未定则先证据/方案；需要新唯一索引/DDL或改变鉴权/RBAC另行确认，不改历史迁移。",
-      "state": "原写者夹具最小修复1e403b13已推送，7业务方法保留，待本地VPS复测"
+      "state": "1e403b13真实MySQL七项通过，原失败保留；HTTP/真实业务未验"
     },
     {
       "id": "B04",
@@ -428,7 +428,7 @@
       ],
       "claude_boundary": "输出Claude可读的稳定后端合同，不接手其UI/新功能，不做iOS/Flutter。",
       "hold_if": "",
-      "state": "原69c281af CI成功；1e403b13修复与VPS精确复测交付已发布，本地验证循环持续，未虚报通过"
+      "state": "B03 VPS七项已签收；普通202及AI真实存储22项待独立报告，未部署/设备/业务签收"
     }
   ],
   "parallel_policy": {
@@ -591,7 +591,7 @@
     "validated_candidate_sha": "69c281af1ecc3493db5614b74e494b91c7bb0656",
     "github_ci_run": 38730430052,
     "funds_ci_run": 38730430072,
-    "vps_test_status": "B03_FIXTURE_PATCH_PUSHED_WAITING_LOCAL_RETEST",
+    "vps_test_status": "B03_7_PASS_REMAINING_UNIT_202_AI_22_PENDING",
     "claude_handoff_sha": "fe00f5c6359a641c7cbee42c3dc08daae76ffe41",
     "claude_scope_record": "HANDOFF_SCOPE_fe00f5c.md",
     "cloud_vps_connectivity": "NOT_VERIFIED_INDEPENDENT_NOT_A_DEPENDENCY",
@@ -614,6 +614,17 @@
       "unit_and_H2": 202,
       "ai_mysql_redis": 22,
       "status": "planned_not_passed"
+    },
+    "b03_vps_pass": {
+      "candidate": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "evidence_pr": 24,
+      "evidence_sha": "f30057ddc3e7812849121ab0d3d400bc68b0cb0e",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "business_methods_executed": 7,
+      "result": "PASS"
     }
   }
 }
