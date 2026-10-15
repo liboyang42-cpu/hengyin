@@ -47,7 +47,7 @@ CY-HANDOFF: CODEX。控制协议 `CY-COORD-20261015-v1`；唯一协调者C00/C99
 - **CLAIM-MATERIAL / PR21 CL5**：`uploadOSS.fileName`有源码证明是原OSS对象键，`url`是另签URL；app.chooseImage默认取url，当前claim-sheet未覆盖，merchant-claim把URL作为assetId且固定PHOTO。服务只校验type/id非空及32/255长度、1–10份，无type枚举、对象归属/存在校验；同requestId异指纹业务409由controller转code/msg。历史DDL注释不能作当前业务合同。待原业务确认proofType、上传bizType、审核读取及旧URL兼容的具体fixture；不冻结PHOTO，不要求Claude猜键/先修UI接线。共享上传核心保留Codex；认领专属Service/DTO/Mapper可在合同与精确文件登记后委派Claude，目前未授权其改鉴权/DDL。
 - **AI-DELETE**：现有接口只删日志，safe_text回执仍保留，晚到saveLog可重建；删除屏障/留存变更尚无批准方案，保持DRAFT，不标全量永久删除完成。独立新UI设计可继续。
 - **AI-VOICE**：ASR/TTS独立日池无获准政策；不擅自启用新计费/语音配额。admin Vue的token||0展示会把null误作0，属Claude UI待接，不抢写后台页面。
-- **PR21 CL1–CL4**：已读取d9dc65a全部文档并核PR17/20冲突。精确领取/保留见OWNERSHIP；全roam/utils/pages/club通配申请不批准；event-ops/index.js及NpcChatService等核心仍原所有者。新增举报/徽章页面和专属测试缺精确清单，等待自己的CY-HANDOFF补齐。既有无冲突文件可按登记继续独立设计，不因CL5待定阻塞。
+- **PR21 CL1–CL4**：初读d9dc65a后主动发现并完整读取c6bc220的CY-HANDOFF及PR22 64b485a。CL1是NO_API_CHANGE本机辅助，不是服务端路线开局；10/10专属Node不足以SOURCE_READY，七项问题/冲突已发布[审阅](HANDOFF_REVIEW_CL1.md)。已精确登记七个新独立文件给原Claude CL1，roam入口重叠及全局补丁仍待交接，不整包集成。已核PR17/20冲突。精确领取/保留见OWNERSHIP；全roam/utils/pages/club通配申请不批准；event-ops/index.js及NpcChatService等核心仍原所有者。新增举报/徽章页面和专属测试缺精确清单，等待自己的CY-HANDOFF补齐。既有无冲突文件可按登记继续独立设计，不因CL5待定阻塞。
 - **iOS**：已主动查询chengyin-ios开放PR与CY标记，暂无实际交付；已有多个native分支，活动所有者未知，不回收、不选分支，不声称已通知/接收。I01–I11影响使用上述同一合同，原生适配/Swift/设备结果须由其实际SHA交付。
 - **PR17/20**：当前不整包集成。PR20有新DDL和漫游/订单/账本重叠，PR17不同父链且有额外隐私工作，保留原作者；作者的成功/部署声明不算PR18证据。
 
