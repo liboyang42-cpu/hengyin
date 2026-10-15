@@ -1,3 +1,5 @@
+> 第三队验证状态：PR72/2babbe28因212 another_build_holds_lock返回75，containerId=null，执行0；NOT_RUN，不是源码失败。仅本地按正常准入排队，Cloud不替代。两域EXHAUSTED、writer0，不凑6线。
+
 > 最新口径：第三队6条既有源码/旧测试＋PR70 TASKS指定2条新回归均已授权，各归STAT/GROW原child；“新MySqlIT待扩权”限制已纠正撤回。PR72源码已冻结2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd，当前writer=0/NOT_RUN，实际验证交本地。
 
 > 新增第三队：ANALYTICS_THIRD真实thread为01a140c1-6379-71fd-8711-f0b55889c01b，已读PR16 ACK6199048354：/root/stat与/root/grow分别领取AN01/AN02，只有THIRD_CLOUD_HANDOFF.json中的AN01/AN02精确路径保留；实际thread/child ACK后直接按清单单写者开发。勿把analytics目录、旧foundation B文件或未证实事项泛派给新队。原两队及VPS分工继续，C00仍唯一全局源账。

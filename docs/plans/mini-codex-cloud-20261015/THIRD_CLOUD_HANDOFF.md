@@ -1,3 +1,9 @@
+## 第三队验证准入纠正：NOT_RUN，等待共享锁
+
+第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 尚未编译/测试：212守卫因 `another_build_holds_lock` 返回75、containerId=null，本次执行0项，保持 SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。两普通类24与真MySQL11均只是源码声明；资源排队不算源码失败或通过。本地等待正常准入，Cloud不替代验证、不绕锁、不干预其他任务。第三队当前两域EXHAUSTED、实际writer=0，不凑6线或扩产品。
+
+C00已完整读回PR24@8cfa51c099de362540d67cff71225e1ef778d6a4的[README](https://github.com/liboyang42-cpu/hengyin/blob/8cfa51c099de362540d67cff71225e1ef778d6a4/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)和admission-refused.json，已替换先前“执行中”记录。CORE157、EXTRA56针对性通过及各自旧失败历史维持独立，不转给第三候选。
+
 # 第三Cloud两条独立开发线（精确授权）
 
 ANALYTICS第三队真实thread和两child已收到启动ACK，实际归属如下。用户由本地协调者给独立启动说明；C00独占全局源账，本地协调者总控新队源码调度与VPS。公共基线`0d63043ad06775bc3dc52fb925620ef36d1081a7`。新队在PR16回真实thread/child/branch/base和逐路径ACK后，清单内授权立即生效，无需再次general批准；原两队不得编辑这些保留路径。两条真实源码开发线，非测试/复核工作，不凑6/50。
