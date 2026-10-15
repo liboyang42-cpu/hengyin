@@ -2380,7 +2380,7 @@
   "inventory_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
   "inventory_note": "91classes/510 source declarations preserved after fixture-only fixes. 83/483 failed at f7,8gated/JDBC deferred. New0d source not tested; focus8/157 source declarations. C06_29 one method renamed versionedFrozenObject.",
   "execution_owner": "LOCAL_VPS_COORDINATOR/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-  "status": "NOT_RUN_VPS_HANDOFF",
+  "status": "CORE_0d_TARGETED157_PASS_LOCAL_REPORTED_REMAINDER_UNVERIFIED",
   "repair_round_1": "VPS_REPAIR_ROUND_1.json",
   "latest_regression_history": {
     "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
@@ -2400,7 +2400,46 @@
     "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
     "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
     "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-    "new_candidate_verification": "NOT_RUN",
-    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
+    "new_candidate_verification": "0d targeted157 PASS local reported; no full483 rerun",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches",
+    "record_kind": "HISTORICAL_F7_FAILURE_RETAINED"
+  },
+  "current_targeted_vps_result": {
+    "candidate_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "result": "TARGETED_PASS",
+    "location": "VPS",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 8,
+    "tests": 157,
+    "passed": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "guard_exit_code": 0,
+    "guard_state": "completed",
+    "resource_entry": "212 guard and shared lock, local verifier execution",
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "source_diff_scope": "f7..0d only8 test classes and repair docs, no production changes",
+    "closed_original_failed_methods": 13,
+    "full_483_rerun": false,
+    "unchanged_classes_not_rerun": 75,
+    "evidence_pr": 24,
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/",
+    "evidence_commit": null,
+    "C00_read_public_evidence": false,
+    "evidence_level": "Direct delegated actual VPS result accepted at targeted level; raw public report publication/readback pending",
+    "historical_result_retained": "f7e0e523:83 classes483 tests470pass/5fail/8error/0skip",
+    "not_accepted": [
+      "new-SHA full483 execution",
+      "8 deferred gated/JDBC classes",
+      "real MySQL/Redis",
+      "runtime HTTP real identities",
+      "WeChat/iOS devices",
+      "merge",
+      "deployment",
+      "business migrations"
+    ],
+    "cloud_manual_runs": 0
   }
 }

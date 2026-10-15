@@ -20,3 +20,9 @@ C01_51 gate=true、loopback强要求，nested XML单列；C04_19门禁=1用MYBAT
 ## 首轮VPS483失败与原作者串行修复
 
 已完整读回PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee公开README/summary：f7e源码编译PASS，但83类483项470PASS/5FAIL/8ERROR/0skip为FAIL，8 gated/JDBC另未测。C03/C04/C06原写者依次占唯一修复槽，前人停写才交下一人；新公共链b423114b→603dab12→最终 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，8测试文件及证据修正，生产零变更。nullable Long/mock求值/HTTP异常边界/精确现金原行/CAS当前读夹具问题未通过弱化断言掩盖。新SHA未编译/测试，NOT_RUN。完整13方法历史、原堆栈引用、157源声明聚焦清单见VPS_REPAIR_ROUND_1.json/md。本地独占验证，Cloud无手动运行/CI/环境替代，其他独立源继续。
+
+## CORE针对性VPS复测签收（157项）
+
+本地唯一VPS验证者实际回报：CORE `0d63043ad06775bc3dc52fb925620ef36d1081a7` 的8个修复类157项全部PASS，0失败/0错误/0跳过，exact XML类集合和新鲜度已核，212 guard exit0/completed。原13个失败方法按针对性复测闭环，修复槽现可领取下一真实授权项；其他独占源码不等验证。此次只有8类157实际执行，未重跑75个未修改类，不称新483全跑通过；f7的83类483项470PASS/5FAIL/8ERROR原历史保留。f7..0d仅8测试类与修复说明，无生产变化。
+
+证据层级：本轮先按本地直接实际回报签收TARGETED_PASS；PR24新VPS_CORE_0d63043a证据尚待发布及C00读回，未编造公开commit或原始日志哈希。C00/Cloud未手动测试。8个gated/JDBC、真MySQL/Redis、运行时HTTP真实身份、设备、迁移/部署/合并仍未验收；EXTRA e72两类56项正在本地串行复测，未接结果；第三PR72候选2babbe28仍独立NOT_RUN，均不混本次成绩。

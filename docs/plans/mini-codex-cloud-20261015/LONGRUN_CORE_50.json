@@ -5109,5 +5109,44 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ]
     }
-  }
+  },
+  "current_targeted_vps_result": {
+    "candidate_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "result": "TARGETED_PASS",
+    "location": "VPS",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 8,
+    "tests": 157,
+    "passed": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "guard_exit_code": 0,
+    "guard_state": "completed",
+    "resource_entry": "212 guard and shared lock, local verifier execution",
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "source_diff_scope": "f7..0d only8 test classes and repair docs, no production changes",
+    "closed_original_failed_methods": 13,
+    "full_483_rerun": false,
+    "unchanged_classes_not_rerun": 75,
+    "evidence_pr": 24,
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/",
+    "evidence_commit": null,
+    "C00_read_public_evidence": false,
+    "evidence_level": "Direct delegated actual VPS result accepted at targeted level; raw public report publication/readback pending",
+    "historical_result_retained": "f7e0e523:83 classes483 tests470pass/5fail/8error/0skip",
+    "not_accepted": [
+      "new-SHA full483 execution",
+      "8 deferred gated/JDBC classes",
+      "real MySQL/Redis",
+      "runtime HTTP real identities",
+      "WeChat/iOS devices",
+      "merge",
+      "deployment",
+      "business migrations"
+    ],
+    "cloud_manual_runs": 0
+  },
+  "repair_slot_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED"
 }

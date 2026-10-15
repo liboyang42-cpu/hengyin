@@ -1,3 +1,9 @@
+## CORE针对性VPS复测签收（157项）
+
+本地唯一VPS验证者实际回报：CORE `0d63043ad06775bc3dc52fb925620ef36d1081a7` 的8个修复类157项全部PASS，0失败/0错误/0跳过，exact XML类集合和新鲜度已核，212 guard exit0/completed。原13个失败方法按针对性复测闭环，修复槽现可领取下一真实授权项；其他独占源码不等验证。此次只有8类157实际执行，未重跑75个未修改类，不称新483全跑通过；f7的83类483项470PASS/5FAIL/8ERROR原历史保留。f7..0d仅8测试类与修复说明，无生产变化。
+
+证据层级：本轮先按本地直接实际回报签收TARGETED_PASS；PR24新VPS_CORE_0d63043a证据尚待发布及C00读回，未编造公开commit或原始日志哈希。C00/Cloud未手动测试。8个gated/JDBC、真MySQL/Redis、运行时HTTP真实身份、设备、迁移/部署/合并仍未验收；EXTRA e72两类56项正在本地串行复测，未接结果；第三PR72候选2babbe28仍独立NOT_RUN，均不混本次成绩。
+
 # 第三队当前交付与授权口径
 
 最新授权口径纠正：PR70 TASKS原本明确授予两份专属新回归，STAT `/root/stat` 独占 `business/forward20261015/AnalyticsDateContractTest.java`（尚未创建，保留名字即可）；GROW `/root/grow` 独占 `business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`（已在PR72交付）。完整路径均位于 `chengyinhub-admin/src/test/java/com/chengyinhub/`。六条统计仅指既有源码/旧测试，另有这两条新增回归，共8条精确路径。此前C00“尚未授写/待扩权”的记账限制已撤回，这是登记遗漏纠正，不是第三队擅自扩权，不需再批准或为凑文件重写测试。无其他Mapper/DDL/鉴权范围扩展。

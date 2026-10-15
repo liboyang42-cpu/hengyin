@@ -42,7 +42,7 @@
         "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
         "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite$9(OWN_C03_22Test.java:113)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -62,7 +62,7 @@
         "at com.chengyinhub.business.longrun.OWN_C03_22Test.copy(OWN_C03_22Test.java:124)",
         "at com.chengyinhub.business.longrun.OWN_C03_22Test.lambda$chapterInsertMustSucceedAndGenerateIdentityBeforeNodes$7(OWN_C03_22Test.java:101)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -76,7 +76,7 @@
         "at com.chengyinhub.web.controller.api.ApiTopicController.updateTopic(ApiTopicController.java:611)",
         "at com.chengyinhub.business.longrun.OWN_C03_24Test.mediaFailureAfterWriteRemainsUncertain(OWN_C03_24Test.java:97)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -91,7 +91,7 @@
         "-> at com.chengyinhub.business.service.impl.MerchantReferralBountyService.tryActivate(MerchantReferralBountyService.java:167)",
         "at com.chengyinhub.business.longrun.OWN_C04_21Test.bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock(OWN_C04_21Test.java:181)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -106,7 +106,7 @@
         "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
         "at com.chengyinhub.business.longrun.OWN_C04_22Test.lateAcceptedAndAmbiguousReturnOriginalTerminalOrFrozenFacts(OWN_C04_22Test.java:24)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -121,7 +121,7 @@
         "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
         "at com.chengyinhub.business.longrun.OWN_C04_22Test.unchangedProcessingReceiptCanLegitimatelyReportZeroAffectedRows(OWN_C04_22Test.java:51)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -136,7 +136,7 @@
         "at com.chengyinhub.business.longrun.OWN_C04_22Test$Fixture.<init>(OWN_C04_22Test.java:112)",
         "at com.chengyinhub.business.longrun.OWN_C04_22Test.staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot(OWN_C04_22Test.java:63)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -151,7 +151,7 @@
         "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
         "at com.chengyinhub.business.longrun.OWN_C06_25Test.journeyReceiptWriteFailureStillThrows(OWN_C06_25Test.java:82)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -166,7 +166,7 @@
         "at com.chengyinhub.business.mapper.TopicRouteSessionMapper$MockitoMock$1853449730.updateActionResponse(Unknown Source)",
         "at com.chengyinhub.business.longrun.OWN_C06_25Test.checkReceiptWriteFailureStillThrows(OWN_C06_25Test.java:77)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -182,7 +182,7 @@
         "at com.chengyinhub.business.longrun.OWN_C06_29Test.read(OWN_C06_29Test.java:40)",
         "at com.chengyinhub.business.longrun.OWN_C06_29Test.emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled(OWN_C06_29Test.java:59)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -196,7 +196,7 @@
         "-> at com.chengyinhub.business.service.impl.CashWithdrawServiceImpl.withdraw(CashWithdrawServiceImpl.java:89)",
         "at com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.bothLegsHandTheCombinedFrozenAmountToTheAtomicDeduction(BothWithdrawalLegsRejectPlayerCooldownTest.java:186)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -215,7 +215,7 @@
         "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.command(GameSessionRuntimeServiceImpl.java:294)",
         "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.existingPhotoSubmissionReplayDoesNotReverifyStorage(GameSessionRuntimeServiceImplTest.java:1312)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     },
     {
@@ -227,7 +227,7 @@
       "relevant_frames": [
         "at com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.concurrentRoleInsertCollisionReadsActiveWinnerAndCurrentRevision(GameSessionRuntimeServiceImplTest.java:1750)"
       ],
-      "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RETESTED",
+      "repair_status": "TARGETED_VPS_PASS_REPORTED_LOCAL_RAW_PUBLICATION_PENDING",
       "classification": "FIXTURE_OR_REAL_HTTP_BOUNDARY_MISMATCH_NO_PRODUCTION_CHANGE_JUSTIFIED"
     }
   ],
@@ -256,7 +256,7 @@
   ],
   "repair_slot": {
     "limit": 1,
-    "current_status": "IDLE_SOURCE_DELIVERED_LOCAL_RETEST_PENDING",
+    "current_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED",
     "overlap": "none; each original writer stopped before next gained write rights",
     "other_five": "independent authorized development continues; actual tasks required, no fabricated full utilization"
   },
@@ -267,60 +267,68 @@
       "source_test_annotations": 4,
       "owner": "CORE/C03",
       "repair": "nullable Long stub",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 4
     },
     {
       "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
       "source_test_annotations": 6,
       "owner": "CORE/C03",
       "repair": "real global exception advice boundary",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 6
     },
     {
       "class_name": "com.chengyinhub.business.longrun.OWN_C04_21Test",
       "source_test_annotations": 7,
       "owner": "CORE/C04",
       "repair": "precise two current reads, preserve ordering/rollback",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 7
     },
     {
       "class_name": "com.chengyinhub.business.longrun.OWN_C04_22Test",
       "source_test_annotations": 3,
       "owner": "CORE/C04",
       "repair": "precompute mocked Frozen/Admission",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 3
     },
     {
       "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
       "source_test_annotations": 5,
       "owner": "CORE/C06",
       "repair": "noninvoking restub, preserve receipt-write error",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 5
     },
     {
       "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
       "source_test_annotations": 4,
       "owner": "CORE/C06",
       "repair": "minimal valid schemaVersion1, no validator change",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 4
     },
     {
       "class_name": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
       "source_test_annotations": 6,
       "owner": "CORE/C04",
       "repair": "actual inserted cash original, preserve real admission/debit",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 6
     },
     {
       "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
       "source_test_annotations": 122,
       "owner": "CORE/C06",
       "repair": "specific CAS-success and current-lock fixtures",
-      "status": "NOT_RUN_AFTER_FIX"
+      "status": "TARGETED_VPS_PASS_REPORTED_LOCAL",
+      "reported_actual_tests": 122
     }
   ],
   "source_declared_focus_count": 157,
-  "count_note": "Source declarations not executed count; 8 old failed classes retained. C06_29 method emptyFrozenObject renamed versionedFrozenObject, no method deletion.",
+  "count_note": "8 focus classes source declarations157 now match local reported actual157 execution, failures/errors/skips0; public raw receipt pending. Not a full483 rerun.",
   "command_template": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_22Test,com.chengyinhub.business.longrun.OWN_C03_24Test,com.chengyinhub.business.longrun.OWN_C04_21Test,com.chengyinhub.business.longrun.OWN_C04_22Test,com.chengyinhub.business.longrun.OWN_C06_25Test,com.chengyinhub.business.longrun.OWN_C06_29Test,com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest,com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest test",
   "command_is": "Documentation for local approved 212 runner only; not executed by Cloud",
   "deferred_classes": [
@@ -367,13 +375,13 @@
   ],
   "truth_correction": "JourneyRules {} without schemaVersion is invalid by existing validator. Corrected test/evidence to minimal schemaVersion1; production validator unchanged.",
   "not_accepted": [
-    "new SHA compile",
-    "new SHA focused/full regression",
+    "new-SHA full483 execution",
+    "8 deferred gated/JDBC classes",
     "real MySQL/Redis",
-    "runtime HTTP identity acceptance",
-    "devices",
+    "runtime HTTP real identities",
+    "WeChat/iOS devices",
     "merge",
-    "deploy",
+    "deployment",
     "business migrations"
   ],
   "manual_runs_after_repair": 0,
@@ -389,5 +397,44 @@
     "result": "FAIL_REPORTED_PUBLIC_RAW_EVIDENCE_PENDING_READBACK",
     "repair_owner": "EXTRA6/E02 only; external coordinator controls single repair slot",
     "note": "C00 does not edit EXTRA sources; new repairs/new source SHA independent of CORE0d. Local already notified original E02."
-  }
+  },
+  "current_targeted_result": {
+    "candidate_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "result": "TARGETED_PASS",
+    "location": "VPS",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 8,
+    "tests": 157,
+    "passed": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "guard_exit_code": 0,
+    "guard_state": "completed",
+    "resource_entry": "212 guard and shared lock, local verifier execution",
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "source_diff_scope": "f7..0d only8 test classes and repair docs, no production changes",
+    "closed_original_failed_methods": 13,
+    "full_483_rerun": false,
+    "unchanged_classes_not_rerun": 75,
+    "evidence_pr": 24,
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/",
+    "evidence_commit": null,
+    "C00_read_public_evidence": false,
+    "evidence_level": "Direct delegated actual VPS result accepted at targeted level; raw public report publication/readback pending",
+    "historical_result_retained": "f7e0e523:83 classes483 tests470pass/5fail/8error/0skip",
+    "not_accepted": [
+      "new-SHA full483 execution",
+      "8 deferred gated/JDBC classes",
+      "real MySQL/Redis",
+      "runtime HTTP real identities",
+      "WeChat/iOS devices",
+      "merge",
+      "deployment",
+      "business migrations"
+    ],
+    "cloud_manual_runs": 0
+  },
+  "manual_runs_after_repair_meaning": "C00/Cloud only; local VPS157 targeted execution recorded separately"
 }
