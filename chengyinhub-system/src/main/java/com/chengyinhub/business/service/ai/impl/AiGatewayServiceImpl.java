@@ -232,7 +232,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
             retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
-            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
         if (secOut != null)
@@ -242,13 +242,15 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
                 saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
                         0, latencyMs, tokenIn, tokenOut);
-                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
+                throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                        AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
             }
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
             retainQuota(memberId,bizType,reservation,"OUTPUT_REJECTED");
-            throw new AiServiceException("生成内容未通过安全检测,请调整后重试");
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                    AiServiceException.Reason.UNKNOWN, "生成内容未通过安全检测,请调整后重试");
         }
 
         // 5. 落日志
