@@ -51,6 +51,7 @@
     <cover-view class="location-btn" bindtap="requestLocation" aria-role="button" aria-label="定位到当前位置" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
       <cover-view class="location-btn__label">定位</cover-view>
     </cover-view>
+    <cover-view wx:if="{{locationHint && !locationError}}" class="smap-location-hint">{{locationHint}}</cover-view>
     <cover-view wx:if="{{locationError}}" class="smap-location-error">
       <cover-view class="smap-location-error__message">{{locationMessage}}</cover-view>
       <cover-view class="smap-location-error__action" bindtap="recoverLocation" aria-role="button" aria-label="{{locationAction === 'open-setting' ? '打开设置开启定位权限' : '重新定位'}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{locationAction === 'open-setting' ? '去设置' : '重试定位'}}</cover-view>

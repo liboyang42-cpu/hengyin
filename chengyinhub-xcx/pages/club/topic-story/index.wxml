@@ -122,7 +122,7 @@
         <block wx:if="{{answer.hints.length}}">
           <view class="ans__label">提示</view>
           <view class="ans__block ans__block--hints">
-            <view wx:for="{{answer.hints}}" wx:key="*this" class="ans__text">{{index + 1}} · {{item}}</view>
+            <view wx:for="{{answer.hints}}" wx:key="index" class="ans__text">{{index + 1}} · {{item}}</view>
           </view>
         </block>
         <block wx:if="{{answer.feedbackText}}">

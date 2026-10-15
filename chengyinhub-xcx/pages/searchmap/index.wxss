@@ -53,6 +53,14 @@
   font-size:var(--cy-type-caption);
 }
 .smap-location-error__message{ flex:1; }
+.smap-location-hint{
+  position:absolute; left:var(--cy-space-4); right:var(--cy-space-4);
+  top:calc(var(--cy-space-8) + var(--cy-space-4) + env(safe-area-inset-top)); z-index:6;
+  padding:var(--cy-space-2) var(--cy-space-3);
+  background:var(--cy-color-bg-surface); border:1rpx solid var(--cy-color-border-strong);
+  border-radius:var(--cy-radius-md); color:var(--cy-color-text-secondary);
+  font-size:var(--cy-type-caption);
+}
 .smap-location-error__action{
   flex:none; min-height:88rpx; padding:0 var(--cy-space-2);
   display:flex; align-items:center;

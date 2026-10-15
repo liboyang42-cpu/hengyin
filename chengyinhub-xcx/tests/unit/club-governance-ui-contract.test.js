@@ -24,6 +24,7 @@ function createHarness(source) {
       if (request === '../../../utils/response-shape.js') {
         return require(path.join(ROOT, 'utils/response-shape.js'))
       }
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,

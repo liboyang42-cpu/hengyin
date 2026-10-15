@@ -6,6 +6,7 @@ const app = getApp();
 const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
 const { pickLocation, getCurrentLocation } = require('../../../utils/location/location-manager.js');
+const lastLocation = require('../../../utils/location/last-location.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { appendByIndex } = require('../../../utils/list-append.js');
 const {
@@ -102,8 +103,8 @@ Page({
     drawerSnapping: false,
     statusBarHeight: 44,
     navBarHeight: 44,
-    mapLatitude: 31.2304,
-    mapLongitude: 121.4737,
+    mapLatitude: lastLocation.FIXED.latitude,
+    mapLongitude: lastLocation.FIXED.longitude,
     mapScale: 14,
 
     // 新增：页面是否正在刷新
@@ -1033,10 +1034,16 @@ Page({
     var that = this;
     getCurrentLocation({
       onSuccess: function (res) {
+        lastLocation.save(res);
         that.setData({
           mapLatitude: res.latitude,
           mapLongitude: res.longitude
         });
+      },
+      onFail: function () {
+        // 兜底：上次成功位置 → 固定坐标（本页无地图，不展示提示）
+        var fb = lastLocation.resolve();
+        that.setData({ mapLatitude: fb.latitude, mapLongitude: fb.longitude });
       }
     });
   },
