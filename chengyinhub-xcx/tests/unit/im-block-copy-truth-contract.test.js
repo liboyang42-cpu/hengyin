@@ -26,13 +26,14 @@ test('拉黑文案不再承诺「设置里解除」', () => {
   assert.doesNotMatch(all, /设置里解除|随时可以在设置/, '没有这个入口,不许写')
   assert.match(all, /对方不会收到拉黑提示/, '真实后果要保留')
   // RV-p6 #3:「需要时请联系客服」同样做不到 —— 客服端只有 adminUnblock,只删平台级拉黑(memberId=0),
-  // 解不了「我拉黑了谁」。在有黑名单列表接口 + 解除入口之前,只能写真话。
-  assert.match(all, /拉黑后暂不支持解除/, '要如实告知:目前不能解除')
+  // 解不了「我拉黑了谁」。
+  // BL-61:会话「更多」里已有「解除拉黑」(POST /api/im/unblock),文案只指向这个真实入口;设置页仍无黑名单。
+  assert.match(all, /可在本会话「更多」里解除拉黑/, '要如实指向真实的解除入口')
+  assert.doesNotMatch(all, /拉黑后暂不支持解除/, '已有解除入口,旧说法不再成立')
   assert.doesNotMatch(all, /联系客服/, '客服也解不了用户之间的拉黑,不许把人引过去')
 })
 
-test('负控锚点:解除入口真的不存在时,文案里的承诺才是假的', () => {
-  // 若将来补了黑名单页,这个测试会失败 —— 那时应把文案改回「可在设置里解除」并删掉本契约。
+test('解除入口只在私信会话页:文案说「本会话「更多」里」必须真有调用方', () => {
   const files = []
   const walk = (dir) => {
     for (const name of fs.readdirSync(dir)) {
@@ -45,5 +46,6 @@ test('负控锚点:解除入口真的不存在时,文案里的承诺才是假的
   walk(path.join(ROOT, 'pages'))
   walk(path.join(ROOT, 'subpackageB'))
   const unblockCallers = files.filter((f) => /api\/im\/unblock/.test(fs.readFileSync(f, 'utf8')))
-  assert.deepEqual(unblockCallers, [], '发现了解除入口调用方,文案需要同步改口')
+    .map((f) => path.relative(ROOT, f).split(path.sep).join('/'))
+  assert.deepEqual(unblockCallers, ['subpackageB/pages/im/chat/index.js'], '解除入口应只在会话页「更多」里;别处新增入口需同步改文案')
 })
