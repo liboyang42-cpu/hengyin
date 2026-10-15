@@ -39,6 +39,7 @@ class CouponSourceGrantTest {
         verify(receipts, never()).selectCouponForUpdate(any());
         verify(histories, never()).insertSmsCouponHistory(any());
         verify(coupons, never()).incrementReceiveCount(any());
+        verify(coupons, never()).tryReserveIssuableCoupon(any());
     }
     @Test
     void legacyDropWithoutIntentIsUnknownAndCannotBlindlyGrant() {
@@ -64,18 +65,18 @@ class CouponSourceGrantTest {
     void successfulGrantMustPersistItsOriginalHistoryReceipt() {
         SmsCoupon coupon = new SmsCoupon(); coupon.setId(8L); coupon.setPublishCount(2L);
         when(receipts.selectCouponForUpdate(8L)).thenReturn(coupon);
-        when(coupons.tryIncrementReceiveCount(8L)).thenReturn(1);
+        when(coupons.tryReserveIssuableCoupon(8L)).thenReturn(1);
         when(histories.insertSmsCouponHistory(any())).thenAnswer(i -> { ((SmsCouponHistory)i.getArgument(0)).setId(10L); return 1; });
         when(receipts.markDelivered("reward_drop", 9L, 10L)).thenReturn(1);
         assertEquals(10L, service.grantCouponBySource(7L, 8L, "reward_drop", 9L));
-        verify(coupons).tryIncrementReceiveCount(8L);
+        verify(coupons).tryReserveIssuableCoupon(8L);
         verify(receipts).markDelivered("reward_drop", 9L, 10L);
     }
     @Test
     void missingReceiptWriteThrowsForTransactionRollback() {
         SmsCoupon coupon = new SmsCoupon(); coupon.setId(8L); coupon.setPublishCount(2L);
         when(receipts.selectCouponForUpdate(8L)).thenReturn(coupon);
-        when(coupons.tryIncrementReceiveCount(8L)).thenReturn(1);
+        when(coupons.tryReserveIssuableCoupon(8L)).thenReturn(1);
         when(histories.insertSmsCouponHistory(any())).thenAnswer(i -> { ((SmsCouponHistory)i.getArgument(0)).setId(10L); return 1; });
         assertThrows(IllegalStateException.class, () -> service.grantCouponBySource(7L, 8L, "reward_drop", 9L));
     }

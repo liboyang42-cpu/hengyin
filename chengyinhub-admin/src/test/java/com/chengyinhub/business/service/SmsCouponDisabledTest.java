@@ -104,13 +104,14 @@ class SmsCouponDisabledTest {
         assertNull(service.grantCouponWithReceipt(5001L, coupon(3)));
 
         verify(coupons, never()).tryIncrementReceiveCount(any());
+        verify(coupons, never()).tryReserveIssuableCoupon(any());
         verify(coupons, never()).incrementReceiveCount(any());
         verify(histories, never()).insertSmsCouponHistory(any());
     }
 
     @Test
     void activeCouponIsGrantedWithoutStaticQrOrObjectStorage() {
-        when(coupons.tryIncrementReceiveCount(30L)).thenReturn(1);
+        when(coupons.tryReserveIssuableCoupon(30L)).thenReturn(1);
         when(histories.insertSmsCouponHistory(any())).thenAnswer(invocation -> {
             SmsCouponHistory granted = invocation.getArgument(0);
             assertNull(granted.getQrcodeUrl());
@@ -141,6 +142,7 @@ class SmsCouponDisabledTest {
         assertNull(service.grantCouponWithReceipt(5001L, coupon(4)),
                 "停发的券不得再新增发放");
         verify(coupons, never()).tryIncrementReceiveCount(any());
+        verify(coupons, never()).tryReserveIssuableCoupon(any());
         verify(histories, never()).insertSmsCouponHistory(any());
 
         when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
