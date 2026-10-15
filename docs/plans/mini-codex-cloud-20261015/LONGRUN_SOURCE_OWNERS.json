@@ -2664,6 +2664,18 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ]
+    },
+    "verification_progress": {
+      "candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "ordinary_classes": 2,
+      "ordinary_source_declarations": 24,
+      "ordinary_status": "RUNNING_VPS_212_REPORTED_BY_LOCAL",
+      "ordinary_result": null,
+      "mysql_source_declarations": 11,
+      "mysql_status": "PENDING_SEPARATE_REAL_MYSQL_VALIDATION",
+      "actual_executed_tests": null,
+      "no_inherited_results": true
     }
   }
 }

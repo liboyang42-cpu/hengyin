@@ -5108,6 +5108,18 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ]
+    },
+    "verification_progress": {
+      "candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "ordinary_classes": 2,
+      "ordinary_source_declarations": 24,
+      "ordinary_status": "RUNNING_VPS_212_REPORTED_BY_LOCAL",
+      "ordinary_result": null,
+      "mysql_source_declarations": 11,
+      "mysql_status": "PENDING_SEPARATE_REAL_MYSQL_VALIDATION",
+      "actual_executed_tests": null,
+      "no_inherited_results": true
     }
   },
   "current_targeted_vps_result": {
@@ -5132,21 +5144,113 @@
     "unchanged_classes_not_rerun": 75,
     "evidence_pr": 24,
     "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/",
-    "evidence_commit": null,
-    "C00_read_public_evidence": false,
-    "evidence_level": "Direct delegated actual VPS result accepted at targeted level; raw public report publication/readback pending",
+    "evidence_commit": "0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7",
+    "C00_read_public_evidence": true,
+    "evidence_level": "C00 fully read public README/summary at exact independent evidence SHA; per-class fresh XML/log/source hashes retained, raw logs on VPS",
     "historical_result_retained": "f7e0e523:83 classes483 tests470pass/5fail/8error/0skip",
     "not_accepted": [
-      "new-SHA full483 execution",
-      "8 deferred gated/JDBC classes",
+      "new-SHA full matrix execution",
+      "deferred real database classes",
       "real MySQL/Redis",
       "runtime HTTP real identities",
-      "WeChat/iOS devices",
+      "devices",
       "merge",
       "deployment",
       "business migrations"
     ],
-    "cloud_manual_runs": 0
+    "cloud_manual_runs": 0,
+    "previous_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/summary.json",
+    "source_archive_sha256": "1b863845183aedeefc9e7ecabb911e8d77265784603b7935e13c985efb319b13",
+    "log_sha256": "20f136760c990852114d808df8a03a0c5ea093c94b6cffd35beaf84668ee163a",
+    "started_at": "2026-10-15T20:23:49.505347+00:00",
+    "finished_at": "2026-10-15T20:26:34.035720+00:00",
+    "class_reports": [
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_22Test.xml",
+        "sha256": "3e76229aab0d1d7796c1d6e2be9105702dad595705d2f079cf90231a15d846b4",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_24Test.xml",
+        "sha256": "27a0ee917162c6bae313d3ae9467cbdce69b569220baf531d7be50fac028f68c",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_21Test.xml",
+        "sha256": "dbdfc52641b0e32c6464c854d79b78fb04a0a1798a9f96422a5a6fc84a9130ea",
+        "fresh": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_22Test.xml",
+        "sha256": "1f9e13b11c54d0d00267f7923d63f69ce5845c5538b974748d23d5246b2dcd28",
+        "fresh": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_25Test.xml",
+        "sha256": "bf67e6b62989cbddfa407e789640c6178ec0683f9807fa25f1eb164a16305176",
+        "fresh": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_29Test.xml",
+        "sha256": "b841b81d8fc832b04d7a4927efc5d1e6f9ff8615bb1705ee51a61addb0b9fa11",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.xml",
+        "sha256": "a8404d0abceee4c369408022e65b7e731158b3fd8910729fed1c6be0d3e137aa",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.xml",
+        "sha256": "4b6d003a0e7897ed1bd8b67238537ec63588b2f3153ffc9fc62aae5b48cfeb69",
+        "fresh": true,
+        "tests": 122,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "full_matrix_rerun": false,
+    "source_repairs": "Original-author test fixture-only repairs, no production changes in repair diff"
   },
   "repair_slot_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED"
 }
