@@ -814,14 +814,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                                                               CommunityPostRequests.NotificationPreferences request) {
         requirePrincipal(memberId);
         if (request == null) throw error("缺少通知偏好", 400);
-        Map<String, Object> current = notificationPreferences(memberId);
-        boolean interaction = request.getInteractionEnabled() == null
-                ? Boolean.TRUE.equals(current.get("interactionEnabled")) : request.getInteractionEnabled();
-        boolean mention = request.getMentionEnabled() == null
-                ? Boolean.TRUE.equals(current.get("mentionEnabled")) : request.getMentionEnabled();
-        boolean social = request.getSocialEnabled() == null
-                ? Boolean.TRUE.equals(current.get("socialEnabled")) : request.getSocialEnabled();
-        if (mapper.upsertNotificationPreferences(memberId, interaction, mention, social, new Date()) <= 0) {
+        if (mapper.upsertNotificationPreferences(memberId, request.getInteractionEnabled(),
+                request.getMentionEnabled(), request.getSocialEnabled(), new Date()) < 0) {
             throw error("通知偏好保存失败", 500);
         }
         return notificationPreferences(memberId);

@@ -282,9 +282,9 @@ public interface CommunityPostMapper {
                                                   @Param("limit") int limit);
     Map<String, Object> selectNotificationPreferences(@Param("memberId") Long memberId);
     int upsertNotificationPreferences(@Param("memberId") Long memberId,
-                                      @Param("interactionEnabled") boolean interactionEnabled,
-                                      @Param("mentionEnabled") boolean mentionEnabled,
-                                      @Param("socialEnabled") boolean socialEnabled,
+                                      @Param("interactionEnabled") Boolean interactionEnabled,
+                                      @Param("mentionEnabled") Boolean mentionEnabled,
+                                      @Param("socialEnabled") Boolean socialEnabled,
                                       @Param("now") Date now);
     int markNotificationRead(@Param("id") Long id, @Param("memberId") Long memberId,
                              @Param("now") Date now);
