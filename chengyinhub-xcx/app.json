@@ -80,6 +80,7 @@
       "name": "subpackageClub",
       "pages": [
         "apply/index",
+        "badges/index",
         "create/index",
         "customer-detail/index",
         "customers/index",

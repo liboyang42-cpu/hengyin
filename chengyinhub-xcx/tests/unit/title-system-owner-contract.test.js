@@ -59,6 +59,7 @@ const EXPECTED_NAV_ROUTES = [
   'pages/club/topic-detail/index',
   'pages/club/topic-story/index',
   'pages/club/group-code/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/index/index', 'pages/topic/merchantinfo/merchantinfo',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
@@ -115,6 +116,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/publish/activity/index',
   'pages/publish/templateadd/templateadd',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/pricing/index',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-08-30 用户裁决：这 5 个任务页使用「返回独立行 + L1 大标题」。
@@ -248,8 +250,9 @@ function assertTitleInventory(readSource = read) {
      cy-page-title 的普通玩家二级页 ⇒ 131+1 = 132;custom 计数同步 132(按实测重取)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
     /* 2026-10-15 +3:官方路线列表/详情、积分明细三页,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 130+3 = 133(按实测重取)。 */
-  assert.equal(rows.length, 133, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 133)
+  /* 2026-10-15 +1:CL3 俱乐部勋章页 pages/club/badges,custom 导航 + cy-nav-bar + cy-page-title ⇒ 133+1 = 134(按实测重取)。 */
+  assert.equal(rows.length, 134, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 134)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

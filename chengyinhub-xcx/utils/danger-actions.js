@@ -276,6 +276,20 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 权限(逻辑不在本次改动范围,只统一确认文案) =====
+  // N2 俱乐部自建勋章:服务端没有撤回颁发的接口,颁了就收不回 —— 按不可逆登记。
+  'club.badge.grant': {
+    irreversible: true,
+    title: '把「{name}」颁给 {member}?',
+    content: '颁发后对方会拿到这枚俱乐部勋章。',
+    consequences: [
+      { icon: 'star', text: '勋章记在对方名下，来源标注为本俱乐部' },
+      { icon: 'mtab-customers', text: '同一枚勋章对同一个人只会颁发一次，重复颁发不会多记' },
+      { icon: 'warning', text: '此操作不可撤销，目前没有收回勋章的入口' },
+    ],
+    confirmText: '颁发勋章',
+    alt: null,
+    done: { title: '勋章已颁发', text: '' },
+  },
   'club.role.revoke': {
     irreversible: true,
     title: '撤销「{name}」?',

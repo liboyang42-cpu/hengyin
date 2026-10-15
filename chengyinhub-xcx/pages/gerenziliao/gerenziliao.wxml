@@ -163,7 +163,20 @@
 <cy-sheet class="profile-edit-sheet" inset show="{{ popDavid4 }}" title="昵称" footer bind:close="cancel4">
   <view class="pop-model pop-temp">
     <view class="david_tk">
-      <cy-field class="profile-name-field" value="{{tempName}}" placeholder="请输入昵称" disabled="{{saving}}" bind:input="onInputChange" data-field="name" />
+      <cy-field class="profile-name-field" value="{{tempName}}" placeholder="请输入昵称" disabled="{{saving}}" maxlength="{{24}}"
+                bind:input="onInputChange" data-field="name"
+                error="{{nicknameState === 'taken' || nicknameState === 'invalid'}}" errorText="{{nicknameHint}}"
+                success="{{nicknameState === 'available'}}"
+                helperText="{{nicknameState === 'taken' || nicknameState === 'invalid' ? '' : (nicknameHint || '2–24 个字，可用文字、数字和 _ # - . · 空格')}}" />
+      <view class="profile-name-actions">
+        <text wx:if="{{nicknameState === 'error'}}" class="profile-name-link" bindtap="retryNicknameCheck"
+              aria-role="button" aria-label="重新检查昵称" hover-class="cy-pressed" hover-stay-time="80">重新检查</text>
+        <text class="profile-name-link {{nicknameSuggesting || saving ? 'is-disabled' : ''}}" bindtap="suggestNickname"
+              aria-role="button" aria-label="换一个可用的昵称" aria-disabled="{{nicknameSuggesting || saving}}"
+              hover-class="{{nicknameSuggesting || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{nicknameSuggesting ? '正在推荐…' : '换一个'}}</text>
+      </view>
+      <cy-inline-error wx:if="{{nicknameSuggestError}}" title="没换成" sub="{{nicknameSuggestError}}"
+                       action="再试一次" bind:action="suggestNickname" />
     </view>
   </view>
   <cy-btn slot="footer" variant="primary" bindtap="confirm4">完成</cy-btn>

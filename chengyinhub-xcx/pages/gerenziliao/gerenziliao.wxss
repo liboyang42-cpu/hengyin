@@ -142,3 +142,16 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
 .david_tk { height: auto; overflow: visible; }
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
+
+/* 昵称校验/推荐(N4):「换一个」「重新检查」是文字链,命中区用 min-height 撑到 88rpx(44px) */
+.profile-name-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--cy-space-4); }
+.profile-name-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 88rpx;
+  min-width: 88rpx;
+  justify-content: center;
+  color: var(--cy-accent);
+  font-size: var(--cy-type-body);
+}
+.profile-name-link.is-disabled { color: var(--cy-text-tertiary); }

@@ -40,6 +40,7 @@ function loadPage() {
     require(request) {
       if (request === '../../utils/response-shape.js') return require('../../utils/response-shape.js')
       if (request === '../../utils/form-state.js') return require('../../utils/form-state.js')
+      if (request === '../../utils/nickname-check.js') return require('../../utils/nickname-check.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
