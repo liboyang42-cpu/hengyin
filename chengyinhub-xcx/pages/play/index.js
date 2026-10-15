@@ -7000,6 +7000,15 @@ Page({
       setTimeout(() => this.setData({ 'previewEnding.off': 'gone' }), 480),
       setTimeout(done, 820));
   },
+  _finishViewContext() {
+    return { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), epoch: this._finishArtworkEpoch };
+  },
+  _isFinishViewCurrent(context) {
+    return !!context && this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.sessionKey === JSON.stringify(this._sessionParams()) && context.epoch === this._finishArtworkEpoch
+      && context.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
   openFinish() {
     // R9-21 + R1:通关是会话终点,不管从哪条入口进来都要走统一收尾 —— 只清快照不置 _runStarted,
     // 离页时会被写回;正在跑的那局也在这一刻停表,不能再被当成「暂停中」恢复。
@@ -7031,6 +7040,7 @@ Page({
       return sum + (node && node.done ? (Number(node.earnedXp) || 0) : 0);
     }, 0);
     this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
+    const finishView = this._finishViewContext();
     this.setData({
       showFinish: true,
       finishScore: earnedXp,
@@ -7046,6 +7056,7 @@ Page({
       // 主视觉:本次拿到的徽章(有图用图,无图用名字首字);一枚都没有时不硬凑
       finishBadge: this._pickFinishBadge(),
     }, () => {
+      if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
       this.buildReview();       // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离)
@@ -7064,7 +7075,10 @@ Page({
     if (this._reviewTimer) { clearTimeout(this._reviewTimer); this._reviewTimer = null; }
     this._finishRecommendationEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._endingEpoch = (this._endingEpoch || 0) + 1;
-    this.setData({ showFinish: false, 'ending.show': false }, callback);
+    const finishView = this._finishViewContext();
+    this.setData({ showFinish: false, 'ending.show': false }, () => {
+      if (this._isFinishViewCurrent(finishView) && !this.data.showFinish && callback) callback();
+    });
   },
   openFinishJournal() {
     this._hideFinish(() => this.openJournal());
