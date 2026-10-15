@@ -101,3 +101,16 @@
 | 73 | 单测补齐·第三批 | BL-61–72 新增纯函数/页面处理器单测（不改 UI） | tests |
 | 74 | 接口合同测试·第三批 | BL-61–72 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
 | 75 | 私信菜单合并预整合 | BL-36（#77 举报对方）与 BL-61（#104 解除拉黑）同改 `subpackageB/pages/im/chat/**`：在一个分支上预演两者合并，交出冲突解法与合并后测试计数（只写 PR 说明与必要的合并提交，不扩功能） | 等 #77/#104 评审 OK 后 |
+
+## 第五批（76–83）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 76 | 商家核销台账（只读） | 商家工作台现有入口区加一行进入核销记录列表：`POST /api/merchant/verification-records`（`merchantAccessService` 鉴权，字段以返回 VO 为准），四态照现有商家二级页 | `pages/merchant/**`；不碰积分/券/应付服务（Codex） |
+| 77 | 商家券领取/核销统计 | 现有券管理页读 `POST /api/merchant/coupon-summary` 显示领取数/核销数（只读，无数据时不展示） | 不碰 `SmsCouponHistoryServiceImpl`（Codex） |
+| 78 | 商家客户名册（只读） | `POST /api/merchant/customers`（body 按 `MerchantCustomerQuery`）只读列表，含到店/退款状态；不展示手机号等接口未返回的字段 | 照现有商家列表页 |
+| 79 | 藏品卡改名 | 藏品卡页（`subpackageP3/pages/object-cards`）卡片菜单加「改名」：`cy-sheet` 输入，`POST /api/object-card/rename`（`id`,`title`），成功后回读列表；空名/超长按后端报错如实回显 | 照现有菜单样式 |
+| 80 | 官方通知复盘（只读） | 官方发布者查看自己发出的通知触达/点击：`GET /api/official/broadcast/{id}/stats`（仅发布者本人）；先核实小程序是否已有「我发出的通知」列表可挂入口，没有就 BLOCKED，不新造入口 | `pages/activity/official-*` |
+| 81 | 单测补齐·第四批 | BL-76–80 新增纯函数/页面处理器单测（不改 UI） | tests |
+| 82 | 接口合同测试·第四批 | BL-76–80 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
+| 83 | 验收清单更新·第三四批 | 把 BL-61–80 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101） | docs |
