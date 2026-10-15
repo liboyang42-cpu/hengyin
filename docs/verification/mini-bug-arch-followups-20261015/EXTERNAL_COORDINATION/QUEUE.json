@@ -3581,8 +3581,8 @@
     {
       "id": "E03-18",
       "lane": "E03",
-      "title": "合法可选线索空白键在结局与案件册计数一致",
-      "state": "IN_PROGRESS_SOURCE",
+      "title": "合法线索与关系键空白在结局与案件册一致",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "status": "AUDIT_THEN_FIX",
       "trigger": "Validator accepts and preserves padded clue key; casebook trims, ending does not, yielding1/1 vs0/1 on same frozen run",
       "minimal_fix_boundary": "Only normalize lookup with existing String.trim semantics; no JSON rewrite or historical-result recomputation",
@@ -3594,21 +3594,25 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-18.md",
       "source_base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
       "verification": "NOT_RUN",
-      "delivery": "NOT_YET_DELIVERED",
-      "assigned_worker": "/root/external_e03",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "assigned_worker": null,
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": null,
-      "regression_methods_written": null,
+      "public_sha": "92a75e16c04a51f30069f8c1223c8f7a90656a5d",
+      "regression_methods_written": 5,
       "ownership": "Retained C00 source grant; unique new-ID regression/evidence per LONGRUN_EXTRA_EXPANSION; PR16 comment6199009969",
-      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969"
+      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969",
+      "rolling_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
+      "delivery_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199117749",
+      "prior_source_sha": "b59490ffe0b0882b87c386abaaee3a138b3ab631",
+      "doc_public_sha": "003ad6eae97281f3e8c581a76a1cebc765116ccc"
     },
     {
       "id": "E06-17",
       "lane": "E06",
       "title": "分享读库故障保留可重试HTTP错误边界",
-      "state": "IN_PROGRESS_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "status": "AUDIT_THEN_FIX",
       "trigger": "Real GET mapper DataAccessException becomes HTTP200/body500 through global advice and existing caller interprets gone",
       "minimal_fix_boundary": "GET-specific wrapped data-access exception and local HTTP503 handler; keep prior GONE/success, global advice/client/publish/revoke unchanged",
@@ -3620,15 +3624,17 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-17.md",
       "source_base_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
       "verification": "NOT_RUN",
-      "delivery": "NOT_YET_DELIVERED",
-      "assigned_worker": "/root/external_e06",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "assigned_worker": null,
       "branch": "codex/extra-e06-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e06",
       "depends_on": [],
-      "public_sha": null,
-      "regression_methods_written": null,
+      "public_sha": "5ed1b8de890f5bdacadb02a145385f465c196d52",
+      "regression_methods_written": 5,
       "ownership": "Retained C00 source grant; unique new-ID regression/evidence per LONGRUN_EXTRA_EXPANSION; PR16 comment6199009969",
-      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969"
+      "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199009969",
+      "rolling_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
+      "delivery_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199117749"
     },
     {
       "id": "E02-23",
@@ -3716,22 +3722,22 @@
   "active_claims": {
     "E01": null,
     "E02": null,
-    "E03": "E03-18",
+    "E03": null,
     "E04": null,
     "E05": null,
-    "E06": "E06-17"
+    "E06": null
   },
   "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
     "total_history": 109,
-    "source_delivered": 55,
+    "source_delivered": 57,
     "no_change_source_review": 40,
     "blocked": 8,
     "ready": 0,
-    "claimed": 2,
-    "actionable_or_inflight": 2
+    "claimed": 0,
+    "actionable_or_inflight": 0
   },
-  "control_latest_read_sha": "6fd9bf4ca7fd24f58116727fff8b8533a7d145b1",
+  "control_latest_read_sha": "12750a3efbef79fc52db6e8c275ca27e77245839",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3750,9 +3756,9 @@
     },
     {
       "slot": "E03",
-      "task": "E03-18",
+      "task": null,
       "worker": "/root/external_e03",
-      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
+      "mode": "SOURCE_DELIVERED_IDLE_OR_TARGETED_DISCOVERY_ONLY",
       "worktree": "/workspace/hengyin-extra-e03"
     },
     {
@@ -3771,21 +3777,21 @@
     },
     {
       "slot": "E06",
-      "task": "E06-17",
+      "task": null,
       "worker": "/root/external_e06",
-      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
+      "mode": "SOURCE_DELIVERED_IDLE_OR_TARGETED_DISCOVERY_ONLY",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 48,
+  "refill_shortfall": 50,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
     "E02": "Original-author four-line absent-receipt fixture repair publicly delivered; local targeted retest pending; original474e failure retained, repair NOT_RUN",
-    "E03": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
+    "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; targeted NODE_COMPLETED numeric-input candidate discovery only, not a claimed bug",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
-    "E06": "Authorized Share storage/read/revoke candidates refuted; no independent proven item READY"
+    "E06": "E06-17 GET-local HTTP503 retry boundary delivered;5 MockMvc methods NOT_RUN; no independent item READY"
   },
   "shared_producer": {
     "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java",
@@ -3912,10 +3918,12 @@
     "E03-16": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
     "E05-17": "24525416a11f6c2fc24272edf3c13d19cbaa6b05",
     "E02-22": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
-    "VPS_EXTRA_474e54ae_20261015": "7b00162a4b54896f0a07058eab57141b1a75b706"
+    "VPS_EXTRA_474e54ae_20261015": "7b00162a4b54896f0a07058eab57141b1a75b706",
+    "E03-18": "92a75e16c04a51f30069f8c1223c8f7a90656a5d",
+    "E06-17": "5ed1b8de890f5bdacadb02a145385f465c196d52"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 2,
+  "actual_new_development_workers": 0,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -3959,9 +3967,17 @@
       "global_contract_dependency": "Register via C00 before any cross-owner write",
       "plan_public_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
       "plan_pr": "https://github.com/liboyang42-cpu/hengyin/pull/70",
-      "status": "PENDING_THREAD_ACTUAL_ACK_ONLY",
+      "status": "ACTUAL_THREAD_AND_CHILD_ACK_REPORTED",
       "startup_marker": "CY-FORWARD3-20261015",
-      "third_thread_id": null
+      "third_thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "third_host_id": "durable",
+      "ack_comment": 6199048354,
+      "control_registration_sha": "12750a3efbef79fc52db6e8c275ca27e77245839",
+      "reported_children": [
+        "/root/stat",
+        "/root/grow"
+      ],
+      "running_claim": "Two writers at actual third-team ACK snapshot, not independently observed continuous runtime"
     }
   ],
   "latest_discovery_round": {
@@ -3973,5 +3989,7 @@
     "E05": "Existing Encounter/privacy guards hold; no new item",
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
-  }
+  },
+  "latest_application_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
+  "actual_targeted_discovery_workers": 1
 }
