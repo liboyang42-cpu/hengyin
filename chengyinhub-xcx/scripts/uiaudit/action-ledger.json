@@ -139992,6 +139992,23 @@
               "index": 0
             },
             {
+              "selector": "cy-npc-chat",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-qr-coupon",
               "index": 0
             },
@@ -141875,6 +141892,23 @@
             },
             {
               "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-npc-chat",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
               "index": 0
             }
           ]
