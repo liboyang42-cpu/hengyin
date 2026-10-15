@@ -6453,10 +6453,17 @@ Page({
   },
 
   loadNewLifeOS() {
-    if (this.data.mode !== 2 || this.data.isPreview || this.data.isMock || !this.data.topicId) return;
+    if (!this._isPlayAccountCurrent() || this.data.mode !== 2 || this.data.isPreview || this.data.isMock || !this.data.topicId) return;
     const that = this;
+    const topicId = String(this.data.topicId);
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._osReadSequence = (this._osReadSequence || 0) + 1;
     this.setData({ 'newLifeOS.loading': true });
-    req('/api/play/os/' + this.data.topicId, 'GET', {}, undefined, true).then((r) => {
+    req('/api/play/os/' + topicId, 'GET', {}, undefined, true).then((r) => {
+      if (!that._isPlayAccountCurrent() || sequence !== that._osReadSequence
+          || topicId !== String(that.data.topicId) || sessionKey !== JSON.stringify(that._sessionParams())
+          || loadEpoch !== that._playLoadEpoch || that.data.mode !== 2) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) {
         that.setData({ 'newLifeOS.loading': false, 'newLifeOS.show': false });
         return;
