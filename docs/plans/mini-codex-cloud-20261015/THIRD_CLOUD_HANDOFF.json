@@ -2,25 +2,26 @@
   "protocol": "CY-THIRD-CLOUD-EXACT-HANDOFF-20261015-v1",
   "team": "ANALYTICS_THIRD",
   "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
-  "state": "ACTIVE_CHILD_ACK_RECEIVED",
+  "state": "SOURCE_DELIVERED_UNVERIFIED",
   "global_source_owner": "C00 global register maintainer; local coordinator owns new team scheduling and VPS",
   "local_workflow_and_validation_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "model": "gpt-6.1-sol",
   "initial_real_tasks": 2,
-  "parallel_task_writers": 2,
+  "parallel_task_writers": 0,
   "not_a_six_item_pool": "Do not split these shared-file tasks to fill6; at most6 if real independently owned new tasks subsequently approved",
   "activation": "New coordinator posts real thread/child/branch/full base SHA/exact per-worker files ACK to PR16. Listed whitelist allocation then effective immediately; no second general approval or Mac relay required. C00 records actual receipt. Before named child ACK no source writer claimed running.",
   "items": [
     {
       "id": "AN01",
       "title": "既有后台漏斗查询的提供日期与顺序校验",
-      "status": "IN_PROGRESS_SOURCE_ONLY",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java"
       ],
       "test_paths": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java"
       ],
       "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN01.md",
       "basis": {
@@ -32,7 +33,7 @@
         "permission": "business:analytics:list unchanged"
       },
       "implementation_contract": "Only nonblank supplied endpoints get strict ISO yyyy-MM-dd true-calendar parsing before Mapper. If both present reject start>end; same day accepted. Invalid input returns existing BaseController.error style; mapper must not be called. Keep null/empty/whitespace absent according to current StringUtils semantics, one-sided queries, unlimited valid range and unpaged complete rows; keep original response echo strings and permission. Do not silently trim malformed supplied dates or normalize them into other days.",
-      "existing_tests_to_preserve": "Existing AnalyticsControllerTest two qualified-pilot cases untouched, add funnel cases here; P3AdminControllersTest untouched. Final whitelist uses existing AnalyticsControllerTest, supersedes earlier proposed new AnalyticsFunnelDateValidationTest filename.",
+      "existing_tests_to_preserve": "Existing AnalyticsControllerTest two qualified-pilot cases untouched, add funnel cases here; P3AdminControllersTest untouched. Final whitelist uses existing AnalyticsControllerTest, supersedes earlier proposed new AnalyticsFunnelDateValidationTest filename. TASKS AnalyticsDateContractTest is separately authorized and reserved, but no need to create it merely to duplicate the delivered existing-class coverage.",
       "acceptance": "Malformed/non-calendar/reversed provided dates do not reach mapper; omitted/blank/one-sided/same-day/leap-day/wide range and complete rows envelope remain. No pagination/default interval/62day cap.",
       "dependencies": [
         "BizFunnelDailyMapper Java/XML read-only; AnalyticsEventService/ApiAnalytics/Task read-only",
@@ -43,19 +44,24 @@
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
       "host_id": "durable",
       "worker": "/root/stat",
-      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354"
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "source_sha": "add1534cd63c6ffd95467795126246c8d3581594",
+      "writer_state": "FROZEN_SOURCE_DELIVERED",
+      "new_regression_file_state": "RESERVED_NOT_CREATED"
     },
     {
       "id": "AN02",
       "title": "玩家成长聚合并发覆盖：不同主题合法通关丢累计里程/节点数",
-      "status": "IN_PROGRESS_SOURCE_ONLY",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
       "production_paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
         "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml"
       ],
       "test_paths": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ],
       "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN02.md",
       "basis": [
@@ -106,7 +112,7 @@
         ]
       },
       "implementation_contract": "Inside PlayerProgressionServiceImpl and PlayerGrowthMapper Java/XML, make growth mutation a single transaction with real current member-growth row read (cache disabled/flushed) before computing and persisting the aggregate; handle existing unique member initialization without DDL. Keep all growth writers on that same current-read protocol, including onNodeDone and onTopicComplete, and retain existing first-completion/badge guards. An atomic delta plus authoritative readback is an alternative only if unchanged level/streak/threshold semantics are preserved. No caller/source-owned controller needs editing.",
-      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local. New writer first rechecks outer real call-chain locks; concrete counterevidence closes this candidate with no source edit. No additional new test files in initial six-file grant; append necessary regression source to existing test, ask local/C00 exact expansion only if technically needed.",
+      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local. New writer first rechecks outer real call-chain locks; concrete counterevidence closes this candidate with no source edit. Original PR70 TASKS explicitly grants PlayerGrowthConcurrencyMySqlIT; six existing files do not include these new regression files. Source-only NOT_RUN; actual database validation local.",
       "dependencies": [
         "Existing player_growth uk_member; no DDL",
         "TopicCompletionAward/Registration/Progress controllers read-only",
@@ -121,7 +127,11 @@
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
       "host_id": "durable",
       "worker": "/root/grow",
-      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354"
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java",
+      "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "writer_state": "FROZEN_SOURCE_DELIVERED",
+      "new_regression_file_state": "SOURCE_DELIVERED_UNVERIFIED"
     }
   ],
   "additional_requested_scope_read_only": [
@@ -146,7 +156,7 @@
       "prior": "No active lock, but no justified modification inAN01; read-only until concrete new task claimed"
     }
   ],
-  "test_scope": "Initial grant only existing AnalyticsControllerTest.java and PlayerProgressionServiceImplTest.java; preserve old assertions. No extra new test/helper/source path included.",
+  "test_scope": "Existing AnalyticsControllerTest and PlayerProgressionServiceImplTest plus TASKS named AnalyticsDateContractTest and PlayerGrowthConcurrencyMySqlIT. Preserve assertions, source-only NOT_RUN.",
   "evidence_and_queue_scope": [
     "Own QUEUE/CLAIMS/DELIVERY documentation paths as precisely named in local startup plan; no C00 control-table writes"
   ],
@@ -553,7 +563,7 @@
   "scheduling_coordinator": "LOCAL/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "startup_plan": "docs/plans/mini-forward-cloud-20261015/ (owned by local coordinator, not edited by C00)",
   "initial_source_file_count": 6,
-  "source_only_boundary": "Exactly6 source/test files; no directory glob. Expanded analytics files remain read-only. Prior proposed extra2 growth test paths revoked before any worker/thread activation.",
+  "source_only_boundary": "Exactly6 existing files plus2 named new regression files; no directory glob or unrelated Mapper/DDL/authorization expansion",
   "startup_pr": {
     "number": 70,
     "url": "https://github.com/liboyang42-cpu/hengyin/pull/70",
@@ -571,22 +581,45 @@
     "AN01": "F3-STAT-01 / STAT",
     "AN02": "F3-GROW-01 / GROW"
   },
-  "ungranted_new_regression_paths": [
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
-  ],
-  "ungranted_path_note": "PR70 TASKS has these new_regression_file fields, but latest explicit local scope is6 existing files; specific mismatch reported PR70 comment6198978444. Existing2 test files may directly add necessary source regression; no general approval hold, extra files only if explicitly expanded. Actual ACK6199048354 mentions GrowthConcurrencyMySqlIT; C00 explicitly restricted extra path in PR16 comment6199096494, no hold on six authorized files.",
   "host_id": "durable",
   "thread_title": "修复日期边界与成长并发一致性",
-  "status": "ACTIVE_CHILD_ACK_RECEIVED",
-  "running_claim": true,
-  "observed_child_writer_count": 2,
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "running_claim": false,
+  "observed_child_writer_count": 0,
   "child_workers": {
     "AN01": "/root/stat",
     "AN02": "/root/grow"
   },
   "source_branch": "codex/mini-forward-source-20261015",
   "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
-  "running_count_basis": "Actual third-team coordinator per-child ACK; snapshot only, not inferred from thread creation",
-  "verification": "NOT_RUN"
+  "running_count_basis": "Latest PR72 QUEUE and CLAIMS read back: both original writers frozen; earlier 2-child startup ACK is historical",
+  "verification": "NOT_RUN",
+  "active_source_writers": 0,
+  "ready_source_items": 0,
+  "scope_state": "EXHAUSTED",
+  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "delivery_head_sha": "7bf99128e0f136f7bc3d13b25f62e4099a073078",
+  "delivery_pr": 72,
+  "delivery_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/7bf99128e0f136f7bc3d13b25f62e4099a073078/docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
+  "initial_existing_file_count": 6,
+  "authorized_new_regression_file_count": 2,
+  "total_authorized_source_test_paths": 8,
+  "new_extra_test_grants": true,
+  "no_new_regression_files_yet": false,
+  "authorized_new_regression_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+  ],
+  "parallel_task_writer_limit": 2,
+  "initial_source_file_count_meaning": "Existing source and old tests only; additional 2 new regression paths separately authorized by original PR70 TASKS",
+  "regression_authority_correction": {
+    "origin": "PR70 TASKS.json F3-STAT-01/F3-GROW-01 new_regression_file; local total coordinator explicitly reconfirmed existing grant",
+    "local_coordinator_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "correction_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6201571952",
+    "meaning": "6 existing source/old-test files plus 2 explicitly named new regression paths; corrects C00 register omission, not a new scope expansion",
+    "new_regression_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+    ]
+  }
 }

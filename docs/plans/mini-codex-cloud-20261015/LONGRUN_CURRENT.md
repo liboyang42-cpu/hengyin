@@ -1,3 +1,9 @@
+# 第三队当前交付与授权口径
+
+最新授权口径纠正：PR70 TASKS原本明确授予两份专属新回归，STAT `/root/stat` 独占 `business/forward20261015/AnalyticsDateContractTest.java`（尚未创建，保留名字即可）；GROW `/root/grow` 独占 `business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`（已在PR72交付）。完整路径均位于 `chengyinhub-admin/src/test/java/com/chengyinhub/`。六条统计仅指既有源码/旧测试，另有这两条新增回归，共8条精确路径。此前C00“尚未授写/待扩权”的记账限制已撤回，这是登记遗漏纠正，不是第三队擅自扩权，不需再批准或为凑文件重写测试。无其他Mapper/DDL/鉴权范围扩展。
+
+已主动完整读取PR72@7bf99128e0f136f7bc3d13b25f62e4099a073078及QUEUE/CLAIMS/DELIVERY：STAT add1534cd63c6ffd95467795126246c8d3581594、GROW 2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd，冻结源码候选为后者；后续head为交付文档，不改变验证源码。两作者均冻结，实际writer=0、READY=0、范围EXHAUSTED；启动两writer为历史ACK，不作持续运行声明。普通24声明+真MySQL11声明=35只是源码计划，全为SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，不能当执行成绩。实际VPS/数据库验证仍本地总控负责，Cloud不测试、CI重跑或连接VPS。
+
 # 当前VPS失败闭环状态（覆盖下文旧快照）
 
 CORE新公共候选 `0d63043ad06775bc3dc52fb925620ef36d1081a7`，原作者串行完成3个fixture-only小提交，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。原f7已编译PASS，但普通83类483项=470PASS/5FAIL/8ERROR/0skip，FAIL，不是业务Ready；8gated/JDBC类另未测。C00已读独立PR24@6e7a22025192710fa5edfd8be5a10ed425edc0ee README/summary完整13堆栈和报告哈希。
@@ -58,10 +64,14 @@ Claude新接收37份精确PR快照见CLAUDE_HANDOFF_INTAKE.json/.md，保留原�
 
 用户授权新增第三Cloud，现已收到真实thread及两child启动ACK；两真实源码任务AN01/AN02与精确路径见THIRD_CLOUD_HANDOFF.json/md。已核64OPEN PR分页文件及真实master blob，新包4生产路径/既有2测试无冲突，C00源表保留给ANALYTICS_THIRD，各一写者；实际thread/child逐路径ACK后生效，无需再次general批准。原CORE/EXTRA/Claude不得写。额外埋点/聚合4历史路径仍原B/旧PR持有，只读待停止/移交，不因目录名泛转权。Cloud不测试/CI/起替代环境，实际VPS交本地。
 
-第三队最新精确收口：本地总控，新队初始仅6源码/既有测试路径（AnalyticsController+AnalyticsControllerTest；PlayerProgressionServiceImpl+PlayerGrowthMapper Java/XML+PlayerProgressionServiceImplTest）。SOURCE_OWNERS已登记真实thread及两child，不分给CORE/EXTRA，先前两个新增GrowthConcurrency测试路径在无worker激活时撤销；更大埋点/聚合源及其他Mapper/DTO/CI/DDL仍只读。新队真实thread/child逐路径ACK即在清单内开工，无需重复general批准；有反证不改。C00仍唯一控制账维护者。
+第三队精确范围为6条既有源码/旧测试，另加PR70 TASKS明确命名的2份新回归；均原child独占，原两队不得写。C00唯一全局账，本地总控调度与VPS，完整范围见THIRD_CLOUD_HANDOFF.json。
 
 ## 实际第三队接入回执
 
-第三队真实聊天 `01a140c1-6379-71fd-8711-f0b55889c01b` / durable（修复日期边界与成长并发一致性）已创建；C00主动读取[PR16实际启动ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354)，据实登记 `/root/stat`（AN01/F3-STAT-01）与 `/root/grow`（AN02/F3-GROW-01）两名child及其六条既有文件，各一写者，基线0d63043ad06775bc3dc52fb925620ef36d1081a7、源码分支codex/mini-forward-source-20261015。运行数2仅为该ACK快照，不由thread存在推断持续运行。清单内授权已生效，不需再次一般批准；原CORE/EXTRA/Claude继续只读这些文件。本地总控三队调度与VPS，C00唯一维护全局账。全部源码/回归NOT_RUN，未合并部署。
+第三队真实聊天 `01a140c1-6379-71fd-8711-f0b55889c01b` / durable（修复日期边界与成长并发一致性）已创建；C00主动读取[PR16实际启动ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354)，据实登记 `/root/stat`（AN01/F3-STAT-01）与 `/root/grow`（AN02/F3-GROW-01）两名child及其六条既有文件，各一写者，基线0d63043ad06775bc3dc52fb925620ef36d1081a7、源码分支codex/mini-forward-source-20261015。启动运行数2为历史ACK快照；最新已交付冻结、实际writer=0。清单内授权已生效，不需再次一般批准；原CORE/EXTRA/Claude继续只读这些文件。本地总控三队调度与VPS，C00唯一维护全局账。全部源码/回归NOT_RUN，未合并部署。
 
-ACK另提PlayerGrowthConcurrencyMySqlIT.java超出本地最后明确的初始6路径，仍未授写；已在PR16 comment6199096494明确转交本地精确扩权对齐。既有PlayerProgressionServiceImplTest.java可追加必要回归，不暂停已获准两条源码线。更大analytics域仍只读。
+## 原启动包新回归授权补登记（覆盖旧限制）
+
+最新授权口径纠正：PR70 TASKS原本明确授予两份专属新回归，STAT `/root/stat` 独占 `business/forward20261015/AnalyticsDateContractTest.java`（尚未创建，保留名字即可）；GROW `/root/grow` 独占 `business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`（已在PR72交付）。完整路径均位于 `chengyinhub-admin/src/test/java/com/chengyinhub/`。六条统计仅指既有源码/旧测试，另有这两条新增回归，共8条精确路径。此前C00“尚未授写/待扩权”的记账限制已撤回，这是登记遗漏纠正，不是第三队擅自扩权，不需再批准或为凑文件重写测试。无其他Mapper/DDL/鉴权范围扩展。
+
+已主动完整读取PR72@7bf99128e0f136f7bc3d13b25f62e4099a073078及QUEUE/CLAIMS/DELIVERY：STAT add1534cd63c6ffd95467795126246c8d3581594、GROW 2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd，冻结源码候选为后者；后续head为交付文档，不改变验证源码。两作者均冻结，实际writer=0、READY=0、范围EXHAUSTED；启动两writer为历史ACK，不作持续运行声明。普通24声明+真MySQL11声明=35只是源码计划，全为SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，不能当执行成绩。实际VPS/数据库验证仍本地总控负责，Cloud不测试、CI重跑或连接VPS。

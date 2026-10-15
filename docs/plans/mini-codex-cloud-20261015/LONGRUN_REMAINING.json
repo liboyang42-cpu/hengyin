@@ -133,12 +133,46 @@
     "E02-13 real audit producer/version contract must be identified; no guessed callback version policy",
     "Local new-SHA compile/test failures pending evidence; none guessed as bugs"
   ],
-  "new_third_fourth_cloud_ready_packages": 2,
-  "reason": "Two targeted static caller-backed packages now confirmed no current file collision; third coordinator pending thread ACK. No fourth full team pool invented.",
+  "new_third_fourth_cloud_ready_packages": 0,
+  "reason": "Two independent third-team tasks now source-delivered, frozen and unverified; current ready0. Historical discovered packages are not remaining development. No fourth team pool invented.",
   "scheduling": "one repair slot per team, other5 independent authorized work without waiting; actual exhaustion disclosed; not a claim5 active workers",
   "new_package_detail": "THIRD_CLOUD_HANDOFF.json: AN01 date inputs, AN02 growth lost-update; prior0 snapshot before targeted discovery retained as history",
   "third_team_count": 1,
-  "independent_source_packages_for_third_team": 2,
+  "independent_source_packages_for_third_team": 0,
   "confirmed_additional_fourth_team_packages": 0,
-  "package_count_is_not_cloud_count": true
+  "package_count_is_not_cloud_count": true,
+  "third_current_delivery": {
+    "state": "SOURCE_DELIVERED_UNVERIFIED",
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "running_claim": false,
+    "observed_child_writer_count": 0,
+    "active_source_writers": 0,
+    "ready_source_items": 0,
+    "scope_state": "EXHAUSTED",
+    "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+    "delivery_head_sha": "7bf99128e0f136f7bc3d13b25f62e4099a073078",
+    "delivery_pr": 72,
+    "delivery_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/7bf99128e0f136f7bc3d13b25f62e4099a073078/docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
+    "running_count_basis": "Latest PR72 QUEUE and CLAIMS read back: both original writers frozen; earlier 2-child startup ACK is historical",
+    "verification": "NOT_RUN",
+    "initial_existing_file_count": 6,
+    "authorized_new_regression_file_count": 2,
+    "total_authorized_source_test_paths": 8,
+    "new_extra_test_grants": true,
+    "no_new_regression_files_yet": false,
+    "authorized_new_regression_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+    ],
+    "regression_authority_correction": {
+      "origin": "PR70 TASKS.json F3-STAT-01/F3-GROW-01 new_regression_file; local total coordinator explicitly reconfirmed existing grant",
+      "local_coordinator_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "correction_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6201571952",
+      "meaning": "6 existing source/old-test files plus 2 explicitly named new regression paths; corrects C00 register omission, not a new scope expansion",
+      "new_regression_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+      ]
+    }
+  }
 }
