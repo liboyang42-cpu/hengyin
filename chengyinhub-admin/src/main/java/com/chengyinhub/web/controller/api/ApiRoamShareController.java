@@ -5,13 +5,18 @@ import com.chengyinhub.business.service.support.RoamSharePrivacyService;
 import com.chengyinhub.business.service.support.RoamShareSnapshotService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.utils.UserSafeMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -73,12 +78,33 @@ public class ApiRoamShareController extends BaseController {
     @GetMapping("/snapshot")
     public AjaxResult read(String token) {
         if (token == null || !TOKEN.matcher(token).matches()) return error(GONE);
-        String json = snapshotMapper.selectSnapshotJsonByToken(token);
+        String json;
+        try {
+            json = snapshotMapper.selectSnapshotJsonByToken(token);
+        } catch (DataAccessException e) {
+            // A failed lookup does not prove the share is gone. Preserve a
+            // transport failure so existing readers offer retry instead.
+            throw new ShareReadUnavailableException(e);
+        }
         if (json == null) return error(GONE);
         try {
             return success(privacyService.normalizeStored(json));
         } catch (RuntimeException e) {
             return error(GONE);
+        }
+    }
+
+    @ExceptionHandler(ShareReadUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public AjaxResult handleShareReadUnavailable() {
+        return error(UserSafeMessage.GENERIC);
+    }
+
+    private static final class ShareReadUnavailableException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        private ShareReadUnavailableException(DataAccessException cause) {
+            super(UserSafeMessage.GENERIC, cause);
         }
     }
 }
