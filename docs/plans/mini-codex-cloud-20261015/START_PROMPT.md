@@ -1,3 +1,5 @@
+> 当前第三队：2babbe28已VPS212编译及普通24实跑PASS；早先锁拒绝保留历史，真MySQL11仍NOT_RUN，未验收并发/HTTP/业务。EXTRA下一ed598258单独待结果，不继承旧通过，Cloud不补跑。
+
 > 第三队验证状态：PR72/2babbe28因212 another_build_holds_lock返回75，containerId=null，执行0；NOT_RUN，不是源码失败。仅本地按正常准入排队，Cloud不替代。两域EXHAUSTED、writer0，不凑6线。
 
 > 最新口径：第三队6条既有源码/旧测试＋PR70 TASKS指定2条新回归均已授权，各归STAT/GROW原child；“新MySqlIT待扩权”限制已纠正撤回。PR72源码已冻结2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd，当前writer=0/NOT_RUN，实际验证交本地。

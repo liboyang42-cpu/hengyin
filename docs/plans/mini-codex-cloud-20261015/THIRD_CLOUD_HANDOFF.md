@@ -1,3 +1,13 @@
+## 第三队当前普通回归签收：24PASS／真MySQL11未运行
+
+第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 正常准入后，由本地专用VPS212完成七模块编译与两普通类24/24实跑PASS（各12项，0失败/错误/跳过），fresh XML精确类集、guard0/completed和容器清理已确认。C00已完整读回[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)，证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f`，逐类XML、源码与日志哈希已入总控索引。
+
+早先exit75/another_build_holds_lock/containerId=null/执行0的准入拒绝作为历史保留，不再是当前普通回归状态。11项真实MySQL仍NOT_RUN：212离线network none不能替代真库，现有资金CI固定类清单不覆盖这11项，尚无可核批准入口，不擅改CI或绕过资源。真实数据库/Redis、运行时HTTP、设备、业务、合并部署仍未验收；普通PASS不证明并发问题已验收。
+
+EXTRA下一本地串行候选 `ed598258c0f614385940f326099b9626531fab02` 单独登记：两新修复及受影响原类共11类，75仅源码声明，尚未回执行结果，不由排程推断已开跑，不继承e72两类56PASS。C00只更新全局账，第三队自行补自己交付账链接；Cloud不补跑。第三队两个当前域EXHAUSTED/writer0，不凭空扩任务。
+
+### 以下包含早先排队与拒绝准入历史，以本节当前结果为准
+
 ## 第三队验证准入纠正：NOT_RUN，等待共享锁
 
 第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 尚未编译/测试：212守卫因 `another_build_holds_lock` 返回75、containerId=null，本次执行0项，保持 SOURCE_DELIVERED_UNVERIFIED / NOT_RUN。两普通类24与真MySQL11均只是源码声明；资源排队不算源码失败或通过。本地等待正常准入，Cloud不替代验证、不绕锁、不干预其他任务。第三队当前两域EXHAUSTED、实际writer=0，不凑6线或扩产品。
