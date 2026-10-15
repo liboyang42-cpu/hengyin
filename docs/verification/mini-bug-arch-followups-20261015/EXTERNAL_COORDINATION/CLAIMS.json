@@ -886,7 +886,7 @@
     },
     {
       "id": "VPS_EXTRA_ed598258_20261015",
-      "status": "SOURCE_DELIVERED_AWAITING_LOCAL_RETEST",
+      "status": "AWAITING_LOCAL_RETEST_ADMISSION_REFUSED",
       "priority": 1,
       "candidate_sha": "ed598258c0f614385940f326099b9626531fab02",
       "actual_results": {
@@ -925,7 +925,7 @@
       "production_files_changed": 0,
       "repair_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
       "child_repair_sha": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
-      "repair_verification": "NOT_RUN",
+      "repair_verification": "NOT_RUN_ADMISSION_REFUSED",
       "planned_static_methods": 5,
       "actual_retest_count": null,
       "focused_future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test",
@@ -935,7 +935,29 @@
         "PR16": 6202097241,
         "PR24": 6202097477
       },
-      "independent_shared_packet": "SHARED_SQL_DIAGNOSTIC_PATTERN; not fixed by fixture prefix and not closed"
+      "independent_shared_packet": "SHARED_SQL_DIAGNOSTIC_PATTERN; not fixed by fixture prefix and not closed",
+      "latest_admission_attempt": {
+        "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+        "previous_source_sha": "ed598258c0f614385940f326099b9626531fab02",
+        "classes": [
+          "com.chengyinhub.business.longrun.E06_17Test"
+        ],
+        "planned_tests": 5,
+        "status": "NOT_RUN_ADMISSION_REFUSED",
+        "tests_executed": 0,
+        "compilation_executed": false,
+        "test_execution_started": false,
+        "guard_exit_code": 75,
+        "guard_reason": "another_build_holds_lock",
+        "container_id": null,
+        "finished_at_utc": "2026-10-15T20:58:53.261865+00:00",
+        "archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+        "evidence_commit": "60febdbdcdcc7eed2b445a80f3d1f21d2cd76966",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md",
+        "admission_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/admission-refused.json",
+        "read_scope": "Public README and admission-refused.json actually read; no test summary/fresh XML exists for this refused attempt",
+        "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
+      }
     }
   ],
   "external_dependency_requests": {
@@ -949,7 +971,7 @@
       "blocked_on": "original completion producer receipt contract and unknown legacy identity"
     },
     "SHARED_SQL_DIAGNOSTIC_PATTERN": {
-      "status": "PENDING_C00_ORIGINAL_OWNER_REVIEW",
+      "status": "NEEDS_REACHABILITY",
       "confirmed_business_bug": false,
       "evidence_source_sha": "ed598258c0f614385940f326099b9626531fab02",
       "failure_evidence_commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
@@ -959,7 +981,8 @@
         "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java"
       ],
       "observation": "Synthetic MVC runtime exception short naked SQL text passes existing pattern unchanged; actual real-business JDBC shape reachability not demonstrated",
-      "not_claimed": "No production exploit confirmed; no shared-source repair or policy tightening authorized; fixture prefix does not resolve packet"
+      "not_claimed": "No production exploit confirmed; no shared-source repair or policy tightening authorized; fixture prefix does not resolve packet",
+      "source_change": "NO_SOURCE_CHANGE"
     }
   },
   "pending_local_failure_retests": [
@@ -1042,5 +1065,36 @@
       "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_e72eff7e/summary.json",
       "read_scope": "Public README and summary actually read; exact e72 two-class56 targeted PASS only, no later SHA inheritance"
     }
-  }
+  },
+  "validation_queue_state": {
+    "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "status": "WAITING_LOCAL_GUARD_ADMISSION",
+    "planned_tests": 5,
+    "tests_executed": 0,
+    "cloud_execution_allowed": false
+  },
+  "admission_history": [
+    {
+      "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+      "previous_source_sha": "ed598258c0f614385940f326099b9626531fab02",
+      "classes": [
+        "com.chengyinhub.business.longrun.E06_17Test"
+      ],
+      "planned_tests": 5,
+      "status": "NOT_RUN_ADMISSION_REFUSED",
+      "tests_executed": 0,
+      "compilation_executed": false,
+      "test_execution_started": false,
+      "guard_exit_code": 75,
+      "guard_reason": "another_build_holds_lock",
+      "container_id": null,
+      "finished_at_utc": "2026-10-15T20:58:53.261865+00:00",
+      "archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+      "evidence_commit": "60febdbdcdcc7eed2b445a80f3d1f21d2cd76966",
+      "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md",
+      "admission_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/admission-refused.json",
+      "read_scope": "Public README and admission-refused.json actually read; no test summary/fresh XML exists for this refused attempt",
+      "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
+    }
+  ]
 }

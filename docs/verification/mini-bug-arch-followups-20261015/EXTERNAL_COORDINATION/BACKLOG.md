@@ -247,3 +247,9 @@ PR16 comment6199117749与PR24 comment6199118000已交本地精确6路径/依赖/
 PR16#6202097241和PR24#6202097477已回完整SHA/两路径/无新依赖/聚焦命令，仅E06_17Test计划5方法，不再重全76或扩旧Share类。未来本地mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E06_17Test test；本Cloud未执行。
 
 原裸SQL未脱敏疑点独立[packet](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6202070194)保存：合成MVC形状确有原文本返回，但真实业务JDBC裸形状可达性未证，不当新已确认业务bug入池；C00核共享owner/合同，EXTRA不改共享源，不以fixture加前缀称该疑点已修。109历史项计数不因fixture修复增加，READY0/源码worker0/目标50缺50；真实再失败恢复一槽，其他真实独占开发无需等复测，无项不加泛审计填数。
+
+## b456准入锁拒绝：执行0项，仍待本地验证
+
+已实际读公共PR24@60febdbdcdcc7eed2b445a80f3d1f21d2cd76966的[README](https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)与[admission-refused.json](https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/admission-refused.json)。冻结b45664de6136eb97c46ed0c86e95fc25686dc1b7仅E06_17Test计划5方法，20:58:53Z因another_build_holds_lock拒绝，exit75/containerId=null；执行0项、未编译/测试，NOT_RUN，不是修复失败/通过，不关闭ed598原76实际75PASS/1FAIL历史。新独占task源码归档哈希见回执，排队等待正常212准入，不碰其他锁/任务、不Cloud替代。
+
+C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598旧76实际1FAIL；b456单类5项NOT_RUN排队”，已通过PR16直接通知原C00，不编辑BACKEND_CHANGES/IOS_HANDOFF。裸SQL疑点保持NEEDS_REACHABILITY/NO_SOURCE_CHANGE，不以人工fixture新增BUG。当前无READY保持EXHAUSTED，未重复改源码或手动验证。
