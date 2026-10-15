@@ -158,7 +158,13 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if (session != null && session.getStatus() != null && session.getStatus() != TopicRouteSession.STATUS_RUNNING) {
             TopicRouteEngine.State frozenState = readState(session);
             if (frozenState.getThemeRuntime().has("result")) {
-                Map<String,Object> result = new ObjectMapper().convertValue(frozenState.getThemeRuntime().get("result"), new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
+                JsonNode archived = frozenState.getThemeRuntime().get("result");
+                // 缺键旧局仍走下方兼容路径；显式损坏值不能冒充可用结局。
+                // endingId 在无候选的合法终态中可以缺省，不要求新版本字段齐全。
+                if (!archived.isObject() || archived.size() == 0) {
+                    throw new ServiceException("本局结局快照不可用");
+                }
+                Map<String,Object> result = JSON.convertValue(archived, new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
                 result.put("code",result.get("endingId")); return result;
             }
         }
