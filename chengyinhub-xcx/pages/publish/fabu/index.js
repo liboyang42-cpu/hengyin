@@ -1924,12 +1924,27 @@ Page({
     const that = this;
     const ch = (this.data.formData.chapters || [])[chapterindex];
     const node = ch && ch.nodes && ch.nodes[nodeindex];
+    if (!ch || !node || !ch._localId || !node._localId) return;
+    const chapterId = ch._localId;
+    const nodeId = node._localId;
+    const memberId = String(app.getUserID() || '');
+    const drawerForm = this.data.nodesForm;
+    const inlineEdit = this.data.inlineEdit;
     const cur = (node && node.imgUrl) ? node.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
-      that._commitInlineNodeAt(chapterindex, nodeindex, { imgUrl: next.join(',') });
+      if (that._publishPageUnloaded || memberId !== String(app.getUserID() || '')
+          || drawerForm !== that.data.nodesForm || inlineEdit !== that.data.inlineEdit) return;
+      const chapters = that.data.formData.chapters || [];
+      const ci = chapters.findIndex(item => item && item._localId === chapterId);
+      const chapter = chapters[ci];
+      const ni = chapter ? (chapter.nodes || []).findIndex(item => item && item._localId === nodeId) : -1;
+      const currentNode = chapter && (chapter.nodes || [])[ni];
+      if (!currentNode) return;
+      const current = String(currentNode.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
+      that._commitInlineNodeAt(ci, ni, { imgUrl: next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
 
