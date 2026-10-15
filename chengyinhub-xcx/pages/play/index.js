@@ -3588,7 +3588,21 @@ Page({
     if (this.data.isMock || !opening || opening.complete || !this.data.chapter.opening) {
       const next = this.data.nextNode;
       const node = next && (this.data.nodes || []).find(n => String(n.nodeId) === String(next.nodeId));
-      return this._endThemeChapter().then(ok => { if (ok && node) this.openSheet(node); });
+      if (!this._isPlayAccountCurrent()) return Promise.resolve();
+      const context = { owner: this._playOwner, sessionKey: JSON.stringify(this._sessionParams()),
+        routeSessionId: String((this._routeState || {}).sessionId || ''), chapter: this.data.chapter };
+      this._chapterContinueIntent = context;
+      return this._endThemeChapter().then(ok => {
+        if (!ok || !node || this._chapterContinueIntent !== context || !this._isPlayAccountCurrent()
+            || context.owner !== this._playOwner || context.sessionKey !== JSON.stringify(this._sessionParams())
+            || context.routeSessionId !== String((this._routeState || {}).sessionId || '')
+            || this.data.chapter !== context.chapter) return;
+        const currentNext = this.data.nextNode;
+        const currentNode = (this.data.nodes || []).find(n => String(n.nodeId) === String(node.nodeId));
+        if (!currentNext || String(currentNext.nodeId) !== String(node.nodeId) || currentNode !== node || currentNode.done) return;
+        this._chapterContinueIntent = null;
+        this.openSheet(node);
+      });
     }
     if (!opening.ready) {
       const nodeId = this._routeState.currentNodeId;
