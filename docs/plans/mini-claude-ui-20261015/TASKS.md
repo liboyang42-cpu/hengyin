@@ -26,3 +26,8 @@
 | CL2 | 阶段名确认：已提交/已受理/调查中/已处理/已关闭/申诉中。申诉**只支持文字**（后端 `normalizeEvidence` 本批也拒绝附件）。**不做被举报方入口与视图。** 「我的举报」**不单独放入口**，从系统消息进入：后端举报进度通知 `notificationType=SYSTEM_GOVERNANCE`、payload 含 `reportId`/`publicStage`（`CommunityTrustServiceImpl.enqueueReportProgress`），在现有系统消息/通知渲染处让这类消息可点进举报详情（含申诉）。如需改 Codex 或协调者文件，只交补丁。 |
 | CL3 | 勋章图标**不改**，沿用现有勋章图标/样式渲染；昵称被占用时列出推荐供点选，不自动填。 |
 | CL4 | 对话导出 = 复制文本。暂停表单用「预设选项 + 补充文字」（四项后端字段仍为文本）。「提交排期」改用户能懂的名称：后端语义是草稿通过发布检查后进入 SCHEDULED（`OfficialEventV2ServiceImpl.schedule`），建议文案「发布活动」+ 副文案「通过发布检查后对报名可见」。**邀请候任主办/转交暂不做。** 重点改为**联合主办**：后端 `official_event_party.role` 已有 `CO_ORGANIZER`（另有 ORGANIZER/FULFILLMENT_*/SPONSOR/PROMOTION_PARTNER），协办方在 `official-inbox` 接受；本卡先在活动详情展示主办方+全部协办方（读接口已有字段才展示，不编造）。**新增协办方**目前只能经草稿 `/v2/drafts` 的 parties 全量覆盖，已排期活动无接口——若要在小程序里加协办方，需要 Claude 专属新接口，先在 PR #21 以 `CY-HANDOFF: CLAUDE` 提合同申请，获批前不写后端。 |
+
+## 用户决定（2026-10-15 晚，最高优先级）
+- **不改现有主标题与现有 UI。** 现有界面就是基准：不得把现有页面改成别的标题样式（保留 `cy-page-title` 大标题等现状）、不得替换现有弹层/描边/四态/token 的既有视觉。已关闭 BL-08/09/10/11/13/14/15/24/29 等改样式 PR。
+- **新功能、新页面按现有 UI 做**：照搬同类现有页面的结构、组件和样式（例如二级页沿用现有 `cy-nav-bar` + `cy-page-title` 的做法），不自创样式。
+- 先前「弹层带关闭、灰底无描边」是说现有 UI 本来就是这样，不是要改现有页面。
