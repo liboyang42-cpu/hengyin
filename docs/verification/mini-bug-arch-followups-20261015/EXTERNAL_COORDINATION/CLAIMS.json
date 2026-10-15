@@ -871,5 +871,11 @@
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
   "latest_application_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
-  "actual_targeted_discovery_workers": 1
+  "actual_targeted_discovery_workers": 0,
+  "targeted_numeric_candidate_conclusion": {
+    "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
+    "evidence": "E03_11Test explicitly accepts string NODE_COMPLETED id; E03-07/11 preserve field-specific asLong coercion; validator/runtime/remap agree for1.5→1",
+    "decision_boundary": "Do not tighten float/bool/large-value parsing without C00 compatibility decision; no source edit or new bug count",
+    "verification": "NOT_RUN"
+  }
 }

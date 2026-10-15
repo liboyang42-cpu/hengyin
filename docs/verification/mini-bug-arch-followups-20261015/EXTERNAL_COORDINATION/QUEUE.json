@@ -3788,7 +3788,7 @@
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
     "E02": "Original-author four-line absent-receipt fixture repair publicly delivered; local targeted retest pending; original474e failure retained, repair NOT_RUN",
-    "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; targeted NODE_COMPLETED numeric-input candidate discovery only, not a claimed bug",
+    "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
     "E06": "E06-17 GET-local HTTP503 retry boundary delivered;5 MockMvc methods NOT_RUN; no independent item READY"
@@ -3991,5 +3991,11 @@
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
   "latest_application_candidate_sha": "129d08ea66d15423478ce582c13a57dda8c0a27d",
-  "actual_targeted_discovery_workers": 1
+  "actual_targeted_discovery_workers": 0,
+  "targeted_numeric_candidate_conclusion": {
+    "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
+    "evidence": "E03_11Test explicitly accepts string NODE_COMPLETED id; E03-07/11 preserve field-specific asLong coercion; validator/runtime/remap agree for1.5→1",
+    "decision_boundary": "Do not tighten float/bool/large-value parsing without C00 compatibility decision; no source edit or new bug count",
+    "verification": "NOT_RUN"
+  }
 }

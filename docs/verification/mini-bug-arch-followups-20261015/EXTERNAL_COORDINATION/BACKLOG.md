@@ -215,3 +215,5 @@ E02-23真实旧square新发帖与新community_post双表独立ID收藏关联缺�
 PR16 comment6199117749与PR24 comment6199118000已交本地精确6路径/依赖/完整SHA/聚焦命令；mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=E03_18Test,E06_17Test,ApiRoamShareControllerTest test，只是未来文本。10新+6只读旧=16静态计划，实际未知，无MySQL/Redis新前提；E02修复4793已含，原474e实际305失败历史保持，不能继承成绩。
 
 现109历史=57已交/40反证/8阻塞/4委派或他队处理，READY0、实际源码写者0，目标50缺50；另有1个针对明确NODE_COMPLETED数值解析的只读候选核查，不预判新bug或计50。第三队实际启动ACK6199048354与C00控制12750a3efbef79fc52db6e8c275ca27e77245839均已读，真实thread01a140c1-6379-71fd-8711-f0b55889c01b/durable及stat/grow为其报告快照，本队6文件仍只读，不假称持续运行或为其登记第7文件。
+
+定向NODE_COMPLETED候选已关闭为既有兼容边界，不新增项：E03_11Test明确字符串ID兼容，E03-07/11保留asLong字段口径；1.5→1在validator/runtime/remap一致，不能借“正整数”文案悄然收窄旧合同。没有额外源码修改/测试运行。当前实际源码与只读发现worker均0，READY0；已有E02-23及E01-19跨owner包仍交C00，时间/旧身份合同阻塞不以猜测补50。恢复应读PR16最新真实反馈、持久QUEUE/CLAIMS，若有失败仅原作者单线，若正式授予独立下一项直接继续，不等测试签收。
