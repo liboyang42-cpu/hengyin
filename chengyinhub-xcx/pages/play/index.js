@@ -6442,6 +6442,7 @@ Page({
     });
   },
   _hideFinish(callback) {
+    this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
     if (this._reviewTimer) { clearTimeout(this._reviewTimer); this._reviewTimer = null; }
     this._finishRecommendationEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._endingEpoch = (this._endingEpoch || 0) + 1;
@@ -6677,10 +6678,17 @@ Page({
   },
 
   loadMilestone() {
+    if (!this._isPlayAccountCurrent() || !this.data.showFinish) return;
+    const sequence = this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const loadEpoch = this._playLoadEpoch;
     this.setData({ milestone: null });
     app.sendRequest({
       url: '/api/play/my-completed', method: 'POST', hideLoading: true, silentError: true,
       success: (res) => {
+        if (!this._isPlayAccountCurrent() || !this.data.showFinish
+            || sequence !== this._milestoneReadSequence || loadEpoch !== this._playLoadEpoch
+            || sessionKey !== JSON.stringify(this._sessionParams())) return;
         const ok = res && (res.code === 200 || res.code === '200');
         if (!ok || !Array.isArray(res.data)) return;      // 保持 null,轴不出现
         const ids = {};
