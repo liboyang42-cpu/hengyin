@@ -89,3 +89,15 @@
 | 66 | 商家安全评价摘要（只读） | 商家公开页读 `GET /api/community-trust/safety/merchants/{merchantId}`，样本不足/无数据时不展示；不做评分提交 | 照商家页现有信息块 |
 | 67 | 商家信息纠错 | 商家公开页「…」加「信息纠错」：`GET /api/community-trust/contributions/taxonomy` 取类型，`POST /contributions/submit` 纯文字提交，成功展示回执；「我的纠错」从系统消息进入，`GET /contributions/{id}` 详情 + `/contributions/supplement` 补充 | 复用举报半屏的结构；请求体按 `MerchantContributionSubmitRequest` |
 | 68 | 俱乐部申请状态回读 | 现有俱乐部申请页提交后/再次进入时用 `POST /api/club/my-apply` 回读申请状态（审核中/已通过/被拒，字段以 `Club` 实体真值为准），不改现有表单样式 | `pages/club/**` |
+
+## 第四批（69–75）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 69 | 商家主页收藏据点 | 商家公开页读 `GET /api/city/nodes/merchant/{merchantId}`（无在架节点返回空，则不展示）；有节点时在现有操作区照现有收藏按钮样式加「收藏据点」，切换走已在用的 `POST /api/city/nodes/{id}/favorite`，以返回值回读收藏态；失败如实提示 | 与 BL-42 收藏列表配套；不改现有按钮样式 |
+| 70 | 商家卡打卡头像堆 | 漫游现有商家/据点卡读 `POST /api/roam/shop/visitors`（`sourceType`=1/2，`sourceIds` 逗号分隔，最多按后端上限），展示头像堆+人数（照现有头像堆写法）；`total=0` 不展示，失败不阻塞卡片 | `pages/roam/**`；sceneCurrent 单宿主不变 |
+| 71 | 我的个人小程序码 | 个人主页现有分享/二维码位置读 `POST /api/user/player-code`（返回 `qr`），可预览/保存；生成失败显示后端文案并可重试；没有现成位置就 BLOCKED，不新增入口样式 | `subpackageMember/components/cy/profile` |
+| 72 | 官方邀约跟踪（只读） | 官方发布者在「我发布的」页按现有分段/列表结构查看 `GET /api/official/invites?status=` 的商家承接邀约及状态，字段以 `CoopInvite` 实体为准；不做发起邀约（含分成/费用字段，属资金政策） | `pages/activity/official-mine` |
+| 73 | 单测补齐·第三批 | BL-61–72 新增纯函数/页面处理器单测（不改 UI） | tests |
+| 74 | 接口合同测试·第三批 | BL-61–72 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
+| 75 | 私信菜单合并预整合 | BL-36（#77 举报对方）与 BL-61（#104 解除拉黑）同改 `subpackageB/pages/im/chat/**`：在一个分支上预演两者合并，交出冲突解法与合并后测试计数（只写 PR 说明与必要的合并提交，不扩功能） | 等 #77/#104 评审 OK 后 |
