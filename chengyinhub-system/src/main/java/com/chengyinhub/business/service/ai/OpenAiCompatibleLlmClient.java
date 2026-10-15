@@ -194,6 +194,10 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         {
             return "";
         }
-        return s.length() <= max ? s : s.substring(0, max);
+        if (s.length() <= max) return s;
+        int end = max;
+        if (end > 0 && Character.isHighSurrogate(s.charAt(end - 1))
+                && Character.isLowSurrogate(s.charAt(end))) end--;
+        return s.substring(0, end);
     }
 }
