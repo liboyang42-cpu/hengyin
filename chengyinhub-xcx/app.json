@@ -264,7 +264,9 @@
         "poi-detail/index",
         "session/index",
         "nearby/index",
-        "citystamp/index"
+        "citystamp/index",
+        "official-routes/index",
+        "official-route/index"
       ]
     }
   ],

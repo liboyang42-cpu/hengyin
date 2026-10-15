@@ -29,6 +29,7 @@
   <view class="entry-map__layers" style="top:{{searchTop}}px" bindtap="openEntryLayers" aria-role="button" aria-label="选择地图图层" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="40" /></view>
   <view class="entry-map__actions">
     <view class="entry-map__roam" bindtap="openRoamHistory" aria-role="button" aria-label="记录" hover-class="cy-pressed" hover-stay-time="80"><text>记录</text></view>
+    <view class="entry-map__roam" bindtap="openOfficialRoutes" aria-role="button" aria-label="官方路线" hover-class="cy-pressed" hover-stay-time="80"><text>官方路线</text></view>
     <view class="entry-map__roam" bindtap="openEntryRoamSheet" aria-role="button" aria-label="打开开始漫游弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="32" /><text>开始漫游</text></view>
   </view>
   <cy-state-shell class="entry-map__permission" wx:if="{{introError}}" kind="no-permission"

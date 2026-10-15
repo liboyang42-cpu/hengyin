@@ -2584,6 +2584,7 @@ Page({
   /** 起始页右侧「拍照」= 直接开始漫游并立刻开相机。
    *  照片是绑在 session 上的(roam_sessions[].photos → 邮票),所以必须先真的开起来,
    *  不能在没有 session 的起始页单独拍 —— 那张照片会无处安放。 */
+  openOfficialRoutes() { wx.navigateTo({ url: '/subpackageRoam/official-routes/index' }); },
   goStartAndShoot() { this._shootAfterStart = true; this.goStart(); },
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
