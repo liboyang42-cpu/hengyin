@@ -248,7 +248,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId,
                                           Integer expectedVersion) {
         Scope scope = requireScope(memberId, topicId, activityId,true);
-        TopicRouteSession session = routeMapper.selectByOwner(scope.activityId, topicId, memberId, DEFAULT_INSTANCE);
+        TopicRouteSession session = currentSession(memberId, topicId, scope.activityId);
         JsonNode opening = openingSnapshot(session);
         if (opening == null || chapterId == null || chapterId != opening.path("chapterId").asLong()) {
             throw new IllegalArgumentException("开局流程不匹配");
@@ -302,13 +302,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void requireOpeningAccess(Long memberId, Long topicId, Long activityId, Long nodeId) {
-        TopicRouteSession session = routeMapper.selectByOwner(activityId == null ? 0L : activityId,
-                topicId, memberId, DEFAULT_INSTANCE);
+        TopicRouteSession session = currentSession(memberId, topicId, activityId);
         if (session == null) {
             CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
             if (topic == null || JourneyStory.openingChapterId(topic.getJourneyStoryJson()) == null) return;
             state(memberId, topicId, activityId);
-            session = routeMapper.selectByOwner(activityId == null ? 0L : activityId, topicId, memberId, DEFAULT_INSTANCE);
+            session = currentSession(memberId, topicId, activityId);
             // 查不到本局 != 这个主题没有开局。建完还读不到就拒,别把读失败当成放行理由。
             if (session == null) throw new IllegalStateException("请先完成开局流程");
         }
