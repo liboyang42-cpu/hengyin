@@ -30,7 +30,7 @@ module.exports = [
   { file: 'pages/activity/official-detail/index.js', count: 1, reason: 'CU-C-16 绑定主题名是装饰读取:失败落页内 boundTopicError(cy-inline-error)说明点任务仍可前往,关掉自动 toast 避免双弹。' },
   { file: 'pages/address/address.js', count: 1, reason: '地址列表页使用自己的加载失败提示，避免底层重复 toast。' },
   { file: 'pages/club/topic-story/index.js', count: 2, reason: '取答案失败落到弹层内 answerError,由 cy-inline-error 承接并给重试;统一 toast 会与弹层里那句说明重复,而且 toast 弹完就没,重试入口必须留在屏幕上。' },
-  { file: 'pages/coop/invite-detail/index.js', count: 5, reason: '取数失败落整页 cy-error 带重试(并把「不在当前列表里了」与「加载失败」分成两种态);接受/拒绝/撤回提交失败落精确 toast,且不本地假设成功 —— 提交后重新问服务端要一次状态。2026-09-15 已接受卡动作搬来后 +3(联系合作方 / 提交供给 / 提交评价):都自带精确 toast 与行内回执,关掉统一 toast 防双弹。' },
+  { file: 'pages/coop/invite-detail/index.js', count: 6, reason: '取数失败落整页 cy-error 带重试(并把「不在当前列表里了」与「加载失败」分成两种态);接受/拒绝/撤回提交失败落精确 toast,且不本地假设成功 —— 提交后重新问服务端要一次状态。2026-09-15 已接受卡动作搬来后 +3(联系合作方 / 提交供给 / 提交评价):都自带精确 toast 与行内回执,关掉统一 toast 防双弹。BL-103 +1:对方近 90 天履约摘要是附属只读信息,读不到就不展示该行,不挡详情、不弹 toast。' },
   { file: 'pages/club/checkin-detail/index.js', count: 1, reason: '核销详情取数失败按 403/权限文案分流到「核销记录不可见」的整屏无权限态,其余落整屏 cy-error 带重新加载;两者都可见,不吞。' },
   { file: 'pages/club/detail/index.js', count: 17, reason: '俱乐部详情的数据看板、合作、团码和导演台场次均以页内 error/empty 或明确 toast 承接；会员摘要失败落可重试 error，活动举报解析失败显示当前操作的精确 toast；场次创建与取消已迁往 event-ops；新增的「可对接的活动」折叠段失败落段内 cy-error 带重试，坏响应不降级成空列表(空列表会被读成「没有可对接的活动」)。会员与会费概览取数 2026-09-09 随会费页整页删除,少一条。2026-09-10 稿 M 的设置弹窗加三条:客户人数与已结算分润取不到就在原位显示「暂时读不到」(留空会被读成「一个客户都没有」「一分钱都没有」),开放设置三个开关(俱乐部公开可见 / 允许成员发帖 / 开放商家承接)失败落 openSettingErrorText 由该行下的 cy-inline-error 承接并可重试;「带上一次游玩记录」选择器失败落 postRefState=error,由半屏里的 cy-error 带重试承接。' },
   { file: 'pages/club/event-ops/index.js', count: 11, reason: '活动运营的权限、系列、名册与写操作分别落入可见错误态或 toast；负责人附属名单失败显示默认值告警；场次取消提交与独立状态回读都有专用错误态。' },
