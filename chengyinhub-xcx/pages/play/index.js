@@ -4286,6 +4286,7 @@ Page({
   // ---------- P1 俱乐部带领(轮询 + 队长控) ----------
   loadTeamProgress() {
     const that = this;
+    const progressContext = this._leadOperationContext();
     const options = arguments[0];
     // 返回 promise:true=本次成功(或被更新的响应顶替,不算失败),false=失败 —— 轮询器据此退避
     if (!this._isPlayAccountCurrent() || this._themeHidden || !this.data.activityId || this.data.isPreview || this.data.isMock) return Promise.resolve(true);
@@ -4299,7 +4300,7 @@ Page({
     const claimResponse = () => {
       // 只拒绝比「已落地」结果更旧的响应，不能以「最新已发起」为准。
       // 否则当 GET 持续慢于 4s 轮询间隔时，每个响应都会被下一请求提前作废而永不刷新。
-      if (!that._isPlayAccountCurrent() || that._themeHidden || lifecycleEpoch !== (that._leadLifecycleEpoch || 0)) return false;
+      if (!that._isLeadOperationContextCurrent(progressContext, false) || that._themeHidden || lifecycleEpoch !== (that._leadLifecycleEpoch || 0)) return false;
       if (requestEpoch < (that._leadProgressAppliedEpoch || 0)) return false;
       that._leadProgressAppliedEpoch = requestEpoch;
       return true;
@@ -4316,7 +4317,14 @@ Page({
         return false;
       }
       const d = res.data;
-      const unlockAuditDone = unlockAuditToken != null && unlockAuditToken === that._leadUnlockAuditToken;
+      const auditIntent = that._leadUnlockIntent;
+      const unlockAuditDone = unlockAuditToken != null && unlockAuditToken === that._leadUnlockAuditToken
+        && auditIntent && auditIntent.auditToken === unlockAuditToken
+        && that._isLeadOperationContextCurrent(auditIntent.context, false);
+      if (unlockAuditDone && that._leadUnlockIntents[auditIntent.key] === auditIntent) {
+        delete that._leadUnlockIntents[auditIntent.key];
+        that._leadUnlockIntent = null;
+      }
       if (!d.exists) {
         if (unlockAuditDone) that._leadUnlockChecking = false;
         that.setData({
@@ -4448,44 +4456,66 @@ Page({
     this.openScene('qr-group-code', { activityId: this.data.activityId, name: '本场次' });
   },
   leadUnlock() {
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
-    if (this._leadUnlockInFlight || this._leadUnlockChecking) return;
-    this._leadUnlockInFlight = true;
-    const that = this;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    const key = JSON.stringify([context.owner, context.activityId, context.sessionKey]);
+    const intents = this._leadUnlockIntents = this._leadUnlockIntents || Object.create(null);
+    let intent = intents[key];
+    const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
+    const audit = () => {
+      if (!current()) return;
+      this._leadUnlockInFlight = false; this._leadUnlockChecking = true;
+      intent.auditToken = this._leadUnlockAuditToken = (this._leadUnlockAuditToken || 0) + 1;
+      this.setData({ leadUnlockChecking: true });
+      this.loadTeamProgress({ unlockAuditToken: intent.auditToken });
+    };
+    if (intent) {
+      this._leadUnlockIntent = intent;
+      if (intent.phase === 'checking') audit();
+      return;
+    }
+    intent = intents[key] = { key, context, phase: 'confirming' };
+    this._leadUnlockIntent = intent;
+    this._leadUnlockInFlight = true; this._leadUnlockChecking = false;
+    this.setData({ leadUnlockChecking: false });
+    const release = () => { if (intents[key] === intent) delete intents[key]; };
+    let modalSettled = false, loadingShown = false;
+    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
     cyModal.show({
       title: '解锁下一章节',
       content: '确认让全队进入下一章节?',
       confirmText: '确认解锁',
-      success(res) {
-        if (!res.confirm) {
-          that._leadUnlockInFlight = false;
-          that.diegetic('已取消解锁');
-          return;
-        }
-        cyLoading.show('正在放行');
-        req('/api/club/lead/unlock-chapter', 'POST', { activityId: that.data.activityId }).then((r) => {
-          cyLoading.hide();
-          that._leadUnlockInFlight = false;
+      success: (res) => {
+        if (modalSettled) return;
+        modalSettled = true;
+        if (!current()) { release(); return; }
+        if (!res.confirm) { release(); this._leadUnlockInFlight = false; this.diegetic('已取消解锁'); return; }
+        intent.phase = 'submitting';
+        loadingShown = true; cyLoading.show('正在放行');
+        req('/api/club/lead/unlock-chapter', 'POST', { activityId: context.activityId }).then((r) => {
+          finishLoading();
           if (r.httpFail) {
-            that._leadUnlockChecking = true;
-            that._leadUnlockAuditToken = (that._leadUnlockAuditToken || 0) + 1;
-            that.setData({ leadUnlockChecking: true });
-            that.diegetic('章节放行结果待核对，正在读取队伍进度');
-            that.loadTeamProgress({ unlockAuditToken: that._leadUnlockAuditToken });
+            intent.phase = 'checking';
+            if (current()) { this.diegetic('章节放行结果待核对，正在读取队伍进度'); audit(); }
             return;
           }
+          release();
+          if (!current()) return;
+          this._leadUnlockInFlight = false;
           const ok = r.code == 200 || r.code == '200';
-          that.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
-          if (ok) that.loadTeamProgress();
+          this.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
+          if (ok) this.loadTeamProgress();
         }).catch(() => {
-          cyLoading.hide();
-          that._leadUnlockInFlight = false;
-          that.diegetic('章节放行没有送达，请检查网络后重试');
+          finishLoading(); release();
+          if (!current()) return;
+          this._leadUnlockInFlight = false;
+          this.diegetic('章节放行没有送达，请检查网络后重试');
         });
       },
-      fail() {
-        that._leadUnlockInFlight = false;
-        that.diegetic('解锁确认未打开，请重试');
+      fail: () => {
+        if (modalSettled) return;
+        modalSettled = true; release();
+        if (current()) { this._leadUnlockInFlight = false; this.diegetic('解锁确认未打开，请重试'); }
       }
     });
   },
