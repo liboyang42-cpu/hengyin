@@ -39,6 +39,8 @@ function loadPage(relativePath, app, requireMap = {}) {
       if (request === '../../../utils/danger-actions.js') return require(path.join(ROOT, 'utils/danger-actions.js'))
       if (request === '../utils/owner-action-guard.js') return require(path.join(ROOT, 'pages/club/utils/owner-action-guard.js'))
       if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,

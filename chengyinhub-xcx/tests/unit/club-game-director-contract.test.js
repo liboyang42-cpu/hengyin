@@ -109,6 +109,8 @@ function loadClubDetail(activityList) {
       }
       if (modules[request]) return modules[request]
       if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -150,6 +152,8 @@ function loadDirector(adapter, initialStorage, options) {
         return { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } }
       }
       if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,

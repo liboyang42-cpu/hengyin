@@ -1,6 +1,7 @@
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../utils/modal.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../../../utils/club-pinned-notice.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
 const { isPoolList, decoratePool } = require('../../../utils/coop-invite-view.js');
@@ -2472,7 +2473,8 @@ Page({
     const detail = e.detail || {};
     const urls = detail.picList || e.currentTarget.dataset.urls;
     const cur = urls && urls[detail.picIndex || 0];
-    if (urls && urls.length) wx.previewImage({ current: cur, urls: urls });
+    // BL-20:统一走 media-preview(过滤空串、current 不在列表时回落首图)
+    mediaPreview.open(urls, cur);
   },
 
   onPostDetail(e) {
