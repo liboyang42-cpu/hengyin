@@ -3997,8 +3997,8 @@ Page({
   _noteLocAccuracy(accuracy) {
     const low = playAccuracy.isLowAccuracy(accuracy);
     if (low === !!this.data.gpsLowAcc) return;
-    this.setData(low ? { gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT }
-      : { gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
+    if (low) this.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
+    else this.setData({ gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
   },
   watchLocation() {
     const that = this;
