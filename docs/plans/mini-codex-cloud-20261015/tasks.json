@@ -303,18 +303,14 @@
     {
       "id": "A02",
       "title": "AI网关失败输入审核与用量一致底层",
-      "priority": "P1",
-      "stage": 2,
+      "priority": "P0→P1",
+      "stage": "1修已确认AI bug→2整理用量底层",
       "effort_person_days": [
         5,
         8
       ],
       "depends_on": [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05"
+        "C00"
       ],
       "opt_refs": [
         "OPT-080",
@@ -343,7 +339,11 @@
       ],
       "claude_boundary": "AI创作入口、新对话UI、模型新场景和新功能后端交Claude；共用网关合同由本单维护。",
       "hold_if": "价格/留存/付费行为与新依赖须明确决策；无真实usage字段能力就标估算，不伪造。",
-      "state": "待新Cloud核基线并领取"
+      "state": "待新Cloud核基线并领取",
+      "phase_split": {
+        "bugfix": "C00后即复核/修缺配置mock成功和完整输入审核缺口，不等其他架构",
+        "architecture": "B01–B05有修复或明确证据处置后，再整理用量/额度/留存合同；同一A02所有者串行继续"
+      }
     },
     {
       "id": "A03",
@@ -429,7 +429,7 @@
   ],
   "parallel_policy": {
     "default_worker_limit": 4,
-    "stage_barrier": "先完成B01–B05的修复或明确证据处置，再进入A01–A03；高风险未获批准项保持阻塞不冒充完成",
+    "stage_barrier": "已确认bug优先，包括A02前半段；B01–B05及A02已确认bug有修复或明确证据处置后再做架构后半段；需批准项保持阻塞，不冒充完成",
     "integration_owner": "C00/C99同一协调者",
     "ci_matrix_max_parallel": 20,
     "vps_java_tests": "serial task-owned resources only"
