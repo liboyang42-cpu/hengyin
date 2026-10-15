@@ -6507,12 +6507,18 @@ Page({
 
   // ---------- 通关足迹卡 ----------
   loadEnding() {
-    if (this.data.mode !== 2 || this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.mode !== 2 || this.data.isPreview || this.data.isMock) return;
     const that = this;
     const epoch = this._endingEpoch = (this._endingEpoch || 0) + 1;
+    const params = this._sessionParams();
+    const sessionKey = JSON.stringify(params);
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const isCurrent = () => that._isPlayAccountCurrent() && epoch === that._endingEpoch && that.data.mode === 2
+      && sessionKey === JSON.stringify(that._sessionParams())
+      && routeSessionId === String((that._routeState || {}).sessionId || '');
     this.setData({ endingError: false });
-    req('/api/play/ending', 'GET', this._sessionParams()).then((r) => {
-      if (epoch !== that._endingEpoch) return;
+    req('/api/play/ending', 'GET', params).then((r) => {
+      if (!isCurrent()) return;
       if ((r.code == 200 || r.code == '200') && r.data) {
         const opener = typeof r.data.opener === 'string' ? r.data.opener : '';
         const fragments = Array.isArray(r.data.fragments) ? r.data.fragments : [];
@@ -6523,7 +6529,7 @@ Page({
         that.setData({ endingError: true });
       }
     }).catch(() => {
-      if (epoch !== that._endingEpoch) return;
+      if (!isCurrent()) return;
       that.setData({ endingError: true });
     });
   },
@@ -6533,28 +6539,39 @@ Page({
    * 盖在完成页之前;点「继续」才进完成页。主题没配结局 / 拿不到 → 直接进完成页,不挡路。
    */
   _loadLifeEnding(next) {
-    req('/api/play/journey/ending', 'GET', { topicId: this.data.topicId, activityId: this.data.activityId || 0 }).then((res) => {
+    if (!this._isPlayAccountCurrent()) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0 };
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const sequence = this._lifeEndingReadSequence = (this._lifeEndingReadSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._lifeEndingReadSequence
+      && params.topicId === this.data.topicId && params.activityId === (this.data.activityId || 0)
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
+    const finish = () => { if (isCurrent()) next(); };
+    req('/api/play/journey/ending', 'GET', params).then((res) => {
+      if (!isCurrent()) return;
       const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
-      if (!d || !d.title) { next(); return; }
+      if (!d || !d.title) { finish(); return; }
       const archive = lifeArchive.fromServer(d.archive, this.data.nodes);
-      const card = () => this._showEnding({ show: true, real: true, idx: 0, list: [{ code: d.code, title: d.title, summary: d.summary || '' }],
-        archive, hasArchive: !lifeArchive.isEmpty(archive) });
+      const card = () => { if (isCurrent()) this._showEnding({ show: true, real: true, idx: 0, list: [{ code: d.code, title: d.title, summary: d.summary || '' }],
+        archive, hasArchive: !lifeArchive.isEmpty(archive) }); };
       // 结局章(2026-09-24):服务端挑中的那一章先当故事流读,读完才出结局卡与这一生的档案
       const ch = d.chapter;
       if (ch && Array.isArray(ch.blocks) && ch.blocks.length) {
         this._playEndingChapter({ id: ch.id, chapterId: ch.id, name: ch.name, blocks: ch.blocks,
-          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl }, card);
+          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl }, card, isCurrent);
         return;
       }
       card();
-    }).catch(() => next());
+    }).catch(finish);
   },
   /** 把一章结局章当故事流播;章末「继续」时收起它并走 after(出结局卡) */
-  _playEndingChapter(chapter, after) {
-    this._afterEndingChapter = after;
+  _playEndingChapter(chapter, after, isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
+    if (!current()) return;
+    this._afterEndingChapter = () => { if (current()) after(); };
     this.stopAudio();
     const built = Object.assign(this.buildChapter({ chapters: [chapter] }, this.data.nodes), { ending: true, idxLabel: '结局' });
-    this.setData({ chapter: built, chapterGameAnchor: '' }, () => this.openChapterFull());
+    this.setData({ chapter: built, chapterGameAnchor: '' }, () => { if (current()) this.openChapterFull(); });
   },
   continueLifeEnding() {
     const done = () => this.setData({ 'previewEnding.show': false }, () => this.openFinish());
@@ -6574,8 +6591,10 @@ Page({
     // 故事主题先看结局与档案(只看一次);探店日与试玩不走这条
     // 只有故事流主题(本章有块流)才配得出结局;经典路线照旧直接进完成页
     const storyTopic = Array.isArray(this.data.chapter && this.data.chapter.blocks);
-    if (storyTopic && !this.data.isPreview && !this.data.isMock && this.data.mode !== 2 && !this._lifeEndingShown) {
-      this._lifeEndingShown = true;
+    const lifeEndingScope = JSON.stringify([this._playOwner, this._sessionParams(), String((this._routeState || {}).sessionId || '')]);
+    if (storyTopic && !this.data.isPreview && !this.data.isMock && this.data.mode !== 2
+        && (!this._lifeEndingShown || this._lifeEndingShownScope !== lifeEndingScope)) {
+      this._lifeEndingShown = true; this._lifeEndingShownScope = lifeEndingScope;
       this._loadLifeEnding(() => this.openFinish());
       return;
     }
