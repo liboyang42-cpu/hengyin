@@ -2992,7 +2992,7 @@
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "C00 must assign exact paths before edits; same-file tasks execute serially; candidate paths do not grant ownership",
       "source_files": [],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -3001,15 +3001,31 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-22.md",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e02",
+      "assigned_worker": null,
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": "76bfabcb46b30c0aa1fe1ddfc13d4c89bd49d7b9",
-      "regression_methods_written": 0,
+      "public_sha": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
+      "regression_methods_written": 9,
       "delivery_kind": "CONTRACT_PACKET_SAME_ROOT_CAUSE_AS_E02-19; not a second confirmed bug",
-      "preparation": "Restored WIP and exact baseline; old fixture grants read and original worker ACK received",
-      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be"
+      "preparation": "APPLIED_AND_PUBLIC; exact fixture transfer completed, do not replay old prepared patch",
+      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_22Test.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-22.md"
+      ],
+      "test_classes": [
+        "E02_22Test",
+        "CommunityPostServiceImplTest"
+      ],
+      "expected_focused_methods": 64,
+      "expected_existing_methods_preserved": 55,
+      "future_focused_command": "CHENGYIN_E02_22_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_22Test,CommunityPostServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test",
+      "compatibility_limit": "Legacy action deleted before upgrade without immutable receipt cannot be reconstructed; foreign legacy receipt retained, legal UNLIKE continues, subsequent mismatched LIKE409; no DDL/TTL change"
     },
     {
       "id": "E03-15",
@@ -3073,7 +3089,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E03",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -3082,13 +3098,13 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e03",
+      "assigned_worker": null,
       "branch": "codex/extra-e03-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e03",
       "depends_on": [],
-      "public_sha": "cc39c00666e99d472613e86fa37a88a586ec7860",
-      "regression_methods_written": 0,
-      "preparation": "Restored WIP and exact baseline; old fixture grants read and original worker ACK received",
+      "public_sha": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
+      "regression_methods_written": 4,
+      "preparation": "APPLIED_AND_PUBLIC; exact fixture transfer completed, do not replay old prepared patch",
       "prepared_regression_methods": 4,
       "prepared_patch": {
         "base_public_sha": "8be25aebd839c323a6847f80a2afb99f542fa0d2",
@@ -3100,9 +3116,29 @@
           }
         ],
         "verification": "NOT_RUN",
-        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery."
+        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery.",
+        "status": "APPLIED_AND_PUBLIC_DO_NOT_REAPPLY",
+        "applied_public_sha": "48c39663f63995a4e5365d2d615e40135bdc1ef1"
       },
-      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be"
+      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md"
+      ],
+      "test_classes": [
+        "E03_16Test",
+        "PlayJourneyStoryServiceImplTest",
+        "PlayJourneyReadServiceImplTest",
+        "SeventhPierFixtureTest"
+      ],
+      "expected_focused_methods": 57,
+      "expected_existing_methods_preserved": 53,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E03_16Test,PlayJourneyStoryServiceImplTest,PlayJourneyReadServiceImplTest,SeventhPierFixtureTest -Dsurefire.failIfNoSpecifiedTests=false test"
     },
     {
       "id": "E04-13",
@@ -3324,7 +3360,7 @@
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java"
       ],
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E05",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -3333,17 +3369,21 @@
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md",
       "priority": "P2",
       "estimated_source_effort": "30-120 minutes; no verification included",
-      "assigned_worker": "/root/external_e05",
+      "assigned_worker": null,
       "branch": "codex/extra-e05-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e05",
       "depends_on": [],
-      "public_sha": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
-      "regression_methods_written": 0,
+      "public_sha": "24525416a11f6c2fc24272edf3c13d19cbaa6b05",
+      "regression_methods_written": 5,
       "writer_mode": "EVIDENCE_ONLY_SUPPORT",
       "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
         "docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md"
       ],
-      "preparation": "Restored WIP and exact baseline; old fixture grants read and original worker ACK received",
+      "preparation": "APPLIED_AND_PUBLIC; exact fixture transfer completed, do not replay old prepared patch",
       "prepared_regression_methods": 5,
       "prepared_patch": {
         "base_public_sha": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
@@ -3355,9 +3395,20 @@
           }
         ],
         "verification": "NOT_RUN",
-        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery."
+        "recovery": "After exact old-fixture grants, use matching base private worktree, preserve existing patch; apply this diff and new test only if absent, then original worker synchronizes authorized old fixtures before candidate delivery.",
+        "status": "APPLIED_AND_PUBLIC_DO_NOT_REAPPLY",
+        "applied_public_sha": "24525416a11f6c2fc24272edf3c13d19cbaa6b05"
       },
-      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be"
+      "ownership_control_sha": "8533507d637199e3143356509de3e384a74c57be",
+      "test_classes": [
+        "E05_17Test",
+        "ApiPlayEncounterControllerTest",
+        "ApiPlayEncounterRoleViewTest"
+      ],
+      "expected_focused_methods": 72,
+      "expected_existing_methods_preserved": 67,
+      "future_focused_command": "mvn -B -pl chengyinhub-admin -am -Dtest=E05_17Test,ApiPlayEncounterControllerTest,ApiPlayEncounterRoleViewTest -Dsurefire.failIfNoSpecifiedTests=false test",
+      "documentation_correction_public_sha": "f01b5c06657cfb654a0cdc86dc77159ac53b6940"
     },
     {
       "id": "E06-14",
@@ -3488,7 +3539,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 9,
+  "queue_revision": 10,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3542,21 +3593,21 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": "E02-22",
-    "E03": "E03-16",
+    "E02": null,
+    "E03": null,
     "E04": null,
-    "E05": "E05-17",
+    "E05": null,
     "E06": null
   },
   "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
     "total_history": 105,
-    "source_delivered": 52,
+    "source_delivered": 55,
     "no_change_source_review": 40,
     "blocked": 6,
     "ready": 0,
-    "claimed": 3,
-    "actionable_or_inflight": 3
+    "claimed": 0,
+    "actionable_or_inflight": 0
   },
   "control_latest_read_sha": "8533507d637199e3143356509de3e384a74c57be",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
@@ -3565,53 +3616,53 @@
       "slot": "E01",
       "task": null,
       "worker": "/root/external_e01",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e01"
     },
     {
       "slot": "E02",
-      "task": "E02-22",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
       "slot": "E03",
-      "task": "E03-16",
+      "task": null,
       "worker": "/root/external_e03",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e03"
     },
     {
       "slot": "E04",
       "task": null,
       "worker": "/root/external_e04",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e04"
     },
     {
       "slot": "E05",
-      "task": "E05-17",
+      "task": null,
       "worker": "/root/external_e05",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e05"
     },
     {
       "slot": "E06",
       "task": null,
       "worker": "/root/external_e06",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 47,
+  "refill_shortfall": 50,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "Nullable PATCH delivered; LIKE extra query/legacy identity contract pending C00",
-    "E03": "Archive instance filter delivered; current-scope source prepared but3 old fixtures pending",
+    "E02": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
+    "E03": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
-    "E05": "Frozen-key and Unicode fixes delivered; current-scope source prepared but2 old fixtures pending",
+    "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
     "E06": "Authorized Share storage/read/revoke candidates refuted; no independent proven item READY"
   },
   "shared_producer": {
@@ -3620,13 +3671,74 @@
     "import_public_sha": "42cd374d08676bf570db505a454264d5c4178775",
     "owner": "CORE/C06; read-only dependency"
   },
-  "scope_prepared_patch_notice": "Prepared source and new tests are serialized below for lossless recovery only. They are not applied to the candidate tree and are not verified; exact old fixture rights remain required.",
+  "scope_prepared_patch_notice": "Historical exact recovery patches now marked APPLIED_AND_PUBLIC. Candidate contains actual source/tests; do not reapply snapshots.",
   "next_priority": [
-    "E03-16 after3 necessary old fixture grants",
-    "E05-17 after2 necessary old fixture grants",
-    "E02-19/E02-22 only after C00 legacy receipt contract and precise interface query grant",
-    "E02-13 original audit-task writer",
-    "E04-07 original completion-coupon receipt producer contract; no guessed original history"
+    "Process actual local verification failure on one original-writer repair lane; other independent work continues",
+    "Receive C00 exact new backend domain transfers for actual caller requests6198338004",
+    "Keep policy/other-owner blockers scoped; do not recreate delivered E03-17 or restored patches"
   ],
-  "validation_policy": "User separately authorized C00 centralized backend validation; this team/workers still source-only NOT_RUN, no duplicate validation/resources; new SHA/dependencies handed to C00 separately from frozen candidate"
+  "validation_policy": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results; No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
+  "rolling_dispatch_policy": {
+    "name": "ONE_REPAIR_FIVE_DEVELOPMENT",
+    "user_rule": "他们继续做 做完push就好 你来验证后端 然后有问题告诉他们后让他们其中一条线修复 其他5条线继续往下做",
+    "max_workers": 6,
+    "worker_model": "gpt-6.1-sol",
+    "max_concurrent_failure_repair_workers": 1,
+    "normal_development_slots": 5,
+    "repair_slot_when_idle": "May do ordinary authorized work; switch back for actual local verification failure after preserving WIP",
+    "failure_owner": "Original exact file writer preferred; replacement only after formal exact path transfer by C00",
+    "multiple_failures": "One prioritized serial repair queue; never start a second failure-repair worker",
+    "continue_development": "Other independent tasks continue immediately; only genuine shared dependencies block; no whole-team test wait",
+    "delivery": "Finish then publish full SHA immediately; do not wait for tests/CI/local acceptance; SOURCE_DELIVERED_UNVERIFIED is not PASS",
+    "validation_owner": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results",
+    "cloud_validation": "No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
+    "failure_packet_fields": [
+      "failing_complete_candidate_sha",
+      "test_class_or_assertion",
+      "exact_command",
+      "actual_environment",
+      "reproduction",
+      "expected",
+      "actual",
+      "log_evidence",
+      "exact_paths",
+      "original_writer",
+      "priority"
+    ],
+    "repair_result_fields": [
+      "repair_complete_public_sha",
+      "dependencies",
+      "exact_changed_paths",
+      "future_targeted_retest_command",
+      "NOT_RUN_until_local_result"
+    ],
+    "scope": "C00 sole global ownership coordinator; EXTRA only own QUEUE/CLAIMS/BACKLOG; no merge/deploy/migration/production",
+    "real_capacity": "If no genuine authorized independent task is actionable, disclose actual idle count/shortfall; do not fabricate tasks to make five or50"
+  },
+  "failure_repair_queue": [],
+  "active_failure_repair": null,
+  "new_scope_requests": [
+    {
+      "comment_id": 6198338004,
+      "requested_lane": "E01",
+      "module": "CmsTopicLikeService/Mapper leaf",
+      "status": "PENDING_C00_EXACT_TRANSFER",
+      "real_caller": "mylike /api/topic/like_list and /api/topic/like",
+      "confirmed_bug": false
+    },
+    {
+      "comment_id": 6198338004,
+      "requested_lane": "E04",
+      "module": "ShopDayProofServiceImpl only",
+      "status": "PENDING_C00_EXACT_TRANSFER",
+      "real_caller": "play checkin/photo/game proof; ApiPlayProgressController",
+      "confirmed_bug": false
+    }
+  ],
+  "candidate_code_sha_before_protocol_commit": "ff7cddb9093951a5da68a87e033a67bb015cfe66",
+  "latest_source_deliveries": {
+    "E03-16": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
+    "E05-17": "24525416a11f6c2fc24272edf3c13d19cbaa6b05",
+    "E02-22": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc"
+  }
 }

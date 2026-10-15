@@ -1,28 +1,67 @@
-# EXTRA6滚动源码任务池
+# EXTRA6源码交付、单线修复与恢复入口
 
-CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，Cloud running/connected。
-最新已读扩权 `d3d38ccd70d25727ae6f972f1698254e935fce47`。分支 `codex/extra-six-rolling-20261015`，草稿[PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
+CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
+已读控制8533507d637199e3143356509de3e384a74c57be。分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。本协议前完整源码候选 `ff7cddb9093951a5da68a87e033a67bb015cfe66`，待编译/回归，不是可编译通过声明。
 
-历史累计105具体项，源码/回归交付52、反证40、阻塞10；READY 0+在途0=0。目标50尚缺50，未补足；完成/反证/阻塞不算剩余任务，候选不算确认bug。
+历史105项：源码/回归交付55、反证40、阻塞6、其余委派/他队处理；当前READY0/模型执行0，目标剩余50缺50。恢复3项均已完成，额外两个真实caller新范围请求6198338004待C00精确转交，不计为已确认bug或已授权任务。
 
-全部新验证NOT_RUN。禁止Java/Maven/Node/lint/DB/DevTools/业务验证或手动CI。SOURCE_DELIVERED_UNVERIFIED，不合并/部署/迁移/生产/VPS；未来命令仅文字。
+## 持久调度协议：1修复+5开发
 
-## 实际worker分配
+用户最新规则：“他们继续做 做完push就好 你来验证后端 然后有问题告诉他们后让他们其中一条线修复 其他5条线继续往下做”。
 
-|worker gpt-6.1-sol|任务|状态|
-|---|---|---|
-|external_e01|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
-|external_e02|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
-|external_e03|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
-|external_e04|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
-|external_e05|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
-|external_e06|无；等待精确转交|IDLE_FROZEN_SOURCE_OR_EXACT_TRANSFER_PENDING|
+每队最多6个gpt-6.1-sol，最多1条线处理本地验证失败，优先原文件作者；换人必须C00先正式移交精确文件。多个失败按优先级排同一条修复线，不开启第二修复worker。无失败时修复线可做普通独占任务。其余5条有实际独立任务就继续，只有真正共享依赖的项等待，不能因测试整队停工，也不能制造工作维持运行数。
 
-最多六模型槽；此刻0模型执行、6槽空闲，E03/E05补丁已冻结等待旧fixture精确转交，不能写六模型一直运行。待授权时已完成无冲突候选/支援，不能造工作维持运行数。
+完成即push完整SHA，不等测试/CI或本地签收。Cloud双方不新增手动编译/测试/CI触发重跑或专门验证配置，既有自动CI自然运行且门禁保留。实际后端/VPS/数据库由本地验证线程01a13eed集中执行，C00唯一源码/控制账维护者并汇总交付；旧“C00执行验证”讨论已被用户更正覆盖。
 
-## 精确队列
+失败包必须带候选完整SHA、类/断言、命令/环境、复现、期望/实际、日志和路径/原作者。修复前冻结原开发WIP到独立基线，避免覆盖；修复后回填完整修复SHA、依赖、精确改动和针对性复测命令，由本地对新SHA复测。NOT_RUN就是未运行，source push不是PASS，不继承旧SHA结果。
 
-[QUEUE.json](QUEUE.json)为每项状态/公共完整SHA/未来命令；[CLAIMS.json](CLAIMS.json)为源码与支援证据单写边界。
+当前失败队列为空，修复槽待命；实际独立开发任务也已交付完成，空闲如实记账，等待新精确边界不等Mac。
+
+## 启动提示：恢复时先执行
+
+1. 读控制分支最新LONGRUN_CURRENT/START_PROMPT/ROLLING/SOURCE_OWNERS/EXPANSION，再读本目录QUEUE/CLAIMS和PR16新回执；用户更新指令优先。
+2. 核各公共完整HEAD、工作树WIP及原writer；已经APPLIED_AND_PUBLIC的prepared_patch仅历史，不能再应用或重做E03-17。共享helper依赖按公共SHA提取，不全文件覆盖CORE最新源。
+3. 先取实际失败队列的一项交原作者占唯一修复线，同时派其他真实独占任务；无失败可全做开发。发现表外缺陷先C00原writer或正式精确转交。
+4. 每项只改已领取路径，worker不Git/不运行验证；父协调者冻结路径串行小提交、GitHub非强推发布、汇总PR36。Git CLI凭据不可用时用授权Git Data接口并核同tree/parent，不读取凭据。
+5. 更新完整SHA/变更集/依赖/类与预期数、NOT_RUN/本地实际结果分开；向PR16交付，由C00汇总给本地。完成即取下项，不因CI/验证待签收而阻塞无关开发。平台时长/额度停止则保留公开恢复状态，不承诺永久运行。
+
+## 本次三项快速验证移交
+
+|项|公共最小提交|新方法|旧方法保留|未来组预期|
+|---|---|---|---|---|
+|E03-16|`48c39663f63995a4e5365d2d615e40135bdc1ef1`|4|53|57|
+|E05-17|`24525416a11f6c2fc24272edf3c13d19cbaa6b05`|5|67|72|
+|E02-22|`a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc`|9|55|64|
+
+三组共193方法（18新+175旧），全部NOT_RUN；这不是实际执行数、通过数或bug验收数。各组精确write_files见QUEUE，独占证据为docs/verification/mini-longrun-20261015/EXTRA6/<ID>.md。
+
+E03-16未来命令文字：
+
+```bash
+mvn -B -pl chengyinhub-admin -am -Dtest=E03_16Test,PlayJourneyStoryServiceImplTest,PlayJourneyReadServiceImplTest,SeventhPierFixtureTest -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+E05-17未来命令文字：
+
+```bash
+mvn -B -pl chengyinhub-admin -am -Dtest=E05_17Test,ApiPlayEncounterControllerTest,ApiPlayEncounterRoleViewTest -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+E02-22未来命令文字：
+
+```bash
+CHENGYIN_E02_22_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am -Dtest=E02_22Test,CommunityPostServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+E03/E05组无需数据库服务，需要既有JDK/Maven/JUnit/Mockito/Spring资源；共享findCurrent公共producer5162ef45bb42486575619871ff24b4b694941f09，EXTRA精确import42cd374d08676bf570db505a454264d5c4178775，E03分支import8be25aebd839c323a6847f80a2afb99f542fa0d2，保留archive实例隔离642380e194c4830f6350191e3b498679348b435a。
+
+E02真库组须显式CHENGYIN_E02_22_MYSQL_IT=1、六个CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD，独占非空suffix、MySQL8+非MariaDB、scratch CREATE/DROP/DML权限；读证据核环境前提，没开门禁而skip不能算通过。真实MySQL/Redis只能本地适用批准入口，离线212入口无网络不等于真库通道。原E02-20 nullable PATCH源和对应旧fixture保留，新receipt修复不改变它。
+
+依次领取最小提交而非把EXTRA旧base全文件覆到CORE@2b1984或f7e0。E05证据职责更正独立f01b5c06657cfb654a0cdc86dc77159ac53b6940仅文档，可随包取用。旧冻结候选的结果不能混入本轮新增源；当前公共PR36包含三项及全部依赖，C00可整合到单独冻结的新候选后交本地。
+
+## 队列与精确写权
+
+[QUEUE.json](QUEUE.json)记录全部历史、最新SHA、回归和未来命令；[CLAIMS.json](CLAIMS.json)记录单writer精确文件及同一调度协议。原六路初批PR29–34属于历史，任何早期Node/231VPS成绩仅对应当时SHA，不覆盖本轮。
 
 |ID|任务|状态|
 |---|---|---|
@@ -114,63 +153,20 @@ CY-HANDOFF: CODEX；真实thread `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durabl
 |E05-13|订阅模板未知key继承成员过滤|SOURCE_DELIVERED_UNVERIFIED|
 |E06-13|选址坐标非法类型|SOURCE_DELIVERED_UNVERIFIED|
 |E01-18|新OFFERED活动当前可用性与旧hold释放|SOURCE_DELIVERED_UNVERIFIED|
-|E02-19|评论LIKE撤销后不可变重放身份审计|BLOCKED_OWNERSHIP|
+|E02-19|评论LIKE撤销后不可变重放身份审计|DELEGATED_SOURCE_FIX|
 |E02-20|通知偏好不相交PATCH原子保留|SOURCE_DELIVERED_UNVERIFIED|
 |E02-21|初次引用选项和快照权限反证|NO_CHANGE_SOURCE_REVIEW|
-|E02-22|评论旧动作回执兼容精确转交方案|BLOCKED_OWNERSHIP|
+|E02-22|评论旧动作回执兼容精确转交方案|SOURCE_DELIVERED_UNVERIFIED|
 |E03-15|新结局替换前旧引用映射的consumer来源|RESOLVED_BY_OTHER_TEAM|
-|E03-16|当前旅程读面opt-in公共当前局选择|BLOCKED_OWNERSHIP|
+|E03-16|当前旅程读面opt-in公共当前局选择|SOURCE_DELIVERED_UNVERIFIED|
 |E04-13|奖励冲正积分当前锁读|SOURCE_DELIVERED_UNVERIFIED|
 |E04-14|核销首读关联锁与后台编辑竞态|SOURCE_DELIVERED_UNVERIFIED|
 |E04-15|冲正真实caller事务和锁序反证|NO_CHANGE_SOURCE_REVIEW|
 |E05-14|冻结玩法键显式损坏禁止回live|SOURCE_DELIVERED_UNVERIFIED|
 |E05-15|分享文本UTF16截断边界|SOURCE_DELIVERED_UNVERIFIED|
 |E05-16|分享坐标白名单及读写归一化审计|NO_CHANGE_SOURCE_REVIEW|
-|E05-17|Encounter当前局共享helper接入合同|BLOCKED_OWNERSHIP|
+|E05-17|Encounter当前局共享helper接入合同|SOURCE_DELIVERED_UNVERIFIED|
 |E06-14|分享同足迹重放与50上限反证|NO_CHANGE_SOURCE_REVIEW|
 |E06-15|分享撤销与发布交错反证|NO_CHANGE_SOURCE_REVIEW|
 |E06-16|匿名分享读取GONE与隐私闸反证|NO_CHANGE_SOURCE_REVIEW|
 |E03-17|同一账号旅程归档按实际局实例隔离|SOURCE_DELIVERED_UNVERIFIED|
-
-## 最近接续与阻塞
-
-C00正式扩权后E05/E06六源码均逐字取7e5882公共路径，本地原内容一致无伪造baseline提交；仅共享findCurrent helper有独立import。E05-14冻结键损坏修复4方法已公共。Share重放/配额/撤销/匿名读取现有guard和真库套件已覆盖，三项反证不复制用例。E05 Unicode实际拆surrogate已由原writer交付3bd030c9f30ed2e79cb6350ae842fa2ef50a468c，4方法NOT_RUN。
-
-最新d3d38控制已释放E01-18 Mapper+3fixture、E04-14四fixture、E02-20 nullable Mapper+单偏好旧fixture，原三writer正实施。E02旧LIKE额外query仍未授予。PR16 comment6195157560给准确packet链接及E03/E05 current scope必要旧fixture申请；当前不改未授权文件。E03-16 opt-in需3个必要旧fixture、E05-17需2个必要旧fixture；两源码/新测试准备补丁已冻结并完整序列化QUEUE.json prepared_patch，未应用PR36，环境丢失也可按base恢复。E03-15已由CORE C03-25在05d307ec0466988f212187666d7f1e5c3274f434源码接续，仍未验证。
-
-## 首批交付与历史证据
-
-|路|草稿PR|公共完整SHA|方法数|
-|---|---|---|---|
-|E01|[#29](https://github.com/liboyang42-cpu/hengyin/pull/29)|04e03b955899eebd16cbb48aef64436e881ed20e|5|
-|E02|[#30](https://github.com/liboyang42-cpu/hengyin/pull/30)|7fd6855e1cbad0186ae06c4ec8ca8a48c216f626|3|
-|E03|[#31](https://github.com/liboyang42-cpu/hengyin/pull/31)|21d70f6069ca70c1f1d3ad74358ea58d43aace96|3|
-|E04|[#32](https://github.com/liboyang42-cpu/hengyin/pull/32)|495e5b51570b2dc92ada05c860c7be2f287f3d9a|4|
-|E05|[#33](https://github.com/liboyang42-cpu/hengyin/pull/33)|53b4aadcbcd38de8d6b99b5c7a6f093fc7579320|24|
-|E06|[#34](https://github.com/liboyang42-cpu/hengyin/pull/34)|8a1f01767ad154756c1a1feb428362f3885b61d1|6|
-
-首批E01–04 Java 15方法均未运行。E05历史24项16过8失败、E06历史6项4过2失败发生在暂停指令前；失败断言保留，不能当当前/后续候选验收。各路README保存未来精确命令与环境前提。
-
-
-
-## 交付、补位及恢复
-
-一个文件同一时刻只有一个child写者；worker不Git操作。父协调者只stage冻结精确路径，小提交发布公共完整SHA并串行cherry-pick汇总。支援worker可以只写明确未被其他writer领取的新测试/证据，不能修改业务源码；若发现源缺陷交其原writer下一串行项。C00独占全局docs/plans控制账，本队只维护此目录3文件。
-
-恢复先读最新LONGRUN_ROLLING、SOURCE_OWNERS、PR16及本队队列，核各工作树未提交补丁/公共HEAD，禁止覆盖。当前checkpoint之后可能已有新lane公共提交，先按Git历史及专属证据补账，不能重做。
-
-shell GitHub凭据不可用；授权GitHub连接器可用。Git Data create_tree(base parent tree)、create_commit(parent SHA)、update_ref(expected_sha=parent,force=false)发布；确认文本树SHA相同后保存公共完整SHA，读取API commit元数据可重建相同本地对象/在树相同后移动私有ref。不得force push、读取凭据或依赖Mac。连接器也不可用时保留未发布补丁并如实阻塞。PR36 app附加工具挂起已中止，GitHub草稿与链接本身公共可读。
-
-精确跨队依赖：E03-11最终扩围producer c9185cb6027ea04fa8a55ac16191d14f63f6f4d4已交CORE/C03，原freeze四参7cef70bf320c249b966f34cc3908f77912f06780已有CORE实际session消费者回执。E03-08已正式交E05并完成47f44e1dc98ce7d6bb11e7f95dd14535b0b7a98a；E03-10最新CORE已修，旧packet去重。E02-13审核内容版本仍交C00原owner。E04-06已获额外2旧测试正式转交并交ce669a5af4b5231fe9660e44f5e420240f078e56，原初批B03测试同步保全业务断言。E04-07原historyId缺失不可猜补，等待发放侧确切回执合同/旧数据边界，不做DDL。
-
-平台时长/额度/环境限制导致停止时，留下公共SHA、文件持锁、未提交补丁和下一项；不承诺永久运行。本地未来统一验证，当前不等Mac/验证再派工。未来测试命令只文本，需按证据开独占scratch及环境前提，旧231项或历史Node结果不继承到当前SHA。
-
-
-
-
-
-## 恢复实际接收（覆盖此前冻结状态）
-
-控制8533507d637199e3143356509de3e384a74c57be已完整读取；五旧fixture已转交并精确核对应baseline与本地原blob相同，未覆盖既有WIP。原E02/E03/E05三个gpt-6.1-sol child已回ACK、实际接续E02-22/E03-16/E05-17，其余三个槽当前空闲。此前0执行冻结状态属于历史，不再当当前阻塞。目标剩余50仍不足，当前3在途/READY0，缺47，不以已完成/审查项凑数。
-
-最新人类已另外授权C00集中验证；本队与worker仍不运行任何编译/测试/CI重跑/VPS，逐项新完整SHA+依赖+变更集交C00，不混入他已冻结验证候选。源码SOURCE_DELIVERED_UNVERIFIED，新用例NOT_RUN。现有prepared_patch是恢复历史，保持来源对照，交付后标已应用；不重复E03-17。完成当前项后带真实caller证据向C00申领新的独占源范围。

@@ -7,10 +7,10 @@
   "model": "gpt-6.1-sol",
   "active_tasks": {
     "E01": null,
-    "E02": "E02-22",
-    "E03": "E03-16",
+    "E02": null,
+    "E03": null,
     "E04": null,
-    "E05": "E05-17",
+    "E05": null,
     "E06": null
   },
   "file_claims": {
@@ -22,7 +22,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java": {
@@ -33,7 +33,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml": {
@@ -44,7 +44,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java": {
@@ -55,7 +55,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistTokenCodec.java": {
@@ -66,7 +66,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java": {
@@ -76,8 +76,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
@@ -87,8 +87,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
@@ -98,8 +98,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityMediaReceiptServiceImpl.java": {
@@ -109,8 +109,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java": {
@@ -120,8 +120,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java": {
@@ -131,8 +131,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayJourneyReadMapper.xml": {
@@ -142,8 +142,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java": {
@@ -153,8 +153,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStoryValidator.java": {
@@ -164,8 +164,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java": {
@@ -175,8 +175,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java": {
@@ -187,7 +187,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponMapper.xml": {
@@ -198,7 +198,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml": {
@@ -209,7 +209,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml": {
@@ -220,7 +220,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java": {
@@ -231,7 +231,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/subscribe.js": {
@@ -241,8 +241,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js": {
@@ -252,8 +252,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js": {
@@ -263,8 +263,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/pages/mylike/mylike.js": {
@@ -274,8 +274,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/audio-session.js": {
@@ -286,7 +286,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/poller.js": {
@@ -297,7 +297,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/last-location.js": {
@@ -308,7 +308,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/location-manager.js": {
@@ -319,7 +319,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-xcx/utils/location/bg-tracker.js": {
@@ -330,7 +330,7 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SmsCouponMapper.java": {
@@ -341,7 +341,7 @@
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponDisabledTest.java": {
@@ -352,7 +352,7 @@
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java": {
@@ -363,7 +363,7 @@
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityAtomicityContractTest.java": {
@@ -374,7 +374,7 @@
       "transfer_evidence": "C00 reserved public frozen baseline, no active claimant in current CY-HANDOFF/PR20 changed files; explicit E04-03 request6193059698; no modifications by current CORE lanes",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java": {
@@ -384,8 +384,8 @@
       "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamSharePrivacyService.java": {
@@ -395,8 +395,8 @@
       "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java": {
@@ -407,7 +407,7 @@
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamShareSnapshotService.java": {
@@ -418,7 +418,7 @@
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamShareSnapshotMapper.java": {
@@ -429,7 +429,7 @@
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/RoamShareSnapshotMapper.xml": {
@@ -440,7 +440,7 @@
       "transfer_evidence": "C00 reserved baseline released; no active CORE claim; full current PR21/23/25/27 file lists have no exact match. Last public source commit a20fb9b602008ffbdac8bb95f792289626b008f1",
       "child_writer": "/root/external_e06",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java": {
@@ -452,7 +452,7 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionAuditTest.java": {
@@ -464,7 +464,7 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionStartTimeTest.java": {
@@ -476,7 +476,7 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionTransactionBoundaryTest.java": {
@@ -488,7 +488,7 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponLifecycleMybatisIntegrationTest.java": {
@@ -500,7 +500,7 @@
       "transfer_evidence": "C00 read E01-18/E04-14 packets and exact fixture impacts; no CORE active writer, all original C04/C06 stopped. Only packet minimal repair/synchronization, preserve policy/assertions; NOT_RUN.",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java": {
@@ -512,7 +512,7 @@
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistPromotionMembershipRaceTransactionTest.java": {
@@ -524,7 +524,7 @@
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java": {
@@ -536,7 +536,7 @@
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e01",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_NO_ACTIVE_EDIT",
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java": {
@@ -547,8 +547,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
@@ -559,8 +559,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-22",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": {
@@ -571,8 +571,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation.",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java": {
@@ -583,8 +583,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation.",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java": {
@@ -595,8 +595,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation.",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-16",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java": {
@@ -607,8 +607,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation.",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java": {
@@ -619,8 +619,8 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 fully read E03-16@cc39c006 and E05-17@3bd030c9; original CORE source/test writer stopped. Only current-scope dynamic exact fixture alignment; no missing/foreign/activity negative gate masking; no assertion relaxation.",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-17",
-      "source_status": "ACTIVE_OR_EXACT_TASK_ONLY",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     }
   },
@@ -634,10 +634,10 @@
   "control_latest_read_sha": "8533507d637199e3143356509de3e384a74c57be",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
-    "E02": "ef0697487a77184b4c311b5c8c15938132a94e9f",
-    "E03": "8be25aebd839c323a6847f80a2afb99f542fa0d2",
+    "E02": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
+    "E03": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
     "E04": "b53e013623e539760a35665b99a4680c785d5d42",
-    "E05": "3bd030c9f30ed2e79cb6350ae842fa2ef50a468c",
+    "E05": "f01b5c06657cfb654a0cdc86dc77159ac53b6940",
     "E06": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad"
   },
   "worker_runtime_note": "Six lanes claimed; a lane may be frozen awaiting parent serial publication rather than model actively generating. Inspect live agent state before reporting running count.",
@@ -646,46 +646,85 @@
       "slot": "E01",
       "task": null,
       "worker": "/root/external_e01",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e01"
     },
     {
       "slot": "E02",
-      "task": "E02-22",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
       "slot": "E03",
-      "task": "E03-16",
+      "task": null,
       "worker": "/root/external_e03",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e03"
     },
     {
       "slot": "E04",
       "task": null,
       "worker": "/root/external_e04",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e04"
     },
     {
       "slot": "E05",
-      "task": "E05-17",
+      "task": null,
       "worker": "/root/external_e05",
-      "mode": "SOURCE_OWNER",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e05"
     },
     {
       "slot": "E06",
       "task": null,
       "worker": "/root/external_e06",
-      "mode": "IDLE_NO_NEW_INDEPENDENT_ITEM",
+      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
   "support_new_file_claims": {},
   "frozen_prepared_sources": {},
-  "validation_policy": "User separately authorized C00 centralized backend validation; this team/workers still source-only NOT_RUN, no duplicate validation/resources; new SHA/dependencies handed to C00 separately from frozen candidate"
+  "validation_policy": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results; No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
+  "rolling_dispatch_policy": {
+    "name": "ONE_REPAIR_FIVE_DEVELOPMENT",
+    "user_rule": "他们继续做 做完push就好 你来验证后端 然后有问题告诉他们后让他们其中一条线修复 其他5条线继续往下做",
+    "max_workers": 6,
+    "worker_model": "gpt-6.1-sol",
+    "max_concurrent_failure_repair_workers": 1,
+    "normal_development_slots": 5,
+    "repair_slot_when_idle": "May do ordinary authorized work; switch back for actual local verification failure after preserving WIP",
+    "failure_owner": "Original exact file writer preferred; replacement only after formal exact path transfer by C00",
+    "multiple_failures": "One prioritized serial repair queue; never start a second failure-repair worker",
+    "continue_development": "Other independent tasks continue immediately; only genuine shared dependencies block; no whole-team test wait",
+    "delivery": "Finish then publish full SHA immediately; do not wait for tests/CI/local acceptance; SOURCE_DELIVERED_UNVERIFIED is not PASS",
+    "validation_owner": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results",
+    "cloud_validation": "No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
+    "failure_packet_fields": [
+      "failing_complete_candidate_sha",
+      "test_class_or_assertion",
+      "exact_command",
+      "actual_environment",
+      "reproduction",
+      "expected",
+      "actual",
+      "log_evidence",
+      "exact_paths",
+      "original_writer",
+      "priority"
+    ],
+    "repair_result_fields": [
+      "repair_complete_public_sha",
+      "dependencies",
+      "exact_changed_paths",
+      "future_targeted_retest_command",
+      "NOT_RUN_until_local_result"
+    ],
+    "scope": "C00 sole global ownership coordinator; EXTRA only own QUEUE/CLAIMS/BACKLOG; no merge/deploy/migration/production",
+    "real_capacity": "If no genuine authorized independent task is actionable, disclose actual idle count/shortfall; do not fabricate tasks to make five or50"
+  },
+  "active_failure_repair": null,
+  "failure_repair_queue": []
 }
