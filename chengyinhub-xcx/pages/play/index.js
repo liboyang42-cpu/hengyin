@@ -6485,16 +6485,29 @@ Page({
     });
   },
   revokeOsTag(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const tagId = e.currentTarget.dataset.id;
-    this._osTagWrites = this._osTagWrites || {};
-    if (!tagId || this._osTagWrites[tagId]) return;
-    this._osTagWrites[tagId] = true;
-    const that = this;
+    if (!tagId) return;
+    const topicId = String(this.data.topicId || '');
+    const sessionKey = JSON.stringify(this._sessionParams());
+    const loadEpoch = this._playLoadEpoch;
+    const requests = this._osTagWrites = this._osTagWrites || Object.create(null);
+    const requestKey = JSON.stringify([this._playOwner, topicId, sessionKey, String(tagId)]);
+    if (requests[requestKey]) return;
+    const intent = requests[requestKey] = {};
+    const unlock = () => { if (requests[requestKey] === intent) delete requests[requestKey]; };
+    const isCurrent = () => this._isPlayAccountCurrent()
+      && topicId === String(this.data.topicId || '') && loadEpoch === this._playLoadEpoch
+      && sessionKey === JSON.stringify(this._sessionParams());
     req('/api/play/tag/' + tagId + '/revoke', 'POST', {}).then((r) => {
-      delete that._osTagWrites[tagId];
+      unlock();
+      if (!isCurrent()) return;
       if (r.code == 200 || r.code == '200') {
-        that.setData({ 'newLifeOS.tags': that.data.newLifeOS.tags.filter((tag) => tag.id != tagId) });
+        this.setData({ 'newLifeOS.tags': this.data.newLifeOS.tags.filter((tag) => String(tag.id) !== String(tagId)) });
       } else cyToast(r.msg || '撤回没有成功');
+    }).catch(() => {
+      unlock();
+      if (isCurrent()) cyToast('撤回没有成功');
     });
   },
 
