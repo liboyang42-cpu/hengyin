@@ -45,6 +45,7 @@ function merchantInfoPageFrom(source) {
       if (request === '../../../utils/nav-safe-area.js') {
         return require('../../utils/nav-safe-area.js');
       }
+      if (request === '../../../utils/code-text.js') return require('../../utils/code-text.js');
       throw new Error('unexpected require: ' + request);
     },
   };

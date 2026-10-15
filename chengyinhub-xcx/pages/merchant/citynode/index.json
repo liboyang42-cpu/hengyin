@@ -7,6 +7,7 @@
   "backgroundColorBottom": "#F3F4F4",
   "usingComponents": {
     "cy-empty": "/components/cy/empty/index",
+    "cy-code-text": "/components/cy/code-text/index",
     "cy-error": "/components/cy/error/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-badge": "/components/cy/badge/index",

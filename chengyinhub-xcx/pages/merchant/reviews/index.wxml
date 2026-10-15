@@ -104,7 +104,7 @@
                   placeholder="说说环境、服务和真实到店感受" placeholder-class="review-placeholder"
                   bindinput="inputContent" />
         <view class="review-image-grid">
-          <view wx:for="{{images}}" wx:key="*this" class="review-uploaded">
+          <view wx:for="{{images}}" wx:key="index" class="review-uploaded">
             <image src="{{item}}" mode="aspectFill" lazy-load="true" />
             <view class="review-image-remove" data-index="{{index}}" catchtap="removeImage" aria-role="button" aria-label="删除第{{(index + 1) || '—'}}张图片" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="close-sm" size="24" /></view>
           </view>
@@ -160,7 +160,7 @@
 
         <text class="review-body">{{item.content}}</text>
         <view wx:if="{{item.imageUrls.length}}" class="review-photo-grid">
-          <image wx:for="{{item.imageUrls}}" wx:key="*this" wx:for-index="imageIndex"
+          <image wx:for="{{item.imageUrls}}" wx:key="index" wx:for-index="imageIndex"
                  class="review-photo" src="{{item}}" mode="aspectFill" lazy-load="true"
                  data-review-index="{{reviewIndex}}" data-image-index="{{imageIndex}}" bindtap="previewImage"
                  aria-role="button" aria-label="预览评价图片 {{imageIndex + 1}}" hover-class="cy-pressed" hover-stay-time="80" />

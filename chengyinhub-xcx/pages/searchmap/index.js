@@ -7,6 +7,7 @@ const { openScene } = require('../../utils/scene-entry.js');
 const { buildNodeLevelMarkerStyle } = require('../roam/node-level-style.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { appendByIndex } = require('../../utils/list-append.js');
+const lastLocation = require('../../utils/location/last-location.js');
 const DATE_YEARS = Array.from({ length: 81 }, (_, index) => 1970 + index);
 const DATE_MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
@@ -55,8 +56,10 @@ Page({
     searchKeyword: '',
     
     // 地图相关数据
-    latitude: 31.230416, // 上海坐标
-    longitude: 121.473701,
+    // 初始坐标由 onLoad 经 last-location 兜底（上次成功位置 → 固定坐标），不再写死城市
+    latitude: lastLocation.FIXED.latitude,
+    longitude: lastLocation.FIXED.longitude,
+    locationHint: '',
     scale: 14,
     markers: [],
     activityMarkers: [],
@@ -138,8 +141,8 @@ Page({
     
     // 地图区域信息
     regionInfo: {
-      latitude: 31.230416,
-      longitude: 121.473701,
+      latitude: lastLocation.FIXED.latitude,
+      longitude: lastLocation.FIXED.longitude,
       latitudeDelta: 0.1,
       longitudeDelta: 0.1
     },
@@ -454,7 +457,9 @@ Page({
         if (!this._isCurrentSpatialInput(spatialEpoch)) return;
         const { latitude, longitude } = res;
         this._hasLocation = true;
+        lastLocation.save(res);
         this.setData({
+          locationHint: '',
           latitude,
           longitude,
           scale: 16,
@@ -1151,6 +1156,15 @@ Page({
       statusBarHeight: app.globalData.statusBarHeight || 20,
       navTop: navRow.navTop,
       navRight: navRow.navRight,
+    });
+    // 定位兜底：上次成功位置 → 固定坐标，并提示「未获取定位」；用户主动定位成功后由 moveToLocation 覆盖
+    const fb = lastLocation.resolve();
+    this.setData({
+      latitude: fb.latitude,
+      longitude: fb.longitude,
+      'regionInfo.latitude': fb.latitude,
+      'regionInfo.longitude': fb.longitude,
+      locationHint: fb.hint,
     });
     this.setupNetworkState();
 

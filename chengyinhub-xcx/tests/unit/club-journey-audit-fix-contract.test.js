@@ -66,6 +66,7 @@ function loadClubDetail(activityList) {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      if (request === '../../../utils/club-pinned-notice.js') return require('../../utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
