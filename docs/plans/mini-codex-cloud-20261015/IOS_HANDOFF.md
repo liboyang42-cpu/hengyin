@@ -1,3 +1,13 @@
+## 当前E06针对性复测闭环：5PASS／真实HTTP未验
+
+C00已完整读回[PR24公开报告](https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)与summary：固定源码 `b45664de6136eb97c46ed0c86e95fc25686dc1b7` 正常212准入后，E06_17Test单类**5实际项PASS，0失败/0错误/0跳过**，fresh XML精确类集，guard0/completed，精确容器清理。源包、日志及XML哈希已入总控；仅普通单类针对性签收。
+
+旧ed598的11类76实际75PASS/1FAIL原记录及初次锁拒绝原证据继续保留；该唯一失败方法现按b456五项targeted PASS闭环，不称b456重跑全76、不将其他类成绩迁移。原E06修复槽已释放，不新增源码改动；仅有真实独立READY才继续领取，否则EXHAUSTED，不为凑线造任务。EXTRA自己维护本队交付账，C00只更新总控；Cloud无补跑。
+
+裸SQL疑点仍NEEDS_REACHABILITY/NO_SOURCE_CHANGE，无真实业务可达证据不计新BUG，不改共享生产文件。GET分享读库故障HTTP503/body500、原GONE/隐私边界的MockMvc回归通过不等于运行中HTTP验收；真实数据库/Redis、HTTP/身份业务、设备、合并部署及迁移均未验收，TEST_DEPLOYED=NO。第三队普通24PASS/真MySQL11未运行仍独立。
+
+### 以下排队及旧失败为历史，以本节当前签收为准
+
 ## 当前E06修复复测排队：NOT_RUN，非源码失败
 
 当前状态一致口径：旧 `ed598258c0f614385940f326099b9626531fab02` 的11类76实际=75PASS/1FAIL仍保留，失败未因push关闭；修复 `b45664de6136eb97c46ed0c86e95fc25686dc1b7` 仅E06_17Test单类5个源码声明，212因another_build_holds_lock返回75/containerId=null，本次实际0项、未编译测试，**NOT_RUN排队**，不是修复失败或通过。

@@ -1,3 +1,5 @@
+> 当前E06：b456单类5实际VPS targeted PASS、原唯一失败闭环，修复槽释放；旧76项1FAIL/锁拒绝仍留历史，不称新全76通过。没有真实READY就EXHAUSTED，Cloud不补跑。裸SQL仍NEEDS_REACHABILITY/NO_SOURCE_CHANGE，真库/HTTP/设备/业务/合并部署未验。
+
 > E06当前：旧ed598的76实际75PASS/1FAIL保留；b456仅测试夹具源修，新单类5声明因212共享锁拒绝准入，实际0项NOT_RUN排队，不关旧失败、不让Cloud替代或重复修改。裸SQL仅NEEDS_REACHABILITY/NO_SOURCE_CHANGE。
 
 > 当前第三队：2babbe28已VPS212编译及普通24实跑PASS；早先锁拒绝保留历史，真MySQL11仍NOT_RUN，未验收并发/HTTP/业务。EXTRA下一ed598258单独待结果，不继承旧通过，Cloud不补跑。
