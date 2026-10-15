@@ -1629,15 +1629,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 而不是内部状态码;其余售卖时间拒绝保持原文。
      */
     private void assertCommercialSaleOpen(CmsTopic topic, OmsTicket ticket, Date now) {
-        boolean saleOpen;
-        try {
-            saleOpen = topic != null && com.chengyinhub.business.domain.enums.TopicLifecycleState
-                    .fromCode(topic.getLifecycle()).isDirectSaleOpen();
-        } catch (IllegalArgumentException unknownLifecycle) {
-            saleOpen = false;
-        }
-        if (topic != null && !saleOpen) {
-            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
+        if (topic != null) {
+            com.chengyinhub.business.domain.enums.TopicLifecycleState state;
+            try {
+                state = com.chengyinhub.business.domain.enums.TopicLifecycleState.fromCode(topic.getLifecycle());
+            } catch (IllegalArgumentException unknownLifecycle) {
+                state = null;
+            }
+            if (state == null || !state.isDirectSaleOpen()) {
+                // PR10 复审:进行中/结算中/已关闭是「已过售卖期」,不能对玩家说「尚未开售」;
+                // 未知状态继续 fail-closed,按未开售文案拦截。
+                if (state != null && state.isSaleStarted()) {
+                    throw new RuntimeException("报名已结束，本主题已停止售卖");
+                }
+                throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
+            }
         }
         SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
     }
