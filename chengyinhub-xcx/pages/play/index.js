@@ -5764,9 +5764,17 @@ Page({
 
   /** profile 提交成功后的补拉:只取 vars,不重跑 loadData(那会把首屏/章节/角色卡整套重演一遍)。 */
   _refreshStoryVarsFromNodes() {
-    if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
     if (!this.data.activityId && !this.data.topicId) return;
-    req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => { // 补拉
+    const params = this._sessionParams();
+    const sessionKey = JSON.stringify(params);
+    const chapterId = String((this.data.chapter || {}).id || '');
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._storyVarsReadSequence = (this._storyVarsReadSequence || 0) + 1;
+    req('/api/play/nodes', 'GET', params).then((res) => { // 补拉
+      if (!this._isPlayAccountCurrent() || sequence !== this._storyVarsReadSequence
+          || loadEpoch !== this._playLoadEpoch || sessionKey !== JSON.stringify(this._sessionParams())
+          || chapterId !== String((this.data.chapter || {}).id || '')) return;
       if (!(res.code == 200 || res.code == '200') || !res.data) return;
       if (!this._applyStoryVars(res.data)) return;
       // 章节屏正开着就地重铺一次,让刚填的名字立刻显形(measureChapter 会重新量几何)
