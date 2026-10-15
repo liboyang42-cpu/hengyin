@@ -221,7 +221,8 @@ EXPECTED = {
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest": 7,
     "FollowConcurrencyMybatisIntegrationTest": 4,
     "FollowEditRaceMybatisIntegrationTest": 7,
-    "NearbyRunnerShopsMybatisIntegrationTest": 6,
+    # 2026-10-15 PR10 复审 +1 条(瞬移基线按会话取,真库回读),6 → 7。
+    "NearbyRunnerShopsMybatisIntegrationTest": 7,
     # 2026-09-17 拍照一律机审:原 5 条(人工审核三条 CAS)→ 6 条:
     # 通过 CAS 恰好一次 / 存量驳回态同 CAS 转正 / 已完成行永不再通过 /
     # 按 id 取行 / 待审重复插入撞唯一键 / 存量待审行读侧不算完成。

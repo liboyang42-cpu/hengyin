@@ -568,10 +568,12 @@ public class ApiRoamController extends BaseController {
         if (!validLat(lat) || !validLng(lng)) return error("位置越界");
 
         locationConsent.requireCurrentAgreement(memberId);
-        // 附近的人只以服务端记录的本人位置为查询中心;再拒掉瞬移式的坐标,
+        // 附近的人只以服务端记录的本人位置为查询中心;再拒掉会话内瞬移式的坐标,
         // 换着坐标上报去扫别人位置就不成立(合法的乘车移动按真实时间间隔放行)。
+        // PR10 复审:基线只取本场会话已被接受的上一跳。跨会话比对会让「漫游结束→坐高铁→到站重新开始」
+        // 在 120 分钟窗口内被当成瞬移,且被拒的上报从不刷新基线 ⇒ 整段被拦 ~1.5 小时。
         Date reportAt = new Date();
-        RoamSession lastFix = roamMapper.selectLatestPresenceFix(memberId,
+        RoamSession lastFix = roamMapper.selectLatestPresenceFix(memberId, sid,
                 new Date(reportAt.getTime() - PRESENCE_TELEPORT_WINDOW_MIN * 60L * 1000L));
         if (lastFix != null && lastFix.getLastReportAt() != null
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
