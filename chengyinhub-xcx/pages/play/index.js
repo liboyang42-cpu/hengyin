@@ -2181,6 +2181,20 @@ Page({
     return true;
   },
 
+  _playerProjectionContext() {
+    const module = this.data.gameModule || {};
+    return { sessionKey: JSON.stringify(this._sessionParams()), activityId: module.activityId,
+      sessionId: module.sessionId, revision: module.revision };
+  },
+
+  _isPlayerProjectionContextCurrent(context) {
+    const module = this.data.gameModule || {};
+    return !!context && this._isPlayAccountCurrent() && module.enabled === true
+      && context.sessionKey === JSON.stringify(this._sessionParams())
+      && context.activityId === module.activityId && context.sessionId === module.sessionId
+      && context.revision === module.revision;
+  },
+
   /** 角色卡只展示服务端投影；客户端不再按 roleCode 自带角色秘密或技能正文。 */
   _maybeShowRoleCard(myRole) {
     const game = this.data.gameModule || {};
@@ -2198,6 +2212,7 @@ Page({
     let seen = false; try { seen = key ? !!wx.getStorageSync(key) : false; } catch (e) {}
     try { wx.removeStorageSync('role_seen_' + roleScope); } catch (e) {}
     if (seen && myRole.confirmed !== false) return;
+    this._roleCardContext = Object.assign(this._playerProjectionContext(), { roleCode: myRole.roleCode });
     this.setData({ roleCard: {
       show: true,
       code: myRole.roleCode,
@@ -2211,7 +2226,7 @@ Page({
       try { if (key) wx.setStorageSync(key, 1); } catch (e) {}
     }
   },
-  closeRoleCard() { this.setData({ 'roleCard.show': false }); },
+  closeRoleCard() { this._roleCardContext = null; this.setData({ 'roleCard.show': false }); },
 
   confirmPlayerRole() {
     if (!this._isPlayAccountCurrent()) return;
@@ -2219,6 +2234,11 @@ Page({
     if (this.data.gameModule.write.status === 'unknown') { this.reconcilePlayerChoice(); return; }
     if (this.data.gameModule.write.status === 'submitting') return;
     const gameModule = this.data.gameModule || {};
+    if (!this._isPlayerProjectionContextCurrent(this._roleCardContext)
+        || !gameModule.role || this._roleCardContext.roleCode !== gameModule.role.code) {
+      cyToast('身份状态暂未同步');
+      return;
+    }
     const requestId = 'pg-role-' + gameModule.activityId + '-' + Date.now();
     let input;
     try {
@@ -2648,6 +2668,10 @@ Page({
   _submitPlayerAssist(input, labels) {
     if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
+    if (!gameModule.enabled || !gameModule.write || gameModule.write.status === 'submitting'
+        || gameModule.write.status === 'unknown' || input.activityId !== gameModule.activityId
+        || input.expectedRevision !== gameModule.revision
+        || !(gameModule.availableActions || []).includes(input.action)) return false;
     const requestId = input.requestId;
     this.setData({ 'gameModule.write': { status: 'submitting', requestId, message: labels.submitting } });
     if (!this._savePlayerPending(input)) {
@@ -2690,6 +2714,7 @@ Page({
   },
 
   requestPlayerHint(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_HINT')) return;
@@ -2698,13 +2723,21 @@ Page({
     const node = (gameModule.nodes || []).find((item) => item.nodeId === nodeId);
     const hint = node && node.hint;
     if (!hint || level !== hint.nextLevel || (level !== 1 && level !== 2) || !hint.nextImpactLabel) return;
+    const context = this._playerProjectionContext();
+    const hintState = JSON.stringify(hint);
+    const nodeStatus = node.status;
     cyModal.show({
       title: '查看第 ' + level + ' 级提示',
       content: hint.nextImpactLabel,
       confirmText: '查看提示',
       cancelText: '继续想想',
       success: (modal) => {
-        if (!modal.confirm) return;
+        if (!modal.confirm || !this._isPlayerProjectionContextCurrent(context)) return;
+        const current = this.data.gameModule;
+        const currentNode = (current.nodes || []).find(item => item.nodeId === nodeId);
+        if (!currentNode || currentNode.status !== nodeStatus || JSON.stringify(currentNode.hint) !== hintState
+            || !current.write || current.write.status === 'submitting' || current.write.status === 'unknown'
+            || !(current.availableActions || []).includes('PLAYER_HINT')) return;
         const requestId = 'pg-hint-' + gameModule.activityId + '-' + nodeId + '-' + level + '-' + Date.now();
         let input;
         try {
@@ -2729,6 +2762,7 @@ Page({
   },
 
   requestPlayerReveal(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_REVEAL')) return;
@@ -2736,13 +2770,21 @@ Page({
     const node = (gameModule.nodes || []).find((item) => item.nodeId === nodeId);
     const hint = node && node.hint;
     if (!hint || hint.revealAvailable !== true || !hint.revealImpactLabel) return;
+    const context = this._playerProjectionContext();
+    const hintState = JSON.stringify(hint);
+    const nodeStatus = node.status;
     cyModal.show({
       title: '揭示答案',
       content: hint.revealImpactLabel,
       confirmText: '查看答案',
       cancelText: '继续想想',
       success: (modal) => {
-        if (!modal.confirm) return;
+        if (!modal.confirm || !this._isPlayerProjectionContextCurrent(context)) return;
+        const current = this.data.gameModule;
+        const currentNode = (current.nodes || []).find(item => item.nodeId === nodeId);
+        if (!currentNode || currentNode.status !== nodeStatus || JSON.stringify(currentNode.hint) !== hintState
+            || !current.write || current.write.status === 'submitting' || current.write.status === 'unknown'
+            || !(current.availableActions || []).includes('PLAYER_REVEAL')) return;
         const requestId = 'pg-reveal-' + gameModule.activityId + '-' + nodeId + '-' + Date.now();
         let input;
         try {
