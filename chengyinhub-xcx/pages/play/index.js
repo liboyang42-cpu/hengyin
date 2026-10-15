@@ -3128,8 +3128,15 @@ Page({
 
   /** 升级3:同行者榜(GET /api/play/leaderboard,score=完成关数)。入口在通关 sheet。 */
   openBoard() {
+    if (!this._isPlayAccountCurrent()) return;
+    const owner = this._playOwner, params = this._sessionParams(), sessionKey = JSON.stringify(params);
+    const sequence = this._boardReadSequence = (this._boardReadSequence || 0) + 1;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && sequence === this._boardReadSequence && this.data.board.show
+      && sessionKey === JSON.stringify(this._sessionParams());
     this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' } });
-    req('/api/play/leaderboard', 'GET', this._sessionParams()).then((res) => {
+    req('/api/play/leaderboard', 'GET', params).then((res) => {
+      if (!current()) return;
       if (res.code == 200 || res.code == '200') {
         const d = res.data || {};
         this.setData({ board: { show: true, loading: false, list: d.list || [], me: d.me || null, error: '' } });
@@ -3138,10 +3145,14 @@ Page({
         this.setData({ 'board.loading': false, 'board.error': (res && res.msg) || '榜单加载失败' });
       }
     }).catch(() => {
+      if (!current()) return;
       this.setData({ 'board.loading': false, 'board.error': '网络不太好,榜单没拉到' });
     });
   },
-  closeBoard() { this.setData({ 'board.show': false }); },
+  closeBoard() {
+    this._boardReadSequence = (this._boardReadSequence || 0) + 1;
+    this.setData({ 'board.show': false });
+  },
   /** 核销入场:动态码收进场景栈(#572 单宿主收口),票面+放大码都在 scene-qr-ticket 组件里 */
   openEntryQr() {
     if (this.data.isPreview || this.data.isMock) return;
