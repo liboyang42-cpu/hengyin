@@ -1,4 +1,4 @@
-page { background: var(--cy-comp-sheet-player-page); }
+page { background: var(--cy-color-bg-page); }
 .ph { min-height: 100vh; color: var(--cy-color-text-primary); }
 .ph__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); }
 .ph-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }

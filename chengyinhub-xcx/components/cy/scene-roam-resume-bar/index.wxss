@@ -30,3 +30,4 @@
   justify-content: center;
   color: var(--cy-color-text-secondary);
 }
+.cy-pressed { opacity: .88; }

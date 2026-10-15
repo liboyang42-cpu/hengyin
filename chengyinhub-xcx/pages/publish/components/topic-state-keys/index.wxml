@@ -25,7 +25,7 @@
     <view wx:else class="sk-form">
       <view class="sk-form__types">
         <view wx:for="{{prefixes}}" wx:key="prefix" data-index="{{index}}" bindtap="onPrefix"
-              class="sk-form__type {{prefixIndex === index ? 'is-on' : ''}}" aria-role="button" aria-label="{{item.label}}，{{item.hint}}">{{item.label}}</view>
+              class="sk-form__type {{prefixIndex === index ? 'is-on' : ''}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.label}}，{{item.hint}}">{{item.label}}</view>
       </view>
       <text class="sk__desc">{{prefixes[prefixIndex].hint}}</text>
       <view class="sk-form__name">

@@ -1,5 +1,6 @@
 // 积分明细。POST /api/points/list:后端一次返回全部明细,这里按 20 条一页展开。
 const app = getApp()
+const cyToast = require('../../utils/toast.js')
 const { isBizOk } = require('../../utils/response-shape.js')
 const { PAGE_SIZE, normalizeRows } = require('./rows.js')
 
@@ -27,7 +28,7 @@ Page({
         const all = isBizOk(res) ? normalizeRows(res.data) : null
         if (!all) {
           // 已经有数据时下拉刷新失败:保留旧列表,只提示
-          if (keep) wx.showToast({ title: '刷新失败，稍后再试', icon: 'none' })
+          if (keep) cyToast('刷新失败，稍后再试')
           else that.setData({ state: 'error' })
           return
         }
@@ -38,7 +39,7 @@ Page({
       fail() {
         if (seq !== that._seq) return
         if (fromPull) wx.stopPullDownRefresh()
-        if (keep) wx.showToast({ title: '刷新失败，稍后再试', icon: 'none' })
+        if (keep) cyToast('刷新失败，稍后再试')
         else that.setData({ state: 'error' })
       },
     })

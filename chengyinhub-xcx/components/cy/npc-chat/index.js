@@ -142,7 +142,7 @@ Component({
           // 本地列表只是服务端记录的镜像,服务端删成功后同步清空
           this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
           const deleted = res.data && Number(res.data.deleted);
-          dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条服务器上的对话记录，当前对话也已清空。' : '');
+          dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条对话记录，当前对话也已清空。' : '');
         },
         fail: () => { this._clearing = false; this.setData({ clearError: '清除没有成功，对话记录还在，请重试' }); dc.failed(failMsg) },
         successStatusAbnormal: () => { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg) },

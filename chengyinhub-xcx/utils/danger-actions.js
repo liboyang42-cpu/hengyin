@@ -121,7 +121,7 @@ const DANGER_ACTIONS = {
   'topic.stateKey.delete': {
     irreversible: true,
     title: '删除状态键「{name}」?',
-    content: '只有没被节点或剧情配置引用的键才能删除;被引用时服务器会拒绝并告诉你引用位置。',
+    content: '只有没被节点或剧情配置引用的键才能删除;被引用时后台会拒绝并告诉你引用位置。',
     consequences: [
       { icon: 'list', text: '键的显示名和初始值会一起删除,之后需要重新注册' },
       { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这个状态键的配置' },
@@ -134,7 +134,7 @@ const DANGER_ACTIONS = {
   'ai.npc.chatData.delete': {
     irreversible: true,
     title: '清除我的对话记录?',
-    content: '会删除服务器上你与 AI 向导、店铺形象的全部对话记录,立即生效。',
+    content: '会删除你与 AI 向导、店铺形象的全部对话记录,立即生效。',
     consequences: [
       { icon: 'trash', text: '范围是你账号下所有 AI 对话(漫游向导和店铺形象),不只是当前这一段' },
       { icon: 'info', text: '不影响你的漫游足迹、邮票、订单等其他数据' },
@@ -142,7 +142,7 @@ const DANGER_ACTIONS = {
     ],
     confirmText: '清除对话记录',
     alt: null,
-    done: { title: '对话记录已清除', text: '服务器上的 AI 对话记录已删除,当前对话也已清空。' },
+    done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
   },
   'team.disband': {
     irreversible: true,
