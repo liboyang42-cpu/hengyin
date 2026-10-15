@@ -4,13 +4,13 @@
   <cy-modal-host id="cy-modal-host" />
   <view class="orr__shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="{{route.name || '路线详情'}}" subtitle="{{route.metaText}}" safe-top="{{false}}" />
     <view class="orr__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
       <cy-error wx:elif="{{state === 'error'}}" title="路线没能加载出来" sub="网络请求失败，重试会重新拉取一次" retry="重试" bind:retry="load" />
       <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条路线不存在或已下架" sub="回到列表看看其他路线" />
       <block wx:else>
         <image wx:if="{{route.cover}}" class="orr__cover" src="{{route.cover}}" mode="aspectFill" />
-        <cy-page-title title="{{route.name}}" subtitle="{{route.metaText}}" safe-top="{{false}}" flush />
         <text class="orr__sec">站点（{{route.nodes.length}}）</text>
         <cy-empty wx:if="{{!route.nodes.length}}" kind="empty" title="这条路线还没有站点" sub="" />
         <view class="orr-node" wx:for="{{route.nodes}}" wx:key="key" data-index="{{index}}" bindtap="openNode"
