@@ -213,14 +213,17 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
         String recurrenceType = request.getRecurrenceType() == null ? ""
                 : request.getRecurrenceType().trim().toUpperCase(Locale.ROOT);
-        List<LocalDate> dates = scheduleMaterializer.materialize(request, todayShanghai());
+        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
+                request.getClubId(), actorMemberId, requestId);
+        // 已有固定日期回执先核原完整指纹；跨上海日重发不能被“今天”挡在回执之前。
+        List<LocalDate> dates = replay != null && ("ONCE".equals(recurrenceType) || "CUSTOM_DATES".equals(recurrenceType))
+                ? scheduleMaterializer.normalizeFixedDatesForReplay(request)
+                : scheduleMaterializer.materialize(request, todayShanghai());
         // 5.9:集合时刻是场次退款钟的锚点,必须是系列入参的一部分;缺省拒在建系列之前。
         String startTime = requiredStartTime(request);
         String requestFingerprint = seriesFingerprint(actorMemberId, request.getClubId(), request.getTopicId(),
                 recurrenceType, dates, startTime, leadMemberId, capacity,
                 Boolean.TRUE.equals(request.getWaitlistEnabled()), offerMinutes);
-        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
-                request.getClubId(), actorMemberId, requestId);
         if (replay != null) {
             return exactSeriesReplay(replay, requestFingerprint);
         }
