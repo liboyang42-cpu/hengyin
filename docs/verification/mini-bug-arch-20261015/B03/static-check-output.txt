@@ -1,0 +1,7 @@
+PASS: current points read bypasses snapshot/cache and does not fabricate zero (baseline=False)
+PASS: both reward paths use current points without ordinary member read (baseline=False)
+PASS: confirm atomically preserves existing positive/unfrozen policy (baseline=False)
+PASS: markPaid atomically preserves existing positive/unfrozen policy (baseline=False)
+PASS: markInvoiceIssued atomically preserves existing positive/unfrozen policy (baseline=False)
+Baseline missing guards: 5/5; candidate passing source checks: 5/5
+LIMIT: source checks only; Java compilation, MySQL semantics, transactions and business readback NOT RUN.

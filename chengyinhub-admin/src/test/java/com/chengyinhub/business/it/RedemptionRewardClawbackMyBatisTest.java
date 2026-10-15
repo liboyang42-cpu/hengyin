@@ -197,7 +197,6 @@ class RedemptionRewardClawbackMyBatisTest {
         com.chengyinhub.business.service.ICmsPointsSettingService settings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
         when(settings.selectCmsPointsSettingList(any())).thenReturn(java.util.Collections.singletonList(rule));
         com.chengyinhub.business.service.IUmsMemberService memberService = mock(com.chengyinhub.business.service.IUmsMemberService.class);
-        when(memberService.selectUmsMemberById(anyLong())).thenAnswer(i -> members.selectUmsMemberById(i.getArgument(0)));
         when(memberService.addPoints(anyLong(), anyInt())).thenAnswer(i -> members.addPoints(i.getArgument(0), i.getArgument(1)) == 1);
         com.chengyinhub.business.service.IUmsMemberPointsDetailService detailService = mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class);
         when(detailService.selectUmsMemberPointsDetailList(any())).thenAnswer(i -> details.selectUmsMemberPointsDetailList(i.getArgument(0)));
@@ -205,6 +204,7 @@ class RedemptionRewardClawbackMyBatisTest {
         com.chengyinhub.business.service.impl.PointsAwardServiceImpl points = new com.chengyinhub.business.service.impl.PointsAwardServiceImpl();
         ReflectionTestUtils.setField(points, "cmsPointsSettingService", settings);
         ReflectionTestUtils.setField(points, "umsMemberService", memberService);
+        ReflectionTestUtils.setField(points, "umsMemberMapper", members);
         ReflectionTestUtils.setField(points, "umsMemberPointsDetailService", detailService);
         ReflectionTestUtils.setField(points, "umsMemberPointsDetailMapper", details);
 
