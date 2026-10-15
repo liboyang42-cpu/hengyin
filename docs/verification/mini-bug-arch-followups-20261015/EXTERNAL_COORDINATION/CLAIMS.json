@@ -6,12 +6,12 @@
   "max_workers": 6,
   "model": "gpt-6.1-sol",
   "active_tasks": {
-    "E01": "E01-07",
-    "E02": "E02-01",
-    "E03": "E03-01",
-    "E04": "E04-01",
-    "E05": "E05-03",
-    "E06": "E06-08"
+    "E01": "E01-02",
+    "E02": "E02-03",
+    "E03": "E03-03",
+    "E04": "E04-02",
+    "E05": "E05-05",
+    "E06": "E06-01"
   },
   "file_claims": {
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventScheduleMaterializer.java": {
@@ -21,7 +21,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-07",
+      "active_task": "E01-02",
       "worktree": "/workspace/hengyin-extra-e01",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -33,7 +33,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-07",
+      "active_task": "E01-02",
       "worktree": "/workspace/hengyin-extra-e01",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -45,7 +45,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-07",
+      "active_task": "E01-02",
       "worktree": "/workspace/hengyin-extra-e01",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -57,7 +57,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-07",
+      "active_task": "E01-02",
       "worktree": "/workspace/hengyin-extra-e01",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -69,7 +69,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e01",
-      "active_task": "E01-07",
+      "active_task": "E01-02",
       "worktree": "/workspace/hengyin-extra-e01",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -81,7 +81,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-01",
+      "active_task": "E02-03",
       "worktree": "/workspace/hengyin-extra-e02",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -93,7 +93,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-01",
+      "active_task": "E02-03",
       "worktree": "/workspace/hengyin-extra-e02",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -105,7 +105,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-01",
+      "active_task": "E02-03",
       "worktree": "/workspace/hengyin-extra-e02",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -117,7 +117,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-01",
+      "active_task": "E02-03",
       "worktree": "/workspace/hengyin-extra-e02",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -129,7 +129,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -141,7 +141,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -153,7 +153,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -165,7 +165,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -177,7 +177,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -189,7 +189,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e03",
-      "active_task": "E03-01",
+      "active_task": "E03-03",
       "worktree": "/workspace/hengyin-extra-e03",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -201,7 +201,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-01",
+      "active_task": "E04-02",
       "worktree": "/workspace/hengyin-extra-e04",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -213,7 +213,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-01",
+      "active_task": "E04-02",
       "worktree": "/workspace/hengyin-extra-e04",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -225,7 +225,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-01",
+      "active_task": "E04-02",
       "worktree": "/workspace/hengyin-extra-e04",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -237,7 +237,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-01",
+      "active_task": "E04-02",
       "worktree": "/workspace/hengyin-extra-e04",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -249,7 +249,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e04",
-      "active_task": "E04-01",
+      "active_task": "E04-02",
       "worktree": "/workspace/hengyin-extra-e04",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -261,7 +261,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-03",
+      "active_task": "E05-05",
       "worktree": "/workspace/hengyin-extra-e05",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -273,7 +273,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-03",
+      "active_task": "E05-05",
       "worktree": "/workspace/hengyin-extra-e05",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -285,7 +285,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-03",
+      "active_task": "E05-05",
       "worktree": "/workspace/hengyin-extra-e05",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -297,7 +297,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e05",
-      "active_task": "E05-03",
+      "active_task": "E05-05",
       "worktree": "/workspace/hengyin-extra-e05",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -309,7 +309,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-08",
+      "active_task": "E06-01",
       "worktree": "/workspace/hengyin-extra-e06",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -321,7 +321,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-08",
+      "active_task": "E06-01",
       "worktree": "/workspace/hengyin-extra-e06",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -333,7 +333,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-08",
+      "active_task": "E06-01",
       "worktree": "/workspace/hengyin-extra-e06",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -345,7 +345,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-08",
+      "active_task": "E06-01",
       "worktree": "/workspace/hengyin-extra-e06",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
@@ -357,7 +357,7 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e06",
-      "active_task": "E06-08",
+      "active_task": "E06-01",
       "worktree": "/workspace/hengyin-extra-e06",
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
