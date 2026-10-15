@@ -16,7 +16,7 @@
 
     <view wx:if="{{isOwner}}" class="section">
       <cy-btn variant="primary" bindtap="openCreate">创建勋章</cy-btn>
-      <text class="section-caption">勋章名必填；图标可不放。创建后可在下方把勋章颁给俱乐部成员。</text>
+      <text class="section-caption">勋章名必填。创建后可在下方把勋章颁给俱乐部成员。</text>
     </view>
 
     <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
@@ -27,7 +27,7 @@
       <view class="ds-card">
         <view class="badge-row" wx:for="{{badges}}" wx:key="badgeCode">
           <view class="badge-icon">
-            <image wx:if="{{item.iconUrl}}" class="badge-icon-img" src="{{item.iconUrl}}" mode="aspectFill" lazy-load="true" />
+            <image wx:if="{{item.iconUrl}}" class="badge-icon-img" src="{{item.iconUrl}}" mode="aspectFit" lazy-load="true" />
             <cy-icon wx:else name="star" size="40" />
           </view>
           <view class="badge-text">
@@ -53,25 +53,10 @@
     <cy-field variant="textarea" label="说明（选填）" value="{{form.desc}}" placeholder="这枚勋章颁给谁、为什么" maxlength="{{descMax}}" showCount
               disabled="{{creating}}" data-field="desc" bind:input="onFormInput"
               error="{{!!formErrors.desc}}" errorText="{{formErrors.desc}}" />
-    <view class="icon-field">
-      <text class="icon-label">图标（选填）</text>
-      <view class="icon-row">
-        <view class="icon-pick {{creating || iconUploading ? 'is-disabled' : ''}}" bindtap="chooseIcon"
-              aria-role="button" aria-label="{{form.iconUrl ? '更换勋章图标' : '上传勋章图标'}}" aria-disabled="{{creating || iconUploading}}"
-              hover-class="{{creating || iconUploading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-          <image wx:if="{{form.iconUrl}}" class="icon-preview" src="{{form.iconUrl}}" mode="aspectFill" />
-          <cy-icon wx:else name="plus" size="40" />
-        </view>
-        <text wx:if="{{iconUploading}}" class="icon-hint" aria-role="status">正在上传…</text>
-        <text wx:elif="{{form.iconUrl}}" class="icon-link" bindtap="removeIcon"
-              aria-role="button" aria-label="移除勋章图标" hover-class="cy-pressed" hover-stay-time="80">移除</text>
-        <text wx:else class="icon-hint">不放图标时显示默认星标</text>
-      </view>
-      <cy-inline-error wx:if="{{formErrors.icon}}" title="图标没放上" sub="{{formErrors.icon}}" action="重新上传" bind:action="chooseIcon" />
-    </view>
+    <text class="form-note">勋章图标沿用平台勋章的默认样式；自定义图标暂不开放。</text>
     <cy-inline-error wx:if="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
   </view>
-  <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{iconUploading}}" bindtap="submitCreate">创建</cy-btn>
+  <cy-btn slot="footer" variant="primary" loading="{{creating}}" bindtap="submitCreate">创建</cy-btn>
 </cy-sheet>
 
 <cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker">

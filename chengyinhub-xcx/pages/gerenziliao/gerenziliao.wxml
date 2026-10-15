@@ -168,15 +168,24 @@
                 error="{{nicknameState === 'taken' || nicknameState === 'invalid'}}" errorText="{{nicknameHint}}"
                 success="{{nicknameState === 'available'}}"
                 helperText="{{nicknameState === 'taken' || nicknameState === 'invalid' ? '' : (nicknameHint || '2–24 个字，可用文字、数字和 _ # - . · 空格')}}" />
-      <view class="profile-name-actions">
-        <text wx:if="{{nicknameState === 'error'}}" class="profile-name-link" bindtap="retryNicknameCheck"
+      <view wx:if="{{nicknameState === 'error'}}" class="profile-name-actions">
+        <text class="profile-name-link" bindtap="retryNicknameCheck"
               aria-role="button" aria-label="重新检查昵称" hover-class="cy-pressed" hover-stay-time="80">重新检查</text>
-        <text class="profile-name-link {{nicknameSuggesting || saving ? 'is-disabled' : ''}}" bindtap="suggestNickname"
-              aria-role="button" aria-label="换一个可用的昵称" aria-disabled="{{nicknameSuggesting || saving}}"
-              hover-class="{{nicknameSuggesting || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{nicknameSuggesting ? '正在推荐…' : '换一个'}}</text>
       </view>
-      <cy-inline-error wx:if="{{nicknameSuggestError}}" title="没换成" sub="{{nicknameSuggestError}}"
-                       action="再试一次" bind:action="suggestNickname" />
+      <view wx:if="{{nicknameState === 'taken' || nicknameSuggestions.length}}" class="profile-name-suggest">
+        <text class="profile-name-suggest-title">{{nicknameSuggesting && !nicknameSuggestions.length ? '正在找可用的昵称…' : '可以用这些昵称'}}</text>
+        <view class="profile-name-chips">
+          <text wx:for="{{nicknameSuggestions}}" wx:key="*this" class="profile-name-chip" data-name="{{item}}" bindtap="pickNicknameSuggestion"
+                aria-role="button" aria-label="使用昵称 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</text>
+        </view>
+        <view class="profile-name-actions">
+          <text class="profile-name-link {{nicknameSuggesting || saving ? 'is-disabled' : ''}}" bindtap="moreNicknameSuggestions"
+                aria-role="button" aria-label="换一批推荐昵称" aria-disabled="{{nicknameSuggesting || saving}}"
+                hover-class="{{nicknameSuggesting || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{nicknameSuggesting ? '正在推荐…' : '换一批'}}</text>
+        </view>
+      </view>
+      <cy-inline-error wx:if="{{nicknameSuggestError}}" title="没拿到推荐" sub="{{nicknameSuggestError}}"
+                       action="再试一次" bind:action="moreNicknameSuggestions" />
     </view>
   </view>
   <cy-btn slot="footer" variant="primary" bindtap="confirm4">完成</cy-btn>

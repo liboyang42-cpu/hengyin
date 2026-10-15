@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4503,
+  "controlCount": 4501,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -140747,15 +140747,6 @@
             {
               "selector": "cy-inline-error",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/club/badges/index",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 3
             }
           ]
         },
@@ -617932,7 +617923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:59"
+        "staticSource": "pages/club/badges/index.js:58"
       }
     },
     {
@@ -618039,7 +618030,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:64"
+        "staticSource": "pages/club/badges/index.js:63"
       }
     },
     {
@@ -618146,7 +618137,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:64"
+        "staticSource": "pages/club/badges/index.js:63"
       }
     },
     {
@@ -618213,7 +618204,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:150"
+        "staticSource": "pages/club/badges/index.js:149"
       }
     },
     {
@@ -618312,7 +618303,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:249"
+        "staticSource": "pages/club/badges/index.js:222"
       }
     },
     {
@@ -618379,7 +618370,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:155"
+        "staticSource": "pages/club/badges/index.js:154"
       }
     },
     {
@@ -618446,7 +618437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:160"
+        "staticSource": "pages/club/badges/index.js:159"
       }
     },
     {
@@ -618513,360 +618504,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:160"
+        "staticSource": "pages/club/badges/index.js:159"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:59:bindtap:chooseIcon:9",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "chooseImage",
-        "denied": "chooseImage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "chooseIcon",
-        "line": 59,
-        "selectorHint": ".icon-pick",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{form.iconUrl ? '更换勋章图标' : '上传勋章图标'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{creating || iconUploading}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage"
-      ],
-      "successCapabilities": [
-        "app.chooseImage"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index"
-        ],
-        "apis": [
-          "/api/common/uploadOSS",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/common/uploadOSS"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:167"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-nav-bar",
-        "event": "bind:back",
-        "handler": "goBack",
-        "line": 6,
-        "selectorHint": "cy-nav-bar[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/talent/list/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:59"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:66:bindtap:removeIcon:10",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "removeIcon",
-        "line": 66,
-        "selectorHint": ".icon-link",
-        "visibleCondition": "{{form.iconUrl}}",
-        "disabledCondition": null,
-        "ariaLabel": "移除勋章图标",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:188"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:70:bind:action:chooseIcon:11",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "chooseImage",
-        "denied": "chooseImage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "chooseIcon",
-        "line": 70,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{formErrors.icon}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage"
-      ],
-      "successCapabilities": [
-        "app.chooseImage"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index"
-        ],
-        "apis": [
-          "/api/common/uploadOSS",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/common/uploadOSS"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:167"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:74:bindtap:submitCreate:12",
+      "id": "pages/club/badges/index.wxml:59:bindtap:submitCreate:9",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -618889,10 +618531,10 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitCreate",
-        "line": 74,
+        "line": 59,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
-        "disabledCondition": "{{iconUploading}}",
+        "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -618980,11 +618622,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:193"
+        "staticSource": "pages/club/badges/index.js:166"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:77:bind:close:closeMemberPicker:13",
+      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
+      "route": "pages/club/badges/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/badges/index.wxml",
+        "js": "pages/club/badges/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 6,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/talent/list/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/badges/index.js:58"
+      }
+    },
+    {
+      "id": "pages/club/badges/index.wxml:62:bind:close:closeMemberPicker:10",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619007,7 +618719,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMemberPicker",
-        "line": 77,
+        "line": 62,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619047,11 +618759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:258"
+        "staticSource": "pages/club/badges/index.js:231"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:82:bind:action:loadMembers:14",
+      "id": "pages/club/badges/index.wxml:67:bind:action:loadMembers:11",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619074,7 +618786,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadMembers",
-        "line": 82,
+        "line": 67,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{membersState === 'error'}}",
         "disabledCondition": null,
@@ -619146,11 +618858,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:263"
+        "staticSource": "pages/club/badges/index.js:236"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:86:bindtap:pickMember:15",
+      "id": "pages/club/badges/index.wxml:71:bindtap:pickMember:12",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619173,7 +618885,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMember",
-        "line": 86,
+        "line": 71,
         "selectorHint": ".picker-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619215,11 +618927,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:291"
+        "staticSource": "pages/club/badges/index.js:264"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:97:bind:confirm:onConfirmGrant:16",
+      "id": "pages/club/badges/index.wxml:82:bind:confirm:onConfirmGrant:13",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619242,7 +618954,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmGrant",
-        "line": 97,
+        "line": 82,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619315,11 +619027,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:301"
+        "staticSource": "pages/club/badges/index.js:274"
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:97:bind:done:onGrantDone:17",
+      "id": "pages/club/badges/index.wxml:82:bind:done:onGrantDone:14",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -619342,7 +619054,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onGrantDone",
-        "line": 97,
+        "line": 82,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -619382,7 +619094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/badges/index.js:334"
+        "staticSource": "pages/club/badges/index.js:307"
       }
     },
     {
@@ -668406,9 +668118,11 @@
         "apis": [
           "/api/login/code",
           "/api/role/info",
+          "/api/user/nickname/suggest",
           "/api/user/update"
         ],
         "primaryApis": [
+          "/api/user/nickname/suggest",
           "/api/user/update"
         ],
         "auxiliaryApis": [
@@ -668424,6 +668138,12 @@
           },
           {
             "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -668450,7 +668170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:559"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:585"
       }
     },
     {
@@ -668517,7 +668237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:96"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:100"
       }
     },
     {
@@ -668574,10 +668294,12 @@
         "apis": [
           "/api/login/code",
           "/api/role/info",
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "primaryApis": [
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -668601,6 +668323,12 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
         "writeApis": []
@@ -668616,7 +668344,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:457"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:483"
       }
     },
     {
@@ -668686,7 +668414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:627"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:655"
       }
     },
     {
@@ -668785,7 +668513,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:472"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:498"
       }
     },
     {
@@ -668852,7 +668580,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:102"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:106"
       }
     },
     {
@@ -668919,7 +668647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:118"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:122"
       }
     },
     {
@@ -668986,7 +668714,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:331"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:357"
       }
     },
     {
@@ -669092,7 +668820,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:313"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:339"
       }
     },
     {
@@ -669159,7 +668887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:124"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:128"
       }
     },
     {
@@ -669226,7 +668954,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:143"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:147"
       }
     },
     {
@@ -669293,7 +669021,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:382"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:408"
       }
     },
     {
@@ -669399,7 +669127,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:371"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:397"
       }
     },
     {
@@ -669466,7 +669194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:149"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:153"
       }
     },
     {
@@ -669533,7 +669261,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:168"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:173"
       }
     },
     {
@@ -669590,10 +669318,12 @@
         "apis": [
           "/api/login/code",
           "/api/role/info",
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "primaryApis": [
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -669617,6 +669347,12 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
         "writeApis": []
@@ -669632,7 +669368,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:457"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:483"
       }
     },
     {
@@ -669661,7 +669397,7 @@
         "handler": "retryNicknameCheck",
         "line": 172,
         "selectorHint": ".profile-name-link",
-        "visibleCondition": "{{nicknameState === 'error'}}",
+        "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "重新检查昵称",
         "ariaLabelExpression": null,
@@ -669689,10 +669425,12 @@
         "apis": [
           "/api/login/code",
           "/api/role/info",
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "primaryApis": [
-          "/api/user/nickname/check"
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -669716,6 +669454,12 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
         "writeApis": []
@@ -669731,11 +669475,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:245"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:254"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:174:bindtap:suggestNickname:26",
+      "id": "pages/gerenziliao/gerenziliao.wxml:178:bindtap:pickNicknameSuggestion:26",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -669757,113 +669501,14 @@
       "control": {
         "tag": "text",
         "event": "bindtap",
-        "handler": "suggestNickname",
-        "line": 174,
-        "selectorHint": ".profile-name-link",
+        "handler": "pickNicknameSuggestion",
+        "line": 178,
+        "selectorHint": ".profile-name-chip",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "换一个可用的昵称",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{nicknameSuggesting || saving}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/suggest"
-        ],
-        "primaryApis": [
-          "/api/user/nickname/suggest"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:256"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:179:bind:action:suggestNickname:27",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "suggestNickname",
-        "line": 179,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{nicknameSuggestError}}",
-        "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "使用昵称 {{item}}",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -669872,11 +669517,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -669884,52 +669528,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/suggest"
-        ],
-        "primaryApis": [
-          "/api/user/nickname/suggest"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:256"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:324"
       }
     },
     {
@@ -670035,11 +669648,209 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:632"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:660"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:182:bindtap:confirm4:28",
+      "id": "pages/gerenziliao/gerenziliao.wxml:182:bindtap:moreNicknameSuggestions:27",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "moreNicknameSuggestions",
+        "line": 182,
+        "selectorHint": ".profile-name-link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "换一批推荐昵称",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{nicknameSuggesting || saving}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/suggest"
+        ],
+        "primaryApis": [
+          "/api/user/nickname/suggest"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:320"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:188:bind:action:moreNicknameSuggestions:28",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "moreNicknameSuggestions",
+        "line": 188,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{nicknameSuggestError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/suggest"
+        ],
+        "primaryApis": [
+          "/api/user/nickname/suggest"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:320"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:191:bindtap:confirm4:29",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -670062,7 +669873,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirm4",
-        "line": 182,
+        "line": 191,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -670102,11 +669913,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:175"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:180"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:186:bind:close:onCategorySheetClose:30",
+      "id": "pages/gerenziliao/gerenziliao.wxml:195:bind:close:onCategorySheetClose:31",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -670129,7 +669940,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:close",
         "handler": "onCategorySheetClose",
-        "line": 186,
+        "line": 195,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -670169,11 +669980,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:407"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:433"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:186:bind:select:onCategorySelect:29",
+      "id": "pages/gerenziliao/gerenziliao.wxml:195:bind:select:onCategorySelect:30",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -670196,7 +670007,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:select",
         "handler": "onCategorySelect",
-        "line": 186,
+        "line": 195,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -670236,7 +670047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:403"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:429"
       }
     },
     {
@@ -670303,7 +670114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:157"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:161"
       }
     },
     {
@@ -670402,7 +670213,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:641"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:669"
       }
     },
     {
@@ -670469,7 +670280,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:89"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:93"
       }
     },
     {
@@ -670536,7 +670347,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:110"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:114"
       }
     },
     {
@@ -670603,7 +670414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:136"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:140"
       }
     },
     {
@@ -670670,7 +670481,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:339"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:365"
       }
     },
     {
@@ -670737,7 +670548,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:396"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:422"
       }
     },
     {
@@ -670797,9 +670608,11 @@
         "apis": [
           "/api/login/code",
           "/api/role/info",
+          "/api/user/nickname/suggest",
           "/api/user/update"
         ],
         "primaryApis": [
+          "/api/user/nickname/suggest",
           "/api/user/update"
         ],
         "auxiliaryApis": [
@@ -670815,6 +670628,12 @@
           },
           {
             "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -670841,7 +670660,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:559"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:585"
       }
     },
     {

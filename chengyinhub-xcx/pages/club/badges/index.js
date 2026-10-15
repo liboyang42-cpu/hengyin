@@ -8,7 +8,7 @@ const app = getApp()
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
 function isSuccess(res) { return !!res && (res.code === 200 || res.code === '200') }
-function emptyForm() { return { name: '', desc: '', iconUrl: '' } }
+function emptyForm() { return { name: '', desc: '' } }
 
 Page({
   data: {
@@ -31,7 +31,6 @@ Page({
     formErrors: {},
     creating: false,
     createError: '',
-    iconUploading: false,
     // 颁发
     grantBadge: null,
     memberPickerVisible: false,
@@ -164,34 +163,8 @@ Page({
     else if (field === 'desc') this.setData({ 'form.desc': value, 'formErrors.desc': '' })
   },
 
-  chooseIcon() {
-    if (!this.data.isOwner || this.data.creating || this.data.iconUploading) return
-    const that = this
-    // 走既有上传通道:选图/裁剪取消时 app.chooseImage 不回调,所以「上传中」只在真正开始上传时置起
-    app.chooseImage(null, 1, {
-      crop: true,
-      cropScale: '1:1',
-      onUploadStart() { if (!that._unloaded) that.setData({ iconUploading: true, 'formErrors.icon': '' }) },
-      onUploadDone(r) {
-        if (that._unloaded) return true
-        const url = r && r.ok && Array.isArray(r.results) && typeof r.results[0] === 'string' ? r.results[0] : ''
-        that.setData({
-          iconUploading: false,
-          'form.iconUrl': url || that.data.form.iconUrl,
-          'formErrors.icon': url ? '' : '图标没上传成功，可以重试或先不放图标',
-        })
-        return true
-      },
-    })
-  },
-
-  removeIcon() {
-    if (this.data.creating) return
-    this.setData({ 'form.iconUrl': '', 'formErrors.icon': '' })
-  },
-
   submitCreate() {
-    if (!this.data.isOwner || this.data.creating || this.data.iconUploading) return
+    if (!this.data.isOwner || this.data.creating) return
     const result = clubBadge.validateCreateForm(this.data.form, this._clubId)
     if (!result.ok) {
       this.setData({ formErrors: result.errors })

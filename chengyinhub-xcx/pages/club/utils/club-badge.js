@@ -3,19 +3,18 @@
  *
  *   POST /api/club/badge/list   body {id: clubId}          登录即可读;返回 GrowthBadge[]
  *        (selectByClub:id, badgeCode, badgeName, badgeDesc, iconUrl, unlockRule, status, sortNo, clubId, createTime)
- *   POST /api/club/badge/create body {clubId, badgeName, badgeDesc?, iconUrl?}
+ *   POST /api/club/badge/create body {clubId, badgeName, badgeDesc?, iconUrl?}(本页不传 iconUrl)
  *        仅主理人(club.member_id)且需「勋章设计」能力位;badgeCode 由服务端生成并回给 data.badgeCode
  *   POST /api/club/badge/grant  body {clubId, memberId, badgeCode}
  *        仅主理人;对方须是本团成员或主理人;重复颁发回 200 + msg「已颁发过」
  *
  * 字段上限取库表 growth_badge:badge_name varchar(120) NOT NULL、badge_desc varchar(255)、
- * icon_url varchar(255)。服务端只截断名称,描述/图标超长会落成库错误,所以客户端先挡。
+ * icon_url varchar(255)。服务端只截断名称,描述超长会落成库错误,所以客户端先挡。
  * 服务端没有「规则(unlockRule)」写入口,本页也不提供该输入。
  */
 
 var NAME_MAX = 120;
 var DESC_MAX = 255;
-var ICON_MAX = 255;
 
 function charLength(value) {
   return Array.from(String(value || '')).length;
@@ -50,23 +49,23 @@ function normalizeBadges(list) {
   return out;
 }
 
-/** 创建表单校验:返回 {ok, errors:{name,desc,icon}, payload}。 */
+/**
+ * 创建表单校验:返回 {ok, errors:{name,desc}, payload}。
+ * 2026-10-15 用户决定:图标沿用平台勋章渲染,没有确认可用的值就不传 iconUrl —— payload 永不带它。
+ */
 function validateCreateForm(form, clubId) {
   var name = trimText(form && form.name);
   var desc = trimText(form && form.desc);
-  var icon = trimText(form && form.iconUrl);
   var errors = {};
   if (!name) errors.name = '请填写勋章名';
   else if (charLength(name) > NAME_MAX) errors.name = '勋章名最多 ' + NAME_MAX + ' 个字';
   if (charLength(desc) > DESC_MAX) errors.desc = '说明最多 ' + DESC_MAX + ' 个字';
-  if (icon && icon.length > ICON_MAX) errors.icon = '图标地址过长，请重新上传';
   var id = positiveId(clubId);
-  var ok = !!id && !errors.name && !errors.desc && !errors.icon;
+  var ok = !!id && !errors.name && !errors.desc;
   var payload = null;
   if (ok) {
     payload = { clubId: id, badgeName: name };
     if (desc) payload.badgeDesc = desc;
-    if (icon) payload.iconUrl = icon;
   }
   return { ok: ok, errors: errors, payload: payload };
 }
@@ -102,7 +101,6 @@ function grantReceipt(res) {
 module.exports = {
   NAME_MAX: NAME_MAX,
   DESC_MAX: DESC_MAX,
-  ICON_MAX: ICON_MAX,
   charLength: charLength,
   positiveId: positiveId,
   normalizeBadges: normalizeBadges,

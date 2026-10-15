@@ -15948,11 +15948,9 @@
    "refreshError": "",
    "formErrors": {
     "name": false,
-    "desc": false,
-    "icon": false
+    "desc": false
    },
    "createError": "",
-   "iconUploading": false,
    "membersState": "empty",
    "membersError": "",
    "members": []
@@ -15966,7 +15964,6 @@
    "badges",
    "formErrors",
    "createError",
-   "iconUploading",
    "membersState",
    "membersError",
    "members"

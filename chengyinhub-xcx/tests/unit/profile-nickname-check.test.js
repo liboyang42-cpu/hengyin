@@ -123,39 +123,67 @@ test('查询失败可重试,且不拦「完成」(保存时服务端还会再判
   assert.equal(vm.data.userInfo.name, '断网时');
 });
 
-test('「换一个」用服务端候选并沿用 cursor 翻页', () => {
+function takeName(vm, name) {
+  type(vm, name);
+  mock.timers.tick(400);
+  const checks = req('/api/user/nickname/check');
+  checks[checks.length - 1].success({ code: 200, data: { nickname: name, available: false, errorCode: 'NICKNAME_TAKEN' } });
+}
+
+test('被占用时自动列出推荐(按 cursor 连取 3 个),不自动填入,点选才填', () => {
   const vm = boot();
-  type(vm, '撞名的');
-  vm.suggestNickname();
-  const s1 = req('/api/user/nickname/suggest')[0];
-  assert.deepEqual(s1.data, { baseName: '撞名的' });
-  s1.success({ code: 200, data: { nickname: '撞名的#0001', available: true, cursor: 1 } });
-  assert.equal(vm.data.tempName, '撞名的#0001');
+  takeName(vm, '撞名的');
+  const s = req('/api/user/nickname/suggest');
+  assert.equal(s.length, 1);
+  assert.deepEqual(s[0].data, { baseName: '撞名的' });
+  assert.equal(s[0].header, undefined, '后端是 @RequestParam');
+  s[0].success({ code: 200, data: { nickname: '撞名的#0001', available: true, cursor: 1 } });
+  assert.deepEqual(req('/api/user/nickname/suggest')[1].data, { baseName: '撞名的', cursor: 1 });
+  req('/api/user/nickname/suggest')[1].success({ code: 200, data: { nickname: '撞名的#0003', available: true, cursor: 3 } });
+  req('/api/user/nickname/suggest')[2].success({ code: 200, data: { nickname: '撞名的#0004', available: true, cursor: 4 } });
+  assert.deepEqual(vm.data.nicknameSuggestions, ['撞名的#0001', '撞名的#0003', '撞名的#0004']);
+  assert.equal(vm.data.tempName, '撞名的', '推荐不得自动填入');
+  assert.equal(vm.data.nicknameState, 'taken');
+
+  vm.pickNicknameSuggestion({ currentTarget: { dataset: { name: '撞名的#0003' } } });
+  assert.equal(vm.data.tempName, '撞名的#0003');
   assert.equal(vm.data.nicknameState, 'available');
-  vm.suggestNickname();
-  const s2 = req('/api/user/nickname/suggest')[1];
-  assert.deepEqual(s2.data, { baseName: '撞名的#0001', cursor: 1 });
+  assert.deepEqual(vm.data.nicknameSuggestions, []);
+  vm.pickNicknameSuggestion({ currentTarget: { dataset: { name: '不在列表里' } } });
+  assert.equal(vm.data.tempName, '撞名的#0003');
 });
 
-test('「换一个」失败给出可读原因并可再试', () => {
+test('「换一批」从上次 cursor 往后取', () => {
   const vm = boot();
-  type(vm, '撞名的');
-  vm.suggestNickname();
+  takeName(vm, '撞名的');
+  req('/api/user/nickname/suggest')[0].success({ code: 200, data: { nickname: '撞名的#0001', available: true, cursor: 1 } });
+  req('/api/user/nickname/suggest')[1].success({ code: 200, data: { nickname: '撞名的#0002', available: true, cursor: 2 } });
+  req('/api/user/nickname/suggest')[2].success({ code: 200, data: { nickname: '撞名的#0003', available: true, cursor: 3 } });
+  vm.moreNicknameSuggestions();
+  assert.deepEqual(req('/api/user/nickname/suggest')[3].data, { baseName: '撞名的', cursor: 3 });
+});
+
+test('推荐失败给出可读原因并可再试;部分成功保留已拿到的', () => {
+  const vm = boot();
+  takeName(vm, '撞名的');
   req('/api/user/nickname/suggest')[0].success({ code: 400, msg: '昵称不符合规则或候选已耗尽', errorCode: 'NICKNAME_SUFFIX_EXHAUSTED' });
   assert.match(vm.data.nicknameSuggestError, /候选都被占用/);
   assert.equal(vm.data.nicknameSuggesting, false);
-  vm.suggestNickname();
-  req('/api/user/nickname/suggest')[1].fail();
-  assert.match(vm.data.nicknameSuggestError, /再点一次/);
+  vm.moreNicknameSuggestions();
+  req('/api/user/nickname/suggest')[1].success({ code: 200, data: { nickname: '撞名的#0001', available: true, cursor: 1 } });
+  req('/api/user/nickname/suggest')[2].fail();
+  assert.deepEqual(vm.data.nicknameSuggestions, ['撞名的#0001']);
+  assert.equal(vm.data.nicknameSuggestError, '');
 });
 
-test('推荐返回前用户又改了输入:不覆盖用户的字', () => {
+test('推荐在途时用户改了输入:旧推荐作废,不覆盖也不残留', () => {
   const vm = boot();
-  type(vm, '撞名的');
-  vm.suggestNickname();
+  takeName(vm, '撞名的');
   type(vm, '我自己想的');
   req('/api/user/nickname/suggest')[0].success({ code: 200, data: { nickname: '撞名的#0001', available: true, cursor: 1 } });
   assert.equal(vm.data.tempName, '我自己想的');
+  assert.deepEqual(vm.data.nicknameSuggestions, []);
+  assert.equal(req('/api/user/nickname/suggest').length, 1, '作废后不再续取');
 });
 
 test('保存被服务端以 NICKNAME_TAKEN 拒绝 → 重新打开昵称面板可恢复;保存接口语义不变', () => {
@@ -170,6 +198,7 @@ test('保存被服务端以 NICKNAME_TAKEN 拒绝 → 重新打开昵称面板�
   assert.equal(vm.data.popDavid4, true);
   assert.equal(vm.data.nicknameState, 'taken');
   assert.equal(vm.data.saveError, '昵称已被占用，请选择建议昵称');
+  assert.equal(req('/api/user/nickname/suggest').length, 1, '保存被拒也列推荐');
 });
 
 test('本地规则与服务端一致:2–24 字 + 字符集', () => {
@@ -193,7 +222,8 @@ test('readCheckResult 只认后端 available/errorCode,未知结构不当作可�
 test('视图:昵称输入挂校验反馈、换一个、可恢复错误', () => {
   const view = fs.readFileSync(VIEW_PATH, 'utf8');
   assert.match(view, /errorText="\{\{nicknameHint\}\}"/);
-  assert.match(view, /bindtap="suggestNickname"/);
+  assert.match(view, /bindtap="pickNicknameSuggestion"/);
+  assert.match(view, /bindtap="moreNicknameSuggestions"/);
   assert.match(view, /bindtap="retryNicknameCheck"/);
-  assert.match(view, /<cy-inline-error wx:if="\{\{nicknameSuggestError\}\}"[^>]*bind:action="suggestNickname"/);
+  assert.match(view, /<cy-inline-error wx:if="\{\{nicknameSuggestError\}\}"[^>]*bind:action="moreNicknameSuggestions"/);
 });

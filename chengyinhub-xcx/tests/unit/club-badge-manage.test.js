@@ -116,8 +116,6 @@ test('非主理人:所有管理动作都是 no-op,不打写接口', () => {
   vm.submitCreate();
   vm.openGrant({ currentTarget: { dataset: { code: 'CLUB9_2' } } });
   assert.equal(vm.data.memberPickerVisible, false);
-  vm.chooseIcon();
-  assert.equal(sandbox.chooseImage, null);
   assert.equal(req('/api/club/badge/create').length, 0);
   assert.equal(req('/api/club/badge/grant').length, 0);
   assert.equal(req('/api/club/members').length, 0);
@@ -187,23 +185,21 @@ test('创建:网络中断按「结果未知」处理并回读列表,不让用户
   assert.equal(req('/api/club/badge/list').length, 2);
 });
 
-test('图标走既有上传通道;上传失败给可恢复提示', () => {
+test('图标不开放上传:页面不调上传通道,创建 payload 不带 iconUrl(2026-10-15 用户决定)', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
-  vm.chooseIcon();
-  assert.equal(sandbox.chooseImage.count, 1);
-  assert.equal(sandbox.chooseImage.options.cropScale, '1:1');
-  sandbox.chooseImage.options.onUploadStart();
-  assert.equal(vm.data.iconUploading, true);
-  assert.equal(sandbox.chooseImage.options.onUploadDone({ ok: true, results: ['https://cdn/x.png'] }), true);
-  assert.equal(vm.data.form.iconUrl, 'https://cdn/x.png');
-  assert.equal(vm.data.iconUploading, false);
-
-  vm.chooseIcon();
-  sandbox.chooseImage.options.onUploadStart();
-  sandbox.chooseImage.options.onUploadDone({ ok: false, results: [], failures: [{ msg: 'x' }] });
-  assert.equal(vm.data.form.iconUrl, 'https://cdn/x.png', '失败不清掉已有图标');
-  assert.match(vm.data.formErrors.icon, /没上传成功/);
+  assert.equal(typeof vm.chooseIcon, 'undefined');
+  vm.openCreate();
+  vm.onFormInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: '元老' } });
+  vm.submitCreate();
+  const body = JSON.parse(req('/api/club/badge/create')[0].data);
+  assert.equal(Object.prototype.hasOwnProperty.call(body, 'iconUrl'), false);
+  assert.equal(sandbox.chooseImage, null);
+  const view = fs.readFileSync(VIEW_PATH, 'utf8');
+  assert.doesNotMatch(view, /chooseIcon|iconUploading/);
+  // 渲染与平台勋章墙一致:有 iconUrl 用 aspectFit 图片,没有就星标
+  assert.match(view, /<image wx:if="\{\{item\.iconUrl\}\}"[^>]*mode="aspectFit"/);
+  assert.match(view, /<cy-icon wx:else name="star"/);
 });
 
 test('颁发:成员取自 /api/club/members → 危险确认 → 发 grant → 回执', () => {
@@ -259,10 +255,10 @@ test('成员名单失败 → 可重试', () => {
   assert.equal(req('/api/club/members').length, 2);
 });
 
-test('validateCreateForm 按库表上限:名 120、说明 255、图标 255', () => {
+test('validateCreateForm 按库表上限:名 120、说明 255;即便传入 iconUrl 也不进 payload', () => {
   assert.equal(clubBadge.validateCreateForm({ name: 'a'.repeat(121) }, 9).errors.name, '勋章名最多 120 个字');
   assert.equal(clubBadge.validateCreateForm({ name: '名', desc: '字'.repeat(256) }, 9).errors.desc, '说明最多 255 个字');
-  assert.ok(clubBadge.validateCreateForm({ name: '名', iconUrl: 'h'.repeat(256) }, 9).errors.icon);
+  assert.deepEqual(clubBadge.validateCreateForm({ name: '名', iconUrl: 'https://x/a.png' }, 9).payload, { clubId: 9, badgeName: '名' });
   assert.equal(clubBadge.validateCreateForm({ name: '名' }, null).ok, false, '无 clubId 不出 payload');
   assert.deepEqual(clubBadge.validateCreateForm({ name: '名', desc: ' ', iconUrl: '' }, '9').payload, { clubId: 9, badgeName: '名' });
 });
