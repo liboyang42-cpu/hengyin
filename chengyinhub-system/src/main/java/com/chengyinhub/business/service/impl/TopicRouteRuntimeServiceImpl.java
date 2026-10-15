@@ -1609,7 +1609,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         syncTheme(session, state);
         themeEngine.signal(themeConfig(session), state, rules, "NODE", outcome.getNodeId(), "", "", 0, "node:" + outcome.getNodeId());
-        session.setStateJson(writeSettled(session, state));
+        String settledState = writeSettled(session, state);
+        if (!branchOpening && "ACTIVE".equals(state.getStatus()) && state.getCurrentNodeId() != null) {
+            state.getNodeStates().put(state.getCurrentNodeId(), TopicRouteState.PLAYABLE);
+            settledState = write(state);
+        }
+        session.setStateJson(settledState);
         session.setStatus(statusOf(state));
         keepOpeningRunning(session, state);
         session.setCurrentNodeId(state.getCurrentNodeId()); session.setRecommendedNodeId(state.getRecommendedNodeId());
