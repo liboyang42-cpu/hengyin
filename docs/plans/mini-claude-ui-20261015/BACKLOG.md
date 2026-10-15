@@ -127,3 +127,16 @@
 | 89 | 到访安全感受评价 | 只在已有「核销/到访完成」结果处照现有按钮样式加「评价安全感受」：`GET /api/community-trust/safety/taxonomy` 取选项，`cy-sheet` 内单选，`POST /safety/ratings` 提交，资格以后端报错为准如实回显；没有现成位置就 BLOCKED | 与 BL-66 配套；不展示他人评价 |
 | 90 | 单测补齐·第五批 | BL-84–89 新增纯函数/页面处理器单测（不改 UI） | tests |
 | 91 | 接口合同测试·第五批 | BL-84–89 新调用接口的合同测试（路径/方法/字段对照 Java 源码） | tests |
+
+## 第七批（92–99）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 92 | 剧情案卷（只读） | 在主题游玩已有的「线索/案卷」类入口读 `GET /api/play/journey/casebook?topicId=&activityId=`（`PlayJourneyReadService.casebook` 返回为准），`cy-sheet` 内列表展示；只能挂在非 Codex 文件的现有入口，入口在 `pages/play/index.js` 或没有现成位置就 BLOCKED | 不碰 `pages/play/index.js`（Codex）；照现有半屏列表 |
+| 93 | 剧情背包（只读） | 同上入口读 `GET /api/play/journey/backpack`，展示本主题各节点奖励与领取状态（状态值取自 service 真值，不编造「可领取」按钮）；没有现成位置就 BLOCKED | 与 BL-92 同一宿主；不做领取写操作 |
+| 94 | 主题游玩历史（只读） | 主题详情/我的游玩现有记录区读 `GET /api/play/theme/history?topicId=&beforeSessionId=&limit=`，按 `beforeSessionId` 游标「加载更多」，四态照现有列表；先核实是否已有同类历史列表，已有则 BLOCKED | 不改会话运行时服务（Codex）；只读 |
+| 95 | 成就概览（只读） | 个人页现有成长/等级信息块读 `POST /api/play/achievements`（`level`、`totalCheckins`、碎片/彩蛋列表，字段以控制器 `data.put` 为准），只补现有块里缺的数字；没有现成块就 BLOCKED，不新造入口 | 照现有个人页信息块；不改主标题 |
+| 96 | 收藏的活动（只读） | 现有「我的收藏」类页面读 `POST /api/activity/like_list` 展示已收藏活动；若唯一宿主是 `pages/mylike/mylike.js`（Codex）则只交补丁并 BLOCKED；不做 `/api/activity/like` 写入口以外的新按钮 | 照现有收藏列表样式 |
+| 97 | 商家项目草稿箱 | 商家工作台现有项目入口读 `POST /api/content-draft/list`（`business_type`、`scope`，需 `PROJECT_MANAGE`），支持「恢复」(`/restore`) 与「删除」(`/delete`，二次确认，成功后回读列表)；**不做** `/publish`；没有现成位置就 BLOCKED | `pages/merchant/**`；四态照现有商家二级页 |
+| 98 | 报名按日趋势（只读） | 主题/活动主办方现有报名管理页读 `POST /api/registration/count_by_date`（`owner_type` 1 主题/2 活动、`owner_id`），按日列出报名数；403「无权查看该项目趋势」如实提示；不画新图表样式，沿用现有列表/数字行 | 主办方现有页面；不碰支付/报名写接口 |
+| 99 | 单测与合同测试·第七批 | BL-92–98 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
