@@ -117,6 +117,7 @@ chengyinhub-xcx/pages/merchant/customer/index.js 6  # 2026-09-25 CRM 工作台:�
 chengyinhub-xcx/pages/merchant/customer/index.js 1  # 2026-09-15 F15 获取联系号码:失败由失败半屏承接并含可读原因,通用 toast 会与半屏双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-08-25 商家工作台:经营身份失败关闭为 consoleState:error 并显示 consoleError,不冒充空态;通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-09-17 入驻申请状态回读:失败由页内 consoleError + 「重新加载」承接,不弹重复 toast
+chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-10-15 BL-85 开通前置检查(只读辅助区块):读取失败就不展示,不挡工作台其他区块,也不弹 toast
 chengyinhub-xcx/pages/merchant/predict/index.js 3  # 2026-09-12 竞猜待答:身份与待办列表失败落整页 cy-error/无权限空态;结算失败由本页 toast 精确文案并留在原地可再试。通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/ledger/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/team/index.js 7  # 2026-08-25 团队页:权限、成员、岗位、邀请与写操作失败落页内/弹层精确错误并保留重试;通用 toast 会双弹
