@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 133,
+    "routes": 136,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1531,6 +1531,43 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageMember/report-mine/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/report-detail/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "reportId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/report-appeal/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "reportId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageMember/signup/index",
       "pkg": "subpackageMember",
       "tabBar": false,
@@ -1715,8 +1752,8 @@
       "component": "scene-member-order-detail",
       "dir": "subpackageMember/components/cy/scene-member-order-detail",
       "twin": {
-        "route": "pages/merchant/ledger/order-detail/index",
-        "score": 11
+        "route": "subpackageMember/report-detail/index",
+        "score": 12
       }
     },
     {
@@ -1730,7 +1767,10 @@
     {
       "component": "scene-member-participation-detail",
       "dir": "subpackageMember/components/scene-member-participation-detail",
-      "twin": null
+      "twin": {
+        "route": "subpackageMember/report-detail/index",
+        "score": 12
+      }
     },
     {
       "component": "scene-member-withdraw-history",

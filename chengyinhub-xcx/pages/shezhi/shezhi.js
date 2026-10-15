@@ -156,6 +156,10 @@ Page({
     wx.navigateTo({ url: '/pages/mylike/mylike' });
   },
 
+  goMyReports() {
+    wx.navigateTo({ url: '/subpackageMember/report-mine/index' });
+  },
+
   // 隐私与定位 / 用户服务协议:原来都是 navigateTo 整页跳走,现在原地开弹窗,不离开设置页。
   // pages/privacy 与 pages/agreement 两个路由页都保留(深链、分享、以及微信隐私授权回调仍走它们)。
   goPrivacy() {

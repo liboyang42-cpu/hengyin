@@ -1,0 +1,52 @@
+<view class="theme-dark rd">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="{{mode === 'subject' ? '关于你的举报' : '举报进度'}}" safe-top="{{false}}" />
+    <view class="rd__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
+      <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" />
+      <cy-state-shell wx:elif="{{state === 'no-permission'}}" kind="no-permission"
+                      title="暂时不能查看这条举报" sub="只有举报人本人和被举报的用户可以查看进度" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度没能加载出来"
+                      sub="{{errorSub || '举报处理不受影响，只是这次没读到'}}" primary="重试" bind:primary="retry" />
+      <block wx:else>
+        <view class="rd-card">
+          <view class="rd-card__head">
+            <text class="rd-card__title">{{report.targetText}} · {{report.reasonText}}</text>
+            <cy-tag variant="{{report.stageTone}}">{{report.stageText}}</cy-tag>
+          </view>
+          <text class="rd-card__hint">{{report.stageHint}}</text>
+          <text class="rd-card__meta">编号 {{report.id}}{{report.createText ? ' · 提交于 ' + report.createText : ''}}</text>
+          <text class="rd-card__meta" wx:if="{{report.etaText}}">{{report.etaText}}</text>
+          <text class="rd-card__privacy" wx:if="{{report.privacyText}}">{{report.privacyText}}</text>
+        </view>
+
+        <view class="rd-section" wx:if="{{report.decisionSummary}}">
+          <text class="rd-section__label">处理结论</text>
+          <text class="rd-section__text">{{report.decisionSummary}}</text>
+        </view>
+        <view class="rd-section" wx:if="{{mode !== 'subject' && report.description}}">
+          <text class="rd-section__label">你的举报说明</text>
+          <text class="rd-section__text">{{report.description}}</text>
+        </view>
+
+        <view class="rd-section">
+          <text class="rd-section__label">处理进度</text>
+          <cy-timeline wx:if="{{nodes.length}}" nodes="{{nodes}}" />
+          <text wx:else class="rd-section__text rd-section__text--muted">暂时还没有进度记录</text>
+        </view>
+
+        <view class="rd-actions" wx:if="{{report.appealable}}">
+          <text class="rd-actions__hint">对处理结论有异议，可以提交申诉，平台会重新核查</text>
+          <cy-btn variant="secondary" bindtap="goAppeal">提交申诉</cy-btn>
+        </view>
+        <view class="rd-actions" wx:elif="{{report.appealing}}">
+          <text class="rd-actions__hint">申诉已受理，复核结果会更新在这里</text>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>
