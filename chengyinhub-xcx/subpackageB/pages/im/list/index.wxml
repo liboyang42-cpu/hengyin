@@ -65,7 +65,7 @@
             bindtouchcancel="onTouchEnd"
             bindtap="openChat" data-id="{{item.conversationId}}"
             data-name="{{item.counterparty.nickname}}" data-avatar="{{item.counterparty.avatar}}"
-            data-type="{{item.type}}">
+            data-type="{{item.type}}" aria-role="button" aria-label="打开{{item.counterparty.nickname}}会话">
         <view class="avatar">
           <view wx:if="{{item.type==2}}" class="sys-avatar">
             <cy-icon name="bell" size="48" />

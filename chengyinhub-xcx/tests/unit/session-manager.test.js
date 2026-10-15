@@ -217,3 +217,222 @@ test('dev 兜底首次仍然生效:没在用 dev token 时照常兜底', async (
   assert.equal(r.dev, true);
   assert.equal(calls.dev, 1);
 });
+
+function deferredLoginFixture(stage, dev) {
+  const session = makeSession({ user_id: '7', authorization: 'A' });
+  let finish, exchanges = 0, devCalls = 0;
+  const pending = new Promise((resolve, reject) => { finish = value => value instanceof Error ? reject(value) : resolve(value); });
+  const manager = createSessionManager({
+    session,
+    wxLogin: () => stage === 'wx' ? pending : Promise.resolve({ code: 'CODE' }),
+    exchangeCode: () => { exchanges++; return stage === 'exchange' ? pending : Promise.resolve(okBody); },
+    isDevEnv: () => !!dev,
+    useDevUser: () => { devCalls++; session.setUserID('1'); session.setAuthorization('DEV'); }
+  });
+  return { session, manager, finish, exchanges: () => exchanges, devCalls: () => devCalls,
+    async ready() { for (let i = 0; i < 8; i++) await Promise.resolve(); },
+    switchSession(id = '9', token = 'B') { session.setUserID(id); session.setAuthorization(token); } };
+}
+for (const stage of ['wx', 'exchange']) {
+  for (const outcome of ['success', 'failure']) {
+    test('旧登录在换号后停止 ' + stage + '/' + outcome + '，不覆盖真实或开发会话', async () => {
+      const f = deferredLoginFixture(stage, true);
+      const promise = f.manager.refresh(); await f.ready();
+      f.switchSession();
+      f.finish(outcome === 'failure' ? new Error('fixture failure') : stage === 'wx' ? { code: 'CODE' } : okBody);
+      const result = await promise;
+      assert.equal(result.ok, false); assert.equal(result.reason, 'sessionChanged');
+      assert.equal(f.devCalls(), 0);
+      if (stage === 'wx') assert.equal(f.exchanges(), 0);
+      assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+      assert.equal(f.manager.isLoggingIn(), false);
+    });
+  }
+}
+for (const replacement of [{ id: '', token: '' }, { id: '7', token: 'A-new' }]) {
+  test('旧登录不能恢复已退出会话或覆盖同账号更新的 token: ' + replacement.id, async () => {
+    const f = deferredLoginFixture('exchange');
+    const promise = f.manager.login(); await f.ready();
+    f.switchSession(replacement.id, replacement.token); f.finish(okBody);
+    assert.equal((await promise).reason, 'sessionChanged');
+    assert.equal(f.session.getUserID(), replacement.id);
+    assert.equal(f.session.getAuthorization(), replacement.token);
+  });
+}
+test('登录微任务开始前换号，不再发起旧 wx.login', async () => {
+  const { deps, calls } = makeDeps({ session: makeSession({ user_id: '7', authorization: 'A' }) });
+  const manager = createSessionManager(deps), promise = manager.login();
+  deps.session.setUserID('9'); deps.session.setAuthorization('B');
+  assert.equal((await promise).reason, 'sessionChanged');
+  assert.equal(calls.wxLogin, 0); assert.equal(calls.exchange, 0);
+});
+test('换号导致旧单航班结束后，新会话仍能再次登录', async () => {
+  const f = deferredLoginFixture('exchange');
+  const old = f.manager.login(); assert.equal(f.manager.refresh(), old); await f.ready();
+  f.switchSession(); f.finish(okBody); assert.equal((await old).reason, 'sessionChanged');
+  f.switchSession('7', 'A'); assert.equal((await f.manager.refresh()).ok, true);
+});
+
+function loadOwnerApp() {
+  const path = require('node:path'), fs = require('node:fs'), vm = require('node:vm');
+  const root = path.join(__dirname, '../..');
+  let app;
+  const toasts = [], requests = [];
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8'), {
+    App: value => { app = value; }, wx: { request: options => { requests.push(options); } },
+    require: file => file === './utils/toast.js' ? Object.assign(msg => toasts.push(msg), { hide() {} }) : require(path.join(root, file)),
+    console
+  }, { filename: 'app.js' });
+  const { createSessionStore } = require('../../utils/session/session-store.js');
+  const storage = new Map();
+  const session = createSessionStore({ target: app.globalData, wx: {
+    setStorageSync: (key, value) => storage.set(key, value),
+    getStorageSync: key => storage.get(key), removeStorageSync: key => storage.delete(key)
+  } });
+  app.getSession = () => session;
+  app.isDevEnv = () => false;
+  return { app, session, toasts, requests };
+}
+for (const entry of ['reLogin', 'firstLogin']) {
+  test('App ' + entry + ' 在旧失败后保留新账号内存与 Storage，并停止旧提示', async () => {
+    const f = loadOwnerApp(), pending = deferredLoginFixture('exchange');
+    f.session.setUserID('7'); f.session.setAuthorization('A');
+    const manager = createSessionManager({ session: f.session, wxLogin: () => Promise.resolve({ code: 'CODE' }),
+      exchangeCode: () => new Promise(resolve => { pending.resolve = resolve; }) });
+    f.app.getSessionManager = () => manager;
+    // firstLogin 使用登录中的同一单航班，而非命中缓存。
+    const refresh = manager.refresh();
+    if (entry === 'firstLogin') manager.ensureSession = () => refresh;
+    const result = entry === 'reLogin' ? new Promise(resolve => f.app.reLogin((ok, r) => resolve({ ok, r }))) : f.app.firstLogin();
+    await pending.ready();
+    f.session.setUserID('9'); f.session.setAuthorization('B');
+    pending.resolve({ msg: '登录失败' }); await result;
+    assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+    assert.equal(f.session.restore(), undefined);
+    assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+    assert.deepEqual(f.toasts, []);
+  });
+}
+test('App 失败已返回但回调尚未执行时换号，也不能清除新账号', async () => {
+  const f = loadOwnerApp(); f.session.setUserID('7'); f.session.setAuthorization('A');
+  let finish;
+  f.app.getSessionManager = () => ({ refresh: () => new Promise(resolve => { finish = resolve; }) });
+  const result = new Promise(resolve => f.app.reLogin(resolve));
+  finish({ ok: false, reason: 'networkFail' }); f.session.setUserID('9'); f.session.setAuthorization('B');
+  assert.equal(await result, false);
+  assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+});
+test('App 同账号真实续期失败仍清理旧会话', async () => {
+  const f = loadOwnerApp(); f.session.setUserID('7'); f.session.setAuthorization('A');
+  f.app.getSessionManager = () => createSessionManager({ session: f.session,
+    wxLogin: () => Promise.reject(new Error('fixture')), exchangeCode: async () => okBody });
+  assert.equal(await new Promise(resolve => f.app.reLogin(resolve)), false);
+  assert.ok(!f.session.getUserID()); assert.ok(!f.session.getAuthorization());
+});
+for (const method of ['GET', 'POST']) {
+  test('App 实际装配让首登后的原匿名 ' + method + ' 请求使用真实新会话', async () => {
+    const f = loadOwnerApp();
+    const manager = createSessionManager({ session: f.session, wxLogin: async () => ({ code: 'CODE' }), exchangeCode: async () => okBody });
+    f.app.getSessionManager = () => manager;
+    f.app.globalData.siteBaseUrl = 'https://fixture';
+    f.app.getRequestClient().send({ url: '/api/fixture', method });
+    f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
+    for (let i = 0; i < 15; i++) await Promise.resolve();
+    assert.equal(f.requests.length, 2); assert.equal(f.requests[1].header.Authorization, okBody.token);
+    assert.equal(f.session.getUserID(), '7');
+  });
+}
+test('App 实际请求装配在换号后拒绝旧 POST 登录和重发', () => {
+  const f = loadOwnerApp(); let loginCalls = 0;
+  f.app.globalData.siteBaseUrl = 'https://fixture';
+  f.app.reLogin = () => { loginCalls++; };
+  f.session.setUserID('7'); f.session.setAuthorization('A');
+  const events = [];
+  f.app.getRequestClient().send({ url: '/api/fixture', method: 'POST', data: { draft: 'A-content' },
+    fail: body => { events.push('fail'); assert.equal(body.reason, 'sessionChanged'); },
+    complete: () => events.push('complete') });
+  f.session.setUserID('9'); f.session.setAuthorization('B');
+  f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
+  assert.equal(loginCalls, 0); assert.equal(f.requests.length, 1);
+  assert.deepEqual(events, ['fail', 'complete']);
+});
+test('App 登录成功落地后、回调前换号，匿名旧请求也不能借新账号重发', async () => {
+  const f = loadOwnerApp();
+  f.app.globalData.siteBaseUrl = 'https://fixture';
+  const manager = createSessionManager({ session: f.session, wxLogin: async () => ({ code: 'CODE' }), exchangeCode: async () => okBody });
+  const refresh = manager.refresh();
+  const completed = await refresh;
+  // 将真实成功登录结果延迟交给真实 App 回调，再换成其他会话。
+  let deliver;
+  f.app.getSessionManager = () => ({ refresh: () => new Promise(resolve => { deliver = resolve; }) });
+  f.session.clearSession();
+  const events = [];
+  f.app.getRequestClient().send({ url: '/api/fixture', method: 'GET',
+    fail: body => { events.push('fail'); assert.equal(body.reason, 'sessionChanged'); },
+    complete: () => events.push('complete') });
+  f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
+  f.session.setUserID('9'); f.session.setAuthorization('B'); deliver(completed);
+  for (let i = 0; i < 4; i++) await Promise.resolve();
+  assert.equal(f.requests.length, 1); assert.deepEqual(events, ['fail', 'complete']);
+  assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+});
+
+test('启动前已失效的登录即使账号随后恢复，也不能调用交换或开发兜底', async () => {
+  const { deps, calls } = makeDeps({ session: makeSession({ user_id: '7', authorization: 'A' }), isDevEnv: () => true });
+  const manager = createSessionManager(deps), promise = manager.login();
+  deps.session.setUserID('9'); deps.session.setAuthorization('B');
+  await Promise.resolve();
+  deps.session.setUserID('7'); deps.session.setAuthorization('A');
+  assert.equal((await promise).reason, 'sessionChanged');
+  assert.equal(calls.wxLogin, 0); assert.equal(calls.exchange, 0); assert.equal(calls.dev, 0);
+});
+for (const reason of ['noData', 'networkFail']) {
+  test('App 当前首登失败保留既有清理/弱网规则: ' + reason, async () => {
+    const f = loadOwnerApp(); f.session.setUserID('7'); f.session.setAuthorization('A');
+    f.app.getSessionManager = () => ({ ensureSession: () => Promise.resolve({ ok: false, reason }) });
+    await f.app.firstLogin();
+    assert.equal(!!f.session.getUserID(), reason === 'networkFail');
+    assert.equal(!!f.session.getAuthorization(), reason === 'networkFail');
+    assert.equal(f.toasts.length, 1);
+  });
+}
+
+for (const response of [
+  { statusCode: 401, data: { msg: '登录失败' }, expected: 401 },
+  { statusCode: 200, data: { code: 401, msg: '登录失败' }, expected: 401 },
+  { statusCode: 200, data: { code: 2, msg: '登录失败' }, expected: 2 }
+]) {
+  test('真实App本次重登失败清会话仍保留鉴权失败码: ' + response.statusCode + '/' + response.expected, async () => {
+    const f = loadOwnerApp(); f.app.globalData.siteBaseUrl = 'https://fixture';
+    f.session.setUserID('7'); f.session.setAuthorization('A');
+    const manager = createSessionManager({ session: f.session, wxLogin: async () => { throw new Error('fixture'); },
+      exchangeCode: async () => okBody });
+    f.app.getSessionManager = () => manager;
+    const events = [];
+    f.app.getRequestClient().send({ url: '/api/fixture', method: 'POST',
+      fail: (body, status) => { events.push(['fail', body.reason, status]); },
+      complete: () => events.push(['complete']) });
+    f.requests[0].success(response); f.requests[0].complete(response);
+    for (let i = 0; i < 15; i++) await Promise.resolve();
+    assert.equal(f.requests.length, 1);
+    assert.deepEqual(events, [['fail', undefined, response.expected], ['complete']]);
+    assert.ok(!f.session.getUserID()); assert.ok(!f.session.getAuthorization());
+  });
+}
+test('真实App本次清会话后若又换号，旧请求仍必须取消而非冒充正常鉴权失败', async () => {
+  const f = loadOwnerApp(); f.app.globalData.siteBaseUrl = 'https://fixture';
+  f.session.setUserID('7'); f.session.setAuthorization('A');
+  f.app.getSessionManager = () => createSessionManager({ session: f.session,
+    wxLogin: async () => { throw new Error('fixture'); }, exchangeCode: async () => okBody });
+  const reLogin = f.app.reLogin;
+  f.app.reLogin = cb => reLogin.call(f.app, (ok, result) => {
+    f.session.setUserID('9'); f.session.setAuthorization('B'); cb(ok, result);
+  });
+  const events = [];
+  f.app.getRequestClient().send({ url: '/api/fixture', method: 'POST',
+    fail: body => events.push(body.reason), complete: () => events.push('complete') });
+  f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
+  for (let i = 0; i < 15; i++) await Promise.resolve();
+  assert.equal(f.requests.length, 1); assert.deepEqual(events, ['sessionChanged', 'complete']);
+  assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
+});

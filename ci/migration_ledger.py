@@ -49,6 +49,7 @@ EXPLICIT_MANAGED_SQL = {
         "seed_refund_manual_menu_20260714",
 }
 EXPLICIT_AUXILIARY_SQL = {
+    "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",

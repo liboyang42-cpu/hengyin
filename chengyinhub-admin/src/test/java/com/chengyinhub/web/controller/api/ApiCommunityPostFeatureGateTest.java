@@ -14,6 +14,28 @@ import static org.mockito.Mockito.when;
 
 class ApiCommunityPostFeatureGateTest {
     @Test
+    void personalListsRequireCurrentPrincipalAndReadGate() {
+        ICommunityPostService service = mock(ICommunityPostService.class);
+        CommunityPostFeatureGate gate = mock(CommunityPostFeatureGate.class);
+        ApiCommunityPostController controller = spy(new ApiCommunityPostController(service, gate));
+        doReturn(0L).when(controller).getAppUserId();
+        assertEquals(401, controller.myPosts(null, 2).get("code"));
+        assertEquals(401, controller.myBookmarks(null, 2).get("code"));
+        doReturn(8L).when(controller).getAppUserId();
+        assertEquals(404, controller.myPosts(null, 2).get("code"));
+        assertEquals(404, controller.myBookmarks(null, 2).get("code"));
+        verify(service, never()).myPosts(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verify(service, never()).myBookmarks(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        when(gate.canRead(8L)).thenReturn(true);
+        when(gate.canWrite(8L)).thenReturn(false);
+        assertEquals(200, controller.myPosts(50L, 2).get("code"));
+        assertEquals(200, controller.myBookmarks(40L, 2).get("code"));
+        verify(service).myPosts(8L, 50L, 2);
+        verify(service).myBookmarks(8L, 40L, 2);
+        verify(gate, never()).canWrite(org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
     void closedReadAndWriteFlagsStopBeforeCommunityService() {
         ICommunityPostService service = mock(ICommunityPostService.class);
         CommunityPostFeatureGate gate = mock(CommunityPostFeatureGate.class);

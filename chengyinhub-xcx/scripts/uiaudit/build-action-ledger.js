@@ -69,7 +69,7 @@ const APP_WRITE_HELPERS = new Set(['recordConsent', 'chooseImage', 'chooseDocume
 // ApiMerchantAftercareController:respond），路径里没有通用写动词，只能按真实合同逐个登记；
 // 同前缀的 /aftercare/detail、/customers/{param}/detail 是查询读，绝不登记，避免写读串味。
 const EXPLICIT_WRITE_APIS = new Set([
-  '/api/template/draft', '/api/game/session/command', '/api/im/block',
+  '/api/template/draft', '/api/template/adopt-draft', '/api/game/session/command', '/api/im/block',
   '/api/merchant/aftercare/respond',
   '/api/merchant/crm/customers/{param}/notes',
   '/api/merchant/crm/customers/{param}/notes/hide',
@@ -257,6 +257,16 @@ function withdrawSubmitVariant(handler) {
 }
 
 const ACTION_VARIANTS = new Map([
+  // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
+  ['components/cy/scene-asset-earnings/index.js:openWithdraw', [
+    { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openWithdrawHistory', [
+    { id: null, handler: 'openWithdrawHistory', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openInvite', [
+    { id: null, handler: 'openInvite', requiredBranches: ['success', 'error'] },
+  ]],
   ['subpackageMember/components/cy/profile/index.js:onPrimaryCta', [
     {
       id: 'visitor-follow', handler: 'toggleFollow', predicate: { isSelf: false, subjectIsMerchant: false },
@@ -604,15 +614,19 @@ const ACTION_VARIANTS = new Map([
   // 举报分支的确认闸在 reportSquare 的 modal.show 里(与 tap 是同一条闸),事件合同推不出
   // 确认模式,这里按检测器对 modal.show 的既有标签如实声明(wx.showModal),才能保住
   // 「举报有确认 + 有取消分支」这条棘轮。
+  ['pages/square/components/cy/post-compose/index.js:onPublish', [
+    { id: 'create', handler: 'publishNewPost', predicate: { editMode: false }, predicateScope: 'component' },
+    { id: 'edit', handler: 'saveExistingPost', predicate: { editMode: true }, predicateScope: 'component' },
+  ]],
   ['pages/square/detail/index.js:onPostAction', [
     { id: 'edit', handler: 'openPostEdit', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
-    { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
+    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/list/index.js:onPostAction', [
     { id: 'edit', handler: 'editCurrentSquarePost', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
-    { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
+    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/components/cy/post-actions/index.js:onDelete', [
     // 组件的删除闸走 this._danger() 间接拿 cy-danger-confirm(selectComponent 不在本函数体),
@@ -849,7 +863,11 @@ function reconcileServerContracts(apiContracts) {
     const methods = server.get(normalizeApiTemplate(contract.url))
     if (!methods || methods.size === 0) return contract
     if (methods.size === 1) {
-      return { ...contract, method: [...methods.keys()][0], source: 'server-controller' }
+      const serverMethod = [...methods.keys()][0]
+      if (contract.source === 'local-wrapper' && String(contract.method).toUpperCase() !== serverMethod) {
+        throw new Error(`${contract.url}: 本地 wrapper method ${contract.method} 不匹配后端 Controller ${serverMethod}`)
+      }
+      return { ...contract, method: serverMethod, source: 'server-controller' }
     }
     if (!methods.has(String(contract.method || '').toUpperCase())) {
       throw new Error(`${contract.url}: 前端 method ${contract.method || 'null'} 不在后端 Controller 合同 ${[...methods.keys()].join('/')}`)
@@ -936,7 +954,8 @@ function inferEffectClasses(handlerName, source, appHelperBodies, targets, direc
   const body = String(source || '')
   const directBody = directSource == null ? body : String(directSource)
   const effects = []
-  const targetWrites = targets && (targets.primaryApis || []).some(isWriteApi)
+  const targetWrites = targets && ((targets.primaryApis || []).some(isWriteApi)
+    || (targets.apiContracts || []).some((c) => c.adapterBranch && c.method !== 'GET'))
   if (NETWORK_RE.test(body)) effects.push(WRITE_RE.test(name) || targetWrites ? 'write' : 'read')
   const appNetworkCalls = appHelperCalls(body, appHelperBodies)
     .filter(([, helperBody]) => NETWORK_RE.test(helperBody))
@@ -1066,6 +1085,16 @@ function staticAttr(value) {
 function dynamicAttr(value) {
   const text = value == null ? '' : String(value)
   return text.includes('{{') ? text : null
+}
+// ponytail: only literal branches under a simple data-path condition are supported.
+// Extend this grammar when a real binding needs more; unknown expressions fail closed.
+function eventHandlerNames(value) {
+  const classified = classifyBinding(value)
+  if (classified.kind === 'identifier') return [classified.name]
+  if (classified.kind === 'empty') return []
+  const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
+  if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
+  return [...new Set([match[2], match[4]])]
 }
 
 /**
@@ -1431,6 +1460,243 @@ function discoverComponentHosts() {
 
 function isSelfOnlyWriteApi(api) {
   return SELF_ONLY_WRITE_APIS.has(api) || SELF_ONLY_WRITE_API_RE.test(api)
+    || /^\/api\/v1\/community\/(?:posts\/\{param\}\/actions(?:\/\{param\})?|comments\/\{param\}\/actions(?:\/LIKE)?)$/.test(api)
+}
+
+function communityAliasesForSource(source, jsFile) {
+  if (!source.includes('community-post-api')) return []
+  const masked = maskNonCodeSafely(source), aliases = new Set(), modules = new Set()
+  for (const m of source.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"]([^'"]+)['"]\)(\.createClient\s*\()?/g)) {
+    if (!/^(?:const|let|var)\b/.test(masked.slice(m.index))
+      || resolveSourceDependency(rel(jsFile), m[2], ['.js', '/index.js']) !== 'utils/community-post-api.js') continue
+    if (m[3]) aliases.add(m[1]); else modules.add(m[1])
+  }
+  for (const module of modules) {
+    const pattern = new RegExp(`((?:(?:this|that|self)\\.)?[A-Za-z_$][\\w$]*)\\s*=\\s*${module.replace(/[$]/g, '\\$&')}\\.createClient\\s*\\(`, 'g')
+    for (const m of masked.matchAll(pattern)) aliases.add(m[1])
+  }
+  // Instance getters are trusted only when their own body returns a receiver actually assigned createClient above.
+  const getters = new Set()
+  for (const m of masked.matchAll(/\b([A-Za-z_$][\w$]*)\s*\([^\n(){}]*\)\s*\{/g)) {
+    const open = m.index + m[0].lastIndexOf('{'), end = matchBrace(masked, open)
+    if (end < 0) continue
+    const body = masked.slice(open, end + 1)
+    for (const alias of aliases) if (alias.startsWith('this.') && new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=').test(body)
+      && new RegExp(`\\breturn\\s+${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*;`).test(body)) getters.add(m[1])
+  }
+  for (const getter of getters) for (const receiver of ['this', 'that', 'self']) aliases.add(`${receiver}.${getter}()`)
+  for (const m of masked.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*((?:this|that|self)\.[A-Za-z_$][\w$]*\(\))/g))
+    if (aliases.has(m[2])) aliases.add(m[1])
+  return [...aliases]
+}
+
+function communitySourceContracts(method, helperSource) {
+  const source = helperSource || fs.readFileSync(path.join(ROOT, 'utils/community-post-api.js'), 'utf8')
+  const masked = maskNonCodeSafely(source), functions = new Map()
+  for (const m of masked.matchAll(/\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g)) {
+    const open = m.index + m[0].lastIndexOf('{'), end = matchBrace(masked, open)
+    if (end < 0) throw new Error('community helper function incomplete')
+    functions.set(m[1], { source: source.slice(open, end + 1), masked: masked.slice(open, end + 1) })
+  }
+  const exported = [...source.matchAll(/\breturn\s*\{\s*([^{}]+)\}\s*;/g)].filter(m => /^return\b/.test(masked.slice(m.index))).at(-1)
+  if (!exported) throw new Error('community helper exports incomplete')
+  const entries = new Map(exported[1].split(',').map(raw => {
+    const parts = raw.trim().split(/\s*:\s*/)
+    if (parts.some(p => !/^[A-Za-z_$][\w$]*$/.test(p))) throw new Error('community helper export grammar unknown')
+    return [parts[0], parts.at(-1)]
+  }))
+  if (!entries.has(method)) throw new Error(`未登记 community helper 方法: ${method}`)
+  const contracts = [], seen = new Set()
+  function visit(name) {
+    if (seen.has(name)) return
+    seen.add(name)
+    const fn = functions.get(name)
+    if (!fn) throw new Error(`community helper 实际函数缺失: ${name}`)
+    const events = []
+    for (const m of fn.masked.matchAll(/\bapp\.sendRequest\s*\(\s*\{/g)) events.push({ index:m.index, request:m })
+    for (const m of fn.masked.matchAll(/(^|[^\w$.])([A-Za-z_$][\w$]*)\s*\(/g))
+      if (functions.has(m[2]) && m[2] !== name) events.push({ index:m.index, function:m[2] })
+    events.sort((a,b) => a.index-b.index)
+    for (const event of events) {
+      if (event.function) { visit(event.function); continue }
+      const open=event.index+event.request[0].lastIndexOf('{'),end=matchBrace(fn.masked,open)
+      if(end<0)throw new Error('community dispatch incomplete')
+      const block=fn.source.slice(open,end+1), code=fn.masked.slice(open,end+1)
+      const urlField=/\burl\s*:\s*([^,\n}]+)/.exec(code), methodField=/\bmethod\s*:\s*/.exec(code)
+      if(!urlField || !methodField)throw new Error('community dispatch literal path/method missing')
+      const expression=block.slice(urlField.index+urlField[0].indexOf(':')+1,urlField.index+urlField[0].length).trim()
+      let url='',offset=0
+      if(expression.startsWith('`')){
+        if(!/^`\/api\/v1\/community\/[^`]*`$/.test(expression))throw new Error('community dispatch template must be complete actual literal')
+        url=expression.slice(1,-1).replace(/\$\{view\.id\(options\.commentId\)\}/g,'{param}')
+        if(/[${}]/.test(url.replaceAll('{param}','')))throw new Error('community dispatch template expression unknown')
+      }else{
+        const literals=[...expression.matchAll(/(['"])([^'"]*)\1/g)]
+        if(!literals.length || literals[0].index!==0 || !literals[0][2].startsWith('/api/v1/community/'))
+          throw new Error('community dispatch path must start with actual literal')
+        for(const literal of literals){if(expression.slice(offset,literal.index).trim())url+='{param}';url+=literal[2];offset=literal.index+literal[0].length}
+        if(expression.slice(offset).trim())url+='{param}'
+      }
+      const methodLiteral=/^(['"])(GET|POST|PATCH|DELETE)\1/.exec(block.slice(methodField.index+methodField[0].indexOf(':')+1).trimStart())
+      if(!methodLiteral)throw new Error('community dispatch method must be literal')
+      contracts.push({url,method:methodLiteral[2],auth:'authenticated',source:'community-source-call',adapterMethod:method,adapterStage:name,adapterBranch:'source:'+method+':'+name})
+    }
+  }
+  visit(entries.get(method))
+  return contracts
+}
+
+// Resolve only actual exported adapter calls. Legacy request() still accepts just the two report commands.
+function communityRequestContracts(source, aliases, helperSource) {
+  const contracts=[],commands=new Set()
+  if(!aliases.length)return{commands,contracts}
+  const masked=maskNonCodeSafely(source)
+  for(const alias of aliases){
+    const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+    const pattern=new RegExp(`\\b${escaped}\\.([A-Za-z_$][\\w$]*)\\s*\\(`,'g')
+    for(const match of source.matchAll(pattern)){
+      if(!masked.slice(match.index).startsWith(alias+'.'+match[1]))continue
+      const method=match[1]
+      if(method==='request'){
+        const start=masked.indexOf('{',match.index+match[0].length),end=matchBrace(masked,start)
+        if(start<0 || end<0)throw new Error('community request object incomplete')
+        const call=source.slice(start,end+1),url=call.match(/\burl\s*:\s*['"]([^'"]+)['"]/)?.[1]
+        if(!url)throw new Error('community request URL must be literal')
+        if(!['/api/creativesquare/report','/api/comment/report'].includes(url))throw new Error(`未登记 community adapter 指令: ${url}`)
+        commands.add(url)
+        const actual=communitySourceContracts('request',helperSource)
+        if(actual.length!==2 || actual[0].url!=='/api/v1/community/capabilities' || actual[0].method!=='GET'
+          || actual[1].url!=='/api/v1/community/reports' || actual[1].method!=='POST')throw new Error('community report actual source drift')
+        contracts.push(...actual.map((c,i)=>({...c,adapterBranch:i?'confirmed-report':'report-taxonomy'})))
+      }else contracts.push(...communitySourceContracts(method,helperSource))
+    }
+  }
+  return{commands,contracts}
+}
+
+function communityTypedRequestPlan(contracts, sourceFile, caller) {
+  const actual=contracts.filter(c=>c.adapterMethod && c.adapterMethod!=='request')
+  if(!actual.length)return null
+  if(sourceFile){
+    const app=JSON.parse(fs.readFileSync(path.join(ROOT,'app.json'),'utf8'))
+    const roots=['pages','components',...(app.subPackages || app.subpackages || []).map(pkg=>pkg.root)]
+    if(typeof sourceFile!=='string' || path.isAbsolute(sourceFile) || sourceFile.includes('\\')
+      || sourceFile.split('/').some(part=>part==='.' || part==='..') || !sourceFile.endsWith('.js')
+      || !roots.some(root=>sourceFile.startsWith(root+'/')))
+      throw new Error('community caller requires repository-relative production source')
+    const absolute=path.join(ROOT,sourceFile)
+    if(!fs.realpathSync(absolute).startsWith(fs.realpathSync(ROOT)+path.sep))
+      throw new Error('community caller requires repository-relative production source')
+    sourceFile=absolute
+  }
+  const request=c=>({urlTemplate:c.url,method:c.method,kind:c.method==='GET'?'read':'write'})
+  const byBranch={},outcomes={}
+  const branch=(name,sequence,failures=true)=>{
+    byBranch[name]=sequence.map(request);outcomes[name]=sequence.map(()=> 'success')
+    if(failures)sequence.forEach((_,i)=>{
+      for(const failure of ['error','timeout']){const key=name==='success' ? (i===0?failure:`stage-${i+1}-${failure}`) : `${name}-stage-${i+1}-${failure}`
+        byBranch[key]=sequence.slice(0,i+1).map(request);outcomes[key]=sequence.slice(0,i+1).map((_,j)=>j===i?failure:'success')}
+    })
+  }
+  const distinct=list=>[...new Map(list.map(c=>[c.url+'\0'+c.method,c])).values()]
+  const called=new Set(actual.map(c=>c.adapterMethod))
+  const publisher=called.has('publishNew')?'publishNew':called.has('saveEdit')?'saveEdit':null
+  if(publisher){
+    if(called.has('publishNew') && called.has('saveEdit'))throw new Error('community publisher caller must expose explicit create/edit variants')
+    const stages=actual.filter(c=>c.adapterMethod===publisher)
+    const stage=(name,method)=>{const matches=stages.filter(c=>c.adapterStage===name && (!method || c.method===method));if(matches.length!==1)throw new Error(`community actual ${publisher}/${name}/${method} stage incomplete`);return matches[0]}
+    const read=stage('readDetail','GET'),guideline=stage('confirmGuideline','GET'),ack=stage('confirmGuideline','POST'),media=stage('resolveMedia','POST')
+    const writes=stages.filter(c=>c.adapterStage===publisher && c.method!=='GET')
+    if(writes.length!==(publisher==='publishNew'?2:1))throw new Error('community publisher write stage drift')
+    if(!sourceFile)throw new Error('community publisher requires real caller source')
+    const source=stripJsCommentsKeepStrings(fs.readFileSync(sourceFile,'utf8'))
+    const literal=/Math\.max\(0,\s*(\d+)\s*-\s*(?:this|that)\.data\.picList\.length\)/.exec(source)
+    const constant=/\bconst\s+MAX_PICS\s*=\s*(\d+)\s*;/.exec(source)
+    const hasChooser=/\bapp\.chooseImage\s*\(/.test(maskNonCodeSafely(source))
+    if(!hasChooser || (!literal && !constant))throw new Error('community publisher actual image chooser bound missing')
+    let maxMedia=Number((literal||constant)[1])
+    if(/form\.mediaPaths\.push\(activity\.routePreviewImg\)/.test(maskNonCodeSafely(source)))maxMedia+=1
+    if(!Number.isInteger(maxMedia) || maxMedia<0 || maxMedia>9)throw new Error('community actual media bound invalid')
+    const follow=distinct(actual.filter(c=>c.adapterMethod!==publisher && c.method==='GET'))
+    const repeated=n=>Array.from({length:n},()=>media)
+    if(publisher==='publishNew'){
+      branch('success',[guideline,ack,...writes,...follow])
+      for(let n=1;n<=maxMedia;n++)branch(`new-${n}-media`,[guideline,ack,...repeated(n),...writes,...follow])
+      branch('resume-create',[...writes,...follow])
+      for(let n=1;n<=maxMedia;n++)branch(`resume-${n}-media`,[...repeated(n),...writes,...follow])
+      branch('resume-publish',[read,writes[1],...follow])
+      branch('already-published',[read,...follow])
+      branch('deleted-terminal',[writes[0]],false)
+      branch('deleted-reupload-required',[writes[0]],false)
+      branch('deleted-restart',[writes[0],guideline,ack,...writes,...follow])
+      for(let n=1;n<=maxMedia;n++)branch(`deleted-restart-${n}-fresh-media`,[writes[0],guideline,ack,...repeated(n),...writes,...follow])
+      branch('recovery-confirmation-required',[],false)
+    }else{
+      branch('success',[read,guideline,ack,...writes,...follow])
+      branch('draft-edit',[read,...writes,...follow])
+      for(let n=1;n<=maxMedia;n++){
+        branch(`edit-${n}-new-media`,[read,guideline,ack,...repeated(n),...writes,...follow])
+        branch(`draft-edit-${n}-new-media`,[read,...repeated(n),...writes,...follow])
+      }
+      branch('patch-already-applied',[read,...follow])
+      branch('patch-unchanged',[read],false);branch('patch-conflict',[read],false)
+      branch('patch-retry-confirmed',[read,...writes,...follow])
+    }
+  }else{
+    const writes=distinct(actual.filter(c=>c.method!=='GET'))
+    const reads=distinct(actual.filter(c=>c.method==='GET'))
+    const direct=distinct(contracts.filter(c=>!c.adapterMethod && !AUXILIARY_APIS.has(c.url)))
+    if(called.has('myPosts') && called.has('feed')){
+      if(!sourceFile)throw new Error('community mutually exclusive profile reads require actual caller source')
+      const slices=handlerSlices(sourceFile),list=slices.get('getCreativesquareList') || '',action=slices.get('performPostAction') || ''
+      if(!/if\s*\(self\)\s*this\.communityClient\(\)\.myPosts\(options\)/.test(list)
+        || !/else\s*\{\s*options\.query\.authorId\s*=\s*this\.data\.userId;\s*this\.communityClient\(\)\.feed\(options\)/.test(list))
+        throw new Error('community profile self/other source branch drift')
+      const own=reads.filter(c=>c.adapterMethod==='myPosts'),other=reads.filter(c=>c.adapterMethod==='feed')
+      if(own.length!==1 || other.length!==1)throw new Error('community profile read branch incomplete')
+      if(writes.length){
+        if(!/if\s*\(actionType\s*===\s*'NOT_INTERESTED'\)[\s\S]*?this\.reloadFeed\(\);\s*\}\s*else\s*\{/.test(action))
+          throw new Error('community profile NOT_INTERESTED readback branch drift')
+        const type=caller && caller.attrs && caller.attrs['data-type'],handler=caller && caller.handlerName
+        const notInterested=handler==='lickClick' && type==='2'
+        const permitsNotInterested=!caller || (handler==='lickClick' && type!=='1')
+        if(!notInterested)writes.forEach((write,i)=>branch(i===0?'success':`${write.adapterMethod}-success`,[write]))
+        if(permitsNotInterested){
+          const add=writes.find(c=>c.adapterMethod==='addPostAction')
+          if(!add)throw new Error('community NOT_INTERESTED actual add action missing')
+          branch(notInterested?'success':'not-interested-self',[add,...own])
+          branch('not-interested-other',[add,...other])
+        }
+      }else{branch('success',own);branch('other-profile',other)}
+    }else if(writes.length){
+      writes.forEach((write,i)=>branch(i===0?'success':`${write.adapterMethod}-success`,[write,...reads,...direct.filter(c=>c.method==='GET')]))
+    }else branch('success',[...direct.filter(c=>c.method!=='GET'),...reads,...direct.filter(c=>c.method==='GET')])
+  }
+  byBranch['duplicate-trigger']=byBranch.success;outcomes['duplicate-trigger']=outcomes.success
+  return{requiredRequests:byBranch.success,requiredRequestsByBranch:byBranch,requiredRequestOutcomes:outcomes,branches:Object.keys(byBranch)}
+}
+
+function communityRequestPlan(contracts, sourceFile, caller) {
+  const typed=communityTypedRequestPlan(contracts, sourceFile, caller)
+  if(typed)return typed
+  const community = contracts.filter((c) => c.adapterBranch)
+  if (!community.length) return null
+  if (community.some((c) => !['report-taxonomy', 'confirmed-report'].includes(c.adapterBranch)))
+    throw new Error('未登记 community adapter request plan')
+  const taxonomy = community.find((c) => c.adapterBranch === 'report-taxonomy')
+  const report = community.find((c) => c.adapterBranch === 'confirmed-report')
+  if (!taxonomy || !report) throw new Error('community report request plan 不完整')
+  const request = (c) => ({ urlTemplate: c.url, method: c.method, kind: c.method === 'GET' ? 'read' : 'write' })
+  const success = [request(taxonomy), request(report)]
+  const byBranch = { success, 'duplicate-trigger': success }
+  const outcomes = { success: ['success', 'success'], 'duplicate-trigger': ['success', 'success'] }
+  for (const failure of ['error', 'timeout']) {
+    byBranch[failure] = success.slice(0, 1); outcomes[failure] = [failure]
+    byBranch[`stage-2-${failure}`] = success
+    outcomes[`stage-2-${failure}`] = ['success', failure]
+  }
+  return { requiredRequests: success, requiredRequestsByBranch: byBranch,
+    requiredRequestOutcomes: outcomes, branches: Object.keys(byBranch) }
 }
 
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
@@ -1454,6 +1720,14 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  const communityAliases = communityAliasesForSource(fileSource, jsFile)
+  const communityTargets = communityRequestContracts(expandedSource, communityAliases)
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
+  targets.communityContracts = communityTargets.contracts
+  targets.communitySourceFile = rel(jsFile)
+  targets.apis.push(...communityTargets.contracts.map((c) => c.url))
+  targets.apiContracts.push(...communityTargets.contracts)
   for (const declaration of fileSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{/g)) {
     const helperName = declaration[1]
     const urlParam = declaration[2].split(',')[0].trim()
@@ -1464,9 +1738,10 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     const methodMatch = body.match(/\bmethod\s*:\s*["']([A-Za-z]+)["']/)
     const urlBinding = new RegExp(`\\burl\\s*:\\s*${urlParam.replace(/[$]/g, '\\$&')}\\b`).test(body)
       || (urlParam === 'url' && /(?:^|[,\n{])\s*url\s*,/.test(body))
-    if (!methodMatch || !urlBinding) continue
+    if (!urlBinding || !methodMatch) continue
     const callPattern = new RegExp(`\\b${helperName.replace(/[$]/g, '\\$&')}\\s*\\(\\s*["'](\\/api\\/[^"']+)["']`, 'g')
     for (const call of expandedSource.matchAll(callPattern)) {
+      if (!maskNonCodeSafely(expandedSource).slice(call.index).startsWith(helperName)) continue
       targets.apiContracts.push({
         url: call[1], method: methodMatch[1].toUpperCase(), auth: 'authenticated', source: 'local-wrapper',
       })
@@ -1495,6 +1770,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       if (!names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
+      if (dependency === 'utils/community-post-api.js') return
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],
@@ -1573,6 +1849,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
   }
   appendDependencyTargets(jsFile)
   if (appHelperCalls(source, appHelperBodies).length) appendDependencyTargets(path.join(ROOT, 'app.js'))
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
   let apiContracts = [...new Map(targets.apiContracts.map((item) => [`${item.url}\0${item.method || ''}`, item])).values()]
     .sort((a, b) => a.url.localeCompare(b.url) || String(a.method).localeCompare(String(b.method)))
   const templatePrefixes = new Set(apiContracts.filter((item) => item.url.includes('{param}'))
@@ -1597,7 +1875,17 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     primaryApis: contracted.filter((api) => !AUXILIARY_APIS.has(api)).sort(),
     auxiliaryApis: contracted.filter((api) => AUXILIARY_APIS.has(api)).sort(),
     apiContracts,
+    communityContracts: targets.communityContracts,
+    communitySourceFile: rel(jsFile),
   }
+}
+
+// Native page handlers have no WXML binding; reuse the same resolver without adding controls.
+function targetsForHandler(jsFile, handlerName) {
+  const slices = handlerSlices(jsFile)
+  if (!slices.has(handlerName)) throw new Error(`未找到实际 handler: ${handlerName}`)
+  return extractHandlerTargets(expandHandlerBody(handlerName, slices), jsFile, handlerName, {},
+    discoverAppHelperBodies(path.join(ROOT, 'app.js')))
 }
 
 function buildLedger() {
@@ -1627,15 +1915,15 @@ function buildLedger() {
       const hostRoutes = [...new Set(hostComponentPaths.map((item) => item.route))].sort()
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
-      findEventBindings(source).forEach((binding, bindingIndex) => {
-        const classified = classifyBinding(binding.value)
-        if (classified.kind !== 'identifier') return
+      findEventBindings(source).flatMap((binding, bindingIndex) =>
+        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+      ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''
         const attrs = parseAttrs(tagSource)
         const rawAriaLabel = attrs['aria-label'] || attrs['accessibility-label'] || null
-        const variantKey = `${rel(jsFile)}:${classified.name}`
-        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: classified.name, predicate: null }])
+        const variantKey = `${rel(jsFile)}:${name}`
+        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: name, predicate: null }])
           .filter((variant) => !variant.events || variant.events.includes(binding.attrName))
         variants.forEach((variant) => {
         const body = expandHandlerBody(variant.sourceHandler || variant.handler, slices)
@@ -1674,9 +1962,8 @@ function buildLedger() {
           ? variant.confirmationMode
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
-          const contract = targets.apiContracts.find((item) => item.url === api)
-          return contract && contract.method && contract.method !== 'GET'
-            && (isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api))
+          return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
+            && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
         }) : []
         const writeApis = variant.writeApis || inferredWriteApis
         if (writeApis.some((api) => !targets.primaryApis.includes(api)
@@ -1698,7 +1985,13 @@ function buildLedger() {
             requiredRequestOutcomes: { ...plan.requiredRequestOutcomes, 'without-chapter-grant': ['success'] },
             requiredBranches: plan.requiredBranches.concat(['without-chapter-grant']) }
         }
-        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${classified.name}:${bindingIndex}`
+        const communityPlan = communityRequestPlan([...(targets.communityContracts || []), ...targets.apiContracts.filter(c => !c.adapterMethod)], targets.communitySourceFile, {handlerName:variant.handler,attrs})
+        if (communityPlan && !variant.requiredRequests && !variant.requiredRequestsByBranch) {
+          variant = { ...variant, ...communityPlan,
+            requiredBranches: [...new Set(requiredBranchesFor(actionClass, baseActionClass,
+              externalCapabilities, effectClasses, accessBoundary).concat(communityPlan.branches))] }
+        }
+        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${name}:${bindingIndex}`
         const controlId = variant.id ? `${baseControlId}:variant:${variant.id}` : baseControlId
         controls.push({
           id: controlId,
@@ -1729,7 +2022,7 @@ function buildLedger() {
           control: {
             tag: tag ? tag.name : 'unknown',
             event: binding.attrName,
-            handler: classified.name,
+            handler: name,
             line: binding.line,
             selectorHint: attrs.id ? `#${attrs.id}` : (attrs.class ? `.${attrs.class.trim().split(/\s+/)[0]}` : `${tag ? tag.name : 'unknown'}[${binding.attrName}]`),
             visibleCondition: attrs['wx:if'] || attrs['wx:elif'] || attrs.hidden || null,
@@ -1759,7 +2052,7 @@ function buildLedger() {
           )).concat(confirmationMode ? ['modal-cancelled'] : []))],
           requiredPlatforms: requiredPlatformsFor(actionClass),
           externalGate: actionClass === 'external' ? 'real-device-required' : null,
-          evidence: { status: 'pending', staticSource: handlerSources.get(classified.name) || `${rel(jsFile)}:0` },
+          evidence: { status: 'pending', staticSource: handlerSources.get(name) || `${rel(jsFile)}:0` },
         })
         })
       })
@@ -2576,6 +2869,7 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+  eventHandlerNames,
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,
@@ -2588,6 +2882,13 @@ module.exports = {
   discoverExternalHelperNames,
   serverApiContracts,
   buildLedger,
+  targetsForHandler,
+  communityRequestContracts,
+  communityAliasesForSource,
+  communitySourceContracts,
+  communityRequestPlan,
+  isSelfOnlyWriteApi,
+  extractTargets,
   sourceFilesFor,
   sourceDigestFor,
   sourceDigestAtCommit,

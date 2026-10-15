@@ -891,10 +891,21 @@ public class ApiMerchantController extends BaseController {
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());
         pending.setScopeId(access.getMerchantId());
+        pending.setVoiceVersion(mine.getVoiceVersion());
         pending.setVoiceId(null);
         pending.setVoiceStatus(VOICE_PENDING);
         pending.setVoiceSample(sample);
-        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) return error("声音任务未保存，请重试");
+        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) {
+            NpcProfile latest = ownNpcOrNull(access.getMerchantId());
+            if (latest != null && sample.equals(latest.getVoiceSample())
+                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
+                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) {
+                AjaxResult existing = AjaxResult.success();
+                existing.put("voiceStatus", latest.getVoiceStatus());
+                return existing;
+            }
+            return error("声音任务未保存，请重试");
+        }
 
         String voiceId;
         try {
@@ -903,6 +914,7 @@ public class ApiMerchantController extends BaseController {
             NpcProfile failed = new NpcProfile();
             failed.setId(mine.getId());
             failed.setScopeId(access.getMerchantId());
+            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
             failed.setVoiceId(null);
             failed.setVoiceStatus(VOICE_FAILED);
             npcProfileMapper.updateMerchantNpcVoice(failed);
@@ -918,6 +930,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile done = new NpcProfile();
         done.setId(mine.getId());
         done.setScopeId(access.getMerchantId());
+        done.setVoiceVersion(mine.getVoiceVersion() + 1);
         done.setVoiceId(voiceId);
         done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         if (npcProfileMapper.updateMerchantNpcVoice(done) != 1) return error("声音结果待确认，请稍后查询状态");
@@ -950,14 +963,17 @@ public class ApiMerchantController extends BaseController {
                     NpcProfile upd = new NpcProfile();
                     upd.setId(mine.getId());
                     upd.setScopeId(access.getMerchantId());
+                    upd.setVoiceVersion(mine.getVoiceVersion());
                     upd.setVoiceId(mine.getVoiceId());
                     upd.setVoiceStatus(VOICE_READY);
-                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) status = VOICE_READY;
+                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) mine.setVoiceStatus(VOICE_READY);
                 }
             } catch (AiServiceException ignore) {}
+            mine = ownNpcOrNull(access.getMerchantId());
+            status = mine == null || mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
         }
         r.put("voiceStatus", status);
-        r.put("voiceSample", mine.getVoiceSample());
+        r.put("voiceSample", mine == null ? null : mine.getVoiceSample());
         return r;
     }
 
@@ -975,6 +991,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile upd = new NpcProfile();
         upd.setId(mine.getId());
         upd.setScopeId(access.getMerchantId());
+        upd.setVoiceVersion(mine.getVoiceVersion());
         upd.setVoiceId(null);
         upd.setVoiceStatus(VOICE_NONE);
         return npcProfileMapper.updateMerchantNpcVoice(upd) == 1

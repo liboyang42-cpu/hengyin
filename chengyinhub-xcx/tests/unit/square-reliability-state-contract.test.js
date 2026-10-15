@@ -46,7 +46,12 @@ function loadPage(relativePath) {
     },
     tips(message) { toasts.push(message) },
   }
+  const store = new Map()
   const wxApi = {
+    getStorageSync: key => store.get(key),
+    setStorageSync: (key, value) => store.set(key, structuredClone(value)),
+    removeStorageSync: key => store.delete(key),
+    showModal: options => options.success({ confirm: true }),
     getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20 }),
     getMenuButtonBoundingClientRect: () => ({ bottom: 64 }),
     hideTabBar() {},
@@ -83,28 +88,49 @@ function loadPage(relativePath) {
   }
 }
 
-test('广场刷新失败保留旧帖并在 complete 后收起系统刷新动画', () => {
+const tick = () => new Promise(resolve => setImmediate(resolve))
+function bundle(id, body) {
+  return { post: { id, authorId: 7, version: 0, lifecycle: 'PUBLISHED', body, audience: 'PUBLIC' },
+    viewerIsAuthor: true, viewerCanComment: true, viewerFollowing: false, media: [], references: [], topicCodes: [], mentions: [] }
+}
+async function createRequest(h) {
+  await tick()
+  let request = h.requests.at(-1)
+  assert.equal(request.url, '/api/v1/community/guidelines/active')
+  request.success({ code: 200, data: { id: 3, contentJson: { rules: [{ title: '真实规范' }] } } })
+  await tick()
+  request = h.requests.at(-1)
+  assert.equal(request.url, '/api/v1/community/guidelines/ack')
+  request.success({ code: 200, data: {} })
+  await tick()
+  request = h.requests.at(-1)
+  assert.equal(request.url, '/api/v1/community/posts')
+  return request
+}
+
+test('广场刷新失败保留旧帖并在 complete 后收起系统刷新动画', async () => {
   const h = loadPage('pages/square/list/index.js')
   const previous = [{ id: 7, contents: '已有帖文' }]
   Object.assign(h.page.data, { list: previous, listLoading: false, hasMore: true, page_no: 2 })
 
   h.page.refreshList()
+  await tick()
 
   assert.deepEqual(h.page.data.list, previous)
   assert.equal(h.page.data.isRefreshing, true)
   assert.equal(h.requests.length, 1)
-  assert.equal(h.requests[0].data.pageNum, 1)
+  assert.equal(Object.hasOwn(h.requests[0].data, 'cursor'), false)
 
   h.requests[0].success({ code: 500, msg: '刷新暂时失败' })
   assert.deepEqual(h.page.data.list, previous)
   assert.equal(h.pullStops, 0)
 
-  h.requests[0].complete()
+  await tick()
   assert.equal(h.page.data.isRefreshing, false)
   assert.equal(h.pullStops, 1)
 })
 
-test('广场加载更多单飞，失败保留分页资格并提供原位重试', () => {
+test('广场加载更多单飞，失败保留分页资格并提供原位重试', async () => {
   const h = loadPage('pages/square/list/index.js')
   Object.assign(h.page.data, {
     list: [{ id: 1 }],
@@ -113,48 +139,56 @@ test('广场加载更多单飞，失败保留分页资格并提供原位重试',
     hasMore: true,
   })
 
+  h.page._nextCursor = 50
   h.page.onReachBottom()
+  await tick()
   h.page.onReachBottom()
+  await tick()
 
   assert.equal(h.requests.length, 1)
-  assert.equal(h.requests[0].data.pageNum, 2)
+  assert.equal(h.requests[0].data.cursor, 50)
   assert.equal(h.page.data.isLoadingMore, true)
 
   h.requests[0].fail({ errMsg: 'request:fail timeout' })
-  h.requests[0].complete()
+  await tick()
   assert.equal(h.page.data.page_no, 1)
   assert.equal(h.page.data.hasMore, true)
   assert.match(h.page.data.loadMoreError, /网络/)
 
   h.page.retryLoadMore()
+  await tick()
   assert.equal(h.requests.length, 2)
-  assert.equal(h.requests[1].data.pageNum, 2)
+  assert.equal(h.requests[1].data.cursor, 50)
 })
 
-test('广场发布有可见忙碌态，失败保留草稿并能重试', () => {
+test('广场发布有可见忙碌态，失败保留草稿并能重试', async () => {
   const h = loadPage('pages/square/list/index.js')
   Object.assign(h.page.data, { valCont: '保留这份草稿', picList: ['/a.png'] })
 
+  h.page.communityClient().captureUpload({url:'/a.png',uploadReceipt:'fixture-upload-receipt',byteSize:32,mimeType:'image/png'})
   h.page.submitFormData()
+  await tick()
   h.page.submitFormData()
+  await tick()
   assert.equal(h.requests.length, 1)
   assert.equal(h.page.data.submitting, true)
   assert.equal(h.requests[0].hideLoading, true)
   assert.equal(h.requests[0].silentError, true)
 
   h.requests[0].success({ code: 500, msg: '内容暂时无法发布' })
-  h.requests[0].complete()
+  await tick()
   assert.equal(h.page.data.submitting, false)
   assert.equal(h.page.data.submitError, '内容暂时无法发布')
   assert.equal(h.page.data.valCont, '保留这份草稿')
   assert.deepEqual(h.page.data.picList, ['/a.png'])
 
   h.page.retrySubmit()
+  await tick()
   assert.equal(h.requests.length, 2)
   assert.equal(h.page.data.submitError, '')
 })
 
-test('广场发布成功关闭编辑层，并在刷新回读前保留原列表', () => {
+test('广场发布成功关闭编辑层，并在刷新回读前保留原列表', async () => {
   const h = loadPage('pages/square/list/index.js')
   const previous = [{ id: 1, contents: '已有帖文' }]
   Object.assign(h.page.data, {
@@ -167,70 +201,94 @@ test('广场发布成功关闭编辑层，并在刷新回读前保留原列表',
   })
 
   h.page.submitFormData()
-  h.requests[0].success({ code: '200' })
+  await tick()
+  const create = await createRequest(h)
+  const draft = bundle(77, '新帖文')
+  draft.post = { ...create.data, id: 77, authorId: 7, version: 0, lifecycle: 'DRAFT' }
+  create.success({ code: 200, data: draft })
+  await tick()
+  const publish = h.requests.at(-1)
+  assert.equal(publish.url, '/api/v1/community/posts/77/publish')
+  assert.equal(publish.data.expectedVersion, 0)
+  publish.success({ code: 200, data: { ...draft, post: { ...draft.post, version: 1, lifecycle: 'CHECKING' } } })
+  await tick()
 
   assert.equal(h.page.data.popOrig, false)
   assert.equal(h.page.data.popShow, false)
   assert.equal(h.page.data.valCont, '')
   assert.deepEqual(h.page.data.list, previous)
-  assert.equal(h.requests.length, 2)
-  assert.equal(h.requests[1].data.pageNum, 1)
+  assert.equal(h.requests.length, 5)
+  assert.equal(Object.hasOwn(h.requests[4].data, 'cursor'), false)
 })
 
-test('帖子与评论的点赞、关注微操作单飞，失败不会提前改写界面状态', () => {
+test('帖子与评论的点赞、关注微操作单飞，失败不会提前改写界面状态', async () => {
   const list = loadPage('pages/square/list/index.js')
   Object.assign(list.page.data, {
-    list: [{ id: 3, memberId: 8, isLiked: 0, likeCount: 4, isFollowTheUser: 0 }],
+    list: [{ id: 3, memberId: 8, isLiked: false, likeCount: 4, isFollowTheUser: false }],
   })
   const event = { currentTarget: { dataset: { index: 0, type: 1 } } }
 
   list.page.lickClick(event)
+  await tick()
   list.page.lickClick(event)
+  await tick()
   assert.equal(list.requests.length, 1)
-  assert.equal(list.page.data.list[0].isLiked, 0)
+  assert.equal(list.page.data.list[0].isLiked, false)
   list.requests[0].fail({ errMsg: 'request:fail timeout' })
-  list.requests[0].complete()
-  assert.equal(list.page.data.list[0].isLiked, 0)
+  await tick()
+  assert.equal(list.page.data.list[0].isLiked, false)
 
   list.page.followClick(event)
+  await tick()
   list.page.followClick(event)
+  await tick()
   assert.equal(list.requests.length, 2)
-  assert.equal(list.page.data.list[0].isFollowTheUser, 0)
+  assert.equal(list.page.data.list[0].isFollowTheUser, false)
 
   const detail = loadPage('pages/square/detail/index.js')
   Object.assign(detail.page.data, {
     id: 3,
-    info: { id: 3, memberId: 8, isLiked: 0, likeCount: 4, isFollowTheUser: 0 },
+    info: { id: 3, memberId: 8, isLiked: false, likeCount: 4, isFollowTheUser: false },
   })
   detail.page.lickClick(event)
+  await tick()
   detail.page.lickClick(event)
+  await tick()
   assert.equal(detail.requests.length, 1)
   detail.page.followClick(event)
+  await tick()
   detail.page.followClick(event)
+  await tick()
   assert.equal(detail.requests.length, 2)
 
   const comments = loadPage('pages/square/detail/index.js')
   Object.assign(comments.page.data, {
     id: 3,
-    list: [{ id: 11, memberId: 8, isLiked: 0, likeCount: 2, isFollowTheUser: 0 }],
+    list: [{ id: 11, memberId: 8, isLiked: false, likeCount: 2, isFollowTheUser: false }],
   })
   comments.page.commentLikeClick(event)
+  await tick()
   comments.page.commentLikeClick(event)
+  await tick()
   assert.equal(comments.requests.length, 1)
-  comments.requests[0].complete()
+  comments.requests[0].fail({ errMsg: 'request:fail timeout' })
+  await tick()
   comments.page.commentFollowClick(event)
+  await tick()
   comments.page.commentFollowClick(event)
+  await tick()
   assert.equal(comments.requests.length, 2)
 })
 
-test('动态评论首载、空态和分页失败都有独立且可恢复的状态', () => {
+test('动态评论首载、空态和分页失败都有独立且可恢复的状态', async () => {
   const h = loadPage('pages/square/detail/index.js')
   h.page.data.id = 9
 
   h.page.getList()
+  await tick()
   assert.equal(h.page.data.commentsState, 'loading')
-  h.requests[0].success({ code: '200', data: { rows: [], total: 0 } })
-  h.requests[0].complete()
+  h.requests[0].success({ code: '200', data: { items: [], hasMore: false, nextCursor: null } })
+  await tick()
   assert.equal(h.page.data.commentsState, 'ready')
   assert.equal(h.page.data.nodata, true)
 
@@ -240,22 +298,26 @@ test('动态评论首载、空态和分页失败都有独立且可恢复的状�
     hasMore: true,
     nodata: false,
   })
+  h.page._nextCursor = 50
   h.page.onReachBottom()
+  await tick()
   h.page.onReachBottom()
+  await tick()
   assert.equal(h.requests.length, 2)
-  assert.equal(h.requests[1].data.pageNum, 2)
+  assert.equal(h.requests[1].data.cursor, 50)
   h.requests[1].fail({ errMsg: 'request:fail timeout' })
-  h.requests[1].complete()
+  await tick()
   assert.equal(h.page.data.page_no, 1)
   assert.equal(h.page.data.hasMore, true)
   assert.match(h.page.data.commentLoadMoreError, /网络/)
 
   h.page.retryCommentLoadMore()
+  await tick()
   assert.equal(h.requests.length, 3)
-  assert.equal(h.requests[2].data.pageNum, 2)
+  assert.equal(h.requests[2].data.cursor, 50)
 })
 
-test('动态详情缺参零请求，详情请求单飞且旧响应不能覆盖重试结果', () => {
+test('动态详情缺参零请求，详情请求单飞且旧响应不能覆盖重试结果', async () => {
   const missing = loadPage('pages/square/detail/index.js')
   missing.page.onLoad({})
   assert.equal(missing.page.data.detailState, 'missing-param')
@@ -264,47 +326,57 @@ test('动态详情缺参零请求，详情请求单飞且旧响应不能覆盖�
   const h = loadPage('pages/square/detail/index.js')
   h.page.data.id = 9
   h.page.getData()
+  await tick()
   h.page.getData()
+  await tick()
   assert.equal(h.requests.length, 1)
 
   const first = h.requests[0]
   first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
+  await tick()
   h.page.onRetryDetail()
+  await tick()
   assert.equal(h.requests.length, 2)
   assert.equal(h.page.data.detailState, 'loading')
 
-  first.success({ code: '200', data: { id: 9, contents: '迟到的旧详情' } })
+  first.success({ code: '200', data: bundle(9, '迟到的旧详情') })
   assert.notEqual(h.page.data.info.contents, '迟到的旧详情')
-  h.requests[1].success({ code: '200', data: { id: 9, contents: '最新详情' } })
+  h.requests[1].success({ code: '200', data: bundle(9, '最新详情') })
+  await tick()
   assert.equal(h.page.data.info.contents, '最新详情')
   assert.equal(h.page.data.detailState, 'ready')
 })
 
-test('评论和回复提交单飞，失败保留输入并展示持久恢复入口', () => {
+test('评论和回复提交单飞，失败保留输入并展示持久恢复入口', async () => {
   const h = loadPage('pages/square/detail/index.js')
-  Object.assign(h.page.data, { id: 9, commentContent: '这条评论要保留' })
+  Object.assign(h.page.data, { info: { viewerCanComment: true }, id: 9, commentContent: '这条评论要保留' })
 
   h.page.addComment()
+  await tick()
   h.page.addComment()
+  await tick()
   assert.equal(h.requests.length, 1)
   assert.equal(h.page.data.commentSubmitting, true)
   h.requests[0].fail({ errMsg: 'request:fail timeout' })
-  h.requests[0].complete()
+  await tick()
   assert.equal(h.page.data.commentSubmitting, false)
   assert.equal(h.page.data.commentContent, '这条评论要保留')
-  assert.match(h.page.data.commentSubmitError, /网络/)
+  assert.match(h.page.data.commentSubmitError, /结果未确认.*重试/)
+  assert.equal(h.page.data.commentSubmitErrorKind, 'network')
 
   h.page.retryCommentSubmit()
+  await tick()
   assert.equal(h.requests.length, 2)
 
   Object.assign(h.page.data, { replyContent: '这条回复要保留', replyId: 12 })
   h.page.addReplyComment()
+  await tick()
   h.page.addReplyComment()
+  await tick()
   assert.equal(h.requests.length, 3)
   assert.equal(h.page.data.replySubmitting, true)
   h.requests[2].success({ code: 500, msg: '回复暂时失败' })
-  h.requests[2].complete()
+  await tick()
   assert.equal(h.page.data.replyContent, '这条回复要保留')
   assert.equal(h.page.data.replySubmitError, '回复暂时失败')
 })

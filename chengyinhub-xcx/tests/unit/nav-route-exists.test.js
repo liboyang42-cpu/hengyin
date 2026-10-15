@@ -61,9 +61,12 @@ function collect(sources) {
         const field = m[1]
         const raw = m[3]
         const route = raw.split('?')[0]
-        const concatenated = /['"`]\s*\+/.test(line.slice(m.index))
+        const suffix = line.slice(m.index + m[0].length + 1)
+        const concatenated = /^\s*\+/.test(suffix)
+        // 只接受两个分支均为查询串/空串且在此结束的条件拼接；未知后缀仍须盘点。
+        const queryOnly = /^\s*\+\s*\([^?\n]+\?\s*(['"])(\?[^'"\\\n]*|)\1\s*:\s*(['"])(\?[^'"\\\n]*|)\3\s*\)\s*(?=[},])/.test(suffix)
         // 查询参数可以动态,但路由 path 必须能静态回读；只把 path 本身拼接的列入盘点。
-        if (route.includes('${') || (!raw.includes('?') && concatenated)) {
+        if (route.includes('${') || (!raw.includes('?') && concatenated && !queryOnly)) {
           dynamic.push({ rel, line: i + 1, field, raw })
           continue
         }
@@ -119,6 +122,44 @@ test('negative control：url/path/focusPath 坏路径必须经真实 source scan
       name: 'AssertionError',
       message: /导航指向了 app\.json 里不存在的页面/,
     })
+  }
+})
+
+test('条件查询参数不改变路径，静态存在性和孤儿页检查仍覆盖该入口', () => {
+  const route = '/subpackageMember/mytemplate/mytemplate'
+  const { hits, dynamic } = collect([{
+    rel: 'fixtures/query.js',
+    source: `wx.reLaunch({ url: '${route}' + (scope === 'MERCHANT' ? '?scope=MERCHANT' : '') })`,
+  }])
+  assert.deepEqual(dynamic, [])
+  assert.equal(hits.length, 1)
+  assert.equal(hits[0].route, route)
+  assertRoutesExist(knownRoutes(), hits)
+  assert.deepEqual(orphansOf(new Set([route]), hits, new Map()).orphans, [])
+  assert.deepEqual(orphansOf(new Set([route]), [], new Map()).orphans, [route])
+  const broken = collect([{
+    rel: 'fixtures/query.js',
+    source: "wx.reLaunch({ url: '/pages/does-not-exist/index' + (scope ? '?scope=MERCHANT' : '') })",
+  }])
+  assert.equal(broken.hits.length, 1)
+  assert.throws(() => assertRoutesExist(knownRoutes(), broken.hits), /导航指向了/)
+})
+
+test('negative control：条件分支或未知后缀可能改变路径时仍必须盘点', () => {
+  for (const suffix of [
+    "(scope ? '/child' : '')",
+    "(scope ? '?scope=MERCHANT' : '/child')",
+    "(scope ? '?scope=MERCHANT' : unknown)",
+    "(scope ? '?scope=MERCHANT' : '') + unknown",
+    "unknown",
+  ]) {
+    const { hits, dynamic } = collect([{
+      rel: 'fixtures/dynamic.js',
+      source: `wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + ${suffix} })`,
+    }])
+    assert.equal(hits.length, 0, suffix)
+    assert.equal(dynamic.length, 1, suffix)
+    assert.throws(() => assertDynamicInventory(dynamic), /动态导航清单发生漂移/)
   }
 })
 

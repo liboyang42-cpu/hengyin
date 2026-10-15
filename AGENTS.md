@@ -6,12 +6,18 @@
 > 注意：本仓库是 monorepo，根目录同时含**后端 Java 模块**、**小程序 `chengyinhub-xcx/`**、**前端 `chengyinhub-ui/`**、`docs/`。编辑小程序时以 `chengyinhub-xcx/AGENTS.md` 为准（就近覆盖）。
 
 ## 项目结构（带版本）
-- Spring Boot 2.5.15 · Java 8 · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz
+- Spring Boot 4.1.1 · Java 21 · Maven 多模块 · MySQL · Redis · Druid · jjwt(JWT) · Quartz；Bouncy Castle jdk18on 1.86（版本以 [pom.xml](pom.xml) 为准）
 - 模块：chengyinhub-admin(入口/接口) · framework(配置/鉴权) · system(业务) · quartz · common · generator · ui(RuoYi-UI 后台 Vue2)
-- 正在进行：① Boot3/Java17 升级（feature/upgrade-boot3，规划中） ② user_type → RBAC role 迁移收尾
+- 当前源码已迁移到 Java 21 / Spring Boot 4.1.1；源码版本不代表已部署版本。user_type → RBAC role 迁移仍按既有边界处理。
 - 小程序端登录走 AppLoginService（JWT 自动续期，RBAC role 登录即落地为单一真源）
 
+## 开发环境与公开边界
+- 公开开发与 CI 在 [hengyin](https://github.com/liboyang42-cpu/hengyin) 进行；[主 CI](.github/workflows/ci.yml) 和 [资金集成测试](.github/workflows/funds-mysql-it.yml) 使用 GitHub 标准托管 `ubuntu-latest`，按现有路径规则触发，避免重复派发。
+- 专用测试 VPS 用于后端构建、Java 测试、数据库和预览服务，不运行 GitHub Actions runner。Mac 保留编辑器、浏览器、微信开发者工具和轻量前端检查，不启动本地 Java 或数据库服务。
+- 私有仓库保留现有源码、remote 和历史；公开仓库只接收经审阅与敏感扫描的源码补丁，不复制私有日志、备份、凭据或生产配置。
+
 ## 命令
+以下后端命令在专用测试 VPS 或上述托管 CI 中执行。
 - 构建：`mvn -q -DskipTests package`
 - 跑测试：`mvn -q test`（改了哪个模块就只跑哪个：`mvn -q -pl chengyinhub-system test`）
 - 提交前必须：编译通过 + 相关单测通过
@@ -24,7 +30,7 @@
 ## Git
 - 从 master 切 feature/<scope> 分支，别直接推 master
 - commit 用中文 + 类型前缀（feat/fix/chore/docs），与现有 git log 一致
-- **push ≠ 部署**：线上后端在 47.100.84.122（应用机，跑 jar），真库在 47.103.124.64/chengyinhubdb；部署需用户操作
+- **push ≠ 部署**：推送和 CI 通过不代表已上线；部署仍需用户授权。
 
 ## 边界（重要）
 - ✅ Always：写操作必须校验 owner/scope（如活动操作要校验创建者归属）；新表结构改动写成 `sql/migration_*.sql`；改完跑相关单测

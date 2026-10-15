@@ -22,10 +22,18 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码50个GET调用点的显式权限清单（直接29 + req包装21）。
+// 当前源码58个GET调用点的显式权限清单（直接36 + req包装22）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  ['utils/community-post-api.js', "url: '/api/v1/community/capabilities'", 'optional', 'visitor/member', 'public-report-taxonomy'],
+  // 当前社区真实 GET：服务端 feature gate、可见性与本人归属为准。
+  ['utils/community-post-api.js', "url: '/api/v1/community/feeds/LATEST'", 'optional', 'visitor/member', 'community-visible-feed'],
+  ['utils/community-post-api.js', "url: '/api/v1/community/me/posts'", 'required', 'member', 'community-self-post-workspace'],
+  ['utils/community-post-api.js', "url: '/api/v1/community/me/bookmarks'", 'required', 'member', 'community-self-visible-bookmarks'],
+  ['utils/community-post-api.js', "url: '/api/v1/community/posts/' + view.id(postId)", 'optional', 'visitor/member', 'community-visible-post'],
+  ['utils/community-post-api.js', "url: '/api/v1/community/posts/' + view.id(options.postId) + '/comments'", 'optional', 'visitor/member', 'community-visible-comment-threads'],
+  ['utils/community-post-api.js', "url: '/api/v1/community/guidelines/active'", 'optional', 'visitor/member', 'community-active-guideline'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
@@ -105,7 +113,9 @@ const MATRIX = [
 ];
 
 const VALID_SCOPES = new Set([
-  'self-account', 'public-list+viewer-personalization', 'self-registration',
+  'community-visible-feed', 'community-self-post-workspace', 'community-self-visible-bookmarks',
+  'community-visible-post', 'community-visible-comment-threads', 'community-active-guideline',
+  'public-report-taxonomy', 'self-account', 'public-list+viewer-personalization', 'self-registration',
   'self-party', 'self-merchant', 'self-capability', 'self-publisher',
   'public-detail+viewer-personalization', 'global-read+viewer-personalization',
   'current-session', 'activity-lead-access', 'global-authenticated-read',
@@ -220,7 +230,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-09-24 CU-C-68:merchantinfo 新增第二处 /api/game/session/merchant/entries GET
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
-  assert.equal(directCount, 29, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(directCount, 36, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(MATRIX.length, directCount + wrapperCount);
 
@@ -305,6 +315,11 @@ for (const dsl of ['legacy', 'boot4']) {
     });
   }
 }
+
+test('举报原因 GET 只公开服务器分类与策略版本', () => {
+  const controller = fs.readFileSync(path.join(XCX_ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommunityPostController.java'), 'utf8');
+  assert.match(controller, /@GetMapping\("\/capabilities"\)\s+@Anonymous\s+public AjaxResult capabilities\(\) \{ return success\(service\.capabilities\(\)\); \}/);
+});
 
 test('team-progress 后端必须同时校验登录身份与本场资源归属', () => {
   const controller = fs.readFileSync(CLUB_LEAD_CONTROLLER, 'utf8');

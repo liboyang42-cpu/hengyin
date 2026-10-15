@@ -2,7 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import java.net.URL;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

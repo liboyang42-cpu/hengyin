@@ -37,6 +37,50 @@ function loadPage(modulePath) {
   return { page, requests, toasts }
 }
 
+for (const action of ['block', 'clear']) {
+  test(`聊天${action}失败结果关闭后旧确认无效，重新打开仍可提交`, () => {
+    const h = loadPage(CHAT_MODULE)
+    h.page.data.conversationId = 7
+    h.page.data.myId = 8
+    h.page.data.msgs = [{ id: 1, senderId: 9 }]
+    const key = action === 'block' ? 'im.block' : 'im.conversation.delete'
+    const open = () => action === 'block' ? h.page.doBlock() : h.page.clearConversation()
+    const event = { detail: { key } }
+    let componentDefinition
+    global.Component = config => { componentDefinition = config }
+    const componentPath = path.join(ROOT, 'components/cy/danger-confirm/index.js')
+    delete require.cache[require.resolve(componentPath)]
+    require(componentPath)
+    const binding = /<cy-danger-confirm\b[^>]*\bbind:done="([^"]+)"/.exec(read('subpackageB/pages/im/chat/index.wxml'))
+    assert.ok(binding, '失败结果关闭发 done，页面必须接回取消处理')
+    const component = {
+      data: { action: { key }, stage: 'confirm' },
+      setData(patch) { Object.assign(this.data, patch) },
+      open() { this.data.stage = 'confirm' },
+      busyOn() { this.data.stage = 'busy' },
+      failed() { this.data.stage = 'error' },
+      triggerEvent(name, detail) {
+        assert.equal(name, 'done')
+        h.page[binding[1]]({ detail })
+      },
+    }
+    h.page.selectComponent = () => component
+    open()
+    h.page.onDangerConfirm(event)
+    assert.equal(h.requests.length, 1)
+    h.requests[0].success({ code: 500, msg: '合成失败' })
+    assert.equal(component.data.stage, 'error')
+    componentDefinition.methods.onCloseDone.call(component)
+    assert.equal(component.data.stage, '')
+    h.page.onDangerConfirm(event)
+    assert.equal(h.requests.length, 1, '关闭后不能重发已取消的旧动作')
+    open()
+    h.page.onDangerConfirm(event)
+    assert.equal(h.requests.length, 2, '重新打开确认仍可正常提交')
+    assert.deepEqual(h.requests[1].data, action === 'block' ? { target_member_id: 9 } : { conversation_id: 7 })
+  })
+}
+
 test('消息列表静默刷新失败保留旧会话，并给原位重试而不是整页错误', () => {
   const h = loadPage(LIST_MODULE)
   const old = [{ conversationId: 1, unread: 0, type: 1 }]

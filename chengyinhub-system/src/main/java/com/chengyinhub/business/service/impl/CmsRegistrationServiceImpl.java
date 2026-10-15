@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.service.RegistrationOrderExpiredException;
@@ -113,6 +114,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
 
     @Autowired
+    @Lazy
     private com.chengyinhub.business.service.ITopicCompletionAwardService topicCompletionAwardService;
 
     @Autowired

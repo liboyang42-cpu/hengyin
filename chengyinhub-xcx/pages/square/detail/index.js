@@ -1,9 +1,12 @@
+const reportSheet = require('../../../utils/community-report-sheet.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const app = getApp();
+const communityApi = require('../../../utils/community-post-api.js');
+const communityView = require('../../../utils/community-post-view.js');
 const analytics = require('../../../utils/analytics.js');
 const { appendByIndex } = require('../../../utils/list-append.js');
 const {
@@ -15,13 +18,66 @@ const {
   isCompletedShare,
 } = require('../../../utils/feed-play-card.js');
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
-const { isRecordList } = require('../../../utils/response-shape.js');
-const { sendUiStateRequest } = require('../../../utils/ui-state-request.js');
 Page({
+  communityClient() {
+    const owner = String(app.getUserID() || '');
+    if (!this._community || this._communityOwner !== owner) {
+      const replacing = Boolean(this._community);
+      if (this._community) this._community.dispose();
+      this._community = communityApi.createClient(app, wx);
+      this._communityOwner = owner;
+      this._communityCommands = Object.create(null);
+      this._actionRequests = Object.create(null);
+      this._followRequests=Object.create(null);this._followRequestInFlight=false;
+      this._commentLikeRequests = Object.create(null);
+      this._commentDeleteRequests = Object.create(null);
+      this._commentFollowRequests = Object.create(null);
+      this._commentSubmitting = this._replySubmitting = this._deleting = this._deletingPost = this._submitting = false;
+      if (replacing) {
+        this._feedRequestId = (this._feedRequestId || 0) + 1;
+        this._detailRequestId = (this._detailRequestId || 0) + 1;
+        this._commentsRequestId = (this._commentsRequestId || 0) + 1;
+        this._feedRequestInFlight = this._detailRequestInFlight = this._commentsRequestInFlight = false;
+      }
+    }
+    return this._community;
+  },
+
+  communityCurrent() {
+    this.communityClient();
+    const owner = String(app.getUserID() || '');
+    return () => !this._unloaded && String(app.getUserID() || '') === owner;
+  },
+
+  communityCommand(key, payload) {
+    this._communityCommands = this._communityCommands || Object.create(null);
+    const owner = String(app.getUserID() || '');
+    const fingerprint = JSON.stringify([owner, payload]);
+    const previous = this._communityCommands[key];
+    if (!previous || previous.fingerprint !== fingerprint) this._communityCommands[key] = {
+      fingerprint, requestId: 'square-' + Date.now() + '-' + Math.random().toString(36).slice(2)
+    };
+    return this._communityCommands[key].requestId;
+  },
+
+  postView(bundle) {
+    const row = communityView.toPostView(bundle);
+    row.picList = String(row.pics || '').split(';').filter(Boolean);
+    row.formattedCreateTime = row.createTime ? this.formatTimeDifference(row.createTime) : '';
+    row.playCover = resolveFeedPlayCover(row);
+    row.hasPlayCover = hasFeedPlayCover(row);
+    row.isCompletionShare = isCompletedShare(row);
+    row.isRoamResultShare = isRoamResultShare(row);
+    row.completionImage = resolveCompletionShareImage(row);
+    if (row.sportName) row.playSubtitle = buildFeedPlaySubtitle(row);
+    return row;
+  },
   /**
    * 页面的初始数据
    */
   data: {
+    reportReasonShow: false,
+    reportReasonItems: [],
     statusBarHeight: (app.globalData || {}).statusBarHeight || 20,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     id: 0,
@@ -107,7 +163,7 @@ Page({
     const value = e.detail.value || '';
     this.setData({
       commentContent: value,
-      canComment: value.trim().length > 0,
+      canComment: this.data.info.viewerCanComment === true && value.trim().length > 0,
       commentSubmitError: ''
     });
   },
@@ -117,7 +173,7 @@ Page({
     const value = e.detail.value || '';
     this.setData({
       replyContent: value,
-      canReply: value.trim().length > 0,
+      canReply: this.data.info.viewerCanComment === true && value.trim().length > 0,
       replySubmitError: ''
     });
   },
@@ -189,132 +245,44 @@ Page({
     wx.navigateTo({ url: '/pages/play/index?' + query });
   },
 
-  // 添加评论（回车发送）
-  addComment: function () {
-    var that = this;
-    const content = String(that.data.commentContent || '').trim();
-    
-    if (!content) {
-      toast('评论内容不能为空');
-      return;
-    }
-    if (that._commentSubmitting) return;
-    that._commentSubmitting = true;
-    that.setData({
-      commentSubmitting: true,
-      commentSubmitError: '',
-      commentSubmitErrorKind: 'data'
-    });
+  addComment() { this.submitComment(false); },
+  retryCommentSubmit() { this.addComment(); },
+  addReplyComment() { this.submitComment(true); },
+  retryReplySubmit() { this.addReplyComment(); },
 
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/comment/add',
-      method: "POST",
-      data: {
-        owner_type : 3,
-        owner_id: that.data.id,
-        rating : 0,
-        contents : content,
-        reply_id : 0,
-        img_arr  :'',
-      },
-      success: function (res) {
-        if (res.code == "200") {
-          toast.success('评论成功');
-          that.setData({
-            commentContent: '',
-            canComment: false,
-            commentSubmitError: ''
-          });
-          that.refreshComments();
-        } else {
-          that.setData({
-            commentSubmitError: app.getRequestErrorMessage(res, '评论失败，请稍后重试'),
-            commentSubmitErrorKind: 'data'
-          });
+  submitComment(reply) {
+    this.communityClient();
+    const prefix = reply ? 'reply' : 'comment';
+    const content = String(this.data[prefix + 'Content'] || '').trim();
+    if (!content) { toast(reply ? '回复内容不能为空' : '评论内容不能为空'); return; }
+    if (this.data.info.viewerCanComment !== true) { toast('当前帖文暂不能评论，请刷新'); return; }
+    const guard = '_' + prefix + 'Submitting';
+    if (this[guard]) return;
+    const current = this.communityCurrent(), parentId = reply ? this.data.replyId : null;
+    if (reply && !parentId) { toast('回复目标已变化，请重新选择'); return; }
+    this[guard] = true;
+    this.setData({ [prefix+'Submitting']:true,[prefix+'SubmitError']:'',[prefix+'SubmitErrorKind']:'data' });
+    const key = prefix + ':' + this.data.id;
+    this.communityClient().addComment({postId:this.data.id,current,autoErrorToast:false,
+      command:{clientRequestId:this.communityCommand(key,[this.data.id,parentId,content]),body:content,parentId},
+      success:res => {
+        if (res.code !== 200) {
+          if (res.code !== 499) this.setData({[prefix+'SubmitError']:app.getRequestErrorMessage(res,'提交未确认，内容已保留，请重试'),[prefix+'SubmitErrorKind']:'data'});
+          return;
         }
-      },
-      fail: function (res) {
-        that.setData({
-          commentSubmitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
-          commentSubmitErrorKind: 'network'
-        });
-      },
-      complete: function () {
-        that._commentSubmitting = false;
-        that.setData({ commentSubmitting: false });
-      }
-    })
-  },
-
-  retryCommentSubmit: function () {
-    this.addComment();
-  },
-
-  // 添加回复评论（回车发送）
-  addReplyComment: function () {
-    var that = this;
-    const content = String(that.data.replyContent || '').trim();
-    
-    if (!content) {
-      toast('回复内容不能为空');
-      return;
-    }
-    if (that._replySubmitting) return;
-    that._replySubmitting = true;
-    that.setData({
-      replySubmitting: true,
-      replySubmitError: '',
-      replySubmitErrorKind: 'data'
-    });
-
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/comment/add',
-      method: "POST",
-      data: {
-        owner_type : 3,
-        owner_id: that.data.id,
-        rating : 0,
-        contents : content,
-        reply_id : that.data.replyId || 0,
-        img_arr  :'',
-      },
-      success: function (res) {
-        if (res.code == "200") {
-          toast.success('回复成功');
-          that.setData({
-            replyContent: '',
-            canReply: false,
-            popShow: false,
-            replyId: 0,
-            replySubmitError: ''
-          });
-          that.refreshComments();
-        } else {
-          that.setData({
-            replySubmitError: app.getRequestErrorMessage(res, '回复失败，请稍后重试'),
-            replySubmitErrorKind: 'data'
-          });
+        delete this._communityCommands[key];
+        const sameInput = String(this.data[prefix+'Content'] || '').trim() === content && (!reply || String(this.data.replyId) === String(parentId));
+        if (sameInput) {
+          const patch = {[prefix+'Content']:'',[reply?'canReply':'canComment']:false,[prefix+'SubmitError']:''};
+          if (reply) Object.assign(patch,{popShow:false,replyId:0});
+          this.setData(patch);
         }
+        toast(res.data.approvalState === 'CHECKING' || res.data.lifecycle === 'CHECKING' ? '已提交审核' : '已提交');
+        this.refreshComments(); this.getData();
       },
-      fail: function (res) {
-        that.setData({
-          replySubmitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
-          replySubmitErrorKind: 'network'
-        });
-      },
-      complete: function () {
-        that._replySubmitting = false;
-        that.setData({ replySubmitting: false });
-      }
-    })
-  },
-
-  retryReplySubmit: function () {
-    this.addReplyComment();
+      fail:res => this.setData({[prefix+'SubmitError']:app.getRequestErrorMessage(res,'结果未确认，请重试同一内容'),[prefix+'SubmitErrorKind']:'network'}),
+      complete:() => { this[guard]=false;this.setData({[prefix+'Submitting']:false}); }
+    });
   },
 
   // 修改回复按钮点击事件
@@ -341,6 +309,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._unloaded = false;
     var that = this
     options = options || {}
     const id = options.id || ''
@@ -434,8 +403,10 @@ Page({
     var that = this
     let item = that.data.info
     if (!item || !item.memberId || that._followRequestInFlight) return;
+    if (![true,false,0,1].includes(item.isFollowTheUser)) { toast('关注状态未确认，请刷新'); return; }
     that._followRequestInFlight = true;
     // R10-07:请求发出前冻结意图,丢响应后重试同一意图不会反转服务端关系。
+    const current = this.communityCurrent();
     const intendedFollow = item.isFollowTheUser ? 0 : 1;
     app.sendRequest({
       hideLoading: true,
@@ -447,6 +418,7 @@ Page({
         follow: intendedFollow,
       },
       success: function (res) {
+        if (!current()) return;
         if (res.code == "200") {
           const nextFollowState = intendedFollow;
           that.setData({ 'info.isFollowTheUser': nextFollowState });
@@ -457,6 +429,7 @@ Page({
         }
       },
       fail: function (res) {
+        if (!current()) return;
         toast('网络错误，请重试');
       },
       complete: function () {
@@ -491,239 +464,135 @@ Page({
   },
 
   lickClick(e) {
-    var that = this
-    let id = that.data.id
-    if (!id || that._likeRequestInFlight) return;
-    that._likeRequestInFlight = true;
-    let type = e.currentTarget.dataset.type;
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/like',
-      method: "POST",
-      data: {
-        id  : id,
-        type :type
-      },
-      success: function (res) {
-        if (res.code != "200") {
-          toast(res.msg || '操作失败');
-          return;
-        }
-          let newinfo = that.data.info
-          // 只有「从没赞到赞」才播爆赞:取消赞也放礼花等于在庆祝用户收回喜欢
-          const likedBefore = newinfo['isLiked'] == 1
-            if(type==1){
-              if(newinfo['isLiked']==0){
-                newinfo['likeCount'] = newinfo['likeCount']+1 
-                newinfo['isLiked'] = 1 
-              }else if(newinfo['isLiked']==1){
-                newinfo['likeCount'] = newinfo['likeCount']-1 
-                newinfo['isLiked'] = 0
-              }else if(newinfo['isLiked']==2){
-                newinfo['likeCount'] = newinfo['likeCount']+1 
-                newinfo['isLiked'] = 1
-              }
-            }else{
-              if(newinfo['isLiked']==0){
-                newinfo['isLiked'] = 2 
-              }else if(newinfo['isLiked']==1){
-                newinfo['likeCount'] = newinfo['likeCount']-1 
-                newinfo['isLiked'] = 2
-              }else if(newinfo['isLiked']==2){
-                newinfo['isLiked'] = 0
-              }
-            }
-            that.setData({
-              info: newinfo
-            });
-            if (type == 1 && !likedBefore && newinfo['isLiked'] == 1) that.burstLike();
-
-      },
-      fail: function (res) {
-        toast('网络错误，请重试');
-      },
-      complete: function () {
-        that._likeRequestInFlight = false;
-      }
-    })
+    const info = this.data.info || {};
+    if (!info.id) return;
+    const type = e && e.currentTarget && e.currentTarget.dataset.type;
+    if (String(type) === '1' && typeof info.isLiked !== 'boolean') { toast('互动状态未确认，请刷新'); return; }
+    this.changePostAction(String(type) === '1' ? 'LIKE' : 'NOT_INTERESTED', String(type) === '1' && info.isLiked);
   },
 
   favoriteClick() {
     const info = this.data.info || {};
-    if (!info.id || this._favoriteRequestInFlight) return;
-    this._favoriteRequestInFlight = true;
-    const next = info.isBookmarked == 1 ? 0 : 1;
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/bookmark',
-      method: 'POST',
-      data: {
-        id: info.id,
-        bookmark: next,
-        request_id: 'bookmark-' + info.id + '-' + next + '-' + Date.now().toString(36)
-      },
-      success: (res) => {
-        if (!res || res.code != '200') {
-          toast((res && res.msg) || '操作失败');
-          return;
-        }
-        this.setData({ 'info.isBookmarked': next, favoriteBurst: next === 1 });
-        if (next === 1) {
-          motion.haptic({ type: 'light', reducedMotion: readReducedMotion() });
-          this._favoriteBurstTimer = setTimeout(() => {
-            this._favoriteBurstTimer = null;
-            if (!this._unloaded) this.setData({ favoriteBurst: false });
-          }, 300);
+    if (!info.id) return;
+    if (typeof info.isBookmarked !== 'boolean') { toast('收藏状态未确认，请刷新'); return; }
+    this.changePostAction('BOOKMARK', info.isBookmarked);
+  },
+
+  changePostAction(actionType, removing) {
+    this.communityClient();
+    const info = this.data.info || {}, id = info.id;
+    this._actionRequests = this._actionRequests || Object.create(null);
+    if (!id || this._actionRequests[actionType]) return;
+    this._actionRequests[actionType] = true;
+    const current = this.communityCurrent(), key = 'post:' + id + ':' + actionType;
+    const options = {postId:id,actionType,current,autoErrorToast:false,
+      command:{requestId:this.communityCommand(key,[id,actionType,Boolean(removing)]),actionType},
+      success:res => {
+        if (res.code !== 200) { if (res.code !== 499) toast(res.msg || '互动结果未确认，请刷新'); return; }
+        delete this._communityCommands[key]; this.markListDirty();
+        if (actionType === 'NOT_INTERESTED') { this.setData({detailState:'empty'});toast('已隐藏这条动态');return; }
+        const row = this.postView(res.data); this.setData({info:Object.assign({},this.data.info,actionType==='LIKE'?{isLiked:row.isLiked,likeCount:row.likeCount}:{isBookmarked:row.isBookmarked,bookmarkCount:row.bookmarkCount})});
+        if (actionType === 'LIKE' && !removing && row.isLiked) this.burstLike();
+        if (actionType === 'BOOKMARK' && !removing && row.isBookmarked) {
+          motion.haptic({type:'light',reducedMotion:readReducedMotion()});this.setData({favoriteBurst:true});
+          this._favoriteBurstTimer=setTimeout(() => {this._favoriteBurstTimer=null;if(current())this.setData({favoriteBurst:false});},300);
         }
       },
-      fail: () => toast('网络错误，请重试'),
-      complete: () => { this._favoriteRequestInFlight = false; }
-    });
+      fail:() => toast('结果未确认，请重试同一操作或刷新'),
+      complete:() => { delete this._actionRequests[actionType]; }
+    };
+    if (removing) this.communityClient().removePostAction(options);
+    else this.communityClient().addPostAction(options);
   },
 
   commentFollowClick(e) {
-    const index = Number(e.currentTarget.dataset.index);
-    const item = this.data.list[index];
-    if (!item || !item.memberId) {
-      toast('用户信息不完整，请刷新后重试');
-      return;
-    }
-    const requestKey = String(item.memberId);
-    this._commentFollowRequests = this._commentFollowRequests || Object.create(null);
-    if (this._commentFollowRequests[requestKey]) return;
-    this._commentFollowRequests[requestKey] = true;
-    const releaseRequest = () => { delete this._commentFollowRequests[requestKey]; };
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/user/follow/action',
-      method: 'POST',
-      data: {
-        follow_member_id: item.memberId,
-        follow: 1 // R10-07:评论区关注按钮只表达「关注」,重试幂等
-      },
-      success: (res) => {
-        if (res.code == '200') {
-          // 写回执不等于服务端终态：回读当前评论所在页，确认 isFollowTheUser 后再报成功。
-          const pageSize = Math.max(1, Number(app.getPageSize()) || 10);
-          const pageNum = Math.floor(index / pageSize) + 1;
-          const confirmFailed = () => toast('已提交，但状态确认失败，请刷新');
-          sendUiStateRequest(app, '/api/comment/list', {
-            method: 'POST',
-            data: {
-              owner_type: 3,
-              owner_id: this.data.id,
-              pageNum,
-              pageSize
-            },
-            success: (readback) => {
-              const rows = readback && readback.code == '200' && readback.data
-                && isRecordList(readback.data.rows) ? readback.data.rows : [];
-              const authoritative = rows.find((row) => String(row.id) === String(item.id));
-              const current = this.data.list[index];
-              if (!authoritative || Number(authoritative.isFollowTheUser) !== 1 ||
-                  !current || String(current.id) !== String(item.id)) {
-                confirmFailed();
-                return;
-              }
-              const list = this.data.list.slice();
-              const formattedCreateTime = authoritative.createTime
-                ? this.formatTimeDifference(authoritative.createTime)
-                : current.formattedCreateTime;
-              list[index] = Object.assign({}, current, authoritative, { formattedCreateTime });
-              this.setData({ list }, () => {
-                toast('关注成功');
-              });
-            },
-            fail: confirmFailed,
-            complete: releaseRequest
-          });
-          return;
-        }
-        releaseRequest();
-        toast(res.msg || '关注失败，请重试');
-      },
-      fail() {
-        releaseRequest();
-        toast('网络错误，请重试');
-      }
+    const item = this.data.list[Number(e.currentTarget.dataset.index)];
+    if (!item || !item.memberId || item.isFollowTheUser !== false) { toast('关注状态未确认，请刷新');return; }
+    const current = this.communityCurrent(), key=String(item.memberId);
+    this._commentFollowRequests=this._commentFollowRequests || Object.create(null);
+    if(this._commentFollowRequests[key])return;
+    this._commentFollowRequests[key]=true;
+    const release=()=>{delete this._commentFollowRequests[key];};
+    const failed=()=>{if(current())toast('已提交，但状态未确认，请刷新');release();};
+    app.sendRequest({url:'/api/user/follow/action',method:'POST',hideLoading:true,autoErrorToast:false,
+      data:{follow_member_id:item.memberId,follow:1},
+      success:res=>{
+        if(!current())return;
+        if(Number(res.code)!==200){toast(res.msg || '关注失败，请重试');release();return;}
+        // 顺着真正的根游标回读，不能用评论数组位置推算页码。
+        const read=(cursor)=>this.communityClient().comments({postId:this.data.id,query:{cursor,limit:app.getPageSize()},current,autoErrorToast:false,
+          success:response=>{
+            if(response.code!==200){failed();return;}
+            const rows=response.data.items.map(communityView.toCommentView);
+            const authority=rows.find(row=>String(row.id)===String(item.id));
+            if(!authority){if(response.data.hasMore)read(response.data.nextCursor);else failed();return;}
+            if(authority.isFollowTheUser!==true){failed();return;}
+            const at=this.data.list.findIndex(row=>String(row.id)===String(item.id));
+            if(at>=0){const list=this.data.list.slice();list[at]=Object.assign({},list[at],authority);this.setData({list});toast('关注成功');}
+            release();
+          },fail:failed});
+        read(null);
+      },fail:()=>{if(current())toast('网络错误，请重试');release();}
     });
   },
 
   commentLikeClick(e) {
-    var that = this
-    let index = e.currentTarget.dataset.index;
-    let item = that.data.list[index]
-    if (!item || !item.id) return;
-    let id = item['id']
-    const requestKey = String(id);
-    that._commentLikeRequests = that._commentLikeRequests || Object.create(null);
-    if (that._commentLikeRequests[requestKey]) return;
-    that._commentLikeRequests[requestKey] = true;
-
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/comment/like',
-      method: "POST",
-      data: {
-        id  : id
-      },
-      success: function (res) {
-        if (res.code == "200") {
-          // 后端是开关语义,以回包 data.isLiked 终态为准;旧后端没回就按开关取反(3-20)
-          let newlist = that.data.list
-          const row = newlist[index]
-          const was = row.isLiked == 1 ? 1 : 0
-          const serverLiked = res.data && res.data.isLiked
-          const now = serverLiked === 0 || serverLiked === 1 ? serverLiked : 1 - was
-          row.isLiked = now
-          row.likeCount = Math.max(0, (Number(row.likeCount) || 0) + now - was)
-          that.setData({
-            list: newlist
-          });
-        }else{
-          // A-14-1:后端 code!=200 却缺 msg 时,原来直接把 undefined 弹给用户。
-          toast(app.getRequestErrorMessage(res, '操作失败，请重试'));
-        }
-      },
-      fail: function (res) {
-        toast('网络错误，请重试');
-      },
-      complete: function () {
-        delete that._commentLikeRequests[requestKey];
-      }
-    })
+    this.communityClient();
+    const item=this.data.list[e.currentTarget.dataset.index];
+    if(!item || !item.id)return;
+    if(typeof item.isLiked !== 'boolean'){toast('互动状态未确认，请刷新');return;}
+    const key='comment-like:'+item.id;
+    this._commentLikeRequests=this._commentLikeRequests || Object.create(null);
+    if(this._commentLikeRequests[key])return;
+    this._commentLikeRequests[key]=true;
+    const current=this.communityCurrent();
+    const options={commentId:item.id,current,autoErrorToast:false,
+      command:{requestId:this.communityCommand(key,[item.id,item.isLiked])},
+      success:res=>{if(res.code===200){delete this._communityCommands[key];this.refreshComments();this.getData();}
+        else if(res.code!==499)toast(res.msg || '互动结果未确认，请刷新');},
+      fail:()=>toast('结果未确认，请重试同一操作或刷新'),
+      complete:()=>{delete this._commentLikeRequests[key];}};
+    if(item.isLiked)this.communityClient().unlikeComment(options);
+    else this.communityClient().likeComment(options);
   },
+
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare() {
     const that = this;
+    const owner = String(app.getUserID() || '');
+    const current = () => !that._unloaded && String(app.getUserID() || '') === owner;
+    if (!current()) return;
     modal.show({
       title: '举报内容',
       content: '确认举报这条内容？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
-        app.sendRequest({
+        that.communityClient().request({
           hideLoading: true,
+          autoErrorToast: false,
           url: '/api/creativesquare/report',
+          selectReportReason: (items, task) => current() ? reportSheet.open(that, items, task)
+            : Promise.reject({ code: 499, msg: '已取消举报' }),
           method: 'POST',
           data: {
             id: that.data.id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
               toast('已提交举报');
-              setTimeout(() => { that.goBack(); }, 800);
+              setTimeout(() => { if (current()) that.goBack(); }, 800);
             } else {
               toast(resp.msg || '举报失败');
             }
           },
-          fail() {
+          fail(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             toast('网络异常，请重试');
           }
         });
@@ -732,6 +601,7 @@ Page({
   },
 
   openPostActions() {
+    this._postActionCurrent = this.communityCurrent();
     this.setData({ postActionShow: true });
   },
 
@@ -742,7 +612,8 @@ Page({
   // H050/H051:三合一弹层的分发。delete 走到这里时用户已过完组件内部的危险确认闸
   // (cy-danger-confirm,文案在 utils/danger-actions.js 的 club.post.delete),别再自建第二道。
   onPostAction(e) {
-    const action = ((e || {}).detail || {}).action;
+    const { action, id } = ((e || {}).detail || {});
+    if (!id || String(id) !== String(this.data.id) || !this._postActionCurrent || !this._postActionCurrent()) return;
     if (action === 'edit') { this.openPostEdit(); return; }
     if (action === 'delete') { this.deleteSquarePost(); return; }
     if (action === 'report') { this.reportSquareFromActions(); return; }
@@ -756,29 +627,17 @@ Page({
   // 删除(H051):软删 + 归属校验都在后端 /api/creativesquare/delete;成功后详情切到既有
   // 「这条动态暂不可用」态 —— 用户关掉「动态已删除」回执卡,还能从空态 CTA 回列表。
   deleteSquarePost() {
-    const id = this.data.id;
-    if (!id || this._deleting) return;
-    this._deleting = true;
-    const pa = this.selectComponent && this.selectComponent('#post-actions');
-    app.sendRequest({
-      hideLoading: true,
-      url: '/api/creativesquare/delete',
-      method: 'POST',
-      data: { id: id },
-      success: (res) => {
-        this._deleting = false;
-        if (res && res.code == '200') {
-          if (pa) pa.deleteDone();
-          this.markListDirty();
-          this.setData({ postActionShow: false, detailState: 'empty' });
-        } else if (pa) {
-          pa.deleteFailed((res && res.msg) || '删除失败');
-        }
-      },
-      fail: () => {
-        this._deleting = false;
-        if (pa) pa.deleteFailed('网络异常，请重试');
-      },
+    this.communityClient();
+    const id=this.data.id,info=this.data.info || {};
+    if(!id || this._deleting)return;
+    this._deleting=true;
+    const current=this.communityCurrent(),pa=this.selectComponent && this.selectComponent('#post-actions'),key='delete:'+id;
+    this.communityClient().deletePost({postId:id,current,autoErrorToast:false,
+      command:{expectedVersion:info.version,requestId:this.communityCommand(key,[id,info.version])},
+      success:res=>{if(res.code===200){if(pa)pa.deleteDone();delete this._communityCommands[key];this.markListDirty();this.setData({postActionShow:false,detailState:'empty'});}
+        else if(pa && res.code!==499)pa.deleteFailed(res.msg || '删除未确认，请刷新后重试');},
+      fail:()=>{if(pa)pa.deleteFailed('删除结果未确认，请刷新后重试');},
+      complete:()=>{this._deleting=false;}
     });
   },
 
@@ -794,6 +653,7 @@ Page({
       contents: info.contents || '',
       dataId: info.dataId,
       dataType: info.dataType,
+      version:info.version,lifecycle:info.lifecycle,
     } });
     this.setData({ composeShow: true });
   },
@@ -802,9 +662,11 @@ Page({
     this.setData({ composeShow: false, composeEdit: null });
   },
 
-  onComposePublished() {
-    // 保存成功:同页回读一次,让详情显示改后的正文(不本地假设成功后的样子)
-    this.setData({ composeShow: false, composeEdit: null });
+  onComposePublished(event) {
+    const detail = event && event.detail || {};
+    if (this._unloaded || (detail.ownerId != null && String(detail.ownerId) !== String(app.getUserID() || ''))) return;
+    // 保留未提交正文时不改编辑器绑定;详情仍按原路径真实回读。
+    if (detail.keepOpen !== true) this.setData({ composeShow: false, composeEdit: null });
     this.markListDirty();
     this.getData();
   },
@@ -824,6 +686,9 @@ Page({
 
   reportComment(e) {
     const that = this;
+    const owner = String(app.getUserID() || '');
+    const current = () => !that._unloaded && String(app.getUserID() || '') === owner;
+    if (!current()) return;
     const index = e.currentTarget.dataset.index;
     const item = that.data.list[index];
     if (!item || !item.id) {
@@ -834,17 +699,21 @@ Page({
       content: '确认举报这条评论？举报后将提交平台审核。',
       confirmText: '举报',
       success(res) {
-        if (!res.confirm) {
+        if (!res.confirm || !current()) {
           return;
         }
-        app.sendRequest({
+        that.communityClient().request({
           hideLoading: true,
+          autoErrorToast: false,
           url: '/api/comment/report',
+          selectReportReason: (items, task) => current() ? reportSheet.open(that, items, task)
+            : Promise.reject({ code: 499, msg: '已取消举报' }),
           method: 'POST',
           data: {
             id: item.id
           },
           success(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
               const list = that.data.list.slice();
               list.splice(index, 1);
@@ -857,7 +726,8 @@ Page({
               toast(resp.msg || '举报失败');
             }
           },
-          fail() {
+          fail(resp) {
+            if (!current() || Number(resp && resp.code) === 499) return;
             toast('网络异常，请重试');
           }
         });
@@ -868,42 +738,21 @@ Page({
   // A-04:自己的评论可删(后端 /api/comment/delete 早有 owner 校验,前端一直没有入口)。
   // 确认闸走已登记的 club.comment.delete(不可逆,后果文案在 utils/danger-actions.js)。
   deleteComment(e) {
-    const that = this;
-    const index = e.currentTarget.dataset.index;
-    const item = that.data.list[index];
-    if (!item || !item.id) return;
-    if (String(item.memberId) !== String(that.data.userId)) return; // 入口只给自己的评论;后端仍会再校验一次
-    const requestKey = String(item.id);
-    that._commentDeleteRequests = that._commentDeleteRequests || Object.create(null);
-    if (that._commentDeleteRequests[requestKey]) return;
-    modal.show({
-      dangerKey: 'club.comment.delete',
-      success(res) {
-        if (!res.confirm) return;
-        if (that._commentDeleteRequests[requestKey]) return;
-        that._commentDeleteRequests[requestKey] = true;
-        app.sendRequest({
-          hideLoading: true,
-          autoErrorToast: false, // 失败由本处精确 toast,不再叠通道的通用 toast
-          url: '/api/comment/delete',
-          method: 'POST',
-          data: { id: item.id },
-          success(resp) {
-            if (resp && resp.code == '200') {
-              const list = that.data.list.slice();
-              const at = list.findIndex((row) => String(row.id) === requestKey);
-              if (at > -1) list.splice(at, 1);
-              that.setData({ list, nodata: list.length < 1 });
-              toast('评论已删除');
-            } else {
-              toast(app.getRequestErrorMessage(resp, '删除失败，请重试'));
-            }
-          },
-          fail() { toast('网络错误，请重试'); },
-          complete() { delete that._commentDeleteRequests[requestKey]; },
-        });
-      },
-    });
+    const item=this.data.list[e.currentTarget.dataset.index];
+    if(!item || !item.id || String(item.memberId)!==String(app.getUserID()))return;
+    const current=this.communityCurrent(),key='comment-delete:'+item.id;
+    this._commentDeleteRequests=this._commentDeleteRequests || Object.create(null);
+    if(this._commentDeleteRequests[key])return;
+    modal.show({dangerKey:'club.comment.delete',success:result=>{
+      if(!result.confirm || !current() || this._commentDeleteRequests[key])return;
+      this._commentDeleteRequests[key]=true;
+      this.communityClient().deleteComment({postId:this.data.id,commentId:item.id,current,autoErrorToast:false,
+        command:{expectedVersion:item.version,requestId:this.communityCommand(key,[item.id,item.version])},
+        success:res=>{if(res.code===200){delete this._communityCommands[key];this.refreshComments();this.getData();toast('评论已删除');}
+          else if(res.code!==499)toast(res.msg || '删除未确认，请刷新后重试');},
+        fail:()=>toast('删除结果未确认，请刷新后重试'),
+        complete:()=>{delete this._commentDeleteRequests[key];}});
+    }});
   },
 
   /**
@@ -935,6 +784,7 @@ Page({
   },
 
   getData: function () {
+    this.communityClient();
     var that = this;
     if (!that.data.id) return;
     if (that._detailRequestInFlight) return;
@@ -942,14 +792,9 @@ Page({
     that._detailRequestId = requestId;
     that._detailRequestInFlight = true;
     that.setData({ detailState: 'loading', detailError: '' });
-    that._detailRequestTask = app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/info',
-      data: {
-        id: that.data.id
-      },
-      method: "POST",
+    const current = that.communityCurrent();
+    that._detailRequestTask = that.communityClient().detail({
+      postId: that.data.id, current: () => current() && requestId === that._detailRequestId, autoErrorToast: false,
       success: function (res) {
         if (requestId !== that._detailRequestId) return;
         if (res.code != "200") {
@@ -964,6 +809,7 @@ Page({
           return;
         }
         {
+          res.data = that.postView(res.data);
           let picList = []
           if (res.data['pics'] != null) {
             // R10-06:显式清空落库为 '',不能再 split 出 [''] 渲染一个空媒体位。
@@ -990,7 +836,7 @@ Page({
           that.setData({
             info: res.data,
             picList: picList,
-            isMine: !!(res.data.memberId && String(res.data.memberId) === String(that.data.userId)),
+            isMine: res.data.viewerIsAuthor === true && res.data.lifecycle !== 'REMOVED',
             imageAspectRatios: imageAspectRatios,
             imageWidths: imageWidths,
             detailState: 'ready',
@@ -1065,6 +911,7 @@ Page({
   },
 
   getList: function (requestedPage, isRefresh) {
+    this.communityClient();
     var that = this;
     const pageNum = requestedPage || 1;
     const refresh = Boolean(isRefresh);
@@ -1093,21 +940,15 @@ Page({
         that.setData({ commentLoadError: true, commentsState: 'error' });
       }
     };
-    that._commentsRequestTask = app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/comment/list',
-      method: "POST",
-      data: {
-        owner_type: 3,
-        owner_id: that.data.id,
-        pageNum: pageNum,
-        pageSize: app.getPageSize(),
-      },
+    const current = that.communityCurrent();
+    that._commentsRequestTask = that.communityClient().comments({
+      postId: that.data.id, current: () => current() && requestId === that._commentsRequestId, autoErrorToast: false,
+      query: { cursor: isLoadMore ? that._nextCursor : null, limit: app.getPageSize() },
       success: function (res) {
         if (requestId !== that._commentsRequestId) return;
-        if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let newlist = res.data.rows;
+        if (res && res.code == "200" && res.data && Array.isArray(res.data.items)) {
+          that._nextCursor = res.data.nextCursor;
+          let newlist = res.data.items.map(communityView.toCommentView);
 
           for (let i = 0; i < newlist.length; i++) {
             if (newlist[i]['createTime']) {
@@ -1126,7 +967,7 @@ Page({
             that.setData({
               list: newlist,
               page_no: pageNum,
-              hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+              hasMore: res.data.hasMore,
               commentsState: 'ready',
               commentLoadError: false,
               commentLoadMoreError: '',
@@ -1138,7 +979,7 @@ Page({
             that.setData(Object.assign(
               {
                 page_no: pageNum,
-                hasMore: (app.getTotalPage(res.data.total, app.getPageSize()) > pageNum),
+                hasMore: res.data.hasMore,
                 commentsState: 'ready',
                 commentLoadError: false,
                 commentLoadMoreError: '',
@@ -1179,6 +1020,8 @@ Page({
 
   onUnload() {
     this._unloaded = true;
+    if (this._community) this._community.dispose();
+    reportSheet.cancel(this);
     if (this._likeBurstTimer) {
       clearTimeout(this._likeBurstTimer);
       this._likeBurstTimer = null;

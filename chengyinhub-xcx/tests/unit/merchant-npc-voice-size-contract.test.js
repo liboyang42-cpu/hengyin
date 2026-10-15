@@ -47,7 +47,7 @@ function loadPage(options = {}) {
     setTimer: () => 1,
     clearTimer: () => {},
   })
-  const app = { globalData: {}, getUploadClient: () => client, sendRequest() {} }
+  const app = { globalData: {}, getUserID: () => '7', getUploadClient: () => client, sendRequest() {} }
   const wx = {
     authorize: () => options.authorizePromise || (options.authorizeError ? Promise.reject(options.authorizeError) : Promise.resolve()),
     getRecorderManager: () => recorder,
@@ -70,6 +70,7 @@ function loadPage(options = {}) {
     setTimeout, clearTimeout, setInterval, clearInterval, Promise, Object, Error, JSON, Math, Number, String, Array,
   }, { filename: PAGE })
   const page = Object.assign({}, state.page, { data: JSON.parse(JSON.stringify(state.page.data)) })
+  page._photoMember = page._voiceMember = '7';
   page.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]))
     if (cb) cb()

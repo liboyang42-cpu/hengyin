@@ -7,6 +7,7 @@ const assert = require('node:assert/strict')
 const CONFIRM_MODES = ['wx.showModal', 'cy-danger-confirm']
 const fs = require('node:fs')
 const path = require('node:path')
+const os = require('node:os')
 const crypto = require('node:crypto')
 const { execFileSync } = require('node:child_process')
 
@@ -29,7 +30,7 @@ const {
   expandHandlerBody,
   discoverExternalHelperNames,
   serverApiContracts,
-  buildLedger,
+  buildLedger: generateLedger,
   sourceDigestFor,
   sourceDigestAtCommit,
   sourceFilesFor,
@@ -44,9 +45,13 @@ const {
   deviceBranchReadbackDigests,
 } = require('../../scripts/uiaudit/build-action-ledger.js')
 
-// 本文件的源码只读断言共用一次扫描，避免每条用例重复重建全量清单。
-let currentLedger
-const readCurrentLedger = () => currentLedger || (currentLedger = buildLedger())
+// Repository source is unchanged by these tests; mutations use cloned objects,
+// digest overrides or an isolated Git fixture. The inventory API checks stay fresh.
+let frozenSourceLedger
+function buildLedger() {
+  if (!frozenSourceLedger) frozenSourceLedger = generateLedger()
+  return structuredClone(frozenSourceLedger)
+}
 
 test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
   // 2026-09-22 实证:两行中文注释(里面并无 wx.*)把 play 页 4 个控件从 read 翻成 external。
@@ -64,7 +69,7 @@ test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
 })
 
 test('分类跟得进 require 来的模块级 helper(B)', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   // publish/fabu 的 choosePoiForNode 调的是 pickLocation(...),内部才是 wx.chooseLocation;
   // 页面代码里根本没有 wx.chooseLocation —— 跟不进 helper 就会漏判成 state,
   // 等于把一个真需要真机验证的控件挪出证据要求。
@@ -99,7 +104,7 @@ test('同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
   assert.deepEqual(inferEffectClasses('goDetail', "wx.navigateTo({url:'/pages/x/index'});this.setData({busy:true})"), [
     'navigation', 'state',
   ])
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   const privacy = rebuilt.controls.find((item) => item.entry.wxml === 'pages/shezhi/shezhi.wxml'
     && item.control.handler === 'goPrivacy')
   assert.ok(privacy, '设置页隐私入口必须进入动作台账')
@@ -173,7 +178,7 @@ test('确认框合同沿同步 helper 展开，但截断异步回调与互斥 va
   ]])
   assert.equal(modalContractForHandler('deleteAddress', legacyProperty, 'tap'), 'wx.showModal')
 
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   const assertConfirmGate = (action, label) => {
     // 契约钉的是「这个危险动作有确认闸」,不是「必须用 wx.showModal」。
     // 2026-08-30:三段式确认组件 cy-danger-confirm 是同一道闸的新实现 ——
@@ -258,6 +263,27 @@ test('确认框深度判定先屏蔽字符串/注释/正则，不得记下假事
 // 2026-10-05 经营时间拆为独立面板，按钮与触摸事件调整后重建：4373 个控件，本地 tap 1759、事件合同 2262。
 // 页内取消退役：资料 -4、发布 -2；模板补关闭 +2、商家迁移关闭 -5、完成面板本地入口 -2。
 // 商家 cy-sheet 关闭 +2 事件合同；完成面板保存卡退役 -1 external。昵称 bindinput → bind:input 等量替换。
+test('编辑态新增保存草稿按钮独立登记正常与据点拒绝两条 tap 分支', () => {
+  const wxml = 'pages/publish/temp/index.wxml'
+  const source = fs.readFileSync(path.join(__dirname, '../..', wxml), 'utf8')
+  const condition = "{{!previewMode && from !== 'fabu' && from !== 'citynode'}}"
+  const buttons = [...source.matchAll(/<cy-btn\b[^>]*\bbindtap="saveDraft"[^>]*>保存草稿<\/cy-btn>/g)]
+  const editor = buttons.filter(match => match[0].includes(`wx:if="${condition}"`))
+  assert.equal(editor.length, 1, '编辑态必须保留一个独立保存草稿按钮')
+  const line = source.slice(0, editor[0].index).split('\n').length
+  const rows = ledger.controls.filter(row => row.entry.wxml === wxml && row.control.line === line)
+  assert.deepEqual(rows.map(row => row.variant.id).sort(), ['citynode-unavailable', 'draft'])
+  for (const row of rows) {
+    assert.equal(row.control.handler, 'saveDraft')
+    assert.equal(row.control.event, 'bindtap')
+    assert.equal(row.control.visibleCondition, condition)
+    assert.equal(row.interactionMode, 'tap')
+    assert.notEqual(row.actionClass, 'external')
+  }
+  assert.deepEqual(rows.find(row => row.variant.id === 'draft').targets.writeApis, ['/api/template/draft'])
+  assert.deepEqual(rows.find(row => row.variant.id === 'citynode-unavailable').targets.writeApis, [])
+})
+
 test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击', () => {
   assert.equal(interactionModeFor('bindtap'), 'tap')
   assert.equal(interactionModeFor('bind:close'), 'event-contract')
@@ -534,7 +560,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-25 CU-M-92 受邀商家承接视图:project-join 底栏主按钮拆成「扫码核销 / 原主按钮」两个互斥分支,各 1 tap ⇒ 1746 → 1747(重建实测)。
   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1781)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-13 编辑态新增保存草稿按钮，沿既有 draft / citynode-unavailable 两分支净增 2。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1788)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -741,7 +768,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-30 项目近期动态首次失败/保留数据重试各新增1个事件合同；本地事件合同 2298 → 2300，tap分母不变。
   // 2026-10-06 合并最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2326)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -765,7 +792,7 @@ test('external 分支按微信能力定义，振动不伪造取消/拒权，选�
 })
 
 test('漫游拍照启动的取消事实必须绑定 chooseMedia，不能由定位能力冒充', () => {
-  const control = readCurrentLedger().controls.find((item) => item.entry.js === 'pages/roam/index.js'
+  const control = buildLedger().controls.find((item) => item.entry.js === 'pages/roam/index.js'
     && item.control.handler === 'goStartAndShoot')
   assert.ok(control)
   assert.equal(control.requiredCapabilityByBranch.cancelled, 'chooseMedia')
@@ -848,7 +875,7 @@ test('真机 capture 的签名起点也必须在 freshness 窗内，不能只刷
 })
 
 test('external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径', () => {
-  const control = readCurrentLedger().controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
+  const control = buildLedger().controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
     && item.control.handler === 'chooseLocation')
   assert.ok(control)
   assert.ok(control.externalCapabilities.includes('chooseLocation'))
@@ -858,7 +885,7 @@ test('external success 只要求主能力，不把拒权恢复 openSetting 合�
 })
 
 test('互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游', () => {
-  const controls = readCurrentLedger().controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
+  const controls = buildLedger().controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
     && item.control.handler === 'onPrimaryCta')
   assert.deepEqual(controls.map((item) => item.variant.id).sort(), ['self-merchant-scan', 'visitor-follow'])
   const follow = controls.find((item) => item.variant.id === 'visitor-follow')
@@ -932,7 +959,7 @@ test('App 登录续期不能把全部 sendRequest 读写动作污染成真机能
 })
 
 test('写操作与动态 URL 合同不能降级成普通读取', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   // 2026-08-30:三段式确认把「点按钮」和「真发请求」拆成两个控件 ——
   //   onDeletePost        第一段,只 dc.open(),不发请求 ⇒ 台账里 apis 为空、class=other
   //   onConfirmDeletePost 第二段,由 <cy-danger-confirm bind:confirm> 绑定,真发请求 ⇒ write
@@ -1011,7 +1038,7 @@ test('写操作与动态 URL 合同不能降级成普通读取', () => {
 })
 
 test('前端 API method 必须与后端 Controller annotation 真源一致', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   const server = serverApiContracts()
   const conflicts = rebuilt.controls.flatMap((control) => control.targets.apiContracts.map((contract) => ({ control, contract })))
     .filter(({ contract }) => server.has(contract.url) && !server.get(contract.url).has(contract.method))
@@ -1022,7 +1049,7 @@ test('前端 API method 必须与后端 Controller annotation 真源一致', () 
 })
 
 test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单', () => {
-  const controls = readCurrentLedger().controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
+  const controls = buildLedger().controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
     && item.control.handler === 'handlePayment' && item.control.event === 'bindtap')
   assert.equal(controls.length, 6)
   const paid = controls.filter((item) => /-paid-/.test(item.variant.id))
@@ -1038,7 +1065,7 @@ test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败
 })
 
 test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   assert.equal(rebuilt.controls.filter((item) => (item.targets.writeApis || []).length > 1
     && !(item.requiredRequests || item.requiredRequestsByBranch)).length, 0)
   const playEnding = rebuilt.controls.filter((item) => item.targets.primaryApis.includes('/api/play/ending'))
@@ -1050,7 +1077,7 @@ test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击
 })
 
 test('评价举报与团队危险操作按页面状态拆成互斥单写 variant', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   const reports = rebuilt.controls.filter((item) => item.entry.js === 'pages/merchant/reviews/index.js'
     && item.control.handler === 'submitReport')
   assert.deepEqual(reports.map((item) => item.variant.id).sort(), ['manage', 'public'])
@@ -1075,7 +1102,7 @@ test('评价举报与团队危险操作按页面状态拆成互斥单写 variant
 })
 
 test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   const favorite = rebuilt.controls.find((item) => item.control.handler === 'toggleFavorite')
   assert.ok(favorite)
   assert.equal(favorite.accessBoundary, 'self')
@@ -1089,7 +1116,7 @@ test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明�
 })
 
 test('服务端写入叠加设备能力时同时保留两类验收事实', () => {
-  const control = readCurrentLedger().controls.find((item) => item.id.includes('pages/privacy/index.wxml')
+  const control = buildLedger().controls.find((item) => item.id.includes('pages/privacy/index.wxml')
     && item.control.handler === 'withdrawRoamLocationConsent')
   assert.ok(control)
   assert.equal(control.actionClass, 'external')
@@ -1105,7 +1132,7 @@ test('服务端写入叠加设备能力时同时保留两类验收事实', () =>
 })
 
 test('Beta 转正式按作者归属写操作验收，不能误归只读', () => {
-  const control = readCurrentLedger().controls.find((item) => item.control.handler === 'onGraduateBeta')
+  const control = buildLedger().controls.find((item) => item.control.handler === 'onGraduateBeta')
   assert.ok(control)
   assert.equal(control.actionClass, 'write')
   assert.equal(control.baseActionClass, 'write')
@@ -1115,7 +1142,7 @@ test('Beta 转正式按作者归属写操作验收，不能误归只读', () => 
 })
 
 test('合并后可达动作 variant 全部进入台账且 handler 真源可定位', () => {
-  const rebuilt = readCurrentLedger()
+  const rebuilt = buildLedger()
   assert.equal(rebuilt.schemaVersion, 7, '并发请求 trace、结算状态 variant 与后端 method 真源变更后必须升级 inventory schema')
   // 商家/俱乐部补全基线 3187；主线详情重做与管理员治理入口净增 9 个 variant。
   // 2026-08-26 状态补全:五个新页各多一条「无权限/网络失败」空态或错误态入口。
@@ -1354,7 +1381,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4432)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  assert.equal(ledger.controlCount, 4445)  /* 2026-10-13 编辑态 saveDraft 的正常/据点拒绝两条分支；预览态按钮已在旧基线内。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
@@ -1422,99 +1449,132 @@ test('动态证据只绑定真实全局运行时依赖，新增无关路由不�
   assert.equal(sourceFilesFor(appBacked).includes('app.json'), false)
 })
 
+// Isolated Git history makes provenance contracts independent of a checkout's dirty state.
+function withSourceHistory(control, run) {
+  const fixtureRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'action-ledger-history-'))
+  const previousAlternates = process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES
+  try {
+    execFileSync('git', ['init', '--bare', '--quiet', fixtureRepo], { stdio: 'ignore' })
+    const git = (args, input = '') => execFileSync('git', ['--git-dir', fixtureRepo, ...args], {
+      input, encoding: 'utf8', env: { ...process.env, GIT_INDEX_FILE: path.join(fixtureRepo, 'index') },
+    }).trim()
+    const commit = tree => git(['-c', 'user.name=Ledger fixture',
+      '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgSign=false', 'commit-tree', tree],
+    'Synthetic action source history\n')
+    const missingSha = commit(git(['mktree']))
+    const sourceRoot = path.resolve(__dirname, '../..')
+    const files = sourceFilesFor(control)
+    assert.ok(files.length > 0, '来源正负控必须包含实际依赖文件')
+    const store = (relative, content) => {
+      const blob = git(['hash-object', '-w', '--stdin'], content)
+      git(['update-index', '--add', '--cacheinfo', '100644', blob,
+        path.posix.join(path.basename(sourceRoot), relative)])
+    }
+    files.forEach(relative => store(relative, fs.readFileSync(path.join(sourceRoot, relative))))
+    const currentSha = commit(git(['write-tree']))
+    store(files[0], Buffer.concat([fs.readFileSync(path.join(sourceRoot, files[0])),
+      Buffer.from('\nsynthetic source mutation\n')]))
+    const changedSha = commit(git(['write-tree']))
+    process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES = [path.join(fixtureRepo, 'objects'), previousAlternates]
+      .filter(Boolean).join(path.delimiter)
+    return run({ currentSha, changedSha, missingSha })
+  } finally {
+    if (previousAlternates === undefined) delete process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES
+    else process.env.GIT_ALTERNATE_OBJECT_DIRECTORIES = previousAlternates
+    fs.rmSync(fixtureRepo, { recursive: true, force: true })
+  }
+}
+
 test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果', () => {
   assert.deepEqual(validateEvidenceOverlay(ledger, overlay), [])
 
   const control = ledger.controls.find((item) =>
     item.id === 'components/cy/sheet/index.wxml:10:catchtouchmove:onDragMove:3')
-  assert.ok(control, '负控需要一个源码未被当前改动触及的本地状态动作')
+  assert.ok(control, '负控需要一个当前存在的本地状态动作')
   const id = control.id
-  const artifactPath = path.join(__dirname, '../../scripts/uiaudit/action-evidence.json')
-  const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-  assert.equal(sourceDigestAtCommit(control, headSha), sourceDigestFor(control))
-  const sample = {
-    schemaVersion: 1,
-    results: {
-      [id]: {
-        status: 'failed',
-        sourceSha: headSha,
-        sourceDigest: sourceDigestFor(control),
-        verifiedAt: freshAt(),
-        branches: control.requiredBranches.slice(),
-        artifacts: [{
-          uri: 'scripts/uiaudit/action-evidence.json',
-          sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
-        }],
-        fixture: {
-          id: 'synthetic-player-01', accountRole: 'player', networkProfile: 'wifi-controlled',
-          backendMode: 'isolated-test', synthetic: true,
-        },
-        fixtureAttestations: control.requiredBranches.map(() => ({
-          fixtureId: 'synthetic-player-01', synthetic: true,
-          identityFingerprint: 'sha256:test-account', backendBase: 'isolated-test', backendDeploymentSha: 'd'.repeat(40),
-          assertions: ['受控身份回读一致'],
-        })),
-        observations: control.requiredBranches.map((branch) => ({
-          branch,
-          readback: {
-            changed: { data: true, dom: true, routeStack: false },
-            assertions: { state: { expected: { show: false }, observed: { show: false } } },
-          },
+  withSourceHistory(control, history => {
+    const artifactPath = path.join(__dirname, '../../scripts/uiaudit/action-evidence.json')
+    const headSha = history.currentSha
+    assert.equal(sourceDigestAtCommit(control, headSha), sourceDigestFor(control))
+    const sample = {
+      schemaVersion: 1,
+      results: {
+        [id]: {
+          status: 'failed',
+          sourceSha: headSha,
+          sourceDigest: sourceDigestFor(control),
+          verifiedAt: freshAt(),
+          branches: control.requiredBranches.slice(),
           artifacts: [{
             uri: 'scripts/uiaudit/action-evidence.json',
             sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
           }],
-        })),
-        readback: 'tap 后 DOM 已关闭，page.data.show=false',
+          fixture: {
+            id: 'synthetic-player-01', accountRole: 'player', networkProfile: 'wifi-controlled',
+            backendMode: 'isolated-test', synthetic: true,
+          },
+          fixtureAttestations: control.requiredBranches.map(() => ({
+            fixtureId: 'synthetic-player-01', synthetic: true,
+            identityFingerprint: 'sha256:test-account', backendBase: 'isolated-test', backendDeploymentSha: 'd'.repeat(40),
+            assertions: ['受控身份回读一致'],
+          })),
+          observations: control.requiredBranches.map((branch) => ({
+            branch,
+            readback: {
+              changed: { data: true, dom: true, routeStack: false },
+              assertions: { state: { expected: { show: false }, observed: { show: false } } },
+            },
+            artifacts: [{
+              uri: 'scripts/uiaudit/action-evidence.json',
+              sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
+            }],
+          })),
+          readback: 'tap 后 DOM 已关闭，page.data.show=false',
+        },
       },
-    },
-  }
-  assert.deepEqual(validateEvidenceOverlay(ledger, sample), [])
-  assert.equal(evidenceReadiness(ledger, sample).ready, false)
+    }
+    assert.deepEqual(validateEvidenceOverlay(ledger, sample), [])
+    assert.equal(evidenceReadiness(ledger, sample).ready, false)
 
-  const vague = JSON.parse(JSON.stringify(sample))
-  vague.results[id].status = 'passed'
-  vague.results[id].observations[0].readback = { assertions: ['人工说已完成'] }
-  assert.match(validateEvidenceOverlay(ledger, vague).join('\n'), /精确前后状态断言/)
+    const vague = JSON.parse(JSON.stringify(sample))
+    vague.results[id].status = 'passed'
+    vague.results[id].observations[0].readback = { assertions: ['人工说已完成'] }
+    assert.match(validateEvidenceOverlay(ledger, vague).join('\n'), /精确前后状态断言/)
 
-  const validDigest = sample.results[id].sourceDigest
-  sample.results[id].sourceDigest = '0'.repeat(64)
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
-  sample.results[id].sourceDigest = validDigest
+    const validDigest = sample.results[id].sourceDigest
+    sample.results[id].sourceDigest = '0'.repeat(64)
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
+    sample.results[id].sourceDigest = validDigest
 
-  // 空树提交明确缺少源码，负控不依赖仓库是否保留历史；不创建分支或修改工作区。
-  const emptyTree = execFileSync('git', ['mktree'], { input: '', encoding: 'utf8' }).trim()
-  const rootSha = execFileSync('git', ['commit-tree', emptyTree, '-m', 'test: missing source fixture'], {
-    encoding: 'utf8',
-    env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
-      GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' },
-  }).trim()
-  const missingAtRoot = control
-  assert.equal(sourceDigestAtCommit(missingAtRoot, rootSha), null)
-  const forgedHistorical = {
-    schemaVersion: 1,
-    results: {
-      [missingAtRoot.id]: {
-        ...sample.results[id],
-        sourceSha: rootSha,
-        sourceDigest: sourceDigestFor(missingAtRoot),
-        branches: missingAtRoot.requiredBranches.slice(),
-      },
-    },
-  }
-  assert.match(validateEvidenceOverlay(ledger, forgedHistorical).join('\n'), /不包含当前 WXML\/JS/)
+    const changedSource = JSON.parse(JSON.stringify(sample))
+    changedSource.results[id].sourceSha = history.changedSha
+    const changedDigest = sourceDigestAtCommit(control, history.changedSha)
+    assert.ok(changedDigest, '内容变更负控必须仍有完整依赖，不能靠文件缺失判红')
+    assert.notEqual(changedDigest, validDigest)
+    assert.match(validateEvidenceOverlay(ledger, changedSource).join('\n'),
+      /sourceDigest 与 sourceSha 提交中的 WXML\/JS 不一致/)
 
-  sample.results[id].artifacts = []
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /artifacts/)
+    assert.equal(sourceDigestAtCommit(control, history.missingSha), null,
+      '真实旧提交不含目标控件，必须拒绝使用当前工作区内容补齐')
+    const forgedHistorical = JSON.parse(JSON.stringify(sample))
+    forgedHistorical.results[id].sourceSha = history.missingSha
+    const historicalErrors = validateEvidenceOverlay(ledger, forgedHistorical).join('\n')
+    assert.doesNotMatch(historicalErrors, /sourceSha 在当前 Git 对象库中不存在/,
+      '负控必须使用真实可读取提交，不能仅验证不存在的 SHA')
+    assert.match(historicalErrors, /不包含当前 WXML\/JS/)
 
-  sample.results[id].artifacts = [{ uri: 'missing.json', sha256: '0'.repeat(64) }]
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /不存在/)
+    sample.results[id].artifacts = []
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /artifacts/)
 
-  sample.results[id].artifacts = [{ uri: 'https://invalid.example/evidence.json', sha256: '0'.repeat(64) }]
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /远端 artifact 未回读/)
+    sample.results[id].artifacts = [{ uri: 'missing.json', sha256: '0'.repeat(64) }]
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /不存在/)
 
-  sample.results[id].status = 'blocked'
-  assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /blocked 必须含/)
+    sample.results[id].artifacts = [{ uri: 'https://invalid.example/evidence.json', sha256: '0'.repeat(64) }]
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /远端 artifact 未回读/)
+
+    sample.results[id].status = 'blocked'
+    assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /blocked 必须含/)
+  })
 })
 
 test('external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件', () => {

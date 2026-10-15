@@ -109,7 +109,46 @@ class TemplateMarketLifecycleMySqlIT {
         field(target, "memberTemplateService", memberService); field(target, "memberTemplateMapper", members);
         field(target, "templateLibraryService", libraryService); field(target, "libraryMapper", libraries);
         field(target, "auditTaskMapper", tasks); field(target, "auditTaskService", audit);
+        field(target, "capabilityGuard", mock(ICapabilityGuard.class));
         publish = proxy(target);
+    }
+
+    @Test
+    void publicAdoptionCopiesFullConfigurationAndResavesOnlyTheOwnedDraft() throws Exception {
+        CmsTemplateLibrary original = new CmsTemplateLibrary();
+        original.setTitle("合成公开玩法"); original.setDescription("采用回读测试");
+        original.setMemberId(100L); original.setDuration(7L); original.setValidationMethod(1);
+        original.setQuestionName("合成测试题"); original.setQuestionAnswer("测试答案");
+        original.setStatus(1L); original.setPublishStatus(1L); original.setDelFlag(0);
+        original.setAdvancedConfigJson("{\"schemaVersion\":1}");
+        assertEquals(1, libraries.insertCmsTemplateLibrary(original));
+        com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest request =
+                new com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest();
+        request.setOriginalTemplateId(original.getId()); request.setAdoptSourceOnly(true);
+        request.setTitle("客户端占位"); request.setQuestionAnswer("客户端不可信");
+        Long draftId = publish.saveOrUpdateDraft(request, 7L, "test-author");
+        CmsMemberTemplate own = members.selectCmsMemberTemplateById(draftId);
+        assertEquals("测试答案", own.getQuestionAnswer());
+        org.springframework.beans.BeanUtils.copyProperties(own, request, "duration", "adoptSourceOnly");
+        request.setDuration(Math.toIntExact(own.getDuration())); request.setAdoptSourceOnly(false);
+        request.setTitle("本人续存");
+        assertEquals(draftId, publish.saveOrUpdateDraft(request, 7L, "test-author"));
+        try (Connection readback = java.sql.DriverManager.getConnection(
+                MybatisItDatabase.url("template_market"), MybatisItDatabase.user(), MybatisItDatabase.password());
+             java.sql.PreparedStatement query = readback.prepareStatement(
+                     "SELECT member_id,original_template_id,title,question_answer,publish_status FROM cms_member_template WHERE id=?")) {
+            query.setLong(1, draftId);
+            try (java.sql.ResultSet row = query.executeQuery()) {
+                assertTrue(row.next()); assertEquals(7L, row.getLong("member_id"));
+                assertEquals(original.getId().longValue(), row.getLong("original_template_id"));
+                assertEquals("本人续存", row.getString("title"));
+                assertEquals("测试答案", row.getString("question_answer"));
+                assertEquals(0L, row.getLong("publish_status")); assertFalse(row.next());
+            }
+        }
+        assertEquals(1, count("cms_member_template"));
+        assertEquals("合成公开玩法", libraries.selectCmsTemplateLibraryById(original.getId()).getTitle());
+        assertEquals("测试答案", libraries.selectCmsTemplateLibraryById(original.getId()).getQuestionAnswer());
     }
 
     @Test

@@ -46,10 +46,11 @@
         <image class="compose-avatar" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
         <view class="compose-col">
         <text class="compose-title">{{nickname || '城瘾玩家'}}</text>
+        <text wx:if="{{postAudience === 'PRIVATE'}}" aria-role="status">仅自己可见</text>
       <textarea
         class="compose-input post-text"
         placeholder-class="compose-ph"
-        maxlength="8000"
+        maxlength="5000"
         value="{{valCont}}"
         bindinput="bindTextAreaBlur"
         bindconfirm="submitFormData"
@@ -169,3 +170,6 @@
 <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
   sub="{{resultSheet.sub}}" meta="{{resultSheet.meta}}" pill="{{resultSheet.pill}}" why="{{resultSheet.why}}"
   duration="{{resultSheet.duration}}" bind:close="onResultSheetClose" />
+
+<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+  confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

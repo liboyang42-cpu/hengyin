@@ -217,4 +217,4 @@
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 <!-- 危险动作三段式确认(文案在 utils/danger-actions.js) -->
-<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" />
+<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" bind:done="onDangerCancel" />

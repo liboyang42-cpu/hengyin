@@ -27,7 +27,7 @@ function makeWx(onModal) {
     setStorageSync(key, value) { store[key] = value },
     removeStorageSync(key) { delete store[key] },
     showToast() {}, hideToast() {}, showLoading() {}, hideLoading() {},
-    showModal(options) { if (onModal) onModal(options) },
+    showModal(options) { if (onModal) onModal(options); else options.success({confirm:true}) },
     getWindowInfo: () => ({ windowWidth: 375, windowHeight: 667, safeArea: { top: 20, bottom: 647 } }),
     getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 667, safeArea: { top: 20, bottom: 647 } }),
     getMenuButtonBoundingClientRect: () => ({ top: 24, bottom: 56, left: 278, right: 365 }),
@@ -50,7 +50,7 @@ function setByPath(target, keyPath, value) {
 function mount(relativePath, kind, options = {}) {
   const requests = []
   const wx = makeWx(options.onModal)
-  const member = options.member || { value: 'member-A' }
+  const member = options.member || { value: '7' }
   const app = Object.assign({
     globalData: {},
     getUserID: () => member.value,
@@ -75,7 +75,13 @@ function mount(relativePath, kind, options = {}) {
     clearTimeout() {},
     require(id) {
       if (!id.startsWith('.')) return require(id)
-      return require(path.resolve(path.dirname(path.join(ROOT, relativePath)), id))
+      const absolute = path.resolve(path.dirname(path.join(ROOT, relativePath)), id)
+      if (options.apiSource && absolute === path.join(ROOT, 'utils/community-post-api.js')) {
+        const module = {exports:{}}
+        require('node:vm').runInNewContext(options.apiSource, {module,exports:module.exports,require:require('node:module').createRequire(absolute),console}, {filename:absolute})
+        return module.exports
+      }
+      return require(absolute)
     },
     Page(value) { definition = value },
     Component(value) { definition = value },
@@ -108,6 +114,36 @@ function last(requests, url) {
 
 function intentStoreFor(wx, memberId, scope) {
   return wx._store['square_publish_intent_v1:' + memberId + ':' + scope] || null
+}
+
+// Keep the real client and persistence; only app.sendRequest receives controlled transport replies.
+const tick = () => new Promise(resolve => setImmediate(resolve))
+const CREATE = '/api/v1/community/posts'
+async function awaitCreate(h) {
+  await tick()
+  let request = h.requests.at(-1)
+  if (request && request.url === '/api/v1/community/guidelines/active') {
+    request.success({code:200,data:{id:3,contentJson:{rules:[{title:'真实规范'}]}}})
+    await tick(); request = h.requests.at(-1)
+    assert.equal(request.url, '/api/v1/community/guidelines/ack')
+    request.success({code:200,data:{}})
+    await tick(); request = h.requests.at(-1)
+  }
+  assert.ok(request, '必须发起真实创建请求')
+  assert.equal(request.url, CREATE)
+  assert.equal(request.method, 'POST')
+  return request
+}
+async function publishSuccess(h, create, id) {
+  const draft = {post:{...create.data,id,authorId:Number(h.member.value),version:0,lifecycle:'DRAFT'},
+    viewerIsAuthor:true,viewerCanComment:true,viewerFollowing:false,media:[],references:create.data.references,topicCodes:[],mentions:[]}
+  create.success({code:200,data:draft}); await tick()
+  const publish = h.requests.at(-1)
+  assert.equal(publish.url, CREATE + '/' + id + '/publish')
+  assert.equal(publish.data.expectedVersion, 0)
+  assert.match(publish.data.requestId, INTENT_RE)
+  publish.success({code:200,data:{...draft,post:{...draft.post,version:1,lifecycle:'CHECKING'}}})
+  await tick()
 }
 
 // ---------------------------------------------------------------- 纯 util
@@ -167,105 +203,83 @@ function fillListForm(instance, content) {
   instance.data.selectedActivity = null
 }
 
-test('广场列表:首次发布携带稳定意图键并持久化', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '列表正文')
-
-  instance.submitFormData()
-
-  const request = last(requests, '/api/creativesquare/action')
-  assert.ok(request, '必须发起发布请求')
-  assert.match(request.data.request_id, INTENT_RE)
-  assert.ok(intentStoreFor(wx, 'member-A', 'square:list'), '首写前必须已持久化意图键')
-})
-
-test('广场列表:丢回包后重试复用同一意图键;成功后相同正文才算新帖', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '列表正文')
-  instance.submitFormData()
-  const first = last(requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-
-  first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
-  instance.retrySubmit()
-  const retry = last(requests, '/api/creativesquare/action')
-  assert.equal(retry.data.request_id, firstKey, '重试必须复用同一意图键,不得再发一条')
-  assert.equal(intentStoreFor(wx, 'member-A', 'square:list').key, firstKey, '持久化意图键必须仍是同一个')
-
-  retry.success({ code: '200', data: { id: 77 } })
-  retry.complete()
-  assert.equal(intentStoreFor(wx, 'member-A', 'square:list'), null, '成功后清除意图')
-
-  fillListForm(instance, '列表正文')
-  instance.submitFormData()
-  const fresh = last(requests, '/api/creativesquare/action')
-  assert.notEqual(fresh.data.request_id, firstKey, '用户主动再发相同正文=新帖子')
-})
-
-test('广场列表:未知结果后改内容必须换新意图键', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '初稿')
-  instance.submitFormData()
-  const first = last(requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-  first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
-
-  fillListForm(instance, '改过的稿')
-  instance.submitFormData()
-  const changed = last(requests, '/api/creativesquare/action')
-  assert.notEqual(changed.data.request_id, firstKey, '内容变化必须是新意图')
-  assert.ok(intentStoreFor(wx, 'member-A', 'square:list:previous'), '前次未知留下痕迹')
-})
-
-test('广场列表:切账号后不复用上一账号的意图键', () => {
+test('广场列表:首次发布携带稳定意图键并持久化', async () => {
   const h = mountSquareList()
-  fillListForm(h.instance, '同一段正文')
-  h.instance.submitFormData()
-  const firstRequest = last(h.requests, '/api/creativesquare/action')
-  const firstKey = firstRequest.data.request_id
-  firstRequest.fail({ errMsg: 'request:fail timeout' })
-  firstRequest.complete()
+  fillListForm(h.instance, '列表正文'); h.instance.submitFormData()
+  const request = await awaitCreate(h)
+  assert.match(request.data.clientRequestId, INTENT_RE)
+  assert.equal(intentStoreFor(h.wx, '7', 'square:list').key, request.data.clientRequestId)
+})
 
-  h.member.value = 'member-B'
-  fillListForm(h.instance, '同一段正文')
-  h.instance.submitFormData()
-  const secondKey = last(h.requests, '/api/creativesquare/action').data.request_id
+test('广场列表:丢回包后重试复用同一完整 wire;成功后相同正文才算新帖', async () => {
+  const h = mountSquareList()
+  fillListForm(h.instance, '列表正文'); h.instance.submitFormData()
+  const first = await awaitCreate(h), firstKey = first.data.clientRequestId
+  first.fail({errMsg:'request:fail timeout'}); await tick()
+  h.instance.retrySubmit()
+  const retry = await awaitCreate(h)
+  assert.notEqual(retry, first)
+  assert.deepEqual(retry.data, first.data, '未知回包重试必须复用完整创建 wire')
+  assert.equal(intentStoreFor(h.wx, '7', 'square:list').key, firstKey)
+  await publishSuccess(h, retry, 77)
+  assert.equal(intentStoreFor(h.wx, '7', 'square:list'), null)
+  fillListForm(h.instance, '列表正文'); h.instance.submitFormData()
+  const fresh = await awaitCreate(h)
+  assert.notEqual(fresh.data.clientRequestId, firstKey)
+})
 
-  assert.notEqual(secondKey, firstKey, '意图键按账号隔离')
+test('广场列表:未知结果后改内容先核旧wire并保留新输入，禁止新写', async () => {
+  const dialogs = [], h = mountSquareList({onModal:options=>{if(options.title==='先核对上次提交')dialogs.push(options);else options.success({confirm:true})}})
+  fillListForm(h.instance, '初稿'); h.instance.submitFormData()
+  const first = await awaitCreate(h)
+  first.fail({errMsg:'request:fail timeout'}); await tick()
+  const original = structuredClone(intentStoreFor(h.wx, '7', 'square:list')), count = h.requests.length
+  fillListForm(h.instance, '改过的稿'); h.instance.submitFormData(); await tick()
+  assert.equal(h.requests.length,count);assert.deepEqual(intentStoreFor(h.wx,'7','square:list'),original);assert.equal(h.instance.data.valCont,'改过的稿')
+  dialogs[0].success({confirm:false});await tick();assert.equal(h.requests.length,count)
+  h.instance.submitFormData();await tick();dialogs[1].success({confirm:true});await tick()
+  const replay=h.requests.at(-1);assert.deepEqual(replay.data,first.data);assert.equal(replay.data.body,'初稿')
+  await publishSuccess(h,replay,77);assert.equal(h.instance.data.valCont,'改过的稿');assert.equal(h.instance.data.resultSheet.title,'上次提交已确认')
+})
+
+test('广场列表:切账号后不复用上一账号的意图键', async () => {
+  const h = mountSquareList()
+  fillListForm(h.instance, '同一段正文'); h.instance.submitFormData()
+  const first = await awaitCreate(h)
+  first.fail({errMsg:'request:fail timeout'}); await tick()
+  h.member.value = '8'
+  fillListForm(h.instance, '同一段正文'); h.instance.submitFormData()
+  const second = await awaitCreate(h)
+  assert.notEqual(second.data.clientRequestId, first.data.clientRequestId)
+  assert.equal(intentStoreFor(h.wx, '7', 'square:list').key, first.data.clientRequestId)
+  assert.equal(intentStoreFor(h.wx, '8', 'square:list').key, second.data.clientRequestId)
 })
 
 // ---------------------------------------------------------------- post-compose
 
 function mountCompose(options = {}) {
   const h = mount(POST_COMPOSE, 'component', options)
-  h.instance._memberId = h.member.value
+  h.definition.lifetimes.attached.call(h.instance)
+  h.definition.observers.show.call(h.instance, true)
   h.instance.setData({ content: '组件正文', picList: [], address: '', selectedActivity: null })
   return h
 }
 
-test('发布组件:丢回包重试复用意图键,成功后清除', () => {
+test('发布组件:丢回包重试复用完整 wire,成功后清除', async () => {
   const h = mountCompose()
   h.instance.onPublish()
-  const first = last(h.requests, '/api/creativesquare/action')
-  assert.match(first.data.request_id, INTENT_RE)
-  const firstKey = first.data.request_id
-
-  first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
+  const first = await awaitCreate(h), firstKey = first.data.clientRequestId
+  assert.match(firstKey, INTENT_RE)
+  first.fail({errMsg:'request:fail timeout'}); await tick()
   h.instance.onPublish()
-  const retry = last(h.requests, '/api/creativesquare/action')
-  assert.equal(retry.data.request_id, firstKey, '组件重试必须复用意图键')
-
-  retry.success({ code: '200', data: { id: 9 } })
-  retry.complete()
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:compose'), null, '成功后清除')
-
-  h.instance.setData({ content: '组件正文' })
+  const retry = await awaitCreate(h)
+  assert.notEqual(retry, first)
+  assert.deepEqual(retry.data, first.data)
+  await publishSuccess(h, retry, 9)
+  assert.equal(intentStoreFor(h.wx, '7', 'square:compose'), null)
+  h.instance.setData({content:'组件正文'})
   h.instance.onPublish()
-  const fresh = last(h.requests, '/api/creativesquare/action')
-  assert.notEqual(fresh.data.request_id, firstKey, '再次主动发布=新意图')
+  assert.notEqual((await awaitCreate(h)).data.clientRequestId, firstKey)
 })
 
 // ---------------------------------------------------------------- roam 分享
@@ -303,7 +317,7 @@ test('漫游分享:未知结果重试复用意图键,成功后再次主动分享
   // 传输失败=结果未知:保留同键,不新开意图
   first.fail({ errMsg: 'request:fail timeout' })
   await firstFlow
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:roam:44').status, 'unknown')
+  assert.equal(intentStoreFor(h.wx, '7', 'square:roam:44').status, 'unknown')
   assert.equal(h.instance._squarePostUnknown, true, '结果未知必须挂起,不假成功')
 
   // 用户明确选择再次尝试(清掉待核对挂起) → 同一未决意图复用键
@@ -314,7 +328,7 @@ test('漫游分享:未知结果重试复用意图键,成功后再次主动分享
   assert.equal(retry.data.request_id, firstKey, '同一未决分享重试必须复用键')
   retry.success({ code: '200', data: { id: 45 } })
   await retryFlow
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:roam:44'), null, '成功后清除')
+  assert.equal(intentStoreFor(h.wx, '7', 'square:roam:44'), null, '成功后清除')
 
   // 主动再次分享:意图已结算 → 新键=新帖
   const secondFlow = h.instance._shareToSquare()
@@ -361,49 +375,38 @@ test('R10-03 util:软删终态 discard 丢键,下一次同 payload 换新键', (
   assert.notEqual(next.key, first.key, '重新发布必须换新键,不能被软删行占键')
 })
 
-test('广场列表:服务端软删终态回执必须丢键并换新键重发', () => {
-  const h = mountSquareList()
-  fillListForm(h.instance, '已删帖正文')
-  h.instance.submitFormData()
-  const first = last(h.requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-
-  first.success({ code: 500, msg: '该发布已删除，请重新发布', intentDiscarded: true })
-  first.complete()
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:list'), null, '软删终态必须丢弃意图键')
-
-  fillListForm(h.instance, '已删帖正文')
-  h.instance.submitFormData()
-  const next = last(h.requests, '/api/creativesquare/action')
-  assert.notEqual(next.data.request_id, firstKey, '重新发布必须换新键')
-})
-
-test('发布组件:服务端软删终态回执丢键并换新键重发', () => {
-  const h = mountCompose()
-  h.instance.onPublish()
-  const first = last(h.requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-
-  first.success({ code: 500, msg: '该发布已删除，请重新发布', intentDiscarded: true })
-  first.complete()
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:compose'), null, '软删终态必须丢弃意图键')
-
-  h.instance.onPublish()
-  const next = last(h.requests, '/api/creativesquare/action')
-  assert.notEqual(next.data.request_id, firstKey, '重新发布必须换新键')
-})
+for (const component of [false, true]) {
+  test((component ? '发布组件' : '广场列表') + ':已删除或移除回读拒绝不得自动丢键复活', async () => {
+    const h = component ? mountCompose() : mountSquareList()
+    const scope = component ? 'square:compose' : 'square:list'
+    if (!component) fillListForm(h.instance, '已删帖正文')
+    const publish = () => component ? h.instance.onPublish() : h.instance.submitFormData()
+    publish()
+    const first = await awaitCreate(h), key = first.data.clientRequestId
+    // The canonical contract has no intentDiscarded flag. A rejected request cannot prove a new post is safe.
+    first.success({code:404,msg:'该帖文已不可访问'}); await tick()
+    assert.equal(intentStoreFor(h.wx, '7', scope).key, key)
+    assert.equal(component ? h.instance.data.content : h.instance.data.valCont, component ? '组件正文' : '已删帖正文')
+    publish()
+    const retry = await awaitCreate(h)
+    assert.deepEqual(retry.data, first.data, '不得通过自动换键绕过终态')
+    retry.success({code:409,msg:'当前内容不能发布'}); await tick()
+    assert.equal(intentStoreFor(h.wx, '7', scope).key, key)
+    assert.equal(h.requests.filter(r => /\/publish$/.test(r.url)).length, 0)
+  })
+}
 
 // ---------------------------------------------------------------- 负控
 
-test('负控:列表发布去掉意图键时必须判红', () => {
-  const source = read(SQUARE_LIST)
-  const mutated = source.replace('    data.request_id = intent.key;\n', '')
-  assert.notEqual(mutated, source, '负控锚点失效:未找到 request_id 写入')
-  const h = mountSquareList({ source: mutated })
-  fillListForm(h.instance, '列表正文')
-  h.instance.submitFormData()
-  const request = last(h.requests, '/api/creativesquare/action')
-  assert.equal(request.data.request_id, undefined, '去掉写入后不得携带意图键')
+test('负控:真实创建 wire 去掉意图键时必须判红', async () => {
+  const source = read('utils/community-post-api.js')
+  const mutated = source.replace('body.clientRequestId = ctx.key;', 'delete body.clientRequestId;')
+  assert.notEqual(mutated, source, '负控锚点必须命中实际 helper 创建路径')
+  const h = mountSquareList({apiSource:mutated})
+  fillListForm(h.instance, '列表正文'); h.instance.submitFormData()
+  const request = await awaitCreate(h)
+  assert.equal(request.data.clientRequestId, undefined)
+  assert.throws(() => assert.match(request.data.clientRequestId, INTENT_RE), assert.AssertionError)
 })
 
 test('负控:意图键不再是稳定复用(每次新键)时必须判红', () => {
@@ -427,3 +430,38 @@ test('负控:意图键不再是稳定复用(每次新键)时必须判红', () =>
   assert.notEqual(first.key, second.key, '变异体确实每次新键')
   assert.throws(() => assert.equal(first.key, second.key))
 })
+
+for (const drift of [false, true]) {
+  test('广场列表:发布回包丢失后先读真实草稿，' + (drift ? '内容漂移拒绝盲重发' : '未变才复用原 CAS 命令'), async () => {
+    const h = mountSquareList()
+    fillListForm(h.instance, '需要确认的稿'); h.instance.submitFormData()
+    const create = await awaitCreate(h)
+    const draft = {post:{...create.data,id:77,authorId:7,version:0,lifecycle:'DRAFT'},
+      viewerIsAuthor:true,viewerCanComment:true,viewerFollowing:false,media:[],references:[],topicCodes:[],mentions:[]}
+    create.success({code:200,data:draft}); await tick()
+    const originalPublish = h.requests.at(-1)
+    assert.equal(originalPublish.url, CREATE + '/77/publish')
+    originalPublish.fail({errMsg:'request:fail timeout'}); await tick()
+    const beforeRetryCount = h.requests.length
+    h.instance.retrySubmit(); await tick()
+    const readback = h.requests.at(-1)
+    assert.equal(h.requests.length, beforeRetryCount + 1)
+    assert.equal(readback.url, CREATE + '/77')
+    assert.equal(readback.method, 'GET')
+    readback.success({code:200,data: drift ? {...draft,post:{...draft.post,version:1,body:'另一处已改正文'}} : draft})
+    await tick()
+    if (drift) {
+      assert.equal(h.requests.length, beforeRetryCount + 1, '内容漂移必须阻止第二次写入')
+      assert.match(h.instance.data.submitError, /内容已变化/)
+      assert.equal(h.instance.data.valCont, '需要确认的稿')
+      assert.equal(intentStoreFor(h.wx,'7','square:list').key, create.data.clientRequestId)
+    } else {
+      const retry = h.requests.at(-1)
+      assert.equal(retry.url, originalPublish.url)
+      assert.deepEqual(retry.data, originalPublish.data, 'expectedVersion 与 requestId 都不可漂移')
+      assert.equal(h.requests.filter(r => r.url === CREATE).length, 1, '不能重新创建第二个草稿')
+      retry.success({code:200,data:{...draft,post:{...draft.post,version:1,lifecycle:'CHECKING'}}}); await tick()
+      assert.equal(intentStoreFor(h.wx,'7','square:list'), null)
+    }
+  })
+}

@@ -647,6 +647,16 @@
     ],
     "club_direct_merchant_receivable_20261004": [
       "perk_ledger_20260716"
+    ],
+    "wechat_identity_unique_20261013": [],
+    "member_exp_earned_20261011": [
+      "p3_phase_b_player_world_creator"
+    ],
+    "20261011_npc_voice_version": [
+      "npc_profile"
+    ],
+    "community_legacy_comment_like_counts_20261015": [
+      "community_post_platform_20260909"
     ]
   }
 }

@@ -6,6 +6,8 @@ const { TEMPLATES } = require('../../utils/subscribe.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 
+const flush = () => new Promise(resolve => setImmediate(resolve))
+
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 }
@@ -27,6 +29,7 @@ function createPage(relativePath, appOverrides = {}, wxOverrides = {}) {
   const navigations = []
   const app = Object.assign({
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => '42',
     sendRequest(request) { requests.push(request) },
     getRequestErrorMessage(_response, fallback) { return fallback },
   }, appOverrides)
@@ -312,12 +315,14 @@ test('协作邀请「收到的」由受邀方主动点击开启邀约提醒，�
   assert.match(read('pages/coop/list/index.wxml'), /bindtap="enableInviteAlerts"/)
 })
 
-test('收藏页只保留帖文与主题数据链，不回流退役活动与商家状态', () => {
+test('收藏页只保留帖文与主题数据链，不回流退役活动与商家状态', async () => {
   const { page, requests } = createPage('pages/mylike/mylike.js')
   page.loadLikeData()
+  await flush()
   assert.equal(requests.length, 1)
-  assert.equal(requests[0].url, '/api/creativesquare/list')
-  assert.equal(requests[0].data.favorite_only, 1)
+  assert.equal(requests[0].url, '/api/v1/community/me/bookmarks')
+  assert.equal(requests[0].method, 'GET')
+  assert.equal(Object.hasOwn(requests[0].data, 'cursor'), false)
 
   const source = read('pages/mylike/mylike.js')
   assert.match(source, /activeFavoriteTab/)
@@ -338,34 +343,40 @@ test('收藏页只保留帖文与主题数据链，不回流退役活动与商�
   assert.doesNotMatch(description[1], /路线|场次/, '已退役的数据域不得继续出现在入口描述')
 })
 
-test('收藏页首展由 onLoad 单独请求，第一次 onShow 不制造第二个 page=1', () => {
+test('收藏页首展由 onLoad 单独请求，第一次 onShow 不制造第二个 page=1', async () => {
   const { page, requests } = createPage('pages/mylike/mylike.js')
   page.onLoad({})
   page.onShow()
+  await flush()
   assert.equal(requests.length, 1, '首展两个生命周期合计只能发一次请求')
-  assert.equal(requests[0].data.pageNum, 1)
+  assert.equal(Object.hasOwn(requests[0].data, 'cursor'), false)
 })
 
-test('收藏页第二次 onShow 会从 page=1 刷新，且仍经过 loading 守卫', () => {
+test('收藏页第二次 onShow 会从 page=1 刷新，且仍经过 loading 守卫', async () => {
   const { page, requests } = createPage('pages/mylike/mylike.js')
   page.onLoad({})
   page.onShow()
-  requests[0].complete()
+  await flush()
+  requests[0].success({ code: 200, data: { items: [], hasMore: false, nextCursor: null } })
+  await flush()
 
   page.onShow()
+  await flush()
   assert.equal(requests.length, 2, '返回收藏页必须重新读取服务端列表')
-  assert.equal(requests[1].data.pageNum, 1)
+  assert.equal(Object.hasOwn(requests[1].data, 'cursor'), false)
 
   page.onShow()
+  await flush()
   assert.equal(requests.length, 2, '刷新请求在途时不得再绕过 loading 守卫并发同页请求')
 })
 
-test('收藏接口 200 空 payload 不得崩溃或伪装成真实空列表', () => {
+test('收藏接口 200 空 payload 不得崩溃或伪装成真实空列表', async () => {
   const { page, requests } = createPage('pages/mylike/mylike.js')
   page.loadLikeData()
+  await flush()
 
   assert.doesNotThrow(() => requests[0].success({ code: 200, data: null }))
-  requests[0].complete()
+  await flush()
 
   assert.equal(page.data.loading, false)
   assert.equal(page.data.errorMsg, '收藏帖文加载失败')

@@ -24,6 +24,7 @@ import com.chengyinhub.system.service.ISysCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
@@ -62,6 +63,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     private ISysCategoryService sysCategoryService;
 
     @org.springframework.beans.factory.annotation.Autowired
+    @Lazy
     private com.chengyinhub.business.service.IChapterMerchantNodeService chapterMerchantNodeService;
 
     @Override

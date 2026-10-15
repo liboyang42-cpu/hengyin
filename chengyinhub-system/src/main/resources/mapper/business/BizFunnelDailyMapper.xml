@@ -140,7 +140,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and event.biz_type = 'community_post'
             and event.member_id is not null
             and event.occurred_at &gt;= cast(#{startDate} as date)
-            and event.occurred_at &lt; date_add(cast(#{endDate} as date), interval 1 day)
+            and event.occurred_at &lt; timestampadd(day, 1, cast(#{endDate} as date))
           group by event.member_id, event.biz_id, post.author_id
         )
         select count(distinct member_id) as qualified_user_count,

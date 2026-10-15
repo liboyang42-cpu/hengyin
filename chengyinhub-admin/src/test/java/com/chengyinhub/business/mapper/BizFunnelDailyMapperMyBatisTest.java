@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import java.io.InputStream;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -57,6 +56,28 @@ public class BizFunnelDailyMapperMyBatisTest {
         }
     }
 
+    @Test
+    void pilotWindowIncludesWholeEndDateAndExcludesAdjacentDays() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        createSchema(jdbc);
+        insertPost(jdbc, 10L, 100L, "PUBLISHED");
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        LocalDateTime nextDay = LocalDateTime.of(2026, 10, 1, 0, 0);
+        insertQualifiedView(jdbc, 1L, 10L, start.minusSeconds(1));
+        insertQualifiedView(jdbc, 2L, 10L, start);
+        insertQualifiedView(jdbc, 3L, 10L, nextDay.minusNanos(1000));
+        insertQualifiedView(jdbc, 4L, 10L, nextDay);
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            BizFunnelDailyMapper mapper = session.getMapper(BizFunnelDailyMapper.class);
+            Map<String, Object> metric = mapper.selectCommunityQualifiedPilotMetric("2026-09-01", "2026-09-30");
+            assertMetric(metric, 2L, 2L, 1L, 1L);
+            assertEquals(Timestamp.valueOf(start), metric.get("FIRST_QUALIFIED_AT"));
+            assertEquals(Timestamp.valueOf(nextDay.minusNanos(1000)), metric.get("LAST_QUALIFIED_AT"));
+        }
+    }
+
     private static void assertMetric(Map<String, Object> metric,
                                      long users,
                                      long userPosts,
@@ -83,21 +104,11 @@ public class BizFunnelDailyMapperMyBatisTest {
     }
 
     private static void createSchema(JdbcTemplate jdbc) {
-        jdbc.execute("create alias DATE_ADD for \""
-                + BizFunnelDailyMapperMyBatisTest.class.getName() + ".dateAdd\"");
         jdbc.execute("create table biz_event_log("
                 + "id bigint auto_increment primary key, event_name varchar(80), biz_type varchar(40),"
                 + "biz_id bigint, member_id bigint, occurred_at timestamp)");
         jdbc.execute("create table community_post("
                 + "id bigint primary key, author_id bigint, lifecycle varchar(20))");
-    }
-
-    /** H2 1.4 没有 MySQL DATE_ADD；测试别名只补足本查询用到的 DAY 间隔。 */
-    public static Date dateAdd(Date date, String interval) {
-        if (!"INTERVAL '1' DAY".equalsIgnoreCase(interval)) {
-            throw new IllegalArgumentException("unsupported interval: " + interval);
-        }
-        return Date.valueOf(date.toLocalDate().plusDays(1));
     }
 
     private static void insertPost(JdbcTemplate jdbc, long id, long authorId, String lifecycle) {

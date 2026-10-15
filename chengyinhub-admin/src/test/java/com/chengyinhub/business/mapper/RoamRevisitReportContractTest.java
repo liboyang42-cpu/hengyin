@@ -6,6 +6,7 @@ import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -19,6 +20,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -172,7 +175,38 @@ class RoamRevisitReportContractTest {
         }
         assertTrue(backend.contains("mvn -B clean test"));
         assertTrue(workflow.contains("- 'chengyinhub-admin/**'"));
-        assertTrue(workflow.contains("run: bash ci/backend-test.sh"));
+        assertTrue(backendJobRunsTests(workflow), "backend job 必须实际执行后端测试脚本");
+    }
+
+    @Test
+    void backendScriptCollectionSupportsInlineAndMultilineRunSteps() {
+        String inline = "jobs:\n  backend:\n    steps:\n      - run: bash ci/backend-test.sh\n";
+        assertTrue(backendJobRunsTests(inline));
+        assertTrue(backendJobRunsTests(inline.replace("run: bash ci/backend-test.sh",
+                "run: |\n          echo prepare\n          bash ci/backend-test.sh")));
+    }
+
+    @Test
+    void backendScriptMentionsOutsideExecutableBackendStepsDoNotCount() {
+        String workflow = "jobs:\n  backend:\n    steps:\n      - run: |\n          bash ci/backend-test.sh\n";
+        assertFalse(backendJobRunsTests(workflow.replace("bash ci/backend-test.sh", "echo prepare")));
+        assertFalse(backendJobRunsTests(workflow.replace("bash ci/backend-test.sh", "# bash ci/backend-test.sh")));
+        assertFalse(backendJobRunsTests(workflow.replace("bash ci/backend-test.sh", "echo bash ci/backend-test.sh")));
+        assertFalse(backendJobRunsTests(workflow.replace("  backend:", "  other_job:")));
+    }
+
+    private static boolean backendJobRunsTests(String workflow) {
+        Object parsed = new Yaml().load(workflow);
+        if (!(parsed instanceof Map<?, ?> root)
+                || !(root.get("jobs") instanceof Map<?, ?> jobs)
+                || !(jobs.get("backend") instanceof Map<?, ?> backend)
+                || !(backend.get("steps") instanceof List<?> steps)) return false;
+        Pattern command = Pattern.compile("(?m)^\\h*bash\\h+ci/backend-test\\.sh\\h*(?:#[^\\r\\n]*)?$");
+        for (Object value : steps) {
+            if (value instanceof Map<?, ?> step && step.get("run") instanceof String run
+                    && command.matcher(run).find()) return true;
+        }
+        return false;
     }
 
     private static void assertImmutable(Class<?> type) {

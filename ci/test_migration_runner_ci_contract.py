@@ -1,4 +1,5 @@
 import ast
+import contextlib
 import importlib.util
 import os
 import pathlib
@@ -78,6 +79,19 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
+
+    @contextlib.contextmanager
+    def versioned_entry_repo(self):
+        # Test the candidate bytes without relying on a developer's private fallback checkout.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir).resolve()
+            (root / "ci").mkdir()
+            for name in ("run_migration_skill_entry.py", "run_migration.py", "sql_splitter.py"):
+                shutil.copyfile(REPO / "ci" / name, root / "ci" / name)
+            subprocess.run(["git", "-C", str(root), "init", "-q"], check=True)
+            subprocess.run(["git", "-C", str(root), "remote", "add", "origin",
+                            "https://github.com/liboyang42-cpu/chengyin.git"], check=True)
+            yield root
 
     @staticmethod
     def squeeze(text):
@@ -285,9 +299,10 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
                              "同域名下的别的仓库被误认 —— 身份判据被放宽了")
 
     def test_imported_entry_lazily_exposes_runner_public_api(self):
-        entry = REPO / "ci" / "run_migration_skill_entry.py"
-        with mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(REPO)}):
-            module = self.load_entry(entry)
+        with self.versioned_entry_repo() as repo, \
+                mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(repo)}):
+            module = self.load_entry(repo / "ci" / "run_migration_skill_entry.py")
+            self.assertEqual(repo / "ci" / "run_migration.py", module.resolve_runner())
             self.assertTrue(str(module.DEFAULT_CONFIG).endswith(
                 "chengyinhub-admin/src/main/resources/application-druid.yml"))
             self.assertTrue(callable(module.connect))
@@ -307,6 +322,8 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
                 "entry", {str(entry)!r})
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+            assert module.resolve_runner() == __import__("pathlib").Path(
+                {str(repo / "ci" / "run_migration.py")!r}), "runner 不是当前候选夹具"
             assert callable(module.connect), "connect 不可调用"
             print("ENTRY_IMPORT_OK")
         """) + extra
@@ -318,8 +335,9 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
                 capture_output=True, text=True, env=env)
 
     def test_imported_entry_works_without_ci_on_syspath(self):
-        result = self._import_entry_in_clean_subprocess(
-            REPO / "ci" / "run_migration_skill_entry.py", REPO)
+        with self.versioned_entry_repo() as repo:
+            result = self._import_entry_in_clean_subprocess(
+                repo / "ci" / "run_migration_skill_entry.py", repo)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("ENTRY_IMPORT_OK", result.stdout)
 
@@ -329,13 +347,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             encoding="utf-8")
         anchor = "        sys.path.insert(0, str(pathlib.Path(runner).resolve().parent))\n"
         self.assertIn(anchor, entry_src, "负控锚点失效:sys.path 补丁形状已变")
-        with tempfile.TemporaryDirectory() as temp_dir:
-            broken_repo = pathlib.Path(temp_dir) / "repo"
-            shutil.copytree(REPO / "ci", broken_repo / "ci")
-            subprocess.run(["git", "-C", str(broken_repo), "init", "-q"], check=True)
-            subprocess.run(
-                ["git", "-C", str(broken_repo), "remote", "add", "github",
-                 "https://github.com/liboyang42-cpu/chengyin.git"], check=True)
+        with self.versioned_entry_repo() as broken_repo:
             broken_entry = broken_repo / "ci" / "run_migration_skill_entry.py"
             broken_entry.write_text(entry_src.replace(anchor, ""), encoding="utf-8")
             result = self._import_entry_in_clean_subprocess(
@@ -352,14 +364,36 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             self.assertFalse(hasattr(module, "__all__"))
 
     def test_entry_byte_drift_is_rejected_before_loading_runner(self):
-        entry = REPO / "ci" / "run_migration_skill_entry.py"
-        with tempfile.TemporaryDirectory() as temp_dir:
-            mutated = pathlib.Path(temp_dir) / "run_migration.py"
+        with self.versioned_entry_repo() as repo:
+            entry = repo / "ci" / "run_migration_skill_entry.py"
+            mutated = repo / "drifted_entry.py"
             mutated.write_bytes(entry.read_bytes() + b"\n# drift\n")
-            with mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(REPO)}):
+            with mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(repo)}):
                 module = self.load_entry(mutated)
                 with self.assertRaisesRegex(SystemExit, "漂移"):
                     _ = module.DEFAULT_CONFIG
+
+    def test_entry_missing_versioned_runner_is_rejected(self):
+        with self.versioned_entry_repo() as repo:
+            (repo / "ci" / "run_migration.py").unlink()
+            module = self.load_entry(repo / "ci" / "run_migration_skill_entry.py")
+            with mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(repo)}, clear=True), \
+                    mock.patch.object(module, "current_git_root", return_value=None), \
+                    mock.patch.object(module, "FALLBACK_REPO", repo):
+                with self.assertRaisesRegex(SystemExit, "找不到版本化 runner"):
+                    module.resolve_runner()
+
+    def test_entry_public_repo_does_not_authorize_private_migration_runner(self):
+        with self.versioned_entry_repo() as repo:
+            subprocess.run(["git", "-C", str(repo), "remote", "set-url", "origin",
+                            "https://github.com/liboyang42-cpu/hengyin"], check=True)
+            module = self.load_entry(repo / "ci" / "run_migration_skill_entry.py")
+            self.assertFalse(module.is_chengyin_repo(repo))
+            with mock.patch.dict(os.environ, {"CHENGYIN_REPO": str(repo)}, clear=True), \
+                    mock.patch.object(module, "current_git_root", return_value=None), \
+                    mock.patch.object(module, "FALLBACK_REPO", repo):
+                with self.assertRaisesRegex(SystemExit, "找不到版本化 runner"):
+                    module.resolve_runner()
 
     # 迁移安全 job 必须跑的整份契约清单。新增迁移契约文件时【同时】改这里与 ci.yml，
     # 否则下面那条负控会红 —— 这正是本条断言存在的意义。
@@ -645,6 +679,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_quartz_jobs_pause_repair_mysql_integration.py",
             "ci/test_migration_historical_schema_forward_fix_mysql_integration.py",
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
+            "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
             "ci/test_migration_runner_ci_contract.py",
             "ci/funds-mysql-it-gate.sh",
         )
@@ -661,6 +696,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_quartz_jobs_pause_repair_mysql_integration.py",
             "ci/test_migration_historical_schema_forward_fix_mysql_integration.py",
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
+            "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
             "ci/test_migration_*.py",
             "scripts/e2e/**",
             "sql/base_schema_20260818.sql",
@@ -720,7 +756,10 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "MerchantOfferWithdrawalColumnsMysqlIntegrationTest",
             gate,
         )
-        self.assertIn('"$atomic_ran" -lt 41', gate)
+        self.assertIn(
+            "ci.test_community_legacy_comment_like_counts_mysql_integration."
+            "CommunityLegacyCommentLikesMysqlIntegrationTest", gate)
+        self.assertIn('"$atomic_ran" -lt 56', gate)
         self.assertIn("bash ci/funds-mysql-it-gate.sh atomic-migration", workflow)
         self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", workflow)
 
@@ -769,7 +808,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(test_methods), 4)
 
-    def test_merchant_candidate_schema_repair_it_keeps_nine_discoverable_tests(self):
+    def test_merchant_candidate_schema_repair_it_keeps_fifteen_discoverable_tests(self):
         source = (REPO / "ci" / "test_merchant_candidate_schema_repair_mysql_integration.py").read_text(
             encoding="utf-8")
         tree = ast.parse(source)
@@ -814,19 +853,19 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(test_methods), 7)
 
-    def test_atomic_gate_accepts_forty_one_unskipped_tests_and_rejects_skips(self):
+    def test_atomic_gate_accepts_fifty_six_unskipped_tests_and_rejects_skips(self):
         result = self.run_atomic_gate_with_unittest_result(
-            "Ran 41 tests in 0.001s\n\nOK\n", 0)
+            "Ran 56 tests in 0.001s\n\nOK\n", 0)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("实际执行 41 条", result.stdout + result.stderr)
+        self.assertIn("实际执行 56 条", result.stdout + result.stderr)
         skipped = self.run_atomic_gate_with_unittest_result(
-            "Ran 41 tests in 0.001s\n\nOK (skipped=41)\n", 0)
+            "Ran 56 tests in 0.001s\n\nOK (skipped=56)\n", 0)
         self.assertNotEqual(0, skipped.returncode)
         self.assertIn("skipped=0", skipped.stdout + skipped.stderr)
 
     def test_atomic_gate_rejects_old_thirty_five_and_incomplete_forty_tests(self):
-        for count in (35, 40):
+        for count in (35, 40, 41, 47, 49, 51, 55):
             with self.subTest(count=count):
                 result = self.run_atomic_gate_with_unittest_result(
                     "Ran %d tests in 0.001s\n\nOK\n" % count, 0)
@@ -842,6 +881,16 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         test_methods = [node.name for node in repair_class.body
                         if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
         self.assertGreaterEqual(len(test_methods), 6)
+        self.assertNotIn("SkipTest", source)
+        self.assertNotIn("skipUnless", source)
+
+    def test_community_migration_mysql_it_keeps_fifteen_discoverable_tests(self):
+        source = (REPO / "ci/test_community_legacy_comment_like_counts_mysql_integration.py").read_text()
+        tree = ast.parse(source)
+        case = next(node for node in tree.body if isinstance(node, ast.ClassDef)
+                    and node.name == "CommunityLegacyCommentLikesMysqlIntegrationTest")
+        self.assertEqual(15, sum(isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+                                for node in case.body))
         self.assertNotIn("SkipTest", source)
         self.assertNotIn("skipUnless", source)
 

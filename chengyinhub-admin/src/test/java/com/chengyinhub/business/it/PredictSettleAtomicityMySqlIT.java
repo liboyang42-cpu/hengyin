@@ -174,6 +174,7 @@ class PredictSettleAtomicityMySqlIT {
         try (Connection c = open(); Statement st = c.createStatement()) {
             st.execute("delete from play_predict_bet");
             st.execute("delete from play_predict_result");
+            st.execute("delete from member_exp_earned");
             st.execute("delete from member_growth");
             st.execute("delete from sms_coupon_history");
             st.execute("delete from sms_coupon");
@@ -332,6 +333,9 @@ class PredictSettleAtomicityMySqlIT {
                 + "last_active_time datetime null, create_time datetime null, update_time datetime null,"
                 + "unique key uk_member_growth_member (member_id)"
                 + ") engine=InnoDB default charset=utf8mb4");
+        st.execute("create table member_exp_earned (id bigint not null auto_increment primary key,"
+                + "member_id bigint not null, exp_value int not null, reason text null,"
+                + "earned_at datetime not null, mission_progress_id bigint null unique) engine=InnoDB");
         st.execute("create table sms_coupon ("
                 + "id bigint not null auto_increment primary key, name varchar(100) null,"
                 + "coupon_type int null, platform int null, amount decimal(10,2) null,"

@@ -22,6 +22,7 @@
   <block wx:else>
   <view class="gbox1">
     <view class="wp">
+      <view class="ph-time" wx:if="{{info.lifecycleLabel}}" aria-role="status">{{info.lifecycleLabel}}</view>
       <!-- 关联卡头部按参考图收成头像 + @昵称 + 溢出入口；纯文本帖保留原名/时间。 -->
       <view class="post-head flex-ac {{info.hasPlayCover ? 'post-head--immersive' : ''}}">
         <view class="ph-avatar" bindtap="goUserInfoClcik" aria-role="button" aria-label="打开用户主页" hover-class="cy-pressed" hover-stay-time="80">
@@ -244,3 +245,6 @@
      塞进帖文区会被上面的 overflow 裁掉。 -->
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
+
+<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+  confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

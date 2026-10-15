@@ -11,7 +11,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
-    <insert id="insertMissionProgress" parameterType="GrowthMissionProgress">
+    <insert id="insertMissionProgress" parameterType="GrowthMissionProgress" useGeneratedKeys="true" keyProperty="id">
         insert ignore into growth_mission_progress
         (member_id, mission_code, biz_type, biz_id, progress_date, complete_count, reward_exp, create_time, update_time)
         values

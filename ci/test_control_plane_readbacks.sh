@@ -117,6 +117,68 @@ DEPLOY_UI_NAME=$(sed -n 's/^name: //p' "$ROOT/.github/workflows/deploy-ui.yml" |
 drift_block() { awk -v j="$2" '$0=="  "j":"{f=1;next} /^  [A-Za-z0-9_-]+:$/{f=0} f' "$1"; }
 drift_on_block() { awk '/^on:$/{f=1;next} /^[a-z]/{f=0} f' "$1"; }
 
+# Evaluate only the boolean grammar used by these job guards, never workflow steps.
+# This keeps the no-Mac fast path and the public-repository isolation independently testable.
+check_job_guards() {
+  python3 - "$1" <<'PY_GUARDS'
+import ast
+import itertools
+import pathlib
+import re
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text()
+fields = {
+    'github.repository': 'repository',
+    'github.event_name': 'event',
+    'github.event.workflow_run.event': 'origin',
+    'github.event.workflow_run.conclusion': 'conclusion',
+}
+expressions = {}
+try:
+    for job in ('audit', 'migration-drift'):
+        block = re.search(r'^  ' + job + r':\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', source, re.M | re.S)
+        if block is None:
+            raise ValueError(job + ': missing job')
+        condition = re.search(r'^    if: ([^\n]+)(?:\n((?:      [^\n]*\n)*))?', block[1], re.M)
+        if condition is None:
+            raise ValueError(job + ': missing job-level if')
+        expression = (condition[2] or '') if condition[1].strip() in ('>-', '>', '|', '|-') else condition[1]
+        expression = ' '.join(line for line in expression.splitlines() if not line.lstrip().startswith('#'))
+        for field, name in fields.items():
+            expression = expression.replace(field, name)
+        tree = ast.parse(expression.replace('&&', ' and ').replace('||', ' or ').strip(), mode='eval')
+        allowed = (ast.Expression, ast.BoolOp, ast.And, ast.Or, ast.Compare, ast.Eq, ast.NotEq,
+                   ast.Name, ast.Load, ast.Constant)
+        if any(not isinstance(node, allowed) for node in ast.walk(tree)):
+            raise ValueError(job + ': unsupported guard grammar')
+        if any(isinstance(node, ast.Name) and node.id not in fields.values() for node in ast.walk(tree)):
+            raise ValueError(job + ': unknown guard field')
+        expressions[job] = compile(tree, '<job-if>', 'eval')
+    checked = 0
+    for repository, event, origin, conclusion in itertools.product(
+            ('liboyang42-cpu/chengyin', 'liboyang42-cpu/hengyin', 'another-owner/chengyin'),
+            ('workflow_run', 'workflow_dispatch', 'schedule', 'push', 'pull_request', 'repository_dispatch', ''),
+            ('workflow_dispatch', 'push', 'pull_request', ''),
+            ('failure', 'cancelled', 'timed_out', 'success', 'skipped', 'neutral', 'action_required', '')):
+        private = repository == 'liboyang42-cpu/chengyin'
+        expected = {
+            'audit': private and (event != 'workflow_run' or (
+                origin != 'workflow_dispatch' and conclusion in ('failure', 'cancelled', 'timed_out'))),
+            'migration-drift': private and event != 'workflow_run',
+        }
+        context = dict(repository=repository, event=event, origin=origin, conclusion=conclusion)
+        for job, expression in expressions.items():
+            if bool(eval(expression, {'__builtins__': {}}, context)) != expected[job]:
+                raise ValueError(job + ': private fast-path or public isolation mismatch: ' + str(context))
+            checked += 1
+    print('PASS: job guard truth table (' + str(checked) + ' cases)')
+except (ValueError, SyntaxError) as error:
+    print(error)
+    sys.exit(1)
+PY_GUARDS
+}
+
 # 一处结构一条断言;返回非零并打印原因,好让负控能对上。
 check_fast_path() {
   local f="$1" on audit mig c
@@ -136,8 +198,8 @@ check_fast_path() {
     echo 'audit job 把 skipped 也当失败:CI 红时部署 run 整体 skipped,会白烧云端额度'
     return 1
   fi
-  grep -qF "if: github.event_name != 'workflow_run'" <<< "$mig" \
-    || { echo 'migration-drift 没在快速对账里跳过 —— Mac 睡着会把 run 拖成 pending,快速判决就没了'; return 1; }
+  check_job_guards "$f" \
+    || { echo 'job 守卫未保留快速对账跳过 Mac 或公开仓库隔离'; return 1; }
   return 0
 }
 
@@ -173,7 +235,15 @@ expect_fast_path nc-cancelled-not-covered red \
 expect_fast_path nc-skipped-counted-as-failure red \
   awk '{print} $0=="  audit:"{print "    # github.event.workflow_run.conclusion == '\''skipped'\''"}' "$DRIFT"
 expect_fast_path nc-migration-drift-not-skipped red \
-  grep -vF "    if: github.event_name != 'workflow_run'" "$DRIFT"
+  sed "s/ && github.event_name != 'workflow_run'//" "$DRIFT"
+expect_fast_path nc-migration-public-guard-removed red \
+  sed "s/if: github.repository == 'liboyang42-cpu\/chengyin' \&\& /if: /" "$DRIFT"
+expect_fast_path nc-migration-repository-or-event red \
+  sed "s/ \&\& github.event_name !=/ || github.event_name !=/" "$DRIFT"
+expect_fast_path nc-audit-public-guard-removed red \
+  grep -vF "      github.repository == 'liboyang42-cpu/chengyin' &&" "$DRIFT"
+expect_fast_path nc-audit-repository-or-event red \
+  sed "s/^      github.repository == 'liboyang42-cpu\/chengyin' \&\&$/      github.repository == 'liboyang42-cpu\/chengyin' ||/" "$DRIFT"
 # 反向负控:同样的字样只出现在 migration-drift 块里时必须仍然红 / 仍然绿 ——
 # 证明上面各条确实是按 job 块判的,不是整文件 grep 到哪算哪。
 mut_guard_to_wrong_job() {

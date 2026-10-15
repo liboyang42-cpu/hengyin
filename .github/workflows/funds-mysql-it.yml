@@ -146,7 +146,7 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '21'
       - name: Start Oracle MySQL 8.0.45 scratch
         id: mysql
         if: steps.scope.outputs.run == 'true'

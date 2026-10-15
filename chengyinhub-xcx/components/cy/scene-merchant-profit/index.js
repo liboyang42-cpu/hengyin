@@ -5,6 +5,14 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 // 2026-09-15 起「提现」不再跳银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js');
 
+function identityKey() {
+  const gd = app.globalData || {};
+  const member = typeof app.getUserID === 'function' ? app.getUserID() : gd.user_id;
+  const role = typeof app.getUserRole === 'function' ? app.getUserRole() : gd.role;
+  const type = typeof app.getUserType === 'function' ? app.getUserType() : gd.user_type;
+  return [member == null ? '' : member, role || '', type == null ? '' : type].join('|');
+}
+
 // 分润明细 = 三级(记录)⇒ 场景弹窗,宿主是「账户收益」页。
 // 取数与结算展示的唯一实现;pages/coop/finance 退化成深链薄壳。
 // Figma G2「调整待处理 / 已执行调整」。两个数由服务端的扣回申请聚合而来;
@@ -52,16 +60,60 @@ Component({
       // 2026-09-17 总控裁定:余额三段只给主体本人;后端判定,前端不猜,缺省不显示
       isOwner: false,
     },
-  lifetimes: { attached() { this.load() } },
+  lifetimes: {
+    attached() { this._detached = false; this._hidden = false; this.load(); },
+    detached() { this._detached = true; this._loadEpoch = (this._loadEpoch || 0) + 1; },
+  },
+  pageLifetimes: {
+    show() {
+      const refresh = this._hidden || this._loadIdentity !== identityKey();
+      this._hidden = false;
+      if (refresh) this.load();
+    },
+    hide() { this._hidden = true; this._loadEpoch = (this._loadEpoch || 0) + 1; },
+  },
   methods: {
     // 去主题详情/提现这些非场景目标:先关掉本层,不在弹窗上再压页面(§8.3)
     _leave(url) { this.triggerEvent('close'); wx.navigateTo({ url }); },
+    _clearData() {
+      this._dataIdentity = null;
+      this.setData({ topics: [], statItems: [], adjustReason: '', myIncomeTotal: null,
+        canWithdraw: false, withdrawState: 'unknown', pendingCount: 0, isOwner: false });
+    },
+    _acceptRead(epoch) {
+      if (!Number.isInteger(epoch) || epoch !== this._loadEpoch || this._detached || this._hidden) return false;
+      const current = identityKey();
+      if (current === this._loadIdentity) return true;
+      const previousMember = this._loadIdentity.split('|')[0];
+      const currentMember = current.split('|')[0];
+      this._loadEpoch += 1;
+      this._clearData();
+      this.setData({ loaded: true, loadErr: true });
+      if ((!previousMember || previousMember === '0') && currentMember && currentMember !== '0') this.load();
+      return false;
+    },
+    _hasCurrentData() {
+      if (this._detached || this._hidden) return false;
+      if (this._dataIdentity !== identityKey()) {
+        if (this._dataIdentity != null) {
+          this._clearData(); this.setData({ loaded: true, loadErr: true });
+        }
+        return false;
+      }
+      return this.data.loaded && !this.data.loadErr;
+    },
     load() {
+      if (this._detached || this._hidden) return;
+      this._loadIdentity = identityKey();
+      const epoch = this._loadEpoch = (this._loadEpoch || 0) + 1;
+      this._clearData();
+      this.setData({ loaded: false, loadErr: false });
       const that = this;
       app.sendRequest({
         hideLoading: true, url: '/api/coop/finance', method: 'POST',
         data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
         success(res) {
+          if (!that._acceptRead(epoch)) return;
           if (!(res && res.code == '200' && res.data && typeof res.data === 'object'
               && !Array.isArray(res.data) && Array.isArray(res.data.topics)
               && res.data.topics.every(function (item) {
@@ -148,6 +200,7 @@ Component({
           const canWithdraw = myIncomeTotal != null && Number(myIncomeTotal) > 0;
           const withdrawState = myIncomeTotal == null ? 'unknown' : (canWithdraw ? 'positive' : 'zero');
           const pendingCount = rows.filter(function (row) { return weight(row) < 3; }).length;
+          that._dataIdentity = that._loadIdentity;
           that.setData({
             topics: rows,
             myIncomeTotal: myIncomeTotal,
@@ -164,21 +217,27 @@ Component({
             loadErr: false,
           });
         },
-        fail() { that.setData({ loaded: true, loadErr: true, canWithdraw: false, withdrawState: 'unknown' }); },
+        fail() {
+          if (!that._acceptRead(epoch)) return;
+          that.setData({ loaded: true, loadErr: true, canWithdraw: false, withdrawState: 'unknown' });
+        },
       });
     },
 
     onRetry() {
-      this.setData({ loaded: false, loadErr: false, myIncomeTotal: null, canWithdraw: false, withdrawState: 'unknown', pendingCount: 0, statItems: [] });
       this.load();
     },
 
     goSettlementDetail(e) {
-      const id = e.currentTarget.dataset.id;
-      if (id != null && id !== '') this._leave('/pages/coop/settlement-detail/index?source=finance&topicId=' + id);
+      if (!this._hasCurrentData()) return;
+      const id = e && e.currentTarget && e.currentTarget.dataset.id;
+      if (id != null && id !== '' && this.data.topics.some(row => String(row.topicId) === String(id))) {
+        this._leave('/pages/coop/settlement-detail/index?source=finance&topicId=' + id);
+      }
     },
 
     goWithdraw() {
+      if (!this._hasCurrentData()) return;
       if (!this.data.canWithdraw) return;
       // 平台不打款:不再跳独立提现页(那是银行卡表单),改弹平台客服微信线下处理。
       withdrawCs.showWithdrawCsPopup();

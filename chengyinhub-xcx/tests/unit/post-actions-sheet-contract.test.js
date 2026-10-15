@@ -120,8 +120,8 @@ test('删除必须过组件内部的危险确认闸,不能裸发', () => {
   assert.equal(DANGER_ACTIONS[key].irreversible, true, '删帖不可逆')
 
   // onDelete 只开闸,不发 select;select 只能出现在 onDeleteConfirmed 里。
-  const onDelete = JS.slice(JS.indexOf('onDelete()'), JS.indexOf('onDeleteConfirmed()'))
+  const onDelete = JS.slice(JS.indexOf('onDelete()'), JS.indexOf('onDeleteConfirmed('))
   assert.doesNotMatch(onDelete, /triggerEvent\('select'/, '点「删除」当场就上报 = 绕过确认闸')
   assert.match(onDelete, /dc\.open\(DELETE_CONFIRM_KEY/, '点「删除」只负责开闸')
-  assert.match(JS, /onDeleteConfirmed\(\)[\s\S]*?triggerEvent\('select', \{ action: 'delete'/, '确认后才上报 delete')
+  assert.match(JS, /onDeleteConfirmed\(e\)[\s\S]*?triggerEvent\('select', \{ action: 'delete'/, '确认后才上报 delete')
 })

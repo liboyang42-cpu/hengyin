@@ -37,6 +37,7 @@
         <result property="locationPrecision" column="location_precision"/>
         <result property="cityCode" column="city_code"/>
         <result property="poiName" column="poi_name"/>
+        <result property="approximateGeohash" column="approximate_geohash"/>
         <result property="recommendationEligible" column="recommendation_eligible"/>
         <result property="searchEligible" column="search_eligible"/>
         <result property="interactionEnabled" column="interaction_enabled"/>
@@ -79,6 +80,7 @@
                          WHERE pa.post_id=p.id AND pa.member_id=#{viewerId} AND pa.action_type='BOOKMARK') THEN 1 ELSE 0 END viewer_bookmarked
     </sql>
     <sql id="visibilityPolicy">
+        AND p.lifecycle&lt;&gt;'DELETED'
         AND (
           p.author_id = #{viewerId}
           OR (p.lifecycle='PUBLISHED' AND (
@@ -165,6 +167,29 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectAuthorPosts" resultMap="CommunityPostResult">
+      <bind name="viewerId" value="authorId"/>
+      SELECT <include refid="publicColumns"/>,<include refid="ownerColumns"/>,
+             <include refid="personalColumns"/>, 'OWN' feed_source,'AUTHOR_WORKSPACE' reason_code
+      FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+      WHERE p.author_id=#{authorId}
+        AND p.lifecycle IN ('DRAFT','CHECKING','PUBLISHED','LIMITED','HIDDEN','REMOVED')
+        AND NOT EXISTS(SELECT 1 FROM community_post_member_action hidden
+          WHERE hidden.post_id=p.id AND hidden.member_id=#{authorId} AND hidden.action_type='NOT_INTERESTED')
+        AND (#{cursor} IS NULL OR p.id&lt;#{cursor}) ORDER BY p.id DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectBookmarkedPosts" resultMap="CommunityPostResult">
+      SELECT <include refid="publicColumns"/>,<include refid="personalColumns"/>,
+             'BOOKMARKS' feed_source,'SAVED_BY_VIEWER' reason_code
+      FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+      WHERE p.lifecycle&lt;&gt;'DELETED'
+        AND EXISTS(SELECT 1 FROM community_post_member_action bookmark
+          WHERE bookmark.post_id=p.id AND bookmark.member_id=#{viewerId} AND bookmark.action_type='BOOKMARK')
+        <include refid="visibilityPolicy"/>
+        AND (#{cursor} IS NULL OR p.id&lt;#{cursor}) ORDER BY p.id DESC LIMIT #{limit}
+    </select>
+
     <select id="selectAuthorDrafts" resultMap="CommunityPostResult">
       <bind name="viewerId" value="authorId"/>
       SELECT <include refid="publicColumns"/>,<include refid="ownerColumns"/>,
@@ -223,7 +248,7 @@
         safety_labels_json=#{post.safetyLabelsJson},guideline_version_id=#{post.guidelineVersionId},
         lifecycle=#{targetLifecycle},edited_at=#{now},update_time=#{now},version=version+1
       WHERE id=#{post.id} AND author_id=#{post.authorId} AND version=#{expectedVersion}
-        AND lifecycle IN ('DRAFT','PUBLISHED','LIMITED','HIDDEN')
+        AND lifecycle IN ('DRAFT','CHECKING','PUBLISHED','LIMITED','HIDDEN')
     </update>
     <update id="transitionCas">
       UPDATE community_post SET lifecycle=#{targetLifecycle},published_at=COALESCE(#{publishedAt},published_at),
@@ -271,6 +296,9 @@
       UPDATE community_post_media SET review_state=#{reviewState},update_time=#{now}
       WHERE post_id=#{postId} AND retention_state='ACTIVE' AND review_state IN ('PENDING','HOLD')
     </update>
+    <select id="selectTopicCodes" resultType="string">
+      SELECT topic_code FROM community_post_topic WHERE post_id=#{postId} ORDER BY topic_code
+    </select>
     <delete id="deleteTopics">DELETE FROM community_post_topic WHERE post_id=#{postId}</delete>
     <insert id="insertTopic">INSERT INTO community_post_topic(post_id,topic_code,create_time) VALUES(#{postId},#{topicCode},#{now})</insert>
     <delete id="deleteMentions">DELETE FROM community_post_mention WHERE post_id=#{postId}</delete>
@@ -398,6 +426,19 @@
     <select id="selectCommandReceipt" resultType="map">
       SELECT id,member_id,request_id,command_type,aggregate_id,result_json,create_time
       FROM community_post_command_receipt WHERE member_id=#{memberId} AND request_id=#{requestId}
+    </select>
+    <select id="countAuthorDeleteEvidence" resultType="int">
+      SELECT COUNT(*) FROM community_post p
+      WHERE p.id=#{postId} AND p.author_id=#{memberId} AND p.lifecycle='DELETED'
+        AND EXISTS(SELECT 1 FROM community_post_command_receipt deletion
+          JOIN community_erasure_job job ON job.post_id=deletion.aggregate_id AND job.request_id=deletion.request_id
+          WHERE deletion.member_id=#{memberId} AND deletion.aggregate_id=p.id AND deletion.command_type='POST_DELETE'
+            AND job.trigger_type='POST_DELETE' AND job.legal_hold=0)
+        AND NOT EXISTS(SELECT 1 FROM community_erasure_job restriction
+          WHERE restriction.post_id=p.id AND (restriction.trigger_type IN ('COPYRIGHT_REMOVE','ACCOUNT_DEREGISTER')
+            OR restriction.legal_hold=1))
+        AND NOT EXISTS(SELECT 1 FROM community_post_command_receipt copyright
+          WHERE copyright.aggregate_id=p.id AND copyright.command_type='COPYRIGHT_REMOVE')
     </select>
     <insert id="insertCommandReceipt">
       INSERT IGNORE INTO community_post_command_receipt
@@ -873,7 +914,9 @@
              c.author_approval_state,c.version,c.like_count,c.create_time,
              m.nickname author_nickname,m.avatar author_avatar,
              CASE WHEN EXISTS(SELECT 1 FROM community_post_comment_action ca
-               WHERE ca.comment_id=c.id AND ca.member_id=#{viewerId} AND ca.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked
+               WHERE ca.comment_id=c.id AND ca.member_id=#{viewerId} AND ca.action_type='LIKE') THEN 1 ELSE 0 END viewer_liked,
+             CASE WHEN #{viewerId}&gt;0 AND EXISTS(SELECT 1 FROM ums_member_follow cf
+               WHERE cf.member_id=#{viewerId} AND cf.follow_member_id=c.author_id) THEN 1 ELSE 0 END viewer_following
       FROM root_page rp
       JOIN community_post_comment c ON c.id=rp.id OR c.root_id=rp.id
       LEFT JOIN ums_member m ON m.id=c.author_id

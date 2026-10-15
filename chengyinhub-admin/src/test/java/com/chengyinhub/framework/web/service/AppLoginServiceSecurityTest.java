@@ -254,6 +254,32 @@ class AppLoginServiceSecurityTest {
     }
 
     @Test
+    void existingWechatIdentityCollisionRejectsBindingWithoutSigningAnotherMember() {
+        IUmsMemberService memberService = mock(IUmsMemberService.class);
+        UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);
+        AppTokenService tokenService = mock(AppTokenService.class);
+        UmsMember member = new UmsMember();
+        member.setId(42L);
+        member.setPhone("13800000000");
+        member.setPassword(SecurityUtils.encryptPassword("password"));
+        member.setWxOpenId("");
+        when(memberService.selectUmsMemberList(any(UmsMember.class)))
+                .thenReturn(Collections.singletonList(member));
+        when(memberMapper.bindWxOpenIdIfBlank(42L, "owned-openid"))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("collision"));
+        AppLoginService loginService = new AppLoginService();
+        ReflectionTestUtils.setField(loginService, "appUserSevice", memberService);
+        ReflectionTestUtils.setField(loginService, "umsMemberMapper", memberMapper);
+        ReflectionTestUtils.setField(loginService, "appTokenService", tokenService);
+        ReflectionTestUtils.setField(loginService, "appSessionRegistryService", stableRegistry());
+
+        assertThrows(ServiceException.class,
+                () -> loginService.login("13800000000", "password", "owned-openid"));
+        assertEquals("", member.getWxOpenId());
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
     void concurrentFirstBindingsAllowOnlyOneOpenIdToReceiveToken() throws Exception {
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);

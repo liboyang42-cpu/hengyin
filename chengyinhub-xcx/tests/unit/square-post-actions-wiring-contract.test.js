@@ -13,9 +13,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const { createRequire } = require('node:module');
 const path = require('node:path');
-const vm = require('../helpers/ui-sandbox-vm.js');
 
 const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -72,215 +70,69 @@ test('渲染层:详情与列表都接上 cy-post-actions(编辑走 cy-post-compo
   assert.throws(() => assertListWired(strippedList), assert.AssertionError);
 });
 
-function loadPage(relativePath, opts) {
-  const requests = [];
-  const modalCalls = [];
-  const navigations = [];
-  const toasts = [];
-  let definition;
-  const absolutePath = path.join(ROOT, relativePath);
-  const app = {
-    globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => 1,
-    getAvatar: () => '',
-    getNickname: () => '',
-    getPageSize: () => 10,
-    getTotalPage: (total, size) => Math.ceil(Number(total || 0) / size),
-    getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
-    sendRequest(options) {
-      requests.push(options);
-      return { aborted: false, abort() { this.aborted = true; } };
-    },
-  };
-  const wxApi = {
-    getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20, safeAreaInsets: { bottom: 0 } }),
-    getMenuButtonBoundingClientRect: () => ({ bottom: 64 }),
-    hideTabBar() {},
-    navigateBack(options) { if (options && options.fail) options.fail(); },
-    navigateTo(options) { navigations.push(options && options.url); },
-    redirectTo(options) { navigations.push(options && options.url); },
-    reLaunch(options) { navigations.push(options && options.url); },
-    pageScrollTo() {},
-    setClipboardData() {},
-    previewImage() {},
-    stopPullDownRefresh() {},
-    showModal(options) {
-      modalCalls.push(options);
-      if (!opts || !opts.manualModal) options.success({ confirm: true, content: '测试理由' });
-    },
-    showToast() {}, hideToast() {}, showLoading() {}, hideLoading() {},
-    createSelectorQuery: () => ({ select() { return this; }, selectViewport() { return this; }, boundingClientRect() { return this; }, fields() { return this; }, scrollOffset() { return this; }, exec(cb) { if (cb) cb([null]); } }),
-  };
-  const source = (opts && opts.source) || read(relativePath);
-  vm.runInNewContext(source, {
-    console,
-    getApp: () => app,
-    Page: (config) => { definition = config; },
-    require: createRequire(absolutePath),
-    setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
-    wx: wxApi,
-  }, { filename: absolutePath });
 
-  assert.ok(definition, relativePath + ' 必须注册 Page');
-  const page = Object.assign({}, definition, {
-    data: JSON.parse(JSON.stringify(definition.data)),
-    setData(patch, done) {
-      Object.entries(patch).forEach(([key, value]) => {
-        const parts = key.replace(/\[(\d+)\]/g, '.$1').split('.');
-        let cursor = this.data;
-        parts.slice(0, -1).forEach((part) => {
-          if (!cursor[part] || typeof cursor[part] !== 'object') cursor[part] = {};
-          cursor = cursor[part];
-        });
-        cursor[parts[parts.length - 1]] = value;
-      });
-      if (done) done.call(this);
-    },
-  });
-  return { page, requests, modalCalls, navigations, toasts };
+const {load,post,tick}=require('../helpers/community-square-vm');
+test('详情:作者删除按canonical DELETE+真实version,成功不可用;负控换typed方法真红',async()=>{const h=load('detail');await h.ready();h.page.openPostActions();h.page.onPostAction({detail:{action:'delete',id:'77'}});await tick();const write=h.asked('/api/v1/community/posts/77').at(-1);assert.equal(write.method,'DELETE');assert.equal(write.data.expectedVersion,3);assert.match(write.data.requestId,/^square-/);await h.answer(write.url,null);assert.equal(h.page.data.detailState,'empty');assert.equal(h.page.data.postActionShow,false);const source=read('pages/square/detail/index.js'),broken=source.replace('this.communityClient().deletePost({','this.communityClient().detail({');assert.notEqual(broken,source);const bad=load('detail',{source:broken});await bad.ready();bad.page.openPostActions();bad.page.onPostAction({detail:{action:'delete',id:'77'}});await tick();assert.throws(()=>assert.equal(bad.asked('/api/v1/community/posts/77').at(-1).method,'DELETE'),assert.AssertionError)});
+test('详情:编辑预填真实id/正文/关联/版本;举报走确认;删除分发负控真红',async()=>{const h=load('detail');const b=post();b.references=[{referenceType:'TOPIC',referenceId:9,snapshotJson:'{"title":"关联"}'}];await h.ready(b);h.page.openPostActions();h.page.onPostAction({detail:{action:'edit',id:'77'}});assert.equal(h.page.data.composeShow,true);assert.equal(h.page.data.composeEdit.id,'77');assert.equal(h.page.data.composeEdit.contents,'原文');assert.equal(h.page.data.composeEdit.dataId,9);assert.equal(h.page.data.composeEdit.dataType,2);assert.equal(h.page.data.composeEdit.version,3);h.page.onPostAction({detail:{action:'report',id:h.page.data.currentActionId || h.page.data.id}});assert.equal(h.modals.length,1);assert.equal(h.page.data.postActionShow,false);const source=read('pages/square/detail/index.js'),broken=source.replace("if (action === 'delete') { this.deleteSquarePost(); return; }",'');assert.notEqual(broken,source);const bad=load('detail',{source:broken});await bad.ready();bad.page.openPostActions();bad.page.onPostAction({detail:{action:'delete',id:'77'}});await tick();assert.throws(()=>assert.ok(bad.requests.some(r=>r.method==='DELETE')),assert.AssertionError)});
+test('列表:more由真实viewer能力定位,编辑预填/关闭,按ID删除,举报taxonomy全链',async()=>{const h=load('list');h.page.data.list=[h.page.postView(post(11)),h.page.postView(post(12,2))];h.page.data.userId=1;h.page.showAction({detail:{index:1}});assert.equal(h.page.data.currentActionId,'12');assert.equal(h.page.data.currentActionOwner,false);h.page.closePostActions();h.page.showAction({detail:{index:0}});assert.equal(h.page.data.currentActionOwner,true);h.page.onPostAction({detail:{action:'edit',id:h.page.data.currentActionId}});assert.equal(h.page.data.composeEdit.id,'11');assert.equal(h.page.data.composeEdit.contents,'原文');h.page.onComposeClose();assert.equal(h.page.data.composeShow,false);assert.equal(h.page.data.composeEdit,null);h.page.showAction({detail:{index:0}});h.page.onPostAction({detail:{action:'delete',id:h.page.data.currentActionId}});await tick();assert.equal(h.asked('/api/v1/community/posts/11')[0].method,'DELETE');await h.answer('/api/v1/community/posts/11',null);assert.deepEqual(h.page.data.list.map(r=>r.id),[12]);assert.equal(h.page.data.postActionShow,false);h.page.showAction({detail:{index:0}});h.page.onPostAction({detail:{action:'report',id:h.page.data.currentActionId || h.page.data.id}});assert.equal(h.modals.length,1);h.modals[0].success({confirm:true});await tick();await h.answer('/api/v1/community/capabilities',{reporting:{policyVersion:'synthetic',reasons:[{code:'SERVER_REASON',label:'服务端原因'}]}});h.page.onReportReasonSelect({detail:{index:0}});await tick();const report=h.asked('/api/v1/community/reports')[0];assert.equal(report.method,'POST');assert.equal(report.data.targetId,12);assert.equal(report.data.reasonCode,'SERVER_REASON');assert.equal(report.data.policyVersion,'synthetic')});
+test('A-09:非本人纯文本帖仍可举报,组件owner=false只显示举报行',async()=>{const h=load('detail');await h.ready(post(77,2));assert.equal(h.page.data.isMine,false);h.page.openPostActions();assert.equal(h.page.data.postActionShow,true);h.page.onPostAction({detail:{action:'report',id:h.page.data.currentActionId || h.page.data.id}});assert.equal(h.modals.length,1);assert.equal(h.page.data.composeShow,false);assert.match(read('pages/square/detail/index.wxml'),/<cy-post-actions[^>]*owner="\{\{isMine\}\}"/)});
+test('列表:编辑必须带真实编辑态,关闭后清理不泄漏到下次打开',()=>{const h=load('list');h.page.data.list=[h.page.postView(post(11))];h.page.showAction({detail:{index:0}});h.page.onPostAction({detail:{action:'edit',id:h.page.data.currentActionId}});assert.equal(h.page.data.composeShow,true);assert.equal(h.page.data.composeEdit.id,'11');assert.equal(h.page.data.composeEdit.version,3);h.page.onComposeClose();assert.equal(h.page.data.composeShow,false);assert.equal(h.page.data.composeEdit,null)});
+
+// Exercise the real component events against synchronous parent/prop updates, not just handlers.
+const vm = require('node:vm');
+const { createRequire } = require('node:module');
+function mountActions(h, route) {
+  function component(rel) {
+    const file=path.join(ROOT,rel);let definition;
+    vm.runInNewContext(read(rel),{Component:value=>{definition=value},require:createRequire(file),console},{filename:file});
+    return Object.assign({},definition.methods,{data:JSON.parse(JSON.stringify(definition.data||{})),setData(patch){Object.assign(this.data,patch)}});
+  }
+  const actions=component('pages/square/components/cy/post-actions/index.js');
+  const danger=component('components/cy/danger-confirm/index.js');
+  const events=[];
+  const sync=()=>Object.assign(actions.data,route==='list'?{postId:h.page.data.currentActionId,summary:h.page.data.currentActionSummary,owner:h.page.data.currentActionOwner}:{postId:String(h.page.data.id||''),summary:h.page.data.info?.contents||'',owner:h.page.data.isMine});
+  const setData=h.page.setData;h.page.setData=function(patch,callback){setData.call(this,patch,callback);sync()};
+  actions.selectComponent=()=>danger;
+  actions.triggerEvent=(name,detail)=>{events.push({name,detail});if(name==='close')h.page.closePostActions();if(name==='select')h.page.onPostAction({detail})};
+  danger.triggerEvent=(name,detail)=>{if(name==='confirm')actions.onDeleteConfirmed({detail})};
+  h.page.selectComponent=()=>actions;sync();
+  return{actions,danger,events,open(index=0){if(route==='list')h.page.showAction({detail:{index}});else h.page.openPostActions();sync()}};
 }
-
-function detailReady(h, over) {
-  h.page.onLoad({ id: '77' });
-  const info = h.requests.find((r) => r.url === '/api/creativesquare/info');
-  assert.ok(info, '详情必须请求 /api/creativesquare/info');
-  info.success({ code: '200', data: Object.assign({ id: 77, memberId: 1, memberNickname: '我自己', contents: '发错的原文', pics: '' }, over || {}) });
-  assert.equal(h.page.data.detailState, 'ready');
-}
-
-test('详情:作者点删除走 /api/creativesquare/delete,成功后落到「暂不可用」态;负控换 URL 即红', () => {
-  const h = loadPage('pages/square/detail/index.js');
-  detailReady(h);
-  assert.equal(h.page.data.isMine, true, '本人帖必须判定 isMine');
-
-  h.page.openPostActions();
-  assert.equal(h.page.data.postActionShow, true, '··· 先开弹层,不直接删');
-  assert.equal(h.requests.some((r) => r.url === '/api/creativesquare/delete'), false);
-
-  h.page.onPostAction({ detail: { action: 'delete', id: '77' } });
-  const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
-  assert.ok(write, '确认后必须发删除请求');
-  assert.equal(String(write.data.id), '77', '删的必须是这一条');
-  write.success({ code: '200' });
-  assert.equal(h.page.data.detailState, 'empty', '删除成功后详情切「暂不可用」,不能留一条已删帖在页上');
-
-  // 负控:把 URL 变异成别的端点,「必须发删除请求」这条断言真红
-  const brokenSource = read('pages/square/detail/index.js')
-    .replace("url: '/api/creativesquare/delete'", "url: '/api/creativesquare/report'");
-  assert.notEqual(brokenSource, read('pages/square/detail/index.js'), '负控锚点失效:删除 URL 未命中');
-  const broken = loadPage('pages/square/detail/index.js', { source: brokenSource });
-  detailReady(broken);
-  broken.page.onPostAction({ detail: { action: 'delete', id: '77' } });
-  assert.equal(broken.requests.some((r) => r.url === '/api/creativesquare/delete'), false, '负控必须真的把删除端点改掉');
-  assert.throws(() => {
-    assert.ok(broken.requests.find((r) => r.url === '/api/creativesquare/delete'), '确认后必须发删除请求');
-  }, assert.AssertionError);
+test('真实组件链:列表编辑在close同步清父状态和props后仍打开原帖',()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11)),h.page.postView(post(12))];const c=mountActions(h,'list');c.open();c.actions.onEdit();
+ assert.equal(h.page.data.currentActionId,'');assert.equal(c.actions.data.postId,'');assert.equal(h.page.data.postActionShow,false);
+ assert.equal(c.events.at(-1).detail.id,'11');assert.equal(h.page.data.composeShow,true);assert.equal(h.page.data.composeEdit.id,'11');assert.equal(h.page.data.composeEdit.version,3);
 });
-
-test('详情:编辑以编辑态打开新建面板并带原帖 id/正文/关联;举报仍走既有确认', () => {
-  const h = loadPage('pages/square/detail/index.js');
-  detailReady(h, { dataId: 9, dataType: 1 });
-
-  h.page.onPostAction({ detail: { action: 'edit', id: '77' } });
-  assert.equal(h.page.data.postActionShow, false, '选完动作弹层要收起');
-  assert.equal(h.page.data.composeShow, true, '编辑必须打开面板');
-  assert.equal(h.page.data.composeEdit.id, '77');
-  assert.equal(h.page.data.composeEdit.contents, '发错的原文');
-  assert.equal(h.page.data.composeEdit.dataId, 9, '关联要带上:后端编辑分支对 data_id 无值即清 0');
-  assert.equal(h.page.data.composeEdit.dataType, 1);
-
-  let reports = 0;
-  h.page.reportSquare = () => { reports += 1; };
-  h.page.onPostAction({ detail: { action: 'report', id: '77' } });
-  assert.equal(reports, 1, '举报必须仍走既有举报确认');
-  assert.equal(h.page.data.postActionShow, false);
-
-  // 负控:掐掉分发里的 delete 分支,上面的删除用例必须真红
-  const brokenSource = read('pages/square/detail/index.js')
-    .replace("if (action === 'delete') { this.deleteSquarePost(); return; }", '');
-  assert.notEqual(brokenSource, read('pages/square/detail/index.js'), '负控锚点失效:分发分支未命中');
-  const broken = loadPage('pages/square/detail/index.js', { source: brokenSource });
-  detailReady(broken);
-  broken.page.onPostAction({ detail: { action: 'delete', id: '77' } });
-  assert.throws(() => {
-    assert.ok(broken.requests.find((r) => r.url === '/api/creativesquare/delete'), '确认后必须发删除请求');
-  }, assert.AssertionError, '掐掉分发分支后必须变红');
+test('真实组件链:删除确认保留原id和摘要,列表重排后仅删已确认帖',async()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11)),h.page.postView(post(12))];const c=mountActions(h,'list');c.open();c.actions.onDelete();
+ assert.equal(c.actions.data.postId,'');assert.equal(c.danger._params.id,'11');assert.ok(c.danger._params.name.includes('原文'));assert.equal(h.requests.length,0);
+ h.page.data.list.reverse();c.danger.onConfirm();await tick();const write=h.asked('/api/v1/community/posts/11')[0];assert.equal(write.method,'DELETE');assert.equal(write.data.expectedVersion,3);
+ await h.answer(write.url,null);assert.deepEqual(h.page.data.list.map(row=>row.id),[12]);assert.equal(c.danger.data.stage,'done');
 });
-
-test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、举报走确认', () => {
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [
-    { id: 11, memberId: 1, contents: '我的帖', dataId: 0, dataType: 0 },
-    { id: 12, memberId: 2, contents: '别人的帖' },
-  ];
-
-  h.page.showAction({ detail: { index: 1 } });
-  assert.equal(h.page.data.postActionShow, true);
-  assert.equal(h.page.data.currentActionId, '12');
-  assert.equal(h.page.data.currentActionOwner, false, '别人的帖:只该看到举报');
-
-  h.page.closePostActions();
-  assert.equal(h.page.data.postActionShow, false);
-  h.page.showAction({ detail: { index: 0 } });
-  assert.equal(h.page.data.currentActionId, '11');
-  assert.equal(h.page.data.currentActionOwner, true, '本人帖:编辑/删除要出现');
-
-  h.page.onPostAction({ detail: { action: 'edit', id: '11' } });
-  assert.equal(h.page.data.composeShow, true);
-  assert.equal(h.page.data.composeEdit.id, '11');
-  assert.equal(h.page.data.composeEdit.contents, '我的帖');
-
-  h.page.onComposeClose();
-  assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关面板必须清编辑态,免得下次新建以编辑态打开');
-
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'delete', id: '11' } });
-  const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
-  assert.ok(write, '列表删除必须发删除请求');
-  assert.equal(String(write.data.id), '11');
-  write.success({ code: '200' });
-  assert.deepEqual(h.page.data.list.map((item) => item.id), [12], '删除成功后本地摘掉这一行');
-  assert.equal(h.page.data.postActionShow, false);
-
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'report', id: '12' } });
-  assert.equal(h.modalCalls.length >= 1, true, '举报必须过确认框');
-  const report = h.requests.find((r) => r.url === '/api/creativesquare/report');
-  assert.ok(report, '确认后必须发举报请求');
-  assert.equal(String(report.data.id), '12');
+test('真实组件链:举报在close后保留id,成功只移除目标而不依赖旧index',async()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11,2)),h.page.postView(post(12,2))];const c=mountActions(h,'list');c.open();c.actions.onReport();
+ assert.equal(c.actions.data.postId,'');assert.equal(c.events.at(-1).detail.id,'11');assert.equal(h.modals.length,1);h.modals[0].success({confirm:true});await tick();
+ await h.answer('/api/v1/community/capabilities',{reporting:{policyVersion:'synthetic',reasons:[{code:'SERVER_REASON',label:'服务端原因'}]}});h.page.onReportReasonSelect({detail:{index:0}});await tick();
+ const write=h.asked('/api/v1/community/reports')[0];assert.equal(write.data.targetId,11);h.page.data.list.reverse();await h.answer(write.url,{id:1});assert.deepEqual(h.page.data.list.map(row=>row.id),[12]);
 });
-
-test('A-09:非本人纯文本帖在详情也有举报入口(owner=false 只渲染举报行)', () => {
-  const h = loadPage('pages/square/detail/index.js');
-  detailReady(h, { memberId: 2 });
-  assert.equal(h.page.data.isMine, false, '别人的帖必须判定非本人');
-
-  h.page.openPostActions();
-  assert.equal(h.page.data.postActionShow, true, '非本人也要能打开 ··· 弹层(此前详情页没有这个入口)');
-  let reports = 0;
-  h.page.reportSquare = () => { reports += 1; };
-  h.page.onPostAction({ detail: { action: 'report', id: '77' } });
-  assert.equal(reports, 1, '非本人的举报必须仍走既有举报确认');
-  assert.equal(h.page.data.composeShow, false, '非本人不该打开编辑面板');
-
-  const wxml = read('pages/square/detail/index.wxml');
-  assert.match(wxml, /<cy-post-actions[^>]*owner="\{\{isMine\}\}"/, 'owner 仍由 isMine 决定,非本人不露出编辑/删除');
+test('真实组件链:取消删除和缺少危险组件均不产生请求',()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11))];const c=mountActions(h,'list');c.open();c.actions.onDelete();c.danger.onCancel();assert.equal(h.requests.length,0);assert.equal(c.events.some(e=>e.name==='select'),false);
+ c.actions.selectComponent=()=>null;c.open();c.actions.onDelete();assert.equal(h.requests.length,0);assert.equal(c.events.some(e=>e.name==='select'),false);
 });
-
-test('列表:编辑入口显式带编辑态,关闭后清编辑态', () => {
-  // 2026-09-18 UI-15:「展开进完整新建弹窗」口随发布区改造删除,
-  // cy-post-compose 只剩编辑已有帖一条入口;这里锁编辑态的装载与关闭清理。
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [{ id: 11, memberId: 1, contents: '我的帖' }];
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'edit', id: '11' } });
-  assert.equal(h.page.data.composeShow, true);
-  assert.ok(h.page.data.composeEdit, '编辑入口必须带被编辑的那条帖');
-
-  h.page.onComposeClose();
-  assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关闭后必须清编辑态,不能带到下一次打开');
+test('真实组件链:错误确认key或缺少确认快照id不能借当前props删除',()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11))];const c=mountActions(h,'list');c.open();
+ c.actions.onDeleteConfirmed({detail:{key:'other',params:{id:'11'}}});c.actions.onDeleteConfirmed({detail:{key:'club.post.delete',params:{}}});
+ assert.equal(h.requests.length,0);assert.equal(c.events.some(e=>e.name==='select'),false);
+});
+for(const route of ['list','detail'])for(const invalidation of ['owner','unload'])test(`真实组件链:${route}删除确认前${invalidation}变化拒弃旧动作`,async()=>{
+ const h=load(route);if(route==='detail')await h.ready();else h.page.data.list=[h.page.postView(post(11))];const c=mountActions(h,route);c.open();c.actions.onDelete();
+ if(invalidation==='owner')h.changeOwner();else h.page._unloaded=true;const patchesBefore=h.patches.length;c.danger.onConfirm();await tick();assert.equal(h.requests.some(r=>r.method==='DELETE'),false);assert.equal(h.patches.length,patchesBefore);assert.equal(c.danger.data.stage,'confirm');
+});
+test('真实组件链:详情切换帖子后旧确认不得删除新目标',async()=>{
+ const h=load('detail');await h.ready();const c=mountActions(h,'detail');c.open();c.actions.onDelete();h.page.setData({id:'88',info:{id:88,version:4}});c.danger.onConfirm();await tick();assert.equal(h.requests.some(r=>r.method==='DELETE'),false);
+});
+test('真实组件链:缺id只关闭菜单,已离开列表的目标不借其他行执行',async()=>{
+ const h=load('list');h.page.data.list=[h.page.postView(post(11)),h.page.postView(post(12))];const c=mountActions(h,'list');c.open();c.actions.data.postId='';c.actions.onEdit();
+ assert.equal(h.page.data.postActionShow,false);assert.equal(h.page.data.composeShow,false);assert.equal(c.events.some(e=>e.name==='select'),false);
+ c.open();c.actions.onDelete();h.page.data.list=[h.page.postView(post(12))];c.danger.onConfirm();await tick();assert.equal(h.requests.length,0);assert.deepEqual(h.page.data.list.map(row=>row.id),[12]);assert.equal(c.danger.data.busy,false);assert.equal(c.danger.data.stage,'error');
 });

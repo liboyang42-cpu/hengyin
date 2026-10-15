@@ -328,3 +328,78 @@ test('OSS 签名地址升级 HTTPS，保留 query 和结构化元数据，其他
     assert.equal(done.results[0], url);
   }
 });
+
+function ownerUploadFixture() {
+  let owner = '7', authorization = 'A', mapped = 0, aborted = 0;
+  const calls = [], timers = [], done = [];
+  const client = createUploadClient({
+    getBaseUrl: () => 'https://fixture', getAuthorization: () => authorization, getUserID: () => owner,
+    wxUploadFile: value => { calls.push(value); return { abort() { aborted++; value.fail({ errMsg: 'abort' }); } }; },
+    setTimer: (fn, ms) => { const timer = { fn, ms, cleared: false }; timers.push(timer); return timer; },
+    clearTimer: timer => { timer.cleared = true; }
+  });
+  return { client, calls, timers, done, mapped: () => mapped, aborted: () => aborted,
+    switchOwner(id = '9', token = 'B') { owner = id; authorization = token; },
+    startPool() { return client.uploadAll(['A-1', 'A-2', 'A-3', 'A-4'], {
+      perFileTimeoutMs: 1000, totalDeadlineMs: 5000,
+      mapResult: body => { mapped++; return body.url; }, onDone: result => done.push(result) }); },
+    complete(index) { calls[index].success({ data: JSON.stringify({ code: 200, url: 'https://fixture/A-' + (index + 1) }) }); }
+  };
+}
+for (const phase of ['success', 'fail', 'watchdog', 'deadline']) {
+  test('换号后上传池 ' + phase + ' 不补位、不映射旧结果，取消并清理整批资源', () => {
+    const f = ownerUploadFixture(), control = f.startPool();
+    try {
+      assert.equal(f.calls.length, 3); f.switchOwner();
+      if (phase === 'success') f.complete(0);
+      else if (phase === 'fail') f.calls[0].fail({ errMsg: 'fixture failure' });
+      else f.timers.find(timer => timer.ms === (phase === 'watchdog' ? 1000 : 5000)).fn();
+      assert.equal(f.calls.length, 3); assert.equal(f.mapped(), 0); assert.deepEqual(f.done, []);
+      assert.equal(f.aborted(), 3); assert.ok(f.timers.every(timer => timer.cleared));
+    } finally { control.abort(); }
+  });
+}
+test('同会员token续期仍可补位上传剩余文件且只完成一次', () => {
+  const f = ownerUploadFixture(), control = f.startPool();
+  try {
+    f.switchOwner(7, 'A-new'); f.complete(0);
+    assert.equal(f.calls.length, 4); assert.equal(f.calls[3].header.Authorization, 'Bearer A-new');
+    for (let i = 1; i < 4; i++) f.complete(i);
+    assert.equal(f.done.length, 1); assert.equal(f.done[0].ok, true);
+    assert.equal(f.done[0].results.length, 4); assert.ok(f.timers.every(timer => timer.cleared));
+  } finally { control.abort(); }
+});
+for (const phase of ['success', 'fail', 'watchdog']) {
+  test('uploadOne换号后旧 ' + phase + ' 不回调新身份', () => {
+    const f = ownerUploadFixture();
+    const control = f.client.uploadOne('A-voice', { timeoutMs: 1000, onDone: result => f.done.push(result) });
+    try {
+      f.switchOwner();
+      if (phase === 'success') f.calls[0].success({ data: JSON.stringify({ code: 200, data: { safeText: 'A reply' } }) });
+      else if (phase === 'fail') f.calls[0].fail({ errMsg: 'fixture failure' });
+      else f.timers[0].fn();
+      assert.deepEqual(f.done, []); assert.ok(f.timers.every(timer => timer.cleared));
+    } finally { control.abort(); }
+  });
+}
+test('uploadOne同会员正常语音响应无需文件URL', () => {
+  const f = ownerUploadFixture();
+  const control = f.client.uploadOne('A-voice', { onDone: result => f.done.push(result) });
+  try {
+    f.calls[0].success({ data: JSON.stringify({ code: 200, data: { safeText: 'A reply' } }) });
+    assert.equal(f.done.length, 1); assert.equal(f.done[0].ok, true);
+    assert.equal(f.done[0].data.data.safeText, 'A reply');
+  } finally { control.abort(); }
+});
+
+test('formData回调同步换号时不启动上传并清理队列计时器', () => {
+  const f = ownerUploadFixture();
+  const control = f.client.uploadAll(['A-1', 'A-2'], {
+    formData() { f.switchOwner(); return {}; }, onDone: result => f.done.push(result)
+  });
+  try {
+    assert.equal(f.calls.length, 0);
+    assert.deepEqual(f.done, []);
+    assert.ok(f.timers.every(timer => timer.cleared));
+  } finally { control.abort(); }
+});

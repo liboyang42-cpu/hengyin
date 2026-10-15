@@ -224,7 +224,7 @@ function assertInviteSheetContract(files) {
     '邀请记录独立路由不再套常驻半屏（同收益明细 / 提现记录）')
   assert.match(files.route, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(files.earnings, /sceneCurrent\.id === 'member-invite-history'[\s\S]*?<cy-scene-sheet show="\{\{true\}\}"[\s\S]*?<cy-scene-member-invite-history/)
-  assert.match(files.entry, /openInvite\(\)\s*\{\s*this\.triggerEvent\('open', \{ id: 'member-invite-history' \}\)\s*\}/)
+  assert.match(files.entry, /openInvite\(\)\s*\{\s*if \(!this\._hasCurrentBalance\(\)\) return;\s*this\.triggerEvent\('open', \{ id: 'member-invite-history' \}\)\s*\}/)
   assert.match(files.registry, /'member-invite-history':\s*\{[^}]*route:\s*'\/subpackageMember\/myinvite\/myinvite'[^}]*variant:\s*'half'/)
   assert.match(files.scene, /class="ir-row"[\s\S]*?class="ir-time"[\s\S]*?class="ir-status"[\s\S]*?class="ir-reward"/)
   // CU-M-145:空态标题不再复述「邀请记录」(弹层/页头已经说过一次),改陈述事实本身。

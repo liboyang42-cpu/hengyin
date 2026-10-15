@@ -54,6 +54,7 @@ class ApiGrowthControllerTest {
     @BeforeEach
     void setUp() {
         memberGrowthMapper = mock(MemberGrowthMapper.class);
+        when(memberGrowthMapper.insertEarnedExp(any(), anyInt(), any(), any(), any())).thenReturn(1);
         growthMissionMapper = mock(GrowthMissionMapper.class);
         progressMapper = mock(GrowthMissionProgressMapper.class);
         playerBadgeMapper = mock(PlayerBadgeMapper.class);
@@ -241,8 +242,8 @@ class ApiGrowthControllerTest {
 
     @Test
     void getLeaderboardRoutesToExpWeek() {
-        when(leaderboardMapper.selectExpWeekTop(any(), eq(50))).thenReturn(Collections.emptyList());
-        when(leaderboardMapper.selectExpWeekMyRank(eq(1001L), any())).thenReturn(myRank(1, 5, 50L));
+        when(leaderboardMapper.selectExpWeekTop(any(), any(), eq(50))).thenReturn(Collections.emptyList());
+        when(leaderboardMapper.selectExpWeekMyRank(eq(1001L), any(), any())).thenReturn(myRank(1, 5, 50L));
         LeaderboardQueryDTO q = new LeaderboardQueryDTO();
         q.setMetric("exp");
         q.setPeriod("week");
@@ -251,8 +252,14 @@ class ApiGrowthControllerTest {
 
         assertEquals("exp", vo.getMetric());
         assertEquals("week", vo.getPeriod());
-        verify(leaderboardMapper).selectExpWeekTop(any(), eq(50));
-        verify(leaderboardMapper).selectExpWeekMyRank(eq(1001L), any());
+        ArgumentCaptor<java.util.Date> start = ArgumentCaptor.forClass(java.util.Date.class);
+        ArgumentCaptor<java.util.Date> end = ArgumentCaptor.forClass(java.util.Date.class);
+        verify(leaderboardMapper).selectExpWeekTop(start.capture(), end.capture(), eq(50));
+        verify(leaderboardMapper).selectExpWeekMyRank(eq(1001L), eq(start.getValue()), eq(end.getValue()));
+        java.time.ZonedDateTime monday = start.getValue().toInstant().atZone(java.time.ZoneId.systemDefault());
+        assertEquals(java.time.DayOfWeek.MONDAY, monday.getDayOfWeek());
+        assertEquals(java.time.LocalTime.MIDNIGHT, monday.toLocalTime());
+        assertEquals(monday.plusWeeks(1).toInstant(), end.getValue().toInstant());
         verify(leaderboardMapper, never()).selectPointTotalTop(anyInt());
     }
 
@@ -299,8 +306,8 @@ class ApiGrowthControllerTest {
 
     @Test
     void getLeaderboardDoesNotInventFirstPlaceForEmptyCohort() {
-        when(leaderboardMapper.selectExpWeekTop(any(), eq(50))).thenReturn(Collections.emptyList());
-        when(leaderboardMapper.selectExpWeekMyRank(eq(1001L), any())).thenReturn(myRank(1, 0, 0L));
+        when(leaderboardMapper.selectExpWeekTop(any(), any(), eq(50))).thenReturn(Collections.emptyList());
+        when(leaderboardMapper.selectExpWeekMyRank(eq(1001L), any(), any())).thenReturn(myRank(1, 0, 0L));
         LeaderboardQueryDTO q = new LeaderboardQueryDTO();
         q.setMetric("exp");
         q.setPeriod("week");

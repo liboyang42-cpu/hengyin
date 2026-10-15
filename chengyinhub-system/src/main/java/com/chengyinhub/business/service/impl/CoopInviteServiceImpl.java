@@ -20,7 +20,7 @@ import com.chengyinhub.business.service.support.ClubCoopWindowPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
@@ -680,7 +680,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             notify.run();
             return;
         }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 notify.run();

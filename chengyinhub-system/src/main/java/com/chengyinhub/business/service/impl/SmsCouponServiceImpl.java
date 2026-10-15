@@ -2,7 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import java.util.List;
 import com.chengyinhub.common.utils.DateUtils;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import com.chengyinhub.common.constant.CmsConstants;
 import com.chengyinhub.common.utils.VerifyDynCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;

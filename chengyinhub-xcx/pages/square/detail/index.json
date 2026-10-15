@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "cy-option-sheet": "/components/cy/option-sheet/index",
     "cy-popover": "/pages/square/components/cy/popover/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-icon": "/components/cy/icon/index",

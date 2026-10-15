@@ -29,6 +29,7 @@ function loadPage(relativePath, options = {}) {
   let definition
   const app = {
     globalData: { navBarHeight: 44 },
+    getUserID: () => '7',
     sendRequest(request) { requests.push(request) },
     getRequestErrorMessage(error, fallback) { return error && error.msg || fallback },
     chooseImage() {},
@@ -62,6 +63,7 @@ function loadPage(relativePath, options = {}) {
   vm.runInNewContext(source, sandbox, { filename: absolutePath })
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data))
+  page._photoMember = page._voiceMember = '7'
   page.setData = function (patch, callback) {
     applyPatch(this.data, patch)
     if (typeof callback === 'function') callback.call(this)

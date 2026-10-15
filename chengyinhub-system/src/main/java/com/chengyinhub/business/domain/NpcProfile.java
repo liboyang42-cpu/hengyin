@@ -1,6 +1,7 @@
 package com.chengyinhub.business.domain;
 
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * NPC 人设实体。
@@ -32,6 +33,8 @@ public class NpcProfile
     /** 0=未配置 1=复刻中 2=可用 3=复刻失败。默认 0 而不是 null —— null 参与比较恒为 null,
      *  写出 voice_status = 2 之外的条件时很容易得到「永远取不到」而不报错。 */
     private Integer voiceStatus;
+    /** 声音每次写入递增，阻止清除或换任务后旧结果落库。 */
+    private Long voiceVersion = 0L;
 
     /** 商家录的那段音频,留着供音色重建。 */
     private String voiceSample;
@@ -46,6 +49,9 @@ public class NpcProfile
     public void setId(Long id) { this.id = id; }
     public Integer getVoiceStatus() { return voiceStatus; }
     public void setVoiceStatus(Integer voiceStatus) { this.voiceStatus = voiceStatus; }
+    @JsonIgnore
+    public Long getVoiceVersion() { return voiceVersion; }
+    public void setVoiceVersion(Long voiceVersion) { this.voiceVersion = voiceVersion; }
     public String getVoiceSample() { return voiceSample; }
     public void setVoiceSample(String voiceSample) { this.voiceSample = voiceSample; }
     public Boolean getVoiceConsent() { return voiceConsent; }

@@ -11,6 +11,7 @@ const { marketView } = require('../../utils/template-market.js');
 Page({
   data: {
     isMerchant: false,
+    operationScope: '',
     list: [],
     searchKeyword: '',
     filterCategoryId: 0,
@@ -85,7 +86,8 @@ Page({
     const index = e.currentTarget.dataset.index;
     const item = this.data.list[index];
     wx.navigateTo({
-      url: '/pages/templatedetail/templatedetail?id=' + item.id + '&scope=my',
+      url: '/pages/templatedetail/templatedetail?id=' + item.id + '&scope=my' +
+        (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : ''),
     })
   },
   // 删除模板
@@ -116,7 +118,8 @@ Page({
         hideLoading: true,
         url: view._canSubmitMarket ? `/api/template/${item.id}/market-submit` : '/api/template/updateLibraryStatus',
         method: 'POST',
-        data: view._canSubmitMarket ? {} : { template_id: item.id, publish_status: view._marketPublishTarget },
+        data: Object.assign(view._canSubmitMarket ? {} : { template_id: item.id, publish_status: view._marketPublishTarget },
+          this.data.operationScope ? { scope: this.data.operationScope } : {}),
         success: (res) => {
           release();
           if (res && res.code == '200') {
@@ -227,6 +230,7 @@ Page({
         is_quote: '',
         keyword: this.data.searchKeyword,
         category_id: '',
+        scope: this.data.operationScope,
         pageNum: pageNum,
         pageSize: this.data.pageSize
       },
@@ -311,7 +315,7 @@ Page({
     app.sendRequest({
       url: '/api/template/delete',
       method: "POST",
-      data: { template_id : id },
+      data: { template_id : id, scope: that.data.operationScope },
       success: function (res) {
         if (res.code == "200") {
           toast.success('删除成功');
@@ -333,6 +337,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.data.operationScope = options && options.scope === 'MERCHANT' ? 'MERCHANT' : '';
     this.getList();
   },
 
@@ -340,7 +345,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    const isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
+    const isMerchant = this.data.operationScope === 'MERCHANT' || policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
     this.setData({ isMerchant: isMerchant });
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();

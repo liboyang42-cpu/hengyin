@@ -100,14 +100,14 @@ function buildDetailDisplay(info, categoryText) {
 }
 
 // R9-05:发布者显示的唯一派生口。缺作者字段不得回退成「城瘾/官方」——
-// scope=my 是本人作品,没名字就用本人昵称;公共库有作者但没名字时用中性「创作者」;
+// 个人模板经服务端确认可编辑才回退本人昵称;其他作者缺名字时用中性「创作者」;
 // 只有平台内容(没有 memberId 也没有 publisher)才保留「城瘾 + 官方」。
 function resolvePublisherDisplay(info, scope) {
   var source = info || {};
   var name = source.publisher ? String(source.publisher).trim() : '';
   var hasAuthor = Number(source.memberId) > 0;
   if (name) return { text: name, official: scope !== 'my' && !hasAuthor };
-  if (scope === 'my') {
+  if (scope === 'my' && source.canEdit === true) {
     var nickname = '';
     try {
       var global = getApp().globalData || {};
@@ -115,7 +115,7 @@ function resolvePublisherDisplay(info, scope) {
     } catch (e) { /* 取不到昵称时留空 */ }
     return { text: nickname || '我的作品', official: false };
   }
-  if (hasAuthor) return { text: '创作者', official: false };
+  if (scope === 'my' || hasAuthor) return { text: '创作者', official: false };
   return { text: '城瘾', official: true };
 }
 
@@ -150,6 +150,7 @@ Page({
   data: {
     id: 0,
     scope: 'library',
+    operationScope: '',
     info: {},
     gallery: [],
     coverUrl: '',
@@ -181,9 +182,6 @@ Page({
     moreShow: false,
     isMyScope: false,
     isMerchant: false,
-    // 2026-08-05 用户定:两页两态文案统一为「开始应用」。原来 scope=my 下叫「编辑玩法」,
-    // 但两个 scope 的 goPrimary 跳的是同一个 /pages/publish/temp —— 那里做的是基于模板起草,
-    // 不是就地编辑,「编辑玩法」这个叫法本身就与行为对不上。
     primaryLabel: '开始应用',
     tplTabs: [TAB_DETAILS, TAB_CAPABILITIES]
   },
@@ -197,10 +195,12 @@ Page({
   },
 
   onLoad(options) {
+    this._disposed = false;
     var scope = options.scope === 'my' ? 'my' : 'library';
     var data = {
       id: options.id || 0,
       scope: scope,
+      operationScope: options.operationScope === 'MERCHANT' ? 'MERCHANT' : '',
       isMyScope: scope === 'my'
     };
     if (options.tab === 'capabilities') {
@@ -234,10 +234,31 @@ Page({
     this.setData({ isMerchant: isMerchant });
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
+    var context = this.detailContext();
+    var returnedFromEditor = this._editorContext === context;
+    this._editorContext = null;
+    if (!this._disposed && this._detailContext &&
+        (this._detailContext !== context || returnedFromEditor)) this.getData();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() {
+    this._disposed = true;
+    this._editorContext = null;
+    merchantTheme.merchantPageRestore();
+  },
+
+  detailContext() {
+    return JSON.stringify([
+      typeof app.getUserID === 'function' ? app.getUserID() : '',
+      app.getUserRole(), app.getUserType(),
+      this.data.id, this.data.scope, this.data.operationScope
+    ]);
+  },
+
+  isDetailRequestCurrent(token, context) {
+    return !this._disposed && token === this._detailRequestToken && context === this.detailContext();
+  },
 
   patchNormalized(target, raw) {
     var normalized = templateDetailUtil.normalizeTemplateDetail(raw);
@@ -269,6 +290,7 @@ Page({
     var capable = hasCapabilityInfo(capRows);
     this.setData({
       info: normalized.info,
+      primaryLabel: this.data.scope === 'my' ? (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用') : '开始应用',
       gallery: normalized.gallery,
       coverUrl: normalized.coverUrl,
       publisherText: publisher.text,
@@ -284,18 +306,23 @@ Page({
       difficultyLetter: meta.letter,
       difficultyLabel: meta.label,
       descExpanded: false,
-      ruleExpanded: false
+      descNeedMore: false,
+      ruleExpanded: false,
+      ruleNeedMore: false
     }, this.checkTextOverflow);
   },
 
   checkTextOverflow() {
     var that = this;
+    var token = that._detailRequestToken;
+    var context = that.detailContext();
     wx.nextTick(function () {
+      if (!that.isDetailRequestCurrent(token, context)) return;
       var query = wx.createSelectorQuery().in(that);
       query.select('#tpl-desc').boundingClientRect();
       query.select('#tpl-rule').boundingClientRect();
       query.exec(function (res) {
-        if (!res || !res.length) return;
+        if (!that.isDetailRequestCurrent(token, context) || !res || !res.length) return;
         var patch = {};
         if (res[0] && res[0].height > 110) patch.descNeedMore = true;
         if (res[1] && res[1].height > 110) patch.ruleNeedMore = true;
@@ -306,6 +333,16 @@ Page({
 
   getData() {
     var that = this;
+    if (that._disposed) return;
+    var token = (that._detailRequestToken || 0) + 1;
+    var context = that.detailContext();
+    that._detailRequestToken = token;
+    if (that._detailContext && that._detailContext !== context) {
+      that.applyDetailPayload({});
+      that.setData({ moreShow: false });
+      that.closePop();
+    }
+    that._detailContext = context;
     if (!that.data.id) {
       that.setData({ loading: false, loadError: true, loadErrorMsg: '玩法链接不完整，请从玩法列表重新进入。' });
       return;
@@ -315,9 +352,10 @@ Page({
       hideLoading: true,
       silentError: true,
       url: that.data.scope === 'my' ? '/api/template/myinfo' : '/api/template/info',
-      data: { id: that.data.id },
+      data: { id: that.data.id, scope: that.data.scope === 'my' ? that.data.operationScope : '' },
       method: 'POST',
       success: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
         } else {
@@ -328,12 +366,14 @@ Page({
         }
       },
       fail: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({
           loadError: true,
           loadErrorMsg: app.getRequestErrorMessage(res, '网络错误，玩法详情暂时没有加载出来。')
         });
       },
       complete: function () {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({ loading: false });
       }
     });
@@ -345,11 +385,12 @@ Page({
 
   goBack() {
     var isMyScope = this.data.isMyScope;
+    var operationScope = this.data.operationScope;
     wx.navigateBack({
       delta: 1,
       fail: function () {
         // T36:模板页是 tabBar 页,redirectTo 必失败,只能 switchTab
-        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' });
+        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' + (operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
         else wx.switchTab({ url: '/pages/template/index' });
       }
     });
@@ -472,6 +513,10 @@ Page({
 
   goPrimary() {
     var that = this;
+    if (that.data.scope === 'my' && (!that.data.info || that.data.info.canEdit !== true)) {
+      wx.switchTab({ url: '/pages/template/index' });
+      return;
+    }
     if (that.data.scope !== 'my') {
       analytics.track('template_reuse', {
         bizType: 'template',
@@ -480,9 +525,14 @@ Page({
     }
     // R9-04:scope=my 的 id 是个人草稿(cms_member_template),编辑页必须知道这一点
     // 才会走 /api/template/myinfo;丢掉它就会拿公共库接口查草稿 id,报「模版不存在」。
+    var context = that.detailContext();
+    var ownTemplate = that.data.scope === 'my';
     wx.navigateTo({
       url: '/pages/publish/temp/index?id=' + that.data.id +
-        (that.data.scope === 'my' ? '&scope=my' : '')
+        (that.data.scope === 'my' ? (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my') : ''),
+      success: function () {
+        if (ownTemplate && !that._disposed && context === that.detailContext()) that._editorContext = context;
+      }
     });
   },
 

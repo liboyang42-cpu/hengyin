@@ -98,13 +98,16 @@ function begin(wx, options) {
 
 /** 结算意图:success 清除;rejected/unknown/failed 保留(同 payload 重试继续复用该键)。 */
 function settle(wx, scope, memberId, key, status) {
-  var current = read(wx, scope, memberId)
-  if (!current || String(current.key) !== String(key)) return
+  var current
+  try { current = wx.getStorageSync(storageKey(scope, memberId)) } catch (_) { return false }
+  if (!current || String(current.key) !== String(key)) return false
   if (status === 'success') {
-    remove(wx, scope, memberId)
-    return
+    try {
+      wx.removeStorageSync(storageKey(scope, memberId))
+      return !wx.getStorageSync(storageKey(scope, memberId))
+    } catch (_) { return false }
   }
-  write(wx, scope, memberId, Object.assign({}, current, { status: status, settledAt: Date.now() }))
+  return write(wx, scope, memberId, Object.assign({}, current, { status: status, settledAt: Date.now() }))
 }
 
 /**
@@ -114,9 +117,12 @@ function settle(wx, scope, memberId, key, status) {
  */
 function discard(wx, scope, memberId, key) {
   var current = read(wx, scope, memberId)
-  if (!current || String(current.key) !== String(key)) return
-  write(wx, scope + ':previous', memberId, Object.assign({}, current, { status: 'discarded', discardedAt: Date.now() }))
-  remove(wx, scope, memberId)
+  if (!current || String(current.key) !== String(key) || String(current.memberId) !== String(memberId)) return false
+  if (!write(wx, scope + ':previous', memberId, Object.assign({}, current, { status: 'discarded', discardedAt: Date.now() }))) return false
+  try {
+    wx.removeStorageSync(storageKey(scope, memberId))
+    return !wx.getStorageSync(storageKey(scope, memberId))
+  } catch (_) { return false }
 }
 
 /** 当前未决意图(非 success),供冷恢复提示;无则 null。 */
@@ -124,6 +130,19 @@ function pending(wx, scope, memberId) {
   var current = read(wx, scope, memberId)
   if (!current || current.status === 'success') return null
   return current
+}
+
+function saveStage(wx, scope, memberId, key, stagePatch) {
+  var current = read(wx, scope, memberId)
+  if (!current || String(current.memberId) !== String(memberId) || String(current.key) !== String(key)
+    || !stagePatch || typeof stagePatch !== 'object' || Array.isArray(stagePatch)) return false
+  if (['key', 'memberId', 'payloadKey', 'createdAt'].some(function (field) {
+    return Object.prototype.hasOwnProperty.call(stagePatch, field)
+  })) return false
+  try {
+    var snapshot = JSON.parse(JSON.stringify(stagePatch))
+    return write(wx, scope, memberId, Object.assign({}, current, snapshot))
+  } catch (_) { return false }
 }
 
 module.exports = {
@@ -134,5 +153,6 @@ module.exports = {
   read: read,
   payloadKey: payloadKey,
   storageKey: storageKey,
+  saveStage: saveStage,
   isIntentKey: function (value) { return KEY_RE.test(String(value || '')) },
 }

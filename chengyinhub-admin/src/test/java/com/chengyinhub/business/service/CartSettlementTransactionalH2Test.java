@@ -470,6 +470,11 @@ class CartSettlementTransactionalH2Test {
         }
 
         @Bean
+        com.chengyinhub.business.service.ICmsPointsSettingService cmsPointsSettingService() {
+            return org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
+        }
+
+        @Bean
         com.chengyinhub.business.service.IUmsMemberBalanceDetailService balanceDetailService() {
             return org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberBalanceDetailService.class);
         }

@@ -617,7 +617,7 @@ function assertProfitPresentation(wxml, wxss, js) {
   assert.match(rule(wxss, '.withdraw-reason'), /color:\s*var\(--cy-text-secondary\)/)
   assert.match(js, /canWithdraw:\s*false/)
   assert.match(js, /withdrawState:\s*'unknown'/)
-  assert.match(js, /goWithdraw\(\)\s*\{\s*if \(!this\.data\.canWithdraw\) return;/s)
+  assert.match(js, /goWithdraw\(\)\s*\{\s*if \(!this\._hasCurrentData\(\)\) return;\s*if \(!this\.data\.canWithdraw\) return;/s)
 
   // CU-M-122:这条原本硬性要求空态必须带 sub,而那句 sub 只是把标题换个说法再念一遍
   // (「还没有合作结算 / 完成合作结算后，收入明细会显示在此」),已按要求删掉。

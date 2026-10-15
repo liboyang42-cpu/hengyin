@@ -3,8 +3,8 @@ package com.chengyinhub.business.domain.dto;
 import com.chengyinhub.common.annotation.Excel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -21,6 +21,13 @@ public class CmsTemplatePublishRequest implements Serializable {
 
     @Schema(description = "引用的模板库ID(可为空)", example = "0")
     private Long originalTemplateId;
+
+    /** 仅创建采用草稿：内容从可见公共模板读取，不信任客户端的公开投影。 */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Boolean adoptSourceOnly;
+
+    public Boolean getAdoptSourceOnly() { return adoptSourceOnly; }
+    public void setAdoptSourceOnly(Boolean adoptSourceOnly) { this.adoptSourceOnly = adoptSourceOnly; }
 
     @Schema(description = "模板类别ID", example = "1")
     private Long categoryId;

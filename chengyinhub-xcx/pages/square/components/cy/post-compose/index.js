@@ -1,3 +1,6 @@
+const communityApi = require('../../../../../utils/community-post-api.js');
+const modal = require('../../../../../utils/modal.js');
+const { geohash9 } = require('../../../../../utils/roam-geo.js');
 // cy-post-compose —— 新建帖文弹窗(内容照 Figma 379:2484,呈现照 334:3563)
 //
 // ⚠️ 这是【组件】不是页面。2026-09-03 用户定:「新建帖文是弹窗,草稿就是弹窗叠弹窗」。
@@ -5,15 +8,10 @@
 // 才是真的列表。顺带三个好处:行内 composer 展开不用跨页传值(同页同数据,不会丢字)、
 // 不必再为「自绘顶栏」向标题体系申请例外、面板顶已在胶囊之下所以不用自己算 navRight。
 //
-// 发布复用 pages/square/list 内嵌编辑器那一条:POST /api/creativesquare/action,
-// 字段 contents,单飞锁 _submitting,空文按 trim 后长度判。**不新造接口、不改口径** ——
-// 两处分叉过一次就会出现「列表里能发、这页发不出去」这种没人报错的静默差异。
-// 与 list 的唯一差别:这里不传 silentError,让统一请求通道自己弹错误 toast
-// (list 那边要把错误渲染进内嵌表单,才需要静默 + 自己接管文案)。
+// 新建和编辑复用社区客户端；编辑先读取作者权限及完整配置，再按版本保存。
 const cyToast = require('../../../../../utils/toast.js');
 const app = getApp();
 const proEditorDraft = require('../../../../../utils/publish/pro-editor-draft.js');
-const publishIntent = require('../../../../../utils/publish/publish-intent.js');
 const { chinaParts } = require('../../../../../utils/datetime.js');
 const { resolveMenuChrome } = require('../../../../../utils/nav-safe-area.js');
 const { pickLocation } = require('../../../../../utils/location/location-manager.js');
@@ -128,9 +126,7 @@ Component({
     // 行内 composer 里已经写了一半的正文。同页传值,不经 storage ——
     // 经 storage 就会把上一条草稿覆盖掉(草稿只有一个槽位)。
     prefill: { type: String, value: '' },
-    // H050 编辑态:传 { id, contents, dataId, dataType } 即改这条帖。
-    // 只改正文与关联 —— 图片/地点不提交,后端 R10-06「未提交字段不清空」会原样保留,
-    // 所以编辑态不给附件工具(给了也提交不上去,等于骗用户)。
+    // 编辑态传入原帖摘要；保存前回读服务端完整配置，仅修改正文。
     editPost: { type: Object, value: null },
   },
 
@@ -145,6 +141,7 @@ Component({
     submitting: false,
     // 编辑态(editPost 非空):标题/提交键换文案,草稿与附件工具收起 —— wxml 直接消费它
     editMode: false,
+    postAudience: 'PUBLIC',
     draftsShow: false,
     drafts: [],
     picList: [],
@@ -161,6 +158,9 @@ Component({
       this._memberId = app.getUserID();
       this._submitting = false;
       this._published = false;
+      this._composeEpoch = 0;
+      this._composeOpen = !!this.data.show;
+      this._detached = false;
       this.setData({
         avatar: app.getAvatar(),
         nickname: app.getNickname(),
@@ -170,13 +170,22 @@ Component({
       });
     },
     // 组件被卸载(页面退出)时也要把没发出去的正文存下来
-    detached() { this.persist(); },
+    detached() {
+      this.persist();
+      this._detached = true;
+      if (this._community) this._community.dispose();
+      this._composeEpoch += 1;
+    },
   },
 
   observers: {
     // 每次拉起都重新取一次正文:优先用行内 composer 带过来的半截,
     // 没有才回 storage 捡草稿。关闭时存一次 —— 组件不卸载,所以不能只靠 detached。
     show(open) {
+      this._composeEpoch = (this._composeEpoch || 0) + 1;
+      this._composeOpen = !!open;
+      this._submitting = false;
+      this.setData({ submitting: false });
       if (!open) {
         // ⚠️ 草稿层是本组件的**子弹窗**,不能活得比宿主久。
         //    draftsShow 是内部 data,show 置 false 并不会自动收 ——
@@ -188,6 +197,10 @@ Component({
       }
       // 宿主页常驻不卸载:上一篇发布成功的标记只管那一次关闭,新拉起的这篇要照常关闭即存(3-19)。
       this._published = false;
+      this._recoverPrevious = false;
+      this._restartDiscarded = false;
+      this._memberId = app.getUserID();
+      this.communityClient();
       const edit = this.data.editPost;
       if (edit && edit.id != null && edit.id !== '') { this.applyEdit(edit); return; }
       this.setData({ editMode: false });
@@ -200,11 +213,46 @@ Component({
       const saved = res.status === 'ready' && res.envelope && res.envelope.formData
         ? String(res.envelope.formData.contents || '')
         : '';
+      this.setData({ postAudience: res.status === 'ready' && res.envelope && res.envelope.formData && res.envelope.formData.postAudience === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC' });
       this.applyContent(saved);
     },
   },
 
   methods: {
+    communityClient() {
+      const owner = String(app.getUserID() || '');
+      if (!this._community || this._communityOwner !== owner) {
+        if (this._community) this._community.dispose();
+        this._community = communityApi.createClient(app, wx);
+        this._communityOwner = owner;
+      }
+      return this._community;
+    },
+    communityCurrent() {
+      const owner = String(app.getUserID() || ''), epoch = this._composeEpoch;
+      return () => !this._detached && this._composeOpen && this._composeEpoch === epoch
+        && String(this._memberId || '') === owner && String(app.getUserID() || '') === owner;
+    },
+    loadEditSnapshot() {
+      const current = this.communityCurrent(), id = this._editId, initial = this.data.content;
+      this._editReady = false;
+      const fail = res => { if (current() && Number(res && res.code) !== 499) cyToast(app.getRequestErrorMessage(res, '帖文读取失败，请重试')); };
+      this.communityClient().detail({ postId: id, current, autoErrorToast: false,
+        success: res => {
+          if (res.code !== 200) { fail(res); return; }
+          const bundle = res.data;
+          if (String(bundle.post.id) !== String(id) || bundle.viewerIsAuthor !== true
+            || String(bundle.post.authorId) !== String(app.getUserID() || '')
+            || !['DRAFT','CHECKING','PUBLISHED','LIMITED','HIDDEN'].includes(bundle.post.lifecycle)) {
+            fail({ msg: '当前帖文不可编辑' }); return;
+          }
+          this._editBundle = bundle; this._editReady = true;
+          this.setData({ postAudience: bundle.post.audience });
+          if (this.data.content === initial) this.applyContent(bundle.post.body || '');
+        }, fail
+      });
+    },
+
     // 关闭即存。已发布成功的不再存(草稿在 onPublish 里已删);编辑态不写草稿槽位
     // ——草稿是「新建」的存档,拿编辑中的正文去盖掉它 = 静默丢用户没发出去的那篇。
     persist() {
@@ -215,7 +263,7 @@ Component({
         proEditorDraft.saveDraft(wx, {
           memberId: this._memberId,
           topicId: draftIdentity(this._memberId).topicId,
-          formData: { contents: this.data.content },
+          formData: { contents: this.data.content, postAudience: this.data.postAudience },
         });
       } catch (e) {
         // 存草稿失败(storage 满/被禁)不该在退出路径上再弹一层打断,静默放过。
@@ -232,12 +280,9 @@ Component({
       });
     },
 
-    // 以编辑态打开:正文与关联来自被编辑的帖子;图片/地点/预览图不参与(后端保留原值)。
-    // 关联要留着并重发 —— 后端编辑分支对 data_id 无值即清 0,不重发会把关联丢掉。
+    // 编辑先显示摘要，再读取作者完整配置；共享客户端保留所有未修改关系。
     applyEdit(edit) {
       this._editId = String(edit.id);
-      this._editDataId = edit.dataId == null || edit.dataId === '' ? '' : String(edit.dataId);
-      this._editDataType = edit.dataType == null || edit.dataType === '' ? '' : String(edit.dataType);
       this._lng = '';
       this._lat = '';
       this.setData({
@@ -249,6 +294,8 @@ Component({
         selectedActivity: null,
       });
       this.applyContent(edit.contents || '');
+      this._retryEditSnapshot = null;
+      this.loadEditSnapshot();
     },
 
     onInput(e) {
@@ -312,7 +359,7 @@ Component({
         return fail('这条草稿打不开了');
       }
       this.applyContent(res.envelope.formData.contents);
-      this.setData({ draftsShow: false });
+      this.setData({ draftsShow: false, postAudience: res.envelope.formData.postAudience === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC' });
     },
 
     // 走到这里时删除确认闸已经过完(闸长在 cy-post-drafts 里),页面直接删,别再加一道 modal。
@@ -348,10 +395,15 @@ Component({
         cyToast('最多 6 张图片');
         return;
       }
+      const current = this.communityCurrent(), client = this.communityClient();
       app.chooseImage(function (res) {
+        if (!current()) return;
         const next = (that.data.picList || []).concat(res || []).slice(0, MAX_PICS);
         that.setData({ picList: next });
-      }, left);
+      }, left, { bizType: 'COMMUNITY_POST', mapResult: data => {
+        if (!current()) throw { code: 499, msg: '已取消选择' };
+        return client.captureUpload(data);
+      } });
     },
 
     onClearPic(e) {
@@ -363,19 +415,23 @@ Component({
     },
 
     onPickLocation() {
-      const that = this;
-      pickLocation({
-        onPick(poi) {
-          that._lng = poi.longitude;
-          that._lat = poi.latitude;
-          that.setData({ address: placeLine(poi) });
-        }
-      });
+      const current = this.communityCurrent();
+      pickLocation({ onPick: poi => {
+        if (!current()) return;
+        let grid;
+        try { grid = geohash9(poi.latitude, poi.longitude); } catch (error) { cyToast(error.message || '地点无效，请重新选择'); return; }
+        modal.show({ title: '精确地点仅自己可见', content: '保留精确地点将保存为私密帖文；移除地点也不会自动公开。', confirmText: '仅自己可见', cancelText: '取消',
+          success: result => {
+            if (!current() || !result.confirm) return;
+            this._locationGrid = grid;
+            this.setData({ address: placeLine(poi), postAudience: 'PRIVATE' });
+          }
+        });
+      } });
     },
 
     onClearLocation() {
-      this._lng = '';
-      this._lat = '';
+      this._lng = ''; this._lat = ''; this._locationGrid = null;
       this.setData({ address: '' });
     },
 
@@ -457,101 +513,97 @@ Component({
     },
 
     clearAttachments() {
+      this._locationGrid = null;
       this._lng = '';
       this._lat = '';
       this.setData({ picList: [], address: '', selectedActivity: null, activityPickerShow: false });
     },
 
+    saveExistingPost(options, content) {
+      return this.communityClient().saveEdit(Object.assign({}, options, {
+        scope: 'square:compose:edit:' + this._editId, postId: this._editId,
+        changes: { body: content }, retryUnknown: this._retryEditSnapshot === content
+      }));
+    },
+
+    publishNewPost(options, content) {
+      const activity = this.data.selectedActivity;
+      const form = { body: content, mediaPaths: (this.data.picList || []).slice(), audience: this.data.postAudience || 'PUBLIC' };
+      if (activity && activity.activityId) form.references = [{ referenceType: activity.dataType == 2 ? 'TOPIC' : 'ACTIVITY', referenceId: activity.activityId }];
+      if (this.data.address) {
+        if (!this._locationGrid || form.audience !== 'PRIVATE') throw { msg: '请重新确认地点仅自己可见' };
+        Object.assign(form, { locationPrecision: 'EXACT', approximateGeohash: this._locationGrid, poiName: this.data.address, cityCode: null });
+      }
+      return this.communityClient().publishNew(Object.assign({}, options, { scope: 'square:compose', form }));
+    },
+
     onPublish() {
-      const that = this;
-      const content = String(that.data.content || '').trim();
-      // 与 canSubmit 同一口径(trim 后非空)。视觉禁用只是 opacity,真正的闸在这里。
-      if (!content) {
-        cyToast('请输入内容');
-        return;
-      }
-      if (that._submitting) return;
-      that._submitting = true;
-      that.setData({ submitting: true });
-
-      const activity = that.data.selectedActivity;
-      const editing = that.data.editMode && that._editId;
-      // 编辑:只发正文 + 关联。图片/地点/预览图不发 = 后端按「null 不碰原值」保留(R10-06);
-      // 关联必须重发,后端编辑分支对 data_id 是「无值即清 0」,不发会把旧关联清掉。
-      const payload = editing
-        ? {
-            id: that._editId,
-            contents: content,
-            data_id: that._editDataId || '',
-            data_type: that._editDataId ? (that._editDataType || '1') : '',
-          }
-        : {
-            contents: content,
-            pics: (that.data.picList || []).join(';'),
-            address: that.data.address || '',
-            longitude: that._lng || '',
-            latitude: that._lat || '',
-            data_id: activity && activity.activityId ? activity.activityId : '',
-            data_type: activity && activity.activityId ? (activity.dataType || 1) : '',
-          };
-      // R10-03:稳定发布意图键只服务「新建」;编辑是幂等的 update,不占意图键。
-      let intent = null;
-      if (!editing) {
-        intent = publishIntent.begin(wx, {
-          scope: 'square:compose',
-          memberId: that._memberId,
-          payload: [payload.contents, payload.pics, payload.address, payload.longitude, payload.latitude, payload.data_id, payload.data_type],
-        });
-        payload.request_id = intent.key;
-        if (intent.previousUnknown) cyToast('上次结果未确认，重试不重复发');
-      }
-
-      app.sendRequest({
-        hideLoading: true,
-        url: '/api/creativesquare/action',
-        method: 'POST',
-        data: payload,
-        success: function (res) {
-          if (res.code != '200') {
-            if (editing) return;   // 非 200 由统一通道弹 toast,这里不重复
-            if (res && res.intentDiscarded === true) {
-              // 服务端明确该发布已软删:丢弃意图键,重新发布自然换新键(旧帖不自动复活)
-              publishIntent.discard(wx, 'square:compose', that._memberId, intent.key);
-            } else {
-              publishIntent.settle(wx, 'square:compose', that._memberId, intent.key, 'rejected');
+      if (String(this._memberId || '') !== String(app.getUserID() || '')) { cyToast('登录身份已变化，请重新打开'); return; }
+      const content = String(this.data.content || '').trim();
+      if (!content) { cyToast('请输入内容'); return; }
+      if (this._submitting) return;
+      const editing = this.data.editMode && this._editId;
+      const restarting = !editing && this._restartDiscarded === true;
+      if (editing && !this._editReady) { this.loadEditSnapshot(); cyToast('请等待读取完成后保存'); return; }
+      this.communityClient();
+      const ownerId = String(app.getUserID() || ''), isOpen = this.communityCurrent();
+      const sequence = (this._publishSequence || 0) + 1; this._publishSequence = sequence;
+      const current = () => isOpen() && this._publishSequence === sequence;
+      const snapshot = JSON.stringify([this.data.content, this.data.picList, this.data.address, this.data.postAudience, this.data.selectedActivity]);
+      this._submitting = true; this.setData({ submitting: true });
+      const fail = res => {
+        if (!current() || Number(res && res.code) === 499) return;
+        if (!editing && Number(res && res.code) === 409 && res.requiresReupload === true) { cyToast('请移除旧图，重新选图上传'); return; }
+        if (!editing && !restarting && Number(res && res.code) === 409 && res.intentDiscarded === true && res.requiresRestart === true) {
+          const restartSnapshot = JSON.stringify([this.data.content, this.data.picList, this.data.address, this.data.postAudience, this.data.selectedActivity]);
+          modal.show({ title: '保留当前内容作为新帖', content: '上次提交已被删除。是否保留当前内容，作为一条新帖重新提交？', confirmText: '作为新帖', cancelText: '暂不提交',
+            success: result => {
+              if (!current() || !result.confirm) return;
+              if (restartSnapshot !== JSON.stringify([this.data.content, this.data.picList, this.data.address, this.data.postAudience, this.data.selectedActivity])) { cyToast('内容已变化，请重新确认'); return; }
+              this._restartDiscarded = true; this.onPublish();
             }
-            return;   // 非 200 由统一通道弹 toast,这里不重复
-          }
-          if (!editing) {
-            publishIntent.settle(wx, 'square:compose', that._memberId, intent.key, 'success');
-            if (that._memberId) {
-              proEditorDraft.removeDraft(wx, draftIdentity(that._memberId), { memberId: that._memberId });
+          });
+          return;
+        }
+        if (res && res.requiresRecovery === true) {
+          modal.show({ title: '先核对上次提交', content: '上次提交结果未确认。先核对上次提交，本次新修改会保留，不会被当作已经提交。', confirmText: '核对上次', cancelText: '暂不核对',
+            success: result => {
+              if (!current() || !result.confirm) return;
+              this._recoverPrevious = true; this.onPublish();
             }
+          });
+          return;
+        }
+        if (res && res.retrySameWire === true) this._retryEditSnapshot = content;
+        cyToast(app.getRequestErrorMessage(res, '结果未确认，内容已保留'));
+      };
+      const complete = () => { if (current()) { this._submitting = false; this.setData({ submitting: false }); } };
+      const options = { current, autoErrorToast: false, recoverPrevious: this._recoverPrevious === true, restartDiscarded: restarting,
+        selectGuideline: (document, task) => new Promise((resolve, reject) => modal.show({ title: '社区发布规范',
+          content: document.rules.map(rule => rule.title + (rule.content ? '：' + rule.content : '')).join('\n'),
+          confirmText: '同意并提交', cancelText: '取消',
+          success: result => current() && !task.aborted ? resolve(result.confirm === true) : reject({ code: 499, msg: '已取消提交' }), fail: reject })),
+        success: res => {
+          if (!current()) return;
+          if (res.code !== 200) { fail(res); return; }
+          const post = res.data.post;
+          const keepOpen = res.recoveredPrevious === true || snapshot !== JSON.stringify([this.data.content, this.data.picList, this.data.address, this.data.postAudience, this.data.selectedActivity]);
+          const event = { id: post.id, version: post.version, lifecycle: post.lifecycle, audience: post.audience, keepOpen, ownerId };
+          this._retryEditSnapshot = null;
+          if (keepOpen) {
+            cyToast(res.recoveredPrevious === true ? '旧提交已确认，新修改尚未保存' : '已保存，新修改尚未保存'); this.triggerEvent('published', event); return;
           }
-          that._published = true;
-          that.applyContent('');
-          that.clearAttachments();
-          // prefill 是 property,清空归广场页管(onComposePublished 里已清)——
-          // 组件自己 setData 一个 wxml 不渲染的字段会被 U4 死数据字段门禁判红,而且它说得对。
-          // 不弹「发布成功」toast:success-toast 棘轮是「只减不增」,判据是
-          // 「新增一次成功提示 = 又一处『做成了但界面不记得』」。
-          // 这里界面是记得的 —— 广场页收到 published 会刷新,
-          // 新帖就出现在第一条,那本身就是最好的回执,比一个 1.5 秒就消失的 toast 强。
-          that.triggerEvent('published');
-          that.triggerEvent('close');
-        },
-        fail: (err) => {
-          if (!editing) {
-            // 结果未知:保留同一意图键,重试复用,不再新开一条
-            publishIntent.settle(wx, 'square:compose', that._memberId, intent.key, 'unknown');
-          }
-          cyToast(app.getRequestErrorMessage ? app.getRequestErrorMessage(err, '网络异常，请检查后重试') : '网络异常，请检查后重试');
-        },
-        complete: function () {
-          that._submitting = false;
-          that.setData({ submitting: false });
-        },
-      });
+          if (!editing && this._memberId) proEditorDraft.removeDraft(wx, draftIdentity(this._memberId), { memberId: this._memberId });
+          this._published = true; this.applyContent(''); this.clearAttachments();
+          this.triggerEvent('published', event); this.triggerEvent('close');
+        }, fail, complete
+      };
+      this._recoverPrevious = false;
+      this._restartDiscarded = false;
+      try {
+        if (editing) this.saveExistingPost(options, content);
+        else this.publishNewPost(options, content);
+      } catch (error) { fail(error); complete(); }
     },
   },
 });

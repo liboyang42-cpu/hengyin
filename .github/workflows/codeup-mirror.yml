@@ -11,6 +11,7 @@ permissions:
 jobs:
   mirror:
     if: >-
+      github.repository == 'liboyang42-cpu/chengyin' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'master'

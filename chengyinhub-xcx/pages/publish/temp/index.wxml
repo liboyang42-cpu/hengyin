@@ -54,7 +54,7 @@
     <!-- 封面 + 名字:原型是**同一张卡** —— 上半是 1:1 的大方块封面(斜纹占位 + 圆形 ＋),
          下半是名字输入框(原型 .hero / .hero-cover / .hero-body)。 -->
     <view class="cg-hero" id="sec-top">
-      <view class="cg-hero-cover cg-hero-cover--picked" wx:if="{{ formData.imgUrl }}">
+      <view class="cg-hero-cover cg-hero-cover--picked" wx:if="{{ formData.imgUrl }}" bindtap="uploadPic" aria-role="button" aria-label="更换玩法封面" hover-class="cy-pressed" hover-stay-time="80">
         <image class="cg-hero-img" src="{{ formData.imgUrl }}" mode="aspectFill" />
         <view class="cg-cover-del" catchtap="clearCover" aria-role="button" aria-label="删除玩法封面" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
       </view>
@@ -1409,6 +1409,7 @@
 
   <!-- 编辑态底部栏 -->
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">
+    <cy-btn wx:if="{{!previewMode && from !== 'fabu' && from !== 'citynode'}}" variant="secondary" disabled="{{submitting}}" loading="{{submitting && submittingAction === 'draft'}}" bindtap="saveDraft">保存草稿</cy-btn>
     <cy-btn variant="primary" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
   </view>
 

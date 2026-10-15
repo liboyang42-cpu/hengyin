@@ -24,32 +24,55 @@ function loadComponent(source) {
     // 写成普通字段会在加载那一刻按值捕获,后面换 __globalData 就打不进去了。
     getApp: () => ({
       get globalData() { return sandbox.__globalData },
-      getUserID: () => 1,
+      getUserID: () => sandbox.__memberId,
       getUserRole: () => sandbox.__role,
-      getUserType: () => sandbox.__role === 'merchant' ? 2 : 1,
+      getUserType: () => sandbox.__type == null ? (sandbox.__role === 'merchant' ? 2 : 1) : sandbox.__type,
       sendRequest: (opts) => { requests.push(opts) },
     }),
     require: (p) => {
       // utils/toast.js 真件,在只带本沙箱 wx 的上下文里求值(回落 wx.showToast 才打得到下面的桩)
       // 本场景的权限夹具先于通用 UI 加载器；toast/loading/modal 仍跑真模块。
       if (p.indexOf('roleGuard') >= 0) return {
-        load: (cb) => { sandbox.__guardLoads += 1; cb() },
+        load: (cb) => { sandbox.__guardLoads += 1; if (sandbox.__deferGuard) sandbox.__guardCallbacks.push(cb); else cb() },
         can: (cap) => { sandbox.__guardCaps.push(cap); return cap === 'withdrawable' && sandbox.__withdrawable },
       }
       if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx: sandbox.wx }))
       // countUp 接线(2026-08-21):motion 是纯 node 兼容模块,直接给真件;
       // 减动效偏好固定 true → 单帧直落,金额断言保持同步可判
-      if (p.indexOf('motion-preference') >= 0) return { readReducedMotion: () => true }
-      if (p.indexOf('motion') >= 0) return require(path.join(ROOT, 'utils/motion.js'))
+      if (p.indexOf('motion-preference') >= 0) return { readReducedMotion: () => sandbox.__reducedMotion }
+      if (p.indexOf('motion') >= 0) {
+        const real = require(path.join(ROOT, 'utils/motion.js'))
+        return { countUp(from, to, onFrame, options) {
+          if (!sandbox.__manualMotion) return real.countUp(from, to, onFrame, options)
+          const run = { onFrame, onDone: options.onDone, timers: [] }
+          sandbox.__motions.push(run)
+          return real.countUp(from, to, onFrame, Object.assign({}, options, {
+            setTimeout(fn) { const timer = { fn, cancelled: false }; run.timers.push(timer); return timer },
+            clearTimeout(timer) { timer.cancelled = true },
+          }))
+        } }
+      }
       throw new Error('unexpected require: ' + p)
     },
-    wx: { showToast: (o) => { sandbox.__toast = o } },
+    wx: {
+      showToast: (o) => { sandbox.__toast = o },
+      navigateTo: (o) => { sandbox.__navigations.push(o.url) },
+      switchTab: (o) => { sandbox.__navigations.push(o.url) },
+    },
     module: { exports: {} },
     __globalData: { userInfo: null },
     __withdrawable: true,
     __role: 'player',
     __guardLoads: 0,
     __guardCaps: [],
+    __memberId: 1,
+    __type: null,
+    __deferGuard: false,
+    __guardCallbacks: [],
+    __reducedMotion: true,
+    __manualMotion: false,
+    __motions: [],
+    __navigations: [],
   }
   const fn = new Function('Component', 'getApp', 'require', 'wx', 'module', src)
   fn(sandbox.Component, sandbox.getApp, sandbox.require, sandbox.wx, sandbox.module)
@@ -57,9 +80,14 @@ function loadComponent(source) {
 }
 
 /** 造一个最小的组件实例:setData 直接合进 data */
-function instantiate({ globalData, withdrawable, role, source } = {}) {
+function instantiate({ globalData, withdrawable, role, source, memberId, type, deferGuard, reducedMotion, manualMotion } = {}) {
   const { def, requests, sandbox } = loadComponent(source)
   if (role !== undefined) sandbox.__role = role
+  if (memberId !== undefined) sandbox.__memberId = memberId
+  if (type !== undefined) sandbox.__type = type
+  if (deferGuard !== undefined) sandbox.__deferGuard = deferGuard
+  if (reducedMotion !== undefined) sandbox.__reducedMotion = reducedMotion
+  if (manualMotion !== undefined) sandbox.__manualMotion = manualMotion
   if (globalData !== undefined) sandbox.__globalData = globalData
   if (withdrawable !== undefined) sandbox.__withdrawable = withdrawable
   const ctx = {
@@ -74,7 +102,7 @@ function instantiate({ globalData, withdrawable, role, source } = {}) {
 }
 
 test('缓存里有合法余额时直接 ready,不再发请求', () => {
-  const { ctx, requests } = instantiate({ globalData: { userInfo: { balance: '12.5' } } })
+  const { ctx, requests } = instantiate({ globalData: { userInfo: { id: 1, balance: '12.5' } } })
   ctx.load()
   assert.equal(ctx.data.state, 'ready')
   assert.equal(ctx.data.balance, '12.50')
@@ -143,12 +171,16 @@ test('组件销毁后忽略晚到请求,不得重新启动金额动画或 setDat
 function assertWithdrawCapability(source) {
   for (const role of ['player', 'merchant']) {
     const allowed = instantiate({ globalData: { userInfo: null }, withdrawable: true, role, source })
+    allowed.ctx.load(true)
+    allowed.requests[0].success({ code: 200, data: { balance: 0 } })
     allowed.ctx.openWithdraw()
     assert.deepEqual(allowed.ctx.events, [{ name: 'open', detail: { id: 'member-withdraw' } }])
     assert.equal(allowed.sandbox.__guardLoads, 1)
     assert.deepEqual(allowed.sandbox.__guardCaps, ['withdrawable'])
 
     const denied = instantiate({ globalData: { userInfo: null }, withdrawable: false, role, source })
+    denied.ctx.load(true)
+    denied.requests[0].success({ code: 200, data: { balance: 0 } })
     denied.ctx.openWithdraw()
     assert.deepEqual(denied.ctx.events, [])
     assert.equal(denied.sandbox.__guardLoads, 1)
@@ -168,6 +200,8 @@ test('提现权限负控：删能力闸或改成按商家角色放行必须判�
   for (const changed of [withoutGuard, byRole]) {
     assert.notEqual(changed, source, '负控锚点失效')
     const breached = instantiate({ withdrawable: false, role: 'merchant', source: changed })
+    breached.ctx.load(true)
+    breached.requests[0].success({ code: 200, data: { balance: 0 } })
     breached.ctx.openWithdraw()
     assert.equal(breached.ctx.events.filter((event) => event.name === 'open').length, 1,
       '负控必须复现未有提现能力却打开提现场景')
@@ -231,4 +265,182 @@ test('negative control CU-M-144: 空态退回「创建俱乐部获得分润」�
     'sub="发布路线与场次获得创作收益，或创建俱乐部获得分润"')
   assert.notEqual(reverted, wxml, '负控锚点失效(源码已改动?)')
   assert.throws(() => assertEarningsEmptyState(reverted), assert.AssertionError)
+})
+
+function readyBalance(options = {}, balance = 12.5) {
+  const harness = instantiate(options)
+  harness.ctx.load(true)
+  harness.requests[0].success({ code: 200, data: { balance } })
+  return harness
+}
+
+test('缓存余额必须有同一账号归属；缺ID或其他账号缓存改走实际请求', () => {
+  for (const userInfo of [{ balance: 88 }, { id: 2, balance: 88 }]) {
+    const h = instantiate({ globalData: { userInfo } })
+    h.ctx.load(false)
+    assert.equal(h.requests.length, 1)
+    assert.equal(h.requests[0].data.member_id, 1)
+    assert.equal(h.ctx.data.balance, '')
+  }
+})
+
+for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
+  test(`换号后的旧余额 ${callback} 回调清除旧值且不自动重发已登录账号请求`, () => {
+    const h = readyBalance()
+    h.ctx.refresh()
+    h.sandbox.__memberId = 2
+    h.requests[1][callback]({ code: 200, data: { balance: 88 } })
+    assert.equal(h.ctx.data.state, 'error')
+    assert.equal(h.ctx.data.balance, '')
+    assert.equal(h.ctx.data.balanceDisplay, '')
+    assert.equal(h.requests.length, 2)
+  })
+}
+
+for (const [field, value] of [['__role', 'merchant'], ['__type', 2]]) {
+  test(`同账号${field}变化也拒绝旧余额结果`, () => {
+    const h = instantiate()
+    h.ctx.load(true)
+    h.sandbox[field] = value
+    h.requests[0].success({ code: 200, data: { balance: 88 } })
+    assert.equal(h.ctx.data.state, 'error')
+    assert.equal(h.ctx.data.balance, '')
+  })
+}
+
+test('未登录读请求遇到登录完成，只发一次当前身份读，不接纳旧余额', () => {
+  const h = instantiate({ memberId: 0 })
+  h.ctx.load(true)
+  h.sandbox.__memberId = 2
+  h.requests[0].success({ code: 200, data: { balance: 88 } })
+  assert.equal(h.ctx.data.balance, '')
+  assert.equal(h.ctx.data.state, 'loading')
+  assert.equal(h.requests.length, 2)
+  assert.equal(h.requests[1].data.member_id, 2)
+  h.requests[0].fail()
+  assert.equal(h.requests.length, 2)
+  h.requests[1].success({ code: 200, data: { balance: null } })
+  assert.equal(h.ctx.data.balance, '0.00')
+})
+
+test('同账号普通续期后正常余额响应仍可落定', () => {
+  const h = instantiate()
+  h.ctx.load(true)
+  h.sandbox.__globalData.token = 'controlled-renewed-session'
+  h.requests[0].success({ code: 200, data: { balance: 12.5 } })
+  assert.equal(h.ctx.data.state, 'ready')
+  assert.equal(h.ctx.data.balance, '12.50')
+})
+
+for (const callback of ['fail', 'successStatusAbnormal']) {
+  test(`刷新开始即清除旧金额，当前${callback}不能遗留先前金额`, () => {
+    const h = readyBalance()
+    h.ctx.refresh()
+    assert.equal(h.ctx.data.state, 'loading')
+    assert.equal(h.ctx.data.balance, '')
+    assert.equal(h.ctx.data.balanceDisplay, '')
+    h.requests[1][callback]()
+    assert.equal(h.ctx.data.state, 'error')
+    assert.equal(h.ctx.data.balance, '')
+  })
+}
+
+test('页面隐藏后旧回调无效，返回页面自动读取当前身份', () => {
+  const h = instantiate()
+  h.def.lifetimes.attached.call(h.ctx)
+  h.def.pageLifetimes.hide.call(h.ctx)
+  const hidden = JSON.stringify(h.ctx.data)
+  for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
+    h.requests[0][callback]({ code: 200, data: { balance: 88 } })
+    assert.equal(JSON.stringify(h.ctx.data), hidden)
+  }
+  h.sandbox.__memberId = 2
+  h.def.pageLifetimes.show.call(h.ctx)
+  assert.equal(h.requests.length, 2)
+  assert.equal(h.requests[1].data.member_id, 2)
+  h.requests[1].success({ code: 200, data: { balance: 0 } })
+  assert.equal(h.ctx.data.balance, '0.00')
+})
+
+test('页面显示时身份未变不重复取数，变更身份则清除旧金额并重读', () => {
+  const h = readyBalance()
+  h.def.pageLifetimes.show.call(h.ctx)
+  assert.equal(h.requests.length, 1)
+  h.sandbox.__memberId = 2
+  h.def.pageLifetimes.show.call(h.ctx)
+  assert.equal(h.requests.length, 2)
+  assert.equal(h.ctx.data.state, 'loading')
+  assert.equal(h.ctx.data.balance, '')
+})
+
+test('真实金额动画的排队帧在换号后不得显示旧余额', () => {
+  const h = readyBalance({ reducedMotion: false, manualMotion: true }, 88)
+  const run = h.sandbox.__motions[0]
+  h.sandbox.__memberId = 2
+  run.timers[0].fn()
+  assert.equal(h.ctx.data.balance, '')
+  assert.equal(h.ctx.data.balanceDisplay, '')
+  assert.equal(h.ctx.data.state, 'error')
+  assert.ok(run.timers.every((timer) => timer.cancelled))
+})
+
+test('旧动画完成回调不能清除新动画句柄；旧帧也不能覆盖新金额', () => {
+  const h = readyBalance({ reducedMotion: false, manualMotion: true }, 88)
+  const old = h.sandbox.__motions[0]
+  h.ctx.refresh()
+  h.requests[1].success({ code: 200, data: { balance: 20 } })
+  const currentStop = h.ctx._stopCountUp
+  old.onDone()
+  old.onFrame(88)
+  assert.equal(h.ctx._stopCountUp, currentStop)
+  assert.equal(h.ctx.data.balance, '20.00')
+  assert.equal(h.ctx.data.balanceDisplay, '0.00')
+})
+
+for (const change of ['account', 'role', 'type', 'hide', 'detach', 'refresh']) {
+  test(`提现权限等待期间${change}变化，旧回调不能打开新身份场景`, () => {
+    const h = readyBalance({ deferGuard: true })
+    h.ctx.openWithdraw()
+    assert.equal(h.sandbox.__guardCallbacks.length, 1)
+    if (change === 'account') h.sandbox.__memberId = 2
+    if (change === 'role') h.sandbox.__role = 'merchant'
+    if (change === 'type') h.sandbox.__type = 2
+    if (change === 'hide') h.def.pageLifetimes.hide.call(h.ctx)
+    if (change === 'detach') h.def.lifetimes.detached.call(h.ctx)
+    if (change === 'refresh') h.ctx.refresh()
+    h.sandbox.__guardCallbacks[0]()
+    assert.deepEqual(h.ctx.events, [])
+    assert.equal(h.sandbox.__toast, undefined)
+  })
+}
+
+test('金额结果还未确定时不执行提现能力请求或打开场景', () => {
+  const h = instantiate()
+  h.ctx.load(true)
+  h.ctx.openWithdraw()
+  assert.equal(h.sandbox.__guardLoads, 0)
+  assert.deepEqual(h.ctx.events, [])
+})
+
+test('旧身份的明细、记录、邀请、空态入口都不得执行导航', () => {
+  const h = readyBalance()
+  h.sandbox.__memberId = 2
+  for (const action of ['openIncomeDetail', 'openWithdrawHistory', 'openInvite', 'goPublish']) h.ctx[action]()
+  assert.deepEqual(h.ctx.events, [])
+  assert.deepEqual(h.sandbox.__navigations, [])
+  assert.equal(h.ctx.data.balance, '')
+})
+
+test('当前身份的正常明细和记录入口保留，不增加请求', () => {
+  const h = readyBalance()
+  for (const action of ['openIncomeDetail', 'openWithdrawHistory', 'openInvite', 'goPublish']) h.ctx[action]()
+  assert.equal(h.ctx.events.length, 2)
+  assert.equal(h.sandbox.__navigations.length, 2)
+  assert.equal(h.requests.length, 1)
+})
+
+test('收益错误态不把身份失效误报为网络原因，提现标签匹配客服入口', () => {
+  const wxml = read('index.wxml')
+  assert.doesNotMatch(wxml, /网络可能不稳定/)
+  assert.match(wxml, /aria-label="联系平台客服处理提现"/)
 })

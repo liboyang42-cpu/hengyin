@@ -90,6 +90,7 @@ test('活动运营页从后端读取系列与版本，并提供未来场次批�
 })
 
 test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 version', () => {
+  const futureDate = require('../../utils/datetime.js').chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000))
   let config
   const requests = []
   const appMock = {
@@ -107,7 +108,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
             id: 61, clubId: 21, topicId: 31, recurrenceType: 'CUSTOM_DATES',
             defaultLeadMemberId: 51, defaultCapacity: null,
             waitlistEnabled: true, offerMinutes: 30, version: 4,
-            futureDates: ['2026-09-01'],
+            futureDates: [futureDate],
           },
         })
       }
@@ -132,7 +133,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
       editingSeriesId: 61,
       editingTopicId: 31,
       recurrenceType: 'CUSTOM_DATES',
-      customDates: ['2026-09-01'],
+      customDates: [futureDate],
       defaultLeadMemberId: 51,
       capacity: '',
       waitlistEnabled: true,
@@ -148,6 +149,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
   const update = JSON.parse(requests[0].data)
   assert.equal(update.seriesId, 61)
   assert.equal(update.expectedVersion, 3)
+  assert.deepEqual(update.customDates, [futureDate])
   assert.deepEqual(requests.slice(1).map(item => item.url), [
     '/api/club/event-ops/series/list',
     '/api/club/event-ops/series/detail',

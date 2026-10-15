@@ -85,6 +85,9 @@ public interface SmsCouponMapper
     /** C1 限量占坑:仅当 receive_count &lt; publish_count 时 +1,返回受影响行数(0=已抢光,并发安全) */
     public int tryIncrementReceiveCount(Long id);
 
+    /** 正常发券原子占库存：同时校验当前停发状态、可发放期及原有限量/不限量规则。 */
+    public int tryIncrementIssuableReceiveCount(Long id);
+
     /** 核销时 use_count +1（原子） */
     public int incrementUseCount(Long id);
 

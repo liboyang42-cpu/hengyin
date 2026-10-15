@@ -51,13 +51,13 @@ module.exports = [
   { file: 'pages/merchant/index/index.js', count: 2, reason: '商家首页身份聚合请求失败落 consoleState=error 和 consoleError，不伪装成空态。2026-09-17 拍板 #24 入驻申请状态回读新增一处:失败同样落 consoleError + 「重新加载」页内承接,通用 toast 会双弹;申请行读到了才渲染状态卡,读不到不编状态。' },
   { file: 'pages/merchant/relation/index.js', count: 1, reason: '关系页把失败写入 error 并渲染可见反馈。' },
   { file: 'pages/merchant/team/index.js', count: 7, reason: '经营团队的权限、名单、邀请和角色写操作均落页内 error/result 状态或明确 toast。' },
-  { file: 'pages/mylike/mylike.js', count: 3, reason: '帖文与主题收藏列表失败落到 errorMsg 页内错误态；取消帖文收藏失败由动作自己的精确 toast 承接，通用 toast 会双弹。' },
+  { file: 'pages/mylike/mylike.js', count: 1, reason: '帖文与主题收藏列表失败落到 errorMsg 页内错误态；取消帖文收藏失败由动作自己的精确 toast 承接，通用 toast 会双弹。' },
   { file: 'pages/play/index.js', count: 1, reason: '已完成记录是非阻断附属区块，失败由页面空错态承接。' },
   { file: 'components/cy/scene-qr-ticket/index.js', count: 1, reason: '入场动态码签发失败会切换 state=error 并渲染 errorText 与重试操作。' },
   { file: 'pages/publish/activity/index.js', count: 4, reason: '发布身份失败落到 accessState/accessError，编辑回填失败落到 activityLoadError，发起人失败落到 ownerLoadError，模板列表失败落到 templateError/templateStaleError，四路均可见可重试。' },
   { file: 'pages/publish/fabu/index.js', count: 3, reason: '编辑内容加载失败写入 editLoadError，AI 安全预检失败由表单内提示承接，公开模板增强失败明确回退空列表。' },
   // 2026-09-19 本支批3C 删 AI 节点链(/api/ai/template/fill)连带收回其 silentError 一处(5→4),与 ci/silent-error-allowlist.txt 同批对账。
-  { file: 'pages/publish/temp/index.js', count: 4, reason: '商家权限、字典、模板提交与编辑详情失败分别写入权限反馈、dictErrors、submitError、loadError，均在当前表单可见。' },
+  { file: 'pages/publish/temp/index.js', count: 5, reason: '商家权限、字典、模板提交与编辑详情失败分别写入权限反馈、dictErrors、submitError、loadError，均在当前表单可见；adopt-draft 失败由 loadError 自管，结果不确定时保留到我的玩法核对提示，避免重复采用。' },
   { file: 'pages/publish/template-intro/index.js', count: 1, reason: '模板介绍页以页面错误态承接加载失败。' },
   // 2026-09-10 7 → 9:「附近还在走的人」新增一对位置心跳(_reportPresence 30 s 上行 /
   //   _fetchRunners 45 s 下行)。两条都必须静默 —— 它们每分钟各跑一两次、不承载任何用户
@@ -72,8 +72,8 @@ module.exports = [
   { file: 'pages/search2/index.js', count: 1, reason: '搜索分类读取失败会写入 categoryError，页面显示局部错误且不阻断已有搜索内容。' },
   { file: 'pages/shezhi/components/marketing-consent/index.js', count: 2, reason: '营销授权列表与保存失败落组件 state/error，保存后刷新仍保留原错误。' },
   { file: 'pages/shezhi/shezhi.js', count: 1, reason: '俱乐部身份回读的业务失败与网络失败都显式 toast，不会无反馈停留。' },
-  { file: 'pages/square/detail/index.js', count: 9, reason: '动态详情、评论列表与评论/回复提交失败均落页内错误字段；关注、点赞、收藏与评论点赞失败使用可见 toast 并释放操作态。' },
-  { file: 'pages/square/list/index.js', count: 6, reason: '广场列表加载失败分流到 loadError/staleError/loadMoreError，点赞、收藏、关注与互动失败显式 toast；官方活动增强失败才降级空卡。' },
+  { file: 'pages/square/detail/index.js', count: 1, reason: '动态详情、评论列表与评论/回复提交失败均落页内错误字段；关注、点赞、收藏与评论点赞失败使用可见 toast 并释放操作态。' },
+  { file: 'pages/square/list/index.js', count: 2, reason: '广场列表加载失败分流到 loadError/staleError/loadMoreError，点赞、收藏、关注与互动失败显式 toast；官方活动增强失败才降级空卡。' },
   { file: 'pages/talent/list/index.js', count: 4, reason: '动态 feed、商家城市、俱乐部与成员四路读取失败都落到各自 state/error/errorKind，保留快照时使用 stale-error 可见态。' },
   { file: 'pages/template/index.js', count: 3, reason: '模板首页、分类列表与主题模板三路失败写入 errorMsg/staleError 或 ttError，页内均可见。2026-08-25 删「圈层自由探索」整节,连带收回 circleThemesError 那一处(4→3)。' },
   { file: 'pages/templatedetail/templatedetail.js', count: 1, reason: '玩法详情回包异常或网络失败会设置 loadError/loadErrorMsg，页面显示明确错误与重试入口。' },
@@ -87,7 +87,7 @@ module.exports = [
   { file: 'subpackageMember/mycanyu/mycanyu.js', count: 1, reason: '我的参与页把失败写入 errorMsg 并展示。' },
   { file: 'components/cy/scene-asset-earnings/index.js', count: 1, reason: '资产收益读取失败会切换 state=error，组件渲染错误态而不留在 loading。' },
   { file: 'subpackageA/components/scene-how-to-play-detail/index.js', count: 1, reason: '玩法说明读取失败会清理旧内容并设置 empty=true/loading=false，组件显示可见空错态。' },
-  { file: 'subpackageA/pages/myproject/index.js', count: 5, reason: '我的项目读取失败落到 projectState/projectErrorMsg，模板上下架失败显式 toast；取消活动/主题前的退款人数预览(C8-05)失败显式 toast 且不弹确认，新增提交广场失败同样显式 toast 并释放操作锁，五路都可见可重试。' },
+  { file: 'subpackageA/pages/myproject/index.js', count: 10, reason: '项目读取失败写入projectState/projectErrorMsg；两路取消预览、模板上下架及提交广场失败显式toast。新增上下架、两路取消、项目共用删除和模板删除均绑定会员及页面epoch，当前失败用toast或dc.failed提示并可重试，旧身份或隐藏后的回包不提示、不刷新新页面。' },
   { file: 'subpackageB/pages/im/chat/index.js', count: 3, reason: '消息首载、更多消息与路线选择三路失败分别落到 loadErrorText、loadMoreError、routeError，当前聊天页均可见。' },
   { file: 'subpackageB/pages/im/list/index.js', count: 1, reason: '会话列表首载失败落到 error/errorMsg，有快照时落到 staleError，页内显示重试或保留内容提示。' },
   { file: 'subpackageMember/complaint/index.js', count: 2, reason: '投诉对象读取失败落到 errorMsg，投诉提交失败落到 submitError/submitErrorKind，两处均在页内显示。' },
@@ -101,5 +101,6 @@ module.exports = [
   { file: 'utils/analytics.js', count: 1, reason: '埋点是非阻断遥测，失败保留队列重试且不得打扰玩家。' },
   { file: 'utils/marketing-consent-entry.js', count: 1, reason: '支付成功面板/订单详情上取商家营销同意状态(GET /api/merchant/crm/marketing-consents)是非必要附属请求:失败只隐藏可选的同意勾选行(fail-closed),主流程(面板自愈跳转、订单详情)不受影响;支付刚成功就弹通道默认「网络错误」会让玩家以为没付成功(2026-09-17 总控裁定,release-0917 第三阶段 C)。保存同意(POST)仍不静默。' },
   { file: 'utils/roam-share-snapshot.js', count: 2, reason: '足迹分享快照的发布、作废、接收方读取失败分别由分享面板链接提示+重试、精确 toast、整页空态/重试承接，避免统一 toast 双弹。' },
+  { file: 'utils/community-post-api.js', count: 1, reason: '当前17个实际社区方法共用唯一请求dispatch；业务/网络失败经当前caller可见页内错误或toast一次，取消/换号/卸载旧回包安静退出；拒绝未知命令并保留未知写入恢复，未放行未来方法；owner=小程序，复核=2026-10-13' },
   { file: 'utils/ui-state-request.js', count: 1, reason: '共享 UI-state wrapper 仅允许枚举端点且强制传入 fail；真实调用方均在 fail 写页内错误态，本层只抑制重复全局 toast。' },
 ]

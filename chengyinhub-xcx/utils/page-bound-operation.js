@@ -1,11 +1,12 @@
 'use strict';
 
-// 把原生选择器/裁剪与后续上传绑到发起页面。页面从栈中移除后立即取消，
-// 避免离页后继续占网络，也避免迟到回调再 setData。
+// 原生选择器/裁剪与后续上传绑定发起页面和会员，离页或换号后取消旧操作。
 function createPageBoundOperation(options) {
   options = options || {};
   var owner = options.owner;
   var getPages = options.getPages || function () { return []; };
+  var getUserID = options.getUserID || function () { return ''; };
+  var member = String(getUserID() || '');
   var setPoll = options.setInterval || setInterval;
   var clearPoll = options.clearInterval || clearInterval;
   var pollMs = Math.max(100, Number(options.pollMs) || 250);
@@ -32,7 +33,7 @@ function createPageBoundOperation(options) {
     if (finished || aborted) return;
     var pages;
     try { pages = getPages() || []; } catch (e) { pages = []; }
-    if (!owner || pages.indexOf(owner) < 0) operation.abort();
+    if (!owner || pages.indexOf(owner) < 0 || String(getUserID() || '') !== member) operation.abort();
   }
 
   var operation = {

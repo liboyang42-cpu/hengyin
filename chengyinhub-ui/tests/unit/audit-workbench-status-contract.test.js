@@ -306,3 +306,29 @@ test('组局证据可读且保留合并举报快照，缺证提供同组局调�
   assert.equal(vm.queryParams.bizId, 88); assert.equal(vm.queryParams.bizType, 'HANGOUT');
   assert.equal(vm.queryParams.status, null); assert.equal(loaded, 1);
 });
+
+
+test('社区帖文可按真实业务类型筛选，名称与审核版本沿现有工作台传递', async () => {
+  const queries = [];
+  const task = { id: 70, bizType: 'COMMUNITY_POST', bizId: 81, status: 0, version: 4 };
+  const component = loadComponent(query => {
+    queries.push({ ...query });
+    return Promise.resolve({ rows: [task], total: 1 });
+  }, () => Promise.resolve({ task, records: [], reportCount: 0 }));
+  const vm = { ...component.data(), ...component.methods };
+  const options = vm.bizTypeOptions.filter(option => option.value === 'COMMUNITY_POST');
+  assert.equal(options.length, 1, '现有下拉必须提供唯一的社区帖文筛选项');
+  assert.equal(options[0].label, '社区帖文');
+  assert.equal(vm.bizTypeLabel(task.bizType), '社区帖文', '列表与详情复用可读名称');
+  assert.equal(vm.bizTypeLabel('SQUARE'), '创意广场', '旧业务名称保持');
+  vm.queryParams.bizType = options[0].value;
+  vm.queryParams.bizId = task.bizId;
+  const filters = component.computed.activeFilters.call(vm);
+  assert.equal(filters.find(item => item.key === 'bizType').value, '社区帖文');
+  await vm.getList();
+  assert.equal(queries[0].bizType, 'COMMUNITY_POST');
+  assert.equal(queries[0].bizId, 81);
+  await vm.openDetail(vm.auditList[0]);
+  vm.openReview(vm.detailTask, 1);
+  assert.deepEqual(vm.reviewForm, { taskId: 70, expectedVersion: 4, status: 1, reasonText: null });
+});

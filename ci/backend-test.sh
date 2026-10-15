@@ -28,6 +28,7 @@ mvn -B clean test
 # ⚠️ 不在此清单里的两套 Explore*RealDbIT 连的是 chengyin_explore_it,
 #   由自托管的 ci/funds-mysql-it-gate.sh 负责;CoopServiceRealDbIT 已烂透,见其类注释。
 MYBATIS_ITS=(
+  WechatMemberRegistrationMySqlIT
   # 2026-08-19:类间隔离契约本身也点名跑 —— 它有三条负控(共用必撞 / 真查 information_schema /
   # ★A 的遗留数据不许喂饱 B 的 fail-closed 前置)。不点名 = 没人看着隔离,那这批又会慢慢滑回共用。
   MybatisItSchemaIsolationIT

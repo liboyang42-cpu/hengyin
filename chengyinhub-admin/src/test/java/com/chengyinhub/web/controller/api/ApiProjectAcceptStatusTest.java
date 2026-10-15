@@ -21,12 +21,15 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 /**
  * P0-4 承接三态:我的项目卡必须带 acceptStatus(P0-4 验收:每张项目卡显示当前承接状态)。
@@ -70,7 +73,9 @@ class ApiProjectAcceptStatusTest {
             CoopInvite q = inv.getArgument(0);
             List<CoopInvite> out = new ArrayList<>();
             for (CoopInvite i : acceptedInvites) {
-                if (q.getTopicId() != null && q.getTopicId().equals(i.getTopicId())
+                List<?> topicIds = (List<?>) q.getParams().get("topicIds");
+                if ((q.getTopicId() != null && q.getTopicId().equals(i.getTopicId())
+                        || topicIds != null && topicIds.contains(i.getTopicId()))
                         && (q.getStatus() == null || q.getStatus().equals(i.getStatus()))) {
                     out.add(i);
                 }
@@ -204,5 +209,46 @@ class ApiProjectAcceptStatusTest {
         pending.setStatus(0);
         acceptedInvites.add(pending);
         assertEquals("clubOpen", row(1L).get("acceptStatus"));
+    }
+
+    @Test
+    void acceptedInviteBatchIsLimitedToVisibleOwnedTopics() {
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class))).thenReturn(Arrays.asList(
+                myTopic(1L, null, 1, 0), myTopic(2L, 7L, 0, 1)));
+        accepted(2L, "merchant");
+        accepted(999L, "club");
+        assertEquals("clubOpen", row(1L).get("acceptStatus"));
+        org.mockito.ArgumentCaptor<CoopInvite> query = org.mockito.ArgumentCaptor.forClass(CoopInvite.class);
+        verify(coopInviteService).selectCoopInviteList(query.capture());
+        assertEquals(Arrays.asList(1L, 2L), query.getValue().getParams().get("topicIds"));
+        assertEquals(1, query.getValue().getStatus());
+    }
+
+    @Test
+    void inviteBatchSqlPreservesLegacyFilterAndEmptyScopeCannotReadAll() throws Exception {
+        org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
+        config.getTypeAliasRegistry().registerAlias("CoopInvite", CoopInvite.class);
+        String resource = "mapper/business/CoopInviteMapper.xml";
+        try (java.io.InputStream in = org.apache.ibatis.io.Resources.getResourceAsStream(resource)) {
+            new org.apache.ibatis.builder.xml.XMLMapperBuilder(in, config, resource, config.getSqlFragments()).parse();
+        }
+        org.apache.ibatis.mapping.MappedStatement statement = config.getMappedStatement(
+                "com.chengyinhub.business.mapper.CoopInviteMapper.selectCoopInviteList");
+        CoopInvite query = new CoopInvite();
+        query.setStatus(1);
+        query.getParams().put("topicIds", Arrays.asList(1L, 2L));
+        org.apache.ibatis.mapping.BoundSql bound = statement.getBoundSql(query);
+        String sql = bound.getSql().replaceAll("\\s+", " ");
+        assertTrue(sql.contains("del_flag = 0"));
+        assertTrue(sql.contains("topic_id in"));
+        assertTrue(sql.contains("status = ?"));
+        assertEquals(3, bound.getParameterMappings().size());
+        query.getParams().put("topicIds", Collections.emptyList());
+        assertTrue(statement.getBoundSql(query).getSql().contains("and 1 = 0"));
+        query.getParams().remove("topicIds");
+        query.setTopicId(1L);
+        sql = statement.getBoundSql(query).getSql().replaceAll("\\s+", " ");
+        assertTrue(sql.contains("topic_id = ?"));
+        assertFalse(sql.contains("topic_id in"));
     }
 }

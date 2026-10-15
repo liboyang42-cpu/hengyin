@@ -31,15 +31,17 @@ test('WXML 有预览区 class,图/地点/活动都能看见也能清掉', () => 
   assert.match(wxml, /onClearActivity/)
 })
 
-test('发布 payload 含 pics / address / data_id', () => {
-  const publish = js.match(/onPublish\(\)\s*\{[\s\S]*?\n    \},\n/)
-  assert.ok(publish, '找不到 onPublish')
-  const body = publish[0]
-  assert.match(body, /pics:/)
-  assert.match(body, /address:/)
-  assert.match(body, /data_id:/)
-  assert.match(body, /data_type:/)
-})
+test('发布使用同客户端媒体引用和精确私密位置，不发送裸坐标', () => {
+  const source = js;
+  const method = source.slice(source.indexOf('    publishNewPost('), source.indexOf('    onPublish('));
+  assert.match(method, /mediaPaths: \(this\.data\.picList/);
+  assert.match(method, /form\.references = \[\{ referenceType:/);
+  assert.match(method, /locationPrecision: 'EXACT'/);
+  assert.match(method, /form\.audience !== 'PRIVATE'/);
+  assert.match(method, /approximateGeohash: this\._locationGrid/);
+  assert.doesNotMatch(method, /longitude|latitude/);
+  assert.match(source, /client\.captureUpload\(data\)/);
+});
 
 test('预览区只用 token,不另造颜色', () => {
   const preview = wxss.match(/\.cmp-preview[\s\S]*?\.cmp-send/)

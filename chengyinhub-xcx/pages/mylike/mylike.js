@@ -1,3 +1,5 @@
+const communityApi = require('../../utils/community-post-api.js');
+const { toPostView } = require('../../utils/community-post-view.js');
 const modal = require('../../utils/modal.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
@@ -6,6 +8,17 @@ const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 
 Page({
+    communityClient() {
+      const owner = String(app.getUserID() || '');
+      if (!this._community || this._communityOwner !== owner) {
+        if (this._community) this._community.dispose();
+        this._community = communityApi.createClient(app, wx);
+        this._communityOwner = owner;
+        this._communityActions = Object.create(null);
+      }
+      return this._community;
+    },
+
   /**
    * 页面的初始数据
    */
@@ -42,6 +55,10 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    if (this._communityOwner != null && this._communityOwner !== String(app.getUserID() || '')) {
+      this.communityClient(); this._bookmarkEpoch = (this._bookmarkEpoch || 0) + 1;
+      this._bookmarkCursor = null; this.setData({ loading: false, postList: [], pageConfig: { pageNum: 1, pageSize: 10 } });
+    }
     this.syncViewTheme();
     if (!this._hasShown) {
       this._hasShown = true;
@@ -52,7 +69,7 @@ Page({
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { this._unloaded = true; if (this._community) this._community.dispose(); merchantTheme.merchantPageRestore(); },
 
   syncViewTheme() {
     const isMerchantView = policy.isMerchantView({
@@ -94,42 +111,34 @@ Page({
     this.loadLikeData();
   },
 
-  getPostFavoriteList: function(stopPullAfterComplete) {
-    const that = this;
-    const pageConfig = that.data.pageConfig;
-    const hasOldContent = that.data.postList.length > 0;
-    const finishLoadError = function (res, fallback) {
-      const message = app.getRequestErrorMessage(res, fallback);
-      that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message });
+  getPostFavoriteList: function(stopPullAfterComplete, loadMore) {
+    this.communityClient();
+    const owner = this._communityOwner, epoch = (this._bookmarkEpoch || 0) + 1;
+    this._bookmarkEpoch = epoch;
+    const cursor = loadMore ? this._bookmarkCursor : null;
+    const current = () => !this._unloaded && this._bookmarkEpoch === epoch
+      && String(app.getUserID() || '') === owner && this.data.activeFavoriteTab === 'posts';
+    this.setData({ loading: true, refreshing: !loadMore && this.data.postList.length > 0 });
+    const fail = res => {
+      if (!current() || Number(res && res.code) === 499) return;
+      const message = app.getRequestErrorMessage(res, '收藏帖文加载失败');
+      this.setData({ errorMsg: message });
+      if (this.data.postList.length) toast(message);
     };
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      auth: true,
-      url: '/api/creativesquare/list',
-      method: 'POST',
-      data: {
-        favorite_only: 1,
-        pageNum: pageConfig.pageNum,
-        pageSize: pageConfig.pageSize
-      },
-      success: function (res) {
-        if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
-          const rows = res.data.rows.map(function (row) {
-            row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
-            return row;
-          });
-          const postList = pageConfig.pageNum === 1 ? rows : that.data.postList.concat(rows);
-          that.setData({ postList: postList, hasMorePosts: rows.length >= pageConfig.pageSize, errorMsg: '' });
-        } else finishLoadError(res, '收藏帖文加载失败');
-      },
-      fail: function (res) { finishLoadError(res, '收藏帖文加载失败'); },
-      successStatusAbnormal: function (res) { finishLoadError(res, '服务暂时不可用，请稍后再试'); },
-      complete: function () {
-        const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
-        that._stopPullWithCurrent = false;
-        that.setData({ loading: false, refreshing: false });
-        if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+    this.communityClient().bookmarks({ query: { limit: this.data.pageConfig.pageSize, cursor }, current, autoErrorToast: false,
+      success: res => {
+        if (res.code !== 200) { fail(res); return; }
+        const rows = res.data.items.map(toPostView).map(row => Object.assign(row, { picList: row.pics ? row.pics.split(';') : [] }));
+        const existing = loadMore ? this.data.postList : [], seen = new Set(existing.map(row => String(row.id)));
+        this._bookmarkCursor = res.data.nextCursor;
+        this.setData({ postList: existing.concat(rows.filter(row => !seen.has(String(row.id)))), hasMorePosts: res.data.hasMore, errorMsg: '' });
+      }, fail,
+      complete: () => {
+        if (!current()) return;
+        const stop = stopPullAfterComplete || this._stopPullWithCurrent;
+        this._stopPullWithCurrent = false;
+        this.setData({ loading: false, refreshing: false });
+        if (stop && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
       }
     });
   },
@@ -278,33 +287,25 @@ Page({
   },
 
   postUnlike: function(e) {
-    const index = e.detail && e.detail.index;
-    const item = this.data.postList[index];
+    if (this._communityOwner != null && this._communityOwner !== String(app.getUserID() || '')) { toast('登录身份已变化，请刷新'); return; }
+    const item = this.data.postList[e.detail && e.detail.index];
     if (!item || !item.id) return;
-    const requestKey = String(item.id);
-    this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
-    if (this._postUnlikeRequests[requestKey]) return;
-    this._postUnlikeRequests[requestKey] = true;
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/bookmark',
-      method: 'POST',
-      data: {
-        id: item.id,
-        bookmark: 0,
-        request_id: 'bookmark-' + item.id + '-0-' + Date.now().toString(36)
-      },
-      success: (res) => {
-        if (!res || res.code != '200') {
-          toast((res && res.msg) || '操作失败');
-          return;
-        }
-        const postList = this.data.postList.filter(post => String(post.id) !== requestKey);
-        this.setData({ postList: postList });
-      },
-      fail: () => toast('网络错误，请重试'),
-      complete: () => { delete this._postUnlikeRequests[requestKey]; }
+    this.communityClient();
+    const owner = this._communityOwner, id = String(item.id), epoch = this._bookmarkEpoch;
+    const current = () => !this._unloaded && this._bookmarkEpoch === epoch && String(app.getUserID() || '') === owner;
+    const key = 'BOOKMARK:' + id;
+    const action = this._communityActions[key] || { requestId: 'bookmark-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) };
+    if (action.busy && action.current && action.current()) return;
+    action.current = current; action.busy = true; this._communityActions[key] = action;
+    const fail = res => { if (current() && Number(res && res.code) !== 499) toast(app.getRequestErrorMessage(res, '取消收藏结果未确认，请重试')); };
+    this.communityClient().removePostAction({ postId: item.id, actionType: 'BOOKMARK', command: { requestId: action.requestId }, current, autoErrorToast: false,
+      success: res => {
+        if (res.code !== 200) { fail(res); return; }
+        const row = toPostView(res.data);
+        if (row.isBookmarked !== false) { fail({ msg: '取消收藏结果未确认，请重试' }); return; }
+        delete this._communityActions[key];
+        this.setData({ postList: this.data.postList.filter(post => String(post.id) !== id) });
+      }, fail, complete: () => { if (current()) action.busy = false; }
     });
   },
 
@@ -393,7 +394,8 @@ Page({
     const hasMore = that.data.activeFavoriteTab === 'posts' ? that.data.hasMorePosts : that.data.hasMore1;
     if (!hasMore) return;
     
-    // 加载下一页
+    if (that.data.activeFavoriteTab === 'posts') { that.getPostFavoriteList(false, true); return; }
+    // 主题保留原页码合同
     pageConfig.pageNum += 1;
     that.setData({ pageConfig });
     that.loadLikeData();
