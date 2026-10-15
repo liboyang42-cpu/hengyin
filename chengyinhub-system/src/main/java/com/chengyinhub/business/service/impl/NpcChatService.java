@@ -443,7 +443,12 @@ public class NpcChatService
     private void applyGatewayFailure(NpcChatRequest processing, AiServiceException e)
     {
         AiServiceException.Reason reason = e.getReason();
-        if (reason == AiServiceException.Reason.RATE_LIMITED)
+        if (e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException)
+        {
+            terminalize(processing, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
+                    null, false, "原请求结果待确认，请稍后查看原请求。");
+        }
+        else if (reason == AiServiceException.Reason.RATE_LIMITED)
         {
             terminalize(processing, NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "RATE_LIMITED", "DAY", true,
                     "问得有点快，明天再来试试。", secondsUntilTomorrow());

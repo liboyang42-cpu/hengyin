@@ -385,6 +385,28 @@ class NpcChatServiceTest {
     }
 
     @Test
+    void providerUnknownIsStoredAndReplayedWithoutCallingModelAgain() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
+                        "unknown", new RuntimeException("timeout")));
+        NpcChatResp response = service.chat(req("provider-unknown", "hi"), USER_ONE);
+        assertEquals("PROCESSING", response.getOutcomeStatus());
+        assertEquals("UNKNOWN", response.getSafetyDecision());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", response.getErrorCode());
+        assertEquals(false, response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> stored = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(stored.capture());
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("provider-unknown")))
+                .thenReturn(stored.getValue());
+        NpcChatResp replay = service.chat(req("provider-unknown", "hi"), USER_ONE);
+        assertEquals(response.getRequestId(), replay.getRequestId());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", replay.getErrorCode());
+        assertEquals(false, replay.isRetryable());
+        verify(aiGatewayService, times(1)).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
+        verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
     void unknownReviewDecisionKeepsOriginalRetryableFailure() {
         when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
                 .thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "review"));
