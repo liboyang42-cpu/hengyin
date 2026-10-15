@@ -1,0 +1,43 @@
+{
+  "pack": "CY-FORWARD3-20261015",
+  "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+  "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+  "branch": "codex/mini-forward-source-20261015",
+  "verification": "NOT_RUN",
+  "ownership_checked_control_sha": "a77eaf5edf3ed19a6271bf2b50101817845b6462",
+  "open_pr_count": 56,
+  "open_pr_path_intersections": [],
+  "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+  "writers": [
+    {
+      "lane": "STAT",
+      "task_id": "F3-STAT-01",
+      "child": "/root/stat",
+      "state": "ACTIVE_SOURCE_ONLY",
+      "files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+      ]
+    },
+    {
+      "lane": "GROW",
+      "task_id": "F3-GROW-01",
+      "child": "/root/grow",
+      "state": "ACTIVE_SOURCE_ONLY",
+      "files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+      ],
+      "new_file_authority": "TASKS.json items[F3-GROW-01].new_regression_file"
+    }
+  ],
+  "coordinator_owned_files": [
+    "docs/verification/mini-forward-cloud-20261015/QUEUE.json",
+    "docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
+    "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
+  ]
+}

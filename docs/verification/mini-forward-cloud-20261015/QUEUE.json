@@ -1,0 +1,30 @@
+{
+  "pack": "CY-FORWARD3-20261015",
+  "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+  "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+  "branch": "codex/mini-forward-source-20261015",
+  "verification": "NOT_RUN",
+  "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
+  "active_source_writers": 2,
+  "initial_independent_lanes": 2,
+  "items": [
+    {
+      "id": "F3-STAT-01",
+      "lane": "STAT",
+      "writer": "/root/stat",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "commit_sha": null
+    },
+    {
+      "id": "F3-GROW-01",
+      "lane": "GROW",
+      "writer": "/root/grow",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "commit_sha": null
+    }
+  ],
+  "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
+  "next_scope_policy": "No new source scope without exact local coordinator transfer.",
+  "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local"
+}
