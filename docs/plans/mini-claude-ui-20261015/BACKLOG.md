@@ -140,3 +140,16 @@
 | 97 | 商家项目草稿箱 | 商家工作台现有项目入口读 `POST /api/content-draft/list`（`business_type`、`scope`，需 `PROJECT_MANAGE`），支持「恢复」(`/restore`) 与「删除」(`/delete`，二次确认，成功后回读列表)；**不做** `/publish`；没有现成位置就 BLOCKED | `pages/merchant/**`；四态照现有商家二级页 |
 | 98 | 报名按日趋势（只读） | 主题/活动主办方现有报名管理页读 `POST /api/registration/count_by_date`（`owner_type` 1 主题/2 活动、`owner_id`），按日列出报名数；403「无权查看该项目趋势」如实提示；不画新图表样式，沿用现有列表/数字行 | 主办方现有页面；不碰支付/报名写接口 |
 | 99 | 单测与合同测试·第七批 | BL-92–98 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
+
+## 第八批（100–107）：监督线补充（后端已有、小程序零调用；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 100 | 商家触达任务记录（只读） | 商家现有客户/营销页加一行进入触达记录：`GET /api/merchant/crm/campaigns` 列表 + `GET /api/merchant/crm/campaigns/{campaignId}` 逐人脱敏回执（字段以 `merchantCrmCampaignService.list/detail` 返回为准）；**不做** 创建/投递/重试（`POST /campaigns`、`/dispatch`、`/retry`）；无权限/无数据诚实空态，没有现成位置就 BLOCKED | `pages/merchant/**`；四态照现有商家二级页 |
+| 101 | 发布检查 XP 预算总览（只读） | 主题发布检查已有的奖励/预算区读 `POST /api/topic/xp-budget`（`topic_id`，`xpBudgetService.computeBudget` 返回为准），只补现有块缺的数字；宿主若是 `pages/publish/fabu/index.js`（Codex）则只交补丁并 BLOCKED | 不碰 fabu/pro-editor（Codex）；不改现有样式 |
+| 102 | 创作广场头部统计（只读） | 个人页现有广场分区读 `POST /api/creativesquare/summary`（参与活动/通关数/本周打卡节点，字段以控制器 `data.put` 为准），只填现有头部块缺的数字；没有现成块就 BLOCKED，不新造入口 | `subpackageMember/components/cy/profile`；不改主标题 |
+| 103 | 合作方履约信用摘要（只读） | 现有合作邀约详情页读 `POST /api/coop/credit`（body `{memberId}` 为对方，近 90 天履约率/违约计数，字段以 `creditSummary` 返回为准），照现有键值行展示；样本为 0 时不展示，不做评分/排序 | `pages/coop/invite-detail/**`；不碰分成/费用字段（资金政策） |
+| 104 | 商家订单异常列表（只读） | 先核实商家工作台是否已有订单/异常列表（`ledger`、`aftercare` 等），已有则 BLOCKED；否则在现有入口区加一行读 `POST /api/merchant/orders`（`ORDER_READ`，联系方式按后端脱敏），只读，不做退款/核销写操作 | `pages/merchant/**`；不碰积分/券/应付服务（Codex） |
+| 105 | 商家可报名主题（只读） | 商家现有合作/找主题入口读 `POST /api/topic/list-to-merchant` 列出可报名主题，点进沿用现有主题详情；先核实是否已有同类列表（`coop/nearby` 等），已有则 BLOCKED；不新增报名写接口 | 照现有主题列表卡片 |
+| 106 | 单测与合同测试·第八批 | BL-100–105 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码） | tests |
+| 107 | 验收清单更新·第五至八批 | 把 BL-84–105 已开 PR 的本地验收清单补进 `ACCEPTANCE.md`（依赖 BL-59 #101、BL-83 #126） | docs |
