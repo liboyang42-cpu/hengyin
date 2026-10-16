@@ -72,18 +72,18 @@
         <view class="entry-activity__copy"><text class="entry-activity__title">{{entryActivity.title}}</text><text class="entry-activity__meta">{{entryActivity.meta || entryActivity.address || '查看活动详情'}}</text></view>
       </view>
       <view wx:if="{{!entryActivity.registered}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="去报名" hover-class="cy-pressed" hover-stay-time="80">去报名</view>
-      <view class="entry-attendees" wx:if="{{entryActivity.participantCount}}"><view class="entry-team__avatars" wx:if="{{entryActivity.participantFaces.length}}"><image wx:for="{{entryActivity.participantFaces}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view><text>{{entryActivity.participantCount}} 人参加</text></view>
+      <view class="entry-attendees" wx:if="{{entryActivity.participantCount}}"><view class="entry-team__avatars" wx:if="{{entryActivity.participantFaces.length}}"><image wx:for="{{entryActivity.participantFaces}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view><text>{{entryActivity.participantCount}} 人参加</text></view>
       <view class="entry-sheet__section" wx:if="{{entryActivity.teams.length}}">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">一起参加 · {{entryActivity.teams.length}} 队正在招募</text></view>
         <view class="entry-team" wx:for="{{entryActivity.teams}}" wx:key="teamId" data-id="{{item.teamId}}" bindtap="openEntryTeam" aria-role="button" aria-label="查看队伍 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="entry-team__avatars" wx:if="{{item.faces.length}}"><image wx:for="{{item.faces}}" wx:for-item="face" wx:key="*this" src="{{face}}" mode="aspectFill" /></view>
+          <view class="entry-team__avatars" wx:if="{{item.faces.length}}"><image wx:for="{{item.faces}}" wx:for-item="face" wx:key="index" src="{{face}}" mode="aspectFill" /></view>
           <view class="entry-team__copy"><text>{{item.title}}</text><text>{{item.members}} · 队长审核</text></view><view class="entry-team__action {{entryActivity.registered?'':'is-disabled'}}">{{entryActivity.registered?'申请加入':'报名后申请'}}</view>
         </view>
       </view>
       <view wx:if="{{entryActivity.registered}}" class="entry-sheet__create-team" bindtap="openEntryActivityDetail" aria-role="button" aria-label="发起组队" hover-class="cy-pressed" hover-stay-time="80">发起组队</view>
       <view class="entry-sheet__section">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">现场动态{{entryActivity.dynamicImages.length ? ' · ' + entryActivity.dynamicImages.length : ''}}</text></view>
-        <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view>
+        <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view>
         <view class="entry-sheet__empty entry-sheet__empty--compact" wx:else>还没有现场动态</view>
       </view>
     </block>
@@ -96,7 +96,7 @@
     </block>
 
     <block wx:elif="{{entrySheet=='activity' && entryActivity && entrySheetView=='team' && entryTeam}}">
-      <view class="entry-team-detail"><view class="entry-team__avatars" wx:if="{{entryTeam.faces.length}}"><image wx:for="{{entryTeam.faces}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view><text>{{entryTeam.members}}</text></view>
+      <view class="entry-team-detail"><view class="entry-team__avatars" wx:if="{{entryTeam.faces.length}}"><image wx:for="{{entryTeam.faces}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view><text>{{entryTeam.members}}</text></view>
       <view class="entry-sheet__primary" bindtap="openEntryTeamAction" aria-role="button" aria-label="{{entryTeam.canApply?'申请加入':'去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryTeam.canApply?'申请加入':'去报名'}}</view>
     </block>
 
@@ -588,7 +588,7 @@
 <block wx:if="{{topicView}}">
 <view class="pdim is-in {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeTopicView" aria-role="button" aria-label="关闭主题" hover-class="cy-pressed" hover-stay-time="80"></view>
 <scroll-view class="tstrip is-in" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topicView.pics.length}}">
-  <image class="tstrip__i" wx:for="{{topicView.pics}}" wx:key="*this" src="{{item}}" mode="aspectFill" lazy-load="true" />
+  <image class="tstrip__i" wx:for="{{topicView.pics}}" wx:key="index" src="{{item}}" mode="aspectFill" lazy-load="true" />
 </scroll-view>
 <view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab"></view>
