@@ -205,3 +205,16 @@
 | 137 | 评审规则静态复核 | 新建 `LINT-AUDIT.md`：对 open PR 的新增代码复核监督规则——新可点元素是否有 `hover-class`、传给 `app.sendRequest` 的回调是否在方法简写里依赖 `this`、宿主页场景半屏是否经单一 `sceneCurrent`、是否有裸错误文案/假成功文案；逐条写 PR 号 + file:line；只汇总不改代码 | docs |
 | 138 | 验收总索引 | 新建 `ACCEPTANCE-INDEX.md`：把 `ACCEPTANCE*.md` 与各 PR 正文「本地验收清单」按页面/入口归并成一张总表（入口路径、需要的身份、依赖的协调者补丁、对应 PR），供用户统一验证日按页走查 | docs；依赖 BL-123 #167、BL-131 |
 | 139 | 协调者补丁累计校验 | 依据 BL-126 `COORDINATOR-PATCHES.md`，在本地临时 worktree 把各 PR 交协调者的补丁按 BL-127 顺序叠加，跑 TASKS.md 公共规则里的 node 检查（**不跑 `ci/xcx-check.sh`**），把每步计数与失败项记入 `COORDINATOR-PATCHES-CHECK.md`；只提交该文档，不提交叠加后的统筹文件 | docs；依赖 BL-126、BL-127 |
+
+## 第十三批（140–147）：监督线补充（BL-133 #177 复核出有现成宿主的零调用接口 + BL-136 #180 单测缺口；不改现有样式、无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 140 | 俱乐部解散阻断明细回读 | 现有俱乐部编辑场景的解散区（`components/cy/scene-club-edit`，已有 `dissolutionBlockerItems`/`dissolutionBlockerSection` 状态，目前只从 `/api/club/dissolve` 报错里取）在主理人进入解散区或处理完一项返回时读 `POST /api/club/dissolution-blockers`（`{id}`；`clubService.selectDissolutionBlockers(id, ownerId)` 返回为准），用现有阻断列表渲染；字段对不上就只做回读校验并在 PR 写清；错误按后端文案如实提示；非主理人按后端报错 | 只读；照现有阻断区结构，不加新样式；不涉及资金写 |
+| 141 | 商家营业状态写后回读 | `pages/merchant/index` 与 `pages/merchant/decor` 现有营业中/已打烊切换在 `/business-status/update` 成功后读 `POST /api/merchant/business-status`（返回 `businessStatus`/`businessStatusText`），以回读值为准刷新开关，不一致时如实提示「状态未同步」；不得在回读前宣称成功；若现有页面已从 info 回读且等价则 BLOCKED 并附对照 | 不改开关样式；只加回读 |
+| 142 | 合作候选池（发布者视角，只读） | `pages/coop/list` 已用 `candidates/received`、`candidates/confirm`；核实发布者是否有按主题查看候选的现成位置，有则读 `POST /api/coop/candidates`（`topicId`、`scope`；仅主题发布者，返回邀约候选+报名候选，字段以控制器为准）照现有候选卡展示；没有现成宿主或与现有列表等价就 BLOCKED 并附对照 | 只读；不做确认/拒绝以外的新写操作 |
+| 143 | 单测补齐·漫游筛选 | 依 #180 `TEST-GAPS.md`：为 #37 `utils/roam-poi-filter` 的 `storageKey`（按账号隔离）、`isVisitedPoi`、`radiusLabel` 补单测；从 #37 分支切出，PR 正文注明依赖 #37、须在其后合并 | tests；不改被测代码 |
+| 144 | 单测补齐·官方主办规则 | 依 #180：为 #27（CL4）`organizer-rules` 的 `composePauseField`（预设+补充文字拼接、空值）、`verifyReadBack`（回读不一致必须失败）补单测；从 #27 分支切出并注明依赖 | tests；不改被测代码 |
+| 145 | 单测补齐·积分月份分组与商家 ID 校验 | 依 #180：#40 `rows.js` 的 `monthKey`/`monthLabel`（跨年、非法日期）与 #110 `validMerchantId`（0/负数/字符串）补单测；各从对应分支切出、分别开 PR 或在正文写清依赖 | tests；不改被测代码 |
+| 146 | 单测与合同测试·第十三批 | BL-140–142 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码）；均 BLOCKED 则 BLOCKED | tests |
+| 147 | 验收清单更新·第十三批 | 把 BL-132–146 已开 PR 的本地验收清单补进 `ACCEPTANCE-BATCH13.md`，并在 BL-138 `ACCEPTANCE-INDEX.md`（#182）对应页面行注明 | docs |
