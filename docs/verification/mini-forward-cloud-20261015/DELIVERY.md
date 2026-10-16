@@ -10,6 +10,15 @@
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
 只在现有授权内源码修复、回归编写和 Git 交付。验证全部 `NOT_RUN`；不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
+## 最新源码工作：原两域两项具体续领
+
+用户再次要求继续。原分支父 `6f0e2b076d029dd527e1b873bfea9d10ea4e3dc0`，业务起点和计划父均未换。刷新201开放PR（三页100+100+1）及各自完整文件列表，六既有白名单交集仅本队PR72；最新SOURCE_OWNERS blob `8508fc7aedb13a393f7eeea1914a9926f4f0465a` 仍给原两写者，无新写者冲突。
+
+- F3-STAT-02：`/root/stat` 只改原 Controller/Test。pilot 日期解析仍接受零年/负年/符号扩展年份，1天窗口可传SQL DATE cast；仅拒非法年份，保留合法日期、必填、1–62inclusive和原响应，不改funnel/Mapper/UI。
+- F3-GROW-02：`/root/grow` 只改原 Service/Test。分别取today与lastCheckinDate跨午夜时，可将15日计算的streak存为16日，次日被当同日而少延一天；锁读后统一采样时点，沿原默认时区与连续打卡/等级/奖励规则，补确定性受控时间回归。
+
+均为源码级确认触发，未运行HTTP/DB/测试；新增回归NOT_RUN，不把旧候选普通24PASS继承给新补丁。当前实际源码writer=2，仍仅原两域，不新增路径或模块，不凑六条。完成一项即独立提交push，不等验证；父协调者只维护本目录三文档。下文EXHAUSTED为此前范围完成时的历史状态，本节覆盖当前活动状态。
+
 ## 最新外部验证：普通24项通过，真实MySQL仍未运行
 
 本节覆盖下文源码首次交付时的“全部 NOT_RUN”历史表述；Cloud 自己仍未运行任何编译或验证。冻结业务源码继续为 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，当前仍 `EXHAUSTED`（writer=0、READY=0），总体保留 `SOURCE_DELIVERED_UNVERIFIED`，不作完整业务验收。

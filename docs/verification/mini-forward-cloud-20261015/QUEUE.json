@@ -4,9 +4,9 @@
   "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
   "branch": "codex/mini-forward-source-20261015",
-  "verification": "LOCAL_VPS_UNIT_PASS_MYSQL_NOT_RUN",
+  "verification": "NEW_SOURCE_WORK_NOT_RUN_PREVIOUS_CANDIDATE_UNIT_PASS",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
-  "active_source_writers": 0,
+  "active_source_writers": 2,
   "initial_independent_lanes": 2,
   "items": [
     {
@@ -44,6 +44,34 @@
         "Existing player_badge uk_member_badge(member_id,badge_code,source_id)",
         "Existing outer grantOnce TOPIC_FINISH identity; no new reward policy"
       ]
+    },
+    {
+      "id": "F3-STAT-02",
+      "lane": "STAT",
+      "writer": "/root/stat",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "title": "既有pilot统计拒绝零年与带符号扩展年份",
+      "owned_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+      ],
+      "finding": "LocalDate ISO years outside positive four-digit yyyy-MM-dd pass inclusive one-day pilot validation and reach SQL DATE cast; source-level reachability only, no HTTP/DB execution.",
+      "verification": "NOT_RUN",
+      "commit_sha": null
+    },
+    {
+      "id": "F3-GROW-02",
+      "lane": "GROW",
+      "writer": "/root/grow",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "title": "节点成长跨午夜时的连续打卡与持久化日期使用同一时点",
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+      ],
+      "finding": "Independent today and lastCheckinDate clock reads can straddle midnight under thread preemption and suppress the next day streak increment. Preserve default timezone and existing streak/reward policy.",
+      "verification": "NOT_RUN",
+      "commit_sha": null
     }
   ],
   "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
@@ -51,7 +79,7 @@
   "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
   "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72",
   "ready_source_items": 0,
-  "scope_state": "EXHAUSTED",
+  "scope_state": "ACTIVE_SOURCE_ONLY",
   "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
   "declarations": {
     "total": 35,
@@ -60,9 +88,8 @@
     "status": "PARTIAL_LOCAL_VPS_EXECUTION",
     "note": "35 static declarations; local coordinator executed exactly the two ordinary classes (24 actual/pass). Eleven real MySQL cases remain NOT_RUN. Cloud executed none."
   },
-  "next_action": "Keep EXHAUSTED and frozen source. Local coordinator chooses an approved real-MySQL execution entry; Cloud does not run substitutes. Wake only the original author repair lane for an actual failure.",
+  "next_action": "Original STAT/GROW writers implement only the four claimed existing paths, freeze independently, coordinator commits and pushes each item. Do not inherit old 2babbe28 PASS or run Cloud validation.",
   "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
-  "exhausted_reason": "Both authorized initial tasks are frozen and delivered. No concrete unclaimed next item is established inside the current whitelist; do not expand scope or fabricate tasks.",
   "cloud_execution": "NOT_RUN",
   "external_verification": {
     "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
@@ -122,5 +149,6 @@
       "merge",
       "deployment"
     ]
-  }
+  },
+  "work_parent_sha": "6f0e2b076d029dd527e1b873bfea9d10ea4e3dc0"
 }
