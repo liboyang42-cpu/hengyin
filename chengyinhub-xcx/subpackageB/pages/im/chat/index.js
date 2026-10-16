@@ -11,7 +11,9 @@ Page({
     moreSheetShow: false,
     // CU-C-120:系统通知(type=2)没有可交流的对象,举报/拉黑的目标也是空的 ⇒ 面板只留真能做的清空聊天。
     // 初始值按可回复的私信给,onLoad 里再按会话类型收窄(见 _moreItemsFor)。
-    moreSheetItems: ['举报', '拉黑', '清空聊天'],
+    moreSheetItems: ['举报', '举报对方', '拉黑', '清空聊天'],
+    reportShow: false,
+    reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
     readOnlyTip: '系统通知，不能回复',
@@ -111,7 +113,7 @@ Page({
       avatar: decodeURIComponent(options.avatar || ''),
       type: type,
       readOnly: readOnly,
-      moreSheetItems: readOnly ? ['清空聊天'] : ['举报', '拉黑', '清空聊天'],
+      moreSheetItems: readOnly ? ['清空聊天'] : ['举报', '举报对方', '拉黑', '清空聊天'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
     });
@@ -582,6 +584,7 @@ Page({
     const label = e.detail.label;
     this.setData({ moreSheetShow: false });
     if (label === '举报') this.doReport();
+    else if (label === '举报对方') this.doReportPeer();
     else if (label === '拉黑') this.doBlock();
     else if (label === '清空聊天') this.clearConversation();
   },
@@ -613,6 +616,16 @@ Page({
       success(res) { app.tips && app.tips(res && res.code == 200 ? '举报已提交' : (res.msg || '提交失败')); },
     });
   },
+  // BL-36:举报对方(社区信任举报 targetType=MEMBER),走共用举报半屏。
+  // 本页拿不到会话对方 id,与「拉黑」同口径:取最近一条对方消息的 senderId。
+  doReportPeer() {
+    if (this.data.readOnly) return;
+    let otherId = 0;
+    for (let i = this.data.msgs.length - 1; i >= 0; i--) { if (this.data.msgs[i].senderId && this.data.msgs[i].senderId != this.data.myId) { otherId = this.data.msgs[i].senderId; break; } }
+    if (!otherId) { app.tips && app.tips('对方还没有发过消息，暂时无法举报对方'); return; }
+    this.setData({ reportShow: true, reportPeerId: String(otherId) });
+  },
+  onReportClose() { this.setData({ reportShow: false }); },
   doBlock() {
     // 单聊对方 id 需后端会话信息;此处用会话发起对象。简化:从最近一条对方消息取 senderId
     let otherId = 0;

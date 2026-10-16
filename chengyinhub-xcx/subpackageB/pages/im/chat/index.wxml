@@ -214,6 +214,7 @@
                    bind:select="onPlusSelect" bind:cancel="onPlusCancel" />
   <cy-option-sheet show="{{moreSheetShow}}" title="更多" items="{{moreSheetItems}}" immediate="{{true}}"
                    bind:select="onMoreSelect" bind:cancel="onMoreCancel" />
+  <cy-report-sheet wx:if="{{!readOnly}}" show="{{reportShow}}" target-type="MEMBER" target-id="{{reportPeerId}}" title="举报对方" bind:close="onReportClose" />
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 <!-- 危险动作三段式确认(文案在 utils/danger-actions.js) -->
