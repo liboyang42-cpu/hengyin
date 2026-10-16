@@ -218,7 +218,13 @@ public class FileOssUploadUtils {
             if (aftercareEvidence) {
                 jsobj1.put("versionId", result.getVersionId());
             } else if (signPublic) {
-                jsobj1.put("url", generatePresignedUrl(ossClient, fileRelName, bucketName));
+                if ("COMMUNITY_POST".equals(ownerMetadata.getUserMetadata().get(UPLOAD_BIZ_TYPE_METADATA_KEY))) {
+                    GeneratePresignedUrlRequest preview = new GeneratePresignedUrlRequest(bucketName, fileRelName);
+                    preview.setExpiration(shortLivedExpiration(new Date(), 300));
+                    jsobj1.put("url", resolveGeneratedUrl(ossClient, preview));
+                } else {
+                    jsobj1.put("url", generatePresignedUrl(ossClient, fileRelName, bucketName));
+                }
             }
 //            jsobj1.put("orgName", orgName);
 //            jsobj1.put("urls", "/" + fileRelName);
@@ -643,6 +649,36 @@ public class FileOssUploadUtils {
         }
         Date expiration = shortLivedExpiration(new Date(), expirationSeconds);
         return generatePresignedUrl(objectName, expiration);
+    }
+
+    /** Only persisted server-issued keys or HTTPS references to this configured storage are identities. */
+    public static String communityMediaObjectKey(String reference) {
+        if (reference != null && reference.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) return reference;
+        return communityMediaObjectKey(reference, requiredEnv(OSS_BUCKET_NAME_ENV), requiredEnv(OSS_ENDPOINT_ENV));
+    }
+
+    static String communityMediaObjectKey(String reference, String bucket, String endpoint) {
+        if (reference == null || !reference.equals(reference.trim())) throw new IllegalArgumentException("社区媒体来源无效");
+        if (reference.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) return reference;
+        try {
+            URI storage = new URI(endpoint.contains("://") ? endpoint : "https://" + endpoint);
+            URI uri = new URI(reference);
+            String key = uri.getRawPath() == null || !uri.getRawPath().startsWith("/")
+                    ? "" : uri.getRawPath().substring(1);
+            if (!"https".equalsIgnoreCase(storage.getScheme()) || storage.getHost() == null
+                    || storage.getUserInfo() != null || storage.getPort() != -1
+                    || storage.getRawQuery() != null || storage.getRawFragment() != null
+                    || !(storage.getRawPath().isEmpty() || "/".equals(storage.getRawPath()))
+                    || !"https".equalsIgnoreCase(uri.getScheme())
+                    || uri.getUserInfo() != null || uri.getPort() != -1 || uri.getRawFragment() != null
+                    || !(bucket + "." + storage.getHost()).equalsIgnoreCase(uri.getHost())
+                    || !key.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) {
+                throw new IllegalArgumentException("社区媒体来源无效");
+            }
+            return key;
+        } catch (URISyntaxException | NullPointerException invalid) {
+            throw new IllegalArgumentException("社区媒体来源无效", invalid);
+        }
     }
 
     static Date shortLivedExpiration(Date now, int expirationSeconds) {

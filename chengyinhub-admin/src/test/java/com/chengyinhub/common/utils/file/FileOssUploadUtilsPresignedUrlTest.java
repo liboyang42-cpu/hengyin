@@ -30,6 +30,34 @@ class FileOssUploadUtilsPresignedUrlTest {
             "upload/merchant-aftercare-evidence/0123456789abcdef0123456789abcdef.jpg";
     private static final String EVIDENCE_VERSION_ID = "CAEQARiBgMC-example-version-1";
 
+
+    @Test
+    void communityIdentityAcceptsCanonicalKeysAndExpiredTrustedUrlsWithoutReusingTheirSignature() {
+        String key = "upload/0123456789abcdef0123456789abcdef.png";
+        assertEquals(key, FileOssUploadUtils.communityMediaObjectKey(key));
+        assertEquals(key, FileOssUploadUtils.communityMediaObjectKey(
+                "https://private-test.oss-cn-shanghai.aliyuncs.com/" + key + "?Expires=1&Signature=old",
+                "private-test", "https://oss-cn-shanghai.aliyuncs.com"));
+    }
+
+    @Test
+    void communityIdentityRejectsForeignHostsAmbiguousUrlsAndEncodedPaths() {
+        String key = "upload/0123456789abcdef0123456789abcdef.png";
+        String prefix = "https://private-test.oss-cn-shanghai.aliyuncs.com/";
+        for (String reference : new String[] {
+                "http://private-test.oss-cn-shanghai.aliyuncs.com/" + key,
+                "https://foreign.example/" + key,
+                "https://user@private-test.oss-cn-shanghai.aliyuncs.com/" + key,
+                "https://private-test.oss-cn-shanghai.aliyuncs.com:443/" + key,
+                prefix + key + "#fragment", prefix + "upload%2f0123456789abcdef0123456789abcdef.png",
+                prefix + "upload/../" + key, prefix + key.replace(".png", "%2epng"),
+                "/profile/" + key, "upload/not-a-server-key.png", " " + prefix + key }) {
+            assertThrows(IllegalArgumentException.class, () ->
+                    FileOssUploadUtils.communityMediaObjectKey(reference, "private-test",
+                            "https://oss-cn-shanghai.aliyuncs.com"), reference);
+        }
+    }
+
     @Test
     void returnsTheSignedUrlProducedByTheSdk() throws Exception {
         OSSClient client = mock(OSSClient.class);
