@@ -14,23 +14,22 @@
       "lane": "STAT",
       "task_id": "F3-STAT-01",
       "child": "/root/stat",
-      "state": "ACTIVE_SOURCE_ONLY",
+      "state": "FROZEN_SOURCE_DELIVERED",
       "files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
       ],
       "commit_sha": "add1534cd63c6ffd95467795126246c8d3581594",
-      "active_task_id": "F3-STAT-02",
-      "active_files": [
-        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
-      ]
+      "active_task_id": null,
+      "active_files": [],
+      "latest_task_id": "F3-STAT-02",
+      "latest_commit_sha": "009664d74bc9a330b14a10e0696dba74e91ea291"
     },
     {
       "lane": "GROW",
       "task_id": "F3-GROW-01",
       "child": "/root/grow",
-      "state": "ACTIVE_SOURCE_ONLY",
+      "state": "FROZEN_SOURCE_DELIVERED",
       "files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
@@ -40,11 +39,10 @@
       ],
       "new_file_authority": "TASKS.json items[F3-GROW-01].new_regression_file",
       "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "active_task_id": "F3-GROW-02",
-      "active_files": [
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
-      ]
+      "active_task_id": null,
+      "active_files": [],
+      "latest_task_id": "F3-GROW-02",
+      "latest_commit_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     }
   ],
   "coordinator_owned_files": [
@@ -52,9 +50,9 @@
     "docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
     "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
   ],
-  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-  "active_source_writers": 2,
-  "verification_scope": "NOT_RUN records Cloud execution only; local VPS ordinary24 PASS and MySQL11 NOT_RUN are recorded in QUEUE.json. Source remains frozen; active writers=0.",
+  "source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "active_source_writers": 0,
+  "verification_scope": "Current bde356f3 source candidate NOT_RUN. Previous local VPS ordinary24 PASS is recorded separately under source2babbe28; MySQL11 remains NOT_RUN. Both authors frozen.",
   "refreshed_ownership": {
     "open_pr_count": 201,
     "rest_pages": [
@@ -67,5 +65,6 @@
     ],
     "other_writer_intersections": [],
     "control_source_owners_blob": "8508fc7aedb13a393f7eeea1914a9926f4f0465a"
-  }
+  },
+  "previous_source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd"
 }

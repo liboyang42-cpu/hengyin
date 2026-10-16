@@ -10,7 +10,41 @@
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
 只在现有授权内源码修复、回归编写和 Git 交付。验证全部 `NOT_RUN`；不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
-## 最新源码工作：原两域两项具体续领
+## 最新交付候选：两项续作已公共，当前 NOT_RUN
+
+最新冻结源码为 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，分支与草稿PR72不变；前一项独立提交 `009664d74bc9a330b14a10e0696dba74e91ea291` 已包含其中。旧候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 的普通24PASS仅保留历史，不能覆盖新候选。当前所有验证为 NOT_RUN / SOURCE_DELIVERED_UNVERIFIED，Cloud没有运行任何验证。
+
+本次只追加原白名单四条既有路径：Controller/Test 与 ProgressionService/Test，不新增文件。两位原作者均再次冻结，实际writer=0、READY=0；当前没有已确认下一具体项，恢复EXHAUSTED。下文恢复开发及旧验证段落均为历史，当前状态以本节和QUEUE为准。
+
+### F3-STAT-02
+
+原作者 `/root/stat`；完整源码提交 `009664d74bc9a330b14a10e0696dba74e91ea291`，仅 `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java`、`chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java`。
+
+触发：pilot的LocalDate.parse接受零年、负年、符号扩展年份，完整1天窗口仍把原串传SQL DATE cast。仅解析后/窗口计算前追加正四位年份检查，不重构funnel、不改Mapper/UI；合法年份、必填、1–62inclusive及start/end/dedup/coverage/metric五字段保留。没有实测HTTP或SQL返回，不把预期转换问题称生产已复现。
+
+既有12个测试完整保留，新增2个@Test，共14声明：12个非法年份短窗，均错误码500/固定日期格式消息且Mapper零交互；3个合法0001/0999/9999短窗，完整核原参数与五字段。案例组合不是执行数。NOT_RUN，无新依赖/窗口政策。真实SQL转换及接口仍由总控验证。
+
+### F3-GROW-02
+
+原作者 `/root/grow`；完整源码提交 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，仅 `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java`、`chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java`。
+
+触发：锁读后先LocalDate.now算today，后new Date写lastCheckinDate，在午夜间线程停顿可用15日计算streak却存16日，16日下一有效调用被当同日，少延一天。现在锁读后一次采样checkinTime，toLocalDate沿原ZoneId.systemDefault算日期；lastCheckinDate/updateTime共用采样。取时方法为最小protected生产new Date，便于测试受控时间；没有新配置/依赖，未动成长锁、计次、等级、主题里程、徽章时间或阈值政策。
+
+既有12个测试完整保留，新增2个确定性@Test，共14声明。子类给定午夜前/后队列并模拟Mapper持久化，断言单次streak7与存储日期一致，以及两次有效调用streak6→7→8、checkins9→10→11/level3，无sleep或源码字符串断言。NOT_RUN。Date→DATE映射及JVM/DB时区集成仍未验，未选择新时区或改事件身份。
+
+### 新候选的验证交接
+
+当前AnalyticsControllerTest14 + PlayerProgressionServiceImplTest14 + PlayerGrowthConcurrencyMySqlIT11 =39源码声明（本次净增4，公共基线起净增34），全部新候选NOT_RUN，实际执行数未知。原MySQL IT文件未改，11项始终未执行。仍需要本地独占入口及原两唯一键/事务代理前提，资源与真实MySQL执行门禁不变。
+
+普通用例选择示例（只写文本，Cloud未执行）：
+
+```bash
+mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.business.AnalyticsControllerTest,com.chengyinhub.business.service.PlayerProgressionServiceImplTest test
+```
+
+是否执行28普通声明及真实MySQL11由本地按批准入口/直接影响决定，不能以旧24PASS或声明数签收；不再以文档head替代源码冻结SHA。日期全历史性能、共享会员锁序与完整奖励并发仍是原交接边界，不新增共享表或目录写权。未来真实失败仅对应原作者一条修复线；其余独立授权项可继续。
+
+## 历史恢复开发记录：原两域两项具体续领
 
 用户再次要求继续。原分支父 `6f0e2b076d029dd527e1b873bfea9d10ea4e3dc0`，业务起点和计划父均未换。刷新201开放PR（三页100+100+1）及各自完整文件列表，六既有白名单交集仅本队PR72；最新SOURCE_OWNERS blob `8508fc7aedb13a393f7eeea1914a9926f4f0465a` 仍给原两写者，无新写者冲突。
 

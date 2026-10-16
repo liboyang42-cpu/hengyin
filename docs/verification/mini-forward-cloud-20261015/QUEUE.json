@@ -4,9 +4,9 @@
   "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
   "branch": "codex/mini-forward-source-20261015",
-  "verification": "NEW_SOURCE_WORK_NOT_RUN_PREVIOUS_CANDIDATE_UNIT_PASS",
+  "verification": "NOT_RUN",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
-  "active_source_writers": 2,
+  "active_source_writers": 0,
   "initial_independent_lanes": 2,
   "items": [
     {
@@ -49,7 +49,7 @@
       "id": "F3-STAT-02",
       "lane": "STAT",
       "writer": "/root/stat",
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "title": "既有pilot统计拒绝零年与带符号扩展年份",
       "owned_files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
@@ -57,13 +57,16 @@
       ],
       "finding": "LocalDate ISO years outside positive four-digit yyyy-MM-dd pass inclusive one-day pilot validation and reach SQL DATE cast; source-level reachability only, no HTTP/DB execution.",
       "verification": "NOT_RUN",
-      "commit_sha": null
+      "commit_sha": "009664d74bc9a330b14a10e0696dba74e91ea291",
+      "test_class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "test_declarations": 14,
+      "new_test_declarations": 2
     },
     {
       "id": "F3-GROW-02",
       "lane": "GROW",
       "writer": "/root/grow",
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "title": "节点成长跨午夜时的连续打卡与持久化日期使用同一时点",
       "owned_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
@@ -71,7 +74,10 @@
       ],
       "finding": "Independent today and lastCheckinDate clock reads can straddle midnight under thread preemption and suppress the next day streak increment. Preserve default timezone and existing streak/reward policy.",
       "verification": "NOT_RUN",
-      "commit_sha": null
+      "commit_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "test_class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "test_declarations": 14,
+      "new_test_declarations": 2
     }
   ],
   "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
@@ -79,16 +85,19 @@
   "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
   "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72",
   "ready_source_items": 0,
-  "scope_state": "ACTIVE_SOURCE_ONLY",
-  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "scope_state": "EXHAUSTED",
+  "source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
   "declarations": {
-    "total": 35,
-    "new": 30,
-    "executed": 24,
-    "status": "PARTIAL_LOCAL_VPS_EXECUTION",
-    "note": "35 static declarations; local coordinator executed exactly the two ordinary classes (24 actual/pass). Eleven real MySQL cases remain NOT_RUN. Cloud executed none."
+    "total": 39,
+    "new_since_public_base": 34,
+    "new_this_continuation": 4,
+    "ordinary_class_declarations": 28,
+    "real_mysql_declarations": 11,
+    "executed_for_current_candidate": null,
+    "status": "NOT_RUN",
+    "note": "14 Analytics +14 PlayerProgression +11 existing MySQL IT. Old external24 PASS belongs only to previous source2babbe28; no result inheritance."
   },
-  "next_action": "Original STAT/GROW writers implement only the four claimed existing paths, freeze independently, coordinator commits and pushes each item. Do not inherit old 2babbe28 PASS or run Cloud validation.",
+  "next_action": "Local coordinator may validate frozen bde356f3 candidate (STAT02+GROW02) with exact classes; Cloud never runs validation. Real-MySQL11 approved entry remains local responsibility. No further concrete task is established within current whitelist; exact new scope must be transferred.",
   "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
   "cloud_execution": "NOT_RUN",
   "external_verification": {
@@ -150,5 +159,7 @@
       "deployment"
     ]
   },
-  "work_parent_sha": "6f0e2b076d029dd527e1b873bfea9d10ea4e3dc0"
+  "work_parent_sha": "6f0e2b076d029dd527e1b873bfea9d10ea4e3dc0",
+  "previous_source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "exhausted_reason": "Two concrete continuation items delivered as independent commits. No authorized independent next item is established; do not expand products, modules or task counts."
 }
