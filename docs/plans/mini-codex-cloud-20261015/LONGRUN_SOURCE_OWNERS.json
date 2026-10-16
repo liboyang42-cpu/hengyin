@@ -2651,14 +2651,65 @@
       "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
       "actual_writer": 0
     },
-    "sql/migration_topic_completion_coupon_receipt_20261016.sql": {
-      "owner": "EXTRA6/E04",
-      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
-      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
-      "worker": "original /root/external_e04",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
       "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "actual_writer": 0,
+      "transfer_evidence": "212 openPR paginated supplemental scan zero hits and no existing global claim; original E02 requested exact paths in 6215854647",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "actual_writer": 0,
+      "transfer_evidence": "212 openPR paginated supplemental scan zero hits and no existing global claim; original E02 requested exact paths in 6215854647",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "actual_writer": 0,
+      "transfer_evidence": "212 openPR paginated supplemental scan zero hits and no existing global claim; original E02 requested exact paths in 6215854647",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "actual_writer": 0,
+      "transfer_evidence": "212 openPR paginated supplemental scan zero hits and no existing global claim; original E02 requested exact paths in 6215854647",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "actual_writer": 0,
+      "transfer_evidence": "212 openPR paginated supplemental scan zero hits and no existing global claim; original E02 requested exact paths in 6215854647",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
+    },
+    "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql": {
+      "owner": "EXTRA6/E04",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_SOURCE_ONLY_NEW_MIGRATION_NO_EXECUTION",
+      "actual_writer": 0,
       "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
-      "actual_writer": 0
+      "replaces_unwritten_reserved_path": "sql/migration_topic_completion_coupon_receipt_20261016.sql"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_REGRESSION_SOURCE_ONLY_NOT_RUN",
+      "actual_writer": 0,
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json"
     }
   },
   "reserved_not_transferred": [
@@ -2846,7 +2897,8 @@
     },
     "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md": "EXTRA6/E02",
     "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md": "EXTRA6/E04",
-    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md": "EXTRA6/E04"
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md": "EXTRA6/E04",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07.md": "EXTRA6/E04"
   },
   "analytics_third_pending": {
     "packet": "THIRD_CLOUD_HANDOFF.json",
@@ -4021,8 +4073,26 @@
       "/root/external_e02",
       "/root/external_e04"
     ],
-    "state": "GRANTED_AWAITING_REAL_CHILD_ACK",
+    "state": "ORIGINAL_TWO_DECISION_RECEIPTS_SCOPE_PROPOSALS_CONFIRMED_GRANT_ACK_PENDING",
     "actual_writers": 0,
-    "only_global_editor": "C00"
+    "only_global_editor": "C00",
+    "original_author_receipts": [
+      {
+        "lane": "E02",
+        "worker": "/root/external_e02",
+        "child_thread_id": "01a13fa2-edb5-73da-99d7-848a5391f002",
+        "branch": "codex/extra-e02-regression-20261015",
+        "base": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+        "state": "USER_DECISION_RECEIVED_SCOPE_PROPOSED_GRANT_ACK_PENDING"
+      },
+      {
+        "lane": "E04",
+        "worker": "/root/external_e04",
+        "child_thread_id": "01a13fa3-5db0-708e-82e4-07e19d54b028",
+        "branch": "codex/extra-e04-regression-20261015",
+        "base": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+        "state": "USER_DECISION_RECEIVED_SCOPE_PROPOSED_GRANT_ACK_PENDING"
+      }
+    ]
   }
 }

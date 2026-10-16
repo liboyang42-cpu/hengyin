@@ -110,7 +110,7 @@
       "新投稿、编辑、审核、删除时谁写哪份权威状态必须明确"
     ],
     "physical_schema": "这些是逻辑能力缺口，不预断必须新增列/表。现有client_request_id字符串不足；若需新字段/表或回填须C00另行批准DDL与归属，不改历史migration。",
-    "marker_limit": "createDraft接受客户端clientRequestId；requireRequestId(:1585)只校长度，legacy-square-*不是可信来源证明。既有迁移标签不能替代持续producer合同。",
+    "marker_limit": "Superseded by current static guarded-label proof only for exact migrated conjunction; clientRequestId alone still untrusted. See implementation_grant revision2. No runtime data/deployment evidence.",
     "original_producer": "旧/action -> UmsCreativeSquareServiceImpl/Mapper是仍活动的实际producer；若保留旧写，桥创建/映射持久化责任必须交给此写事务或明确受控投影worker，不可把收藏消费者临时猜映射。"
   },
   "choices_for_root": [
@@ -180,5 +180,20 @@
     }
   },
   "implementation_grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
-  "old_choices_are_historical_not_pending": true
+  "old_choices_are_historical_not_pending": true,
+  "trusted_historical_source_rule": {
+    "source_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "migration": "chengyinhub-admin/sql/migration_community_post_platform_20260909.sql:853-884 inserts preserved source ID/author/clientRequestId and JSON_ARRAY(LEGACY_MIGRATED)",
+    "author_guard": "CommunityPostServiceImpl.java:49-50 AUTHOR_SAFETY_LABELS excludes LEGACY_MIGRATED; validateUpsert:1349-1359 rejects any unlisted label; both createDraft:145 and edit:180 call validation before mapPost/write",
+    "production_writers": "Bounded git grep of all current admin/system main source and sql: mapPost:1293 serializes validated author labels; CommunityPostMapper insertPost/updateContentCas writes them, prepareAccountPostsForErasure only replaces with empty array. Only migration produces protected marker; no runtime producer found assigning it. Do not extend allowlist/producer. Future integration that changes these paths must recheck invariant.",
+    "negative_controls": [
+      "spoof requestId alone",
+      "same id/author with unprotected labels",
+      "literal marker substring not JSON element",
+      "wrong author",
+      "no row",
+      "trusted migration JSON marker combined with all preserved mapping predicates",
+      "author edit/erasure removes marker -> deny, no self-heal"
+    ]
+  }
 }

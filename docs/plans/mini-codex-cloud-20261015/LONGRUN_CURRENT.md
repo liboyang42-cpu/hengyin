@@ -1,5 +1,7 @@
 # 当前恢复入口
 
+原EXTRA两作者已实际接收真人决定并给出精确scope提案（[真实回执](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6215854647)）；这不是新grant写入ACK，未报源码writer数。补充3个View转发路径和2旧fixture已核212开放PR零交集并精确转给原E02。静态核得LEGACY_MIGRATED安全标签不在作者允许值内、create/edit均拒绝，只有历史迁移设置；仅“旧行+保留ID/作者+exact迁移requestId+JSON受保护标签”共同成立才可保留历史关联，任一不成立按已选止错拒绝，不能单凭字符串/同号/作者。没有部署数据证据，真库仍未验。新增迁移源码统一采用作者请求的`chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql`，替代此前未写root路径，只准一份、不执行；原E04真库IT亦仅门控源码NOT_RUN。
+
 ## 2026-10-16 真人身份与通关券决定已落账（尚无新源码/验收）
 
 E02-23：无可信legacy→community映射的旧帖明确拒绝收藏/取消收藏；列表、收藏筛选及状态不再按数字同号或客户端legacy-square字串关联。没有证明的映射不恢复收藏，不建立新桥或切发布源。
