@@ -81,8 +81,8 @@
     "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
     "environment": "Dedicated VPS approved212 ordinary only",
     "evidence_pr": 24,
-    "evidence_commit": null,
-    "public_evidence_status": "Pending local batch publication; direct actual verifier result, C00 has not read new public raw report",
+    "evidence_commit": "5a90a1e81db8274960c3d5dee9d6646aa73311be",
+    "public_evidence_status": "C00 read public README and structured summary; original logs/XML retained by local verifier",
     "full483_rerun": false,
     "not_accepted": [
       "real MySQL/Redis",
@@ -90,6 +90,9 @@
       "device/business acceptance",
       "merge/deployment/migrations"
     ],
-    "cloud_manual_runs": 0
+    "cloud_manual_runs": 0,
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+    "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94"
   }
 }
