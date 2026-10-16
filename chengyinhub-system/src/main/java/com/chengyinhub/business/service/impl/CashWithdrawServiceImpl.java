@@ -65,6 +65,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     @Autowired
     private WithdrawalFrozenAmountResolver frozenAmountResolver;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService balanceAdmissionService;
+
     @Override
     public boolean hasPendingWithdraw(Long memberId) {
         if (memberId == null) return false;
@@ -136,22 +139,27 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
         // 3. 原子扣余额,并给冻结赏金留底(护栏与扣款同一条 UPDATE ⇒ 并发也提不走冻结额)。
         boolean deducted;
+        boolean currentRequestEligible;
         try {
-            deducted = umsMemberService.deductWithdrawableBalance(memberId, amount, frozen);
+            com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService.Admission admission =
+                    balanceAdmissionService.debitCash(id, memberId, amount);
+            deducted = admission.deducted;
+            currentRequestEligible = admission.currentRequestEligible;
         } catch (Exception e) {
             // DB/mapper 未知异常 → 扣款状态不明(DB 可能已扣但响应丢失),绝不自动退款,置待人工+告警
-            markFailed(id, outBatchNo, outDetailNo, "扣款异常:" + safe(e.getMessage()),
-                    "扣款状态不明(可能已扣),保留CW/CD供人工对账:outBatchNo=" + outBatchNo + " outDetailNo=" + outDetailNo,
-                    DateUtils.getNowDate(), MemberCashWithdraw.STATUS_FAILED_MANUAL);
+            claimFailedRefund(id, DateUtils.getNowDate(),
+                    "扣款状态不明(可能已扣),保留CW/CD供人工对账:扣款异常:" + safe(e.getMessage()), null, null);
             alarmService.alarm("提现待人工", "原子扣款状态不明 id=" + id + " member=" + memberId
                     + " amount=" + amount + " outBatchNo=" + outBatchNo + " trace=" + traceId);
             throw new IllegalStateException("提现处理异常,请稍后重试");
         }
+        if (!currentRequestEligible) {
+            // A concurrent terminal/freeze owns this original receipt. Do not debit, submit, refund or overwrite it.
+            throw new IllegalStateException("提现单状态已更新，请刷新");
+        }
         if (!deducted) {
-            // 原子 UPDATE 影响 0 行 → 确定未扣款。不进入人工回补流程,置终态 5。
-            markFailed(id, outBatchNo, outDetailNo, "原子扣款未执行(余额不足或并发)",
-                    "原子 UPDATE 0 行:未扣款,无需回补;outBatchNo=" + outBatchNo + " outDetailNo=" + outDetailNo,
-                    DateUtils.getNowDate(), MemberCashWithdraw.STATUS_FAILED_NO_DEBIT);
+            // The short transaction persisted the original no-debit terminal while holding its row lock.
+            // Do not overwrite a later terminal/freeze after that transaction ended.
             throw new IllegalStateException("可用余额不足");
         }
 
@@ -167,11 +175,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setTransferBatchId(res.get("batchId"));
             upd.setWechatBatchStatus(res.get("batchStatus"));
-            upd.setStatus(MemberCashWithdraw.STATUS_PROCESSING);
             upd.setSubmitTime(now);
-            mapper.updateMemberCashWithdraw(upd);
-            logger.info("提现已受理待确认 id={} member={} amount={} batchId={} trace={}", id, memberId, amount, res.get("batchId"), traceId);
-            return mapper.selectById(id);
+            int observed = mapper.updateReceiptIfProcessing(upd);
+            if (observed > 0) logger.info("提现已受理待确认 id={} member={} amount={} batchId={} trace={}", id, memberId, amount, res.get("batchId"), traceId);
+            else logger.info("提现受理观察未改原持久回执 id={} trace={}", id, traceId);
+            return mapper.selectByIdForUpdate(id);
         }
 
         // 5a. ★结果不确定(超时/网络/验签异常,res==null 或 ambiguous):微信可能已受理并已打款。
@@ -183,10 +191,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setSubmitTime(now);
             upd.setWechatBatchStatus("UNCERTAIN");
-            mapper.updateMemberCashWithdraw(upd);
-            logger.warn("提现发起结果不确定,保持处理中待查询核实 id={} member={} amount={} err={} trace={}",
+            int observed = mapper.updateReceiptIfProcessing(upd);
+            if (observed > 0) logger.warn("提现发起结果不确定,保持处理中待查询核实 id={} member={} amount={} err={} trace={}",
                     id, memberId, amount, res == null ? "无响应" : res.get("error"), traceId);
-            return mapper.selectById(id);
+            else logger.info("提现不确定观察未改原持久回执 id={} trace={}", id, traceId);
+            return mapper.selectByIdForUpdate(id);
         }
 
         // 5b. 确定性未受理(微信拒绝/参数非法/服务未就绪),钱未出 → 原路退回余额一次(退款也失败则待人工,不丢钱)
@@ -271,7 +280,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setWechatBatchStatus(bs);
         }
         upd.setWechatDetailId(emptyToNull(q == null ? null : q.get("detailId")));
-        mapper.updateMemberCashWithdraw(upd);
+        if (mapper.updateReceiptIfProcessing(upd) == 0) return;
 
         if (isStuck(w, now)) {
             MemberCashWithdraw esc = new MemberCashWithdraw();
@@ -371,7 +380,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (w != null && Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(w.getStatus())) {
             syncOne(w);
         }
-        return mapper.selectById(id);
+        return mapper.selectByIdForUpdate(id);
     }
 
     @Override

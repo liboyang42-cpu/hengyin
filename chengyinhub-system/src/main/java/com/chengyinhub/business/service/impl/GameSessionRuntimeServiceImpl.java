@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
@@ -219,6 +220,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public GameSessionView view(GameActorContext actor, Long activityId) {
         requireActor(actor);
         CmsActivity activity = requireActivity(activityId, false);
@@ -239,6 +241,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> exportRecap(GameActorContext actor, Long activityId) {
         requireActor(actor);
         if (!"CLUB".equals(actor.getPerspective())) {
@@ -264,7 +267,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {
         requireActor(actor);
         validateCommand(command);
-        command.setAction(command.getAction().trim().toUpperCase());
+        command.setAction(command.getAction().trim().toUpperCase(Locale.ROOT));
         String requestHash = requestHash(command);
         command.setRequestHash(requestHash);
 
@@ -367,7 +370,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     private ActionResult prepare(GameActorContext actor, CmsActivity activity) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(activity.getTopicId());
+        // Serialize configuration and INSERT ... SELECT node capture with content replacement.
+        CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(activity.getTopicId());
         String configJson = topic == null ? null : topic.getGameModuleConfigJson();
         boolean route = isRouteTopic(topic);
         JsonNode config = route ? objectMapper.createObjectNode().put("schemaVersion", 1).put("playMode", "ROUTE")
@@ -387,7 +391,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         session.setCreateTime(now);
         session.setUpdateTime(now);
         if (runtimeMapper.insertSession(session) != 1) {
-            GameSession concurrent = runtimeMapper.selectSessionByActivity(activity.getId());
+            GameSession concurrent = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (concurrent == null) throw error("GAME_STATE_CONFLICT", "游戏准备失败");
             return result(concurrent, singleton("prepared", false));
         }
@@ -444,7 +448,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         List<Map<String, Object>> appliedAssignments = new ArrayList<>();
         Set<Long> seenMembers = new HashSet<>();
         boolean changed = false;
-        boolean concurrentAssignmentObserved = false;
         for (Object item : (List<?>) raw) {
             if (!(item instanceof Map)) throw error("GAME_BAD_REQUEST", "角色分配格式不正确");
             Map<String, Object> assignmentMap = (Map<String, Object>) item;
@@ -481,7 +484,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     throw error("GAME_STATE_CONFLICT", "角色分配失败");
                 }
                 unchanged = true;
-                concurrentAssignmentObserved = true;
             }
             changed |= !unchanged;
             Map<String, Object> applied = new LinkedHashMap<>();
@@ -493,8 +495,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (changed) {
             String next = readinessStatus(session);
             bumpSession(session, next, session.getCurrentChapterId(), actor.getMemberId(), clock.now());
-        } else if (concurrentAssignmentObserved) {
-            GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+        } else {
+            GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (current != null) session = current;
         }
         Map<String, Object> data = new LinkedHashMap<>();
@@ -845,9 +847,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             story.setStatus("VARIABLES_UPDATED");
         }
         if (runtimeMapper.updateStoryStateCas(story) != 1) {
-            GameStoryState concurrent = runtimeMapper.selectStoryState(session.getId(), "TEAM", player.teamId);
+            GameStoryState concurrent = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", player.teamId);
             if (concurrent != null && containsText(readArray(concurrent.getAppliedChoicesJson()), choiceId)) {
-                GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+                GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
                 return result(current == null ? session : current,
                         choiceResult(choiceId, true, findEnding(config, concurrent.getEndingCode())));
             }
@@ -927,7 +929,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameTaskSubmission active = runtimeMapper.selectActiveSubmission(session.getId(), actor.getMemberId(),
                 station.getNodeId(), taskCode);
         if (active != null) {
-            GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+            GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                     actor.getMemberId(), active, taskConfig, receiptId);
             return result(session, submissionResult(active, outcome, true));
         }
@@ -952,7 +954,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     station.getNodeId(), taskCode);
             if (active != null) {
                 GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
-                GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+                GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                         actor.getMemberId(), active, taskConfig, receiptId);
                 return result(current == null ? session : current, submissionResult(active, outcome, true));
             }
@@ -2429,16 +2431,38 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         state.setCreateTime(clock.now());
         state.setUpdateTime(clock.now());
         if (runtimeMapper.insertStoryState(state) != 1) {
-            state = runtimeMapper.selectStoryState(session.getId(), "TEAM", teamId);
+            state = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", teamId);
             if (state == null) throw error("GAME_STATE_CONFLICT", "剧情状态创建失败");
         }
         return state;
+    }
+
+    private static final class OutcomeChanges { private boolean added; }
+
+    private GamePlayerNodeOutcome recoverSubmissionOutcome(GameSession session, GameStationRun station,
+                                                            Long teamId, Long memberId,
+                                                            GameTaskSubmission submission, JsonNode taskConfig,
+                                                            Long receiptId) {
+        OutcomeChanges changes = new OutcomeChanges();
+        GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, teamId, memberId,
+                submission, taskConfig, receiptId, changes);
+        if (changes.added) {
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+        }
+        return outcome;
     }
 
     private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
                                                        Long teamId, Long memberId,
                                                        GameTaskSubmission submission, JsonNode taskConfig,
                                                        Long receiptId) {
+        return outcomeForSubmission(session, station, teamId, memberId, submission, taskConfig, receiptId, null);
+    }
+
+    private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
+                                                       Long teamId, Long memberId,
+                                                       GameTaskSubmission submission, JsonNode taskConfig,
+                                                       Long receiptId, OutcomeChanges changes) {
         if (submission == null || "PENDING".equals(submission.getStatus())
                 || "REJECTED".equals(submission.getStatus())) {
             return null;
@@ -2455,8 +2479,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             return null;
         }
         GamePlayerNodeOutcome outcome = ensureOutcome(session, station, teamId, memberId,
-                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null);
-        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId);
+                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null, changes);
+        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId, changes);
         return outcome;
     }
 
@@ -2464,6 +2488,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                                 Long memberId, String status, String completionSource,
                                                 Long submissionId, Long receiptId, String planCode,
                                                 Integer planVersion) {
+        return ensureOutcome(session, station, teamId, memberId, status, completionSource,
+                submissionId, receiptId, planCode, planVersion, null);
+    }
+
+    private GamePlayerNodeOutcome ensureOutcome(GameSession session, GameStationRun station, Long teamId,
+                                                Long memberId, String status, String completionSource,
+                                                Long submissionId, Long receiptId, String planCode,
+                                                Integer planVersion, OutcomeChanges changes) {
         GamePlayerNodeOutcome existing = runtimeMapper.selectPlayerNodeOutcome(
                 session.getId(), memberId, station.getNodeId());
         if (existing != null) return existing;
@@ -2488,11 +2520,17 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (existing == null) throw error("GAME_STATE_CONFLICT", "节点完成结果落库失败");
             return existing;
         }
+        if (changes != null) changes.added = true;
         return outcome;
     }
 
     private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
                                               Long teamId, Long memberId, Long receiptId) {
+        ensureFallbackSourceOutcomes(session, completedTarget, teamId, memberId, receiptId, null);
+    }
+
+    private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
+                                              Long teamId, Long memberId, Long receiptId, OutcomeChanges changes) {
         JsonNode config = sessionConfig(session);
         for (GameStationRun source : safe(runtimeMapper.selectStations(session.getId()))) {
             if (source == null || !session.getId().equals(source.getGameSessionId())
@@ -2505,7 +2543,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             }
             ensureOutcome(session, source, teamId, memberId,
                     GamePlayerNodeOutcome.FALLBACK_COMPLETED, "FALLBACK_PLAN", null, receiptId,
-                    source.getFallbackPlanCode(), source.getFallbackPlanVersion());
+                    source.getFallbackPlanCode(), source.getFallbackPlanVersion(), changes);
         }
     }
 
@@ -2971,7 +3009,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         canonical.put("activityId", command.getActivityId());
         canonical.put("nodeId", command.getNodeId());
         canonical.put("expectedRevision", command.getExpectedRevision());
-        canonical.put("action", command.getAction().trim().toUpperCase());
+        canonical.put("action", command.getAction().trim().toUpperCase(Locale.ROOT));
         canonical.put("payload", command.getPayload());
         try {
             String json = canonicalJson(objectMapper.valueToTree(canonical));

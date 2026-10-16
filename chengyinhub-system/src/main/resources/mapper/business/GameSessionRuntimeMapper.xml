@@ -758,6 +758,13 @@
            and owner_id=#{ownerId} limit 1
     </select>
 
+    <select id="selectStoryStateForUpdate" resultMap="GameStoryResult" useCache="false" flushCache="true">
+        select id, game_session_id, owner_type, owner_id, variables_json, applied_choices_json,
+               ending_code, status, revision, create_time, update_time
+          from game_story_state where game_session_id=#{sessionId} and owner_type=#{ownerType}
+           and owner_id=#{ownerId} limit 1 for update
+    </select>
+
     <insert id="insertStoryState" parameterType="com.chengyinhub.business.domain.GameStoryState"
             useGeneratedKeys="true" keyProperty="id">
         insert ignore into game_story_state

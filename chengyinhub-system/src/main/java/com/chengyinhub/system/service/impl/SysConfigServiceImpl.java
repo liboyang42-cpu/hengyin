@@ -5,6 +5,11 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.common.annotation.DataSource;
 import com.chengyinhub.common.constant.CacheConstants;
 import com.chengyinhub.common.constant.UserConstants;
@@ -25,6 +30,7 @@ import com.chengyinhub.system.service.ISysConfigService;
 @Service
 public class SysConfigServiceImpl implements ISysConfigService
 {
+    private static final Logger log = LoggerFactory.getLogger(SysConfigServiceImpl.class);
     @Autowired
     private SysConfigMapper configMapper;
 
@@ -162,15 +168,15 @@ public class SysConfigServiceImpl implements ISysConfigService
      */
     @Override
     @DataSource(DataSourceType.MASTER)
+    @Transactional(rollbackFor = Exception.class)
     public int updateFundsPolicyConfigByKey(String configKey, String configValue, String updateBy)
     {
         if (StringUtils.isEmpty(configKey) || StringUtils.isEmpty(configValue))
         {
             throw new ServiceException("参数键名与键值都不能为空");
         }
-        SysConfig probe = new SysConfig();
-        probe.setConfigKey(configKey);
-        SysConfig current = configMapper.selectConfig(probe);
+        requireFundsPolicyKey(configKey);
+        SysConfig current = configMapper.selectFundsPolicyConfigForUpdate(configKey);
         if (StringUtils.isNull(current))
         {
             // 键不存在时绝不当成「改成功了」：调用方的审计行已经写了，必须一并回滚。
@@ -184,13 +190,57 @@ public class SysConfigServiceImpl implements ISysConfigService
             throw new ServiceException("参数【" + configKey + "】更新命中 " + row + " 行，预期 1 行");
         }
         // ★回读问的是数据库那一行，不是自己刚写进 Redis 的值 —— 后者是恒真断言。
-        SysConfig readBack = configMapper.selectConfig(probe);
+        SysConfig readBack = configMapper.selectFundsPolicyConfigForUpdate(configKey);
         if (StringUtils.isNull(readBack) || !StringUtils.equals(configValue, readBack.getConfigValue()))
         {
             throw new ServiceException("参数【" + configKey + "】回读与写入不一致");
         }
-        redisCache.setCacheObject(getCacheKey(configKey), readBack.getConfigValue());
+        invalidateFundsPolicyCacheAfterCommit(configKey);
         return row;
+    }
+
+    @Override
+    @DataSource(DataSourceType.MASTER)
+    public String selectFundsPolicyValueForUpdate(String configKey)
+    {
+        requireFundsPolicyKey(configKey);
+        SysConfig current = configMapper.selectFundsPolicyConfigForUpdate(configKey);
+        return current == null ? StringUtils.EMPTY : current.getConfigValue();
+    }
+
+    private static void requireFundsPolicyKey(String configKey)
+    {
+        if (!ISysConfigService.FUNDS_POLICY_CONFIG_KEYS.contains(configKey))
+        {
+            throw new ServiceException("参数【" + configKey + "】不是资金政策专用键");
+        }
+    }
+
+    private void invalidateFundsPolicyCacheAfterCommit(final String configKey)
+    {
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive())
+        {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() { invalidateFundsPolicyCache(configKey); }
+            });
+        }
+        else
+        {
+            // 无外层事务的直接调用已按数据库自动提交完成；不能注册虚假的提交回调。
+            invalidateFundsPolicyCache(configKey);
+        }
+    }
+
+    private void invalidateFundsPolicyCache(String configKey)
+    {
+        try { redisCache.deleteObject(getCacheKey(configKey)); }
+        catch (RuntimeException unavailable)
+        {
+            // 数据库已经提交；资金业务当前读不依赖此缓存，不把失效故障伪装成回滚。
+            log.warn("资金政策缓存失效失败 key={}", configKey, unavailable);
+        }
     }
 
     private static void requireNotFundsPolicyKey(String configKey)

@@ -1,0 +1,78 @@
+package com.chengyinhub.business.service.support;
+
+import com.chengyinhub.business.mapper.UmsMemberMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+
+/** Short financial admission only. No channel/provider work while balance or freeze rows are locked. */
+@Service
+public class WithdrawalBalanceAdmissionService {
+    private final UmsMemberMapper members;
+    private final com.chengyinhub.business.mapper.MemberCashWithdrawMapper cash;
+    private final WithdrawalFrozenAmountResolver frozen;
+
+    public WithdrawalBalanceAdmissionService(UmsMemberMapper members, WithdrawalFrozenAmountResolver frozen,
+            com.chengyinhub.business.mapper.MemberCashWithdrawMapper cash) {
+        this.members = members; this.cash = cash;
+        this.frozen = frozen;
+    }
+
+    /** Bank intent is already claimed by the caller's transaction. */
+    @Transactional(rollbackFor = Exception.class)
+    public Admission debitBank(Long memberId, BigDecimal amount) { return debit(memberId, amount, false); }
+
+    /** Original cash identity is already committed; finish this transaction before calling the channel. */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public Admission debitCash(Long id, Long memberId, BigDecimal amount) {
+        com.chengyinhub.business.domain.MemberCashWithdraw original = cash.selectByIdForUpdate(id);
+        if (original == null || memberId == null || !memberId.equals(original.getMemberId())
+                || amount == null || original.getAmount() == null || amount.compareTo(original.getAmount()) != 0
+                || !Integer.valueOf(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())
+                || Integer.valueOf(1).equals(original.getFrozen()))
+            return new Admission(null, null, null, false, false);
+        Admission result = debit(memberId, amount, true);
+        if (!result.deducted) {
+            com.chengyinhub.business.domain.MemberCashWithdraw failed = new com.chengyinhub.business.domain.MemberCashWithdraw();
+            failed.setId(id);
+            failed.setStatus(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_FAILED_NO_DEBIT);
+            failed.setFailReason("原子扣款未执行(余额不足或并发)");
+            failed.setManualNote("原子 UPDATE 0 行:未扣款,无需回补;outBatchNo=CW" + id + " outDetailNo=CD" + id);
+            failed.setFinishTime(new java.util.Date()); failed.setAuditBy(0L); failed.setAuditTime(new java.util.Date());
+            if (cash.updateMemberCashWithdraw(failed) != 1)
+                throw new IllegalStateException("未扣款终态写入失败");
+        }
+        return result;
+    }
+
+    private Admission debit(Long memberId, BigDecimal amount, boolean cashLeg) {
+        if (memberId == null || amount == null || amount.signum() <= 0)
+            throw new IllegalArgumentException("Invalid withdrawal admission");
+        BigDecimal before = members.selectBalanceForUpdate(memberId);
+        if (before == null) throw new IllegalStateException("用户不存在");
+        WithdrawalFrozenAmountResolver.Frozen snapshot = frozen.resolveForWithdrawal(memberId);
+        // Preserve the cash leg's existing IUmsMemberService negative-floor rejection.
+        if (cashLeg && snapshot.total().signum() < 0)
+            throw new IllegalArgumentException("参数错误：冻结额不能为负");
+        if (before.subtract(snapshot.total()).compareTo(amount) < 0)
+            return new Admission(before, before, snapshot, false);
+        boolean deducted = members.deductWithdrawableBalance(memberId, amount, snapshot.total()) > 0;
+        return new Admission(before, deducted ? before.subtract(amount) : before, snapshot, deducted);
+    }
+
+    public static final class Admission {
+        public final BigDecimal before;
+        public final BigDecimal after;
+        public final WithdrawalFrozenAmountResolver.Frozen frozen;
+        public final boolean deducted;
+        public final boolean currentRequestEligible;
+        public Admission(BigDecimal before, BigDecimal after, WithdrawalFrozenAmountResolver.Frozen frozen, boolean deducted) {
+            this(before, after, frozen, deducted, true);
+        }
+        public Admission(BigDecimal before, BigDecimal after, WithdrawalFrozenAmountResolver.Frozen frozen, boolean deducted, boolean eligible) {
+            this.before = before; this.after = after; this.frozen = frozen; this.deducted = deducted;
+            this.currentRequestEligible = eligible;
+        }
+    }
+}

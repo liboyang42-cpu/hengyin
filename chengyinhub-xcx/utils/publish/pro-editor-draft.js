@@ -20,12 +20,14 @@ function createDraftUuid(now, randomValue) {
   return ts + '-' + entropy;
 }
 
-function draftKeyFor(identity) {
+function draftKeyFor(identity, memberId) {
   identity = identity || {};
+  var prefix = DRAFT_PREFIX;
+  if (value(memberId)) prefix += 'member_' + encodeURIComponent(value(memberId)) + '_';
   var topicId = value(identity.topicId);
-  if (topicId) return DRAFT_PREFIX + 'topic_' + encodeURIComponent(topicId);
+  if (topicId) return prefix + 'topic_' + encodeURIComponent(topicId);
   var draftUuid = value(identity.draftUuid);
-  if (draftUuid) return DRAFT_PREFIX + 'new_' + encodeURIComponent(draftUuid);
+  if (draftUuid) return prefix + 'new_' + encodeURIComponent(draftUuid);
   throw new Error('topicId 或 draftUuid 至少提供一个');
 }
 
@@ -46,7 +48,32 @@ function rememberActiveNewDraft(storage, memberId, draftUuid) {
 function readActiveNewDraft(storage, memberId) {
   var key = activeKeyFor(memberId);
   if (!key || !storage || typeof storage.getStorageSync !== 'function') return '';
-  return value(storage.getStorageSync(key));
+  var uuid = value(storage.getStorageSync(key));
+  function ownedDraft(candidate) {
+    if (!candidate) return null;
+    var result = loadDraft(storage, { draftUuid: candidate }, { memberId: memberId });
+    if (result.status === 'storage_unavailable') throw new Error('本地草稿暂时无法读取');
+    return result.status === 'ready' && value(result.envelope.draftUuid) === candidate
+      ? result.envelope : null;
+  }
+  var best = ownedDraft(uuid);
+  // The pointer is only an index. Recover from existing envelopes after an index write failure.
+  if (typeof storage.getStorageInfoSync === 'function') {
+    var keys = storage.getStorageInfoSync().keys || [];
+    var scopedPrefix = DRAFT_PREFIX + 'member_' + encodeURIComponent(value(memberId)) + '_new_';
+    keys.forEach(function (draftKey) {
+      if (draftKey.indexOf(scopedPrefix) !== 0 && draftKey.indexOf(DRAFT_PREFIX + 'new_') !== 0) return;
+      var envelope = storage.getStorageSync(draftKey);
+      if (!envelope || value(envelope.memberId) !== value(memberId) || !value(envelope.draftUuid)) return;
+      if (!best || Number(envelope.savedAt || 0) > Number(best.savedAt || 0)) best = envelope;
+    });
+  }
+  var recovered = best ? value(best.draftUuid) : '';
+  try {
+    if (recovered) rememberActiveNewDraft(storage, memberId, recovered);
+    else if (uuid && typeof storage.removeStorageSync === 'function') storage.removeStorageSync(key);
+  } catch (error) {} // Index maintenance cannot invalidate an already durable envelope.
+  return recovered;
 }
 
 function saveDraft(storage, input) {
@@ -58,7 +85,7 @@ function saveDraft(storage, input) {
   if (!memberId) throw new Error('memberId 不能为空');
 
   var identity = { topicId: input.topicId, draftUuid: input.draftUuid };
-  var key = draftKeyFor(identity);
+  var key = draftKeyFor(identity, memberId);
   var formData = clone(input.formData || { chapters: input.chapters || [] }) || { chapters: [] };
   var envelope = {
     memberId: input.memberId,
@@ -77,16 +104,25 @@ function saveDraft(storage, input) {
 
   // 唯一一次写入：章节和待编排素材来自同一个页面快照。
   storage.setStorageSync(key, clone(envelope));
-  if (envelope.draftUuid) rememberActiveNewDraft(storage, memberId, envelope.draftUuid);
+  if (envelope.draftUuid) {
+    try { rememberActiveNewDraft(storage, memberId, envelope.draftUuid); } catch (error) {}
+  }
   return key;
 }
 
 function loadDraft(storage, identity, options) {
   options = options || {};
   if (!storage || typeof storage.getStorageSync !== 'function') {
-    return { status: 'missing', envelope: null };
+    return { status: 'storage_unavailable', envelope: null };
   }
-  var stored = storage.getStorageSync(draftKeyFor(identity));
+  var stored;
+  try {
+    stored = storage.getStorageSync(draftKeyFor(identity, options.memberId));
+    // A failed read is not proof that a previous UNKNOWN envelope does not exist.
+    if (!stored) stored = storage.getStorageSync(draftKeyFor(identity));
+  } catch (error) {
+    return { status: 'storage_unavailable', envelope: null };
+  }
   if (!stored || typeof stored !== 'object') return { status: 'missing', envelope: null };
   var envelope = clone(stored);
   if (value(envelope.memberId) !== value(options.memberId)) {
@@ -94,7 +130,9 @@ function loadDraft(storage, identity, options) {
   }
   var storedRevision = value(envelope.baseRevision);
   var currentRevision = value(options.currentBaseRevision);
-  if (storedRevision && currentRevision && storedRevision !== currentRevision) {
+  var checkingTopicRevision = value(identity && identity.topicId)
+    && Object.prototype.hasOwnProperty.call(options, 'currentBaseRevision');
+  if (checkingTopicRevision && (!storedRevision || !currentRevision || storedRevision !== currentRevision)) {
     return { status: 'revision_conflict', envelope: envelope };
   }
   return { status: 'ready', envelope: envelope };
@@ -102,14 +140,23 @@ function loadDraft(storage, identity, options) {
 
 function removeDraft(storage, identity, options) {
   options = options || {};
-  if (!storage || typeof storage.removeStorageSync !== 'function') return false;
-  storage.removeStorageSync(draftKeyFor(identity));
+  if (!storage || typeof storage.removeStorageSync !== 'function'
+      || typeof storage.getStorageSync !== 'function' || !value(options.memberId)) return false;
+  var removed = false;
+  var keys = [draftKeyFor(identity, options.memberId), draftKeyFor(identity)];
+  keys.forEach(function (key) {
+    var envelope = storage.getStorageSync(key);
+    if (envelope && value(envelope.memberId) === value(options.memberId)) {
+      storage.removeStorageSync(key);
+      removed = true;
+    }
+  });
   var uuid = value(identity && identity.draftUuid);
-  if (uuid && readActiveNewDraft(storage, options.memberId) === uuid) {
+  if (removed && uuid && readActiveNewDraft(storage, options.memberId) === uuid) {
     var activeKey = activeKeyFor(options.memberId);
     if (activeKey) storage.removeStorageSync(activeKey);
   }
-  return true;
+  return removed;
 }
 
 module.exports = {

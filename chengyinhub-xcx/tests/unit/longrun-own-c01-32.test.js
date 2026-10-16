@@ -1,0 +1,6 @@
+'use strict';
+// NOT_RUN: source-only authored regression.
+const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
+function load(){let definition;const modals=[],requests=[],feedback=[];global.getApp=()=>({globalData:{},getUserID:()=> '11',sendRequest:r=>requests.push(r)});global.Page=p=>{definition=p;};global.wx={showModal:o=>modals.push(o)};const file=path.resolve(__dirname,'../../pages/play/index.js');delete require.cache[file];require(file);const page=Object.assign({},definition,{data:{activityId:9,topicId:8},diegetic:m=>feedback.push(m),loadTeamProgress:()=>feedback.push('refresh')});return{page,modals,requests,feedback};}
+test('old broadcast modal cannot send under a replacement activity',()=>{const h=load();h.page.leadBroadcast();h.page.data.activityId=10;h.modals[0].success({confirm:true,content:'fixture'});assert.deepEqual(h.requests,[]);});
+test('broadcast confirm sends once and late response has no replacement feedback',async()=>{const h=load();h.page.leadBroadcast();const result={confirm:true,content:'fixture'};h.modals[0].success(result);h.modals[0].success(result);assert.equal(h.requests.length,1);assert.equal(h.requests[0].data.activityId,9);h.page.data.activityId=10;h.requests[0].success({code:200,msg:'old'});await new Promise(r=>setImmediate(r));assert.deepEqual(h.feedback,[]);});

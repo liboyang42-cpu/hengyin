@@ -71,7 +71,7 @@ class PlayerWithdrawalCooldownServiceTest {
     // ── §5.3-10 配置只影响新事件 ───────────────────────────────────────────
     @Test
     void changingTheConfigOnlyAffectsNewEvents() {
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("24");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("24");
 
         service.registerFromPositiveComplaintDetail(DETAIL, MEMBER, COMPLAINT, new BigDecimal("50"));
 
@@ -82,13 +82,13 @@ class PlayerWithdrawalCooldownServiceTest {
 
     @Test
     void aBrokenConfigFailsClosedInsteadOfSilentlyDroppingTheCooldown() {
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("0");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("0");
         assertThrows(IllegalStateException.class, () -> service.currentCooldownHours());
 
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("abc");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("abc");
         assertThrows(IllegalStateException.class, () -> service.currentCooldownHours());
 
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("-1");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("-1");
         assertThrows(IllegalStateException.class, () -> service.currentCooldownHours());
     }
 
@@ -210,7 +210,7 @@ class PlayerWithdrawalCooldownServiceTest {
      */
     @Test
     void rewritingTheCooldownRecordsWhoChangedItFromWhatToWhatAndWhy() {
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
         when(mapper.insertConfigChangeAudit(anyInt(), anyInt(), anyString(), anyLong())).thenReturn(1);
 
         service.rewriteCooldownHours(24, "投诉争议期按法务意见收窄", 71L);
@@ -229,7 +229,7 @@ class PlayerWithdrawalCooldownServiceTest {
     /** 审计写不进去就不许改配置：留不下痕的改写等于没有闸。 */
     @Test
     void aFailedAuditRowBlocksTheRewriteInsteadOfChangingTheConfigSilently() {
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
         when(mapper.insertConfigChangeAudit(anyInt(), anyInt(), anyString(), anyLong())).thenReturn(0);
 
         assertEquals("PLAYER_WITHDRAWAL_COOLDOWN_AUDIT_WRITE_FAILED", assertThrows(IllegalStateException.class,
@@ -240,7 +240,7 @@ class PlayerWithdrawalCooldownServiceTest {
     /** 0 / 负数 / 空理由 / 无操作人都不许进来：那等于把冷静期悄悄关掉且查不到是谁干的。 */
     @Test
     void anIllegalRewriteIsRefusedBeforeItTouchesAnything() {
-        when(configService.selectConfigByKey(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
+        when(configService.selectFundsPolicyValueForUpdate(IPlayerWithdrawalCooldownService.CONFIG_KEY)).thenReturn("48");
 
         assertThrows(IllegalArgumentException.class, () -> service.rewriteCooldownHours(0, "理由", 71L));
         assertThrows(IllegalArgumentException.class, () -> service.rewriteCooldownHours(-1, "理由", 71L));

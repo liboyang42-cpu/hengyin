@@ -132,10 +132,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
-        String openid = resolveOpenid(memberId);
-        stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
+        String openid;
         String secIn;
         try {
+            openid = resolveOpenid(memberId);
+            stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
             // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
                     + (userPrompt == null ? "" : userPrompt);
@@ -163,6 +164,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
         // 3. 选模型(场景路由)
         LlmClient client;
+        String modelName;
         try
         {
             client = selectClient(bizType);
@@ -171,6 +173,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             {
                 ((com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client).requireReady();
             }
+            modelName = client == null ? null : client.name();
         }
         catch (RuntimeException e)
         {
@@ -188,13 +191,19 @@ public class AiGatewayServiceImpl implements AiGatewayService
             retainQuota(memberId,bizType,reservation,"CACHE_RESULT");
             return new AiGatewayResult(traceId, "[]", "cache", 0);
         }
-        String modelName = client.name();
         long t0 = System.currentTimeMillis();
 
         String modelText;
+        try {
+            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
+        } catch (RuntimeException stageUnavailable) {
+            // chat has not been invoked; preserve the original unsent compensation path.
+            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", stageUnavailable);
+        }
         try
         {
-            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
             modelText = client.chat(systemPrompt, userPrompt);
             if (modelText == null || modelText.trim().isEmpty())
             {
@@ -222,30 +231,32 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
-            retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
-            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
         if (secOut != null)
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
             {
-                retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+                retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
                 saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
                         0, latencyMs, tokenIn, tokenOut);
-                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
+                throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                        AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
             }
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
-            retainQuota(memberId,bizType,reservation,"OUTPUT_REJECTED");
-            throw new AiServiceException("生成内容未通过安全检测,请调整后重试");
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                    AiServiceException.Reason.UNKNOWN, "生成内容未通过安全检测,请调整后重试");
         }
 
         // 5. 落日志
         saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
 
-        retainQuota(memberId,bizType,reservation,"SUCCESS");
+        retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
         return new AiGatewayResult(traceId, modelText, modelName, 0);
     }
 
@@ -280,23 +291,23 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.warn("[AiGateway] quota-read-failed memberId={} bizType={}", memberId, bizType, e);
             return limit;
         }
-        int used = 0;
+        long used = 0;
         if (raw instanceof Number)
         {
-            used = ((Number) raw).intValue();
+            used = ((Number) raw).longValue();
         }
         else if (raw != null)
         {
             try
             {
-                used = Integer.parseInt(String.valueOf(raw).trim());
+                used = Long.parseLong(String.valueOf(raw).trim());
             }
             catch (NumberFormatException ignored)
             {
                 used = 0;
             }
         }
-        return Math.max(0, limit - used);
+        return (int) Math.max(0L, (long) limit - Math.max(0L, used));
     }
 
     @Override
@@ -338,7 +349,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
         if (used > dailyLimitOf(group)) {
             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
-            throw new AiServiceException("今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
+            throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
+                    "今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
         }
         return key + "|" + nonce;
     }
@@ -367,6 +379,16 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public void retainQuota(Long memberId,String bizType,String reservation,String reason) {
         String receipt=receiptOf(memberId,bizType,reservation);
         if(quotaRecovery!=null && receipt!=null) quotaRecovery.retain(receipt,reason);
+    }
+
+    private void retainQuotaAfterResult(Long memberId, String bizType, String reservation, String reason) {
+        try {
+            retainQuota(memberId, bizType, reservation, reason);
+        } catch (RuntimeException persistenceFailure) {
+            throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
+                    AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", persistenceFailure);
+        }
     }
 
     private String receiptOf(Long memberId,String bizType,String token) {
@@ -583,6 +605,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             return "";
         }
-        return s.length() <= max ? s : s.substring(0, max);
+        if (s.length() <= max) return s;
+        int end = max;
+        if (end > 0 && Character.isHighSurrogate(s.charAt(end - 1))
+                && Character.isLowSurrogate(s.charAt(end))) end--;
+        return s.substring(0, end);
     }
 }

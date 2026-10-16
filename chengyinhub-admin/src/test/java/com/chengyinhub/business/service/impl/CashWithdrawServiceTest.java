@@ -67,9 +67,12 @@ class CashWithdrawServiceTest {
                 .thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(svc, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
+        ReflectionTestUtils.setField(svc, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(svc, "frozenAmountResolver")));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
         // insert 时给对象分配 id(用于 out_batch_no=CW+id)
         when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
+        when(mapper.updateReceiptIfProcessing(any())).thenReturn(1);
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
             MemberCashWithdraw created = inv.getArgument(0);
             created.setId(500L);
@@ -98,17 +101,18 @@ class CashWithdrawServiceTest {
         when(wechatPayService.transferToBalance(eq("CW500"), eq("CD500"), eq(new BigDecimal("30.00")), eq("oXAbc"), any(), any()))
                 .thenReturn(transferResult(true, "BATCH123"));
 
-        svc.withdraw(900002L, new BigDecimal("30"));
+        MemberCashWithdraw current = svc.withdraw(900002L, new BigDecimal("30"));
+        assertEquals(Integer.valueOf(0), current.getStatus());
 
         // 扣款一次、不退款、结算单置「处理中」(修复:已受理≠成功,待定时查询确认到账才成功)+回写批次号
         verify(umsMemberService).deductWithdrawableBalance(900002L, new BigDecimal("30.00"), BigDecimal.ZERO);
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(mapper, never()).updateStatusIfProcessing(any());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateReceiptIfProcessing(cap.capture());
         boolean accepted = cap.getAllValues().stream().anyMatch(v ->
-                Integer.valueOf(0).equals(v.getStatus()) && "BATCH123".equals(v.getTransferBatchId()));
-        assertTrue(accepted, "受理置处理中并回写微信批次号");
+                v.getStatus() == null && "BATCH123".equals(v.getTransferBatchId()));
+        assertTrue(accepted, "受理仅回写微信批次号，原持久状态仍处理中");
     }
 
     @Test
@@ -145,12 +149,13 @@ class CashWithdrawServiceTest {
         when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any())).thenReturn(ambiguous);
 
         // 不确定态不应抛异常给用户(单已受理待查),正常返回处理中单
-        svc.withdraw(900002L, new BigDecimal("30"));
+        MemberCashWithdraw current = svc.withdraw(900002L, new BigDecimal("30"));
+        assertEquals(Integer.valueOf(0), current.getStatus());
 
         // 核心断言:结果不确定时绝不退款,绝不置终态失败
         verify(umsMemberService, never()).addBalance(any(), any());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateReceiptIfProcessing(cap.capture());
         boolean anyTerminalFail = cap.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(2).equals(v.getStatus()));
         assertTrue(!anyTerminalFail, "结果不确定禁止置『失败已退款』终态(会造成双花丢钱)");
@@ -244,6 +249,7 @@ class CashWithdrawServiceTest {
      * 不得自动退款、不得标已退款、必须告警+置待人工(3)。*/
     @Test
     void withdraw_deductThrows_marksManualAndAlarms() {
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(merchantReferralBountyService.frozenAmount(900002L)).thenReturn(new BigDecimal("60"));
         doThrow(new RuntimeException("DB connection lost"))
@@ -255,7 +261,7 @@ class CashWithdrawServiceTest {
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(alarmService, times(1)).alarm(anyString(), anyString());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
         assertTrue(cap.getAllValues().stream().anyMatch(v -> Integer.valueOf(3).equals(v.getStatus())),
                 "扣款异常须置待人工(3),实际:" + cap.getAllValues());
     }
@@ -266,6 +272,7 @@ class CashWithdrawServiceTest {
      */
     @Test
     void withdraw_deductThrowsIllegalState_goesManualNotZombie() {
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(merchantReferralBountyService.frozenAmount(900002L)).thenReturn(new BigDecimal("60"));
         doThrow(new IllegalStateException("db down"))
@@ -275,7 +282,7 @@ class CashWithdrawServiceTest {
 
         verify(alarmService, times(1)).alarm(anyString(), anyString());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
         assertTrue(cap.getAllValues().stream().anyMatch(v -> Integer.valueOf(3).equals(v.getStatus())),
                 "IllegalStateException 也是未知异常,必须 status=3 不是 0,实际:" + cap.getAllValues());
     }

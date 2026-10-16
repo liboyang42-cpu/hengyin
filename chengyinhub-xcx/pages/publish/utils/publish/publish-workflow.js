@@ -29,7 +29,7 @@ function createPublishWorkflow(deps) {
     state = 'submitting';
 
     var settled = false;
-    request(payload, function (res) {
+    function settle(res) {
       if (destroyed || settled) return;
       settled = true;
       if (res && res.ok) {
@@ -39,7 +39,16 @@ function createPublishWorkflow(deps) {
         state = res && res.networkError && deps.networkFailureState === 'unknown' ? 'unknown' : 'idle';
         call(handlers.onFail, res);
       }
-    });
+    }
+    try {
+      request(payload, settle);
+    } catch (error) {
+      // A synchronous exception does not prove that the write never reached the server.
+      if (settled) throw error;
+      settled = true;
+      state = 'unknown';
+      if (!destroyed) call(handlers.onFail, { ok: false, networkError: true });
+    }
     return true;
   }
 

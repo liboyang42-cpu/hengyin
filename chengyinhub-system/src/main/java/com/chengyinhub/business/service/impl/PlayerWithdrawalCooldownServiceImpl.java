@@ -86,7 +86,8 @@ public class PlayerWithdrawalCooldownServiceImpl implements IPlayerWithdrawalCoo
 
     @Override
     public int currentCooldownHours() {
-        String configured = configService.selectConfigByKey(CONFIG_KEY);
+        // 数据库当前锁读：RR旧read view与Redis旧值都不能成为资金政策权威。
+        String configured = configService.selectFundsPolicyValueForUpdate(CONFIG_KEY);
         if (configured == null || configured.trim().isEmpty()) {
             return DEFAULT_HOURS;
         }

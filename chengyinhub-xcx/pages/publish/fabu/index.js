@@ -129,6 +129,12 @@ function chapterCardTitle(index, name) {
   if (CHAPTER_ORDINAL.test(raw)) return raw;
   return raw ? seq + ' ' + raw : seq;
 }
+function ticketCoordinate(ticket, formField, storedField) {
+  const current = ticket[formField];
+  if (current !== null && current !== undefined && current !== '') return current;
+  const stored = ticket[storedField];
+  return stored === null || stored === undefined ? '' : stored;
+}
 function isEditingTopicPayload(detail) {
   if (!isRecord(detail) || !isRecord(detail.topic)) return false;
   if (detail.chapters != null && !isRecordList(detail.chapters)) return false;
@@ -644,7 +650,7 @@ Page({
   _persistDraftEnvelope() {
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity || !memberId || this._publishPageUnloaded
+    if (this._draftStorageUnavailable || !identity || !memberId || this._publishPageUnloaded
         || String(memberId) !== String(app.getUserID() || '')) return false;
     try {
       proEditorDraft.saveDraft(wx, {
@@ -717,10 +723,20 @@ Page({
 
   _bootstrapNewLocalDraft(options) {
     const memberId = app.getUserID() || '';
-    let draftUuid = this._newDraftUuid(options || {}, memberId);
+    let draftUuid;
+    try {
+      draftUuid = this._newDraftUuid(options || {}, memberId);
+    } catch (error) {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
     this.setData({ draftUuid, draftMemberId: memberId });
     if (!memberId) return false;
     const restored = proEditorDraft.loadDraft(wx, { draftUuid }, { memberId });
+    if (restored.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
     if (restored.status === 'member_mismatch') {
       draftUuid = proEditorDraft.createDraftUuid();
       this.setData({ draftUuid });
@@ -759,19 +775,31 @@ Page({
       memberId,
       currentBaseRevision: baseRevision,
     });
+    if (result.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return;
+    }
     if (result.envelope && result.envelope.publishAttempt) {
       this._publishAttempt = result.envelope.publishAttempt;
     }
     const finish = () => { if (isCurrent()) this._draftAutosaveReady = true; };
-    if (result.status === 'ready') {
+    // Equal (including second-resolution) revisions do not settle a lost write response.
+    // Only an explicit adoption of this known topic's saved version can clear UNKNOWN.
+    const unknownExistingWrite = result.envelope && result.envelope.publishAttempt
+      && result.envelope.publishAttempt.status === 'UNKNOWN'
+      && !!this.data.editingTopicId
+      && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
+    if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
       finish();
       return;
     }
-    if (result.status === 'revision_conflict') {
+    if (result.status === 'revision_conflict' || unknownExistingWrite) {
       modal.show({
-        title: '另一端草稿已更新',
-        content: '其他设备上的草稿已更新，是否用本机草稿覆盖？',
+        title: unknownExistingWrite ? '上次发布结果待确认' : '另一端草稿已更新',
+        content: unknownExistingWrite
+          ? '是否保留本机草稿，或使用当前已保存版本？'
+          : '其他设备上的草稿已更新，是否用本机草稿覆盖？',
         confirmText: '使用本地草稿',
         cancelText: '使用已保存版本',
         success: (res) => {
@@ -792,24 +820,48 @@ Page({
     finish();
   },
 
+  _markDraftStorageUnavailable() {
+    this._draftStorageUnavailable = true;
+    this._draftAutosaveReady = true; // Keep the existing unsaved-exit warning active.
+    this.setData({ submitting: false, submitError: '本地草稿暂时无法读取，请稍后重新进入再发布，已有草稿不会被覆盖。' });
+  },
+
   _clearDraftEnvelope() {
+    if (this._draftStorageUnavailable) return false;
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity) return;
+    if (!identity) return true;
     try {
       proEditorDraft.removeDraft(wx, identity, { memberId });
-    } catch (error) {}
+      return true;
+    } catch (error) { return false; }
   },
 
   clearLocalDraft() {
+    if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
+    const memberId = String(app.getUserID() || '');
+    if (this._publishPageUnloaded) return;
+    if (!memberId || String(this.data.draftMemberId || '') !== memberId) {
+      cyToast('请重新进入当前账号的草稿');
+      return;
+    }
+    const topicId = this.data.editingTopicId;
+    const draftUuid = this.data.draftUuid;
     modal.show({
       title: '清空本地草稿？',
       content: '当前未发布的章节和待编排素材都会从本机删除。',
       confirmText: '清空',
       success: (res) => {
-        if (!res.confirm) return;
+        if (!res.confirm || this._publishPageUnloaded || this._draftStorageUnavailable
+            || memberId !== String(app.getUserID() || '')
+            || memberId !== String(this.data.draftMemberId || '')
+            || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
         this._draftAutosaveReady = false;
-        this._clearDraftEnvelope();
+        if (!this._clearDraftEnvelope()) {
+          this._draftAutosaveReady = true;
+          cyToast('本地草稿清空失败，请稍后重试');
+          return;
+        }
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
         const club = this.data.formData.clubId ? ('&clubId=' + encodeURIComponent(this.data.formData.clubId)) : '';
         wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club });
@@ -1054,8 +1106,22 @@ Page({
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
     const index = Number(e.currentTarget.dataset.index);
+    const editor = this.data.storyEditor;
+    const chapter = (this.data.formData.chapters || [])[editor.chapterIndex];
+    if (!chapter) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    const blocks = chapter.blocks || [];
+    const beforeKey = blocks[index - 1] && blocks[index - 1].key;
+    const afterKey = blocks[index] && blocks[index].key;
     this.setData({ 'storyEditor.insertMenuAt': -1 });
     app.chooseImage((res) => {
+      const current = (this.data.formData.chapters || [])[editor.chapterIndex];
+      if (this._publishPageUnloaded || this.data.storyEditor !== editor || !editor.show
+          || memberId !== String(app.getUserID() || '') || !current || current._localId !== chapterId) return;
+      const currentBlocks = current.blocks || [];
+      if ((currentBlocks[index - 1] && currentBlocks[index - 1].key) !== beforeKey
+          || (currentBlocks[index] && currentBlocks[index].key) !== afterKey) return;
       const url = res && res[0];
       if (!url) return;
       this._insertStoryMedia('image', index, { url });
@@ -1110,19 +1176,42 @@ Page({
    * ⚠️ _duration 是本地字段(下划线开头):stripLocalFields 会剥掉,
    *    toPayloadChapter 也只重建 {type,url},所以它进不了 payload,不影响后端块形状。
    */
+  _destroyStoryDurationProbes() {
+    const cleanups = this._storyDurationProbeCleanups || [];
+    this._storyDurationProbeCleanups = [];
+    cleanups.forEach(done => done());
+  },
+
   _fillStoryAudioMeta() {
-    const chapterIndex = this.data.storyEditor.chapterIndex;
-    const chapter = (this.data.formData.chapters || [])[chapterIndex];
-    if (!chapter) return;
-    (chapter.blocks || []).forEach((block, blockIndex) => {
-      if (!block || block.type !== 'audio' || !block.url || block._duration) return;
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    if (!chapter || !chapter._localId) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    (chapter.blocks || []).forEach((block) => {
+      if (!block || !block.key || block.type !== 'audio' || !block.url || block._duration) return;
+      const blockKey = block.key;
+      const url = block.url;
       const probe = wx.createInnerAudioContext();
-      probe.src = block.url;
+      probe.src = url;
       probe.obeyMuteSwitch = false;
-      const done = () => { try { probe.destroy(); } catch (err) {} };
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).filter(item => item !== done);
+        try { probe.destroy(); } catch (err) {}
+      };
+      this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).concat(done);
       probe.onCanplay(() => {
+        if (settled) return;
+        const chapters = this.data.formData.chapters || [];
+        const chapterIndex = chapters.findIndex(item => item && item._localId === chapterId);
+        const currentChapter = chapters[chapterIndex];
+        const blockIndex = currentChapter ? (currentChapter.blocks || []).findIndex(item => item && item.key === blockKey) : -1;
+        const currentBlock = currentChapter && (currentChapter.blocks || [])[blockIndex];
         const seconds = Math.round(probe.duration || 0);
-        if (seconds > 0) {
+        if (!this._publishPageUnloaded && memberId === String(app.getUserID() || '')
+            && currentBlock && currentBlock.type === 'audio' && currentBlock.url === url && seconds > 0) {
           this.setData({
             [`formData.chapters[${chapterIndex}].blocks[${blockIndex}]._duration`]: seconds,
           });
@@ -1848,12 +1937,27 @@ Page({
     const that = this;
     const ch = (this.data.formData.chapters || [])[chapterindex];
     const node = ch && ch.nodes && ch.nodes[nodeindex];
+    if (!ch || !node || !ch._localId || !node._localId) return;
+    const chapterId = ch._localId;
+    const nodeId = node._localId;
+    const memberId = String(app.getUserID() || '');
+    const drawerForm = this.data.nodesForm;
+    const inlineEdit = this.data.inlineEdit;
     const cur = (node && node.imgUrl) ? node.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
-      that._commitInlineNodeAt(chapterindex, nodeindex, { imgUrl: next.join(',') });
+      if (that._publishPageUnloaded || memberId !== String(app.getUserID() || '')
+          || drawerForm !== that.data.nodesForm || inlineEdit !== that.data.inlineEdit) return;
+      const chapters = that.data.formData.chapters || [];
+      const ci = chapters.findIndex(item => item && item._localId === chapterId);
+      const chapter = chapters[ci];
+      const ni = chapter ? (chapter.nodes || []).findIndex(item => item && item._localId === nodeId) : -1;
+      const currentNode = chapter && (chapter.nodes || [])[ni];
+      if (!currentNode) return;
+      const current = String(currentNode.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
+      that._commitInlineNodeAt(ci, ni, { imgUrl: next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
 
@@ -2344,7 +2448,9 @@ Page({
     const chapters = attached.chapters.concat(attached.legacy.map((item) => this._endingChapterFrom(item)));
     const tickets = (detail.tickets || []).map((ticket) => Object.assign({}, ticket, {
       mode: productType,
-      totalStock: ticket.totalInventory
+      totalStock: ticket.totalInventory,
+      meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+      meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat')
     }));
     const categoryIds = topic.categoryIds ? String(topic.categoryIds).split(',').filter(Boolean) : [];
     const completionRule = advancedGameConfig.parseTopicCompletion(topic.completeRuleJson || '');
@@ -2613,6 +2719,8 @@ Page({
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onUnload() {
     this._publishPageUnloaded = true;
+    this._destroyChapterDurationAudio();
+    this._destroyStoryDurationProbes();
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
@@ -4523,11 +4631,20 @@ Page({
   // 上传节点照片(抽屉内,多张,存逗号分隔 CSV)
   uploadAddressPic() {
     let that = this;
+    const memberId = String(app.getUserID() || '');
+    const nodeForm = that.data.nodesForm;
+    const chapterLid = that.data.editTargetChapterLid;
+    const nodeLid = that.data.editTargetNodeLid;
     const cur = that.data.nodesForm.imgUrl ? that.data.nodesForm.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
+      if (that._publishPageUnloaded || !that.data.popChapterNodes
+          || memberId !== String(app.getUserID() || '')
+          || nodeForm !== that.data.nodesForm
+          || chapterLid !== that.data.editTargetChapterLid || nodeLid !== that.data.editTargetNodeLid) return;
+      const current = String(that.data.nodesForm.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
       that.setData({ 'nodesForm.imgUrl': next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
@@ -4558,34 +4675,65 @@ Page({
   //    (ui-integrity 把 onPreviewAudio 记成零绑定债务)。这次改挂 chapterForm ——
   //    主题级 audioUrl 已按 2026-09-15 拍板清理(小程序不再读写;后端字段保留,存量数据不受影响)。
   uploadChapterAudio() {
-    var that = this;
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = (this._chapterAudioToken || 0) + 1;
+    this._chapterAudioToken = token;
+    this._destroyChapterDurationAudio();
     app.chooseDocument(function (res) {
+      if (that._publishPageUnloaded || !that.data.popChapter
+          || token !== that._chapterAudioToken || chapterForm !== that.data.chapterForm
+          || chapterIndex !== that.data.popChapterIndex
+          || memberId !== String(app.getUserID() || '')) return;
       if (res && res[0] && res[0].url) {
-        var file = res[0];
+        const file = res[0];
         that.setData({
           'chapterForm.audioUrl': file.url,
-          'chapterForm.audioFileName': file.filename || ''
+          'chapterForm.audioFileName': file.filename || '',
+          'chapterForm.audioDuration': 0
         });
-        // 自动识别时长
         that.autoDetectAudioDuration(file.url);
       }
     }, 1, ['mp3', 'm4a', 'aac']);
   },
 
+  _destroyChapterDurationAudio() {
+    const audio = this._chapterDurationAudio;
+    this._chapterDurationAudio = null;
+    if (audio) audio.destroy();
+  },
+
   autoDetectAudioDuration(url) {
-    var that = this;
-    var audio = wx.createInnerAudioContext();
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = this._chapterAudioToken;
+    this._destroyChapterDurationAudio();
+    const audio = wx.createInnerAudioContext();
+    this._chapterDurationAudio = audio;
     audio.src = url;
     audio.obeyMuteSwitch = false;
     audio.onCanplay(function () {
-      var d = Math.round(audio.duration || 0);
-      if (d > 0) that.setData({ 'chapterForm.audioDuration': d });
-      audio.destroy();
+      if (that._chapterDurationAudio !== audio) return;
+      const current = !that._publishPageUnloaded && that.data.popChapter
+        && token === that._chapterAudioToken && chapterForm === that.data.chapterForm
+        && chapterIndex === that.data.popChapterIndex && that.data.chapterForm.audioUrl === url
+        && memberId === String(app.getUserID() || '');
+      const duration = Math.round(audio.duration || 0);
+      if (current && duration > 0) that.setData({ 'chapterForm.audioDuration': duration });
+      that._destroyChapterDurationAudio();
     });
-    audio.onError(function () { audio.destroy(); });
+    audio.onError(function () {
+      if (that._chapterDurationAudio === audio) that._destroyChapterDurationAudio();
+    });
   },
 
   clearChapterAudio() {
+    this._chapterAudioToken = (this._chapterAudioToken || 0) + 1;
+    this._destroyChapterDurationAudio();
     this.destroyPreviewAudio();
     this.setData({
       'chapterForm.audioUrl': '', 'chapterForm.audioDuration': 0,
@@ -4718,6 +4866,7 @@ Page({
 
   getUserData: function () {
     let that = this;
+    const memberId = String(app.getUserID() || '');
     if (app.getUserID() && !that._localDraftRestored) {
       that.setData({
         'formData.collaboratorList': [{
@@ -4738,6 +4887,7 @@ Page({
       },
       method: "POST",
       success: function (res) {
+        if (that._publishPageUnloaded || memberId !== String(app.getUserID() || '')) return;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           let userData = {
             name: res.data.nickname,
@@ -4758,7 +4908,7 @@ Page({
           };
           // 完整本地信封里可能有多位合作者；恢复后这里只刷新当前用户展示信息，
           // 不能把已恢复列表重置成 owner 一人并立刻覆盖保存。
-          if (!that._localDraftRestored) {
+          if (!that._localDraftRestored && !that.data.editingTopicId) {
             patch['formData.collaboratorList'] = collaboratorList;
             patch['formData.collaboratorIds'] = collaboratorIds;
           }
@@ -4846,12 +4996,12 @@ Page({
           id: ticket.id,
           name: ticket.name || '',
           price: ticket.price || 0,
-          totalStock: ticket.totalStock || 100,
+          totalStock: ticket.totalStock == null || ticket.totalStock === '' ? 100 : ticket.totalStock,
           mode: this.data.formData.productType || 1,
           meetingPoint: ticket.meetingPoint || '',
           meetingPointAddress: ticket.meetingPointAddress || '',
-          meetingPointLongitude: ticket.meetingPointLongitude || '',
-          meetingPointLatitude: ticket.meetingPointLatitude || '',
+          meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+          meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat'),
           teamSize: ticket.teamSize || 0,
           startTime: ticket.startTime || '',
           endTime: ticket.endTime || '',
@@ -4932,10 +5082,11 @@ Page({
       cyToast(blocked);
       return;
     }
+    const stock = et.totalStock == null || et.totalStock === '' ? NaN : Number(et.totalStock);
     const ticketData = {
       name: et.name,
       price: Number(et.price) || 0,
-      totalStock: Number(et.totalStock) || 100,
+      totalStock: Number.isFinite(stock) ? stock : 100,
       mode: this.data.formData.productType || 1,
       meetingPoint: et.meetingPoint,
       meetingPointAddress: et.meetingPointAddress,
@@ -4943,8 +5094,8 @@ Page({
       meetingPointLatitude: et.meetingPointLatitude,
       // 集合点经纬度落库:后端 OmsTicket 只有 gather_lng/gather_lat(无 meeting_point_longitude 列),
       // 故 meetingPointLongitude/Latitude 发出去会丢;这里以数字形式补 gatherLng/gatherLat(空则 null)。
-      gatherLng: et.meetingPointLongitude ? Number(et.meetingPointLongitude) : null,
-      gatherLat: et.meetingPointLatitude ? Number(et.meetingPointLatitude) : null,
+      gatherLng: et.meetingPointLongitude !== '' && et.meetingPointLongitude != null ? Number(et.meetingPointLongitude) : null,
+      gatherLat: et.meetingPointLatitude !== '' && et.meetingPointLatitude != null ? Number(et.meetingPointLatitude) : null,
       // 成团已下线(2026-07-15):不再派生 minPeople / signupDeadline / refundRule。
       // teamSize 保留(恒 0)以免连锁改动 editingTicket 的多处初始化;列保留不物理删。
       teamSize: Number(et.teamSize) || 0,
@@ -5550,7 +5701,7 @@ Page({
       const existing = previous.find((edge) => edge.fromNodeId === sourceId
         && edge.trigger.type === row.triggerType
         && edge.trigger.outcomeCode === row.code);
-      graph.edges.push(Object.assign({
+      const mappedEdge = Object.assign({
         id: 'mapping_' + sourceId + '_' + row.code,
         conditions: [], effects: [], priority: index, weight: 1,
         once: true, maxVisits: 1, allowLoop: false,
@@ -5558,7 +5709,12 @@ Page({
         fromNodeId: sourceId,
         trigger: { type: row.triggerType, outcomeCode: row.code },
         toNodeId: targetId,
-      }));
+      });
+      if (existing && String(existing.id || '').indexOf('route_') === 0
+          && row.toNodeId && targetId !== nextNodeId) {
+        mappedEdge.id = 'mapping_' + sourceId + '_' + row.code;
+      }
+      graph.edges.push(mappedEdge);
     });
     graph.fallbacks = (graph.fallbacks || []).filter((item) => item.fromNodeId !== sourceId);
     if (nextNodeId) graph.fallbacks.push({ fromNodeId: sourceId, toNodeId: nextNodeId });
@@ -6519,6 +6675,10 @@ Page({
   sendData(data) {
     let that = this;
     if (this._publishPageUnloaded) return;
+    if (this._draftStorageUnavailable) {
+      this._markDraftStorageUnavailable();
+      return;
+    }
     const memberId = String(app.getUserID() || '');
     if (!memberId || (this.data.draftMemberId && String(this.data.draftMemberId) !== memberId)) return;
     const workflow = that.getPublishWorkflow();
@@ -6616,7 +6776,7 @@ Page({
       }
     });
     // submit 在途会返回 false(防重),仅真正发起时点亮 loading
-    if (started) {
+    if (started && workflow.isBusy()) {
       that.setData({ submitting: true, submitError: '' });
     }
   },
@@ -6939,21 +7099,39 @@ Page({
      每次打开面板都重拉 —— 刚存的那条要马上看得到。拉不到就不出这一段,不塞占位。 */
   getStoryDraftList: function () {
     const that = this;
+    const memberId = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = (this._storyDraftListEpoch || 0) + 1;
+    this._storyDraftListEpoch = epoch;
+    const isCurrent = () => !that._publishPageUnloaded
+      && epoch === that._storyDraftListEpoch
+      && memberId === String(app.getUserID() || '')
+      && scope === that.data.operationScope;
+    this.setData({ storyDraftList: [] });
     app.sendRequest({
       hideLoading: true,
       url: '/api/template/my-list',
       method: 'POST',
       data: { draft_status: 0, scope: that.data.operationScope },
       success: function (res) {
+        if (!isCurrent()) return;
         const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
         that.setData({ storyDraftList: rows });
       },
-      fail: function () { that.setData({ storyDraftList: [] }); },
+      fail: function () { if (isCurrent()) that.setData({ storyDraftList: [] }); },
     });
   },
 
   getTempList: function () {
     var that = this;
+    const memberId = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = (this._tempListReadEpoch || 0) + 1;
+    this._tempListReadEpoch = epoch;
+    const isCurrent = () => !that._publishPageUnloaded
+      && epoch === that._tempListReadEpoch
+      && memberId === String(app.getUserID() || '') && scope === that.data.operationScope;
+    this.setData({ tempList: [] });
     app.sendRequest({
       hideLoading: true,
       url: '/api/template/my-list',
@@ -6964,6 +7142,7 @@ Page({
         scope: that.data.operationScope,
       },
       success: function (res) {
+        if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
             tempList: res.data.rows,
@@ -6974,6 +7153,7 @@ Page({
         }
       },
       fail: function (res) {
+        if (isCurrent()) that.setData({ tempList: [] });
       },
       complete: function () {
 

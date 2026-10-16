@@ -452,6 +452,13 @@ public class RefundServiceImpl implements IRefundService {
                 || refund.getRefundAmount() == null || refund.getRefundAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("source and refundAmount are required");
         }
+        // DECIMAL(18,2) must not silently round the request before the provider's exact-cent guard.
+        // Trailing zeroes (1.230) are valid; fractional cents (1.001) must fail before any insert.
+        try {
+            refund.getRefundAmount().setScale(2, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException fractionalCent) {
+            throw new IllegalArgumentException("退款金额必须精确到分，不能包含不足一分的金额", fractionalCent);
+        }
         // FX-14:只建单不改单。带 id 原先会走 updateRefundApplication 直接改已有单的 status/金额/审核人;
         // 新单自带 status=1 则绕过 reviewRefund 的双人闸,被 RefundReconcileTask 当成待派发真打款。
         // 审核态只能由 reviewRefund 流转,派发态只能由派发编排流转。
