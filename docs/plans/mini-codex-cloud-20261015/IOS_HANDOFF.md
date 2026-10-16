@@ -1,5 +1,7 @@
 ## CORE5752单类31项通过／原作者签收并释放修复槽
 
+本次三项真人决定已全部形成公共源码：A `dedb44d54a4a277273943c0cbbca9f6e7528482a` → E02 `13be997646c88b9eea282cc8c8225b42820dc3b3` → B `923170abd8e468d62eb8404b16b990609a4da42a`，完整父链/精确路径/本地文本命令见[源码批次](BUSINESS_DECISIONS_SOURCE_BATCH.json)、[E02](E02_23_SOURCE_DELIVERY.json)、[B](E04_07_B_SOURCE_DELIVERY.json)。原两作者已按225b grant真实ACK并完成停写、保留独占锁，当前源码writer0，非仍等三项决定。E02真实行为变化：无可信旧帖映射收藏/取消返回原错误封装，收藏筛选/状态同一受保护来源谓词；无新URL，但不能标无行为变化。B原发券boolean外部签名不变，仅精确回执与审计内部合同，旧未知只审计不动券、其他冲正继续。静态逐源码声明A3、E02四类18、B两类11；B新5+旧3真库8均NOT_RUN/现有入口覆盖缺口，不能累加不同SHA为一个已跑矩阵。B唯一新增迁移仅审查，旧行NULL不回填，先加列才可未来部署B；当前无执行/集成合并部署，TEST_DEPLOYED=NO。
+
 E04-A已真实源码交付：[dedb44d54a4a277273943c0cbbca9f6e7528482a](https://github.com/liboyang42-cpu/hengyin/commit/dedb44d54a4a277273943c0cbbca9f6e7528482a)，直接父a76268d5，仅consumer未知券分支+新3方法普通回归+本包说明。无新列/迁移依赖，原券/log/重开标记不动，原积分/经验冲正及audit继续；新执行NOT_RUN，已交本地现有212定向3声明，不继承旧PASS。原E04已ACK A公共SHA并接续B，当前已证实1源码writer；E02真人决定/scope已ACK，但补充grant后的写入回执仍待收，不虚报2运行。详见[E04-07-A交付包](E04_07_A_SOURCE_DELIVERY.json)。
 
 原EXTRA两作者已实际接收真人决定并给出精确scope提案（[真实回执](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6215854647)）；这不是新grant写入ACK，未报源码writer数。补充3个View转发路径和2旧fixture已核212开放PR零交集并精确转给原E02。静态核得LEGACY_MIGRATED安全标签不在作者允许值内、create/edit均拒绝，只有历史迁移设置；仅“旧行+保留ID/作者+exact迁移requestId+JSON受保护标签”共同成立才可保留历史关联，任一不成立按已选止错拒绝，不能单凭字符串/同号/作者。没有部署数据证据，真库仍未验。新增迁移源码统一采用作者请求的`chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql`，替代此前未写root路径，只准一份、不执行；原E04真库IT亦仅门控源码NOT_RUN。

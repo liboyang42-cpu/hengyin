@@ -1,6 +1,6 @@
 {
   "item": "E02-23",
-  "status": "USER_DECIDED_PRECISE_SOURCE_GRANT_PUBLISHED_AUTHOR_ACK_PENDING",
+  "status": "USER_DECIDED_SOURCE_DELIVERED_UNVERIFIED",
   "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "decision_owner": "本地root/C00确认身份合同及精确文件归属；不是等待测试资源",
   "known_facts": [
@@ -195,5 +195,8 @@
       "trusted migration JSON marker combined with all preserved mapping predicates",
       "author edit/erasure removes marker -> deny, no self-heal"
     ]
-  }
+  },
+  "current_source_delivery_packet": "E02_23_SOURCE_DELIVERY.json",
+  "current_source_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "actual_author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
 }

@@ -115,7 +115,7 @@
   },
   "user_decided_identity_coupon_packets": {
     "grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
-    "state": "E04_A_DELIVERED_UNVERIFIED_B_CONTINUING_E02_POST_GRANT_ACK_PENDING",
+    "state": "ALL_THREE_SOURCE_PACKAGES_PUBLIC_DELIVERED_UNVERIFIED",
     "source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
     "packages": [
       "E02-23-STOP_WRONG_TARGET",
@@ -123,8 +123,8 @@
       "E04-07-B-EXACT_RECEIPT_SOURCE"
     ],
     "distinct_original_source_lanes": 2,
-    "actual_received_child_claims": 1,
-    "actual_source_writers": 1,
+    "actual_received_child_claims": 2,
+    "actual_source_writers": 0,
     "new_execution": "NOT_RUN",
     "future_migration_execution": "NOT_AUTHORIZED",
     "validation_owner": "local root 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
@@ -148,7 +148,9 @@
         "state": "USER_DECISION_RECEIVED_SCOPE_PROPOSED_GRANT_ACK_PENDING"
       }
     ],
-    "source_delivered_package": "dedb44d54a4a277273943c0cbbca9f6e7528482a"
+    "source_delivered_package": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+    "actual_completed_source_packages": 3,
+    "current_extra_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a"
   },
   "latest_extra_e04_07_a_source_delivery": {
     "id": "E04-07-A-UNKNOWN_AUDIT",
@@ -199,5 +201,230 @@
     "source_stage": "SOURCE_READY_SOURCE_ONLY_NOT_DEPLOYED",
     "test_deployed": false,
     "current_E02": "Decision/scope ACK received; supplemental5path grant published225b; actual post-grant child source-writing ACK not yet independently received, do not count second writer"
+  },
+  "business_decisions_source_batch": {
+    "id": "USER_DECIDED_IDENTITY_COUPON_SOURCE_BATCH",
+    "public_source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "source_chain": [
+      {
+        "id": "E04-07-A",
+        "sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "parent": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+        "ordinary_declared": 3,
+        "packet": "E04_07_A_SOURCE_DELIVERY.json"
+      },
+      {
+        "id": "E02-23",
+        "sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+        "parent": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "ordinary_declared": 18,
+        "packet": "E02_23_SOURCE_DELIVERY.json"
+      },
+      {
+        "id": "E04-07-B",
+        "sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+        "parent": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+        "ordinary_declared": 11,
+        "real_mysql_declared": 8,
+        "packet": "E04_07_B_SOURCE_DELIVERY.json"
+      }
+    ],
+    "status": "ALL_THREE_SOURCE_PACKAGES_PUBLIC_DELIVERED_UNVERIFIED",
+    "actual_original_authors": 2,
+    "actual_source_writers_now": 0,
+    "ready_source_packages_not_delivered": 0,
+    "ack_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+    "files_locked_to_original_authors": true,
+    "validation_owner": "local root 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "actual_tests_current_round": null,
+    "execution": "NOT_RUN_UNTIL_REAL_LOCAL_REPORT",
+    "pass_transfer": false,
+    "integration": "Rolling EXTRA source chain only, not cross-team integration/merge/deployment",
+    "deployment": "NO",
+    "old_history_preserved": true
+  },
+  "latest_extra_e02_23_source_delivery": {
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "contract_stage": "CONTRACT_FROZEN_BY_USER",
+    "source_stage": "SOURCE_READY_SOURCE_ONLY",
+    "test_deployed": false,
+    "author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+    "local_handoff": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6216061352",
+    "actual_source_writers": 0,
+    "original_authors_stopped_lock_retained": true,
+    "cloud_manual_execution": 0,
+    "new_results": "NOT_RUN; no old PASS inheritance",
+    "user_resource_rule": "保持现有入口，不新增; 212/CI/network unchanged, no new entry, no migration execution/merge/deployment",
+    "id": "E02-23-STOP_WRONG_TARGET",
+    "source_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+    "parent_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+    "owner": "EXTRA6/E02",
+    "writer": "/root/external_e02",
+    "child_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+    "child_parent": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+    "paths": [
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+      "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+      "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md"
+    ],
+    "c00_review": "Actual complete public commit patches and own explanation read; exactly9 authorized paths:5production+2oldfixtures+new6methodtest+deliverydoc. Resolver/favoriteOnly/batch reuse one trusted SQL fragment, no post service/interface edit or publisher/UI/DDL. Two oldfixture setup changes preserve business assertions. Source label writer proof independent C00 read, not runtime evidence.",
+    "ordinary": {
+      "source_method_counts": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+          "fqn": "com.chengyinhub.business.longrun.E02_23Test",
+          "declarations": 6,
+          "gate_lines": []
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+          "fqn": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+          "declarations": 8,
+          "gate_lines": [
+            "    void legacyCommunityWritesStayEnabledUntilControlledCutover() throws Exception {",
+            "                ApiCreativeSquareController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+            "                ApiCommentController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+            "                ApiTopicController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+            "        ReflectionTestUtils.setField(controller, \"legacyCommunityWritesEnabled\", true);",
+            "        ReflectionTestUtils.setField(controller, \"legacyCommunityWritesEnabled\", true);"
+          ]
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+          "fqn": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+          "declarations": 2,
+          "gate_lines": []
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicySqlTest.java",
+          "fqn": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+          "declarations": 2,
+          "gate_lines": []
+        }
+      ],
+      "declared_methods": 18,
+      "actual_tests": null,
+      "status": "NOT_RUN",
+      "local_only_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
+      "environment": "Existing212 offline; existing H2/Jackson/MyBatis/JUnit/Mockito. H2 JSON aliases limited to array/exact-string semantics, not MySQL proof. No externalDB/Redis/env/new dependencies"
+    },
+    "behavior_contract": "Same URL/error envelope: unproven old mapping rejects bookmark and cancel before new act/unact, safe AjaxResult500 message. Trusted legacy row/id/originalauthor/exact migrationrequestId+JSON server-only marker only; normal legacy list preserved, favoriteOnly and isBookmarked no unrelated same-number row. Actual running HTTP not tested.",
+    "real_mysql_json_runtime": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "dependencies": [
+      "Includes independently delivered A dedb as parent; A has no new-schema dependency",
+      "No B migration dependency for E02 standalone source"
+    ],
+    "confirmed_new_bug_id": false
+  },
+  "latest_extra_e04_07_b_source_delivery": {
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "contract_stage": "CONTRACT_FROZEN_BY_USER",
+    "source_stage": "SOURCE_READY_SOURCE_ONLY",
+    "test_deployed": false,
+    "author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+    "local_handoff": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6216061352",
+    "actual_source_writers": 0,
+    "original_authors_stopped_lock_retained": true,
+    "cloud_manual_execution": 0,
+    "new_results": "NOT_RUN; no old PASS inheritance",
+    "user_resource_rule": "保持现有入口，不新增; 212/CI/network unchanged, no new entry, no migration execution/merge/deployment",
+    "id": "E04-07-B-EXACT_RECEIPT_SOURCE",
+    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+    "owner": "EXTRA6/E04",
+    "writer": "/root/external_e04",
+    "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+    "child_parent": "e617b3e158cf86972c037c73e5ed4e085e008346",
+    "paths": [
+      "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+      "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+      "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+      "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
+    ],
+    "c00_review": "Actual public full parent and11 changed-file patches read, all5production/migration and oldfixture diffs plus full newMySqlIT and ordinary7 source read. Receipt lookup exact history_id joins member/template, temporal/MAX inference removed; locked identity checked again. Producer uses actual receipt and exact NULL-onlybind requires1, existing REQUIRED rollback. Old assertions retained, only changed receipt premises. No running SQL/transaction/compile proof.",
+    "ordinary": {
+      "source_method_counts": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+          "fqn": "com.chengyinhub.business.longrun.E04_07Test",
+          "declarations": 7,
+          "gate_lines": []
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+          "fqn": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
+          "declarations": 4,
+          "gate_lines": []
+        }
+      ],
+      "declared_methods": 11,
+      "actual_tests": null,
+      "status": "NOT_RUN",
+      "local_only_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
+      "environment": "Existing212 offline and existing dependencies only; mocks exercise service boundary, do not assert actual SQL transaction success"
+    },
+    "real_database": {
+      "source_method_counts": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+          "fqn": "com.chengyinhub.business.longrun.E04_07MySqlIT",
+          "declarations": 5,
+          "gate_lines": [
+            "    private final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e04_07_it\");",
+            "            String value=System.getenv(\"CHENGYIN_TEST_MYSQL_\"+key);",
+            "        assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));",
+            "        assertEquals(\"e04_scratch\",System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          ]
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+          "fqn": "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest",
+          "declarations": 3,
+          "gate_lines": []
+        }
+      ],
+      "declared_methods": 8,
+      "actual_tests": null,
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "local_only_selection_text_not_execution": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
+      "prerequisites": [
+        "No network DB through offline212; no new service/entry/CI trigger",
+        "New IT is explicit *IT selection, no new env opt-in gate; selection requires six explicit CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD",
+        "New IT DATABASE_BASE=e04_scratch, nonempty unique suffix; MySQL8+ nonMariaDB, scratch CREATE/DROP/DML only; fail on schema-name collision, never predrop someone else; drop only schema actually created by this run",
+        "Old RedemptionRewardClawbackMyBatisTest retains existing MyBatis integration helper/source entry behavior; no assumption fixedCI now covers either sourceSHA",
+        "Source-owned scratch ALTER is fixture preparation only, not migration-file execution acceptance"
+      ]
+    },
+    "migration": {
+      "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+      "only_new_migration": true,
+      "source_only": true,
+      "executed": false,
+      "nullable_history_id": true,
+      "old_rows_remain_null": true,
+      "historical_backfill": false,
+      "new_global_unique_fk": false,
+      "deployment_dependency": "A remains independent; B cannot be deployed before separately approved/applied newcolumn. Source review permission is not deployment/migration execution permission."
+    },
+    "behavior_contract": "Unknown/null/nonpositive/dangling/wrong member/template/deleted exactidentity => audit only, no coupon/log/reopen marker mutation, other authorized reversals continue. Exact USED audit only; successful exact-original-unused CAS alone deletes reward log/reopens coupon reward. No refund/point/XP policy change.",
+    "dependencies": [
+      "Public chain a762 -> A dedb -> E02 13be -> B9231",
+      "Original E04 A then B same writer; E02 independent source inserted in rolling parent, does not change E04 files",
+      "No cross-team CORE/FORWARD/Claude branch integration or merge performed"
+    ],
+    "confirmed_new_bug_id": false
   }
 }

@@ -2,7 +2,7 @@
   "item": "EXTRA/E04-07 通关券冲正限定原奖励",
   "evidence_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "control_read_head": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
-  "status": "USER_DECIDED_PRECISE_SOURCE_GRANT_PUBLISHED_AUTHOR_ACK_PENDING",
+  "status": "USER_DECIDED_SOURCE_DELIVERED_UNVERIFIED",
   "proved": [
     {
       "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
@@ -94,5 +94,8 @@
     }
   },
   "implementation_grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
-  "old_choices_are_historical_not_pending": true
+  "old_choices_are_historical_not_pending": true,
+  "current_source_delivery_packet": "E04_07_B_SOURCE_DELIVERY.json",
+  "current_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "actual_author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
 }
