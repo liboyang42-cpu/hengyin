@@ -1,0 +1,96 @@
+<view class="theme-dark rd">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="举报进度" safe-top="{{false}}" />
+    <view class="rd__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
+      <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" />
+      <cy-state-shell wx:elif="{{state === 'no-permission'}}" kind="no-permission"
+                      title="暂时不能查看这条举报" sub="只有举报人本人可以查看举报进度" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度没能加载出来"
+                      sub="{{errorSub || '举报处理不受影响，只是这次没读到'}}" primary="重试" bind:primary="retry" />
+      <block wx:else>
+        <view class="rd-card">
+          <view class="rd-card__head">
+            <text class="rd-card__title">{{report.targetText}} · {{report.reasonText}}</text>
+            <cy-tag variant="{{report.stageTone}}">{{report.stageText}}</cy-tag>
+          </view>
+          <text class="rd-card__hint">{{report.stageHint}}</text>
+          <text class="rd-card__meta">编号 {{report.id}}{{report.createText ? ' · 提交于 ' + report.createText : ''}}</text>
+          <text class="rd-card__meta" wx:if="{{report.etaText}}">{{report.etaText}}</text>
+          <text class="rd-card__privacy" wx:if="{{report.privacyText}}">{{report.privacyText}}</text>
+        </view>
+
+        <view class="rd-section" wx:if="{{report.decisionSummary}}">
+          <text class="rd-section__label">处理结论</text>
+          <text class="rd-section__text">{{report.decisionSummary}}</text>
+        </view>
+        <view class="rd-section" wx:if="{{report.description}}">
+          <text class="rd-section__label">你的举报说明</text>
+          <text class="rd-section__text">{{report.description}}</text>
+        </view>
+
+        <view class="rd-section">
+          <text class="rd-section__label">处理进度</text>
+          <cy-timeline wx:if="{{nodes.length}}" nodes="{{nodes}}" />
+          <text wx:else class="rd-section__text rd-section__text--muted">暂时还没有进度记录</text>
+        </view>
+
+        <view class="rd-actions" wx:if="{{report.appealable}}">
+          <text class="rd-actions__hint">对处理结论有异议，可以提交文字申诉，平台会重新调查</text>
+          <cy-btn variant="secondary" bindtap="openAppeal">提交申诉</cy-btn>
+        </view>
+        <view class="rd-actions" wx:elif="{{report.appealing}}">
+          <text class="rd-actions__hint">申诉已受理，复核结果会更新在这里</text>
+        </view>
+        <view class="rd-link" bindtap="goMine" aria-role="button" aria-label="查看我的全部举报"
+              hover-class="cy-pressed" hover-stay-time="80">查看我的全部举报</view>
+      </block>
+    </view>
+  </view>
+</view>
+
+<cy-sheet show="{{!!sheet}}" title="{{sheet === 'ok' ? '申诉已受理' : sheet === 'fail' ? '申诉没有提交成功' : sheet === 'unknown' ? '还没确认申诉是否提交' : '提交申诉'}}"
+          closable="{{sheet !== 'busy'}}" mask-closable="{{sheet !== 'busy'}}" dirty="{{sheet === 'form' && !!reason}}"
+          bind:close="closeSheet" bind:requestclose="closeSheet">
+  <view class="rd-sheet">
+    <block wx:if="{{sheet === 'form'}}">
+      <cy-field variant="textarea" label="申诉理由" required show-count maxlength="{{maxLength}}"
+                placeholder="说明你对处理结论的异议和相关事实"
+                value="{{reason}}" error="{{!!reasonError}}" error-text="{{reasonError}}"
+                bind:input="onReasonInput" />
+      <text class="rd-sheet__note">本次申诉仅支持文字说明，暂不能附图片或文件。</text>
+      <cy-btn variant="primary" bindtap="toConfirm">下一步</cy-btn>
+    </block>
+    <block wx:elif="{{sheet === 'confirm'}}">
+      <text class="rd-sheet__text">提交后举报会进入「申诉中」，申诉说明提交后不能修改。</text>
+      <text class="rd-sheet__quote">{{reason}}</text>
+      <view class="rd-sheet__row">
+        <cy-btn variant="secondary" bindtap="backToForm">返回修改</cy-btn>
+        <cy-btn variant="primary" bindtap="submitAppeal">确认提交</cy-btn>
+      </view>
+    </block>
+    <block wx:elif="{{sheet === 'busy'}}">
+      <text class="rd-sheet__text">正在提交申诉…</text>
+      <cy-btn variant="primary" loading="{{true}}">提交中</cy-btn>
+    </block>
+    <block wx:elif="{{sheet === 'ok'}}">
+      <text class="rd-sheet__text">平台会重新调查，结果会更新在举报进度里。</text>
+      <cy-btn variant="primary" bindtap="closeSheet">知道了</cy-btn>
+    </block>
+    <block wx:elif="{{sheet === 'fail'}}">
+      <text class="rd-sheet__text">{{failText}}</text>
+      <cy-btn variant="primary" bindtap="closeSheet">知道了</cy-btn>
+    </block>
+    <block wx:elif="{{sheet === 'unknown'}}">
+      <text class="rd-sheet__text">网络不太稳定，暂时没读到申诉记录。再试一次不会重复提交。</text>
+      <view class="rd-sheet__row">
+        <cy-btn variant="secondary" bindtap="closeSheet">稍后再看</cy-btn>
+        <cy-btn variant="primary" bindtap="submitAppeal">再试一次</cy-btn>
+      </view>
+    </block>
+  </view>
+</cy-sheet>
