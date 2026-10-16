@@ -428,11 +428,23 @@ const DANGER_ACTIONS = {
     content: '',
     consequences: [
       { icon: 'close', text: '不再收到对方的任何消息' },
-      { icon: 'info', text: '对方不会收到拉黑提示;拉黑后暂不支持解除' },
+      { icon: 'info', text: '对方不会收到拉黑提示;可在本会话「更多」里解除拉黑' },
     ],
     confirmText: '拉黑',
     alt: null,
     done: { title: '已拉黑', text: '你不会再收到对方消息。' },
+  },
+  'im.unblock': {
+    irreversible: false,
+    title: '解除拉黑?',
+    content: '',
+    consequences: [
+      { icon: 'info', text: '对方的新消息会重新送达' },
+      { icon: 'info', text: '对方不会收到解除提示' },
+    ],
+    confirmText: '解除拉黑',
+    alt: null,
+    done: { title: '已解除拉黑', text: '' },
   },
   'im.conversation.delete': {
     irreversible: true,

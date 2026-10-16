@@ -164,16 +164,24 @@ Page({
       && credential === (app.globalData && app.globalData.authorization);
   },
 
-  loadMessages(toBottom) {
+  // onSettled(data|null):仅 BL-61 解除拉黑回读用;本次(或取代它的更新一次)回读成功给回包 data,失败给 null。
+  loadMessages(toBottom, onSettled) {
     const that = this;
+    if (onSettled) this._loadSettle = onSettled;
     const current = this._viewGuard();
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
+    // 被更新一次取代 ⇒ 交给新请求落定;视图已失效(切会话/切账号/卸载)⇒ 以 null 落定,确认框不停在进行中(BL-176)
+    const stale = () => {
+      if (requestEpoch !== that._messageRequestEpoch) return true;
+      if (!current()) { that._takeLoadSettle(null); return true; }
+      return false;
+    };
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 30 },
       success(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           const list = that.decorate(Array.isArray(res.data.list) ? res.data.list : []);
@@ -184,27 +192,43 @@ Page({
           if (that._syncAfter === undefined) that._syncAfter = that.maxLocalId();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           if (res.data.blocked === true) {
-            that.setData({ disabled: true, disabledText: res.data.blockedByMe === true ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息' });
+            const byMe = res.data.blockedByMe === true;
+            that.setData({ disabled: true, disabledText: byMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息',
+              moreSheetItems: that._blockMenuItems(byMe) });
+            // BL-61:我方是否拉黑了对方只作逻辑判断、不渲染 ⇒ 存实例字段,不进 data(U4 零消费)
+            that._blockedByMe = byMe;
+          } else if (res.data.blocked === false && that._blockedByMe) {
+            // BL-61:解除拉黑后按回读恢复可发送;只在此前因「我拉黑对方」禁用时才解禁
+            that._blockedByMe = false;
+            that.setData({ disabled: false, disabledText: '', moreSheetItems: that._blockMenuItems(false) });
           }
           if (toBottom) that.scrollBottom();
           that.markRead();
           that.recoverPending();
+          that._takeLoadSettle(res.data);
           return;
         }
         that._setMessageLoadError(res);
       },
       fail(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         that._setMessageLoadError(res);
       },
       successStatusAbnormal(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         that._setMessageLoadError(res);
       },
     });
   },
 
+  _takeLoadSettle(data) {
+    const fn = this._loadSettle;
+    this._loadSettle = null;
+    if (fn) fn(data);
+  },
+
   _setMessageLoadError(response) {
+    this._takeLoadSettle(null);
     if (response && response.errorCode === 'HANGOUT_CLOSED') {
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
@@ -586,6 +610,7 @@ Page({
     if (label === '举报') this.doReport();
     else if (label === '举报对方') this.doReportPeer();
     else if (label === '拉黑') this.doBlock();
+    else if (label === '解除拉黑') this.doUnblock();
     else if (label === '清空聊天') this.clearConversation();
   },
 
@@ -599,6 +624,16 @@ Page({
 
   onDangerCancel(e) {
     if (e.detail.key === 'im.conversation.delete') this._pendingClearId = null;
+    if (e.detail.key === 'im.unblock') this._pendingUnblockId = 0;
+  },
+
+  // BL-61:「更多」里拉黑/解除拉黑二选一,其余项原样保留
+  _blockMenuItems(byMe) {
+    return (this.data.moreSheetItems || []).map((label) => {
+      if (byMe && label === '拉黑') return '解除拉黑';
+      if (!byMe && label === '解除拉黑') return '拉黑';
+      return label;
+    });
   },
 
   onMoreCancel() { this.setData({ moreSheetShow: false }); },
@@ -636,7 +671,51 @@ Page({
     if (dc) dc.open('im.block');
   },
 
+  doUnblock() {
+    // 与拉黑同口径:对方 id 取最近一条对方消息的 senderId
+    let otherId = 0;
+    for (let i = this.data.msgs.length - 1; i >= 0; i--) { if (this.data.msgs[i].senderId && this.data.msgs[i].senderId != this.data.myId) { otherId = this.data.msgs[i].senderId; break; } }
+    if (!otherId) { app.tips && app.tips('暂时无法在本会话解除拉黑'); return; }
+    this._pendingUnblockId = otherId;
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.open('im.unblock');
+  },
+
+  _confirmUnblock() {
+    const otherId = this._pendingUnblockId;
+    if (!otherId) return;
+    const that = this;
+    const current = this._viewGuard();
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.busyOn();
+    app.sendRequest({
+      url: '/api/im/unblock', method: 'POST', hideLoading: true, data: { target_member_id: otherId },
+      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准,回读确认后才显示「已解除拉黑」
+      success(res) {
+        if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '解除拉黑失败，请重试'); return; }
+        that._pendingUnblockId = 0;
+        // BL-176:视图已失效则按「结果未确认」落定,回读结果若属于新视图也不算本次确认
+        if (!current()) { that._settleUnblock(dc, null); return; }
+        that.loadMessages(false, (data) => that._settleUnblock(dc, current() ? data : null));
+      },
+      // 网络失败 = 结果未知(请求可能已生效):不说「失败」,回读核对;保留待解除对象,解除可重复提交
+      fail() {
+        if (dc) dc.failed('解除结果未确认，正在重新核对会话状态，可稍后重试');
+        if (current()) that.loadMessages(false);
+      },
+    });
+  },
+
+  _settleUnblock(dc, data) {
+    if (!dc) return;
+    const ok = !!data && (data.blocked === false || (data.blocked === true && data.blockedByMe === false));
+    if (ok) { dc.done(); return; }
+    if (data && data.blockedByMe === true) { dc.failed('会话仍显示你已拉黑对方，请稍后重试'); return; }
+    dc.failed('解除结果未确认，请稍后刷新会话核对');
+  },
+
   onDangerConfirm(e) {
+    if (e.detail.key === 'im.unblock') { this._confirmUnblock(); return; }
     if (e.detail.key === 'im.conversation.delete') {
       const id = this._pendingClearId;
       if (!id || id !== this.data.conversationId) return;
@@ -682,7 +761,9 @@ Page({
       // 不判 code 就禁用输入框并弹「已拉黑」,用户会以为对方发不进来了,实际没有。
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '拉黑失败，请重试'); return; }
-        that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息' });
+        that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息',
+          moreSheetItems: that._blockMenuItems(true) });
+        that._blockedByMe = true;
         that._pendingBlockId = 0;
         if (dc) dc.done();
       },
