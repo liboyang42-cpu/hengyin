@@ -260,3 +260,16 @@
 | 172 | 基线漂移复跑 | 对监督结论 OK 的 xcx 代码 PR，把当前 `claude/mini-ui-features-20261015` 合进临时 worktree（不推送），跑该 PR 相关单测 + `node scripts/ui-validity-gates.js` + `node tests/lint/ui-integrity.js --warn-as-error`，列出因基线前进而转红/冲突的 PR 与失败项，写进 `DRIFT-CHECK.md`；不推送到任何 worker 分支 | docs；只读复跑 |
 | 173 | 零调用接口增量复扫 | 以 #177 `ZERO-CALL.md`（基线 `d0307a78`）为底，复扫 `controller/api/*.java` 与当前基线及 Codex 控制分支，列出新增或变更的映射及其小程序调用情况；只登记，不立功能卡（新卡由监督线按用户决定筛选） | docs |
 | 174 | 验收清单更新·第十六批 + 索引 | 把 BL-168–173 已开 PR 的验收命令与期望（前后对照、依赖顺序）写进 `ACCEPTANCE-BATCH16.md`，并在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十六批行的补丁 | docs |
+
+## 第十七批（175–182）：监督线补充（来自 #104/#213/#219 复审与 `ui-integrity` 实测的未决项；不改现有 UI 与标题，无迁移/新接口/新依赖；协调者文件只交补丁；各从被修 PR 分支切出，正文注明依赖）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 175 | 修 U4·私信 blockedByMe 零消费 | #104 评审：`node tests/lint/ui-integrity.js --warn-as-error` 报 `[U4] subpackageB/pages/im/chat/index.js:191 setData 顶层字段 blockedByMe 在同页 WXML 零消费`（旧 head 已有）。把只给逻辑用的 `blockedByMe` 移出 `data`（如 `this._blockedByMe`），同步 #104 自带单测；不改 wxml/样式；从 #104 当前 head 切出，给前后 U4 对照 | xcx；只改 #104 新增逻辑 |
+| 176 | 解除拉黑回读在视图切换时落定 | #213 评审 nit 在 #104 新 head（`1799039b`）同样存在：`loadMessages` 在 `!current()` 时直接 return，`_loadSettle` 不落定，确认框可能停在进行中。在视图失效路径调用 `_takeLoadSettle(null)`（或确认框随视图销毁则 BLOCKED 附证据）；补处理器单测；从 #104 切出 | xcx；只改 #104 新增处理器 |
+| 177 | BL-154 todo 转正（基于 #104 新 head） | #104 新 head 已让 #201（BL-154）3 个 todo 断言通过（监督实测）。从 #201 分支合入 #104 当前 head，去掉 3 个 `todo`，测试文案按 #104 实际文案对齐；跑 `im-*` 单测。完成后在 #213 留言说明可关闭或只保留差异部分 | tests；不改被测代码 |
+| 178 | 漫游 u5Silent 行号漂移补丁 | #219 `U5-QUOTA.md` §4：#38/#83/#113 改 `pages/roam/index.js` 后 11 条既有 `u5Silent` key 行号位移。照 #37 的等量换 key 做法，逐 PR 给 `tests/lint/ui-integrity-baseline.js` 最小补丁（换 key + 重算 digest，不改条数），在各分支 `git apply` 后实跑 `ui-integrity` 给前后对照；不提交该文件 | docs/补丁；不改协调者文件 |
+| 179 | 官方收件箱 U1-VARIABLE 基线漂移补丁 | #209 评审：#43（BL-06）使 `pages/activity/official-inbox/index.js:103 → :109` 的 U1-VARIABLE 基线键漂移（`[BASELINE] … 基线已未命中`）。给 `ui-integrity-baseline.js` 最小补丁并在 #43/#209 上 `git apply` 实测 `UI-GATE-0: PASS`；不提交该文件 | docs/补丁；不改协调者文件 |
+| 180 | ui-integrity 逐 PR 实测表 | 监督此前多只跑 `ui-validity-gates`；对所有 open xcx 代码 PR（各自 head，不合基线）跑 `node tests/lint/ui-integrity.js --warn-as-error`，列 UI-GATE-0 结果与每条 violation（U1/U4/U5/WARN/BASELINE），标注「本 PR 引入 / 基线既有 / 归 C00」，写进 `UI-INTEGRITY-BY-PR.md`；与 BL-172（合基线复跑）互补，不重复 | docs；只读复跑 |
+| 181 | U5 名额消化评估 | 依 #219 §6 选项 2：逐条评估 #73（report-sheet:46/:89）、#110、#123、#83、#113 新增的 `silentError` 调用能否在**本 PR 新增代码内**改为门禁认可的可见反馈（不改现有 UI、不加新样式），能改的给补丁草案与前后 `ui-integrity` 对照，不能改的写原因；只交文档，等 C00 裁定后再动代码 | docs |
+| 182 | 验收清单更新·第十七批 + 索引 | 把 BL-175–181 已开 PR 的验收命令与期望写进 `ACCEPTANCE-BATCH17.md`，并在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十七批行的补丁 | docs |
