@@ -183,7 +183,7 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：�
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # BL-120 另存为模板：业务失败按后端文案、网络失败均显式 toast，成功 toast 后回读；complete/fail 释放在途锁，关闭通道 toast 避免双弹，myproject-save-as-template 覆盖
 
 # 2026-09-30 会员分包组件迁移：按实际路径重新核对，旧路径冻结收据保留，不增加冻结额度。
-chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。
+chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。BL-66 安全感受摘要只读附加块，失败与样本不足同样不展示（merchantSafety=null），不挡主页。
 chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js 4  # 详情读取落 state:error，取消预检和取消提交落 cancelError，评价提交落 commentError；各有页内反馈与恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-qr-coupon/index.js 2  # 凭证签发失败落 qrState:error，状态轮询失败落 pollError；已使用或失效会清凭证，各有页内恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 据点和商家读取落页内错误态，收藏失败落 favoriteError，打卡业务拒绝或网络异常落专用恢复面板；通道 toast 会重复报错。
