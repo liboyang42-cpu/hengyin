@@ -15,10 +15,33 @@ function normalizeTaxonomy(raw) {
   if (!policyVersion || !Array.isArray(raw.reasons)) return null
   const reasons = raw.reasons
     .filter((r) => r && typeof r.code === 'string' && r.code && typeof r.label === 'string' && r.label)
-    .map((r) => ({ code: r.code, label: r.label }))
+    .map((r) => {
+      const reason = { code: r.code, label: r.label }
+      // BL-51:时效说明只由 taxonomy 的 firstResponseMinutes / emergency 推出;字段缺失就不显示。
+      const responseText = reasonResponseText(r)
+      if (responseText) reason.responseText = responseText
+      return reason
+    })
   if (!reasons.length) return null
   const targetTypes = Array.isArray(raw.targetTypes) ? raw.targetTypes : []
   return { policyVersion, reasons, targetTypes }
+}
+
+function minutesText(minutes) {
+  const n = Number(minutes)
+  if (!Number.isSafeInteger(n) || n <= 0) return ''
+  if (n < 60) return n + ' 分钟'
+  if (n % 60 === 0) return (n / 60) + ' 小时'
+  return Math.floor(n / 60) + ' 小时 ' + (n % 60) + ' 分钟'
+}
+
+// 后端 CommunityReportPolicy:URGENT 15 分钟、STANDARD 24 小时首响目标(publicReasons 原样下发)。
+function reasonResponseText(r) {
+  const span = minutesText(r && r.firstResponseMinutes)
+  if (!span) return ''
+  return r.emergency === true
+    ? '此类举报会优先处理，平台目标在约 ' + span + '内首次响应。'
+    : '平台目标在约 ' + span + '内首次响应。'
 }
 
 function validTarget(targetType, targetId) {
@@ -55,4 +78,4 @@ function receiptId(data) {
   return id == null || id === '' ? '' : String(id)
 }
 
-module.exports = { DESCRIPTION_MAX, normalizeTaxonomy, validTarget, checkDescription, makeRequestId, buildPayload, receiptId }
+module.exports = { DESCRIPTION_MAX, normalizeTaxonomy, reasonResponseText, validTarget, checkDescription, makeRequestId, buildPayload, receiptId }

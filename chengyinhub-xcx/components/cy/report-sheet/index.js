@@ -18,6 +18,7 @@ Component({
     stage: 'loading', // loading | loadfail | pick | form | busy | ok | fail | unknown
     reasonLabels: [],
     reasonLabel: '',
+    reasonResponseText: '',
     description: '',
     descriptionError: '',
     maxLength: model.DESCRIPTION_MAX,
@@ -33,7 +34,7 @@ Component({
       this._reasonCode = ''
       this._requestId = ''
       this._busy = false
-      this.setData({ stage: 'loading', reasonLabels: [], reasonLabel: '', description: '', descriptionError: '', receipt: '', failText: '' })
+      this.setData({ stage: 'loading', reasonLabels: [], reasonLabel: '', reasonResponseText: '', description: '', descriptionError: '', receipt: '', failText: '' })
       this.loadTaxonomy()
     },
     loadTaxonomy() {
@@ -64,7 +65,7 @@ Component({
       if (!reason) return
       if (reason.code !== this._reasonCode) this._requestId = ''
       this._reasonCode = reason.code
-      this.setData({ stage: 'form', reasonLabel: reason.label, descriptionError: '' })
+      this.setData({ stage: 'form', reasonLabel: reason.label, reasonResponseText: reason.responseText || '', descriptionError: '' })
     },
     onDescriptionInput(e) {
       const value = (e.detail && e.detail.value) || ''

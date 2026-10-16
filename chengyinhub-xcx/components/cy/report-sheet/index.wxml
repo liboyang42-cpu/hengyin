@@ -6,6 +6,7 @@
 <cy-sheet show="{{show && stage === 'form'}}" title="{{title}}" bind:close="close" bind:requestclose="close">
   <view class="rs">
     <text class="rs__reason">举报原因：{{reasonLabel}}</text>
+    <text class="rs__note" wx:if="{{reasonResponseText}}">{{reasonResponseText}}</text>
     <cy-field variant="textarea" label="具体说明" required show-count maxlength="{{maxLength}}"
               placeholder="写一下具体发生了什么，便于平台核实"
               value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
