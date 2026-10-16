@@ -387,3 +387,12 @@ C00初4efd与补225b59精确转交已实际读全；所涉E02/E04生产及旧fix
 更正此前E02组18的静态漏计：ApiCreativeSquareCommunityPolicyTest有8个普通@Test及1个六行@ParameterizedTest，按调用声明14；因此E02四类6+14+2+2=24，组合再加E04 7+4为六类35。35只是声明，全部实际未执行；旧回执18仅保留为被此处纠正的历史，不通过改测试减少数量。
 
 A独立候选准入拒绝证据f3569c2b5f04912ba75b3f0ead8c916a94fd2743继续保留。两次均NOT_RUN/非源码失败，不开修复槽、不继承旧PASS。真实MySQL新5+旧3仍未跑，迁移未执行。普通35待本地现有资源自然准入；不Cloud补跑、不新增入口/网络/CI/服务、不停别人、不改变门槛。此次提交仅本队三账，冻结生产/测试/依赖不变。
+
+
+## 正式第二次准入纠正：并未启动（证据 UTC 13:22:31Z）
+
+已实际核读公共b6da6971e8f0fee7e979620aa66f878ff59e0719的VPS_EXTRA_923170ab/README.md与summary.json。13:21:16Z预检2838712KiB达标，正式原212准入13:22:31Z已降至2460648KiB，exit75 insufficient_start_memory/containerId=null；实际0/freshXML0/target0/无Maven日志，Java未启动。更正此前PR24#6216462402及PR36#6216462683将预检后调用表述为RUNNING；最终准入回执优先，当前NOT_RUN_ADMISSION_REFUSED，非源码失败、不占原作者修复槽。
+
+首次13:09原run/result逐字另存为unit-run-admission-refused-130903Z.json与unit-guard-result-admission-refused-130903Z.json；公共summary保留两次哈希。本队记录公开manifest，不自行访问VPS或重算远端原件。第二次run哈希b50e351be93475eb9f4c08b32c5077424935b1f5ddcd15ffa4ce6e8607cab09b、result哈希edf47afdf0d402c49ea44f41a7b4f4cc25be1e6a453686601e206e1269d051bf；精确chengyin-aws容器过滤由本地核为空。
+
+应用源码继续冻结923170abd8e468d62eb8404b16b990609a4da42a；六类35声明仍待验，真库新5+旧3未跑、迁移未执行、不继承旧PASS。READY0/writer0/修复0，不凑任务、不Cloud补测/CI、不新增入口或绕门槛、不停他人。只等待资源自然满足现有212正式准入，不把预检当测试启动。
