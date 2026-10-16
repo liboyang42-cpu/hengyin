@@ -57,6 +57,8 @@ Component({
       // 稿 P6 31:38 把阻断项按资金类型分节。后端一次只抛一类(两个 catch 分支),
       // 所以这里只存当前这一节的抬头。
       dissolutionBlockerSection: '',
+      dissolutionBlockerType: '',
+      dissolutionBlockerOriginKeys: [],
       showDissolutionBlockers: false,
       dissolutionBlockerItems: [],
       // 定位:T1 半屏 draft(点「应用」才写回表单)。倾向回显直接在 wxml 上读 activityPrefs,
@@ -346,6 +348,9 @@ Component({
             that.setData({
               showDissolutionBlockers: true,
               dissolutionBlockerSection: (res.data && res.data.sectionTitle) || '待处理事项',
+              // BL-140:记下本次报错的阻断类型与原始 id(含无 type+id 链接的历史保证金),回读时据此区分「本列表已有」。
+              dissolutionBlockerType: (res.data && res.data.blockerType) || '',
+              dissolutionBlockerOriginKeys: dissolutionBlockerKeys(res.data),
               dissolutionBlockerText: '',
               dissolutionBlockerItems: blockerItems
             });
@@ -362,7 +367,7 @@ Component({
     },
 
     closeDissolutionBlockers() {
-      this.setData({ showDissolutionBlockers: false, dissolutionBlockerText: '', dissolutionBlockerSection: '', dissolutionBlockerItems: [] });
+      this.setData({ showDissolutionBlockers: false, dissolutionBlockerText: '', dissolutionBlockerSection: '', dissolutionBlockerType: '', dissolutionBlockerOriginKeys: [], dissolutionBlockerItems: [] });
     },
 
     closeDissolutionError() {
@@ -433,7 +438,10 @@ Component({
         success(res) {
           that._blockerRefreshing = false;
           if (res && res.code == '200') {
-            const r = reconcileDissolutionBlockers(that.data.dissolutionBlockerItems, res.data);
+            const r = reconcileDissolutionBlockers(that.data.dissolutionBlockerItems, res.data, {
+              type: that.data.dissolutionBlockerType,
+              originKeys: that.data.dissolutionBlockerOriginKeys,
+            });
             const patch = { dissolutionBlockerText: lead + dissolutionBlockerSummary(r) };
             if (r.ok) patch.dissolutionBlockerItems = r.items;
             that.setData(patch);
@@ -470,7 +478,8 @@ function resolveDissolutionBlockerTarget(url) {
 // BL-140:解散资金阻断回读。展示行(title/statusText/metaText/actionText/url)只由 /api/club/dissolve 报错的
 // data.actionItems 给出;只读接口 /api/club/dissolution-blockers 返回 ClubDissolutionBlockers 原始事实
 // { deposits: [{ id, topicId, depositStatus, amount, retryable }], settlements: [{ id, topicId, amount, direction }] },
-// 没有展示文案 ⇒ 只按 url 里的 type+id 对照:回读里没有的行移除,本地没有的新增只计数(不在前端拼状态/金额)。
+// 没有展示文案 ⇒ 只按 url 里的 type+id 对照:回读里没有的行移除,本列表没有的只计数(不在前端拼状态/金额)。
+// /dissolve 先查结算、再查保证金,只报第一类;回读里另一类的项是「下一阶段」,单独计数,不算本列表遗漏。
 function dissolutionBlockerKey(url) {
   const raw = String(url || '')
   if (raw.indexOf('/pages/club/dissolution-blockers/') !== 0) return ''
@@ -494,33 +503,45 @@ function dissolutionBlockerKeys(blockers) {
 
 /**
  * 回读结果为准对照现有行。
- * 返回 { ok, items, removedCount, extraCount, cleared }:
+ * ctx = { type: 'deposit'|'settlement'|'', originKeys: [/dissolve 报错时的 type:id] }(可缺省)。
+ * 返回 { ok, items, removedCount, extraCount, otherCount, cleared }:
  *   ok=false 表示回读结构不可信(两个列表都缺),调用方不得改动现有行。
- *   url 解析不出 type+id 的行(历史退款转平台核验等)原样保留,不据回读移除。
+ *   url 解析不出 type+id 的行(历史退款转平台核验等)平时原样保留;两个列表都为空时服务端已无待处理项,一并移除。
+ *   extraCount 只数本类型、且不在本列表(含 originKeys 里无链接的历史行)的项;otherCount 是另一类型的项。
  */
-function reconcileDissolutionBlockers(items, blockers) {
+function reconcileDissolutionBlockers(items, blockers, ctx) {
   const list = Array.isArray(items) ? items : []
   const b = blockers || {}
   if (!Array.isArray(b.deposits) && !Array.isArray(b.settlements)) {
-    return { ok: false, items: list, removedCount: 0, extraCount: 0, cleared: false }
+    return { ok: false, items: list, removedCount: 0, extraCount: 0, otherCount: 0, cleared: false }
   }
+  const c = ctx || {}
+  const type = c.type === 'deposit' || c.type === 'settlement' ? c.type : ''
   const remote = dissolutionBlockerKeys(b)
+  const cleared = remote.length === 0
   const remoteSet = {}
   remote.forEach((k) => { remoteSet[k] = true })
   const localSet = {}
+  ;(Array.isArray(c.originKeys) ? c.originKeys : []).forEach((k) => { localSet[k] = true })
   const kept = list.filter((item) => {
     const key = dissolutionBlockerKey(item && item.url)
-    if (!key) return true
+    if (!key) return !cleared
     localSet[key] = true
     return !!remoteSet[key]
   })
-  const extraCount = remote.filter((k) => !localSet[k]).length
+  let extraCount = 0
+  let otherCount = 0
+  remote.forEach((k) => {
+    if (type && k.indexOf(type + ':') !== 0) otherCount += 1
+    else if (!localSet[k]) extraCount += 1
+  })
   return {
     ok: true,
     items: kept,
     removedCount: list.length - kept.length,
     extraCount,
-    cleared: remote.length === 0,
+    otherCount,
+    cleared,
   }
 }
 
@@ -529,7 +550,8 @@ function dissolutionBlockerSummary(r) {
   if (r.cleared) return '已重新核对：资金阻断明细已无待处理项，可重新发起解散，以解散结果为准'
   const parts = ['已重新核对']
   if (r.removedCount) parts.push(r.removedCount + ' 项已不在阻断明细中')
-  if (r.extraCount) parts.push('另有 ' + r.extraCount + ' 项新增待处理，请重新发起解散查看')
-  if (parts.length === 1) parts.push('阻断事项仍未结清')
+  if (r.extraCount) parts.push('另有 ' + r.extraCount + ' 项未在本列表中，请重新发起解散查看')
+  if (r.otherCount) parts.push('本类处理完后，重新发起解散还会提示另外 ' + r.otherCount + ' 项待处理')
+  if (parts.length === 1 || (!r.removedCount && !r.extraCount)) parts.splice(1, 0, '阻断事项仍未结清')
   return parts.join('；')
 }

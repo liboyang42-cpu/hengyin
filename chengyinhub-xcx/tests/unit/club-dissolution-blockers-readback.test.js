@@ -42,7 +42,56 @@ test('回读:回读里没有的行移除,无 type+id 的行(转平台核验)保�
   const d = readBack({ deposits: [{ id: 9 }, { id: 11 }], settlements: [] })
   assert.deepEqual(d.dissolutionBlockerItems.map(i => i.title), ['保证金 #9', '保证金 #5'])
   assert.match(d.dissolutionBlockerText, /1 项已不在阻断明细中/)
-  assert.match(d.dissolutionBlockerText, /另有 1 项新增待处理/)
+  assert.match(d.dissolutionBlockerText, /另有 1 项未在本列表中/)
+  assert.doesNotMatch(d.dissolutionBlockerText, /新增/)
+})
+
+function readBackWith(data, ctx, items) {
+  const { vm, requests } = loadComponent()
+  vm.data.clubId = '7'
+  vm.data.dissolutionBlockerItems = (items || ITEMS).slice()
+  vm.data.dissolutionBlockerType = ctx.type
+  vm.data.dissolutionBlockerOriginKeys = ctx.originKeys
+  vm.refreshDissolutionBlockers('')
+  requests[0].success({ code: '200', data })
+  return vm.data
+}
+
+test('回读:转平台核验的历史保证金(无链接)仍在 deposits 里,不算「未在本列表」', () => {
+  const items = [ITEMS[0], ITEMS[2]]
+  const d = readBackWith({ deposits: [{ id: 9 }, { id: 5 }], settlements: [] },
+    { type: 'deposit', originKeys: ['deposit:9', 'deposit:5'] }, items)
+  assert.deepEqual(d.dissolutionBlockerItems.map(i => i.title), ['保证金 #9', '保证金 #5'])
+  assert.doesNotMatch(d.dissolutionBlockerText, /未在本列表中/)
+  assert.match(d.dissolutionBlockerText, /仍未结清/)
+})
+
+test('回读:结算分区里出现的保证金是下一阶段,单独说明、不算本列表遗漏', () => {
+  const items = [{ title: '结算单 #3', url: U('settlement', 3) }]
+  const d = readBackWith({ deposits: [{ id: 9 }, { id: 11 }], settlements: [{ id: 3 }] },
+    { type: 'settlement', originKeys: ['settlement:3'] }, items)
+  assert.equal(d.dissolutionBlockerItems.length, 1)
+  assert.doesNotMatch(d.dissolutionBlockerText, /未在本列表中/)
+  assert.match(d.dissolutionBlockerText, /还会提示另外 2 项待处理/)
+  assert.match(d.dissolutionBlockerText, /仍未结清/)
+})
+
+test('回读:两个列表都为空时,无链接的历史行也一并移除', () => {
+  const d = readBackWith({ deposits: [], settlements: [] },
+    { type: 'deposit', originKeys: ['deposit:9', 'deposit:5'] }, [ITEMS[0], ITEMS[2]])
+  assert.deepEqual(d.dissolutionBlockerItems, [])
+  assert.match(d.dissolutionBlockerText, /已无待处理项/)
+})
+
+test('/dissolve 报阻断时记下类型与原始 id,关闭弹层清空', () => {
+  const src = fs.readFileSync(COMPONENT, 'utf8')
+  assert.match(src, /dissolutionBlockerType: \(res\.data && res\.data\.blockerType\) \|\| ''/)
+  assert.match(src, /dissolutionBlockerOriginKeys: dissolutionBlockerKeys\(res\.data\)/)
+  const { vm } = loadComponent()
+  vm.data.dissolutionBlockerType = 'deposit'; vm.data.dissolutionBlockerOriginKeys = ['deposit:1']
+  vm.closeDissolutionBlockers()
+  assert.equal(vm.data.dissolutionBlockerType, '')
+  assert.deepEqual(vm.data.dissolutionBlockerOriginKeys, [])
 })
 
 test('回读:两个列表都为空 = 资金阻断已清,文案以解散结果为准、不宣称已解散', () => {
