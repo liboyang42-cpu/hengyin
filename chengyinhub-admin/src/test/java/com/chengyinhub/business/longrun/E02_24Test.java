@@ -96,7 +96,8 @@ class E02_24Test {
             parent.put("id", 18L);
             parent.put("author_id", 12L);
             when(mapper.selectCommentForReply(18L, 7L, 9L)).thenReturn(parent);
-            when(mapper.selectCommentByAuthorRequest(9L, "synthetic-reply-1")).thenReturn(null, stored(storedParent));
+            when(mapper.selectCommentByAuthorRequest(9L, "synthetic-reply-1")).thenReturn(null);
+            when(mapper.selectCommentByAuthorRequestForUpdate(9L, "synthetic-reply-1")).thenReturn(stored(storedParent));
             when(mapper.insertComment(eq(7L), eq(9L), eq(18L), eq(18L), eq(12L),
                     eq("synthetic-reply-1"), eq("同意"), eq("CHECKING"), eq("VISIBLE"), any()))
                     .thenThrow(new DuplicateKeyException("synthetic insert race at SQL boundary"));
