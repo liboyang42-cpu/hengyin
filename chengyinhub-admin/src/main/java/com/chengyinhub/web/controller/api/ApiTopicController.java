@@ -1212,7 +1212,7 @@ public class ApiTopicController extends BaseController {
                 .map(CmsTopicLike::getId)
                 .toArray(Long[]::new);
         int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
-        if (rows > 0) {
+        if (rows > 0 || (!legacyToggle && rows == 0)) {
             return success("取消点赞成功");
         } else {
             return error("取消点赞失败");
