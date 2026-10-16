@@ -9,7 +9,7 @@ Page({
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     state: 'loading', // loading | ready | empty | error
-    errorSub: '网络请求失败，重试会重新拉取一次',
+    errorSub: '网络不太稳，点重试再拉一次',
     nodes: [],
   },
   onLoad() { this.load() },
@@ -39,7 +39,7 @@ Page({
       fail() {
         if (seq !== that._seq) return
         if (quiet && that.data.state === 'ready') return
-        that.setData({ state: 'error', errorSub: '网络请求失败，重试会重新拉取一次' })
+        that.setData({ state: 'error', errorSub: '网络不太稳，点重试再拉一次' })
       },
     })
   },
