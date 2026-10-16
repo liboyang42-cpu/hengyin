@@ -4,6 +4,7 @@ const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
 const { COUPON_TYPE_LABELS } = require('../../utils/coupon-form.js');
+const { shapeCouponSummary } = require('./coupon-summary.js');
 
 function scalarText(value) {
   if (value === null || value === undefined || value === '') return '—';
@@ -83,6 +84,7 @@ Page({
     loadState: 'loading',
     errorMsg: '',
     operationScope: '',
+    summaryItems: [], // BL-77 商家券领取/核销统计,无数据为空数组即不展示
     tpShow: false, // 弹窗显示状态
     currentCoupon: {} // 当前选中的优惠券
   },
@@ -101,6 +103,7 @@ Page({
     merchantTheme.merchantPageShow();
     var that = this
     that.getList()
+    that.loadSummary()
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
@@ -144,7 +147,21 @@ Page({
     })
   },
 
-  retryLoad() { this.getList(); },
+  retryLoad() { this.getList(); this.loadSummary(); },
+
+  // BL-77:只在商家口径下读统计;失败或没有券就不展示,不阻塞列表。
+  loadSummary() {
+    if (this.data.operationScope !== 'MERCHANT') return;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      autoErrorToast: false,
+      url: '/api/merchant/coupon-summary',
+      method: 'POST',
+      success: (res) => this.setData({ summaryItems: shapeCouponSummary(res) || [] }),
+      fail: () => this.setData({ summaryItems: [] }),
+    });
+  },
 
   // 点击优惠券
   tpClick: function (e) {

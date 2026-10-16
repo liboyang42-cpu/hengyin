@@ -111,5 +111,6 @@ module.exports = [
   { file: 'utils/roam-share-snapshot.js', count: 2, reason: '足迹分享快照的发布、作废、接收方读取失败分别由分享面板链接提示+重试、精确 toast、整页空态/重试承接，避免统一 toast 双弹。' },
   { file: 'pages/merchant/verify-records/index.js', count: 2, reason: 'BL-76 access/me 与核销记录读取失败都落页内 cy-error 并带重新加载;通用 toast 会双弹。与 ci/silent-error-allowlist.txt 同批对账。' },
   { file: 'pages/merchant/crm-campaigns/index.js', count: 3, reason: 'BL-100 access/me 与触达列表读取失败落页内 cy-error、逐人回执读取失败落半屏 cy-inline-error,均带重新加载;通用 toast 会双弹。与 ci/silent-error-allowlist.txt 同批对账。' },
+  { file: 'subpackageMember/coupon/coupon.js', count: 1, reason: 'BL-77 券领取/核销统计卡是辅助只读信息,读取失败即不展示、不挡券列表;通用 toast 会打断券列表。与 ci/silent-error-allowlist.txt 同批对账。' },
   { file: 'utils/ui-state-request.js', count: 1, reason: '共享 UI-state wrapper 仅允许枚举端点且强制传入 fail；真实调用方均在 fail 写页内错误态，本层只抑制重复全局 toast。' },
 ]
