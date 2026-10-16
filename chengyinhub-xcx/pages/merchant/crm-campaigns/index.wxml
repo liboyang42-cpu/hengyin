@@ -24,7 +24,7 @@
         <view class="fin-row ccl-row" wx:for="{{items}}" wx:key="id"
               data-id="{{item.id}}" bindtap="openDetail"
               hover-class="cy-pressed" hover-stay-time="80" aria-role="button"
-              aria-label="{{item.titleText}}，{{item.statusText}}，{{item.summaryText}}，查看逐人回执">
+              aria-label="{{item.titleText}}，{{item.statusText}}，{{item.summaryText}}，查看逐人结果">
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.titleText}}</text>
             <view class="fin-row__t2">
@@ -41,11 +41,11 @@
     </view>
   </scroll-view>
 
-  <cy-sheet show="{{detailOpen}}" title="{{detail ? detail.titleText : '触达回执'}}" bind:close="closeDetail">
+  <cy-sheet show="{{detailOpen}}" title="{{detail ? detail.titleText : '触达明细'}}" bind:close="closeDetail">
     <view class="ccl-detail">
       <cy-skeleton wx:if="{{detailState === 'loading'}}" type="list" count="3" />
       <cy-inline-error wx:elif="{{detailState === 'error'}}" kind="data"
-                       title="触达回执没有加载出来" sub="{{detailError}}"
+                       title="触达明细没有加载出来" sub="{{detailError}}"
                        action="重新加载" bind:action="retryDetail" />
       <block wx:elif="{{detailState === 'ready' && detail}}">
         <view class="ccl-metrics">
@@ -69,7 +69,7 @@
             </view>
           </view>
         </view>
-        <text class="ccl-more" wx:else>这次触达没有逐人回执</text>
+        <text class="ccl-more" wx:else>这次触达没有逐人结果</text>
       </block>
     </view>
   </cy-sheet>
