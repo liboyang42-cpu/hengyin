@@ -10,7 +10,8 @@ function load(file, replies) {
   const calls = [], storage = new Map(); let definition, state;
   const app = {
     canUseCommunity: () => true, // Current-account server-open fixture.
-    globalData: {}, getUserID: () => 990005, getAvatar: () => '', getNickname: () => '测试', getPageSize: () => 1,
+    globalData: {}, getUserID: () => 990005,
+    ...(file === 'subpackageMember/components/cy/profile/index.js' ? { getAuthorization: () => 'Bearer existing-member-fixture' } : {}), getAvatar: () => '', getNickname: () => '测试', getPageSize: () => 1,
     getRequestErrorMessage: (r, fallback) => r && r.msg || fallback, getTotalPage: (n,s) => Math.ceil(n/s),
     sendRequest(o) { calls.push(o); let reply = o.method==='GET' && /\/posts\/[0-9]+$/.test(o.url) && state ? JSON.parse(JSON.stringify(state)) : replies.shift(); if(typeof reply==='function')reply=reply(o,state); if(reply && reply.post && (o.method==='PATCH'||o.method==='POST' && /\/posts(?:\/[0-9]+\/publish)?$/.test(o.url)))state=reply; if (reply === undefined) throw new Error('Unexpected HTTP '+o.url);
       const task = { aborted: false, abort() { this.aborted = true; } };

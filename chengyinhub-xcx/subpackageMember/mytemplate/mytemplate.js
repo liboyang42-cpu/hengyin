@@ -8,6 +8,13 @@ const { isRecordList } = require('../../utils/response-shape.js');
 const { marketView } = require('../../utils/template-market.js');
 const { gameTemplateCover } = require('../../utils/template-display.js');
 const { decodeDisplayFields } = require('../../utils/display-text.js');
+const session = require('../../utils/session/login-reload.js');
+
+function authorization() {
+  const value = typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 Page({
   data: {
@@ -23,7 +30,8 @@ Page({
     loading: false,
     loadingMore: false,
     errorMsg: '',
-    loadMoreError: ''
+    loadMoreError: '',
+    readAccess: ''
   },
 
   onBack() {
@@ -201,14 +209,61 @@ Page({
     this.getList(true, this.data.page + 1);
   },
 
+  retryRead() {
+    if (this._hidden || this._unloaded) return;
+    if (this.data.readAccess !== 'login') { this.refreshList(); return; }
+    const epoch = this._listEpoch || 0;
+    const owner = session.memberId(app);
+    return session.retryLogin(this, app, function () {
+      if (epoch !== this._listEpoch || (owner && owner !== session.memberId(app)) || !authorization()) return;
+      this.setData({ readAccess: '' });
+      this.refreshList();
+    });
+  },
+
+  _setReadAccess(access) {
+    this.setData({ readAccess: access, list: [], total: 0, page: 1, hasMore: false,
+      loading: false, loadingMore: false, errorMsg: '', loadMoreError: '' });
+  },
+
   // 获取模板列表
   getList: function (isLoadMore = false, requestedPage) {
-    if (this.data.loading || this.data.loadingMore || this._unloaded) return;
+    if (this._hidden || this._unloaded) return;
+    const owner = session.memberId(app);
+    const token = authorization();
+    if (this._readOwner !== undefined && (owner !== this._readOwner || token !== this._readAuthorization)) {
+      this._listEpoch = (this._listEpoch || 0) + 1;
+      this._setReadAccess('');
+    }
+    this._readOwner = owner;
+    this._readAuthorization = token;
+    if (this.data.loading || this.data.loadingMore) return;
     const epoch = (this._listEpoch || 0) + 1;
     this._listEpoch = epoch;
-    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
-    const current = () => !this._unloaded && epoch === this._listEpoch
-      && owner === (typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '');
+    if (!owner || !token || this.data.readAccess === 'login') {
+      this._setReadAccess('login');
+      session.waitForInitialSession(this, app, function () {
+        if (epoch !== this._listEpoch) return;
+        this.setData({ readAccess: '' });
+        this.refreshList();
+      });
+      return;
+    }
+    this.setData({ readAccess: '' });
+    const current = () => !this._unloaded && !this._hidden && epoch === this._listEpoch
+      && owner === session.memberId(app) && token === authorization();
+    const failure = (res, statusCode) => {
+      if (this._unloaded || this._hidden || epoch !== this._listEpoch) return;
+      if (session.recoverReadSession(this, app, res, function (anonymous) {
+        this._listEpoch++;
+        this._setReadAccess(anonymous ? 'login' : '');
+      }, this.refreshList, statusCode)) return;
+      if (!current()) return;
+      const status = session.failureStatus(res, statusCode);
+      if (session.isLoginRequired(app, res, statusCode)) { this._setReadAccess('login'); return; }
+      if (status === 403) { this._setReadAccess('permission'); return; }
+      this.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'));
+    };
     const pageNum = isLoadMore ? (requestedPage || this.data.page + 1) : 1;
     if (isLoadMore) this.setData({ loadingMore: true, loadMoreError: '' });
     else this.setData({ loading: true, errorMsg: '' });
@@ -227,7 +282,7 @@ Page({
         pageSize: this.data.pageSize
       },
       success: function (res) {
-        if (!current()) return;
+        if (!current()) { failure(res); return; }
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           const data = res.data.rows;
           const numericTotal = Number(res.data.total);
@@ -257,13 +312,11 @@ Page({
               errorMsg: '' });
           }
         } else {
-          that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'));
+          failure(res);
         }
       },
-      fail: function (res) {
-        if (!current()) return;
-        that.handleListError(isLoadMore, app.getRequestErrorMessage(res, '玩法草稿加载失败'));
-      },
+      fail: function (res, statusCode) { failure(res, statusCode); },
+      successStatusAbnormal: function (res, statusCode) { failure(res, statusCode); },
       complete: function () {
         if (!current()) return;
         if (isLoadMore) that.setData({ loadingMore: false });
@@ -337,6 +390,10 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this._hidden = false;
+    if (this._readOwner !== session.memberId(app) || this._readAuthorization !== authorization()) {
+      this.setData({ loading: false, loadingMore: false });
+    }
     const isMerchant = this.data.operationScope === 'MERCHANT' || policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
     this.setData({ isMerchant: isMerchant });
     if (isMerchant) merchantTheme.merchantPageShow();
@@ -345,7 +402,12 @@ Page({
     this.refreshList();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true;
+    this._listEpoch = (this._listEpoch || 0) + 1;
+    this.setData({ loading: false, loadingMore: false });
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() { merchantTheme.merchantPageRestore(); this._unloaded = true; this._listEpoch = (this._listEpoch || 0) + 1; },
 
   /**

@@ -69,6 +69,7 @@ const app = {
     canUseCommunity: () => true, // Current-account server-open fixture.
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   getUserID: () => '42',
+  getAuthorization: () => 'Bearer unit-fixture',
   getUserRole: () => 'player',
   getUserType: () => 1,
   getPageSize: () => 8,
@@ -186,7 +187,12 @@ for (const [method, responses] of metricReads) {
       else componentDefinition.lifetimes.detached.call(component)
       const snapshot = structuredClone(component.data)
       await finishMetricRead(read, responses(2))
-      assert.deepEqual(component.data, snapshot)
+      if (end === 'cleared-identity') {
+        assert.equal(component.data.selfReadAccess, 'login')
+        assert.deepEqual(component.data.userInfo, {})
+        assert.equal(component.data.profilePoint, null)
+        for (const field of ['themeProgress', 'orderPreviewList', 'projectPreviewList']) assert.deepEqual(component.data[field], [])
+      } else assert.deepEqual(component.data, snapshot)
     } finally { app.getUserID = original }
   })
 
@@ -248,7 +254,8 @@ for (const end of ['cleared-identity', 'detached']) test(`订单预览在${end}�
     else componentDefinition.lifetimes.detached.call(component)
     requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
     await pending
-    assert.deepEqual(component.data.orderPreviewList.map(row => row.id), [99])
+    assert.deepEqual(component.data.orderPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = originalGetUserID }
 })
 
@@ -364,7 +371,8 @@ for (const end of ['cleared-identity', 'detached']) test(`项目预览回包：$
     else componentDefinition.lifetimes.detached.call(component)
     requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
     await pending
-    assert.deepEqual(component.data.projectPreviewList.map(row => row.id), [99])
+    assert.deepEqual(component.data.projectPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = original }
 })
 
@@ -416,7 +424,8 @@ for (const end of ['changed-member', 'same-member-refresh', 'cleared-identity', 
     else componentDefinition.lifetimes.detached.call(component)
     oldRequest.success({ code: 200, data: { projectSummary: { pending: 5, rejected: 4 } } })
     await old
-    assert.equal(component.data.projectPendingCount, 2)
+    assert.equal(component.data.projectPendingCount, end === 'cleared-identity' ? 0 : 2)
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = original }
 })
 
@@ -607,14 +616,33 @@ test('请求失败：参与判据这次没取到时进入错误态，不能降�
   assert.equal(component.data.profileMetricState, 'error')
 })
 
-test('HTTP401和历史鉴权码2保留登录失败原因，指标成功重读后清除', async () => {
+async function resumeWithNormalLogin(component) {
+  const saved = { login: app.reLogin, wx: global.wx, refresh: component.refreshAll, banner: component.loadBanner, merchant: component.syncMerchantView }
+  let logins = 0
+  app.reLogin = () => { logins++; return Promise.resolve({ ok: true }) }
+  global.wx = { hideTabBar() {}, setNavigationBarColor() {}, setBackgroundColor() {} }
+  component.refreshAll = () => Promise.resolve()
+  component.loadBanner = () => Promise.resolve()
+  component.syncMerchantView = () => {}
+  try {
+    await component.loginToReadProfile()
+    assert.equal(logins, 1)
+    assert.equal(component.data.selfReadAccess, '')
+  } finally {
+    app.reLogin = saved.login; global.wx = saved.wx
+    component.refreshAll = saved.refresh; component.loadBanner = saved.banner; component.syncMerchantView = saved.merchant
+  }
+}
+
+test('HTTP401和历史鉴权码2必须正常登录后才恢复指标读取', async () => {
   for (const code of [401, 2]) {
     const component = loadProfile()
     component.resetProfileMetricState()
     const pending = component.loadUserData()
     requests.find((r) => r.url === '/api/user/info').fail({ code: 500 }, code)
     await pending
-    assert.equal(component.data.profileMetricAuthError, true)
+    assert.equal(component.data.selfReadAccess, 'login')
+    await resumeWithNormalLogin(component)
     requests = []
     await loadMetricSources(component, successSources())
     assert.equal(component.data.profileMetricAuthError, false)
@@ -637,8 +665,13 @@ test('订单、项目、推文和勋章分别区分登录与网络失败，成�
       requests.find((r) => r.url === url).fail({ code: status }, status)
       await pending
       await flush()
-      assert.equal(component.data[section + 'Err'], true)
-      assert.equal(component.data[section + 'AuthError'], status === 401)
+      if (status === 401) {
+        assert.equal(component.data.selfReadAccess, 'login')
+        await resumeWithNormalLogin(component)
+      } else {
+        assert.equal(component.data[section + 'Err'], true)
+        assert.equal(component.data[section + 'AuthError'], false)
+      }
     }
     requests = []
     const pending = component[method]()
