@@ -3849,7 +3849,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 18,
+  "queue_revision": 19,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -4865,7 +4865,7 @@
   },
   "validation_queue_state": {
     "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
-    "status": "SOURCE_DELIVERED_LOCAL_TARGETED_NOT_RUN",
+    "status": "LOCAL_PREPARED_WAITING_EXISTING_212_SERIAL_ENTRY",
     "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
     "classes": [
       "com.chengyinhub.business.longrun.E02_12Test"
@@ -4884,7 +4884,22 @@
       "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
     },
     "other_true_mysql_rr": "E02_25MySqlIT2 remains NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; no newentryproposal",
-    "on_failure": "Only original external_e02 repairlane; independent granted source continues"
+    "on_failure": "Only original external_e02 repairlane; independent granted source continues",
+    "task": "cy-vps-extra-1bfa81a5-20261016",
+    "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+    "local_preparation_receipt": {
+      "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "task": "cy-vps-extra-1bfa81a5-20261016",
+      "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+      "state": "LOCAL_PREPARED_WAITING_EXISTING_212_SERIAL_ENTRY",
+      "declared_tests": 2,
+      "actual_tests": null,
+      "actual_result": null,
+      "source": "Direct local delegation; fetched/reviewed exact source and prepared source archive, waiting current CORE212 run to finish normally",
+      "cloud_execution": false,
+      "old64_pass_inherited": false,
+      "true_mysql_rr2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    }
   },
   "admission_history": [
     {
@@ -5007,7 +5022,8 @@
         "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
       ],
       "next": "C00 routes original legacy writer to freeze precise identity/compatibility contract and exact source scope; EXTRA does not seize old source or createDDL/UI",
-      "not_new_bug": true
+      "not_new_bug": true,
+      "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
     },
     "E04-07": {
       "status": "BLOCKED_CONTRACT",
@@ -5026,7 +5042,9 @@
         "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml"
       ],
       "next": "C00/original producer freezes receipt and legacy contract then grants exact producer/fixture/schema-source scope if necessary; no repeated consumerpermission request or inferredhistory repair",
-      "not_new_bug": true
+      "not_new_bug": true,
+      "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
     }
-  }
+  },
+  "E01_13_current_followup": "Directed fact check completed; retain exact WAITING contract inputs and separate existingOFFERED guards. No new confirmed independently authorized source action from this receipt; no repeated audit or invented active writer."
 }

@@ -349,3 +349,9 @@ C00最新[PR36#6209006760](https://github.com/liboyang42-cpu/hengyin/pull/36#iss
 未来本地最小文本命令 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test`，只新类计划2，实际未知；无需外部DB/Redis/新环境变量，不重跑旧29fe64、不继承其PASS。PR16#6209046388/PR24#6209046566已交完整候选/3路径/差异/2声明/前提。现有真MySQL未覆盖项继续NOT_RUN，入口新增方案仍关闭。根因/边界见[交付](https://github.com/liboyang42-cpu/hengyin/blob/1bfa81a5a58ffa8112c10414dad9fdb1701ef188/docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md)。
 
 当前原E02已交付停写，实际源码0/READY0；其他已列E01-13、E02-23、E04-07精确合同接续不因本次本地验证等待而冻结。活动售卖字段仍只存读不擅加WAITING政策，原作者与锁保留；新真实失败仅一原作者修复槽。
+
+## 1bfa本地已冻结准备，待现有212串行准入
+
+本地已fetch/review完整1bfa81a5a58ffa8112c10414dad9fdb1701ef188，确认仅POI options一条件、新2方法生产XML/H2测试及旧NULL来源未证限定；源码包SHA2564947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb，task cy-vps-extra-1bfa81a5-20261016已准备，等待当前CORE212正常结束后由本地串行执行E02_12Test2。尚无实际项数/测试结果，不继承旧64，Cloud不编译补跑。E02_25真MySQL2未验边界及现有入口约束不变。
+
+E01-13原定向事实核查已完成，既有WAITING逐状态合同仍需明确，不重复泛查或混入OFFERED保护。E02-23/E04-07由本地向用户提出了最小产品/身份问题，答案未到前不猜；其他真实明确独立任务不为此次验证排队而停。此回执没有新增源码或修复任务，原作者与锁保留。
