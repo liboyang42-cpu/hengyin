@@ -1,0 +1,13 @@
+{
+  "team": "extra",
+  "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "classes": [
+    "com.chengyinhub.business.longrun.E02_24Test",
+    "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+  ],
+  "declared_tests": 60,
+  "archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+  "task": "cy-vps-extra-faefbaf8-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "New production fix; only directly affected ordinary tests. True database, Redis and running HTTP remain separate."
+}

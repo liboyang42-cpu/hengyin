@@ -1,0 +1,325 @@
+[
+  {
+    "team": "core",
+    "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "classes": [
+      {
+        "class": "com.chengyinhub.business.longrun.E04_13Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+        "environment_names": [
+          "CHENGYIN_RUN_SESSION_ORDER_IT"
+        ],
+        "mysql_config": false,
+        "redis_reference": false,
+        "declared_tests": 4
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": true,
+        "declared_tests": 4
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 5
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+        "environment_names": [
+          "CHENGYIN_RUN_OWN_C01_51_MYSQL",
+          "CHENGYIN_TEST_MYSQL_HOST"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 5
+      }
+    ],
+    "status": "NOT_RUN_TRUE_DATABASE"
+  },
+  {
+    "team": "extra",
+    "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "classes": [
+      {
+        "class": "com.chengyinhub.business.longrun.E01_06Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_09Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_10Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_18Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 5
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_01Test",
+        "environment_names": [
+          "CHENGYIN_E02_01_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 1
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_06Test",
+        "environment_names": [
+          "CHENGYIN_E02_06_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 1
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_10Test",
+        "environment_names": [
+          "CHENGYIN_E02_10_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 1
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_11Test",
+        "environment_names": [
+          "CHENGYIN_E02_11_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 1
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_15Test",
+        "environment_names": [
+          "CHENGYIN_E02_15_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 4
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_16Test",
+        "environment_names": [
+          "CHENGYIN_E02_16_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_18Test",
+        "environment_names": [
+          "CHENGYIN_E02_18_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 1
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_20Test",
+        "environment_names": [
+          "CHENGYIN_E02_20_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 4
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_22Test",
+        "environment_names": [
+          "CHENGYIN_E02_22_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 9
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_06Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_10Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_13Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_14Test",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 2
+      },
+      {
+        "class": "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+        "environment_names": [
+          "CHENGYIN_ENDING_MYSQL_IT",
+          "CHENGYIN_MYBATIS_IT_DB_SUFFIX",
+          "CHENGYIN_MYBATIS_IT_HOST",
+          "CHENGYIN_MYBATIS_IT_PASSWORD",
+          "CHENGYIN_MYBATIS_IT_PORT",
+          "CHENGYIN_MYBATIS_IT_USER"
+        ],
+        "mysql_config": false,
+        "redis_reference": false,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 4
+      },
+      {
+        "class": "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 5
+      },
+      {
+        "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+        "environment_names": [
+          "CHENGYIN_B05_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": true,
+        "declared_tests": 3
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 7
+      },
+      {
+        "class": "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
+        "environment_names": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "mysql_config": true,
+        "redis_reference": false,
+        "declared_tests": 12
+      }
+    ],
+    "status": "NOT_RUN_TRUE_DATABASE"
+  }
+]

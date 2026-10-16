@@ -1,0 +1,6 @@
+{
+  "returncode": 75,
+  "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+  "stderr": "",
+  "finished_at": "2026-10-16T03:40:30.281687+00:00"
+}
