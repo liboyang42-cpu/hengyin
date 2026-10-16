@@ -17,7 +17,7 @@
 | #139 BL-96 | 690d9f7d = head | Must：`components/cy/scene-route-content` index.js:86,188-190,262-284 / index.wxml:39 / `shezhi.wxml:92` / `shezhi.js:41`——「唯一宿主是 mylike.js」不成立，需评估在 settings-likes 场景 src-favorites 补收藏活动，或写清不能的原因；nit：详情跳转需写具体路由 | line-fix 22:35Z：只改正文，路由写为 `/pages/activity/detail/index?id=`，评估后维持 BLOCKED 并写理由 → 待复审 |
 | #151 BL-107 | 0a572218 → **16360cbc** | `ACCEPTANCE-BATCH5-8.md:104`：#138 已非 BLOCKED，需移到第一节、照抄 4 条验收清单并注明碎片/彩蛋仍 BLOCKED；`:6` 依赖提示补 #138 的 action-ledger 重建；`:3` 更新快照说明 | line-fix 23:58Z + 新提交 16360cbc，声称三项已改 → 待复审（更新：00:43Z 监督复审 16360cbc 为 **OK**，仅剩正文过时的 nit） |
 
-**结论**：7 个 CHANGES NEEDED 中 6 个已有 line-fix（#119/#120/#128/#138/#139/#151），1 个（#22）只改了正文没发 line-fix。全部等监督按当前 head 复审，没有本线仍需动手的项。
+**结论**：7 个 CHANGES NEEDED 中 6 个已有 line-fix（#119/#120/#128/#138/#139/#151），1 个（#22）只改了正文没发 line-fix。其中 #138、#151 已于 00:43Z 复审为 OK；其余 5 个等监督按当前 head 复审，没有本线仍需动手的项。
 
 ## 2. 最新结论为 CLOSE（3 个，建议关闭，本卡不关）
 
