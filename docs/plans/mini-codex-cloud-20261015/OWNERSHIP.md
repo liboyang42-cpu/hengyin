@@ -1,5 +1,14 @@
 ## CORE5752单类31项通过／原作者签收并释放修复槽
 
+## 2026-10-16 真人身份与通关券决定已落账（尚无新源码/验收）
+
+E02-23：无可信legacy→community映射的旧帖明确拒绝收藏/取消收藏；列表、收藏筛选及状态不再按数字同号或客户端legacy-square字串关联。没有证明的映射不恢复收藏，不建立新桥或切发布源。
+
+E04-07：原券身份未知时仅审计、券不动，其他已授权冲正继续；USED保持只审计，不猜时间窗/MAX/替代券。允许未来精确history_id回执的最小生产/回归/新增迁移源码供审查，旧行保持NULL不回填；迁移不执行、无合并部署。分A止错与B未来回执，同一原E04作者串行。B依赖迁移在未来另行部署后才可运行，不称已上线。
+
+[精确独占grant](BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json)已保留原EXTRA/E02、E04；新旧Controller/View、producer/receipt Mapper与指定回归分别列明。212个开放PR全分页已核；活跃PR231的社区接口明确排除，UI/iOS等不扩权。原协调者已实时表示接收决定并等待精确grant；child实际接收待ACK，暂不声称两线已运行。源码一push一完整SHA交本地root，Cloud不执行验证；现有入口不新增，未覆盖真库仍NOT_RUN。
+
+
 C00已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/d31786327b5e9c1be346eb911a386b28e31b3da5/docs/verification/mini-bug-arch-20261015/VPS_CORE_5752ee6f/README.md)，证据`d31786327b5e9c1be346eb911a386b28e31b3da5`：固定5752ee6fd302dab9e610f65cb8f3dc5b2b66201d的TopicUpdateByOwnerTest **31实际PASS／0失败错误跳过**，fresh精确1XML/31testcase、212guard0/completed、源包/日志/XML哈希与精确容器清理入[C03_5752_TARGETED_VPS_RESULT](C03_5752_TARGETED_VPS_RESULT.json)。原CORE/C03作者已实际只读签收ACK，当前普通失败闭环，单修复槽释放，原身份/文件锁保留。
 
 原adf51=35P/1F/15E/0S公开证据cd57永久保留；5752只复测旧失败类31，不继承其他三类20，不称新51全跑。EXTRA1bfa H2两项PASS（1ae7b60c）、第三d592仅编译PASS/实际0测试（1d266f99）各自分层保留；11真MySQL及其他现有入口未覆盖真存储仍NOT_RUN。root本轮无活动Java，不重复旧PASS。真实DB/Redis/HTTP/设备业务/候选集成合并部署未验，TEST_DEPLOYED=NO；保持现有入口不新增。三个业务问题仅阻塞对应身份/DDL合同，未答不猜规则，不影响明确独立项。

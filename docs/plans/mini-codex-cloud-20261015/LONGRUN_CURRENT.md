@@ -1,6 +1,15 @@
 # 当前恢复入口
 
-本轮实际继续：CORE协作者ID形状修复、EXTRA POI查询NULL兼容修复、第三队成长真库回归夹具时钟修正均已push；不是仅恢复旧EXHAUSTED快照。三个原作者现均交付停写、文件锁保留，实际源码writer0/READY0。后续真实失败只回原作者单修复槽；最多每队6个gpt-6.1-sol，不为并行或50项造任务。
+## 2026-10-16 真人身份与通关券决定已落账（尚无新源码/验收）
+
+E02-23：无可信legacy→community映射的旧帖明确拒绝收藏/取消收藏；列表、收藏筛选及状态不再按数字同号或客户端legacy-square字串关联。没有证明的映射不恢复收藏，不建立新桥或切发布源。
+
+E04-07：原券身份未知时仅审计、券不动，其他已授权冲正继续；USED保持只审计，不猜时间窗/MAX/替代券。允许未来精确history_id回执的最小生产/回归/新增迁移源码供审查，旧行保持NULL不回填；迁移不执行、无合并部署。分A止错与B未来回执，同一原E04作者串行。B依赖迁移在未来另行部署后才可运行，不称已上线。
+
+[精确独占grant](BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json)已保留原EXTRA/E02、E04；新旧Controller/View、producer/receipt Mapper与指定回归分别列明。212个开放PR全分页已核；活跃PR231的社区接口明确排除，UI/iOS等不扩权。原协调者已实时表示接收决定并等待精确grant；child实际接收待ACK，暂不声称两线已运行。源码一push一完整SHA交本地root，Cloud不执行验证；现有入口不新增，未覆盖真库仍NOT_RUN。
+
+
+本轮实际继续：CORE协作者ID形状修复、EXTRA POI查询NULL兼容修复、第三队成长真库回归夹具时钟修正均已push；不是仅恢复旧EXHAUSTED快照。此前三个原作者均交付停写、文件锁保留；新身份/券包已授权原EXTRA两线，当前child ACK未到，不报运行数。后续真实失败只回原作者单修复槽；最多每队6个gpt-6.1-sol，不为并行或50项造任务。
 
 当前集中批次已结束：CORE5752普通31PASS／EXTRA1bfa H2普通2PASS／第三d592仅test-compilePASS且实际测试0。root无活动Java，原C03明确ACK、单修复槽释放；原作者与源文件锁保留，后续仅真实新独立项或失败才恢复，不凑任务。
 
@@ -30,7 +39,7 @@
 
 [E02-23](BLOCKER_E02_23_DECISION.json)：旧publisher仍写legacy，收藏消费者把同数值当新postID；需权威legacy→community映射/provenance与创建、编辑、审核、删除责任。切源、持续桥投影或无可信映射明确拒绝的用户影响已列；不凭客户端可声明requestId字符串放行，不擅自双写/DDL。
 
-[E04-07](BLOCKER_E04_07_DECISION.json)：原producer boolean丢historyId、completion日志缺原券ID，时间窗MAX可能误选合法后发券；需决定未来原receipt持久字段/原子写入（若新增history_id有DDL，未授权）与旧NULL身份审计继续或整笔拒绝。保USED只审计，不猜ASC/DESC/找未用券。root已向用户提出3个具体业务问题，尚无答复；不阻塞独立源码，不擅自选择。
+[E04-07](BLOCKER_E04_07_DECISION.json)：原producer boolean丢historyId、completion日志缺原券ID，时间窗MAX可能误选合法后发券；需决定未来原receipt持久字段/原子写入（若新增history_id有DDL，未授权）与旧NULL身份审计继续或整笔拒绝。保USED只审计，不猜ASC/DESC/找未用券。这3项用户决定已收到，原待决策记录保留为历史，以本页顶部及新精确grant为准；其他未回答政策不扩权。
 
 ## 保持现有验证入口
 

@@ -24,7 +24,7 @@
     "dependency_blocked": 1,
     "note": "Latestoriginalteam publicQUEUE111history/60source/40counterevidence/6blocked/5otherdelegated, actualREADY0/claimed0; these are historical slices, not111remainingbugs",
     "latest_public_queue": {
-      "head": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+      "head": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
       "total_history": 111,
       "source_delivered": 60,
       "no_change_source_review": 40,
@@ -32,7 +32,10 @@
       "ready": 0,
       "claimed": 0,
       "actionable_or_inflight": 0
-    }
+    },
+    "current_authorized_new_source_lanes": 2,
+    "claimed_new_source_lanes": 0,
+    "remaining_counts_note": "Prior queue counts preserved as history, not currentREADY; two old IDs now authorized, E04 A/B sequential same writer, no new bug count."
   },
   "blocked_records": [
     {
@@ -83,12 +86,12 @@
       "team": "EXTRA",
       "id": "E04-07",
       "title": "通关券冲正限定原奖励",
-      "state": "BLOCKED_CONTRACT",
+      "state": "USER_DECIDED_SOURCE_GRANTED_ACK_PENDING",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
-      "detail": "Original consumer already owned EXTRA/E04; producer bool grant/log lack original historyId, CRM same-template later grants can be mischosen. Existing grantCouponWithReceipt capability alone does not define persistent old-log identity contract.",
-      "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      "detail": "Latest actual user decisions supersede earlier policy holds; no source claimed delivered yet",
+      "status": "EXACT_GRANT_SEE_BUSINESS_DECISIONS_IMPLEMENTATION_GRANT"
     },
     {
       "team": "EXTRA",
@@ -1297,5 +1300,22 @@
     "new_full51_rerun": false,
     "old_other20_inherited": false,
     "true_db_http_device_merge_deploy_accepted": false
+  },
+  "user_decided_identity_coupon_packets": {
+    "grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+    "state": "USER_DECIDED_GRANTED_PENDING_ORIGINAL_AUTHOR_CLAIMS",
+    "source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "packages": [
+      "E02-23-STOP_WRONG_TARGET",
+      "E04-07-A-UNKNOWN_AUDIT",
+      "E04-07-B-EXACT_RECEIPT_SOURCE"
+    ],
+    "distinct_original_source_lanes": 2,
+    "actual_received_child_claims": 0,
+    "actual_source_writers": 0,
+    "new_execution": "NOT_RUN",
+    "future_migration_execution": "NOT_AUTHORIZED",
+    "validation_owner": "local root 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "new_storage_entry": "CLOSED_KEEP_EXISTING"
   }
 }

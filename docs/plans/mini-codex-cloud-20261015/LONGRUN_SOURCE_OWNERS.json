@@ -338,10 +338,12 @@
     },
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml": {
       "owner": "EXTRA6/E04",
-      "worker": "EXTRA6/E04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
     },
     "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml": {
       "owner": "EXTRA6/E04",
@@ -352,10 +354,12 @@
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java": {
       "owner": "EXTRA6/E04",
-      "worker": "EXTRA6/E04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
     },
     "chengyinhub-xcx/utils/subscribe.js": {
       "owner": "EXTRA6/E05",
@@ -2547,6 +2551,114 @@
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
       "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
       "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java": {
+      "owner": "EXTRA6/E02",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml": {
+      "owner": "EXTRA6/E02",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java": {
+      "owner": "EXTRA6/E02",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23MapperTest.java": {
+      "owner": "EXTRA6/E02",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07ReceiptTest.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
+    },
+    "sql/migration_topic_completion_coupon_receipt_20261016.sql": {
+      "owner": "EXTRA6/E04",
+      "base_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "transfer_evidence": "C00 specific user-decided packet; no prior global claim/open PR hit for newly reserved source; old frozen IT fixture transfer explicitly narrowed",
+      "worker": "original /root/external_e04",
+      "state": "EXCLUSIVE_GRANTED_ACK_PENDING_NOT_RUNNING",
+      "active_packet": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+      "actual_writer": 0
     }
   },
   "reserved_not_transferred": [
@@ -2731,7 +2843,10 @@
       "lock": "RETAINED_BY_ORIGINAL_CORE_C03",
       "repair_slot_released": true,
       "result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
-    }
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md": "EXTRA6/E02",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md": "EXTRA6/E04",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md": "EXTRA6/E04"
   },
   "analytics_third_pending": {
     "packet": "THIRD_CLOUD_HANDOFF.json",
@@ -3899,5 +4014,15 @@
     "new_full51_rerun": false,
     "old_other20_inherited": false,
     "true_db_http_device_merge_deploy_accepted": false
+  },
+  "user_decided_identity_coupon_packets": {
+    "grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+    "original_children": [
+      "/root/external_e02",
+      "/root/external_e04"
+    ],
+    "state": "GRANTED_AWAITING_REAL_CHILD_ACK",
+    "actual_writers": 0,
+    "only_global_editor": "C00"
   }
 }

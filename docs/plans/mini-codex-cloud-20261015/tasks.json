@@ -3302,5 +3302,22 @@
       "host_id": "durable",
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6192515205"
     }
-  ]
+  ],
+  "user_decided_identity_coupon_packets": {
+    "grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+    "state": "USER_DECIDED_GRANTED_PENDING_ORIGINAL_AUTHOR_CLAIMS",
+    "source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "packages": [
+      "E02-23-STOP_WRONG_TARGET",
+      "E04-07-A-UNKNOWN_AUDIT",
+      "E04-07-B-EXACT_RECEIPT_SOURCE"
+    ],
+    "distinct_original_source_lanes": 2,
+    "actual_received_child_claims": 0,
+    "actual_source_writers": 0,
+    "new_execution": "NOT_RUN",
+    "future_migration_execution": "NOT_AUTHORIZED",
+    "validation_owner": "local root 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "new_storage_entry": "CLOSED_KEEP_EXISTING"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "item": "E02-23",
-  "status": "BLOCKED_CONTRACT_DECISION_REQUIRED",
+  "status": "USER_DECIDED_PRECISE_SOURCE_GRANT_PUBLISHED_AUTHOR_ACK_PENDING",
   "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "decision_owner": "本地root/C00确认身份合同及精确文件归属；不是等待测试资源",
   "known_facts": [
@@ -169,5 +169,16 @@
     "未运行Java/Node/测试/CI/DB/VPS",
     "未声称已有新源运行证据"
   ],
-  "current_coordination": "RESUME_KNOWN_BLOCKERS.json; user existing-entry-only constraint unchanged; this is source/input/identity evidence, not awaiting new verification resources"
+  "current_coordination": "RESUME_KNOWN_BLOCKERS.json; user existing-entry-only constraint unchanged; this is source/input/identity evidence, not awaiting new verification resources",
+  "previous_decision_state": "BLOCKED_CONTRACT_DECISION_REQUIRED",
+  "effective_decision": {
+    "source": "Explicit human choices relayed by authorized local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; latest delegation in C00 chat",
+    "choices": {
+      "E02-23": "No trusted legacy-to-community mapping: explicitly reject bookmark; same numeric ID and client legacy-square-* are not proof. Read list/bookmark state must not identify unrelated new post as old post.",
+      "E04-07_legacy": "Unknown original completion coupon identity: audit only, coupon unchanged, continue other already-authorized reward reversals. Preserve USED audit-only; no time/MAX/substitute inference or refund policy change.",
+      "E04-07_future": "Prepare minimal production/regression/new migration source for exact original coupon history ID persistence; review only, no migration execution, merge/deployment or guessed historical backfill."
+    }
+  },
+  "implementation_grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+  "old_choices_are_historical_not_pending": true
 }
