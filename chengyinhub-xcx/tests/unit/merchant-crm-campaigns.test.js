@@ -38,7 +38,7 @@ test('状态表覆盖后端 MerchantCrmCampaign / Recipient 常量', () => {
   }
 });
 
-test('shapeCampaignDetail 逐人回执只用 VO 字段,失败原因只在未送达时显示', () => {
+test('shapeCampaignDetail 逐人结果只用 VO 字段,失败原因只在未送达时显示', () => {
   assert.equal(vm.shapeCampaignDetail(null), null);
   const d = vm.shapeCampaignDetail({
     id: 3, status: 'SUCCESS', recipientCount: 2, deliveredCount: 1,
