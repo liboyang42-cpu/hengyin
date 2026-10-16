@@ -78,6 +78,16 @@ Component({
       this.loadClub()
     },
   },
+  pageLifetimes: {
+    // BL-140:从结算页处理完一项返回时,以 /api/club/dissolution-blockers 回读为准重新核对阻断列表。
+    show() {
+      if (!this._blockerReturnCheck) return
+      this._blockerReturnCheck = false
+      if (!this.data.dissolutionBlockerItems.length) return
+      this.setData({ showDissolutionBlockers: true, dissolutionBlockerText: '正在重新核对解散阻断明细…' })
+      this.refreshDissolutionBlockers('')
+    },
+  },
   methods: {
     loadClub() {
       var that = this;
@@ -369,6 +379,7 @@ Component({
       if (!item || !item.url) return;
       const target = resolveDissolutionBlockerTarget(item.url);
       if (target.kind === 'deposit') { this.retryDissolutionDeposit(target.id, item); return; }
+      if (dissolutionBlockerKey(item.url)) this._blockerReturnCheck = true;
       this.setData({ showDissolutionBlockers: false });
       wx.navigateTo({ url: target.url });
     },
@@ -391,6 +402,8 @@ Component({
               // 退款接口只报告保证金状态；未重新读取解散条件前不能移除阻断。
               dissolutionBlockerText: (confirmed ? res.msg : '退款结果暂无法确认') + '；未结事项仍保留，请核对后再操作',
             });
+            // BL-140:再读一次阻断明细,以回读为准决定哪些行可以移除。
+            that.refreshDissolutionBlockers(confirmed ? res.msg : '退款结果暂无法确认');
             return;
           }
           that.setData({ dissolutionBlockerText: (res && res.msg) || '退款重试失败，请稍后再试' });
@@ -402,6 +415,39 @@ Component({
         successStatusAbnormal() {
           that._blockerRetrying = false;
           that.setData({ dissolutionBlockerText: '退款结果暂无法确认，请先核对，勿重复提交' });
+        },
+      });
+    },
+
+    // BL-140:只读回读 POST /api/club/dissolution-blockers({id});返回原始 deposits/settlements,
+    // 没有展示文案,所以只按 type+id 校验现有行(不在前端拼状态/金额)。非主理人等按后端报错如实提示。
+    refreshDissolutionBlockers(prefix) {
+      const clubId = this.data.clubId;
+      if (!clubId || this._blockerRefreshing) return;
+      this._blockerRefreshing = true;
+      const that = this;
+      const lead = prefix ? prefix + '；' : '';
+      app.sendRequest({
+        url: '/api/club/dissolution-blockers', method: 'POST',
+        data: jsonBody({ id: clubId }), header: jsonHeader(),
+        success(res) {
+          that._blockerRefreshing = false;
+          if (res && res.code == '200') {
+            const r = reconcileDissolutionBlockers(that.data.dissolutionBlockerItems, res.data);
+            const patch = { dissolutionBlockerText: lead + dissolutionBlockerSummary(r) };
+            if (r.ok) patch.dissolutionBlockerItems = r.items;
+            that.setData(patch);
+            return;
+          }
+          that.setData({ dissolutionBlockerText: lead + ((res && res.msg) || '解散阻断明细暂无法核对，请稍后重试') });
+        },
+        fail() {
+          that._blockerRefreshing = false;
+          that.setData({ dissolutionBlockerText: lead + '网络异常，阻断明细未能重新核对，请稍后重试' });
+        },
+        successStatusAbnormal() {
+          that._blockerRefreshing = false;
+          that.setData({ dissolutionBlockerText: lead + '阻断明细暂无法核对，请稍后重试' });
         },
       });
     },
@@ -419,4 +465,71 @@ function resolveDissolutionBlockerTarget(url) {
   raw.split('?')[1] && raw.split('?')[1].split('&').forEach((kv) => { const i = kv.indexOf('='); if (i > 0) q[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1)); });
   if (q.type === 'deposit') return { kind: 'deposit', id: q.id || '' };
   return { kind: 'nav', url: '/pages/club/settlement/index?clubId=' + encodeURIComponent(q.clubId || '') };
+}
+
+// BL-140:解散资金阻断回读。展示行(title/statusText/metaText/actionText/url)只由 /api/club/dissolve 报错的
+// data.actionItems 给出;只读接口 /api/club/dissolution-blockers 返回 ClubDissolutionBlockers 原始事实
+// { deposits: [{ id, topicId, depositStatus, amount, retryable }], settlements: [{ id, topicId, amount, direction }] },
+// 没有展示文案 ⇒ 只按 url 里的 type+id 对照:回读里没有的行移除,本地没有的新增只计数(不在前端拼状态/金额)。
+function dissolutionBlockerKey(url) {
+  const raw = String(url || '')
+  if (raw.indexOf('/pages/club/dissolution-blockers/') !== 0) return ''
+  const qs = raw.split('?')[1] || ''
+  const q = {}
+  qs.split('&').forEach((kv) => {
+    const i = kv.indexOf('=')
+    if (i > 0) q[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1))
+  })
+  if ((q.type !== 'deposit' && q.type !== 'settlement') || !q.id) return ''
+  return q.type + ':' + q.id
+}
+
+function dissolutionBlockerKeys(blockers) {
+  const keys = []
+  const b = blockers || {}
+  ;(Array.isArray(b.deposits) ? b.deposits : []).forEach((d) => { if (d && d.id != null) keys.push('deposit:' + d.id) })
+  ;(Array.isArray(b.settlements) ? b.settlements : []).forEach((s) => { if (s && s.id != null) keys.push('settlement:' + s.id) })
+  return keys
+}
+
+/**
+ * 回读结果为准对照现有行。
+ * 返回 { ok, items, removedCount, extraCount, cleared }:
+ *   ok=false 表示回读结构不可信(两个列表都缺),调用方不得改动现有行。
+ *   url 解析不出 type+id 的行(历史退款转平台核验等)原样保留,不据回读移除。
+ */
+function reconcileDissolutionBlockers(items, blockers) {
+  const list = Array.isArray(items) ? items : []
+  const b = blockers || {}
+  if (!Array.isArray(b.deposits) && !Array.isArray(b.settlements)) {
+    return { ok: false, items: list, removedCount: 0, extraCount: 0, cleared: false }
+  }
+  const remote = dissolutionBlockerKeys(b)
+  const remoteSet = {}
+  remote.forEach((k) => { remoteSet[k] = true })
+  const localSet = {}
+  const kept = list.filter((item) => {
+    const key = dissolutionBlockerKey(item && item.url)
+    if (!key) return true
+    localSet[key] = true
+    return !!remoteSet[key]
+  })
+  const extraCount = remote.filter((k) => !localSet[k]).length
+  return {
+    ok: true,
+    items: kept,
+    removedCount: list.length - kept.length,
+    extraCount,
+    cleared: remote.length === 0,
+  }
+}
+
+function dissolutionBlockerSummary(r) {
+  if (!r || !r.ok) return '解散阻断明细暂无法核对，请稍后重试'
+  if (r.cleared) return '已重新核对：资金阻断明细已无待处理项，可重新发起解散，以解散结果为准'
+  const parts = ['已重新核对']
+  if (r.removedCount) parts.push(r.removedCount + ' 项已不在阻断明细中')
+  if (r.extraCount) parts.push('另有 ' + r.extraCount + ' 项新增待处理，请重新发起解散查看')
+  if (parts.length === 1) parts.push('阻断事项仍未结清')
+  return parts.join('；')
 }
