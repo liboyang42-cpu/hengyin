@@ -1,0 +1,17 @@
+{
+  "repo": "liboyang42-cpu/hengyin",
+  "public_source_base": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "initial_owned_paths": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+    "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+  ],
+  "open_pr_snapshot_count": 54,
+  "open_pr_path_intersections": [],
+  "registered_owner_intersections": [],
+  "reserved_intersections": [],
+  "snapshot_note": "Open PR and ownership snapshots; refresh before writing. Source findings are not runtime proof."
+}
