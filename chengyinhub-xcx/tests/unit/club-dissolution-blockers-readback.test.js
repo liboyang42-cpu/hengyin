@@ -50,8 +50,8 @@ function readBackWith(data, ctx, items) {
   const { vm, requests } = loadComponent()
   vm.data.clubId = '7'
   vm.data.dissolutionBlockerItems = (items || ITEMS).slice()
-  vm.data.dissolutionBlockerType = ctx.type
-  vm.data.dissolutionBlockerOriginKeys = ctx.originKeys
+  vm._blockerType = ctx.type
+  vm._blockerOriginKeys = ctx.originKeys
   vm.refreshDissolutionBlockers('')
   requests[0].success({ code: '200', data })
   return vm.data
@@ -85,13 +85,13 @@ test('回读:两个列表都为空时,无链接的历史行也一并移除', () 
 
 test('/dissolve 报阻断时记下类型与原始 id,关闭弹层清空', () => {
   const src = fs.readFileSync(COMPONENT, 'utf8')
-  assert.match(src, /dissolutionBlockerType: \(res\.data && res\.data\.blockerType\) \|\| ''/)
-  assert.match(src, /dissolutionBlockerOriginKeys: dissolutionBlockerKeys\(res\.data\)/)
+  assert.match(src, /that\._blockerType = \(res\.data && res\.data\.blockerType\) \|\| ''/)
+  assert.match(src, /that\._blockerOriginKeys = dissolutionBlockerKeys\(res\.data\)/)
   const { vm } = loadComponent()
-  vm.data.dissolutionBlockerType = 'deposit'; vm.data.dissolutionBlockerOriginKeys = ['deposit:1']
+  vm._blockerType = 'deposit'; vm._blockerOriginKeys = ['deposit:1']
   vm.closeDissolutionBlockers()
-  assert.equal(vm.data.dissolutionBlockerType, '')
-  assert.deepEqual(vm.data.dissolutionBlockerOriginKeys, [])
+  assert.equal(vm._blockerType, '')
+  assert.deepEqual(vm._blockerOriginKeys, [])
 })
 
 test('回读:两个列表都为空 = 资金阻断已清,文案以解散结果为准、不宣称已解散', () => {

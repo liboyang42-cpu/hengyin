@@ -57,8 +57,6 @@ Component({
       // 稿 P6 31:38 把阻断项按资金类型分节。后端一次只抛一类(两个 catch 分支),
       // 所以这里只存当前这一节的抬头。
       dissolutionBlockerSection: '',
-      dissolutionBlockerType: '',
-      dissolutionBlockerOriginKeys: [],
       showDissolutionBlockers: false,
       dissolutionBlockerItems: [],
       // 定位:T1 半屏 draft(点「应用」才写回表单)。倾向回显直接在 wxml 上读 activityPrefs,
@@ -345,12 +343,13 @@ Component({
           const blockerItems = res && res.data && Array.isArray(res.data.actionItems) ? res.data.actionItems : [];
           if (blockerItems.length) {
             if (dc) dc.close();
+            // BL-140:记下本次报错的阻断类型与原始 id(含无 type+id 链接的历史保证金),回读时据此区分「本列表已有」。
+            // 只给 JS 用、WXML 不消费,所以放实例字段而不进 setData(U4 零消费)。
+            that._blockerType = (res.data && res.data.blockerType) || '';
+            that._blockerOriginKeys = dissolutionBlockerKeys(res.data);
             that.setData({
               showDissolutionBlockers: true,
               dissolutionBlockerSection: (res.data && res.data.sectionTitle) || '待处理事项',
-              // BL-140:记下本次报错的阻断类型与原始 id(含无 type+id 链接的历史保证金),回读时据此区分「本列表已有」。
-              dissolutionBlockerType: (res.data && res.data.blockerType) || '',
-              dissolutionBlockerOriginKeys: dissolutionBlockerKeys(res.data),
               dissolutionBlockerText: '',
               dissolutionBlockerItems: blockerItems
             });
@@ -367,7 +366,9 @@ Component({
     },
 
     closeDissolutionBlockers() {
-      this.setData({ showDissolutionBlockers: false, dissolutionBlockerText: '', dissolutionBlockerSection: '', dissolutionBlockerType: '', dissolutionBlockerOriginKeys: [], dissolutionBlockerItems: [] });
+      this._blockerType = '';
+      this._blockerOriginKeys = [];
+      this.setData({ showDissolutionBlockers: false, dissolutionBlockerText: '', dissolutionBlockerSection: '', dissolutionBlockerItems: [] });
     },
 
     closeDissolutionError() {
@@ -439,12 +440,12 @@ Component({
           that._blockerRefreshing = false;
           if (res && res.code == '200') {
             const r = reconcileDissolutionBlockers(that.data.dissolutionBlockerItems, res.data, {
-              type: that.data.dissolutionBlockerType,
-              originKeys: that.data.dissolutionBlockerOriginKeys,
+              type: that._blockerType || '',
+              originKeys: that._blockerOriginKeys || [],
             });
-            const patch = { dissolutionBlockerText: lead + dissolutionBlockerSummary(r) };
-            if (r.ok) patch.dissolutionBlockerItems = r.items;
-            that.setData(patch);
+            const text = lead + dissolutionBlockerSummary(r);
+            if (r.ok) that.setData({ dissolutionBlockerText: text, dissolutionBlockerItems: r.items });
+            else that.setData({ dissolutionBlockerText: text });
             return;
           }
           that.setData({ dissolutionBlockerText: lead + ((res && res.msg) || '解散阻断明细暂无法核对，请稍后重试') });
