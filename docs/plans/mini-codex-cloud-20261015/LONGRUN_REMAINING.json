@@ -387,7 +387,7 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 1,
       "source_declarations": 2,
-      "local_verification": "NOT_RUN_NEW_H2_QUERY_SOURCE",
+      "local_verification": "H2_TARGETED2_PASS_PUBLIC_EVIDENCE_READ",
       "previous_candidate_validation": {
         "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
         "result": "ORDINARY_TARGETED_PASS",
@@ -465,7 +465,7 @@
       },
       "delivery_packet": "E02_12_SOURCE_DELIVERY.json",
       "real_mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "validation_result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
       "previous_candidate_validation_packet": "E02_25_ORDINARY_VPS_RESULT.json"
     },
     "THIRD": {
@@ -479,7 +479,7 @@
       "ordinary_classes": 2,
       "source_declarations": 28,
       "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-      "local_verification": "NOT_RUN_TEST_SOURCE_CHANGED_ORDINARY_UNCHANGED_DO_NOT_REPEAT",
+      "local_verification": "TEST_COMPILE_PASS_ONLY_LOCAL_REPORTED_PUBLIC_REPORT_PENDING",
       "previous_candidate_validation": {
         "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
         "result": "ORDINARY_TARGETED_PASS",
@@ -550,7 +550,8 @@
         "cloud_manual_runs": 0
       },
       "production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
-      "task": "F3-GROW-03 testsourceonly"
+      "task": "F3-GROW-03 testsourceonly",
+      "actual_tests": 0
     }
   },
   "e02_25_grant": {
@@ -1188,5 +1189,42 @@
     "full51_repeat": false,
     "actual_source_writers": 0,
     "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
+  },
+  "latest_extra_e02_12_validation": {
+    "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "result": "H2_PRODUCTION_XML_TARGETED_PASS",
+    "actual_tests": 2,
+    "passed": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+    "result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
+    "production_null_reachability_proven": false,
+    "no_real_mysql_claim": true
+  },
+  "latest_forward_d592_test_compile": {
+    "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result": "TEST_COMPILE_PASS_ONLY",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "ExistingVPS212",
+    "guard_exit_code": 0,
+    "actual_tests": 0,
+    "fresh_main_class_verified_by_local": true,
+    "fresh_anonymous_clock_class_verified_by_local": true,
+    "exact_artifact_paths_not_yet_supplied": true,
+    "container_cleanup_confirmed_by_local": true,
+    "container_id": null,
+    "evidence_pr": 24,
+    "evidence_commit": null,
+    "public_evidence_status": "Directlocalresult, publiccompilereportpending, noC00rawartifactreadclaim",
+    "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+    "task": "cy-vps-forward-d592334a-20261016",
+    "first_shared_lock_refusal_retained": true,
+    "ordinary28_rerun": false,
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "true_db_redis_http_device_merge_deploy_accepted": false,
+    "cloud_manual_runs": 0
   }
 }

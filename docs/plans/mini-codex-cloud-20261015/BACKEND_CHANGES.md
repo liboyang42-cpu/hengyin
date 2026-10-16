@@ -1,3 +1,11 @@
+## EXTRA H2两项通过／第三队仅编译通过
+
+已核读[EXTRA公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)：固定1bfa81a5的E02_12Test **2实际PASS／0失败错误跳过**，fresh精确1XML、212guard0/completed及精确清理，原首次锁拒绝0项保留。证据1ae7b60cab62696ec0a9259907cfad265496c554，源包/日志/XML哈希见[E02_12_ORDINARY_VPS_RESULT](E02_12_ORDINARY_VPS_RESULT.json)。仅生产Mapper XML/H2合同回归，NULL生产来源仍未证，不称真MySQL/生产NULL复现、不重复旧64。
+
+第三d592本地已报test-compile guard0，fresh主类/匿名时钟类和精确清理已核，**实际测试0**；公开编译报告待补，C00未冒称读原class文件。原拒绝准入历史保留，11真MySQL仍NOT_RUN，旧28不重跑/不继承。CORE5752已由本地fetch/review并准备独占源包，单旧失败类31复测结果待回；adf原51失败不覆盖、不迁移新51。入口现有不新增，真实DB/Redis/HTTP/设备/集成部署继续未验。
+
+### 以下为此前失败、修复与队列历史，以本节最新实际层级为准
+
 ## CORE旧编辑夹具修复已push／31项待本地定向复测
 
 最新完整CORE候选`5752ee6fd302dab9e610f65cb8f3dc5b2b66201d` / PR44，直接父adf59791。C00已核公开compare仅旧TopicUpdateByOwnerTest.java的imports/setUp三段成功insert生成ID回答＋新修复说明；章801+/节点901+/活动1001+，null重stub不耗ID，31方法/全部业务断言/负控和node101/102局部覆盖不变。生产、新协作者测试、其他测试、门禁和依赖均未改。原C03作者已交付停写，锁保留。

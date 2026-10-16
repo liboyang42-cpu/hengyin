@@ -21,13 +21,18 @@
   "basis": "Existingpublic/save snapshot requireexplicitstatus1; NULLnot provenonline. Legalproducer0/1unchanged; historicalproductionNULLprovenance remainsunproved, syntheticNULL iscompatibilitynegativecontrol only.",
   "source_status": "SOURCE_DELIVERED_UNVERIFIED",
   "ordinary": {
-    "status": "NOT_RUN",
+    "status": "H2_PRODUCTION_XML_TARGETED_PASS",
     "class": "com.chengyinhub.business.longrun.E02_12Test",
     "source_declarations": 2,
-    "actual_executed": null,
+    "actual_executed": 2,
     "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
     "requires": "Existing212 cachedprojectH2/MyBatis/JdbcTemplate/Jupiter; realproductionMapperXML onclasspath, noexternalMySQL/Redis/env/newdependencies",
-    "boundary": "H2actualSELECT, notrealMySQL/productionNULL/HTTP; no29fe64inheritance or repeat required"
+    "boundary": "H2actualSELECT, notrealMySQL/productionNULL/HTTP; no29fe64inheritance or repeat required",
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
+    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554"
   },
   "c00_review": "Read publiccommit3paths fulltest/doc and exactXMLonehunk; no build/tests run",
   "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209046388",
