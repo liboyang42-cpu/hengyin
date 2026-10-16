@@ -3,6 +3,7 @@
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
   "controlCount": 4502,
   "controlCount": 4483,
+  "controlCount": 4486,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1411,6 +1412,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -30803,6 +30805,226 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -70498,6 +70720,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -76604,6 +76827,61 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -85311,6 +85589,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -86388,6 +86667,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -87646,6 +87938,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -88723,6 +89016,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -89980,6 +90286,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -91057,6 +91364,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -92314,6 +92634,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -93391,6 +93712,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -94648,6 +94982,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -95725,6 +96060,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -96982,6 +97330,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -98059,6 +98408,19 @@
         {
           "route": "pages/merchant/team/index",
           "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
             {
               "selector": "#dc",
               "index": 0
@@ -113593,6 +113955,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -115403,6 +115766,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "cy-empty",
@@ -118635,6 +119007,7 @@
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -120987,6 +121360,24 @@
             {
               "selector": "cy-error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             }
           ]
         },
@@ -124599,6 +124990,7 @@
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -126951,6 +127343,24 @@
             {
               "selector": "cy-error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             }
           ]
         },
@@ -130563,6 +130973,7 @@
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -132915,6 +133326,24 @@
             {
               "selector": "cy-error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             }
           ]
         },
@@ -140424,6 +140853,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -142281,6 +142711,19 @@
           ]
         },
         {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/mylike/mylike",
           "segments": [
             {
@@ -144072,6 +144515,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -144716,6 +145160,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-loading",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-loading",
@@ -146658,6 +147111,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -147303,6 +147757,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -148028,6 +148491,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -148673,6 +149137,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -149398,6 +149871,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -150043,6 +150517,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -150767,6 +151250,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -151412,6 +151896,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -152136,6 +152629,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -152781,6 +153275,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -153505,6 +154008,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -158054,6 +158558,66 @@
           "segments": [
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
               "index": 0
             },
             {
@@ -162903,6 +163467,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -167452,6 +168017,66 @@
           "segments": [
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
               "index": 0
             },
             {
@@ -172301,6 +172926,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -176850,6 +177476,66 @@
           "segments": [
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
               "index": 0
             },
             {
@@ -181699,6 +182385,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -186248,6 +186935,66 @@
           "segments": [
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
               "index": 0
             },
             {
@@ -191097,6 +191844,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -195646,6 +196394,66 @@
           "segments": [
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
               "index": 0
             },
             {
@@ -200493,6 +201301,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/publish/activity/index",
@@ -201147,6 +201956,15 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -202700,6 +203518,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/publish/activity/index",
@@ -203619,6 +204438,19 @@
         },
         {
           "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -213808,6 +214640,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -218612,6 +219445,49 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -224826,6 +225702,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -229630,6 +230507,49 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -235844,6 +236764,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -240648,6 +241569,49 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -246862,6 +247826,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -251666,6 +252631,49 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -257880,6 +258888,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -262684,6 +263693,49 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -314333,6 +315385,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -327920,6 +328973,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -346342,6 +347505,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -359929,6 +361093,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -378351,6 +379625,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -391938,6 +393213,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -410360,6 +411745,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -423947,6 +425333,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -442369,6 +443865,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -455956,6 +457453,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -474379,6 +475986,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -487966,6 +489574,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -506389,6 +508107,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -519976,6 +521695,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -538399,6 +540228,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -551986,6 +553816,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -570409,6 +572349,7 @@
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
         "pages/merchant/team/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
@@ -583996,6 +585937,116 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -606394,6 +608445,7 @@
         "pages/merchant/coop-center/index",
         "pages/merchant/ledger/index",
         "pages/merchant/relation/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/index",
         "pages/roam/index",
@@ -606535,6 +608587,24 @@
             {
               "selector": "cy-tabs.rel-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 1
             }
           ]
         },
@@ -606941,6 +609011,7 @@
         "pages/merchant/coop-center/index",
         "pages/merchant/ledger/index",
         "pages/merchant/relation/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/index",
         "pages/roam/index",
@@ -607082,6 +609153,24 @@
             {
               "selector": "cy-tabs.rel-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 1
             }
           ]
         },
@@ -607488,6 +609577,7 @@
         "pages/merchant/coop-center/index",
         "pages/merchant/ledger/index",
         "pages/merchant/relation/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/index",
         "pages/roam/index",
@@ -607629,6 +609719,24 @@
             {
               "selector": "cy-tabs.rel-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 1
             }
           ]
         },
@@ -608035,6 +610143,7 @@
         "pages/merchant/coop-center/index",
         "pages/merchant/ledger/index",
         "pages/merchant/relation/index",
+        "pages/merchant/verify-records/index",
         "pages/mylike/mylike",
         "pages/play/index",
         "pages/roam/index",
@@ -608176,6 +610285,24 @@
             {
               "selector": "cy-tabs.rel-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 1
             }
           ]
         },
@@ -705780,7 +707907,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:281"
+        "staticSource": "pages/merchant/index/index.js:282"
       }
     },
     {
@@ -705850,7 +707977,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:731"
+        "staticSource": "pages/merchant/index/index.js:737"
       }
     },
     {
@@ -705920,7 +708047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1251"
+        "staticSource": "pages/merchant/index/index.js:1257"
       }
     },
     {
@@ -706029,7 +708156,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1234"
+        "staticSource": "pages/merchant/index/index.js:1240"
       }
     },
     {
@@ -706203,7 +708330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1260"
+        "staticSource": "pages/merchant/index/index.js:1266"
       }
     },
     {
@@ -706273,7 +708400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1244"
+        "staticSource": "pages/merchant/index/index.js:1250"
       }
     },
     {
@@ -706447,7 +708574,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:479"
+        "staticSource": "pages/merchant/index/index.js:485"
       }
     },
     {
@@ -706570,7 +708697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:999"
+        "staticSource": "pages/merchant/index/index.js:1005"
       }
     },
     {
@@ -706640,7 +708767,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1020"
+        "staticSource": "pages/merchant/index/index.js:1026"
       }
     },
     {
@@ -706710,7 +708837,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1020"
+        "staticSource": "pages/merchant/index/index.js:1026"
       }
     },
     {
@@ -706902,6 +709029,7 @@
           "pages/coop/list/index",
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/verify-records/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
         ],
         "apis": [],
@@ -706976,6 +709104,7 @@
           "pages/coop/list/index",
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/verify-records/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
         ],
         "apis": [],
@@ -706997,7 +709126,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:262:bindtap:onMoreItem:22",
+      "id": "pages/merchant/index/index.wxml:263:bindtap:onMoreItem:22",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707020,7 +709149,82 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMoreItem",
-        "line": 262,
+        "line": 263,
+        "selectorHint": ".rv-more-item",
+        "visibleCondition": "{{merchantAccess.canReadVerifyRecords}}",
+        "disabledCondition": null,
+        "ariaLabel": "打开核销记录",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/list/index",
+          "pages/merchant/aftercare/index",
+          "pages/merchant/decor/index",
+          "pages/merchant/verify-records/index",
+          "subpackageMember/coupon/coupon?scope=MERCHANT"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/index/index.js:268"
+      }
+    },
+    {
+      "id": "pages/merchant/index/index.wxml:267:bindtap:onMoreItem:23",
+      "route": "pages/merchant/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/index/index.wxml",
+        "js": "pages/merchant/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onMoreItem",
+        "line": 267,
         "selectorHint": ".rv-more-item",
         "visibleCondition": "{{merchantAccess.canManageCoupons}}",
         "disabledCondition": null,
@@ -707050,6 +709254,7 @@
           "pages/coop/list/index",
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/verify-records/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
         ],
         "apis": [],
@@ -707071,7 +709276,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:269:bindtap:onMoreItem:23",
+      "id": "pages/merchant/index/index.wxml:274:bindtap:onMoreItem:24",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707094,7 +709299,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMoreItem",
-        "line": 269,
+        "line": 274,
         "selectorHint": ".rv-more-item",
         "visibleCondition": "{{merchantAccess.canWriteProfile}}",
         "disabledCondition": null,
@@ -707124,6 +709329,7 @@
           "pages/coop/list/index",
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/verify-records/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
         ],
         "apis": [],
@@ -707145,7 +709351,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:279:catchtouchmove:blockSceneTouch:24",
+      "id": "pages/merchant/index/index.wxml:284:catchtouchmove:blockSceneTouch:25",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707168,7 +709374,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 279,
+        "line": 284,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-chapter-picker'}}",
         "disabledCondition": null,
@@ -707213,7 +709419,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:280:bind:requestclose:onChapterSheetClose:25",
+      "id": "pages/merchant/index/index.wxml:285:bind:requestclose:onChapterSheetClose:26",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707236,7 +709442,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onChapterSheetClose",
-        "line": 280,
+        "line": 285,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -707276,11 +709482,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1138"
+        "staticSource": "pages/merchant/index/index.js:1144"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:284:bindtap:onChapterPick:26",
+      "id": "pages/merchant/index/index.wxml:289:bindtap:onChapterPick:27",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707303,7 +709509,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterPick",
-        "line": 284,
+        "line": 289,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -707415,11 +709621,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1151"
+        "staticSource": "pages/merchant/index/index.js:1157"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:293:catchtouchmove:blockSceneTouch:27",
+      "id": "pages/merchant/index/index.wxml:298:catchtouchmove:blockSceneTouch:28",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707442,7 +709648,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 293,
+        "line": 298,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-station-picker'}}",
         "disabledCondition": null,
@@ -707487,7 +709693,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:294:bind:requestclose:onStationSheetClose:28",
+      "id": "pages/merchant/index/index.wxml:299:bind:requestclose:onStationSheetClose:29",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707510,7 +709716,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onStationSheetClose",
-        "line": 294,
+        "line": 299,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -707550,11 +709756,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1176"
+        "staticSource": "pages/merchant/index/index.js:1182"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:298:bindtap:onStationPick:29",
+      "id": "pages/merchant/index/index.wxml:303:bindtap:onStationPick:30",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707577,7 +709783,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStationPick",
-        "line": 298,
+        "line": 303,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -707689,142 +709895,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1180"
-      }
-    },
-    {
-      "id": "pages/merchant/index/index.wxml:306:catchtouchmove:blockSceneTouch:30",
-      "route": "pages/merchant/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/index/index.wxml",
-        "js": "pages/merchant/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "blockSceneTouch",
-        "line": 306,
-        "selectorHint": ".scene-host",
-        "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-verification-result'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:266"
-      }
-    },
-    {
-      "id": "pages/merchant/index/index.wxml:307:bind:requestclose:closeVerificationResult:31",
-      "route": "pages/merchant/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/index/index.wxml",
-        "js": "pages/merchant/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-sheet",
-        "event": "bind:requestclose",
-        "handler": "closeVerificationResult",
-        "line": 307,
-        "selectorHint": "cy-scene-sheet[bind:requestclose]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1147"
+        "staticSource": "pages/merchant/index/index.js:1186"
       }
     },
     {
@@ -707894,11 +709965,146 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:726"
+        "staticSource": "pages/merchant/index/index.js:732"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:311:bindtap:closeVerificationResult:32",
+      "id": "pages/merchant/index/index.wxml:311:catchtouchmove:blockSceneTouch:31",
+      "route": "pages/merchant/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/index/index.wxml",
+        "js": "pages/merchant/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "blockSceneTouch",
+        "line": 311,
+        "selectorHint": ".scene-host",
+        "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-verification-result'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/index/index.js:266"
+      }
+    },
+    {
+      "id": "pages/merchant/index/index.wxml:312:bind:requestclose:closeVerificationResult:32",
+      "route": "pages/merchant/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/index/index.wxml",
+        "js": "pages/merchant/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-sheet",
+        "event": "bind:requestclose",
+        "handler": "closeVerificationResult",
+        "line": 312,
+        "selectorHint": "cy-scene-sheet[bind:requestclose]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/index/index.js:1153"
+      }
+    },
+    {
+      "id": "pages/merchant/index/index.wxml:316:bindtap:closeVerificationResult:33",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707921,7 +710127,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVerificationResult",
-        "line": 311,
+        "line": 316,
         "selectorHint": ".verify-result__action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -707961,11 +710167,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1147"
+        "staticSource": "pages/merchant/index/index.js:1153"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:320:catchtouchmove:blockSceneTouch:33",
+      "id": "pages/merchant/index/index.wxml:325:catchtouchmove:blockSceneTouch:34",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -707988,7 +710194,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 320,
+        "line": 325,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'play-activity-detail' && sceneCurrent.id !== 'roam-poi-detail' && sceneCurrent.id !== 'merchant-more-menu' && sceneCurrent.id !== 'merchant-chapter-picker' && sceneCurrent.id !== 'merchant-station-picker' && sceneCurrent.id !== 'merchant-verification-result'}}",
         "disabledCondition": null,
@@ -708033,7 +710239,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:321:bind:back:backScene:35",
+      "id": "pages/merchant/index/index.wxml:326:bind:back:backScene:36",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708056,7 +710262,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 321,
+        "line": 326,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708100,7 +710306,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:321:bind:requestclose:requestSceneClose:34",
+      "id": "pages/merchant/index/index.wxml:326:bind:requestclose:requestSceneClose:35",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708123,7 +710329,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 321,
+        "line": 326,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708167,7 +710373,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:322:bind:back:backScene:37",
+      "id": "pages/merchant/index/index.wxml:327:bind:back:backScene:38",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708190,7 +710396,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 322,
+        "line": 327,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708234,7 +710440,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:322:bind:close:closeScene:38",
+      "id": "pages/merchant/index/index.wxml:327:bind:close:closeScene:39",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708257,7 +710463,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 322,
+        "line": 327,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708301,7 +710507,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:322:bind:dirtychange:onSceneDirtyChange:39",
+      "id": "pages/merchant/index/index.wxml:327:bind:dirtychange:onSceneDirtyChange:40",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708324,7 +710530,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 322,
+        "line": 327,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708368,7 +710574,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:322:bind:open:openChildScene:36",
+      "id": "pages/merchant/index/index.wxml:327:bind:open:openChildScene:37",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708391,7 +710597,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 322,
+        "line": 327,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708474,7 +710680,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:324:bindtap:submitSceneForm:40",
+      "id": "pages/merchant/index/index.wxml:329:bindtap:submitSceneForm:41",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708497,7 +710703,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSceneForm",
-        "line": 324,
+        "line": 329,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708542,7 +710748,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:329:catchtouchmove:blockSceneTouch:41",
+      "id": "pages/merchant/index/index.wxml:334:catchtouchmove:blockSceneTouch:42",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708565,7 +710771,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 329,
+        "line": 334,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}",
         "disabledCondition": null,
@@ -708610,7 +710816,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:330:bind:back:backScene:43",
+      "id": "pages/merchant/index/index.wxml:335:bind:back:backScene:44",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708633,7 +710839,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 330,
+        "line": 335,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708677,7 +710883,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:330:bind:requestclose:requestSceneClose:42",
+      "id": "pages/merchant/index/index.wxml:335:bind:requestclose:requestSceneClose:43",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708700,7 +710906,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 330,
+        "line": 335,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708744,7 +710950,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:331:bind:close:closeScene:44",
+      "id": "pages/merchant/index/index.wxml:336:bind:close:closeScene:45",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708767,7 +710973,7 @@
         "tag": "cy-scene-play-activity-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 331,
+        "line": 336,
         "selectorHint": "cy-scene-play-activity-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708811,7 +711017,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:334:catchtouchmove:blockSceneTouch:45",
+      "id": "pages/merchant/index/index.wxml:339:catchtouchmove:blockSceneTouch:46",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708834,7 +711040,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 334,
+        "line": 339,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}",
         "disabledCondition": null,
@@ -708879,7 +711085,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:335:bind:back:backScene:47",
+      "id": "pages/merchant/index/index.wxml:340:bind:back:backScene:48",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708902,7 +711108,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 335,
+        "line": 340,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -708946,7 +711152,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:335:bind:requestclose:requestSceneClose:46",
+      "id": "pages/merchant/index/index.wxml:340:bind:requestclose:requestSceneClose:47",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -708969,7 +711175,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 335,
+        "line": 340,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709013,7 +711219,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:336:bind:citystamp:openCityStamp:50",
+      "id": "pages/merchant/index/index.wxml:341:bind:citystamp:openCityStamp:51",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709036,7 +711242,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:citystamp",
         "handler": "openCityStamp",
-        "line": 336,
+        "line": 341,
         "selectorHint": "cy-scene-roam-poi-detail[bind:citystamp]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709084,7 +711290,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:336:bind:close:closeScene:49",
+      "id": "pages/merchant/index/index.wxml:341:bind:close:closeScene:50",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709107,7 +711313,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 336,
+        "line": 341,
         "selectorHint": "cy-scene-roam-poi-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709151,7 +711357,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:336:bind:open:openChildScene:48",
+      "id": "pages/merchant/index/index.wxml:341:bind:open:openChildScene:49",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709174,7 +711380,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 336,
+        "line": 341,
         "selectorHint": "cy-scene-roam-poi-detail[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709257,7 +711463,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:339:bind:cancel:cancelSceneDiscard:52",
+      "id": "pages/merchant/index/index.wxml:344:bind:cancel:cancelSceneDiscard:53",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709280,7 +711486,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 339,
+        "line": 344,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709324,7 +711530,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:339:bind:confirm:confirmSceneDiscard:51",
+      "id": "pages/merchant/index/index.wxml:344:bind:confirm:confirmSceneDiscard:52",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709347,7 +711553,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 339,
+        "line": 344,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709391,7 +711597,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:342:bind:settled:onPrivacyGateSettled:53",
+      "id": "pages/merchant/index/index.wxml:347:bind:settled:onPrivacyGateSettled:54",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709414,7 +711620,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 342,
+        "line": 347,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709626,7 +711832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1209"
+        "staticSource": "pages/merchant/index/index.js:1215"
       }
     },
     {
@@ -709725,7 +711931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:825"
+        "staticSource": "pages/merchant/index/index.js:831"
       }
     },
     {
@@ -709904,7 +712110,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1063"
+        "staticSource": "pages/merchant/index/index.js:1069"
       }
     },
     {
@@ -709974,7 +712180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1217"
+        "staticSource": "pages/merchant/index/index.js:1223"
       }
     },
     {
@@ -710044,7 +712250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1205"
+        "staticSource": "pages/merchant/index/index.js:1211"
       }
     },
     {
@@ -720273,6 +722479,387 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/merchant/team/index.js:450"
+      }
+    },
+    {
+      "id": "pages/merchant/verify-records/index.wxml:12:bind:retry:retry:1",
+      "route": "pages/merchant/verify-records/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/verify-records/index.wxml",
+        "js": "pages/merchant/verify-records/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retry",
+        "line": 12,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{pageState === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/login/code",
+          "/api/merchant/access/me",
+          "/api/merchant/verification-records",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/access/me",
+          "/api/merchant/verification-records"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/access/me",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/verification-records",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/verify-records/index.js:68"
+      }
+    },
+    {
+      "id": "pages/merchant/verify-records/index.wxml:16:bind:back:onNavBack:2",
+      "route": "pages/merchant/verify-records/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/verify-records/index.wxml",
+        "js": "pages/merchant/verify-records/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:back",
+        "handler": "onNavBack",
+        "line": 16,
+        "selectorHint": "cy-error[bind:back]",
+        "visibleCondition": "{{pageState === 'no-permission'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/verify-records/index.js:38"
+      }
+    },
+    {
+      "id": "pages/merchant/verify-records/index.wxml:20:bind:change:switchBucket:3",
+      "route": "pages/merchant/verify-records/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/verify-records/index.wxml",
+        "js": "pages/merchant/verify-records/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-tabs",
+        "event": "bind:change",
+        "handler": "switchBucket",
+        "line": 20,
+        "selectorHint": ".vrl-filter",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/verify-records/index.js:93"
+      }
+    },
+    {
+      "id": "pages/merchant/verify-records/index.wxml:28:bind:change:switchBucket:4",
+      "route": "pages/merchant/verify-records/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/verify-records/index.wxml",
+        "js": "pages/merchant/verify-records/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-tabs",
+        "event": "bind:change",
+        "handler": "switchBucket",
+        "line": 28,
+        "selectorHint": ".vrl-filter",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/verify-records/index.js:93"
+      }
+    },
+    {
+      "id": "pages/merchant/verify-records/index.wxml:6:bind:back:onNavBack:0",
+      "route": "pages/merchant/verify-records/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/verify-records/index.wxml",
+        "js": "pages/merchant/verify-records/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "onNavBack",
+        "line": 6,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/verify-records/index.js:38"
       }
     },
     {

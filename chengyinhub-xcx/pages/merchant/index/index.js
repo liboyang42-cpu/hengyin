@@ -298,6 +298,7 @@ Page({
     else if (action === 'coupon') this.goManageCoupon();
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
+    else if (action === 'verifyRecords') this.goVerifyRecords();
   },
 
   goManageCoupon() {
@@ -307,6 +308,11 @@ Page({
   goAftercare() {
     if (!this.data.merchantAccess.canReadAftercare) return;
     wx.navigateTo({ url: '/pages/merchant/aftercare/index' });
+  },
+
+  goVerifyRecords() {
+    if (!this.data.merchantAccess.canReadVerifyRecords) return;
+    wx.navigateTo({ url: '/pages/merchant/verify-records/index' });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {

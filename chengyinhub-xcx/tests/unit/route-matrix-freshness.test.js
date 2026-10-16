@@ -32,6 +32,7 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131(按脚本重建实测)。 */
   /* 2026-10-15 +3:官方路线列表/详情、积分明细三页 ⇒ 130+3 = 133(按脚本重建实测)。 */
   /* 2026-10-15 +1:CL3 俱乐部勋章页 pages/club/badges/index ⇒ 133+1 = 134(按脚本重建实测)。 */
+  /* 2026-10-15 +1:BL-76 商家核销记录页 pages/merchant/verify-records/index ⇒ 133+1 = 134(按脚本重建实测)。 */
   assert.equal(current.routes.length, 134)
   assert.equal(matrix.counts.routes, 134)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)

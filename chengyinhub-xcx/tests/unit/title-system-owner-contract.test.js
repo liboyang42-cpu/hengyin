@@ -74,6 +74,7 @@ const EXPECTED_NAV_ROUTES = [
   // 标题由 cy-page-title 持有(所以也进 page-title 盘点)。标题仍然只出现一次。
   'pages/merchant/coop-center/index', 'pages/merchant/customer/index', 'pages/merchant/game-node/index',
   'pages/merchant/aftercare/index', 'pages/merchant/aftercare/detail/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/customer/detail/index', 'pages/merchant/reviews/index', 'pages/merchant/team/index',
   'pages/merchant/predict/index',
   'pages/merchant/marketing/ai-insight/index',
@@ -124,6 +125,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/merchant/citynode/index', 'pages/merchant/aftercare/detail/index', 'pages/merchant/team/index',
   // 2026-09-17 用户裁决:退款售后列表照 Revolut Business 316-318,改为返回 + 左对齐 L1 大标题。
   'pages/merchant/aftercare/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   // 其余商家页继续使用居中 nav 标题，仍只保留在 nav inventory。
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',
@@ -251,6 +253,7 @@ function assertTitleInventory(readSource = read) {
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
     /* 2026-10-15 +3:官方路线列表/详情、积分明细三页,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 130+3 = 133(按实测重取)。 */
   /* 2026-10-15 +1:CL3 俱乐部勋章页 pages/club/badges,custom 导航 + cy-nav-bar + cy-page-title ⇒ 133+1 = 134(按实测重取)。 */
+  /* 2026-10-15 +1:BL-76 商家核销记录页 pages/merchant/verify-records,custom 导航 + cy-nav-bar + cy-page-title ⇒ 133+1 = 134(按实测重取)。 */
   assert.equal(rows.length, 134, '注册页面盘点数量发生漂移,需重新核对标题规范')
   assert.equal(rows.filter((row) => row.custom).length, 134)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),

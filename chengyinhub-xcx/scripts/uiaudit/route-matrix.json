@@ -1123,6 +1123,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/merchant/verify-records/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/merchant/team/index",
       "pkg": "pages/merchant",
       "tabBar": false,
