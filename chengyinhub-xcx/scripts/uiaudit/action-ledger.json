@@ -268039,7 +268039,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:167"
+        "staticSource": "components/cy/scene-club-edit/index.js:177"
       }
     },
     {
@@ -268228,7 +268228,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:171"
+        "staticSource": "components/cy/scene-club-edit/index.js:181"
       }
     },
     {
@@ -268417,7 +268417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -268607,7 +268607,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:282"
+        "staticSource": "components/cy/scene-club-edit/index.js:292"
       }
     },
     {
@@ -268829,7 +268829,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:230"
+        "staticSource": "components/cy/scene-club-edit/index.js:240"
       }
     },
     {
@@ -269018,7 +269018,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:228"
+        "staticSource": "components/cy/scene-club-edit/index.js:238"
       }
     },
     {
@@ -269240,7 +269240,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:230"
+        "staticSource": "components/cy/scene-club-edit/index.js:240"
       }
     },
     {
@@ -269429,7 +269429,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:186"
+        "staticSource": "components/cy/scene-club-edit/index.js:196"
       }
     },
     {
@@ -269618,7 +269618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:188"
+        "staticSource": "components/cy/scene-club-edit/index.js:198"
       }
     },
     {
@@ -269846,7 +269846,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:214"
+        "staticSource": "components/cy/scene-club-edit/index.js:224"
       }
     },
     {
@@ -270035,7 +270035,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:204"
+        "staticSource": "components/cy/scene-club-edit/index.js:214"
       }
     },
     {
@@ -270224,7 +270224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:186"
+        "staticSource": "components/cy/scene-club-edit/index.js:196"
       }
     },
     {
@@ -270413,7 +270413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:192"
+        "staticSource": "components/cy/scene-club-edit/index.js:202"
       }
     },
     {
@@ -270602,7 +270602,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:204"
+        "staticSource": "components/cy/scene-club-edit/index.js:214"
       }
     },
     {
@@ -270792,7 +270792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:300"
+        "staticSource": "components/cy/scene-club-edit/index.js:310"
       }
     },
     {
@@ -271016,7 +271016,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:295"
+        "staticSource": "components/cy/scene-club-edit/index.js:305"
       }
     },
     {
@@ -271205,7 +271205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:354"
+        "staticSource": "components/cy/scene-club-edit/index.js:368"
       }
     },
     {
@@ -271383,11 +271383,13 @@
       "targets": {
         "routes": [],
         "apis": [
+          "/api/club/dissolution-blockers",
           "/api/coop/deposit/refund/retry",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/dissolution-blockers",
           "/api/coop/deposit/refund/retry"
         ],
         "auxiliaryApis": [
@@ -271395,6 +271397,12 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/dissolution-blockers",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/coop/deposit/refund/retry",
             "method": "POST",
@@ -271430,7 +271438,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:367"
+        "staticSource": "components/cy/scene-club-edit/index.js:383"
       }
     },
     {
@@ -271619,7 +271627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:358"
+        "staticSource": "components/cy/scene-club-edit/index.js:374"
       }
     },
     {
@@ -271808,7 +271816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:358"
+        "staticSource": "components/cy/scene-club-edit/index.js:374"
       }
     },
     {
@@ -272036,7 +272044,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:220"
+        "staticSource": "components/cy/scene-club-edit/index.js:230"
       }
     },
     {
@@ -272226,7 +272234,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:409"
+        "staticSource": "components/cy/scene-club-edit/index.js:464"
       }
     },
     {
@@ -272415,7 +272423,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -272604,7 +272612,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -272794,7 +272802,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:409"
+        "staticSource": "components/cy/scene-club-edit/index.js:464"
       }
     },
     {
@@ -272983,7 +272991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -273172,7 +273180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -273393,7 +273401,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:82"
+        "staticSource": "components/cy/scene-club-edit/index.js:92"
       }
     },
     {
@@ -273582,7 +273590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:159"
+        "staticSource": "components/cy/scene-club-edit/index.js:169"
       }
     },
     {
@@ -273803,7 +273811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:82"
+        "staticSource": "components/cy/scene-club-edit/index.js:92"
       }
     },
     {
@@ -273992,7 +274000,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:177"
+        "staticSource": "components/cy/scene-club-edit/index.js:187"
       }
     },
     {
@@ -274181,7 +274189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:181"
+        "staticSource": "components/cy/scene-club-edit/index.js:191"
       }
     },
     {
