@@ -1,3 +1,7 @@
+## 继续开发：E01-19正式领取
+
+E01-19是EXTRA已报而未修的真实packet，不重复创建bug。C00重新核0d实际source及mylike caller，显式type0读同旧行后DELETE1/0第二个错误ACK，既有B4幂等方向合同允许DELETE0成功。原C03作者已冻结停写，0d干净；现正式将ApiTopicController仅topicLike方法交/root/topic_like_cancel_sol（gpt-6.1-sol），另仅新TopicLikeExplicitCancelConcurrencyTest与CORE/E01-19.md。其他方法/旧测试/Mapper/权限不转，生产仅最小ACK条件，保legacy toggle/异常传播/账号filter/ID。必要并发回归源码NOT_RUN，Cloud不跑任何验证，完成即push公共SHA交本地。
+
 ## 当前E06针对性复测闭环：5PASS／真实HTTP未验
 
 C00已完整读回[PR24公开报告](https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md)与summary：固定源码 `b45664de6136eb97c46ed0c86e95fc25686dc1b7` 正常212准入后，E06_17Test单类**5实际项PASS，0失败/0错误/0跳过**，fresh XML精确类集，guard0/completed，精确容器清理。源包、日志及XML哈希已入总控；仅普通单类针对性签收。

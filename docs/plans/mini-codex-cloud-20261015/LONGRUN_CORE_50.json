@@ -4990,7 +4990,7 @@
   "total_created_items": 178,
   "delivered_items": 173,
   "refill_progress": "178 cumulative concrete source slices/reviews; actual actionable0, target50 shortfall50; no invented filler",
-  "actual_actionable_or_in_progress_items": 0,
+  "actual_actionable_or_in_progress_items": 1,
   "counts_note": "Initial50 and cumulative history are concrete source slices/reviews, not remaining actionable bugs or passed cases. Actual current READY/inflight0, target50 shortfall50 disclosed. Source delivered remains unverified.",
   "current_public_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "actual_state_counts": {
@@ -5004,19 +5004,19 @@
   "active_claims": {
     "C01": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C02": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
-    "C03": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
+    "C03": "E01-19_ASSIGNED_SOURCE_ONLY",
     "C04": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C05": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C06": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK"
   },
-  "refill_shortfall": 50,
+  "refill_shortfall": 49,
   "current_source_scope_producer": {
     "commit_sha": "5162ef45bb42486575619871ff24b4b694941f09",
     "method": "TopicRouteSessionScope.findCurrent",
     "old_find": "UNCHANGED",
     "verification": "NOT_RUN"
   },
-  "source_pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES",
+  "source_pool_status": "ONE_REAL_EXISTING_PACKET_ASSIGNED_NOT_FULL_POOL",
   "pool_status": "EXHAUSTED_WITH_RECORDED_POLICY_BOUNDARIES",
   "scheduling_rule": {
     "mode": "ONE_REPAIR_PLUS_FIVE_INDEPENDENT_DEVELOPMENT",
@@ -5354,5 +5354,29 @@
     "full_matrix_rerun": false,
     "source_repairs": "Original-author test fixture-only repairs, no production changes in repair diff"
   },
-  "repair_slot_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED"
+  "repair_slot_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED",
+  "existing_external_packet_work": {
+    "id": "E01-19",
+    "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
+    "title": "显式取消主题收藏并发DELETE0仍成功",
+    "basis_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
+    "owner": "CORE/C03",
+    "worker": "/root/topic_like_cancel_sol",
+    "model": "gpt-6.1-sol",
+    "state": "ASSIGNED_SOURCE_ONLY",
+    "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "worktree": "/workspace/hengyin-topic-like-20261015",
+    "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
+    "source_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "source_scope": "topicLike method only; explicit type0 DELETE0 acknowledgment",
+    "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicLikeExplicitCancelConcurrencyTest.java",
+    "evidence_path": "docs/verification/mini-longrun-20261015/CORE/E01-19.md",
+    "old_writer": "feature_points_rules_sol",
+    "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
+    "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
+    "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
+    "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+    "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
+    "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+  }
 }

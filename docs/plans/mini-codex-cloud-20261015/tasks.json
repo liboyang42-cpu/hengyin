@@ -1942,6 +1942,39 @@
         ]
       },
       "repair_slot_status": "RELEASED"
+    },
+    "existing_packet_e01_19": {
+      "id": "E01-19",
+      "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
+      "title": "显式取消主题收藏并发DELETE0仍成功",
+      "basis_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
+      "owner": "CORE/C03",
+      "worker": "/root/topic_like_cancel_sol",
+      "model": "gpt-6.1-sol",
+      "state": "ASSIGNED_SOURCE_ONLY",
+      "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "worktree": "/workspace/hengyin-topic-like-20261015",
+      "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
+      "source_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_scope": "topicLike method only; explicit type0 DELETE0 acknowledgment",
+      "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicLikeExplicitCancelConcurrencyTest.java",
+      "evidence_path": "docs/verification/mini-longrun-20261015/CORE/E01-19.md",
+      "old_writer": "feature_points_rules_sol",
+      "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
+      "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
+      "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
+      "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+      "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
+      "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+    },
+    "new_real_development": {
+      "source_writers_assigned": 1,
+      "item": "E01-19 original packet, no duplicate count",
+      "read_only_unblock_checks": {
+        "E04-07": "BLOCKED_CONTRACT: original coupon history identity absent, cannot infer",
+        "E02-23": "BLOCKED_CONTRACT: one-time legacy identity does not provide new legacy posts mapping"
+      },
+      "manual_validation": "NOT_RUN_BY_CLOUD"
     }
   },
   "followup_lanes": [

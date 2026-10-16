@@ -1,10 +1,10 @@
 {
   "protocol": "CY-REMAINING-DEVELOPMENT-SNAPSHOT-20261015",
-  "core_source": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
-  "extra_source": "a37ce191756ab11896faf4e61e8a06b4279f0303",
+  "core_source": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "extra_source": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "counts_are": "Actual remaining source work, not cumulative history, testcase count or initial50",
   "core": {
-    "proven_actionable_undelivered": 0,
+    "proven_actionable_undelivered": 1,
     "source_deliveries_unverified_history": 135,
     "decision_blocked": 3,
     "historical_total": 178
@@ -17,14 +17,21 @@
       "E03-16",
       "E05-17"
     ],
-    "effective_known_undelivered_active": [
-      "E02-22"
-    ],
+    "effective_known_undelivered_active": [],
     "blocked_queue_items": 6,
     "decision_blocked": 4,
     "ownership_blocked": 1,
     "dependency_blocked": 1,
-    "note": "EXTRA coordinator alone updates own QUEUE; metadata3 claimed is older than two a37 source deliveries, so not3 remaining"
+    "note": "EXTRA coordinator alone updates own QUEUE; metadata3 claimed is older than two a37 source deliveries, so not3 remaining",
+    "latest_public_queue": {
+      "head": "2226ee5b6a79478aef74b39f95dd0edea9e0cb0d",
+      "history": 109,
+      "source_delivered": 57,
+      "no_change_source_review": 40,
+      "blocked": 8,
+      "ready": 0,
+      "claimed": 0
+    }
   },
   "blocked_records": [
     {
@@ -86,11 +93,11 @@
       "team": "EXTRA",
       "id": "E04-07",
       "title": "通关券冲正限定原奖励",
-      "state": "BLOCKED_OWNERSHIP",
+      "state": "BLOCKED_CONTRACT",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
-      "detail": "",
+      "detail": "Original consumer already owned EXTRA/E04; producer bool grant/log lack original historyId, CRM same-template later grants can be mischosen. Existing grantCouponWithReceipt capability alone does not define persistent old-log identity contract.",
       "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
     },
     {
@@ -124,7 +131,7 @@
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "detail": "applyAuditDecision读取当前post/version后推进；旧删除评论保护不等于帖子内容版本绑定",
+      "detail": "Producer review-version identity remains unresolved; no new callback policy guessed.",
       "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
     }
   ],
@@ -173,6 +180,43 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
       ]
+    }
+  },
+  "existing_packet_e01_19": {
+    "id": "E01-19",
+    "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
+    "title": "显式取消主题收藏并发DELETE0仍成功",
+    "basis_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
+    "owner": "CORE/C03",
+    "worker": "/root/topic_like_cancel_sol",
+    "model": "gpt-6.1-sol",
+    "state": "ASSIGNED_SOURCE_ONLY",
+    "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "worktree": "/workspace/hengyin-topic-like-20261015",
+    "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
+    "source_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "source_scope": "topicLike method only; explicit type0 DELETE0 acknowledgment",
+    "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicLikeExplicitCancelConcurrencyTest.java",
+    "evidence_path": "docs/verification/mini-longrun-20261015/CORE/E01-19.md",
+    "old_writer": "feature_points_rules_sol",
+    "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
+    "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
+    "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
+    "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+    "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
+    "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+  },
+  "current_unblock_checks": {
+    "E04-07": {
+      "status": "BLOCKED_CONTRACT",
+      "source_change": "NO_SOURCE_CHANGE",
+      "evidence_file": "/tmp/coupon-identity-unblock.json"
+    },
+    "E02-23": {
+      "status": "BLOCKED_CONTRACT",
+      "source_change": "NO_SOURCE_CHANGE",
+      "evidence_file": "/tmp/square-identity-unblock.json",
+      "reason": "One-time legacy-square requestId+protected tag can identify migrated history only; runtime old publishes have no authoritative new-post mapping. No dual-write policy granted."
     }
   }
 }
