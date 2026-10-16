@@ -347,6 +347,7 @@ Component({
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
+    reportShow: false,
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -1529,6 +1530,15 @@ Component({
 
   openMoreMenu: function () { this.openScene('member-more-menu'); },
   closeMoreMenu: function () { this.closeScene(); },
+
+  onReportMember: function () {
+    this.closeMoreMenu();
+    this.setData({ reportShow: true });
+  },
+
+  onReportClose: function () {
+    this.setData({ reportShow: false });
+  },
 
   onShareProfile: function () {
     this.closeMoreMenu();

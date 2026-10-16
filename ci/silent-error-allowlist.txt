@@ -190,3 +190,4 @@ chengyinhub-xcx/subpackageMember/points-history/index.js 1  # 积分明细首次
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 线路详情失败落页内 error/notfound 可见态并给重试
 chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 线路列表失败落页内 cy-error 并给重试
 chengyinhub-xcx/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
+chengyinhub-xcx/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
