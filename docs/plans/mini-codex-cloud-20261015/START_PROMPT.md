@@ -1,16 +1,4 @@
-> 当前E06：b456单类5实际VPS targeted PASS、原唯一失败闭环，修复槽释放；旧76项1FAIL/锁拒绝仍留历史，不称新全76通过。没有真实READY就EXHAUSTED，Cloud不补跑。裸SQL仍NEEDS_REACHABILITY/NO_SOURCE_CHANGE，真库/HTTP/设备/业务/合并部署未验。
-
-> E06当前：旧ed598的76实际75PASS/1FAIL保留；b456仅测试夹具源修，新单类5声明因212共享锁拒绝准入，实际0项NOT_RUN排队，不关旧失败、不让Cloud替代或重复修改。裸SQL仅NEEDS_REACHABILITY/NO_SOURCE_CHANGE。
-
-> 当前第三队：2babbe28已VPS212编译及普通24实跑PASS；早先锁拒绝保留历史，真MySQL11仍NOT_RUN，未验收并发/HTTP/业务。EXTRA下一ed598258单独待结果，不继承旧通过，Cloud不补跑。
-
-> 第三队验证状态：PR72/2babbe28因212 another_build_holds_lock返回75，containerId=null，执行0；NOT_RUN，不是源码失败。仅本地按正常准入排队，Cloud不替代。两域EXHAUSTED、writer0，不凑6线。
-
-> 最新口径：第三队6条既有源码/旧测试＋PR70 TASKS指定2条新回归均已授权，各归STAT/GROW原child；“新MySqlIT待扩权”限制已纠正撤回。PR72源码已冻结2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd，当前writer=0/NOT_RUN，实际验证交本地。
-
-> 新增第三队：ANALYTICS_THIRD真实thread为01a140c1-6379-71fd-8711-f0b55889c01b，已读PR16 ACK6199048354：/root/stat与/root/grow分别领取AN01/AN02，只有THIRD_CLOUD_HANDOFF.json中的AN01/AN02精确路径保留；实际thread/child ACK后直接按清单单写者开发。勿把analytics目录、旧foundation B文件或未证实事项泛派给新队。原两队及VPS分工继续，C00仍唯一全局源账。
-
-> 最新用户分工：两队各最多6名gpt-6.1-sol，按“1条失败修复线＋5条独立开发线”滚动；多个失败串行给原写者，其余源码完成即push，不等验证/CI，不重复开发。真实后端验证仅由本地协调者执行VPS212/批准真库入口；C00及Cloud worker不得新增手动编译/测试/CI触发或专门验证配置，原有自动CI自然运行。NOT_RUN不称通过；无合并/部署/迁移。恢复先读[LONGRUN_CURRENT](LONGRUN_CURRENT.md)、[后端移交](BACKEND_VALIDATION_VPS_HANDOFF.md)、精确源表和两队实际队列。真实池不足如实EXHAUSTED，不凑50或冒称满载。
+> 当前唯一恢复状态见[LONGRUN_CURRENT](LONGRUN_CURRENT.md)：CORE新源码e0e3f517b8e6deb26ed3697a00d38ae14f015e76，E01-19已交、修后NOT_RUN；本地下一最小2类10声明。之前各候选通过仅覆盖原SHA，旧checkpoint已归档。源码作者停写、无真实READY不凑线；Cloud不验证，原6.1-sol/单写者/1修复规则继续。
 
 # Codex最终提示词
 
@@ -27,13 +15,13 @@
 
 先完成C00：复核master、PR11父链及PR12–15当前实现，已有修复复用，不重做。核实三方实际分支/SHA和已有工作，固定公共候选SHA。由你独占维护文档分支上的OWNERSHIP.md、BACKEND_CHANGES.md和任务主账，先发布具体文件/测试归属和接口合同；初始归属表只是规划，不代表任务已经认领。每个文件同一时刻只能有一个写入者，未知/冲突文件先分配，不能让Claude与bug worker同时改同一JS、Controller、DTO或Mapper。
 
-然后按任务卡先修B01–B05及A02前半已确认AI bug，之后做A01/A03及A02后半架构，最后C99。使用环境实际支持的并行能力，最多4个worker。独立checkout可各自提交；共享工作区的worker不得并发切分支、暂存或提交，由你按明确路径串行收口。每个worker都要知道他不是独自在仓库工作，不得覆盖别人改动。
+然后按任务卡先修B01–B05及A02前半已确认AI bug，之后做A01/A03及A02后半架构，最后C99。使用环境实际支持的并行能力，默认本队最多6个gpt-6.1-sol worker（最新用户规则；无真实任务不凑数）。独立checkout可各自提交；共享工作区的worker不得并发切分支、暂存或提交，由你按明确路径串行收口。每个worker都要知道他不是独自在仓库工作，不得覆盖别人改动。
 
 三方通过各自草稿PR正文/专属交付文档同步，标记CY-HANDOFF: CODEX、CLAUDE或IOS。你在分派、集成或接口变动前，读取hengyin及chengyin-ios中这些交付记录，处理文件申领与依赖。新功能专属后端可以明确委派Claude；共用核心及其他已锁文件仍由原所有者修改。转交文件必须先取得原所有者停止编辑及提交/补丁证据，再登记新基线和新所有者；超时不等于释放。
 
 任何后端变化由你汇总到BACKEND_CHANGES.md，记录BK编号、实现者、方法/路径/DTO/单位/错误/权限/分页/requestId/version差异、两端影响、兼容fixture、源码SHA/PR、测试、合并和部署状态。按DRAFT→CONTRACT_FROZEN→SOURCE_READY→TEST_DEPLOYED分层，客户端验收另列；即使不改API也写NO_API_CHANGE。合同未冻结不让客户端猜协议，未核测试部署不宣称可真实联调。没有自动消息总线，你需要主动读取交付记录，不能假定其他agent已收到通知。
 
-代码编辑和轻量Node检查在Cloud；Java开发/集成测试、数据库及测试服务用已授权VPS，附加CI用GitHub托管runner。Cloud localhost不是Mac隧道。VPS不可达则继续独立源码工作并保留运行层待验，不回落生产或另起本地Java/数据库。不做本批DDL、新依赖、生产配置、部署/上传；鉴权、资金或产品政策改变先给可审阅方案。保留既有幂等、旧局快照和旧结局顺序，不用假成功或放宽门禁收口。
+Cloud只编辑/交付源码和必要回归，全部手动编译/测试/Node/lint/CI触发均不执行；后端真实验证由本地唯一协调者按已授权VPS212/批准真库入口完成，已有自动CI自然运行。Cloud localhost不是Mac隧道。VPS不可达则继续独立源码工作并保留运行层待验，不回落生产或另起本地Java/数据库。不做本批DDL、新依赖、生产配置、部署/上传；鉴权、资金或产品政策改变先给可审阅方案。保留既有幂等、旧局快照和旧结局顺序，不用假成功或放宽门禁收口。
 
 交付精确文件、复现或反证、相关测试实际输出、候选SHA和两端合同，分清源码、PR/CI、合并、部署、设备及业务验收。只对实际通过层级签收，继续推进已授权独立工作，不只返回计划。
 ```

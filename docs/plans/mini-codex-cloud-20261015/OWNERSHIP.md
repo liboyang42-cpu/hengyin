@@ -1,3 +1,9 @@
+## E01-19 显式取消收藏的并发ACK修复
+
+公共源码 `e0e3f517b8e6deb26ed3697a00d38ae14f015e76` / PR44，原0d之上一小提交，源码作者CORE/C03，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。`POST /api/topic/like` 显式type0两请求都读到旧行而DELETE1/0时，第二个body.code由500改为200、msg“取消点赞成功”，符合既有方向幂等合同；HTTP方法/路径/参数/字段/账号过滤/目标ID不变。空type旧toggle的DELETE0仍失败，负数失败、数据库异常仍传播，不增加自动重试或端侧写权。
+
+新5＋既有方向5=10为待验证源码声明，无新库/配置/DDL，已给本地212最小普通矩阵；新SHA未编译测试，不能沿用0d157PASS。真实数据库/HTTP/设备/合并部署未验收，TEST_DEPLOYED=NO。回执及精确文件见[E01_19_SOURCE_CLAIM](E01_19_SOURCE_CLAIM.json)。
+
 ## 继续开发：E01-19正式领取
 
 E01-19是EXTRA已报而未修的真实packet，不重复创建bug。C00重新核0d实际source及mylike caller，显式type0读同旧行后DELETE1/0第二个错误ACK，既有B4幂等方向合同允许DELETE0成功。原C03作者已冻结停写，0d干净；现正式将ApiTopicController仅topicLike方法交/root/topic_like_cancel_sol（gpt-6.1-sol），另仅新TopicLikeExplicitCancelConcurrencyTest与CORE/E01-19.md。其他方法/旧测试/Mapper/权限不转，生产仅最小ACK条件，保legacy toggle/异常传播/账号filter/ID。必要并发回归源码NOT_RUN，Cloud不跑任何验证，完成即push公共SHA交本地。

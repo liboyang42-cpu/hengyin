@@ -1951,7 +1951,7 @@
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
       "model": "gpt-6.1-sol",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "worktree": "/workspace/hengyin-topic-like-20261015",
       "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
@@ -1963,19 +1963,140 @@
       "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
       "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
       "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
-      "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+      "verification": "NOT_RUN",
       "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
-      "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+      "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery",
+      "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "public_branch": "codex/mini-longrun-core-20261015",
+      "pr": 44,
+      "writer_status": "STOPPED_AFTER_DELIVERY",
+      "actual_source_writers": 0,
+      "production_delta": "Only rows>0 || (!legacyToggle && rows==0) in topicLike deletion result",
+      "validation": {
+        "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+        "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+        "status": "NOT_RUN",
+        "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "classes": [
+          {
+            "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+            "source_declarations": 5,
+            "new": true
+          },
+          {
+            "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+            "source_declarations": 5,
+            "new": false
+          }
+        ],
+        "source_declared_total": 10,
+        "actual_executed_tests": null,
+        "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+        "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+        "new_database_acceptance": "NOT_RUN",
+        "runtime_HTTP": "NOT_RUN",
+        "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+        "Cloud_execution": false
+      }
     },
     "new_real_development": {
-      "source_writers_assigned": 1,
+      "source_writers_assigned": 0,
       "item": "E01-19 original packet, no duplicate count",
       "read_only_unblock_checks": {
         "E04-07": "BLOCKED_CONTRACT: original coupon history identity absent, cannot infer",
         "E02-23": "BLOCKED_CONTRACT: one-time legacy identity does not provide new legacy posts mapping"
       },
-      "manual_validation": "NOT_RUN_BY_CLOUD"
-    }
+      "manual_validation": "NOT_RUN_BY_CLOUD",
+      "status": "E01-19_SOURCE_DELIVERED_NOT_RUN",
+      "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "validation": {
+        "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+        "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+        "status": "NOT_RUN",
+        "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "classes": [
+          {
+            "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+            "source_declarations": 5,
+            "new": true
+          },
+          {
+            "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+            "source_declarations": 5,
+            "new": false
+          }
+        ],
+        "source_declared_total": 10,
+        "actual_executed_tests": null,
+        "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+        "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+        "new_database_acceptance": "NOT_RUN",
+        "runtime_HTTP": "NOT_RUN",
+        "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+        "Cloud_execution": false
+      }
+    },
+    "current_CORE_source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "latest_three_team_candidates": {
+      "CORE": {
+        "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+        "task": "E01-19",
+        "status": "SOURCE_DELIVERED_UNVERIFIED",
+        "ordinary_classes": 2,
+        "source_declarations": 10,
+        "local_verification": "RUNNING_VPS_212_COMPILE_REPORTED_BY_LOCAL_RESULT_PENDING"
+      },
+      "EXTRA": {
+        "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+        "delivery_head_sha": "ad0ffc86b4275c802fd8a312ab016b6f7d3ff53e",
+        "task": "E02-24",
+        "status": "SOURCE_DELIVERED_UNVERIFIED",
+        "ordinary_classes": 2,
+        "source_declarations": 60,
+        "local_verification": "SOURCE_PREPARED_LOCAL_SERIAL_QUEUE_RESULT_PENDING"
+      },
+      "THIRD": {
+        "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+        "delivery_head_sha": "e80caf3958e9e0a636260b9b7a2dc905187bf673",
+        "tasks": [
+          "F3-STAT-02",
+          "F3-GROW-02"
+        ],
+        "status": "SOURCE_DELIVERED_UNVERIFIED",
+        "ordinary_classes": 2,
+        "source_declarations": 28,
+        "mysql11": "NOT_RUN",
+        "local_verification": "SOURCE_PREPARED_LOCAL_SERIAL_QUEUE_RESULT_PENDING"
+      }
+    },
+    "e02_25_grant": {
+      "id": "E02-25",
+      "title": "评论创建重复键恢复按当前读取赢家",
+      "owner": "EXTRA6/E02",
+      "original_worker": "external_e02",
+      "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+      "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
+      "source_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+      ],
+      "test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+      ],
+      "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
+      "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+      "source_limit": "Only DuplicateKey catch replay uses new exact author/request current read. Initial read stays ordinary; new XML same projection/WHERE with FOR UPDATE/useCache=false/flushCache=true. Preserve E02-24 post/body/normalized-parent identity. No isolation-level/config/auth/DDL/other interface edits.",
+      "basis": "Existing default transaction can inherit legal MySQL RR; plain read before competing committed insert establishes snapshot, catch ordinary read cannot see winner. Actual VPS isolation not observed/assumed.",
+      "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
+      "verification": "SOURCE_ONLY_NOT_RUN",
+      "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
+      "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
+    },
+    "real_storage_entry_map": "REAL_STORAGE_ENTRY_MAP.json",
+    "validation_coordination_state": "NEW_CANDIDATES_LOCAL_VALIDATION_IN_PROGRESS_DEVELOPMENT_READY_SEPARATE"
   },
   "followup_lanes": [
     {

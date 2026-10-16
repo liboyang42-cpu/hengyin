@@ -735,5 +735,11 @@
       }
     ]
   },
-  "verification_evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f"
+  "verification_evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+  "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "latest_tasks": [
+    "F3-STAT-02",
+    "F3-GROW-02"
+  ],
+  "latest_verification": "NOT_RUN_PREVIOUS24_PASS_RETAINED_ONLY_AT2babbe"
 }

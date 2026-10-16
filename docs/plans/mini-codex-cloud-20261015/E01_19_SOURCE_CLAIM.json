@@ -6,7 +6,7 @@
   "owner": "CORE/C03",
   "worker": "/root/topic_like_cancel_sol",
   "model": "gpt-6.1-sol",
-  "state": "ASSIGNED_SOURCE_ONLY",
+  "state": "SOURCE_DELIVERED_UNVERIFIED",
   "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "worktree": "/workspace/hengyin-topic-like-20261015",
   "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
@@ -18,7 +18,39 @@
   "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
   "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
   "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
-  "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+  "verification": "NOT_RUN",
   "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
-  "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+  "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery",
+  "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "public_branch": "codex/mini-longrun-core-20261015",
+  "pr": 44,
+  "writer_status": "STOPPED_AFTER_DELIVERY",
+  "actual_source_writers": 0,
+  "production_delta": "Only rows>0 || (!legacyToggle && rows==0) in topicLike deletion result",
+  "validation": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "status": "NOT_RUN",
+    "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": [
+      {
+        "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+        "source_declarations": 5,
+        "new": true
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+        "source_declarations": 5,
+        "new": false
+      }
+    ],
+    "source_declared_total": 10,
+    "actual_executed_tests": null,
+    "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+    "new_database_acceptance": "NOT_RUN",
+    "runtime_HTTP": "NOT_RUN",
+    "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+    "Cloud_execution": false
+  }
 }
