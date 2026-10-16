@@ -4917,15 +4917,11 @@
    "curError": false,
    "errorMsg": "",
    "emptyTitle": "还没有参与的官方活动",
-   "emptySub": "报名或发起活动后，会显示在这里",
-   "_all": [],
-   "_mine": []
+   "emptySub": "报名或发起活动后，会显示在这里"
   },
   "dropped": [],
   "switchKeys": [
    "events",
-   "_all",
-   "_mine",
    "loading",
    "curError",
    "errorMsg"
