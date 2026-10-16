@@ -3,7 +3,9 @@ package com.chengyinhub.business.longrun;
 import com.alibaba.fastjson2.JSON;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
+import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import com.chengyinhub.business.service.impl.RedemptionRewardClawbackService;
+import com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -49,14 +51,16 @@ class E04_07Test {
     }
 
     @Test void missingOriginalIdentityOnlyAuditsAndKeepsCouponAndGrantUnchanged() {
+        when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(null);
         reverse();
         assertEquals("UNKNOWN_IDENTITY_NOT_RECOVERED",couponAudit().get("result"));
-        verifyNoInteractions(histories);
+        verify(histories,never()).selectSmsCouponHistoryByIdForUpdate(anyLong());
         noCouponMutation();
         verify(progress,never()).insertMissionProgress(any());
     }
 
     @Test void missingOriginalIdentityDoesNotBlockAuthorizedCompletionPointsAndXpClawback() {
+        when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(null);
         UmsMemberPointsDetail grant = new UmsMemberPointsDetail();
         grant.setId(11L); grant.setChangePoints(5L);
         when(points.selectGrantForClawback(501L,13L,8001L)).thenReturn(grant);
@@ -76,6 +80,59 @@ class E04_07Test {
         verify(progress,never()).insertMissionProgress(argThat(p -> RedemptionRewardClawbackService.MARKER_COMPLETION_COUPON.equals(p.getMissionCode())));
         assertEquals("UNKNOWN_IDENTITY_NOT_RECOVERED",couponAudit().get("result"));
         noCouponMutation();
+    }
+
+    @Test void nonPositiveOriginalReceiptIsUnknownBeforeAnyHistoryLock() {
+        when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(0L,-1L);
+        reverse(); reverse();
+        verify(histories,never()).selectSmsCouponHistoryByIdForUpdate(anyLong());
+        noCouponMutation();
+        verify(progress,never()).insertMissionProgress(any());
+        verify(audits,times(2)).insertBusinessAuditEvent(argThat(a -> a.getAfterJson().contains("UNKNOWN_IDENTITY_NOT_RECOVERED")));
+    }
+
+    @Test void lockedHistoryMustStillMatchOriginalMemberTemplateAndLiveIdentity() {
+        when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(41L);
+        SmsCouponHistory wrongMember = history(30L,999L,0); 
+        SmsCouponHistory wrongCoupon = history(31L,501L,0);
+        SmsCouponHistory deleted = history(30L,501L,0); deleted.setDelFlag(1);
+        SmsCouponHistory wrongId = history(30L,501L,0); wrongId.setId(42L);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(41L)).thenReturn(wrongMember,wrongCoupon,deleted,wrongId,null);
+        for (int i=0;i<5;i++) { reverse(); }
+        noCouponMutation();
+        verify(progress,never()).insertMissionProgress(any());
+        verify(audits,times(5)).insertBusinessAuditEvent(argThat(a -> a.getAfterJson().contains("UNKNOWN_IDENTITY_NOT_RECOVERED")));
+    }
+
+    @Test void usedOriginalCouponIsAuditedWithoutDeletingGrantOrFindingAReplacement() {
+        when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(41L);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(41L)).thenReturn(history(30L,501L,1));
+        when(histories.voidUnusedCoupon(eq(41L),anyString())).thenReturn(0);
+        reverse();
+        assertEquals("USED_NOT_RECOVERED",couponAudit().get("result"));
+        verify(histories).selectCompletionRewardHistoryId(501L,700L);
+        verify(histories).selectSmsCouponHistoryByIdForUpdate(41L);
+        verify(rewards,never()).deleteGrant(anyLong(),anyLong());
+        verify(progress,never()).insertMissionProgress(any());
+    }
+
+    @Test void producerBindsTheActualReceiptAndRejectsMissingReceiptOrFailedBinding() {
+        TopicCompletionCouponRewardServiceImpl producer = new TopicCompletionCouponRewardServiceImpl();
+        SmsCouponMapper coupons = mock(SmsCouponMapper.class);
+        ISmsCouponHistoryService issuing = mock(ISmsCouponHistoryService.class);
+        SmsCoupon coupon = new SmsCoupon(); coupon.setId(30L);
+        ReflectionTestUtils.setField(producer,"rewardMapper",rewards);
+        ReflectionTestUtils.setField(producer,"smsCouponMapper",coupons);
+        ReflectionTestUtils.setField(producer,"smsCouponHistoryService",issuing);
+        when(coupons.selectSmsCouponById(30L)).thenReturn(coupon);
+        when(rewards.insertIgnore(700L,501L,30L)).thenReturn(1);
+        when(issuing.grantCouponWithReceipt(501L,coupon)).thenReturn(41L,null,43L);
+        when(rewards.bindHistoryId(700L,501L,30L,41L)).thenReturn(1);
+        assertTrue(producer.grantOnce(700L,501L,30L));
+        verify(rewards).bindHistoryId(700L,501L,30L,41L);
+        assertThrows(IllegalStateException.class,() -> producer.grantOnce(700L,501L,30L));
+        assertThrows(IllegalStateException.class,() -> producer.grantOnce(700L,501L,30L));
+        verify(issuing,never()).grantCouponById(anyLong(),anyLong());
     }
 
     @Test void noCompletionGrantKeepsTheExistingNoRewardResultAndDoesNotInventACoupon() {
@@ -100,5 +157,8 @@ class E04_07Test {
     void noCouponMutation() {
         verify(histories,never()).voidUnusedCoupon(anyLong(),anyString());
         verify(rewards,never()).deleteGrant(anyLong(),anyLong());
+    }
+    SmsCouponHistory history(Long coupon,Long member,int state) {
+        SmsCouponHistory h = new SmsCouponHistory(); h.setId(41L); h.setCouponId(coupon); h.setMemberId(member); h.setUseStatus(state); h.setDelFlag(0); return h;
     }
 }

@@ -213,10 +213,30 @@ public class RedemptionRewardClawbackService {
         if (couponId == null) return null;
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("couponId", couponId);
-        // 历史完成日志没有精确原historyId；不得用时间窗/MAX或其他同模板券猜原奖励。
-        // 仅审计未知身份，保留全部券、原发放日志和券补发标记边界；
-        // 不抛异常阻断其他已授权积分/经验冲正。未来精确回执另包接入。
-        out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+        Long historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
+        if (historyId == null || historyId <= 0) {
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+            return out;
+        }
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
+        if (history == null || !historyId.equals(history.getId()) || !memberId.equals(history.getMemberId())
+                || !couponId.equals(history.getCouponId())
+                || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
+            // 原身份缺失时仅审计，不猜其他券，不删除原日志或写券补发标记。
+            // 返回结果而非异常，让其他已授权积分/经验冲正沿原事务继续。
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+            return out;
+        }
+        out.put("historyId", history.getId());
+        if (smsCouponHistoryMapper.voidUnusedCoupon(history.getId(), "撤销核销冲回作废 redemption#" + redemptionId) == 1) {
+            // 作废了才删发放日志:重新通关能再发一张;已使用的券不删日志,再通关不再多给
+            completionCouponRewardMapper.deleteGrant(topicId, memberId);
+            out.put("result", "VOIDED");
+        } else if (Integer.valueOf(1).equals(history.getUseStatus())) {
+            out.put("result", "USED_NOT_RECOVERED");
+        } else {
+            out.put("result", "ALREADY_INACTIVE");
+        }
         return out;
     }
 
