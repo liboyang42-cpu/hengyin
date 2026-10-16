@@ -782,7 +782,7 @@ Page({
         if (this._destroyed) return;
         if (this.data.voiceStatus === 0 && !this.data.voiceError) {
           this.setData({ voiceBusy: false, voiceSample: '' });
-          toast.success('角色声音已清除');
+          toast('角色声音已清除');
         } else {
           this.setData({ voiceBusy: false, voiceError: this.data.voiceError || '声音状态还没更新，请稍后刷新再看' });
         }

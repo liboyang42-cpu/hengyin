@@ -22,6 +22,7 @@ test('BL-43: 清除后回读状态，只有回读为 0 才提示成功', () => {
   const body = js.slice(js.indexOf('  _doClearVoice() {'), js.indexOf('  resetVoiceRecording() {'))
   assert.match(body, /this\._request\('\/api\/merchant\/npc\/voice\/reset'\)\n      \.then\(\(\) => this\.refreshVoice\(\)\)/)
   assert.match(body, /if \(this\.data\.voiceStatus === 0 && !this\.data\.voiceError\) \{/)
-  assert.match(body, /toast\.success\('角色声音已清除'\)/)
+  assert.match(body, /toast\('角色声音已清除'\)/)
+  assert.doesNotMatch(body, /toast\.success\(/, 'BL-162: 声音行回到未录音即是结果,不再加成功 toast(棘轮上限 101)')
   assert.match(body, /\.catch\(\(e\) => \{/)
 })
