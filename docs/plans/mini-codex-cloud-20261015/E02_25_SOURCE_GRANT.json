@@ -1,0 +1,26 @@
+{
+  "id": "E02-25",
+  "title": "评论创建重复键恢复按当前读取赢家",
+  "owner": "EXTRA6/E02",
+  "original_worker": "external_e02",
+  "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+  "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
+  "source_paths": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+  ],
+  "test_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+  ],
+  "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
+  "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+  "source_limit": "Only DuplicateKey catch replay uses new exact author/request current read. Initial read stays ordinary; new XML same projection/WHERE with FOR UPDATE/useCache=false/flushCache=true. Preserve E02-24 post/body/normalized-parent identity. No isolation-level/config/auth/DDL/other interface edits.",
+  "basis": "Existing default transaction can inherit legal MySQL RR; plain read before competing committed insert establishes snapshot, catch ordinary read cannot see winner. Actual VPS isolation not observed/assumed.",
+  "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
+  "verification": "SOURCE_ONLY_NOT_RUN",
+  "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
+  "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
+}

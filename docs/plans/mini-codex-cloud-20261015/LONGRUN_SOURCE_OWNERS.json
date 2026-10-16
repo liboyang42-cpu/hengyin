@@ -85,13 +85,14 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java": {
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
-      "state": "ASSIGNED_SOURCE_ONLY_E01_19",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "transfer_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
-      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "frozen_source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "source_scope": "topicLike method only; explicit type0 DELETE0 acknowledgment",
       "previous_worker": "feature_points_rules_sol",
-      "transfer_record": "E01_19_SOURCE_CLAIM.json"
+      "transfer_record": "E01_19_SOURCE_CLAIM.json",
+      "writer_status": "STOPPED_AFTER_DELIVERY"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java": {
       "owner": "CORE/C04",
@@ -588,7 +589,14 @@
       "state": "ASSIGNED_SOURCE_ONLY",
       "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
-      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant."
+      "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant. E02-25 exact additional method now authorized by E02_25_SOURCE_GRANT; all unrelated interface scope retained.",
+      "additional_exact_grant": {
+        "task": "E02-25",
+        "method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+        "same_owner": "EXTRA6/E02",
+        "baseline": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+        "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK"
+      }
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
       "owner": "EXTRA6/E02",
@@ -2442,7 +2450,7 @@
       "owner": "ANALYTICS_THIRD/AN01",
       "worker": "/root/stat",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
@@ -2451,13 +2459,14 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "add1534cd63c6ffd95467795126246c8d3581594",
-      "verification": "NOT_RUN"
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java": {
       "owner": "ANALYTICS_THIRD/AN02",
       "worker": "/root/grow",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
@@ -2466,13 +2475,14 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "verification": "NOT_RUN"
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java": {
       "owner": "ANALYTICS_THIRD/AN02",
       "worker": "/root/grow",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
@@ -2481,13 +2491,14 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "verification": "NOT_RUN"
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml": {
       "owner": "ANALYTICS_THIRD/AN02",
       "worker": "/root/grow",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "allocation": "Explicit C00 whitelist; becomes active after actual per-child ACK, no second permission",
       "scope": "Only specified task; no validation/deployment/policy changes",
@@ -2496,7 +2507,8 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "verification": "NOT_RUN"
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     }
   },
   "reserved_not_transferred": [
@@ -2543,7 +2555,7 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java": {
       "owner": "ANALYTICS_THIRD/AN01",
       "worker": "/root/stat",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
@@ -2551,14 +2563,15 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "add1534cd63c6ffd95467795126246c8d3581594",
-      "verification": "VPS_ORDINARY_CLASS_12_PASS",
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
       "verification_candidate": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f"
+      "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java": {
       "owner": "ANALYTICS_THIRD/AN02",
       "worker": "/root/grow",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "scope": "Necessary own fixture/new regression source only, preserve old assertions, NOT_RUN",
       "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
@@ -2566,9 +2579,10 @@
       "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
       "source_branch": "codex/mini-forward-source-20261015",
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "verification": "VPS_ORDINARY_CLASS_12_PASS",
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
       "verification_candidate": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-      "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f"
+      "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java": {
       "owner": "ANALYTICS_THIRD/AN01",
@@ -2590,17 +2604,33 @@
       "host_id": "durable",
       "source_branch": "codex/mini-forward-source-20261015",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "state": "FROZEN_SOURCE_DELIVERED_UNVERIFIED",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
       "authority": "Original PR70 TASKS new_regression_file, explicitly reconfirmed by local total coordinator; C00 prior pending-approval annotation withdrawn",
-      "verification": "NOT_RUN",
-      "scope": "Only this exact regression path, original named child sole writer; no validation/DDL/auth changes"
+      "verification": "NEW_CANDIDATE_NOT_RUN_OLD24_PASS_ONLY_AT2babbe",
+      "scope": "Only this exact regression path, original named child sole writer; no validation/DDL/auth changes",
+      "latest_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicLikeExplicitCancelConcurrencyTest.java": {
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
-      "state": "ASSIGNED_SOURCE_ONLY_E01_19",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "verification": "NOT_RUN",
+      "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "external_e02 original author",
+      "state": "AUTHORIZED_PENDING_OWNER_ACK",
+      "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "external_e02 original author",
+      "state": "AUTHORIZED_PENDING_OWNER_ACK",
+      "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "verification": "NOT_RUN"
     }
   },
@@ -2653,13 +2683,13 @@
     "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
     "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
     "running_count_basis": "Latest PR72 QUEUE and CLAIMS read back: both original writers frozen; earlier 2-child startup ACK is historical",
-    "verification": "ORDINARY_24_PASS_MYSQL_11_NOT_RUN",
+    "verification": "NEW_STAT02_GROW02_NOT_RUN",
     "state": "SOURCE_DELIVERED_UNVERIFIED",
     "active_source_writers": 0,
     "ready_source_items": 0,
     "scope_state": "EXHAUSTED",
-    "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-    "delivery_head_sha": "7bf99128e0f136f7bc3d13b25f62e4099a073078",
+    "source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "delivery_head_sha": "e80caf3958e9e0a636260b9b7a2dc905187bf673",
     "delivery_pr": 72,
     "delivery_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/7bf99128e0f136f7bc3d13b25f62e4099a073078/docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
     "initial_existing_file_count": 6,
@@ -2915,7 +2945,7 @@
     "owner": "CORE/C03",
     "worker": "/root/topic_like_cancel_sol",
     "model": "gpt-6.1-sol",
-    "state": "ASSIGNED_SOURCE_ONLY",
+    "state": "SOURCE_DELIVERED_UNVERIFIED",
     "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
     "worktree": "/workspace/hengyin-topic-like-20261015",
     "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
@@ -2927,8 +2957,66 @@
     "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
     "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
     "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
-    "verification": "NOT_RUN; source/test writing only, local verifier owns all runtime",
+    "verification": "NOT_RUN",
     "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
-    "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery"
+    "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery",
+    "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "public_branch": "codex/mini-longrun-core-20261015",
+    "pr": 44,
+    "writer_status": "STOPPED_AFTER_DELIVERY",
+    "actual_source_writers": 0,
+    "production_delta": "Only rows>0 || (!legacyToggle && rows==0) in topicLike deletion result",
+    "validation": {
+      "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "status": "NOT_RUN",
+      "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "classes": [
+        {
+          "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+          "source_declarations": 5,
+          "new": true
+        },
+        {
+          "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+          "source_declarations": 5,
+          "new": false
+        }
+      ],
+      "source_declared_total": 10,
+      "actual_executed_tests": null,
+      "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+      "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+      "new_database_acceptance": "NOT_RUN",
+      "runtime_HTTP": "NOT_RUN",
+      "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+      "Cloud_execution": false
+    }
+  },
+  "e02_25_grant": {
+    "id": "E02-25",
+    "title": "评论创建重复键恢复按当前读取赢家",
+    "owner": "EXTRA6/E02",
+    "original_worker": "external_e02",
+    "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+    "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
+    "source_paths": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+      "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+    ],
+    "test_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+    ],
+    "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
+    "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+    "source_limit": "Only DuplicateKey catch replay uses new exact author/request current read. Initial read stays ordinary; new XML same projection/WHERE with FOR UPDATE/useCache=false/flushCache=true. Preserve E02-24 post/body/normalized-parent identity. No isolation-level/config/auth/DDL/other interface edits.",
+    "basis": "Existing default transaction can inherit legal MySQL RR; plain read before competing committed insert establishes snapshot, catch ordinary read cannot see winner. Actual VPS isolation not observed/assumed.",
+    "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
+    "verification": "SOURCE_ONLY_NOT_RUN",
+    "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
+    "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
   }
 }
