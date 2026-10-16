@@ -49,7 +49,7 @@ module.exports = [
   { file: 'pages/merchant/coop-center/index.js', count: 2, reason: '合作中心营销聚合与官方活动两路各自渲染错误或空态，不伪装成空列表（2026-09-15 对账：邀约并入 coop/list 收件箱后 callsite 只剩 2，原登记 4 未跟上）。' },
   { file: 'pages/merchant/customer/detail/index.js', count: 6, reason: '客户详情读取失败落整页错误态，备注与标签写操作落表单错误或明确 toast。' },
   { file: 'pages/merchant/customer/index.js', count: 8, reason: '客户、分群与导出失败均由页内错误或操作提示承接；联系号码失败使用失败半屏，避免双重提示。' },
-  { file: 'pages/merchant/decor/index.js', count: 2, reason: '装饰页精选活动用 featuredError；支付状态核验由四终态工作流显示 unknown/failed，不重复弹底层 toast。' },
+  { file: 'pages/merchant/decor/index.js', count: 3, reason: '装饰页精选活动用 featuredError；支付状态核验由四终态工作流显示 unknown/failed，不重复弹底层 toast；BL-108 已生效权益读取失败就不展示，不弹 toast。' },
   { file: 'pages/merchant/ledger/index.js', count: 1, reason: '商家身份回读失败会退到页面 error=true/loading=false 错误态，而非留在无反馈的加载态。' },
   { file: 'pages/merchant/marketing/index.js', count: 2, reason: '两条静默:access/me 身份真源失败与 marketing-home 聚合失败，都落 funnelError 并由首屏错误态渲染、保留重试入口，不伪装成空态。merchant/info 那条随该请求一并退役。' },
   { file: 'pages/merchant/predict/index.js', count: 3, reason: '竞猜待答:身份与待办列表失败落整页 cy-error 或无权限空态；结算失败由本页 toast 精确文案并留在原地可再试。通用 toast 会双弹。' },
