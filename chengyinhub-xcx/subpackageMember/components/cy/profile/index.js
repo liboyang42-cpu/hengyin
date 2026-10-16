@@ -750,7 +750,7 @@ Component({
         return;
       }
       that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
-      cyToast.success(favorited ? '已收藏据点' : '已取消收藏');
+      cyToast(favorited ? '已收藏据点' : '已取消收藏');
     };
     this.setData({ merchantNodeBusy: true });
     app.sendRequest({

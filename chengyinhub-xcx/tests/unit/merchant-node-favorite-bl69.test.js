@@ -105,6 +105,7 @@ test('切换收藏:以返回值回读;失败如实提示且不改收藏态', () 
   req.success({ code: 200, data: { favorited: true } })
   assert.equal(c.data.merchantNode.favorited, true)
   assert.equal(c.data.merchantNodeBusy, false)
+  assert.ok(!toasts.some((t) => t.icon === 'success'), 'BL-162: 按钮变「已收藏据点」即是结果,不再用成功 toast(棘轮上限 101)')
 
   c.toggleMerchantNodeFavorite()
   requests.pop().success({ code: 500, msg: '请先登录' })
