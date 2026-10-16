@@ -9,6 +9,12 @@ CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / d
 
 用户当前有效决定：**“保持现有入口，不新增”**。新增隔离MySQL/Redis集成入口方案已关闭，不再等待或请求相同方案批准；212/CI保持原状，现有自动CI自然运行、不手动重复触发。无适用现有入口的真实存储项继续NOT_RUN/现有入口覆盖缺口；普通回归仅新真实源码或未解失败交本地按现有212执行。本次仅更新约束，没有新增开发或补跑任务。此决定覆盖下文历史回执中的“新入口待批准”状态。
 
+## 本轮指定packet推进与下一步
+
+原E02已完成E02-12生产输入链核查，原E01已完成E01-13逐状态/阶段核查；实际曾运行2名事实核查worker，现两人完成、源码写者0。正常POI仅0/1，历史NULL可达证据与语义仍缺；WAITING不扣库存/不生成订单，票售卖字段迁移明文只存读不拦购票，不能新增准入政策。详细事实锚点及四项具体接续维护在QUEUE/CLAIMS.latest_focused_packet_round和pending_concrete_contract_inputs，不新增bug/测试数量或重复29fe64回归。
+
+下一步交C00/原owner：E02-12提供历史NULL来源和既有语义；E01-13提供WAITING对下架、结束、主题售卖窗、signupDeadline与存量保留的分别既有规则；E02-23冻结后迁移发布的权威对象映射及更新/审核/删除责任；E04-07冻结原historyId原子回执和旧无身份日志行为。已有消费者锁不重复申领；真实缺陷且既定合同明确后，精确登记原作者最小修复，不等待本地测试签收才推进独立项。
+
 ## 持久调度协议：1修复+5开发
 
 用户最新规则：“他们继续做 做完push就好 你来验证后端 然后有问题告诉他们后让他们其中一条线修复 其他5条线继续往下做”。
@@ -323,3 +329,13 @@ E01-19已由CORE/C03交e0e3f517并据C00签普通10PASS，转记他队解决不�
 ## 新入口方案已关闭：仅保留现有入口
 
 授权本地协调者转达用户明确决定“保持现有入口，不新增”，已作为当前有效约束写入QUEUE/CLAIMS.storage_entry_policy。新增隔离MySQL/Redis集成入口不再待批，也不再催同一方案；既有212与CI不改，自动CI自然运行，不手动重触发。现有入口覆盖不到的E02_25MySqlIT2及其他真实MySQL/Redis项保持NOT_RUN/现有入口覆盖缺口，不能称通过。29fe普通64实际PASS及未验层级、旧失败历史保持。没有新增开发、补跑或修复任务，原作者/文件锁保留；本队只维护自有交付，C00负责全局与跨端索引。
+
+## 指定两packet事实结论及四项精确合同交接
+
+本轮按本地转达的用户要求实际恢复原external_e02和external_e01。E02-12补核ApiMerchantNodeController:416缺失/非1归0，:432走setOwnedNodeStatus，Service:175-188拒null/非0/1；申请insert固定0、认领先验1、审批投放固定1、资料更新不写status，管理online/offline固定1/0。DDL migration_roam.sql:49允许NULL，但未找到合法生产NULL写入口，不构造人工NULL称已复现。既有选项COALESCE与保存status1在0/1输入一致；历史NULL来源与合同仍缺，原mapper停写。
+
+E01-13核join的ACTIVE scope/会员/库存恰0/去重后仅WAITING；活动publish变更不关闭ACTIVE occurrence，故下架仍登记路径存在，但没有禁止预登记的明文合同。migration_oms_ticket_sale_fields_20260918.sql:8-12明确票sale字段仅存读、不拦购票，报名/有效hold/OFFERED合同不同，不能复制整个报名可售链。E01-18当前hold保护已有，不重报。需C00依已有裁决逐类给出WAITING新增资格及存量处理，最小修复应隔离join，不影响cancel/expire库存归还。
+
+E02-23缺后迁移旧发布的权威新post映射及legacy新源责任；数值相等或客户端可写legacy-square字符串不足证明来源，不能擅自双写/DDL。E04-07缺确切原historyId与topic/member的原子发放回执及旧未知身份处理；grantCouponWithReceipt已有可复用实际ID，但当前completionproducer仍boolean且日志无ID，不能靠同模板时间/MAX或换未用券猜原奖励。C00当前EXISTING_BLOCKERS_REFRESH与实际producer/legacy链已再核，明细见pending_concrete_contract_inputs；这两项是既有缺口、不新增bug数，不重复索已授consumer写权。
+
+全部本轮源码/测试/依赖/CI/运行验证零变化、NOT_RUN；两名原worker已完成事实核查、锁保留。公开应用仍29fe9236，其普通64已验事实与真MySQL2未验边界保持。待原owner合同明确即可精确领取并最小源码交付，不以“无READY”代替上述具体下一步。

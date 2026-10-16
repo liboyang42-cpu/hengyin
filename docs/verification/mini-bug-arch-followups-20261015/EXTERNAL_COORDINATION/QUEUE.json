@@ -1757,7 +1757,27 @@
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
       "public_sha": "6d9e6b1565137d66f81b91cdc5fa2e739b64166b",
-      "regression_methods_written": 0
+      "regression_methods_written": 0,
+      "focused_recheck": {
+        "worker": "/root/external_e02",
+        "branch": "codex/extra-e02-regression-20261015",
+        "base_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+        "status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_NO_REACHABLE_NULL_INPUT_CONFIRMED",
+        "fact": "Options COALESCE(status,1)=1 vs snapshot status=1; normal allowed 0/1 inputs agree. DDL permits NULL but application writing path not found producing NULL.",
+        "anchors": {
+          "mapper": "CommunityPostMapper.xml:337-340,368-370",
+          "ddl": "chengyinhub-admin/sql/migration_roam.sql:49",
+          "normalization": "ApiMerchantNodeController:416,432; RoamPoiApplicationServiceImpl:175-188",
+          "writer": "RoamMapper.xml:514-520,548-553,591-597,610-624",
+          "admin": "RoamPoiAdminController:65,68,74"
+        },
+        "missing": [
+          "Actual historicalNULL producing entry or data evidence; default1 alone does not excludeNULL",
+          "Existing contract for historicalNULL as online vs unknown/offline"
+        ],
+        "next": "Original owner/C00 provides existingNULL contract and evidence; only then register exact option-vs-snapshot hunk, no silent permission expansion or narrowing",
+        "regression_methods_added": 0
+      }
     },
     {
       "id": "E03-09",
@@ -2052,7 +2072,30 @@
       "public_sha": "f6c88c675e198ae557076b0874b1ef131850485b",
       "writer_mode": "SOURCE_OWNER",
       "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits"
+      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "focused_recheck": {
+        "worker": "/root/external_e01",
+        "branch": "codex/extra-e01-regression-20261015",
+        "base_sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+        "status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_WAITING_POLICY_UNSPECIFIED",
+        "fact": "Join insertsWAITING withouthold/order; ACTIVE scope, membership, inventory0 and uniqueness checked. Activitypublish changes can leave occurrenceACTIVE, but WAITING ban is not documented.",
+        "anchors": {
+          "join": "ClubWaitlistServiceImpl.java:63-77,481-509",
+          "scope": "ClubEventOpsMapper.xml:228-248",
+          "real_caller": "ApiClubEventOpsController.java:138-144",
+          "publish": "ApiActivityController.java:690-691",
+          "registration": "CmsRegistrationServiceImpl.java:1203-1223,1640-1655,1855-1861",
+          "sale_field_limit": "chengyinhub-admin/sql/migration_oms_ticket_sale_fields_20260918.sql:8-12"
+        },
+        "explicit_counterevidence": "Ticket sale_start_time/sale_end_time currently store/display only, must not gate purchase pending product decision; do not make them new WAITING eligibility.",
+        "missing": [
+          "Existing WAITING rule for temporaryunpublish vs finalactivityend",
+          "Existing WAITING rule for topicnotstarted/saleended vs ticketsignupDeadline",
+          "Existing WAITING retention/cancel/termination rule when those statuses change"
+        ],
+        "next": "C00 original owner supplies established per-stateWAITING contract. If defined, isolate newjoin check from sharedcancel/expire/release paths; preserve E01-18 OFFERED guard without duplicatefix",
+        "regression_methods_added": 0
+      }
     },
     {
       "id": "E02-13",
@@ -3774,7 +3817,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 16,
+  "queue_revision": 17,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3844,7 +3887,7 @@
     "claimed": 0,
     "actionable_or_inflight": 0
   },
-  "control_latest_read_sha": "9ee26595044bba61b4f033966cae653e8658be9b",
+  "control_latest_read_sha": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3891,7 +3934,7 @@
     }
   ],
   "refill_shortfall": 50,
-  "refill_status": "EXHAUSTED: no concrete authorized READY item; request caller-backed independent scope via C00, never invent bugs or repeat delivered work to fill50",
+  "refill_status": "Specific rechecks E02-12/E01-13 completed; four precise contract inputs routed to C00/local. No confirmed new bug/code from this round; do not invent rules, generic audits or50ready.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
     "E02": "E02-25 source delivered; exact29fe local3 ordinary classes64 actualPASS publicly signed; trueMySQL2 remains NOT_RUN, actualRR race not accepted. No failure or independentREADY.",
@@ -3908,9 +3951,10 @@
   },
   "scope_prepared_patch_notice": "Historical exact recovery patches now marked APPLIED_AND_PUBLIC. Candidate contains actual source/tests; do not reapply snapshots.",
   "next_priority": [
-    "Process actual local failure on only one original-writer repair lane; independent authorized tasks continue",
-    "C00 original owners resolve E02-23 identity bridge and E04-07 original history contract, or grant concrete caller-backed independent scope",
-    "Do not repeat E01-19 solved by CORE or E03-17; no generic filler audit; real-storage/HTTP verification stays local"
+    "C00 existing POI historicalNULL contract/evidence for E02-12",
+    "C00 original WAITING per-state eligibility/retention evidence for E01-13, no ticket sale-field gate",
+    "C00 original legacy identity bridge contract E02-23; original completionhistory receipt/legacy contract E04-07",
+    "Any genuine new localfailure only originalauthor single repairline; other exact independently grantedsource continues"
   ],
   "validation_policy": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results; No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
   "rolling_dispatch_policy": {
@@ -4862,5 +4906,96 @@
     "existing_ci": "UNCHANGED; automatic existing CI may run naturally, no manual duplicate triggering",
     "uncovered_true_mysql_redis": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; preserve unvalidated layers, not passed",
     "new_development_or_test_run_requested": false
+  },
+  "latest_focused_packet_round": {
+    "trigger": "Local coordinator new user instruction: continue concrete unfinished packets, facts first, no new policy; exact caller review E02-12 then E01-13",
+    "control_read_sha": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
+    "source_candidate_unchanged": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "initial_actual_workers": 2,
+    "final_actual_workers": 0,
+    "new_source_writers": 0,
+    "source_or_tests_changed": false,
+    "validation_run": false,
+    "E02-12": {
+      "worker": "/root/external_e02",
+      "branch": "codex/extra-e02-regression-20261015",
+      "base_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+      "status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_NO_REACHABLE_NULL_INPUT_CONFIRMED",
+      "fact": "Options COALESCE(status,1)=1 vs snapshot status=1; normal allowed 0/1 inputs agree. DDL permits NULL but application writing path not found producing NULL.",
+      "anchors": {
+        "mapper": "CommunityPostMapper.xml:337-340,368-370",
+        "ddl": "chengyinhub-admin/sql/migration_roam.sql:49",
+        "normalization": "ApiMerchantNodeController:416,432; RoamPoiApplicationServiceImpl:175-188",
+        "writer": "RoamMapper.xml:514-520,548-553,591-597,610-624",
+        "admin": "RoamPoiAdminController:65,68,74"
+      },
+      "missing": [
+        "Actual historicalNULL producing entry or data evidence; default1 alone does not excludeNULL",
+        "Existing contract for historicalNULL as online vs unknown/offline"
+      ],
+      "next": "Original owner/C00 provides existingNULL contract and evidence; only then register exact option-vs-snapshot hunk, no silent permission expansion or narrowing",
+      "regression_methods_added": 0
+    },
+    "E01-13": {
+      "worker": "/root/external_e01",
+      "branch": "codex/extra-e01-regression-20261015",
+      "base_sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+      "status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_WAITING_POLICY_UNSPECIFIED",
+      "fact": "Join insertsWAITING withouthold/order; ACTIVE scope, membership, inventory0 and uniqueness checked. Activitypublish changes can leave occurrenceACTIVE, but WAITING ban is not documented.",
+      "anchors": {
+        "join": "ClubWaitlistServiceImpl.java:63-77,481-509",
+        "scope": "ClubEventOpsMapper.xml:228-248",
+        "real_caller": "ApiClubEventOpsController.java:138-144",
+        "publish": "ApiActivityController.java:690-691",
+        "registration": "CmsRegistrationServiceImpl.java:1203-1223,1640-1655,1855-1861",
+        "sale_field_limit": "chengyinhub-admin/sql/migration_oms_ticket_sale_fields_20260918.sql:8-12"
+      },
+      "explicit_counterevidence": "Ticket sale_start_time/sale_end_time currently store/display only, must not gate purchase pending product decision; do not make them new WAITING eligibility.",
+      "missing": [
+        "Existing WAITING rule for temporaryunpublish vs finalactivityend",
+        "Existing WAITING rule for topicnotstarted/saleended vs ticketsignupDeadline",
+        "Existing WAITING retention/cancel/termination rule when those statuses change"
+      ],
+      "next": "C00 original owner supplies established per-stateWAITING contract. If defined, isolate newjoin check from sharedcancel/expire/release paths; preserve E01-18 OFFERED guard without duplicatefix",
+      "regression_methods_added": 0
+    }
+  },
+  "pending_concrete_contract_inputs": {
+    "E02-23": {
+      "status": "BLOCKED_CONTRACT",
+      "evidence": "C00 EXISTING_BLOCKERS_REFRESH.json square plus current legacy publisher/bookmark source read",
+      "real_caller": "ApiCreativeSquareController.action writeslegacy; bookmark treats suppliedlegacyid as communitypostid; ViewCreativeSquare list/state uses same numerical equality",
+      "required_contracts": [
+        "Authoritative legacy-to-community identity for publications after one-time offline migration; equalnumericid/client-suppliedlegacy-square string not proof",
+        "Existing source-of-truth and update/audit/delete responsibilities: legacycutover vs approvedbridge/projection, no assumeddualwrite",
+        "Legacy missingmapping/collision behavior and protected historical provenance including author consistency"
+      ],
+      "owner_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
+      ],
+      "next": "C00 routes original legacy writer to freeze precise identity/compatibility contract and exact source scope; EXTRA does not seize old source or createDDL/UI",
+      "not_new_bug": true
+    },
+    "E04-07": {
+      "status": "BLOCKED_CONTRACT",
+      "consumer_ownership_already_granted": true,
+      "real_caller": "Registration redemptionreverse clawbackRewards -> PerkLedger -> RedemptionRewardClawbackService.voidCompletionCoupon; do not enlarge refundpolicy",
+      "facts": "Completion log stores topic/member/coupon/time but no originalhistoryid; boolean grantCouponById discards id. timewindow/MAXhistory can select later validCRM/nodegrant.",
+      "reusable_primitive": "Existing ISmsCouponHistoryService.grantCouponWithReceipt returns actualhistoryid transactionally; reward_drop source helper is not a completion identity contract",
+      "required_contracts": [
+        "How exact newlygranted historyid joins topic/member completionreceipt atomically while preserving uniqueonce/recompletion",
+        "Established behavior for old logs whose originalhistory identity is missing: cannot infer by DESC/ASC/window or pick unused substitute",
+        "Preserve originalUSED audit-only behavior and unrelatedcoupon nonmutation; define originalunknown boundary before consumer implementation"
+      ],
+      "producer_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml"
+      ],
+      "next": "C00/original producer freezes receipt and legacy contract then grants exact producer/fixture/schema-source scope if necessary; no repeated consumerpermission request or inferredhistory repair",
+      "not_new_bug": true
+    }
   }
 }
