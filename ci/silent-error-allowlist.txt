@@ -199,3 +199,4 @@ chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.js 1  # BL-79:改名
 chengyinhub-xcx/pages/activity/official-mine/index.js 1  # BL-80:通知复盘读取失败如实写在该卡触达行并可再点重试;关全局 toast 避免双弹。
 chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js 3  # 2026-10-15 BL-89 安全感受评价半屏:选项读取/商家 ID 换取/提交失败均落半屏内 cy-inline-error(含后端资格报错原文)，保留输入可重试，关闭全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/crm-campaigns/index.js 3  # BL-100:access/me、触达列表读取失败落页内 cy-error,回执读取失败落半屏 cy-inline-error(均带重新加载);关全局 toast 避免双弹。
+chengyinhub-xcx/pages/coop/invite-detail/index.js 1  # BL-103:对方近 90 天履约摘要(POST /api/coop/credit)是附属只读信息,读不到或样本为 0 就不展示该行,不挡详情页,也不弹 toast
