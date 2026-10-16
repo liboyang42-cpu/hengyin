@@ -104,10 +104,11 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     public List<PlayerBadge> onNodeDone(Long memberId)
     {
         PlayerGrowth g = ensureGrowth(memberId);
+        Date checkinTime = currentCheckinTime();
         int checkins = nz(g.getTotalCheckins()) + 1;
 
         // 连续打卡
-        LocalDate today = LocalDate.now();
+        LocalDate today = toLocalDate(checkinTime);
         LocalDate last = toLocalDate(g.getLastCheckinDate());
         int streak;
         if (last == null) streak = 1;
@@ -119,9 +120,9 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         changes.setMemberId(memberId);
         changes.setTotalCheckins(checkins);
         changes.setStreakDays(streak);
-        changes.setLastCheckinDate(new Date());
+        changes.setLastCheckinDate(checkinTime);
         changes.setLevel(levelFor(checkins));
-        changes.setUpdateTime(new Date());
+        changes.setUpdateTime(checkinTime);
         playerGrowthMapper.updatePlayerGrowth(changes);
 
         List<PlayerBadge> newly = new ArrayList<>();
@@ -230,6 +231,9 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         }
         return sum;
     }
+
+    /** 锁读后采样一次,使连续天数与持久化打卡日期在跨午夜时仍取同一时点。 */
+    protected Date currentCheckinTime() { return new Date(); }
 
     private int levelFor(int checkins) { return checkins / 5 + 1; }
 
