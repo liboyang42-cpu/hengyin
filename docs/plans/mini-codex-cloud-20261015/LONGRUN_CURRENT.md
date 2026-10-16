@@ -1,3 +1,9 @@
+## 当前有效约束：保持现有入口，不新增
+
+用户最新明确决定：**“保持现有入口，不新增”**。新增隔离MySQL/Redis集成入口方案已关闭，不再处于等待批准状态，也不再催批同一方案。现有VPS212和CI配置保持原样；现有自动CI自然运行，不手动触发或重复重跑。普通回归只在新真实源码候选或未解失败时由本地按现有212验证，已通过且未变的候选不补跑。
+
+现有入口未覆盖的真实MySQL/Redis项继续为 **NOT_RUN／现有入口覆盖缺口**，包括E02_25MySqlIT2、第三Growth真MySQL11等；不改称通过，不以普通/mock/skip结果代替。已有精确SHA的PASS和失败/锁拒绝历史均保留；真实HTTP/设备业务/集成合并部署仍未验收。此为约束更新，无新增开发或补跑任务。详见[持久决定](VALIDATION_ENTRY_DECISION.json)。C00只维护全局账，各队只维护自有交付账。
+
 # 当前恢复入口
 
 ## 已完成的新源码交付
@@ -10,9 +16,9 @@ E01-19（EXTRA旧packet，不另造bugID）已由正式移交的CORE/C03 writer�
 
 最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA最新29fe9236（E02-25 RR当前读，普通64实际PASS；旧faef普通60PASS保留）、第三bde356f3（STAT02年份/GROW02午夜时点，普通28实际PASS）；前批CORE/旧EXTRAfaef/第三已获各自普通PASS，EXTRA新29fe普通64已实际PASS，真库2未验，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
 
-E02-25已由原EXTRA/E02交新冻结源码`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`，原作者已停写/锁保留、writer0。C00核精确7路径符合原授权，见[E02_25_SOURCE_DELIVERY](E02_25_SOURCE_DELIVERY.json)。本地已按212执行普通3类64实际PASS/F0/E0/S0，fresh精确3XML、guard0及精确清理已核公开证据；真MySQL RR2仍NOT_RUN/批准入口缺失。旧faef60PASS不得继承；docs e9b9e191仅3账本文档，不是新生产修复。
+E02-25已由原EXTRA/E02交新冻结源码`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`，原作者已停写/锁保留、writer0。C00核精确7路径符合原授权，见[E02_25_SOURCE_DELIVERY](E02_25_SOURCE_DELIVERY.json)。本地已按212执行普通3类64实际PASS/F0/E0/S0，fresh精确3XML、guard0及精确清理已核公开证据；真MySQL RR2仍NOT_RUN/现有入口覆盖缺口。旧faef60PASS不得继承；docs e9b9e191仅3账本文档，不是新生产修复。
 
-本地要求的真库/Redis现有入口映射已在[REAL_STORAGE_ENTRY_MAP](REAL_STORAGE_ENTRY_MAP.md)：固定CI名单只覆盖明确列类；其余缺批准真存储入口，212不能替代。Cloud不运行/改CI/增网例外。本地另已发布[入口缺口与候选清单](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)，独立真库入口仍待用户对该具体资源方案答复，未自行创建。
+本地要求的真库/Redis现有入口映射已在[REAL_STORAGE_ENTRY_MAP](REAL_STORAGE_ENTRY_MAP.md)：固定CI名单只覆盖明确列类；其余属现有真存储入口覆盖缺口，212不能替代；不新增入口。Cloud不运行/改CI/增网例外。本地另已发布[入口缺口与候选清单](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)，用户已明确“保持现有入口，不新增”：新方案关闭、无需等待批准，不再催批。现有入口未覆盖的项继续NOT_RUN，212/CI不改。
 
 ## 三队普通定向及新29fe普通64已结束／真库仍待验
 

@@ -1287,7 +1287,7 @@
       "funds": ".github/workflows/funds-mysql-it.yml -> bash ci/funds-mysql-it-gate.sh: fixed -Dtest list, exports FUNDS=1, scratch Oracle MySQL8.0.45 and CHENGYIN_TEST_MYSQL_HOST/PORT/USER/PASSWORD/DATABASE_SUFFIX; list includes ClubWaitlistToken/CouponLifecycle/RoamShare; does not include longrun E*, B03/B04/B05/A03, or PlayerGrowth. Changing selector/gates is outside scope.",
       "backend": ".github/workflows/ci.yml -> bash ci/backend-test.sh: real MySQL8.0.45; CHENGYIN_MYBATIS_IT_USER/PASSWORD/PORT injected; fixed MYBATIS_ITS includes JourneyFullFlowMySqlIT and assert_it_ran skipped=0. Ordinary mvn test discovers *Test but gates unset skip gated suites.",
       "A03": "No matching existing fixed CI entry. ENDING_MYSQL_IT=1 and explicit MYBATIS_IT_HOST=127.0.0.1, PORT, USER, PASSWORD (empty allowed), DB_SUFFIX matching _[a-z0-9_]{1,24}; MySQL8.0 specifically; collision-refusing CREATE, owned DROP/readback; no fallback gate.",
-      "local": "Existing VPS212 network none entry cannot access real external MySQL/Redis. Missing an approved external-storage local entry is explicit, not permission to add network or start services. Local coordinator must supply approved execution entry separately."
+      "local": "Existing212 network none cannot access true storage. User closed new entry proposal; no new resource/network path or repeated approval request; preserve uncoveredNOT_RUN."
     },
     "environment_notes": [
       "For real DB use dedicated authorized scratch MySQL only, never production host/schema/account; supply CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD explicitly. Empty explicit PASSWORD may be allowed; other required fields nonempty. Enable only the intended class gate listed in entries.",
@@ -1310,6 +1310,17 @@
       "basis": "Root exact GitHub comparisons: these real-storage test files unchanged, while production changed; map source requirements only and inherit no outcomes"
     }
   },
-  "future_e02_25": "New planned MySqlIT only authorized test source, not delivered infaef. Do not enqueue until exact sourceSHA published.",
-  "authorization": "Existing CI selector membership is scope evidence only, no manual CI trigger or selector change. VPS212 offline network none not real storage entry. Local approved true-storage resource channel remains missing. No Cloud test/DB/network exception."
+  "future_e02_25": "Delivered source29fe9236ede15a8f1bbd3aaf2b93e3fc25409726: E02_25MySqlIT2, gateCHENGYIN_E02_25_MYSQL_IT=1 and sixexplicit scratchbindings. RealRR NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; ordinary64 separatelyPASS. No new entry permitted.",
+  "authorization": "User decided existing entries only; new isolated MySQL/Redis entry proposal CLOSED. Preserve212/CI configuration, natural automaticCI only, no manual repeat trigger. Uncovered real storage staysNOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; do not reask same proposal. Gate/selector listings are prerequisites, not run evidence or permission.",
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  }
 }

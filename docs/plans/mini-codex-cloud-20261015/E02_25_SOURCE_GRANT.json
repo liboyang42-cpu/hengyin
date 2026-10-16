@@ -50,7 +50,7 @@
     "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "ordinary_status": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
     "ordinary_source_declarations": 64,
-    "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "mysql_source_declarations": 2,
     "actual_source_writers": 0,
     "no_inherited_results": true,
@@ -60,7 +60,7 @@
   "ordinary_validation": "64_ACTUAL_PASS_0FAILURE_ERROR_SKIP",
   "ordinary_evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
   "ordinary_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
-  "true_mysql": "NOT_RUN_APPROVED_ENTRY_MISSING",
+  "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
   "latest_extra_e02_25_validation": {
     "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "result": "ORDINARY_TARGETED_PASS",
@@ -74,7 +74,18 @@
     "cleanup_observed_absent": true,
     "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
     "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
-    "mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "no_rr_acceptance_claim": true
+  },
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
   }
 }

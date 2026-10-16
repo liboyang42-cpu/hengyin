@@ -810,5 +810,16 @@
       "later source SHAs"
     ],
     "cloud_manual_runs": 0
+  },
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
   }
 }

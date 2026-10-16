@@ -1,4 +1,4 @@
-> 当前唯一恢复状态见[LONGRUN_CURRENT](LONGRUN_CURRENT.md)：CORE新源码e0e3f517b8e6deb26ed3697a00d38ae14f015e76，E01-19已交、修后NOT_RUN；本地下一最小2类10声明。之前各候选通过仅覆盖原SHA，旧checkpoint已归档。源码作者停写、无真实READY不凑线；Cloud不验证，原6.1-sol/单写者/1修复规则继续。
+> 当前恢复状态见[LONGRUN_CURRENT](LONGRUN_CURRENT.md)，入口约束见[VALIDATION_ENTRY_DECISION](VALIDATION_ENTRY_DECISION.json)。只用现有入口，不新增；普通旧PASS不重跑，已有自动CI自然运行。源码/测试层级与原文件单写者规则保留。
 
 # Codex最终提示词
 
@@ -21,7 +21,7 @@
 
 任何后端变化由你汇总到BACKEND_CHANGES.md，记录BK编号、实现者、方法/路径/DTO/单位/错误/权限/分页/requestId/version差异、两端影响、兼容fixture、源码SHA/PR、测试、合并和部署状态。按DRAFT→CONTRACT_FROZEN→SOURCE_READY→TEST_DEPLOYED分层，客户端验收另列；即使不改API也写NO_API_CHANGE。合同未冻结不让客户端猜协议，未核测试部署不宣称可真实联调。没有自动消息总线，你需要主动读取交付记录，不能假定其他agent已收到通知。
 
-Cloud只编辑/交付源码和必要回归，全部手动编译/测试/Node/lint/CI触发均不执行；后端真实验证由本地唯一协调者按已授权VPS212/批准真库入口完成，已有自动CI自然运行。Cloud localhost不是Mac隧道。VPS不可达则继续独立源码工作并保留运行层待验，不回落生产或另起本地Java/数据库。不做本批DDL、新依赖、生产配置、部署/上传；鉴权、资金或产品政策改变先给可审阅方案。保留既有幂等、旧局快照和旧结局顺序，不用假成功或放宽门禁收口。
+Cloud只编辑/交付源码和必要回归，全部手动编译/测试/Node/lint/CI触发均不执行；后端真实验证由本地唯一协调者按用户决定保留的现有VPS212及适用现有入口完成，未覆盖真库项NOT_RUN，不新增入口、不催批已关闭方案，已有自动CI自然运行。Cloud localhost不是Mac隧道。VPS不可达则继续独立源码工作并保留运行层待验，不回落生产或另起本地Java/数据库。不做本批DDL、新依赖、生产配置、部署/上传；鉴权、资金或产品政策改变先给可审阅方案。保留既有幂等、旧局快照和旧结局顺序，不用假成功或放宽门禁收口。
 
 交付精确文件、复现或反证、相关测试实际输出、候选SHA和两端合同，分清源码、PR/CI、合并、部署、设备及业务验收。只对实际通过层级签收，继续推进已授权独立工作，不只返回计划。
 ```

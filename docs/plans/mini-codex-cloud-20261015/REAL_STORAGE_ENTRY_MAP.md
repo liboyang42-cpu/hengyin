@@ -1,3 +1,9 @@
+## 当前有效约束：保持现有入口，不新增
+
+用户最新明确决定：**“保持现有入口，不新增”**。新增隔离MySQL/Redis集成入口方案已关闭，不再处于等待批准状态，也不再催批同一方案。现有VPS212和CI配置保持原样；现有自动CI自然运行，不手动触发或重复重跑。普通回归只在新真实源码候选或未解失败时由本地按现有212验证，已通过且未变的候选不补跑。
+
+现有入口未覆盖的真实MySQL/Redis项继续为 **NOT_RUN／现有入口覆盖缺口**，包括E02_25MySqlIT2、第三Growth真MySQL11等；不改称通过，不以普通/mock/skip结果代替。已有精确SHA的PASS和失败/锁拒绝历史均保留；真实HTTP/设备业务/集成合并部署仍未验收。此为约束更新，无新增开发或补跑任务。详见[持久决定](VALIDATION_ENTRY_DECISION.json)。C00只维护全局账，各队只维护自有交付账。
+
 # 真MySQL/Redis待验类与现有入口
 
 此表只读核源码/固定CI清单，未执行测试、未改CI或网络。当前候选：CORE e0e3f517、EXTRA faefbaf8、第三bde356f3；完整SHA和逐类门禁/fixture/环境在[JSON](REAL_STORAGE_ENTRY_MAP.json)。旧PASS不继承。23个EXTRA旧deferred逐一核过实际MySQL setup；另两直接IT合并去重后25类。H2与mock Redis另列，不能算真库。
@@ -17,4 +23,4 @@
 
 六CHENGYIN_TEST_MYSQL_*：HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD（空密码允许的类仍需显式绑定key）。E04_13要求BASE=e04_scratch，E01_06还需PROCESS/innodb_trx锁等待观察；各类schema长度/预删除/仅删自有库边界见JSON。A03仅MySQL8.0；CORE C01 gate是真字符串true，不是1；AI Redis专用DB和loopback限制按源，不默认连任何地址。
 
-**当前缺口**：本地尚无可核批准的真存储资源入口（测试MySQL/Redis隔离服务/共享预算锁范围/可用scratch建删库身份绑定及清理责任）。212离线network none只能ordinary；现有GitHub-hosted固定selector只能证明已列类的既有路径，不能据此扩名单、手动触发CI或增网例外。未获合适入口的项保持NOT_RUN/BLOCKED_RESOURCE_CHANNEL；源码开发继续。新E02-25 MySqlIT尚属已授权待交源码，不在faef候选，不预先计入已交测试。
+**当前缺口**：现有入口覆盖不足；用户已决定不新增入口，新方案关闭，不再待批或重复催批。212离线network none只做普通回归；固定CI selector的存在不证明当前新SHA已运行，不手动触发/扩大名单或增网例外。未覆盖项保持NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP。E02-25已交29fe，新MySqlIT2仍未运行、普通64已另验通过。

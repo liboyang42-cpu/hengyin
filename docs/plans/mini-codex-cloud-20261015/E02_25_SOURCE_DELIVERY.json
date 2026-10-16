@@ -56,7 +56,7 @@
     "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
   },
   "mysql": {
-    "status": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
     "source_declarations": 2,
     "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
@@ -67,7 +67,8 @@
       "approved shared lock/resource/network entry;212 network none cannot execute"
     ],
     "mock_boundary": "External safety gateway only; actual mapper/service/transaction/unique conflict/current read/outbox/independent JDBC assertions in source, NOT_RUN",
-    "real_redis_required": false
+    "real_redis_required": false,
+    "entry_policy": "No new entry per user; preserve existing212/CI and do not request same closed proposal"
   },
   "not_accepted": [
     "real MySQL RR2",
@@ -78,5 +79,16 @@
   ],
   "cloud_manual_runs": 0,
   "repair_policy": "Only actual local failure resumes original E02 single repair writer; others continue real independent ready items; no invented task.",
-  "ordinary_layer_status": "64_ACTUAL_PASS_TRUE_MYSQL2_NOT_RUN"
+  "ordinary_layer_status": "64_ACTUAL_PASS_TRUE_MYSQL2_NOT_RUN",
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  }
 }

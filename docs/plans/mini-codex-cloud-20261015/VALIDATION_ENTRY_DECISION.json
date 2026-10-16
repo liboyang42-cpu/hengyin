@@ -1,0 +1,31 @@
+{
+  "id": "VALIDATION_ENTRY_DECISION_20261016",
+  "state": "EFFECTIVE_EXISTING_ENTRIES_ONLY",
+  "user_decision": "保持现有入口，不新增",
+  "decision_source": {
+    "reporting_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "basis": "Latest explicit user decision relayed in this chat; overrides prior pending-approval proposal"
+  },
+  "new_isolated_mysql_redis_entry_proposal": "CLOSED_BY_USER_DO_NOT_CREATE_OR_REASK",
+  "pending_new_entry_approval": false,
+  "existing_vps212": "KEEP_UNCHANGED",
+  "existing_ci_configuration": "KEEP_UNCHANGED",
+  "automatic_ci": "ALLOW_EXISTING_AUTOMATIC_RUNS_TO_FINISH_NATURALLY",
+  "manual_ci_trigger_or_repeat": "DO_NOT_TRIGGER_OR_REPEAT",
+  "ordinary_regression": "Local verifier uses existing approved212 only for a new real source candidate or unresolved failure; do not rerun already-passing unchanged candidates",
+  "uncovered_real_mysql_redis": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "existing_entry_membership_is_not_pass": true,
+  "no_manual_network_resource_exception": true,
+  "no_new_development_or_rerun_task": true,
+  "existing_pass_and_failure_history": "PRESERVE_EXACT_SHA_AND_LAYER",
+  "not_accepted": [
+    "uncovered real MySQL/Redis",
+    "runtime HTTP",
+    "device/business acceptance",
+    "candidate integration",
+    "merge/deployment/migrations"
+  ],
+  "global_editor": "C00 only",
+  "team_delivery_ledger_editors": "Original team coordinators only",
+  "next_action": "Record coverage gaps; continue only already-authorized concrete independent source work. No new validation setup and no repeated request for same closed proposal."
+}
