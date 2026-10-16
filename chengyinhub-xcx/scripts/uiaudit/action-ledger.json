@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4635,
+  "controlCount": 4639,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -48911,6 +48911,32 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
             }
           ]
         },
@@ -152774,6 +152800,19 @@
             {
               "selector": "cy-inline-error",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 2
             }
           ]
         },
@@ -970022,6 +970061,32 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 9
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "project-join",
               "index": 0
             },
@@ -970320,6 +970385,32 @@
             {
               "selector": "project-drawer",
               "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 9
             }
           ]
         },
@@ -970632,6 +970723,32 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-drawer",
+              "index": 9
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "project-join",
               "index": 0
             },
@@ -970823,7 +970940,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:100:bindtap:emit:5",
+      "id": "pages/topic/components/project-host/index.wxml:103:bindtap:emit:6",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -970858,7 +970975,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "emit",
-        "line": 100,
+        "line": 103,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -970899,11 +971016,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:107:bind:action:emitDrawerAction:7",
+      "id": "pages/topic/components/project-host/index.wxml:110:bind:action:emitDrawerAction:8",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -970938,7 +971055,7 @@
         "tag": "project-drawer",
         "event": "bind:action",
         "handler": "emitDrawerAction",
-        "line": 107,
+        "line": 110,
         "selectorHint": "project-drawer[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -970979,11 +971096,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:85"
+        "staticSource": "pages/topic/components/project-host/index.js:138"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:107:bind:close:emitCloseClub:6",
+      "id": "pages/topic/components/project-host/index.wxml:110:bind:close:emitCloseClub:7",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971018,7 +971135,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseClub",
-        "line": 107,
+        "line": 110,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971059,7 +971176,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:72"
+        "staticSource": "pages/topic/components/project-host/index.js:125"
       }
     },
     {
@@ -971139,11 +971256,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:122:catchtap:emit:8",
+      "id": "pages/topic/components/project-host/index.wxml:125:catchtap:emit:9",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971178,7 +971295,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 122,
+        "line": 125,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971219,11 +971336,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:137:bind:action:emitDrawerAction:10",
+      "id": "pages/topic/components/project-host/index.wxml:140:bind:action:emitDrawerAction:11",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971258,7 +971375,7 @@
         "tag": "project-drawer",
         "event": "bind:action",
         "handler": "emitDrawerAction",
-        "line": 137,
+        "line": 140,
         "selectorHint": "project-drawer[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971299,11 +971416,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:85"
+        "staticSource": "pages/topic/components/project-host/index.js:138"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:137:bind:close:emitCloseMerchant:9",
+      "id": "pages/topic/components/project-host/index.wxml:140:bind:close:emitCloseMerchant:10",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971338,7 +971455,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseMerchant",
-        "line": 137,
+        "line": 140,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971379,11 +971496,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:81"
+        "staticSource": "pages/topic/components/project-host/index.js:134"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:146:catchtap:emit:11",
+      "id": "pages/topic/components/project-host/index.wxml:149:catchtap:emit:12",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971418,7 +971535,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 146,
+        "line": 149,
         "selectorHint": ".review-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971459,11 +971576,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:165:catchtap:emit:12",
+      "id": "pages/topic/components/project-host/index.wxml:168:catchtap:emit:13",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971498,7 +971615,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 165,
+        "line": 168,
         "selectorHint": ".review-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971539,11 +971656,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:167:catchtap:emit:13",
+      "id": "pages/topic/components/project-host/index.wxml:170:catchtap:emit:14",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971578,7 +971695,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 167,
+        "line": 170,
         "selectorHint": ".review-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971619,11 +971736,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:187:catchtap:emit:14",
+      "id": "pages/topic/components/project-host/index.wxml:190:catchtap:emit:15",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971658,7 +971775,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 187,
+        "line": 190,
         "selectorHint": ".review-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971699,11 +971816,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:189:catchtap:emit:15",
+      "id": "pages/topic/components/project-host/index.wxml:192:catchtap:emit:16",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971738,7 +971855,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 189,
+        "line": 192,
         "selectorHint": ".review-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971779,11 +971896,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:211:catchtap:emit:16",
+      "id": "pages/topic/components/project-host/index.wxml:214:catchtap:emit:17",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971818,7 +971935,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 211,
+        "line": 214,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971859,11 +971976,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:224:catchtap:emit:17",
+      "id": "pages/topic/components/project-host/index.wxml:227:catchtap:emit:18",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971898,7 +972015,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 224,
+        "line": 227,
         "selectorHint": ".dn-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -971939,11 +972056,90 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:236:bind:close:emitCloseMore:18",
+      "id": "pages/topic/components/project-host/index.wxml:241:bind:action:emitCircleConfigSubmit:20",
+      "route": "component:pages/topic/components/project-host/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-host/index.wxml",
+        "js": "pages/topic/components/project-host/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "project-drawer",
+        "event": "bind:action",
+        "handler": "emitCircleConfigSubmit",
+        "line": 241,
+        "selectorHint": "project-drawer[bind:action]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-host/index.js:111"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-host/index.wxml:241:bind:close:emitCloseCircleConfig:19",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -971977,8 +972173,8 @@
       "control": {
         "tag": "project-drawer",
         "event": "bind:close",
-        "handler": "emitCloseMore",
-        "line": 236,
+        "handler": "emitCloseCircleConfig",
+        "line": 241,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972019,11 +972215,170 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:78"
+        "staticSource": "pages/topic/components/project-host/index.js:107"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:240:bind:action:emit:19",
+      "id": "pages/topic/components/project-host/index.wxml:245:catchtap:toggleCircleCandidate:21",
+      "route": "component:pages/topic/components/project-host/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-host/index.wxml",
+        "js": "pages/topic/components/project-host/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "toggleCircleCandidate",
+        "line": 245,
+        "selectorHint": ".dpick",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "checkbox",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{ item.picked }}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-host/index.js:92"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-host/index.wxml:261:bind:close:emitCloseMore:22",
+      "route": "component:pages/topic/components/project-host/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-host/index.wxml",
+        "js": "pages/topic/components/project-host/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "project-drawer",
+        "event": "bind:close",
+        "handler": "emitCloseMore",
+        "line": 261,
+        "selectorHint": "project-drawer[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-host/index.js:131"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-host/index.wxml:265:bind:action:emit:23",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972058,7 +972413,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "emit",
-        "line": 240,
+        "line": 265,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{ stationOpsErrorText }}",
         "disabledCondition": null,
@@ -972099,11 +972454,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:244:catchtap:emit:20",
+      "id": "pages/topic/components/project-host/index.wxml:269:catchtap:emit:24",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972138,7 +972493,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 244,
+        "line": 269,
         "selectorHint": ".dpick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972179,11 +972534,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:248:catchtap:noop:21",
+      "id": "pages/topic/components/project-host/index.wxml:273:catchtap:noop:25",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972218,7 +972573,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 248,
+        "line": 273,
         "selectorHint": "view[catchtap]",
         "visibleCondition": "{{ row.key === 'chapterOpen' && row.switchKnown }}",
         "disabledCondition": null,
@@ -972259,11 +972614,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:67"
+        "staticSource": "pages/topic/components/project-host/index.js:79"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:250:bind:change:emit:22",
+      "id": "pages/topic/components/project-host/index.wxml:275:bind:change:emit:26",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972298,7 +972653,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "emit",
-        "line": 250,
+        "line": 275,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{ row.disabled || row.busy }}",
@@ -972339,11 +972694,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:260:bind:action:emitDrawerAction:24",
+      "id": "pages/topic/components/project-host/index.wxml:285:bind:action:emitDrawerAction:28",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972378,7 +972733,7 @@
         "tag": "project-drawer",
         "event": "bind:action",
         "handler": "emitDrawerAction",
-        "line": 260,
+        "line": 285,
         "selectorHint": "project-drawer[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972419,11 +972774,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:85"
+        "staticSource": "pages/topic/components/project-host/index.js:138"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:260:bind:close:emitClosePlayer:23",
+      "id": "pages/topic/components/project-host/index.wxml:285:bind:close:emitClosePlayer:27",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972458,7 +972813,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitClosePlayer",
-        "line": 260,
+        "line": 285,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972499,11 +972854,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:75"
+        "staticSource": "pages/topic/components/project-host/index.js:128"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:264:bind:action:emit:25",
+      "id": "pages/topic/components/project-host/index.wxml:289:bind:action:emit:29",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972538,7 +972893,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "emit",
-        "line": 264,
+        "line": 289,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{ playerSheet.errorText }}",
         "disabledCondition": null,
@@ -972579,11 +972934,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:282:catchtap:emit:26",
+      "id": "pages/topic/components/project-host/index.wxml:307:catchtap:emit:30",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972618,7 +972973,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 282,
+        "line": 307,
         "selectorHint": ".dfil-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972659,11 +973014,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:298:catchtap:emit:27",
+      "id": "pages/topic/components/project-host/index.wxml:323:catchtap:emit:31",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -972698,7 +973053,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 298,
+        "line": 323,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -972739,7 +973094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
@@ -972819,7 +973174,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
@@ -972899,7 +973254,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
@@ -972979,11 +973334,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:93:bindtap:emit:4",
+      "id": "pages/topic/components/project-host/index.wxml:95:bindtap:emit:4",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -973018,7 +973373,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "emit",
-        "line": 93,
+        "line": 95,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -973059,7 +973414,87 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-host/index.js:68"
+        "staticSource": "pages/topic/components/project-host/index.js:121"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-host/index.wxml:96:bindtap:emit:5",
+      "route": "component:pages/topic/components/project-host/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-host/index.wxml",
+        "js": "pages/topic/components/project-host/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "emit",
+        "line": 96,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-host/index.js:121"
       }
     },
     {
@@ -982529,7 +982964,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:103:bind:act:onJoinAct:3",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:104:bind:act:onJoinAct:3",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982552,7 +982987,7 @@
         "tag": "project-join",
         "event": "bind:act",
         "handler": "onJoinAct",
-        "line": 103,
+        "line": 104,
         "selectorHint": "project-join[bind:act]",
         "visibleCondition": "{{ !fromMerchantJoin }}",
         "disabledCondition": null,
@@ -982593,11 +983028,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2661"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2712"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:109:bind:retry:retryBrowseData:4",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:110:bind:retry:retryBrowseData:4",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982620,7 +983055,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryBrowseData",
-        "line": 109,
+        "line": 110,
         "selectorHint": ".browse-error",
         "visibleCondition": "{{browseLoadError}}",
         "disabledCondition": null,
@@ -982724,11 +983159,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:404"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:406"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:112:binderror:onCoverError:5",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:113:binderror:onCoverError:5",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982751,7 +983186,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onCoverError",
-        "line": 112,
+        "line": 113,
         "selectorHint": "image[binderror]",
         "visibleCondition": "{{ info.imgUrl && !coverFailed }}",
         "disabledCondition": null,
@@ -982791,11 +983226,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:683"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:685"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:134:bindtap:scrollToSecond:6",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:135:bindtap:scrollToSecond:6",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982818,7 +983253,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "scrollToSecond",
-        "line": 134,
+        "line": 135,
         "selectorHint": ".jt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982859,11 +983294,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:691"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:693"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:142:binderror:onDetailCoverError:7",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:143:binderror:onDetailCoverError:7",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982886,7 +983321,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onDetailCoverError",
-        "line": 142,
+        "line": 143,
         "selectorHint": ".bgt",
         "visibleCondition": "{{img.first(info.imgArr) && !detailCoverFailed}}",
         "disabledCondition": null,
@@ -982926,7 +983361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:687"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:689"
       }
     },
     {
@@ -982996,7 +983431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:323"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:325"
       }
     },
     {
@@ -983066,11 +983501,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:323"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:325"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:182:bind:change:switchBrowseTab:8",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:183:bind:change:switchBrowseTab:8",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983093,7 +983528,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchBrowseTab",
-        "line": 182,
+        "line": 183,
         "selectorHint": ".browse-tabs",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983133,11 +983568,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:695"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:697"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:184:bind:action:getIsJoin:9",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:185:bind:action:getIsJoin:9",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983160,7 +983595,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "getIsJoin",
-        "line": 184,
+        "line": 185,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{joinCheckError}}",
         "disabledCondition": null,
@@ -983232,11 +983667,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:658"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:660"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:206:bindtap:goTemplateDetail:10",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:207:bindtap:goTemplateDetail:10",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983259,7 +983694,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTemplateDetail",
-        "line": 206,
+        "line": 207,
         "selectorHint": ".li",
         "visibleCondition": "{{ node.cmsMemberTemplate }}",
         "disabledCondition": null,
@@ -983302,11 +983737,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:707"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:709"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:262:bindtap:previewGuideImage:11",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:263:bindtap:previewGuideImage:11",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983329,7 +983764,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewGuideImage",
-        "line": 262,
+        "line": 263,
         "selectorHint": ".guide-image",
         "visibleCondition": "{{part.type === 'image'}}",
         "disabledCondition": null,
@@ -983379,11 +983814,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:700"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:702"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:267:bindtap:previewGuideImage:12",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:268:bindtap:previewGuideImage:12",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983406,7 +983841,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewGuideImage",
-        "line": 267,
+        "line": 268,
         "selectorHint": ".guide-image",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983456,11 +983891,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:700"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:702"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:276:bindtap:previewGuideImage:13",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:277:bindtap:previewGuideImage:13",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983483,7 +983918,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewGuideImage",
-        "line": 276,
+        "line": 277,
         "selectorHint": "image[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983533,11 +983968,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:700"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:702"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:289:bindtap:bmClick2:14",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:290:bindtap:bmClick2:14",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983560,7 +983995,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "bmClick2",
-        "line": 289,
+        "line": 290,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983611,11 +984046,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:720"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:722"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:311:bindtap:openNodeNpcForm:15",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:312:bindtap:openNodeNpcForm:15",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983638,7 +984073,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openNodeNpcForm",
-        "line": 311,
+        "line": 312,
         "selectorHint": ".cy-btn-inline",
         "visibleCondition": "{{chapterNode.auditLabel === '已通过'}}",
         "disabledCondition": null,
@@ -983678,11 +984113,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:989"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:991"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:319:bindtap:bmClick2:16",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:320:bindtap:bmClick2:16",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983705,7 +984140,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "bmClick2",
-        "line": 319,
+        "line": 320,
         "selectorHint": ".cy-btn-inline",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983756,11 +984191,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:720"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:722"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:326:bindtap:openChapterNodeForm:17",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:327:bindtap:openChapterNodeForm:17",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983783,7 +984218,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openChapterNodeForm",
-        "line": 326,
+        "line": 327,
         "selectorHint": ".cy-btn-inline",
         "visibleCondition": "{{application.canConfigureNode}}",
         "disabledCondition": null,
@@ -983823,11 +984258,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:892"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:894"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:328:bindtap:openChapterOfferForm:18",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:329:bindtap:openChapterOfferForm:18",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983850,7 +984285,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openChapterOfferForm",
-        "line": 328,
+        "line": 329,
         "selectorHint": ".cy-btn-inline",
         "visibleCondition": "{{application.canSubmitOffer}}",
         "disabledCondition": null,
@@ -983890,11 +984325,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1089"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1091"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:330:bindtap:withdrawChapterApplication:19",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:331:bindtap:withdrawChapterApplication:19",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983917,7 +984352,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "withdrawChapterApplication",
-        "line": 330,
+        "line": 331,
         "selectorHint": ".cy-btn-inline",
         "visibleCondition": "{{application.canWithdraw}}",
         "disabledCondition": null,
@@ -983991,11 +984426,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1122"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1124"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:336:bindtap:withdrawChapterOffer:20",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:337:bindtap:withdrawChapterOffer:20",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984018,7 +984453,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "withdrawChapterOffer",
-        "line": 336,
+        "line": 337,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984102,11 +984537,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:511"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:513"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:342:bindtap:reconfirmCircleSupply:21",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:343:bindtap:reconfirmCircleSupply:21",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984129,7 +984564,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reconfirmCircleSupply",
-        "line": 342,
+        "line": 343,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984209,11 +984644,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:563"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:565"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:343:bindtap:pauseCircleSupply:22",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:344:bindtap:pauseCircleSupply:22",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984236,7 +984671,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "pauseCircleSupply",
-        "line": 343,
+        "line": 344,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984317,11 +984752,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:584"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:586"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:358:bind:close:topicClose:23",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:359:bind:close:topicClose:23",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984344,7 +984779,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "topicClose",
-        "line": 358,
+        "line": 359,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984384,11 +984819,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:801"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:803"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:377:bindtap:davidClick:24",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:378:bindtap:davidClick:24",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984411,7 +984846,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "davidClick",
-        "line": 377,
+        "line": 378,
         "selectorHint": ".dt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984451,11 +984886,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:805"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:807"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:388:bindtap:selectNode:25",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:389:bindtap:selectNode:25",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984478,7 +984913,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "selectNode",
-        "line": 388,
+        "line": 389,
         "selectorHint": ".dd",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984518,11 +984953,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:819"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:821"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:397:bindtap:goSettlement:26",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:398:bindtap:goSettlement:26",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984545,7 +984980,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goSettlement",
-        "line": 397,
+        "line": 398,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984587,11 +985022,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:919"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:921"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:402:bind:close:davidClose:27",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:403:bind:close:davidClose:27",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984614,7 +985049,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "davidClose",
-        "line": 402,
+        "line": 403,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984654,11 +985089,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:809"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:811"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:44:bind:act:onJoinAct:2",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:45:bind:act:onJoinAct:2",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984681,7 +985116,7 @@
         "tag": "project-host",
         "event": "bind:act",
         "handler": "onJoinAct",
-        "line": 44,
+        "line": 45,
         "selectorHint": "project-host[bind:act]",
         "visibleCondition": "{{ role === 'host' }}",
         "disabledCondition": null,
@@ -984722,11 +985157,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2661"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2712"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:459:bind:close:topicClose:28",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:460:bind:close:topicClose:28",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984749,7 +985184,7 @@
         "tag": "cy-chapter-target-picker",
         "event": "bind:close",
         "handler": "topicClose",
-        "line": 459,
+        "line": 460,
         "selectorHint": "cy-chapter-target-picker[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984789,11 +985224,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:801"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:803"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:460:bind:confirm:onChapterTargetConfirm:29",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:461:bind:confirm:onChapterTargetConfirm:29",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984816,7 +985251,7 @@
         "tag": "cy-chapter-target-picker",
         "event": "bind:confirm",
         "handler": "onChapterTargetConfirm",
-        "line": 460,
+        "line": 461,
         "selectorHint": "cy-chapter-target-picker[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984856,11 +985291,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:846"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:848"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:461:bind:retrychapters:loadMerchantRecruitmentChapters:30",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:462:bind:retrychapters:loadMerchantRecruitmentChapters:30",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984883,7 +985318,7 @@
         "tag": "cy-chapter-target-picker",
         "event": "bind:retrychapters",
         "handler": "loadMerchantRecruitmentChapters",
-        "line": 461,
+        "line": 462,
         "selectorHint": "cy-chapter-target-picker[bind:retrychapters]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984955,11 +985390,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:411"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:413"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:462:bind:gocategory:goMerchantCategory:31",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:463:bind:gocategory:goMerchantCategory:31",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984982,7 +985417,7 @@
         "tag": "cy-chapter-target-picker",
         "event": "bind:gocategory",
         "handler": "goMerchantCategory",
-        "line": 462,
+        "line": 463,
         "selectorHint": "cy-chapter-target-picker[bind:gocategory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985026,11 +985461,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:796"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:798"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:463:bind:createtemplate:goCreateTemplate:32",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:464:bind:createtemplate:goCreateTemplate:32",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985053,7 +985488,7 @@
         "tag": "cy-chapter-target-picker",
         "event": "bind:createtemplate",
         "handler": "goCreateTemplate",
-        "line": 463,
+        "line": 464,
         "selectorHint": "cy-chapter-target-picker[bind:createtemplate]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985097,11 +985532,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:913"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:915"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:467:bind:cancel:onStationSheetCancel:34",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:468:bind:cancel:onStationSheetCancel:34",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985124,7 +985559,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onStationSheetCancel",
-        "line": 467,
+        "line": 468,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985164,11 +985599,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3184"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3236"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:467:bind:select:onStationSheetSelect:33",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:468:bind:select:onStationSheetSelect:33",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985196,7 +985631,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onStationSheetSelect",
-        "line": 467,
+        "line": 468,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985283,11 +985718,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3186"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3238"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:473:bind:close:onNodeNpcFormClose:35",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:474:bind:close:onNodeNpcFormClose:35",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985310,7 +985745,7 @@
         "tag": "node-npc-form",
         "event": "bind:close",
         "handler": "onNodeNpcFormClose",
-        "line": 473,
+        "line": 474,
         "selectorHint": "#node-npc-form",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985382,11 +985817,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1000"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1002"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:486:bind:close:closeChapterNodeForm:36",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:487:bind:close:closeChapterNodeForm:36",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985409,7 +985844,7 @@
         "tag": "chapter-node-form",
         "event": "bind:close",
         "handler": "closeChapterNodeForm",
-        "line": 486,
+        "line": 487,
         "selectorHint": "chapter-node-form[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985449,11 +985884,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:984"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:986"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:487:bind:submit:onChapterNodeFormSubmit:37:variant:application",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:488:bind:submit:onChapterNodeFormSubmit:37:variant:application",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985521,7 +985956,7 @@
         "tag": "chapter-node-form",
         "event": "bind:submit",
         "handler": "onChapterNodeFormSubmit",
-        "line": 487,
+        "line": 488,
         "selectorHint": "chapter-node-form[bind:submit]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985590,11 +986025,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1006"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1008"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:487:bind:submit:onChapterNodeFormSubmit:37:variant:offer",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:488:bind:submit:onChapterNodeFormSubmit:37:variant:offer",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985625,7 +986060,7 @@
         "tag": "chapter-node-form",
         "event": "bind:submit",
         "handler": "onChapterNodeFormSubmit",
-        "line": 487,
+        "line": 488,
         "selectorHint": "chapter-node-form[bind:submit]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985681,11 +986116,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1006"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:1008"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:496:bindlongpress:copyCheckinCode:38",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:497:bindlongpress:copyCheckinCode:38",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985708,7 +986143,7 @@
         "tag": "cy-qr-voucher",
         "event": "bindlongpress",
         "handler": "copyCheckinCode",
-        "line": 496,
+        "line": 497,
         "selectorHint": "cy-qr-voucher[bindlongpress]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -985749,11 +986184,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3474"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3526"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:503:bind:close:closeLiveCheckin:39",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:504:bind:close:closeLiveCheckin:39",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985776,7 +986211,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "closeLiveCheckin",
-        "line": 503,
+        "line": 504,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -985816,11 +986251,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3411"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3463"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:504:bind:retry:issueStationPoster:40",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:505:bind:retry:issueStationPoster:40",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985848,7 +986283,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "issueStationPoster",
-        "line": 504,
+        "line": 505,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -985932,11 +986367,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3430"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3482"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:505:bind:secondary:downloadCheckinQr:41",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:506:bind:secondary:downloadCheckinQr:41",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985964,7 +986399,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:secondary",
         "handler": "downloadCheckinQr",
-        "line": 505,
+        "line": 506,
         "selectorHint": "cy-qr-voucher[bind:secondary]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -986048,11 +986483,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3476"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3528"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:506:bind:settled:onPrivacyGateSettled:42",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:507:bind:settled:onPrivacyGateSettled:42",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986075,7 +986510,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 506,
+        "line": 507,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986115,11 +986550,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:319"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:321"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:510:bind:alt:onDangerAlt:44",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:511:bind:alt:onDangerAlt:44",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986142,7 +986577,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDangerAlt",
-        "line": 510,
+        "line": 511,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986214,11 +986649,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3131"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3183"
       }
     },
     {
-      "id": "pages/topic/merchantinfo/merchantinfo.wxml:510:bind:confirm:onDangerConfirm:43",
+      "id": "pages/topic/merchantinfo/merchantinfo.wxml:511:bind:confirm:onDangerConfirm:43",
       "route": "pages/topic/merchantinfo/merchantinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986241,7 +986676,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 510,
+        "line": 511,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986332,7 +986767,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3122"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3174"
       }
     },
     {

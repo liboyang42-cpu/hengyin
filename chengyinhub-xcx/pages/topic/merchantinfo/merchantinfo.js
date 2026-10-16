@@ -154,7 +154,7 @@ Page({
     role: 'join',                 // join | host,后端 /api/project/home 下发
     operationScope: '',
     // BL-183:圈层供给角色抽屉(project-host 内勾选,这里只管开关、提交中和后端原文错误)
-    circleConfig: { show: false, submitting: false, errorText: '' },
+    circleConfig: { show: false, submitting: false, errorText: '', errorTitle: '' },
     // 同一主题承接多站时的站点切换条。只有 >1 站才出,单站维持原样不多一条空行。
     myStations: [],
     activeStationId: 0,
@@ -2253,7 +2253,7 @@ Page({
 
   openCircleConfig() {
     if (!(this.data.hostTopic && this.data.hostTopic.circleThemeCode)) return;
-    this.setData({ circleConfig: { show: true, submitting: false, errorText: '' } });
+    this.setData({ circleConfig: { show: true, submitting: false, errorText: '', errorTitle: '' } });
   },
 
   closeCircleConfig() {
@@ -2268,7 +2268,7 @@ Page({
     const codes = ((e.currentTarget.dataset || {}).candidateCodes || []).map(String);
     if (!topicId || !codes.length || this._circleConfiguring) return;
     this._circleConfiguring = true;
-    this.setData({ 'circleConfig.submitting': true, 'circleConfig.errorText': '' });
+    this.setData({ 'circleConfig.submitting': true, 'circleConfig.errorText': '', 'circleConfig.errorTitle': '' });
     const that = this;
     app.sendRequest({
       hideLoading: false,
@@ -2278,7 +2278,10 @@ Page({
       data: JSON.stringify({ topicId, candidateCodes: codes, scope: that.data.operationScope }),
       success(res) {
         if (!res || res.code != '200') {
-          that.setData({ 'circleConfig.errorText': app.getRequestErrorMessage(res, '供给角色保存失败') });
+          that.setData({
+            'circleConfig.errorTitle': '供给角色没有保存',
+            'circleConfig.errorText': app.getRequestErrorMessage(res, '供给角色保存失败'),
+          });
           return;
         }
         that.setData({ 'circleConfig.show': false });
@@ -2287,7 +2290,7 @@ Page({
       },
       fail() {
         // 断网时服务端可能已保存:不说失败也不说成功,重载一次让复核文案说话。
-        that.setData({ 'circleConfig.errorText': '结果未确认，已重新加载项目' });
+        that.setData({ 'circleConfig.errorTitle': '保存结果未确认', 'circleConfig.errorText': '已重新加载项目，请看复核状态' });
         that.loadProjectHome();
       },
       complete() {

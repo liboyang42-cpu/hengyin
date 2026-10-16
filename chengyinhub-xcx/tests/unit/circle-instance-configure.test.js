@@ -128,6 +128,7 @@ test('业务拒绝时抽屉不关、原文展示、不提示成功', () => {
   requests[0].complete();
   assert.equal(p.data.circleConfig.show, true);
   assert.equal(p.data.circleConfig.errorText, '只有城市实例的内容主体本人可以配置供给角色');
+  assert.equal(p.data.circleConfig.errorTitle, '供给角色没有保存');
   assert.equal(tips.length, 0);
   assert.equal(p.reloads, 0);
 });
@@ -139,7 +140,8 @@ test('断网时结果未确认并重载一次，不提示成功', () => {
   p.submitCircleConfig(submitEvent(['P1', 'P3', 'P4']));
   requests[0].fail({ errMsg: 'request:fail' });
   requests[0].complete();
-  assert.match(p.data.circleConfig.errorText, /未确认/);
+  assert.equal(p.data.circleConfig.errorTitle, '保存结果未确认');
+  assert.doesNotMatch(p.data.circleConfig.errorTitle + p.data.circleConfig.errorText, /没有保存|失败/);
   assert.equal(p.reloads, 1);
   assert.equal(tips.length, 0);
 });

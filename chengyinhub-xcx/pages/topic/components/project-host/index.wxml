@@ -253,7 +253,7 @@
       </view>
     </view>
     <view class="dg-sub" wx:if="{{ circleConfigHint }}">{{ circleConfigHint }}</view>
-    <cy-inline-error wx:if="{{ circleConfig.errorText }}" kind="data" title="供给角色没有保存"
+    <cy-inline-error wx:if="{{ circleConfig.errorText }}" kind="data" title="{{ circleConfig.errorTitle || '供给角色没有保存' }}"
       sub="{{ circleConfig.errorText }}" />
   </project-drawer>
 

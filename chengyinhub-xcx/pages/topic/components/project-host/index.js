@@ -30,7 +30,7 @@ Component({
     pendingMerchantNodes: { type: Array, value: [] },
     pendingMerchantNodesState: { type: String, value: 'idle' },
     // BL-183:圈层供给角色抽屉。开关/提交中/后端错误归页面;勾选只在抽屉里,提交时随事件带回。
-    circleConfig:    { type: Object, value: { show: false, submitting: false, errorText: '' } },
+    circleConfig:    { type: Object, value: { show: false, submitting: false, errorText: '', errorTitle: '' } },
   },
   observers: {
     'hostTopic, hostRecruit': function (topic, recruit) {
@@ -50,9 +50,10 @@ Component({
       this.setData({ hostStatusText: text });
     },
     // 抽屉在页面流里,不是遮罩;上面那块 hero 虚化就是「有东西打开了」的唯一提示
-    'clubSheet, playerSheet, merchantSheet': function (club, player, merchant) {
+    'clubSheet, playerSheet, merchantSheet, circleConfig': function (club, player, merchant, circle) {
       this.setData({
-        anyDrawerOpen: !!((club && club.show) || (player && player.show) || (merchant && merchant.show)),
+        anyDrawerOpen: !!((club && club.show) || (player && player.show) || (merchant && merchant.show)
+          || (circle && circle.show)),
       });
     },
     'circleConfig.show': function (show) {
