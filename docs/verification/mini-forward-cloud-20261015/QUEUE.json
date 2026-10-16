@@ -101,7 +101,7 @@
     "status": "PARTIAL_LOCAL_VPS_EXECUTION",
     "note": "39 static declarations; source bde356f3 has new local ordinary28 actual PASS/0fail/error/skip. True MySQL11 remains NOT_RUN. Prior source2babbe28 24PASS is separate history; Cloud ran none."
   },
-  "next_action": "Remain EXHAUSTED; retain bde356f3 source and local ordinary28 PASS. Local coordinator handles user approval for a separate constrained integration entry; do not change existing212/CI or run Cloud substitutes. Actual failures use only original author repair lane.",
+  "next_action": "Keep EXHAUSTED and existing source/ordinary28 PASS. Existing212 and CI stay unchanged; no new MySQL/Redis entry or same-proposal approval reminders. Uncovered real-DB items remain NOT_RUN/coverage gap. Only new real source or unresolved failures justify ordinary validation by local coordinator.",
   "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
   "cloud_execution": "NOT_RUN",
   "external_verification": {
@@ -155,8 +155,9 @@
       "declarations": 11,
       "status": "NOT_RUN",
       "funds_ci_registration": "NOT_REGISTERED",
-      "approved_execution_entry": "PENDING_USER_APPROVAL_IN_LOCAL_COORDINATOR_FLOW",
-      "entry_gap_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md"
+      "approved_execution_entry": "EXISTING_ENTRY_COVERAGE_GAP_NO_NEW_ENTRY",
+      "entry_gap_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md",
+      "new_entry_proposal": "CLOSED_BY_USER_DECISION"
     },
     "redis_integration": "NOT_VERIFIED; Redis mocks or references are not real Redis integration.",
     "acceptance_exclusions": [
@@ -232,5 +233,19 @@
         "deployment"
       ]
     }
-  ]
+  ],
+  "validation_entry_policy": {
+    "decision": "KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY",
+    "user_instruction": "保持现有入口，不新增",
+    "provenance": "Explicit user decision relayed by local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; current effective constraint.",
+    "new_isolated_mysql_redis_entry_proposal": "CLOSED_BY_USER_DECISION",
+    "awaiting_same_proposal_approval": false,
+    "existing_212": "UNCHANGED",
+    "ci_configuration": "UNCHANGED",
+    "automatic_ci": "ALLOW_NATURAL_RUNS_NO_MANUAL_DUPLICATE_TRIGGER",
+    "ordinary_regression": "Use existing212 only for genuinely new source or unresolved failure; no repeated verification without new grounds.",
+    "uncovered_mysql_redis": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "cloud_execution": "NOT_RUN",
+    "new_work_authorized": false
+  }
 }

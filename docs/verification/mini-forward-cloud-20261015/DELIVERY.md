@@ -10,6 +10,14 @@
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
 只在现有授权内源码修复、回归编写和 Git 交付。Cloud执行始终 `NOT_RUN`；本地外部验证见最新候选段。Cloud 不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
+## 当前有效约束：保持现有入口，不新增
+
+用户已明确决定“保持现有入口，不新增”，由本地总控直接回传。此决定覆盖本文件和先前公共回执中的“新真库入口待批准”：新增隔离MySQL/Redis集成入口方案已关闭，当前没有该方案的待批准动作，也不再催用户批准相同方案。
+
+保留现有212与CI配置；自动CI自然运行，不手动重复触发。普通回归仅在真实新源码或未解失败出现时，由本地按现有212执行。没有适用现有入口覆盖的真MySQL/Redis项，继续标NOT_RUN/现有入口覆盖缺口，不把计划关闭或普通PASS改称真库通过。
+
+这只是约束更新，没有新增开发、服务、入口或补跑任务。冻结源码 `bde356f3f0944f4c1a00726fbf821de2267a3eea`、本地普通28PASS证据及旧候选独立历史全部保留；真MySQL11未执行、真实Redis/运行HTTP/设备业务/集成部署未验边界不变。EXHAUSTED、writer0/READY0/源码阻塞0，Cloud执行NOT_RUN。C00唯一编辑全局账，本队只维护自己的QUEUE/CLAIMS/DELIVERY与本队PR说明。
+
 ## 最新交付候选：本地普通28实际通过，真MySQL11仍NOT_RUN
 
 最新冻结源码为 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，分支与草稿PR72不变；前一项独立提交 `009664d74bc9a330b14a10e0696dba74e91ea291` 已包含其中。旧候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 的普通24PASS仅保留历史，不能覆盖新候选。本地已对这个新冻结源码完成编译及普通28实际测试，28pass/0failure/0error/0skip；真MySQL11仍NOT_RUN，整体保持SOURCE_DELIVERED_UNVERIFIED，Cloud未运行验证。
@@ -20,7 +28,7 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 Cloud仅核公开README/summary，未拉取或独立解析VPS原始XML/日志，未连接VPS；这是本地唯一验证者的新SHA结果，不是继承旧24PASS。CORE/EXTRA各自结果不计入本队，也不更新他们或C00的账本。
 
-F3真MySQL类11项未登记现有资金CI固定清单，当前NOT_RUN；212固定network none无凭据透传，不能充当真库入口。有Redis mock不能当真实Redis联验。独立限额隔离入口仍待用户在本地总控流程明确批准，现有212与CI保持原样，Cloud不创建服务/入口或补跑替代。真库/Redis、运行HTTP、设备业务、候选集成、合并部署均未签收。总体SOURCE_DELIVERED_UNVERIFIED、EXHAUSTED（writer0/READY0/源码阻塞0）不变。
+F3真MySQL类11项未登记现有资金CI固定清单，当前NOT_RUN；212固定network none无凭据透传，不能充当真库入口。有Redis mock不能当真实Redis联验。用户已关闭新增隔离入口方案，现有212与CI保持原样，现有入口覆盖缺口继续NOT_RUN；Cloud不创建服务/入口或补跑替代，也不再催批同方案。真库/Redis、运行HTTP、设备业务、候选集成、合并部署均未签收。总体SOURCE_DELIVERED_UNVERIFIED、EXHAUSTED（writer0/READY0/源码阻塞0）不变。
 
 本次只追加原白名单四条既有路径：Controller/Test 与 ProgressionService/Test，不新增文件。两位原作者均再次冻结，实际writer=0、READY=0；当前没有已确认下一具体项，恢复EXHAUSTED。下文恢复开发及旧验证段落均为历史，当前状态以本节和QUEUE为准。
 
@@ -50,7 +58,7 @@ F3真MySQL类11项未登记现有资金CI固定清单，当前NOT_RUN；212固�
 mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.business.AnalyticsControllerTest,com.chengyinhub.business.service.PlayerProgressionServiceImplTest test
 ```
 
-普通28已由本地按实际28签收，非声明推算或旧成绩转移；真实MySQL11仍待本地批准入口，不能以普通PASS或声明数签收；不再以文档head替代源码冻结SHA。日期全历史性能、共享会员锁序与完整奖励并发仍是原交接边界，不新增共享表或目录写权。未来真实失败仅对应原作者一条修复线；其余独立授权项可继续。
+普通28已由本地按实际28签收，非声明推算或旧成绩转移；真实MySQL11因现有入口覆盖缺口保持NOT_RUN，不再等待新增入口批准，不能以普通PASS或声明数签收；不再以文档head替代源码冻结SHA。日期全历史性能、共享会员锁序与完整奖励并发仍是原交接边界，不新增共享表或目录写权。未来真实失败仅对应原作者一条修复线；其余独立授权项可继续。
 
 ## 历史恢复开发记录：原两域两项具体续领
 
@@ -69,7 +77,7 @@ mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsur
 
 已只读核对公共证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f` 的 [README](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)、[summary.json](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/summary.json) 与 [早先准入拒绝](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/admission-refused.json)，其中包含实际212命令、源包/日志/XML哈希和精确类结果。Cloud 未直接取得或独立重解析 VPS 原始XML/日志，不把公开摘要读取当成再次执行。早先 another_build_holds_lock（exit75、containerId null、执行0项）是资源准入事件而非源码失败；正常释放后才完成本次执行，历史证据保留。
 
-`com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT` 的11项仍 NOT_RUN。212离线入口network none；既有资金CI固定类清单也不覆盖本套，真实MySQL的批准执行入口由本地另确认。下文MySQL命令仅为测试选择示例，不能视为入口已获批准或已执行。真实并发、运行中后端HTTP、真实DB/Redis、设备/业务验收、合并部署均未签收。Cloud不补跑替代，未来真实失败仅恢复对应原作者一条修复线。
+`com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT` 的11项仍 NOT_RUN。212离线入口network none；既有资金CI固定类清单也不覆盖本套，此为历史入口缺口；现行决定为保持现有入口、不新增，未覆盖项继续NOT_RUN。下文MySQL命令仅为测试选择示例，不能视为入口已获批准或已执行。真实并发、运行中后端HTTP、真实DB/Redis、设备/业务验收、合并部署均未签收。Cloud不补跑替代，未来真实失败仅恢复对应原作者一条修复线。
 
 ## 当前进度（源码交付记录）
 
@@ -122,7 +130,7 @@ GROW 合计 23 声明/净增 20；与 STAT 合计 35 声明/净增 30。全部 N
 
 IT 必须由本地在批准的临时 MySQL 8+ 环境执行：`CHENGYIN_FUNDS_MYSQL_IT=1`；显式绑定 `CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD` 六变量（密码可空但绑定不可缺，suffix 非空）。配置生成的库名前缀≤47字符，追加16位 UUID 唯一后缀，需要临时建删库权限；只建自己的独占 schema，从未在 Cloud 连接数据库。线程异常通过 Future 返回，屏障/等待有界，未终止线程时禁止删 schema 并保留供总控排查。缺 opt-in 的条件跳过不是通过。
 
-本地可按已批准 Maven 入口选择 `AnalyticsControllerTest,PlayerProgressionServiceImplTest` 普通用例与显式 `PlayerGrowthConcurrencyMySqlIT` 真库用例；本文件未执行任何命令，不能以源码声明数代替新鲜 XML 报告。
+普通用例仅按现有批准入口选择；`PlayerGrowthConcurrencyMySqlIT` 选择文本不代表现有入口适用，当前仍为NOT_RUN/覆盖缺口且不新增入口；本文件未执行任何命令，不能以源码声明数代替新鲜 XML 报告。
 
 ### 依赖与剩余风险
 
@@ -150,7 +158,7 @@ IT 必须由本地在批准的临时 MySQL 8+ 环境执行：`CHENGYIN_FUNDS_MYS
 mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=AnalyticsControllerTest,PlayerProgressionServiceImplTest test
 ```
 
-真实 MySQL 回归（仍由本地批准入口；先显式提供 `CHENGYIN_FUNDS_MYSQL_IT=1` 与上述六个测试连接变量，不在文档填写凭据，不指向生产）：
+历史真实 MySQL selector示例（当前现有入口覆盖缺口、NOT_RUN，不代表新的执行许可；只有适用既有授权入口才可取用；先显式提供 `CHENGYIN_FUNDS_MYSQL_IT=1` 与上述六个测试连接变量，不在文档填写凭据，不指向生产）：
 
 ```bash
 mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=PlayerGrowthConcurrencyMySqlIT test

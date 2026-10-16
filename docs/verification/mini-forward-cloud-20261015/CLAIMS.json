@@ -66,5 +66,6 @@
     "other_writer_intersections": [],
     "control_source_owners_blob": "8508fc7aedb13a393f7eeea1914a9926f4f0465a"
   },
-  "previous_source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd"
+  "previous_source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "validation_entry_policy": "User decided KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY; isolated MySQL/Redis proposal closed, no approval pending. Existing212/CI unchanged; uncovered MySQL11 NOT_RUN/coverage gap. No new development or validation task."
 }
