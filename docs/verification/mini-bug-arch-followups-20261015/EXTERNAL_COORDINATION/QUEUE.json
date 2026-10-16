@@ -1777,6 +1777,12 @@
         ],
         "next": "Original owner/C00 provides existingNULL contract and evidence; only then register exact option-vs-snapshot hunk, no silent permission expansion or narrowing",
         "regression_methods_added": 0
+      },
+      "blocker": "No legitimate production NULL writer identified; need actual historical NULL source/evidence and established NULL semantics before widening snapshot or narrowing options. Normal0/1 paths agree.",
+      "source_ownership_status": "OWNED_EXISTING_ORIGINAL_E02",
+      "focused_recheck_delivery_comments": {
+        "PR16": 6208972509,
+        "PR24": 6208972676
       }
     },
     {
@@ -2072,7 +2078,7 @@
       "public_sha": "f6c88c675e198ae557076b0874b1ef131850485b",
       "writer_mode": "SOURCE_OWNER",
       "regression_methods_written": 0,
-      "blocker": "Exact ownership or dependency request in public evidence and PR16 comment6195023061; no unauthorized edits",
+      "blocker": "Existing source ownership confirmed; missing established per-state WAITING eligibility/retention contract. Ticket sale fields explicitly store/display only; E01-18 OFFERED guard already delivered, do not repeat.",
       "focused_recheck": {
         "worker": "/root/external_e01",
         "branch": "codex/extra-e01-regression-20261015",
@@ -2095,6 +2101,11 @@
         ],
         "next": "C00 original owner supplies established per-stateWAITING contract. If defined, isolate newjoin check from sharedcancel/expire/release paths; preserve E01-18 OFFERED guard without duplicatefix",
         "regression_methods_added": 0
+      },
+      "source_ownership_status": "OWNED_EXISTING_ORIGINAL_E01",
+      "focused_recheck_delivery_comments": {
+        "PR16": 6208972509,
+        "PR24": 6208972676
       }
     },
     {
