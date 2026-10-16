@@ -56,7 +56,7 @@ test('normalizeMembers: 缺 id / 非法 id 丢弃，重复 memberId 只保留首
 
 test('grantReceipt: 成功与「已颁发过」幂等回执区分', () => {
   assert.deepEqual(clubBadge.grantReceipt({ code: 200, msg: '已颁发' }), {
-    repeated: false, text: '这枚勋章已经记在对方名下。',
+    repeated: false, unknown: false, text: '这枚勋章已经记在对方名下。',
   });
   const repeated = clubBadge.grantReceipt({ code: 200, msg: '已颁发过' });
   assert.equal(repeated.repeated, true);
@@ -74,10 +74,15 @@ test('grantReceipt: 页面只在 isSuccess 后调用；结果未知走 fail/succ
   assert.match(grantBlock, /successStatusAbnormal\(\) \{ report\(false, '[^']*结果未确认/);
 });
 
-test('grantReceipt: 空响应（结果未知）不应返回成功文案', { todo: 'club-badge.js grantReceipt(null/undefined) 当前返回「已经记在对方名下」；页面已由 isSuccess 守卫，纯函数本身未区分未知，已报 #23' }, () => {
-  for (const res of [null, undefined, {}]) {
-    assert.doesNotMatch(clubBadge.grantReceipt(res).text, /已经记在对方名下/);
+test('grantReceipt: 空响应（结果未知）不应返回成功文案（BL-163 转正）', () => {
+  for (const res of [null, undefined, {}, { msg: '已颁发' }, { code: 500, msg: '已颁发过' }]) {
+    const out = clubBadge.grantReceipt(res);
+    assert.equal(out.unknown, true);
+    assert.equal(out.repeated, false);
+    assert.doesNotMatch(out.text, /已经记在对方名下|没有重复颁发/);
+    assert.match(out.text, /未确认/);
   }
+  assert.equal(clubBadge.grantReceipt({ code: '200', msg: '已颁发' }).unknown, false);
 });
 
 test('charLength: 按码点计数，emoji / 代理对算 1', () => {

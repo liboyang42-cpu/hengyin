@@ -92,10 +92,13 @@ function normalizeMembers(list) {
 }
 
 /** 颁发回执:服务端用 msg 区分「已颁发」与「已颁发过」(幂等),其余照原文。 */
+// 只认 code 200 的回包;空/缺 code 是结果未知,不给成功文案(页面另有 isSuccess 守卫)。
 function grantReceipt(res) {
-  var msg = res && typeof res.msg === 'string' ? res.msg : '';
-  if (msg === '已颁发过') return { repeated: true, text: '对方之前已经拿到这枚勋章，这次没有重复颁发。' };
-  return { repeated: false, text: '这枚勋章已经记在对方名下。' };
+  var code = res && typeof res === 'object' ? res.code : undefined;
+  if (code !== 200 && code !== '200') return { repeated: false, unknown: true, text: '颁发结果未确认，请刷新成员勋章后再看。' };
+  var msg = typeof res.msg === 'string' ? res.msg : '';
+  if (msg === '已颁发过') return { repeated: true, unknown: false, text: '对方之前已经拿到这枚勋章，这次没有重复颁发。' };
+  return { repeated: false, unknown: false, text: '这枚勋章已经记在对方名下。' };
 }
 
 module.exports = {
