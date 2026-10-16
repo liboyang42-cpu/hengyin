@@ -155,8 +155,8 @@ Page({
       success(res) {
         if (!isCurrentAction()) return;
         if (res.code == '200' || res.code === 200) {
-          that.setData({ businessStatus: next });
-          cyToast(next === 1 ? '已营业' : '已打烊');
+          // BL-141:写成功不等于状态已落库,以 /api/merchant/business-status 回读为准再刷新开关。
+          that.readBackBusinessStatus(next, isCurrentAction);
         } else {
           cyToast(app.getRequestErrorMessage(res, '切换失败'));
         }
@@ -164,6 +164,29 @@ Page({
       fail() {
         if (!isCurrentAction()) return;
         cyToast('网络异常，请重试');
+      }
+    });
+  },
+
+  readBackBusinessStatus(expected, isCurrentAction) {
+    const that = this;
+    app.sendRequest({
+      url: '/api/merchant/business-status', method: 'POST', silentError: true,
+      success(res) {
+        if (!isCurrentAction()) return;
+        const data = res && (res.code == '200' || res.code === 200) ? res.data : null;
+        const actual = data ? Number(data.businessStatus) : NaN;
+        if (actual !== 0 && actual !== 1) {
+          cyToast('状态未同步，请刷新后核对');
+          return;
+        }
+        that.setData({ businessStatus: actual });
+        cyToast(actual === expected ? (actual === 1 ? '已营业' : '已打烊')
+          : '状态未同步，当前' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')));
+      },
+      fail() {
+        if (!isCurrentAction()) return;
+        cyToast('状态未同步，请刷新后核对');
       }
     });
   },

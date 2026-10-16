@@ -59,6 +59,22 @@ function classifyFailure(error, fallback) {
   return { kind: 'data', text: requestText(error, fallback) };
 }
 
+// BL-141:营业状态写后回读。回读值与提交值不一致、或回读不到,都按失败处理(由 _startSave 回滚开关并给重试)。
+function readBackBusinessStatus(expected, success) {
+  app.sendRequest({
+    hideLoading: true, silentError: true, url: '/api/merchant/business-status', method: 'POST',
+    success: function (res) {
+      const data = res && (res.code === '200' || res.code === 200) ? res.data : null;
+      const actual = data ? Number(data.businessStatus) : NaN;
+      if (actual === expected) { success(res); return; }
+      success({ code: 'READBACK', msg: actual === 0 || actual === 1
+        ? '状态未同步：当前仍为' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')) + '，请重试'
+        : '状态未同步，请刷新后核对' });
+    },
+    fail: function () { success({ code: 'READBACK', msg: '状态未同步，请刷新后核对' }); },
+  });
+}
+
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
@@ -767,10 +783,16 @@ Page({
         this.saveBusinessStatus(bs, previous);
       },
       onFailure: () => this.setData({ 'm.businessStatus': previous }),
+      // BL-141:写成功后先读 /api/merchant/business-status,回读值一致才算保存成功(才出回执)。
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/business-status/update', method: 'POST',
-          data: { business_status: bs }, success: success, fail: fail,
+          data: { business_status: bs },
+          success: function (res) {
+            if (!res || !(res.code === '200' || res.code === 200)) { success(res); return; }
+            readBackBusinessStatus(bs, success);
+          },
+          fail: fail,
         });
       },
     });
