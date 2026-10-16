@@ -14,6 +14,7 @@
       <view wx:for="{{events}}" wx:key="id" class="om-card" data-id="{{item.id}}" bindtap="openEvent" hover-class="om-card--pressed" aria-role="button" aria-label="查看{{item._title}}详情，{{item._st}}">
         <view class="om-row"><text class="om-t">{{item._title}}</text><cy-badge type="status" variant="neutral" label="{{item._st}}" /></view>
         <text class="om-sub">{{item._city}}{{item._category ? ' · ' + item._category : ''}}</text>
+        <view wx:if="{{item._isV2}}" class="om-organizer" data-id="{{item.id}}" catchtap="openOrganizer" hover-class="om-card--pressed" hover-stay-time="80" aria-role="button" aria-label="打开{{item._title}}的主办控制台">主办控制台 · 发布 / 暂停 / 恢复</view>
       </view>
 
       <view class="om-sec">我发的通知 · {{broadcasts.length}}</view>

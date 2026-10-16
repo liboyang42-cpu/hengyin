@@ -248,6 +248,19 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/activity/official-organizer/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageA/pages/myproject/index",
       "pkg": "subpackageA",
       "tabBar": false,

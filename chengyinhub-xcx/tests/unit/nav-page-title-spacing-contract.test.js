@@ -486,6 +486,7 @@ test('全仓 72 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-10-15 +3:官方路线列表/详情、积分明细,均为 cy-nav-bar + 共享 cy-page-title 标准二级页,68 → 71。
   // 2026-10-15 +1:CL3 俱乐部勋章页(pages/club/badges),cy-nav-bar + 共享 cy-page-title 标准二级页,71 → 72。
   // 2026-10-15 +1:BL-76 商家核销记录页(pages/merchant/verify-records),cy-nav-bar + 共享 cy-page-title 标准二级页,71 → 72。
+  // 2026-10-15 CL4 +1:主办控制台 official-organizer,cy-nav-bar + 共享 cy-page-title 标准二级页,71 → 72。
   assert.equal(files.length, 72, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。

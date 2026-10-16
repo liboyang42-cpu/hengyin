@@ -556,6 +556,10 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-16 BL-05 集邮册「收到的」邮票详情半屏:openDetail +1 tap(重建实测 1796 → 1797)。
   // 2026-10-15 BL-76 工作台「更多」加「核销记录」1 tap(新页其余为组件事件合同),1796 → 1797(重建实测)。
   assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1797)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-15 CL4 重建实测 1796 → 1804(+8):主办控制台发布/暂停/恢复按钮与暂停预设选项、我发布的/详情页两处控制台入口、
+  //   npc-chat「导出我的对话记录」与「返回对话」;复制按钮走 wx.setClipboardData,判 external 不进 local 分母。
+  //   (按用户决定撤掉邀请/转交与 JSON 复制后按最终树重建,数值取自 --write 实测。)
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1804)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -771,6 +775,9 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2349)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 2026-10-15 BL-76 商家核销记录页 5 个组件事件合同(retry/back×2/change×2),2348 → 2353(重建实测)。
   assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2353)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  // 2026-10-15 CL4 重建实测 2348 → 2358(+10):主办控制台 cy-field 输入(恢复说明 + 暂停四项补充文字)、三个 cy-danger-confirm 确认回调、
+  //   状态壳返回/重试与结果条「知道了」,以及 npc-chat 导出失败「重试」等组件事件(数值取自 --write 重建,非推算)。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2358)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1388,6 +1395,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   assert.equal(ledger.controlCount, 4483)  /* 2026-10-15 任务2 新增认领 sheet/置顶公告/打卡码文本兜底控件后重建(4432→4455)。  2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
   // 2026-10-15 BL-76 商家核销记录页 5 控件 + 工作台入口 1 项,4480 → 4486(重建实测)。
   assert.equal(ledger.controlCount, 4486)  /* 2026-10-15 任务2 新增认领 sheet/置顶公告/打卡码文本兜底控件后重建(4432→4455)。  2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  assert.equal(ledger.controlCount, 4499)  /* 2026-10-15 CL4 新增主办控制台页(发布/暂停/恢复 + 暂停预设 + 三个确认)、npc-chat 导出/复制/返回、详情页主办入口、我发布的控制台入口后重建(4480→4499,实测;邀请/转交按用户决定撤掉)。  2026-10-15 任务2 新增认领 sheet/置顶公告/打卡码文本兜底控件后重建(4432→4455)。  2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

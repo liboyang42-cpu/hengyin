@@ -144,6 +144,46 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
   },
+  // ===== 官方活动 V2 · 主办控制台(pages/activity/official-organizer)=====
+  // 口径对齐 OfficialEventV2ServiceImpl 的 schedule / pause / resume;「排期」对用户叫「发布活动」(用户决定 2026-10-15)。
+  'official.organizer.schedule': {
+    irreversible: true,
+    title: '发布「{name}」?',
+    content: '通过发布检查后对报名可见,按设定的报名与开始时间自动推进。',
+    consequences: [
+      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效,按报名/开始时间自动推进' },
+      { icon: 'info', text: '排期后活动详情对玩家可见;之后需要停下只能用暂停' },
+      { icon: 'warning', text: '此操作不可撤销,发布后无法退回草稿' },
+    ],
+    confirmText: '发布活动',
+    alt: null,
+    done: { title: '活动已发布', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.pause': {
+    irreversible: false,
+    title: '暂停「{name}」?',
+    content: '暂停后玩家侧显示活动已暂停,通知策略记为待执行。',
+    consequences: [
+      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约;原定结束时间不变' },
+      { icon: 'bell', text: '填写的通知策略不会自动群发,状态记为「待执行」,需要按策略另行通知' },
+      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口;到结束时间仍未恢复会直接转入待结算' },
+    ],
+    confirmText: '暂停活动',
+    alt: null,
+    done: { title: '活动已暂停', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.resume': {
+    irreversible: false,
+    title: '恢复「{name}」?',
+    content: '平台会先重新做发布检查,不通过会拒绝恢复并给出原因。',
+    consequences: [
+      { icon: 'check', text: '恢复后活动按当前时间回到对应阶段(已排期/报名中/进行中)' },
+      { icon: 'info', text: '如果活动已过结束时间,会转入待结算而不是恢复运行' },
+    ],
+    confirmText: '恢复活动',
+    alt: null,
+    done: { title: '活动已恢复', text: '已按平台最新记录刷新。' },
+  },
   'team.disband': {
     irreversible: true,
     title: '解散这支队伍?',
