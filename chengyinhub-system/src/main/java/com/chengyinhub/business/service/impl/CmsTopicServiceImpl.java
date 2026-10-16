@@ -3912,6 +3912,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto == null || StringUtils.isBlank(dto.getName())) {
             throw new IllegalArgumentException("主题名称不能为空");
         }
+        assertCollaboratorIdShape(dto.getCollaboratorIds());
         // R19-DRAFT2:完整度校验按草稿/发布分流,先在这里定型,后面所有闸都用同一个判据
         // (客户端自称不算,与 R18-DRAFT 的活动壳/送审两道副作用闸同源)。
         boolean saveDraft = dto.getSaveDraft() != null && dto.getSaveDraft() == 1;
@@ -4366,6 +4367,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         assertTopicDeletable(topicId);
         // 整体替换的入场闸:本次没带的子集合若库里现有行,拒收并点名缺什么(见方法注释)
         assertRebuildPayloadComplete(topicId, dto);
+        assertCollaboratorIdShape(dto.getCollaboratorIds());
         // NodeDTO 不开放前置解锁编辑；重建前保存服务端既有关系，等全部新节点生成后翻译 ID。
         Map<Long, Long> existingUnlocks = existingNodeUnlocks(topicId);
         Long existingOpeningId = JourneyStory.openingChapterId(exist.getJourneyStoryJson());
@@ -5610,6 +5612,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         if (tpl.getDraftStatus() == null || tpl.getDraftStatus() != 1) {
             throw new RuntimeException("草稿模板不能引用,请先发布:" + templateId);
+        }
+    }
+
+    /** 仅保护署名 ID 形状；缺席/空集合与重复正 ID 的既有语义不变。 */
+    private void assertCollaboratorIdShape(List<Long> collaboratorIds) {
+        if (collaboratorIds == null) {
+            return;
+        }
+        for (Long memberId : collaboratorIds) {
+            if (memberId == null || memberId <= 0L) {
+                throw new IllegalArgumentException("合作者用户ID必须为正整数");
+            }
         }
     }
 
