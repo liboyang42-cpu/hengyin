@@ -2,7 +2,7 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "CORE5752_TARGETED31_PENDING_EXTRA1bfa_H2_2_PASS_FORWARDd592_COMPILE_ONLY_PASS_MYSQL_UNVERIFIED",
+  "execution_status": "CORE5752_SINGLE31_PENDING_EXTRA1bfa_H2_2_PASS_FORWARDd592_PUBLIC_COMPILE_ONLY_PASS",
   "candidates": {
     "CORE": {
       "pr": 44,
@@ -1966,7 +1966,7 @@
   "current_EXTRA_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
   "forward_d592_compile_request": {
     "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
-    "status": "TEST_COMPILE_PASS_ONLY_PUBLIC_REPORT_PENDING",
+    "status": "TEST_COMPILE_PASS_ONLY_PUBLIC_EVIDENCE_READ",
     "task": "cy-vps-forward-d592334a-20261016",
     "archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
     "root_report": "Otherprelaunch task holds sharedlock; local waitsnormaladmission, no bypass. CORE/EXTRAsources preparing. No sourcefailure.",
@@ -1980,7 +1980,7 @@
       "reason": "another_build_holds_lock",
       "observed_owner_description": "Other prelaunch task, reported by local verifier; not inspected or modified by Cloud"
     },
-    "public_evidence_commit": null,
+    "public_evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
     "latest_result": {
       "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
       "result": "TEST_COMPILE_PASS_ONLY",
@@ -1990,28 +1990,47 @@
       "actual_tests": 0,
       "fresh_main_class_verified_by_local": true,
       "fresh_anonymous_clock_class_verified_by_local": true,
-      "exact_artifact_paths_not_yet_supplied": true,
+      "exact_artifact_paths_not_yet_supplied": false,
       "container_cleanup_confirmed_by_local": true,
-      "container_id": null,
+      "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c",
       "evidence_pr": 24,
-      "evidence_commit": null,
-      "public_evidence_status": "Directlocalresult, publiccompilereportpending, noC00rawartifactreadclaim",
+      "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+      "public_evidence_status": "C00readpublicREADMEandsummary; originalclassfilesretainedbylocal, notreadbyCloud",
       "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
       "task": "cy-vps-forward-d592334a-20261016",
       "first_shared_lock_refusal_retained": true,
       "ordinary28_rerun": false,
       "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
       "true_db_redis_http_device_merge_deploy_accepted": false,
-      "cloud_manual_runs": 0
+      "cloud_manual_runs": 0,
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+      "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+      "guard_reason": "completed",
+      "started_at": "2026-10-16T06:08:19.135291+00:00",
+      "finished_at": "2026-10-16T06:10:59.528066+00:00",
+      "compiled_files": [
+        {
+          "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.class",
+          "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+          "fresh": true
+        },
+        {
+          "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT$1.class",
+          "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+          "fresh": true
+        }
+      ],
+      "log_sha256": "49c557f5c969ce3424f37bdc836f9030df80126b10e460de2db695d0fb0ab38f",
+      "reports": []
     }
   },
   "current_local_validation_queue": {
     "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
-    "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+    "state": "CORE5752_SINGLE31_PENDING_EXTRA2_H2_PASS_FORWARD_COMPILE_ONLY_PASS",
     "source_failure": false,
     "cloud_runs": 0,
     "new_entry": false,
-    "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
+    "guard_refusal_scope": "Historicalfirstrefusalsretained; latestExtraH2/FORWARDcompilepassed. CurrentCORE31awaitactualresult, no newrefusalinferred"
   },
   "core_c03_topic_update_repair": {
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
@@ -2165,18 +2184,47 @@
     "actual_tests": 0,
     "fresh_main_class_verified_by_local": true,
     "fresh_anonymous_clock_class_verified_by_local": true,
-    "exact_artifact_paths_not_yet_supplied": true,
+    "exact_artifact_paths_not_yet_supplied": false,
     "container_cleanup_confirmed_by_local": true,
-    "container_id": null,
+    "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c",
     "evidence_pr": 24,
-    "evidence_commit": null,
-    "public_evidence_status": "Directlocalresult, publiccompilereportpending, noC00rawartifactreadclaim",
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "public_evidence_status": "C00readpublicREADMEandsummary; originalclassfilesretainedbylocal, notreadbyCloud",
     "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
     "task": "cy-vps-forward-d592334a-20261016",
     "first_shared_lock_refusal_retained": true,
     "ordinary28_rerun": false,
     "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "true_db_redis_http_device_merge_deploy_accepted": false,
-    "cloud_manual_runs": 0
+    "cloud_manual_runs": 0,
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+    "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T06:08:19.135291+00:00",
+    "finished_at": "2026-10-16T06:10:59.528066+00:00",
+    "compiled_files": [
+      {
+        "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.class",
+        "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+        "fresh": true
+      },
+      {
+        "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT$1.class",
+        "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+        "fresh": true
+      }
+    ],
+    "log_sha256": "49c557f5c969ce3424f37bdc836f9030df80126b10e460de2db695d0fb0ab38f",
+    "reports": []
+  },
+  "forward_d592_public_compile_receipt": {
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "result": "COMPILE_PASS_ONLY",
+    "actual_tests": 0,
+    "fresh_class_files": 2,
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary28_not_repeated": true
   }
 }

@@ -1,0 +1,132 @@
+{
+  "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+  "previous_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "task": "cy-vps-forward-d592334a-20261016",
+  "archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+  "validation_phase": "test-compile only",
+  "actual_tests": 0,
+  "changed_test_class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+  "declared_true_mysql_tests": 11,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "Only MySQL IT date fixture and own coordination documents changed. Production/dependencies unchanged; do not repeat ordinary28 or claim MySQL execution.",
+  "started_at": "2026-10-16T06:08:19.135291+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-forward-d592334a",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/source/vps-test-compile.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=true",
+    "test-compile"
+  ],
+  "memavailable_before": "MemAvailable:    3800896 kB",
+  "retry_after_normal_lock_release": true,
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T06:10:59.528066+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c"
+  },
+  "reports": [],
+  "compiled_files": [
+    {
+      "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.class",
+      "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+      "fresh": true
+    },
+    {
+      "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT$1.class",
+      "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+      "fresh": true
+    }
+  ],
+  "fresh_compile_classes": true,
+  "true_mysql_status": "NOT_RUN",
+  "integrity_ok": true,
+  "log_sha256": "49c557f5c969ce3424f37bdc836f9030df80126b10e460de2db695d0fb0ab38f",
+  "build_success": true,
+  "evidence_result": "COMPILE_PASS_ONLY",
+  "admission_refusals": [
+    {
+      "run": {
+        "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+        "previous_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+        "task": "cy-vps-forward-d592334a-20261016",
+        "archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+        "validation_phase": "test-compile only",
+        "actual_tests": 0,
+        "changed_test_class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+        "declared_true_mysql_tests": 11,
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "basis": "Only MySQL IT date fixture and own coordination documents changed. Production/dependencies unchanged; do not repeat ordinary28 or claim MySQL execution.",
+        "started_at": "2026-10-16T05:52:29.388798+00:00",
+        "command": [
+          "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+          "--name",
+          "cy-budget-212-forward-d592334a",
+          "--source",
+          "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/source",
+          "--cache",
+          "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/cache",
+          "--",
+          "mvn",
+          "-o",
+          "-B",
+          "-ntp",
+          "-l",
+          "/home/ubuntu/previews/cy-vps-forward-d592334a-20261016/source/vps-test-compile.log",
+          "-pl",
+          "chengyinhub-admin",
+          "-am",
+          "-Dmaven.test.skip=false",
+          "-DskipTests=true",
+          "test-compile"
+        ]
+      },
+      "guard": {
+        "returncode": 75,
+        "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+        "stderr": "",
+        "finished_at": "2026-10-16T05:52:29.439295+00:00"
+      }
+    }
+  ],
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c"
+  },
+  "not_validated": [
+    "11 true MySQL tests NOT_RUN",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "integration",
+    "merge/deployment"
+  ],
+  "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+  "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+  "c00_read_public_readme_summary": true,
+  "c00_read_raw_class_files": false,
+  "cloud_manual_runs": 0,
+  "ordinary28_rerun": false
+}

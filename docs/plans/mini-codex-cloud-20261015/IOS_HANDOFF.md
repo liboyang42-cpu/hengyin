@@ -1,3 +1,11 @@
+## 第三队d592公开编译证据已核／实际测试0
+
+已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md)，证据`1d266f99ec55a50008bdc56057b9487adf7a3bd0`：固定d592334abee1a379963e7b72a58eec5e0f7bd5ad于06:08:19Z—06:10:59Z完成既有212 test-compile，guard0/completed；fresh主IT与匿名时钟class2份哈希、源码/日志哈希及精确容器清理入[FORWARD_D592_TEST_COMPILE_RESULT](FORWARD_D592_TEST_COMPILE_RESULT.json)。**无Surefire XML、实际测试0、11真MySQL仍NOT_RUN**；不称真并发/午夜行为闭环，不重跑或继承旧28。首次05:52:29Z锁拒绝0项/未编译原回执保留。
+
+EXTRA1bfa H2两项PASS已独立签收；CORE5752单失败类31定向待实际结果，adf51原FAIL保留。入口现有不新增，真实MySQL/Redis/HTTP/设备业务/候选集成合并部署均未验收，TEST_DEPLOYED=NO。
+
+### 以下为此前直接回报／待公开历史，当前以本节公开证据为准
+
 ## EXTRA H2两项通过／第三队仅编译通过
 
 已核读[EXTRA公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)：固定1bfa81a5的E02_12Test **2实际PASS／0失败错误跳过**，fresh精确1XML、212guard0/completed及精确清理，原首次锁拒绝0项保留。证据1ae7b60cab62696ec0a9259907cfad265496c554，源包/日志/XML哈希见[E02_12_ORDINARY_VPS_RESULT](E02_12_ORDINARY_VPS_RESULT.json)。仅生产Mapper XML/H2合同回归，NULL生产来源仍未证，不称真MySQL/生产NULL复现、不重复旧64。
