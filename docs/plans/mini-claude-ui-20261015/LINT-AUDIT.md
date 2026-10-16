@@ -17,7 +17,7 @@
 
 | 规则 | 命中 | 说明 |
 |---|---|---|
-| R1 | **1** | 见下表 F-4（#23 把 `hover-class` 挂在 `<text>` 上，不生效）；其余 51 个代码 PR 的新增可点元素都带 `hover-class`，或是自带按压态的 `cy-btn`/`cy-cell` |
+| R1 | **1** | 见下表 F-4（#23 把 `hover-class` 挂在 `<text>` 上，不生效）；其余 50 个代码 PR 的新增可点元素都带 `hover-class`，或是自带按压态的 `cy-btn`/`cy-cell` |
 | R2 | **0** | 新增方法简写回调 60 余处（#166/#164/#158/#152/#147/#141/#128/#118/#104/#84/#27/#25/#23），体内全部改用 `that`/闭包变量；其余新增回调均为箭头函数 |
 | R3 | **1 条需复核** | 见下表 F-1；宿主页新增半屏（#37 `roam-poi-filter`、#59 `club-edit` 返回守卫）均走 `sceneCurrent` |
 | R4 | **0 条违规，2 条 nit** | 见下表 F-2、F-3；所有成功态均在业务码 200（或回读确认）后才出现，没有发现假成功 |
@@ -28,7 +28,7 @@
 |---|---|---|---|---|---|
 | F-1 | #42 BL-05 | R3 需复核 | `components/cy/scene-roam-stamp-album/index.wxml:39` | 集邮册本身是 `pages/roam/index.wxml:880` 的 `sceneCurrent.id === 'roam-stamp-album'` 场景半屏（`variant: 'full'`）；BL-05 在组件里新增 `<cy-sheet show="{{!!detail}}">` 详情半屏，叠在场景半屏之上，显隐不经 `sceneCurrent`。同一组件也被 `pages/play/index.wxml:1518`、`components/cy/scene-deep-link/index.wxml:49` 挂载 | 监督线确认「场景内二级半屏」是否允许；不允许则改为组件内切换视图（不加新半屏），或在宿主注册子场景。改动前需用户/协调者拍板，本卡不改 |
 | F-2 | #88 BL-43 | R4 nit | `pages/merchant/decor/ai-npc/index.js:792`（`_doClearVoice` 的 `.catch`） | `_request` 的 reject 一律带中文兜底（`'请求失败，请重试'`/`'网络异常，请稍后重试'`），`refreshVoice` 自抛的也是中文；只有 `.then` 链内出现运行时异常（TypeError 等）时 `e.message` 才会是英文原文 | 可选：`e.message` 改为 `(e && e.message) \|\| '声音没有清除，请稍后再试'` 不能挡住英文；真要挡需判断 `e instanceof Error && /[一-龥]/`。与本页既有 `.catch((e) => toast(e.message))` 写法一致，**不阻塞** |
-| F-4 | #23 CL3 | R1 | `pages/gerenziliao/gerenziliao.wxml:172-173`（重新检查）、`:178-179`（推荐昵称胶囊）、`:182-184`（换一批）（head `79570ed2`） | 三处都是 `<text bindtap … hover-class="cy-pressed">`；微信 `text` 组件不支持 `hover-class`，点了没有按压反馈。初版 R1 只看「标签内有无 `hover-class=`」，漏了这一类 | 在 #23 里改：外包一层 `view` 并把 `hover-class` 移到 `view` 上（或直接把 `text` 换成 `view`）。本卡不改代码 |
+| F-4 | #23 CL3 | R1（**已在 #23 `94da5557` 修复**，三处 `<text>` 改为 `<view>`，head `06048b3d`） | `pages/gerenziliao/gerenziliao.wxml:172-173`（重新检查）、`:178-179`（推荐昵称胶囊）、`:182-184`（换一批）（head `79570ed2`） | 三处都是 `<text bindtap … hover-class="cy-pressed">`；微信 `text` 组件不支持 `hover-class`，点了没有按压反馈。初版 R1 只看「标签内有无 `hover-class=`」，漏了这一类 | 在 #23 里改：外包一层 `view` 并把 `hover-class` 移到 `view` 上（或直接把 `text` 换成 `view`）。本卡不改代码 |
 | F-3 | #164 BL-120（#166 BL-122 同一行） | R4 nit | `subpackageA/pages/myproject/index.js:347` 另存为模板 `success(res)` 内 `toast((res && res.msg) \|\| '已另存为主题模板')` | 成功分支已判 `res.code == '200'`，不是假成功；但 RuoYi 成功 msg 常为「操作成功」，会盖掉更具体的「已另存为主题模板」 | 可选：成功时固定显示「已另存为主题模板」。**不阻塞** |
 
 ### 已核、未命中但值得记一笔的
