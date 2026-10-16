@@ -29,6 +29,6 @@
 |---|---|---|
 | #153 | BL-109 创作者中心 | 个人页无现成创作者信息块；`applyStatus` 脱离申请入口无意义（申请入口需产品决定），`recentIncome` 属收益展示 |
 | #154 | BL-110 为你推荐 | 首页「推荐主题」有意只取运营人工推荐位（`/api/topic/list is_recommend=1`）；`RecommendationItemVO` 缺卡片字段且要求登录 |
-| #155 | BL-111 发现页筛选对齐 | 小程序现有筛选取值与 `DiscoveryFilterContract.schema` 完全一致（PR 附对照表）；核销列表无分页属另一问题 |
+| #155 | BL-111 发现页筛选对齐 | 小程序现有筛选取值与 `DiscoveryFilterContract.schema` 完全一致（PR 附对照表） |
 | #156 | BL-112 IP 世界 | 小程序没有 IP 世界/城市世界入口 |
 | #157 | BL-113 经营台账汇总 | 台账页已有服务端汇总（资金域）；`/orders/ledger` 是订单域，口径不等价。附带发现：核销列表只拉第 1 页，应走 `finance/redemptions` 的 `pageNum` 另开卡 |
