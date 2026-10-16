@@ -14,7 +14,7 @@
 | 4 等上游合入 | 9 | 上游合入后开新卡并关 |
 | 合计（diff 为空） | 59 | |
 | 5 有代码但不应合并的 PR | 2 | 见 §5 |
-| 6 无 PR 的重复 / 作废分支 | 15 | 见 §6，由分支所有者或协调者删除 |
+| 6 无 open PR 的重复 / 作废分支（12 个 PR 已关闭、3 个从未开 PR） | 15 | 见 §6，由分支所有者或协调者删除 |
 
 ### 与 DECISIONS-NEEDED.md 的口径差异（需要统一）
 - **#66 BL-30**：BL-128 放在「一、需要用户拍板」（圆角三选一），但 BL-30 已在用户 2026-10-15 晚的决定里作废，监督结论是 CLOSE。建议从拍板表中移出，直接关闭。
@@ -107,25 +107,27 @@
 | #75 BL-34 | 标题是 BLOCKED，但分支带着 #73 的全部代码（10 个文件）。监督结论 OK（「BLOCKED 记录，不要合并」）。是否另加举报入口待拍板；**无论怎么选都关闭、不合并** | 是（一、需要用户拍板） |
 | #118 BL-75 | 是 #77 与 #104 的菜单合并预演，已包含二者的提交和旧版 #73。按 MERGE-ORDER §3.1 推荐方案 A：合 #77 + #104 后关闭 #118 | 否（MERGE-ORDER §3.1 有取舍说明） |
 
-## 6. 无 PR 的重复 / 作废分支（`git diff --name-only` 文件数）
+## 6. 无 open PR 的重复 / 作废分支（`git diff --name-only` 文件数）
+
+> 15 个分支中 12 个已有**已关闭**（未合并）的 PR，只有 3 个从未开过 PR（`bl-22-list-key-fix`、`bl-27-honest-empty`、`bl-107-acceptance-batch58`）。核对时间 2026-10-16 01:55Z。
 
 | 分支 | 文件数 | 结论 |
 |---|---|---|
-| `claude/bl-22-list-key-fix` | 0 | 重复认领；正式 PR #58 |
-| `claude/bl-27-honest-empty` | 0 | 重复认领；正式 PR #65 |
-| `claude/bl-40-party-status-list` | 0 | 重复认领；正式 PR #82 |
-| `claude/bl-107-acceptance-batch58` | 0 | 重复认领；正式 PR #151 |
-| `claude/bl-08-nav-member` | 0 | BL-08 已作废 |
-| `claude/bl-51-report-reason-note` | 10 | **有代码**（含旧版 #73），与 #95 重复；不要合 |
-| `claude/bl-08-member-nav-bar` | 23 | BL-08 已作废（改现有 UI）；不要合 |
-| `claude/bl-09-club-nav-bar` | 24 | BL-09 已作废；不要合 |
-| `claude/bl-10-merchant-nav-bar` | 12 | BL-10 已作废；不要合 |
-| `claude/bl-11-roam-p3-nav-bar` | 11 | BL-11 已作废；不要合 |
-| `claude/bl-13-merchant-sheet` | 3 | BL-13 已作废；不要合 |
-| `claude/bl-14-publish-sheet` | 3 | BL-14 已作废；不要合 |
-| `claude/bl-15-merchant-borderless` | 3 | BL-15 已作废；不要合 |
-| `claude/bl-24-merchant-state-shell` | 12 | BL-24 已作废；不要合 |
-| `claude/bl-29-club-tokens` | 1 | BL-29 已作废；不要合 |
+| `claude/bl-22-list-key-fix` | 0 | 从未开 PR；重复认领；正式 PR #58 |
+| `claude/bl-27-honest-empty` | 0 | 从未开 PR；重复认领；正式 PR #65 |
+| `claude/bl-40-party-status-list` | 0 | PR #81 已关闭；重复认领；正式 PR #82 |
+| `claude/bl-107-acceptance-batch58` | 0 | 从未开 PR；重复认领；正式 PR #151 |
+| `claude/bl-08-nav-member` | 0 | PR #47 已关闭；BL-08 已作废 |
+| `claude/bl-51-report-reason-note` | 10 | PR #93 已关闭；**有代码**（含旧版 #73），与 #95 重复；不要合 |
+| `claude/bl-08-member-nav-bar` | 23 | PR #45 已关闭；BL-08 已作废（改现有 UI）；不要合 |
+| `claude/bl-09-club-nav-bar` | 24 | PR #46 已关闭；BL-09 已作废；不要合 |
+| `claude/bl-10-merchant-nav-bar` | 12 | PR #50 已关闭；BL-10 已作废；不要合 |
+| `claude/bl-11-roam-p3-nav-bar` | 11 | PR #49 已关闭；BL-11 已作废；不要合 |
+| `claude/bl-13-merchant-sheet` | 3 | PR #51 已关闭；BL-13 已作废；不要合 |
+| `claude/bl-14-publish-sheet` | 3 | PR #52 已关闭；BL-14 已作废；不要合 |
+| `claude/bl-15-merchant-borderless` | 3 | PR #54 已关闭；BL-15 已作废；不要合 |
+| `claude/bl-24-merchant-state-shell` | 12 | PR #67 已关闭；BL-24 已作废；不要合 |
+| `claude/bl-29-club-tokens` | 1 | PR #64 已关闭；BL-29 已作废；不要合 |
 
 ## 复核方法
 
