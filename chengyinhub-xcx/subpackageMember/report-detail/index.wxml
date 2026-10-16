@@ -78,6 +78,7 @@
       <cy-btn variant="primary" loading="{{true}}">提交中</cy-btn>
     </block>
     <block wx:elif="{{sheet === 'ok'}}">
+      <text wx:if="{{receiptText}}" class="rd-sheet__text">{{receiptText}}</text>
       <text class="rd-sheet__text">平台会重新调查，结果会更新在举报进度里。</text>
       <cy-btn variant="primary" bindtap="closeSheet">知道了</cy-btn>
     </block>

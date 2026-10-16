@@ -330,6 +330,54 @@ test('N1 处理器: 系统 tab 读举报进度通知，点进举报详情；读�
   } finally { h2.restore() }
 })
 
+test('BL-52: 申诉成功回执——回执属本举报且阶段可识别才给摘要，缺回执不编造', () => {
+  assert.equal(view.appealReceiptText({ reportId: 5, stage: 'APPEALED', publicStage: 'IN_REVIEW', version: 3 }, 5), '举报编号 5 · 当前阶段：申诉中')
+  assert.equal(view.appealReceiptText({ reportId: 6, stage: 'APPEALED' }, 5), '', '不是本举报的回执')
+  assert.equal(view.appealReceiptText({ reportId: 5, stage: 'WHATEVER' }, 5), '', '未知阶段')
+  assert.equal(view.appealReceiptText(null, 5), '')
+  assert.equal(view.appealReceiptText('x', 5), '')
+})
+
+test('BL-52 处理器: 申诉成功时 ok 半屏展示后端回执；网络失败靠回读确认时不显示回执行', () => {
+  let appealed = false
+  let mode = 'ok'
+  const h = loadPage('subpackageMember/report-detail/index.js', (o) => {
+    if (o.url.endsWith('/taxonomy')) { o.success({ code: 200, data: { reasons: [] } }); return }
+    if (o.url.endsWith('/appeal')) {
+      appealed = true
+      if (mode === 'ok') o.success({ code: 200, data: { reportId: 5, stage: 'APPEALED', publicStage: 'IN_REVIEW', version: 4 } })
+      else o.fail({})
+      return
+    }
+    o.success({ code: 200, data: { id: 5, stage: appealed ? 'APPEALED' : 'RESOLVED', timeline: appealed ? [{ eventType: 'APPEALED' }] : [] } })
+  })
+  try {
+    h.vm.onLoad({ reportId: '5' })
+    h.vm.openAppeal()
+    h.vm.onReasonInput({ detail: { value: '处理结论与事实不符' } })
+    h.vm.toConfirm()
+    h.vm.submitAppeal()
+    assert.equal(h.vm.data.sheet, 'ok')
+    assert.equal(h.vm.data.receiptText, '举报编号 5 · 当前阶段：申诉中')
+  } finally { h.restore() }
+  appealed = false
+  mode = 'fail'
+  const h2 = loadPage('subpackageMember/report-detail/index.js', (o) => {
+    if (o.url.endsWith('/taxonomy')) { o.success({ code: 200, data: { reasons: [] } }); return }
+    if (o.url.endsWith('/appeal')) { appealed = true; o.fail({}); return }
+    o.success({ code: 200, data: { id: 5, stage: appealed ? 'APPEALED' : 'RESOLVED', timeline: appealed ? [{ eventType: 'APPEALED' }] : [] } })
+  })
+  try {
+    h2.vm.onLoad({ reportId: '5' })
+    h2.vm.openAppeal()
+    h2.vm.onReasonInput({ detail: { value: '处理结论与事实不符' } })
+    h2.vm.toConfirm()
+    h2.vm.submitAppeal()
+    assert.equal(h2.vm.data.sheet, 'ok', '回读确认成功')
+    assert.equal(h2.vm.data.receiptText, '', '没有回执就不显示回执行')
+  } finally { h2.restore() }
+})
+
 // ---------- 入口与注册 ----------
 
 test('N1 入口: 只从系统消息进入；不在设置页放入口；两页注册在 subpackageMember', () => {

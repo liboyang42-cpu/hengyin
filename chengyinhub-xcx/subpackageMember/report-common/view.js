@@ -190,6 +190,16 @@ function validateAppealReason(value) {
 }
 
 // 幂等键:服务端要求 8–96 字符;同一份说明重试时复用,改了说明再换新键
+// BL-52:申诉成功回执(CommunityReportAppealReceiptVO:reportId/stage/publicStage/version)。
+// 只在回执确属本举报且阶段可识别时给一行;回执缺失(如网络失败后靠回读确认)就不显示,不编造。
+function appealReceiptText(receipt, reportId) {
+  if (!receipt || typeof receipt !== 'object') return ''
+  const id = positiveId(receipt.reportId)
+  if (!id || id !== positiveId(reportId)) return ''
+  const info = stageInfo(receipt.stage)
+  return info ? '举报编号 ' + id + ' · 当前阶段：' + info.label : ''
+}
+
 function makeRequestId(reportId, nowMs, randomPart) {
   const id = positiveId(reportId)
   const now = Number(nowMs) || Date.now()
@@ -201,5 +211,6 @@ module.exports = {
   PAGE_SIZE, APPEAL_MAX, STAGES, TARGETS, TABS,
   stageLabel, canAppeal, timeText, reasonLabelMap, normalizeReport, normalizeList,
   filterRows, timelineNodes, appealEventCount, appealConfirmed, validateAppealReason, makeRequestId,
+  appealReceiptText,
   positiveId,
 }
