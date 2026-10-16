@@ -20,6 +20,15 @@ function nonBlank(value, fallback) {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
+/** BL-80:stats = { reached, clicked }(OfficialBroadcastServiceImpl.reachStats);形状不对返回空串。 */
+function broadcastStatsText(res) {
+  if (!res || !(res.code == 200 || res.code == '200') || !isRecord(res.data)) return '';
+  const reached = Number(res.data.reached);
+  const clicked = Number(res.data.clicked);
+  if (!finiteCount(reached) || !finiteCount(clicked)) return '';
+  return '站内触达 ' + reached + ' 人 · 点击 ' + clicked + ' 人';
+}
+
 function validPayload(data) {
   return isRecord(data)
     && isRecordList(data.events)
@@ -120,6 +129,36 @@ Page({
       _st: Number.isInteger(b.status) && BC_ST[b.status] ? BC_ST[b.status] : '状态待确认',
       _reach: finiteCount(b.reachedCount) ? '站内触达 ' + b.reachedCount + ' 人' : '站内触达人数待确认',
       _city: nonBlank(b.city, '范围待确认'),
+    });
+  },
+
+  // BL-80 通知复盘:只读 reached/clicked;失败如实写在原触达行,再点一次重试。
+  openBroadcastStats(e) {
+    const index = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index);
+    const item = Number.isInteger(index) ? this.data.broadcasts[index] : null;
+    if (!item || !hasUsableId(item.id) || item._statsLoading) return;
+    const id = item.id;
+    const key = 'broadcasts[' + index + ']';
+    const sameItem = () => !this._unloaded && this.data.broadcasts[index] && this.data.broadcasts[index].id === id;
+    this.setData({ [key + '._statsLoading']: true, [key + '._statsText']: '正在读取复盘…' });
+    app.sendRequest({
+      url: '/api/official/broadcast/' + encodeURIComponent(String(id)) + '/stats',
+      method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      success: (res) => {
+        if (!sameItem()) return;
+        const text = broadcastStatsText(res);
+        this.setData({
+          [key + '._statsLoading']: false,
+          [key + '._statsText']: text || (app.getRequestErrorMessage(res, '复盘没读到') + '，点一下重试'),
+        });
+      },
+      fail: (res) => {
+        if (!sameItem()) return;
+        this.setData({
+          [key + '._statsLoading']: false,
+          [key + '._statsText']: app.getRequestErrorMessage(res, '网络连接失败') + '，点一下重试',
+        });
+      },
     });
   },
 
