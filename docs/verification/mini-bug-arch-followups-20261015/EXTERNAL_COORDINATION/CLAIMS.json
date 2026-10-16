@@ -653,7 +653,7 @@
       "slot": "E02",
       "task": null,
       "worker": "/root/external_e02",
-      "mode": "DELIVERED; TMP_ONLY_PREP_E02_25_PENDING_EXACT_INTERFACE_GRANT",
+      "mode": "DELIVERED_IDLE; RR_PATCH_PREPARED_PENDING_EXACT_INTERFACE_GRANT",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -1045,7 +1045,13 @@
       "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
       "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
       "comment": 6207443710,
-      "extra_new_method_write_allowed": false
+      "extra_new_method_write_allowed": false,
+      "prepared_patch": "/tmp/e02-25-proposal/production.patch",
+      "prepared_fixture_patch": "/tmp/e02-25-proposal/fixture-E02_24.patch",
+      "prepared_plan": "/tmp/e02-25-proposal/README.md",
+      "prepared_status": "COMPLETE_TMP_ONLY_NO_REPOSITORY_APPLICATION",
+      "new_source_dependency_blocker": "Only exact new Mapper method grant; same original writer retains E02_24 fixture, no writer change",
+      "actual_source_writers": 0
     }
   },
   "pending_local_failure_retests": [],
@@ -1164,5 +1170,5 @@
       "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
     }
   ],
-  "actual_targeted_preparation_workers": 1
+  "actual_targeted_preparation_workers": 0
 }

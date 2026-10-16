@@ -283,3 +283,5 @@ C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598
 另独立E02-25为支持MySQL RR时的真实评论创建重复键恢复读视图问题：T1旧空读视图→T2同请求完整提交→T1insert唯一冲突→普通重读仍看不到赢家。仓库MySQL+Druid DEFAULT无RC覆盖，不能宣称VPS实际必RR；MyBatis insert flushCache只清一级缓存不刷新RR readview。最小仅catch后专用current读，初始不锁缺失key。接口Java原授范围受限，已PR16#6207443710精确申请新方法/回归路径，原E02仅/tmp准备patch，不在repo实施、不混已交24。
 
 现111历史=58交付/40反证/9依赖或决策阻塞/4委派他队，READY0，目标50缺50；当前源码写者0、1名只在/tmp准备具体待转交补丁，不称满载或追加泛审计。C00若授精确新方法即可原writer继续；E01-19一行建议已公共备妥，E02-23跨owner仍待原写者。
+
+E02-25具体补丁与RR回归方案已/tmp准备完毕，源码/测试仓库未应用，原worker停止；真实源码活动0/READY0/阻塞9（111历史），未因本地faef验证等待而停合法独立项。唯一源阻塞是新Mapper方法精确grant；E02_24Test仍原E02写者，无需换人，未来仅必要duplicate fixture接线。新测试证据沿原lane唯一ID登记，不重复索一般开工批准。核心review差异：仅catch后普通select→selectCommentByAuthorRequestForUpdate，接口增exact author/request方法，XML同投影FOR UPDATE/useCachefalse/flushCachetrue；初始普通读及新24 parent绑定不变。真RR回归是未来方案，不是faef已交类，不能把设计4普通+2真库当实际已写/已测。
