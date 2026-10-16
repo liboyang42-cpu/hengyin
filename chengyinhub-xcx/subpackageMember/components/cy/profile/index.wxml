@@ -296,7 +296,7 @@
             <view class="pc-rank-sep"></view>
             <view class="pc-rank-right">
               <text class="pc-rank-k">累计探索</text>
-              <text class="pc-rank-v">{{exploreStat.shops || 0}}家店</text>
+              <text class="pc-rank-v">{{exploreStat.shops || 0}}家店 · {{exploreStat.km || '0.0'}}km</text>
               <text class="pc-rank-exp">本周 +{{exploreStat.weekExp}} EXP</text>
             </view>
           </view>
