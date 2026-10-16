@@ -1,0 +1,50 @@
+{
+  "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+  "direct_parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+  "package": "E04-07-A",
+  "archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+  "task": "cy-vps-extra-dedb44d5-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E04_07Test"
+  ],
+  "declared_tests": 3,
+  "actual_tests": 0,
+  "fresh_xml_count": 0,
+  "result": "NOT_RUN_ADMISSION_REFUSED",
+  "guard": {
+    "exitCode": 75,
+    "reason": "insufficient_start_memory",
+    "containerId": null
+  },
+  "started_at": "2026-10-16T13:01:10.104568+00:00",
+  "finished_at": "2026-10-16T13:01:10.150306+00:00",
+  "memavailable_before_kib": 2195624,
+  "required_start_mib": 2560,
+  "container_created": false,
+  "exact_context_container_filter": "chengyin-aws; name=^/cy-budget-212-extra-dedb44d5$; empty result, exit0",
+  "run_sha256": "ee498d67f941513b57ff9fe8bde0c417b3147d874792e81a8a45e2f47d90c621",
+  "guard_result_sha256": "68e7bf467687a6627071ce8b0861e27e954956dd30d0df362f9596adda7a69d6",
+  "retained_remote": [
+    "unit-run.json",
+    "unit-guard-result.json",
+    "selection.json",
+    "incoming/source.tar.gz",
+    "source",
+    "cache"
+  ],
+  "not_validated": [
+    "ordinary E04_07Test (0 executed)",
+    "true MySQL",
+    "true Redis",
+    "runtime HTTP",
+    "device/business acceptance",
+    "migration execution",
+    "merge/deploy"
+  ],
+  "notes": [
+    "Resource refusal is not a source/test failure and does not open an author repair slot.",
+    "No bypass, other-service stop, new entry, CI trigger, migration or deployment performed.",
+    "No prior pass results attributed to this SHA."
+  ]
+}
