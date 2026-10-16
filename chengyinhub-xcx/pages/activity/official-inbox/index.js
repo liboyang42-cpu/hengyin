@@ -4,6 +4,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const inviteCard = require('./invite-card.js');
 const TARGET_LABEL = { NODE: '指定站点职责', ROUTE: '指定路线职责', CHAPTER: '指定章节职责' };
 
 const STATUS = { INVITED: '待你确认', ACCEPTED: '已接受', ACTIVE: '履约中' };
@@ -71,6 +72,10 @@ Page({
               _status: STATUS[item.status] || item.status || '状态待确认',
               _role: role,
               _window: this.timeRange(item.windowStart, item.windowEnd),
+              // BL-06 角色说明 / 承接名额 / 活动暂停提示,均来自收件箱已有字段
+              _roleNote: inviteCard.roleNote(item.role),
+              _capacity: inviteCard.capacityText(item.capacity),
+              _paused: inviteCard.pausedText(item.controlState),
               _display: {
                 eventTitle: item.eventTitle || '未命名官方活动',
                 // CU-C-14:city=NULL 是全国活动(详情页写「全国」),不是「未设城市」;
@@ -84,6 +89,7 @@ Page({
           });
           this._loaded = true;
           this.setData({ invites, error: '', loading: false, refreshing: false });
+          this._checkReadback(invites);
         } else setInboxFetchFailure(this, res, hasSnapshot, requestId);
       },
       fail: (res) => setInboxFetchFailure(this, res, hasSnapshot, requestId),
@@ -110,6 +116,7 @@ Page({
         if (res && (res.code == 200 || res.code == '200')) {
           this._clearActionBusy(true);
           toast.success(isAccept ? '已接受' : '已更新');
+          this._expectReadback = { partyId, action };
           this.fetch();
         } else this._setActionFailure(context, app.getRequestErrorMessage(res, '操作未完成'), 'data');
       },
@@ -184,6 +191,15 @@ Page({
       actionError: '',
     });
     this._submitAction(context);
+  },
+
+  // BL-06 回读:动作成功后的下一次收件箱结果必须体现这次决定,否则如实提示,不当作已生效。
+  _checkReadback(invites) {
+    const expect = this._expectReadback;
+    if (!expect) return;
+    this._expectReadback = null;
+    if (!inviteCard.readbackMismatch(invites, expect)) return;
+    toast('已提交，但最新状态还没同步，请稍后下拉刷新');
   },
 
   _clearActionBusy(clearFailed) {
