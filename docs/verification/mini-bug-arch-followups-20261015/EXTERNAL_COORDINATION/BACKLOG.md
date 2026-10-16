@@ -7,7 +7,7 @@ CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / d
 | 包 | 完整源SHA | 直接父SHA | 最小普通计划 |
 |---|---|---|---|
 | E04-A未知审计、无新schema | `dedb44d54a4a277273943c0cbbca9f6e7528482a` | `a76268d5454c8a5c5e3181ae7574bfb93932f800` | E04_07Test3 |
-| E02旧帖收藏身份 | `13be997646c88b9eea282cc8c8225b42820dc3b3` | `dedb44d54a4a277273943c0cbbca9f6e7528482a` | 新6+旧12=18 |
+| E02旧帖收藏身份 | `13be997646c88b9eea282cc8c8225b42820dc3b3` | `dedb44d54a4a277273943c0cbbca9f6e7528482a` | 新6+旧18=24（含参数行） |
 | E04-B未来精确回执 | `923170abd8e468d62eb8404b16b990609a4da42a` | `13be997646c88b9eea282cc8c8225b42820dc3b3` | 新/续7+旧4=11；真库新5+旧3=8仍未验 |
 
 E02五生产/两旧fixture/新6方法/说明9路径已交；真实旧行+保留ID+作者+exact迁移requestId+受保护JSON数组元素共同构成现有可信映射，三处读写同谓词，缺失/伪造/substring/标量/擦标全拒绝且不关联。全部写者与author白名单拒marker证据见[E02-23](https://github.com/liboyang42-cpu/hengyin/blob/13be997646c88b9eea282cc8c8225b42820dc3b3/docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md)。H2函数alias是有限模型，不当nativeMySQL/部署数据证明，不新增桥/DDL/UI/共享community接口。
@@ -375,6 +375,15 @@ C00初4efd与补225b59精确转交已实际读全；所涉E02/E04生产及旧fix
 
 ## A正式内存准入拒绝与最终候选冻结
 
-本地实际212回执：固定dedb44d54a4a277273943c0cbbca9f6e7528482a，MemAvailable2195624kB<2560MiB，exit75 insufficient_start_memory，containerId=null、0项/freshXML0，精确容器名过滤确认无容器。源包b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191/task cy-vps-extra-dedb44d5-20261016保留；公开证据commit尚未提供，当前仅本地直接真实回报。不是源码失败/通过，不恢复作者修复线、不停其他任务或绕资源限制。
+本地实际212回执：固定dedb44d54a4a277273943c0cbbca9f6e7528482a，MemAvailable2195624kB<2560MiB，exit75 insufficient_start_memory，containerId=null、0项/freshXML0，精确容器名过滤确认无容器。源包b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191/task cy-vps-extra-dedb44d5-20261016保留；公共证据已核读：`f3569c2b5f04912ba75b3f0ead8c916a94fd2743`/VPS_EXTRA_dedb44d5；保留原直接回报历史。不是源码失败/通过，不恢复作者修复线、不停其他任务或绕资源限制。
 
-最终应用候选923170abd8e468d62eb8404b16b990609a4da42a（直接父13be997646c88b9eea282cc8c8225b42820dc3b3）无进一步源修改；普通A3/E0218/B11、真库B8的完整FQN/命令/条件见QUEUE.source_delivery_packages及PR16#6216061116、PR24#6216061352。声明不是实际项数，新候选不继承A或旧PASS；后续验证由本地按现有212承担。
+最终应用候选923170abd8e468d62eb8404b16b990609a4da42a（直接父13be997646c88b9eea282cc8c8225b42820dc3b3）无进一步源修改；普通A3/E0224/B11、真库B8的完整FQN/命令/条件见QUEUE.source_delivery_packages及PR16#6216061116、PR24#6216061352。声明不是实际项数，新候选不继承A或旧PASS；后续验证由本地按现有212承担。
+
+
+## 组合候选正式准入拒绝与声明数更正（证据 UTC 2026-10-16T13:09:03Z）
+
+已实际读取公共 [README](https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/README.md) 与 [summary](https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json)。固定源码923170abd8e468d62eb8404b16b990609a4da42a，212 exit75/insufficient_start_memory，MemAvailable2192124KiB<2560MiB；containerId=null、实际0/freshXML0/target0、无Maven日志。精确自有容器名由本地显式chengyin-aws核为空，未创建容器。源包f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec/task cy-vps-extra-923170ab-20261016及原source/cache/run/result保留。Cloud只读公开manifest，未自行访问VPS或重算原始日志哈希。
+
+更正此前E02组18的静态漏计：ApiCreativeSquareCommunityPolicyTest有8个普通@Test及1个六行@ParameterizedTest，按调用声明14；因此E02四类6+14+2+2=24，组合再加E04 7+4为六类35。35只是声明，全部实际未执行；旧回执18仅保留为被此处纠正的历史，不通过改测试减少数量。
+
+A独立候选准入拒绝证据f3569c2b5f04912ba75b3f0ead8c916a94fd2743继续保留。两次均NOT_RUN/非源码失败，不开修复槽、不继承旧PASS。真实MySQL新5+旧3仍未跑，迁移未执行。普通35待本地现有资源自然准入；不Cloud补跑、不新增入口/网络/CI/服务、不停别人、不改变门槛。此次提交仅本队三账，冻结生产/测试/依赖不变。

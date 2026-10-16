@@ -1139,21 +1139,30 @@
           "schema_dependency": "NONE; does not read history_id; may independently review/runtime before B",
           "fresh_xml": 0,
           "admission_receipt": {
-            "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
-            "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+            "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+            "direct_parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
             "task": "cy-vps-extra-dedb44d5-20261016",
-            "started_at_utc": "2026-10-16T13:01:10Z",
-            "exit_code": 75,
-            "reason": "insufficient_start_memory",
-            "memavailable_kb": 2195624,
-            "required_memavailable_mib": 2560,
-            "container_id": null,
+            "archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+            "declared_tests": 3,
             "actual_tests": 0,
-            "fresh_xml": 0,
-            "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
-            "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+            "fresh_xml_count": 0,
+            "result": "NOT_RUN_ADMISSION_REFUSED",
+            "guard": {
+              "exitCode": 75,
+              "reason": "insufficient_start_memory",
+              "containerId": null
+            },
+            "started_at": "2026-10-16T13:01:10.104568+00:00",
+            "memavailable_before_kib": 2195624,
+            "required_start_mib": 2560,
+            "container_created": false,
+            "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+            "evidence_commit": "f3569c2b5f04912ba75b3f0ead8c916a94fd2743",
+            "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/f3569c2b5f04912ba75b3f0ead8c916a94fd2743/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_dedb44d5/summary.json",
+            "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
             "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
-            "evidence_commit": null
+            "cloud_execution_allowed": false,
+            "old_pass_inherited": false
           }
         },
         "B": {
@@ -1211,6 +1220,14 @@
             "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
             "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
             "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+          },
+          "combined_candidate_admission_receipt": {
+            "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+            "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+            "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+            "result": "NOT_RUN_ADMISSION_REFUSED",
+            "actual_tests": 0,
+            "declared_tests": 35
           }
         }
       },
@@ -3901,7 +3918,7 @@
       "child_source_base_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
       "rolling_candidate_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
       "regression_methods_written": 6,
-      "planned_methods": 18,
+      "planned_methods": 24,
       "future_focused_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
       "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
       "delivery_comments": {
@@ -3909,7 +3926,18 @@
         "PR24": 6216061352
       },
       "resolved_contract": "Untrusted legacy identities reject bookmark AND cancellation and cannot enrich/filter favorites; only statically proved protected migration identity is retained",
-      "runtime_provenance_limit": "Currentrepo static trustedmarker proof only; deployed migration/data/schema, nativeMySQL JSON semantics and actualbusiness not validated"
+      "runtime_provenance_limit": "Currentrepo static trustedmarker proof only; deployed migration/data/schema, nativeMySQL JSON semantics and actualbusiness not validated",
+      "count_correction": {
+        "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "previous_controller_count": 8,
+        "corrected_controller_invocations": 14,
+        "basis": "8 @Test methods plus one @ParameterizedTest with 6 CsvSource rows; static source read only, no execution",
+        "previous_E02_group": 18,
+        "corrected_E02_group": 24,
+        "combined_six_classes_declared": 35,
+        "actual_combined_tests": 0,
+        "source_changed": false
+      }
     },
     {
       "id": "E02-24",
@@ -4022,7 +4050,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 21,
+  "queue_revision": 22,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -4142,7 +4170,7 @@
   "refill_status": "Two concrete previouslyblocked items implemented across3 publiccommits, not newbugIDs; no independentREADY remaining, no filler50. Local newcandidate verification does not block future clearlygranted work.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-23 protected existing migrationmapping reader/writer stopwrongtarget delivered;6new/12old ordinary18 plannedNOT_RUN; no bridge/UI/DDL/PR231 edits",
+    "E02": "E02-23 delivered; 6 new + 18 old invocations = 24 declared NOT_RUN (controller 8 plain + 6 parameter rows). Combined candidate 6 classes/35 declared, admission refused/actual0; no source failure.",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "A schema-compatibleunknown audit delivered; sameauthorB exactreceipt/newnullablemigration prepared and delivered;11 ordinary/8trueMySQL plannedNOT_RUN; noDDLexecution/backfill",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -5187,61 +5215,53 @@
     }
   },
   "validation_queue_state": {
-    "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
+    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+    "task": "cy-vps-extra-923170ab-20261016",
+    "archive_sha256": "f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec",
+    "declared_tests": 35,
+    "actual_tests": 0,
+    "fresh_xml_count": 0,
+    "target_directory_count": 0,
+    "maven_log_exists": false,
+    "result": "NOT_RUN_ADMISSION_REFUSED",
+    "guard": {
+      "exitCode": 75,
+      "reason": "insufficient_start_memory",
+      "containerId": null
+    },
+    "started_at": "2026-10-16T13:09:03.037086+00:00",
+    "memavailable_before_kib": 2192124,
+    "required_start_mib": 2560,
+    "container_created": false,
     "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
-    "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
-    "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
-    "child_parent_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
-    "write_files": [
-      "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
-      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
-      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
-      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
-      "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
-      "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
-      "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
-    ],
-    "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
+    "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+    "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
+    "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+    "cloud_execution_allowed": false,
+    "old_pass_inherited": false,
+    "package": "E02-23_PLUS_E04-07-B_COMBINED",
     "classes": [
+      "com.chengyinhub.business.longrun.E02_23Test",
+      "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
       "com.chengyinhub.business.longrun.E04_07Test",
       "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
     ],
-    "declared_tests": 11,
-    "actual_tests": null,
-    "actual_result": null,
-    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
-    "cloud_execution_allowed": false,
-    "old_pass_inherited": false,
-    "declared_breakdown": {
-      "new_ordinary_cumulative": 7,
-      "old_producer": 4
+    "declared_class_counts": {
+      "com.chengyinhub.business.longrun.E02_23Test": 6,
+      "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest": 14,
+      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": 2,
+      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest": 2,
+      "com.chengyinhub.business.longrun.E04_07Test": 7,
+      "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest": 4
     },
-    "depends_on_A_source": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
-    "migration": {
-      "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
-      "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
-      "old_rows": "NULL_NO_BACKFILL",
-      "future_runtime_order": "Apply reviewed migration in separately approved future operation BEFORE deploying B code; no deployment in this task",
-      "scope": "One guarded nullablehistory_id column only, no index/FK/base-schema/historicalmigration edits"
-    },
-    "real_mysql": {
-      "classes": [
-        "com.chengyinhub.business.longrun.E04_07MySqlIT",
-        "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest"
-      ],
-      "declared_tests": 8,
-      "new_methods": 5,
-      "old_methods": 3,
-      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
-      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-      "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
-      "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
-      "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
-    }
+    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest,com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
+    "retry_policy": "Local only if resources naturally meet existing212 entry; no Cloud retry/new entry/network/CI or stopping another task",
+    "true_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "migration_status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED"
   },
   "admission_history": [
     {
@@ -5265,6 +5285,60 @@
       "admission_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/60febdbdcdcc7eed2b445a80f3d1f21d2cd76966/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/admission-refused.json",
       "read_scope": "Public README and admission-refused.json actually read; no test summary/fresh XML exists for this refused attempt",
       "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
+    },
+    {
+      "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "direct_parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "task": "cy-vps-extra-dedb44d5-20261016",
+      "archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+      "declared_tests": 3,
+      "actual_tests": 0,
+      "fresh_xml_count": 0,
+      "result": "NOT_RUN_ADMISSION_REFUSED",
+      "guard": {
+        "exitCode": 75,
+        "reason": "insufficient_start_memory",
+        "containerId": null
+      },
+      "started_at": "2026-10-16T13:01:10.104568+00:00",
+      "memavailable_before_kib": 2195624,
+      "required_start_mib": 2560,
+      "container_created": false,
+      "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "evidence_commit": "f3569c2b5f04912ba75b3f0ead8c916a94fd2743",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/f3569c2b5f04912ba75b3f0ead8c916a94fd2743/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_dedb44d5/summary.json",
+      "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
+      "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false
+    },
+    {
+      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "task": "cy-vps-extra-923170ab-20261016",
+      "archive_sha256": "f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec",
+      "declared_tests": 35,
+      "actual_tests": 0,
+      "fresh_xml_count": 0,
+      "target_directory_count": 0,
+      "maven_log_exists": false,
+      "result": "NOT_RUN_ADMISSION_REFUSED",
+      "guard": {
+        "exitCode": 75,
+        "reason": "insufficient_start_memory",
+        "containerId": null
+      },
+      "started_at": "2026-10-16T13:09:03.037086+00:00",
+      "memavailable_before_kib": 2192124,
+      "required_start_mib": 2560,
+      "container_created": false,
+      "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+      "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
+      "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false
     }
   ],
   "actual_targeted_preparation_workers": 0,
@@ -5394,21 +5468,30 @@
       "schema_dependency": "NONE; does not read history_id; may independently review/runtime before B",
       "fresh_xml": 0,
       "admission_receipt": {
-        "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
-        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "direct_parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
         "task": "cy-vps-extra-dedb44d5-20261016",
-        "started_at_utc": "2026-10-16T13:01:10Z",
-        "exit_code": 75,
-        "reason": "insufficient_start_memory",
-        "memavailable_kb": 2195624,
-        "required_memavailable_mib": 2560,
-        "container_id": null,
+        "archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+        "declared_tests": 3,
         "actual_tests": 0,
-        "fresh_xml": 0,
-        "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
-        "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+        "fresh_xml_count": 0,
+        "result": "NOT_RUN_ADMISSION_REFUSED",
+        "guard": {
+          "exitCode": 75,
+          "reason": "insufficient_start_memory",
+          "containerId": null
+        },
+        "started_at": "2026-10-16T13:01:10.104568+00:00",
+        "memavailable_before_kib": 2195624,
+        "required_start_mib": 2560,
+        "container_created": false,
+        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "evidence_commit": "f3569c2b5f04912ba75b3f0ead8c916a94fd2743",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/f3569c2b5f04912ba75b3f0ead8c916a94fd2743/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_dedb44d5/summary.json",
+        "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
         "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
-        "evidence_commit": null
+        "cloud_execution_allowed": false,
+        "old_pass_inherited": false
       }
     },
     {
@@ -5435,7 +5518,7 @@
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest"
       ],
-      "declared_tests": 18,
+      "declared_tests": 24,
       "actual_tests": null,
       "actual_result": null,
       "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
@@ -5443,12 +5526,23 @@
       "old_pass_inherited": false,
       "declared_breakdown": {
         "new": 6,
-        "old_controller": 8,
+        "old_controller": 14,
         "old_mapper": 2,
         "old_sql_contract": 2
       },
       "environment": "Existing212 ordinary offline; H2/Jackson/MyBatis/Mockito dependencies already in repo; limited testJSON aliases are not nativeMySQL proof",
-      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed"
+      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed",
+      "count_correction": {
+        "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "previous_controller_count": 8,
+        "corrected_controller_invocations": 14,
+        "basis": "8 @Test methods plus one @ParameterizedTest with 6 CsvSource rows; static source read only, no execution",
+        "previous_E02_group": 18,
+        "corrected_E02_group": 24,
+        "combined_six_classes_declared": 35,
+        "actual_combined_tests": 0,
+        "source_changed": false
+      }
     },
     {
       "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
@@ -5505,6 +5599,14 @@
         "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
         "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
         "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+      },
+      "combined_candidate_admission_receipt": {
+        "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+        "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+        "result": "NOT_RUN_ADMISSION_REFUSED",
+        "actual_tests": 0,
+        "declared_tests": 35
       }
     }
   ],
@@ -5534,21 +5636,30 @@
       "schema_dependency": "NONE; does not read history_id; may independently review/runtime before B",
       "fresh_xml": 0,
       "admission_receipt": {
-        "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
-        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "direct_parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
         "task": "cy-vps-extra-dedb44d5-20261016",
-        "started_at_utc": "2026-10-16T13:01:10Z",
-        "exit_code": 75,
-        "reason": "insufficient_start_memory",
-        "memavailable_kb": 2195624,
-        "required_memavailable_mib": 2560,
-        "container_id": null,
+        "archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+        "declared_tests": 3,
         "actual_tests": 0,
-        "fresh_xml": 0,
-        "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
-        "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+        "fresh_xml_count": 0,
+        "result": "NOT_RUN_ADMISSION_REFUSED",
+        "guard": {
+          "exitCode": 75,
+          "reason": "insufficient_start_memory",
+          "containerId": null
+        },
+        "started_at": "2026-10-16T13:01:10.104568+00:00",
+        "memavailable_before_kib": 2195624,
+        "required_start_mib": 2560,
+        "container_created": false,
+        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "evidence_commit": "f3569c2b5f04912ba75b3f0ead8c916a94fd2743",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/f3569c2b5f04912ba75b3f0ead8c916a94fd2743/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_dedb44d5/summary.json",
+        "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
         "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
-        "evidence_commit": null
+        "cloud_execution_allowed": false,
+        "old_pass_inherited": false
       }
     },
     {
@@ -5575,7 +5686,7 @@
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest"
       ],
-      "declared_tests": 18,
+      "declared_tests": 24,
       "actual_tests": null,
       "actual_result": null,
       "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
@@ -5583,12 +5694,23 @@
       "old_pass_inherited": false,
       "declared_breakdown": {
         "new": 6,
-        "old_controller": 8,
+        "old_controller": 14,
         "old_mapper": 2,
         "old_sql_contract": 2
       },
       "environment": "Existing212 ordinary offline; H2/Jackson/MyBatis/Mockito dependencies already in repo; limited testJSON aliases are not nativeMySQL proof",
-      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed"
+      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed",
+      "count_correction": {
+        "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "previous_controller_count": 8,
+        "corrected_controller_invocations": 14,
+        "basis": "8 @Test methods plus one @ParameterizedTest with 6 CsvSource rows; static source read only, no execution",
+        "previous_E02_group": 18,
+        "corrected_E02_group": 24,
+        "combined_six_classes_declared": 35,
+        "actual_combined_tests": 0,
+        "source_changed": false
+      }
     },
     {
       "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
@@ -5645,6 +5767,14 @@
         "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
         "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
         "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+      },
+      "combined_candidate_admission_receipt": {
+        "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+        "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+        "result": "NOT_RUN_ADMISSION_REFUSED",
+        "actual_tests": 0,
+        "declared_tests": 35
       }
     }
   ],
@@ -5710,20 +5840,42 @@
     }
   },
   "latest_local_admission_refusal": {
-    "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
-    "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
-    "task": "cy-vps-extra-dedb44d5-20261016",
-    "started_at_utc": "2026-10-16T13:01:10Z",
-    "exit_code": 75,
-    "reason": "insufficient_start_memory",
-    "memavailable_kb": 2195624,
-    "required_memavailable_mib": 2560,
-    "container_id": null,
+    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+    "task": "cy-vps-extra-923170ab-20261016",
+    "archive_sha256": "f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec",
+    "declared_tests": 35,
     "actual_tests": 0,
-    "fresh_xml": 0,
-    "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
-    "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+    "fresh_xml_count": 0,
+    "target_directory_count": 0,
+    "maven_log_exists": false,
+    "result": "NOT_RUN_ADMISSION_REFUSED",
+    "guard": {
+      "exitCode": 75,
+      "reason": "insufficient_start_memory",
+      "containerId": null
+    },
+    "started_at": "2026-10-16T13:09:03.037086+00:00",
+    "memavailable_before_kib": 2192124,
+    "required_start_mib": 2560,
+    "container_created": false,
+    "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "evidence_commit": "39e3ea012b007a19f3885ba557235c1b94968323",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/39e3ea012b007a19f3885ba557235c1b94968323/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+    "read_scope": "Public README and summary actually read; remote run/result/XML hashes not independently retrieved or recomputed by Cloud",
     "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
-    "evidence_commit": null
+    "cloud_execution_allowed": false,
+    "old_pass_inherited": false
+  },
+  "declared_count_correction": {
+    "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+    "previous_controller_count": 8,
+    "corrected_controller_invocations": 14,
+    "basis": "8 @Test methods plus one @ParameterizedTest with 6 CsvSource rows; static source read only, no execution",
+    "previous_E02_group": 18,
+    "corrected_E02_group": 24,
+    "combined_six_classes_declared": 35,
+    "actual_combined_tests": 0,
+    "source_changed": false
   }
 }
