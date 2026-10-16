@@ -72,7 +72,7 @@ class CommunityAuditMediaPreviewTest {
         task.setSnapshotJson("{\"id\":7,\"authorId\":9,\"version\":4,\"body\":\"frozen words\"}");
         try (MockedStatic<FileOssUploadUtils> storage = signer()) {
             assertEmpty("UNAVAILABLE");
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
@@ -81,7 +81,7 @@ class CommunityAuditMediaPreviewTest {
             post.setVersion(5); assertEmpty("STALE"); post.setVersion(4);
             post.setAuthorId(10L); assertEmpty("STALE"); post.setAuthorId(9L);
             post.setBody("new content"); assertEmpty("STALE");
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
@@ -98,7 +98,7 @@ class CommunityAuditMediaPreviewTest {
             String original = task.getSnapshotJson();
             task.setSnapshotJson(original.replace("\"id\":7", "\"id\":8")); assertEmpty("UNAVAILABLE");
             task.setSnapshotJson(original.replace("\"authorId\":9", "\"authorId\":10")); assertEmpty("UNAVAILABLE");
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
@@ -110,7 +110,7 @@ class CommunityAuditMediaPreviewTest {
                     .thenReturn("upload/ffffffffffffffffffffffffffffffff.png");
             assertEmpty("STALE");
             when(mapper.selectMediaForSafety(7L)).thenReturn(Collections.emptyList()); assertEmpty("STALE");
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
@@ -120,13 +120,13 @@ class CommunityAuditMediaPreviewTest {
             storage.when(() -> FileOssUploadUtils.communityMediaObjectKey("https://foreign.invalid/image.png"))
                     .thenThrow(new IllegalArgumentException("untrusted"));
             assertEmpty("UNAVAILABLE");
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
     @Test void signerFailureKeepsTheTaskReadableWithoutAnyLongUrlFallback() {
         try (MockedStatic<FileOssUploadUtils> storage = signer()) {
-            storage.when(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300))
+            storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY))
                     .thenThrow(new IllegalStateException("unavailable"));
             assertEmpty("UNAVAILABLE");
             assertTrue(task.getSnapshotJson().contains("frozen words"));
@@ -146,7 +146,7 @@ class CommunityAuditMediaPreviewTest {
             assertEquals(KEY, row.getString("derivedObjectKey"));
             assertEquals(KEY, row.getString("derived_object_key"));
             assertTrue(original.contains("Signature=old"));
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY), never());
         }
     }
 
@@ -166,7 +166,7 @@ class CommunityAuditMediaPreviewTest {
         MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class);
         storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(OLD)).thenReturn(KEY);
         storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(KEY)).thenReturn(KEY);
-        storage.when(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300)).thenReturn(FRESH);
+        storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY)).thenReturn(FRESH);
         return storage;
     }
 }

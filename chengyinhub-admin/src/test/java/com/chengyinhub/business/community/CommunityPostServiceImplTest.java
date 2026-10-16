@@ -423,7 +423,7 @@ class CommunityPostServiceImplTest {
                      org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
             storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.communityMediaObjectKey(key))
                     .thenReturn(key);
-            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(key, 300))
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateCommunityMediaPresignedUrl(key))
                     .thenReturn(preview);
             service.publish(9L, null, 7L, state(3));
         }

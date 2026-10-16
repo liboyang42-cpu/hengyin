@@ -1,6 +1,8 @@
 package com.chengyinhub.common.utils.file;
 
 import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.ClientConfiguration;
+import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.OSSObject;
@@ -55,6 +57,65 @@ class FileOssUploadUtilsPresignedUrlTest {
             assertThrows(IllegalArgumentException.class, () ->
                     FileOssUploadUtils.communityMediaObjectKey(reference, "private-test",
                             "https://oss-cn-shanghai.aliyuncs.com"), reference);
+        }
+    }
+
+    @Test
+    void nativeSdkDefaultBareEndpointRetainsHttpForOtherBusinessTypes() throws Exception {
+        OSSClient client = new OSSClient("oss-cn-shanghai.aliyuncs.com",
+                new DefaultCredentialProvider("test-id", "test-secret"), new ClientConfiguration());
+        try {
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("private-test",
+                    "upload/0123456789abcdef0123456789abcdef.png");
+            request.setExpiration(new Date(System.currentTimeMillis() + 300_000L));
+            assertEquals("http", client.generatePresignedUrl(request).getProtocol());
+        } finally {
+            client.shutdown();
+        }
+    }
+
+    @Test
+    void nativeCommunitySdkSignsBareAndHttpsEndpointsWithoutChangingSignedQuery() throws Exception {
+        String key = "upload/0123456789abcdef0123456789abcdef.png";
+        Date now = new Date();
+        Date expiration = FileOssUploadUtils.shortLivedExpiration(now, 300);
+        for (String endpoint : new String[] {"oss-cn-shanghai.aliyuncs.com",
+                "https://oss-cn-shanghai.aliyuncs.com", "https://oss-cn-shanghai.aliyuncs.com/"}) {
+            OSSClient client = FileOssUploadUtils.createCommunityOssClient(endpoint,
+                    new DefaultCredentialProvider("test-id", "test-secret"));
+            try {
+                GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("private-test", key);
+                request.setExpiration(expiration);
+                URL signed = new URL(FileOssUploadUtils.resolveGeneratedUrl(client, request));
+                assertEquals("https", signed.getProtocol());
+                assertEquals("private-test.oss-cn-shanghai.aliyuncs.com", signed.getHost());
+                assertEquals("/" + key, signed.getPath());
+                assertEquals(key, FileOssUploadUtils.communityMediaObjectKey(
+                        signed.toString(), "private-test", endpoint));
+                java.util.Map<String, String> query = new java.util.HashMap<>();
+                for (String part : signed.getQuery().split("&")) {
+                    String[] pair = part.split("=", 2);
+                    query.put(pair[0], java.net.URLDecoder.decode(pair[1], "UTF-8"));
+                }
+                assertEquals("test-id", query.get("OSSAccessKeyId"));
+                assertEquals(expiration.getTime() / 1000L, Long.parseLong(query.get("Expires")));
+                assertEquals(300_000L, expiration.getTime() - now.getTime());
+                assertTrue(query.get("Signature") != null && !query.get("Signature").isEmpty());
+            } finally {
+                client.shutdown();
+            }
+        }
+    }
+
+    @Test
+    void communitySdkRejectsAmbiguousOrInsecureEndpointBeforeCreatingClient() {
+        for (String endpoint : new String[] {null, "", "http://oss-cn-shanghai.aliyuncs.com",
+                "https://user@oss-cn-shanghai.aliyuncs.com", "https://oss-cn-shanghai.aliyuncs.com:443",
+                "https://oss-cn-shanghai.aliyuncs.com/upload", "https://oss-cn-shanghai.aliyuncs.com?x=1",
+                "https://oss-cn-shanghai.aliyuncs.com#fragment", " oss-cn-shanghai.aliyuncs.com",
+                "https://oss-cn-shanghai.aliyuncs.com/%2f"}) {
+            assertThrows(IllegalArgumentException.class, () -> FileOssUploadUtils.createCommunityOssClient(
+                    endpoint, new DefaultCredentialProvider("test-id", "test-secret")));
         }
     }
 

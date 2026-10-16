@@ -53,7 +53,7 @@ class CommunityPrivateMediaContractTest {
         Map<String, Object> stored = media(LEGACY);
         when(mapper.selectMedia(7L)).thenReturn(Collections.singletonList(stored));
         try (MockedStatic<FileOssUploadUtils> storage = signer()) {
-            storage.when(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300))
+            storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY))
                     .thenReturn(PREVIEW, PREVIEW + "-renewed");
             Map<?, ?> first = firstMedia(service.detail(9L, 7L));
             Map<?, ?> renewed = firstMedia(service.detail(9L, 7L));
@@ -187,7 +187,7 @@ class CommunityPrivateMediaContractTest {
                 storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(PREVIEW)).thenReturn(KEY);
                 assertEquals(Integer.valueOf(403), assertThrows(ServiceException.class,
                         () -> service.registerMedia(9L, request)).getCode());
-                storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(anyString(), anyInt()), never());
+                storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(anyString()), never());
             }
         }
         verifyNoInsert();
@@ -202,7 +202,7 @@ class CommunityPrivateMediaContractTest {
             storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(other)).thenReturn(other);
             assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
                     () -> service.registerMedia(9L, request)).getCode());
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(anyString(), anyInt()), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(anyString()), never());
             verifyNoInsert();
         }
     }
@@ -216,7 +216,7 @@ class CommunityPrivateMediaContractTest {
                     .thenThrow(new IllegalArgumentException("untrusted source"));
             assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
                     () -> service.registerMedia(9L, request)).getCode());
-            storage.verify(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(anyString(), anyInt()), never());
+            storage.verify(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(anyString()), never());
             verifyNoInsert();
         }
     }
@@ -227,7 +227,7 @@ class CommunityPrivateMediaContractTest {
         Map<String, Object> stored = media(LEGACY);
         when(mapper.selectMedia(7L)).thenReturn(Collections.singletonList(stored));
         try (MockedStatic<FileOssUploadUtils> storage = signer()) {
-            storage.when(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300))
+            storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY))
                     .thenThrow(new IllegalStateException("storage unavailable"));
             assertThrows(IllegalStateException.class, () -> service.detail(9L, 7L));
             assertEquals(LEGACY, stored.get("derived_object_key"));
@@ -239,7 +239,7 @@ class CommunityPrivateMediaContractTest {
         MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class);
         storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(KEY)).thenReturn(KEY);
         storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(LEGACY)).thenReturn(KEY);
-        storage.when(() -> FileOssUploadUtils.generateShortLivedPresignedUrl(KEY, 300)).thenReturn(PREVIEW);
+        storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY)).thenReturn(PREVIEW);
         return storage;
     }
 

@@ -1527,7 +1527,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             for (Map.Entry<Long, String> entry : keys.entrySet()) {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("id", entry.getKey());
-                item.put("url", FileOssUploadUtils.generateShortLivedPresignedUrl(entry.getValue(), 300));
+                item.put("url", FileOssUploadUtils.generateCommunityMediaPresignedUrl(entry.getValue()));
                 items.add(item);
             }
             result.put("items", items);
@@ -1592,7 +1592,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         if (original != null) result.put("object_key", canonicalMediaKey(original.toString()));
         if (derived != null && !blank(derived.toString())) {
             String key = canonicalMediaKey(derived.toString());
-            result.put("derived_object_key", FileOssUploadUtils.generateShortLivedPresignedUrl(key, 300));
+            result.put("derived_object_key", FileOssUploadUtils.generateCommunityMediaPresignedUrl(key));
         }
         return result;
     }
