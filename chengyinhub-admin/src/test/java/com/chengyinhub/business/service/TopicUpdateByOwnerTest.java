@@ -4,6 +4,8 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -93,6 +96,26 @@ class TopicUpdateByOwnerTest {
         xpBudgetService = mock(IXpBudgetService.class);
         auditTaskService = mock(IAuditTaskService.class);
         omsTicketService = mock(IOmsTicketService.class);
+
+        // Mapper 成功插入须返回 1 并回填生成 ID；null 是 Mockito 重 stub 的占位调用。
+        AtomicLong chapterIds = new AtomicLong(801L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsTopicChapter chapter = invocation.getArgument(0);
+            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
+            return 1;
+        }).when(chapterMapper).insertCmsTopicChapter(any());
+        AtomicLong nodeIds = new AtomicLong(901L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsTopicNode node = invocation.getArgument(0);
+            if (node != null) node.setId(nodeIds.getAndIncrement());
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
+        AtomicLong activityIds = new AtomicLong(1001L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsActivity activity = invocation.getArgument(0);
+            if (activity != null) activity.setId(activityIds.getAndIncrement());
+            return 1;
+        }).when(activityMapper).insertCmsActivity(any());
 
         svc = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
