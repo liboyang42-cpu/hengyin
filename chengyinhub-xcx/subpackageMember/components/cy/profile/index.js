@@ -19,6 +19,7 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const { shapeMerchantNode, readFavoriteToggle } = require('../../../../utils/merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -360,6 +361,9 @@ Component({
     merchantTags: [],
     merchantCategories: [],
     merchantHasGeo: false,
+    // BL-69:商家在架据点(收藏入口);null = 无在架节点/读取失败,按钮不展示
+    merchantNode: null,
+    merchantNodeBusy: false,
     // 招牌主推卡:null = 未设置/已下架/已易主/坏数据,整块不渲染
     featured: null,
     activeTab: 'projects',
@@ -597,6 +601,8 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantNode: null,
+      merchantNodeBusy: false,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : 'posts'),
       memberTabs: memberTabs,
@@ -673,9 +679,12 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: null,
       isMerchantView: false
     });
+    this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
     applyTheme('dark');
   },
 
@@ -694,6 +703,8 @@ Component({
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
       merchantHasGeo: hasGeo,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: shapeFeaturedCard(m.featured),
       // 商家公开身份接管身份头:品牌名 / 头像 / 主页封面 / 城市角色 / 品牌口号
       heroImg: m.coverImage || this.data.heroImg,
@@ -701,6 +712,59 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    this.loadMerchantNode(m.id);
+  },
+
+  // BL-69:商家在架据点。无节点(data 为空)/读取失败都不展示收藏按钮,不打扰主页
+  loadMerchantNode: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
+    if (this.data.isSelf || !Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: '/api/city/nodes/merchant/' + id,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantNodeEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantNode: res && res.code == 200 ? shapeMerchantNode(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:收藏/取消收藏据点,以切换接口返回的 favorited 回读;失败如实提示,不改本地态
+  toggleMerchantNodeFavorite: function () {
+    var that = this;
+    var node = this.data.merchantNode;
+    if (this.data.merchantNodeBusy || !node || !node.poiId) return;
+    var epoch = this._merchantNodeEpoch;
+    var poiId = node.poiId;
+    var settle = function (favorited, msg) {
+      if (epoch !== that._merchantNodeEpoch || !that.data.merchantNode || that.data.merchantNode.poiId !== poiId) return;
+      if (favorited === null) {
+        that.setData({ merchantNodeBusy: false });
+        cyToast(msg);
+        return;
+      }
+      that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
+      cyToast.success(favorited ? '已收藏据点' : '已取消收藏');
+    };
+    this.setData({ merchantNodeBusy: true });
+    app.sendRequest({
+      url: '/api/city/nodes/' + poiId + '/favorite',
+      method: 'POST',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        var favorited = readFavoriteToggle(res);
+        settle(favorited, (res && res.msg) || '收藏状态没有更新，请重试');
+      },
+      fail: function () { settle(null, '网络异常，收藏状态没有更新'); },
+      successStatusAbnormal: function () { settle(null, '收藏状态没有更新，请重试'); }
+    });
   },
 
   retryMerchantProbe: function () { this.probeSubjectMerchant(); },
