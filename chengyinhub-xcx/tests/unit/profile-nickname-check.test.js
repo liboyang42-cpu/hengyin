@@ -226,4 +226,6 @@ test('视图:昵称输入挂校验反馈、换一个、可恢复错误', () => {
   assert.match(view, /bindtap="moreNicknameSuggestions"/);
   assert.match(view, /bindtap="retryNicknameCheck"/);
   assert.match(view, /<cy-inline-error wx:if="\{\{nicknameSuggestError\}\}"[^>]*bind:action="moreNicknameSuggestions"/);
+  // <text> 不支持 hover-class:可点的昵称链接/推荐胶囊必须是 <view>,否则没有按压反馈
+  assert.doesNotMatch(view, /<text[^>]*hover-class/);
 });
