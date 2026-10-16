@@ -669516,7 +669516,7 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "text",
+        "tag": "view",
         "event": "bindtap",
         "handler": "retryNicknameCheck",
         "line": 172,
@@ -669623,7 +669623,7 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "text",
+        "tag": "view",
         "event": "bindtap",
         "handler": "pickNicknameSuggestion",
         "line": 178,
@@ -669796,7 +669796,7 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "text",
+        "tag": "view",
         "event": "bindtap",
         "handler": "moreNicknameSuggestions",
         "line": 182,
