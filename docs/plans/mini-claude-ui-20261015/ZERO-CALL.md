@@ -8,18 +8,18 @@
 
 | 类别 | 数量 | 说明 |
 |---|---|---|
-| A 已由 open PR 接线 | 37 | 合入对应 PR 后不再是零调用 |
+| A 已由 open PR 接线 | 39 | 合入对应 PR 后不再是零调用 |
 | B 用户决定排除 | 21 | 会费 / 群聊 / 投票 / 邀请候任主办与转交 / 被举报方视图 |
 | C 资金、商城或支付 | 32 | 本线不碰资金政策 |
 | S 非小程序调用方 | 12 | 服务端回调、App 端登录、健康检查、旧上传口 |
 | D 宿主在 Codex | 61 | Codex `owned_files` 或运行时服务；本线只能交补丁 |
-| E 已核实 BLOCKED / 已有等价 | 23 | 每条都有对应 BLOCKED PR |
-| X 无现成宿主、尚未立卡 | 34 | 需产品决定是否做、放哪 |
+| E 已核实 BLOCKED / 已有等价 | 25 | 有对应 BLOCKED PR，或已有等价/新版接口 |
+| X 无现成宿主、尚未立卡 | 30 | 需产品决定是否做、放哪 |
 | **合计** | **220** | |
 
-结论：除 A 类外，剩下的零调用接口要么属于用户已经排除、资金、Codex 宿主或非小程序调用方，要么已经核实为 BLOCKED。X 类 34 条是唯一可能新开卡的池子，但都需要产品先决定入口（见 `DECISIONS-NEEDED.md`，BL-128）。
+结论：除 A 类外，剩下的零调用接口要么属于用户已经排除、资金、Codex 宿主或非小程序调用方，要么已经核实为 BLOCKED。X 类 30 条已逐条核实宿主：其中 2 条是小程序已改用新版接口的旧口（`coop/offer/circle-supply/reconfirm`、`roam/tiles`），其余都没有现成宿主页，是唯一可能新开卡的池子，需产品先决定做不做、放哪（见 `DECISIONS-NEEDED.md`，BL-128）。原先「尚未核实」的有宿主项已立卡：`club/dissolution-blockers`（BL-140 #183）、`merchant/business-status`（BL-141 #184）归 A；`coop/candidates`（#185 BLOCKED）、`club/set-member-role`（旧重复口）归 E。
 
-### A. 已由 open PR 接线（37）
+### A. 已由 open PR 接线（39）
 
 | 方法 | 路径 | 源码 | 接线 PR |
 |---|---|---|---|
@@ -60,6 +60,8 @@
 | POST | `/api/user/nickname/check` | `ApiUmsMemberController.java:112` | #23 |
 | POST | `/api/user/nickname/suggest` | `ApiUmsMemberController.java:118` | #23 |
 | POST | `/api/user/player-code` | `ApiUmsMemberController.java:131` | #114 |
+| POST | `/api/club/dissolution-blockers` | `ApiClubController.java:931` | #183（BL-140；宿主 `components/cy/scene-club-edit` 已有 `dissolutionBlockerItems`） |
+| POST | `/api/merchant/business-status` | `ApiMerchantController.java:305` | #184（BL-141；宿主 `pages/merchant/index`、`decor` 已调 `/business-status/update`） |
 
 ### B. 用户决定排除（会费/群聊/投票/候任主办与转交/被举报方视图）（21）
 
@@ -204,10 +206,10 @@
 | GET | `/api/play/theme/history` | `ApiThemeRuntimeController.java:27` | 宿主 pages/play/index.js（Codex）；#137/#161 BLOCKED |
 | POST | `/api/topic/publish-draft` | `ApiTopicController.java:1079` | ApiTopicController / 发布编辑器（Codex）；#145/#149 |
 | POST | `/api/topic/xp-budget` | `ApiTopicController.java:1734` | ApiTopicController / 发布编辑器（Codex）；#145/#149 |
-| POST | `/api/topic/list-to-merchant` | `ApiTopicController.java:2086` | ApiTopicController / 发布编辑器（Codex）；#145/#149 |
+| POST | `/api/topic/list-to-merchant` | `ApiTopicController.java:2086` | ApiTopicController / 发布编辑器（Codex）；#145/#149（`BACKEND-FINDINGS.md` 引的 `:2104` 是同一方法内的 `user_type` 判权行） |
 | GET | `/api/topic/publish-check` | `ApiTopicStateKeyController.java:164` | ApiTopicController / 发布编辑器（Codex）；#145/#149 |
 
-### E. 已核实 BLOCKED 或已有等价实现（需产品决定才会接）（23）
+### E. 已核实 BLOCKED 或已有等价实现（需产品决定才会接）（25）
 
 | 方法 | 路径 | 源码 | 依据 |
 |---|---|---|---|
@@ -234,8 +236,10 @@
 | POST | `/api/official/v2/drafts` | `ApiOfficialEventController.java:260` | 草稿全量覆盖无读合同（#79） |
 | POST | `/api/play/achievements` | `ApiPlayProgressController.java:3342` | 碎片/彩蛋无现有位置（#138 只补里程，数据取 growth） |
 | POST | `/api/recommendation/list` | `ApiRecommendationController.java:27` | 首页推荐位已有运营数据源（#154） |
+| POST | `/api/club/set-member-role` | `ApiClubController.java:1668` | 「兼容旧成员角色入口」，是 `roles/assign` 的旧重复口；小程序已用 `/api/club/roles/assign`（`pages/club/roles/index.js`） |
+| POST | `/api/coop/candidates` | `ApiCoopController.java:1064` | 与现有按主题筛选的合作列表等价（#185 BL-142 BLOCKED） |
 
-### X. 无现成宿主、尚未立卡（需产品决定）（34）
+### X. 无现成宿主、尚未立卡（需产品决定）（30）
 
 | 方法 | 路径 | 源码 | 依据 |
 |---|---|---|---|
@@ -244,12 +248,8 @@
 | POST | `/api/betagame/vote` | `ApiBetaGameController.java:112` | 内测游戏（含投票）无入口；vote 属投票类 |
 | POST | `/api/club/apply` | `ApiClubController.java:414` | 俱乐部「填完即有」走 create，无申请/审核态（#111） |
 | POST | `/api/club/my-apply` | `ApiClubController.java:448` | 俱乐部「填完即有」走 create，无申请/审核态（#111） |
-| POST | `/api/club/dissolution-blockers` | `ApiClubController.java:931` | 尚未逐条核实宿主 |
-| POST | `/api/club/set-member-role` | `ApiClubController.java:1668` | 尚未逐条核实宿主 |
 | POST | `/api/coop/offer/circle-supply/reconfirm` | `ApiCoopController.java:728` | 小程序已用 /reconfirm-current，此为旧口 |
-| POST | `/api/coop/candidates` | `ApiCoopController.java:1064` | 尚未逐条核实宿主 |
-| POST | `/api/growth/mission/complete` | `ApiGrowthController.java:51` | 尚未逐条核实宿主 |
-| POST | `/api/merchant/business-status` | `ApiMerchantController.java:305` | 小程序已用 /business-status/update；此读口未用 |
+| POST | `/api/growth/mission/complete` | `ApiGrowthController.java:51` | 成长中心页（`subpackageP3/pages/growthcenter`）只读 center/leaderboard，不渲染任务列表，无「完成任务」宿主 |
 | GET | `/api/merchant/crm/campaigns/coupons` | `ApiMerchantCrmController.java:74` | 触达任务写入/投递；#144 明确只做只读列表/详情，写操作需产品决定 |
 | POST | `/api/merchant/crm/campaigns/preview` | `ApiMerchantCrmController.java:83` | 触达任务写入/投递；#144 明确只做只读列表/详情，写操作需产品决定 |
 | POST | `/api/merchant/crm/campaigns` | `ApiMerchantCrmController.java:92` | 触达任务写入/投递；#144 明确只做只读列表/详情，写操作需产品决定 |
@@ -258,9 +258,9 @@
 | POST | `/api/merchant/crm/broadcast/preview` | `ApiMerchantCrmController.java:137` | 商家群发/画像对账写操作，无现成入口 |
 | POST | `/api/merchant/crm/broadcast` | `ApiMerchantCrmController.java:146` | 商家群发/画像对账写操作，无现成入口 |
 | POST | `/api/merchant/crm/profiles/reconcile` | `ApiMerchantCrmController.java:164` | 商家群发/画像对账写操作，无现成入口 |
-| POST | `/api/official/publish` | `ApiOfficialEventController.java:242` | 尚未逐条核实宿主 |
-| POST | `/api/official/broadcast` | `ApiOfficialEventController.java:330` | 尚未逐条核实宿主 |
-| GET | `/api/preset/style/list` | `ApiPresetController.java:29` | 尚未逐条核实宿主 |
+| POST | `/api/official/publish` | `ApiOfficialEventController.java:242` | 官方轻发布旧口（白名单）；现有入口 `pages/activity/list` 只读 can-publish，V2 草稿另见 #79，无轻发布宿主 |
+| POST | `/api/official/broadcast` | `ApiOfficialEventController.java:330` | 官方通知发送（白名单）；小程序只消费 `/api/official/broadcast/{id}/click`（`subpackageB/pages/im/chat/index.js:714`），无发送宿主 |
+| GET | `/api/preset/style/list` | `ApiPresetController.java:29` | 官方路线页只用 `/api/preset/route/*`；主题风格预设无现成宿主（若做，大概率落在发布编辑器，Codex） |
 | GET | `/api/roam/tiles` | `ApiRoamController.java:437` | 小程序已用分页版 /api/roam/tiles/page，此为旧全量口 |
 | POST | `/api/roam/hangout/create` | `ApiRoamHangoutController.java:57` | 漫游约伴：小程序只读 /nearby，发起/加入/举报流程无宿主页 |
 | GET | `/api/roam/hangout/detail` | `ApiRoamHangoutController.java:66` | 漫游约伴：小程序只读 /nearby，发起/加入/举报流程无宿主页 |
@@ -272,7 +272,7 @@
 | POST | `/api/track/drafts` | `ApiTrackController.java:88` | 轨迹草稿/转主题：漫游页无保存轨迹入口；转主题会进发布编辑器（Codex） |
 | POST | `/api/track/to-topic` | `ApiTrackController.java:102` | 轨迹草稿/转主题：漫游页无保存轨迹入口；转主题会进发布编辑器（Codex） |
 | POST | `/api/track/delete` | `ApiTrackController.java:170` | 轨迹草稿/转主题：漫游页无保存轨迹入口；转主题会进发布编辑器（Codex） |
-| POST | `/api/user/statistics_chat` | `ApiUmsMemberController.java:276` | 尚未逐条核实宿主 |
+| POST | `/api/user/statistics_chat` | `ApiUmsMemberController.java:276` | 旧统计图表口；个人页积分统计已用 `/api/user/points/statistics`（`profile/index.js:1030`），无图表宿主 |
 
 ## 复跑
 
