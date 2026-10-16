@@ -27,7 +27,7 @@
 
 | PR | BL | 原因 |
 |---|---|---|
-| #160 | BL-116 圈层探索记录卡 | 已实现：`pages/play/circle/index.js` 已读 `GET /api/circle-theme/session/{sessionId}/card` 并渲染记录卡 |
+| #160 | BL-116 圈层探索记录卡 | 已实现：`pages/play/circle/index.js` 已读 `GET /api/circle-theme/session/{sessionId}/card` 并渲染记录卡。验收（PR 正文原话）：确认 `pages/play/circle` 结束时显示记录卡（现有行为） |
 | #161 | BL-117 主题游玩记录卡 | 唯一宿主 `pages/play/index.js` 属 Codex；与 BL-94 同因无宿主 |
 | #162 | BL-118 主题模板详情 | 货架主题卡点击直达发布器（2026-08-30 裁决），插详情会改现有行为，需产品决定 |
 | #163 | BL-119 俱乐部承接意向 | 依赖 BL-118 |
