@@ -143,5 +143,7 @@
   "raw_vps_xml_read_by_c00": false,
   "history_preserved": true,
   "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
-  "repair_status": "SOURCE_DELIVERED_UNVERIFIED_NOT_RUN_31"
+  "repair_status": "ORIGINAL_FAILED_CLASS_CLOSED_BY5752_TARGETED31_PASS",
+  "closing_evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+  "closing_result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
 }

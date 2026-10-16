@@ -5010,7 +5010,7 @@
   "active_claims": {
     "C01": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C02": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
-    "C03": "OLD_TOPIC_UPDATE_FIXTURE_SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+    "C03": "TARGETED31_PASS_REPAIR_SLOT_RELEASED_SOURCE_FROZEN",
     "C04": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C05": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C06": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK"
@@ -5033,7 +5033,7 @@
     "repair_slot_limit": 1,
     "repair_policy": "Prioritize original exact file owner; transfer repair role after prior repair worker stops; multiple failures serial queue. Others do independent authorized source tasks and push without waiting for tests/CI. No fabricated tasks or simultaneous writers.",
     "core_actual_source_writers_now": 0,
-    "core_repair_slot": "IDLE_SOURCE_REPAIRS_DELIVERED_LOCAL_RETEST_PENDING",
+    "core_repair_slot": "AVAILABLE_NO_ACTIVE_REPAIR_LOCAL_TARGETED31_PASS",
     "extra_last_actual_ack": {
       "comment": 6198215180,
       "dispatched": 3,
@@ -5360,7 +5360,7 @@
     "full_matrix_rerun": false,
     "source_repairs": "Original-author test fixture-only repairs, no production changes in repair diff"
   },
-  "repair_slot_status": "SOURCE_REPAIR_DELIVERED_WAIT_LOCAL_TARGETED31",
+  "repair_slot_status": "RELEASED_TARGETED31_PASS_NO_OPEN_FAILURE_IN_CURRENT_BATCH",
   "existing_external_packet_work": {
     "id": "E01-19",
     "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
@@ -5498,7 +5498,7 @@
     "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
     "packet": "C03_14_SOURCE_DELIVERY.json",
     "source_status": "SOURCE_DELIVERED_UNVERIFIED",
-    "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
+    "ordinary": "Originaladf51FAIL retained; failedclass closedby5752targeted31PASS, notnewfull51",
     "actual_source_writers": 0,
     "no_old_pass_inherited": true
   },
@@ -5518,9 +5518,38 @@
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
     "production_changed": false,
     "old_test_class31_assertions_unchanged": true,
-    "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+    "verification": "TARGETED31_ACTUAL_PASS_OTHER_LAYERS_UNVERIFIED",
     "full51_repeat": false,
     "actual_source_writers": 0,
-    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
+    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+    "repair_slot_released": true
+  },
+  "latest_core_5752_targeted_validation": {
+    "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "result": "TARGETED_ORDINARY_PASS",
+    "actual_tests": 31,
+    "passed": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+    "author_signoff": {
+      "worker": "/root/topic_like_cancel_sol",
+      "owner": "CORE/C03",
+      "state": "ACK_RECEIVED_TARGETED31_PASS_SLOT_RELEASE_FILE_LOCK_RETAINED",
+      "basis": "Originalwriter directly readsharedC00publicevidence record and replied explicitACK in collaboration; no further edits/tests/Git",
+      "old51_failure_retained": true,
+      "no_new_full51_claim": true,
+      "no_old20_inherited": true
+    },
+    "repair_slot_released": true,
+    "new_full51_rerun": false,
+    "old_other20_inherited": false,
+    "true_db_http_device_merge_deploy_accepted": false
   }
 }

@@ -2,7 +2,7 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "CORE5752_SINGLE31_PENDING_EXTRA1bfa_H2_2_PASS_FORWARDd592_PUBLIC_COMPILE_ONLY_PASS",
+  "execution_status": "CORE5752_TARGETED31_PASS_EXTRA1bfa_H2_2_PASS_FORWARDd592_COMPILE_ONLY_PASS_NO_LOCAL_JAVA_ACTIVE_TRUE_DB_UNVERIFIED",
   "candidates": {
     "CORE": {
       "pr": 44,
@@ -1130,14 +1130,20 @@
     "repair_slot_status": "RELEASED"
   },
   "core_latest_delta_validation": {
-    "status": "NOT_RUN_REPAIR_SOURCE_DELIVERED_LOCAL_RETEST_PENDING",
+    "status": "TARGETED31_ACTUAL_PASS",
     "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
     "source_declarations": 31,
     "full51_repeat": false,
     "environment": "Localexisting212 offline; no DB/Redis/newdependency",
     "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.service.TopicUpdateByOwnerTest test",
     "candidate_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
-    "actual_executed_tests": null
+    "actual_executed_tests": 31,
+    "passed": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
   },
   "latest_three_team_candidates": {
     "CORE": {
@@ -1146,7 +1152,7 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 1,
       "source_declarations": 31,
-      "local_verification": "NOT_RUN_NEW_REPAIR_SINGLE_CLASS31",
+      "local_verification": "TARGETED31_PASS_PUBLIC_EVIDENCE_READ_OTHER_LAYERS_UNVERIFIED",
       "previous_candidate_validation": {
         "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
         "result": "ORDINARY_TARGETED_PASS",
@@ -1217,7 +1223,8 @@
         "cloud_manual_runs": 0
       },
       "delivery_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-      "previous_candidate_failure_packet": "C03_ADF51_VPS_FAILURE.json"
+      "previous_candidate_failure_packet": "C03_ADF51_VPS_FAILURE.json",
+      "validation_result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
     },
     "EXTRA": {
       "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -1940,7 +1947,7 @@
     "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
     "packet": "C03_14_SOURCE_DELIVERY.json",
     "source_status": "SOURCE_DELIVERED_UNVERIFIED",
-    "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
+    "ordinary": "Originaladf51FAIL retained; failedclass closedby5752targeted31PASS, notnewfull51",
     "actual_source_writers": 0,
     "no_old_pass_inherited": true
   },
@@ -2026,17 +2033,18 @@
   },
   "current_local_validation_queue": {
     "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
-    "state": "CORE5752_SINGLE31_PENDING_EXTRA2_H2_PASS_FORWARD_COMPILE_ONLY_PASS",
+    "state": "CURRENT_FOCUSED_BATCH_COMPLETE_NO_LOCAL_JAVA_ACTIVE",
     "source_failure": false,
     "cloud_runs": 0,
     "new_entry": false,
-    "guard_refusal_scope": "Historicalfirstrefusalsretained; latestExtraH2/FORWARDcompilepassed. CurrentCORE31awaitactualresult, no newrefusalinferred"
+    "guard_refusal_scope": "Historicalfirstrefusalsretained; latestExtraH2/FORWARDcompilepassed. CurrentCORE31awaitactualresult, no newrefusalinferred",
+    "current_repair_slots": 0
   },
   "core_c03_topic_update_repair": {
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-    "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+    "state": "TARGETED31_PASS_SLOT_RELEASED",
     "repair_writer": "/root/topic_like_cancel_sol",
-    "repair_slot_count": 1,
+    "repair_slot_count": 0,
     "failure_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
     "actual51": {
       "passed": 35,
@@ -2047,10 +2055,21 @@
     "newC03_14class10": "PASS_ONLY_ATadf",
     "repair_scope": "Oldfixtureonly/31businessassertionspreserved",
     "public_failure_evidence": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
-    "retest": "NOT_RUN_SINGLE_CLASS31_NEW_SHA",
+    "retest": "31_ACTUAL_PASS_PUBLIC_EVIDENCE_READ",
     "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
     "actual_source_writers": 0,
-    "failure_packet": "C03_ADF51_VPS_FAILURE.json"
+    "failure_packet": "C03_ADF51_VPS_FAILURE.json",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+    "closing_evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+    "author_signoff": {
+      "worker": "/root/topic_like_cancel_sol",
+      "owner": "CORE/C03",
+      "state": "ACK_RECEIVED_TARGETED31_PASS_SLOT_RELEASE_FILE_LOCK_RETAINED",
+      "basis": "Originalwriter directly readsharedC00publicevidence record and replied explicitACK in collaboration; no further edits/tests/Git",
+      "old51_failure_retained": true,
+      "no_new_full51_claim": true,
+      "no_old20_inherited": true
+    }
   },
   "latest_core_adf51_result": {
     "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
@@ -2156,10 +2175,12 @@
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
     "production_changed": false,
     "old_test_class31_assertions_unchanged": true,
-    "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+    "verification": "TARGETED31_ACTUAL_PASS_OTHER_LAYERS_UNVERIFIED",
     "full51_repeat": false,
     "actual_source_writers": 0,
-    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
+    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+    "repair_slot_released": true
   },
   "latest_extra_e02_12_validation": {
     "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -2226,5 +2247,32 @@
     "fresh_class_files": 2,
     "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "ordinary28_not_repeated": true
+  },
+  "latest_core_5752_targeted_validation": {
+    "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "result": "TARGETED_ORDINARY_PASS",
+    "actual_tests": 31,
+    "passed": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+    "author_signoff": {
+      "worker": "/root/topic_like_cancel_sol",
+      "owner": "CORE/C03",
+      "state": "ACK_RECEIVED_TARGETED31_PASS_SLOT_RELEASE_FILE_LOCK_RETAINED",
+      "basis": "Originalwriter directly readsharedC00publicevidence record and replied explicitACK in collaboration; no further edits/tests/Git",
+      "old51_failure_retained": true,
+      "no_new_full51_claim": true,
+      "no_old20_inherited": true
+    },
+    "repair_slot_released": true,
+    "new_full51_rerun": false,
+    "old_other20_inherited": false,
+    "true_db_http_device_merge_deploy_accepted": false
   }
 }

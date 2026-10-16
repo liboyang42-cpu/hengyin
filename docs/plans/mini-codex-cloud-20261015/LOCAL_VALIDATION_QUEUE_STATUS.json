@@ -1,6 +1,6 @@
 {
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "state": "CORE5752_SINGLE31_RETEST_PENDING_EXTRA2_H2_PASS_FORWARD_TEST_COMPILE_ONLY_PASS",
+  "state": "CURRENT_FOCUSED_BATCH_COMPLETE_NO_LOCAL_JAVA_ACTIVE",
   "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
   "entry_decision": "VALIDATION_ENTRY_DECISION.json",
   "candidates": {
@@ -9,15 +9,24 @@
       "action": "ordinary targeted repairedfixture only",
       "source_declared_tests": 31,
       "classes": 1,
-      "state": "LOCAL_REVIEWED_SOURCE_PACKAGE_READY_SINGLE31_ADMISSION_PENDING_RESULT",
-      "actual_tests": null,
+      "state": "TARGETED31_ACTUAL_PASS",
+      "actual_tests": 31,
       "source_failure": "Notconfirmedproductionregression; oldfixtureidentitygapreview",
       "repair_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
       "previous_failed_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
       "prior_failure_packet": "C03_ADF51_VPS_FAILURE.json",
       "retest_full51": false,
       "source_archive_sha256": "f82ec1b33dfc2a5bf6e132a2b6449827dd9e578ef83bfa1d48f90bd198718326",
-      "task": "cy-vps-core-5752ee6f-20261016"
+      "task": "cy-vps-core-5752ee6f-20261016",
+      "passed": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+      "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+      "guard_exit_code": 0,
+      "fresh_exact_xml": true,
+      "repair_slot_released": true
     },
     "EXTRA": {
       "sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -100,8 +109,8 @@
       "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json"
     }
   },
-  "retry": "Local verifier waits for shared lock to release normally, then existing212 serial execution; no bypass/stopping other tasks/new entry or manualCI trigger",
-  "repair_slots": "OriginalC03repairsource deliveredstopped0; failure notclosed until newtargetedreport",
+  "retry": "No repeatpassing tests; onlynewreal source or unresolvedfailure viaexisting212; no newentry/manualCI",
+  "repair_slots": "RELEASED_CURRENT_ORDINARY_FAILURE_CLOSED_FILE_LOCK_RETAINED",
   "source_work": "Only explicit real independent source tasks may continue; no new task invented from queue",
   "business_decisions": {
     "pending_local_user_answers": true,
@@ -129,5 +138,6 @@
     "fresh_class_files": 2,
     "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "ordinary28_not_repeated": true
-  }
+  },
+  "local_java_active": false
 }

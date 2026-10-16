@@ -1,3 +1,11 @@
+## CORE5752单类31项通过／原作者签收并释放修复槽
+
+C00已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/d31786327b5e9c1be346eb911a386b28e31b3da5/docs/verification/mini-bug-arch-20261015/VPS_CORE_5752ee6f/README.md)，证据`d31786327b5e9c1be346eb911a386b28e31b3da5`：固定5752ee6fd302dab9e610f65cb8f3dc5b2b66201d的TopicUpdateByOwnerTest **31实际PASS／0失败错误跳过**，fresh精确1XML/31testcase、212guard0/completed、源包/日志/XML哈希与精确容器清理入[C03_5752_TARGETED_VPS_RESULT](C03_5752_TARGETED_VPS_RESULT.json)。原CORE/C03作者已实际只读签收ACK，当前普通失败闭环，单修复槽释放，原身份/文件锁保留。
+
+原adf51=35P/1F/15E/0S公开证据cd57永久保留；5752只复测旧失败类31，不继承其他三类20，不称新51全跑。EXTRA1bfa H2两项PASS（1ae7b60c）、第三d592仅编译PASS/实际0测试（1d266f99）各自分层保留；11真MySQL及其他现有入口未覆盖真存储仍NOT_RUN。root本轮无活动Java，不重复旧PASS。真实DB/Redis/HTTP/设备业务/候选集成合并部署未验，TEST_DEPLOYED=NO；保持现有入口不新增。三个业务问题仅阻塞对应身份/DDL合同，未答不猜规则，不影响明确独立项。
+
+### 以下为原失败、修复及此前验证历史，以本节最新实际结果为准
+
 ## 第三队d592公开编译证据已核／实际测试0
 
 已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md)，证据`1d266f99ec55a50008bdc56057b9487adf7a3bd0`：固定d592334abee1a379963e7b72a58eec5e0f7bd5ad于06:08:19Z—06:10:59Z完成既有212 test-compile，guard0/completed；fresh主IT与匿名时钟class2份哈希、源码/日志哈希及精确容器清理入[FORWARD_D592_TEST_COMPILE_RESULT](FORWARD_D592_TEST_COMPILE_RESULT.json)。**无Surefire XML、实际测试0、11真MySQL仍NOT_RUN**；不称真并发/午夜行为闭环，不重跑或继承旧28。首次05:52:29Z锁拒绝0项/未编译原回执保留。

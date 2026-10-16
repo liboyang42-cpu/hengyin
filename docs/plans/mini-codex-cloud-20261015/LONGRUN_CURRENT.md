@@ -2,20 +2,22 @@
 
 本轮实际继续：CORE协作者ID形状修复、EXTRA POI查询NULL兼容修复、第三队成长真库回归夹具时钟修正均已push；不是仅恢复旧EXHAUSTED快照。三个原作者现均交付停写、文件锁保留，实际源码writer0/READY0。后续真实失败只回原作者单修复槽；最多每队6个gpt-6.1-sol，不为并行或50项造任务。
 
+当前集中批次已结束：CORE5752普通31PASS／EXTRA1bfa H2普通2PASS／第三d592仅test-compilePASS且实际测试0。root无活动Java，原C03明确ACK、单修复槽释放；原作者与源文件锁保留，后续仅真实新独立项或失败才恢复，不凑任务。
+
 ## 当前精确候选与本地验证
 
 | 队伍 | 公共候选 | 本轮差异 | 最新验证边界 |
 |---|---|---|---|
-| CORE / PR44 | `5752ee6fd302dab9e610f65cb8f3dc5b2b66201d` | adf之上仅旧TopicUpdate31 fixture成功生成ID前提，生产0改 | 修后单类31 NOT_RUN；adf原51=35P/1F/15E历史保留，不全51重跑 |
+| CORE / PR44 | `5752ee6fd302dab9e610f65cb8f3dc5b2b66201d` | adf之上仅旧TopicUpdate31 fixture成功生成ID前提，生产0改 | 单类31实际PASS/F0/E0/S0，公开d3178632已核，原作者ACK/修复槽释放；adf51历史保留，不新51全跑 |
 | EXTRA / PR36 | `1bfa81a5a58ffa8112c10414dad9fdb1701ef188` | E02-12：仅POI options状态谓词与既有status1保存/公开合同对齐、2方法H2真实XML回归及说明 | 本地H2普通单类2实际PASS/F0/E0/S0，公开1ae7b60c已核；不继承旧64 |
 | FORWARD / PR72 | `d592334abee1a379963e7b72a58eec5e0f7bd5ad` | F3-GROW-03：仅原PlayerGrowthConcurrencyMySqlIT统一固定逻辑日与seed；11方法和全部断言不变 | 最新test-compile guard0通过、fresh主/匿名时钟类及清理已回报，[公开编译报告已核](https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md)；实际测试0，首次锁拒绝保留；普通两类/生产仍bde且未改，不重跑旧28；真库11仍NOT_RUN |
 
-当前本地[排队记录](LOCAL_VALIDATION_QUEUE_STATUS.json)：共享java-build.lock由其他prelaunch任务持有；CORE5752单类31定向复测待结果，adf51原失败保留；EXTRA普通H2两项已通过、公开证据已核，F3首次test-compile准入拒绝历史保留、最新仅编译通过且实际测试0。不绕锁、不停止其他任务，本地按现有212串行；不因资源拒绝开启作者修复槽。
+当前本地[批次记录](LOCAL_VALIDATION_QUEUE_STATUS.json)：首次共享锁拒绝仅作历史保留，当前批次已结束、本地root无活动Java；CORE5752单类31定向31PASS已签收，adf51原失败保留；EXTRA普通H2两项已通过、公开证据已核，F3首次test-compile准入拒绝历史保留、最新仅编译通过且实际测试0。不绕锁、不停止其他任务，本地按现有212串行；不因资源拒绝开启作者修复槽。
 
 三分支独立，未整枝集成、未合并部署，TEST_DEPLOYED=NO。源码已交不等于普通/真库/HTTP验收。精确路径、方法、依赖、完整FQN与仅供本地执行的命令见[C03交付](C03_14_SOURCE_DELIVERY.json)、[POI交付](E02_12_SOURCE_DELIVERY.json)、[验证移交](BACKEND_VALIDATION_VPS_HANDOFF.json)、[第三队交接](THIRD_CLOUD_HANDOFF.json)。EXTRA后续`02b99bea07c82aa0b0b0d045b54a26f93fb041de`仅自有三账，第三`5432481a8f9e957ee2dfcb9b531ca754a0395633`仅自有三账；不当新生产修复。
 
 
-当前已核读EXTRA[1ae7b60c公开证据](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)并落[E02_12_ORDINARY_VPS_RESULT](E02_12_ORDINARY_VPS_RESULT.json)：仅H2生产XML回归2实际PASS，NULL生产来源未证，不是真MySQL。第三d592公开test-compile guard0证据已核，fresh主/匿名时钟类及精确清理已核、[公开编译报告已核](https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md)，实际测试0，真MySQL11仍NOT_RUN。CORE5752源包已备，31定向待实际结果；原adf51=35P/1F/15E/0S及[公开原失败](C03_ADF51_VPS_FAILURE.json)永久保留，修复源码push不关闭失败。
+当前已核读EXTRA[1ae7b60c公开证据](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)并落[E02_12_ORDINARY_VPS_RESULT](E02_12_ORDINARY_VPS_RESULT.json)：仅H2生产XML回归2实际PASS，NULL生产来源未证，不是真MySQL。第三d592公开test-compile guard0证据已核，fresh主/匿名时钟类及精确清理已核、[公开编译报告已核](https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md)，实际测试0，真MySQL11仍NOT_RUN。CORE5752单类31实际PASS已签收、修复槽释放；原adf51=35P/1F/15E/0S及[公开原失败](C03_ADF51_VPS_FAILURE.json)永久保留，31复测证据见[C03_5752_TARGETED_VPS_RESULT](C03_5752_TARGETED_VPS_RESULT.json)，仅push不关闭失败，本次由独立31实跑PASS关闭旧失败类。
 
 ## 合同与兼容
 

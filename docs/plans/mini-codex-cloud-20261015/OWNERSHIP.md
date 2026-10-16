@@ -1,3 +1,11 @@
+## CORE5752单类31项通过／原作者签收并释放修复槽
+
+C00已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/d31786327b5e9c1be346eb911a386b28e31b3da5/docs/verification/mini-bug-arch-20261015/VPS_CORE_5752ee6f/README.md)，证据`d31786327b5e9c1be346eb911a386b28e31b3da5`：固定5752ee6fd302dab9e610f65cb8f3dc5b2b66201d的TopicUpdateByOwnerTest **31实际PASS／0失败错误跳过**，fresh精确1XML/31testcase、212guard0/completed、源包/日志/XML哈希与精确容器清理入[C03_5752_TARGETED_VPS_RESULT](C03_5752_TARGETED_VPS_RESULT.json)。原CORE/C03作者已实际只读签收ACK，当前普通失败闭环，单修复槽释放，原身份/文件锁保留。
+
+原adf51=35P/1F/15E/0S公开证据cd57永久保留；5752只复测旧失败类31，不继承其他三类20，不称新51全跑。EXTRA1bfa H2两项PASS（1ae7b60c）、第三d592仅编译PASS/实际0测试（1d266f99）各自分层保留；11真MySQL及其他现有入口未覆盖真存储仍NOT_RUN。root本轮无活动Java，不重复旧PASS。真实DB/Redis/HTTP/设备业务/候选集成合并部署未验，TEST_DEPLOYED=NO；保持现有入口不新增。三个业务问题仅阻塞对应身份/DDL合同，未答不猜规则，不影响明确独立项。
+
+### 以下为原失败、修复及此前验证历史，以本节最新实际结果为准
+
 ## EXTRA H2两项通过／第三队仅编译通过
 
 已核读[EXTRA公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)：固定1bfa81a5的E02_12Test **2实际PASS／0失败错误跳过**，fresh精确1XML、212guard0/completed及精确清理，原首次锁拒绝0项保留。证据1ae7b60cab62696ec0a9259907cfad265496c554，源包/日志/XML哈希见[E02_12_ORDINARY_VPS_RESULT](E02_12_ORDINARY_VPS_RESULT.json)。仅生产Mapper XML/H2合同回归，NULL生产来源仍未证，不称真MySQL/生产NULL复现、不重复旧64。
