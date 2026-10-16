@@ -361,3 +361,20 @@ test('我发布的:V2 活动挂控制台入口;页面不再有邀请/转交', ()
   const activity = appJson.subPackages.find((p) => p.root === 'pages/activity');
   assert.ok(activity.pages.includes('official-organizer/index'));
 });
+
+test('规则:composePauseField 拼接与空值;verifyReadBack 不一致必须判 mismatch', () => {
+  assert.equal(rules.composePauseField({ preset: '天气或安全原因', extra: '暴雨' }), '天气或安全原因：暴雨');
+  assert.equal(rules.composePauseField({ preset: ' 预设 ', extra: '  ' }), '预设');
+  assert.equal(rules.composePauseField({ preset: '', extra: ' 只有补充 ' }), '只有补充');
+  assert.equal(rules.composePauseField({}), '');
+  assert.equal(rules.composePauseField(null), '');
+  assert.equal(rules.composePauseField({ preset: 3, extra: null }), '', '非字符串当空');
+  assert.equal(rules.verifyReadBack('schedule', { status: 1 }), 'confirmed');
+  assert.equal(rules.verifyReadBack('schedule', { status: 0 }), 'mismatch');
+  assert.equal(rules.verifyReadBack('schedule', { status: '1' }), 'mismatch', '状态非整数不算确认');
+  assert.equal(rules.verifyReadBack('pause', { controlState: 'NORMAL' }), 'mismatch');
+  assert.equal(rules.verifyReadBack('resume', { controlState: 'PAUSED' }), 'mismatch');
+  assert.equal(rules.verifyReadBack('resume', { controlState: 'NORMAL' }), 'confirmed');
+  assert.equal(rules.verifyReadBack('pause', null), 'mismatch');
+  assert.equal(rules.verifyReadBack('unknown-action', { status: 3 }), 'mismatch');
+});

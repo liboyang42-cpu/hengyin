@@ -162,3 +162,15 @@ test('组件:导出不打断在途提问,返回对话后回答照常呈现', () 
   assert.equal(chat.data.isThinking, true);
   assert.equal(requests[1].url, '/api/ai/npc/chat/data/export');
 });
+
+test('timeText:ISO 串只去 +08:00,秒/毫秒时间戳按北京时间,空值标未记录', () => {
+  assert.equal(exp.timeText('2026-10-01T12:00:00.000+08:00'), '2026-10-01 12:00:00');
+  assert.equal(exp.timeText('2026-10-01T12:00:00+0800'), '2026-10-01 12:00:00');
+  assert.equal(exp.timeText('2026-10-01T04:00:00.000Z'), '2026-10-01 04:00:00Z', '其他时区保留偏移,不冒充北京时间');
+  assert.equal(exp.timeText('2026-10-01 12:00:00'), '2026-10-01 12:00:00');
+  assert.equal(exp.timeText(Date.UTC(2026, 9, 1, 4, 0, 0)), '2026-10-01 12:00:00', '毫秒时间戳');
+  assert.equal(exp.timeText(null), '时间未记录');
+  assert.equal(exp.timeText(''), '时间未记录');
+  assert.equal(exp.timeText(0), '时间未记录');
+  assert.equal(exp.timeText(NaN), '时间未记录');
+});

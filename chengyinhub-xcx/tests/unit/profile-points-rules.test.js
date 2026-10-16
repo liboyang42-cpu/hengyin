@@ -44,3 +44,16 @@ test('profile 积分弹窗走规则整理,不再写死分值或 eventType 过滤
   assert.match(wxml, /pointsSheet\.spendRules/);
   assert.match(wxml, /积分消耗/);
 });
+
+test('pointValue:正数/小数/数字串保留,负数、空、非数字一律 null(页面显示「以平台规则为准」)', () => {
+  const { pointValue } = require('../../subpackageMember/components/cy/profile/points-rules.js');
+  assert.equal(pointValue(20), 20);
+  assert.equal(pointValue('10.00'), 10);
+  assert.equal(pointValue(0.125), 0.13);
+  assert.equal(pointValue(0), 0);
+  assert.equal(pointValue(-5), null);
+  assert.equal(pointValue(null), null);
+  assert.equal(pointValue(undefined), null);
+  assert.equal(pointValue(''), null);
+  assert.equal(pointValue('abc'), null);
+});
