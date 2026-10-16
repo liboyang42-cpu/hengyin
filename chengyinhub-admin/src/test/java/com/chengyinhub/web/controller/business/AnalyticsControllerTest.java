@@ -175,6 +175,63 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    void qualifiedPilotRejectsInvalidYearsBeforeMapperAccess() {
+        BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+        AnalyticsController controller = new AnalyticsController();
+        ReflectionTestUtils.setField(controller, "bizFunnelDailyMapper", mapper);
+        String[][] windows = {
+                {"0000-01-01", "0000-01-01"},
+                {"0000-01-01", "0000-01-02"},
+                {"-0001-01-01", "-0001-01-01"},
+                {"-0001-01-01", "-0001-01-02"},
+                {"+10000-01-01", "+10000-01-01"},
+                {"+10000-01-01", "+10000-01-02"},
+                {"+09999-01-01", "+09999-01-01"},
+                {"+09999-01-01", "+09999-01-02"},
+                {"0000-12-31", "0001-01-01"},
+                {"9999-12-31", "+10000-01-01"},
+                {"+09999-01-01", "9999-01-02"},
+                {"9999-01-01", "+09999-01-02"}
+        };
+        for (String[] window : windows) {
+            AjaxResult result = controller.communityQualifiedPilot(window[0], window[1]);
+
+            assertEquals(500, result.get(AjaxResult.CODE_TAG));
+            assertEquals("日期格式必须为 yyyy-MM-dd", result.get(AjaxResult.MSG_TAG));
+        }
+        verifyNoInteractions(mapper);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void qualifiedPilotPreservesValidFourDigitYearsAndResponseContract() {
+        String[][] windows = {
+                {"0001-01-01", "0001-01-01"},
+                {"0999-12-01", "0999-12-31"},
+                {"9999-01-01", "9999-03-03"}
+        };
+        for (String[] window : windows) {
+            BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
+            AnalyticsController controller = new AnalyticsController();
+            ReflectionTestUtils.setField(controller, "bizFunnelDailyMapper", mapper);
+            Map<String, Object> metric = Collections.singletonMap("qualified_user_count", 68L);
+            when(mapper.selectCommunityQualifiedPilotMetric(window[0], window[1])).thenReturn(metric);
+
+            AjaxResult result = controller.communityQualifiedPilot(window[0], window[1]);
+
+            assertEquals(200, result.get(AjaxResult.CODE_TAG));
+            Map<String, Object> data = (Map<String, Object>) result.get(AjaxResult.DATA_TAG);
+            assertEquals(5, data.size());
+            assertEquals(window[0], data.get("startDate"));
+            assertEquals(window[1], data.get("endDate"));
+            assertEquals("DISTINCT_USER_POST_ACROSS_WINDOW", data.get("deduplication"));
+            assertEquals("CURRENT_NON_ERASED_POST_AUTHOR", data.get("authorCoverageSemantics"));
+            assertSame(metric, data.get("metric"));
+            verify(mapper).selectCommunityQualifiedPilotMetric(window[0], window[1]);
+        }
+    }
+
+    @Test
     void qualifiedPilotRejectsMissingReversedOrOversizedWindow() {
         BizFunnelDailyMapper mapper = mock(BizFunnelDailyMapper.class);
         AnalyticsController controller = new AnalyticsController();

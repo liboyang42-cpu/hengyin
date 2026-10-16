@@ -76,6 +76,10 @@ public class AnalyticsController extends BaseController {
         } catch (DateTimeParseException e) {
             return error("日期格式必须为 yyyy-MM-dd");
         }
+        if (startDate.length() != 10 || endDate.length() != 10
+                || start.getYear() < 1 || end.getYear() < 1) {
+            return error("日期格式必须为 yyyy-MM-dd");
+        }
         long inclusiveDays = ChronoUnit.DAYS.between(start, end) + 1;
         if (inclusiveDays < 1 || inclusiveDays > 62) {
             return error("查询窗口必须在1至62天内");
