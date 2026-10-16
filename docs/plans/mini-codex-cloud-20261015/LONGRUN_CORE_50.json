@@ -4998,7 +4998,7 @@
   "refill_progress": "178historicalconcrete slices; existingblockedC03-14 source-now-delivered, no newbugID; actualundeliveredREADY0, nofiller",
   "actual_actionable_or_in_progress_items": 0,
   "counts_note": "178history=136source/38counterevidence/2decision/1superseded/1delegated afterresumingexistingC03-14; not178bugsorpasses; actualREADY0/writer0. Newsourceadf51NOT_RUN.",
-  "current_public_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "current_public_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
   "actual_state_counts": {
     "SOURCE_DELIVERED_UNVERIFIED": 136,
     "NO_CHANGE_SOURCE_REVIEW": 38,
@@ -5010,7 +5010,7 @@
   "active_claims": {
     "C01": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C02": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
-    "C03": "OWN-C03-14_SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+    "C03": "OLD_TOPIC_UPDATE_FIXTURE_SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "C04": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C05": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK",
     "C06": "LOCAL_CANDIDATE_EXHAUSTED_OR_WAIT_EXPLICIT_FEEDBACK"
@@ -5360,7 +5360,7 @@
     "full_matrix_rerun": false,
     "source_repairs": "Original-author test fixture-only repairs, no production changes in repair diff"
   },
-  "repair_slot_status": "IDLE_AVAILABLE_TARGETED_REPAIR_CLOSED",
+  "repair_slot_status": "SOURCE_REPAIR_DELIVERED_WAIT_LOCAL_TARGETED31",
   "existing_external_packet_work": {
     "id": "E01-19",
     "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
@@ -5510,5 +5510,17 @@
     "actual_source_writers": 0,
     "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
     "no_old_pass_inherited": true
+  },
+  "current_CORE_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+  "latest_core_topic_fixture_repair_candidate": {
+    "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "parent_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+    "production_changed": false,
+    "old_test_class31_assertions_unchanged": true,
+    "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+    "full51_repeat": false,
+    "actual_source_writers": 0,
+    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
   }
 }

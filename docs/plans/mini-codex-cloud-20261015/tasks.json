@@ -2107,15 +2107,15 @@
         "evidence_commit": "5a90a1e81db8274960c3d5dee9d6646aa73311be"
       }
     },
-    "current_CORE_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "current_CORE_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
     "latest_three_team_candidates": {
       "CORE": {
-        "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
-        "task": "OWN-C03-14 splitA",
+        "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+        "task": "OWN-C03-14 oldTopicUpdatefixture repair",
         "status": "SOURCE_DELIVERED_UNVERIFIED",
-        "ordinary_classes": 4,
-        "source_declarations": 51,
-        "local_verification": "NOT_RUN_NEW_SOURCE_CANDIDATE",
+        "ordinary_classes": 1,
+        "source_declarations": 31,
+        "local_verification": "NOT_RUN_NEW_REPAIR_SINGLE_CLASS31",
         "previous_candidate_validation": {
           "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
           "result": "ORDINARY_TARGETED_PASS",
@@ -2185,7 +2185,8 @@
           ],
           "cloud_manual_runs": 0
         },
-        "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
+        "delivery_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+        "previous_candidate_failure_packet": "C03_ADF51_VPS_FAILURE.json"
       },
       "EXTRA": {
         "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -2938,7 +2939,7 @@
     },
     "core_c03_topic_update_repair": {
       "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-      "state": "AUTHORIZED_PENDING_WRITER_START",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
       "repair_writer": "/root/topic_like_cancel_sol",
       "repair_slot_count": 1,
       "failure_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
@@ -2950,8 +2951,22 @@
       },
       "newC03_14class10": "PASS_ONLY_ATadf",
       "repair_scope": "Oldfixtureonly/31businessassertionspreserved",
-      "public_failure_evidence": "PENDING",
-      "retest": "ONLY_CHANGED_FAILURE_CLASS31_AT_NEW_SHA_NOT_FULL51"
+      "public_failure_evidence": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+      "retest": "NOT_RUN_SINGLE_CLASS31_NEW_SHA",
+      "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "actual_source_writers": 0,
+      "failure_packet": "C03_ADF51_VPS_FAILURE.json"
+    },
+    "latest_core_topic_fixture_repair_candidate": {
+      "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "parent_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+      "production_changed": false,
+      "old_test_class31_assertions_unchanged": true,
+      "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+      "full51_repeat": false,
+      "actual_source_writers": 0,
+      "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
     }
   },
   "followup_lanes": [

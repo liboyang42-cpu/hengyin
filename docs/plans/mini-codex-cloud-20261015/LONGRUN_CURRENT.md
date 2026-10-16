@@ -1,3 +1,9 @@
+## CORE旧编辑夹具修复已push／31项待本地定向复测
+
+最新完整CORE候选`5752ee6fd302dab9e610f65cb8f3dc5b2b66201d` / PR44，直接父adf59791。C00已核公开compare仅旧TopicUpdateByOwnerTest.java的imports/setUp三段成功insert生成ID回答＋新修复说明；章801+/节点901+/活动1001+，null重stub不耗ID，31方法/全部业务断言/负控和node101/102局部覆盖不变。生产、新协作者测试、其他测试、门禁和依赖均未改。原C03作者已交付停写，锁保留。
+
+修后SOURCE_DELIVERED_UNVERIFIED／NOT_RUN；已交本地仅TopicUpdateByOwnerTest31定向，不重复51，不继承adf其余三类20为新SHA实跑。原adf51实际35P/1F/15E/0S，已核读[PR24公开原失败](https://github.com/liboyang42-cpu/hengyin/blob/cd57aef324b03c6c5d3f3f2580bbba91d5d295b4/docs/verification/mini-bug-arch-20261015/VPS_CORE_adf59791/README.md)及summary，源包/日志/四XML哈希/guard/精确清理入[C03_ADF51_VPS_FAILURE](C03_ADF51_VPS_FAILURE.json)永久保留，未因push关闭失败。最小命令/精确2路径及fixture链见[修复包](C03_TOPIC_UPDATE_FIXTURE_REPAIR.json)。EXTRA2本地正常准入中、F3编译队列，尚未接新成绩；入口现有不新增，真实DB/HTTP/设备/集成部署仍未验。
+
 ## CORE adf新51项实际失败／单原作者修复槽
 
 本地VPS212已实际执行冻结`adf597917da2654b6b753141180bbbcb6db92fc5`四类51：**35PASS／1失败／15错误／0跳过**，4fresh精确XML、guard1/child_command_failed、精确容器清理已按本地直接报告登记，公开PR24完整证据待补。新OWN_C03_14Test10、OWN_C03_12Test4、TopicCreateBusinessErrorPassthroughTest6均PASS；仅旧TopicUpdateByOwnerTest31的16项失败/错误，其中15项是章insert未生成身份，1项免费转商业断言被提前章身份错误挡住。
@@ -12,7 +18,7 @@ C00初核旧setUp无章节/节点insert成功及生成ID前提，章身份保护
 
 | 队伍 | 公共候选 | 本轮差异 | 最新验证边界 |
 |---|---|---|---|
-| CORE / PR44 | `adf597917da2654b6b753141180bbbcb6db92fc5` | OWN-C03-14：仅CmsTopicServiceImpl写前拒null/非正署名ID、新10方法回归及说明 | 本地51实际35PASS/1FAIL/15ERROR/0skip；新10/旧4/Controller6通过，旧TopicUpdate31单作者夹具修复；旧e0不继承 |
+| CORE / PR44 | `5752ee6fd302dab9e610f65cb8f3dc5b2b66201d` | adf之上仅旧TopicUpdate31 fixture成功生成ID前提，生产0改 | 修后单类31 NOT_RUN；adf原51=35P/1F/15E历史保留，不全51重跑 |
 | EXTRA / PR36 | `1bfa81a5a58ffa8112c10414dad9fdb1701ef188` | E02-12：仅POI options状态谓词与既有status1保存/公开合同对齐、2方法H2真实XML回归及说明 | 普通单类2源声明，NOT_RUN；不重跑/继承旧29fe64 |
 | FORWARD / PR72 | `d592334abee1a379963e7b72a58eec5e0f7bd5ad` | F3-GROW-03：仅原PlayerGrowthConcurrencyMySqlIT统一固定逻辑日与seed；11方法和全部断言不变 | 首次212准入被共享锁拒绝：exit75/containerId=null/0项、未编译；等待正常准入；普通两类/生产仍bde且未改，不重跑旧28；真库11仍NOT_RUN |
 

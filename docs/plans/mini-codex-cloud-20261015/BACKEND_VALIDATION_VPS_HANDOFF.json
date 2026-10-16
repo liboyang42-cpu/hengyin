@@ -2,13 +2,13 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "CORE_adf51_FAIL_REPAIR_SINGLE_OLD_FIXTURE_AUTHORIZED_EXTRA2_LOCAL_RUNNING_FORWARD_COMPILE_QUEUED",
+  "execution_status": "CORE5752_TESTFIXTURE_REPAIR_DELIVERED_TARGETED31_NOT_RUN_ADF51_FAILURE_PRESERVED_EXTRA2_RUNNING_FORWARD_QUEUE",
   "candidates": {
     "CORE": {
       "pr": 44,
       "branch": "codex/mini-longrun-core-20261015",
-      "sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
-      "parent": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "parent": "adf597917da2654b6b753141180bbbcb6db92fc5",
       "integration_order": [
         "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
         "b423114b6eb33ca50b32a3b92147b3834aeb5c8c",
@@ -20,8 +20,8 @@
       "matrix": "BACKEND_VALIDATION_CORE_MATRIX.json",
       "source_classes": 91,
       "source_test_annotations": 510,
-      "source_review_status": "C03_14_INPUT_SHAPE_STATIC_REVIEWED_NOT_RUN",
-      "delta_packet": "C03_14_SOURCE_DELIVERY.json",
+      "source_review_status": "FIXTURE_ONLY_EXACT2FILES_PRESERVE31_ASSERTIONS_NOT_RUN",
+      "delta_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
       "source_count_inventory_scope": "Existing91class/510annotations matrix is historicalf7 snapshot; usecurrentdelta4classes51 declaration notfullnewinventory"
     },
     "EXTRA": {
@@ -1130,43 +1130,23 @@
     "repair_slot_status": "RELEASED"
   },
   "core_latest_delta_validation": {
-    "status": "NOT_RUN",
-    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-    "classes": [
-      {
-        "name": "com.chengyinhub.business.longrun.OWN_C03_14Test",
-        "source_declarations": 10,
-        "new": true
-      },
-      {
-        "name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
-        "source_declarations": 4,
-        "new": false
-      },
-      {
-        "name": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
-        "source_declarations": 31,
-        "new": false
-      },
-      {
-        "name": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
-        "source_declarations": 6,
-        "new": false
-      }
-    ],
-    "source_declared_total": 51,
-    "actual_executed": null,
-    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_14Test,com.chengyinhub.business.longrun.OWN_C03_12Test,com.chengyinhub.business.service.TopicUpdateByOwnerTest,com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest test",
-    "environment": "Existing212 ordinary offline dependencies; noMySQL/Redis/newconfig/dependency"
+    "status": "NOT_RUN_REPAIR_SOURCE_DELIVERED_LOCAL_RETEST_PENDING",
+    "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+    "source_declarations": 31,
+    "full51_repeat": false,
+    "environment": "Localexisting212 offline; no DB/Redis/newdependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.service.TopicUpdateByOwnerTest test",
+    "candidate_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "actual_executed_tests": null
   },
   "latest_three_team_candidates": {
     "CORE": {
-      "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
-      "task": "OWN-C03-14 splitA",
+      "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "task": "OWN-C03-14 oldTopicUpdatefixture repair",
       "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "ordinary_classes": 4,
-      "source_declarations": 51,
-      "local_verification": "NOT_RUN_NEW_SOURCE_CANDIDATE",
+      "ordinary_classes": 1,
+      "source_declarations": 31,
+      "local_verification": "NOT_RUN_NEW_REPAIR_SINGLE_CLASS31",
       "previous_candidate_validation": {
         "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
         "result": "ORDINARY_TARGETED_PASS",
@@ -1236,7 +1216,8 @@
         ],
         "cloud_manual_runs": 0
       },
-      "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
+      "delivery_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+      "previous_candidate_failure_packet": "C03_ADF51_VPS_FAILURE.json"
     },
     "EXTRA": {
       "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -1962,7 +1943,7 @@
     "actual_source_writers": 0,
     "no_old_pass_inherited": true
   },
-  "current_CORE_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "current_CORE_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
   "latest_extra_e02_12_candidate": {
     "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
     "packet": "E02_12_SOURCE_DELIVERY.json",
@@ -2010,7 +1991,7 @@
   },
   "core_c03_topic_update_repair": {
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-    "state": "AUTHORIZED_PENDING_WRITER_START",
+    "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "repair_writer": "/root/topic_like_cancel_sol",
     "repair_slot_count": 1,
     "failure_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
@@ -2022,8 +2003,11 @@
     },
     "newC03_14class10": "PASS_ONLY_ATadf",
     "repair_scope": "Oldfixtureonly/31businessassertionspreserved",
-    "public_failure_evidence": "PENDING",
-    "retest": "ONLY_CHANGED_FAILURE_CLASS31_AT_NEW_SHA_NOT_FULL51"
+    "public_failure_evidence": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+    "retest": "NOT_RUN_SINGLE_CLASS31_NEW_SHA",
+    "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "actual_source_writers": 0,
+    "failure_packet": "C03_ADF51_VPS_FAILURE.json"
   },
   "latest_core_adf51_result": {
     "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
@@ -2070,8 +2054,68 @@
     },
     "vps_task": "/home/ubuntu/previews/cy-vps-core-adf59791-20261016",
     "evidence_pr": 24,
-    "evidence_commit": null,
-    "public_evidence_status": "Directactualverifier report; fullpublicreport pending, no rawlog/hashreadclaim",
-    "source_failure_classification": "FIXTURE_GAP_UNDER_ORIGINAL_WRITER_REVIEW_NOT_CONFIRMED_PRODUCTION_REGRESSION"
+    "evidence_commit": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+    "public_evidence_status": "C00readpublicREADMEandsummary; originalXML/logsretainedbylocal, noCloudrerun",
+    "source_failure_classification": "FIXTURE_GAP_UNDER_ORIGINAL_WRITER_REVIEW_NOT_CONFIRMED_PRODUCTION_REGRESSION",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cd57aef324b03c6c5d3f3f2580bbba91d5d295b4/docs/verification/mini-bug-arch-20261015/VPS_CORE_adf59791/README.md",
+    "source_archive_sha256": "150ea9ba58249c9a822cc47ca001500ac55a3621873a00b56550bc380441ccd4",
+    "log_sha256": "2883aa88b83c5c4ebb0b8efeed65a0d3a61ccd41e0b737d73c2e22c3e1544dca",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest.xml",
+        "sha256": "1d2dbef54bdad6c9196e17d8f4ae7eb1b26096801bdf50face6db8e6435bcc14",
+        "fresh": true,
+        "testcases": 6,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_12Test.xml",
+        "sha256": "91cd8a06bf8d4106023aa6beba4a9e98f5ffc20c9cf981bddd709448a90e5f3d",
+        "fresh": true,
+        "testcases": 4,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_14Test.xml",
+        "sha256": "84c71d0b252dc461716c1b1300da2d47a3adf837572bc30f1bc56bf82f5d071b",
+        "fresh": true,
+        "testcases": 10,
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.TopicUpdateByOwnerTest.xml",
+        "sha256": "1a87ec328ae4bc2afc7765c12c523621fb77f44b3ad050107b0fb140dabf65fd",
+        "fresh": true,
+        "testcases": 31,
+        "tests": 31,
+        "failures": 1,
+        "errors": 15,
+        "skipped": 0
+      }
+    ]
+  },
+  "latest_core_topic_fixture_repair_candidate": {
+    "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "parent_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+    "production_changed": false,
+    "old_test_class31_assertions_unchanged": true,
+    "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+    "full51_repeat": false,
+    "actual_source_writers": 0,
+    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
   }
 }

@@ -2718,12 +2718,14 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java": {
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
-      "state": "AUTHORIZED_REPAIR_PENDING_WRITER_START",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
       "scope": "OldTopicUpdateByOwnerTest fixture only: supply actual successfulchapter/node insert return1 plusunique positive generatedIDs in commonsetup, preservepertest customnode101+ overrides; if furtherrequiredfixture dependencies confirmed from actualpath, minimaloldfixture injection only. Preserve31@Test/allbusiness assertions/negativecontrols. No production/other test/guard/skip/DDL/CI/dependency edits.",
       "transfer_evidence": "Noexistingglobal owner entry for exacttest; currentC03writer completedadf and stoppedclean, originalCORE/C03 productionauthor frozen0d; user explicitly assigns this oldtest fixture to sameC03 repair slot after C00registration. No other writer assigned/live for exacttest.",
       "grant_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "frozen_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "actual_source_writer": 0
     }
   },
   "analytics_third_pending": {
@@ -3757,7 +3759,7 @@
   },
   "core_c03_topic_update_repair": {
     "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
-    "state": "AUTHORIZED_PENDING_WRITER_START",
+    "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "repair_writer": "/root/topic_like_cancel_sol",
     "repair_slot_count": 1,
     "failure_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
@@ -3769,7 +3771,22 @@
     },
     "newC03_14class10": "PASS_ONLY_ATadf",
     "repair_scope": "Oldfixtureonly/31businessassertionspreserved",
-    "public_failure_evidence": "PENDING",
-    "retest": "ONLY_CHANGED_FAILURE_CLASS31_AT_NEW_SHA_NOT_FULL51"
+    "public_failure_evidence": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+    "retest": "NOT_RUN_SINGLE_CLASS31_NEW_SHA",
+    "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "actual_source_writers": 0,
+    "failure_packet": "C03_ADF51_VPS_FAILURE.json"
+  },
+  "current_CORE_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+  "latest_core_topic_fixture_repair_candidate": {
+    "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "parent_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+    "production_changed": false,
+    "old_test_class31_assertions_unchanged": true,
+    "verification": "NOT_RUN_LOCAL_TARGETED31_PENDING",
+    "full51_repeat": false,
+    "actual_source_writers": 0,
+    "old51_failure_history": "C03_ADF51_VPS_FAILURE.json"
   }
 }

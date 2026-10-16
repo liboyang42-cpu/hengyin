@@ -36,7 +36,7 @@
   "writer_stopped": true,
   "c00_static_review": "Reviewed full3path diff and existing methodordering, same-tree publicparent alignment; GitHubcompare readback confirms exactly3paths. No compilation/test executed.",
   "ordinary": {
-    "status": "NOT_RUN",
+    "status": "ACTUAL51_FAIL_35PASS_1FAILURE_15ERROR_0SKIP",
     "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
     "classes": [
       {
@@ -61,9 +61,13 @@
       }
     ],
     "source_declared_total": 51,
-    "actual_executed": null,
+    "actual_executed": 51,
     "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_14Test,com.chengyinhub.business.longrun.OWN_C03_12Test,com.chengyinhub.business.service.TopicUpdateByOwnerTest,com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest test",
-    "environment": "Existing212 ordinary offline dependencies; noMySQL/Redis/newconfig/dependency"
+    "environment": "Existing212 ordinary offline dependencies; noMySQL/Redis/newconfig/dependency",
+    "result_packet": "C03_ADF51_VPS_FAILURE.json",
+    "passing_new_class": "OWN_C03_14Test10PASS_ONLYATadf",
+    "repair_candidate": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "repair_retest": "TopicUpdateByOwnerTest31ONLY_NOT_RUN"
   },
   "evidence_limits": "Known caller rejects malformed readback and drafts can restore/send suchlists; no realuserbadDraft or realviewDDL observed, no claimDB constraint failed.",
   "old_results_not_inherited": [

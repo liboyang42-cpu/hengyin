@@ -1,22 +1,21 @@
 {
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "state": "CORE51_ACTUAL_FAIL_SINGLE_FIXTURE_REPAIR_EXTRA2_RUNNING_FORWARD_QUEUED",
+  "state": "CORE5752_SOURCE_REPAIR_DELIVERED_SINGLE31_RETEST_PENDING_EXTRA2_RESULT_PENDING_FORWARD_COMPILE_QUEUE",
   "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
   "entry_decision": "VALIDATION_ENTRY_DECISION.json",
   "candidates": {
     "CORE": {
-      "sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
-      "action": "ordinary regression",
-      "source_declared_tests": 51,
-      "classes": 4,
-      "state": "ACTUAL_51_FAIL_REPAIR_OLD_TOPIC_UPDATE_FIXTURE",
-      "actual_tests": 51,
+      "sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "action": "ordinary targeted repairedfixture only",
+      "source_declared_tests": 31,
+      "classes": 1,
+      "state": "NOT_RUN_SINGLE_CLASS31_REPAIR_DELIVERED",
+      "actual_tests": null,
       "source_failure": "Notconfirmedproductionregression; oldfixtureidentitygapreview",
-      "actual_passed": 35,
-      "failures": 1,
-      "errors": 15,
-      "skipped": 0,
-      "repair_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json"
+      "repair_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+      "previous_failed_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "prior_failure_packet": "C03_ADF51_VPS_FAILURE.json",
+      "retest_full51": false
     },
     "EXTRA": {
       "sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
@@ -49,7 +48,7 @@
     }
   },
   "retry": "Local verifier waits for shared lock to release normally, then existing212 serial execution; no bypass/stopping other tasks/new entry or manualCI trigger",
-  "repair_slots": "COREonly/root/topic_like_cancel_sol oldfixture exactgrant; sourcefailure remains evidencebased",
+  "repair_slots": "OriginalC03repairsource deliveredstopped0; failure notclosed until newtargetedreport",
   "source_work": "Only explicit real independent source tasks may continue; no new task invented from queue",
   "business_decisions": {
     "pending_local_user_answers": true,
