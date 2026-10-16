@@ -233,3 +233,18 @@
 | 155 | 单测补齐·工作台前置检查跳转白名单 | 为 #128（BL-85）`pages/merchant/utils/merchant-prerequisites.js` 的 `pendingPrerequisites` 补用例：`actionTarget` 不在 `ALLOWED_PATHS` 时 `path` 为空、带 query 的白名单路径、空/非数组输入；现有 `merchant-prerequisites.test.js` 已等价覆盖则 BLOCKED 附对照；从 #128 切出并注明依赖 | tests；不改被测代码 |
 | 156 | 处理器单测·另存为模板结果未知 | 为 #164（BL-120）`subpackageA/pages/myproject/index.js` 的 `_postSaveAsTemplate` 补处理器单测：结果未知/失败时不提示成功、重复点击不重复发请求（若无防抖用 `todo` 标注并报 #164）；从 #164 切出并注明依赖（注意与 #166 BL-122 已有用例不重复） | tests；不改被测代码 |
 | 157 | 验收清单更新·第十四批 | 把 BL-148–156 已开 PR 的本地验收命令（`node --test` 文件、期望 pass/fail/todo、须在哪个 PR 之后合并）补进 `ACCEPTANCE-BATCH14.md`，并在 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 测试行注明 | docs |
+
+## 第十五批（158–167）：监督线补充（零调用接口池已核完；本批来自 #194 `COORDINATOR-PATCHES-CHECK.md` §3 与 #192/#201 单测 todo 的未决评审意见。都是修自己线上新代码的文案/门禁登记/判定，不改现有 UI 与标题，无迁移/新接口/新依赖；各从被修 PR 分支切出，正文注明依赖、须在其后合并）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 158 | 修 F13 禁用词·触达任务页 | #144（BL-100）新页 `pages/merchant/crm-campaigns/index.{js,wxml}` 仍有 5 处「回执」（`index.wxml:27,44,48,72`、`index.js:121`），触发 `audit-f01-f17-contract.test.js:79` F13；改为用户能懂的说法（如「触达明细」「逐人结果」），只改这页新文案与对应单测；从 #144 切出 | xcx；只改 #144 新页文案 |
+| 159 | 修 U1 误判·安全感受摘要请求路径 | #109（BL-66）`subpackageMember/components/cy/profile/index.js:720` `'/api/community-trust/safety/merchants/' + id` 被 `ui-validity-gates` U1 判为无后端映射（后端 `ApiCommunityTrustController` 有 `@GetMapping("/safety/merchants/{merchantId}")`）；改为模板字符串（与 #130 写法一致），不改门禁；从 #109 切出 | xcx；一行 |
+| 160 | 补 U5 白名单同步 | #194 X-5：#122/#123/#128/#141/#114/#73 只登记了 `ci/silent-error-allowlist.txt`，未同步 `scripts/ui-silent-error-allowlist.js`（#141/#114 两份都没登记）；逐 PR 从原分支切出补登记（一 PR 一个 follow-up，或在一个 PR 正文按 PR 分节给补丁），跑 `node scripts/ui-validity-gates.js` 给前后对照 | xcx scripts 白名单；不改业务代码 |
+| 161 | 修超长/开发者口径提示·新页 | #194 X-11：#84（BL-42）`subpackageRoam/node-favorites/index.js:12,42` 错误副文案「网络请求失败，重试会重新拉取一次」被判开发者口径；#43（BL-06）`official-inbox/index.js:202` 提示 21 字 > 16；#130 `im/chat` 新增提示 18 字 > 16（以 `node tests/lint/ui-integrity.js --warn-as-error` 在该分支实测行号为准）；改成 ≤16 字用户口径，不改现有页面既有文案 | xcx；只改这三个 PR 新增文案 |
+| 162 | 成功 toast 棘轮·#88/#112 | `success-toast-ratchet.test.js:86` 上限 101：#88（BL-43）`ai-npc/index.js:785` `toast.success('角色声音已清除')`、#112（BL-69）收藏据点 `cyToast.success` 会推到 102/103；改为界面状态体现（如声音行回到「未录音」、收藏按钮变已收藏）+ 普通 toast 或无提示，不抬上限；做不到不改 UI 时 BLOCKED 写明需协调者抬上限 | xcx；只改这两个 PR 新增行 |
+| 163 | 修结果未知当成功·勋章颁发回执 | #192（BL-148）todo：#23（CL3）`pages/club/utils/club-badge.js` `grantReceipt(null/{})` 返回成功文案；改为未知时返回未知态（不给成功文案），页面已有 `isSuccess` 守卫保持不变；把 #192 的 todo 转正；从 #23 切出 | xcx；纯函数 + 单测 |
+| 164 | 修回读前提示成功·私信解除拉黑 | #201（BL-154）三条 todo：#104（BL-61）`subpackageB/pages/im/chat/index.js` `_confirmUnblock` 在 `/api/im/unblock` 200 后、回读前就 `dc.done()`「已解除拉黑」；改为 `/api/im/messages` 回读确认 `blockedByMe === false` 后再提示，回读不一致时如实提示；断网改为「结果未确认」并回读一次；把 #201 todo 转正；从 #104 切出 | xcx；只改 #104 新增处理器 |
+| 165 | 冻结计数·项目操作面板 | #194 X-3：#164（BL-120）加「另存为模板」后 `merchant-card-project-actions-contract.test.js:50` 期望 5 / 实际 6；在 #164 线上把期望改为 6 并更新断言说明（列出新增项），确认 44px 热区断言仍覆盖新行 | tests；一处计数 |
+| 166 | 门禁登记·安全感受半屏 U5 理由 | #194 X-7：#132（BL-89）`safety-rating-sheet/index.js:115` silentError 未在 `ui-integrity` U5 逐项理由登记；`ui-integrity-baseline.js` 归协调者，只在 PR 正文给最小补丁 + 本地验证输出，不提交该文件 | docs/补丁；不改协调者文件 |
+| 167 | 验收清单更新·第十五批 + 索引 | 把 BL-158–166 已开 PR 的验收命令（门禁/单测命令、期望前后对照、依赖顺序）写进 `ACCEPTANCE-BATCH15.md`；并按 BL-157 #204 要求，在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十四、十五批行的补丁（BL-154 只列 #201，#200 已按重复关闭） | docs |
