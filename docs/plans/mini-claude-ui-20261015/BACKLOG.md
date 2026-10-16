@@ -273,3 +273,9 @@
 | 180 | ui-integrity 逐 PR 实测表 | 监督此前多只跑 `ui-validity-gates`；对所有 open xcx 代码 PR（各自 head，不合基线）跑 `node tests/lint/ui-integrity.js --warn-as-error`，列 UI-GATE-0 结果与每条 violation（U1/U4/U5/WARN/BASELINE），标注「本 PR 引入 / 基线既有 / 归 C00」，写进 `UI-INTEGRITY-BY-PR.md`；与 BL-172（合基线复跑）互补，不重复 | docs；只读复跑 |
 | 181 | U5 名额消化评估 | 依 #219 §6 选项 2：逐条评估 #73（report-sheet:46/:89）、#110、#123、#83、#113 新增的 `silentError` 调用能否在**本 PR 新增代码内**改为门禁认可的可见反馈（不改现有 UI、不加新样式），能改的给补丁草案与前后 `ui-integrity` 对照，不能改的写原因；只交文档，等 C00 裁定后再动代码 | docs |
 | 182 | 验收清单更新·第十七批 + 索引 | 把 BL-175–181 已开 PR 的验收命令与期望写进 `ACCEPTANCE-BATCH17.md`，并在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十七批行的补丁 | docs |
+
+> **监督更正（2026-10-16 03:50Z，依 TASKS.md「监督规则修正（2026-10-16）」，该规则 `ceade3d8` 早于第十七批 `04814fec` 提交）**：
+> - BL-177（只含单测）、BL-178–182（补丁文档/复跑表/评估/验收清单）属于规则 1 禁止新增的类别，**作废，不要领取**；已领取的也停止。
+> - BL-175 已由 #104 `e966caa2` 在原分支完成（监督实测 `ui-integrity` UI-GATE-0 PASS），**不要再领取**。
+> - BL-176 按规则 2 **直接提交到 #104 分支 `claude/bl-61-im-unblock`**，不开新分支、不开「依赖 #104」的新 PR。
+> - 规则 3：符合条件（用户可见新功能或真实缺陷、已有接口、不改现有 UI）的新卡本轮没有找到，因此不补。开发线转去处理监督结论为 CHANGES NEEDED 的 PR，修正直接推到原分支。
