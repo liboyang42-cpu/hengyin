@@ -1731,33 +1731,33 @@
     {
       "id": "E02-12",
       "lane": "E02",
-      "status": "AUDIT_THEN_FIX",
+      "status": "QUERY_CONTRACT_NULL_COMPATIBILITY",
       "title": "POI选项与保存状态条件一致性",
-      "trigger": "POI options用COALESCE(status,1)=1，snapshot用status=1；历史NULL若可达会可选不可保存",
-      "invariant": "先核历史NULL是否可达；不可达反证关闭，不改POI状态政策",
-      "minimal_fix_boundary": "仅实际证实不变量失配时最小修改；已有覆盖反证可关闭，不新增政策/接口/依赖/DDL",
+      "trigger": "C00 closes existing online/save query contract; nullable schema model is defensive compatibility, not actual productionNULL reproduction",
+      "invariant": "POI options require same explicit online status as existing snapshot/player-public contract; historical NULL origin/retention not decided",
+      "minimal_fix_boundary": "Only POI selectReferenceOptions COALESCE(status,1)=1 -> explicit status=1; preserve city/projection/order/limit and snapshot/count unchanged",
       "policy_blocker": "表外源码、旧测试需C00精确转交；真实权限/产品/资金/留存政策决定BLOCKED并换项",
       "execution": "STATIC_SOURCE_ONLY; no validation execution",
       "ownership": "EXTRA6 exact transferred files, same lane serial writer",
       "source_files": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "state": "BLOCKED_DECISION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
-      "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "source_base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md",
-      "evidence": "实际两条生产SQL条件不同，需沿POI表定义/创建链确认输入",
+      "evidence": "Actual save snapshot and player visibility require status1; original merchant/admin writing chains allow only0/1; C006209006760 closes query contract",
       "priority": "P1",
       "estimated_source_effort": "30-120 minutes; verification excluded",
       "assigned_worker": null,
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": "6d9e6b1565137d66f81b91cdc5fa2e739b64166b",
-      "regression_methods_written": 0,
+      "public_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "regression_methods_written": 2,
       "focused_recheck": {
         "worker": "/root/external_e02",
         "branch": "codex/extra-e02-regression-20261015",
@@ -1778,11 +1778,32 @@
         "next": "Original owner/C00 provides existingNULL contract and evidence; only then register exact option-vs-snapshot hunk, no silent permission expansion or narrowing",
         "regression_methods_added": 0
       },
-      "blocker": "No legitimate production NULL writer identified; need actual historical NULL source/evidence and established NULL semantics before widening snapshot or narrowing options. Normal0/1 paths agree.",
+      "blocker": null,
       "source_ownership_status": "OWNED_EXISTING_ORIGINAL_E02",
       "focused_recheck_delivery_comments": {
         "PR16": 6208972509,
         "PR24": 6208972676
+      },
+      "previous_document_only_public_sha": "6d9e6b1565137d66f81b91cdc5fa2e739b64166b",
+      "rolling_candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "child_source_base_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md"
+      ],
+      "future_focused_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
+      "planned_methods": 2,
+      "decision_comment": "https://github.com/liboyang42-cpu/hengyin/pull/36#issuecomment-6209006760",
+      "grant_document": "docs/plans/mini-codex-cloud-20261015/RESUME_KNOWN_BLOCKERS.json",
+      "grant_control_sha": "78197cf835ff9f0542114560cc0645678a9f59e6",
+      "new_confirmed_production_bug": false,
+      "new_bug_id": false,
+      "production_null_provenance": "UNPROVEN; synthetic NULL is only compatibility negative control",
+      "previous_sha_pass_inherited": false,
+      "delivery_comments": {
+        "PR16": 6209046388,
+        "PR24": 6209046566
       }
     },
     {
@@ -3828,7 +3849,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 17,
+  "queue_revision": 18,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3888,17 +3909,17 @@
     "E05": null,
     "E06": null
   },
-  "candidate_sha_before_queue_commit": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "candidate_sha_before_queue_commit": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
   "actual_counts": {
     "total_history": 111,
-    "source_delivered": 59,
+    "source_delivered": 60,
     "no_change_source_review": 40,
-    "blocked": 7,
+    "blocked": 6,
     "ready": 0,
     "claimed": 0,
     "actionable_or_inflight": 0
   },
-  "control_latest_read_sha": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
+  "control_latest_read_sha": "78197cf835ff9f0542114560cc0645678a9f59e6",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3945,10 +3966,10 @@
     }
   ],
   "refill_shortfall": 50,
-  "refill_status": "Specific rechecks E02-12/E01-13 completed; four precise contract inputs routed to C00/local. No confirmed new bug/code from this round; do not invent rules, generic audits or50ready.",
+  "refill_status": "E02-12 existing item contract closed and source delivered; no newbugID or productionNULL reproduction claim. Other exact contract inputs remain; no filler50 or inventedREADY.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-25 source delivered; exact29fe local3 ordinary classes64 actualPASS publicly signed; trueMySQL2 remains NOT_RUN, actualRR race not accepted. No failure or independentREADY.",
+    "E02": "E02-12 options-only explicit online-state query compatibility delivered,2 H2/MyBatis methods NOT_RUN; actual productionNULL origin unproven.29fe ordinary64 remains exact historical evidence only.",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -3962,10 +3983,10 @@
   },
   "scope_prepared_patch_notice": "Historical exact recovery patches now marked APPLIED_AND_PUBLIC. Candidate contains actual source/tests; do not reapply snapshots.",
   "next_priority": [
-    "C00 existing POI historicalNULL contract/evidence for E02-12",
-    "C00 original WAITING per-state eligibility/retention evidence for E01-13, no ticket sale-field gate",
-    "C00 original legacy identity bridge contract E02-23; original completionhistory receipt/legacy contract E04-07",
-    "Any genuine new localfailure only originalauthor single repairline; other exact independently grantedsource continues"
+    "Local targeted new E02_12Test2 only on new complete source; no repeat29fe64 or Cloud execution",
+    "C00/root original WAITING per-state eligibility/retention contract E01-13; no sale-field gate",
+    "C00/root legacy identity/source responsibilities E02-23 and original completionhistory receipt/old unknownidentity E04-07",
+    "Real local failure goes to one original-writer repairlane; independent clearly granted source does not wait validation"
   ],
   "validation_policy": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results; No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
   "rolling_dispatch_policy": {
@@ -4271,7 +4292,8 @@
     "E06-17": "5ed1b8de890f5bdacadb02a145385f465c196d52",
     "E06-17-fixture-repair": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
     "E02-24": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
-    "E02-25": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d"
+    "E02-25": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+    "E02-12": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf"
   },
   "actual_failed_validation_repairs": 0,
   "actual_new_development_workers": 0,
@@ -4655,7 +4677,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "latest_application_candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -4842,44 +4864,27 @@
     }
   },
   "validation_queue_state": {
-    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-    "status": "LOCAL_TARGETED_ORDINARY_PASS_ONLY",
+    "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "status": "SOURCE_DELIVERED_LOCAL_TARGETED_NOT_RUN",
     "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-    "entry": "Existing approved VPS212 offline ordinary regression entry only",
     "classes": [
-      "com.chengyinhub.business.longrun.E02_25Test",
-      "com.chengyinhub.business.longrun.E02_24Test",
-      "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+      "com.chengyinhub.business.longrun.E02_12Test"
     ],
-    "declared_tests": 64,
-    "actual_tests": 64,
-    "actual_result": {
-      "passed": 64,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0
-    },
-    "receipt_source": "Public local README and summary read;64 actual ordinary PASS,3fresh exactXML,guard0 and own-container cleanup",
+    "declared_tests": 2,
+    "actual_tests": null,
+    "actual_result": null,
+    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
+    "environment": "Existing212 ordinary offline entry; embeddedH2 and existingMyBatis, no externalDB/Redis/envvar/newdependency",
     "cloud_execution_allowed": false,
+    "new_sha_inherits_old_pass": false,
     "source_delivery_status": "SOURCE_DELIVERED_UNVERIFIED",
-    "prior_faef60_pass_inherited": false,
-    "mysql": {
-      "class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
-      "declared_tests": 2,
-      "status": "NOT_RUN",
-      "resource_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; keep existing212/CI; new entry proposal closed by explicit user decision, no pending approval"
+    "previous_exact_ordinary_pass": {
+      "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "tests": 64,
+      "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
     },
-    "on_failure": "Only original external_e02 repair lane; no repair dispatched without actual failure",
-    "previous_closed_targeted_repair": {
-      "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
-      "class": "E06_17Test",
-      "actual_tests": 5,
-      "status": "TARGETED_PASS_ONLY"
-    },
-    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
-    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md",
-    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/summary.json",
-    "next_action": "No actual failure/READY item; keep original owner/file locks. MySQL2 stays NOT_RUN with existing-entry coverage gap; new entry proposal closed, do not request same approval again."
+    "other_true_mysql_rr": "E02_25MySqlIT2 remains NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; no newentryproposal",
+    "on_failure": "Only original external_e02 repairlane; independent granted source continues"
   },
   "admission_history": [
     {
@@ -4921,7 +4926,6 @@
   "latest_focused_packet_round": {
     "trigger": "Local coordinator new user instruction: continue concrete unfinished packets, facts first, no new policy; exact caller review E02-12 then E01-13",
     "control_read_sha": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
-    "source_candidate_unchanged": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "initial_actual_workers": 2,
     "final_actual_workers": 0,
     "new_source_writers": 0,
@@ -4931,7 +4935,7 @@
       "worker": "/root/external_e02",
       "branch": "codex/extra-e02-regression-20261015",
       "base_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
-      "status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_NO_REACHABLE_NULL_INPUT_CONFIRMED",
+      "status": "CONTRACT_CLOSED_SOURCE_DELIVERED_UNVERIFIED",
       "fact": "Options COALESCE(status,1)=1 vs snapshot status=1; normal allowed 0/1 inputs agree. DDL permits NULL but application writing path not found producing NULL.",
       "anchors": {
         "mapper": "CommunityPostMapper.xml:337-340,368-370",
@@ -4940,12 +4944,17 @@
         "writer": "RoamMapper.xml:514-520,548-553,591-597,610-624",
         "admin": "RoamPoiAdminController:65,68,74"
       },
-      "missing": [
+      "next": "Local new ordinaryE02_12Test2 targeted run on exactSHA; historicalNULL origin remains unproven but is not required for authorized existing querycontract repair",
+      "regression_methods_added": 2,
+      "previous_status": "FACT_CHECK_COMPLETE_BLOCKED_DECISION_NO_REACHABLE_NULL_INPUT_CONFIRMED",
+      "decision_comment": 6209006760,
+      "rolling_candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "public_child_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "earlier_missing": [
         "Actual historicalNULL producing entry or data evidence; default1 alone does not excludeNULL",
         "Existing contract for historicalNULL as online vs unknown/offline"
       ],
-      "next": "Original owner/C00 provides existingNULL contract and evidence; only then register exact option-vs-snapshot hunk, no silent permission expansion or narrowing",
-      "regression_methods_added": 0
+      "resolution": "C00 expressly confirms explicitstatus1 online/save contract for options; no waiting forNULL provenance, no historicalretention decision or newproductrule"
     },
     "E01-13": {
       "worker": "/root/external_e01",
@@ -4969,6 +4978,17 @@
       ],
       "next": "C00 original owner supplies established per-stateWAITING contract. If defined, isolate newjoin check from sharedcancel/expire/release paths; preserve E01-18 OFFERED guard without duplicatefix",
       "regression_methods_added": 0
+    },
+    "initial_fact_check_candidate": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "followup_source_delivery": {
+      "task": "E02-12",
+      "candidate": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "child": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "decision_comment": 6209006760,
+      "peak_source_writers": 1,
+      "source_or_tests_changed": true,
+      "new_confirmed_production_bug": false,
+      "runtime_validation": "NOT_RUN"
     }
   },
   "pending_concrete_contract_inputs": {

@@ -1,9 +1,9 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
-当前已读控制 `9ee26595044bba61b4f033966cae653e8658be9b`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`**，原E02 child `6b98aabcdf20bbc55b05b78187f52f2321be3a1d`；SOURCE_DELIVERED_UNVERIFIED；本地普通3类64实际PASS，真MySQL2项NOT_RUN。
+当前已读控制 `78197cf835ff9f0542114560cc0645678a9f59e6`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`1bfa81a5a58ffa8112c10414dad9fdb1701ef188`**，原E02 child `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`；E02-12仅POI选项显式上架状态，2新方法SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。原29fe普通64PASS仅其旧SHA，真MySQL2项NOT_RUN。
 
-当前111历史=59源码交付/40反证/7合同或决策阻塞/5委派他队；实际源码worker0、修复worker0、READY0，目标可行动50缺50。无真实独立READY项时如实EXHAUSTED，不造任务。E01-19已由CORE解决，不重复。E02-23/E04-07仍需C00原owner解决身份合同。
+当前111历史=60源码交付/40反证/6合同或决策阻塞/5委派他队；实际源码worker0、修复worker0、READY0，目标可行动50缺50。无真实独立READY项时如实EXHAUSTED，不造任务。E01-19已由CORE解决，不重复。E02-23/E04-07仍需C00原owner解决身份合同。
 
 本地验证只按完整源SHA登记：29fe9236普通3类64实际PASS，公开PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e；faefbaf8旧两类60PASS独立保留，不以旧成绩继承。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
 
@@ -11,9 +11,9 @@ CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / d
 
 ## 本轮指定packet推进与下一步
 
-原E02已完成E02-12生产输入链核查，原E01已完成E01-13逐状态/阶段核查；实际曾运行2名事实核查worker，现两人完成、源码写者0。正常POI仅0/1，历史NULL可达证据与语义仍缺；WAITING不扣库存/不生成订单，票售卖字段迁移明文只存读不拦购票，不能新增准入政策。详细事实锚点及四项具体接续维护在QUEUE/CLAIMS.latest_focused_packet_round和pending_concrete_contract_inputs，不新增bug/测试数量或重复29fe64回归。
+原E02/E01已完成定向事实核查；后续C00#6209006760闭合E02-12选项合同，原E02已交options一hunk+2新回归。峰值事实worker2，后续单源码writer1，现均完成；历史NULL来源仍未证，不当生产复现/新增bug。E01-13 WAITING准入与其他两项身份合同仍列明确缺口。当前候选及2方法NOT_RUN见首段；旧29fe64不补跑、不继承。
 
-下一步交C00/原owner：E02-12提供历史NULL来源和既有语义；E01-13提供WAITING对下架、结束、主题售卖窗、signupDeadline与存量保留的分别既有规则；E02-23冻结后迁移发布的权威对象映射及更新/审核/删除责任；E04-07冻结原historyId原子回执和旧无身份日志行为。已有消费者锁不重复申领；真实缺陷且既定合同明确后，精确登记原作者最小修复，不等待本地测试签收才推进独立项。
+下一步交C00/原owner：E02-12已按6209006760闭合并交源码，不再以NULL来源阻塞查询合同；E01-13提供WAITING对下架、结束、主题售卖窗、signupDeadline与存量保留的分别既有规则；E02-23冻结后迁移发布的权威对象映射及更新/审核/删除责任；E04-07冻结原historyId原子回执和旧无身份日志行为。已有消费者锁不重复申领；真实缺陷且既定合同明确后，精确登记原作者最小修复，不等待本地测试签收才推进独立项。
 
 ## 持久调度协议：1修复+5开发
 
@@ -339,3 +339,13 @@ E01-13核join的ACTIVE scope/会员/库存恰0/去重后仅WAITING；活动publi
 E02-23缺后迁移旧发布的权威新post映射及legacy新源责任；数值相等或客户端可写legacy-square字符串不足证明来源，不能擅自双写/DDL。E04-07缺确切原historyId与topic/member的原子发放回执及旧未知身份处理；grantCouponWithReceipt已有可复用实际ID，但当前completionproducer仍boolean且日志无ID，不能靠同模板时间/MAX或换未用券猜原奖励。C00当前EXISTING_BLOCKERS_REFRESH与实际producer/legacy链已再核，明细见pending_concrete_contract_inputs；这两项是既有缺口、不新增bug数，不重复索已授consumer写权。
 
 全部本轮源码/测试/依赖/CI/运行验证零变化、NOT_RUN；两名原worker已完成事实核查、锁保留。公开应用仍29fe9236，其普通64已验事实与真MySQL2未验边界保持。待原owner合同明确即可精确领取并最小源码交付，不以“无READY”代替上述具体下一步。
+
+## E02-12查询合同已闭合并公开最小修复
+
+C00最新[PR36#6209006760](https://github.com/liboyang42-cpu/hengyin/pull/36#issuecomment-6209006760)明确保存快照/玩家公开仅status1，因此options不把显式NULL当已上架；该裁定覆盖旧撤销READY后的查询合同等待，不再申请一般开工许可。授权78197cf8三个路径，由原E02实际恢复并完成。历史NULL生产来源未证保留，只作QUERY_CONTRACT_NULL_COMPATIBILITY，沿旧ID不新增bug计数，不把合成NULL当生产重现。
+
+新完整候选 `1bfa81a5a58ffa8112c10414dad9fdb1701ef188`，child `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`。XML仅selectReferenceOptions/POI一个谓词COALESCE(status,1)=1→status=1，city/投影/order/limit及snapshot/count原样；新E02_12Test2方法和原E02-12.md。真实生产XML在现有H2/MyBatis执行SELECT的回归源码覆盖1/0/合成NULL、快照对照、city非空、4列投影/三层subtitle回退/降序/limit。父静态审阅+串行GitHub非强推发布，运行验证全NOT_RUN，无新DDL/依赖/Java/权限/CI/入口变化。
+
+未来本地最小文本命令 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test`，只新类计划2，实际未知；无需外部DB/Redis/新环境变量，不重跑旧29fe64、不继承其PASS。PR16#6209046388/PR24#6209046566已交完整候选/3路径/差异/2声明/前提。现有真MySQL未覆盖项继续NOT_RUN，入口新增方案仍关闭。根因/边界见[交付](https://github.com/liboyang42-cpu/hengyin/blob/1bfa81a5a58ffa8112c10414dad9fdb1701ef188/docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md)。
+
+当前原E02已交付停写，实际源码0/READY0；其他已列E01-13、E02-23、E04-07精确合同接续不因本次本地验证等待而冻结。活动售卖字段仍只存读不擅加WAITING政策，原作者与锁保留；新真实失败仅一原作者修复槽。
