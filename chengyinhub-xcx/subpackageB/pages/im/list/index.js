@@ -2,7 +2,7 @@ const toast = require('../../../../utils/toast.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
-const { reportNoticeRows, reportDetailUrl } = require('./report-notices.js');
+const { reportNoticeRows, reportDetailUrl, makeReadRequestId } = require('./report-notices.js');
 const app = getApp();
 
 Page({
@@ -143,7 +143,7 @@ Page({
 
   openReportNotice(e) {
     const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId);
-    if (url) wx.navigateTo({ url: url });
+    if (url) { wx.navigateTo({ url: url }); this.markReportNoticeRead(e.currentTarget.dataset); }
   },
 
   // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
@@ -446,6 +446,29 @@ Page({
         '&name=' + encodeURIComponent(ds.name || '') +
         '&avatar=' + encodeURIComponent(ds.avatar || '') +
         '&type=' + (ds.type || 1),
+    });
+  },
+
+  // BL-31:点开举报进度即标记该条通知已读,不等结果先跳转(失败不阻塞查看)。
+  // 成功后重新拉通知,未读点以服务端 read_at 回读为准;失败在系统 tab 局部提示,红点保留。
+  markReportNoticeRead(dataset) {
+    const that = this;
+    const id = Number(dataset && dataset.noticeId);
+    if (!(Number.isSafeInteger(id) && id > 0) || !(dataset && dataset.unread)) return;
+    app.sendRequest({
+      url: '/api/v1/community/notifications/' + id + '/read',
+      method: 'POST',
+      data: JSON.stringify({ requestId: makeReadRequestId(id) }),
+      header: { 'Content-Type': 'application/json' },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (isBizOk(res)) { that.loadReportNotices(); return; }
+        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
+      },
+      fail() {
+        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
+      },
     });
   },
 });

@@ -129,8 +129,8 @@ test('N1: 系统消息整形——只取带 reportId 的 SYSTEM_GOVERNANCE 举�
     { id: 25, notification_type: 'SYSTEM_GOVERNANCE', payload_json: { reportId: 7, action: 'REPORT_RECEIVED', publicNote: '' }, read_at: '2026-10-14' },
   ]
   assert.deepEqual(notices.reportNoticeRows(items), [
-    { key: '30', reportId: '5', title: '平台已开始调查', createTime: '2026-10-15T02:00:00Z', unread: true },
-    { key: '25', reportId: '7', title: '举报进度有更新', createTime: '', unread: false },
+    { key: '30', notificationId: '30', reportId: '5', title: '平台已开始调查', createTime: '2026-10-15T02:00:00Z', unread: true },
+    { key: '25', notificationId: '25', reportId: '7', title: '举报进度有更新', createTime: '', unread: false },
   ])
   assert.equal(notices.reportNoticeRows(null), null)
   assert.deepEqual(notices.reportNoticeRows([]), [])
@@ -328,6 +328,46 @@ test('N1 处理器: 系统 tab 读举报进度通知，点进举报详情；读�
     h2.vm.loadReportNotices()
     assert.equal(h2.vm.data.reportNoticeError, '举报进度暂时没读到')
   } finally { h2.restore() }
+})
+
+test('BL-31 处理器: 点开未读举报进度先跳转再标记已读，成功后回读未读状态；失败局部提示不挡查看', () => {
+  let readAt = null
+  let readOk = true
+  const h = loadPage('subpackageB/pages/im/list/index.js', (o) => {
+    if (o.url === '/api/v1/community/notifications') {
+      o.success({ code: 200, data: { items: [{ id: 3, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 41, action: 'REPORT_STAGE_RESOLVED', publicNote: '已处理' }), read_at: readAt, create_time: '2026-10-15 10:00:00' }] } })
+    } else if (o.url === '/api/v1/community/notifications/3/read') {
+      if (!readOk) { o.fail({}); return }
+      readAt = '2026-10-15 10:05:00'
+      o.success({ code: 200 })
+    }
+  })
+  try {
+    h.vm.fmtTime = () => '10:00'
+    h.vm.loadReportNotices()
+    const row = h.vm.data.reportNotices[0]
+    assert.equal(row.notificationId, '3')
+    assert.equal(row.unread, true)
+    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: row.reportId, noticeId: row.notificationId, unread: row.unread } } })
+    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'], '先跳转，不等已读结果')
+    const read = h.requests.find((r) => r.url === '/api/v1/community/notifications/3/read')
+    assert.ok(read, '发出已读请求')
+    assert.equal(read.method, 'POST')
+    const rid = JSON.parse(read.data).requestId
+    assert.ok(rid.length >= 8 && rid.length <= 96, 'requestId 8–96 字符')
+    assert.equal(h.vm.data.reportNotices[0].unread, false, '红点以回读 read_at 为准')
+    const before = h.requests.length
+    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: false } } })
+    assert.equal(h.requests.length, before, '已读的不再发')
+    readOk = false
+    readAt = null
+    h.vm.loadReportNotices()
+    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: true } } })
+    assert.equal(h.nav.length, 3, '失败不挡查看')
+    assert.equal(h.vm.data.reportNoticeError, '举报进度已读状态没更新')
+    assert.equal(h.vm.data.reportNotices[0].unread, true, '失败不假装已读')
+  } finally { h.restore() }
+  assert.equal(notices.makeReadRequestId('3', 1760000000000, 'abcd1234'), 'ntr-3-' + (1760000000000).toString(36) + '-abcd1234')
 })
 
 // ---------- 入口与注册 ----------

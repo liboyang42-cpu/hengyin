@@ -38,6 +38,8 @@ function reportNoticeRows(items) {
     seen[reportId] = 1
     rows.push({
       key: String(item.id || reportId),
+      // 标记已读用(POST /api/v1/community/notifications/{id}/read);没有通知 id 就不发
+      notificationId: positiveId(item.id) ? String(positiveId(item.id)) : '',
       reportId: String(reportId),
       title: text(payload.publicNote) || '举报进度有更新',
       createTime: item.create_time == null ? '' : item.create_time,
@@ -52,4 +54,12 @@ function reportDetailUrl(reportId) {
   return id ? REPORT_DETAIL_ROUTE + '?reportId=' + id : ''
 }
 
-module.exports = { reportNoticeRows, reportDetailUrl }
+// 标记已读的幂等键:后端要求 8–96 字符,同键重放只记一次回执
+function makeReadRequestId(notificationId, nowMs, randomPart) {
+  const id = positiveId(notificationId)
+  const now = Number(nowMs) || Date.now()
+  const rand = text(randomPart) || Math.random().toString(36).slice(2, 10)
+  return ('ntr-' + id + '-' + now.toString(36) + '-' + rand).slice(0, 96)
+}
+
+module.exports = { reportNoticeRows, reportDetailUrl, makeReadRequestId }
