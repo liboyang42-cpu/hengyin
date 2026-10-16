@@ -10,9 +10,9 @@
 |---|---|---|---|---|---|
 | BL-158 触达任务页禁用词 | #205 | #144 BL-100 | `node --test tests/unit/audit-f01-f17-contract.test.js tests/unit/merchant-crm-campaigns.test.js tests/unit/r9-32-crm-write-ack-contract.test.js` | F13 失败，列出 5 处「回执」 | pass 16 / fail 0 |
 | | | | `node --test tests/unit/merchant-crm-*.test.js` | — | pass 22 / fail 0 |
-| BL-159 安全感受摘要路径 | #206 | #109 BL-66 | `node scripts/ui-validity-gates.js` | `U1 FAIL: subpackageMember/components/cy/profile/index.js:720 … 没有后端 @*Mapping` | `U1: 通过（540 个前端字面量 /api 调用，1340 个后端映射）` |
+| BL-159 安全感受摘要路径 | #206 | #109 BL-66 | `node scripts/ui-validity-gates.js` | `U1 FAIL: subpackageMember/components/cy/profile/index.js:720 … 没有后端 @*Mapping` | `U1: 通过（540 个前端字面量 /api 调用，1340 个后端映射）`；同一命令仍报 `U5 FAIL …profile/index.js（白名单 1，实际 2）`，U5 需 #216（BL-168） |
 | | | | `node --test tests/unit/merchant-safety-summary-bl66.test.js` | — | pass 4 / fail 0 |
-| BL-160 U5 白名单同步 | #207 | 各被补 PR（#122 #123 #128 #141 #114 #73） | 在各分支 `git apply` `BL-160-U5-PATCHES.md` 对应一节后：`node scripts/ui-validity-gates.js \| grep ^U5`；根目录 `node ci/silent-error-gate.js` | 6 个分支 U5 均 FAIL（见 #207 表） | U5 通过；silent-error-gate 通过 |
+| BL-160 U5 白名单同步 | #207 | 各被补 PR（#122 #123 #128 #141 #114 #73） | 在各分支 `git apply` `BL-160-U5-PATCHES.md` 对应一节后：`node scripts/ui-validity-gates.js \| grep ^U5`；根目录 `node ci/silent-error-gate.js` | 6 个分支 U5 均 FAIL（见 #207 表） | U5 通过；silent-error-gate 未登记/超额 0，剩基线 2 条（`pages/publish/fabu/index.js`、`subpackageMember/complaint/index.js`，基线落后 master 的存量问题，exit 1 不变） |
 | BL-161（1/2）收藏点位页副文案 | #208 | #84 BL-42 | `node tests/lint/ui-integrity.js --warn-as-error` | `node-favorites/index.js:12/:42` 两条 WARN/LEGACY | `UI-GATE-0: PASS` |
 | | | | `node --test tests/unit/roam-node-favorites.test.js` | — | pass 3 / fail 0 |
 | BL-161（2/2）官方收件箱提示 | #209 | #43 BL-06 | `node tests/lint/ui-integrity.js --warn-as-error` | `official-inbox/index.js:202 提示文案 21 字` WARN | 该条消失；仍剩 2 条 `official-inbox/index.js:103 → :109` U1-VARIABLE 基线键漂移（#43 自带，#194 X-8，归协调者） |
