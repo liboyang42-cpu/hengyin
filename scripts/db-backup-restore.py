@@ -5,16 +5,19 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 
 
-def mysql(args, sql):
+def mysql(args, sql, definition=False):
+    # SHOW CREATE uses escaped batch cells, so embedded newlines/tabs cannot become records.
+    options = ["--batch", "--skip-raw", "--column-names"] if definition else ["--batch", "--raw", "--skip-column-names"]
     run = subprocess.run(["mysql", "--defaults-extra-file=" + str(args.defaults_file),
-                          "--batch", "--raw", "--skip-column-names", "--database=" + args.database],
+                          "--default-character-set=utf8mb4", *options, "--database=" + args.database],
                          input=sql.encode(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.returncode:
         raise ValueError("MySQL command failed; no backup or restore is considered verified")
-    return run.stdout.decode().strip()
+    return run.stdout.decode().rstrip("\n") if definition else run.stdout.decode().strip()
 
 
 def identify(args):
@@ -26,26 +29,81 @@ def identify(args):
     return identity
 
 
+def quoted(name):
+    return "`" + name.replace("`", "``") + "`"
+
+
+def batch_cell(value):
+    """Decode mysql's batch escaping once, preserving literal backslashes and Unicode."""
+    escapes = {"0": "\0", "n": "\n", "t": "\t", "r": "\r", "b": "\b", "Z": "\x1a", "\\": "\\"}
+    result = []
+    index = 0
+    while index < len(value):
+        if value[index] == "\\":
+            index += 1
+            if index == len(value) or value[index] not in escapes:
+                raise ValueError("Unverifiable MySQL definition escaping")
+            result.append(escapes[value[index]])
+        else:
+            result.append(value[index])
+        index += 1
+    return "".join(result)
+
+
+def definition_hash(args, kind, name):
+    rows = mysql(args, "SHOW CREATE " + kind + " " + quoted(name), definition=True).split("\n")
+    if len(rows) != 2:
+        raise ValueError("Unverifiable MySQL object definition")
+    headers, values = (row.split("\t") for row in rows)
+    if len(headers) != len(values) or len(set(headers)) != len(headers):
+        raise ValueError("Unexpected MySQL definition fields")
+    fields = dict(zip(headers, map(batch_cell, values)))
+    identity_column = {"DATABASE": "Database", "TABLE": "Table", "VIEW": "View", "PROCEDURE": "Procedure",
+                       "FUNCTION": "Function", "TRIGGER": "Trigger", "EVENT": "Event"}[kind]
+    create_column = "SQL Original Statement" if kind == "TRIGGER" else "Create " + kind.title()
+    if fields.get(identity_column) != name or not fields.get(create_column, "").lstrip().upper().startswith("CREATE "):
+        # SHOW CREATE ROUTINE can return SQL NULL when the account cannot see the body.
+        raise ValueError("Object definition is missing or not visible to the backup account")
+    if kind == "TRIGGER":
+        fields.pop("Created", None)  # Server-assigned creation time changes on a legitimate restore.
+    return hashlib.sha256(json.dumps(fields, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def object_rows(args, columns, table, schema_column):
+    raw = mysql(args, "SELECT JSON_ARRAY(" + columns + ") FROM information_schema." + table
+                + " WHERE " + schema_column + "=DATABASE()")
+    return [json.loads(line) for line in raw.split("\n") if line]
+
+
 def snapshot(args):
-    objects = mysql(args, "SHOW FULL TABLES")
     tables = {}
     views = []
-    for line in objects.splitlines():
-        name, kind = line.split("\t")
+    definitions = {"DATABASE:" + args.database: definition_hash(args, "DATABASE", args.database)}
+    for name, kind in object_rows(args, "TABLE_NAME, TABLE_TYPE", "TABLES", "TABLE_SCHEMA"):
+        if kind not in ("BASE TABLE", "VIEW"):
+            raise ValueError("Unsupported schema object type")
+        definitions[("VIEW:" if kind == "VIEW" else "TABLE:") + name] = definition_hash(
+            args, "VIEW" if kind == "VIEW" else "TABLE", name)
         if kind == "VIEW":
             views.append(name)
             continue
-        quoted = "`" + name.replace("`", "``") + "`"
-        checksum = mysql(args, "CHECKSUM TABLE " + quoted + " EXTENDED").split("\t")[-1]
+        checksum = mysql(args, "CHECKSUM TABLE " + quoted(name) + " EXTENDED").split("\t")[-1]
         if checksum == "NULL":
             raise ValueError("A table has no verifiable checksum")
-        tables[name] = {"rows": int(mysql(args, "SELECT COUNT(*) FROM " + quoted)), "checksum": checksum}
+        tables[name] = {"rows": int(mysql(args, "SELECT COUNT(*) FROM " + quoted(name))), "checksum": checksum}
     counts = {}
-    for kind in ("ROUTINES", "TRIGGERS", "EVENTS"):
-        column = "ROUTINE_SCHEMA" if kind == "ROUTINES" else "TRIGGER_SCHEMA" if kind == "TRIGGERS" else "EVENT_SCHEMA"
-        counts[kind] = int(mysql(args, "SELECT COUNT(*) FROM information_schema." + kind
-                                + " WHERE " + column + "=DATABASE()"))
-    return {"tables": tables, "views": sorted(views), "objects": counts}
+    for table, columns, schema_column, fixed_kind in (
+            ("ROUTINES", "ROUTINE_NAME, ROUTINE_TYPE", "ROUTINE_SCHEMA", None),
+            ("TRIGGERS", "TRIGGER_NAME", "TRIGGER_SCHEMA", "TRIGGER"),
+            ("EVENTS", "EVENT_NAME", "EVENT_SCHEMA", "EVENT")):
+        rows = object_rows(args, columns, table, schema_column)
+        counts[table] = len(rows)
+        for row in rows:
+            name, kind = (row[0], fixed_kind) if fixed_kind else row
+            if kind not in ("PROCEDURE", "FUNCTION", "TRIGGER", "EVENT"):
+                raise ValueError("Unsupported stored object type")
+            definitions[kind + ":" + name] = definition_hash(args, kind, name)
+    return {"tables": tables, "views": sorted(views), "objects": counts, "definitions": definitions}
 
 
 def digest(path):
@@ -69,6 +127,7 @@ def backup(args):
         os.chmod(partial, 0o600)
         try:
             run = subprocess.run(["mysqldump", "--defaults-extra-file=" + str(args.defaults_file),
+                                  "--default-character-set=utf8mb4",
                                   "--single-transaction", "--routines", "--triggers", "--events",
                                   "--set-gtid-purged=OFF", "--no-tablespaces", "--hex-blob", args.database],
                                  stdout=stream, stderr=subprocess.PIPE)
@@ -76,7 +135,7 @@ def backup(args):
             os.fsync(stream.fileno())
             if run.returncode or partial.stat().st_size == 0 or snapshot(args) != before:
                 raise ValueError("Dump failed, is empty, or source changed; quiesce writes and retry")
-            manifest = {"serverUuid": identity[0], "mysqlVersion": identity[1], "database": args.database,
+            manifest = {"formatVersion": 2, "serverUuid": identity[0], "mysqlVersion": identity[1], "database": args.database,
                         "sha256": digest(partial), "snapshot": before}
             with receipt.open("x", encoding="utf-8") as result:
                 os.chmod(receipt, 0o600)
@@ -88,9 +147,32 @@ def backup(args):
     print("Backup created with checksum receipt; restore drill still required")
 
 
+def manifest_definitions(manifest, database):
+    """Legacy or truncated receipts cannot authorize a restore write."""
+    snapshot = manifest.get("snapshot", {}) if isinstance(manifest, dict) else {}
+    proof = snapshot.get("definitions", {}) if isinstance(snapshot, dict) else {}
+    valid = isinstance(proof, dict) and bool(proof) and isinstance(manifest, dict) and manifest.get("formatVersion") == 2
+    if valid:
+        tables, views, counts = snapshot.get("tables"), snapshot.get("views"), snapshot.get("objects")
+        valid = isinstance(tables, dict) and isinstance(views, list) and isinstance(counts, dict)
+    if valid:
+        expected = {"DATABASE:" + database} | {"TABLE:" + name for name in tables} | {"VIEW:" + name for name in views}
+        stored = {key for key in proof if isinstance(key, str) and key.partition(":")[0] in
+                  ("PROCEDURE", "FUNCTION", "TRIGGER", "EVENT") and key.partition(":")[2]}
+        valid = set(proof) == expected | stored and all(isinstance(value, str) and re.fullmatch("[a-f0-9]{64}", value)
+                                                       for value in proof.values())
+        for plural, kinds in (("ROUTINES", ("PROCEDURE", "FUNCTION")), ("TRIGGERS", ("TRIGGER",)), ("EVENTS", ("EVENT",))):
+            count = counts.get(plural)
+            valid = valid and type(count) is int and count >= 0 and count == sum(key.partition(":")[0] in kinds for key in stored)
+    if not valid:
+        raise ValueError("Backup manifest lacks complete definition proof; keep the old backup and create a verified v2 backup")
+    return proof
+
+
 def restore(args):
-    identity = identify(args)
     manifest = json.loads(Path(str(args.backup) + ".json").read_text(encoding="utf-8"))
+    proof = manifest_definitions(manifest, args.database)
+    identity = identify(args)
     if not args.confirm_test_target or args.database != manifest["database"]:
         raise ValueError("Confirm isolated test target and preserve the source database name for views")
     if mysql(args, "SELECT @@global.event_scheduler") not in ("OFF", "DISABLED"):
@@ -102,8 +184,11 @@ def restore(args):
     target = snapshot(args)
     if target["tables"] or target["views"] or any(target["objects"].values()):
         raise ValueError("Restore target must be empty; existing data is never dropped")
+    if target["definitions"]["DATABASE:" + args.database] != proof["DATABASE:" + args.database]:
+        raise ValueError("Restore database definition differs; create the empty target with matching source options")
     with args.backup.open("rb") as stream:
         run = subprocess.run(["mysql", "--defaults-extra-file=" + str(args.defaults_file),
+                              "--default-character-set=utf8mb4",
                               "--database=" + args.database], stdin=stream, stderr=subprocess.PIPE,
                              stdout=subprocess.DEVNULL)
     if run.returncode or snapshot(args) != manifest["snapshot"]:
