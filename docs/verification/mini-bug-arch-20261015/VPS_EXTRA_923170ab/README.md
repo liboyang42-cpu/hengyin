@@ -1,4 +1,23 @@
-# E02/E04组合候选 VPS 准入拒绝回执
+# E02/E04组合候选 VPS 实际普通回归：28通过、7异常
+
+固定源码 `923170abd8e468d62eb8404b16b990609a4da42a`，2026-10-16 13:54:12.303208Z—13:57:02.825513Z经原212实际执行 **六类35项：28PASS / 0FAIL / 7ERROR / 0SKIP**。fresh六份XML精确匹配固定类集和实际testcase数，guard exit1 / child_command_failed；不是全通过。
+
+| 类 | 实际 | 通过 | 异常 |
+|---|---:|---:|---:|
+| E02_23Test | 6 | 1 | 5 |
+| ApiCreativeSquareCommunityPolicyTest | 14 | 14 | 0 |
+| ViewCreativeSquareCommunityPolicyMyBatisTest | 2 | 0 | 2 |
+| ViewCreativeSquareCommunityPolicySqlTest | 2 | 2 | 0 |
+| E04_07Test | 7 | 7 | 0 |
+| TopicCompletionCouponRewardServiceImplTest | 4 | 4 | 0 |
+
+7异常均发生在H2 fixture创建JSON_TYPE别名：`CREATE ALIAS JSON_TYPE FOR 'com.chengyinhub.business.longrun.E02_23Test.jsonType'` 被实际H2 1.4.200以expected identifier /42001-200拒绝；位置为E02_23Test.fixture:177及旧MyBatisTest.createSchema:106。因此相关SQL业务断言尚未执行，不能当生产MySQL错误或7个新BUG。已交原E02作者唯一1修复槽，只修此前已授权两个测试的H2别名语法，保全部8方法/业务断言/负控/生产XML，不升级依赖或弱化身份验证。新源交付后只复测这两个原异常类，不重跑已通过4类或全35。
+
+源包/依赖/守卫/精确六类未变；正式准入可用内存2,824,240KiB。守卫容器 `c2bb12cb40d9b43ef08847f80ebd8cf9adef6fa37f58a2ffb08639ad13c707dd` 已经显式chengyin-aws精确ID过滤确认清理，当前无活动Java。source/cache/完整日志/六XML/guard与targeted-summary均保留。两次先前0项拒绝回执已另存130903Z和132231Z后缀，哈希逐字核对，summary保留全部历史。
+
+E04两类11普通项通过只证明本次普通回归；真实MySQL新5+旧3、Redis/运行HTTP/设备业务/集成仍未验，迁移源码未执行，未合并部署。新history_id依赖代码不能部署到未迁移数据库。详细逐XML SHA256及guard/源包见[summary.json](summary.json)。
+
+# 历史准入拒绝回执
 
 固定公开源码 `923170abd8e468d62eb8404b16b990609a4da42a`，直接父E02交付 `13be997646c88b9eea282cc8c8225b42820dc3b3`，含此前A `dedb44d54a4a277273943c0cbbca9f6e7528482a`。已按C00补充授权 `225b59efa72bf54423fc3a5f6069bff6cc72353e` 核差异：E02五个生产文件/两旧fixture/新回归，E04精确producer/mapper/consumer/回归和一份新迁移源码；未改依赖/CI/入口。
 
