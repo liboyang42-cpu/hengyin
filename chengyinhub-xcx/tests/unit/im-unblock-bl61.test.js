@@ -39,7 +39,7 @@ function enterBlockedByMe(ctx) {
 test('我拉黑了对方:更多菜单显示「解除拉黑」而不是「拉黑」', () => {
   const ctx = loadChat()
   enterBlockedByMe(ctx)
-  assert.equal(ctx.page.data.blockedByMe, true)
+  assert.equal(ctx.page._blockedByMe, true)
   assert.ok(ctx.page.data.moreSheetItems.includes('解除拉黑'))
   assert.ok(!ctx.page.data.moreSheetItems.includes('拉黑'))
 })
@@ -68,7 +68,7 @@ test('解除拉黑:先二次确认,确认后才发 /api/im/unblock,成功后回�
   assert.equal(reread.url, '/api/im/messages')
   reread.success({ code: 200, data: { list: [{ id: 9, senderId: 2 }], blocked: false, blockedByMe: false } })
   assert.equal(ctx.page.data.disabled, false)
-  assert.equal(ctx.page.data.blockedByMe, false)
+  assert.equal(ctx.page._blockedByMe, false)
   assert.ok(ctx.page.data.moreSheetItems.includes('拉黑'))
 })
 

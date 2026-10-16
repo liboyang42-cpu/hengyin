@@ -45,8 +45,6 @@ Page({
     toView: '',
     disabled: false,
     disabledText: '',
-    // BL-61:我方是否拉黑了对方(只信服务端 /api/im/messages 回读的 blockedByMe)
-    blockedByMe: false,
     // 非 ready 时输入栏为什么点不动,按真实原因给一句话。做成静态映射(而不是每个 setData
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
     sendBlockedMap: {
@@ -188,10 +186,13 @@ Page({
           if (res.data.blocked === true) {
             const byMe = res.data.blockedByMe === true;
             that.setData({ disabled: true, disabledText: byMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息',
-              blockedByMe: byMe, moreSheetItems: that._blockMenuItems(byMe) });
-          } else if (res.data.blocked === false && that.data.blockedByMe) {
+              moreSheetItems: that._blockMenuItems(byMe) });
+            // BL-61:我方是否拉黑了对方只作逻辑判断、不渲染 ⇒ 存实例字段,不进 data(U4 零消费)
+            that._blockedByMe = byMe;
+          } else if (res.data.blocked === false && that._blockedByMe) {
             // BL-61:解除拉黑后按回读恢复可发送;只在此前因「我拉黑对方」禁用时才解禁
-            that.setData({ disabled: false, disabledText: '', blockedByMe: false, moreSheetItems: that._blockMenuItems(false) });
+            that._blockedByMe = false;
+            that.setData({ disabled: false, disabledText: '', moreSheetItems: that._blockMenuItems(false) });
           }
           if (toBottom) that.scrollBottom();
           that.markRead();
@@ -740,7 +741,8 @@ Page({
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '拉黑失败，请重试'); return; }
         that.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息',
-          blockedByMe: true, moreSheetItems: that._blockMenuItems(true) });
+          moreSheetItems: that._blockMenuItems(true) });
+        that._blockedByMe = true;
         that._pendingBlockId = 0;
         if (dc) dc.done();
       },
