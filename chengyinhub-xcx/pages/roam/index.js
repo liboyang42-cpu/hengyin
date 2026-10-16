@@ -243,6 +243,7 @@ function httpFail(res) { return !!res && res.httpFail === true; }
 // GET 由 request-client 默认注入 Authorization；真正匿名的调用点才显式 auth:false。
 // 官方活动虽可匿名访问，但登录态会返回报名进度，不能强制降为匿名请求。
 const { createRoamNpcCoordinator } = require('../../utils/roam-npc-coordinator.js');
+const { activeRoamEventCard, applyEventCard } = require('../../utils/roam-official-active.js');
 const { persistPhoto, retainRecentPhotos, archivedSessionPhotos, droppedSavedPhotos, evictedSavedPhotos, releaseSavedPhotos } = require('../../utils/roam-session-photos.js');
 
 const NPC_JSON_HEADER = { header: { 'content-type': 'application/json' } };
@@ -679,7 +680,7 @@ Page({
     const introTab = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.tab) || 'start';
     if (introTab === this.data.introTab) return;
     this.setData({ introTab });
-    if (introTab === 'passport') this._loadIntroPassport();
+    if (introTab === 'passport') { this._loadIntroPassport(); this._loadActiveRoamEvents(); }
   },
   /** 护照 tab 读数:全部来自本机 roam_sessions,拿不到就是 0,不摆假数。
    *  分两层(2026-08-08 定稿)——
@@ -728,9 +729,24 @@ Page({
     else if (key === 'badge') wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' });
     else this.openPassport();
   },
+  // BL-41:护照「官方活动」大卡读可参与的漫游官方活动;失败静默,卡片保持原文案。
+  _loadActiveRoamEvents() {
+    const token = {};
+    this._activeRoamToken = token;
+    this._activeRoamEventId = '';
+    req('/api/official/active-for-roam', 'GET', {}, { silentError: true }).then((res) => {
+      if (this._activeRoamToken !== token || !apiOk(res)) return;
+      const card = activeRoamEventCard(res.data);
+      const passport = this.data.passport || {};
+      if (!card || !Array.isArray(passport.plays)) return;
+      this._activeRoamEventId = card.eventId;
+      this.setData({ 'passport.plays': applyEventCard(passport.plays, card) });
+    });
+  },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === 'event') this.openRoamTasks();   // 官方活动 = roam-task-list 场景(route 同为 activity/list)
+    if (key === 'event' && this._activeRoamEventId) wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId });
+    else if (key === 'event') this.openRoamTasks();   // 官方活动 = roam-task-list 场景(route 同为 activity/list)
     else this.goDiscover();
   },
   onIntroCardSwipe(e) { this.setData({ introCardIdx: e.detail.current || 0 }); },
