@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4480,
+  "controlCount": 4483,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -283929,7 +283929,124 @@
       }
     },
     {
-      "id": "components/cy/scene-roam-stamp-album/index.wxml:18:bind:retry:retryLoad:1",
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:12:bindtap:openDetail:1",
+      "route": "component:components/cy/scene-roam-stamp-album/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-roam-stamp-album/index.wxml",
+        "js": "components/cy/scene-roam-stamp-album/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openDetail",
+        "line": 12,
+        "selectorHint": ".stkcell",
+        "visibleCondition": "{{tab === 'received'}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看这枚收到的邮票",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:99"
+      }
+    },
+    {
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:25:bind:retry:retryLoad:2",
       "route": "component:components/cy/scene-roam-stamp-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -284002,7 +284119,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryLoad",
-        "line": 18,
+        "line": 25,
         "selectorHint": ".album-state",
         "visibleCondition": "{{error && !items.length}}",
         "disabledCondition": null,
@@ -284082,11 +284199,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:92"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:118"
       }
     },
     {
-      "id": "components/cy/scene-roam-stamp-album/index.wxml:20:bindtap:openCamera:2",
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:27:bindtap:openCamera:3",
       "route": "component:components/cy/scene-roam-stamp-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -284159,7 +284276,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openCamera",
-        "line": 20,
+        "line": 27,
         "selectorHint": ".album-empty__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -284200,11 +284317,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:94"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:120"
       }
     },
     {
-      "id": "components/cy/scene-roam-stamp-album/index.wxml:26:bindtap:retryLoad:3",
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:33:bindtap:retryLoad:4",
       "route": "component:components/cy/scene-roam-stamp-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -284277,7 +284394,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryLoad",
-        "line": 26,
+        "line": 33,
         "selectorHint": ".album-more",
         "visibleCondition": "{{error && items.length}}",
         "disabledCondition": null,
@@ -284357,11 +284474,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:92"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:118"
       }
     },
     {
-      "id": "components/cy/scene-roam-stamp-album/index.wxml:27:bindtap:loadMore:4",
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:34:bindtap:loadMore:5",
       "route": "component:components/cy/scene-roam-stamp-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -284434,7 +284551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 27,
+        "line": 34,
         "selectorHint": ".album-load-more",
         "visibleCondition": "{{!noMore && items.length}}",
         "disabledCondition": null,
@@ -284514,11 +284631,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:93"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:119"
       }
     },
     {
-      "id": "components/cy/scene-roam-stamp-album/index.wxml:29:bindtap:openCamera:5",
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:36:bindtap:openCamera:6",
       "route": "component:components/cy/scene-roam-stamp-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -284591,7 +284708,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openCamera",
-        "line": 29,
+        "line": 36,
         "selectorHint": ".album-fab",
         "visibleCondition": "{{total > 0}}",
         "disabledCondition": null,
@@ -284632,7 +284749,251 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:94"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:120"
+      }
+    },
+    {
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:39:bind:close:closeDetail:7",
+      "route": "component:components/cy/scene-roam-stamp-album/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-roam-stamp-album/index.wxml",
+        "js": "components/cy/scene-roam-stamp-album/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeDetail",
+        "line": 39,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:113"
+      }
+    },
+    {
+      "id": "components/cy/scene-roam-stamp-album/index.wxml:41:bindtap:previewDetail:8",
+      "route": "component:components/cy/scene-roam-stamp-album/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-roam-stamp-album/index.wxml",
+        "js": "components/cy/scene-roam-stamp-album/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "bindtap",
+        "handler": "previewDetail",
+        "line": 41,
+        "selectorHint": ".stkdetail__img",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看大图",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "previewImage"
+      ],
+      "successCapabilities": [
+        "previewImage"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:114"
       }
     },
     {
@@ -284789,7 +285150,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-stamp-album/index.js:42"
+        "staticSource": "components/cy/scene-roam-stamp-album/index.js:45"
       }
     },
     {
@@ -326495,6 +326856,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -328823,6 +329210,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -338105,6 +338518,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -342806,6 +343253,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -358103,6 +358584,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -360431,6 +360938,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -369713,6 +370246,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -374414,6 +374981,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -389711,6 +390312,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -392039,6 +392666,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -401321,6 +401974,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -406022,6 +406709,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -421319,6 +422040,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -423647,6 +424394,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -432929,6 +433702,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -437630,6 +438437,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -452927,6 +453768,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -455255,6 +456122,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -464537,6 +465430,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -469238,6 +470165,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -484536,6 +485497,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -486864,6 +487851,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -496146,6 +497159,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -500847,6 +501894,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -516145,6 +517226,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -518473,6 +519580,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -527755,6 +528888,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -532456,6 +533623,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -547754,6 +548955,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -550082,6 +551309,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -559364,6 +560617,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -564065,6 +565352,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -579363,6 +580684,32 @@
           "route": "pages/play/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -581691,6 +583038,32 @@
           "route": "pages/roam/index",
           "segments": [
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -590973,6 +592346,40 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-roam-task-list",
               "index": 0
             },
@@ -595674,6 +597081,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
