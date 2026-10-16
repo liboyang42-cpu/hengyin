@@ -489,7 +489,7 @@ Page({
       hideLoading: true, silentError: true, autoErrorToast: false,
       url: '/api/merchant/subscription', method: 'POST',
       success(res) {
-        if (res && (res.code == '200' || res.code == 200)) {
+        if (!that._destroyed && res && (res.code == '200' || res.code == 200)) {
           that.setData({ activeSubs: buildActiveSubscriptions(res.data, that.data.tiers) });
         }
       },
