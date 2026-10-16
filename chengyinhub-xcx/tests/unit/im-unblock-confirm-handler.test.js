@@ -4,7 +4,7 @@ const assert = require('node:assert/strict')
 // BL-154：subpackageB/pages/im/chat/index.js 的 _confirmUnblock 页面处理器单测
 // 依赖 #104（BL-61），须在其后合并；不改被测代码。
 // 要求：回读确认之前不得显示「已解除拉黑」（danger-actions 'im.unblock'.done.title）；失败如实提示。
-// 暴露的现有缺陷以 todo 标注，并报 #104。
+// 暴露的现有缺陷原以 todo 标注并报 #104；BL-164 修复后已转正。
 function loadChat() {
   let def
   const requests = []
@@ -113,9 +113,7 @@ test('_confirmUnblock: 视图已切换（会话变了）时成功回包不回读
   assert.equal(ctx.requests.length, 0)
 })
 
-test('_confirmUnblock: 回读确认之前不得显示「已解除拉黑」', {
-  todo: '#104 现状：/api/im/unblock 回 200 即调 dc.done()（标题取 danger-actions im.unblock.done「已解除拉黑」），早于 /api/im/messages 回读；已报 #104',
-}, () => {
+test('_confirmUnblock: 回读确认之前不得显示「已解除拉黑」', () => {
   const ctx = loadChat()
   enterBlockedByMe(ctx)
   confirmUnblock(ctx).success({ code: 200 })
@@ -124,9 +122,7 @@ test('_confirmUnblock: 回读确认之前不得显示「已解除拉黑」', {
   assert.equal(doneCalls(ctx).length, 1, '回读确认 blockedByMe=false 后才显示完成')
 })
 
-test('_confirmUnblock: 回读仍为 blockedByMe=true 时不得显示「已解除拉黑」', {
-  todo: '#104 现状：done 已在回读前显示，回读不一致时无法撤回；已报 #104',
-}, () => {
+test('_confirmUnblock: 回读仍为 blockedByMe=true 时不得显示「已解除拉黑」', () => {
   const ctx = loadChat()
   enterBlockedByMe(ctx)
   confirmUnblock(ctx).success({ code: 200 })
@@ -134,12 +130,26 @@ test('_confirmUnblock: 回读仍为 blockedByMe=true 时不得显示「已解除
   assert.equal(doneCalls(ctx).length, 0)
 })
 
-test('_confirmUnblock: 网络失败（结果未知）文案不应断言「失败」', {
-  todo: '#104 现状：fail() 提示「解除拉黑失败，请重试」，但请求可能已到达服务端；应提示结果未确认并回读；已报 #104',
-}, () => {
+test('_confirmUnblock: 网络失败（结果未知）文案不应断言「失败」', () => {
   const ctx = loadChat()
   enterBlockedByMe(ctx)
   confirmUnblock(ctx).fail({ errMsg: 'request:fail timeout' })
   const last = ctx.dcCalls[ctx.dcCalls.length - 1]
   assert.doesNotMatch(last[1], /失败/)
+  assert.match(last[1], /未确认/)
+  // BL-164:断网后回读一次,以服务端状态刷新输入框
+  const reread = ctx.requests.shift()
+  assert.equal(reread.url, '/api/im/messages')
+  reread.success({ code: 200, data: { list: [], blocked: false, blockedByMe: false } })
+  assert.equal(ctx.page.data.blockedByMe, false)
+  assert.equal(ctx.page.data.disabled, false)
+})
+
+test('_confirmUnblock: 回读本身失败时提示结果未确认，不显示完成（BL-164）', () => {
+  const ctx = loadChat()
+  enterBlockedByMe(ctx)
+  confirmUnblock(ctx).success({ code: 200 })
+  ctx.requests.shift().fail({ errMsg: 'request:fail' })
+  assert.equal(doneCalls(ctx).length, 0)
+  assert.deepEqual(ctx.dcCalls[ctx.dcCalls.length - 1], ['failed', '解除结果未确认，请稍后再看'])
 })

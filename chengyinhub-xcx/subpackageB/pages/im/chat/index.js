@@ -194,6 +194,7 @@ Page({
           if (toBottom) that.scrollBottom();
           that.markRead();
           that.recoverPending();
+          that._settleUnblockReadback(true);
           return;
         }
         that._setMessageLoadError(res);
@@ -210,6 +211,7 @@ Page({
   },
 
   _setMessageLoadError(response) {
+    this._settleUnblockReadback(false);
     if (response && response.errorCode === 'HANGOUT_CLOSED') {
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
@@ -660,15 +662,35 @@ Page({
     if (dc) dc.busyOn();
     app.sendRequest({
       url: '/api/im/unblock', method: 'POST', hideLoading: true, data: { target_member_id: otherId },
-      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准
+      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准。
+      // BL-164:回读确认 blockedByMe 已为 false 才显示「已解除拉黑」;回读仍是拉黑或读失败都如实说。
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '解除拉黑失败，请重试'); return; }
         that._pendingUnblockId = 0;
-        if (dc) dc.done();
+        if (!current()) return;
+        // 由最新一次落定的 /api/im/messages 回读(本次或更晚的一次)给出结论
+        that._unblockReadback = (ok) => {
+          if (!dc) return;
+          if (ok && !that.data.blockedByMe) dc.done();
+          else if (ok) dc.failed('解除还没生效，请重试');
+          else dc.failed('解除结果未确认，请稍后再看');
+        };
+        that.loadMessages(false);
+      },
+      // 断网:请求可能已到服务端,不说「失败」;回读一次,以服务端状态刷新输入框与菜单。
+      fail() {
+        if (dc) dc.failed('网络中断，解除结果未确认');
         if (current()) that.loadMessages(false);
       },
-      fail() { if (dc) dc.failed('解除拉黑失败，请重试'); },
     });
+  },
+
+  // BL-164:解除拉黑的回读结论只消费一次;ok=true 表示消息回读成功(blockedByMe 已按回包刷新)。
+  _settleUnblockReadback(ok) {
+    const settle = this._unblockReadback;
+    if (!settle) return;
+    this._unblockReadback = null;
+    settle(ok);
   },
 
   onDangerConfirm(e) {
