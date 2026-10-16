@@ -12,7 +12,7 @@ module.exports = [
   { file: 'components/cy/club-direct-ledger/index.js', count: 1, reason: '计酬账目读取失败显示 cy-inline-error 并提供重试；epoch 拒绝过期或切号响应，关闭通道 toast 避免与页内错误提示重复。' },
   { file: 'components/cy/npc-chat/index.js', count: 2, reason: '聊天组件把失败落到可见 error 状态并允许重试，避免统一 toast 与组件提示重复。' },
   { file: 'pages/square/components/cy/post-compose/index.js', count: 2, reason: '广场选活动两路列表失败落组件 activityError 并给重试，关掉自动 toast 避免双弹。' },
-  { file: 'subpackageMember/components/cy/profile/index.js', count: 1, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态。' },
+  { file: 'subpackageMember/components/cy/profile/index.js', count: 2, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态；BL-66 安全感受摘要为只读附加块，失败与样本不足同样不展示，不挡主页。' },
   { file: 'components/cy/scene-game-coupon-wallet/index.js', count: 1, reason: '钱包场景在组件内显示加载失败态，不让底层接口文案覆盖场景提示。' },
   { file: 'components/cy/scene-member-invite-history/index.js', count: 1, reason: '请求包装器把失败交给调用场景的可见状态机统一处理。' },
   { file: 'subpackageMember/components/cy/scene-play-activity-detail/index.js', count: 4, reason: '详情读取失败落到 state/errorMsg，取消与评价提交失败分别落到弹层内 cancelError/commentError，取消前的退款人数预览失败也落 cancelError(C8-05)，四路均有可见重试反馈。' },
