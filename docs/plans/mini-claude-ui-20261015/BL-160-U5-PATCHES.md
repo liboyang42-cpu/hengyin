@@ -1,17 +1,20 @@
 # BL-160 U5 白名单同步补丁（按 PR 分节）
 
 来源：#194 `COORDINATOR-PATCHES-CHECK.md` X-5。`ui-validity-gates` U5 读的是 `chengyinhub-xcx/scripts/ui-silent-error-allowlist.js`，
-`ci/silent-error-gate.js` 读的是 `ci/silent-error-allowlist.txt`；下面 6 个 PR 至少少登记了其中一份。
+`ci/silent-error-gate.js` 读的是 `ci/silent-error-allowlist.txt`；下面 7 个 PR 至少少登记了其中一份（#109 一节为监督复审后补，与 BL-168 #216 的补丁内容一致，二者择一合入）。
 每节是在该 PR 分支上直接 `git apply` 的最小补丁（理由按该 PR 新增 silentError 调用的实际错误承接写，不是套话）。
 
-| PR | 分支 | 改前 U5 | 改后 U5 | 改后 silent-error-gate |
+| PR | 分支 | 改前 U5 | 改后 U5 | 改后 silent-error-gate（未登记/超额） |
 |---|---|---|---|---|
-| #122 | bl-79-object-card-rename | FAIL 未进白名单 object-cards/index/index.js(1) | 通过 | 通过 |
-| #123 | bl-80-broadcast-stats | FAIL official-mine 白名单 1 实际 2 | 通过 | 通过 |
-| #128 | bl-85-merchant-prereq | FAIL merchant/index 白名单 2 实际 3 | 通过 | 通过 |
-| #141 | bl-98-registration-trend | FAIL club/topic-detail 白名单 6 实际 7（两份都未登记） | 通过 | 通过 |
-| #114 | bl-71-player-code | FAIL 未进白名单 scene-share-invite(1)（两份都未登记） | 通过 | 通过 |
-| #73 | bl-32-report-member | FAIL 未进白名单 report-sheet(2) | 通过 | 通过 |
+| #122 | bl-79-object-card-rename | FAIL 未进白名单 object-cards/index/index.js(1) | 通过 | 未登记 0 / 超额 0 |
+| #123 | bl-80-broadcast-stats | FAIL official-mine 白名单 1 实际 2 | 通过 | 未登记 0 / 超额 0 |
+| #128 | bl-85-merchant-prereq | FAIL merchant/index 白名单 2 实际 3 | 通过 | 未登记 0 / 超额 0 |
+| #141 | bl-98-registration-trend | FAIL club/topic-detail 白名单 6 实际 7（两份都未登记） | 通过 | 未登记 0 / 超额 0 |
+| #114 | bl-71-player-code | FAIL 未进白名单 scene-share-invite(1)（两份都未登记） | 通过 | 未登记 0 / 超额 0 |
+| #73 | bl-32-report-member | FAIL 未进白名单 report-sheet(2) | 通过 | 未登记 0 / 超额 0 |
+| #109 | bl-66-merchant-safety | FAIL profile/index.js 白名单 1 实际 2（两份都要补） | 通过 | 未登记 0 / 超额 0 |
+
+> `ci/silent-error-gate.js` 的退出码：监督在有 `origin/master` 的环境里实测 6 个分支与基线 `claude/mini-ui-features-20261015` 均 **exit 1**，原因是基线已有的【册子本身有问题】2 条（`pages/publish/fabu/index.js`、`subpackageMember/complaint/index.js` 存量额度相对 origin/master 上涨），与本补丁无关（见 MERGE-ORDER §2 第 0 步基线同步）。因此上表只写「未登记/超额 0」，不写「通过」。
 
 复跑：在各分支 worktree 里 `cd chengyinhub-xcx && node scripts/ui-validity-gates.js | grep ^U5`；仓库根 `node ci/silent-error-gate.js`。
 
@@ -77,4 +80,19 @@ diff --git a/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js b/chengyinhub-
 +++ b/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js
 @@ -109,0 +110 @@ module.exports = [
 +  { file: 'components/cy/report-sheet/index.js', count: 2, reason: 'BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹。' },
+```
+#### #109（`claude/bl-66-merchant-safety`）
+```diff
+diff --git a/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js b/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js
+--- a/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js
++++ b/chengyinhub-xcx/scripts/ui-silent-error-allowlist.js
+@@ -15 +15 @@ module.exports = [
+-  { file: 'subpackageMember/components/cy/profile/index.js', count: 1, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态。' },
++  { file: 'subpackageMember/components/cy/profile/index.js', count: 2, reason: '公开商家身份探测明确区分非商家与网络错误，并落入组件可见状态；BL-66 安全感受摘要为只读附加块，失败与样本不足同样不展示，不挡主页。' },
+diff --git a/ci/silent-error-allowlist.txt b/ci/silent-error-allowlist.txt
+--- a/ci/silent-error-allowlist.txt
++++ b/ci/silent-error-allowlist.txt
+@@ -182 +182 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：
+-chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。
++chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。BL-66 安全感受摘要只读附加块，失败与样本不足同样不展示（merchantSafety=null），不挡主页。
 ```
