@@ -64,6 +64,10 @@
 | #109（**正文未列**） | profile 组件（商家安全感受摘要） | `/api/community-trust/safety/merchants/{merchantId}` | 待补 |
 | #112（**正文未列**） | profile 组件（商家收藏据点） | `/api/city/nodes/merchant/{merchantId}` | 待补 |
 
+**scope 枚举核对**（`get-auth-matrix-contract.test.js:114` 的 `VALID_SCOPES`，不在枚举里的 scope 会让 `:244` 断言失败）：
+- ✅ 在枚举内：#73 `global-read+viewer-personalization`、#110 `global-authenticated-read`、#123 `self-publisher`、#128 `self-merchant`、#83 `public-list+viewer-personalization`。
+- ❌ 不在枚举内：#130 `self-submitter`（改用 `self-account`，或同一补丁里加进枚举）；#132 `public-taxonomy`（改用 `global-authenticated-read`，与 #110 一致）；#144 写的 `MARKETING_READ` 是权限码不是 scope（按现有商家 CRM 行应为 `self-merchant`，role 列写 `merchant/merchant:crm:...` 形式）；#27 新增的 `controlled-event-operator` 需在同一补丁里加入枚举（#27 正文已说明）。
+
 #113（`POST /api/roam/shop/visitors`）、#114（`POST /api/user/player-code`）是 POST，不进 GET 矩阵。
 
 ### 2.4 silentError 白名单（`ci/silent-error-allowlist.txt` + `scripts/ui-silent-error-allowlist.js`）
