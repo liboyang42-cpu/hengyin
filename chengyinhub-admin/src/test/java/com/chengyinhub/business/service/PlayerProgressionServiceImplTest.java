@@ -235,6 +235,91 @@ class PlayerProgressionServiceImplTest {
         verify(growthMapper, never()).selectByMemberForUpdate(anyLong());
     }
 
+    @Test
+    void midnightSampleKeepsStreakAndStoredCheckinDateOnTheSameDay() {
+        LocalDate checkinDay = LocalDate.of(2030, 1, 15);
+        Date beforeMidnight = Date.from(checkinDay.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        Date afterMidnight = day(checkinDay.plusDays(1));
+        TimedProgressionService timed = useCheckinTimes(beforeMidnight, afterMidnight);
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(checkinDay.minusDays(1)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        PlayerGrowth change = writtenGrowth();
+        assertEquals(7, change.getStreakDays());
+        assertEquals(beforeMidnight, change.getLastCheckinDate(), "打卡日期必须与用于计算连续天数的日期一致");
+        assertEquals(beforeMidnight, change.getUpdateTime());
+        assertEquals(10, change.getTotalCheckins());
+        assertEquals(3, change.getLevel());
+        assertEquals(1, timed.samplesTaken, "同一次打卡不应在午夜后再次取时");
+    }
+
+    @Test
+    void checkinsAcrossMidnightExtendStreakOnBothConsecutiveDays() {
+        LocalDate checkinDay = LocalDate.of(2030, 1, 15);
+        Date beforeMidnight = Date.from(checkinDay.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        Date afterMidnight = day(checkinDay.plusDays(1));
+        TimedProgressionService timed = useCheckinTimes(beforeMidnight, afterMidnight);
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(checkinDay.minusDays(1)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+        doAnswer(call -> {
+            PlayerGrowth change = call.getArgument(0);
+            row.setTotalCheckins(change.getTotalCheckins());
+            row.setStreakDays(change.getStreakDays());
+            row.setLastCheckinDate(change.getLastCheckinDate());
+            row.setLevel(change.getLevel());
+            row.setUpdateTime(change.getUpdateTime());
+            return 1;
+        }).when(growthMapper).updatePlayerGrowth(any(PlayerGrowth.class));
+
+        svc.onNodeDone(1L);
+        assertEquals(7, row.getStreakDays());
+        assertEquals(beforeMidnight, row.getLastCheckinDate());
+
+        svc.onNodeDone(1L);
+
+        assertEquals(8, row.getStreakDays(), "午夜后的有效打卡应延续一天,不能误判为前次同日");
+        assertEquals(afterMidnight, row.getLastCheckinDate());
+        assertEquals(afterMidnight, row.getUpdateTime());
+        assertEquals(11, row.getTotalCheckins(), "两次有效调用均计次");
+        assertEquals(3, row.getLevel());
+        assertEquals(2, timed.samplesTaken);
+        verify(growthMapper, times(2)).updatePlayerGrowth(any(PlayerGrowth.class));
+    }
+
+    private TimedProgressionService useCheckinTimes(Date... samples) {
+        TimedProgressionService timed = new TimedProgressionService(samples);
+        ReflectionTestUtils.setField(timed, "playerGrowthMapper", growthMapper);
+        ReflectionTestUtils.setField(timed, "playerBadgeMapper", badgeMapper);
+        ReflectionTestUtils.setField(timed, "growthBadgeMapper", defMapper);
+        ReflectionTestUtils.setField(timed, "cmsTopicChapterService", chapters);
+        ReflectionTestUtils.setField(timed, "ruleEvaluator", new RuleEvaluator());
+        svc = timed;
+        return timed;
+    }
+
+    private static class TimedProgressionService extends PlayerProgressionServiceImpl {
+        private final Date[] samples;
+        private int samplesTaken;
+
+        private TimedProgressionService(Date... samples) {
+            this.samples = samples;
+        }
+
+        @Override
+        protected Date currentCheckinTime() {
+            assertTrue(samplesTaken < samples.length, "没有为额外取时配置样本");
+            return samples[samplesTaken++];
+        }
+    }
+
     private PlayerGrowth writtenGrowth() {
         ArgumentCaptor<PlayerGrowth> changes = ArgumentCaptor.forClass(PlayerGrowth.class);
         verify(growthMapper).updatePlayerGrowth(changes.capture());
