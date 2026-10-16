@@ -7,7 +7,7 @@
   "model": "gpt-6.1-sol",
   "active_tasks": {
     "E01": null,
-    "E02": "E02-24",
+    "E02": null,
     "E03": null,
     "E04": null,
     "E05": null,
@@ -76,8 +76,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": "E02-24",
-      "source_status": "ACTIVE_ORIGINAL_SOURCE_WRITER",
+      "active_task": null,
+      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
@@ -651,9 +651,9 @@
     },
     {
       "slot": "E02",
-      "task": "E02-24",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
+      "mode": "DELIVERED; TMP_ONLY_PREP_E02_25_PENDING_EXACT_INTERFACE_GRANT",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -722,15 +722,17 @@
       "owner": "EXTRA6/E02",
       "child_writer": "/root/external_e02",
       "task": "E02-24",
-      "state": "ACTIVE_UNIQUE_NEW_ID",
-      "verification": "NOT_RUN"
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "verification": "NOT_RUN",
+      "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
     },
     "docs/verification/mini-longrun-20261015/EXTRA6/E02-24.md": {
       "owner": "EXTRA6/E02",
       "child_writer": "/root/external_e02",
       "task": "E02-24",
-      "state": "ACTIVE_UNIQUE_NEW_ID",
-      "verification": "NOT_RUN"
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "verification": "NOT_RUN",
+      "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
     }
   },
   "frozen_prepared_sources": {},
@@ -1037,12 +1039,19 @@
       "observation": "Synthetic MVC runtime exception short naked SQL text passes existing pattern unchanged; actual real-business JDBC shape reachability not demonstrated",
       "not_claimed": "No production exploit confirmed; no shared-source repair or policy tightening authorized; fixture prefix does not resolve packet",
       "source_change": "NO_SOURCE_CHANGE"
+    },
+    "E02-25": {
+      "requested_owner": "EXTRA6/E02 original writer",
+      "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+      "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+      "comment": 6207443710,
+      "extra_new_method_write_allowed": false
     }
   },
   "pending_local_failure_retests": [],
   "latest_repair_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 1,
+  "actual_new_development_workers": 0,
   "external_team_read_only_reservations": [
     {
       "id": "FORWARD_CLOUD_INITIAL_SIX_PATHS",
@@ -1091,7 +1100,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "latest_application_candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -1154,5 +1163,6 @@
       "read_scope": "Public README and admission-refused.json actually read; no test summary/fresh XML exists for this refused attempt",
       "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
     }
-  ]
+  ],
+  "actual_targeted_preparation_workers": 1
 }

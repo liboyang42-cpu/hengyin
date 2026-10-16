@@ -275,3 +275,11 @@ C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598
 ```
 
 仅显式type0正常DELETE0成功，legacy toggle/其他type/negative/账号predicate/异常保留；真实回归需同账号两请求先读同row再实际DELETE1/0，并核另一账号收藏不变。原Controller仍CORE/C03，本队仓库未应用；PR16#6207390194请求原owner处理或精确转交。E02-23双表关联仍跨owner，不凭空扩权。旧E06 targeted5PASS及其他历史保持，不为新源码迁移成绩。
+
+## E02-24已push：父目标绑定，5新+55旧仅计划
+
+完整独立候选faefbaf8947b6ff202849385d28473fe2eaaa21e，原作者childd9e5ed59885a2f614dc3ea317811e21b58cf6e6d，精确3文件Service/E02_24Test/E02-24.md。仅两处replay的parent身份及局部helper，正parent严格，null/0/负顶层兼容，原root/repliedTo派生语义/历史重放可见性不改；无接口/Mapper/DDL/旧测试/依赖变化。新5方法已写，旧55未改，聚焦60静态计划/实际未知；源码/回归NOT_RUN，不沿用任何旧候选通过。PR16#6207432703/PR24#6207432892已交完整SHA、精确路径、命令、无DB/Redis前提。
+
+另独立E02-25为支持MySQL RR时的真实评论创建重复键恢复读视图问题：T1旧空读视图→T2同请求完整提交→T1insert唯一冲突→普通重读仍看不到赢家。仓库MySQL+Druid DEFAULT无RC覆盖，不能宣称VPS实际必RR；MyBatis insert flushCache只清一级缓存不刷新RR readview。最小仅catch后专用current读，初始不锁缺失key。接口Java原授范围受限，已PR16#6207443710精确申请新方法/回归路径，原E02仅/tmp准备patch，不在repo实施、不混已交24。
+
+现111历史=58交付/40反证/9依赖或决策阻塞/4委派他队，READY0，目标50缺50；当前源码写者0、1名只在/tmp准备具体待转交补丁，不称满载或追加泛审计。C00若授精确新方法即可原writer继续；E01-19一行建议已公共备妥，E02-23跨owner仍待原写者。

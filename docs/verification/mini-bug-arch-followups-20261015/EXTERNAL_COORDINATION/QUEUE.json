@@ -4,7 +4,7 @@
   "initial_item_count": 50,
   "lane_counts": {
     "E01": 19,
-    "E02": 24,
+    "E02": 25,
     "E03": 18,
     "E04": 15,
     "E05": 17,
@@ -3669,10 +3669,10 @@
       "id": "E02-24",
       "lane": "E02",
       "title": "评论创建重放绑定规范化父目标",
-      "state": "IN_PROGRESS_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "status": "AUDIT_THEN_FIX",
       "owner": "EXTRA6/E02",
-      "assigned_worker": "/root/external_e02",
+      "assigned_worker": null,
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
@@ -3685,12 +3685,47 @@
       "minimal_fix_boundary": "Two existing comment replay branches compare canonical positive parent identity; preserve null/0/negative top-level compatibility and derived root/repliedTo semantics",
       "ownership": "Original source owner retained; unique new-ID regression/evidence per EXPANSION, PR16#6207390194",
       "verification": "NOT_RUN",
-      "delivery": "NOT_YET_DELIVERED",
-      "public_sha": null,
-      "regression_methods_written": null,
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
+      "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+      "regression_methods_written": 5,
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
-      "depends_on": []
+      "depends_on": [],
+      "rolling_candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "future_focused_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_24Test,com.chengyinhub.business.community.CommunityPostServiceImplTest test",
+      "planned_methods": 60,
+      "delivery_comments": {
+        "PR16": 6207432703,
+        "PR24": 6207432892
+      }
+    },
+    {
+      "id": "E02-25",
+      "lane": "E02",
+      "title": "评论唯一冲突后RR重放读取赢家当前行",
+      "state": "BLOCKED_DEPENDENCY",
+      "status": "SOURCE_PACKET_PREPARATION_ONLY",
+      "owner": "EXTRA6/E02 retained Service/XML; Mapper method extension pending C00",
+      "assigned_worker": null,
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+      ],
+      "source_base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "regression_file": null,
+      "evidence_file": null,
+      "public_sha": null,
+      "verification": "NOT_RUN",
+      "delivery": "SOURCE_PROPOSAL_ONLY_NOT_IMPLEMENTED",
+      "trigger": "Supported MySQL RR scenario: ordinary readview misses concurrent same-request winner after duplicate insert; ordinary recovery still sees null and409",
+      "scope_limit": "Repository MySQL/Druid inherits isolation, no RC override; actual VPS/production isolation unknown, no service connection attempted",
+      "minimal_fix_boundary": "Only duplicate-key recovery uses exact uncached current read; initial read unchanged; preserve E02-24 target identity and no global isolation change",
+      "depends_on": [
+        "C00 formally extends exact Mapper interface method selectCommentByAuthorRequestForUpdate(authorId,clientRequestId) and registers new regressions"
+      ],
+      "permission_request": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
+      "preparation": "Original E02 preparing reviewable patch/regression plan under /tmp only; no repository source change"
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3752,7 +3787,7 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": "E02-24",
+    "E02": null,
     "E03": null,
     "E04": null,
     "E05": null,
@@ -3760,13 +3795,13 @@
   },
   "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
-    "total_history": 110,
-    "source_delivered": 57,
+    "total_history": 111,
+    "source_delivered": 58,
     "no_change_source_review": 40,
-    "blocked": 8,
+    "blocked": 9,
     "ready": 0,
-    "claimed": 1,
-    "actionable_or_inflight": 1
+    "claimed": 0,
+    "actionable_or_inflight": 0
   },
   "control_latest_read_sha": "ba40af104e008a8a58cb79840290bd909abaeed2",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
@@ -3780,9 +3815,9 @@
     },
     {
       "slot": "E02",
-      "task": "E02-24",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
+      "mode": "DELIVERED; TMP_ONLY_PREP_E02_25_PENDING_EXACT_INTERFACE_GRANT",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -3814,11 +3849,11 @@
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 49,
+  "refill_shortfall": 50,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-24 independent confirmed parent replay target mismatch actively assigned original writer; prior E02 failures remain closed",
+    "E02": "E02-24 parent identity publicly delivered,5new+55old planned60 NOT_RUN; independent RR E02-25 needs exact interface grant, only /tmp preparation",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -4138,10 +4173,11 @@
     "VPS_EXTRA_474e54ae_20261015": "7b00162a4b54896f0a07058eab57141b1a75b706",
     "E03-18": "92a75e16c04a51f30069f8c1223c8f7a90656a5d",
     "E06-17": "5ed1b8de890f5bdacadb02a145385f465c196d52",
-    "E06-17-fixture-repair": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff"
+    "E06-17-fixture-repair": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
+    "E02-24": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 1,
+  "actual_new_development_workers": 0,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -4339,7 +4375,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "latest_application_candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -4395,6 +4431,13 @@
       "public_core_checked_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "source_blob": "ca9c885b9cd30e6858e469373ae8811dd0784e34",
       "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194"
+    },
+    "E02-25": {
+      "requested_owner": "EXTRA6/E02 original writer",
+      "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+      "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+      "comment": 6207443710,
+      "extra_new_method_write_allowed": false
     }
   },
   "validation_queue_state": {
@@ -4426,5 +4469,6 @@
       "read_scope": "Public README and admission-refused.json actually read; no test summary/fresh XML exists for this refused attempt",
       "result_meaning": "Neither fix failure nor pass; retain ed59876/1FAIL and queue exact b456 five-method retest; Cloud does not run substitutes"
     }
-  ]
+  ],
+  "actual_targeted_preparation_workers": 1
 }
