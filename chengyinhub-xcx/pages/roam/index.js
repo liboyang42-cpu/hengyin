@@ -82,8 +82,10 @@ const HANGOUT_INTRO_CARD = Object.freeze({
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
 const bgTracker = require('../../utils/location/bg-tracker.js');
+const lastLocation = require('../../utils/location/last-location.js');
 
-const FALLBACK = { lat: 31.230416, lng: 121.473701 };
+// BL-23:兜底坐标与 utils/location/last-location.js 同源;入口地图优先用上次成功定位
+const FALLBACK = { lat: lastLocation.FIXED.latitude, lng: lastLocation.FIXED.longitude };
 const REVEAL_M = 55;
 // 历史 geohash7 格中心的揭示半径:格宽 ~153m,110m ≈ 半对角线,相邻已探格连成片不留缝。
 // 只作用于重开加载的格子历史;实时轨迹仍是 REVEAL_M 细走廊。
@@ -853,6 +855,9 @@ Page({
       isDevtools: this._isDevtools(),
       reducedMotion: readReducedMotion(),
     });
+    // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
+    const lastPoint = lastLocation.load();
+    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude } });
     this._entryItems = []; this._entryTeams = []; this._loadEntryMap(this.data.center);
     this._reveals = [];
     this._track = [];
@@ -2665,6 +2670,7 @@ Page({
       success(r) {
         if (stale()) return;
         that._roamStartPending = false;
+        lastLocation.save(r);
         that.setData({ introError: '', locErr: false });
         that._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
         // 系统授权通过 = 用户明示同意,留痕但不阻塞已经开起来的漫游。
