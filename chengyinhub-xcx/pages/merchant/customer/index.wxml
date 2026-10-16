@@ -109,6 +109,9 @@
             hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}
       </view>
+      <!-- BL-100:触达任务记录(只读,MARKETING_READ),照「导出」同款工具按钮。 -->
+      <view wx:if="{{canCampaigns}}" class="cu-tool" bindtap="goCampaigns" aria-role="button"
+            aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">触达记录</view>
 
     </view>
 
