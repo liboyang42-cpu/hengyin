@@ -14,7 +14,9 @@ const keys = require('../../pages/publish/components/topic-state-keys/rules.js')
 test('B8: 漫游半径常量抽出且两处请求都引用它', () => {
   const src = read('pages/roam/index.js')
   assert.match(src, /const ROAM_POI_RADIUS_M = 3000;/)
-  assert.match(src, /radius: String\(ROAM_POI_RADIUS_M\)/)
+  // BL-01:POI 半径改由筛选给出,默认仍回落到同一常量。
+  assert.match(src, /const radiusM = this\._poiFilterState\(\)\.radiusM \|\| ROAM_POI_RADIUS_M;/)
+  assert.match(src, /radius: String\(radiusM\)/)
   assert.match(src, /radius: ROAM_POI_RADIUS_M \}/)
   assert.doesNotMatch(src, /radius: '3000'/)
 })

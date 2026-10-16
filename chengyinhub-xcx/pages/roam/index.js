@@ -66,6 +66,7 @@ const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require
 // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
 const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
 const { createRoamSyncStatus, OFFLINE_TEXT: ROAM_SYNC_OFFLINE_TEXT } = require('../../utils/roam-sync-status.js');
+const roamPoiFilter = require('../../utils/roam-poi-filter.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
 // 本地历史只用于下次打开地图时高亮一处已走过的边缘；不画路线、不上报坐标。
 const { buildFootprintHint } = require('../../utils/roam-footprint-hint.js');
@@ -287,6 +288,8 @@ function buildNpcPorts(page) {
 Page({
   data: {
     privacyGateShow: false,
+    // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
+    poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
     screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
@@ -1397,7 +1400,8 @@ Page({
     const nearbyDone = this._nearbyReady || Promise.resolve();
     return nearbyDone.then(() => {
     if (!current()) return;
-    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: String(ROAM_POI_RADIUS_M) }).then((res) => {
+    const radiusM = this._poiFilterState().radiusM || ROAM_POI_RADIUS_M; // BL-01 筛选范围,默认仍是 3km
+    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: String(radiusM) }).then((res) => {
       if (!current()) return;
       if (netFail(res)) {
         // req 的 fail 哨兵 = 网络故障。此时"地图上这些点"既没被证实也没被证伪。
@@ -1414,7 +1418,15 @@ Page({
       }
       const list = res.data;
       this.setData({ poiOffline: false, poiEmpty: !list.length }, () => this._syncGoal());
-      if (!list.length) return;
+      // BL-01:换范围会重拉,上一轮的漫游点位先摘掉(打完卡的由 _mergeSessionDonePois 保留),否则同 id 叠两份。
+      const rest = (this._pois || []).filter((p) => !p._roamId);
+      if (!list.length) {
+        if (rest.length !== (this._pois || []).length) {
+          this._pois = this._mergeSessionDonePois(rest);
+          this._syncMarkers(); this._syncSparkCircles();
+        }
+        return;
+      }
       const catMap = {
         1: { icon: 'poi-landmark', catLabel: '地标', color: BRAND, cat: 'landmark' },
         2: { icon: 'poi-shop', catLabel: '商家 · 探店', color: '#D9D9D9', cat: 'merchant' },
@@ -1440,7 +1452,7 @@ Page({
         };
       });
       // 真 POI 优先,拼在演示 POI 前(演示作兜底底色)
-      this._pois = this._mergeSessionDonePois(roamPois.concat(this._pois));
+      this._pois = this._mergeSessionDonePois(roamPois.concat(rest));
       this._seenSweepHistory();
       this._genIcons().then(() => { if (current()) { this._syncMarkers(); this._syncSparkCircles(); } });
       this._resolveNearbyReady();
@@ -2331,9 +2343,11 @@ Page({
     const mk = [];
     const mapStates = [];
     const visit = this.data.visit || {};
+    const poiFilter = this._poiFilterState();
     (this._pois || []).forEach((p) => {
       if (p.state === 'fog') return;
       const stateKey = getRoamPoiState(p, visit);
+      if (roamPoiFilter.hiddenByFilter(p, poiFilter, stateKey)) return;
       const state = getPlayMapState(stateKey);
       mapStates.push({ nodeId: p.id, state: stateKey });
       // 有玩法 = 这个点挂着主题(topicId)。星星只认这一件事,和去没去过无关。
@@ -5397,6 +5411,7 @@ Page({
         funText: pois.length ? ('这一片有 ' + pois.length + ' 处能去') : '这一片还没点亮',
         runnerText: runners ? (runners + ' 人在这片') : '这会儿没人在附近走',
         stampText: '投一张换一张',
+        filterText: this._poiFilterSummary(),
       },
     });
     this.openScene('roam-more');
@@ -5408,6 +5423,42 @@ Page({
   openOfficialEvent(e) { wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.detail.id }); },
   openRoamCoupons() { this.openScene('game-coupon-wallet'); },
   openStampAlbum() { this.openScene('roam-stamp-album'); },
+  /* ── BL-01 点位筛选(.psheet 半屏)──────────────────────────────────────────
+     范围只改 /api/roam/pois 的 radius;「只看未到过」只在本地藏 marker,不改任何进度。 */
+  _poiFilterState() {
+    const app = typeof getApp === 'function' ? getApp() : null;
+    const owner = app && typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    if (!this._roamPoiFilter || this._roamPoiFilterOwner !== owner) {
+      this._roamPoiFilter = roamPoiFilter.readFilter(owner, typeof wx !== 'undefined' ? wx : null);
+      this._roamPoiFilterOwner = owner;
+    }
+    return this._roamPoiFilter;
+  },
+  _poiFilterSummary() {
+    const f = this._poiFilterState();
+    return '范围 ' + roamPoiFilter.radiusLabel(f.radiusM) + (f.unvisitedOnly ? ' · 只看未到过' : ' · 全部点位');
+  },
+  _savePoiFilter(next) {
+    this._roamPoiFilter = roamPoiFilter.normalizeFilter(next);
+    roamPoiFilter.writeFilter(this._roamPoiFilterOwner, this._roamPoiFilter, typeof wx !== 'undefined' ? wx : null);
+    this.setData({ poiFilter: this._roamPoiFilter });
+  },
+  openPoiFilter() {
+    this.setData({ poiFilter: this._poiFilterState() });
+    this.openScene('roam-poi-filter');
+  },
+  onPoiFilterRadius(e) {
+    const radiusM = Number(e && e.detail && e.detail.key);
+    const prev = this._poiFilterState();
+    if (!radiusM || radiusM === prev.radiusM) return;
+    this._savePoiFilter(Object.assign({}, prev, { radiusM }));
+    if (this._c) this._fetchRoamPois(this._c);
+  },
+  togglePoiFilterUnvisited() {
+    const prev = this._poiFilterState();
+    this._savePoiFilter(Object.assign({}, prev, { unvisitedOnly: !prev.unvisitedOnly }));
+    this._syncMarkers();
+  },
   openRoamSettings() { this._syncRoamPermission(); this.openScene('roam-settings'); },
   /* 抽屉只在地图运行态出现,intro 不渲染 ⇒ 不能切护照 tab(置空 screen = 整页黑屏)。
      去勋章墙页面:navigateTo 保留本页,计时/定位照常,返回即回地图。 */
