@@ -18,7 +18,7 @@ function timeText(value) {
 // BL-04 月份分组键:取 createTime 的 YYYY-MM;读不出时间的行归入「时间未知」组,不丢行。
 function monthKey(value) {
   const m = (value == null ? '' : String(value).trim()).match(/^(\d{4})-(\d{2})/)
-  return m ? `${m[1]}-${m[2]}` : ''
+  return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${m[1]}-${m[2]}` : ''
 }
 
 function normalizeRow(raw) {
@@ -68,7 +68,7 @@ function filterRows(rows, kind) {
 
 function monthLabel(key) {
   const m = String(key || '').match(/^(\d{4})-(\d{2})$/)
-  return m ? `${m[1]}年${Number(m[2])}月` : '时间未知'
+  return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${m[1]}年${Number(m[2])}月` : '时间未知'
 }
 
 // 按出现顺序分组(接口已按 id 倒序),相邻同月合成一组。

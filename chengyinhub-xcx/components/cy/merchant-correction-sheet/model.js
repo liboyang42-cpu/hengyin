@@ -36,6 +36,8 @@ function normalizeTaxonomy(raw) {
 }
 
 function validMerchantId(merchantId) {
+  if (typeof merchantId !== 'number' && typeof merchantId !== 'string') return false
+  if (typeof merchantId === 'string' && !/^[1-9]\d{0,15}$/.test(merchantId.trim())) return false
   const id = Number(merchantId)
   return Number.isSafeInteger(id) && id > 0
 }

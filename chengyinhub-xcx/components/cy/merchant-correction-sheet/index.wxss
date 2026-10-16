@@ -2,4 +2,4 @@
 .mcs__issue { font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
 .mcs__note { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .mcs__row { display: flex; gap: var(--cy-space-3); }
-.mcs__row cy-btn { flex: 1; }
+.mcs__cell { flex: 1; }

@@ -51,7 +51,7 @@ function writeFilter(userId, filter, storage) {
 }
 
 function isVisitedPoi(poi) {
-  return !!(poi && VISITED_STATES[poi.state])
+  return !!(poi && Object.prototype.hasOwnProperty.call(VISITED_STATES, poi.state))
 }
 
 /** 地图上这个点该不该因筛选被藏起来。正在打卡/打卡失败的目标点永远保留。 */

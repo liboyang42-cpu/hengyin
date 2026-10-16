@@ -141,6 +141,7 @@
         "game-node/index",
         "customer/detail/index",
         "verify-records/index",
+        "crm-campaigns/index",
         "team/index"
       ]
     },
