@@ -108,6 +108,11 @@
           <cy-icon name="tab-feed" size="32" />
           <text>发消息</text>
         </view>
+        <!-- BL-69:商家在架据点的收藏入口,照「发消息」同款按钮;无在架节点不展示 -->
+        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && subjectIsMerchant && merchantNode}}" bindtap="toggleMerchantNodeFavorite" hover-class="{{merchantNodeBusy ? 'none' : 'pc-btn-press'}}" aria-role="button" aria-label="{{merchantNodeBusy ? '正在更新据点收藏' : (merchantNode.favorited ? '取消收藏据点' : '收藏据点')}}" aria-pressed="{{merchantNode.favorited}}" aria-busy="{{merchantNodeBusy}}" aria-disabled="{{merchantNodeBusy}}">
+          <cy-icon name="{{merchantNode.favorited ? 'star-filled' : 'star'}}" size="32" />
+          <text>{{merchantNodeBusy ? '处理中…' : (merchantNode.favorited ? '已收藏据点' : '收藏据点')}}</text>
+        </view>
         <!-- UI-12:公开视角也要有「···」更多(分享主页/屏蔽);本人商家视角保持原入口。 -->
         <view class="pc-more" wx:if="{{!isSelf || isMerchantView}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
       </view>
