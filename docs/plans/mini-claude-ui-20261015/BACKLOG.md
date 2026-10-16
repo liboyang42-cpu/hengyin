@@ -279,3 +279,9 @@
 > - BL-175 已由 #104 `e966caa2` 在原分支完成（监督实测 `ui-integrity` UI-GATE-0 PASS），**不要再领取**。
 > - BL-176 按规则 2 **直接提交到 #104 分支 `claude/bl-61-im-unblock`**，不开新分支、不开「依赖 #104」的新 PR。
 > - 规则 3：符合条件（用户可见新功能或真实缺陷、已有接口、不改现有 UI）的新卡本轮没有找到，因此不补。开发线转去处理监督结论为 CHANGES NEEDED 的 PR，修正直接推到原分支。
+
+## 第十八批（183）：监督线补充（10-16 规则 3：真实缺陷 + 已有接口 + 不改现有 UI；本轮零调用复扫只找到这一项）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 183 | 修圈层城市实例无法启用供给角色 | 真实缺陷：模板复制时圈层候选全部置 `circleEnabled=0`（`CmsTopicServiceImpl.java:698-702`「模板副本必须由城市代理重新选择」），唯一能重新启用的 `POST /api/circle-theme/instance/configure`（`ApiCircleThemeController.java:128-149`，body `{topicId, candidateCodes[], scope}`，返回 `changed`；服务端已做归属/`PROJECT_MANAGE`/3–4 个覆盖全部角色/`assertPublishable` 校验，改选会清 `circleReviewedAt`）小程序零调用，导致「确认本实例供给已复核」无可复核内容。在现有「30天供给复核」区（`pages/topic/components/project-host/index.wxml:87-94`，仅 `hostTopic.circleThemeCode` 时出现）加一行「选择供给角色」→ 现有 `cy-sheet` 列出该主题候选（复用 `pages/play/utils/circle-theme.js` 的 `THEMES`/`themeOf`/`validateSelection`），提交后重载项目首页并以复核文案回到「尚未完成城市供给复核」作为回读。**无读取当前已启用候选的接口**：半屏不预选、不编造已选状态，PR 写明；后端错误原文展示，不给假成功。先核实圈层主题确有城市实例在用、发布编辑器（`pages/publish/fabu`）没有同类选择，否则 BLOCKED | `pages/topic/components/project-host/**` + `pages/topic/merchantinfo/merchantinfo.js`（`reviewCircleSupplies` 旁薄接线）；不碰 `pages/play/index.js` |
