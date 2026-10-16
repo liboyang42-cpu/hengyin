@@ -4,7 +4,7 @@
   "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
   "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
   "branch": "codex/mini-forward-source-20261015",
-  "verification": "NOT_RUN_REGRESSION_SOURCE_CORRECTION",
+  "verification": "LOCAL_VPS_COMPILE_PASS_ONLY_MYSQL_NOT_RUN",
   "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
   "active_source_writers": 0,
   "initial_independent_lanes": 2,
@@ -102,7 +102,10 @@
       "dependencies": [
         "Existing bde356f3 protected currentCheckinTime seam; no new dependency/config."
       ],
-      "finding": "Cases1/2/3/4/6 coupled seed(LocalDate.now()) and live service clock; actual midnight can legally change streak while assertions assume one logical day. Fixed test-only CHECKIN_DAY and service clock preserve all original assertions, barriers and real transactions/mappers."
+      "finding": "Cases1/2/3/4/6 coupled seed(LocalDate.now()) and live service clock; actual midnight can legally change streak while assertions assume one logical day. Fixed test-only CHECKIN_DAY and service clock preserve all original assertions, barriers and real transactions/mappers.",
+      "compilation": "LOCAL_VPS_COMPILE_PASS_ONLY",
+      "verification_evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+      "actual_tests": 0
     }
   ],
   "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
@@ -118,12 +121,12 @@
     "new_this_continuation": 4,
     "ordinary_class_declarations": 28,
     "real_mysql_declarations": 11,
-    "executed_for_current_candidate": null,
-    "status": "NOT_RUN_FOR_NEW_TEST_SOURCE",
-    "note": "Still14 Analytics +14 Progression +11 MySQL=39. Only IT fixture changed; no new tests/production source. Previous ordinary28 PASS belongs to bde356f3, not an execution result for d592334a.",
+    "executed_for_current_candidate": 0,
+    "status": "COMPILE_PASS_ONLY_TESTS_NOT_RUN",
+    "note": "Still14 Analytics +14 Progression +11 MySQL=39. Local existing212 compiled changed IT and anonymous clock class at d592; actual tests0/no Surefire XML. Previous ordinary28 PASS remains bound only to bde356f3.",
     "new_this_round": 0
   },
-  "next_action": "Await coordinator guard/compile-only result for cy-vps-forward-d592334a-20261016 via existing212. No Cloud compilation, test run or CI; no repeated ordinary28. True MySQL11 remains NOT_RUN/coverage gap. Resume original writer only for actual in-scope defect or reported failure; no new verification entry.",
+  "next_action": "No compilation failure to repair. Retain11 exact MySQL acceptance conditions as NOT_RUN/coverage gap; no new entry or repeat ordinary28. Resume original author only for a confirmed in-scope defect or actual failure reported by local coordinator.",
   "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
   "cloud_execution": "NOT_RUN",
   "external_verification": {
@@ -479,11 +482,49 @@
     "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
     "reported_by": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
     "entry": "EXISTING_212_TEST_COMPILE_ONLY",
-    "status": "PENDING_GUARD_RESULT",
-    "resource_observation": "Shared lock busy at initial admission observation; guard result not yet reported. No bypass, completion or rejection exit code inferred.",
+    "status": "COMPILE_PASS_ONLY",
+    "resource_observation": "First admission refused normally at05:52:29Z with exit75/another_build_holds_lock/containerId null; no compilation/tests. Retry followed normal lock release, no bypass.",
     "scope": "Compile changed PlayerGrowthConcurrencyMySqlIT and anonymous clock subclass only; no repeat of previous ordinary28; source/cache exclusive.",
-    "compilation_result": null,
+    "compilation_result": "LOCAL_VPS_COMPILE_PASS_ONLY",
     "mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-    "evidence_basis": "Coordinator delegation receipt only; no Cloud VPS access or execution."
+    "evidence_basis": "Cloud read public README.md and summary.json at exact evidence commit; did not independently hash class files, read raw compile log or access VPS. Reported by local coordinator.",
+    "actual_tests": 0,
+    "reports": [],
+    "started_at": "2026-10-16T06:08:19.135291+00:00",
+    "finished_at": "2026-10-16T06:10:59.528066+00:00",
+    "guard_exit": 0,
+    "guard_reason": "completed",
+    "fresh_compile_classes": true,
+    "compiled_files": [
+      {
+        "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+        "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+        "fresh": true
+      },
+      {
+        "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT$1",
+        "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+        "fresh": true
+      }
+    ],
+    "admission_refusals": [
+      {
+        "started_at": "2026-10-16T05:52:29.388798+00:00",
+        "finished_at": "2026-10-16T05:52:29.439295+00:00",
+        "guard_exit": 75,
+        "reason": "another_build_holds_lock",
+        "container_id": null,
+        "compilation": "NOT_RUN",
+        "actual_tests": 0
+      }
+    ],
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c"
+    },
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/summary.json"
   }
 }

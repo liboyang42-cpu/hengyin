@@ -16,11 +16,13 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 **完整回归源码候选：`d592334abee1a379963e7b72a58eec5e0f7bd5ad`；生产源码仍为`bde356f3f0944f4c1a00726fbf821de2267a3eea`。** 该新提交仅修改 `chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`，分类F3-GROW-03 / REGRESSION_SOURCE_CORRECTION，原GROW唯一作者已冻结。节点并发用例#1/2/3/4/6原先seed(LocalDate.now())与实际调用取时若跨午夜，streak合法延续却偏离固定预期；现在测试内CHECKIN_DAY固定2030-01-15、service子类仅覆盖既有currentCheckinTime取该日默认时区12:00、seed同一日。所有11方法、断言、锁屏障、真实事务/Mapper与环境gate保留，无sleep、配置、依赖或生产规则变化。
 
-该测试源码依赖bde已存在的取时方法，未编译/执行，NOT_RUN；不把bde的普通28PASS迁为d592成绩。普通两类与全部生产文件未改，未新增普通受影响类；root若需要核新Java测试源码编译，仅经现有212取用 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false test-compile`（这里只是命令文本，Cloud未执行），编译通过不等于11项运行。无理由重跑旧普通PASS。真MySQL11仍为现有入口覆盖缺口，关闭的新入口方案不恢复。
+该测试源码依赖bde已存在的取时方法，Cloud未编译/执行；本地最新编译结果见下节，实际测试仍NOT_RUN；不把bde的普通28PASS迁为d592成绩。普通两类与全部生产文件未改，未新增普通受影响类；本地已通过现有212执行 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=true test-compile`（完整含日志参数命令见公开summary，Cloud未执行），编译通过不等于11项运行。无理由重跑旧普通PASS。真MySQL11仍为现有入口覆盖缺口，关闭的新入口方案不恢复。
 
-### 本地编译请求回执（结果待守卫）
+### 本地编译证据签收：COMPILE_PASS_ONLY，实际测试0
 
-本地总控已签收冻结源码 `d592334abee1a379963e7b72a58eec5e0f7bd5ad`，提交现有212的 **test-compile only** 请求：task `cy-vps-forward-d592334a-20261016`，源码包SHA256 `69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38`，source/cache独占。只核新测试和匿名时钟类编译，不重跑旧28，不执行11项MySQL。初始准入观测共享锁busy，守卫结果尚未收到，状态 `PENDING_GUARD_RESULT`；不推断已开始、已拒绝或已通过，不绕锁。此为总控消息签收，Cloud未访问VPS、编译或测试。身份/券业务决策由原负责队等待用户答复，与已关闭的新验证入口方案分开，不领取到F3。
+已实际读取公开PR24证据提交 `1d266f99ec55a50008bdc56057b9487adf7a3bd0` 的 [README.md与summary.json](https://github.com/liboyang42-cpu/hengyin/tree/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a)。冻结源码 `d592334abee1a379963e7b72a58eec5e0f7bd5ad`，现有212 task `cy-vps-forward-d592334a-20261016`，源码包SHA256 `69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38`。实际test-compile自 `2026-10-16T06:08:19.135291+00:00` 至 `2026-10-16T06:10:59.528066+00:00`，guard0/completed、BUILD SUCCESS。原IT主class及匿名时钟class均fresh，两个SHA256已记录QUEUE；精确容器 `528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c` 经本地显式chengyin-aws过滤确认清理。Cloud只读公开摘要，未自行读取/哈希class、原始日志或连接VPS。
+
+仅编译通过，**无Surefire XML、实际测试0，原11项真实MySQL继续NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP**；不称真实并发或日界闭环。生产/依赖及原11断言不变，不重复旧28、不迁成绩。首次 `2026-10-16T05:52:29.388798+00:00` 准入exit75/another_build_holds_lock/containerId null、未编译/测试0，原回执保留；正常释放后重试，无绕锁。早先PENDING_GUARD_RESULT记录由此明确结果覆盖。整体继续SOURCE_DELIVERED_UNVERIFIED，Cloud执行NOT_RUN，现有入口不新增。身份/券业务决定由原负责队等待用户答复，不领取到F3。
 
 ### 本轮生产分支结论与只读packet
 

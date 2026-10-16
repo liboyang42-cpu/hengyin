@@ -52,7 +52,7 @@
   ],
   "source_candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
   "active_source_writers": 0,
-  "verification_scope": "Current d592334a changes only existing MySQL IT clock fixture:NOT_RUN. Production runtime source remainsbde356f3, prior ordinary28PASS binds only that SHA. Current review and11 unmet real-DB conditions are explicit inQUEUE/DELIVERY. No new resource/CI/entry grant.",
+  "verification_scope": "Current d592334a has local existing212 COMPILE_PASS_ONLY: changed main IT and anonymous clock class fresh, actual tests0/no Surefire XML. All11 real MySQL tests NOT_RUN/coverage gap. Production remains bde356f3; prior ordinary28PASS binds only that SHA. Cloud execution NOT_RUN; no new resource/CI/entry grant.",
   "refreshed_ownership": {
     "open_pr_count": 201,
     "rest_pages": [
@@ -70,5 +70,11 @@
   "validation_entry_policy": "User decided KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY; isolated MySQL/Redis proposal closed, no approval pending. Existing212/CI unchanged; uncovered MySQL11 NOT_RUN/coverage gap. No new development or validation task.",
   "production_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
   "active_reviewers": 0,
-  "current_round_ownership_source_owners_blob": "88fe475c8fcbb13208510fd028b54c71322f54fc"
+  "current_round_ownership_source_owners_blob": "88fe475c8fcbb13208510fd028b54c71322f54fc",
+  "external_compilation": {
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result": "COMPILE_PASS_ONLY",
+    "actual_tests": 0,
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0"
+  }
 }
