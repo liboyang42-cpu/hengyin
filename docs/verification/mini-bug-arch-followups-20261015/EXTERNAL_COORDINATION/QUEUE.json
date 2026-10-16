@@ -4,7 +4,7 @@
   "initial_item_count": 50,
   "lane_counts": {
     "E01": 19,
-    "E02": 23,
+    "E02": 24,
     "E03": 18,
     "E04": 15,
     "E05": 17,
@@ -3664,6 +3664,33 @@
       "depends_on": [
         "C00 confirms existing identity bridge contract and delegates original writer or exact paths"
       ]
+    },
+    {
+      "id": "E02-24",
+      "lane": "E02",
+      "title": "评论创建重放绑定规范化父目标",
+      "state": "IN_PROGRESS_SOURCE",
+      "status": "AUDIT_THEN_FIX",
+      "owner": "EXTRA6/E02",
+      "assigned_worker": "/root/external_e02",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
+      ],
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-24.md",
+      "source_base_sha": "2226ee5b6a79478aef74b39f95dd0edea9e0cb0d",
+      "child_source_base_sha": "7b00162a4b54896f0a07058eab57141b1a75b706",
+      "source_blob_before": "a17b291b2c28f88441a7f21879959c5fa9234510",
+      "trigger": "Same member/requestId/post/body with parent17→18 currently returns old reply success because both replay paths omit parent_id binding",
+      "minimal_fix_boundary": "Two existing comment replay branches compare canonical positive parent identity; preserve null/0/negative top-level compatibility and derived root/repliedTo semantics",
+      "ownership": "Original source owner retained; unique new-ID regression/evidence per EXPANSION, PR16#6207390194",
+      "verification": "NOT_RUN",
+      "delivery": "NOT_YET_DELIVERED",
+      "public_sha": null,
+      "regression_methods_written": null,
+      "branch": "codex/extra-e02-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e02",
+      "depends_on": []
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3725,7 +3752,7 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": null,
+    "E02": "E02-24",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -3733,15 +3760,15 @@
   },
   "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
   "actual_counts": {
-    "total_history": 109,
+    "total_history": 110,
     "source_delivered": 57,
     "no_change_source_review": 40,
     "blocked": 8,
     "ready": 0,
-    "claimed": 0,
-    "actionable_or_inflight": 0
+    "claimed": 1,
+    "actionable_or_inflight": 1
   },
-  "control_latest_read_sha": "4d5ba311e8653635717ac603fdb560c35650748f",
+  "control_latest_read_sha": "ba40af104e008a8a58cb79840290bd909abaeed2",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3753,9 +3780,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "E02-24",
       "worker": "/root/external_e02",
-      "mode": "SOURCE_DELIVERED_IDLE_PENDING_LOCAL_RETEST_OR_REAL_NEW_SCOPE",
+      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -3787,11 +3814,11 @@
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 50,
+  "refill_shortfall": 49,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "Original three failure methods closed by local e72 targeted56PASS; current/later source not generally validated; repair slot released; cross-ownerE02-23 remains dependency",
+    "E02": "E02-24 independent confirmed parent replay target mismatch actively assigned original writer; prior E02 failures remain closed",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -4114,7 +4141,7 @@
     "E06-17-fixture-repair": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 0,
+  "actual_new_development_workers": 1,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -4360,6 +4387,14 @@
       "observation": "Synthetic MVC runtime exception short naked SQL text passes existing pattern unchanged; actual real-business JDBC shape reachability not demonstrated",
       "not_claimed": "No production exploit confirmed; no shared-source repair or policy tightening authorized; fixture prefix does not resolve packet",
       "source_change": "NO_SOURCE_CHANGE"
+    },
+    "E01-19": {
+      "source_owner": "CORE/C03",
+      "extra_write_allowed": false,
+      "prepared_review_patch": "if (rows > 0) -> if (rows > 0 || (rows == 0 && !legacyToggle && likeType == 0))",
+      "public_core_checked_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "source_blob": "ca9c885b9cd30e6858e469373ae8811dd0784e34",
+      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194"
     }
   },
   "validation_queue_state": {

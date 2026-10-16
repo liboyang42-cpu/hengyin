@@ -7,7 +7,7 @@
   "model": "gpt-6.1-sol",
   "active_tasks": {
     "E01": null,
-    "E02": null,
+    "E02": "E02-24",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -76,8 +76,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
+      "active_task": "E02-24",
+      "source_status": "ACTIVE_ORIGINAL_SOURCE_WRITER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
@@ -631,7 +631,7 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "4d5ba311e8653635717ac603fdb560c35650748f",
+  "control_latest_read_sha": "ba40af104e008a8a58cb79840290bd909abaeed2",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
     "E02": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
@@ -651,9 +651,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "E02-24",
       "worker": "/root/external_e02",
-      "mode": "SOURCE_DELIVERED_IDLE_PENDING_LOCAL_RETEST_OR_REAL_NEW_SCOPE",
+      "mode": "ACTIVE_SOURCE_DEVELOPMENT_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -717,6 +717,20 @@
       "state": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN",
       "public_sha": "5ed1b8de890f5bdacadb02a145385f465c196d52"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "task": "E02-24",
+      "state": "ACTIVE_UNIQUE_NEW_ID",
+      "verification": "NOT_RUN"
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-24.md": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "task": "E02-24",
+      "state": "ACTIVE_UNIQUE_NEW_ID",
+      "verification": "NOT_RUN"
     }
   },
   "frozen_prepared_sources": {},
@@ -1000,7 +1014,11 @@
     "E01-19": {
       "source_owner": "CORE/C03",
       "comment": 6198507537,
-      "extra_write_allowed": false
+      "extra_write_allowed": false,
+      "prepared_review_patch": "if (rows > 0) -> if (rows > 0 || (rows == 0 && !legacyToggle && likeType == 0))",
+      "public_core_checked_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "source_blob": "ca9c885b9cd30e6858e469373ae8811dd0784e34",
+      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194"
     },
     "E04-07": {
       "consumer_owned": "EXTRA6/E04",
@@ -1024,7 +1042,7 @@
   "pending_local_failure_retests": [],
   "latest_repair_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 0,
+  "actual_new_development_workers": 1,
   "external_team_read_only_reservations": [
     {
       "id": "FORWARD_CLOUD_INITIAL_SIX_PATHS",

@@ -261,3 +261,17 @@ C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598
 原ed59876项75PASS/1FAIL历史保持，其唯一失败仅按b456这一类targeted PASS闭环，不称新SHA重跑全76。首次锁拒绝exit75/containerId=null/0项未编译测试的admission_history保留。裸SQL疑点仍NEEDS_REACHABILITY/NO_SOURCE_CHANGE，未证真实业务可达不计新BUG、不改共享源；真实数据库/Redis、运行中HTTP、设备业务、合并部署仍未验收。
 
 唯一E06修复槽已释放，READY0/源码worker0，EXHAUSTED；没有真实独立下一项不凑工位、不泛审计，其他真实授权项不必等验证。只更新本队交付与PR36，C00负责总账/BACKEND_CHANGES/IOS_HANDOFF状态与链接。
+
+## 用户要求继续：新增E02-24具体源码，E01-19备妥最小交接
+
+当前原external_e02在独占CommunityPostServiceImpl处理新确认缺口：同member/requestId/post/body改parent17→18被两重放分支误当旧回复成功。Mapper已返回parent_id；只补两处规范化正父身份，null/0/负值沿原positive语义都是顶层，不新增root/repliedTo客户端身份或旧父可见性复查。新E02_24Test/E02-24.md唯一ID，原source blob a17b291b在child7b00162与rolling2226ee相同，源权按控制ba40af保持E02。全部NOT_RUN，完成直接push，Cloud不验证。110历史/1在途/READY0，50目标缺49；实际源码worker1，不虚报6线。
+
+跨owner E01-19已准备具体review hunk，父读公共CORE0d63043a仍为rows>0分支：
+
+```diff
+-        if (rows > 0) {
++        if (rows > 0 || (rows == 0 && !legacyToggle && likeType == 0)) {
+             return success("取消点赞成功");
+```
+
+仅显式type0正常DELETE0成功，legacy toggle/其他type/negative/账号predicate/异常保留；真实回归需同账号两请求先读同row再实际DELETE1/0，并核另一账号收藏不变。原Controller仍CORE/C03，本队仓库未应用；PR16#6207390194请求原owner处理或精确转交。E02-23双表关联仍跨owner，不凭空扩权。旧E06 targeted5PASS及其他历史保持，不为新源码迁移成绩。
