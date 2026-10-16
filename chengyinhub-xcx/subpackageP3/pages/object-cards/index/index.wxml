@@ -27,7 +27,7 @@
   </view>
 
   <!-- 放大态:有转台就左右拖着转,有贴纸就看贴纸,都没有是照片卡 -->
-  <cy-sheet show="{{!!active}}" title="{{active.title || '藏品'}}" bind:close="onCloseActive">
+  <cy-sheet show="{{!!active && !renaming}}" title="{{active.title || '藏品'}}" bind:close="onCloseActive">
     <view class="oc-big" wx:if="{{active}}">
       <view class="oc-big__stage">
         <cy-spin-card wx:if="{{active.frames.length > 1}}" frames="{{active.frames}}" title="{{active.title}}"
@@ -38,7 +38,9 @@
                       caption="{{active.caption}}" card-style="{{active.cardStyle}}" tilt="{{true}}" />
       </view>
       <view class="oc-group">
-        <view class="oc-row">
+        <!-- BL-79:名称行本来就带编辑图标,点它进改名(POST /api/object-card/rename) -->
+        <view class="oc-row" bindtap="onRenameStart" aria-role="button" aria-label="给{{active.title}}改名"
+              hover-class="cy-pressed" hover-stay-time="80">
           <view class="oc-dot oc-dot--name"><cy-icon name="edit" size="24" /></view>
           <text class="oc-k">名称</text><text class="oc-v">{{active.title}}</text>
         </view>
@@ -57,6 +59,17 @@
         </view>
       </block>
       <text class="oc-big__note" wx:if="{{active.generating}}">3D 生成中，好了以后可以左右拖着转一圈</text>
+    </view>
+  </cy-sheet>
+
+  <!-- BL-79 改名:空名/超长由后端判,报错原文回显在输入框下 -->
+  <cy-sheet show="{{renaming}}" title="改名" footer="{{true}}" bind:close="onRenameCancel">
+    <view class="oc-rename">
+      <cy-field label="卡名" value="{{renameValue}}" placeholder="给这张卡起个名字" maxlength="{{64}}" show-count
+                error="{{!!renameError}}" error-text="{{renameError}}" bind:input="onRenameInput" />
+    </view>
+    <view slot="footer">
+      <cy-btn variant="primary" loading="{{renameSubmitting}}" disabled="{{renameSubmitting}}" bindtap="onRenameSubmit">保存</cy-btn>
     </view>
   </cy-sheet>
 </view>
