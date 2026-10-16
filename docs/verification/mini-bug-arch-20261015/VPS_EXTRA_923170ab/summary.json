@@ -36,21 +36,23 @@
     "reason": "insufficient_start_memory",
     "containerId": null
   },
-  "started_at": "2026-10-16T13:09:03.037086+00:00",
-  "finished_at": "2026-10-16T13:09:03.105105+00:00",
-  "memavailable_before_kib": 2192124,
+  "started_at": "2026-10-16T13:22:31.317566+00:00",
+  "finished_at": "2026-10-16T13:22:31.372736+00:00",
+  "memavailable_before_kib": 2460648,
   "required_start_mib": 2560,
   "container_created": false,
   "exact_context_container_filter": "chengyin-aws; name=^/cy-budget-212-extra-923170ab$; empty result, exit0",
-  "run_sha256": "278a9023eedc05c3d9a3eead30ad7e45780f9487e8384bd4f0cfde97fef2da55",
-  "guard_result_sha256": "f29e845a9ac00966b482739258b993d60bc49253c7b9122a9e6cb9fd9c51fa00",
+  "run_sha256": "b50e351be93475eb9f4c08b32c5077424935b1f5ddcd15ffa4ce6e8607cab09b",
+  "guard_result_sha256": "edf47afdf0d402c49ea44f41a7b4f4cc25be1e6a453686601e206e1269d051bf",
   "retained_remote": [
     "unit-run.json",
     "unit-guard-result.json",
     "selection.json",
     "incoming/source.tar.gz",
     "source",
-    "cache"
+    "cache",
+    "unit-run-admission-refused-130903Z.json",
+    "unit-guard-result-admission-refused-130903Z.json"
   ],
   "static_review": {
     "scope": "Exact production/fixture/migration diffs match C00 supplemental grant225b59efa72bf54423fc3a5f6069bff6cc72353e; no dependency/entry/CI changes.",
@@ -82,6 +84,30 @@
   "notes": [
     "No source failure or author repair slot from resource refusal.",
     "No prior A/other SHA PASS inherited.",
-    "Existing-entry-only decision remains; no network/CI/service workaround or stopping another task."
-  ]
+    "Existing-entry-only decision remains; no network/CI/service workaround or stopping another task.",
+    "Second formal attempt 13:22:31Z refused at2460648KiB; first13:09 receipt retained byte-for-byte. No tight retry loop."
+  ],
+  "prior_admission_attempts": [
+    {
+      "started_at": "2026-10-16T13:09:03.037086+00:00",
+      "finished_at": "2026-10-16T13:09:03.105105+00:00",
+      "memavailable_before_kib": 2192124,
+      "guard": {
+        "exitCode": 75,
+        "reason": "insufficient_start_memory",
+        "containerId": null
+      },
+      "actual_tests": 0,
+      "fresh_xml_count": 0,
+      "run_sha256": "278a9023eedc05c3d9a3eead30ad7e45780f9487e8384bd4f0cfde97fef2da55",
+      "guard_result_sha256": "f29e845a9ac00966b482739258b993d60bc49253c7b9122a9e6cb9fd9c51fa00",
+      "retained_run": "unit-run-admission-refused-130903Z.json",
+      "retained_result": "unit-guard-result-admission-refused-130903Z.json"
+    }
+  ],
+  "admission_precheck": {
+    "checked_at_utc": "2026-10-16T13:21:16Z",
+    "memavailable_kib": 2838712,
+    "note": "Memory was above threshold at precheck, then fell before guard admission. No Maven/container started."
+  }
 }
