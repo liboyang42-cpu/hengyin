@@ -255,12 +255,12 @@
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
       "worker": "original /root/external_e02",
-      "state": "IN_PROGRESS_QUERY_CONTRACT_NULL_COMPATIBILITY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "frozen_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
       "latest_task": "E02-12",
-      "actual_writer": 1,
+      "actual_writer": 0,
       "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
       "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
       "real_database_verification": "NOT_RUN",
@@ -2701,10 +2701,11 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "/root/external_e02",
-      "state": "IN_PROGRESS_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "scope": "POI selectReferenceOptions usesCOALESCE(status,1)=1 whereas actual save snapshot and established player-public rule requirestatus=1. Original owner confirm caller/producers then align options only tostatus=1; preservecity_code/order/limit/projection. Do not broaden snapshot or automatically changeunusedcountReferenceTarget.",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "frozen_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java": {
       "owner": "EXTRA6/E01",
@@ -3708,9 +3709,9 @@
   "resumed_existing_items": {
     "packet": "RESUME_KNOWN_BLOCKERS.json",
     "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
-    "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+    "extra": "E02-12 delivered1bfa81a5/originalwriter0, queryNULLcompat notproductionrepro; E01concretecontractgap persists",
     "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
-    "current_source_writers": 1,
+    "current_source_writers": 0,
     "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
   },
   "latest_core_c03_14_candidate": {
@@ -3734,5 +3735,14 @@
     "latest_test_source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
     "production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
     "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209005869"
+  },
+  "latest_extra_e02_12_candidate": {
+    "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "packet": "E02_12_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_SINGLE_H2_CLASS2_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
+    "no_old_pass_inherited": true
   }
 }

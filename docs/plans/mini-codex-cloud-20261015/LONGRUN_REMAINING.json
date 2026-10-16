@@ -1,12 +1,12 @@
 {
   "protocol": "CY-REMAINING-DEVELOPMENT-SNAPSHOT-20261015",
-  "core_source": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
-  "extra_source": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "core_source": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "extra_source": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
   "counts_are": "Actual remaining source work, not cumulative history, testcase count or initial50",
   "core": {
     "proven_actionable_undelivered": 0,
-    "source_deliveries_unverified_history": 135,
-    "decision_blocked": 3,
+    "source_deliveries_unverified_history": 136,
+    "decision_blocked": 2,
     "historical_total": 178
   },
   "extra": {
@@ -22,15 +22,16 @@
     "decision_blocked": 4,
     "ownership_blocked": 1,
     "dependency_blocked": 1,
-    "note": "EXTRA coordinator alone updates own QUEUE; metadata3 claimed is older than two a37 source deliveries, so not3 remaining",
+    "note": "Latestoriginalteam publicQUEUE111history/60source/40counterevidence/6blocked/5otherdelegated, actualREADY0/claimed0; these are historical slices, not111remainingbugs",
     "latest_public_queue": {
-      "head": "2226ee5b6a79478aef74b39f95dd0edea9e0cb0d",
-      "history": 109,
-      "source_delivered": 57,
+      "head": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+      "total_history": 111,
+      "source_delivered": 60,
       "no_change_source_review": 40,
-      "blocked": 8,
+      "blocked": 6,
       "ready": 0,
-      "claimed": 0
+      "claimed": 0,
+      "actionable_or_inflight": 0
     }
   },
   "blocked_records": [
@@ -45,17 +46,6 @@
       ],
       "detail": "BLOCKED_DECISION",
       "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
-    },
-    {
-      "team": "CORE",
-      "id": "OWN-C03-14",
-      "title": "协作者空值及重复输入按既有合同收口",
-      "state": "SPLIT_A_SOURCE_DELIVERED_UNVERIFIED",
-      "paths": [
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
-      ],
-      "detail": "adf59791 inputsnull/<=0 rejectbeforewrites; duplicatespositive remainoriginalbylatestinstruction",
-      "status": "NEW_SOURCE_LOCAL_VALIDATION_PENDING"
     },
     {
       "team": "CORE",
@@ -102,17 +92,6 @@
     },
     {
       "team": "EXTRA",
-      "id": "E02-12",
-      "title": "POI选项与保存状态条件一致性",
-      "state": "QUERY_CONTRACT_NULL_COMPATIBILITY_IN_PROGRESS",
-      "paths": [
-        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
-      ],
-      "detail": "C00ruling6209006760: existingstatus1 public/savecontract supportsminimaloptions failclosed; productionNULLunproved notnewconfirmedbug",
-      "status": "ORIGINAL_E02_ACTUAL_ACK_6209021853"
-    },
-    {
-      "team": "EXTRA",
       "id": "E01-13",
       "title": "候补加入与售卖活动状态合同",
       "state": "WAITING_STATE_CONTRACT_REQUIRED",
@@ -141,7 +120,7 @@
     "Local new-SHA compile/test failures pending evidence; none guessed as bugs"
   ],
   "new_third_fourth_cloud_ready_packages": 0,
-  "reason": "Existing E01-19 dependency packet source-delivered at newCORE SHA, no duplicate item. Current known READY0, exact blockers remain, no fabricated pool.",
+  "reason": "Currentround actualnewCOREinput/EXTRAquerysource plusFORWARDtestcorrection pushed; localvalidationpending, no unchangedPASSrepeat; exactremainingcontractdecisions listed, no fabricatedREADY",
   "scheduling": "one repair slot per team, other5 independent authorized work without waiting; actual exhaustion disclosed; not a claim5 active workers",
   "new_package_detail": "THIRD_CLOUD_HANDOFF.json: AN01 date inputs, AN02 growth lost-update; prior0 snapshot before targeted discovery retained as history",
   "third_team_count": 1,
@@ -401,13 +380,13 @@
       "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
     },
     "EXTRA": {
-      "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "delivery_head_sha": "e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec",
-      "task": "E02-25",
+      "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "delivery_head_sha": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+      "task": "E02-12 queryNULLcompat",
       "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "ordinary_classes": 3,
-      "source_declarations": 64,
-      "local_verification": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
+      "ordinary_classes": 1,
+      "source_declarations": 2,
+      "local_verification": "NOT_RUN_NEW_H2_QUERY_SOURCE",
       "previous_candidate_validation": {
         "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
         "result": "ORDINARY_TARGETED_PASS",
@@ -483,9 +462,10 @@
           "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
         }
       },
-      "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+      "delivery_packet": "E02_12_SOURCE_DELIVERY.json",
       "real_mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "previous_candidate_validation_packet": "E02_25_ORDINARY_VPS_RESULT.json"
     },
     "THIRD": {
       "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
@@ -1118,9 +1098,9 @@
   "resumed_existing_items": {
     "packet": "RESUME_KNOWN_BLOCKERS.json",
     "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
-    "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+    "extra": "E02-12 delivered1bfa81a5/originalwriter0, queryNULLcompat notproductionrepro; E01concretecontractgap persists",
     "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
-    "current_source_writers": 1,
+    "current_source_writers": 0,
     "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
   },
   "latest_core_c03_14_candidate": {
@@ -1130,5 +1110,42 @@
     "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
     "actual_source_writers": 0,
     "no_old_pass_inherited": true
-  }
+  },
+  "latest_extra_e02_12_candidate": {
+    "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "packet": "E02_12_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_SINGLE_H2_CLASS2_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
+    "no_old_pass_inherited": true
+  },
+  "resolved_blocker_history": [
+    {
+      "team": "CORE",
+      "id": "OWN-C03-14",
+      "title": "协作者空值及重复输入按既有合同收口",
+      "state": "SPLIT_A_SOURCE_DELIVERED_UNVERIFIED",
+      "paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
+      "detail": "adf59791 inputsnull/<=0 rejectbeforewrites; duplicatespositive remainoriginalbylatestinstruction",
+      "status": "NEW_SOURCE_LOCAL_VALIDATION_PENDING",
+      "latest_state": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5"
+    },
+    {
+      "team": "EXTRA",
+      "id": "E02-12",
+      "title": "POI选项与保存状态条件一致性",
+      "state": "QUERY_CONTRACT_NULL_COMPATIBILITY_IN_PROGRESS",
+      "paths": [
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+      ],
+      "detail": "C00ruling6209006760: existingstatus1 public/savecontract supportsminimaloptions failclosed; productionNULLunproved notnewconfirmedbug",
+      "status": "ORIGINAL_E02_ACTUAL_ACK_6209021853",
+      "latest_state": "SOURCE_DELIVERED_UNVERIFIED",
+      "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188"
+    }
+  ]
 }

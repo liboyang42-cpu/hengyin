@@ -2,7 +2,7 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "NEW_CORE_adf59791_SOURCE_DELIVERED_51_NOT_RUN_EXTRA_E02_12_IN_PROGRESS_FORWARD_d592_TEST_SOURCE_ONLY",
+  "execution_status": "NEW_CORE_adf51_EXTRA_1bfa2_SOURCE_DELIVERED_NOT_RUN_FORWARD_d592_TEST_COMPILE_REQUEST_PENDING_GUARD",
   "candidates": {
     "CORE": {
       "pr": 44,
@@ -1239,13 +1239,13 @@
       "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
     },
     "EXTRA": {
-      "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "delivery_head_sha": "e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec",
-      "task": "E02-25",
+      "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "delivery_head_sha": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+      "task": "E02-12 queryNULLcompat",
       "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "ordinary_classes": 3,
-      "source_declarations": 64,
-      "local_verification": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
+      "ordinary_classes": 1,
+      "source_declarations": 2,
+      "local_verification": "NOT_RUN_NEW_H2_QUERY_SOURCE",
       "previous_candidate_validation": {
         "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
         "result": "ORDINARY_TARGETED_PASS",
@@ -1321,9 +1321,10 @@
           "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
         }
       },
-      "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+      "delivery_packet": "E02_12_SOURCE_DELIVERY.json",
       "real_mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "previous_candidate_validation_packet": "E02_25_ORDINARY_VPS_RESULT.json"
     },
     "THIRD": {
       "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
@@ -1961,5 +1962,32 @@
     "actual_source_writers": 0,
     "no_old_pass_inherited": true
   },
-  "current_CORE_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5"
+  "current_CORE_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "latest_extra_e02_12_candidate": {
+    "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "packet": "E02_12_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_SINGLE_H2_CLASS2_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
+    "no_old_pass_inherited": true
+  },
+  "extra_latest_delta_validation": {
+    "status": "NOT_RUN",
+    "class": "com.chengyinhub.business.longrun.E02_12Test",
+    "source_declarations": 2,
+    "actual_executed": null,
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
+    "requires": "Existing212 cachedprojectH2/MyBatis/JdbcTemplate/Jupiter; realproductionMapperXML onclasspath, noexternalMySQL/Redis/env/newdependencies",
+    "boundary": "H2actualSELECT, notrealMySQL/productionNULL/HTTP; no29fe64inheritance or repeat required"
+  },
+  "current_EXTRA_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+  "forward_d592_compile_request": {
+    "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "status": "TEST_COMPILE_REQUEST_PENDING_GUARD_RESULT",
+    "task": "cy-vps-forward-d592334a-20261016",
+    "archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+    "root_report": "Sharedlockbusy observation, no guardresult received; no claimtestcompilepass, no repeatordinary28; trueMySQL11NOT_RUN",
+    "new_entry": false
+  }
 }

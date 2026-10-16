@@ -2188,13 +2188,13 @@
         "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
       },
       "EXTRA": {
-        "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-        "delivery_head_sha": "e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec",
-        "task": "E02-25",
+        "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+        "delivery_head_sha": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+        "task": "E02-12 queryNULLcompat",
         "status": "SOURCE_DELIVERED_UNVERIFIED",
-        "ordinary_classes": 3,
-        "source_declarations": 64,
-        "local_verification": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
+        "ordinary_classes": 1,
+        "source_declarations": 2,
+        "local_verification": "NOT_RUN_NEW_H2_QUERY_SOURCE",
         "previous_candidate_validation": {
           "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
           "result": "ORDINARY_TARGETED_PASS",
@@ -2270,9 +2270,10 @@
             "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
           }
         },
-        "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+        "delivery_packet": "E02_12_SOURCE_DELIVERY.json",
         "real_mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
-        "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+        "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+        "previous_candidate_validation_packet": "E02_25_ORDINARY_VPS_RESULT.json"
       },
       "THIRD": {
         "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
@@ -2905,9 +2906,9 @@
     "resumed_existing_items": {
       "packet": "RESUME_KNOWN_BLOCKERS.json",
       "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
-      "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+      "extra": "E02-12 delivered1bfa81a5/originalwriter0, queryNULLcompat notproductionrepro; E01concretecontractgap persists",
       "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
-      "current_source_writers": 1,
+      "current_source_writers": 0,
       "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
     },
     "latest_core_c03_14_candidate": {
@@ -2916,6 +2917,15 @@
       "source_status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
       "actual_source_writers": 0,
+      "no_old_pass_inherited": true
+    },
+    "latest_extra_e02_12_candidate": {
+      "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "packet": "E02_12_SOURCE_DELIVERY.json",
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "ordinary": "NOT_RUN_SINGLE_H2_CLASS2_SOURCE_DECLARATIONS",
+      "actual_source_writers": 0,
+      "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
       "no_old_pass_inherited": true
     }
   },

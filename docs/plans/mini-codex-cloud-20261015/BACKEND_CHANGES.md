@@ -1,3 +1,11 @@
+## POI查询合同修复已交／本轮三队候选已分别冻结
+
+EXTRA新完整源码`1bfa81a5a58ffa8112c10414dad9fdb1701ef188` / PR36，原E02已停写，C00核精确3路径：只POI options的COALESCE(status,1)=1改status=1；新E02_12Test真实生产XML/H2两方法及原说明。保city/projection/order/limit/snapshot/count，无Java/DDL/权限/依赖更改。NULL生产来源未证，分类查询合同/NULL兼容修复，不计现场新增bug。[交付包](E02_12_SOURCE_DELIVERY.json)记录原child、父链及本地单类2方法命令；Cloud未运行，不重跑或继承29fe64。docs02b99bea仅三账已核。
+
+CORE `adf597917da2654b6b753141180bbbcb6db92fc5`普通4类51声明待本地报告；第三`d592334abee1a379963e7b72a58eec5e0f7bd5ad`只改IT测试时钟，root已申请既有212 test-compile、守卫结果待回，不计11真库执行或普通28重跑。三队原作者本轮均交付停写，源码writer0，后续实际失败才原作者单修复线。真实HTTP/DB/设备/候选集成合并部署仍未验；用户不新增验证入口的决定不变。当前完整状态以[恢复页](LONGRUN_CURRENT.md)为准。
+
+### 以下为本轮过程与先前历史，以当前候选和实际结果为准
+
 ## 本轮真实源码继续交付：CORE协作者输入保护
 
 [PR44](https://github.com/liboyang42-cpu/hengyin/pull/44)新完整源码`adf597917da2654b6b753141180bbbcb6db92fc5`，直接父e0e3f517。唯一CORE/C03作者已交付停写；仅CmsTopicServiceImpl新增14行写前ID检查＋新10方法回归＋原说明。create/FULL显式名单含null/<=0沿原IllegalArgumentException/默认body500整包失败，重复正ID和顺序、list缺席/[]清空/已有行缺席保护/WHITELIST、owner与完整性校验顺序保留；不新增权限/成员存在/邀请/DDL/依赖。

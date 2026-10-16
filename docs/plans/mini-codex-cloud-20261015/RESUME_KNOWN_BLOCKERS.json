@@ -29,7 +29,7 @@
       "owner": "EXTRA6/E02",
       "writer": "original /root/external_e02",
       "base": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "state": "QUERY_CONTRACT_NULL_COMPATIBILITY_IN_PROGRESS",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
       "source_paths": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
@@ -39,14 +39,17 @@
       "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md",
       "scope": "POI selectReferenceOptions usesCOALESCE(status,1)=1 whereas actual save snapshot and established player-public rule requirestatus=1. Original owner confirm caller/producers then align options only tostatus=1; preservecity_code/order/limit/projection. Do not broaden snapshot or automatically changeunusedcountReferenceTarget.",
       "evidence": "MCP read exact29fe XML280-385; service.replaceRelations usesselectReferenceSnapshot; migration_roam.sql nullabledefault1/1上架0下架, RoamPoiAdminController documents publicstatus1. No new state policy.",
-      "actual_source_writers": 1,
-      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209021853",
+      "actual_source_writers": 0,
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209046388",
       "counterevidence": "Original producer paths explicitly write0/1; absent/non1 inputnormalized or rejected; NULL only schema-capable, no legitimate producer/historicaldata proven. Withdraw earlierREADY inference; no artificialNULL as confirmedproductionbug.",
       "missing": [
         "ActualNULL-producing entry or historicaldata evidence",
         "Existing historicalNULL online/unknown/offline contract"
       ],
-      "ruling": "C00 closure6209006760 supersedes earlierNEEDS_NULL_PROVENANCE hold for narrow queryalignment. Existingstatus1 public/save upperbound; alignoptionsnullfailclosed only, no newproductionbugcount. NULLproductionprovenance remainsunproved."
+      "ruling": "C00 closure6209006760 supersedes earlierNEEDS_NULL_PROVENANCE hold for narrow queryalignment. Existingstatus1 public/save upperbound; alignoptionsnullfailclosed only, no newproductionbugcount. NULLproductionprovenance remainsunproved.",
+      "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "source_packet": "E02_12_SOURCE_DELIVERY.json",
+      "docs_head": "02b99bea07c82aa0b0b0d045b54a26f93fb041de"
     },
     {
       "id": "E01-13",
@@ -93,7 +96,7 @@
   ],
   "validation": "Cloud source onlyNOT_RUN; local root tests only new real source or unresolved failure via existing212; no new entry/network/CI/repeat oldPASS",
   "coordination": "Global C00 sole editor; extra original authors own their ledgers. GitHubPR36 request6208928920 plus narrowing6208946765; receipt required to claim live workers.",
-  "current_source_writers": 1,
+  "current_source_writers": 0,
   "max_workers_per_team": 6,
   "extra_final_fact_head": "1b3905f946b3c3103543fdb09619d554df3f4fa7",
   "existing_ci_observation": {
@@ -104,5 +107,10 @@
     "actions_runs_total_count": 0,
     "scope": "Observed twice by localroot this round only; natural autoCI policy is no run/result claim",
     "manual_trigger": false
+  },
+  "round_source_deliveries": {
+    "CORE": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "EXTRA": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "FORWARD_TEST_ONLY": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
   }
 }
