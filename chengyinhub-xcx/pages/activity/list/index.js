@@ -67,17 +67,9 @@ Page({
     tabsCy: [{ key: '0', label: '进行中' }, { key: '1', label: '即将' }, { key: '2', label: '已结束' }, { key: '3', label: '我的' }],
     keyword: '',
     events: [],
-    _all: [],
-    _mine: [],
     loading: true,
-    publicLoading: true,
-    mineLoading: false,
     mineAuthRequired: false,
     mineAccessDenied: false,
-    loadErrorMsg: '',
-    mineErrorMsg: '',
-    loadError: false,   // /api/official/events 失败
-    mineError: false,   // /api/official/my-events 失败
     curError: false,    // 当前 tab 数据源的错误(applyFilter 派生,防两接口串台)
     errorMsg: '',
     summary: '',
@@ -106,7 +98,7 @@ Page({
       this._ownerId = memberId(app);
       this._authorization = authorization();
     }
-    if (hidden && (!this._loaded || this.data.publicLoading)) this.fetchAll();
+    if (hidden && (!this._loaded || this._publicLoading)) this.fetchAll();
     else if (this._loaded || changed || hidden) this.fetchMine();
     if (changed || hidden) this.checkPublish();
   },
@@ -116,7 +108,7 @@ Page({
     this._allSeq = (this._allSeq || 0) + 1;
     this._mineSeq = (this._mineSeq || 0) + 1;
     this._publishSeq = (this._publishSeq || 0) + 1;
-    this.setData({ mineLoading: false });
+    this._mineLoading = false;
   },
   onUnload() { this.onHide(); this._unloaded = true; },
 
@@ -126,8 +118,11 @@ Page({
     this._publishSeq = (this._publishSeq || 0) + 1;
     this._mineLoaded = false;
     this._loginRequired = !!authRequired;
-    this.setData({ _mine: [], mineLoading: false, mineError: !!authRequired,
-      mineAuthRequired: !!authRequired, mineAccessDenied: false, mineErrorMsg: '', canPublish: false });
+    this._mine = [];
+    this._mineLoading = false;
+    this._mineError = !!authRequired;
+    this._mineErrorMsg = '';
+    this.setData({ mineAuthRequired: !!authRequired, mineAccessDenied: false, canPublish: false });
     this.applyFilter();
   },
 
@@ -144,10 +139,11 @@ Page({
     if (isLoginRequired(app, res, statusCode) || !authorization()) { this.resetPrivate(true); return; }
     this._mineLoaded = true;
     const denied = failureStatus(res, statusCode) === 403;
-    if (denied) this.setData({ _mine: [] });
-    this.setData({ mineLoading: false, mineError: true,
-      mineAuthRequired: false, mineAccessDenied: denied,
-      mineErrorMsg: app.getRequestErrorMessage(res, '活动列表暂时没能打开，请稍后重试') });
+    if (denied) this._mine = [];
+    this._mineLoading = false;
+    this._mineError = true;
+    this._mineErrorMsg = app.getRequestErrorMessage(res, '活动列表暂时没能打开，请稍后重试');
+    this.setData({ mineAuthRequired: false, mineAccessDenied: denied });
     this.applyFilter();
   },
 
@@ -189,11 +185,17 @@ Page({
     if (this._hidden || this._unloaded) return;
     const seq = (this._allSeq || 0) + 1;
     this._allSeq = seq;
-    this.setData({ publicLoading: true, loadError: false, loadErrorMsg: '' });
+    this._publicLoading = true;
+    this._loadError = false;
+    this._loadErrorMsg = '';
     this.applyFilter();
     const done = (patch) => {
       if (this._hidden || this._unloaded || this._allSeq !== seq) return;
-      this.setData(Object.assign({ publicLoading: false }, patch)); this.applyFilter();
+      this._publicLoading = false;
+      this._loadError = patch.loadError === true;
+      this._loadErrorMsg = patch.loadErrorMsg || '';
+      if (patch._all) this._all = patch._all;
+      this.applyFilter();
     };
     app.sendRequest({
       url: '/api/official/events', method: 'GET', data: {}, hideLoading: true, silentError: true,
@@ -230,10 +232,13 @@ Page({
       });
       return;
     }
-    if (this.data.mineLoading) return;
+    if (this._mineLoading) return;
     const current = currentPrivate(this), seq = (this._mineSeq || 0) + 1;
     this._mineSeq = seq;
-    this.setData({ mineLoading: true, mineError: false, mineAuthRequired: false, mineAccessDenied: false, mineErrorMsg: '' });
+    this._mineLoading = true;
+    this._mineError = false;
+    this._mineErrorMsg = '';
+    this.setData({ mineAuthRequired: false, mineAccessDenied: false });
     this.applyFilter();
     const failed = (res, statusCode) => {
       if (current(res, statusCode) && this._mineSeq === seq) this.mineFailure(res, statusCode);
@@ -244,7 +249,9 @@ Page({
         if (!current(res) || this._mineSeq !== seq) return;
         if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)) {
           this._mineLoaded = true;
-          this.setData({ _mine: res.data.filter(this._isCompleteEvent).map(this._decorate), mineError: false, mineLoading: false });
+          this._mine = res.data.filter(this._isCompleteEvent).map(this._decorate);
+          this._mineError = false;
+          this._mineLoading = false;
           this.applyFilter();
         } else failed(res);
       },
@@ -302,10 +309,10 @@ Page({
   applyFilter(extra) {
     const d = extra ? Object.assign({}, this.data, extra) : this.data;
     let list;
-    if (d.tab === 3) list = this.data._mine;
-    else if (d.tab === 0) list = d._all.filter(e => e._live);
-    else if (d.tab === 1) list = d._all.filter(e => e.status == 1);
-    else list = d._all.filter(e => e.status >= 5);
+    if (d.tab === 3) list = this._mine || [];
+    else if (d.tab === 0) list = (this._all || []).filter(e => e._live);
+    else if (d.tab === 1) list = (this._all || []).filter(e => e.status == 1);
+    else list = (this._all || []).filter(e => e.status >= 5);
 
     const kw = d.keyword.trim().toLowerCase();
     if (kw) {
@@ -331,9 +338,9 @@ Page({
     }
     this.setData(Object.assign({
       events: list, summary, emptyTitle, emptySub, emptyKind,
-      curError: d.tab === 3 ? this.data.mineError : this.data.loadError,
-      loading: d.tab === 3 ? this.data.mineLoading : this.data.publicLoading,
-      errorMsg: d.tab === 3 ? this.data.mineErrorMsg : this.data.loadErrorMsg,
+      curError: d.tab === 3 ? this._mineError === true : this._loadError === true,
+      loading: d.tab === 3 ? this._mineLoading === true : this._publicLoading === true,
+      errorMsg: (d.tab === 3 ? this._mineErrorMsg : this._loadErrorMsg) || '',
     }, extra));
   },
 
