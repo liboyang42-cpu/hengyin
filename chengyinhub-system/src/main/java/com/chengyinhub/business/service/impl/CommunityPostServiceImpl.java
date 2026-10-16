@@ -462,7 +462,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Map<String, Object> replay = mapper.selectCommentByAuthorRequest(memberId, request.getClientRequestId());
         if (replay != null) {
             if (!postId.equals(number(value(replay, "post_id")))
-                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
+                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))
+                    || !sameCommentParent(number(value(replay, "parent_id")), request.getParentId())) {
                 throw error("同一请求号不能用于不同回复", 409);
             }
             return commentResult(memberId, postId, String.valueOf(value(replay, "author_approval_state")),
@@ -496,7 +497,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         } catch (DuplicateKeyException e) {
             replay = mapper.selectCommentByAuthorRequest(memberId, request.getClientRequestId());
             if (replay == null || !postId.equals(number(value(replay, "post_id")))
-                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
+                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))
+                    || !sameCommentParent(number(value(replay, "parent_id")), request.getParentId())) {
                 throw error("回复请求号已被使用", 409);
             }
             return commentResult(memberId, postId, String.valueOf(value(replay, "author_approval_state")),
@@ -1156,6 +1158,13 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 recommendation, search, interaction, now) != 1) stale();
         mapper.upsertSearchDocument(postId, search == 1 && CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) ? "VISIBLE" : "HIDDEN", now);
         outbox(postId, "POST_ENFORCEMENT_RECONCILED", payload("postId", postId), now);
+    }
+
+    private boolean sameCommentParent(Long storedParentId, Long requestedParentId) {
+        if (positive(storedParentId) || positive(requestedParentId)) {
+            return storedParentId != null && storedParentId.equals(requestedParentId);
+        }
+        return true;
     }
 
     private Map<String, Object> commentResult(Long memberId, Long postId, String approval, String lifecycle) {
