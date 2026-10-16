@@ -1,3 +1,9 @@
+## 最新bde候选普通28项通过
+
+新源码`bde356f3f0944f4c1a00726fbf821de2267a3eea`两普通类各14/合计28实际PASS，0失败/错误/跳过、fresh精确2XML、guard0及精确清理已核读[公开证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md)。11真MySQL仍NOT_RUN，未合并部署；旧2bab24PASS不迁移。本轮实际Java验证已结束，后续新源码另报。
+
+### 以下为旧候选历史
+
 ## 第三队当前普通回归签收：24PASS／真MySQL11未运行
 
 第三队PR72冻结源码 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 正常准入后，由本地专用VPS212完成七模块编译与两普通类24/24实跑PASS（各12项，0失败/错误/跳过），fresh XML精确类集、guard0/completed和容器清理已确认。C00已完整读回[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/README.md)，证据提交 `fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f`，逐类XML、源码与日志哈希已入总控索引。

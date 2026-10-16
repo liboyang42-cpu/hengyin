@@ -242,10 +242,10 @@
       "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "result": "ORDINARY_TARGETED_PASS",
       "tests": 10,
-      "passed": 10,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
+      "passed": 10,
       "classes": [
         "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
         "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
@@ -258,27 +258,54 @@
       "exact_class_set_match": true,
       "guard_exit_code": 0,
       "guard_reason": "completed",
-      "started_at": "2026-10-16T03:35:37Z",
-      "finished_at": "2026-10-16T03:38:22Z",
+      "started_at": "2026-10-16T03:35:37.743053+00:00",
+      "finished_at": "2026-10-16T03:38:22.314565+00:00",
       "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
-      "cleanup": "Local explicitly confirmed exact container cleaned with chengyin-aws filter",
+      "cleanup": {
+        "observed_absent": true,
+        "endpoint": "chengyin-aws",
+        "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
+      },
+      "task": "cy-vps-core-e0e3f517-20261016",
       "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+      "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
       "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
       "environment": "Dedicated VPS approved212 ordinary only",
       "evidence_pr": 24,
-      "evidence_commit": "5a90a1e81db8274960c3d5dee9d6646aa73311be",
-      "public_evidence_status": "C00 read public README and structured summary; original logs/XML retained by local verifier",
-      "full483_rerun": false,
+      "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+      "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+      "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+      "reports": [
+        {
+          "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+        },
+        {
+          "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+        }
+      ],
       "not_accepted": [
-        "real MySQL/Redis",
+        "true MySQL/Redis",
         "runtime HTTP",
         "device/business acceptance",
-        "merge/deployment/migrations"
+        "candidate integration",
+        "merge/deployment/migrations",
+        "later source SHAs"
       ],
-      "cloud_manual_runs": 0,
-      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
-      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
-      "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94"
+      "cloud_manual_runs": 0
     }
   },
   "current_unblock_checks": {
@@ -301,7 +328,76 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 2,
       "source_declarations": 10,
-      "local_verification": "ORDINARY10_PASS_PUBLIC_EVIDENCE_READ_5a90a1e8"
+      "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
+      "validation_result": {
+        "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+        "result": "ORDINARY_TARGETED_PASS",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 10,
+        "classes": [
+          "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+          "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+        ],
+        "class_test_counts": [
+          5,
+          5
+        ],
+        "fresh_reports": true,
+        "exact_class_set_match": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T03:35:37.743053+00:00",
+        "finished_at": "2026-10-16T03:38:22.314565+00:00",
+        "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
+        },
+        "task": "cy-vps-core-e0e3f517-20261016",
+        "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "Dedicated VPS approved212 ordinary only",
+        "evidence_pr": 24,
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+        "reports": [
+          {
+            "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0
+      }
     },
     "EXTRA": {
       "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
@@ -310,18 +406,18 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 2,
       "source_declarations": 60,
-      "local_verification": "ORDINARY60_PASS_LOCAL_REPORTED_PUBLIC_REPORT_PENDING",
+      "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
       "validation_result": {
         "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
         "result": "ORDINARY_TARGETED_PASS",
         "tests": 60,
-        "passed": 60,
         "failures": 0,
         "errors": 0,
         "skipped": 0,
+        "passed": 60,
         "classes": [
           "com.chengyinhub.business.longrun.E02_24Test",
-          "com.chengyinhub.business.service.CommunityPostServiceImplTest"
+          "com.chengyinhub.business.community.CommunityPostServiceImplTest"
         ],
         "class_test_counts": [
           5,
@@ -331,30 +427,60 @@
         "exact_class_set_match": true,
         "guard_exit_code": 0,
         "guard_reason": "completed",
-        "started_at": "2026-10-16T03:44:19Z",
-        "finished_at": "2026-10-16T03:47:03Z",
+        "started_at": "2026-10-16T03:44:19.150799+00:00",
+        "finished_at": "2026-10-16T03:47:03.564145+00:00",
         "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
-        "cleanup": "Local explicitly confirmed exact container absent using chengyin-aws filter",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+        },
         "task": "cy-vps-extra-faefbaf8-20261016",
         "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
         "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-        "environment": "Dedicated VPS approved212 ordinary only; SQL collaborators mocked",
+        "environment": "Dedicated VPS approved212 ordinary only",
         "evidence_pr": 24,
-        "evidence_commit": null,
-        "public_evidence_status": "Direct actual verifier report; public batch pending, no public report/log hash read claim",
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+            "tests": 55,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.business.longrun.E02_24Test",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0,
         "prior_admission_refusal": {
           "observed_at": "2026-10-16T03:40:30Z",
           "actual_tests": 0,
-          "retained": true
-        },
-        "not_accepted": [
-          "real MySQL RR/Redis concurrency",
-          "runtime HTTP",
-          "device/business acceptance",
-          "merge/deployment/migrations",
-          "later E02-25 candidate"
-        ],
-        "cloud_manual_runs": 0
+          "retained": true,
+          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
+        }
       }
     },
     "THIRD": {
@@ -368,7 +494,76 @@
       "ordinary_classes": 2,
       "source_declarations": 28,
       "mysql11": "NOT_RUN",
-      "local_verification": "LOCAL_212_STARTED_2026_10_16_034703Z_RESULT_PENDING"
+      "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
+      "validation_result": {
+        "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+        "result": "ORDINARY_TARGETED_PASS",
+        "tests": 28,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 28,
+        "classes": [
+          "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+          "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+        ],
+        "class_test_counts": [
+          14,
+          14
+        ],
+        "fresh_reports": true,
+        "exact_class_set_match": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T03:47:03.567744+00:00",
+        "finished_at": "2026-10-16T03:49:49.990667+00:00",
+        "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+        },
+        "task": "cy-vps-forward-bde356f3-20261016",
+        "source_archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "Dedicated VPS approved212 ordinary only",
+        "evidence_pr": 24,
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+            "tests": 14,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+            "tests": 14,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0
+      }
     }
   },
   "e02_25_grant": {
@@ -376,7 +571,7 @@
     "title": "评论创建重复键恢复按当前读取赢家",
     "owner": "EXTRA6/E02",
     "original_worker": "external_e02",
-    "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+    "state": "ACK_RECEIVED_ORIGINAL_WRITER_IN_PROGRESS",
     "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
     "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
     "source_paths": [
@@ -386,7 +581,8 @@
     ],
     "test_paths": [
       "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java"
     ],
     "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
     "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
@@ -395,7 +591,24 @@
     "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
     "verification": "SOURCE_ONLY_NOT_RUN",
     "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
-    "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
+    "activation": "Original writer resumed; actual ACK6207665975 read. No duplicate writer; new candidate separately NOT_RUN.",
+    "owner_ack": {
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
+      "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+      "child": "/root/external_e02",
+      "branch": "codex/extra-e02-regression-20261015",
+      "worktree": "/workspace/hengyin-extra-e02",
+      "child_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+      "reported_service_blob": "4a1e436",
+      "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "actual_source_writers": 1,
+      "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
+    },
+    "attached_existing_fixture": {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+      "owner": "EXTRA6/E02",
+      "scope": "Only duplicate replay fixture: ordinary null plus current-read winner; preserve five methods and all parent binding assertions. Do not modify old55."
+    }
   },
   "real_storage_entry_map": "REAL_STORAGE_ENTRY_MAP.json",
   "validation_coordination_state": "NEW_CANDIDATES_LOCAL_VALIDATION_IN_PROGRESS_DEVELOPMENT_READY_SEPARATE",
@@ -403,13 +616,13 @@
     "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
     "result": "ORDINARY_TARGETED_PASS",
     "tests": 60,
-    "passed": 60,
     "failures": 0,
     "errors": 0,
     "skipped": 0,
+    "passed": 60,
     "classes": [
       "com.chengyinhub.business.longrun.E02_24Test",
-      "com.chengyinhub.business.service.CommunityPostServiceImplTest"
+      "com.chengyinhub.business.community.CommunityPostServiceImplTest"
     ],
     "class_test_counts": [
       5,
@@ -419,29 +632,434 @@
     "exact_class_set_match": true,
     "guard_exit_code": 0,
     "guard_reason": "completed",
-    "started_at": "2026-10-16T03:44:19Z",
-    "finished_at": "2026-10-16T03:47:03Z",
+    "started_at": "2026-10-16T03:44:19.150799+00:00",
+    "finished_at": "2026-10-16T03:47:03.564145+00:00",
     "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
-    "cleanup": "Local explicitly confirmed exact container absent using chengyin-aws filter",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+    },
     "task": "cy-vps-extra-faefbaf8-20261016",
     "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
     "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-    "environment": "Dedicated VPS approved212 ordinary only; SQL collaborators mocked",
+    "environment": "Dedicated VPS approved212 ordinary only",
     "evidence_pr": 24,
-    "evidence_commit": null,
-    "public_evidence_status": "Direct actual verifier report; public batch pending, no public report/log hash read claim",
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "tests": 55,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_24Test",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+      }
+    ],
+    "not_accepted": [
+      "true MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge/deployment/migrations",
+      "later source SHAs"
+    ],
+    "cloud_manual_runs": 0,
     "prior_admission_refusal": {
       "observed_at": "2026-10-16T03:40:30Z",
       "actual_tests": 0,
-      "retained": true
+      "retained": true,
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
+    }
+  },
+  "latest_core_e01_19_validation": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 10,
+    "classes": [
+      "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+      "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+    ],
+    "class_test_counts": [
+      5,
+      5
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:35:37.743053+00:00",
+    "finished_at": "2026-10-16T03:38:22.314565+00:00",
+    "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
     },
+    "task": "cy-vps-core-e0e3f517-20261016",
+    "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+    "reports": [
+      {
+        "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+      }
+    ],
     "not_accepted": [
-      "real MySQL RR/Redis concurrency",
+      "true MySQL/Redis",
       "runtime HTTP",
       "device/business acceptance",
+      "candidate integration",
       "merge/deployment/migrations",
-      "later E02-25 candidate"
+      "later source SHAs"
     ],
     "cloud_manual_runs": 0
+  },
+  "latest_forward_bde356f3_validation": {
+    "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 28,
+    "classes": [
+      "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+    ],
+    "class_test_counts": [
+      14,
+      14
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:47:03.567744+00:00",
+    "finished_at": "2026-10-16T03:49:49.990667+00:00",
+    "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+    },
+    "task": "cy-vps-forward-bde356f3-20261016",
+    "source_archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+      }
+    ],
+    "not_accepted": [
+      "true MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge/deployment/migrations",
+      "later source SHAs"
+    ],
+    "cloud_manual_runs": 0
+  },
+  "ordinary_batch_evidence": {
+    "commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "status": "ALL_THREE_PINNED_ORDINARY_TARGETED_PASS_REAL_STORAGE_HTTP_UNVERIFIED",
+    "candidate_results": {
+      "core": {
+        "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+        "result": "ORDINARY_TARGETED_PASS",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 10,
+        "classes": [
+          "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+          "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+        ],
+        "class_test_counts": [
+          5,
+          5
+        ],
+        "fresh_reports": true,
+        "exact_class_set_match": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T03:35:37.743053+00:00",
+        "finished_at": "2026-10-16T03:38:22.314565+00:00",
+        "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
+        },
+        "task": "cy-vps-core-e0e3f517-20261016",
+        "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "Dedicated VPS approved212 ordinary only",
+        "evidence_pr": 24,
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+        "reports": [
+          {
+            "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0
+      },
+      "extra": {
+        "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+        "result": "ORDINARY_TARGETED_PASS",
+        "tests": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 60,
+        "classes": [
+          "com.chengyinhub.business.longrun.E02_24Test",
+          "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+        ],
+        "class_test_counts": [
+          5,
+          55
+        ],
+        "fresh_reports": true,
+        "exact_class_set_match": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T03:44:19.150799+00:00",
+        "finished_at": "2026-10-16T03:47:03.564145+00:00",
+        "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+        },
+        "task": "cy-vps-extra-faefbaf8-20261016",
+        "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "Dedicated VPS approved212 ordinary only",
+        "evidence_pr": 24,
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+            "tests": 55,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.business.longrun.E02_24Test",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0,
+        "prior_admission_refusal": {
+          "observed_at": "2026-10-16T03:40:30Z",
+          "actual_tests": 0,
+          "retained": true,
+          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
+        }
+      },
+      "forward": {
+        "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+        "result": "ORDINARY_TARGETED_PASS",
+        "tests": 28,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 28,
+        "classes": [
+          "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+          "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+        ],
+        "class_test_counts": [
+          14,
+          14
+        ],
+        "fresh_reports": true,
+        "exact_class_set_match": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T03:47:03.567744+00:00",
+        "finished_at": "2026-10-16T03:49:49.990667+00:00",
+        "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+        },
+        "task": "cy-vps-forward-bde356f3-20261016",
+        "source_archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "Dedicated VPS approved212 ordinary only",
+        "evidence_pr": 24,
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+        "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+        "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+            "tests": 14,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+            "tests": 14,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+          }
+        ],
+        "not_accepted": [
+          "true MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "candidate integration",
+          "merge/deployment/migrations",
+          "later source SHAs"
+        ],
+        "cloud_manual_runs": 0
+      }
+    },
+    "no_cross_candidate_inheritance": true,
+    "class_name_correction": {
+      "previous_ledger_typo": "com.chengyinhub.business.service.CommunityPostServiceImplTest",
+      "actual_fresh_report_class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+      "basis": "PR24@cae72e05 summary exact class set; result remains60, no new test execution"
+    }
+  },
+  "e02_25_original_owner_ack": {
+    "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
+    "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+    "child": "/root/external_e02",
+    "branch": "codex/extra-e02-regression-20261015",
+    "worktree": "/workspace/hengyin-extra-e02",
+    "child_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+    "reported_service_blob": "4a1e436",
+    "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "actual_source_writers": 1,
+    "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
   }
 }

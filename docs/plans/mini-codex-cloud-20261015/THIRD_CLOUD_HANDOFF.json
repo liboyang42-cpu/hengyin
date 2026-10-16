@@ -741,5 +741,74 @@
     "F3-STAT-02",
     "F3-GROW-02"
   ],
-  "latest_verification": "NOT_RUN_PREVIOUS24_PASS_RETAINED_ONLY_AT2babbe"
+  "latest_verification": "ORDINARY28_PASS_AT_bde356f3_MYSQL11_NOT_RUN",
+  "latest_validation": {
+    "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 28,
+    "classes": [
+      "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+    ],
+    "class_test_counts": [
+      14,
+      14
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:47:03.567744+00:00",
+    "finished_at": "2026-10-16T03:49:49.990667+00:00",
+    "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+    },
+    "task": "cy-vps-forward-bde356f3-20261016",
+    "source_archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+      }
+    ],
+    "not_accepted": [
+      "true MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge/deployment/migrations",
+      "later source SHAs"
+    ],
+    "cloud_manual_runs": 0
+  }
 }

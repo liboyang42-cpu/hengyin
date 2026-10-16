@@ -3,7 +3,7 @@
   "title": "评论创建重复键恢复按当前读取赢家",
   "owner": "EXTRA6/E02",
   "original_worker": "external_e02",
-  "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+  "state": "ACK_RECEIVED_ORIGINAL_WRITER_IN_PROGRESS",
   "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
   "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
   "source_paths": [
@@ -13,7 +13,8 @@
   ],
   "test_paths": [
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
-    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java"
   ],
   "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
   "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
@@ -22,5 +23,22 @@
   "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
   "verification": "SOURCE_ONLY_NOT_RUN",
   "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
-  "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
+  "activation": "Original writer resumed; actual ACK6207665975 read. No duplicate writer; new candidate separately NOT_RUN.",
+  "owner_ack": {
+    "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
+    "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+    "child": "/root/external_e02",
+    "branch": "codex/extra-e02-regression-20261015",
+    "worktree": "/workspace/hengyin-extra-e02",
+    "child_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+    "reported_service_blob": "4a1e436",
+    "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "actual_source_writers": 1,
+    "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
+  },
+  "attached_existing_fixture": {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+    "owner": "EXTRA6/E02",
+    "scope": "Only duplicate replay fixture: ordinary null plus current-read winner; preserve five methods and all parent binding assertions. Do not modify old55."
+  }
 }

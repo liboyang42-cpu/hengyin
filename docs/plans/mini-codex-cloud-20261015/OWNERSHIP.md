@@ -1,3 +1,13 @@
+## 当前三候选普通定向证据已签收
+
+已核读PR24@`cae72e05ee668271d79ea9c95e505d7e8971d3a5`的三份README和summary：CORE `e0e3f517` **10/10**、EXTRA `faefbaf8` **60/60**、第三 `bde356f3` **28/28** 实际通过，均0失败/错误/跳过、fresh精确2XML、212guard0/completed、自有精确容器清理。[CORE证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md) / [EXTRA证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md) / [第三队证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md)。EXTRA首次锁拒绝0项仍保留，不改写历史。各结果只属于各自完整SHA，不是合并候选全量验证；SQL边界有替身，不是实际数据库/Redis/运行HTTP或设备业务验收。TEST_DEPLOYED=NO，未合并/部署。
+
+真存储[入口缺口](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)已核：本次列CORE8类未入funds固定名单、EXTRA所列23类仅2已入/21未入，第三Growth真MySQL11未入；名单覆盖不等于新SHA已运行，有Redis mock不能称真Redis联验。独立限额入口仍待用户明确答复，212/CI/网络不改。
+
+E02-25原`/root/external_e02`已实际[ACK恢复](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975)，源码writer1（队伍回执快照），无需等待上述结果。仅附加同owner已有E02_24Test的duplicate当前读夹具前提，保5方法与全部断言、不改旧55；新RR源码/真实库回归仍NOT_RUN，不继承faef60PASS。
+
+### 以下为此前交付与验证历史，当前以本节及LONGRUN_CURRENT为准
+
 ## E01-19 显式取消收藏的并发ACK修复
 
 公共源码 `e0e3f517b8e6deb26ed3697a00d38ae14f015e76` / PR44，原0d之上一小提交，源码作者CORE/C03，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。`POST /api/topic/like` 显式type0两请求都读到旧行而DELETE1/0时，第二个body.code由500改为200、msg“取消点赞成功”，符合既有方向幂等合同；HTTP方法/路径/参数/字段/账号过滤/目标ID不变。空type旧toggle的DELETE0仍失败，负数失败、数据库异常仍传播，不增加自动重试或端侧写权。

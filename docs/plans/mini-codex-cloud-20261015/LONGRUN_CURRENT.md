@@ -8,17 +8,17 @@ E01-19（EXTRA旧packet，不另造bugID）已由正式移交的CORE/C03 writer�
 
 ## 三队新候选与后续派工
 
-最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA faefbaf8（E02-24评论重放父目标绑定，新普通60声明）、第三bde356f3（STAT02年份/GROW02午夜时点，新普通28声明）；CORE已获本地新10项定向PASS；EXTRA已回普通60PASS/公开报告待补，第三仍待执行结果，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
+最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA faefbaf8（E02-24评论重放父目标绑定，普通60实际PASS）、第三bde356f3（STAT02年份/GROW02午夜时点，普通28实际PASS）；三队均获各自新SHA普通定向PASS，公开证据已核读，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
 
-E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：仅新Mapper方法与catch当前读、原SQL projection/WHERE、两唯一测试及说明，见[E02_25_SOURCE_GRANT](E02_25_SOURCE_GRANT.json)。不改初始读/全局隔离/权限/DDL，保E02-24父目标绑定；待原owner实际ACK，不假称已运行。真实VPS是否RR未知，不把条件触发说成现场已复现。
+E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：仅新Mapper方法与catch当前读、原SQL projection/WHERE、两唯一测试及说明，见[E02_25_SOURCE_GRANT](E02_25_SOURCE_GRANT.json)。不改初始读/全局隔离/权限/DDL，保E02-24父目标绑定；原owner已实际[ACK恢复](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975)，队伍回执源码writer1；同owner E02_24Test仅duplicate夹具同步普通null+current赢家，保留5方法和断言，不改旧55。新源码未交、NOT_RUN。真实VPS是否RR未知，不把条件触发说成现场已复现。
 
-本地要求的真库/Redis现有入口映射已在[REAL_STORAGE_ENTRY_MAP](REAL_STORAGE_ENTRY_MAP.md)：固定CI名单只覆盖明确列类；其余缺批准真存储入口，212不能替代。Cloud不运行/改CI/增网例外。本地另已发布[入口缺口与候选清单](https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)，独立真库入口仍待用户对该具体资源方案答复，未自行创建。
+本地要求的真库/Redis现有入口映射已在[REAL_STORAGE_ENTRY_MAP](REAL_STORAGE_ENTRY_MAP.md)：固定CI名单只覆盖明确列类；其余缺批准真存储入口，212不能替代。Cloud不运行/改CI/增网例外。本地另已发布[入口缺口与候选清单](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)，独立真库入口仍待用户对该具体资源方案答复，未自行创建。
 
-## 新候选本地验证进行中（开发是否有READY单独记录）
+## 三候选普通定向已结束（开发是否有READY单独记录）
 
-本地最新已回CORE e0e3f517普通10项PASS；EXTRA faef首次03:40:30Z锁拒绝0项已公开保留；03:44:19Z正常准入重试，03:47:03Z结束普通2类60实际PASS/F0/E0/S0，公开PR24汇总待补。第三bde于03:47:03Z进入同入口串行执行，尚未回结果。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
+本地三批已结束：CORE10、EXTRA60、第三28普通定向全部PASS/F0/E0/S0，PR24@cae72e05ee668271d79ea9c95e505d7e8971d3a5公开README/summary已核读。EXTRA首次03:40:30Z拒绝0项历史保留，重试03:44:19Z—03:47:03Z；第三03:47:03Z—03:49:49Z。新RR源码继续，不继承本批通过。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
 
-## 本地下一项验证
+## CORE本次验证范围
 
 唯一实际验证者：本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`。新候选普通套件TopicLikeExplicitCancelConcurrencyTest5＋ApiTopicLikeDirectionTest5，已由本地实际执行10/10通过，0失败/错误/跳过，fresh精确2 XML、212guard0及清理已回报；C00已核读PR24@5a90a1e81db8274960c3d5dee9d6646aa73311be的公开README和结构化summary；原始XML/日志由本地保留，未声称重新执行。命令/前提见[移交JSON](BACKEND_VALIDATION_VPS_HANDOFF.json)的core_latest_delta_validation；只按已批准212准入，Cloud不执行，不重跑全483/157。无新DB/Redis/DDL前提；真实SQL交错与运行HTTP另验。
 
@@ -31,7 +31,8 @@ E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：
 | e72eff7e | EXTRA原2失败类56项针对性PASS | 后续源码、新305全跑 |
 | b45664de | EXTRA E06单类5项针对性PASS | 新76全跑、真库/HTTP/业务 |
 | 2babbe28 | 第三队编译＋普通2类24项PASS | 11真MySQL仍NOT_RUN、真实并发/HTTP |
-| faefbaf8 | 本地普通2类60实际PASS，公开报告待补 | 后续RR候选、真MySQL/Redis/HTTP未验 |
+| bde356f3 | 本地普通2类28实际PASS，[公开证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md) | 真MySQL11/HTTP/业务未验 |
+| faefbaf8 | 本地普通2类60实际PASS，[公开证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md) | 后续RR候选、真MySQL/Redis/HTTP未验 |
 | e0e3f517 | 本地普通2类10实际PASS、[公开报告已核读](https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md) | 真SQL/HTTP/业务均未验 |
 
 原69c初始化失败、f7的483失败、474的305失败、ed598的76项1失败，以及两次212锁拒绝均保留独立证据；对应失败已按各自针对性复测关闭，不改写原失败为PASS。[VPS_REPAIR_ROUND_1](VPS_REPAIR_ROUND_1.json)及PR24保留原报告/哈希。
