@@ -122,6 +122,157 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
             connection.close()
 
 
+    PAYEE_FORWARD = REPO / "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql"
+
+    def payee_fixture(self, *, pages=False, account=False):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.executemany("INSERT INTO sys_role(role_id,role_name,role_key,role_sort,status,del_flag) VALUES(%s,%s,%s,1,'0','0')",
+                    [(100, 'operator', 'cy_operator'), (101, 'auditor', 'cy_auditor'),
+                     (102, 'support', 'cy_support'), (103, 'finance', 'cy_finance')])
+                rows = [(9000, 0, 'M', ''), (9100, 9000, 'C', 'business:topic:list'),
+                        (9101, 9100, 'F', 'business:topic:query'),
+                        (9201, 9100, 'F', 'business:clubpayable:confirm'),
+                        (9202, 9100, 'F', 'business:clubpayable:paid'),
+                        (9203, 9100, 'F', 'business:clubpayee:verify'),
+                        (9204, 9100, 'F', 'business:clubpayee:payout'),
+                        (9205, 9100, 'F', 'business:clubextra:approve'),
+                        (9206, 9100, 'F', 'business:clubhours:correct'),
+                        (9300, 9000, 'C', 'business:activity:list'),
+                        (9301, 9300, 'F', 'business:activity:edit'),
+                        (9302, 9300, 'F', 'business:activity:export'),
+                        (9400, 9000, 'C', 'system:user:list'),
+                        (9500, 9300, 'F', 'business:manual:custom')]
+                cur.executemany("INSERT INTO sys_menu(menu_id,parent_id,menu_type,perms,menu_name,path,visible,status) VALUES(%s,%s,%s,%s,'owned-role-fixture','owned','0','0')", rows)
+                # These are source-declared upstream grants, not inferred from observed current DB data.
+                grants = [(100,9204), (103,9201), (103,9203), (103,9206),
+                          (100,9202), (100,9205), (100,9101), (103,9101)]
+                if pages:
+                    grants += [(rid,9100) for rid in (100,101,102,103)]
+                cur.executemany("INSERT INTO sys_role_menu(role_id,menu_id) VALUES(%s,%s)", grants)
+                if account:
+                    cur.execute("INSERT INTO sys_user(user_id,user_name,nick_name,status,del_flag) VALUES(700,'owned-role-fixture','owned-role-fixture','0','0')")
+        finally:
+            connection.close()
+
+    def payee_grants(self):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT role_id,menu_id FROM sys_role_menu ORDER BY role_id,menu_id")
+                return set(cur.fetchall())
+        finally:
+            connection.close()
+
+    def apply_payee_forward(self, path=None):
+        connection = self.connect()
+        try:
+            results = []
+            ok = run_file(connection.cursor(), path or self.PAYEE_FORWARD, "payee-forward", results, False, schema_only=True)
+            return ok, results
+        finally:
+            connection.close()
+
+    def test_payee_fresh_four_role_source_matrix_and_legal_extras_then_replay(self):
+        self.payee_fixture()
+        # Independent source contract: old four-role predicates plus explicit prior grants,
+        # excluding exactly the two inverse payee pairs approved for removal.
+        import re
+        matrix = (REPO / "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql").read_text()
+        before = self.payee_grants()
+        connection = self.connect()
+        expected = set(before)
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT menu_id,parent_id FROM sys_menu")
+                parents = dict(cur.fetchall())
+                for rid, role in [(100,'cy_operator'),(101,'cy_auditor'),(102,'cy_support'),(103,'cy_finance')]:
+                    match = re.search(r"WHERE t\.role_key = '"+role+r"'(?P<predicate>[\s\S]*?)AND NOT EXISTS \(SELECT 1 FROM sys_role_menu", matrix)
+                    self.assertIsNotNone(match)
+                    cur.execute("SELECT m.menu_id FROM sys_menu m WHERE 1=1 " + match['predicate'])
+                    ids = {row[0] for row in cur.fetchall()} | {mid for role_id,mid in before if role_id == rid}
+                    ids -= ({9203} if rid == 100 else {9204} if rid == 103 else set())
+                    for _ in range(4):
+                        ids |= {parents[mid] for mid in list(ids) if parents[mid] in parents}
+                    expected |= {(rid,mid) for mid in ids}
+        finally:
+            connection.close()
+        expected -= {(100,9203),(103,9204)}
+        self.assertEqual((True, []), self.apply_payee_forward())
+        self.assertEqual(expected, self.payee_grants())
+        self.assertTrue({(100,9204),(103,9201),(103,9203),(103,9206)} <= self.payee_grants())
+        self.assertEqual((True, []), self.apply_payee_forward())
+        self.assertEqual(expected, self.payee_grants())
+
+    def test_payee_existing_pages_only_correct_two_pairs_and_preserve_every_other_grant(self):
+        self.payee_fixture(pages=True)
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.executemany("INSERT INTO sys_role_menu VALUES(%s,%s)", [(100,9203),(103,9204),(100,9500),(102,9400)])
+                # Missing unrelated optional grants must not be newly added to a configured role.
+                cur.execute("DELETE FROM sys_role_menu WHERE role_id=103 AND menu_id IN(9201,9206)")
+                cur.execute("DELETE FROM sys_role_menu WHERE role_id=100 AND menu_id=9204")
+        finally:
+            connection.close()
+        before = self.payee_grants()
+        expected = (before - {(100,9203),(103,9204)}) | {(100,9204),(103,9203)}
+        self.assertEqual((True, []), self.apply_payee_forward())
+        self.assertEqual(expected, self.payee_grants())
+        self.assertNotIn((103,9201), self.payee_grants())
+        self.assertNotIn((103,9206), self.payee_grants())
+        self.assertEqual((True, []), self.apply_payee_forward())
+        self.assertEqual(expected, self.payee_grants())
+
+    def test_payee_account_bearing_zero_page_roles_are_not_bulk_initialized(self):
+        self.payee_fixture(account=True)
+        before = self.payee_grants()
+        self.assertEqual((True, []), self.apply_payee_forward())
+        self.assertEqual(before, self.payee_grants())
+
+    def test_payee_missing_menu_or_duplicate_role_rejects_before_any_grant_change(self):
+        self.payee_fixture()
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("DELETE FROM sys_menu WHERE menu_id=9203")
+        finally:
+            connection.close()
+        before = self.payee_grants()
+        ok, results = self.apply_payee_forward()
+        self.assertFalse(ok)
+        self.assertEqual('TRANSACTION', results[0][2])
+        self.assertEqual(before, self.payee_grants())
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("INSERT INTO sys_menu(menu_id,parent_id,menu_type,perms,menu_name,path,visible,status) VALUES(9203,9100,'F','business:clubpayee:verify','owned','owned','0','0')")
+                cur.execute("INSERT INTO sys_role(role_id,role_name,role_key,role_sort,status,del_flag) VALUES(104,'duplicate','cy_operator',1,'0','0')")
+        finally:
+            connection.close()
+        self.assertFalse(self.apply_payee_forward()[0])
+        self.assertEqual(before, self.payee_grants())
+
+    def test_payee_late_actual_sql_error_rolls_back_all_initialization_and_pair_changes(self):
+        import tempfile
+        self.payee_fixture(pages=True)
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.executemany("INSERT INTO sys_role_menu VALUES(%s,%s)", [(100,9203),(103,9204)])
+        finally:
+            connection.close()
+        before = self.payee_grants()
+        sql = self.PAYEE_FORWARD.read_text().replace("DROP TEMPORARY TABLE tmp_cy_payee_preserved;",
+            "INSERT INTO tmp_cy_payee_guard(id) VALUES(1);\nDROP TEMPORARY TABLE tmp_cy_payee_preserved;")
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "owned-late-error.sql"
+            path.write_text(sql)
+            self.assertFalse(self.apply_payee_forward(path)[0])
+        self.assertEqual(before, self.payee_grants())
+
+
 
 class RetentionJobRegistrationMysqlIntegrationTest(unittest.TestCase):
     """Exercise the real forward through the fresh-schema runner on a tiny owned table."""
