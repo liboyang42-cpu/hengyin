@@ -353,6 +353,8 @@ Component({
     reportTargetType: '',
     reportTargetId: '',
     reportTitle: '举报',
+    correctionShow: false,
+    correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -1638,6 +1640,18 @@ Component({
 
   onReportClose: function () {
     this.setData({ reportShow: false });
+  },
+
+  // BL-67:商家公开主页「信息纠错」(问题上报,纯文字),走纠错半屏
+  onMerchantCorrection: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ correctionShow: true, correctionMerchantId: String(merchantId) });
+  },
+
+  onCorrectionClose: function () {
+    this.setData({ correctionShow: false });
   },
 
   onShareProfile: function () {

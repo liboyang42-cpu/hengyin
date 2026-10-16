@@ -603,6 +603,8 @@
   <cy-cell wx:if="{{!isSelf && !subjectIsMerchant}}" title="举报" arrow="{{false}}" bind:tap="onReportMember" />
   <!-- BL-33:商家公开主页举报该商家(targetType=MERCHANT,targetId=商家档案主键 subjectMerchant.id)。 -->
   <cy-cell wx:if="{{!isSelf && subjectIsMerchant && subjectMerchant.id}}" title="举报" arrow="{{false}}" bind:tap="onReportMerchant" />
+  <!-- BL-67:商家公开主页信息纠错(问题上报,merchantId=商家档案主键 subjectMerchant.id)。 -->
+  <cy-cell wx:if="{{!isSelf && subjectIsMerchant && subjectMerchant.id}}" title="信息纠错" arrow="{{false}}" bind:tap="onMerchantCorrection" />
   <!-- CU-M-43(2026-09-23 用户裁决 B):「屏蔽」暂不开放。原入口只弹一句「已屏蔽」,
        既不写关系数据也不落本地态,重进页面一切照旧 —— 是句假成功。写口接通前这里不放
        这条 cell,也不用「暂未开放」的理由行占位(不可点的行读起来仍像一个能用的功能)。 -->
@@ -610,6 +612,8 @@
 </view>
 
 <cy-report-sheet wx:if="{{!isSelf}}" show="{{reportShow}}" target-type="{{reportTargetType}}" target-id="{{reportTargetId}}" title="{{reportTitle}}" bind:close="onReportClose" />
+<!-- 挂在 .pc-page 外,照 cy-coop-invite-sheet 包一层主题,商家日间页才取得到 theme-merchant token。 -->
+<view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-merchant-correction-sheet wx:if="{{!isSelf}}" show="{{correctionShow}}" merchant-id="{{correctionMerchantId}}" bind:close="onCorrectionClose" /></view>
 
 <!-- [P0-2] ③ 选章核销:一商家在同一路线承接多章是常态 ⇒ 交集≥2 时由他自己选,
      选完调 scan_qr_code_chapter。不用 wx.showActionSheet —— 它的 itemList 上限 6 项,

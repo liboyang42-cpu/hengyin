@@ -21,6 +21,7 @@
     "cy-npc-avatar": "/components/cy/npc-avatar/index",
     "cy-npc-chat": "/components/cy/npc-chat/index",
     "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index",
-    "cy-report-sheet": "/components/cy/report-sheet/index"
+    "cy-report-sheet": "/components/cy/report-sheet/index",
+    "cy-merchant-correction-sheet": "/components/cy/merchant-correction-sheet/index"
   }
 }
