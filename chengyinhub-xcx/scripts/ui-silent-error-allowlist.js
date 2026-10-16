@@ -97,7 +97,7 @@ module.exports = [
   { file: 'subpackageA/components/scene-how-to-play-detail/index.js', count: 1, reason: '玩法说明读取失败会清理旧内容并设置 empty=true/loading=false，组件显示可见空错态。' },
   { file: 'subpackageB/pages/im/chat/index.js', count: 6, reason: '消息首载、更多消息与路线选择三路失败分别落到 loadErrorText、loadMoreError、routeError，当前聊天页均可见；B包新增 send-receipt 原请求只读回读(失败保持该气泡原失败/未知态与手动重试，不造新请求)与轮询内路线卡隐私重核(失败保持「路线已不可用」占位，每轮 toast 会刷屏)。BL-87 处理结果半屏回读审核记录(失败含 403/404 由半屏内 cy-inline-error 如实回显并可重试)。' },
   { file: 'subpackageA/pages/myproject/index.js', count: 6, reason: '我的项目读取失败落到 projectState/projectErrorMsg，模板上下架失败显式 toast；取消活动/主题前的退款人数预览(C8-05)失败显式 toast 且不弹确认，新增提交广场失败同样显式 toast 并释放操作锁，BL-120 另存为模板失败按后端文案显式 toast 并释放在途锁，六路都可见可重试。' },
-  { file: 'subpackageB/pages/im/list/index.js', count: 2, reason: '会话列表首载失败落到 error/errorMsg，有快照时落到 staleError，页内显示重试或保留内容提示；系统 tab 举报进度通知读取失败落 reportNoticeError（cy-inline-error 带重试），不影响会话列表。' },
+  { file: 'subpackageB/pages/im/list/index.js', count: 3, reason: '会话列表首载失败落到 error/errorMsg，有快照时落到 staleError，页内显示重试或保留内容提示；系统 tab 举报进度通知读取失败落 reportNoticeError（cy-inline-error 带重试），不影响会话列表；BL-31 点开举报进度后标记已读失败，落 reportNoticeError 局部提示，红点保留，不挡跳转。' },
   { file: 'subpackageMember/complaint/index.js', count: 2, reason: '投诉对象读取失败落到 errorMsg，投诉提交失败落到 submitError/submitErrorKind，两处均在页内显示。' },
   { file: 'subpackageMember/components/scene-member-participation-detail/index.js', count: 1, reason: '参与详情回包异常或网络失败会切换 loadState=error 并显示 loadErrorText 与重试入口。' },
   { file: 'subpackageMember/mytemplate/mytemplate.js', count: 1, reason: '我的模板首载与加载更多失败分别落到 errorMsg/staleError 或 loadMoreError，列表保留可见反馈。' },
