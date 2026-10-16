@@ -717,7 +717,7 @@ Component({
     var epoch = this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
     if (!Number.isInteger(id) || id <= 0) return;
     app.sendRequest({
-      url: '/api/community-trust/safety/merchants/' + id,
+      url: `/api/community-trust/safety/merchants/${id}`,
       method: 'GET',
       hideLoading: true,
       silentError: true,
