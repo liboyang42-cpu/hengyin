@@ -60,11 +60,15 @@
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
       "owner": "CORE/C03",
-      "worker": "feature_points_rules_sol",
-      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
+      "worker": "/root/topic_like_cancel_sol",
+      "state": "AUTHORIZED_NULL_ID_REPAIR_PENDING_WRITER_START",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7"
+      "transfer_evidence": "Original C03 writer source frozen0d in global ledger; no live original writer. Current publice0 differsfrom0d onlyApiTopic.topicLike/newtest/doc. Destination worktree local1ec identical publice0 tree and clean; sole new writer starts after public grant.",
+      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "previous_worker": "feature_points_rules_sol",
+      "latest_task": "OWN-C03-14",
+      "source_base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "exact_scope": "SplitA only: explicit nonempty collaboratorIds containing null or <=0 cannot satisfy existing edit-detail caller positive-ID shape. Existing draft restore preserves such list and save sends it unchanged. Validate before any aggregate write in create and FULL update; fail entire write with existing IllegalArgumentException/default AjaxResult500 path and short safe message, do not silently filter/clear attribution. Keep omitted list/[]/existing omission guard and WHITELIST behavior. Preserve repeated positive IDs and order; no membership/permission/invitation/DDL rule."
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
       "owner": "CORE/C03",
@@ -2682,6 +2686,30 @@
       "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
       "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
       "real_database_verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java": {
+      "owner": "CORE/C03",
+      "worker": "/root/topic_like_cancel_sol",
+      "state": "AUTHORIZED_PENDING_WRITER_START",
+      "base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "scope": "Null/nonpositive inputguards only, preserve duplicatepositive IDs and oldaggregate contracts",
+      "verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+      "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "scope": "POI selectReferenceOptions usesCOALESCE(status,1)=1 whereas actual save snapshot and established player-public rule requirestatus=1. Original owner confirm caller/producers then align options only tostatus=1; preservecity_code/order/limit/projection. Do not broaden snapshot or automatically changeunusedcountReferenceTarget.",
+      "verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java": {
+      "owner": "EXTRA6/E01",
+      "worker": "original E01 author",
+      "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+      "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "scope": "Trace actual activity creation/publish/cancel/end/sale cutoff and existing waitlistjoin contract. If unique existing invariant provesbug minimal source repair within original ownership; else precise unresolved field/state decision. Do notguess sale cutoff semantics or put new predicates on sharedseriesPolicy harming existingOFFERED expiry/payment/release.",
+      "verification": "NOT_RUN"
     }
   },
   "analytics_third_pending": {
@@ -3673,5 +3701,13 @@
     "manual_ci_trigger_or_repeat": false,
     "changes_to_212_ci_or_network": false,
     "no_new_work_or_rerun_task": true
+  },
+  "resumed_existing_items": {
+    "packet": "RESUME_KNOWN_BLOCKERS.json",
+    "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
+    "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
+    "third": "No new confirmedREADY in originalscope; no inventedrunning count",
+    "current_source_writers": 0,
+    "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
   }
 }

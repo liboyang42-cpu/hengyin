@@ -2898,6 +2898,14 @@
       "manual_ci_trigger_or_repeat": false,
       "changes_to_212_ci_or_network": false,
       "no_new_work_or_rerun_task": true
+    },
+    "resumed_existing_items": {
+      "packet": "RESUME_KNOWN_BLOCKERS.json",
+      "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
+      "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
+      "third": "No new confirmedREADY in originalscope; no inventedrunning count",
+      "current_source_writers": 0,
+      "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
     }
   },
   "followup_lanes": [

@@ -50,12 +50,12 @@
       "team": "CORE",
       "id": "OWN-C03-14",
       "title": "协作者空值及重复输入按既有合同收口",
-      "state": "BLOCKED_DECISION",
+      "state": "PARTIALLY_UNBLOCKED_NULL_ID_REPAIR",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
       ],
-      "detail": "BLOCKED_DECISION",
-      "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      "detail": "Existing edit-detail positiveID shape plus real draft restore/save; preserve duplicate positiveIDs",
+      "status": "EXACT_CORE_C03_WRITER_GRANT_RESUME_PACKET"
     },
     {
       "team": "CORE",
@@ -104,24 +104,24 @@
       "team": "EXTRA",
       "id": "E02-12",
       "title": "POI选项与保存状态条件一致性",
-      "state": "BLOCKED_DECISION",
+      "state": "READY_NARROW_SOURCE_REPAIR_PENDING_ORIGINAL_OWNER_ACK",
       "paths": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "detail": "实际两条生产SQL条件不同，需沿POI表定义/创建链确认输入",
-      "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      "detail": "AlignPOI option status1 with existing save snapshot/public rule; no broadeningsnapshot",
+      "status": "EXISTING_EXTRA_E02_SCOPE"
     },
     {
       "team": "EXTRA",
       "id": "E01-13",
       "title": "候补加入与售卖活动状态合同",
-      "state": "BLOCKED_DECISION",
+      "state": "TARGETED_CONTRACT_RECHECK_PENDING_ORIGINAL_OWNER_ACK",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
       "detail": "seriesPolicyByActivity只club/del_flag，join未直接查发布/结束/售卖截止；已有fullActivity用例未覆盖",
-      "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      "status": "EXISTING_EXTRA_E01_SCOPE"
     },
     {
       "team": "EXTRA",
@@ -1111,5 +1111,13 @@
     "manual_ci_trigger_or_repeat": false,
     "changes_to_212_ci_or_network": false,
     "no_new_work_or_rerun_task": true
+  },
+  "resumed_existing_items": {
+    "packet": "RESUME_KNOWN_BLOCKERS.json",
+    "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
+    "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
+    "third": "No new confirmedREADY in originalscope; no inventedrunning count",
+    "current_source_writers": 0,
+    "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
   }
 }
