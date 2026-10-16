@@ -4,11 +4,11 @@
 
 E01-19（EXTRA旧packet，不另造bugID）已由正式移交的CORE/C03 writer完成。公共源码 **`e0e3f517b8e6deb26ed3697a00d38ae14f015e76` / PR44**，直接父`0d63043ad06775bc3dc52fb925620ef36d1081a7`。生产仅ApiTopicController.topicLike一处条件：显式type0取消DELETE0也成功；legacy空type toggle、负数失败、异常传播、member/topic过滤及选中ID不变。新增5个有界读屏障/负控回归源码，旧测试/Service/Mapper不改。
 
-状态 **SOURCE_DELIVERED_UNVERIFIED / NOT_RUN**；作者已停写、锁保留，实际源码writer0，无新已证实READY项，不凑50/6线。根因、精确3路径与正式旧作者停写/新作者移交见[E01_19_SOURCE_CLAIM](E01_19_SOURCE_CLAIM.json)。
+状态 **源码已交；本地普通2类10实际PASS，公开报告待发布，真实数据库/HTTP/业务未验**；作者已停写、锁保留，实际源码writer0，无新已证实READY项，不凑50/6线。根因、精确3路径与正式旧作者停写/新作者移交见[E01_19_SOURCE_CLAIM](E01_19_SOURCE_CLAIM.json)。
 
 ## 三队新候选与后续派工
 
-最新公共源码分别CORE e0e3f517（E01-19，新普通10声明）、EXTRA faefbaf8（E02-24评论重放父目标绑定，新普通60声明）、第三bde356f3（STAT02年份/GROW02午夜时点，新普通28声明）；均新候选NOT_RUN，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
+最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA faefbaf8（E02-24评论重放父目标绑定，新普通60声明）、第三bde356f3（STAT02年份/GROW02午夜时点，新普通28声明）；均新候选NOT_RUN，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
 
 E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：仅新Mapper方法与catch当前读、原SQL projection/WHERE、两唯一测试及说明，见[E02_25_SOURCE_GRANT](E02_25_SOURCE_GRANT.json)。不改初始读/全局隔离/权限/DDL，保E02-24父目标绑定；待原owner实际ACK，不假称已运行。真实VPS是否RR未知，不把条件触发说成现场已复现。
 
@@ -16,11 +16,11 @@ E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：
 
 ## 新候选本地验证进行中（开发是否有READY单独记录）
 
-本地最新已回CORE e0e3f517正在212编译/定向验证，尚无结果；EXTRA faef与第三bde已备包串行排队。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
+本地最新已回CORE e0e3f517普通10项PASS；EXTRA faef与第三bde已进入同守卫串行批次，未接新结果。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
 
 ## 本地下一项验证
 
-唯一实际验证者：本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`。新候选最小普通套件：TopicLikeExplicitCancelConcurrencyTest新5＋ApiTopicLikeDirectionTest既有5，合计10为源码声明、实际执行未知。命令/前提见[移交JSON](BACKEND_VALIDATION_VPS_HANDOFF.json)的core_latest_delta_validation；只按已批准212准入，Cloud不执行，不重跑全483/157。无新DB/Redis/DDL前提；真实SQL交错与运行HTTP另验。
+唯一实际验证者：本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`。新候选普通套件TopicLikeExplicitCancelConcurrencyTest5＋ApiTopicLikeDirectionTest5，已由本地实际执行10/10通过，0失败/错误/跳过，fresh精确2 XML、212guard0及清理已回报；新公开报告待本地同批发布，不能声称C00已读。命令/前提见[移交JSON](BACKEND_VALIDATION_VPS_HANDOFF.json)的core_latest_delta_validation；只按已批准212准入，Cloud不执行，不重跑全483/157。无新DB/Redis/DDL前提；真实SQL交错与运行HTTP另验。
 
 ## 各候选结果边界
 
@@ -31,7 +31,7 @@ E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：
 | e72eff7e | EXTRA原2失败类56项针对性PASS | 后续源码、新305全跑 |
 | b45664de | EXTRA E06单类5项针对性PASS | 新76全跑、真库/HTTP/业务 |
 | 2babbe28 | 第三队编译＋普通2类24项PASS | 11真MySQL仍NOT_RUN、真实并发/HTTP |
-| e0e3f517 | 本次仅源码交付、5新回归声明NOT_RUN | 新候选编译/普通套件/SQL/HTTP均未验 |
+| e0e3f517 | 本地普通2类10实际PASS、公开报告待发布 | 真SQL/HTTP/业务均未验 |
 
 原69c初始化失败、f7的483失败、474的305失败、ed598的76项1失败，以及两次212锁拒绝均保留独立证据；对应失败已按各自针对性复测关闭，不改写原失败为PASS。[VPS_REPAIR_ROUND_1](VPS_REPAIR_ROUND_1.json)及PR24保留原报告/哈希。
 

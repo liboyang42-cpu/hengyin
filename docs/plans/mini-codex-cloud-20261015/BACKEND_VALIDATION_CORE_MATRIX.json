@@ -2380,7 +2380,7 @@
   "inventory_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
   "inventory_note": "Historical0d full-source matrix retained; latest production/test delta and minimal2class10declared suite in latest_source_delta. No old results inherited.",
   "execution_owner": "LOCAL_VPS_COORDINATOR/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
-  "status": "NEW_CORE_E01_19_DELTA_NOT_RUN",
+  "status": "CORE_E01_19_ORDINARY10_PASS_LOCAL_REPORTED_PUBLIC_REPORT_PENDING",
   "repair_round_1": "VPS_REPAIR_ROUND_1.json",
   "latest_regression_history": {
     "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
@@ -2559,5 +2559,44 @@
     "runtime_HTTP": "NOT_RUN",
     "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
     "Cloud_execution": false
+  },
+  "latest_core_e01_19_validation": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 10,
+    "passed": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "classes": [
+      "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+      "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+    ],
+    "class_test_counts": [
+      5,
+      5
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:35:37Z",
+    "finished_at": "2026-10-16T03:38:22Z",
+    "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+    "cleanup": "Local explicitly confirmed exact container cleaned with chengyin-aws filter",
+    "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": null,
+    "public_evidence_status": "Pending local batch publication; direct actual verifier result, C00 has not read new public raw report",
+    "full483_rerun": false,
+    "not_accepted": [
+      "real MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "merge/deployment/migrations"
+    ],
+    "cloud_manual_runs": 0
   }
 }

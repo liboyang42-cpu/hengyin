@@ -1,3 +1,7 @@
+## E01-19普通定向结果更新
+
+CORE e0e3f517b8e6deb26ed3697a00d38ae14f015e76已获本地VPS212普通2类10实际PASS（0failure/error/skip，fresh精确类集、guard0/completed、精确容器清理）；只按本地直接实际回报签收，PR24新公开证据待同批发布，evidence_commit=null，不编造公开报告或说已读。旧483不迁移，真MySQL/Redis、HTTP、设备/业务、合并部署仍未验。EXTRA faef/第三bde串行验证进行中，不影响原E02按已发精确grant继续RR源码；ACK未到不虚报worker运行。
+
 ## E01-19 显式取消收藏的并发ACK修复
 
 公共源码 `e0e3f517b8e6deb26ed3697a00d38ae14f015e76` / PR44，原0d之上一小提交，源码作者CORE/C03，SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。`POST /api/topic/like` 显式type0两请求都读到旧行而DELETE1/0时，第二个body.code由500改为200、msg“取消点赞成功”，符合既有方向幂等合同；HTTP方法/路径/参数/字段/账号过滤/目标ID不变。空type旧toggle的DELETE0仍失败，负数失败、数据库异常仍传播，不增加自动重试或端侧写权。
