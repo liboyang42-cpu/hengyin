@@ -2,7 +2,7 @@
 
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable；原E02/E04均gpt-6.1-sol，本轮最多2业务写者，E01仅只读新包审阅。工作树 `/workspace/hengyin-extra-*` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
 
-当前已读控制 `225b59efa72bf54423fc3a5f6069bff6cc72353e` 的BUSINESS_DECISIONS_IMPLEMENTATION_GRANT及源锁，真人3决定已实现，不再等待/询问同一授权。最新完整应用候选 **`923170abd8e468d62eb8404b16b990609a4da42a`**；三个公共源包如下，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，旧PASS不继承。
+当前已读控制 `225b59efa72bf54423fc3a5f6069bff6cc72353e` 的BUSINESS_DECISIONS_IMPLEMENTATION_GRANT及源锁，真人3决定已实现，不再等待/询问同一授权。最新完整候选 **`b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf`**（仅两fixture修复，生产同923170ab）；三个公共源包如下，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，旧PASS不继承。
 
 | 包 | 完整源SHA | 直接父SHA | 最小普通计划 |
 |---|---|---|---|
@@ -396,3 +396,12 @@ A独立候选准入拒绝证据f3569c2b5f04912ba75b3f0ead8c916a94fd2743继续保
 首次13:09原run/result逐字另存为unit-run-admission-refused-130903Z.json与unit-guard-result-admission-refused-130903Z.json；公共summary保留两次哈希。本队记录公开manifest，不自行访问VPS或重算远端原件。第二次run哈希b50e351be93475eb9f4c08b32c5077424935b1f5ddcd15ffa4ce6e8607cab09b、result哈希edf47afdf0d402c49ea44f41a7b4f4cc25be1e6a453686601e206e1269d051bf；精确chengyin-aws容器过滤由本地核为空。
 
 应用源码继续冻结923170abd8e468d62eb8404b16b990609a4da42a；六类35声明仍待验，真库新5+旧3未跑、迁移未执行、不继承旧PASS。READY0/writer0/修复0，不凑任务、不Cloud补测/CI、不新增入口或绕门槛、不停他人。只等待资源自然满足现有212正式准入，不把预检当测试启动。
+
+
+## 原E02单槽修复H2 ALIAS引用：源码已交、复测待本地
+
+已实际核读公共3489ce72995b840af2196deab80fa8f2a88e527c/VPS_EXTRA_923170ab/README.md及summary.json：原923170ab在13:54:12Z—13:57:02Z六类35实际28PASS/0FAIL/7ERROR/0SKIP，fresh6XML精确；guard1 child_command_failed。错误均源于两fixture的CREATE ALIAS JSON_TYPE FOR单引号字符串被现有H2 1.4.200按identifier语法拒绝；相关SQL业务断言未到达，不归为生产MySQL错误或7个新BUG。E04两类11普通通过只属原923，不等实库事务验收。两次0项准入拒绝历史保留，当前实际结果优先。公开manifest哈希只引用、不称Cloud取得远端原件重算。
+
+原external_e02唯一修复作者已完成停写：child992b9ea146db16f9c9a12f4041925e2c6b386950（父7eacc598f047a3d40fabed268059dfffbda0a590）；完整rolling frozen b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf（直接父54fdc951a59467cd93b6ba49cf87ae890faf2500）。只E02_23Test.java:177-178与ViewCreativeSquareCommunityPolicyMyBatisTest.java:106-107四行，把JSON_TYPE/JSON_CONTAINS FOR后的Java方法名改SQL双引号（Java源码转义）。实际H2 Parser FOR分支读取标识符，仓库ClubPostMediaReviewOutboxMapperMyBatisTest亦使用同语法。全部6+2方法/负控/断言/helper/真实生产XML/依赖不变，原child与923两文件基线相同。
+
+本修复SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。已PR24#6217153817及PR16#6217154148交完整SHA/父/两路径/根因/命令；本地只复测E02_23Test6与ViewCreativeSquareCommunityPolicyMyBatisTest2共8声明调用，不重跑已过四类或全35、不转移原28PASS到新SHA。原失败历史永久保留；C00唯一总账，父仅维护本队三账。E04不占修复线；实际源writer0/READY0，唯一修复case待本地回执。Cloud未编译测试/触发CI/VPS，真库新5+旧3未跑、迁移未执行，不新增入口或绕门槛。
