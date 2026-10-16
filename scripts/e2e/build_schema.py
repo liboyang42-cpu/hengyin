@@ -409,6 +409,10 @@ def main():
     c = connect(a, a.schema)
     try:
         cur = c.cursor()
+        cur.execute("SELECT @@SESSION.transaction_isolation")
+        session_isolation = (cur.fetchone() or [None])[0]
+        if session_isolation not in {"READ-UNCOMMITTED", "READ-COMMITTED", "REPEATABLE-READ", "SERIALIZABLE"}:
+            raise RuntimeError("unknown initial session isolation; stop schema rebuild")
         results = []
         observations = []
         t0 = time.time()
@@ -437,6 +441,17 @@ def main():
         for m in ordered:
             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
                           keep_going=a.keep_going, schema_only=True, observations=observations)
+            # A file may need READ COMMITTED internally; later range-lock guards must not inherit it.
+            server_status = getattr(c, "server_status", None)
+            if not c.get_autocommit() or not isinstance(server_status, int) or server_status & 1:
+                raise RuntimeError("session isolation restore requires an idle autocommit connection; stop schema rebuild")
+            try:
+                cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))
+                cur.execute("SELECT @@SESSION.transaction_isolation")
+                if (cur.fetchone() or [None])[0] != session_isolation:
+                    raise RuntimeError("session isolation readback mismatch")
+            except Exception as failure:
+                raise RuntimeError("session isolation restore failed; stop schema rebuild") from failure
             if not ok and not a.keep_going:
                 break
         cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))

@@ -1,6 +1,13 @@
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { memberId, failureStatus, retryLogin } = require('../../../../utils/session/login-reload.js');
+
+function galleryIdentity() {
+  const owner = memberId(app);
+  const authorization = typeof app.getAuthorization === 'function' ? app.getAuthorization() : (app.globalData || {}).authorization;
+  return owner && authorization ? JSON.stringify([owner, authorization]) : '';
+}
 
 function requestText(error, fallback) {
   if (app.getRequestErrorMessage) return app.getRequestErrorMessage(error, fallback);
@@ -46,14 +53,73 @@ Page({
     });
     this.load();
   },
-  onShow() { merchantTheme.merchantPageShow && merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore(); },
+  onShow() {
+    this._hidden = false;
+    merchantTheme.merchantPageShow && merchantTheme.merchantPageShow();
+    const changed = this._syncIdentity();
+    if (changed) {
+      const gate = this.selectComponent && this.selectComponent('#cy-access-gate');
+      if (gate && gate.check) gate.check();
+    }
+    if (this._saveOutcome) {
+      const settle = this._saveOutcome; this._saveOutcome = null; settle();
+    }
+    if (this._galleryIdentity && (changed || this._resumeRead)) this.load();
+  },
+  onHide() {
+    this._hidden = true;
+    this._loginEpoch = (this._loginEpoch || 0) + 1;
+    this._resumeRead = this._resumeRead || this._loadInFlight;
+    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._loadInFlight = false;
+    this.setData({ refreshing: false });
+    merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore();
+  },
   onUnload() {
+    this._unloaded = true;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
     this._saveEpoch = (this._saveEpoch || 0) + 1;
+    this._loginEpoch = (this._loginEpoch || 0) + 1;
     this._loadInFlight = false;
+    this._saveOutcome = null;
     if (this._successTimer) clearTimeout(this._successTimer);
     merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore();
+  },
+
+  _syncIdentity() {
+    const owner = galleryIdentity();
+    if (owner === this._galleryIdentity) return false;
+    this._galleryIdentity = owner;
+    this._identityEpoch = (this._identityEpoch || 0) + 1;
+    this._dataIdentity = null;
+    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._saveEpoch = (this._saveEpoch || 0) + 1;
+    this._loginEpoch = (this._loginEpoch || 0) + 1;
+    this._loadInFlight = false;
+    this._resumeRead = false;
+    this._saveOutcome = null;
+    if (this._successTimer) clearTimeout(this._successTimer);
+    this.setData({ gallery: [], dirty: false, saving: false, refreshing: false,
+      loadState: owner ? 'loading' : 'login', loadErrorKind: '', loadError: '',
+      saveErrorKind: '', saveError: '', saveReceipt: '', discardVisible: false });
+    return true;
+  },
+  _currentIdentity(owner) {
+    if (this._unloaded) return false;
+    if (galleryIdentity() !== this._galleryIdentity) {
+      this._syncIdentity();
+      if (!this._hidden && this._galleryIdentity) this.load();
+      return false;
+    }
+    return !!owner && owner === this._galleryIdentity;
+  },
+  _canEdit() {
+    return this._currentIdentity(this._dataIdentity) && !this._hidden
+      && this.data.loadState === 'ready' && !this.data.saving && !this.data.refreshing;
+  },
+  onLogin() {
+    const epoch = this._loginEpoch || 0;
+    retryLogin(this, app, () => { if (epoch === (this._loginEpoch || 0)) this.load(); });
   },
 
   keepEditing() { this.setData({discardVisible:false}); },
@@ -66,7 +132,11 @@ Page({
   },
 
   load() {
-    if (this._loadInFlight) return;
+    if (this._unloaded || this._hidden) return;
+    this._syncIdentity();
+    if (!this._galleryIdentity || this._loadInFlight || this.data.saving) return;
+    this._resumeRead = false;
+    const owner = this._galleryIdentity;
     const that = this;
     const epoch = (this._loadEpoch || 0) + 1;
     this._loadEpoch = epoch;
@@ -74,7 +144,7 @@ Page({
     const hasOldContent = this.data.loadState === 'ready';
     const isCurrent = function () {
       if (epoch !== that._loadEpoch) return false;
-      return true;
+      return !that._hidden && that._currentIdentity(owner);
     };
     const finish = function () {
       if (!isCurrent()) return false;
@@ -83,10 +153,12 @@ Page({
     };
     const fail = function (error, fallback) {
       if (!isCurrent()) return;
+      const status = failureStatus(error);
       const failure = classifyFailure(error, fallback);
-      if (failure.kind === 'permission') {
+      if (status === 401 || status === 2 || failure.kind === 'permission') {
         if (!finish()) return;
-        that.setData({ refreshing: false, loadState: 'permission', loadErrorKind: '', loadError: '', gallery: [], dirty: false });
+        that._dataIdentity = null;
+        that.setData({ refreshing: false, loadState: status === 401 || status === 2 ? 'login' : 'permission', loadErrorKind: '', loadError: '', gallery: [], dirty: false });
       } else if (hasOldContent) {
         if (!finish()) return;
         that.setData({ refreshing: false, loadState: 'ready', loadErrorKind: failure.kind, loadError: failure.text });
@@ -107,7 +179,7 @@ Page({
         if (!isCurrent()) return;
         const ok = res.code === '200' || res.code === 200;
         if (!ok) return fail(res, '门店相册暂时没能加载，请重试。');
-        if (typeof res.data !== 'object' || Array.isArray(res.data)) {
+        if (!res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
           return fail({ msg: '相册数据不完整' }, '相册数据不完整，请重试。');
         }
         const memberId = Number(res.data.memberId);
@@ -120,9 +192,11 @@ Page({
         }
         if (!Array.isArray(gallery)) return fail({ msg: '相册数据格式异常' }, '相册数据格式异常');
         if (!finish()) return;
+        that._dataIdentity = owner;
         that.setData({ refreshing: false, gallery: gallery, loadState: 'ready', loadErrorKind: '', loadError: '', dirty: false });
       },
-      fail(error) { fail(error, '门店相册暂时没能加载，请重试。'); }
+      fail(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册暂时没能加载，请重试。'); },
+      successStatusAbnormal(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册暂时没能加载，请重试。'); }
     });
   },
 
@@ -130,18 +204,21 @@ Page({
   goApply() { wx.redirectTo({ url: '/pages/merchant/apply/index' }); },
 
   addGallery() {
-    if (this.data.saving || this.data.refreshing) return;
+    if (!this._canEdit()) return;
     const remain = 9 - this.data.gallery.length;
     if (remain <= 0) return toast('最多 9 张');
     const that = this;
+    const owner = this._dataIdentity;
+    const epoch = this._identityEpoch;
     app.chooseImage(function (images) {
-      if (!images || !images.length || that.data.saving || that.data.refreshing) return;
+      if (!that._currentIdentity(owner) || that._hidden || epoch !== that._identityEpoch
+          || !images || !images.length || !that._canEdit()) return;
       that.setData({ gallery: that.data.gallery.concat(images).slice(0, 9), dirty: true });
     }, remain, { cropScale: '16:9' });
   },
 
   removeGallery(e) {
-    if (this.data.saving || this.data.refreshing) return;
+    if (!this._canEdit()) return;
     const rawIndex = e && e.currentTarget && e.currentTarget.dataset
       ? e.currentTarget.dataset.index
       : undefined;
@@ -157,7 +234,8 @@ Page({
   },
 
   save() {
-    if (this.data.saving || this.data.refreshing || !this.data.dirty) return;
+    if (!this._canEdit() || !this.data.dirty) return;
+    const owner = this._dataIdentity;
     if (this._loadInFlight) {
       this._loadEpoch = (this._loadEpoch || 0) + 1;
       this._loadInFlight = false;
@@ -167,12 +245,25 @@ Page({
     this._saveEpoch = epoch;
     const isCurrent = function () {
       if (epoch !== that._saveEpoch) return false;
-      return true;
+      return that._currentIdentity(owner);
+    };
+    const settle = function (apply) {
+      if (!isCurrent()) return;
+      if (that._hidden) { that._saveOutcome = () => { if (isCurrent()) apply(); }; return; }
+      apply();
     };
     const fail = function (error) {
-      if (!isCurrent()) return;
-      const failure = classifyFailure(error, '相册保存失败');
-      that.setData({ saving: false, saveErrorKind: failure.kind, saveError: failure.text });
+      settle(() => {
+        const failure = classifyFailure(error, '相册保存失败');
+        const status = failureStatus(error);
+        if (status === 401 || status === 2 || failure.kind === 'permission') {
+          that._dataIdentity = null;
+          that.setData({ gallery: [], dirty: false, saving: false,
+            loadState: status === 401 || status === 2 ? 'login' : 'permission', saveErrorKind: '', saveError: '' });
+          return;
+        }
+        that.setData({ saving: false, saveErrorKind: failure.kind, saveError: failure.text });
+      });
     };
     this.setData({ saving: true, refreshing: false, saveErrorKind: '', saveError: '', saveReceipt: '' });
     app.sendRequest({
@@ -182,16 +273,19 @@ Page({
       success(res) {
         if (!isCurrent()) return;
         if (res.code === '200' || res.code === 200) {
-          that.setData({ saving: false, dirty: false, saveErrorKind: '', saveError: '', saveReceipt: '门店相册已保存' });
-          toast.success('相册已保存');
-          that._successTimer = setTimeout(function () {
-            if (isCurrent()) that.onNavBack();
-          }, 400);
+          settle(() => {
+            that.setData({ saving: false, dirty: false, saveErrorKind: '', saveError: '', saveReceipt: '门店相册已保存' });
+            toast.success('相册已保存');
+            that._successTimer = setTimeout(function () {
+              if (isCurrent() && !that._hidden) that.onNavBack();
+            }, 400);
+          });
         } else {
           fail(res);
         }
       },
-      fail(error) { fail(error); }
+      fail(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error); },
+      successStatusAbnormal(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error); }
     });
   }
 });
