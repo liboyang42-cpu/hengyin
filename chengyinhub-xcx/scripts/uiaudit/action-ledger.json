@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4643,
+  "controlCount": 4646,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -124874,6 +124874,33 @@
           ]
         },
         {
+          "route": "subpackageA/pages/myproject/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "subpackageA/pages/myproject/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "subpackageA/pages/myproject/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "subpackageB/pages/im/chat/index",
           "segments": [
             {
@@ -124933,6 +124960,24 @@
             {
               "selector": "cy-empty.cy-fill-state",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/complaint/index",
+          "segments": [
+            {
+              "selector": "cy-empty.cy-fill-state",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/complaint/index",
+          "segments": [
+            {
+              "selector": "cy-empty.cy-fill-state",
+              "index": 2
             }
           ]
         },
@@ -1002399,7 +1002444,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:110:catchtap:tplSubmitMarket:7",
+      "id": "subpackageA/pages/myproject/index.wxml:115:catchtap:tplSubmitMarket:8",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002422,7 +1002467,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "tplSubmitMarket",
-        "line": 110,
+        "line": 115,
         "selectorHint": ".mp-op",
         "visibleCondition": "{{item._canSubmitMarket}}",
         "disabledCondition": null,
@@ -1002512,11 +1002557,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:543"
+        "staticSource": "subpackageA/pages/myproject/index.js:603"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:111:catchtap:tplToggle:8",
+      "id": "subpackageA/pages/myproject/index.wxml:116:catchtap:tplToggle:9",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002539,7 +1002584,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "tplToggle",
-        "line": 111,
+        "line": 116,
         "selectorHint": ".mp-op",
         "visibleCondition": "{{item._canToggleMarket}}",
         "disabledCondition": null,
@@ -1002632,11 +1002677,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:569"
+        "staticSource": "subpackageA/pages/myproject/index.js:629"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:112:catchtap:tplDelete:9",
+      "id": "subpackageA/pages/myproject/index.wxml:117:catchtap:tplDelete:10",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002659,7 +1002704,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "tplDelete",
-        "line": 112,
+        "line": 117,
         "selectorHint": ".mp-op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1002701,11 +1002746,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:598"
+        "staticSource": "subpackageA/pages/myproject/index.js:658"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:127:bind:close:closeOpsSheet:11",
+      "id": "subpackageA/pages/myproject/index.wxml:133:bind:close:closeOpsSheet:12",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002728,7 +1002773,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeOpsSheet",
-        "line": 127,
+        "line": 133,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1002768,11 +1002813,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:340"
+        "staticSource": "subpackageA/pages/myproject/index.js:399"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:129:bindtap:onOpsPick:12",
+      "id": "subpackageA/pages/myproject/index.wxml:135:bindtap:onOpsPick:13",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002795,7 +1002840,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 129,
+        "line": 135,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canViewApplies}}",
         "disabledCondition": null,
@@ -1002924,11 +1002969,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:344"
+        "staticSource": "subpackageA/pages/myproject/index.js:403"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:133:bindtap:onOpsPick:13",
+      "id": "subpackageA/pages/myproject/index.wxml:139:bindtap:onOpsPick:14",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1002951,7 +1002996,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 133,
+        "line": 139,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canEdit}}",
         "disabledCondition": null,
@@ -1003080,11 +1003125,136 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:344"
+        "staticSource": "subpackageA/pages/myproject/index.js:403"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:137:bindtap:onOpsPick:14",
+      "id": "subpackageA/pages/myproject/index.wxml:14:bind:cta:onLogin:1",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onLogin",
+        "line": 14,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/access/me",
+          "/api/project/my",
+          "/api/role/info",
+          "/api/template/my-list"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/access/me",
+          "/api/project/my",
+          "/api/template/my-list"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/access/me",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/my-list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:202"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:143:bindtap:onOpsPick:15",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003107,7 +1003277,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 137,
+        "line": 143,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canToggle}}",
         "disabledCondition": null,
@@ -1003236,11 +1003406,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:344"
+        "staticSource": "subpackageA/pages/myproject/index.js:403"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:141:bindtap:onOpsPick:15",
+      "id": "subpackageA/pages/myproject/index.wxml:147:bindtap:onOpsPick:16",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003263,7 +1003433,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 141,
+        "line": 147,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canCancel}}",
         "disabledCondition": null,
@@ -1003392,11 +1003562,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:344"
+        "staticSource": "subpackageA/pages/myproject/index.js:403"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:145:bindtap:onOpsPick:16",
+      "id": "subpackageA/pages/myproject/index.wxml:151:bindtap:onOpsPick:17",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003419,7 +1003589,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 145,
+        "line": 151,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canDelete}}",
         "disabledCondition": null,
@@ -1003548,11 +1003718,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:344"
+        "staticSource": "subpackageA/pages/myproject/index.js:403"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:153:bind:alt:onDeleteItemAlt:18",
+      "id": "subpackageA/pages/myproject/index.wxml:159:bind:alt:onDeleteItemAlt:19",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003575,7 +1003745,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteItemAlt",
-        "line": 153,
+        "line": 159,
         "selectorHint": "#dcActivity",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1003684,11 +1003854,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:700"
+        "staticSource": "subpackageA/pages/myproject/index.js:760"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:153:bind:confirm:onConfirmDeleteActivity:17",
+      "id": "subpackageA/pages/myproject/index.wxml:159:bind:confirm:onConfirmDeleteActivity:18",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003711,7 +1003881,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteActivity",
-        "line": 153,
+        "line": 159,
         "selectorHint": "#dcActivity",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1003812,11 +1003982,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:611"
+        "staticSource": "subpackageA/pages/myproject/index.js:671"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:154:bind:confirm:onConfirmCancelActivity:19",
+      "id": "subpackageA/pages/myproject/index.wxml:160:bind:confirm:onConfirmCancelActivity:20",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003839,7 +1004009,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmCancelActivity",
-        "line": 154,
+        "line": 160,
         "selectorHint": "#dcCancel",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1003940,11 +1004110,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:614"
+        "staticSource": "subpackageA/pages/myproject/index.js:674"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:155:bind:confirm:onConfirmCancelTopic:20",
+      "id": "subpackageA/pages/myproject/index.wxml:161:bind:confirm:onConfirmCancelTopic:21",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1003967,7 +1004137,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmCancelTopic",
-        "line": 155,
+        "line": 161,
         "selectorHint": "#dcCancelTopic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004068,11 +1004238,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:635"
+        "staticSource": "subpackageA/pages/myproject/index.js:695"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:156:bind:alt:onDeleteItemAlt:22",
+      "id": "subpackageA/pages/myproject/index.wxml:162:bind:alt:onDeleteItemAlt:23",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004095,7 +1004265,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteItemAlt",
-        "line": 156,
+        "line": 162,
         "selectorHint": "#dcRoute",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004204,11 +1004374,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:700"
+        "staticSource": "subpackageA/pages/myproject/index.js:760"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:156:bind:confirm:onConfirmDeleteRoute:21",
+      "id": "subpackageA/pages/myproject/index.wxml:162:bind:confirm:onConfirmDeleteRoute:22",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004231,7 +1004401,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteRoute",
-        "line": 156,
+        "line": 162,
         "selectorHint": "#dcRoute",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004332,11 +1004502,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:612"
+        "staticSource": "subpackageA/pages/myproject/index.js:672"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:157:bind:alt:onDeleteTemplateAlt:24",
+      "id": "subpackageA/pages/myproject/index.wxml:163:bind:alt:onDeleteTemplateAlt:25",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004359,7 +1004529,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteTemplateAlt",
-        "line": 157,
+        "line": 163,
         "selectorHint": "#dcTpl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004452,11 +1004622,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:705"
+        "staticSource": "subpackageA/pages/myproject/index.js:765"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:157:bind:confirm:onConfirmDeleteTemplate:23",
+      "id": "subpackageA/pages/myproject/index.wxml:163:bind:confirm:onConfirmDeleteTemplate:24",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004479,7 +1004649,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteTemplate",
-        "line": 157,
+        "line": 163,
         "selectorHint": "#dcTpl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004572,11 +1004742,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:678"
+        "staticSource": "subpackageA/pages/myproject/index.js:738"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:23:bindtap:goCreateActivity:2",
+      "id": "subpackageA/pages/myproject/index.wxml:28:bindtap:goCreateActivity:3",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004599,7 +1004769,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCreateActivity",
-        "line": 23,
+        "line": 28,
         "selectorHint": ".mp-create-row",
         "visibleCondition": "{{projectState === 'ready' && typeTab === 'activity' && canPublishActivity && list.length > 0}}",
         "disabledCondition": null,
@@ -1004642,11 +1004812,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:369"
+        "staticSource": "subpackageA/pages/myproject/index.js:428"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:40:bindlongpress:onCardLong:4",
+      "id": "subpackageA/pages/myproject/index.wxml:45:bindlongpress:onCardLong:5",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004669,7 +1004839,7 @@
         "tag": "view",
         "event": "bindlongpress",
         "handler": "onCardLong",
-        "line": 40,
+        "line": 45,
         "selectorHint": ".mp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004709,11 +1004879,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:319"
+        "staticSource": "subpackageA/pages/myproject/index.js:378"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:40:bindtap:onCardTap:3",
+      "id": "subpackageA/pages/myproject/index.wxml:45:bindtap:onCardTap:4",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004736,7 +1004906,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCardTap",
-        "line": 40,
+        "line": 45,
         "selectorHint": ".mp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004781,11 +1004951,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:290"
+        "staticSource": "subpackageA/pages/myproject/index.js:349"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:82:bind:cta:onEmptyCta:5",
+      "id": "subpackageA/pages/myproject/index.wxml:87:bind:cta:onEmptyCta:6",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004808,7 +1004978,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onEmptyCta",
-        "line": 82,
+        "line": 87,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1004852,7 +1005022,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:364"
+        "staticSource": "subpackageA/pages/myproject/index.js:423"
       }
     },
     {
@@ -1004961,11 +1005131,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:175"
+        "staticSource": "subpackageA/pages/myproject/index.js:241"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:91:bindtap:tplTap:6",
+      "id": "subpackageA/pages/myproject/index.wxml:96:bindtap:tplTap:7",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1004988,7 +1005158,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tplTap",
-        "line": 91,
+        "line": 96,
         "selectorHint": ".mp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1005031,7 +1005201,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:537"
+        "staticSource": "subpackageA/pages/myproject/index.js:597"
       }
     },
     {
@@ -1009354,6 +1009524,207 @@
       }
     },
     {
+      "id": "subpackageMember/complaint/index.wxml:100:bindtap:selectPickerOption:12",
+      "route": "subpackageMember/complaint/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/complaint/index.wxml",
+        "js": "subpackageMember/complaint/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "selectPickerOption",
+        "line": 100,
+        "selectorHint": ".cp-sheet-option",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.name}}",
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{topicIndex === index}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/complaint/index.js:268"
+      }
+    },
+    {
+      "id": "subpackageMember/complaint/index.wxml:102:bind:close:closePickerSheet:13",
+      "route": "subpackageMember/complaint/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/complaint/index.wxml",
+        "js": "subpackageMember/complaint/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closePickerSheet",
+        "line": 102,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/complaint/index.js:264"
+      }
+    },
+    {
+      "id": "subpackageMember/complaint/index.wxml:106:bindtap:selectPickerOption:14",
+      "route": "subpackageMember/complaint/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/complaint/index.wxml",
+        "js": "subpackageMember/complaint/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "selectPickerOption",
+        "line": 106,
+        "selectorHint": ".cp-sheet-option",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item}}",
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{typeIndex === index}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/complaint/index.js:268"
+      }
+    },
+    {
       "id": "subpackageMember/complaint/index.wxml:12:bind:back:onBack:0",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
@@ -1009420,11 +1009791,245 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:46"
+        "staticSource": "subpackageMember/complaint/index.js:146"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:39:bindtap:openPickerSheet:2",
+      "id": "subpackageMember/complaint/index.wxml:21:bind:cta:loginToRead:1",
+      "route": "subpackageMember/complaint/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/complaint/index.wxml",
+        "js": "subpackageMember/complaint/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "loginToRead",
+        "line": 21,
+        "selectorHint": ".cy-fill-state",
+        "visibleCondition": "{{readAccess === 'login'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/complaint/mine",
+          "/api/coop/complaint/topics",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/complaint/mine",
+          "/api/coop/complaint/topics"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/complaint/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/complaint/topics",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/complaint/index.js:103"
+      }
+    },
+    {
+      "id": "subpackageMember/complaint/index.wxml:23:bind:cta:onRetry:2",
+      "route": "subpackageMember/complaint/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/complaint/index.wxml",
+        "js": "subpackageMember/complaint/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onRetry",
+        "line": 23,
+        "selectorHint": ".cy-fill-state",
+        "visibleCondition": "{{readAccess === 'denied'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/coop/complaint/mine",
+          "/api/coop/complaint/topics",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/coop/complaint/mine",
+          "/api/coop/complaint/topics"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/complaint/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/complaint/topics",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/complaint/index.js:48"
+      }
+    },
+    {
+      "id": "subpackageMember/complaint/index.wxml:45:bindtap:openPickerSheet:4",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009447,7 +1010052,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPickerSheet",
-        "line": 39,
+        "line": 45,
         "selectorHint": ".cp-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1009487,11 +1010092,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:142"
+        "staticSource": "subpackageMember/complaint/index.js:260"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:49:bindtap:openPickerSheet:3",
+      "id": "subpackageMember/complaint/index.wxml:55:bindtap:openPickerSheet:5",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009514,7 +1010119,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPickerSheet",
-        "line": 49,
+        "line": 55,
         "selectorHint": ".cp-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1009554,11 +1010159,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:142"
+        "staticSource": "subpackageMember/complaint/index.js:260"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:58:bindinput:onReasonInput:4",
+      "id": "subpackageMember/complaint/index.wxml:64:bindinput:onReasonInput:6",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009581,7 +1010186,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onReasonInput",
-        "line": 58,
+        "line": 64,
         "selectorHint": ".cp-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1009621,11 +1010226,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:157"
+        "staticSource": "subpackageMember/complaint/index.js:275"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:64:bindinput:onContactInput:5",
+      "id": "subpackageMember/complaint/index.wxml:70:bindinput:onContactInput:7",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009648,7 +1010253,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onContactInput",
-        "line": 64,
+        "line": 70,
         "selectorHint": ".cp-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1009688,11 +1010293,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:161"
+        "staticSource": "subpackageMember/complaint/index.js:279"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:68:bind:action:submit:6",
+      "id": "subpackageMember/complaint/index.wxml:74:bind:action:submit:8",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009715,7 +1010320,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "submit",
-        "line": 68,
+        "line": 74,
         "selectorHint": ".cp-submit-error",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1009802,11 +1010407,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:171"
+        "staticSource": "subpackageMember/complaint/index.js:289"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:70:bindtap:submit:7",
+      "id": "subpackageMember/complaint/index.wxml:76:bindtap:submit:9",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009829,7 +1010434,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 70,
+        "line": 76,
         "selectorHint": ".cp-submit",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -1009916,11 +1010521,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:171"
+        "staticSource": "subpackageMember/complaint/index.js:289"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:78:bindtap:loadHistory:8",
+      "id": "subpackageMember/complaint/index.wxml:85:bindtap:loadHistory:10",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1009943,7 +1010548,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "loadHistory",
-        "line": 78,
+        "line": 85,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1010025,11 +1010630,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:98"
+        "staticSource": "subpackageMember/complaint/index.js:212"
       }
     },
     {
-      "id": "subpackageMember/complaint/index.wxml:89:bind:close:closePickerSheet:9",
+      "id": "subpackageMember/complaint/index.wxml:96:bind:close:closePickerSheet:11",
       "route": "subpackageMember/complaint/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1010052,7 +1010657,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePickerSheet",
-        "line": 89,
+        "line": 96,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1010092,208 +1010697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:146"
-      }
-    },
-    {
-      "id": "subpackageMember/complaint/index.wxml:93:bindtap:selectPickerOption:10",
-      "route": "subpackageMember/complaint/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/complaint/index.wxml",
-        "js": "subpackageMember/complaint/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "selectPickerOption",
-        "line": 93,
-        "selectorHint": ".cp-sheet-option",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item.name}}",
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{topicIndex === index}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:150"
-      }
-    },
-    {
-      "id": "subpackageMember/complaint/index.wxml:95:bind:close:closePickerSheet:11",
-      "route": "subpackageMember/complaint/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/complaint/index.wxml",
-        "js": "subpackageMember/complaint/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closePickerSheet",
-        "line": 95,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:146"
-      }
-    },
-    {
-      "id": "subpackageMember/complaint/index.wxml:99:bindtap:selectPickerOption:12",
-      "route": "subpackageMember/complaint/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/complaint/index.wxml",
-        "js": "subpackageMember/complaint/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "selectPickerOption",
-        "line": 99,
-        "selectorHint": ".cp-sheet-option",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item}}",
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{typeIndex === index}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/complaint/index.js:150"
+        "staticSource": "subpackageMember/complaint/index.js:264"
       }
     },
     {
