@@ -1,0 +1,530 @@
+{
+  "pack": "CY-FORWARD3-20261015",
+  "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+  "source_base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "plan_parent_sha": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+  "branch": "codex/mini-forward-source-20261015",
+  "verification": "LOCAL_VPS_COMPILE_PASS_ONLY_MYSQL_NOT_RUN",
+  "mode": "SOURCE_ONLY_NO_MANUAL_VALIDATION",
+  "active_source_writers": 0,
+  "initial_independent_lanes": 2,
+  "items": [
+    {
+      "id": "F3-STAT-01",
+      "lane": "STAT",
+      "writer": "/root/stat",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "add1534cd63c6ffd95467795126246c8d3581594",
+      "verification": "LOCAL_VPS_UNIT_PASS",
+      "test_class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "test_declarations": 12,
+      "new_test_declarations": 10
+    },
+    {
+      "id": "F3-GROW-01",
+      "lane": "GROW",
+      "writer": "/root/grow",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "verification": "LOCAL_VPS_UNIT_PASS_MYSQL_NOT_RUN",
+      "test_classes": [
+        {
+          "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+          "test_declarations": 12,
+          "new_test_declarations": 9
+        },
+        {
+          "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+          "test_declarations": 11,
+          "new_test_declarations": 11
+        }
+      ],
+      "dependencies": [
+        "Existing InnoDB uk_member(member_id)",
+        "Existing player_badge uk_member_badge(member_id,badge_code,source_id)",
+        "Existing outer grantOnce TOPIC_FINISH identity; no new reward policy"
+      ]
+    },
+    {
+      "id": "F3-STAT-02",
+      "lane": "STAT",
+      "writer": "/root/stat",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "title": "既有pilot统计拒绝零年与带符号扩展年份",
+      "owned_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
+      ],
+      "finding": "LocalDate ISO years outside positive four-digit yyyy-MM-dd pass inclusive one-day pilot validation and reach SQL DATE cast; source-level reachability only, no HTTP/DB execution.",
+      "verification": "LOCAL_VPS_UNIT_CLASS_14_PASS",
+      "commit_sha": "009664d74bc9a330b14a10e0696dba74e91ea291",
+      "test_class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "test_declarations": 14,
+      "new_test_declarations": 2,
+      "verification_candidate": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "verification_evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5"
+    },
+    {
+      "id": "F3-GROW-02",
+      "lane": "GROW",
+      "writer": "/root/grow",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "title": "节点成长跨午夜时的连续打卡与持久化日期使用同一时点",
+      "owned_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java"
+      ],
+      "finding": "Independent today and lastCheckinDate clock reads can straddle midnight under thread preemption and suppress the next day streak increment. Preserve default timezone and existing streak/reward policy.",
+      "verification": "LOCAL_VPS_UNIT_CLASS_14_PASS",
+      "commit_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "test_class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "test_declarations": 14,
+      "new_test_declarations": 2,
+      "verification_candidate": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "verification_evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5"
+    },
+    {
+      "id": "F3-GROW-03",
+      "lane": "GROW",
+      "writer": "/root/grow",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "classification": "REGRESSION_SOURCE_CORRECTION",
+      "confirmed_new_production_bug": false,
+      "title": "固定既有MySQL并发回归的逻辑日，避免跨午夜正确streak被误报",
+      "owned_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+      ],
+      "commit_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+      "verification": "NOT_RUN",
+      "test_declarations": 11,
+      "new_test_declarations": 0,
+      "production_files_changed": 0,
+      "dependencies": [
+        "Existing bde356f3 protected currentCheckinTime seam; no new dependency/config."
+      ],
+      "finding": "Cases1/2/3/4/6 coupled seed(LocalDate.now()) and live service clock; actual midnight can legally change streak while assertions assume one logical day. Fixed test-only CHECKIN_DAY and service clock preserve all original assertions, barriers and real transactions/mappers.",
+      "compilation": "LOCAL_VPS_COMPILE_PASS_ONLY",
+      "verification_evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+      "actual_tests": 0
+    }
+  ],
+  "failure_repair_policy": "At most one author repair lane; independent authorized work continues.",
+  "next_scope_policy": "No new source scope without exact local coordinator transfer.",
+  "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "pull_request": "https://github.com/liboyang42-cpu/hengyin/pull/72",
+  "ready_source_items": 0,
+  "scope_state": "EXHAUSTED_AFTER_CURRENT_CALLER_RECHECK",
+  "source_candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+  "declarations": {
+    "total": 39,
+    "new_since_public_base": 34,
+    "new_this_continuation": 4,
+    "ordinary_class_declarations": 28,
+    "real_mysql_declarations": 11,
+    "executed_for_current_candidate": 0,
+    "status": "COMPILE_PASS_ONLY_TESTS_NOT_RUN",
+    "note": "Still14 Analytics +14 Progression +11 MySQL=39. Local existing212 compiled changed IT and anonymous clock class at d592; actual tests0/no Surefire XML. Previous ordinary28 PASS remains bound only to bde356f3.",
+    "new_this_round": 0
+  },
+  "next_action": "No compilation failure to repair. Retain11 exact MySQL acceptance conditions as NOT_RUN/coverage gap; no new entry or repeat ordinary28. Resume original author only for a confirmed in-scope defect or actual failure reported by local coordinator.",
+  "delivery_state": "SOURCE_DELIVERED_UNVERIFIED",
+  "cloud_execution": "NOT_RUN",
+  "external_verification": {
+    "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "runner_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+    "compilation": "LOCAL_VPS_COMPILE_PASS",
+    "ordinary_result": {
+      "tests": 28,
+      "passed": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "fresh_reports": 2,
+      "exact_classes_match": true,
+      "guard_exit": 0,
+      "guard_reason": "completed",
+      "started_at": "2026-10-16T03:47:03.567744Z",
+      "finished_at": "2026-10-16T03:49:49.990667Z"
+    },
+    "classes": [
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "tests": 14,
+        "passed": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "tests": 14,
+        "passed": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+      "provenance": "Local coordinator explicit filtered cleanup; public summary.json. Cloud did not connect to VPS."
+    },
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+    "evidence_read_scope": "Cloud only read public README/summary and DB-entry-gap README. Did not fetch or independently parse raw XML/logs, run tests or access VPS.",
+    "mysql_it": {
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "declarations": 11,
+      "status": "NOT_RUN",
+      "funds_ci_registration": "NOT_REGISTERED",
+      "approved_execution_entry": "EXISTING_ENTRY_COVERAGE_GAP_NO_NEW_ENTRY",
+      "entry_gap_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md",
+      "new_entry_proposal": "CLOSED_BY_USER_DECISION"
+    },
+    "redis_integration": "NOT_VERIFIED; Redis mocks or references are not real Redis integration.",
+    "acceptance_exclusions": [
+      "real MySQL concurrency and Date-to-DATE/JVM-DB timezone integration",
+      "real Redis integration",
+      "live backend HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge",
+      "deployment"
+    ]
+  },
+  "work_parent_sha": "b36fd45845889f78c18819826e4e5ed9d10f3e8e",
+  "previous_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "exhausted_reason": "Current STAT/GROW authors rechecked actual callers and all owned branches this round. No new confirmed production defect; one regression clock fixture fix delivered; readonly SQL/RR observations and exact pending acceptance conditions are handed off.",
+  "external_verification_history": [
+    {
+      "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "runner_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+      "compilation": "LOCAL_VPS_COMPILE_PASS",
+      "ordinary_result": {
+        "tests": 24,
+        "passed": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "fresh_reports": 2,
+        "exact_classes_match": true,
+        "guard_exit": 0,
+        "guard_reason": "completed",
+        "finished_at": "2026-10-15T20:47:21.589299Z"
+      },
+      "classes": [
+        {
+          "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "mysql_it": {
+        "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+        "declarations": 11,
+        "status": "NOT_RUN",
+        "approved_execution_entry": "NOT_YET_CONFIRMED_BY_LOCAL_COORDINATOR"
+      },
+      "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/summary.json",
+      "admission_refused_history_url": "https://github.com/liboyang42-cpu/hengyin/blob/fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/admission-refused.json",
+      "evidence_read_scope": "Cloud read public README, summary.json and admission-refused.json; raw XML/log files not independently fetched. No Cloud verification execution.",
+      "admission_refused_history": {
+        "guard_exit": 75,
+        "reason": "another_build_holds_lock",
+        "container_id": null,
+        "tests_executed": 0,
+        "source_failure": false
+      },
+      "acceptance_exclusions": [
+        "real MySQL concurrency",
+        "live backend HTTP",
+        "real database/Redis integration",
+        "device/business acceptance",
+        "merge",
+        "deployment"
+      ]
+    }
+  ],
+  "validation_entry_policy": {
+    "decision": "KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY",
+    "user_instruction": "保持现有入口，不新增",
+    "provenance": "Explicit user decision relayed by local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; current effective constraint.",
+    "new_isolated_mysql_redis_entry_proposal": "CLOSED_BY_USER_DECISION",
+    "awaiting_same_proposal_approval": false,
+    "existing_212": "UNCHANGED",
+    "ci_configuration": "UNCHANGED",
+    "automatic_ci": "ALLOW_NATURAL_RUNS_NO_MANUAL_DUPLICATE_TRIGGER",
+    "ordinary_regression": "Use existing212 only for genuinely new source or unresolved failure; no repeated verification without new grounds.",
+    "uncovered_mysql_redis": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "cloud_execution": "NOT_RUN",
+    "new_resources_or_validation_work_authorized": false
+  },
+  "production_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "active_reviewers": 0,
+  "source_blocked_items": 0,
+  "current_review_round": {
+    "id": "F3-CALLER-RECHECK-03",
+    "basis_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "basis_checkout_head": "b36fd45845889f78c18819826e4e5ed9d10f3e8e",
+    "ownership_source_owners_blob": "88fe475c8fcbb13208510fd028b54c71322f54fc",
+    "authors": {
+      "STAT": "/root/stat",
+      "GROW": "/root/grow"
+    },
+    "stat_result": "NO_CHANGE_SOURCE_REVIEW after current UI/API/binding/Controller/Mapper trace. Optional, empty, one-sided, invalid calendar/year, reversed and pilot1-62 branches have no new confirmed controller omission.",
+    "grow_result": "No new confirmed production counter/init/cache/field overwrite defect. One concrete existing regression clock fixture correction delivered.",
+    "production_bug_count": 0,
+    "regression_source_corrections": 1,
+    "conditional_read_only_packets": 2,
+    "not_reused_prior_exhausted": true
+  },
+  "read_only_packets": [
+    {
+      "id": "F3-STAT-MAX-DATE-OBSERVATION",
+      "status": "NEEDS_REAL_MYSQL_OBSERVATION_READ_ONLY",
+      "confirmed_new_production_bug": false,
+      "trigger": "Authorized GET pilot with startDate=endDate=9999-12-31 is a legal one-day controller window; readonly Mapper applies DATE_ADD(end,1day) past MySQL DATETIME maximum.",
+      "read_only_path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+      "next_owner": "C00 routes original aggregation Mapper owner only if concrete defect is confirmed; no F3 write grant.",
+      "missing_observation": "Actual MySQL DATE_ADD return/warning and exact metric comparison for normal/missing maximum date fixtures.",
+      "existing_entry_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "prohibited_shortcuts": [
+        "Reject legal maximum date in Controller",
+        "Clamp/truncate end date",
+        "Split/merge metric queries changing cross-window deduplication",
+        "Mock/H2 as proof of MySQL boundary"
+      ]
+    },
+    {
+      "id": "F3-TOPIC-FINISH-RR-OBSERVATION",
+      "status": "CONDITIONAL_NEEDS_REACHABILITY_NO_SOURCE_CHANGE",
+      "confirmed_new_production_bug": false,
+      "source_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+      "mapper_read_path": "chengyinhub-system/src/main/resources/mapper/business/PlayerBadgeMapper.xml",
+      "conditional_vector": "Only if an actual RR caller has an old read view and a distinct legitimate same-member/topic completion can commit TOPIC_FINISH: duplicate insert catch ordinary selectOne may miss that committed row and rethrow.",
+      "caller_trace": [
+        "ApiPlayProgressController node completion:explicit RC",
+        "TopicRouteRuntimeServiceImpl.completeOpening:explicit RC",
+        "CmsRegistrationServiceImpl.redeemExploreChapterAndRecord:DEFAULT transaction, grantOnce then real topic ordinary SELECT"
+      ],
+      "counterevidence": [
+        "No repository-wide default RC override found, but external settings/actual DB default not known; DEFAULT does not prove RR.",
+        "Normal registration and self-play creation call ExploreAccountTicketGate, lock common topic, check cross-activity and ownerType1 tickets; canonical account maximum1 defeats the proposed two-normal-Explore-tickets overlap.",
+        "Same-ticket path is serialized by activity/registration locks.",
+        "Historical/manual/expired-ticket exception not established; no broader search or write grant."
+      ],
+      "current_it_limit": "sameTopicOuterUniqueMarkerCallsGrowthOnlyOnce mocks topic SELECT and does not prime second transaction real topic RR view; cannot prove this conditional production path.",
+      "next_owner": "Only C00/caller owner may establish real admission/isolation/lock preconditions and decide; F3 does not alter caller/badge mapper."
+    }
+  ],
+  "acceptance_backlog": [
+    {
+      "id": "F3-DB-01",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "twoFirstNodeCallsCreateOneRowAndCountBoth",
+      "required_observation": "第二写者等待首事务；单成长行，checkins=2、mileage=0、streak=1，FIRST_STEP仅一份。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-02",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "existingNodeCallsAccumulateAcrossLevelBoundary",
+      "required_observation": "初始checkins4/mileage8.50/streak2，结束checkins6/level2，里程和streak不丢。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-03",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "nodeAndTopicKeepBothIndependentCounters",
+      "required_observation": "node先取得锁后topic：checkins5、mileage10.75、level2，MILE_10和TOPIC_CLEAR11事实正确。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-04",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "topicThenNodeKeepsMileageAndExistingStreak",
+      "required_observation": "topic先取得锁后node：checkins10、mileage10.75、level3，原streak6保留。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-05",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "differentFirstTopicsAccumulateMileageWithoutDuplicateGrowthRow",
+      "required_observation": "首次不同主题并发：单成长行，mileage6.00，TOPIC_CLEAR11/22各一份。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-06",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "repeatableReadSnapshotCannotLoseLaterNodeIncrement",
+      "required_observation": "两侧显式RR；第二事务先普通读旧checkins4再等成长锁，最终checkins6，不按旧快照覆盖。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-07",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "differentOuterTopicMarkersDoNotIntroduceGrowthBadgeGapLockCycle",
+      "required_observation": "两侧显式RR、真实外层marker-first，FINISH22/11并发；mileage14.50，两TOPIC_CLEAR，不新增缺失badge锁环。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-08",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "sameTopicOuterUniqueMarkerCallsGrowthOnlyOnce",
+      "required_observation": "同topic外层唯一marker：一次first=true、一次false，仅一次成长读写，mileage10.75/TOPIC_CLEAR一份；不覆盖第二事务预建真实topic RR快照。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-09",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "existingTopicClearLeavesAllGrowthFieldsUntouched",
+      "required_observation": "已有TOPIC_CLEAR：里程、节点/等级/streak/last日期和原create/update时间均不变。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-10",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "badgeFailureRollsBackFirstRowAndCounter",
+      "required_observation": "FIRST_STEP配置读取失败，首次建行与计数整体回滚，无遗留成长行或徽章。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    },
+    {
+      "id": "F3-DB-11",
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "method": "ordinaryGetGrowthDoesNotWaitForWriterOrCreateMissingRows",
+      "required_observation": "持写锁时普通getGrowth在有界时间返回；缺行会员999只返回默认对象，不建行。",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current entry:212 network none; backend/funds fixed IT selectors do not include this class.",
+      "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
+    }
+  ],
+  "acceptance_prerequisites": {
+    "mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "mysql_version": "Real MySQL8+; not H2/MariaDB",
+    "opt_in": "CHENGYIN_FUNDS_MYSQL_IT=1",
+    "explicit_environment": [
+      "CHENGYIN_TEST_MYSQL_HOST",
+      "CHENGYIN_TEST_MYSQL_PORT",
+      "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+      "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+      "CHENGYIN_TEST_MYSQL_USER",
+      "CHENGYIN_TEST_MYSQL_PASSWORD"
+    ],
+    "schema": "Exclusive nonempty suffix, config prefix<=47 plus16hex UUID, approved create/drop/DML, existing baseline two tables and unique keys, thread termination and own schema cleanup observed.",
+    "report": "Fresh exact class,11 actual/0fail/0error/0skip plus identity/isolation/cleanup observations; mock PASS not enough.",
+    "redis_required_by_this_class": false,
+    "redis_result": "No real Redis integration proven.",
+    "entry_policy": "Keep existing212/CI; no new entry, no repeated manual CI, no same-proposal approval reminder."
+  },
+  "date_acceptance_backlog": [
+    {
+      "id": "F3-DATE-HTTP",
+      "condition": "Actual authorized HTTP binding/permission/envelope and null/blank/one-sided behavior at unchanged routes; direct Java controller tests are not live HTTP acceptance.",
+      "status": "NOT_RUN",
+      "existing_entry": "No live-backend acceptance entry registered for this pack;212ordinary does not start backend. Do not create/deploy one here."
+    },
+    {
+      "id": "F3-DATE-SQL-DAY",
+      "condition": "Real XML against real MySQL: previous-day last second, day00:00/day23:59:59 and next-day00:00; only inclusive requested-day events count, cross-window user-post dedup/coverage/min/max unchanged.",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "No applicable current true-DB selector; H2 DATE_ADD Java alias is not equivalent proof."
+    },
+    {
+      "id": "F3-DATE-SQL-MAX",
+      "condition": "Observe MySQL version/sql_mode/DATE_ADD result/warnings; distinct user-post fixtures on9999-12-30 and12-31: each single day should see1, inclusive62day9999-10-31..12-31 should see2 with correct min/max/dedup/coverage. Candidate only until real observation.",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "Readonly aggregation Mapper owner scope; no F3 edit, no applicable current MySQL entry, no new entry proposal."
+    },
+    {
+      "id": "F3-TIME-JVM-DB",
+      "condition": "Actual DATETIME/DATE JDBC mapping with observed JVM/DB zones and production midnight streak behavior; fixed concurrency-fixture day is not this integration test.",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "existing_entry": "Needs an applicable existing real-DB/runtime entry; ordinary controlled clock tests alone do not prove it."
+    }
+  ],
+  "external_compile_request": {
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "task_id": "cy-vps-forward-d592334a-20261016",
+    "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+    "reported_by": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "entry": "EXISTING_212_TEST_COMPILE_ONLY",
+    "status": "COMPILE_PASS_ONLY",
+    "resource_observation": "First admission refused normally at05:52:29Z with exit75/another_build_holds_lock/containerId null; no compilation/tests. Retry followed normal lock release, no bypass.",
+    "scope": "Compile changed PlayerGrowthConcurrencyMySqlIT and anonymous clock subclass only; no repeat of previous ordinary28; source/cache exclusive.",
+    "compilation_result": "LOCAL_VPS_COMPILE_PASS_ONLY",
+    "mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "evidence_basis": "Cloud read public README.md and summary.json at exact evidence commit; did not independently hash class files, read raw compile log or access VPS. Reported by local coordinator.",
+    "actual_tests": 0,
+    "reports": [],
+    "started_at": "2026-10-16T06:08:19.135291+00:00",
+    "finished_at": "2026-10-16T06:10:59.528066+00:00",
+    "guard_exit": 0,
+    "guard_reason": "completed",
+    "fresh_compile_classes": true,
+    "compiled_files": [
+      {
+        "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+        "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+        "fresh": true
+      },
+      {
+        "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT$1",
+        "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+        "fresh": true
+      }
+    ],
+    "admission_refusals": [
+      {
+        "started_at": "2026-10-16T05:52:29.388798+00:00",
+        "finished_at": "2026-10-16T05:52:29.439295+00:00",
+        "guard_exit": 75,
+        "reason": "another_build_holds_lock",
+        "container_id": null,
+        "compilation": "NOT_RUN",
+        "actual_tests": 0
+      }
+    ],
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c"
+    },
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/summary.json"
+  }
+}
