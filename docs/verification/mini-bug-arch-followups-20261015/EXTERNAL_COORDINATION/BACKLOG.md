@@ -1,19 +1,22 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
-CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
-当前已读控制 `78197cf835ff9f0542114560cc0645678a9f59e6`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`1bfa81a5a58ffa8112c10414dad9fdb1701ef188`**，原E02 child `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`；E02-12仅POI选项显式上架状态，本地E02_12Test2实际H2/XML targeted PASS；整体SOURCE_DELIVERED_UNVERIFIED，Cloud验证NOT_RUN。原29fe普通64PASS仅其旧SHA，真MySQL2项NOT_RUN。
+CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable；原E02/E04均gpt-6.1-sol，本轮最多2业务写者，E01仅只读新包审阅。工作树 `/workspace/hengyin-extra-*` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
 
-当前111历史=60源码交付/40反证/6合同或决策阻塞/5委派他队；实际源码worker0、修复worker0、READY0，目标可行动50缺50。无真实独立READY项时如实EXHAUSTED，不造任务。E01-19已由CORE解决，不重复。E02-23/E04-07仍需C00原owner解决身份合同。
+当前已读控制 `225b59efa72bf54423fc3a5f6069bff6cc72353e` 的BUSINESS_DECISIONS_IMPLEMENTATION_GRANT及源锁，真人3决定已实现，不再等待/询问同一授权。最新完整应用候选 **`923170abd8e468d62eb8404b16b990609a4da42a`**；三个公共源包如下，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，旧PASS不继承。
 
-本地验证只按完整源SHA登记：1bfa81a5新单类2实际H2/XML PASS，公开PR24@1ae7b60cab62696ec0a9259907cfad265496c554；29fe9236旧普通3类64实际PASS，公开PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e；faefbaf8旧两类60PASS独立保留，不以旧成绩继承。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
+| 包 | 完整源SHA | 直接父SHA | 最小普通计划 |
+|---|---|---|---|
+| E04-A未知审计、无新schema | `dedb44d54a4a277273943c0cbbca9f6e7528482a` | `a76268d5454c8a5c5e3181ae7574bfb93932f800` | E04_07Test3 |
+| E02旧帖收藏身份 | `13be997646c88b9eea282cc8c8225b42820dc3b3` | `dedb44d54a4a277273943c0cbbca9f6e7528482a` | 新6+旧12=18 |
+| E04-B未来精确回执 | `923170abd8e468d62eb8404b16b990609a4da42a` | `13be997646c88b9eea282cc8c8225b42820dc3b3` | 新/续7+旧4=11；真库新5+旧3=8仍未验 |
 
-用户当前有效决定：**“保持现有入口，不新增”**。新增隔离MySQL/Redis集成入口方案已关闭，不再等待或请求相同方案批准；212/CI保持原状，现有自动CI自然运行、不手动重复触发。无适用现有入口的真实存储项继续NOT_RUN/现有入口覆盖缺口；普通回归仅新真实源码或未解失败交本地按现有212执行。本次仅更新约束，没有新增开发或补跑任务。此决定覆盖下文历史回执中的“新入口待批准”状态。
+E02五生产/两旧fixture/新6方法/说明9路径已交；真实旧行+保留ID+作者+exact迁移requestId+受保护JSON数组元素共同构成现有可信映射，三处读写同谓词，缺失/伪造/substring/标量/擦标全拒绝且不关联。全部写者与author白名单拒marker证据见[E02-23](https://github.com/liboyang42-cpu/hengyin/blob/13be997646c88b9eea282cc8c8225b42820dc3b3/docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md)。H2函数alias是有限模型，不当nativeMySQL/部署数据证明，不新增桥/DDL/UI/共享community接口。
 
-## 本轮指定packet推进与下一步
+E04-A已交本地，正式212准入因MemAvailable2195624kB低于2560MiB拒绝：exit75/insufficient_start_memory、containerId=null、0项/freshXML0，NOT_RUN而非源码失败，不占修复槽、不绕入口。B同writer接A，复用既有grantCouponWithReceipt及只读模板mapper，正ID绑定必须1且同事务失败回滚；旧NULL/悬空/关联错配只审计、不动券/log/券marker，其他已授权pointsXP继续，USED不替代。唯一新增迁移`chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql`仅源文件、未执行/回填/合并部署；B未来运行先另行完成迁移，A无新列依赖。[A交付](https://github.com/liboyang42-cpu/hengyin/blob/dedb44d54a4a277273943c0cbbca9f6e7528482a/docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md) / [B交付](https://github.com/liboyang42-cpu/hengyin/blob/923170abd8e468d62eb8404b16b990609a4da42a/docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md)。
 
-原E02/E01已完成定向事实核查；后续C00#6209006760闭合E02-12选项合同，原E02已交options一hunk+2新回归。峰值事实worker2，后续单源码writer1，现均完成；历史NULL来源仍未证，不当生产复现/新增bug。E01-13 WAITING准入与其他两项身份合同仍列明确缺口。当前候选及2方法NOT_RUN见首段；旧29fe64不补跑、不继承。
+111历史=62源码交付/40反证/4未决/5他队或委派；不是已验收bug数。当前两原作者均交付停写、锁保留，实际源码0/READY0；具体新源码本地验证继续，真实失败仅1原作者修复槽；其他明确独立项不因验证等候停工。E01-13 WAITING逐状态合同仍单独待定，票售卖字段只存读，不擅加规则。
 
-下一步交C00/原owner：E02-12已按6209006760闭合并交源码，不再以NULL来源阻塞查询合同；E01-13提供WAITING对下架、结束、主题售卖窗、signupDeadline与存量保留的分别既有规则；E02-23冻结后迁移发布的权威对象映射及更新/审核/删除责任；E04-07冻结原historyId原子回执和旧无身份日志行为。已有消费者锁不重复申领；真实缺陷且既定合同明确后，精确登记原作者最小修复，不等待本地测试签收才推进独立项。
+用户约束保持现有入口、不新增：212/CI/网络不改，不手动触发CI、不起服务/替代环境。新普通18/11仅声明，真实MySQL8需既有适用批准入口/六显式变量/独占scratch，目前NOT_RUN/覆盖缺口；Cloud未编译测试NodeDBHTTPVPS，未执行迁移。旧1bfa2/29fe64等仅其原SHA范围有效，旧失败和锁拒绝永久保留。下文为历史回执，以本段和QUEUE当前状态为准。
 
 ## 持久调度协议：1修复+5开发
 
@@ -361,3 +364,17 @@ E01-13原定向事实核查已完成，既有WAITING逐状态合同仍需明确�
 已实际核读PR24@1ae7b60cab62696ec0a9259907cfad265496c554的[README](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)和[summary](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json)。固定1bfa81a5a58ffa8112c10414dad9fdb1701ef188，E02_12Test2实际PASS/F0/E0/S0，fresh1XML精确类集、完整性及2实际方法数匹配，212guard0/completed；精确自有容器经本地显式chengyin-aws过滤确认不存在。源包/日志/XML哈希及guard/cleanup公开索引已回填QUEUE/CLAIMS。Cloud未拉取原始XML/日志重解析、未补跑任何验证。
 
 首次共享锁拒绝exit75/containerId=null/0项准入历史独立保留，不记测试失败或通过，正常释放后成功重试。此次仅H2执行生产XML查询合同/合成NULL兼容负控，不是真实MySQL/Redis/HTTP/业务或生产NULL复现，不新增bug计数、不继承旧64/不重跑旧64。E02_25MySqlIT2仍NOT_RUN/现有入口覆盖缺口，其他设备/集成合并部署未验。入口不新增、CI不手动触发；源码整体SOURCE_DELIVERED_UNVERIFIED，原作者与锁保留，无失败修复要开。C00总账更新由本地root另行通知，本队只补自有交付账/PR36。
+
+## 本轮真人决定三公共提交交付
+
+C00初4efd与补225b59精确转交已实际读全；所涉E02/E04生产及旧fixture与授权a762基线无差，原writer实施，没有全文件覆盖他队最新源。E04-A先公开后同writerB；E02独立，E01只读静态复核无阻断发现、指出H2JSON alias不能声称完整MySQL语义，边界已保留。
+
+原作者公共child：E02 `7eacc598f047a3d40fabed268059dfffbda0a590`，父 `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`；E04 A `e617b3e158cf86972c037c73e5ed4e085e008346`，父 `5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788`；E04 B `ca5e69f684b8c9b6e25d5d371189518e72d0a298`，父 `e617b3e158cf86972c037c73e5ed4e085e008346`。父串行GitHub非强推后rolling为上表完整链。A已PR16#6215963891/PR24#6215964142交root；E02/B已PR16#6216061116/PR24#6216061352交完整SHA/父SHA/路径/依赖/方法数/命令。新全部NOT_RUN，源码推送不是测试通过。
+
+未来普通文本命令：E02 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test`，18声明；B `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test`，11声明。未来真库文本命令 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test`，8声明；没有新gate/CI/网络/服务入口，未被现有固定selector覆盖不视为验证。真实回滚/库存历史日志原子性、MySQLJSON/身份业务、设备/集成部署仍待实跑，不借mock/H2或旧PASS完成验收。
+
+## A正式内存准入拒绝与最终候选冻结
+
+本地实际212回执：固定dedb44d54a4a277273943c0cbbca9f6e7528482a，MemAvailable2195624kB<2560MiB，exit75 insufficient_start_memory，containerId=null、0项/freshXML0，精确容器名过滤确认无容器。源包b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191/task cy-vps-extra-dedb44d5-20261016保留；公开证据commit尚未提供，当前仅本地直接真实回报。不是源码失败/通过，不恢复作者修复线、不停其他任务或绕资源限制。
+
+最终应用候选923170abd8e468d62eb8404b16b990609a4da42a（直接父13be997646c88b9eea282cc8c8225b42820dc3b3）无进一步源修改；普通A3/E0218/B11、真库B8的完整FQN/命令/条件见QUEUE.source_delivery_packages及PR16#6216061116、PR24#6216061352。声明不是实际项数，新候选不继承A或旧PASS；后续验证由本地按现有212承担。

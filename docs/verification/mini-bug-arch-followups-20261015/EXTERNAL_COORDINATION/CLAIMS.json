@@ -212,13 +212,15 @@
     "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml": {
       "owner": "EXTRA6/E04",
       "worker": "EXTRA6/E04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
-      "verification": "NOT_RUN"
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CouponSourceGrantMapper.xml": {
       "owner": "EXTRA6/E04",
@@ -234,13 +236,15 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java": {
       "owner": "EXTRA6/E04",
       "worker": "EXTRA6/E04",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite",
       "child_writer": "/root/external_e04",
       "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
-      "verification": "NOT_RUN"
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298"
     },
     "chengyinhub-xcx/utils/subscribe.js": {
       "owner": "EXTRA6/E05",
@@ -637,6 +641,146 @@
       "active_task": null,
       "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml": {
+      "owner": "EXTRA6/E04",
+      "worker": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "active_task": null,
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "transfer_evidence": "C00225b59 exact grant and openPR conflict scan; selected source paths match publica762 baseline, no fullfile overwrite"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "scope": "Only directreceipt fixture/schema, original4/3 methods and businessassertions retained",
+      "verification": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "state": "LOCK_RETAINED_ORIGINAL_WRITER",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "scope": "Only directreceipt fixture/schema, original4/3 methods and businessassertions retained",
+      "verification": "NOT_RUN"
     }
   },
   "rules": [
@@ -646,12 +790,12 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "78197cf835ff9f0542114560cc0645678a9f59e6",
+  "control_latest_read_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
-    "E02": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+    "E02": "7eacc598f047a3d40fabed268059dfffbda0a590",
     "E03": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
-    "E04": "b53e013623e539760a35665b99a4680c785d5d42",
+    "E04": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
     "E05": "f01b5c06657cfb654a0cdc86dc77159ac53b6940",
     "E06": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad"
   },
@@ -668,7 +812,7 @@
       "slot": "E02",
       "task": null,
       "worker": "/root/external_e02",
-      "mode": "SOURCE_DELIVERED_IDLE_NO_READY_TASK",
+      "mode": "SOURCE_DELIVERED_IDLE_ORIGINAL_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -682,7 +826,7 @@
       "slot": "E04",
       "task": null,
       "worker": "/root/external_e04",
-      "mode": "IDLE_DELIVERED_OR_REAL_NEW_SCOPE_PENDING",
+      "mode": "SOURCE_DELIVERED_IDLE_ORIGINAL_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e04"
     },
     {
@@ -797,6 +941,86 @@
       "public_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
       "verification": "NOT_RUN",
       "grant_control_sha": "78197cf835ff9f0542114560cc0645678a9f59e6"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "task": "E02-23-STOP_WRONG_TARGET",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "task": "E02-23-STOP_WRONG_TARGET",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-A-UNKNOWN_AUDIT",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md": {
+      "owner": "EXTRA6/E04",
+      "child_writer": "/root/external_e04",
+      "task": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "active_task": null,
+      "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "verification": "NOT_RUN",
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
     }
   },
   "frozen_prepared_sources": {
@@ -1196,7 +1420,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+  "latest_application_candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -1391,66 +1615,61 @@
     }
   },
   "validation_queue_state": {
-    "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
-    "status": "LOCAL_TARGETED_H2_XML_PASS_ONLY",
-    "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
+    "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+    "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+    "child_parent_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+    "write_files": [
+      "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+      "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+      "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+      "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
+    ],
+    "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
     "classes": [
-      "com.chengyinhub.business.longrun.E02_12Test"
+      "com.chengyinhub.business.longrun.E04_07Test",
+      "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
     ],
-    "declared_tests": 2,
-    "actual_tests": 2,
-    "actual_result": {
-      "tests": 2,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0,
-      "passed": 2
-    },
-    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
-    "environment": "Existing212 ordinary offline entry; embeddedH2 and existingMyBatis, no externalDB/Redis/envvar/newdependency",
+    "declared_tests": 11,
+    "actual_tests": null,
+    "actual_result": null,
+    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
     "cloud_execution_allowed": false,
-    "new_sha_inherits_old_pass": false,
-    "source_delivery_status": "SOURCE_DELIVERED_UNVERIFIED",
-    "previous_exact_ordinary_pass": {
-      "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "tests": 64,
-      "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
+    "old_pass_inherited": false,
+    "declared_breakdown": {
+      "new_ordinary_cumulative": 7,
+      "old_producer": 4
     },
-    "other_true_mysql_rr": "E02_25MySqlIT2 remains NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; no newentryproposal",
-    "on_failure": "Only original external_e02 repairlane; independent granted source continues",
-    "task": "cy-vps-extra-1bfa81a5-20261016",
-    "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
-    "local_preparation_receipt": {
-      "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
-      "task": "cy-vps-extra-1bfa81a5-20261016",
-      "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
-      "state": "LOCAL_PREPARED_WAITING_EXISTING_212_SERIAL_ENTRY",
-      "declared_tests": 2,
-      "actual_tests": null,
-      "actual_result": null,
-      "source": "Direct local delegation; fetched/reviewed exact source and prepared source archive, waiting current CORE212 run to finish normally",
-      "cloud_execution": false,
-      "old64_pass_inherited": false,
-      "true_mysql_rr2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    "depends_on_A_source": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+    "migration": {
+      "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+      "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+      "old_rows": "NULL_NO_BACKFILL",
+      "future_runtime_order": "Apply reviewed migration in separately approved future operation BEFORE deploying B code; no deployment in this task",
+      "scope": "One guarded nullablehistory_id column only, no index/FK/base-schema/historicalmigration edits"
     },
-    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
-    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md",
-    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json",
-    "admission_refusal_history": [
-      {
-        "started_at": "2026-10-16T06:03:49.126651+00:00",
-        "guard": {
-          "returncode": 75,
-          "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
-          "stderr": "",
-          "finished_at": "2026-10-16T06:03:49.191982+00:00"
-        },
-        "tests_executed": 0,
-        "container_id": null,
-        "status": "ADMISSION_REFUSED_NOT_A_TEST_FAILURE_OR_PASS"
-      }
-    ],
-    "next_action": "No actual failure; retain original owner/lock. No old64 rerun or trueMySQL/Redis/HTTP/business acceptance. Existing explicit contract decisions handled separately."
+    "real_mysql": {
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07MySqlIT",
+        "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest"
+      ],
+      "declared_tests": 8,
+      "new_methods": 5,
+      "old_methods": 3,
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
+      "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
+      "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+    }
   },
   "admission_history": [
     {
@@ -1563,45 +1782,386 @@
       "runtime_validation": "NOT_RUN"
     }
   },
-  "pending_concrete_contract_inputs": {
-    "E02-23": {
-      "status": "BLOCKED_CONTRACT",
-      "evidence": "C00 EXISTING_BLOCKERS_REFRESH.json square plus current legacy publisher/bookmark source read",
-      "real_caller": "ApiCreativeSquareController.action writeslegacy; bookmark treats suppliedlegacyid as communitypostid; ViewCreativeSquare list/state uses same numerical equality",
-      "required_contracts": [
-        "Authoritative legacy-to-community identity for publications after one-time offline migration; equalnumericid/client-suppliedlegacy-square string not proof",
-        "Existing source-of-truth and update/audit/delete responsibilities: legacycutover vs approvedbridge/projection, no assumeddualwrite",
-        "Legacy missingmapping/collision behavior and protected historical provenance including author consistency"
+  "pending_concrete_contract_inputs": {},
+  "E01_13_current_followup": "Directed fact check completed; retain exact WAITING contract inputs and separate existingOFFERED guards. No new confirmed independently authorized source action from this receipt; no repeated audit or invented active writer.",
+  "user_identity_coupon_decision": {
+    "status": "HUMAN_DECISIONS_RESOLVED_SOURCE_DELIVERED_UNVERIFIED",
+    "source": "Explicit human choices relayed by authorized local coordinator; C00 public exact grants4efd then225b59",
+    "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+    "grant_file": "docs/plans/mini-codex-cloud-20261015/BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+    "E02-23": "Untrusted legacy identities reject bookmark AND cancellation and cannot enrich/filter favorites; only statically proved protected migration identity is retained",
+    "E04-07_old": "Unknown original history audits only, coupon/grant/coupon-reopen marker unchanged; other authorized pointsXP reversal continues;USED retained",
+    "E04-07_future": "Minimal exact originalhistory receipt producer/mapper/new nullable migration source prepared; no oldrow backfill/DDL execution/merge/deploy",
+    "runtime_validation": "NOT_RUN; oldPASS not inherited",
+    "current_source_candidate": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "implementation_scope": "E02 independent; E04 A thenB same originalauthor; no PR231/interface or UI/sharedhistoryAPI edits"
+  },
+  "source_delivery_packages": [
+    {
+      "package": "E04-07-A-UNKNOWN_AUDIT",
+      "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "child_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+      "child_parent_sha": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md"
       ],
-      "owner_paths": [
+      "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07Test"
+      ],
+      "declared_tests": 3,
+      "actual_tests": 0,
+      "actual_result": "NOT_RUN",
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "local_resource_receipt": "Actual212 refused memory2195624kB<2560MiB, no container/no tests; no bypass or authorrepair",
+      "schema_dependency": "NONE; does not read history_id; may independently review/runtime before B",
+      "fresh_xml": 0,
+      "admission_receipt": {
+        "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
+        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "task": "cy-vps-extra-dedb44d5-20261016",
+        "started_at_utc": "2026-10-16T13:01:10Z",
+        "exit_code": 75,
+        "reason": "insufficient_start_memory",
+        "memavailable_kb": 2195624,
+        "required_memavailable_mib": 2560,
+        "container_id": null,
+        "actual_tests": 0,
+        "fresh_xml": 0,
+        "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+        "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+        "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+        "evidence_commit": null
+      }
+    },
+    {
+      "package": "E02-23-STOP_WRONG_TARGET",
+      "candidate_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "parent_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "child_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "child_parent_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "write_files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
-        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md"
       ],
-      "next": "C00 routes original legacy writer to freeze precise identity/compatibility contract and exact source scope; EXTRA does not seize old source or createDDL/UI",
-      "not_new_bug": true,
-      "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
+      "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_23Test",
+        "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+        "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest"
+      ],
+      "declared_tests": 18,
+      "actual_tests": null,
+      "actual_result": null,
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "declared_breakdown": {
+        "new": 6,
+        "old_controller": 8,
+        "old_mapper": 2,
+        "old_sql_contract": 2
+      },
+      "environment": "Existing212 ordinary offline; H2/Jackson/MyBatis/Mockito dependencies already in repo; limited testJSON aliases are not nativeMySQL proof",
+      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed"
+    },
+    {
+      "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "child_parent_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+      "write_files": [
+        "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
+      ],
+      "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07Test",
+        "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+      ],
+      "declared_tests": 11,
+      "actual_tests": null,
+      "actual_result": null,
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "declared_breakdown": {
+        "new_ordinary_cumulative": 7,
+        "old_producer": 4
+      },
+      "depends_on_A_source": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "migration": {
+        "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+        "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+        "old_rows": "NULL_NO_BACKFILL",
+        "future_runtime_order": "Apply reviewed migration in separately approved future operation BEFORE deploying B code; no deployment in this task",
+        "scope": "One guarded nullablehistory_id column only, no index/FK/base-schema/historicalmigration edits"
+      },
+      "real_mysql": {
+        "classes": [
+          "com.chengyinhub.business.longrun.E04_07MySqlIT",
+          "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest"
+        ],
+        "declared_tests": 8,
+        "new_methods": 5,
+        "old_methods": 3,
+        "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
+        "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+        "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
+        "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
+        "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+      }
+    }
+  ],
+  "pending_validation_candidates": [
+    {
+      "package": "E04-07-A-UNKNOWN_AUDIT",
+      "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "child_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+      "child_parent_sha": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md"
+      ],
+      "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07Test"
+      ],
+      "declared_tests": 3,
+      "actual_tests": 0,
+      "actual_result": "NOT_RUN",
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "local_resource_receipt": "Actual212 refused memory2195624kB<2560MiB, no container/no tests; no bypass or authorrepair",
+      "schema_dependency": "NONE; does not read history_id; may independently review/runtime before B",
+      "fresh_xml": 0,
+      "admission_receipt": {
+        "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
+        "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+        "task": "cy-vps-extra-dedb44d5-20261016",
+        "started_at_utc": "2026-10-16T13:01:10Z",
+        "exit_code": 75,
+        "reason": "insufficient_start_memory",
+        "memavailable_kb": 2195624,
+        "required_memavailable_mib": 2560,
+        "container_id": null,
+        "actual_tests": 0,
+        "fresh_xml": 0,
+        "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+        "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+        "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+        "evidence_commit": null
+      }
+    },
+    {
+      "package": "E02-23-STOP_WRONG_TARGET",
+      "candidate_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "parent_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "child_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+      "child_parent_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "write_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md"
+      ],
+      "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_23Test",
+        "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+        "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest"
+      ],
+      "declared_tests": 18,
+      "actual_tests": null,
+      "actual_result": null,
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "declared_breakdown": {
+        "new": 6,
+        "old_controller": 8,
+        "old_mapper": 2,
+        "old_sql_contract": 2
+      },
+      "environment": "Existing212 ordinary offline; H2/Jackson/MyBatis/Mockito dependencies already in repo; limited testJSON aliases are not nativeMySQL proof",
+      "proof": "Only server migration writes protectedLEGACY_MIGRATED; ordinary create/edit validate author allowlist before mapPost, erase onlyclears. Composite requires existinglegacyrow/preservedid/author/exactrequest/JSONarray marker; three readwrite points shareSQLpredicate; missing/forged/erased failsclosed"
+    },
+    {
+      "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+      "child_parent_sha": "e617b3e158cf86972c037c73e5ed4e085e008346",
+      "write_files": [
+        "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
+      ],
+      "status": "SOURCE_DELIVERED_LOCAL_NOT_RUN",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07Test",
+        "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+      ],
+      "declared_tests": 11,
+      "actual_tests": null,
+      "actual_result": null,
+      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
+      "cloud_execution_allowed": false,
+      "old_pass_inherited": false,
+      "declared_breakdown": {
+        "new_ordinary_cumulative": 7,
+        "old_producer": 4
+      },
+      "depends_on_A_source": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "migration": {
+        "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+        "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+        "old_rows": "NULL_NO_BACKFILL",
+        "future_runtime_order": "Apply reviewed migration in separately approved future operation BEFORE deploying B code; no deployment in this task",
+        "scope": "One guarded nullablehistory_id column only, no index/FK/base-schema/historicalmigration edits"
+      },
+      "real_mysql": {
+        "classes": [
+          "com.chengyinhub.business.longrun.E04_07MySqlIT",
+          "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest"
+        ],
+        "declared_tests": 8,
+        "new_methods": 5,
+        "old_methods": 3,
+        "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
+        "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+        "env": "Explicit CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}; newITBASE=e04_scratch, suffixexclusive nonempty, MySQL8+ nonMariaDB, approvedscratch CREATE/DROP/DML",
+        "gate": "No new envgate/entry/CI; *IT only explicit-Dtest, existing fixed fundsCI list does not imply newclass coverage",
+        "schema_safety": "CREATE collisionfails, no predrop, only drop owncreated scratch; no VPS/service/network byCloud"
+      }
+    }
+  ],
+  "latest_worker_round": {
+    "original_authors": [
+      "/root/external_e02",
+      "/root/external_e04"
+    ],
+    "peak_business_source_workers": 2,
+    "static_readonly_review_worker": "/root/external_e01",
+    "static_review_result": "No blocking finding; H2JSON aliases not nativeMySQL equivalence",
+    "current_source_workers": 0,
+    "new_test_execution": "NOT_RUN"
+  },
+  "resolved_contract_inputs": {
+    "E02-23": {
+      "status": "HUMAN_DECIDED_IMPLEMENTED_SOURCE_NOT_RUN",
+      "prior_blocker": {
+        "status": "BLOCKED_CONTRACT",
+        "evidence": "C00 EXISTING_BLOCKERS_REFRESH.json square plus current legacy publisher/bookmark source read",
+        "real_caller": "ApiCreativeSquareController.action writeslegacy; bookmark treats suppliedlegacyid as communitypostid; ViewCreativeSquare list/state uses same numerical equality",
+        "required_contracts": [
+          "Authoritative legacy-to-community identity for publications after one-time offline migration; equalnumericid/client-suppliedlegacy-square string not proof",
+          "Existing source-of-truth and update/audit/delete responsibilities: legacycutover vs approvedbridge/projection, no assumeddualwrite",
+          "Legacy missingmapping/collision behavior and protected historical provenance including author consistency"
+        ],
+        "owner_paths": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+          "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
+        ],
+        "next": "C00 routes original legacy writer to freeze precise identity/compatibility contract and exact source scope; EXTRA does not seize old source or createDDL/UI",
+        "not_new_bug": true,
+        "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
+      },
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "delivery_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3"
     },
     "E04-07": {
-      "status": "BLOCKED_CONTRACT",
-      "consumer_ownership_already_granted": true,
-      "real_caller": "Registration redemptionreverse clawbackRewards -> PerkLedger -> RedemptionRewardClawbackService.voidCompletionCoupon; do not enlarge refundpolicy",
-      "facts": "Completion log stores topic/member/coupon/time but no originalhistoryid; boolean grantCouponById discards id. timewindow/MAXhistory can select later validCRM/nodegrant.",
-      "reusable_primitive": "Existing ISmsCouponHistoryService.grantCouponWithReceipt returns actualhistoryid transactionally; reward_drop source helper is not a completion identity contract",
-      "required_contracts": [
-        "How exact newlygranted historyid joins topic/member completionreceipt atomically while preserving uniqueonce/recompletion",
-        "Established behavior for old logs whose originalhistory identity is missing: cannot infer by DESC/ASC/window or pick unused substitute",
-        "Preserve originalUSED audit-only behavior and unrelatedcoupon nonmutation; define originalunknown boundary before consumer implementation"
-      ],
-      "producer_paths": [
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
-        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml"
-      ],
-      "next": "C00/original producer freezes receipt and legacy contract then grants exact producer/fixture/schema-source scope if necessary; no repeated consumerpermission request or inferredhistory repair",
-      "not_new_bug": true,
-      "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
+      "status": "HUMAN_DECIDED_IMPLEMENTED_SOURCE_NOT_RUN",
+      "prior_blocker": {
+        "status": "BLOCKED_CONTRACT",
+        "consumer_ownership_already_granted": true,
+        "real_caller": "Registration redemptionreverse clawbackRewards -> PerkLedger -> RedemptionRewardClawbackService.voidCompletionCoupon; do not enlarge refundpolicy",
+        "facts": "Completion log stores topic/member/coupon/time but no originalhistoryid; boolean grantCouponById discards id. timewindow/MAXhistory can select later validCRM/nodegrant.",
+        "reusable_primitive": "Existing ISmsCouponHistoryService.grantCouponWithReceipt returns actualhistoryid transactionally; reward_drop source helper is not a completion identity contract",
+        "required_contracts": [
+          "How exact newlygranted historyid joins topic/member completionreceipt atomically while preserving uniqueonce/recompletion",
+          "Established behavior for old logs whose originalhistory identity is missing: cannot infer by DESC/ASC/window or pick unused substitute",
+          "Preserve originalUSED audit-only behavior and unrelatedcoupon nonmutation; define originalunknown boundary before consumer implementation"
+        ],
+        "producer_paths": [
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+          "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml"
+        ],
+        "next": "C00/original producer freezes receipt and legacy contract then grants exact producer/fixture/schema-source scope if necessary; no repeated consumerpermission request or inferredhistory repair",
+        "not_new_bug": true,
+        "decision_request_state": "Local coordinator has asked user minimal product/identity questions; answer pending, do not infer policy"
+      },
+      "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e",
+      "delivery_sha": "923170abd8e468d62eb8404b16b990609a4da42a"
     }
   },
-  "E01_13_current_followup": "Directed fact check completed; retain exact WAITING contract inputs and separate existingOFFERED guards. No new confirmed independently authorized source action from this receipt; no repeated audit or invented active writer."
+  "migration_source_claim": {
+    "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+    "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+    "old_rows": "NULL_NO_BACKFILL",
+    "future_runtime_order": "Apply reviewed migration in separately approved future operation BEFORE deploying B code; no deployment in this task",
+    "scope": "One guarded nullablehistory_id column only, no index/FK/base-schema/historicalmigration edits",
+    "owner": "EXTRA6/E04",
+    "public_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+    "grant_control_sha": "225b59efa72bf54423fc3a5f6069bff6cc72353e"
+  },
+  "latest_local_admission_refusal": {
+    "source": "Direct local coordinator actual212 guard delegation; publicevidencecommit not yet provided",
+    "candidate_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+    "task": "cy-vps-extra-dedb44d5-20261016",
+    "started_at_utc": "2026-10-16T13:01:10Z",
+    "exit_code": 75,
+    "reason": "insufficient_start_memory",
+    "memavailable_kb": 2195624,
+    "required_memavailable_mib": 2560,
+    "container_id": null,
+    "actual_tests": 0,
+    "fresh_xml": 0,
+    "source_archive_sha256": "b5db4d5f22a8465184ad13980d30aacc538c6073ec19efb756819b66cee74191",
+    "cleanup": "Local explicitchengyin-aws exactnamefilter confirmed no container",
+    "status": "ADMISSION_REFUSED_NOT_RUN_NOT_SOURCE_FAILURE",
+    "evidence_commit": null
+  }
 }
