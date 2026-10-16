@@ -285,3 +285,11 @@ C00总账/跨端索引的旧“11类正在验尚无结果”应更新为“ed598
 现111历史=58交付/40反证/9依赖或决策阻塞/4委派他队，READY0，目标50缺50；当前源码写者0、1名只在/tmp准备具体待转交补丁，不称满载或追加泛审计。C00若授精确新方法即可原writer继续；E01-19一行建议已公共备妥，E02-23跨owner仍待原写者。
 
 E02-25具体补丁与RR回归方案已/tmp准备完毕，源码/测试仓库未应用，原worker停止；真实源码活动0/READY0/阻塞9（111历史），未因本地faef验证等待而停合法独立项。唯一源阻塞是新Mapper方法精确grant；E02_24Test仍原E02写者，无需换人，未来仅必要duplicate fixture接线。新测试证据沿原lane唯一ID登记，不重复索一般开工批准。核心review差异：仅catch后普通select→selectCommentByAuthorRequestForUpdate，接口增exact author/request方法，XML同投影FOR UPDATE/useCachefalse/flushCachetrue；初始普通读及新24 parent绑定不变。真RR回归是未来方案，不是faef已交类，不能把设计4普通+2真库当实际已写/已测。
+
+## faef普通60PASS直接回报；E02-25已正式恢复
+
+本地直接回报faefbaf8947b6ff202849385d28473fe2eaaa21e两普通类E02_24Test+CommunityPostServiceImplTest60实际PASS/F0/E0/S0、2fresh精确XML、212guard0 completed；03:47:03Z结束、精确自有容器已由本地chengyin-aws确认不在。首次03:40:30Z锁拒绝0项、03:44:19Z正常准入历史保留，归档sha e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857。公开PR24证据待发，evidence_commit=null；不是MySQL RR/Redis并发或运行HTTP验收，新25候选不继承60PASS。
+
+已完整读控制5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195的E02_25_SOURCE_GRANT（原af4f5f授权），原external_e02实际恢复，PR16#6207665975回ACK。6正式源/测试/证据路径加自身已独占E02_24Test必要duplicate fixture共7路径；原writer不变，父向C00明示必要第7附属路径，不改旧55。Service原blob与faef一致，按同一原branch继续，不等本地验证。普通和真RR用例仅写NOT_RUN，真实存储入口仍缺，不Cloud运行/改CI/起服务。
+
+E01-19已由CORE/C03交e0e3f517并据C00签普通10PASS，转记他队解决不重复实现；E02-23双表桥合同仍BLOCKED_CONTRACT，不猜双写。111历史当前58交付/40反证/7阻塞/5他队委派/1在途，实际源码writer1，READY0，50目标缺49，其他空槽不伪称满载。

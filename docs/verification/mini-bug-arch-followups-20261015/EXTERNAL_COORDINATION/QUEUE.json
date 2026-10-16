@@ -3554,10 +3554,10 @@
       "source_files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java"
       ],
-      "state": "BLOCKED_DEPENDENCY",
+      "state": "RESOLVED_BY_OTHER_TEAM",
       "owner": "CORE/C03",
-      "verification": "NOT_RUN",
-      "delivery": "SOURCE_PACKET_ONLY_NOT_IMPLEMENTED",
+      "verification": "CORE10_ORDINARY_PASS_REPORTED_BY_C00_NOT_EXTRA_EXECUTION",
+      "delivery": "SOURCE_DELIVERED_BY_ORIGINAL_CORE_WRITER",
       "source_base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "regression_file": null,
       "evidence_file": null,
@@ -3566,17 +3566,15 @@
       "assigned_worker": null,
       "branch": "codex/extra-e01-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e01",
-      "depends_on": [
-        "C00 assigns original CORE/C03 fix or exact topicLike transfer"
-      ],
-      "public_sha": null,
+      "depends_on": [],
+      "public_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "regression_methods_written": 0,
       "writer_mode": "SOURCE_OWNER",
       "future_focused_command": null,
       "requested_owner": "EXTRA6/E01 only if C00 formally transfers exact method",
       "evidence_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
       "evidence_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
-      "blocker": "Controller original owner must repair or formally transfer; leaf CRUD grant alone cannot fix this entry-point behavior"
+      "blocker": null
     },
     {
       "id": "E03-18",
@@ -3644,7 +3642,7 @@
       "id": "E02-23",
       "lane": "E02",
       "title": "旧广场与新社区独立ID的收藏对象误关联",
-      "state": "BLOCKED_DEPENDENCY",
+      "state": "BLOCKED_CONTRACT",
       "status": "SOURCE_PACKET_ONLY",
       "owner": "Existing CreativeSquare/Claude owner; C00 to route",
       "assigned_worker": null,
@@ -3703,29 +3701,32 @@
       "id": "E02-25",
       "lane": "E02",
       "title": "评论唯一冲突后RR重放读取赢家当前行",
-      "state": "BLOCKED_DEPENDENCY",
-      "status": "SOURCE_PACKET_PREPARATION_ONLY",
-      "owner": "EXTRA6/E02 retained Service/XML; Mapper method extension pending C00",
-      "assigned_worker": null,
+      "state": "IN_PROGRESS_SOURCE",
+      "status": "AUTHORIZED_SOURCE_IMPLEMENTATION",
+      "owner": "EXTRA6/E02",
+      "assigned_worker": "/root/external_e02",
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
       "source_base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
-      "regression_file": null,
-      "evidence_file": null,
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
       "public_sha": null,
       "verification": "NOT_RUN",
-      "delivery": "SOURCE_PROPOSAL_ONLY_NOT_IMPLEMENTED",
+      "delivery": "NOT_YET_DELIVERED",
       "trigger": "Supported MySQL RR scenario: ordinary readview misses concurrent same-request winner after duplicate insert; ordinary recovery still sees null and409",
       "scope_limit": "Repository MySQL/Druid inherits isolation, no RC override; actual VPS/production isolation unknown, no service connection attempted",
       "minimal_fix_boundary": "Only duplicate-key recovery uses exact uncached current read; initial read unchanged; preserve E02-24 target identity and no global isolation change",
-      "depends_on": [
-        "C00 formally extends exact selectCommentByAuthorRequestForUpdate Mapper interface method; unique new regressions can then be registered under existing lane authority"
-      ],
+      "depends_on": [],
       "permission_request": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
-      "preparation": "Completed /tmp reviewable production.patch, fixture-E02_24.patch and README; no repo application"
+      "preparation": "Completed /tmp reviewable production.patch, fixture-E02_24.patch and README; no repo application",
+      "mysql_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+      "necessary_owned_fixture": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+      "child_source_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+      "grant_control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
+      "grant_document": "docs/plans/mini-codex-cloud-20261015/E02_25_SOURCE_GRANT.json"
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3787,7 +3788,7 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": null,
+    "E02": "E02-25",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -3798,12 +3799,12 @@
     "total_history": 111,
     "source_delivered": 58,
     "no_change_source_review": 40,
-    "blocked": 9,
+    "blocked": 7,
     "ready": 0,
-    "claimed": 0,
-    "actionable_or_inflight": 0
+    "claimed": 1,
+    "actionable_or_inflight": 1
   },
-  "control_latest_read_sha": "ba40af104e008a8a58cb79840290bd909abaeed2",
+  "control_latest_read_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3815,9 +3816,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "E02-25",
       "worker": "/root/external_e02",
-      "mode": "DELIVERED_IDLE; RR_PATCH_PREPARED_PENDING_EXACT_INTERFACE_GRANT",
+      "mode": "ACTIVE_AUTHORIZED_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -3849,11 +3850,11 @@
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 50,
+  "refill_shortfall": 49,
   "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-24 parent identity publicly delivered,5new+55old planned60 NOT_RUN; independent RR E02-25 needs exact interface grant, only /tmp preparation",
+    "E02": "faef two ordinary classes60PASS reported by local only; original E02 actively implementing authorizedRR current read, new source NOT_RUN",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -4177,7 +4178,7 @@
     "E02-24": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 0,
+  "actual_new_development_workers": 1,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -4323,6 +4324,47 @@
       "full76_rerun": false,
       "other_sha_pass_inherited": false,
       "business_runtime_acceptance": false
+    },
+    {
+      "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "scope": "TWO_ORDINARY_COMMENT_REPLAY_CLASSES_ONLY",
+      "status": "PASS_REPORTED_BY_LOCAL",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_24Test",
+        "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+      ],
+      "actual": {
+        "tests": 60,
+        "passed": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xml_classes": 2,
+        "exact_class_set_match": true,
+        "fresh_reports": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed"
+      },
+      "task": "cy-vps-extra-faefbaf8-20261016",
+      "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+      "completed_at_utc": "2026-10-16T03:47:03Z",
+      "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
+      "cleanup": "Local coordinator explicitly confirmed own container absent via chengyin-aws",
+      "admission_history": [
+        {
+          "at_utc": "2026-10-16T03:40:30Z",
+          "reason": "shared lock refusal",
+          "tests_executed": 0
+        },
+        {
+          "at_utc": "2026-10-16T03:44:19Z",
+          "state": "normal admission after prior lock released"
+        }
+      ],
+      "source": "Direct local report; public PR24 summary pending",
+      "evidence_commit": null,
+      "new_rr_candidate_inherits_pass": false,
+      "real_mysql_redis_acceptance": false
     }
   ],
   "pending_local_failure_retests": [],
@@ -4430,20 +4472,25 @@
       "prepared_review_patch": "if (rows > 0) -> if (rows > 0 || (rows == 0 && !legacyToggle && likeType == 0))",
       "public_core_checked_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "source_blob": "ca9c885b9cd30e6858e469373ae8811dd0784e34",
-      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194"
+      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194",
+      "status": "RESOLVED_BY_CORE_ORIGINAL_WRITER",
+      "public_source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76"
     },
     "E02-25": {
       "requested_owner": "EXTRA6/E02 original writer",
       "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
       "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
       "comment": 6207443710,
-      "extra_new_method_write_allowed": false,
+      "extra_new_method_write_allowed": true,
       "prepared_patch": "/tmp/e02-25-proposal/production.patch",
       "prepared_fixture_patch": "/tmp/e02-25-proposal/fixture-E02_24.patch",
       "prepared_plan": "/tmp/e02-25-proposal/README.md",
-      "prepared_status": "COMPLETE_TMP_ONLY_NO_REPOSITORY_APPLICATION",
+      "prepared_status": "BEING_IMPLEMENTED_AFTER_FORMAL_GRANT",
       "new_source_dependency_blocker": "Only exact new Mapper method grant; same original writer retains E02_24 fixture, no writer change",
-      "actual_source_writers": 0
+      "actual_source_writers": 0,
+      "grant_control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
+      "ack_comment": 6207665975,
+      "source_dependency_blocker": null
     }
   },
   "validation_queue_state": {

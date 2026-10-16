@@ -7,7 +7,7 @@
   "model": "gpt-6.1-sol",
   "active_tasks": {
     "E01": null,
-    "E02": null,
+    "E02": "E02-25",
     "E03": null,
     "E04": null,
     "E05": null,
@@ -76,8 +76,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
+      "active_task": "E02-25",
+      "source_status": "ACTIVE_ORIGINAL_SOURCE_WRITER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
@@ -87,8 +87,8 @@
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "child_writer": "/root/external_e02",
-      "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
+      "active_task": "E02-25",
+      "source_status": "ACTIVE_ORIGINAL_SOURCE_WRITER",
       "verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
@@ -547,9 +547,15 @@
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant.",
       "child_writer": "/root/external_e02",
-      "active_task": null,
-      "source_status": "OWNERSHIP_RETAINED_DELIVERED_UNVERIFIED",
-      "verification": "NOT_RUN"
+      "active_task": "E02-25",
+      "source_status": "ACTIVE_ORIGINAL_SOURCE_WRITER",
+      "verification": "NOT_RUN",
+      "additional_exact_grant": {
+        "task": "E02-25",
+        "method": "selectCommentByAuthorRequestForUpdate(authorId,clientRequestId)",
+        "control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
+        "scope": "Only this new method"
+      }
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
       "owner": "EXTRA6/E02",
@@ -631,7 +637,7 @@
     "No validation execution; preserve historical evidence without transferring pass claims",
     "Freeze task before parent commits and publishes complete SHA; next same-lane task starts after commit"
   ],
-  "control_latest_read_sha": "ba40af104e008a8a58cb79840290bd909abaeed2",
+  "control_latest_read_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
   "lane_public_heads": {
     "E01": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
     "E02": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
@@ -651,9 +657,9 @@
     },
     {
       "slot": "E02",
-      "task": null,
+      "task": "E02-25",
       "worker": "/root/external_e02",
-      "mode": "DELIVERED_IDLE; RR_PATCH_PREPARED_PENDING_EXACT_INTERFACE_GRANT",
+      "mode": "ACTIVE_AUTHORIZED_ORIGINAL_WRITER",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -722,9 +728,11 @@
       "owner": "EXTRA6/E02",
       "child_writer": "/root/external_e02",
       "task": "E02-24",
-      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "state": "ACTIVE_UNIQUE_ORIGINAL_WRITER",
       "verification": "NOT_RUN",
-      "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
+      "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+      "active_task": "E02-25",
+      "scope": "Only duplicate-key fixture connection change, keep5 methods/assertions"
     },
     "docs/verification/mini-longrun-20261015/EXTRA6/E02-24.md": {
       "owner": "EXTRA6/E02",
@@ -733,6 +741,30 @@
       "state": "SOURCE_DELIVERED_UNVERIFIED",
       "verification": "NOT_RUN",
       "public_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "verification": "NOT_RUN",
+      "active_task": "E02-25",
+      "state": "ACTIVE_UNIQUE_ORIGINAL_WRITER",
+      "scope": "Exact grantedE02-25 path"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "verification": "NOT_RUN",
+      "active_task": "E02-25",
+      "state": "ACTIVE_UNIQUE_ORIGINAL_WRITER",
+      "scope": "Exact grantedE02-25 path"
+    },
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md": {
+      "owner": "EXTRA6/E02",
+      "child_writer": "/root/external_e02",
+      "verification": "NOT_RUN",
+      "active_task": "E02-25",
+      "state": "ACTIVE_UNIQUE_ORIGINAL_WRITER",
+      "scope": "Exact grantedE02-25 path"
     }
   },
   "frozen_prepared_sources": {},
@@ -1020,7 +1052,9 @@
       "prepared_review_patch": "if (rows > 0) -> if (rows > 0 || (rows == 0 && !legacyToggle && likeType == 0))",
       "public_core_checked_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
       "source_blob": "ca9c885b9cd30e6858e469373ae8811dd0784e34",
-      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194"
+      "review_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207390194",
+      "status": "RESOLVED_BY_CORE_ORIGINAL_WRITER",
+      "public_source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76"
     },
     "E04-07": {
       "consumer_owned": "EXTRA6/E04",
@@ -1045,19 +1079,22 @@
       "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
       "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
       "comment": 6207443710,
-      "extra_new_method_write_allowed": false,
+      "extra_new_method_write_allowed": true,
       "prepared_patch": "/tmp/e02-25-proposal/production.patch",
       "prepared_fixture_patch": "/tmp/e02-25-proposal/fixture-E02_24.patch",
       "prepared_plan": "/tmp/e02-25-proposal/README.md",
-      "prepared_status": "COMPLETE_TMP_ONLY_NO_REPOSITORY_APPLICATION",
+      "prepared_status": "BEING_IMPLEMENTED_AFTER_FORMAL_GRANT",
       "new_source_dependency_blocker": "Only exact new Mapper method grant; same original writer retains E02_24 fixture, no writer change",
-      "actual_source_writers": 0
+      "actual_source_writers": 0,
+      "grant_control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
+      "ack_comment": 6207665975,
+      "source_dependency_blocker": null
     }
   },
   "pending_local_failure_retests": [],
   "latest_repair_candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 0,
+  "actual_new_development_workers": 1,
   "external_team_read_only_reservations": [
     {
       "id": "FORWARD_CLOUD_INITIAL_SIX_PATHS",
