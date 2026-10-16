@@ -199,7 +199,7 @@ Page({
     if (!expect) return;
     this._expectReadback = null;
     if (!inviteCard.readbackMismatch(invites, expect)) return;
-    toast('已提交，但最新状态还没同步，请稍后下拉刷新');
+    toast('已提交，状态未同步，稍后下拉刷新');
   },
 
   _clearActionBusy(clearFailed) {
