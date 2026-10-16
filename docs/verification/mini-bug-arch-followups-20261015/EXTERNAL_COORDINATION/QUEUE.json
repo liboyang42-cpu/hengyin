@@ -3951,7 +3951,8 @@
         "source_changed": false
       },
       "fixture_repair_candidate_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
-      "local_failure_repair_state": "SOURCE_DELIVERED_UNVERIFIED_PENDING_TWO_CLASS8_RETEST"
+      "local_failure_repair_state": "CLOSED_LOCAL_TWO_CLASS8_TARGETED_PASS",
+      "fixture_repair_evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d"
     },
     {
       "id": "E02-24",
@@ -4064,7 +4065,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 24,
+  "queue_revision": 25,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -4146,9 +4147,9 @@
     },
     {
       "slot": "E02",
-      "task": "E02-23-H2-ALIAS-FIXTURE-REPAIR",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "REPAIR_SOURCE_DELIVERED_AWAITING_LOCAL_TARGETED",
+      "mode": "REPAIR_CLOSED_TARGETED8_PASS_IDLE_ORIGINAL_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e02",
       "public_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950"
     },
@@ -4481,7 +4482,7 @@
     {
       "id": "VPS_EXTRA_923170ab_H2_ALIAS",
       "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
-      "status": "REPAIR_SOURCE_DELIVERED_AWAITING_LOCAL_TARGETED",
+      "status": "CLOSED_LOCAL_TARGETED8_PASS",
       "writer": "/root/external_e02",
       "repair_slots": 1,
       "original_results": {
@@ -4516,57 +4517,17 @@
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
       ],
       "planned_invocations": 8,
-      "repair_execution": "NOT_RUN",
+      "repair_execution": "LOCAL_TWO_CLASS8_PASS",
       "production_change_allowed": false,
       "prior35_errors_retained": true,
       "rerun_passed_four_classes": false,
-      "rerun_all35": false
+      "rerun_all35": false,
+      "repair_slot_released": true,
+      "closure_evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+      "closure_evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json"
     }
   ],
-  "active_failure_repair": {
-    "id": "VPS_EXTRA_923170ab_H2_ALIAS",
-    "candidate_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
-    "status": "REPAIR_SOURCE_DELIVERED_AWAITING_LOCAL_TARGETED",
-    "writer": "/root/external_e02",
-    "repair_slots": 1,
-    "original_results": {
-      "tests": 35,
-      "failures": 0,
-      "errors": 7,
-      "skipped": 0,
-      "passed": 28
-    },
-    "fresh_xml_count": 6,
-    "failure_classes": {
-      "com.chengyinhub.business.longrun.E02_23Test": {
-        "tests": 6,
-        "passed": 1,
-        "errors": 5
-      },
-      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": {
-        "tests": 2,
-        "passed": 0,
-        "errors": 2
-      }
-    },
-    "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
-    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
-    "repair_candidate_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
-    "repair_write_files": [
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java"
-    ],
-    "next_classes": [
-      "com.chengyinhub.business.longrun.E02_23Test",
-      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
-    ],
-    "planned_invocations": 8,
-    "repair_execution": "NOT_RUN",
-    "production_change_allowed": false,
-    "prior35_errors_retained": true,
-    "rerun_passed_four_classes": false,
-    "rerun_all35": false
-  },
+  "active_failure_repair": null,
   "new_scope_requests": [
     {
       "comment_id": 6198507537,
@@ -5317,35 +5278,70 @@
     }
   },
   "validation_queue_state": {
-    "package": "E02-23-H2-ALIAS-FIXTURE-REPAIR",
-    "candidate_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
-    "parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
-    "child_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950",
-    "child_parent_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
-    "write_files": [
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java"
+    "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+    "direct_parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
+    "actual_tests": 8,
+    "totals": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 8
+    },
+    "fresh_xml_count": 2,
+    "fresh_exact_xml": true,
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.longrun.E02_23Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
+        "sha256": "8ffc20454781a45d2169075b3359282caee25e4a4546aff1dc2e29a9e7ef5ac3",
+        "fresh": true,
+        "testcases": 6,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
+        "sha256": "8a0e21e02482cac036a00cb1659aaea3e27e79ec4e3e4c4ac08e174bf7beaa25",
+        "fresh": true,
+        "testcases": 2,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
     ],
-    "writer": "/root/external_e02",
-    "status": "SOURCE_DELIVERED_UNVERIFIED",
-    "execution": "NOT_RUN",
+    "started_at": "2026-10-16T14:03:53.575927+00:00",
+    "guard_receipt": {
+      "exitCode": 0,
+      "reason": "completed",
+      "containerId": "8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8"
+    },
+    "log_sha256": "d37b5935726b87bea9698f6c988b942f52aa834a98bdf4cce76953cdf9725b1b",
+    "build_success": true,
+    "evidence_result": "PASS",
+    "not_inherited": "This new SHA has only8 actual targeted PASS, not35 rerun or inherited28 PASS.",
+    "finished_at": "2026-10-16T14:06:40.642804+00:00",
+    "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
+    "status": "LOCAL_TWO_CLASS8_TARGETED_PASS",
+    "read_scope": "Public README and summary actually read; remote original log/XML hashes cited, not retrieved/recomputed by Cloud",
+    "cleanup": "chengyin-aws; exact id=8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8; empty result exit0",
+    "original_author_ack": "Original external_e02 acknowledged8 targetedPASS and stopped; repair slot released, original file locks retained",
+    "candidate_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
     "classes": [
       "com.chengyinhub.business.longrun.E02_23Test",
       "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
     ],
-    "declared_tests": 8,
-    "actual_tests": null,
-    "old_pass_inherited": false,
-    "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest test",
-    "root_cause": "H2 1.4.200 CREATE ALIAS FOR requires quoted Java method identifier; single-quoted SQL string rejected with42001 expected identifier",
-    "minimal_fix": "Only4 ALIAS strings across2 granted fixtures: JSON_TYPE and JSON_CONTAINS FOR target uses double quotes. All methods/assertions/helpers/productionXML unchanged. No dependency/production/CI changes.",
-    "environment": "Existing offline212 H2/MyBatis/Jackson classpath; no external DB/Redis/new env. Local only.",
-    "depends_on_source": "923170abd8e468d62eb8404b16b990609a4da42a",
-    "repair_feedback_evidence": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
-    "delivery_comments": {
-      "PR24": 6217153817,
-      "PR16": 6217154148
-    }
+    "cloud_execution_allowed": false,
+    "full35_rerun": false,
+    "inherited_old28_pass": false,
+    "true_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "migration_status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+    "next_action": "No current sourcefailure or independentREADY; source frozen, no repeat run or fabricated tasks"
   },
   "admission_history": [
     {
@@ -5772,14 +5768,14 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java"
       ],
       "writer": "/root/external_e02",
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN",
+      "status": "SOURCE_DELIVERED_LOCAL_TARGETED8_PASS",
+      "execution": "LOCAL_TWO_CLASS_EXECUTED_CLOUD_NOT_RUN",
       "classes": [
         "com.chengyinhub.business.longrun.E02_23Test",
         "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
       ],
       "declared_tests": 8,
-      "actual_tests": null,
+      "actual_tests": 8,
       "old_pass_inherited": false,
       "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest test",
       "root_cause": "H2 1.4.200 CREATE ALIAS FOR requires quoted Java method identifier; single-quoted SQL string rejected with42001 expected identifier",
@@ -5790,6 +5786,21 @@
       "delivery_comments": {
         "PR24": 6217153817,
         "PR16": 6217154148
+      },
+      "actual_result": "TARGETED_PASS_ONLY",
+      "local_evidence": {
+        "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+        "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
+        "actual_tests": 8,
+        "totals": {
+          "tests": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 8
+        },
+        "status": "LOCAL_TWO_CLASS8_TARGETED_PASS"
       }
     }
   ],
@@ -5971,37 +5982,6 @@
         "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
         "scope": "Two ordinary classes only within original35 NOT_PASS; trueMySQL stillNOT_RUN; result not transferred to b034 repair SHA"
       }
-    },
-    {
-      "package": "E02-23-H2-ALIAS-FIXTURE-REPAIR",
-      "candidate_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
-      "parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
-      "child_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950",
-      "child_parent_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
-      "write_files": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java"
-      ],
-      "writer": "/root/external_e02",
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN",
-      "classes": [
-        "com.chengyinhub.business.longrun.E02_23Test",
-        "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
-      ],
-      "declared_tests": 8,
-      "actual_tests": null,
-      "old_pass_inherited": false,
-      "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest test",
-      "root_cause": "H2 1.4.200 CREATE ALIAS FOR requires quoted Java method identifier; single-quoted SQL string rejected with42001 expected identifier",
-      "minimal_fix": "Only4 ALIAS strings across2 granted fixtures: JSON_TYPE and JSON_CONTAINS FOR target uses double quotes. All methods/assertions/helpers/productionXML unchanged. No dependency/production/CI changes.",
-      "environment": "Existing offline212 H2/MyBatis/Jackson classpath; no external DB/Redis/new env. Local only.",
-      "depends_on_source": "923170abd8e468d62eb8404b16b990609a4da42a",
-      "repair_feedback_evidence": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
-      "delivery_comments": {
-        "PR24": 6217153817,
-        "PR16": 6217154148
-      }
     }
   ],
   "latest_worker_round": {
@@ -6134,45 +6114,26 @@
   },
   "production_source_unchanged_since": "923170abd8e468d62eb8404b16b990609a4da42a",
   "latest_local_actual_result": {
-    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
-    "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
-    "actual_tests": 35,
+    "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+    "direct_parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
+    "actual_tests": 8,
     "totals": {
-      "tests": 35,
+      "tests": 8,
       "failures": 0,
-      "errors": 7,
+      "errors": 0,
       "skipped": 0,
-      "passed": 28
+      "passed": 8
     },
-    "fresh_xml_count": 6,
+    "fresh_xml_count": 2,
     "fresh_exact_xml": true,
-    "result": "ORDINARY_TARGETED_35_NOT_PASS",
-    "started_at": "2026-10-16T13:54:12.303208+00:00",
-    "finished_at": "2026-10-16T13:57:02.825513+00:00",
-    "guard": {
-      "exitCode": 1,
-      "reason": "child_command_failed",
-      "containerId": "c2bb12cb40d9b43ef08847f80ebd8cf9adef6fa37f58a2ffb08639ad13c707dd"
-    },
     "reports": [
       {
         "class": "com.chengyinhub.business.longrun.E02_23Test",
         "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
-        "sha256": "ba04be2b8071042dd8f7d810b9d39940ba4b9e9b8e2cbaadc6c93da4a0c4f14f",
+        "sha256": "8ffc20454781a45d2169075b3359282caee25e4a4546aff1dc2e29a9e7ef5ac3",
         "fresh": true,
         "testcases": 6,
         "tests": 6,
-        "failures": 0,
-        "errors": 5,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.longrun.E04_07Test",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_07Test.xml",
-        "sha256": "417c80b646f55210f75a577d2ff3485405c15b8c2a77a183c75ee1e62fc2b261",
-        "fresh": true,
-        "testcases": 7,
-        "tests": 7,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -6180,53 +6141,143 @@
       {
         "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
         "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
-        "sha256": "22c3d6454c1f6e5b69482d6fb64f5d17df896964391e86d90d4daa888b6d517c",
+        "sha256": "8a0e21e02482cac036a00cb1659aaea3e27e79ec4e3e4c4ac08e174bf7beaa25",
         "fresh": true,
         "testcases": 2,
         "tests": 2,
-        "failures": 0,
-        "errors": 2,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest.xml",
-        "sha256": "3fde7761cc888afad9342a1ada67d6e4e03320c6f7ee05c5c813cb61a7424e4a",
-        "fresh": true,
-        "testcases": 2,
-        "tests": 2,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest.xml",
-        "sha256": "db62518d28aef97ddf4b814ecd11c549deb793a4ea1ec0b6a91f16c8f381a5b0",
-        "fresh": true,
-        "testcases": 4,
-        "tests": 4,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest.xml",
-        "sha256": "6e7a513106f0cca1a39c3acae8da88ea8868f513b04435841b73fddee708110e",
-        "fresh": true,
-        "testcases": 14,
-        "tests": 14,
         "failures": 0,
         "errors": 0,
         "skipped": 0
       }
     ],
-    "log_sha256": "c961a2468344a7873d3902ec425a1d3eddab08023c6b061e4a95f1f1d06b9251",
-    "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
-    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
-    "read_scope": "Public README and summary actually read; remote original log/XML hashes are cited, not independently retrieved/recomputed by Cloud",
-    "cleanup": "Local explicit chengyin-aws exact container ID confirmed absent; no active Java"
+    "started_at": "2026-10-16T14:03:53.575927+00:00",
+    "guard_receipt": {
+      "exitCode": 0,
+      "reason": "completed",
+      "containerId": "8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8"
+    },
+    "log_sha256": "d37b5935726b87bea9698f6c988b942f52aa834a98bdf4cce76953cdf9725b1b",
+    "build_success": true,
+    "evidence_result": "PASS",
+    "not_inherited": "This new SHA has only8 actual targeted PASS, not35 rerun or inherited28 PASS.",
+    "finished_at": "2026-10-16T14:06:40.642804+00:00",
+    "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
+    "status": "LOCAL_TWO_CLASS8_TARGETED_PASS",
+    "read_scope": "Public README and summary actually read; remote original log/XML hashes cited, not retrieved/recomputed by Cloud",
+    "cleanup": "chengyin-aws; exact id=8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8; empty result exit0",
+    "original_author_ack": "Original external_e02 acknowledged8 targetedPASS and stopped; repair slot released, original file locks retained"
   },
-  "worker_runtime_note": "Original E02 single repair author completed and stopped; actual running source writers0/READY0; one repair case pending local two-class8 retest. E04 not a repair author; all source locks retained. Cloud execution forbidden."
+  "worker_runtime_note": "Original E02 acknowledged8 targetedPASS; repair slot released, actual sourcewriters0/READY0/activefailure0. Original file locks retained; no fabricated work or Cloud execution.",
+  "local_actual_result_history": [
+    {
+      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "actual_tests": 35,
+      "totals": {
+        "tests": 35,
+        "failures": 0,
+        "errors": 7,
+        "skipped": 0,
+        "passed": 28
+      },
+      "fresh_xml_count": 6,
+      "fresh_exact_xml": true,
+      "result": "ORDINARY_TARGETED_35_NOT_PASS",
+      "started_at": "2026-10-16T13:54:12.303208+00:00",
+      "finished_at": "2026-10-16T13:57:02.825513+00:00",
+      "guard": {
+        "exitCode": 1,
+        "reason": "child_command_failed",
+        "containerId": "c2bb12cb40d9b43ef08847f80ebd8cf9adef6fa37f58a2ffb08639ad13c707dd"
+      },
+      "reports": [
+        {
+          "class": "com.chengyinhub.business.longrun.E02_23Test",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
+          "sha256": "ba04be2b8071042dd8f7d810b9d39940ba4b9e9b8e2cbaadc6c93da4a0c4f14f",
+          "fresh": true,
+          "testcases": 6,
+          "tests": 6,
+          "failures": 0,
+          "errors": 5,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.business.longrun.E04_07Test",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_07Test.xml",
+          "sha256": "417c80b646f55210f75a577d2ff3485405c15b8c2a77a183c75ee1e62fc2b261",
+          "fresh": true,
+          "testcases": 7,
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
+          "sha256": "22c3d6454c1f6e5b69482d6fb64f5d17df896964391e86d90d4daa888b6d517c",
+          "fresh": true,
+          "testcases": 2,
+          "tests": 2,
+          "failures": 0,
+          "errors": 2,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest.xml",
+          "sha256": "3fde7761cc888afad9342a1ada67d6e4e03320c6f7ee05c5c813cb61a7424e4a",
+          "fresh": true,
+          "testcases": 2,
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest.xml",
+          "sha256": "db62518d28aef97ddf4b814ecd11c549deb793a4ea1ec0b6a91f16c8f381a5b0",
+          "fresh": true,
+          "testcases": 4,
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest.xml",
+          "sha256": "6e7a513106f0cca1a39c3acae8da88ea8868f513b04435841b73fddee708110e",
+          "fresh": true,
+          "testcases": 14,
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "log_sha256": "c961a2468344a7873d3902ec425a1d3eddab08023c6b061e4a95f1f1d06b9251",
+      "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/summary.json",
+      "read_scope": "Public README and summary actually read; remote original log/XML hashes are cited, not independently retrieved/recomputed by Cloud",
+      "cleanup": "Local explicit chengyin-aws exact container ID confirmed absent; no active Java"
+    },
+    {
+      "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+      "actual_tests": 8,
+      "totals": {
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 8
+      },
+      "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
+      "status": "LOCAL_TWO_CLASS8_TARGETED_PASS"
+    }
+  ]
 }

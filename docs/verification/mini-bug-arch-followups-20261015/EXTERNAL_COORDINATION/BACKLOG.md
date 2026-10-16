@@ -1,5 +1,7 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
+最新闭环：固定b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf已由本地原212复测两原异常类8实际全PASS，公共证据254af5080abac41878357a56ef85bde86b59da1d已读；原E02签收停写、唯一修复槽释放。仅8 targetedPASS，不是新35全跑，不继承旧28。源码冻结，当前writer0/READY0/修复0。下方NOT_RUN/待复测措辞为阶段历史，本节与文末闭环优先。
+
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable；原E02/E04均gpt-6.1-sol，本轮最多2业务写者，E01仅只读新包审阅。工作树 `/workspace/hengyin-extra-*` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
 
 当前已读控制 `225b59efa72bf54423fc3a5f6069bff6cc72353e` 的BUSINESS_DECISIONS_IMPLEMENTATION_GRANT及源锁，真人3决定已实现，不再等待/询问同一授权。最新完整候选 **`b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf`**（仅两fixture修复，生产同923170ab）；三个公共源包如下，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，旧PASS不继承。
@@ -405,3 +407,10 @@ A独立候选准入拒绝证据f3569c2b5f04912ba75b3f0ead8c916a94fd2743继续保
 原external_e02唯一修复作者已完成停写：child992b9ea146db16f9c9a12f4041925e2c6b386950（父7eacc598f047a3d40fabed268059dfffbda0a590）；完整rolling frozen b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf（直接父54fdc951a59467cd93b6ba49cf87ae890faf2500）。只E02_23Test.java:177-178与ViewCreativeSquareCommunityPolicyMyBatisTest.java:106-107四行，把JSON_TYPE/JSON_CONTAINS FOR后的Java方法名改SQL双引号（Java源码转义）。实际H2 Parser FOR分支读取标识符，仓库ClubPostMediaReviewOutboxMapperMyBatisTest亦使用同语法。全部6+2方法/负控/断言/helper/真实生产XML/依赖不变，原child与923两文件基线相同。
 
 本修复SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。已PR24#6217153817及PR16#6217154148交完整SHA/父/两路径/根因/命令；本地只复测E02_23Test6与ViewCreativeSquareCommunityPolicyMyBatisTest2共8声明调用，不重跑已过四类或全35、不转移原28PASS到新SHA。原失败历史永久保留；C00唯一总账，父仅维护本队三账。E04不占修复线；实际源writer0/READY0，唯一修复case待本地回执。Cloud未编译测试/触发CI/VPS，真库新5+旧3未跑、迁移未执行，不新增入口或绕门槛。
+
+
+## 原E02单修复槽闭环：本地两类8实际全PASS
+
+已实际核读[公共README](https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/README.md)与summary：固定b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf，原212于14:03:53.575927Z—14:06:40.642804Z两类8实际PASS/0FAIL/0ERROR/0SKIP，fresh2XML类集与testcase精确，guard0/completed/BUILD SUCCESS。原E02_23Test6与旧ViewCreativeSquareCommunityPolicyMyBatisTest2均通过。manifest载精确容器8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8由本地显式chengyin-aws确认清理；source/cache/日志/报告/回执保留，Cloud未访问VPS或重算原件。
+
+原作者external_e02已实际签收闭环并停写，唯一修复槽释放，文件锁保留；活动源码writer0/独立READY0/未解失败0。不重复测试、不凑任务，后续仅真实独立grant或失败再原作者处理。原923六类35=28P/0F/7E/0S及两次0项准入拒绝永久保留；新SHA仅这8 targetedPASS，不把旧28转移成新35通过。真实MySQL新5+旧3、Redis/HTTP/设备业务/集成未验，迁移仅源码未执行，不合并部署。C00唯一更新全局索引，本队只自有三账/PR36；Cloud不补跑、入口/CI/网络不变。
