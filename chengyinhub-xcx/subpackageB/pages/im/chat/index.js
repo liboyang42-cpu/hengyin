@@ -1,6 +1,7 @@
 const sendRecovery = require('../../../../utils/im-send-recovery.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('../../../../utils/audit-detail.js');
 const app = getApp();
 
 Page({
@@ -38,6 +39,7 @@ Page({
     myAvatar: '',
     msgs: [],
     reviewResult: null,
+    reviewDetail: null,
     text: '',
     sending: false,
     hasMore: false,
@@ -800,6 +802,8 @@ Page({
       const result = message.card.result;
       this.setData({ reviewResult: { taskId: result.taskId, bizId: result.bizId,
         outcome: result.outcome, reason: result.reason, followUp: result.followUp } });
+      if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
+      else this.setData({ reviewDetail: null });
       return;
     }
     // FE-13 官方通知点击回流(best-effort)
@@ -813,7 +817,42 @@ Page({
   },
 
   closeReviewResult() {
-    this.setData({ reviewResult: null });
+    this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
+    this.setData({ reviewResult: null, reviewDetail: null });
+  },
+
+  // BL-87:处理结果半屏里回读审核任务详情(仅提交人本人;403/404 如实回显,不挡卡片原有内容)。
+  loadReviewDetail(taskId) {
+    const epoch = (this._reviewDetailEpoch || 0) + 1;
+    this._reviewDetailEpoch = epoch;
+    const auditUrl = auditDetailUrl(taskId);
+    if (!auditUrl) { this.setData({ reviewDetail: null }); return; }
+    const auditTaskId = Number(taskId);
+    this.setData({ reviewDetail: { state: 'loading', statusLabel: '', timeline: [], error: '' } });
+    const settle = (detail) => {
+      if (epoch !== this._reviewDetailEpoch) return;
+      this.setData({ reviewDetail: detail });
+    };
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: `/api/audit/${auditTaskId}/detail`,
+      method: 'GET',
+      success: (res) => {
+        const ok = res && (res.code === 200 || res.code === '200');
+        const shaped = ok ? shapeAuditDetail(res.data) : null;
+        if (shaped) { settle(Object.assign({ state: 'ready', error: '' }, shaped)); return; }
+        settle({ state: 'error', statusLabel: '', timeline: [], retryable: isRetryableAuditError(res),
+          error: ok ? '审核记录暂时无法读取' : app.getRequestErrorMessage(res, '审核记录暂时无法读取') });
+      },
+      fail: (res) => settle({ state: 'error', statusLabel: '', timeline: [], retryable: true,
+        error: app.getRequestErrorMessage(res, '网络异常，审核记录没有加载') }),
+    });
+  },
+
+  retryReviewDetail() {
+    const detail = this.data.reviewDetail;
+    if (this.data.reviewResult && detail && detail.retryable) this.loadReviewDetail(this.data.reviewResult.taskId);
   },
 
   // 系统卡片可配置按钮:action 是路径则跳转;否则按 key 走业务(MVP 提示)
