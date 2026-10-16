@@ -1,0 +1,87 @@
+{
+  "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "previous_source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+  "packages": [
+    "E02-23",
+    "E04-07-B including A behavior"
+  ],
+  "archive_sha256": "f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec",
+  "task": "cy-vps-extra-923170ab-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E02_23Test",
+    "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+    "com.chengyinhub.business.longrun.E04_07Test",
+    "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+  ],
+  "declared_class_counts": {
+    "com.chengyinhub.business.longrun.E02_23Test": 6,
+    "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest": 14,
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": 2,
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest": 2,
+    "com.chengyinhub.business.longrun.E04_07Test": 7,
+    "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest": 4
+  },
+  "declared_tests": 35,
+  "actual_tests": 0,
+  "fresh_xml_count": 0,
+  "target_directory_count": 0,
+  "maven_log_exists": false,
+  "result": "NOT_RUN_ADMISSION_REFUSED",
+  "guard": {
+    "exitCode": 75,
+    "reason": "insufficient_start_memory",
+    "containerId": null
+  },
+  "started_at": "2026-10-16T13:09:03.037086+00:00",
+  "finished_at": "2026-10-16T13:09:03.105105+00:00",
+  "memavailable_before_kib": 2192124,
+  "required_start_mib": 2560,
+  "container_created": false,
+  "exact_context_container_filter": "chengyin-aws; name=^/cy-budget-212-extra-923170ab$; empty result, exit0",
+  "run_sha256": "278a9023eedc05c3d9a3eead30ad7e45780f9487e8384bd4f0cfde97fef2da55",
+  "guard_result_sha256": "f29e845a9ac00966b482739258b993d60bc49253c7b9122a9e6cb9fd9c51fa00",
+  "retained_remote": [
+    "unit-run.json",
+    "unit-guard-result.json",
+    "selection.json",
+    "incoming/source.tar.gz",
+    "source",
+    "cache"
+  ],
+  "static_review": {
+    "scope": "Exact production/fixture/migration diffs match C00 supplemental grant225b59efa72bf54423fc3a5f6069bff6cc72353e; no dependency/entry/CI changes.",
+    "E02": "Resolver/favoriteOnly/batch state share protected migration JSON identity predicate; author upsert excludes marker, invalid or removed provenance denied. H2 aliases do not prove MySQL JSON behavior.",
+    "E04": "Reuses transactional exact grantCouponWithReceipt; positive receipt bind requires1 affected row; no temporal/MAX fallback; oldNULL/unknown no coupon/log/reopen mutation; USED rule retained.",
+    "migration": "One new nullable-column migration source only; historical migration/base schema unchanged; NOT_EXECUTED. New-column-dependent code cannot be deployed to an unmigrated database."
+  },
+  "not_validated": [
+    "true MySQL: E04_07MySqlIT 5; RedemptionRewardClawbackMyBatisTest 3",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "migration execution",
+    "merge/deploy"
+  ],
+  "true_mysql": [
+    {
+      "class": "com.chengyinhub.business.longrun.E04_07MySqlIT",
+      "declared_tests": 5,
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest",
+      "declared_tests": 3,
+      "status": "NOT_RUN_NO_FRESH_RUN"
+    }
+  ],
+  "notes": [
+    "No source failure or author repair slot from resource refusal.",
+    "No prior A/other SHA PASS inherited.",
+    "Existing-entry-only decision remains; no network/CI/service workaround or stopping another task."
+  ]
+}
