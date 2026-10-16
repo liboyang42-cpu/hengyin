@@ -169,11 +169,17 @@ Page({
     const current = this._viewGuard();
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
+    // 被更新一次取代 ⇒ 交给新请求落定;视图已失效(切会话/切账号/卸载)⇒ 以 null 落定,确认框不停在进行中(BL-176)
+    const stale = () => {
+      if (requestEpoch !== that._messageRequestEpoch) return true;
+      if (!current()) { that._takeLoadSettle(null); return true; }
+      return false;
+    };
     app.sendRequest({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: this.data.conversationId, cursor_id: 0, size: 30 },
       success(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           const list = that.decorate(Array.isArray(res.data.list) ? res.data.list : []);
@@ -203,11 +209,11 @@ Page({
         that._setMessageLoadError(res);
       },
       fail(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         that._setMessageLoadError(res);
       },
       successStatusAbnormal(res) {
-        if (!current() || requestEpoch !== that._messageRequestEpoch) return;
+        if (stale()) return;
         that._setMessageLoadError(res);
       },
     });
@@ -675,7 +681,9 @@ Page({
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '解除拉黑失败，请重试'); return; }
         that._pendingUnblockId = 0;
-        if (current()) that.loadMessages(false, (data) => that._settleUnblock(dc, data));
+        // BL-176:视图已失效则按「结果未确认」落定,回读结果若属于新视图也不算本次确认
+        if (!current()) { that._settleUnblock(dc, null); return; }
+        that.loadMessages(false, (data) => that._settleUnblock(dc, current() ? data : null));
       },
       // 网络失败 = 结果未知(请求可能已生效):不说「失败」,回读核对;保留待解除对象,解除可重复提交
       fail() {

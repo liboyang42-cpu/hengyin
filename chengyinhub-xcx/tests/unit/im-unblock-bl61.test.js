@@ -150,3 +150,35 @@ test('解除拉黑:断网提示结果未确认(不说失败)并回读,可再次�
   ctx.page.onDangerConfirm({ detail: { key: 'im.unblock' } })
   assert.equal(ctx.requests.shift().url, '/api/im/unblock')
 })
+
+// BL-176:回读途中视图失效(切会话/切账号)时确认框按「结果未确认」落定,不停在进行中。
+test('解除拉黑:回读返回前切走会话 → 按结果未确认落定,不显示完成', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).success({ code: 200 })
+  const reread = ctx.requests.shift()
+  ctx.page.data.conversationId = 101
+  reread.success({ code: 200, data: { list: [], blocked: false, blockedByMe: false } })
+  assert.ok(!kinds(ctx).includes('done'))
+  const last = ctx.dcCalls[ctx.dcCalls.length - 1]
+  assert.equal(last[0], 'failed')
+  assert.match(last[1], /结果未确认/)
+  assert.equal(ctx.page._loadSettle, null)
+})
+
+test('解除拉黑:回读断网且视图已失效 → 同样落定', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).success({ code: 200 })
+  const reread = ctx.requests.shift()
+  ctx.page._disposed = true
+  reread.fail({ errMsg: 'request:fail timeout' })
+  assert.equal(ctx.dcCalls[ctx.dcCalls.length - 1][0], 'failed')
+})
+
+test('解除拉黑:unblock 成功返回时视图已失效 → 不发回读,直接按结果未确认落定', () => {
+  const ctx = loadChat()
+  const req = confirmUnblock(ctx)
+  ctx.page.data.conversationId = 101
+  req.success({ code: 200 })
+  assert.equal(ctx.requests.length, 0)
+  assert.match(ctx.dcCalls[ctx.dcCalls.length - 1][1], /结果未确认/)
+})
