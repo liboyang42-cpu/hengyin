@@ -35,6 +35,7 @@ const {
 } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
+const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -324,6 +325,7 @@ Page({
     fogScreenGuard: false,
     fogScreenError: false,
     paused: false,
+    roamIdle: false,
     roamPanelExpanded: false,
     reducedMotion: false,
     openingEmojis: [],
@@ -3724,11 +3726,16 @@ Page({
     if (onLocationChange) {
       try { wx.offLocationChange(onLocationChange); } catch (e) {}
     }
+    this._syncIdle(null);
     wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: false });
   },
   _realTick(loc) {
-    if (!this._realOn || this._blocked()) return;
-    const accepted = acceptRoamLocation(loc, this._realAnchor, Date.now());
+    if (!this._realOn || this._blocked()) { this._syncIdle(null); return; }
+    const now = Date.now();
+    // BL-02 静止提示只看原始定位(过滤器会丢 <3m 的漂移点),仅用于 HUD 展示
+    const raw = acceptRoamLocation(loc, null, now);
+    this._syncIdle(raw && raw.point, now);
+    const accepted = acceptRoamLocation(loc, this._realAnchor, now);
     if (!accepted) return;
     const prev = this._realAnchor;
     const p = accepted.point;
@@ -3738,6 +3745,19 @@ Page({
     const last = this._reveals[this._reveals.length - 1];
     if (!last || distM(last, p) > 15) this._addReveal(p);
     this._applyMovePatch(p, prev);
+  },
+
+  // BL-02:位移 < 3m 持续 60s 时 HUD 显示「原地停留中」;不碰计时/距离/点亮规则
+  _syncIdle(point, now) {
+    if (!point) {
+      if (this._idle) this._idle.reset();
+    } else {
+      if (!this._idle) this._idle = createIdleDetector();
+      const idle = this._idle.update(point, now);
+      if (idle !== this.data.roamIdle) this.setData({ roamIdle: idle });
+      return;
+    }
+    if (this.data.roamIdle) this.setData({ roamIdle: false });
   },
 
   _blocked() {

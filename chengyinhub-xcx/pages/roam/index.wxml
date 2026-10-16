@@ -426,6 +426,12 @@
   <text>地图加载异常 · 点击重试</text>
 </view>
 
+<!-- BL-02 静止提示:只说明状态,不改计时;无操作,不可点 -->
+<view class="maptip maptip--offline" wx:if="{{roamIdle && !paused && screen=='map' && mapLoad!='slow'}}" aria-role="status" aria-live="polite">
+  <cy-icon name="pin" size="24" />
+  <text>原地停留中</text>
+</view>
+
 <!-- §7.4 据点加载失败可见:据点没拉到时说清「地图上的点未经核实」,并说明本地进度没丢。
      原来这里是静默的 —— 拉取失败照旧显示演示据点,用户分不出真假。 -->
 <view class="maptip maptip--offline maptip--recovery" wx:if="{{(revealWriteUnknown || recoveryError) && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
