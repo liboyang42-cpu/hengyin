@@ -48,7 +48,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -75,6 +78,8 @@ import static org.mockito.Mockito.*;
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlayerGrowthConcurrencyMySqlIT {
+    // 固定并发计数用例的逻辑日,不作为生产日界集成验证。
+    private static final LocalDate CHECKIN_DAY = LocalDate.of(2030, 1, 15);
     private String database;
     private JdbcTemplate admin;
     private JdbcTemplate db;
@@ -372,7 +377,12 @@ class PlayerGrowthConcurrencyMySqlIT {
     }
 
     private IPlayerProgressionService service(PlayerGrowthMapper mapper) {
-        PlayerProgressionServiceImpl target = new PlayerProgressionServiceImpl();
+        PlayerProgressionServiceImpl target = new PlayerProgressionServiceImpl() {
+            @Override
+            protected Date currentCheckinTime() {
+                return Date.from(CHECKIN_DAY.atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant());
+            }
+        };
         ReflectionTestUtils.setField(target, "playerGrowthMapper", mapper);
         ReflectionTestUtils.setField(target, "playerBadgeMapper", badges);
         ReflectionTestUtils.setField(target, "growthBadgeMapper", definitions);
@@ -418,7 +428,7 @@ class PlayerGrowthConcurrencyMySqlIT {
     private void seed(int checkins, String mileage, int streak) {
         db.update("insert into player_growth(member_id,level,total_checkins,total_mileage,streak_days,last_checkin_date,"
                 + "create_time,update_time) values(1,?,?,?, ?,?,'2026-01-01 00:00:00','2026-01-02 00:00:00')",
-                checkins / 5 + 1, checkins, new BigDecimal(mileage), streak, java.sql.Date.valueOf(java.time.LocalDate.now()));
+                checkins / 5 + 1, checkins, new BigDecimal(mileage), streak, java.sql.Date.valueOf(CHECKIN_DAY));
     }
 
     private void assertGrowth(int checkins, String mileage, int streak) {
