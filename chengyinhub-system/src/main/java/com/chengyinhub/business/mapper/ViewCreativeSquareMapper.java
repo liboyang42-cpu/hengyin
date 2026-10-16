@@ -69,6 +69,8 @@ public interface ViewCreativeSquareMapper
     public List<UmsCreativeSquareLike> selectCreativeSquareLikesByMemberAndDataIds(@Param("memberId") Long memberId,
                                                                                   @Param("dataIds") List<Long> dataIds);
 
+    public Long selectMappedCommunityPostId(@Param("legacySquareId") Long legacySquareId);
+
     public List<Long> selectCommunityBookmarkedPostIds(@Param("memberId") Long memberId,
                                                        @Param("postIds") List<Long> postIds);
 
