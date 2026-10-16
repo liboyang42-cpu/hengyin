@@ -41,6 +41,7 @@
     pending-merchant-nodes="{{pendingMerchantNodes}}"
     pending-merchant-nodes-state="{{pendingMerchantNodesState}}"
     station-ops-error-text="{{stationOpsErrorText}}"
+    circle-config="{{circleConfig}}"
     bind:act="onJoinAct" />
 
 <project-join wx:elif="{{ !fromMerchantJoin }}"

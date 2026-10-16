@@ -1,4 +1,5 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
+const circleTheme = require('../../../../utils/circle-theme.js');
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
   options: { addGlobalClass: true },
@@ -28,6 +29,8 @@ Component({
     ownerChapterApplicationsState: { type: String, value: 'idle' },
     pendingMerchantNodes: { type: Array, value: [] },
     pendingMerchantNodesState: { type: String, value: 'idle' },
+    // BL-183:圈层供给角色抽屉。开关/提交中/后端错误归页面;勾选只在抽屉里,提交时随事件带回。
+    circleConfig:    { type: Object, value: { show: false, submitting: false, errorText: '' } },
   },
   observers: {
     'hostTopic, hostRecruit': function (topic, recruit) {
@@ -52,6 +55,10 @@ Component({
         anyDrawerOpen: !!((club && club.show) || (player && player.show) || (merchant && merchant.show)),
       });
     },
+    'circleConfig.show': function (show) {
+      if (show && !this._circleConfigOpen) this.resetCircleCandidates();
+      this._circleConfigOpen = !!show;
+    },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
     'hostRecruit, clubSheet': function (recruit, sheet) {
       const total = (recruit && recruit.nodeTotal) || 0;
@@ -62,9 +69,54 @@ Component({
       });
     },
   },
-  data: { recruitDone: false, clubCount: 0, anyDrawerOpen: false, hostStatusText: '状态待确认' },
+  data: {
+    recruitDone: false, clubCount: 0, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    circleCandidates: [], circleConfigHint: '',
+    circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
+  },
   methods: {
     noop() {},
+    // 每次打开都从零开始选:没有读当前已开启候选的接口,预选任何一项都是编造。
+    resetCircleCandidates() {
+      const theme = circleTheme.themeOf((this.data.hostTopic || {}).circleThemeCode);
+      this._circlePicked = [];
+      this.setData({
+        circleCandidates: theme ? theme.candidates.map((item) => ({
+          code: item.code, name: item.name, merchant: item.merchant,
+          roleLabel: item.roleLabel, picked: false,
+        })) : [],
+        circleConfigHint: theme ? '' : '这个主题暂不支持在小程序里选择供给角色',
+      });
+    },
+    toggleCircleCandidate(e) {
+      if ((this.data.circleConfig || {}).submitting) return;
+      const code = String((e.currentTarget.dataset || {}).code || '');
+      if (!code) return;
+      const picked = (this._circlePicked || []).slice();
+      const at = picked.indexOf(code);
+      if (at >= 0) picked.splice(at, 1); else picked.push(code);
+      this._circlePicked = picked;
+      this.setData({
+        circleCandidates: this.data.circleCandidates.map((item) => Object.assign({}, item, {
+          picked: picked.indexOf(item.code) >= 0,
+        })),
+        circleConfigHint: '',
+      });
+    },
+    emitCloseCircleConfig() {
+      if ((this.data.circleConfig || {}).submitting) return;
+      this.triggerEvent('act', { act: 'closeCircleConfig', dataset: {} });
+    },
+    emitCircleConfigSubmit() {
+      const themeCode = (this.data.hostTopic || {}).circleThemeCode;
+      const codes = (this._circlePicked || []).slice();
+      const check = circleTheme.validateSelection(themeCode, codes);
+      if (!check.ok) {
+        this.setData({ circleConfigHint: check.message });
+        return;
+      }
+      this.triggerEvent('act', { act: 'submitCircleConfig', dataset: { candidateCodes: codes } });
+    },
     emit(e) {
       const ds = e.currentTarget.dataset || {};
       this.triggerEvent('act', { act: ds.act, dataset: ds });

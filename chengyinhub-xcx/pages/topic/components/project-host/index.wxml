@@ -90,6 +90,9 @@
       <text class="sec-action">{{ hostTopic.circleReviewText }}</text>
     </view>
     <view class="sec-empty">系统会重新校验3—4家当前供给；少于3家、资料过期或商家重复时不会刷新。</view>
+    <!-- BL-183:模板副本的8个候选全部是关闭的,不先选角色就没有可复核的供给。
+         只有这一个写接口,没有读当前已选的接口 —— 半屏不预选、不假装知道现在开了哪几个。 -->
+    <cy-btn variant="secondary" bindtap="emit" data-act="openCircleConfig">选择供给角色</cy-btn>
     <cy-btn variant="secondary" bindtap="emit" data-act="reviewCircleSupplies">确认本实例供给已复核</cy-btn>
   </view>
 
@@ -230,6 +233,28 @@
          照着空态做找不到「编辑」,照按钮点又落进没有站点可承接的空页。空态只陈述前置条件,
          怎么补交给底部那颗按 nodeTotal 换出来的「去加站点」。 -->
     <cy-empty wx:if="{{ !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置站点" sub="先把站点配好，商家才有可承接的站。" />
+  </project-drawer>
+
+  <!-- ===== 圈层供给角色抽屉(BL-183) ===== -->
+  <project-drawer show="{{ circleConfig.show }}" title="选择供给角色" subtitle="选3—4个，主体验、补给/休息、社交/表达各至少一个"
+                  actions="{{ circleConfig.submitting ? [] : circleConfigActions }}"
+                  bind:close="emitCloseCircleConfig" bind:action="emitCircleConfigSubmit">
+    <view class="dg-sub">不显示当前已开启的角色；保存后会按这次的选择重新开启，原复核记录需要重新确认。</view>
+    <view class="dcard">
+      <view class="dpick" wx:for="{{ circleCandidates }}" wx:key="code"
+            catchtap="toggleCircleCandidate" data-code="{{ item.code }}"
+            aria-role="checkbox" aria-checked="{{ item.picked }}" aria-label="{{ item.name }}"
+            hover-class="cy-pressed" hover-stay-time="80">
+        <view class="dpick-text">
+          <text class="dpick-name">{{ item.name }}</text>
+          <text class="dpick-sub">{{ item.roleLabel }} · {{ item.merchant }}</text>
+        </view>
+        <text class="dpick-tag {{ item.picked ? 'dpick-tag--on' : '' }}">{{ item.picked ? '已选' : '未选' }}</text>
+      </view>
+    </view>
+    <view class="dg-sub" wx:if="{{ circleConfigHint }}">{{ circleConfigHint }}</view>
+    <cy-inline-error wx:if="{{ circleConfig.errorText }}" kind="data" title="供给角色没有保存"
+      sub="{{ circleConfig.errorText }}" />
   </project-drawer>
 
   <!-- ===== 「更多」抽屉:按 role + 状态分组(2026-09-05) ===== -->
