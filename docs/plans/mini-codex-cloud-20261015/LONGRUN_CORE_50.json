@@ -1934,7 +1934,7 @@
       "id": "OWN-C03-14",
       "lane": "C03",
       "owner": "feature_points_rules_sol",
-      "state": "SPLIT_NULL_ID_INPUT_READY_POSITIVE_DUPLICATES_PRESERVED",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "status": "AUDIT_THEN_FIX",
       "title": "协作者空值及重复输入按既有合同收口",
       "source_files": [
@@ -1951,12 +1951,15 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/CORE/OWN-C03-14.md",
       "provenance": "current writer provided actual reachable source anchors; not a bug or test-pass claim",
-      "commit_sha": "38605c354023aa2029eb51cfd46e4d8288c0f8c2",
-      "source_result": "RESUMED_CONCRETE_CALLER_CONTRACT",
-      "production_paths_changed": [],
+      "commit_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "source_result": "SPLIT_A_INPUT_SHAPE_FIX_DUPLICATES_PRESERVED",
+      "production_paths_changed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
       "original_result": "BLOCKED_DECISION",
       "worker": "/root/topic_like_cancel_sol",
-      "resume_packet": "RESUME_KNOWN_BLOCKERS.json"
+      "resume_packet": "RESUME_KNOWN_BLOCKERS.json",
+      "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
     },
     {
       "id": "OWN-C03-15",
@@ -5485,10 +5488,18 @@
   },
   "resumed_existing_items": {
     "packet": "RESUME_KNOWN_BLOCKERS.json",
-    "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
-    "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
-    "third": "No new confirmedREADY in originalscope; no inventedrunning count",
-    "current_source_writers": 0,
+    "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
+    "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+    "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
+    "current_source_writers": 1,
     "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
+  },
+  "latest_core_c03_14_candidate": {
+    "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_14_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "no_old_pass_inherited": true
   }
 }

@@ -1,3 +1,11 @@
+## 本轮真实源码继续交付：CORE协作者输入保护
+
+[PR44](https://github.com/liboyang42-cpu/hengyin/pull/44)新完整源码`adf597917da2654b6b753141180bbbcb6db92fc5`，直接父e0e3f517。唯一CORE/C03作者已交付停写；仅CmsTopicServiceImpl新增14行写前ID检查＋新10方法回归＋原说明。create/FULL显式名单含null/<=0沿原IllegalArgumentException/默认body500整包失败，重复正ID和顺序、list缺席/[]清空/已有行缺席保护/WHITELIST、owner与完整性校验顺序保留；不新增权限/成员存在/邀请/DDL/依赖。
+
+源码和必要回归已push，**SOURCE_DELIVERED_UNVERIFIED／NOT_RUN**；已交本地root聚焦4类10新＋4＋31＋6=51源声明，实际执行数未知，无DB/Redis前提。旧e0普通10/0d157不继承新源码。完整FQN/命令/精确3路径及前提见[C03_14_SOURCE_DELIVERY](C03_14_SOURCE_DELIVERY.json)。真实HTTP/DB/设备/合并部署仍未验，TEST_DEPLOYED=NO。重复正ID按本轮明确指令保原行为，不另外造待决策任务。
+
+EXTRA E02-12已原作者实际[ACK恢复](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209021853)：既有status1公共/保存上限支持仅POI选项NULL fail-closed查询对齐，分类QUERY_CONTRACT_NULL_COMPATIBILITY，生产NULL来源仍未证、不算现场新增bug；新SHA待交。E01-13售卖字段仅存读，WAITING准入政策未定义，不猜窗口拦截。第三F3-GROW-03已交`d592334abee1a379963e7b72a58eec5e0f7bd5ad`，仅原11项MySQL测试时钟和seed一致化，生产仍bde且普通两类未改；新测试源码NOT_RUN、真库11继续现有入口覆盖缺口，不重复旧28PASS。所有新状态见[恢复包](RESUME_KNOWN_BLOCKERS.json)。
+
 ## 恢复具体旧项：先按证据解除阻塞
 
 已恢复[本轮精确派工](RESUME_KNOWN_BLOCKERS.json)：CORE/C03 `OWN-C03-14`拆开处理null/非正ID输入与重复ID，前者由现有edit-detail正ID形状及草稿恢复/保存链确定写前拒绝；重复正ID原样保留，不新增成员/协作权限规则。原C03已冻结停写，精确CmsTopicServiceImpl方法边界及新测试/原说明正式转`/root/topic_like_cancel_sol`，发布grant后开始源码，未假称已运行。

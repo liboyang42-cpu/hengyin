@@ -61,14 +61,15 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
-      "state": "AUTHORIZED_NULL_ID_REPAIR_PENDING_WRITER_START",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "Original C03 writer source frozen0d in global ledger; no live original writer. Current publice0 differsfrom0d onlyApiTopic.topicLike/newtest/doc. Destination worktree local1ec identical publice0 tree and clean; sole new writer starts after public grant.",
-      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "frozen_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
       "previous_worker": "feature_points_rules_sol",
       "latest_task": "OWN-C03-14",
       "source_base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
-      "exact_scope": "SplitA only: explicit nonempty collaboratorIds containing null or <=0 cannot satisfy existing edit-detail caller positive-ID shape. Existing draft restore preserves such list and save sends it unchanged. Validate before any aggregate write in create and FULL update; fail entire write with existing IllegalArgumentException/default AjaxResult500 path and short safe message, do not silently filter/clear attribution. Keep omitted list/[]/existing omission guard and WHITELIST behavior. Preserve repeated positive IDs and order; no membership/permission/invitation/DDL rule."
+      "exact_scope": "SplitA only: explicit nonempty collaboratorIds containing null or <=0 cannot satisfy existing edit-detail caller positive-ID shape. Existing draft restore preserves such list and save sends it unchanged. Validate before any aggregate write in create and FULL update; fail entire write with existing IllegalArgumentException/default AjaxResult500 path and short safe message, do not silently filter/clear attribution. Keep omitted list/[]/existing omission guard and WHITELIST behavior. Preserve repeated positive IDs and order; no membership/permission/invitation/DDL rule.",
+      "actual_writer": 0
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
       "owner": "CORE/C03",
@@ -253,16 +254,17 @@
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
-      "worker": "EXTRA6/E02",
-      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
+      "worker": "original /root/external_e02",
+      "state": "IN_PROGRESS_QUERY_CONTRACT_NULL_COMPATIBILITY",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "latest_task": "E02-25",
-      "actual_writer": 0,
+      "latest_task": "E02-12",
+      "actual_writer": 1,
       "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
       "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
-      "real_database_verification": "NOT_RUN"
+      "real_database_verification": "NOT_RUN",
+      "actual_receipt": "PR16#6209021853"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
       "owner": "EXTRA6/E02",
@@ -2690,15 +2692,16 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java": {
       "owner": "CORE/C03",
       "worker": "/root/topic_like_cancel_sol",
-      "state": "AUTHORIZED_PENDING_WRITER_START",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "scope": "Null/nonpositive inputguards only, preserve duplicatepositive IDs and oldaggregate contracts",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "frozen_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java": {
       "owner": "EXTRA6/E02",
-      "worker": "original /root/external_e02",
-      "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+      "worker": "/root/external_e02",
+      "state": "IN_PROGRESS_SOURCE_ONLY",
       "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "scope": "POI selectReferenceOptions usesCOALESCE(status,1)=1 whereas actual save snapshot and established player-public rule requirestatus=1. Original owner confirm caller/producers then align options only tostatus=1; preservecity_code/order/limit/projection. Do not broaden snapshot or automatically changeunusedcountReferenceTarget.",
       "verification": "NOT_RUN"
@@ -3704,10 +3707,32 @@
   },
   "resumed_existing_items": {
     "packet": "RESUME_KNOWN_BLOCKERS.json",
-    "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
-    "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
-    "third": "No new confirmedREADY in originalscope; no inventedrunning count",
-    "current_source_writers": 0,
+    "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
+    "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+    "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
+    "current_source_writers": 1,
     "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
+  },
+  "latest_core_c03_14_candidate": {
+    "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_14_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "no_old_pass_inherited": true
+  },
+  "third_grow03_test_source_receipt": {
+    "owner": "FORWARD3",
+    "scope": "Only originalPlayerGrowthConcurrencyMySqlIT clock fixed alongside seed, same11/assertions/gates; regression sourcecorrection notnewbusinessbug. No ordinarychanged; optionaltestcompile atlocal discretion, true11stillNOT_RUN existingcoveragegap.",
+    "state": "TEST_SOURCE_CORRECTION_DELIVERED_NOT_RUN",
+    "boundary": "Ordinarybde28PASS retained; MySQL11NOT_RUN existingcoveragegap. Do not claim running children or re-run oldPASS. Exact new failure/source facts needed to resume.",
+    "last_public_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6208951365",
+    "actual_source_writers": 0,
+    "last_reported_growth_fact_workers": 0,
+    "stat": "Concrete branches checked, no confirmedin-scope new defect; end9999-12-31 SQLdate_add candidate requires read-onlyMapperowner evidence, no falsebug/no narrowing validdate.",
+    "growth": "Concrete upstreamlocks/RC-RRchecked, no newconfirmedproduction defect; repeatpacketNEEDS_REACHABILITY and noBadgeMapper/caller writegrant",
+    "latest_test_source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209005869"
   }
 }

@@ -50,12 +50,12 @@
       "team": "CORE",
       "id": "OWN-C03-14",
       "title": "协作者空值及重复输入按既有合同收口",
-      "state": "PARTIALLY_UNBLOCKED_NULL_ID_REPAIR",
+      "state": "SPLIT_A_SOURCE_DELIVERED_UNVERIFIED",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
       ],
-      "detail": "Existing edit-detail positiveID shape plus real draft restore/save; preserve duplicate positiveIDs",
-      "status": "EXACT_CORE_C03_WRITER_GRANT_RESUME_PACKET"
+      "detail": "adf59791 inputsnull/<=0 rejectbeforewrites; duplicatespositive remainoriginalbylatestinstruction",
+      "status": "NEW_SOURCE_LOCAL_VALIDATION_PENDING"
     },
     {
       "team": "CORE",
@@ -104,24 +104,24 @@
       "team": "EXTRA",
       "id": "E02-12",
       "title": "POI选项与保存状态条件一致性",
-      "state": "READY_NARROW_SOURCE_REPAIR_PENDING_ORIGINAL_OWNER_ACK",
+      "state": "QUERY_CONTRACT_NULL_COMPATIBILITY_IN_PROGRESS",
       "paths": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
-      "detail": "AlignPOI option status1 with existing save snapshot/public rule; no broadeningsnapshot",
-      "status": "EXISTING_EXTRA_E02_SCOPE"
+      "detail": "C00ruling6209006760: existingstatus1 public/savecontract supportsminimaloptions failclosed; productionNULLunproved notnewconfirmedbug",
+      "status": "ORIGINAL_E02_ACTUAL_ACK_6209021853"
     },
     {
       "team": "EXTRA",
       "id": "E01-13",
       "title": "候补加入与售卖活动状态合同",
-      "state": "TARGETED_CONTRACT_RECHECK_PENDING_ORIGINAL_OWNER_ACK",
+      "state": "WAITING_STATE_CONTRACT_REQUIRED",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
       ],
-      "detail": "seriesPolicyByActivity只club/del_flag，join未直接查发布/结束/售卖截止；已有fullActivity用例未覆盖",
-      "status": "EXISTING_EXTRA_E01_SCOPE"
+      "detail": "Salewindow fields store/displayonly by migration; WAITINGnohold, existingoverwindowban notdocumented",
+      "status": "FACT_CHECK_COMPLETE_NO_SOURCE_CHANGE"
     },
     {
       "team": "EXTRA",
@@ -323,13 +323,13 @@
   },
   "latest_three_team_candidates": {
     "CORE": {
-      "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
-      "task": "E01-19",
+      "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "task": "OWN-C03-14 splitA",
       "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "ordinary_classes": 2,
-      "source_declarations": 10,
-      "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
-      "validation_result": {
+      "ordinary_classes": 4,
+      "source_declarations": 51,
+      "local_verification": "NOT_RUN_NEW_SOURCE_CANDIDATE",
+      "previous_candidate_validation": {
         "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
         "result": "ORDINARY_TARGETED_PASS",
         "tests": 10,
@@ -397,7 +397,8 @@
           "later source SHAs"
         ],
         "cloud_manual_runs": 0
-      }
+      },
+      "delivery_packet": "C03_14_SOURCE_DELIVERY.json"
     },
     "EXTRA": {
       "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
@@ -487,7 +488,7 @@
       "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
     },
     "THIRD": {
-      "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
       "delivery_head_sha": "e80caf3958e9e0a636260b9b7a2dc905187bf673",
       "tasks": [
         "F3-STAT-02",
@@ -496,9 +497,9 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 2,
       "source_declarations": 28,
-      "mysql11": "NOT_RUN",
-      "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
-      "validation_result": {
+      "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "local_verification": "NOT_RUN_TEST_SOURCE_CHANGED_ORDINARY_UNCHANGED_DO_NOT_REPEAT",
+      "previous_candidate_validation": {
         "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
         "result": "ORDINARY_TARGETED_PASS",
         "tests": 28,
@@ -566,7 +567,9 @@
           "later source SHAs"
         ],
         "cloud_manual_runs": 0
-      }
+      },
+      "production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "task": "F3-GROW-03 testsourceonly"
     }
   },
   "e02_25_grant": {
@@ -1114,10 +1117,18 @@
   },
   "resumed_existing_items": {
     "packet": "RESUME_KNOWN_BLOCKERS.json",
-    "core": "OWN-C03-14 splitA null/nonpositive inputready, positive duplicates preserved",
-    "extra": "E02-12 narrowPOI ready/E01-13 targetedcontractrecheck; originalowner ACKpending",
-    "third": "No new confirmedREADY in originalscope; no inventedrunning count",
-    "current_source_writers": 0,
+    "core": "OWN-C03-14 splitA deliveredadf59791/writer0, preservepositive duplicates",
+    "extra": "E02-12 originalwriter1 querycontractNULLcompat, notproductionNULLrepro; E01waitingcontract nochange",
+    "third": "d592 testclockfixture delivered/frozen0, productionbdeunchanged, IT11NOT_RUN",
+    "current_source_writers": 1,
     "validation": "NOT_RUN_BY_CLOUD_EXISTING_ENTRY_ONLY"
+  },
+  "latest_core_c03_14_candidate": {
+    "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "packet": "C03_14_SOURCE_DELIVERY.json",
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "ordinary": "NOT_RUN_4_CLASSES51_SOURCE_DECLARATIONS",
+    "actual_source_writers": 0,
+    "no_old_pass_inherited": true
   }
 }

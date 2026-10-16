@@ -4,7 +4,7 @@
   "core": {
     "id": "OWN-C03-14",
     "source_base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
-    "state": "AUTHORIZED_NULL_NONPOSITIVE_INPUT_REPAIR_PENDING_WRITER_START",
+    "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "owner": "CORE/C03",
     "previous_writer": "feature_points_rules_sol",
     "writer": "/root/topic_like_cancel_sol",
@@ -16,9 +16,12 @@
     ],
     "transfer_evidence": "Original C03 writer source frozen0d in global ledger; no live original writer. Current publice0 differsfrom0d onlyApiTopic.topicLike/newtest/doc. Destination worktree local1ec identical publice0 tree and clean; sole new writer starts after public grant.",
     "resolved_scope": "SplitA only: explicit nonempty collaboratorIds containing null or <=0 cannot satisfy existing edit-detail caller positive-ID shape. Existing draft restore preserves such list and save sends it unchanged. Validate before any aggregate write in create and FULL update; fail entire write with existing IllegalArgumentException/default AjaxResult500 path and short safe message, do not silently filter/clear attribution. Keep omitted list/[]/existing omission guard and WHITELIST behavior. Preserve repeated positive IDs and order; no membership/permission/invitation/DDL rule.",
-    "duplicate_scope": "Existing read accepts duplicate positive IDs; no de-dup/reject policy granted. Preserve input exactly; do not blockA onB. No JS safeinteger upper bound introduced.",
+    "duplicate_scope": "Explicit latest user instruction preserves original positive duplicates; no new policy/bug or forced decision needed",
     "regression": "Real service create/FULL-update null/0/negative rejects before writes; duplicate positiveIDs preserved;[] and omission/WHITELIST contracts; necessary fixture source onlyNOT_RUN",
-    "actual_source_writers": 0
+    "actual_source_writers": 0,
+    "writer_ack": "Direct childACK after public78197cf8 grant, now writing exact3paths",
+    "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "source_packet": "C03_14_SOURCE_DELIVERY.json"
   },
   "extra": [
     {
@@ -26,7 +29,7 @@
       "owner": "EXTRA6/E02",
       "writer": "original /root/external_e02",
       "base": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "state": "READY_NARROW_SOURCE_REPAIR_PENDING_ORIGINAL_OWNER_ACK",
+      "state": "QUERY_CONTRACT_NULL_COMPATIBILITY_IN_PROGRESS",
       "source_paths": [
         "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
       ],
@@ -36,14 +39,21 @@
       "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md",
       "scope": "POI selectReferenceOptions usesCOALESCE(status,1)=1 whereas actual save snapshot and established player-public rule requirestatus=1. Original owner confirm caller/producers then align options only tostatus=1; preservecity_code/order/limit/projection. Do not broaden snapshot or automatically changeunusedcountReferenceTarget.",
       "evidence": "MCP read exact29fe XML280-385; service.replaceRelations usesselectReferenceSnapshot; migration_roam.sql nullabledefault1/1上架0下架, RoamPoiAdminController documents publicstatus1. No new state policy.",
-      "actual_source_writers": 0
+      "actual_source_writers": 1,
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209021853",
+      "counterevidence": "Original producer paths explicitly write0/1; absent/non1 inputnormalized or rejected; NULL only schema-capable, no legitimate producer/historicaldata proven. Withdraw earlierREADY inference; no artificialNULL as confirmedproductionbug.",
+      "missing": [
+        "ActualNULL-producing entry or historicaldata evidence",
+        "Existing historicalNULL online/unknown/offline contract"
+      ],
+      "ruling": "C00 closure6209006760 supersedes earlierNEEDS_NULL_PROVENANCE hold for narrow queryalignment. Existingstatus1 public/save upperbound; alignoptionsnullfailclosed only, no newproductionbugcount. NULLproductionprovenance remainsunproved."
     },
     {
       "id": "E01-13",
       "owner": "EXTRA6/E01",
       "writer": "original E01 author",
       "base": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "state": "TARGETED_EXISTING_CONTRACT_RECHECK_PENDING_ORIGINAL_OWNER_ACK",
+      "state": "WAITING_STATE_CONTRACT_REQUIRED_NO_SOURCE_CHANGE",
       "source_paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
         "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml"
@@ -53,14 +63,29 @@
       ],
       "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E01-13.md",
       "scope": "Trace actual activity creation/publish/cancel/end/sale cutoff and existing waitlistjoin contract. If unique existing invariant provesbug minimal source repair within original ownership; else precise unresolved field/state decision. Do notguess sale cutoff semantics or put new predicates on sharedseriesPolicy harming existingOFFERED expiry/payment/release.",
-      "actual_source_writers": 0
+      "actual_source_writers": 0,
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6208972509",
+      "counterevidence": "WAITING nohold/order; sale_start/end migration explicitlystore/display only, no purchase gating. Do not invent over-window ban.",
+      "missing": [
+        "Temporaryunpublish vs finalend on newWAITING",
+        "Topicnotstarted/saleended/signupDeadline on newWAITING",
+        "ExistingWAITING retain/cancel/terminate responsibility"
+      ]
     }
   ],
   "third": {
     "owner": "FORWARD3",
-    "scope": "Original STAT/GROW eight files only, no new feature or broad sweep",
-    "state": "NO_NEW_CONFIRMED_READY_ITEM_FROM_CURRENT_PACKET",
-    "boundary": "Ordinarybde28PASS retained; MySQL11NOT_RUN existingcoveragegap. Do not claim running children or re-run oldPASS. Exact new failure/source facts needed to resume."
+    "scope": "Only originalPlayerGrowthConcurrencyMySqlIT clock fixed alongside seed, same11/assertions/gates; regression sourcecorrection notnewbusinessbug. No ordinarychanged; optionaltestcompile atlocal discretion, true11stillNOT_RUN existingcoveragegap.",
+    "state": "TEST_SOURCE_CORRECTION_DELIVERED_NOT_RUN",
+    "boundary": "Ordinarybde28PASS retained; MySQL11NOT_RUN existingcoveragegap. Do not claim running children or re-run oldPASS. Exact new failure/source facts needed to resume.",
+    "last_public_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6208951365",
+    "actual_source_writers": 0,
+    "last_reported_growth_fact_workers": 0,
+    "stat": "Concrete branches checked, no confirmedin-scope new defect; end9999-12-31 SQLdate_add candidate requires read-onlyMapperowner evidence, no falsebug/no narrowing validdate.",
+    "growth": "Concrete upstreamlocks/RC-RRchecked, no newconfirmedproduction defect; repeatpacketNEEDS_REACHABILITY and noBadgeMapper/caller writegrant",
+    "latest_test_source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209005869"
   },
   "decision_packets": [
     "BLOCKER_E02_23_DECISION.json",
@@ -68,6 +93,16 @@
   ],
   "validation": "Cloud source onlyNOT_RUN; local root tests only new real source or unresolved failure via existing212; no new entry/network/CI/repeat oldPASS",
   "coordination": "Global C00 sole editor; extra original authors own their ledgers. GitHubPR36 request6208928920 plus narrowing6208946765; receipt required to claim live workers.",
-  "current_source_writers": 0,
-  "max_workers_per_team": 6
+  "current_source_writers": 1,
+  "max_workers_per_team": 6,
+  "extra_final_fact_head": "1b3905f946b3c3103543fdb09619d554df3f4fa7",
+  "existing_ci_observation": {
+    "reporter": "local root",
+    "pr": 36,
+    "branch": "codex/extra-six-rolling-20261015",
+    "base": "codex/mini-bug-arch-integration-20261015",
+    "actions_runs_total_count": 0,
+    "scope": "Observed twice by localroot this round only; natural autoCI policy is no run/result claim",
+    "manual_trigger": false
+  }
 }
