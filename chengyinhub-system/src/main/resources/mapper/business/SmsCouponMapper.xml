@@ -213,9 +213,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and publish_count is not null and publish_count &gt; 0 and ifnull(receive_count, 0) &lt; publish_count
     </update>
 
-    <!-- 核销计数 +1（原子） -->
+    <!-- 发放专用占库:状态及库存均以当前行为准；NULL状态兼容原非3/4判断。 -->
+    <update id="tryReserveIssuableCoupon">
+        update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
+        where id = #{id}
+          and (status is null or status not in (3, 4))
+          and (publish_count is null or publish_count &lt;= 0 or ifnull(receive_count, 0) &lt; publish_count)
+    </update>
+
+    <!-- 核销当前状态闸门:与历史CAS同事务，当前失效(3)零行使调用方回滚；停发(4)/NULL仍可核销。 -->
     <update id="incrementUseCount">
-        update sms_coupon set use_count = ifnull(use_count, 0) + 1, update_time = now() where id = #{id}
+        update sms_coupon set use_count = ifnull(use_count, 0) + 1, update_time = now()
+        where id = #{id} and (status is null or status &lt;&gt; 3)
     </update>
 
     <!-- 撤销核销计数 -1（原子）:>0 守卫;正常恒 1 行,拿 0 行说明计数与流水已失配,由调用方响亮抛错 -->
