@@ -1,3 +1,11 @@
+## E02-25已交源码，64普通／2真库待验
+
+EXTRA新冻结源码`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726` / PR36，原E02已停写/锁保留。C00已核公开diff：仅3生产文件按授权改comment重复键catch当前读及exact Mapper/SQL，另新4方法普通回归、新2方法guarded MySQL回归、原E02_24的duplicate夹具接线及说明；首次普通读、正常插入后读、post/body/parent绑定、事务/权限/HTTP/DDL/依赖不变，旧55未改。`e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec`直接父为29fe，仅本队3交付文档，不另作源修复。
+
+本地已接收，现按212准备E02_25Test4＋E02_24Test5＋community.CommunityPostServiceImplTest55=64源声明，实际报告未回，NOT_RUN；真实E02_25MySqlIT2仍缺批准入口，NOT_RUN。旧faef60PASS仍只在faef，不套29fe。Cloud未运行验证，TEST_DEPLOYED=NO；运行HTTP/设备/集成合并部署均未验。[精确七路径／完整FQN／依赖交接](E02_25_SOURCE_DELIVERY.json)。当前原队实际writer0/READY0，不凑任务；实测失败再由原E02单修复槽继续。
+
+### 以下为此前候选及交付历史
+
 ## 当前三候选普通定向证据已签收
 
 已核读PR24@`cae72e05ee668271d79ea9c95e505d7e8971d3a5`的三份README和summary：CORE `e0e3f517` **10/10**、EXTRA `faefbaf8` **60/60**、第三 `bde356f3` **28/28** 实际通过，均0失败/错误/跳过、fresh精确2XML、212guard0/completed、自有精确容器清理。[CORE证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md) / [EXTRA证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md) / [第三队证据](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md)。EXTRA首次锁拒绝0项仍保留，不改写历史。各结果只属于各自完整SHA，不是合并候选全量验证；SQL边界有替身，不是实际数据库/Redis/运行HTTP或设备业务验收。TEST_DEPLOYED=NO，未合并/部署。

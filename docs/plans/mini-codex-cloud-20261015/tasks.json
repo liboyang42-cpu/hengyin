@@ -2187,14 +2187,14 @@
         }
       },
       "EXTRA": {
-        "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
-        "delivery_head_sha": "ad0ffc86b4275c802fd8a312ab016b6f7d3ff53e",
-        "task": "E02-24",
+        "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+        "delivery_head_sha": "e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec",
+        "task": "E02-25",
         "status": "SOURCE_DELIVERED_UNVERIFIED",
-        "ordinary_classes": 2,
-        "source_declarations": 60,
-        "local_verification": "ORDINARY_TARGETED_PASS_PUBLIC_EVIDENCE_READ",
-        "validation_result": {
+        "ordinary_classes": 3,
+        "source_declarations": 64,
+        "local_verification": "NOT_RUN_LOCAL_212_PREPARING",
+        "previous_candidate_validation": {
           "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
           "result": "ORDINARY_TARGETED_PASS",
           "tests": 60,
@@ -2268,7 +2268,9 @@
             "retained": true,
             "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/admission-refused-034030Z.json"
           }
-        }
+        },
+        "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+        "real_mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING"
       },
       "THIRD": {
         "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
@@ -2358,7 +2360,7 @@
       "title": "评论创建重复键恢复按当前读取赢家",
       "owner": "EXTRA6/E02",
       "original_worker": "external_e02",
-      "state": "ACK_RECEIVED_ORIGINAL_WRITER_IN_PROGRESS",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
       "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
       "source_paths": [
@@ -2378,7 +2380,7 @@
       "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
       "verification": "SOURCE_ONLY_NOT_RUN",
       "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
-      "activation": "Original writer resumed; actual ACK6207665975 read. No duplicate writer; new candidate separately NOT_RUN.",
+      "activation": "Original writer completed and stopped per public receipt6207773214; do not reapply prepared patch; only real local failure reopens repair slot.",
       "owner_ack": {
         "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
         "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
@@ -2395,7 +2397,10 @@
         "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
         "owner": "EXTRA6/E02",
         "scope": "Only duplicate replay fixture: ordinary null plus current-read winner; preserve five methods and all parent binding assertions. Do not modify old55."
-      }
+      },
+      "current_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+      "actual_source_writers": 0
     },
     "real_storage_entry_map": "REAL_STORAGE_ENTRY_MAP.json",
     "validation_coordination_state": "NEW_CANDIDATES_LOCAL_VALIDATION_IN_PROGRESS_DEVELOPMENT_READY_SEPARATE",
@@ -2848,6 +2853,17 @@
       "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "actual_source_writers": 1,
       "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
+    },
+    "latest_extra_e02_25_candidate": {
+      "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+      "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+      "ordinary_status": "NOT_RUN_LOCAL_212_PREPARING",
+      "ordinary_source_declarations": 64,
+      "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
+      "mysql_source_declarations": 2,
+      "actual_source_writers": 0,
+      "no_inherited_results": true
     }
   },
   "followup_lanes": [

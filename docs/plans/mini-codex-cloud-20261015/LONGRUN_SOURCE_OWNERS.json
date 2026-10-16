@@ -237,16 +237,22 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java": {
       "owner": "EXTRA6/E02",
       "worker": "EXTRA6/E02",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "latest_task": "E02-25",
+      "actual_writer": 0
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
       "worker": "EXTRA6/E02",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "latest_task": "E02-25",
+      "actual_writer": 0
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
       "owner": "EXTRA6/E02",
@@ -587,7 +593,7 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java": {
       "owner": "EXTRA6/E02",
       "worker": "EXTRA6/E02",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "bda1c4e8db08210b573cac1ee02b0d18c19962b7",
       "last_public_file_sha": "a20fb9b602008ffbdac8bb95f792289626b008f1",
       "transfer_evidence": "C00 complete read E01-18@a838241b and E02-20@76bfabcb; original source writers stopped/no WIP; preserve assertions/policy. Mapper CommunityPost only existing nullable notification-preference signature at this grant. E02-25 exact additional method now authorized by E02_25_SOURCE_GRANT; all unrelated interface scope retained.",
@@ -596,7 +602,7 @@
         "method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
         "same_owner": "EXTRA6/E02",
         "baseline": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
-        "state": "ACK_RECEIVED_ORIGINAL_WRITER_IN_PROGRESS",
+        "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
         "owner_ack": {
           "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
           "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
@@ -608,8 +614,12 @@
           "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
           "actual_source_writers": 1,
           "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
-        }
-      }
+        },
+        "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
+      },
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "latest_task": "E02-25",
+      "actual_writer": 0
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
       "owner": "EXTRA6/E02",
@@ -2635,15 +2645,24 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "external_e02 original author",
-      "state": "AUTHORIZED_PENDING_OWNER_ACK",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java": {
       "owner": "EXTRA6/E02",
       "worker": "external_e02 original author",
-      "state": "AUTHORIZED_PENDING_OWNER_ACK",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "verification": "NOT_RUN",
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "external_e02 original author",
+      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "verification": "NOT_RUN"
     }
   },
@@ -3081,7 +3100,7 @@
     "title": "评论创建重复键恢复按当前读取赢家",
     "owner": "EXTRA6/E02",
     "original_worker": "external_e02",
-    "state": "ACK_RECEIVED_ORIGINAL_WRITER_IN_PROGRESS",
+    "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
     "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
     "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
     "source_paths": [
@@ -3101,7 +3120,7 @@
     "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
     "verification": "SOURCE_ONLY_NOT_RUN",
     "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
-    "activation": "Original writer resumed; actual ACK6207665975 read. No duplicate writer; new candidate separately NOT_RUN.",
+    "activation": "Original writer completed and stopped per public receipt6207773214; do not reapply prepared patch; only real local failure reopens repair slot.",
     "owner_ack": {
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
       "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
@@ -3118,7 +3137,10 @@
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
       "owner": "EXTRA6/E02",
       "scope": "Only duplicate replay fixture: ordinary null plus current-read winner; preserve five methods and all parent binding assertions. Do not modify old55."
-    }
+    },
+    "current_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+    "actual_source_writers": 0
   },
   "latest_extra_e02_24_validation": {
     "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
@@ -3574,7 +3596,7 @@
     "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
     "owner": "EXTRA6/E02",
     "worker": "/root/external_e02",
-    "state": "IN_PROGRESS_SOURCE_ONLY",
+    "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
     "scope": "Only duplicate replay prerequisite stub; preserve five methods and all assertions; old55 unchanged",
     "ack": {
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
@@ -3587,6 +3609,18 @@
       "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "actual_source_writers": 1,
       "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
-    }
+    },
+    "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
+  },
+  "latest_extra_e02_25_candidate": {
+    "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+    "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+    "ordinary_status": "NOT_RUN_LOCAL_212_PREPARING",
+    "ordinary_source_declarations": 64,
+    "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "mysql_source_declarations": 2,
+    "actual_source_writers": 0,
+    "no_inherited_results": true
   }
 }
