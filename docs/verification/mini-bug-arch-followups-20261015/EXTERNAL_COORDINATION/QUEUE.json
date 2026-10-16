@@ -1744,7 +1744,7 @@
       ],
       "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
-      "verification": "NOT_RUN",
+      "verification": "Cloud NOT_RUN; exact1bfa local H2/productionXML2 targetedPASS; trueMySQL/Redis/HTTP/business not validated",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "source_base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
@@ -1804,6 +1804,13 @@
       "delivery_comments": {
         "PR16": 6209046388,
         "PR24": 6209046566
+      },
+      "exact_local_ordinary_validation": {
+        "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+        "tests": 2,
+        "status": "H2_XML_TARGETED_PASS_ONLY",
+        "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+        "production_null_reachability_claimed": false
       }
     },
     {
@@ -3849,7 +3856,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 19,
+  "queue_revision": 20,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3969,7 +3976,7 @@
   "refill_status": "E02-12 existing item contract closed and source delivered; no newbugID or productionNULL reproduction claim. Other exact contract inputs remain; no filler50 or inventedREADY.",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-12 options-only explicit online-state query compatibility delivered,2 H2/MyBatis methods NOT_RUN; actual productionNULL origin unproven.29fe ordinary64 remains exact historical evidence only.",
+    "E02": "E02-12 querycontract compatibility source delivered; exact1bfa E02_12Test2 actual H2/XMLPASS, public evidence signed; NULL production provenance unproven. No realMySQL/Redis/HTTP/business acceptance, no newbug count.",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -4625,6 +4632,99 @@
       "mysql_methods_not_run": 2,
       "total66_pass_claimed": false,
       "later_sha_pass_inherited": false
+    },
+    {
+      "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "task": "cy-vps-extra-1bfa81a5-20261016",
+      "scope": "TARGETED_E02_12_H2_PRODUCTION_XML_ONLY",
+      "status": "TARGETED_ORDINARY_PASS_ONLY",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_12Test"
+      ],
+      "actual": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 2,
+        "xml_classes": 1,
+        "exact_class_set_match": true,
+        "all_reports_fresh": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed"
+      },
+      "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "source": "Public PR24 README and summary actually read; no Cloud execution",
+      "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+      "published_evidence": {
+        "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+        "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json",
+        "read_scope": "Public README and structured summary actually read; Cloud did not fetch/reparse original VPSXML/log or execute validation",
+        "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+        "log_sha256": "8c205892a87e41ab8496ef5036496af373065ecb9d3850f80fa85156cec48588",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.longrun.E02_12Test",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_12Test.xml",
+            "sha256": "d831d22aef9fc5352c92ec5cde401b4e11e03e9ad93f7ec65c0be7d377a3822a",
+            "fresh": true,
+            "testcases": 2,
+            "tests": 2,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "actual_totals": {
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 2
+        },
+        "fresh_exact_xml": true,
+        "integrity_ok": true,
+        "guard_receipt": {
+          "exitCode": 0,
+          "reason": "completed",
+          "containerId": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+        },
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+        },
+        "evidence_layer": "H2/MyBatis production XML regression; synthetic NULL compatibility negative control, no production NULL reachability claim",
+        "admission_refusal": {
+          "started_at": "2026-10-16T06:03:49.126651+00:00",
+          "guard": {
+            "returncode": 75,
+            "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+            "stderr": "",
+            "finished_at": "2026-10-16T06:03:49.191982+00:00"
+          },
+          "tests_executed": 0,
+          "container_id": null,
+          "status": "ADMISSION_REFUSED_NOT_A_TEST_FAILURE_OR_PASS"
+        }
+      },
+      "started_at_utc": "2026-10-16T06:05:40.731295+00:00",
+      "finished_at_utc": "2026-10-16T06:08:19.134125+00:00",
+      "old64_rerun": false,
+      "later_sha_pass_inherited": false,
+      "synthetic_null_is_production_reproduction": false,
+      "new_bug_count": 0,
+      "true_mysql_rr2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "not_validated": [
+        "true MySQL",
+        "true Redis",
+        "runtime HTTP",
+        "device",
+        "business acceptance",
+        "merge/deploy"
+      ]
     }
   ],
   "pending_local_failure_retests": [],
@@ -4815,6 +4915,60 @@
         "container_id": "8e70b4e38e8030ce3bd9aeb3c8aa74877b930ae87bb4154027c71b93a5d278a4"
       },
       "evidence_layer": "ordinary mock/SQL-boundary regression only; true MySQL E02_25MySqlIT2 NOT_RUN; Redis/HTTP/device/business/integration/merge/deployment not validated"
+    },
+    "1bfa81a5a58ffa8112c10414dad9fdb1701ef188": {
+      "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+      "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json",
+      "read_scope": "Public README and structured summary actually read; Cloud did not fetch/reparse original VPSXML/log or execute validation",
+      "source_archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+      "log_sha256": "8c205892a87e41ab8496ef5036496af373065ecb9d3850f80fa85156cec48588",
+      "reports": [
+        {
+          "class": "com.chengyinhub.business.longrun.E02_12Test",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_12Test.xml",
+          "sha256": "d831d22aef9fc5352c92ec5cde401b4e11e03e9ad93f7ec65c0be7d377a3822a",
+          "fresh": true,
+          "testcases": 2,
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "actual_totals": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 2
+      },
+      "fresh_exact_xml": true,
+      "integrity_ok": true,
+      "guard_receipt": {
+        "exitCode": 0,
+        "reason": "completed",
+        "containerId": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+      },
+      "cleanup": {
+        "observed_absent": true,
+        "endpoint": "chengyin-aws",
+        "container_id": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+      },
+      "evidence_layer": "H2/MyBatis production XML regression; synthetic NULL compatibility negative control, no production NULL reachability claim",
+      "admission_refusal": {
+        "started_at": "2026-10-16T06:03:49.126651+00:00",
+        "guard": {
+          "returncode": 75,
+          "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+          "stderr": "",
+          "finished_at": "2026-10-16T06:03:49.191982+00:00"
+        },
+        "tests_executed": 0,
+        "container_id": null,
+        "status": "ADMISSION_REFUSED_NOT_A_TEST_FAILURE_OR_PASS"
+      }
     }
   },
   "external_dependency_requests": {
@@ -4865,14 +5019,20 @@
   },
   "validation_queue_state": {
     "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
-    "status": "LOCAL_PREPARED_WAITING_EXISTING_212_SERIAL_ENTRY",
+    "status": "LOCAL_TARGETED_H2_XML_PASS_ONLY",
     "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
     "classes": [
       "com.chengyinhub.business.longrun.E02_12Test"
     ],
     "declared_tests": 2,
-    "actual_tests": null,
-    "actual_result": null,
+    "actual_tests": 2,
+    "actual_result": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 2
+    },
     "future_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
     "environment": "Existing212 ordinary offline entry; embeddedH2 and existingMyBatis, no externalDB/Redis/envvar/newdependency",
     "cloud_execution_allowed": false,
@@ -4899,7 +5059,25 @@
       "cloud_execution": false,
       "old64_pass_inherited": false,
       "true_mysql_rr2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
-    }
+    },
+    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json",
+    "admission_refusal_history": [
+      {
+        "started_at": "2026-10-16T06:03:49.126651+00:00",
+        "guard": {
+          "returncode": 75,
+          "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+          "stderr": "",
+          "finished_at": "2026-10-16T06:03:49.191982+00:00"
+        },
+        "tests_executed": 0,
+        "container_id": null,
+        "status": "ADMISSION_REFUSED_NOT_A_TEST_FAILURE_OR_PASS"
+      }
+    ],
+    "next_action": "No actual failure; retain original owner/lock. No old64 rerun or trueMySQL/Redis/HTTP/business acceptance. Existing explicit contract decisions handled separately."
   },
   "admission_history": [
     {
@@ -4969,7 +5147,13 @@
         "Actual historicalNULL producing entry or data evidence; default1 alone does not excludeNULL",
         "Existing contract for historicalNULL as online vs unknown/offline"
       ],
-      "resolution": "C00 expressly confirms explicitstatus1 online/save contract for options; no waiting forNULL provenance, no historicalretention decision or newproductrule"
+      "resolution": "C00 expressly confirms explicitstatus1 online/save contract for options; no waiting forNULL provenance, no historicalretention decision or newproductrule",
+      "exact_local_validation": {
+        "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+        "tests": 2,
+        "status": "H2_XML_TARGETED_PASS_ONLY",
+        "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554"
+      }
     },
     "E01-13": {
       "worker": "/root/external_e01",

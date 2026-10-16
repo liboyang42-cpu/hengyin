@@ -1,11 +1,11 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
-当前已读控制 `78197cf835ff9f0542114560cc0645678a9f59e6`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`1bfa81a5a58ffa8112c10414dad9fdb1701ef188`**，原E02 child `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`；E02-12仅POI选项显式上架状态，2新方法SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。原29fe普通64PASS仅其旧SHA，真MySQL2项NOT_RUN。
+当前已读控制 `78197cf835ff9f0542114560cc0645678a9f59e6`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`1bfa81a5a58ffa8112c10414dad9fdb1701ef188`**，原E02 child `9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf`；E02-12仅POI选项显式上架状态，本地E02_12Test2实际H2/XML targeted PASS；整体SOURCE_DELIVERED_UNVERIFIED，Cloud验证NOT_RUN。原29fe普通64PASS仅其旧SHA，真MySQL2项NOT_RUN。
 
 当前111历史=60源码交付/40反证/6合同或决策阻塞/5委派他队；实际源码worker0、修复worker0、READY0，目标可行动50缺50。无真实独立READY项时如实EXHAUSTED，不造任务。E01-19已由CORE解决，不重复。E02-23/E04-07仍需C00原owner解决身份合同。
 
-本地验证只按完整源SHA登记：29fe9236普通3类64实际PASS，公开PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e；faefbaf8旧两类60PASS独立保留，不以旧成绩继承。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
+本地验证只按完整源SHA登记：1bfa81a5新单类2实际H2/XML PASS，公开PR24@1ae7b60cab62696ec0a9259907cfad265496c554；29fe9236旧普通3类64实际PASS，公开PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e；faefbaf8旧两类60PASS独立保留，不以旧成绩继承。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
 
 用户当前有效决定：**“保持现有入口，不新增”**。新增隔离MySQL/Redis集成入口方案已关闭，不再等待或请求相同方案批准；212/CI保持原状，现有自动CI自然运行、不手动重复触发。无适用现有入口的真实存储项继续NOT_RUN/现有入口覆盖缺口；普通回归仅新真实源码或未解失败交本地按现有212执行。本次仅更新约束，没有新增开发或补跑任务。此决定覆盖下文历史回执中的“新入口待批准”状态。
 
@@ -355,3 +355,9 @@ C00最新[PR36#6209006760](https://github.com/liboyang42-cpu/hengyin/pull/36#iss
 本地已fetch/review完整1bfa81a5a58ffa8112c10414dad9fdb1701ef188，确认仅POI options一条件、新2方法生产XML/H2测试及旧NULL来源未证限定；源码包SHA2564947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb，task cy-vps-extra-1bfa81a5-20261016已准备，等待当前CORE212正常结束后由本地串行执行E02_12Test2。尚无实际项数/测试结果，不继承旧64，Cloud不编译补跑。E02_25真MySQL2未验边界及现有入口约束不变。
 
 E01-13原定向事实核查已完成，既有WAITING逐状态合同仍需明确，不重复泛查或混入OFFERED保护。E02-23/E04-07由本地向用户提出了最小产品/身份问题，答案未到前不猜；其他真实明确独立任务不为此次验证排队而停。此回执没有新增源码或修复任务，原作者与锁保留。
+
+## 1bfa单类2实际PASS独立签收
+
+已实际核读PR24@1ae7b60cab62696ec0a9259907cfad265496c554的[README](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md)和[summary](https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/summary.json)。固定1bfa81a5a58ffa8112c10414dad9fdb1701ef188，E02_12Test2实际PASS/F0/E0/S0，fresh1XML精确类集、完整性及2实际方法数匹配，212guard0/completed；精确自有容器经本地显式chengyin-aws过滤确认不存在。源包/日志/XML哈希及guard/cleanup公开索引已回填QUEUE/CLAIMS。Cloud未拉取原始XML/日志重解析、未补跑任何验证。
+
+首次共享锁拒绝exit75/containerId=null/0项准入历史独立保留，不记测试失败或通过，正常释放后成功重试。此次仅H2执行生产XML查询合同/合成NULL兼容负控，不是真实MySQL/Redis/HTTP/业务或生产NULL复现，不新增bug计数、不继承旧64/不重跑旧64。E02_25MySqlIT2仍NOT_RUN/现有入口覆盖缺口，其他设备/集成合并部署未验。入口不新增、CI不手动触发；源码整体SOURCE_DELIVERED_UNVERIFIED，原作者与锁保留，无失败修复要开。C00总账更新由本地root另行通知，本队只补自有交付账/PR36。
