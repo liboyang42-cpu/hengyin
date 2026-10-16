@@ -2927,6 +2927,14 @@
       "actual_source_writers": 0,
       "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
       "no_old_pass_inherited": true
+    },
+    "current_local_validation_queue": {
+      "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
+      "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+      "source_failure": false,
+      "cloud_runs": 0,
+      "new_entry": false,
+      "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
     }
   },
   "followup_lanes": [

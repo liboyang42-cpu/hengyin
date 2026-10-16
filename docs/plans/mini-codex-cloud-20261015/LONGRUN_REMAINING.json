@@ -1147,5 +1147,13 @@
       "latest_state": "SOURCE_DELIVERED_UNVERIFIED",
       "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188"
     }
-  ]
+  ],
+  "current_local_validation_queue": {
+    "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
+    "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+    "source_failure": false,
+    "cloud_runs": 0,
+    "new_entry": false,
+    "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
+  }
 }

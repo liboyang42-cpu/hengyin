@@ -1,3 +1,5 @@
+> 当前验证排队更新：CORE adf普通51／EXTRA 1bfa普通2尚未运行，本地源包准备中；F3 d592首次test-compile准入exit75/containerId=null/0项、未编译，属其他任务持共享锁，不是源码失败。只等待现有212正常准入，不绕锁或重复旧PASS，详见[排队记录](LOCAL_VALIDATION_QUEUE_STATUS.json)。业务3问未答不擅改身份/原券策略或DDL；明确独立源码不因排队停工。
+
 ## POI查询合同修复已交／本轮三队候选已分别冻结
 
 EXTRA新完整源码`1bfa81a5a58ffa8112c10414dad9fdb1701ef188` / PR36，原E02已停写，C00核精确3路径：只POI options的COALESCE(status,1)=1改status=1；新E02_12Test真实生产XML/H2两方法及原说明。保city/projection/order/limit/snapshot/count，无Java/DDL/权限/依赖更改。NULL生产来源未证，分类查询合同/NULL兼容修复，不计现场新增bug。[交付包](E02_12_SOURCE_DELIVERY.json)记录原child、父链及本地单类2方法命令；Cloud未运行，不重跑或继承29fe64。docs02b99bea仅三账已核。

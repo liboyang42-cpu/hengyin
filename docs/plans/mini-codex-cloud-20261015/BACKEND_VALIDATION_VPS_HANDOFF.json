@@ -2,7 +2,7 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "NEW_CORE_adf51_EXTRA_1bfa2_SOURCE_DELIVERED_NOT_RUN_FORWARD_d592_TEST_COMPILE_REQUEST_PENDING_GUARD",
+  "execution_status": "NEW_CORE51_EXTRA2_NOT_RUN_SHARED_LOCK_QUEUE_FORWARD_TEST_COMPILE_FIRST_ADMISSION_REFUSED_NOT_SOURCE_FAILURE",
   "candidates": {
     "CORE": {
       "pr": 44,
@@ -1984,10 +1984,28 @@
   "current_EXTRA_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
   "forward_d592_compile_request": {
     "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
-    "status": "TEST_COMPILE_REQUEST_PENDING_GUARD_RESULT",
+    "status": "NOT_RUN_FIRST_ADMISSION_REFUSED_SHARED_LOCK",
     "task": "cy-vps-forward-d592334a-20261016",
     "archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
-    "root_report": "Sharedlockbusy observation, no guardresult received; no claimtestcompilepass, no repeatordinary28; trueMySQL11NOT_RUN",
-    "new_entry": false
+    "root_report": "Otherprelaunch task holds sharedlock; local waitsnormaladmission, no bypass. CORE/EXTRAsources preparing. No sourcefailure.",
+    "new_entry": false,
+    "first_admission": {
+      "guard_exit_code": 75,
+      "container_id": null,
+      "actual_tests": 0,
+      "compilation_started": false,
+      "source_failure": false,
+      "reason": "another_build_holds_lock",
+      "observed_owner_description": "Other prelaunch task, reported by local verifier; not inspected or modified by Cloud"
+    },
+    "public_evidence_commit": null
+  },
+  "current_local_validation_queue": {
+    "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
+    "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+    "source_failure": false,
+    "cloud_runs": 0,
+    "new_entry": false,
+    "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
   }
 }

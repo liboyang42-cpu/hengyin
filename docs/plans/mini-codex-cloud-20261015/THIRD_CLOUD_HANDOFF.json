@@ -831,9 +831,18 @@
     "scope": "Onlyfixed logicalday clock override matchingseed; same11methods/assertions/gates, production0change",
     "c00_public_diff_read": true,
     "ordinary_rerun": "NOT_REQUIRED_UNCHANGED",
-    "test_compile": "Local may decideexisting212 newtestsourcecompile only; CloudNOT_RUN",
+    "test_compile": "NOT_RUN_FIRST_ADMISSION_REFUSED_exit75_containerNull; waiting normalexisting212 lock",
     "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "fixture_classification": "REGRESSION_SOURCE_CORRECTION_NOT_NEW_BUSINESS_BUG",
-    "receipt": "PR16#6209005869"
+    "receipt": "PR16#6209005869",
+    "test_compile_queue_packet": "LOCAL_VALIDATION_QUEUE_STATUS.json"
+  },
+  "current_local_validation_queue": {
+    "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
+    "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+    "source_failure": false,
+    "cloud_runs": 0,
+    "new_entry": false,
+    "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
   }
 }

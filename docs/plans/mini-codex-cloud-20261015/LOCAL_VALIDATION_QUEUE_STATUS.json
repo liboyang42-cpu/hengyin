@@ -1,0 +1,66 @@
+{
+  "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+  "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
+  "entry_decision": "VALIDATION_ENTRY_DECISION.json",
+  "candidates": {
+    "CORE": {
+      "sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "action": "ordinary regression",
+      "source_declared_tests": 51,
+      "classes": 4,
+      "state": "SOURCE_PACKAGE_PREPARING_WAITING_NORMAL_212_ADMISSION",
+      "actual_tests": 0,
+      "source_failure": false
+    },
+    "EXTRA": {
+      "sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "action": "ordinary H2 productionMapper regression",
+      "source_declared_tests": 2,
+      "classes": 1,
+      "state": "SOURCE_PACKAGE_PREPARING_WAITING_NORMAL_212_ADMISSION",
+      "actual_tests": 0,
+      "source_failure": false
+    },
+    "FORWARD": {
+      "sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+      "action": "test-compile only",
+      "state": "NOT_RUN_FIRST_ADMISSION_REFUSED_SHARED_LOCK",
+      "first_admission": {
+        "guard_exit_code": 75,
+        "container_id": null,
+        "actual_tests": 0,
+        "compilation_started": false,
+        "source_failure": false,
+        "reason": "another_build_holds_lock",
+        "observed_owner_description": "Other prelaunch task, reported by local verifier; not inspected or modified by Cloud"
+      },
+      "task": "cy-vps-forward-d592334a-20261016",
+      "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+      "public_evidence_commit": null,
+      "public_evidence_status": "Local retained first refusal; public report not supplied or claimed read",
+      "ordinary28_rerun": false,
+      "true_mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    }
+  },
+  "retry": "Local verifier waits for shared lock to release normally, then existing212 serial execution; no bypass/stopping other tasks/new entry or manualCI trigger",
+  "repair_slots": "No source failure; do not reopen authors for resource queue",
+  "source_work": "Only explicit real independent source tasks may continue; no new task invented from queue",
+  "business_decisions": {
+    "pending_local_user_answers": true,
+    "questions_reported": 3,
+    "scope": [
+      "E02-23 authoritative legacy identity bridge or missing-map handling",
+      "E04-07 legacy missing history identity reversal behavior",
+      "E04-07 future exact historyID migration-source scope"
+    ],
+    "not_authorized": [
+      "identity bridge policy changes",
+      "coupon identity/legacy behavior choice",
+      "DDL source changes"
+    ],
+    "independent_source_blocked_by_wait": false
+  },
+  "prior_passes": "Preserved exact old SHAs; not inherited by current candidates",
+  "cloud_manual_runs": 0
+}

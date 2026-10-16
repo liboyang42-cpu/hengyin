@@ -8,7 +8,9 @@
 |---|---|---|---|
 | CORE / PR44 | `adf597917da2654b6b753141180bbbcb6db92fc5` | OWN-C03-14：仅CmsTopicServiceImpl写前拒null/非正署名ID、新10方法回归及说明 | 普通4类51源声明，NOT_RUN，已交本地root；旧e0普通10不继承 |
 | EXTRA / PR36 | `1bfa81a5a58ffa8112c10414dad9fdb1701ef188` | E02-12：仅POI options状态谓词与既有status1保存/公开合同对齐、2方法H2真实XML回归及说明 | 普通单类2源声明，NOT_RUN；不重跑/继承旧29fe64 |
-| FORWARD / PR72 | `d592334abee1a379963e7b72a58eec5e0f7bd5ad` | F3-GROW-03：仅原PlayerGrowthConcurrencyMySqlIT统一固定逻辑日与seed；11方法和全部断言不变 | root已申请现有212 test-compile，守卫结果待回；普通两类/生产仍bde且未改，不重跑旧28；真库11仍NOT_RUN |
+| FORWARD / PR72 | `d592334abee1a379963e7b72a58eec5e0f7bd5ad` | F3-GROW-03：仅原PlayerGrowthConcurrencyMySqlIT统一固定逻辑日与seed；11方法和全部断言不变 | 首次212准入被共享锁拒绝：exit75/containerId=null/0项、未编译；等待正常准入；普通两类/生产仍bde且未改，不重跑旧28；真库11仍NOT_RUN |
+
+当前本地[排队记录](LOCAL_VALIDATION_QUEUE_STATUS.json)：共享java-build.lock由其他prelaunch任务持有；CORE/EXTRA源包准备中、普通51/2均NOT_RUN，F3首次test-compile准入拒绝不是源码失败。不绕锁、不停止其他任务，锁自然释放后本地串行；不因此开启作者修复槽。
 
 三分支独立，未整枝集成、未合并部署，TEST_DEPLOYED=NO。源码已交不等于普通/真库/HTTP验收。精确路径、方法、依赖、完整FQN与仅供本地执行的命令见[C03交付](C03_14_SOURCE_DELIVERY.json)、[POI交付](E02_12_SOURCE_DELIVERY.json)、[验证移交](BACKEND_VALIDATION_VPS_HANDOFF.json)、[第三队交接](THIRD_CLOUD_HANDOFF.json)。EXTRA后续`02b99bea07c82aa0b0b0d045b54a26f93fb041de`仅自有三账，第三`5432481a8f9e957ee2dfcb9b531ca754a0395633`仅自有三账；不当新生产修复。
 
