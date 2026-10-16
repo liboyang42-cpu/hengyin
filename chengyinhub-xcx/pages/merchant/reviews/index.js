@@ -2,6 +2,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const {
   buildCreateDraft,
   classifyLoadFailure,
@@ -268,7 +269,7 @@ Page({
     const imageIndex = Number(event.currentTarget.dataset.imageIndex);
     const review = this.data.filteredItems[reviewIndex];
     if (!review || !review.imageUrls[imageIndex]) return;
-    wx.previewImage({ current: review.imageUrls[imageIndex], urls: review.imageUrls });
+    mediaPreview.open(review.imageUrls, review.imageUrls[imageIndex]);
   },
 
   refreshCreateState() {

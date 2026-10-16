@@ -19,6 +19,7 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -1777,12 +1778,12 @@ Component({
   previewImage: function (e) {
     var picList = e.currentTarget.dataset.piclist;
     var index = e.currentTarget.dataset.index;
-    wx.previewImage({ current: picList[index], urls: picList });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   previewMerchantGallery: function (e) {
     var src = e.currentTarget.dataset.src;
-    if (src) wx.previewImage({ current: src, urls: this.data.merchantGallery || [src] });
+    if (src) mediaPreview.open(this.data.merchantGallery || [src], src);
   },
 
   goMerchantLocation: function () {
@@ -1826,7 +1827,7 @@ Component({
 
   previewWork: function (e) {
     var url = e.currentTarget.dataset.url;
-    wx.previewImage({ current: url, urls: this.data.casePicsList });
+    mediaPreview.open(this.data.casePicsList, url);
   },
 
   formatTimeDifference: function (createTimeStr) {

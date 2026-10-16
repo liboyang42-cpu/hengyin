@@ -17,6 +17,7 @@ const { isRecordList } = require('../../../utils/response-shape.js');
 const { validationMethodLabel } = require('../../../utils/validation-method-labels.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const codeTextUtil = require('../../../utils/code-text.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -698,7 +699,7 @@ Page({
 
   previewGuideImage(e) {
     const { url, urls } = e.currentTarget.dataset;
-    if (url) wx.previewImage({ current: url, urls: urls && urls.length ? urls : [url] });
+    if (url) mediaPreview.open(urls && urls.length ? urls : [url], url);
   },
 
 

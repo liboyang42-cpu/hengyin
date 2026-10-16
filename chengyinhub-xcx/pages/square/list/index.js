@@ -20,6 +20,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 // 开场倒计时文案:天/小时/分三档取整,不到 1 分钟按「即将开始」收口。
 // 与 activity/list 的 fmtDur 同一套档位,避免两处对同一活动给出不同口径。
@@ -631,10 +632,7 @@ Page({
     const detail = e && e.detail;
     const picList = detail && Array.isArray(detail.picList) ? detail.picList : e.currentTarget.dataset.piclist;
     const index = detail && detail.picIndex !== undefined ? detail.picIndex : e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index], // 当前显示图片的http链接
-      urls: picList // 需要预览的图片http链接列表
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   /**

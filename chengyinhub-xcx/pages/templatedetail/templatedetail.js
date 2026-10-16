@@ -7,6 +7,7 @@ const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecord } = require('../../utils/response-shape.js');
 const toast = require('../../utils/toast.js');
+const mediaPreview = require('../../utils/media-preview.js');
 
 function difficultyMeta(difficulty) {
   var d = String(difficulty || '').trim();
@@ -388,10 +389,7 @@ Page({
   previewGallery(e) {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({
-      current: e.currentTarget.dataset.url || urls[0],
-      urls: urls
-    });
+    mediaPreview.open(urls, e.currentTarget.dataset.url || urls[0]);
   },
 
   // 画廊「查看全部」:从第一张进全量预览。复用 previewGallery 的同一条通道,
@@ -399,7 +397,7 @@ Page({
   previewGalleryAll() {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({ current: urls[0], urls: urls });
+    mediaPreview.open(urls, urls[0]);
   },
 
   openMore() {
