@@ -47,7 +47,9 @@ function assertContract(overrides = {}) {
     '候选池 / 上下架 / 删除不能回到卡面上')
   assert.match(projectWxml, /bindlongpress="onCardLong"/, '长按是这三个动作唯一的入口,不能丢')
   const sheetRows = [...projectWxml.matchAll(/<view\b[^>]*class="mp-ops-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
-  assert.equal(sheetRows.length, 5, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 删除')
+  // BL-120（#164）在取消与删除之间新增「另存为模板」行（仅 canSaveAsTemplate 时渲染），
+  // 同样走 .mp-ops-row + onOpsPick，下方 44px 热区断言按类名覆盖到这一行。
+  assert.equal(sheetRows.length, 6, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 另存为模板 / 删除')
   for (const row of sheetRows) assert.match(row, /bindtap="onOpsPick"/)
   assert.match(rule(projectWxss, '.mp-ops-row'), /min-height:\s*var\(--cy-btn-h\)/)
 }
