@@ -791,6 +791,11 @@
              author_approval_state,version,create_time
       FROM community_post_comment WHERE author_id=#{authorId} AND client_request_id=#{clientRequestId}
     </select>
+    <select id="selectCommentByAuthorRequestForUpdate" resultType="map" useCache="false" flushCache="true">
+      SELECT id,post_id,author_id,root_id,parent_id,replied_to_member_id,client_request_id,body,lifecycle,
+             author_approval_state,version,create_time
+      FROM community_post_comment WHERE author_id=#{authorId} AND client_request_id=#{clientRequestId} FOR UPDATE
+    </select>
     <select id="selectCommentForReply" resultType="map">
       SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.lifecycle,c.author_approval_state
       FROM community_post_comment c JOIN community_post p ON p.id=c.post_id
