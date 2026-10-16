@@ -367,7 +367,7 @@
         </when>
         <when test="referenceType == 'POI'">
           SELECT p.id,p.name,p.city_code,COALESCE(p.address,p.description,'') subtitle
-          FROM roam_poi p WHERE COALESCE(p.status,1)=1 AND p.city_code IS NOT NULL AND p.city_code&lt;&gt;''
+          FROM roam_poi p WHERE p.status=1 AND p.city_code IS NOT NULL AND p.city_code&lt;&gt;''
           ORDER BY p.id DESC LIMIT #{limit}
         </when>
         <when test="referenceType == 'MEMBER'">
