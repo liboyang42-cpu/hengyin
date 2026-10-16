@@ -174,8 +174,8 @@ public class E02_23Test {
         DriverManagerDataSource ds = new DriverManagerDataSource("jdbc:h2:mem:e02_23_" + UUID.randomUUID()
                 + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1", "sa", "");
         JdbcTemplate jdbc = new JdbcTemplate(ds);
-        jdbc.execute("create alias JSON_TYPE for 'com.chengyinhub.business.longrun.E02_23Test.jsonType'");
-        jdbc.execute("create alias JSON_CONTAINS for 'com.chengyinhub.business.longrun.E02_23Test.jsonContains'");
+        jdbc.execute("create alias JSON_TYPE for \"com.chengyinhub.business.longrun.E02_23Test.jsonType\"");
+        jdbc.execute("create alias JSON_CONTAINS for \"com.chengyinhub.business.longrun.E02_23Test.jsonContains\"");
         jdbc.execute("create table ums_creative_square(id bigint primary key, member_id bigint)");
         jdbc.execute("create table community_post(id bigint primary key,author_id bigint,client_request_id varchar(96),safety_labels_json varchar(500))");
         jdbc.execute("create table community_post_member_action(post_id bigint,member_id bigint,action_type varchar(32))");
