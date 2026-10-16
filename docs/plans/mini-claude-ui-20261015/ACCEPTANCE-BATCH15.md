@@ -1,7 +1,7 @@
 # 第十五批本地验收清单（BL-158–166，BL-167）
 
 > 只写文档。第十五批都是修本线新代码的文案、门禁登记、判定或计数，不改现有 UI 与标题。每个分支都从被修的 PR 切出，合入前 diff 会带上被修 PR 的提交，只需审最后一两个提交。
-> 快照 2026-10-16 03:15Z，PR 状态以 GitHub 为准。期望值照抄各 PR 正文（#214 为本线实测），本卡未复跑。
+> 快照 2026-10-16 03:20Z，PR 状态以 GitHub 为准。期望值照抄各 PR 正文（#214 为本线实测），本卡未复跑。
 > 统一前置：`cd chengyinhub-xcx`。
 
 ## 一、逐卡验收命令与前后对照
@@ -22,7 +22,7 @@
 | BL-163 勋章颁发回执 | #212 | #23 CL3、#192 BL-148 | `node --test tests/unit/club-badge-utils.test.js`（PR 正文跑的是 `grep -rln "club-badge\|club/badges" tests/unit` 全部） | #192 上 todo 1 | 相关全部 pass 48 / fail 0 / **todo 0** |
 | BL-164 私信解除拉黑回读 | #213 | #104 BL-61、#201 BL-154 | `node --test tests/unit/im-unblock-confirm-handler.test.js`（PR 正文跑的是引用 `im/chat/index` 与 `im-unblock` 的全部单测） | #201 上 todo 3 | 相关全部 pass 226 / fail 0 / **todo 0** |
 | BL-165 项目操作面板计数 | #214 | #164 BL-120 | `node --test tests/unit/merchant-card-project-actions-contract.test.js tests/unit/myproject-save-as-template.test.js` | 计数断言 fail 1（expected 5, actual 6） | pass 8 / fail 0 |
-| BL-166 安全感受半屏 U5 理由 | 无 PR（`claude/bl-166-safety-sheet-u5` 03:07Z 已被另一条线认领，快照时只有认领提交） | #132 BL-89 | 待该 PR 正文给出 | — | — |
+| BL-166 安全感受半屏 U5 理由 | #218（只文档，补丁交协调者） | #132 BL-89 | 在 #132 分支 `git apply` `BL-166-U5-SAFETY-SHEET.md` 补丁后：`node tests/lint/ui-integrity.js` | `UI-GATE-0: FAIL (1 violations)`，`[U5] …safety-rating-sheet/index.js:115` 未登记 | `U5 PASS: 需逐项理由 29 … 逐项理由 29`，`UI-GATE-0: PASS`；棘轮 28→29 正好顶到冻结上限 29（与 #120 争同一名额，见 BL-170） |
 
 **一次跑单测**（各依赖 PR 与本批 PR 都合入后）：
 
@@ -61,9 +61,10 @@ node tests/lint/ui-integrity.js --warn-as-error
 | #211 | 他人商家主页 → 收藏据点 | 按钮切换为「已收藏据点」，普通提示；再点恢复 |
 | #212 | 俱乐部勋章颁发 | 成功文案、重复颁发文案、断网「结果未确认」 |
 | #213 | 私信拉黑后解除 | 回读后才「已解除拉黑」；回读仍拉黑「解除还没生效，请重试」；断网「网络中断，解除结果未确认」 |
+| #218（补丁应用后） | 安全感受半屏，商家 id 解析失败 | 显示「评价没有提交成功」与原因，可再次提交 |
 | #207、#214 | — | 只跑命令 |
 
 ## 四、未验证
 
 - 期望值除 #214 外照抄各 PR 正文，本卡未在叠加树复跑；没跑 CI、全量单测、`ci/xcx-check.sh`。
-- BL-166 快照时无 PR，本表该行待补。
+- BL-166 行按 #218（03:14Z 开出）正文补入。
