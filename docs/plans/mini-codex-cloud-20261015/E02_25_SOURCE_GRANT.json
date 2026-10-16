@@ -48,11 +48,33 @@
     "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
     "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
-    "ordinary_status": "NOT_RUN_LOCAL_212_PREPARING",
+    "ordinary_status": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
     "ordinary_source_declarations": 64,
     "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
     "mysql_source_declarations": 2,
     "actual_source_writers": 0,
-    "no_inherited_results": true
+    "no_inherited_results": true,
+    "ordinary_actual_tests": 64,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+  },
+  "ordinary_validation": "64_ACTUAL_PASS_0FAILURE_ERROR_SKIP",
+  "ordinary_evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+  "ordinary_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+  "true_mysql": "NOT_RUN_APPROVED_ENTRY_MISSING",
+  "latest_extra_e02_25_validation": {
+    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "result": "ORDINARY_TARGETED_PASS",
+    "actual_tests": 64,
+    "passed": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "no_rr_acceptance_claim": true
   }
 }

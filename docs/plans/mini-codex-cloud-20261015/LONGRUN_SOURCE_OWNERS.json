@@ -242,7 +242,10 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "latest_task": "E02-25",
-      "actual_writer": 0
+      "actual_writer": 0,
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
@@ -252,7 +255,10 @@
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
       "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "latest_task": "E02-25",
-      "actual_writer": 0
+      "actual_writer": 0,
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
       "owner": "EXTRA6/E02",
@@ -619,7 +625,10 @@
       },
       "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
       "latest_task": "E02-25",
-      "actual_writer": 0
+      "actual_writer": 0,
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": {
       "owner": "EXTRA6/E02",
@@ -2648,7 +2657,10 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "verification": "NOT_RUN",
-      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java": {
       "owner": "EXTRA6/E02",
@@ -2656,14 +2668,20 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "verification": "NOT_RUN",
-      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726"
+      "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "external_e02 original author",
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "frozen_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "verification": "NOT_RUN"
+      "verification": "NOT_RUN",
+      "ordinary_verification": "64_TARGETED_PASS_EXACT_CANDIDATE",
+      "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+      "real_database_verification": "NOT_RUN"
     }
   },
   "analytics_third_pending": {
@@ -3140,7 +3158,11 @@
     },
     "current_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
-    "actual_source_writers": 0
+    "actual_source_writers": 0,
+    "ordinary_validation": "64_ACTUAL_PASS_0FAILURE_ERROR_SKIP",
+    "ordinary_evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "ordinary_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "true_mysql": "NOT_RUN_APPROVED_ENTRY_MISSING"
   },
   "latest_extra_e02_24_validation": {
     "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
@@ -3616,11 +3638,29 @@
     "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
     "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
-    "ordinary_status": "NOT_RUN_LOCAL_212_PREPARING",
+    "ordinary_status": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
     "ordinary_source_declarations": 64,
     "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
     "mysql_source_declarations": 2,
     "actual_source_writers": 0,
-    "no_inherited_results": true
+    "no_inherited_results": true,
+    "ordinary_actual_tests": 64,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+  },
+  "latest_extra_e02_25_validation": {
+    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "result": "ORDINARY_TARGETED_PASS",
+    "actual_tests": 64,
+    "passed": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "no_rr_acceptance_claim": true
   }
 }

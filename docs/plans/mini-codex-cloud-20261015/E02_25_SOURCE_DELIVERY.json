@@ -28,7 +28,7 @@
   "scope": "Only comment DuplicateKey catch uses exact author/request current read, MapperJava exact new method, XML same projection/WHERE plusFOR UPDATE/useCache=false/flushCache=true. First ordinary read/normal insert read/post-body-parent identity/auth/isolation/HTTP/DDL/dependencies/CI unchanged. E02_24Test duplicate fixture only; old55 unchanged.",
   "c00_review": "Read public source diff fromfaef plus7-file source commit and delivery; docs e9 direct parent29fe and only three own coordinator docs. No Cloud compilation/tests.",
   "ordinary": {
-    "status": "NOT_RUN_LOCAL_212_PREPARING",
+    "status": "ORDINARY_TARGETED_PASS",
     "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
     "classes": [
       {
@@ -45,10 +45,15 @@
       }
     ],
     "source_declared_total": 64,
-    "actual_executed_tests": null,
+    "actual_executed_tests": 64,
     "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_25Test,com.chengyinhub.business.longrun.E02_24Test,com.chengyinhub.business.community.CommunityPostServiceImplTest test",
     "environment": "Existing approved212 offline entry and cached dependencies; no DB/Redis required",
-    "inherited_pass": false
+    "inherited_pass": false,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
   },
   "mysql": {
     "status": "NOT_RUN_APPROVED_ENTRY_MISSING",
@@ -65,7 +70,6 @@
     "real_redis_required": false
   },
   "not_accepted": [
-    "ordinary64 until fresh actual report",
     "real MySQL RR2",
     "runtime HTTP",
     "device/business acceptance",
@@ -73,5 +77,6 @@
     "merge/deployment/migrations"
   ],
   "cloud_manual_runs": 0,
-  "repair_policy": "Only actual local failure resumes original E02 single repair writer; others continue real independent ready items; no invented task."
+  "repair_policy": "Only actual local failure resumes original E02 single repair writer; others continue real independent ready items; no invented task.",
+  "ordinary_layer_status": "64_ACTUAL_PASS_TRUE_MYSQL2_NOT_RUN"
 }

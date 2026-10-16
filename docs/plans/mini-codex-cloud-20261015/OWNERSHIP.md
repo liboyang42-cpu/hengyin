@@ -1,3 +1,11 @@
+## E02-25普通64项公开证据已签收／真RR2未运行
+
+C00已核读[PR24公开README及summary](https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md)，证据提交`0d3b6195203b0b963e0dd77df8412fde70b3923e`。冻结源码`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`实际执行E02_25Test4＋E02_24Test5＋community.CommunityPostServiceImplTest55＝**64PASS，0失败/错误/跳过**；fresh精确3XML、212guard0/completed和精确容器清理均已核对，原日志/XML/源码哈希见[E02_25_ORDINARY_VPS_RESULT](E02_25_ORDINARY_VPS_RESULT.json)。本地本轮Java已结束，无失败修复槽需要开启，原作者身份/文件锁保留。
+
+这是新SHA实际普通Service/SQL替身回归，不继承faef60PASS、不称66通过或RR实库闭环。E02_25MySqlIT **2项仍NOT_RUN**，真实RR快照、DuplicateKey/current读及SQL副作用提交未验；真Redis、运行HTTP、设备业务、候选集成、合并部署仍未验收，TEST_DEPLOYED=NO。新真库入口授权仍待用户明确答复，212/CI/网络不变。无真实READY不凑任务，后续实际源码另交新SHA。
+
+### 以下为此前交付／待验历史，以本节当前结果为准
+
 ## E02-25已交源码，64普通／2真库待验
 
 EXTRA新冻结源码`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726` / PR36，原E02已停写/锁保留。C00已核公开diff：仅3生产文件按授权改comment重复键catch当前读及exact Mapper/SQL，另新4方法普通回归、新2方法guarded MySQL回归、原E02_24的duplicate夹具接线及说明；首次普通读、正常插入后读、post/body/parent绑定、事务/权限/HTTP/DDL/依赖不变，旧55未改。`e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec`直接父为29fe，仅本队3交付文档，不另作源修复。

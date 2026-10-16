@@ -2,7 +2,7 @@
   "protocol": "CY-BACKEND-VPS-HANDOFF-20261015-v1",
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
   "source_coordinator": "C00 only",
-  "execution_status": "CORE_10_FORWARD_28_PASS_EXTRA_NEW29fe_64_NOT_RUN_LOCAL_PREPARING_REAL_STORAGE_UNVERIFIED",
+  "execution_status": "CORE10_FORWARD28_EXTRA29fe64_ORDINARY_TARGETED_PASS_TRUE_MYSQL_REDIS_HTTP_UNVERIFIED",
   "candidates": {
     "CORE": {
       "pr": 44,
@@ -1239,7 +1239,7 @@
       "status": "SOURCE_DELIVERED_UNVERIFIED",
       "ordinary_classes": 3,
       "source_declarations": 64,
-      "local_verification": "NOT_RUN_LOCAL_212_PREPARING",
+      "local_verification": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
       "previous_candidate_validation": {
         "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
         "result": "ORDINARY_TARGETED_PASS",
@@ -1316,7 +1316,8 @@
         }
       },
       "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
-      "real_mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING"
+      "real_mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING",
+      "validation_result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
     },
     "THIRD": {
       "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
@@ -1446,7 +1447,11 @@
     },
     "current_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
-    "actual_source_writers": 0
+    "actual_source_writers": 0,
+    "ordinary_validation": "64_ACTUAL_PASS_0FAILURE_ERROR_SKIP",
+    "ordinary_evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "ordinary_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "true_mysql": "NOT_RUN_APPROVED_ENTRY_MISSING"
   },
   "real_storage_entry_map": "REAL_STORAGE_ENTRY_MAP.json",
   "validation_coordination_state": "NEW_CANDIDATES_LOCAL_VALIDATION_IN_PROGRESS_DEVELOPMENT_READY_SEPARATE",
@@ -1904,11 +1909,29 @@
     "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
     "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
     "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
-    "ordinary_status": "NOT_RUN_LOCAL_212_PREPARING",
+    "ordinary_status": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
     "ordinary_source_declarations": 64,
     "mysql_status": "NOT_RUN_APPROVED_ENTRY_MISSING",
     "mysql_source_declarations": 2,
     "actual_source_writers": 0,
-    "no_inherited_results": true
+    "no_inherited_results": true,
+    "ordinary_actual_tests": 64,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+  },
+  "latest_extra_e02_25_validation": {
+    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "result": "ORDINARY_TARGETED_PASS",
+    "actual_tests": 64,
+    "passed": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "mysql2": "NOT_RUN_APPROVED_ENTRY_MISSING",
+    "no_rr_acceptance_claim": true
   }
 }
