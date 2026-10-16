@@ -13,6 +13,7 @@
 | F3 | `POST /api/topic/xp-budget` | `ApiTopicController.java:1734-1742`；`XpBudgetServiceImpl.java:35-40` | **中**。只按 `topic_id` 计算并返回该主题的 XP 预算与节点奖励分布，**没有创建者/归属校验**（AGENTS.md「写操作必须校验 owner/scope」虽针对写接口，但这是发布编辑器的内部数据，草稿/未公开主题的结构也能被任意登录用户探测） | 校验调用者是主题创建者（或协作者）后再计算；不满足返回 403/404 | Codex（`ApiTopicController` 在 owned_files） | #145 BL-101 监督评审 |
 | F4 | `POST /api/spoiler/preference`（`revealAll`） | `ApiSpoilerController.java:39`；影响面见 `ApiPlayProgressController.java:674-690` 注释 | **低（已缓解）**。端点只校验登录、无报名关系即可设置。2026-09-02 修复后 `/api/play/nodes` 已不再随 revealAll 放出答案正文（`:686-690` 移除 `answerReveal`），剩余影响只是节点 `revealed` 标记。风险已转为「语义」问题：若将来有调用方按 `revealed` 展示剧情文本，需重新评估 | 维持现状；若产品要开放「全部揭晓」开关，先限定到已报名会话，并在 `BACKEND_CHANGES.md` 记录 | 协调者（产品决定） | #127 BL-84 |
 | F5 | `POST /api/club/badge/list` | `ApiClubController.java:1174-1180` | **低**。只校验登录与俱乐部存在，不校验调用者是否成员/主理人；返回该俱乐部自建勋章定义列表（非个人数据） | 若勋章定义被视为成员内可见，加成员校验；否则在接口注释里写明「公开」 | Codex / 协调者 | #23 CL3 监督评审（「/badge/list 不校验成员身份，交 C00」） |
+| F9 | `POST /api/coop/credit` | `ApiCoopController.java:1051-1060`（`creditSummary(target)`） | **低（需产品决定）**。默认查本人；body 传任意 `memberId` 就能查他人近 90 天履约率/违约计数，只校验登录、不校验双方是否有合作关系。控制器注释写明「主页展示合作方履约率」属设计意图，但可被任意登录用户按 ID 枚举 | 产品确认履约信用是否公开；若只给合作方看，按是否存在邀约/合作关系校验后再返回他人数据，否则在接口注释与隐私口径里写明「公开」 | 协调者（产品决定）→ Codex | #147 BL-103 及其监督评审；BL-132 #176 监督 nit |
 
 ## 2. 数据口径 / 权限模型
 
