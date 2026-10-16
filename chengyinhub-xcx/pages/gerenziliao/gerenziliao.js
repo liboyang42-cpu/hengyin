@@ -3,6 +3,12 @@ const toast = require('../../utils/toast.js');
 const app = getApp();
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
+const nicknameCheck = require('../../utils/nickname-check.js');
+
+// 输入停顿多久再问后端:太短每个字都打一枪,太长用户等不到反馈。
+const NICKNAME_CHECK_DEBOUNCE_MS = 400;
+// 被占用时一次列几个推荐:suggest 每次只回一个候选,按服务端 cursor 连取。
+const NICKNAME_SUGGEST_BATCH = 3;
 
 function boundPhoneFromResponse(res) {
   if (!res) return '';
@@ -55,6 +61,13 @@ Page({
     tempWechat: '', // 临时微信二维码
     tempIntroduction: '', // 城市签名草稿；完成前不写回 userInfo
     tempName: '', // 昵称草稿；完成前不写回 userInfo
+    // 昵称校验(N4):'' 未检查/与原昵称相同 | checking | available | taken | invalid | error(查询失败,可重试)
+    nicknameState: '',
+    nicknameHint: '',
+    // 被占用时列出 /nickname/suggest 的候选让用户点选(2026-10-15 用户决定:不自动填入)
+    nicknameSuggestions: [],
+    nicknameSuggesting: false,
+    nicknameSuggestError: '',
 
     // 活动类型选择 - 多选相关
     selectedCategoryIds: [], // 选中的分类ID数组
@@ -146,23 +159,180 @@ Page({
 
   //个人名称
   openPop4() {
+    this.resetNicknameCheck();
     this.setData({
       popDavid4: true,
-      tempName: this.data.userInfo.name || ''
+      tempName: this.data.userInfo.name || '',
+      nicknameState: '',
+      nicknameHint: '',
+      nicknameSuggestions: [],
+      nicknameSuggestError: ''
     })
   },
   //取消
   cancel4() {
+    this.resetNicknameCheck();
     this.setData({
       popDavid4: false
     })
   },
   //完成
   confirm4() {
+    const state = this.data.nicknameState;
+    // 已确认被占用/不合规的昵称不收进草稿;查询失败(error)或仍在查(checking)不拦 ——
+    // 保存时服务端会再判一次,拦住反而让「网络抖一下」变成改不了昵称。
+    const issue = nicknameCheck.localIssue(this.data.tempName);
+    if (issue) {
+      this.setData({ nicknameState: 'invalid', nicknameHint: issue });
+      return;
+    }
+    if (state === 'taken' || state === 'invalid') return;
+    this.resetNicknameCheck();
     this.setData({
       popDavid4: false,
-      'userInfo.name': this.data.tempName
+      'userInfo.name': nicknameCheck.normalize(this.data.tempName)
     }, () => this.refreshSaveState())
+  },
+
+  // ===== 昵称校验 / 推荐(N4) =====
+  resetNicknameCheck() {
+    if (this._nicknameTimer) {
+      clearTimeout(this._nicknameTimer);
+      this._nicknameTimer = null;
+    }
+    // 序号前进 = 让所有在途响应作废,晚到的不会覆盖当前输入的结论
+    this._nicknameSeq = (this._nicknameSeq || 0) + 1;
+  },
+
+  scheduleNicknameCheck(raw) {
+    this.resetNicknameCheck();
+    const value = nicknameCheck.normalize(raw);
+    if (this.data.nicknameSuggestions.length || this.data.nicknameSuggesting || this.data.nicknameSuggestError) {
+      this.setData({ nicknameSuggestions: [], nicknameSuggesting: false, nicknameSuggestError: '' });
+    }
+    if (value && value === nicknameCheck.normalize(this._savedName)) {
+      this.setData({ nicknameState: '', nicknameHint: '' });
+      return;
+    }
+    const issue = nicknameCheck.localIssue(value);
+    if (issue) {
+      this.setData({ nicknameState: 'invalid', nicknameHint: issue });
+      return;
+    }
+    this.setData({ nicknameState: 'checking', nicknameHint: '正在检查昵称是否可用…' });
+    const seq = this._nicknameSeq;
+    this._nicknameTimer = setTimeout(() => {
+      this._nicknameTimer = null;
+      this.requestNicknameCheck(value, seq);
+    }, NICKNAME_CHECK_DEBOUNCE_MS);
+  },
+
+  requestNicknameCheck(value, seq) {
+    const that = this;
+    const stale = () => that._unloaded || seq !== that._nicknameSeq;
+    const onFailure = () => {
+      if (stale()) return;
+      that.setData({ nicknameState: 'error', nicknameHint: '暂时没查到昵称是否可用，可以重试或直接保存' });
+    };
+    app.sendRequest({
+      hideLoading: true,
+      autoErrorToast: false,
+      url: '/api/user/nickname/check',
+      method: 'POST',
+      data: { nickname: value },
+      success(res) {
+        if (stale()) return;
+        const result = nicknameCheck.readCheckResult(res);
+        that.setData({ nicknameState: result.state, nicknameHint: result.text });
+        if (result.state === 'taken') that.loadNicknameSuggestions(value, false);
+      },
+      successStatusAbnormal: onFailure,
+      fail: onFailure
+    });
+  },
+
+  retryNicknameCheck() {
+    const value = nicknameCheck.normalize(this.data.tempName);
+    this.resetNicknameCheck();
+    if (nicknameCheck.localIssue(value)) {
+      this.scheduleNicknameCheck(value);
+      return;
+    }
+    this.setData({ nicknameState: 'checking', nicknameHint: '正在检查昵称是否可用…' });
+    this.requestNicknameCheck(value, this._nicknameSeq);
+  },
+
+  /**
+   * 拉一批推荐昵称(被占用时自动触发;「换一批」沿用服务端 cursor 往后翻)。
+   * 只列出,不替用户填 —— 点选哪个由用户决定。
+   */
+  loadNicknameSuggestions(raw, more) {
+    if (this.data.nicknameSuggesting || this.data.saving) return;
+    const base = more ? this._suggestBase : nicknameCheck.normalize(raw);
+    if (!base || nicknameCheck.localIssue(base)) {
+      this.setData({ nicknameSuggestions: [], nicknameSuggestError: '先写一个 2–24 字、符合规则的昵称，再看推荐' });
+      return;
+    }
+    if (!more || base !== this._suggestBase) {
+      this._suggestBase = base;
+      this._suggestCursor = null;
+    }
+    const seq = this._nicknameSeq;
+    const that = this;
+    const collected = [];
+    const stale = () => that._unloaded || seq !== that._nicknameSeq;
+    const finish = (failText) => {
+      if (that._unloaded) return;
+      if (stale()) { that.setData({ nicknameSuggesting: false }); return; }
+      that.setData({
+        nicknameSuggesting: false,
+        nicknameSuggestions: collected.slice(),
+        nicknameSuggestError: collected.length ? '' : (failText || '暂时没拿到推荐，可以再试一次')
+      });
+    };
+    const step = (attempt) => {
+      const data = { baseName: base };
+      if (that._suggestCursor !== null && that._suggestCursor !== undefined) data.cursor = that._suggestCursor;
+      app.sendRequest({
+        hideLoading: true,
+        autoErrorToast: false,
+        url: '/api/user/nickname/suggest',
+        method: 'POST',
+        data: data,
+        success(res) {
+          if (stale()) { finish(); return; }
+          const result = nicknameCheck.readSuggestResult(res);
+          if (!result.ok) { finish(result.text); return; }
+          that._suggestCursor = result.cursor;
+          if (collected.indexOf(result.nickname) === -1) collected.push(result.nickname);
+          if (collected.length < NICKNAME_SUGGEST_BATCH && attempt + 1 < NICKNAME_SUGGEST_BATCH
+              && result.cursor !== null) step(attempt + 1);
+          else finish();
+        },
+        successStatusAbnormal() { finish(); },
+        fail() { finish(); }
+      });
+    };
+    this.setData({ nicknameSuggesting: true, nicknameSuggestError: '' });
+    step(0);
+  },
+
+  moreNicknameSuggestions() {
+    this.loadNicknameSuggestions(this._suggestBase || this.data.tempName, !!this._suggestBase);
+  },
+
+  pickNicknameSuggestion(e) {
+    if (this.data.saving) return;
+    const name = e && e.currentTarget && e.currentTarget.dataset.name;
+    if (typeof name !== 'string' || this.data.nicknameSuggestions.indexOf(name) === -1) return;
+    this.resetNicknameCheck();
+    this.setData({
+      tempName: name,
+      nicknameState: 'available',
+      nicknameHint: '已选用推荐昵称，保存时会再确认一次',
+      nicknameSuggestions: [],
+      nicknameSuggestError: ''
+    });
   },
 
   // 上传个人项目图片
@@ -295,6 +465,7 @@ Page({
   onUnload() {
     this._unloaded = true;
     this._profileLoading = false;
+    this.resetNicknameCheck();
     if (this._profileReturnTimer) {
       clearTimeout(this._profileReturnTimer);
       this._profileReturnTimer = null;
@@ -313,7 +484,10 @@ Page({
     const field = e.currentTarget.dataset.field;
     const value = e.detail.value;
     if (field === 'introduction') this.setData({ tempIntroduction: value });
-    else if (field === 'name') this.setData({ tempName: value });
+    else if (field === 'name') {
+      this.setData({ tempName: value });
+      this.scheduleNicknameCheck(value);
+    }
   },
 
   refreshSaveState: function () {
@@ -354,6 +528,7 @@ Page({
             casePicsList = res.data.casePics.split(';').filter(url => url.trim() !== '');
           }
 
+          that._savedName = typeof res.data.name === 'string' ? res.data.name : '';
           that.setData({
             userInfo: {
               ...that.data.userInfo,
@@ -448,6 +623,21 @@ Page({
             if (that._unloaded) return;
             that.exitPage();
           }, 2000);
+        } else if (res && (res.errorCode === nicknameCheck.ERROR_TAKEN || res.errorCode === nicknameCheck.ERROR_INVALID)) {
+          // 保存时服务端判昵称不可用:直接把昵称面板打开并带上原因,被占用时列出推荐供点选
+          const taken = res.errorCode === nicknameCheck.ERROR_TAKEN;
+          that.resetNicknameCheck();
+          that.setData({
+            saving: false,
+            saveError: res.msg || (taken ? '昵称已被占用，请换一个' : '昵称不符合规则'),
+            popDavid4: true,
+            tempName: userInfo.name,
+            nicknameState: taken ? 'taken' : 'invalid',
+            nicknameHint: taken ? '这个昵称已被占用，换一个试试' : (nicknameCheck.localIssue(userInfo.name) || '昵称不符合规则'),
+            nicknameSuggestions: [],
+            nicknameSuggestError: ''
+          });
+          if (taken) that.loadNicknameSuggestions(userInfo.name, false);
         } else {
           that.setData({
             saving: false,

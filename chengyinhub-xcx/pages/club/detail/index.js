@@ -2294,6 +2294,13 @@ Page({
     });
   },
 
+  goClubBadges() {
+    const club = this.data.club;
+    const clubId = positiveId(this.data.clubId);
+    if (!club || !(club.isOwner || club.isJoined) || !clubId) return;
+    wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId });
+  },
+
   goClubRoles() {
     if (!this.data.club || !(this.data.club.isOwner || this.data.canManageRoles)
         || !this.data.clubId) return;
