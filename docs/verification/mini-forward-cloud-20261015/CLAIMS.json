@@ -52,7 +52,7 @@
   ],
   "source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
   "active_source_writers": 0,
-  "verification_scope": "Current bde356f3 source candidate NOT_RUN. Previous local VPS ordinary24 PASS is recorded separately under source2babbe28; MySQL11 remains NOT_RUN. Both authors frozen.",
+  "verification_scope": "Current bde356f3 local ordinary28 actual PASS from PR24@cae72e05; true MySQL11 NOT_RUN/unregistered. Cloud execution NOT_RUN, no new source changes, both authors frozen. Prior2babbe28 24PASS retained separately.",
   "refreshed_ownership": {
     "open_pr_count": 201,
     "rest_pages": [

@@ -8,11 +8,19 @@
 [PR16 启动 ACK](https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354) 已包含真实 child 与精确 claim。
 
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
-只在现有授权内源码修复、回归编写和 Git 交付。验证全部 `NOT_RUN`；不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
+只在现有授权内源码修复、回归编写和 Git 交付。Cloud执行始终 `NOT_RUN`；本地外部验证见最新候选段。Cloud 不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
-## 最新交付候选：两项续作已公共，当前 NOT_RUN
+## 最新交付候选：本地普通28实际通过，真MySQL11仍NOT_RUN
 
-最新冻结源码为 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，分支与草稿PR72不变；前一项独立提交 `009664d74bc9a330b14a10e0696dba74e91ea291` 已包含其中。旧候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 的普通24PASS仅保留历史，不能覆盖新候选。当前所有验证为 NOT_RUN / SOURCE_DELIVERED_UNVERIFIED，Cloud没有运行任何验证。
+最新冻结源码为 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，分支与草稿PR72不变；前一项独立提交 `009664d74bc9a330b14a10e0696dba74e91ea291` 已包含其中。旧候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 的普通24PASS仅保留历史，不能覆盖新候选。本地已对这个新冻结源码完成编译及普通28实际测试，28pass/0failure/0error/0skip；真MySQL11仍NOT_RUN，整体保持SOURCE_DELIVERED_UNVERIFIED，Cloud未运行验证。
+
+### 本次新源码的独立外部证据
+
+已只读签收PR24完整提交 `cae72e05ee668271d79ea9c95e505d7e8971d3a5` 的 [F3 README](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md)、[summary.json](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json) 与 [真库入口缺口 README](https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_DB_ENTRY_GAP_20261016/README.md)。两普通类各14项、总28实际全部通过，2份fresh XML精确类集，212 guard0/completed；原始回执时间字段 `2026-10-16T03:47:03.567744Z`—`2026-10-16T03:49:49.990667Z`。summary记录精确容器 `d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b` 经显式chengyin-aws过滤确认已清理。
+
+Cloud仅核公开README/summary，未拉取或独立解析VPS原始XML/日志，未连接VPS；这是本地唯一验证者的新SHA结果，不是继承旧24PASS。CORE/EXTRA各自结果不计入本队，也不更新他们或C00的账本。
+
+F3真MySQL类11项未登记现有资金CI固定清单，当前NOT_RUN；212固定network none无凭据透传，不能充当真库入口。有Redis mock不能当真实Redis联验。独立限额隔离入口仍待用户在本地总控流程明确批准，现有212与CI保持原样，Cloud不创建服务/入口或补跑替代。真库/Redis、运行HTTP、设备业务、候选集成、合并部署均未签收。总体SOURCE_DELIVERED_UNVERIFIED、EXHAUSTED（writer0/READY0/源码阻塞0）不变。
 
 本次只追加原白名单四条既有路径：Controller/Test 与 ProgressionService/Test，不新增文件。两位原作者均再次冻结，实际writer=0、READY=0；当前没有已确认下一具体项，恢复EXHAUSTED。下文恢复开发及旧验证段落均为历史，当前状态以本节和QUEUE为准。
 
@@ -22,7 +30,7 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 触发：pilot的LocalDate.parse接受零年、负年、符号扩展年份，完整1天窗口仍把原串传SQL DATE cast。仅解析后/窗口计算前追加正四位年份检查，不重构funnel、不改Mapper/UI；合法年份、必填、1–62inclusive及start/end/dedup/coverage/metric五字段保留。没有实测HTTP或SQL返回，不把预期转换问题称生产已复现。
 
-既有12个测试完整保留，新增2个@Test，共14声明：12个非法年份短窗，均错误码500/固定日期格式消息且Mapper零交互；3个合法0001/0999/9999短窗，完整核原参数与五字段。案例组合不是执行数。NOT_RUN，无新依赖/窗口政策。真实SQL转换及接口仍由总控验证。
+既有12个测试完整保留，新增2个@Test，共14声明：12个非法年份短窗，均错误码500/固定日期格式消息且Mapper零交互；3个合法0001/0999/9999短窗，完整核原参数与五字段。案例组合不是执行数。本地本候选对应普通类14实际通过，Cloud NOT_RUN；无新依赖/窗口政策。真实SQL转换及接口仍由总控验证。
 
 ### F3-GROW-02
 
@@ -30,11 +38,11 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 触发：锁读后先LocalDate.now算today，后new Date写lastCheckinDate，在午夜间线程停顿可用15日计算streak却存16日，16日下一有效调用被当同日，少延一天。现在锁读后一次采样checkinTime，toLocalDate沿原ZoneId.systemDefault算日期；lastCheckinDate/updateTime共用采样。取时方法为最小protected生产new Date，便于测试受控时间；没有新配置/依赖，未动成长锁、计次、等级、主题里程、徽章时间或阈值政策。
 
-既有12个测试完整保留，新增2个确定性@Test，共14声明。子类给定午夜前/后队列并模拟Mapper持久化，断言单次streak7与存储日期一致，以及两次有效调用streak6→7→8、checkins9→10→11/level3，无sleep或源码字符串断言。NOT_RUN。Date→DATE映射及JVM/DB时区集成仍未验，未选择新时区或改事件身份。
+既有12个测试完整保留，新增2个确定性@Test，共14声明。子类给定午夜前/后队列并模拟Mapper持久化，断言单次streak7与存储日期一致，以及两次有效调用streak6→7→8、checkins9→10→11/level3，无sleep或源码字符串断言。本地本候选对应普通类14实际通过，Cloud NOT_RUN。Date→DATE映射及JVM/DB时区集成仍未验，未选择新时区或改事件身份。
 
 ### 新候选的验证交接
 
-当前AnalyticsControllerTest14 + PlayerProgressionServiceImplTest14 + PlayerGrowthConcurrencyMySqlIT11 =39源码声明（本次净增4，公共基线起净增34），全部新候选NOT_RUN，实际执行数未知。原MySQL IT文件未改，11项始终未执行。仍需要本地独占入口及原两唯一键/事务代理前提，资源与真实MySQL执行门禁不变。
+当前AnalyticsControllerTest14 + PlayerProgressionServiceImplTest14 + PlayerGrowthConcurrencyMySqlIT11 =39源码声明（本次净增4，公共基线起净增34），本地本候选普通28项已实际通过，0失败/错误/跳过；真MySQL11项仍NOT_RUN。原MySQL IT文件未改，11项始终未执行。仍需要本地独占入口及原两唯一键/事务代理前提，资源与真实MySQL执行门禁不变。
 
 普通用例选择示例（只写文本，Cloud未执行）：
 
@@ -42,7 +50,7 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.business.AnalyticsControllerTest,com.chengyinhub.business.service.PlayerProgressionServiceImplTest test
 ```
 
-是否执行28普通声明及真实MySQL11由本地按批准入口/直接影响决定，不能以旧24PASS或声明数签收；不再以文档head替代源码冻结SHA。日期全历史性能、共享会员锁序与完整奖励并发仍是原交接边界，不新增共享表或目录写权。未来真实失败仅对应原作者一条修复线；其余独立授权项可继续。
+普通28已由本地按实际28签收，非声明推算或旧成绩转移；真实MySQL11仍待本地批准入口，不能以普通PASS或声明数签收；不再以文档head替代源码冻结SHA。日期全历史性能、共享会员锁序与完整奖励并发仍是原交接边界，不新增共享表或目录写权。未来真实失败仅对应原作者一条修复线；其余独立授权项可继续。
 
 ## 历史恢复开发记录：原两域两项具体续领
 
@@ -53,7 +61,7 @@ mvn -o -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsur
 
 均为源码级确认触发，未运行HTTP/DB/测试；新增回归NOT_RUN，不把旧候选普通24PASS继承给新补丁。当前实际源码writer=2，仍仅原两域，不新增路径或模块，不凑六条。完成一项即独立提交push，不等验证；父协调者只维护本目录三文档。下文EXHAUSTED为此前范围完成时的历史状态，本节覆盖当前活动状态。
 
-## 最新外部验证：普通24项通过，真实MySQL仍未运行
+## 历史外部验证：旧2babbe28普通24项通过
 
 本节覆盖下文源码首次交付时的“全部 NOT_RUN”历史表述；Cloud 自己仍未运行任何编译或验证。冻结业务源码继续为 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd`，当前仍 `EXHAUSTED`（writer=0、READY=0），总体保留 `SOURCE_DELIVERED_UNVERIFIED`，不作完整业务验收。
 
