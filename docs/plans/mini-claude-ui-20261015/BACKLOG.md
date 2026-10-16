@@ -248,3 +248,15 @@
 | 165 | 冻结计数·项目操作面板 | #194 X-3：#164（BL-120）加「另存为模板」后 `merchant-card-project-actions-contract.test.js:50` 期望 5 / 实际 6；在 #164 线上把期望改为 6 并更新断言说明（列出新增项），确认 44px 热区断言仍覆盖新行 | tests；一处计数 |
 | 166 | 门禁登记·安全感受半屏 U5 理由 | #194 X-7：#132（BL-89）`safety-rating-sheet/index.js:115` silentError 未在 `ui-integrity` U5 逐项理由登记；`ui-integrity-baseline.js` 归协调者，只在 PR 正文给最小补丁 + 本地验证输出，不提交该文件 | docs/补丁；不改协调者文件 |
 | 167 | 验收清单更新·第十五批 + 索引 | 把 BL-158–166 已开 PR 的验收命令（门禁/单测命令、期望前后对照、依赖顺序）写进 `ACCEPTANCE-BATCH15.md`；并按 BL-157 #204 要求，在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十四、十五批行的补丁（BL-154 只列 #201，#200 已按重复关闭） | docs |
+
+## 第十六批（168–174）：监督线补充（零调用池已核完；本批来自 #205/#206/#207 及 #120 复审的未决意见与合并前核对。不改现有 UI 与标题，无迁移/新接口/新依赖；协调者文件只交补丁）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 168 | 补 U5 白名单·安全感受摘要 | #206 评审：#109（BL-66）`subpackageMember/components/cy/profile/index.js` 新增 `silentError`（`:724`）后 `ui-validity-gates` U5 FAIL（白名单 1，实际 2）；从 #109（或 #206）分支切出，在 `scripts/ui-silent-error-allowlist.js` 计数 1→2 并写真实理由（失败不展示、不挡主页），核对 `ci/silent-error-allowlist.txt` 是否需同步；给前后 U5 对照。若 #207 已补 #109 一节则 BLOCKED 指向 #207 | xcx scripts 白名单；不改业务代码 |
+| 169 | 去残留「回执」·触达任务注释与单测名 | #205 评审：`pages/merchant/crm-campaigns/view-model.js:3` 注释与 `tests/unit/merchant-crm-campaigns.test.js:41` 用例名仍写「回执」，与页面改后「触达明细/逐人结果」不一致；从 #205 切出只改这两处文字，跑该单测与 `audit-f01-f17-contract` | xcx；注释/用例名 |
+| 170 | U5 名额核对（u5Silent 29/29） | #120 复审：#120 用掉 `ui-integrity` U5 最后一个名额（29/29）。列出所有 open `claude/bl-*`/`claude/cl*` PR 中改 `tests/lint/ui-integrity-baseline.js` `u5Silent`/`ratchet.u5Silent` 的 PR、各自 +N、合并后累计值与上限差，写进 `U5-QUOTA.md`，给 C00 是否抬上限的数据；不改协调者文件 | docs |
+| 171 | 冻结计数累计表 | 汇总所有 open PR 对冻结计数的改动（`route-matrix` 条目数、`nav-page-title` 页数、`action-ledger` 控件数、`get-auth-matrix` 直接 GET 数、`success-toast-ratchet` 上限、`app.json` 新页）：每 PR 一行「改前→改后、实际增量」，按 #171 MERGE-ORDER 顺序给合并后应有值，写进 `FROZEN-COUNTS.md`；不改计数文件 | docs |
+| 172 | 基线漂移复跑 | 对监督结论 OK 的 xcx 代码 PR，把当前 `claude/mini-ui-features-20261015` 合进临时 worktree（不推送），跑该 PR 相关单测 + `node scripts/ui-validity-gates.js` + `node tests/lint/ui-integrity.js --warn-as-error`，列出因基线前进而转红/冲突的 PR 与失败项，写进 `DRIFT-CHECK.md`；不推送到任何 worker 分支 | docs；只读复跑 |
+| 173 | 零调用接口增量复扫 | 以 #177 `ZERO-CALL.md`（基线 `d0307a78`）为底，复扫 `controller/api/*.java` 与当前基线及 Codex 控制分支，列出新增或变更的映射及其小程序调用情况；只登记，不立功能卡（新卡由监督线按用户决定筛选） | docs |
+| 174 | 验收清单更新·第十六批 + 索引 | 把 BL-168–173 已开 PR 的验收命令与期望（前后对照、依赖顺序）写进 `ACCEPTANCE-BATCH16.md`，并在 PR 正文给 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 追加第十六批行的补丁 | docs |
