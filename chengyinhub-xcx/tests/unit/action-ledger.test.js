@@ -553,6 +553,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   //   retryScreenFog 两颗 tap 由 local write 改判 external(real-device-required),不进 local 分母。1781 → 1779。
   // 2026-10-15 CL3 俱乐部勋章页(创建/选图标/移除图标/颁发/选成员等)、详情页两处勋章入口、昵称「换一个/重新检查」后重建实测:1796 → 1805。
   assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1805)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-16 BL-05 集邮册「收到的」邮票详情半屏:openDetail +1 tap(重建实测 1796 → 1797)。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1797)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -764,6 +766,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-15 CL3 俱乐部勋章页(cy-field/cy-sheet/cy-inline-error/cy-state-shell/cy-danger-confirm 事件)与昵称面板 cy-inline-error 后重建实测:2348 → 2360。
   // 2026-10-15 协调者审查:勋章创建「结果未确认」的 cy-inline-error「我已核对」解锁动作 +1:2360 → 2361。
   assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2361)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  // 2026-10-16 BL-05 收到的邮票详情半屏:cy-sheet bind:close closeDetail +1 事件合同(重建实测 2348 → 2349)。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2349)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1377,6 +1381,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
   assert.equal(ledger.controlCount, 4502)  /* 2026-10-15 CL3 新增俱乐部勋章页(创建/颁发/成员选择)、详情页两处勋章入口与昵称「换一个/重新检查」后按实测重建(4480→4503);按用户决定撤掉勋章图标上传(-2)、昵称推荐改为可点选列表后重建实测 4501;按协调者审查给「创建结果未确认」加「我已核对」解锁动作后 4502。  2026-10-15 任务2 新增认领 sheet/置顶公告/打卡码文本兜底控件后重建(4432→4455)。  2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  // 2026-10-16 BL-05 收到的邮票详情半屏:openDetail/关闭/大图预览 +3 控件,重建实测 4480 → 4483。
+  assert.equal(ledger.controlCount, 4483)  /* 2026-10-15 任务2 新增认领 sheet/置顶公告/打卡码文本兜底控件后重建(4432→4455)。  2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

@@ -7,10 +7,17 @@
   <text class="album-sub" wx:if="{{loaded}}">{{tab === 'received' ? '别人投来、你换回的 ' + (total || 0) + ' 枚' : '这座城市里你已经收下的 ' + (total || 0) + ' 枚'}}</text>
 
   <view class="stkgrid" wx:if="{{items.length}}">
-    <view class="stkcell" wx:for="{{items}}" wx:key="id">
-      <image class="stkcell__img" src="{{item.picUrl}}" mode="aspectFill" lazy-load />
-      <text class="stkcell__cap" wx:if="{{item.caption}}">{{item.caption}}</text>
-    </view>
+    <block wx:for="{{items}}" wx:key="id">
+      <!-- BL-05:只有「收到的」可点开详情;「我的」保持原样 -->
+      <view class="stkcell" wx:if="{{tab === 'received'}}" data-index="{{index}}" bindtap="openDetail" aria-role="button" aria-label="查看这枚收到的邮票" hover-class="cy-pressed" hover-stay-time="80">
+        <image class="stkcell__img" src="{{item.picUrl}}" mode="aspectFill" lazy-load />
+        <text class="stkcell__cap" wx:if="{{item.caption}}">{{item.caption}}</text>
+      </view>
+      <view class="stkcell" wx:else>
+        <image class="stkcell__img" src="{{item.picUrl}}" mode="aspectFill" lazy-load />
+        <text class="stkcell__cap" wx:if="{{item.caption}}">{{item.caption}}</text>
+      </view>
+    </block>
     <!-- 原型末尾那一格虚线占位:它不是加载态,是「这座城市还有没收到的」 -->
     <view class="stkcell stkcell--lock" wx:if="{{noMore && tab === 'mine'}}"><text class="stkcell__lock-t">还没收到</text></view>
   </view>
@@ -29,4 +36,15 @@
   <view class="album-more" wx:elif="{{noMore && items.length && tab === 'received'}}" aria-role="text">收到的邮票都在这里了</view>
 
   <view class="album-fab" bindtap="openCamera" hover-class="album-fab--press" hover-stay-time="60" wx:if="{{total > 0}}" aria-role="button" aria-label="打开集邮相机"><cy-icon name="plus" size="40" /></view>
+
+  <!-- BL-05 收到的邮票详情:只列接口已有字段;作者不在接口里(换到的票对收件人匿名),不编造 -->
+  <cy-sheet show="{{!!detail}}" title="收到的邮票" handle closable maskClosable bind:close="closeDetail">
+    <view class="stkdetail" wx:if="{{detail}}">
+      <image class="stkdetail__img" src="{{detail.picUrl}}" mode="aspectFit" bindtap="previewDetail" aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80" />
+      <text class="stkdetail__cap" wx:if="{{detail.caption}}">{{detail.caption}}</text>
+      <view class="stkdetail__row"><text class="stkdetail__k">来源</text><text class="stkdetail__v">投一张自己的票换回 · 对方匿名</text></view>
+      <view class="stkdetail__row" wx:if="{{detail.kindLabel}}"><text class="stkdetail__k">类型</text><text class="stkdetail__v">{{detail.kindLabel}}</text></view>
+      <view class="stkdetail__row" wx:if="{{detail.timeText}}"><text class="stkdetail__k">拍下时间</text><text class="stkdetail__v">{{detail.timeText}}</text></view>
+    </view>
+  </cy-sheet>
 </view>
