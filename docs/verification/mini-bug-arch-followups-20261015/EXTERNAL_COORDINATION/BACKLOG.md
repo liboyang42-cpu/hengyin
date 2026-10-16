@@ -1,11 +1,11 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable，工作树 `/workspace/hengyin-extra-*`，六原worker gpt-6.1-sol。
-当前已读控制 `9ee26595044bba61b4f033966cae653e8658be9b`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`**，原E02 child `6b98aabcdf20bbc55b05b78187f52f2321be3a1d`；SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。
+当前已读控制 `9ee26595044bba61b4f033966cae653e8658be9b`（已核E02-25正式7路径）；分支 `codex/extra-six-rolling-20261015` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。最新应用/测试候选 **`29fe9236ede15a8f1bbd3aaf2b93e3fc25409726`**，原E02 child `6b98aabcdf20bbc55b05b78187f52f2321be3a1d`；SOURCE_DELIVERED_UNVERIFIED；本地普通3类64实际PASS，真MySQL2项NOT_RUN。
 
 当前111历史=59源码交付/40反证/7合同或决策阻塞/5委派他队；实际源码worker0、修复worker0、READY0，目标可行动50缺50。无真实独立READY项时如实EXHAUSTED，不造任务。E01-19已由CORE解决，不重复。E02-23/E04-07仍需C00原owner解决身份合同。
 
-本地验证只按完整源SHA登记：faefbaf8两普通类60实际PASS，公开PR24@cae72e05ee668271d79ea9c95e505d7e8971d3a5；不覆盖上述新RR候选。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
+本地验证只按完整源SHA登记：29fe9236普通3类64实际PASS，公开PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e；faefbaf8旧两类60PASS独立保留，不以旧成绩继承。所有真MySQL/Redis/运行HTTP/设备业务/合并部署未验；212不改、Cloud不验证。下文保留历史回执，后续节中的旧计数和等待状态只代表当时快照，以本段及QUEUE为准。
 
 ## 持久调度协议：1修复+5开发
 
@@ -309,3 +309,11 @@ E01-19已由CORE/C03交e0e3f517并据C00签普通10PASS，转记他队解决不�
 ## 本地已冻结29fe；普通结果待回报
 
 本地直接确认已fetch完整29fe9236ede15a8f1bbd3aaf2b93e3fc25409726，核3生产/新2类/自身旧24 fixture符合9ee grant，旧55及依赖无变化。正在准备既有212普通3类，64仅静态计划、尚无实际项数/结果；Cloud不补跑。E02_25MySqlIT2项仍NOT_RUN/缺批准真实存储入口，不增网或改CI。e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec已由本地核为29fe直接子、仅自有3协调文档。旧faef60PASS不套新29fe；当前无真实READY且未收到失败，不派泛审计或预防性修复，实际活动源码0。若真实失败回报只恢复原E02一条修复线；结果和公开证据届时另记。
+
+## 29fe普通64实际PASS公开签收；真实RR仍未验
+
+已实际核读PR24@0d3b6195203b0b963e0dd77df8412fde70b3923e的[README](https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md)和[summary](https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/summary.json)。固定29fe9236ede15a8f1bbd3aaf2b93e3fc25409726的E02_25Test4+E02_24Test5+CommunityPostServiceImplTest55=64实际PASS/F0/E0/S0，3fresh XML精确集合，212guard0/completed，精确自有容器已由本地显式chengyin-aws确认不存在。源包/日志/逐XML哈希及精确guard回执已链接QUEUE；Cloud只核公共索引，没有重新获取或解析VPS原始XML/日志，没有运行编译测试。
+
+仅普通Service/SQL替身分支回归签收；新E02_25MySqlIT2项继续NOT_RUN，真实RR快照、真实DuplicateKey/current-read及SQL提交尚未实库验收，不称RR竞态闭环或66通过。批准真存储入口仍缺，不开网络/改CI/起服务。真Redis/运行HTTP/设备业务/集成合并部署未验，source overall仍SOURCE_DELIVERED_UNVERIFIED。旧faef60/其他候选和失败/锁拒绝历史保留，不向后续SHA迁移成绩。
+
+当前无失败修复可开，实际源码0/READY0/合同等阻塞7；原作者与文件锁保留，无真实下一项不凑任务。C00唯一维护总账/BACKEND_CHANGES/IOS_HANDOFF，本队仅补自有三交付账与PR36公开签收。

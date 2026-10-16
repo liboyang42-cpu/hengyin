@@ -3721,7 +3721,7 @@
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
       "public_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
-      "verification": "NOT_RUN",
+      "verification": "Cloud NOT_RUN; exact29fe local ordinary64 targeted PASS; trueMySQL2 NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "trigger": "Supported MySQL RR scenario: ordinary readview misses concurrent same-request winner after duplicate insert; ordinary recovery still sees null and409",
       "scope_limit": "Repository MySQL/Druid inherits isolation, no RC override; actual VPS/production isolation unknown, no service connection attempted",
@@ -3759,7 +3759,14 @@
       "new_sha_inherits_faef_pass": false,
       "dependencies": [
         "Previous E02-24 parent binding is already in this branch; all 3 production pieces shipped atomically; no external source/dependency/config/DDL changes"
-      ]
+      ],
+      "exact_local_ordinary_validation": {
+        "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+        "tests": 64,
+        "status": "TARGETED_ORDINARY_PASS_ONLY",
+        "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+        "real_mysql_methods_not_run": 2
+      }
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3767,7 +3774,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 14,
+  "queue_revision": 15,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3887,7 +3894,7 @@
   "refill_status": "EXHAUSTED: no concrete authorized READY item; request caller-backed independent scope via C00, never invent bugs or repeat delivered work to fill50",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "E02-25 current-read repair and 4 ordinary+2 MySQL methods SOURCE_DELIVERED_UNVERIFIED/NOT_RUN; faef ordinary60 actual PASS has public evidence and is not inherited",
+    "E02": "E02-25 source delivered; exact29fe local3 ordinary classes64 actualPASS publicly signed; trueMySQL2 remains NOT_RUN, actualRR race not accepted. No failure or independentREADY.",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -4449,6 +4456,98 @@
       },
       "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
       "started_at_utc": "2026-10-16T03:44:19.150799+00:00"
+    },
+    {
+      "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "task": "cy-vps-extra-29fe9236-20261016",
+      "scope": "TARGETED_THREE_ORDINARY_CLASSES_ONLY",
+      "status": "TARGETED_ORDINARY_PASS_ONLY",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_25Test",
+        "com.chengyinhub.business.longrun.E02_24Test",
+        "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+      ],
+      "actual": {
+        "tests": 64,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 64,
+        "xml_classes": 3,
+        "exact_class_set_match": true,
+        "all_reports_fresh": true,
+        "guard_exit_code": 0,
+        "guard_reason": "completed"
+      },
+      "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "source": "Public PR24 README and summary actually read; not Cloud execution",
+      "started_at_utc": "2026-10-16T04:09:10.582362+00:00",
+      "finished_at_utc": "2026-10-16T04:11:52.065077+00:00",
+      "published_evidence": {
+        "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+        "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/summary.json",
+        "read_scope": "Public README and structured summary actually read; original VPS logs/XML not fetched or independently rerun by Cloud",
+        "source_archive_sha256": "d62465ebcc63192f74c95e2e02d86101451fe13a54d873fec83367923d4f2c8f",
+        "log_sha256": "3aca3f0756e171a485c6b973fde7258b0323f096b8fb03c46aa5a049d9e783a7",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+            "tests": 55,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "eba82abddfe43393bb61c2efeda7760eab5c40f2d50bdd7a495617104c5fa697",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.business.longrun.E02_25Test",
+            "tests": 4,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "44981dadff90574e02e559dc87e9d69a9d6f3c9a41c1f374a0f1c6739dc351e4",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_25Test.xml"
+          },
+          {
+            "class": "com.chengyinhub.business.longrun.E02_24Test",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "261d0aedd05db9b71b6dc2925d10408db4b0c27259eec881d051408205c81760",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+          }
+        ],
+        "actual_totals": {
+          "tests": 64,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 64
+        },
+        "fresh_exact_xml": true,
+        "guard": {
+          "returncode": 0,
+          "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"8e70b4e38e8030ce3bd9aeb3c8aa74877b930ae87bb4154027c71b93a5d278a4\"}\n",
+          "stderr": "",
+          "finished_at": "2026-10-16T04:11:52.065077+00:00"
+        },
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "8e70b4e38e8030ce3bd9aeb3c8aa74877b930ae87bb4154027c71b93a5d278a4"
+        },
+        "evidence_layer": "ordinary mock/SQL-boundary regression only; true MySQL E02_25MySqlIT2 NOT_RUN; Redis/HTTP/device/business/integration/merge/deployment not validated"
+      },
+      "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+      "source_archive_sha256": "d62465ebcc63192f74c95e2e02d86101451fe13a54d873fec83367923d4f2c8f",
+      "log_sha256": "3aca3f0756e171a485c6b973fde7258b0323f096b8fb03c46aa5a049d9e783a7",
+      "real_mysql_rr_acceptance": false,
+      "mysql_methods_not_run": 2,
+      "total66_pass_claimed": false,
+      "later_sha_pass_inherited": false
     }
   ],
   "pending_local_failure_retests": [],
@@ -4581,6 +4680,64 @@
         "endpoint": "chengyin-aws",
         "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
       }
+    },
+    "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726": {
+      "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+      "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/summary.json",
+      "read_scope": "Public README and structured summary actually read; original VPS logs/XML not fetched or independently rerun by Cloud",
+      "source_archive_sha256": "d62465ebcc63192f74c95e2e02d86101451fe13a54d873fec83367923d4f2c8f",
+      "log_sha256": "3aca3f0756e171a485c6b973fde7258b0323f096b8fb03c46aa5a049d9e783a7",
+      "reports": [
+        {
+          "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+          "tests": 55,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "eba82abddfe43393bb61c2efeda7760eab5c40f2d50bdd7a495617104c5fa697",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+        },
+        {
+          "class": "com.chengyinhub.business.longrun.E02_25Test",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "44981dadff90574e02e559dc87e9d69a9d6f3c9a41c1f374a0f1c6739dc351e4",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_25Test.xml"
+        },
+        {
+          "class": "com.chengyinhub.business.longrun.E02_24Test",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "261d0aedd05db9b71b6dc2925d10408db4b0c27259eec881d051408205c81760",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+        }
+      ],
+      "actual_totals": {
+        "tests": 64,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 64
+      },
+      "fresh_exact_xml": true,
+      "guard": {
+        "returncode": 0,
+        "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"8e70b4e38e8030ce3bd9aeb3c8aa74877b930ae87bb4154027c71b93a5d278a4\"}\n",
+        "stderr": "",
+        "finished_at": "2026-10-16T04:11:52.065077+00:00"
+      },
+      "cleanup": {
+        "observed_absent": true,
+        "endpoint": "chengyin-aws",
+        "container_id": "8e70b4e38e8030ce3bd9aeb3c8aa74877b930ae87bb4154027c71b93a5d278a4"
+      },
+      "evidence_layer": "ordinary mock/SQL-boundary regression only; true MySQL E02_25MySqlIT2 NOT_RUN; Redis/HTTP/device/business/integration/merge/deployment not validated"
     }
   },
   "external_dependency_requests": {
@@ -4631,7 +4788,7 @@
   },
   "validation_queue_state": {
     "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-    "status": "LOCAL_PREPARING_ORDINARY_RESULT_PENDING",
+    "status": "LOCAL_TARGETED_ORDINARY_PASS_ONLY",
     "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
     "entry": "Existing approved VPS212 offline ordinary regression entry only",
     "classes": [
@@ -4640,9 +4797,14 @@
       "com.chengyinhub.business.community.CommunityPostServiceImplTest"
     ],
     "declared_tests": 64,
-    "actual_tests": null,
-    "actual_result": null,
-    "receipt_source": "Direct local delegation: frozen candidate fetched; exact grant/7 paths/no dependency change reviewed; preparing existing212 ordinary run, no result reported",
+    "actual_tests": 64,
+    "actual_result": {
+      "passed": 64,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "receipt_source": "Public local README and summary read;64 actual ordinary PASS,3fresh exactXML,guard0 and own-container cleanup",
     "cloud_execution_allowed": false,
     "source_delivery_status": "SOURCE_DELIVERED_UNVERIFIED",
     "prior_faef60_pass_inherited": false,
@@ -4658,7 +4820,11 @@
       "class": "E06_17Test",
       "actual_tests": 5,
       "status": "TARGETED_PASS_ONLY"
-    }
+    },
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0d3b6195203b0b963e0dd77df8412fde70b3923e/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_29fe9236/summary.json",
+    "next_action": "No actual failure/READY item; keep original owner and file locks. Real MySQL2 remains NOT_RUN pending approved storage entry."
   },
   "admission_history": [
     {
