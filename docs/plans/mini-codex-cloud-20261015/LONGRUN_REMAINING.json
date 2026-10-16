@@ -1155,5 +1155,22 @@
     "cloud_runs": 0,
     "new_entry": false,
     "guard_refusal_scope": "FORWARDd592 test-compile firstattempt only; CORE/EXTRA preparing sources, do not infer guardattempts"
+  },
+  "core_c03_topic_update_repair": {
+    "packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+    "state": "AUTHORIZED_PENDING_WRITER_START",
+    "repair_writer": "/root/topic_like_cancel_sol",
+    "repair_slot_count": 1,
+    "failure_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "actual51": {
+      "passed": 35,
+      "failures": 1,
+      "errors": 15,
+      "skipped": 0
+    },
+    "newC03_14class10": "PASS_ONLY_ATadf",
+    "repair_scope": "Oldfixtureonly/31businessassertionspreserved",
+    "public_failure_evidence": "PENDING",
+    "retest": "ONLY_CHANGED_FAILURE_CLASS31_AT_NEW_SHA_NOT_FULL51"
   }
 }

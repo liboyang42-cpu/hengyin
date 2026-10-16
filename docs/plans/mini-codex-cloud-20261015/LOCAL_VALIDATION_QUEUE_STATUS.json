@@ -1,6 +1,6 @@
 {
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "state": "NOT_RUN_EXISTING_212_SHARED_LOCK_QUEUE",
+  "state": "CORE51_ACTUAL_FAIL_SINGLE_FIXTURE_REPAIR_EXTRA2_RUNNING_FORWARD_QUEUED",
   "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
   "entry_decision": "VALIDATION_ENTRY_DECISION.json",
   "candidates": {
@@ -9,16 +9,21 @@
       "action": "ordinary regression",
       "source_declared_tests": 51,
       "classes": 4,
-      "state": "SOURCE_PACKAGE_PREPARING_WAITING_NORMAL_212_ADMISSION",
-      "actual_tests": 0,
-      "source_failure": false
+      "state": "ACTUAL_51_FAIL_REPAIR_OLD_TOPIC_UPDATE_FIXTURE",
+      "actual_tests": 51,
+      "source_failure": "Notconfirmedproductionregression; oldfixtureidentitygapreview",
+      "actual_passed": 35,
+      "failures": 1,
+      "errors": 15,
+      "skipped": 0,
+      "repair_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json"
     },
     "EXTRA": {
       "sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
       "action": "ordinary H2 productionMapper regression",
       "source_declared_tests": 2,
       "classes": 1,
-      "state": "SOURCE_PACKAGE_PREPARING_WAITING_NORMAL_212_ADMISSION",
+      "state": "LOCAL_STARTED_SERIAL_ORDINARY2_RESULT_PENDING",
       "actual_tests": 0,
       "source_failure": false
     },
@@ -44,7 +49,7 @@
     }
   },
   "retry": "Local verifier waits for shared lock to release normally, then existing212 serial execution; no bypass/stopping other tasks/new entry or manualCI trigger",
-  "repair_slots": "No source failure; do not reopen authors for resource queue",
+  "repair_slots": "COREonly/root/topic_like_cancel_sol oldfixture exactgrant; sourcefailure remains evidencebased",
   "source_work": "Only explicit real independent source tasks may continue; no new task invented from queue",
   "business_decisions": {
     "pending_local_user_answers": true,

@@ -1,3 +1,11 @@
+## CORE adf新51项实际失败／单原作者修复槽
+
+本地VPS212已实际执行冻结`adf597917da2654b6b753141180bbbcb6db92fc5`四类51：**35PASS／1失败／15错误／0跳过**，4fresh精确XML、guard1/child_command_failed、精确容器清理已按本地直接报告登记，公开PR24完整证据待补。新OWN_C03_14Test10、OWN_C03_12Test4、TopicCreateBusinessErrorPassthroughTest6均PASS；仅旧TopicUpdateByOwnerTest31的16项失败/错误，其中15项是章insert未生成身份，1项免费转商业断言被提前章身份错误挡住。
+
+C00初核旧setUp无章节/节点insert成功及生成ID前提，章身份保护已在父e0，不能改生产guard求绿。已[精确授原CORE/C03唯一修复者](C03_TOPIC_UPDATE_FIXTURE_REPAIR.json)旧TopicUpdateByOwnerTest.java及单独修复说明；先核全实际调用链，仅修必要夹具，保31方法/全部业务断言/负控及node101+逐例覆盖。新源码未交/修后NOT_RUN；后续只交本地失败类31定向，不重跑51。EXTRA普通2已由本地串行启动、结果待回；F3编译继续现有队列。其他真实独立源码不等整队修复，不绕锁、不改入口。
+
+### 以下为此前待验/准入历史，以本轮实际结果为准
+
 > 当前验证排队更新：CORE adf普通51／EXTRA 1bfa普通2尚未运行，本地源包准备中；F3 d592首次test-compile准入exit75/containerId=null/0项、未编译，属其他任务持共享锁，不是源码失败。只等待现有212正常准入，不绕锁或重复旧PASS，详见[排队记录](LOCAL_VALIDATION_QUEUE_STATUS.json)。业务3问未答不擅改身份/原券策略或DDL；明确独立源码不因排队停工。
 
 ## POI查询合同修复已交／本轮三队候选已分别冻结

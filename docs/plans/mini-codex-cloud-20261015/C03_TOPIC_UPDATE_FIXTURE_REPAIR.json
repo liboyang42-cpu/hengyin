@@ -1,0 +1,76 @@
+{
+  "id": "CORE_C03_TOPIC_UPDATE_FIXTURE_REPAIR",
+  "failure_candidate": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "owner": "CORE/C03",
+  "writer": "/root/topic_like_cancel_sol",
+  "model": "gpt-6.1-sol",
+  "state": "AUTHORIZED_PENDING_WRITER_START",
+  "repair_slots": 1,
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+    "docs/verification/mini-longrun-20261015/CORE/OWN-C03-14-FIXTURE-REPAIR.md"
+  ],
+  "scope": "OldTopicUpdateByOwnerTest fixture only: supply actual successfulchapter/node/activity insert return1 plusunique positive generatedIDs in commonsetup, preservepertest customnode101+ overrides; if furtherrequiredfixture dependencies confirmed from actualpath, minimaloldfixture injection only. Preserve31@Test/allbusiness assertions/negativecontrols. No production/other test/guard/skip/DDL/CI/dependency edits.",
+  "ownership_basis": "Noexistingglobal owner entry for exacttest; currentC03writer completedadf and stoppedclean, originalCORE/C03 productionauthor frozen0d; user explicitly assigns this oldtest fixture to sameC03 repair slot after C00registration. No other writer assigned/live for exacttest.",
+  "source_root_cause_review": "InitialC00 source read: commonsetup lacks insertCmsTopicChapter/node success/ID stubs. Existingchapterguard already inparente0; adf changesonly collaborator inputshape, fullDto collaborator listomitted -> guardreturns. Needoriginalwriter actualfullpathreview before minimalfixturechange, not declareproductionbug. Originalwriter traced non-draft publish->ensureSelfHostActivityShell->generateSelfHostActivity:5882: activityinsertalso needsreturn1/generatedID. FinaljourneyRules/routevalidators alreadyreal; existinglocalmemberTemplate/distance and pertestnode101+ remain. DefaultAnswer must be safe fornull synthetic argument duringMockito re-stubbing; do notchange31 assertions.",
+  "reported_failure": {
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 4,
+    "actual_tests": 51,
+    "passed": 35,
+    "failures": 1,
+    "errors": 15,
+    "skipped": 0,
+    "fresh_exact_xml": 4,
+    "started_at": "2026-10-16T05:59:49Z",
+    "finished_at": "2026-10-16T06:02:38Z",
+    "guard_exit_code": 1,
+    "guard_reason": "child_command_failed",
+    "container_id": "4f097c74629d229d6a70a8292a3b1b4bdc37ae967091418bb6dfa58f87cfbd94",
+    "cleanup": "Local confirmed exact container absent viachengyin-aws",
+    "passing_classes": [
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+        "tests": 10
+      },
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "tests": 4
+      },
+      {
+        "name": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+        "tests": 6
+      }
+    ],
+    "failing_class": {
+      "name": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "tests": 31,
+      "passed": 15,
+      "failures": 1,
+      "errors": 15,
+      "skipped": 0,
+      "common_error": "章节保存失败，未生成有效章节身份",
+      "stack": "CmsTopicServiceImpl.saveChaptersAndNodes:5061 -> saveTopicChapters:5083 -> rebuildTopicContent:4501",
+      "failure_method": "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+      "expected_failure_message": "免费主题不能转为商业主题,如需收费请重新发起主题",
+      "actual_failure_message": "章节保存失败，未生成有效章节身份",
+      "other_method_names_not_supplied": true
+    },
+    "vps_task": "/home/ubuntu/previews/cy-vps-core-adf59791-20261016",
+    "evidence_pr": 24,
+    "evidence_commit": null,
+    "public_evidence_status": "Directactualverifier report; fullpublicreport pending, no rawlog/hashreadclaim",
+    "source_failure_classification": "FIXTURE_GAP_UNDER_ORIGINAL_WRITER_REVIEW_NOT_CONFIRMED_PRODUCTION_REGRESSION"
+  },
+  "retest": {
+    "status": "NOT_RUN_REPAIR_NOT_YET_DELIVERED",
+    "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+    "source_declarations": 31,
+    "full51_repeat": false,
+    "environment": "Localexisting212 offline; no DB/Redis/newdependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.service.TopicUpdateByOwnerTest test"
+  },
+  "cloud_manual_runs": 0,
+  "other_work": "EXTRA ordinary2 alreadyseriallystarted per local, F3testcompilequeue; no wholeteamstop/no secondrepairwriter",
+  "constraints": "Keep existing212/CI/no newentry/network; businessidentityDDLquestions pending onlytheirauthorizedscope"
+}
