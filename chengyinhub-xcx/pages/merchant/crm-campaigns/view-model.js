@@ -1,6 +1,6 @@
 // BL-100 商家触达任务记录(只读)。
 // GET /api/merchant/crm/campaigns          → MerchantCrmCampaignVO[](最近 20 条,recipients 为空)
-// GET /api/merchant/crm/campaigns/{id}     → MerchantCrmCampaignVO(含逐人回执 recipients;不含联系方式,客户名为昵称原文)
+// GET /api/merchant/crm/campaigns/{id}     → MerchantCrmCampaignVO(含逐人结果 recipients;不含联系方式,客户名为昵称原文)
 // 状态取自 MerchantCrmCampaign / MerchantCrmCampaignRecipient 常量;未知状态如实写「其他状态」。
 const CAMPAIGN_STATUS = {
   READY: { text: '待投递', tone: 'neutral' },
