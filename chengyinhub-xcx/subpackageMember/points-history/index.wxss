@@ -9,3 +9,6 @@ page { background: var(--cy-color-bg-page); }
 .ph-row__delta.is-income { color: var(--cy-color-brand); }
 .ph-row__delta.is-expense { color: var(--cy-color-text-primary); }
 .ph__more { padding: var(--cy-space-4) 0; text-align: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+/* BL-04 月份分组 */
+.ph-group { margin-top: var(--cy-space-4); }
+.ph-group__title { display: block; padding-bottom: var(--cy-space-1); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-secondary); }

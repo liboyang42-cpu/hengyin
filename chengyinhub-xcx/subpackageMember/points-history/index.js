@@ -2,15 +2,19 @@
 const app = getApp()
 const cyToast = require('../../utils/toast.js')
 const { isBizOk } = require('../../utils/response-shape.js')
-const { PAGE_SIZE, normalizeRows } = require('./rows.js')
+const { PAGE_SIZE, FILTERS, normalizeRows, filterRows, groupByMonth } = require('./rows.js')
 
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     state: 'loading', // loading | ready | empty | error
-    rows: [],
+    groups: [],
     hasMore: false,
+    // BL-04 全部/获得/使用(端上对全量列表筛选) + 月份分组
+    filters: FILTERS,
+    filter: 'all',
+    filterEmpty: false,
     refreshing: false,
   },
   onLoad() { this.load() },
@@ -33,7 +37,7 @@ Page({
           return
         }
         that._all = all
-        that._shown = Math.min(PAGE_SIZE, all.length)
+        that._shown = Math.min(PAGE_SIZE, that._filtered().length)
         that._sync()
       },
       fail() {
@@ -44,19 +48,29 @@ Page({
       },
     })
   },
+  _filtered() { return filterRows(this._all || [], this.data.filter) },
   _sync() {
     const all = this._all || []
+    const list = this._filtered()
     this.setData({
-      rows: all.slice(0, this._shown),
-      hasMore: this._shown < all.length,
+      groups: groupByMonth(list.slice(0, this._shown)),
+      hasMore: this._shown < list.length,
+      filterEmpty: !list.length,
       state: all.length ? 'ready' : 'empty',
     })
   },
+  onFilter(e) {
+    const key = e && e.detail && e.detail.key
+    if (!key || key === this.data.filter) return
+    this.setData({ filter: key })
+    this._shown = Math.min(PAGE_SIZE, this._filtered().length)
+    this._sync()
+  },
   onReachBottom() { this.loadMore() },
   loadMore() {
-    const all = this._all || []
-    if (this._shown >= all.length) return
-    this._shown = Math.min(this._shown + PAGE_SIZE, all.length)
+    const list = this._filtered()
+    if (this._shown >= list.length) return
+    this._shown = Math.min(this._shown + PAGE_SIZE, list.length)
     this._sync()
   },
   goBack() {
