@@ -447,6 +447,10 @@
               <text class="pc-mrow-k">真实评价</text>
               <view class="pc-mrow-v pc-mrow-v--link"><text>核销用户评价与商家回复</text><cy-icon name="arrow-right" size="24" /></view>
             </view>
+            <view class="pc-mrow" wx:if="{{merchantSafety}}" aria-label="{{'安全感受：' + merchantSafety.text + '，' + merchantSafety.note}}">
+              <text class="pc-mrow-k">安全感受</text>
+              <text class="pc-mrow-v">{{merchantSafety.text}}（{{merchantSafety.note}}）</text>
+            </view>
           </view>
 
           <!-- ⑥ 承接能力:四项全空则整块不渲染,不留一个空标题配空框 -->
