@@ -63,6 +63,7 @@ const { normName, groupMerchantsByName, stampProgress, doneShopCount, selectNear
 const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require('../../utils/roam-npc-marker.js');
 // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
 const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
+const { createRoamSyncStatus, OFFLINE_TEXT: ROAM_SYNC_OFFLINE_TEXT } = require('../../utils/roam-sync-status.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
 // 本地历史只用于下次打开地图时高亮一处已走过的边缘；不画路线、不上报坐标。
 const { buildFootprintHint } = require('../../utils/roam-footprint-hint.js');
@@ -386,6 +387,8 @@ Page({
     // gpsWeak = 到点判定的精度/漂移原因(原本三道守卫全是静默 return)
     offline: false,
     revealWriteUnknown: false,
+    // BL-03 位置上报连续网络失败 / 系统断网时的提示(utils/roam-sync-status.js)。
+    syncOffline: false, syncOfflineText: ROAM_SYNC_OFFLINE_TEXT,
     recoveryCanContinue: false,
     recoveryError: '',
     recoveryAvailable: false,
@@ -817,6 +820,7 @@ Page({
 
   onLoad(q) {
     roamMemory(this); // 固定本页玩家归属；切号后的旧异步回包不得写进新玩家桶
+    this._bindRoamNetwork(); // BL-03 断网提示
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
     this._eventId = +((q && q.eventId) || 0) || 0; // 官方活动绑定(可选);无则普通漫游,行为不变
@@ -888,6 +892,7 @@ Page({
 
   onUnload() {
     if (this._sessionClock) this._saveRoamRecovery();
+    this._unbindRoamNetwork();
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
     this._clearRollTimers();   // 读数滚动的计时器,离页必须掐掉
@@ -1666,6 +1671,7 @@ Page({
     const requestSessionId = this._roamSid || 0;
     this._revealInFlight = true;
     const pending = req('/api/roam/reveal', 'POST', { sessionId: String(requestSessionId), tiles: batch.join(','), ...(this._clientSessionKey ? { clientSessionKey: this._clientSessionKey } : {}) }).then((res) => {
+      this._markRoamSync(res);
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent() || String(this._roamSid || 0) !== String(requestSessionId)) return false;
       this._revealInFlight = false;
       this._revealPromise = null;
@@ -2459,7 +2465,26 @@ Page({
       sessionId: String(this._roamSid),
       lat: p.lat, lng: p.lng,
       explorePct: this._stats.explorePct || 0,
-    }, { silentError: true });
+    }, { silentError: true }).then((res) => this._markRoamSync(res));
+  },
+
+  /* BL-03:只改提示,不改计时/重试。值没变就不 setData(GPS 回调里高频进来)。 */
+  _roamSyncStatus() {
+    if (!this._syncStatus) this._syncStatus = createRoamSyncStatus();
+    return this._syncStatus;
+  },
+  _applyRoamSyncOffline(offline) {
+    if (offline !== this.data.syncOffline) this.setData({ syncOffline: offline });
+  },
+  _markRoamSync(res) { this._applyRoamSyncOffline(this._roamSyncStatus().report(res)); },
+  _bindRoamNetwork() {
+    if (this._onRoamNetwork || typeof wx.onNetworkStatusChange !== 'function') return;
+    this._onRoamNetwork = (res) => this._applyRoamSyncOffline(this._roamSyncStatus().setConnected(!!(res && res.isConnected)));
+    wx.onNetworkStatusChange(this._onRoamNetwork);
+  },
+  _unbindRoamNetwork() {
+    if (this._onRoamNetwork && typeof wx.offNetworkStatusChange === 'function') wx.offNetworkStatusChange(this._onRoamNetwork);
+    this._onRoamNetwork = null;
   },
 
   _fetchRunners(p) {

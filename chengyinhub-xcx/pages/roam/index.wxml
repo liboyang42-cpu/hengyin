@@ -434,6 +434,11 @@
     <text>{{recoveryError ? recoveryError + ' · 点击核对' : '点亮同步结果待核对 · 点击核对'}}</text>
   </view>
 </view>
+<!-- BL-03 位置上报连续网络失败 / 系统断网:只提示,格子仍先记在本机;上报成功或网络恢复即消失。 -->
+<view class="maptip maptip--offline" wx:if="{{syncOffline && screen=='map' && !revealWriteUnknown && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
+  <cy-icon name="warning" size="24" />
+  <text>{{syncOfflineText}}</text>
+</view>
 <view class="maptip maptip--offline" wx:if="{{(poiOffline || merchantOffline) && !revealWriteUnknown && mapLoad!='slow'}}" bindtap="onPoiRetry" hover-class="cy-pressed" hover-stay-time="80">
   <cy-icon name="warning" size="24" />
   <text>据点没加载出来 · 足迹仍在本机记录 · 点击重试</text>
