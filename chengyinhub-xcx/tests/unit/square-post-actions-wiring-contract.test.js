@@ -171,6 +171,7 @@ test('详情:作者点删除走 /api/creativesquare/delete,成功后落到「暂
   assert.notEqual(brokenSource, read('pages/square/detail/index.js'), '负控锚点失效:删除 URL 未命中');
   const broken = loadPage('pages/square/detail/index.js', { source: brokenSource });
   detailReady(broken);
+  broken.page.openPostActions();
   broken.page.onPostAction({ detail: { action: 'delete', id: '77' } });
   assert.equal(broken.requests.some((r) => r.url === '/api/creativesquare/delete'), false, '负控必须真的把删除端点改掉');
   assert.throws(() => {
@@ -182,6 +183,7 @@ test('详情:编辑以编辑态打开新建面板并带原帖 id/正文/关联;�
   const h = loadPage('pages/square/detail/index.js');
   detailReady(h, { dataId: 9, dataType: 1 });
 
+  h.page.openPostActions();
   h.page.onPostAction({ detail: { action: 'edit', id: '77' } });
   assert.equal(h.page.data.postActionShow, false, '选完动作弹层要收起');
   assert.equal(h.page.data.composeShow, true, '编辑必须打开面板');
@@ -198,10 +200,11 @@ test('详情:编辑以编辑态打开新建面板并带原帖 id/正文/关联;�
 
   // 负控:掐掉分发里的 delete 分支,上面的删除用例必须真红
   const brokenSource = read('pages/square/detail/index.js')
-    .replace("if (action === 'delete') { this.deleteSquarePost(); return; }", '');
+    .replace("if (detail.action === 'delete') { this.deleteSquarePost(); return; }", '');
   assert.notEqual(brokenSource, read('pages/square/detail/index.js'), '负控锚点失效:分发分支未命中');
   const broken = loadPage('pages/square/detail/index.js', { source: brokenSource });
   detailReady(broken);
+  broken.page.openPostActions();
   broken.page.onPostAction({ detail: { action: 'delete', id: '77' } });
   assert.throws(() => {
     assert.ok(broken.requests.find((r) => r.url === '/api/creativesquare/delete'), '确认后必须发删除请求');

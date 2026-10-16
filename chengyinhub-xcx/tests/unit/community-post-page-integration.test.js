@@ -5,17 +5,17 @@ const path = require('node:path');
 const { createRequire } = require('node:module');
 const vm = require('../helpers/ui-sandbox-vm');
 const ROOT = path.resolve(__dirname, '../..');
-function bundle(id = 56, extra = {}) { return { post: Object.assign({ id, authorId: 990005, authorNickname: '测试', body: '内容', version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, extra), media: [], references: [], viewerFollowing: false }; }
+function bundle(id = 56, extra = {}) { return { post: Object.assign({ id, authorId: 990005, authorNickname: '测试', body: '内容', audience: 'PUBLIC', postType: 'MOMENT', commentPolicy: 'EVERYONE', locationPrecision: 'NONE', version: 1, lifecycle: 'PUBLISHED', viewerLiked: 0, viewerBookmarked: 0, likeCount: 0 }, extra), media: [], references: [], viewerFollowing: false, viewerIsAuthor: true, topicCodes: [], mentions: [] }; }
 function load(file, replies) {
-  const calls = []; let definition;
+  const calls = [], storage = new Map(); let definition, state;
   const app = {
     canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: {}, getUserID: () => 990005, getAvatar: () => '', getNickname: () => '测试', getPageSize: () => 1,
     getRequestErrorMessage: (r, fallback) => r && r.msg || fallback, getTotalPage: (n,s) => Math.ceil(n/s),
-    sendRequest(o) { calls.push(o); const reply = replies.shift(); if (reply === undefined) throw new Error('Unexpected HTTP '+o.url);
+    sendRequest(o) { calls.push(o); let reply = o.method==='GET' && /\/posts\/[0-9]+$/.test(o.url) && state ? JSON.parse(JSON.stringify(state)) : replies.shift(); if(typeof reply==='function')reply=reply(o,state); if(reply && reply.post && (o.method==='PATCH'||o.method==='POST' && /\/posts(?:\/[0-9]+\/publish)?$/.test(o.url)))state=reply; if (reply === undefined) throw new Error('Unexpected HTTP '+o.url);
       const task = { aborted: false, abort() { this.aborted = true; } };
       queueMicrotask(() => { if (!task.aborted) { o.success(reply.code ? reply : { code: 200, data: reply }); if (o.complete) o.complete(); } }); return task; }, tips() {} };
-  const wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {}, getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20 }), getMenuButtonBoundingClientRect: () => ({ bottom: 64 }),
+  const wx = { getStorageSync: key => storage.get(key), setStorageSync(key,value) { storage.set(key,JSON.parse(JSON.stringify(value))); }, removeStorageSync(key) {storage.delete(key);}, getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20 }), getMenuButtonBoundingClientRect: () => ({ bottom: 64 }),
     hideTabBar() {}, showToast() {}, hideToast() {}, showLoading() {}, hideLoading() {}, stopPullDownRefresh() {},
     showModal: o => queueMicrotask(() => o.success({ confirm: true })), showActionSheet: o => queueMicrotask(() => o.success({ tapIndex: 0 })) };
   const absolute = path.join(ROOT,file);
@@ -28,6 +28,8 @@ function load(file, replies) {
   return { page,calls, app, wx };
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
+const created = o => ({...bundle(70,{...o.data,lifecycle:'DRAFT',version:0}),media:o.data.mediaIds.map(id=>({id})),references:o.data.references});
+const checked = (_o,state) => ({...state,post:{...state.post,lifecycle:'CHECKING',version:state.post.version+1}});
 test('real list caller reads canonical bundles then bookmarks and cancels same post', async () => {
   const h=load('pages/square/list/index.js',[{items:[bundle()],hasMore:false,nextCursor:56},bundle(56,{viewerBookmarked:1}),bundle()]);
   h.page.getList();await flush(); assert.equal(h.page.data.list[0].contents,'内容');assert.equal(h.calls[0].url,'/api/v1/community/feeds/LATEST');
@@ -51,19 +53,19 @@ test('real profile own caller preserves pending state and uses own scope without
   assert.equal(h.calls[0].url,'/api/v1/community/me/posts');assert.equal(h.calls[0].data.authorId,undefined);assert.equal(h.page.data.list[0].status,0);assert.equal(h.page.data.list[0].lifecycle,'CHECKING');
 });
 test('real list publish caller confirms actual guideline, creates draft, publishes and reports CHECKING accurately', async () => {
-  const h=load('pages/square/list/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},bundle(70,{lifecycle:'DRAFT',version:0}),bundle(70,{lifecycle:'CHECKING'}),{items:[],hasMore:false,nextCursor:null}]);
+  const h=load('pages/square/list/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},created,checked,{items:[],hasMore:false,nextCursor:null}]);
   h.page.data.valCont='纯本地文案';h.page.data.picList=[];h.page.data.fileList=[];
-  h.page.submitFormData();await flush();assert.equal(h.calls[2].url,'/api/v1/community/posts');assert.equal(h.calls[3].data.expectedVersion,0);
-  assert.equal(h.page.data.resultSheet.title,'已提交审核');assert.equal(h.page.data.submitting,false);assert.equal(h.calls[4].url,'/api/v1/community/feeds/LATEST');
+  h.page.submitFormData();await flush();assert.equal(h.calls[2].url,'/api/v1/community/posts');assert.equal(h.calls[4].data.expectedVersion,0);
+  assert.equal(h.page.data.resultSheet.title,'已提交审核');assert.equal(h.page.data.submitting,false);assert.equal(h.calls[6].url,'/api/v1/community/feeds/LATEST');
 });
 test('real compose caller submits canonical draft/publish and preserves pending lifecycle', async () => {
-  const h=load('pages/square/components/cy/post-compose/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},bundle(70,{lifecycle:'DRAFT',version:0}),bundle(70,{lifecycle:'CHECKING'})]);
+  const h=load('pages/square/components/cy/post-compose/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},created,checked]);
   h.page.lifetimes.attached.call(h.page);h.page.observers.show.call(h.page,true);
   h.page.data.content='组件文案';h.page.data.picList=[];h.page.onPublish();await flush();
-  assert.equal(h.calls[2].url,'/api/v1/community/posts');assert.equal(h.calls[3].url,'/api/v1/community/posts/70/publish');assert.equal(h.page.data.submitting,false);
+  assert.equal(h.calls[2].url,'/api/v1/community/posts');assert.equal(h.calls[4].url,'/api/v1/community/posts/70/publish');assert.equal(h.page.data.submitting,false);
 });
 test('real roam share caller uploads receipt and maps the ended own session to canonical ROUTE', async () => {
-  const h=load('pages/roam/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},{id:12},bundle(70,{lifecycle:'DRAFT',version:0}),bundle(70)]);
+  const h=load('pages/roam/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},{id:12},created,checked]);
   h.app.canUseCommunity=()=>true; // Explicit current-account server gate fixture.
   h.page._shareScope=()=>()=>true;h.page._activeShareSessionId=()=>38;h.page._shareCopy=()=> '本地漫游';h.page._drawShareCard=()=>Promise.resolve('/tmp/unit-card.png');h.page.data.share={idx:0};
   h.wx.showModal=o=>queueMicrotask(()=>o.success({confirm:true,content:'本地分享'}));
@@ -86,9 +88,9 @@ test('actual detail comment follow readback uses canonical comments and authorit
 
 const reportReasons = Array.from({ length: 13 }, (_, i) => ({ code: 'REASON_' + (i + 1), label: '原因' + (i + 1) }));
 const reportingCapability = { reporting: { policyVersion: 'server-policy-13', reasons: reportReasons } };
-function reportFixture(kind, replies = [reportingCapability, { id: 72 }]) {
+function reportFixture(kind, replies = [reportingCapability, o => ({id:72,...o.data})]) {
   const h = load('pages/square/' + (kind === 'list' ? 'list' : 'detail') + '/index.js', replies);
-  h.page.data.id = 59; h.page.data.list = [{ id: kind === 'comment' ? 3 : 59 }]; h.page._actionIndex = 0;
+  h.page.data.id = 59; h.page.data.list = [{ id: kind === 'comment' ? 3 : 59 }]; h.page._actionIndex = 0; h.page.data.currentActionId = '59';
   h.wx.showActionSheet = o => o.fail({ errMsg: 'showActionSheet:fail parameter error: itemList should not be large than 6' });
   h.startReport = () => kind === 'comment' ? h.page.reportComment({ currentTarget: { dataset: { index: 0 } } }) : h.page.reportSquare();
   return h;

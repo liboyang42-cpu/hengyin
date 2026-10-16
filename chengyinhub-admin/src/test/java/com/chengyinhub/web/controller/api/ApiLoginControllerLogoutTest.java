@@ -143,6 +143,7 @@ class ApiLoginControllerLogoutTest {
         original.setDelFlag(0);
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(original));
+        when(memberService.getOrCreateWechatMember("existing-openid")).thenReturn(original);
         AppLoginService loginService = mock(AppLoginService.class);
         when(loginService.login("existing-openid")).thenReturn("fresh-token");
         AppTokenService tokenService = mock(AppTokenService.class);

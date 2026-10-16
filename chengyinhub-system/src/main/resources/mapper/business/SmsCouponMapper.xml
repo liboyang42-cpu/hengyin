@@ -218,6 +218,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and publish_count is not null and publish_count &gt; 0 and ifnull(receive_count, 0) &lt; publish_count
     </update>
 
+    <!-- 正常发券：限量和不限量都在同一条 UPDATE 核验当前有效期，避免预读后过期仍发放。 -->
+    <update id="tryIncrementIssuableReceiveCount">
+        update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
+        where id = #{id}
+        and (status is null or status not in (3, 4))
+        and (enable_time is null or enable_time &lt;= now())
+        and (start_time is null or start_time &lt;= now())
+        and (end_time is null or end_time &gt; now())
+        and (publish_count is null or publish_count &lt;= 0 or ifnull(receive_count, 0) &lt; publish_count)
+    </update>
+
     <!-- 核销计数 +1（原子） -->
     <update id="incrementUseCount">
         update sms_coupon set use_count = ifnull(use_count, 0) + 1, update_time = now() where id = #{id}

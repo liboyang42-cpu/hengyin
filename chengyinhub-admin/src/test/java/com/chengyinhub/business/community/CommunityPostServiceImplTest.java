@@ -3,6 +3,7 @@ package com.chengyinhub.business.community;
 import com.chengyinhub.business.domain.community.CommunityPost;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CommunityReportCase;
+import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
@@ -30,6 +31,7 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -480,6 +482,61 @@ class CommunityPostServiceImplTest {
         assertEquals(Integer.valueOf(400), error.getCode());
         verify(mapper, never()).updateCommentLifecycle(anyLong(), anyString(), anyString(), anyInt(), any());
         verify(mapper, never()).recomputeCounts(7L);
+    }
+
+    @Test
+    void duplicateCommentRecoversCommittedWinnerWithCurrentRead() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-concurrent");
+        request.setBody("并发回复");
+        Map<String, Object> winner = new HashMap<>();
+        winner.put("post_id", 7L);
+        winner.put("body", "并发回复");
+        winner.put("author_approval_state", "VISIBLE");
+        winner.put("lifecycle", "PUBLISHED");
+        when(mapper.selectCommentByAuthorRequest(9L, "comment-concurrent")).thenReturn(null);
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-concurrent"), eq("并发回复"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent")).thenReturn(winner);
+
+        Map<String, Object> result = service.comment(9L, 7L, request);
+
+        assertEquals("PUBLISHED", result.get("lifecycle"));
+        assertEquals("VISIBLE", result.get("approvalState"));
+        verify(mapper, times(1)).selectCommentByAuthorRequest(9L, "comment-concurrent");
+        verify(mapper).selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent");
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void duplicateCommentCurrentReadStillRejectsChangedBodyOrPost() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-conflict");
+        request.setBody("请求正文");
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-conflict"), eq("请求正文"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        for (boolean differentPost : Arrays.asList(false, true)) {
+            Map<String, Object> winner = new HashMap<>();
+            winner.put("post_id", differentPost ? 8L : 7L);
+            winner.put("body", differentPost ? "请求正文" : "不同正文");
+            when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-conflict")).thenReturn(winner);
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> service.comment(9L, 7L, request));
+            assertEquals(Integer.valueOf(409), error.getCode());
+        }
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
     }
 
     @Test
@@ -1048,13 +1105,137 @@ class CommunityPostServiceImplTest {
         request.setTargetId(17L);
         request.setReasonCode("HARASSMENT");
         request.setRequestId("report-request-1");
-        when(communityTrustService.submitReport(9L, request)).thenReturn(new CommunityReportCase());
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("COMMENT", 17L));
 
-        service.report(9L, request);
+        Object result = service.report(9L, request);
 
         assertEquals("COMMENT", request.getTargetType());
         assertEquals(Long.valueOf(17L), request.getTargetId());
+        assertReporterProjection(result, "COMMENT", 17L);
         verify(communityTrustService).submitReport(9L, request);
+    }
+
+    @Test
+    void contentReportSubmissionUsesTheSamePublicReporterProjection() {
+        CommunityPost post = draft(7L, 11L, 1);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetId(7L);
+        request.setRequestId("report-content-request");
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("CONTENT", 7L));
+
+        Object result = service.report(9L, request);
+
+        assertEquals("CONTENT", request.getTargetType());
+        assertReporterProjection(result, "CONTENT", 7L);
+        verify(communityTrustService).submitReport(9L, request);
+    }
+
+    private CommunityReportCase submittedReport(String targetType, Long targetId) {
+        CommunityReportCase row = new CommunityReportCase();
+        row.setId(23L);
+        row.setReporterMemberId(9L);
+        row.setTargetType(targetType);
+        row.setTargetId(targetId);
+        row.setStage("SUBMITTED");
+        row.setVersion(0);
+        row.setPolicyVersion("COMMUNITY_REPORT_POLICY_V1");
+        row.setDescription("举报说明");
+        row.setRequestId("internal-request-marker");
+        row.setPayloadHash("internal-payload-digest");
+        row.setPrioritySnapshot("URGENT");
+        row.setFirstResponseMinutesSnapshot(15);
+        return row;
+    }
+
+    private void assertReporterProjection(Object result, String targetType, Long targetId) {
+        assertEquals(CommunityReportVO.class, result.getClass());
+        Map<String, Object> json = com.alibaba.fastjson2.JSON.parseObject(
+                com.alibaba.fastjson2.JSON.toJSONString(result));
+        assertEquals(23L, ((Number) json.get("id")).longValue());
+        assertEquals(targetType, json.get("targetType"));
+        assertEquals(targetId.longValue(), ((Number) json.get("targetId")).longValue());
+        assertEquals("SUBMITTED", json.get("stage"));
+        assertEquals("RECEIVED", json.get("publicStage"));
+        assertEquals(0, json.get("version"));
+        assertEquals("举报说明", json.get("description"));
+        for (String internal : Arrays.asList("reporterMemberId", "requestId", "payloadHash",
+                "prioritySnapshot", "firstResponseMinutesSnapshot", "internalNote", "operatorId")) {
+            assertEquals(false, json.containsKey(internal), internal);
+        }
+    }
+
+    @Test
+    void deletedCommentAncestorsAreRedactedWithoutDroppingNormalRepliesOrChangingRootCursor() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> root30 = deletedThreadRow(30L, null, null);
+        Map<String, Object> middle31 = deletedThreadRow(31L, 30L, 30L);
+        Map<String, Object> reply32 = threadRow(32L, 31L); reply32.put("root_id", 30L);
+        reply32.put("body", "normal reply"); reply32.put("lifecycle", "PUBLISHED");
+        Map<String, Object> deletedLeaf33 = deletedThreadRow(33L, 30L, 30L);
+        Map<String, Object> root20 = threadRow(20L, null);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(root30, middle31, reply32, deletedLeaf33, root20));
+        Map<String, Object> first = service.comments(9L, 7L, null, 1);
+        List<Map<String, Object>> items = (List<Map<String, Object>>) first.get("items");
+        assertEquals(3, items.size());
+        for (int i = 0; i < 2; i++) {
+            assertEquals("", items.get(i).get("body"));
+            assertEquals(true, items.get(i).get("deletedPlaceholder"));
+            assertFalse(items.get(i).containsKey("BODY"));
+        }
+        assertEquals(reply32, items.get(2));
+        assertEquals("private deleted body", root30.get("BODY"), "projection must not mutate mapper rows");
+        assertEquals(true, first.get("hasMore"));
+        assertEquals(30L, first.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 30L, 2)).thenReturn(Collections.singletonList(root20));
+        assertEquals(Collections.singletonList(root20), service.comments(9L, 7L, 30L, 1).get("items"));
+    }
+
+    @Test
+    void deletedLeavesAndEmptyDeletedThreadsDoNotBecomeVisiblePlaceholders() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> deletedRoot = deletedThreadRow(30L, null, null);
+        Map<String, Object> deletedChild = deletedThreadRow(31L, 30L, 30L);
+        Map<String, Object> normalRoot = threadRow(20L, null);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(deletedRoot, deletedChild, normalRoot));
+        Map<String, Object> page = service.comments(9L, 7L, null, 1);
+        assertEquals(Collections.singletonList(normalRoot), page.get("items"));
+        assertEquals(false, page.get("hasMore"));
+        assertEquals(20L, page.get("nextCursor"));
+    }
+
+    private Map<String, Object> deletedThreadRow(Long id, Long parentId, Long rootId) {
+        Map<String, Object> row = threadRow(id, parentId);
+        row.put("root_id", rootId);
+        row.put("lifecycle", "DELETED");
+        row.put("BODY", "private deleted body");
+        return row;
+    }
+
+    private Map<String, Object> threadRow(Long id, Long parentId) {
+        Map<String, Object> row = new HashMap<>();
+        row.put("id", id);
+        row.put("parent_id", parentId);
+        return row;
+    }
+
+    @Test
+    void deletedPlaceholderCannotBeReportedByGuessingItsId() {
+        Map<String, Object> comment = deletedThreadRow(17L, null, null);
+        comment.put("post_id", 7L);
+        comment.put("author_id", 11L);
+        when(mapper.selectCommentForAudit(17L)).thenReturn(comment);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetType("COMMENT");
+        request.setTargetId(17L);
+        request.setReasonCode("HARASSMENT");
+        request.setRequestId("report-deleted-placeholder");
+        ServiceException error = assertThrows(ServiceException.class, () -> service.report(9L, request));
+        assertEquals(Integer.valueOf(404), error.getCode());
+        verify(communityTrustService, never()).submitReport(anyLong(), any());
     }
 
     @Test

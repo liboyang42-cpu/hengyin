@@ -52,11 +52,12 @@ public class ApiCommunityTrustController extends BaseController {
     }
 
     @GetMapping("/reports/mine")
-    public AjaxResult myReports(@RequestParam(required = false) String stage) {
+    public AjaxResult myReports(@RequestParam(required = false) String stage,
+                               @RequestParam(required = false) String requestId) {
         Long principal = principal();
         if (principal == null) return unauthorized();
         try {
-            return success(communityTrustService.listMyReports(principal, stage));
+            return success(communityTrustService.listMyReports(principal, stage, requestId));
         } catch (ServiceException e) {
             return serviceError(e);
         }

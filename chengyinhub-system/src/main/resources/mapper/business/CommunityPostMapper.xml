@@ -828,6 +828,12 @@
              author_approval_state,version,create_time
       FROM community_post_comment WHERE author_id=#{authorId} AND client_request_id=#{clientRequestId}
     </select>
+    <!-- Duplicate-key recovery must see the committed winner instead of the transaction's earlier null snapshot. -->
+    <select id="selectCommentByAuthorRequestForUpdate" resultType="map" useCache="false" flushCache="true">
+      SELECT id,post_id,author_id,root_id,parent_id,replied_to_member_id,client_request_id,body,lifecycle,
+             author_approval_state,version,create_time
+      FROM community_post_comment WHERE author_id=#{authorId} AND client_request_id=#{clientRequestId} FOR UPDATE
+    </select>
     <select id="selectCommentForReply" resultType="map">
       SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.lifecycle,c.author_approval_state
       FROM community_post_comment c JOIN community_post p ON p.id=c.post_id
@@ -895,7 +901,18 @@
         SELECT r.id
         FROM community_post_comment r
         WHERE r.post_id=#{postId} AND r.parent_id IS NULL
-          AND (r.lifecycle='PUBLISHED' OR (r.lifecycle='CHECKING' AND r.author_id=#{viewerId}))
+          AND (r.lifecycle='PUBLISHED' OR (r.lifecycle='CHECKING' AND r.author_id=#{viewerId})
+            OR (r.lifecycle='DELETED' AND EXISTS(
+              SELECT 1 FROM community_post_comment d
+              WHERE d.post_id=#{postId} AND d.root_id=r.id
+                AND (d.lifecycle='PUBLISHED' OR (d.lifecycle='CHECKING' AND d.author_id=#{viewerId}))
+                AND (d.author_approval_state='VISIBLE' OR d.author_id=#{viewerId} OR EXISTS(
+                  SELECT 1 FROM community_post pd WHERE pd.id=#{postId} AND pd.author_id=#{viewerId}))
+                AND NOT EXISTS(SELECT 1 FROM im_block bd
+                  WHERE (bd.member_id=#{viewerId} AND bd.blocked_member_id=d.author_id)
+                     OR (bd.member_id=d.author_id AND bd.blocked_member_id=#{viewerId}))
+                AND NOT EXISTS(SELECT 1 FROM community_member_mute md
+                  WHERE md.member_id=#{viewerId} AND md.muted_member_id=d.author_id))))
           AND (r.author_approval_state='VISIBLE' OR r.author_id=#{viewerId} OR EXISTS(
             SELECT 1 FROM community_post p0 WHERE p0.id=#{postId} AND p0.author_id=#{viewerId}))
           AND (#{cursor} IS NULL OR r.id&lt;#{cursor})
@@ -906,7 +923,8 @@
             WHERE mu0.member_id=#{viewerId} AND mu0.muted_member_id=r.author_id)
         ORDER BY r.id DESC LIMIT #{limit}
       )
-      SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.replied_to_member_id,c.body,c.lifecycle,
+      SELECT c.id,c.post_id,c.author_id,c.root_id,c.parent_id,c.replied_to_member_id,
+             CASE WHEN c.lifecycle='DELETED' THEN '' ELSE c.body END body,c.lifecycle,
              c.author_approval_state,c.version,c.like_count,c.create_time,
              m.nickname author_nickname,m.avatar author_avatar,
              CASE WHEN EXISTS(SELECT 1 FROM community_post_comment_action ca
@@ -914,9 +932,9 @@
              CASE WHEN EXISTS(SELECT 1 FROM ums_member_follow cf
                WHERE cf.member_id=#{viewerId} AND cf.follow_member_id=c.author_id) THEN 1 ELSE 0 END viewer_following
       FROM root_page rp
-      JOIN community_post_comment c ON c.id=rp.id OR c.root_id=rp.id
+      JOIN community_post_comment c ON c.post_id=#{postId} AND (c.id=rp.id OR c.root_id=rp.id)
       LEFT JOIN ums_member m ON m.id=c.author_id
-      WHERE (c.lifecycle='PUBLISHED' OR (c.lifecycle='CHECKING' AND c.author_id=#{viewerId}))
+      WHERE (c.lifecycle IN ('PUBLISHED','DELETED') OR (c.lifecycle='CHECKING' AND c.author_id=#{viewerId}))
         AND (c.author_approval_state='VISIBLE' OR c.author_id=#{viewerId} OR EXISTS(
           SELECT 1 FROM community_post p2 WHERE p2.id=#{postId} AND p2.author_id=#{viewerId}))
         AND NOT EXISTS(SELECT 1 FROM im_block b WHERE (b.member_id=#{viewerId} AND b.blocked_member_id=c.author_id)

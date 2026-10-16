@@ -59,6 +59,7 @@ class CouponLifecycleMybatisIntegrationTest {
     private DataSource dataSource;
     private ISmsCouponHistoryService couponHistoryService;
     private SmsCouponHistoryMapper historyMapper;
+    private SmsCouponMapper couponMapper;
 
     @BeforeAll
     void createDatabaseAndServices() throws Exception {
@@ -84,6 +85,7 @@ class CouponLifecycleMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "businessAuditEventMapper", template.getMapper(BusinessAuditEventMapper.class));
         couponHistoryService = transactionalProxy(target, ISmsCouponHistoryService.class, tx);
         historyMapper = template.getMapper(SmsCouponHistoryMapper.class);
+        couponMapper = template.getMapper(SmsCouponMapper.class);
     }
 
     @BeforeEach
@@ -284,6 +286,80 @@ class CouponLifecycleMybatisIntegrationTest {
             assertEquals(2, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
         }
         assertEquals(6, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id IN (7001,7002)"));
+    }
+
+    @Test
+    void atomicIssuanceRejectsInvalidDatesAndStoppedStatusForEveryStockMode() throws Exception {
+        for (String limit : new String[]{"1", "NULL", "0", "-1"}) {
+            for (String invalid : new String[]{"end_time=DATE_SUB(NOW(), INTERVAL 1 DAY)",
+                    "start_time=DATE_ADD(NOW(), INTERVAL 1 DAY)",
+                    "enable_time=DATE_ADD(NOW(), INTERVAL 1 DAY)", "status=3", "status=4"}) {
+                execute("UPDATE sms_coupon SET start_time=NULL,end_time=NULL,enable_time=NULL,status=1,"
+                        + "publish_count=" + limit + ",receive_count=0 WHERE id=30",
+                        "UPDATE sms_coupon SET " + invalid + " WHERE id=30");
+                assertEquals(0, couponMapper.tryIncrementIssuableReceiveCount(30L), invalid + ", limit=" + limit);
+                assertEquals(0, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+            }
+        }
+        assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001"));
+    }
+
+    @Test
+    void atomicIssuanceUsesInclusiveStartEnableAndExclusiveEndAtDatabaseInstant() throws Exception {
+        // 仅固定此独立测试连接的 SQL 当前时刻，不改变服务器或 JVM 时钟。
+        try (org.apache.ibatis.session.SqlSession session = buildFactory(dataSource).openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            try {
+                statement.execute("SET timestamp = 1800000000");
+                SmsCouponMapper mapper = session.getMapper(SmsCouponMapper.class);
+                statement.execute("UPDATE sms_coupon SET start_time=NOW(),enable_time=NOW(),"
+                        + "end_time=DATE_ADD(NOW(), INTERVAL 1 SECOND),publish_count=5,receive_count=0 WHERE id=30");
+                assertEquals(1, mapper.tryIncrementIssuableReceiveCount(30L));
+                statement.execute("UPDATE sms_coupon SET end_time=NOW() WHERE id=30");
+                assertEquals(0, mapper.tryIncrementIssuableReceiveCount(30L));
+                statement.execute("UPDATE sms_coupon SET start_time=NULL,end_time=NULL,enable_time=NULL WHERE id=30");
+                for (String status : new String[]{"NULL", "0", "2"}) {
+                    statement.execute("UPDATE sms_coupon SET status=" + status + " WHERE id=30");
+                    assertEquals(1, mapper.tryIncrementIssuableReceiveCount(30L));
+                }
+                assertEquals(4, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+            } finally {
+                statement.execute("SET timestamp = 0");
+            }
+        }
+    }
+
+    @Test
+    void staleValidCouponCannotGrantAfterDatabaseStopsOrExpiresIt() throws Exception {
+        for (String limit : new String[]{"1", "NULL"}) {
+            for (String changed : new String[]{"status=3", "status=4",
+                    "end_time=DATE_SUB(NOW(), INTERVAL 1 DAY)"}) {
+                execute("UPDATE sms_coupon SET status=1,start_time=NULL,end_time=NULL,enable_time=NULL,"
+                        + "publish_count=" + limit + ",receive_count=0 WHERE id=30");
+                com.chengyinhub.business.domain.SmsCoupon stale = couponMapper.selectSmsCouponById(30L);
+                execute("UPDATE sms_coupon SET " + changed + " WHERE id=30");
+                org.junit.jupiter.api.Assertions.assertNull(couponHistoryService.grantCouponWithReceipt(7001L, stale));
+                assertEquals(0, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+                assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001"));
+            }
+        }
+    }
+
+    @Test
+    void couponThatNaturallyExpiresAfterReadCannotReserveStock() throws Exception {
+        execute("UPDATE sms_coupon SET start_time=NULL,enable_time=NULL,"
+                + "end_time=DATE_ADD(NOW(), INTERVAL 2 SECOND),publish_count=1,receive_count=0 WHERE id=30");
+        org.junit.jupiter.api.Assertions.assertNotNull(couponMapper.selectSmsCouponById(30L).getEndTime());
+        assertEquals(1, number("SELECT end_time > NOW() FROM sms_coupon WHERE id=30"));
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+        while (number("SELECT end_time > NOW() FROM sms_coupon WHERE id=30") == 1
+                && System.nanoTime() < deadline) {
+            Thread.sleep(50);
+        }
+        assertEquals(0, number("SELECT end_time > NOW() FROM sms_coupon WHERE id=30"));
+        assertEquals(0, couponMapper.tryIncrementIssuableReceiveCount(30L));
+        assertEquals(0, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+        assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001"));
     }
 
     @Test

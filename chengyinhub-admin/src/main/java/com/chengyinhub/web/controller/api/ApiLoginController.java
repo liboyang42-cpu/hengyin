@@ -186,102 +186,24 @@ public class ApiLoginController extends BaseController {
             @Parameter(name = "code", description = "小程序端获取用户的微信code")
     })
     public AjaxResult logincode(String code) {
-
-        String openid = "";
+        String openid;
         try {
             openid = getOpenID(code);
         } catch (Exception e) {
             return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
         }
-
-        AjaxResult ajax = AjaxResult.success();
-
-        UmsMember umsMember = new UmsMember();
-        umsMember.setWxOpenId(openid);
-        List<UmsMember> list = umsMemberService.selectUmsMemberList(umsMember);
-        if (list.size() > 0) {
-            if (list.get(0).getStatus() == 2) {
-                return AjaxResult.error("账号已被冻结");
-            }
-            if (list.get(0).getDelFlag() == 2) {
-                return AjaxResult.error("账号已删除");
-            }
-            // 生成令牌
-            String token = appLoginService.login(openid);
-
-            ajax = AjaxResult.success();
-            ajax.put(Constants.TOKEN, token);
-            ajax.put("data", LoginResponseVO.from(list.get(0)));
-            return ajax;
-
-//                if(list.get(0).getUserType()==1){ //用户类型：1普通会员
-//                    TuserJobSeekers tuserJobSeekers = new TuserJobSeekers();
-//                    tuserJobSeekers.setUserId(Long.parseLong(list.get(0).getId()));
-//                    List<TuserJobSeekers> tuserJobSeekersList = tuserJobSeekersService.selectTuserJobSeekersList(tuserJobSeekers);
-//                    if(tuserJobSeekersList.size()>0){
-//                        list.get(0).setJobSeekers(tuserJobSeekersList.get(0));
-//                    }
-//                }
-//                else{ //2商户会员
-//                    TuserRecruiter tuserRecruiter = new TuserRecruiter();
-//                    tuserRecruiter.setUserId(Long.parseLong(list.get(0).getId()));
-//                    List<TuserRecruiter> tuserRecruiterList = tuserRecruiterService.selectTuserRecruiterList(tuserRecruiter);
-//                    if(tuserRecruiterList.size()>0){
-//                        list.get(0).setRecruiter(tuserRecruiterList.get(0));
-//                    }
-//                }
-        } else {
-            //生成账号
-            umsMember = new UmsMember();
-            umsMember.setNickname("城瘾用户");
-            umsMember.setName("城瘾用户");
-            umsMember.setUserType(1L); //用户类型：1普通会员 2商户会员
-            umsMember.setRole("player"); //RBAC 角色：注册默认玩家
-            umsMember.setPhone("");
-            umsMember.setPassword("");
-            umsMember.setAvatar(defaultAvatarUrl);
-            umsMember.setWxOpenId(openid);
-            umsMember.setStatus(1L);
-            umsMember.setDelFlag(0);
-            umsMember.setPoint(Long.valueOf(50));
-            int rows = umsMemberService.insertUmsMember(umsMember);
-            if (rows > 0) {
-                // 生成令牌
-                String token = appLoginService.login(openid);
-
-                umsMember = new UmsMember();
-                umsMember.setWxOpenId(openid);
-                list = umsMemberService.selectUmsMemberList(umsMember);
-
-                ajax = AjaxResult.success();
-                ajax.put(Constants.TOKEN, token);
-                ajax.put("data", LoginResponseVO.from(list.get(0)));
-
-
-                int points = 0;
-                CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
-                if (cmsPointsSetting != null) {
-                    points = cmsPointsSetting.getValue().intValue();
-                }
-
-                UmsMemberPointsDetail umsMemberPointsDetail = new UmsMemberPointsDetail();
-                umsMemberPointsDetail.setMemberId(list.get(0).getId());
-                umsMemberPointsDetail.setCurrentPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setAfterPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangePoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangeReason("注册赠送");
-                umsMemberPointsDetail.setEventType(Long.valueOf(1));
-                umsMemberPointsDetail.setEventId(Long.valueOf(0));
-                umsMemberPointsDetail.setChangeType(1L);
-                umsMemberPointsDetail.setDelFlag(0);
-                umsMemberPointsDetail.setCreateTime(new Date());
-                umsMemberPointsDetailService.insertUmsMemberPointsDetail(umsMemberPointsDetail);
-
-                return ajax;
-            } else {
-                return AjaxResult.error("注册失败");
-            }
+        UmsMember member = umsMemberService.getOrCreateWechatMember(openid);
+        if (Long.valueOf(2L).equals(member.getStatus())) {
+            return AjaxResult.error("账号已被冻结");
         }
+        if (Integer.valueOf(2).equals(member.getDelFlag())) {
+            return AjaxResult.error("账号已删除");
+        }
+        String token = appLoginService.login(openid);
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put(Constants.TOKEN, token);
+        ajax.put("data", LoginResponseVO.from(member));
+        return ajax;
     }
 
     String wechatSessionBaseUrl() {

@@ -573,6 +573,8 @@ Component({
         hideLoading: true,
         silentError: true,
         url: '/api/creativesquare/action',
+        intentScope: 'square:compose',
+        current: () => that.isCurrentPublish(pending),
         method: 'POST',
         data: payload,
         success: function (res) {
@@ -591,7 +593,7 @@ Component({
             }
             return;
           }
-          const keepOpen = that.composeSnapshot() !== pending.snapshot;
+          const keepOpen = res.recoveredPrevious === true || that.composeSnapshot() !== pending.snapshot;
           if (!editing) {
             publishIntent.settle(wx, 'square:compose', pending.memberId, intent.key, 'success');
             pending.settled = true;

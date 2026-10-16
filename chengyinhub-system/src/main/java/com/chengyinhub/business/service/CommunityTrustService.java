@@ -24,6 +24,7 @@ public interface CommunityTrustService {
     Map<String, Object> getReportTaxonomy();
     CommunityReportCase appealReport(Long principalMemberId, CommunityReportAppealRequest request);
     List<CommunityReportVO> listMyReports(Long principalMemberId, String stage);
+    List<CommunityReportVO> listMyReports(Long principalMemberId, String stage, String requestId);
     CommunityReportVO getMyReport(Long principalMemberId, Long reportId);
     CommunityReportSubjectVO getSubjectReport(Long principalMemberId, Long reportId);
     List<CommunityReportPlatformVO> listPlatformReports(String stage, String targetType);

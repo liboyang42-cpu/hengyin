@@ -1,5 +1,6 @@
 /** Canonical community transport; legacy-shaped view models are local presentation only. */
 const { decodeDisplayText } = require('./display-text.js');
+const reportIntent = require('./publish/publish-intent.js');
 const BASE = '/api/v1/community';
 const LIFECYCLE_LABELS = { DRAFT: '草稿', CHECKING: '审核中', LIMITED: '展示受限', HIDDEN: '已隐藏', REMOVED: '已移除' };
 function requestId() { return 'mini-community-' + Date.now() + '-' + Math.random().toString(36).slice(2); }
@@ -60,108 +61,142 @@ function createClient(app, wxApi) {
     uploads[data.url] = Object.assign({}, data, { uploadRequestId: requestId() });
     return data.url;
   }
-  function call(path, method, data, task) {
+  function call(path, method, data, task, ownReportLookup) {
     return new Promise((resolve, reject) => {
-      if (task.aborted) return reject({ code: 499, msg: '操作已取消' });
+      if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' });
       if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' });
       task.cancel = () => reject({ code: 499, msg: '操作已取消' });
-      task.current = app.sendRequest({ url: BASE + path, method, data: data || {}, hideLoading: true, silentError: true,
+      const request = { url: BASE + path, method, data: data || {}, hideLoading: true, silentError: true,
         header: { 'content-type': 'application/json' },
-        success: res => { if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' }); if (Number(res && res.code) === 200) { markFeedChanged(path, method); resolve(res.data); } else reject(res || { code: 500, msg: '社区请求失败' }); },
+        success: res => { if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' }); if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' }); if (Number(res && res.code) === 200) { markFeedChanged(path, method); resolve(res.data); } else reject(res || { code: 500, msg: '社区请求失败' }); },
         successStatusAbnormal: (res, status) => reject(Object.assign({}, res, { code: status, transportFailure: true })),
-        fail: res => reject(Object.assign({}, res, { transportFailure: true })) });
+        fail: res => reject(Object.assign({}, res, { transportFailure: true })) };
+      if (ownReportLookup === true) request.url = '/api/community-trust/reports/mine';
+      task.current = app.sendRequest(request);
     });
   }
   function modal(options, task) {
     return new Promise((resolve, reject) => {
-      if (task.aborted) return reject({ code: 499, msg: '操作已取消' });
+      if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' });
       task.cancel = () => reject({ code: 499, msg: '操作已取消' });
       wxApi.showModal(Object.assign({}, options, { success: res => res.confirm ? resolve() : reject({ code: 499, msg: '已取消发布' }),
         fail: () => reject({ code: 499, msg: '已取消发布' }) }));
     });
   }
   function pipeline(options, operation) {
-    const task = { owner, aborted: false, current: null, abort() { this.aborted = true; if (this.cancel) this.cancel(); if (this.current && this.current.abort) this.current.abort(); } };
+    const task = { owner, isCurrent: typeof options.current === 'function' ? options.current : () => true, aborted: false, current: null, abort() { this.aborted = true; if (this.cancel) this.cancel(); if (this.current && this.current.abort) this.current.abort(); } };
     Promise.resolve().then(() => operation(task)).then(data => {
-      if (!task.aborted && options.success) options.success({ code: 200, data });
+      if (!task.aborted && task.isCurrent() && String(app.getUserID() || '') === task.owner && options.success) options.success(Object.assign({ code: 200, data }, task.recoveredPrevious ? { recoveredPrevious: true } : {}));
     }).catch(error => {
-      if (task.aborted) return;
+      if (task.aborted || !task.isCurrent() || String(app.getUserID() || '') !== task.owner) return;
       if (error.transportFailure && options.fail) options.fail(error);
       else {
-        const res = { code: error.code || 500, msg: error.msg || error.message || '社区操作失败' };
+        const res = Object.assign({}, error, { code: error.code || 500, msg: error.msg || error.message || '社区操作失败' });
         if (!options.silentError && options.autoErrorToast !== false && res.code !== 499 && typeof app.tips === 'function') app.tips(typeof app.getRequestErrorMessage === 'function' ? app.getRequestErrorMessage(res, '社区操作失败') : res.msg);
         if (options.success) options.success(res);
       }
-    }).then(() => { if (options.complete) options.complete(); });
+    }).then(() => { if (task.isCurrent() && String(app.getUserID() || '') === task.owner && options.complete) options.complete(); });
     return task;
   }
-  async function publish(form, task) {
-    if (form.file_url) throw { code: 409, msg: '请移除尚未支持的附件后发布' };
-    if (form.longitude || form.latitude || form.address) throw { code: 409, msg: '地点精度尚未接通，请先移除地点' };
-    const key = form.request_id || requestId();
-    const guideline = await call('/guidelines/active', 'GET', {}, task);
-    if (!guideline || !guideline.id || !guideline.content_json) throw { code: 503, msg: '社区规范不完整，暂不能发布' };
-    let document;
-    try { document = typeof guideline.content_json === 'string' ? JSON.parse(guideline.content_json) : guideline.content_json; }
-    catch (error) { throw { code: 503, msg: '社区规范不完整，暂不能发布' }; }
-    const rules = document && document.rules;
-    if (!Array.isArray(rules) || !rules.length || rules.some(rule => !rule || typeof rule.title !== 'string' || !rule.title.trim())) throw { code: 503, msg: '社区规范不完整，暂不能发布' };
-    const content = rules.map((rule, index) => (index + 1) + '. ' + rule.title).join('\n');
-    await modal({ title: guideline.title || '社区规范', content: (guideline.summary || '') + '\n' + content, confirmText: '同意发布' }, task);
-    await call('/guidelines/ack', 'POST', { guidelineVersionId: guideline.id, requestId: key + '-ack', scene: 'PUBLISH' }, task);
-    let previous = null;
-    if (form.id) { previous = await call('/posts/' + form.id, 'GET', {}, task); posts[form.id] = normalizePost(previous); }
-    const mediaIds = [];
-    const paths = form.pics === undefined && previous ? null : String(form.pics || '').split(';').filter(Boolean);
-    if (paths === null) (previous.media || []).forEach(m => mediaIds.push(m.id));
-    else for (const path of paths) {
-      const existing = previous && (previous.media || []).find(m => (value(m,'derivedObjectKey','derived_object_key') || value(m,'objectKey','object_key')) === path);
-      if (existing) { mediaIds.push(existing.id); continue; }
-      const receipt = uploads[path]; if (!receipt) throw { code: 409, msg: '图片上传状态无法确认，请先到我的推文查看发布结果，再重新选择图片' };
-      const media = await call('/media/register', 'POST', { uploadRequestId: receipt.uploadRequestId, mediaType: 'IMAGE', objectKey: receipt.url,
-        uploadReceipt: receipt.uploadReceipt, mimeType: receipt.mimeType, byteSize: receipt.byteSize }, task);
-      if (!media || !media.id) throw { code: 500, msg: '媒体登记响应不完整' };
-      mediaIds.push(media.id);
-    }
-    const references = [];
-    if (form.data_id) {
-      const type = Number(form.data_type), referenceType = type === 1 ? 'ACTIVITY' : type === 2 ? 'TOPIC' : type === 3 ? 'ROUTE' : null;
-      if (!referenceType) throw { code: 409, msg: '关联来源尚未支持' };
-      references.push({ referenceType, referenceId: Number(form.data_id) });
-    }
-    const original = previous && previous.post;
-    if (previous && previous.references && previous.references.length) {
-      const first = previous.references[0];
-      const firstType = value(first, 'referenceType', 'reference_type');
-      const firstId = value(first, 'referenceId', 'reference_id');
-      if (references.length && references[0].referenceType === firstType && references[0].referenceId === Number(firstId)) {
-        references.splice(0, references.length, ...previous.references.map(ref => ({ referenceType: value(ref,'referenceType','reference_type'), referenceId: value(ref,'referenceId','reference_id') })));
-      } else {
-        previous.references.slice(1).forEach(ref => references.push({ referenceType: value(ref,'referenceType','reference_type'), referenceId: value(ref,'referenceId','reference_id') }));
-      }
-    }
-    const body = { clientRequestId: key, body: form.contents, postType: original ? original.postType : references[0] && references[0].referenceType === 'ACTIVITY' ? 'ACTIVITY_RECAP' : references[0] && references[0].referenceType === 'ROUTE' ? 'ROUTE_DISCOVERY' : 'MOMENT',
-      audience: original ? original.audience : 'PUBLIC', commentPolicy: original ? original.commentPolicy : 'EVERYONE',
-      guidelineVersionId: guideline.id, mediaIds, references, locationPrecision: original ? original.locationPrecision : 'NONE' };
-    if (original && ['APPROXIMATE', 'EXACT'].includes(original.locationPrecision) && !original.approximateGeohash) throw { code: 409, msg: '原帖地点信息不完整，请刷新后重试' };
-    if (original) { body.topicCodes = previous.topicCodes || []; body.mentionedMemberIds = previous.mentions || []; try { body.safetyLabels = JSON.parse(original.safetyLabelsJson || '[]'); } catch (_) { throw { code: 409, msg: '原帖安全标签无法读取，请刷新后重试' }; } ['title','communityId','replyApprovalEnabled','slowModeSeconds','cityCode','poiName','approximateGeohash','disclosureType'].forEach(k => { if (original[k] !== undefined) body[k] = original[k]; }); body.expectedVersion = original.version; }
-    const draft = await call(original ? '/posts/' + original.id : '/posts', original ? 'PATCH' : 'POST', body, task);
-    if (!draft || !draft.post) throw { code: 500, msg: '草稿响应不完整' };
-    const result = original && original.lifecycle !== 'DRAFT' ? draft : await call('/posts/' + draft.post.id + '/publish', 'POST', { expectedVersion: draft.post.version, requestId: key + '-publish' }, task);
-    const row = normalizePost(result); posts[row.id] = row;
+  async function publish(form, task, options) {
+    const bundle = await require('./community-submit-progress.js')({ app, wxApi, task, form, options,
+      call, modal, requestId, uploads });
+    const row = normalizePost(bundle); posts[row.id] = row;
     return row;
   }
   async function report(options, task) {
     if (reporting) throw { code: 409, msg: '举报正在处理中' };
     reporting = true;
     try {
-      const taxonomy = (await call('/capabilities', 'GET', {}, task)).reporting;
-      if (!taxonomy || !Array.isArray(taxonomy.reasons) || !taxonomy.reasons.length) throw { code: 503, msg: '举报原因暂不可用' };
-      if (typeof options.selectReportReason !== 'function') throw { code: 503, msg: '举报原因选择暂不可用，请重试' };
-      const index = await options.selectReportReason(taxonomy.reasons.map(r => r.label), task);
-      if (!Number.isInteger(index) || !taxonomy.reasons[index]) throw { code: 500, msg: '举报原因选择无效，请重试' };
-      return await call('/reports', 'POST', { targetType: options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT',
-        targetId: options.data.id, reasonCode: taxonomy.reasons[index].code, policyVersion: taxonomy.policyVersion, requestId: options.data.request_id || requestId() }, task);
+      const data = options.data || {}, targetType = options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT';
+      const scope = 'square:report:' + targetType + ':' + data.id;
+      const validReportKey = value => typeof value === 'string' && value.trim().length >= 8 && value.trim().length <= 96;
+      const storageError = () => ({ code: 507, msg: '举报记录未能保存，未重新提交，请稍后核对' });
+      const current = () => {
+        if (task.aborted || !task.isCurrent()) throw { code: 499, msg: '已取消举报' };
+        if (String(app.getUserID() || '') !== task.owner) throw { code: 409, msg: '登录身份已变化，请重试' };
+      };
+      let stored, wasUnknown = false;
+      try { stored = wxApi.getStorageSync(reportIntent.storageKey(scope, task.owner)); }
+      catch (_) { throw storageError(); }
+      const save = patch => {
+        current();
+        if (!reportIntent.saveStage(wxApi, scope, task.owner, stored.key, patch)) throw storageError();
+        stored = Object.assign({}, stored, patch);
+      };
+      const matches = row => row && /^[1-9][0-9]*$/.test(String(row.id)) && String(row.targetType) === stored.wire.targetType
+        && String(row.targetId) === String(stored.wire.targetId)
+        && row.reasonCode === stored.wire.reasonCode.trim().toUpperCase()
+        && row.policyVersion === stored.wire.policyVersion.trim()
+        && row.description === stored.wire.description.trim()
+        && Array.isArray(row.evidenceAssetIds) && JSON.stringify(row.evidenceAssetIds.map(String).sort()) === JSON.stringify(stored.wire.evidenceAssetIds.map(String).sort());
+      const finish = row => {
+        if (!matches(row)) throw { code: 409, msg: '举报结果与原请求不一致，请先核对' };
+        save({ status: 'confirmed' });
+        try {
+          wxApi.removeStorageSync(reportIntent.storageKey(scope, task.owner));
+          if (wxApi.getStorageSync(reportIntent.storageKey(scope, task.owner))) throw storageError();
+        } catch (_) { throw storageError(); }
+        return row;
+      };
+      if (stored) {
+        if (String(stored.memberId) !== task.owner || !reportIntent.isIntentKey(stored.key) || !stored.wire
+          || !validReportKey(stored.wire.requestId) || stored.wire.targetType !== targetType
+          || String(stored.wire.targetId) !== String(data.id) || typeof stored.wire.description !== 'string'
+          || !stored.wire.description.trim() || typeof stored.wire.reasonCode !== 'string'
+          || typeof stored.wire.policyVersion !== 'string' || !Array.isArray(stored.wire.evidenceAssetIds)) throw { code: 409, msg: '原举报记录不完整，请先核对' };
+        if (stored.status === 'rejected' && stored.rejectionCode === 400) {
+          await modal({ title: '重新确认举报', content: '上次举报明确未被接受。将重新读取当前规则和原因，再提交修正后的举报。', confirmText: '重新确认', cancelText: '取消' }, task);
+          current();
+        } else {
+          wasUnknown = true;
+          const rows = await call('', 'GET', { requestId: stored.wire.requestId }, task, true);
+          current();
+          if (!Array.isArray(rows) || rows.length > 1) throw { code: 409, msg: '举报结果未能唯一确认，请稍后核对' };
+          if (rows.length === 1) return finish(rows[0]);
+          await modal({ title: '上次举报尚未确认', content: '暂未查到结果，不代表原提交未发生。是否使用原请求和相同内容重试？', confirmText: '原样重试', cancelText: '取消' }, task);
+          current();
+        }
+      }
+      if (!stored || stored.status === 'rejected') {
+        const taxonomy = (await call('/capabilities', 'GET', {}, task)).reporting;
+        if (!taxonomy || typeof taxonomy.policyVersion !== 'string' || !taxonomy.policyVersion.trim()
+          || !Array.isArray(taxonomy.reasons) || !taxonomy.reasons.length
+          || taxonomy.reasons.some(reason => !reason || typeof reason.label !== 'string' || !reason.label.trim()
+            || typeof reason.code !== 'string' || !reason.code.trim())) throw { code: 503, msg: '举报原因暂不可用' };
+        if (typeof options.selectReportReason !== 'function') throw { code: 503, msg: '举报原因选择暂不可用，请重试' };
+        const index = await options.selectReportReason(taxonomy.reasons.map(r => r.label), task);
+        current();
+        if (!Number.isInteger(index) || !taxonomy.reasons[index]) throw { code: 500, msg: '举报原因选择无效，请重试' };
+        const reason = taxonomy.reasons[index];
+        if (data.request_id != null && !validReportKey(data.request_id)) throw { code: 400, msg: '举报请求号格式不合法' };
+        if (data.evidenceAssetIds !== undefined && !Array.isArray(data.evidenceAssetIds)) throw { code: 400, msg: '举报证据格式不合法' };
+        const wire = { targetType, targetId: data.id, reasonCode: reason.code, policyVersion: taxonomy.policyVersion,
+          description: typeof data.description === 'string' && data.description.trim() ? data.description : reason.label,
+          evidenceAssetIds: Array.isArray(data.evidenceAssetIds) ? JSON.parse(JSON.stringify(data.evidenceAssetIds)) : [] };
+        const previousRequestId = stored && stored.wire && stored.wire.requestId;
+        const fresh = !stored;
+        if (fresh) {
+          const started = reportIntent.begin(wxApi, { scope, memberId: task.owner, payload: wire });
+          stored = reportIntent.read(wxApi, scope, task.owner);
+          if (!stored || stored.key !== started.key || String(stored.memberId) !== task.owner) throw storageError();
+        }
+        wire.requestId = previousRequestId || data.request_id || stored.key;
+        try { save({ wire, status: 'prepared', rejectionCode: null }); }
+        catch (error) {
+          if (fresh) reportIntent.removeUnsentPartial(wxApi, scope, task.owner, stored.key);
+          throw error;
+        }
+      }
+      save({ status: 'sending' });
+      try { return finish(await call('/reports', 'POST', stored.wire, task)); }
+      catch (error) {
+        if (String(app.getUserID() || '') === task.owner && !task.aborted && task.isCurrent())
+          reportIntent.saveStage(wxApi, scope, task.owner, stored.key,
+            !wasUnknown && !error.transportFailure && Number(error.code) === 400
+              ? { status: 'rejected', rejectionCode: 400 } : { status: 'unknown', rejectionCode: null });
+        throw error;
+      }
     } finally {
       reporting = false;
     }
@@ -170,7 +205,7 @@ function createClient(app, wxApi) {
     resetForOwner();
     const original = options, data = options.data || {}, url = options.url;
     if (!/^\/api\/(creativesquare|comment)\//.test(url)) return app.sendRequest(options);
-    if (url === '/api/creativesquare/action') return pipeline(options, task => publish(data, task));
+    if (url === '/api/creativesquare/action') return pipeline(options, task => publish(data, task, options));
     if (url === '/api/creativesquare/report' || url === '/api/comment/report') return pipeline(options, task => report(options, task));
     const requestOwner = owner;
     let commandKey;

@@ -130,9 +130,10 @@
     <cy-error load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论没能加载" sub="网络可能不稳定，已发布的评论不会丢失" retry="重试" bind:retry="retryComments" />
     <cy-empty wx:if="{{commentsState === 'ready' && nodata}}" kind="empty" title="还没有评论" sub="说说你对这条动态的想法吧" />
 
-    <view class="dl" wx:for="{{ list }}" wx:key="index">
+    <view class="dl" wx:for="{{ list }}" wx:key="id">
       <view class="li">
-        <view class="item flex-b">
+        <view wx:if="{{item.deletedPlaceholder === true || item.lifecycle === 'DELETED'}}" class="item-desc">该评论已删除</view>
+        <view wx:else class="item flex-b">
           <view class="col1">
             <view class="user">
               <image lazy-load="true" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />

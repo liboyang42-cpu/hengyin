@@ -97,6 +97,7 @@
         select <include refid="reportColumns"/>
         from community_report_case
         where reporter_member_id = #{reporterMemberId}
+        <if test="requestId != null">and request_id = #{requestId}</if>
         <if test="stage != null and stage != ''">and stage = #{stage}</if>
         order by create_time desc, id desc
     </select>

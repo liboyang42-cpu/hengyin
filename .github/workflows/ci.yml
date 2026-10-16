@@ -67,6 +67,7 @@ jobs:
               - 'pom.xml'
               # Backend tests 直接执行的门禁脚本也必须触发本 job。
               - 'ci/backend-test.sh'
+              - 'ci/test_wechat_registration_ci_contract.py'
               - 'ci/upgrade-startup-smoke.sh'
               - 'ci/upgrade-startup/**'
               - 'ci/upgrade_startup_network.py'
@@ -104,6 +105,7 @@ jobs:
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
               - 'ci/test_community_legacy_owner_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/test_migration_runner_ci_contract.py'
               - 'ci/funds-mysql-it-gate.sh'
               # 改后端 job 自身时必须跑后端测试，不能靠 skipped 通过。
@@ -168,6 +170,7 @@ jobs:
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
               - 'ci/test_community_legacy_owner_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
               - 'ci/classify-runtime.sh'
@@ -374,8 +377,16 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Build and test backend
-        run: bash ci/backend-test.sh
+        run: |
+          python3 -m unittest ci/test_wechat_registration_ci_contract.py
+          test "$(docker exec "$IT_NAME" mysql -uroot -proot -Nse "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}'")" = 0
+          docker exec "$IT_NAME" mysql -uroot -proot -e "CREATE DATABASE ${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+          bash ci/backend-test.sh
         env:
+          CHENGYIN_WECHAT_IDENTITY_MYSQL_IT: "true"
+          CHENGYIN_TEST_MYSQL_DATABASE_BASE: chengyin_ci
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
+          IT_NAME: chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }}
           MAVEN_OPTS: -Xmx1024m
           MAVEN_ARGS: -DargLine=-Xmx2048m -Dspring.test.context.cache.maxSize=4
           # 2026-08-19 一类一库:MyBatis 真库 IT 各自建自己的 schema(见 MybatisItDatabase),
