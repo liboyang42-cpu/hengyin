@@ -215,6 +215,53 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
                         build_schema.REPO, target_commit="a" * 40,
                         dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])
 
+    def test_content_seed_closure_is_excluded_but_its_persistent_schema_still_replays(self):
+        names = [
+            "seed_new_city_lifestyle_category_20260821", "seed_circle_theme_batch2_20260821",
+            "seed_circle_theme_batch2_repair_20260821", "seed_circle_theme_primary_20260821",
+            "seed_shanghai_solo_topics_20260822", "seed_celebrate_games_20260821",
+            "seed_celebrate_topic_20260821", "seed_life_backup_categories_20260820",
+            "seed_life_backup_games_20260820", "20260829_circle_theme_merge_free_explore",
+            "fix_celebrate_copy_20260821",
+        ]
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        excluded = policy["dataOnlyMigrations"]
+        for name in names:
+            path = "chengyinhub-admin/sql/migration_" + name + ".sql"
+            with self.subTest(path=path):
+                self.assertIn(path, excluded, "content seed must not invent business rows in a zero-data rebuild")
+                source = (build_schema.REPO / path).read_bytes()
+                self.assertEqual(hashlib.sha256(source).hexdigest(), excluded[path])
+                for statement in build_schema.split_statements(source.decode("utf-8")):
+                    sql = build_schema.executable_statement(statement).strip()
+                    if sql:
+                        self.assertRegex(sql, r"(?is)^(?:INSERT|UPDATE|SELECT|CREATE TEMPORARY TABLE|DROP TEMPORARY TABLE)\b",
+                                         "do not classify persistent or dynamic DDL as data-only")
+        selected = {item["path"] for item in build_schema.migrations_after_baseline(
+            build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])}
+        for name in names:
+            self.assertNotIn("chengyinhub-admin/sql/migration_" + name + ".sql", selected)
+        for name in ["circle_theme_batch2_20260821", "circle_theme_primary_schema_20260821",
+                     "20260829_celebration_board_decommission", "20260820_new_city_setup_plan",
+                     "20260821_new_city_preference_library", "20261015_retention_job_missing_registration",
+                     "20261012_legacy_game_v51_category_collation"]:
+            self.assertIn("chengyinhub-admin/sql/migration_" + name + ".sql", selected,
+                          "structural or explicitly approved forward migrations must still run")
+
+    def test_content_seed_exclusion_still_rejects_changed_sql_fingerprint(self):
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        path = "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql"
+        policy["dataOnlyMigrations"][path] = "0" * 64
+        manifest = build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                                              dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tampered = pathlib.Path(tmp) / "policy.json"
+            tampered.write_text(json.dumps(policy), encoding="utf-8")
+            with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", tampered):
+                with self.assertRaisesRegex(RuntimeError, "data-only 指纹不一致"):
+                    build_schema.migrations_after_baseline(manifest["migrations"])
+
     def test_marked_file_begins_and_commits_after_engine_preflight(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = pathlib.Path(tmp) / "atomic.sql"
