@@ -1,0 +1,84 @@
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-nav-bar custom-back bind:back="goBack" />
+  <cy-page-title title="俱乐部勋章" subtitle="{{clubName}}" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" loading-label="正在读取俱乐部勋章" />
+  <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" fill size="lg" auto-back custom-back bind:back="goBack" />
+  <cy-state-shell wx:elif="{{state === 'error'}}" kind="{{errorKind}}" title="勋章列表没加载成功" sub="{{errorText}}"
+                  primary="重新加载" bind:primary="retryLoad" fill size="lg" />
+  <block wx:else>
+    <text wx:if="{{refreshing}}" class="badge-refreshing" aria-role="status">正在核对勋章列表…</text>
+    <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" />
+
+    <view wx:if="{{isOwner}}" class="section">
+      <cy-btn variant="primary" bindtap="openCreate">创建勋章</cy-btn>
+      <text class="section-caption">勋章名必填。创建后可在下方把勋章颁给俱乐部成员。</text>
+    </view>
+
+    <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
+                    sub="{{isOwner ? '创建第一枚勋章，颁给为俱乐部出力的成员。' : '主理人还没有创建勋章。'}}" />
+
+    <view wx:if="{{state === 'ready'}}" class="section">
+      <text class="section-title">全部勋章 · {{badges.length || 0}} 枚</text>
+      <view class="ds-card">
+        <view class="badge-row" wx:for="{{badges}}" wx:key="badgeCode">
+          <view class="badge-icon">
+            <image wx:if="{{item.iconUrl}}" class="badge-icon-img" src="{{item.iconUrl}}" mode="aspectFit" lazy-load="true" />
+            <cy-icon wx:else name="star" size="40" />
+          </view>
+          <view class="badge-text">
+            <text class="badge-name">{{item.badgeName}}</text>
+            <text wx:if="{{item.badgeDesc}}" class="badge-desc">{{item.badgeDesc}}</text>
+          </view>
+          <view wx:if="{{isOwner}}" class="badge-grant {{granting ? 'is-disabled' : ''}}" bindtap="openGrant" data-code="{{item.badgeCode}}"
+                aria-role="button" aria-label="把 {{item.badgeName}} 颁给成员" aria-disabled="{{granting}}"
+                hover-class="{{granting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">颁发</view>
+        </view>
+      </view>
+    </view>
+    <text wx:if="{{isOwner && state === 'ready'}}" class="page-note">颁发需要二次确认；颁发后目前没有收回入口。</text>
+  </block>
+</view>
+</view>
+
+<cy-sheet show="{{createVisible}}" title="创建勋章" closable maskClosable footer bind:close="closeCreate">
+  <view class="form">
+    <cy-field label="勋章名" required value="{{form.name}}" placeholder="例如：开荒元老" maxlength="{{nameMax}}" showCount
+              disabled="{{creating}}" data-field="name" bind:input="onFormInput"
+              error="{{!!formErrors.name}}" errorText="{{formErrors.name}}" />
+    <cy-field variant="textarea" label="说明（选填）" value="{{form.desc}}" placeholder="这枚勋章颁给谁、为什么" maxlength="{{descMax}}" showCount
+              disabled="{{creating}}" data-field="desc" bind:input="onFormInput"
+              error="{{!!formErrors.desc}}" errorText="{{formErrors.desc}}" />
+    <text class="form-note">勋章图标沿用平台勋章的默认样式；自定义图标暂不开放。</text>
+    <cy-inline-error wx:if="{{createError && createUnknown}}" title="创建结果未确认" sub="{{createError}}"
+                     action="我已核对" bind:action="confirmCreateChecked" />
+    <cy-inline-error wx:elif="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
+  </view>
+  <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate">创建</cy-btn>
+</cy-sheet>
+
+<cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker">
+  <view class="picker">
+    <text wx:if="{{grantBadge}}" class="picker-caption">勋章：{{grantBadge.badgeName}}</text>
+    <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="3" loading-label="正在读取成员名单" />
+    <cy-inline-error wx:elif="{{membersState === 'error'}}" title="成员名单没加载成功" sub="{{membersError}}"
+                     action="重新加载" bind:action="loadMembers" />
+    <cy-state-shell wx:elif="{{membersState === 'empty'}}" kind="empty" title="还没有成员" sub="有人加入俱乐部后才能颁发勋章。" />
+    <block wx:elif="{{membersState === 'ready'}}">
+      <view class="picker-row {{granting ? 'is-disabled' : ''}}" wx:for="{{members}}" wx:key="memberId"
+            data-member-id="{{item.memberId}}" bindtap="pickMember"
+            aria-role="button" aria-label="颁给 {{item.nickname}}" aria-disabled="{{granting}}"
+            hover-class="{{granting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+        <cy-avatar src="{{item.avatar || '/images/d_profile.png'}}" size="72" />
+        <text class="picker-name">{{item.nickname}}</text>
+        <text wx:if="{{item.isOwner}}" class="picker-mark">主理人</text>
+      </view>
+    </block>
+  </view>
+</cy-sheet>
+
+<cy-danger-confirm id="dc" bind:confirm="onConfirmGrant" bind:done="onGrantDone" />

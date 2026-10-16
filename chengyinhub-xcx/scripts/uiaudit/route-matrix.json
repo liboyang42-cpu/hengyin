@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 133,
+    "routes": 134,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -510,6 +510,20 @@
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/badges/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
       "hasJs": true,
       "hasWxml": true
     },
