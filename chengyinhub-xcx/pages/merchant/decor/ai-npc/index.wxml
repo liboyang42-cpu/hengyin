@@ -191,6 +191,7 @@
           </cy-btn>
           <cy-btn bindtap="resetVoiceRecording">重新录音</cy-btn>
         </view>
+        <cy-btn variant="secondary" bindtap="clearVoice" loading="{{voiceBusy}}" disabled="{{voiceBusy}}">清除声音</cy-btn>
       </block>
       <block wx:else>
         <text wx:if="{{voiceStatus === 3}}" class="dc-error">声音生成失败，请重新录一段清晰的声音。</text>
