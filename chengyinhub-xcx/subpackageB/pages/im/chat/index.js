@@ -164,8 +164,10 @@ Page({
       && credential === (app.globalData && app.globalData.authorization);
   },
 
-  loadMessages(toBottom) {
+  // onSettled(data|null):仅 BL-61 解除拉黑回读用;本次(或取代它的更新一次)回读成功给回包 data,失败给 null。
+  loadMessages(toBottom, onSettled) {
     const that = this;
+    if (onSettled) this._loadSettle = onSettled;
     const current = this._viewGuard();
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
@@ -194,6 +196,7 @@ Page({
           if (toBottom) that.scrollBottom();
           that.markRead();
           that.recoverPending();
+          that._takeLoadSettle(res.data);
           return;
         }
         that._setMessageLoadError(res);
@@ -209,7 +212,14 @@ Page({
     });
   },
 
+  _takeLoadSettle(data) {
+    const fn = this._loadSettle;
+    this._loadSettle = null;
+    if (fn) fn(data);
+  },
+
   _setMessageLoadError(response) {
+    this._takeLoadSettle(null);
     if (response && response.errorCode === 'HANGOUT_CLOSED') {
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
@@ -660,15 +670,26 @@ Page({
     if (dc) dc.busyOn();
     app.sendRequest({
       url: '/api/im/unblock', method: 'POST', hideLoading: true, data: { target_member_id: otherId },
-      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准
+      // 业务 code!=200 不算解除;成功后不本地解禁,以 /api/im/messages 回读为准,回读确认后才显示「已解除拉黑」
       success(res) {
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '解除拉黑失败，请重试'); return; }
         that._pendingUnblockId = 0;
-        if (dc) dc.done();
+        if (current()) that.loadMessages(false, (data) => that._settleUnblock(dc, data));
+      },
+      // 网络失败 = 结果未知(请求可能已生效):不说「失败」,回读核对;保留待解除对象,解除可重复提交
+      fail() {
+        if (dc) dc.failed('解除结果未确认，正在重新核对会话状态，可稍后重试');
         if (current()) that.loadMessages(false);
       },
-      fail() { if (dc) dc.failed('解除拉黑失败，请重试'); },
     });
+  },
+
+  _settleUnblock(dc, data) {
+    if (!dc) return;
+    const ok = !!data && (data.blocked === false || (data.blocked === true && data.blockedByMe === false));
+    if (ok) { dc.done(); return; }
+    if (data && data.blockedByMe === true) { dc.failed('会话仍显示你已拉黑对方，请稍后重试'); return; }
+    dc.failed('解除结果未确认，请稍后刷新会话核对');
   },
 
   onDangerConfirm(e) {

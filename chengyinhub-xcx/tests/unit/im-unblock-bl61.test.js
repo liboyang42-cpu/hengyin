@@ -103,3 +103,50 @@ test('取消确认:不发请求', () => {
   ctx.page.onDangerConfirm({ detail: { key: 'im.unblock' } })
   assert.equal(ctx.requests.length, 0)
 })
+
+// #104 监督 🟡 + BL-154 发现:「已解除拉黑」只在回读确认后显示;断网 = 结果未知,不说「失败」并回读。
+function confirmUnblock(ctx) {
+  enterBlockedByMe(ctx)
+  ctx.page.doUnblock()
+  ctx.page.onDangerConfirm({ detail: { key: 'im.unblock' } })
+  return ctx.requests.shift()
+}
+const kinds = ctx => ctx.dcCalls.map(c => c[0])
+
+test('解除拉黑:unblock 200 后、回读确认前不显示完成;回读 blockedByMe=false 才完成', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).success({ code: 200 })
+  assert.ok(!kinds(ctx).includes('done'))
+  ctx.requests.shift().success({ code: 200, data: { list: [], blocked: false, blockedByMe: false } })
+  assert.deepEqual(ctx.dcCalls[ctx.dcCalls.length - 1], ['done'])
+})
+
+test('解除拉黑:回读仍 blockedByMe=true 时不显示完成,如实提示', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).success({ code: 200 })
+  ctx.requests.shift().success({ code: 200, data: { list: [], blocked: true, blockedByMe: true } })
+  assert.ok(!kinds(ctx).includes('done'))
+  assert.match(ctx.dcCalls[ctx.dcCalls.length - 1][1], /仍显示你已拉黑对方/)
+  assert.equal(ctx.page.data.disabled, true)
+})
+
+test('解除拉黑:回读失败 = 结果未确认,不显示完成', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).success({ code: 200 })
+  ctx.requests.shift().fail({ errMsg: 'request:fail timeout' })
+  assert.ok(!kinds(ctx).includes('done'))
+  assert.match(ctx.dcCalls[ctx.dcCalls.length - 1][1], /结果未确认/)
+})
+
+test('解除拉黑:断网提示结果未确认(不说失败)并回读,可再次确认', () => {
+  const ctx = loadChat()
+  confirmUnblock(ctx).fail({ errMsg: 'request:fail timeout' })
+  const last = ctx.dcCalls[ctx.dcCalls.length - 1]
+  assert.equal(last[0], 'failed')
+  assert.match(last[1], /结果未确认/)
+  assert.doesNotMatch(last[1], /失败/)
+  assert.equal(ctx.requests.shift().url, '/api/im/messages')
+  assert.equal(ctx.page.data.disabled, true)
+  ctx.page.onDangerConfirm({ detail: { key: 'im.unblock' } })
+  assert.equal(ctx.requests.shift().url, '/api/im/unblock')
+})
