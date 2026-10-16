@@ -25,6 +25,8 @@
   <view class="album-more" wx:if="{{loading && items.length}}">正在读取下一页</view>
   <view class="album-more album-more--error" wx:elif="{{error && items.length}}" bindtap="retryLoad" aria-role="button" aria-label="重试读取下一页" hover-class="album__press" hover-stay-time="80">这一页没读到 · 点此重试</view>
   <view class="album-load-more" wx:elif="{{!noMore && items.length}}" bindtap="loadMore" aria-role="button" aria-label="继续读取城市邮票" hover-class="album__press" hover-stay-time="80">继续展开下一页</view>
+  <!-- BL-49:「收到的」读完后给到底提示(「我的」末尾已有「还没收到」虚线格,不重复) -->
+  <view class="album-more" wx:elif="{{noMore && items.length && tab === 'received'}}" aria-role="text">收到的邮票都在这里了</view>
 
   <view class="album-fab" bindtap="openCamera" hover-class="album-fab--press" hover-stay-time="60" wx:if="{{total > 0}}" aria-role="button" aria-label="打开集邮相机"><cy-icon name="plus" size="40" /></view>
 </view>
