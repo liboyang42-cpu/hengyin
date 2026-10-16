@@ -17,7 +17,7 @@
   "max_workers_per_team": 6,
   "model": "gpt-6.1-sol",
   "intended_source_lanes": 2,
-  "actual_author_claims": "ORIGINAL_TWO_DECISION_ACKS_AND_SCOPE_PROPOSALS_RECEIVED_GRANT_ACK_PENDING",
+  "actual_author_claims": "E04_ACTUAL_A_SOURCE_DELIVERED_B_CONTINUING; E02_SUPPLEMENTAL_GRANT_SOURCE_ACK_PENDING",
   "fourth_team_created": false,
   "packages": [
     {
@@ -77,7 +77,7 @@
       "id": "E04-07-A-UNKNOWN_AUDIT",
       "owner": "EXTRA6/E04",
       "writer": "original /root/external_e04",
-      "state": "GRANTED_AWAITING_AUTHOR_ACK",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "source_paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
@@ -92,13 +92,15 @@
         "unknown original USED/unused cannot be guessed; no history lookup/void/delete/reopen",
         "points/XP paths and audit continue under existing outer transaction",
         "no grant remains no-grant, not fabricated reward"
-      ]
+      ],
+      "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "source_packet": "E04_07_A_SOURCE_DELIVERY.json"
     },
     {
       "id": "E04-07-B-EXACT_RECEIPT_SOURCE",
       "owner": "EXTRA6/E04",
       "writer": "same original /root/external_e04 serially after A",
-      "state": "GRANTED_SERIAL_AFTER_A",
+      "state": "ORIGINAL_AUTHOR_ACK_A_PUBLIC_SHA_B_IN_PROGRESS_SOURCE_ONLY",
       "source_paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
@@ -132,7 +134,8 @@
       "fixture_scope": "Existing producer test and RedemptionRewardClawbackMyBatisTest only for direct changed receipt contract/fixture schema, preserve all business assertions/negative controls and gates. If further old fixtures need source updates, request exact paths, do not weaken or skip.",
       "cross_owner_transfer": "Consumer/history XML stay original E04. Producer/reward mapper/new migration no current global claim and no open PR touches in scan; formally reserve to same original E04 writer. Imported Git author is not current owner. PR18 old IT author frozen1e, transfer only direct receipt fixtures to E04. CORE old C04 no active writer; no second consumer writer.",
       "superseded_unwritten_migration_path": "sql/migration_topic_completion_coupon_receipt_20261016.sql",
-      "real_database_source_scope": "E04_07MySqlIT may use existing documented MySQL gate/scratch helper to express actual producer+receipt rollback and exact consumer constraints; source only NOT_RUN, no new test entry/service/network/CI/gate configuration. Declare exact gate/env/test methods on delivery. Existing old IT stays gate-preserving."
+      "real_database_source_scope": "E04_07MySqlIT may use existing documented MySQL gate/scratch helper to express actual producer+receipt rollback and exact consumer constraints; source only NOT_RUN, no new test entry/service/network/CI/gate configuration. Declare exact gate/env/test methods on delivery. Existing old IT stays gate-preserving.",
+      "parent_package_source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a"
     }
   ],
   "source_delivery_contract": {
@@ -179,7 +182,10 @@
       "child_thread_id": "01a13fa3-5db0-708e-82e4-07e19d54b028",
       "branch": "codex/extra-e04-regression-20261015",
       "base": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
-      "state": "USER_DECISION_RECEIVED_SCOPE_PROPOSED_GRANT_ACK_PENDING"
+      "state": "A_PUBLIC_DELIVERED_B_SOURCE_IN_PROGRESS_SAME_WRITER",
+      "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6215963891"
     }
-  ]
+  ],
+  "actual_source_writers": 1
 }
