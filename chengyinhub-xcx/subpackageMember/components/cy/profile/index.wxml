@@ -641,7 +641,7 @@
   </view>
   <cy-skeleton wx:if="{{pointsSheet.loading}}" type="list" count="{{3}}" />
   <view wx:elif="{{pointsSheet.failed}}" class="pts-loading cy-fade-in" bindtap="loadPointsTasks" hover-class="cy-pressed" hover-stay-time="80">加载失败,点此重试</view>
-  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length}}" title="暂无积分任务" sub="积分规则上线后会出现在这里" />
+  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length}}" title="暂无积分任务" sub="目前没有开启中的积分任务" />
   <view wx:else class="pts-list">
     <view class="pts-row" wx:for="{{pointsSheet.tasks}}" wx:key="id">
       <view class="pts-row__main">

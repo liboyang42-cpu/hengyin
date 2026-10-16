@@ -234,7 +234,7 @@
             data="{{item: item, canManage: club.isOwner || club.viewerIsAdmin || canCheckInEvents, canReport: canSeeMembers && item.memberId != myMemberId}}" />
         </block>
         <!-- 空态(282:478):卡容器内标题 + 说明 + 主按钮 + 归属提示 -->
-        <cy-empty wx:else class="ev-empty" title="还没有城市路线" sub="{{club.isOwner || canManageActivities ? '发布城市定向或自由探索，让成员开始报名。发布后会自动绑定「' + club.name + '」，成员在这里报名。' : '主理人还没发布城市路线，先加入等通知。'}}" cta="{{club.isOwner || canManageActivities ? '发布主题' : ''}}" bind:cta="onCreateTeam" />
+        <cy-empty wx:else class="ev-empty" title="还没有城市路线" sub="{{club.isOwner || canManageActivities ? '发布城市定向或自由探索，让成员开始报名。发布后会自动绑定「' + club.name + '」，成员在这里报名。' : '主理人还没发布城市路线，发布后会显示在这里。'}}" cta="{{club.isOwner || canManageActivities ? '发布主题' : ''}}" bind:cta="onCreateTeam" />
 
         <!-- 段头 · 已结束(282:660):没有已结束的场次就整段不出,不留空标题 -->
         <block wx:if="{{endedTopics.length}}">
