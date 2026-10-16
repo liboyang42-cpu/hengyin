@@ -141,8 +141,8 @@ page { background: var(--cy-bg-page); }
 }
 
 /* 系统 tab「举报进度」:与系统会话行同一视觉(铃铛圆头像 + 标题/时间 + 副行),左右走页边距。 */
-.report-notices { display: flex; flex-direction: column; padding: 0 var(--cy-page-x); }
-.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) 0; background: var(--cy-bg-card); }
+.report-notices { display: flex; flex-direction: column; padding: 0 0 0 var(--cy-page-x); }
+.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-4) 0; background: var(--cy-bg-card); }
 .report-notice .sys-avatar { flex-shrink: 0; }
 .report-notice__body { flex: 1; min-width: 0; overflow: hidden; }
 .report-notice__top { display: flex; align-items: baseline; min-width: 0; gap: var(--cy-space-2); }
