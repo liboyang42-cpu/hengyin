@@ -14,7 +14,7 @@
       "lane": "STAT",
       "task_id": "F3-STAT-01",
       "child": "/root/stat",
-      "state": "FROZEN_SOURCE_DELIVERED",
+      "state": "FROZEN_AFTER_CURRENT_CALLER_RECHECK",
       "files": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java"
@@ -29,7 +29,7 @@
       "lane": "GROW",
       "task_id": "F3-GROW-01",
       "child": "/root/grow",
-      "state": "FROZEN_SOURCE_DELIVERED",
+      "state": "FROZEN_AFTER_CURRENT_CALLER_RECHECK",
       "files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
@@ -41,8 +41,8 @@
       "commit_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
       "active_task_id": null,
       "active_files": [],
-      "latest_task_id": "F3-GROW-02",
-      "latest_commit_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea"
+      "latest_task_id": "F3-GROW-03",
+      "latest_commit_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad"
     }
   ],
   "coordinator_owned_files": [
@@ -50,9 +50,9 @@
     "docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
     "docs/verification/mini-forward-cloud-20261015/DELIVERY.md"
   ],
-  "source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "source_candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
   "active_source_writers": 0,
-  "verification_scope": "Current bde356f3 local ordinary28 actual PASS from PR24@cae72e05; true MySQL11 NOT_RUN/unregistered. Cloud execution NOT_RUN, no new source changes, both authors frozen. Prior2babbe28 24PASS retained separately.",
+  "verification_scope": "Current d592334a changes only existing MySQL IT clock fixture:NOT_RUN. Production runtime source remainsbde356f3, prior ordinary28PASS binds only that SHA. Current review and11 unmet real-DB conditions are explicit inQUEUE/DELIVERY. No new resource/CI/entry grant.",
   "refreshed_ownership": {
     "open_pr_count": 201,
     "rest_pages": [
@@ -66,6 +66,9 @@
     "other_writer_intersections": [],
     "control_source_owners_blob": "8508fc7aedb13a393f7eeea1914a9926f4f0465a"
   },
-  "previous_source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
-  "validation_entry_policy": "User decided KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY; isolated MySQL/Redis proposal closed, no approval pending. Existing212/CI unchanged; uncovered MySQL11 NOT_RUN/coverage gap. No new development or validation task."
+  "previous_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "validation_entry_policy": "User decided KEEP_EXISTING_ENTRIES_NO_NEW_ENTRY; isolated MySQL/Redis proposal closed, no approval pending. Existing212/CI unchanged; uncovered MySQL11 NOT_RUN/coverage gap. No new development or validation task.",
+  "production_source_candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "active_reviewers": 0,
+  "current_round_ownership_source_owners_blob": "88fe475c8fcbb13208510fd028b54c71322f54fc"
 }

@@ -10,6 +10,59 @@
 STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者唯一维护本目录三文档。
 只在现有授权内源码修复、回归编写和 Git 交付。Cloud执行始终 `NOT_RUN`；本地外部验证见最新候选段。Cloud 不编译、测试、lint、业务 HTTP、数据库、设备、手动 CI、VPS、合并或部署，不改门禁/hook。用户当前分工覆盖根 AGENTS 的默认测试及 master 分支要求。
 
+## 本轮重新检查与回归源码修正（覆盖旧EXHAUSTED摘要）
+
+本轮由原作者 `/root/stat`、`/root/grow` 及父协调者重新追当前UI/调用者、事务、Mapper缓存和成长各分支；不是复用旧EXHAUSTED。最新控制源表blob `88fe475c8fcbb13208510fd028b54c71322f54fc` 保留两原writer与两精确回归路径。本轮未发现可在白名单内确认的新生产缺陷，生产新增bug计0；只修一项确定的既有测试夹具时点问题，不凑任务。
+
+**完整回归源码候选：`d592334abee1a379963e7b72a58eec5e0f7bd5ad`；生产源码仍为`bde356f3f0944f4c1a00726fbf821de2267a3eea`。** 该新提交仅修改 `chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java`，分类F3-GROW-03 / REGRESSION_SOURCE_CORRECTION，原GROW唯一作者已冻结。节点并发用例#1/2/3/4/6原先seed(LocalDate.now())与实际调用取时若跨午夜，streak合法延续却偏离固定预期；现在测试内CHECKIN_DAY固定2030-01-15、service子类仅覆盖既有currentCheckinTime取该日默认时区12:00、seed同一日。所有11方法、断言、锁屏障、真实事务/Mapper与环境gate保留，无sleep、配置、依赖或生产规则变化。
+
+该测试源码依赖bde已存在的取时方法，未编译/执行，NOT_RUN；不把bde的普通28PASS迁为d592成绩。普通两类与全部生产文件未改，未新增普通受影响类；root若需要核新Java测试源码编译，仅经现有212取用 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false test-compile`（这里只是命令文本，Cloud未执行），编译通过不等于11项运行。无理由重跑旧普通PASS。真MySQL11仍为现有入口覆盖缺口，关闭的新入口方案不恢复。
+
+### 本轮生产分支结论与只读packet
+
+STAT实际UI初始双null/可清空→GET参数→String绑定→Controller→Mapper已重读：funnel双空/blank不建条件、单边独立解析，非blank严格日历/正四位年份，完整反向在Mapper前拒；DATE列用>=/<=无next-day转换。pilot必填、严格解析/正四位、inclusive1–62及原五字段均未见新Controller遗漏。
+
+唯一SQL边界候选：需analytics:list的直接GET pilot `startDate=endDate=9999-12-31` 合法1天，但当前只读 `chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml:143` 对end做DATE_ADD1day。须实MySQL观察是否越界为NULL/warning并影响指标；尚无HTTP/DB复现，不计确认bug、不改Mapper、不在Controller拒合法日期、截断或拼跨窗指标。真实UI当前只调用funnel，不冒充UI已触发。若获真实证据，由C00路由原聚合Mapper owner；F3写权不扩展。
+
+GROW重读确认写成长表的真实调用仍只有两入口；均REQUIRED→唯一键upsert→FOR UPDATE当前读，upsert/update清会话缓存、锁读flushCache/useCache保护同事务node→topic，未见绕写。node不回写里程，topic不回写节点/等级/streak/日期。普通读缺行仅默认对象，不建行、不加写锁；一次采样/同日/昨日/断日和checkins/5+1不变。
+
+上游两种顺序仍有边界：FULL节点原报名/活动→条件性积分会员锁→成长→徽章；主题/核销原报名/活动等→TOPIC_FINISH→成长→后续奖励可能再锁会员。完整跨域锁序不是F3本轮验收结论，不增加共享会员锁。
+
+RR重复确认packet严格降为conditional / NEEDS_REACHABILITY / confirmed_new_production_bug=false：`TopicCompletionAwardServiceImpl:67` 的DuplicateKey恢复普通 `PlayerBadgeMapper.xml:28` 读若遇既有RR旧视图，理论上可看不到新提交TOPIC_FINISH再抛。直接caller仍只由firstCompletion调成长；上游ApiPlayProgress及TopicRouteRuntime.completeOpening显式RC，CmsRegistration.redeemExploreChapterAndRecord:2990/2999为DEFAULT，grantOnce:44真实topic普通SELECT可建读视图。仓库未见全局强制RC，但实际DB/外部默认未获证，不能将DEFAULT等同RR。
+
+关键正常重叠反证：CmsRegistrationServiceImpl:421/694/799正常购票/自玩都调ExploreAccountTicketGate:17–42，锁同源topic并检查跨activity与ownerType1票；TopicSaleCanonicalV1:144–150限购1，故原先两正常Explore票/自玩+Explore并存向量未成立；同票又有activity→registration锁。历史/人工/过期票例外未证明，停止扩查。现IT#8 mock了topic查询且第二事务无预建真实topic RR快照，不能证明该条件路径已覆盖。只交C00/caller owner判断，不抢写caller或BadgeMapper，不以mock PASS叫实库通过。
+
+### 逐项未验收条件及现有入口
+
+下面11项全部是原 `com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT`，源码声明仍11、测试数未增加。每项都为 **NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP**：212固定network none；普通Maven默认不选择*IT，backend/funds现有固定IT清单未登记该类；不新增入口、不改CI、不手动重复触发或催批旧方案。
+
+| 既有方法 | 真实MySQL必须观察的验收条件 |
+|---|---|
+| `twoFirstNodeCallsCreateOneRowAndCountBoth` | 第二写者等待首事务；单成长行，checkins=2、mileage=0、streak=1，FIRST_STEP仅一份。 |
+| `existingNodeCallsAccumulateAcrossLevelBoundary` | 初始checkins4/mileage8.50/streak2，结束checkins6/level2，里程和streak不丢。 |
+| `nodeAndTopicKeepBothIndependentCounters` | node先取得锁后topic：checkins5、mileage10.75、level2，MILE_10和TOPIC_CLEAR11事实正确。 |
+| `topicThenNodeKeepsMileageAndExistingStreak` | topic先取得锁后node：checkins10、mileage10.75、level3，原streak6保留。 |
+| `differentFirstTopicsAccumulateMileageWithoutDuplicateGrowthRow` | 首次不同主题并发：单成长行，mileage6.00，TOPIC_CLEAR11/22各一份。 |
+| `repeatableReadSnapshotCannotLoseLaterNodeIncrement` | 两侧显式RR；第二事务先普通读旧checkins4再等成长锁，最终checkins6，不按旧快照覆盖。 |
+| `differentOuterTopicMarkersDoNotIntroduceGrowthBadgeGapLockCycle` | 两侧显式RR、真实外层marker-first，FINISH22/11并发；mileage14.50，两TOPIC_CLEAR，不新增缺失badge锁环。 |
+| `sameTopicOuterUniqueMarkerCallsGrowthOnlyOnce` | 同topic外层唯一marker：一次first=true、一次false，仅一次成长读写，mileage10.75/TOPIC_CLEAR一份；不覆盖第二事务预建真实topic RR快照。 |
+| `existingTopicClearLeavesAllGrowthFieldsUntouched` | 已有TOPIC_CLEAR：里程、节点/等级/streak/last日期和原create/update时间均不变。 |
+| `badgeFailureRollsBackFirstRowAndCounter` | FIRST_STEP配置读取失败，首次建行与计数整体回滚，无遗留成长行或徽章。 |
+| `ordinaryGetGrowthDoesNotWaitForWriterOrCreateMissingRows` | 持写锁时普通getGrowth在有界时间返回；缺行会员999只返回默认对象，不建行。 |
+
+共同必要前提保留但不构成执行许可：MySQL8+非H2/MariaDB、CHENGYIN_FUNDS_MYSQL_IT=1、六CHENGYIN_TEST_MYSQL_{HOST,PORT,DATABASE_BASE,DATABASE_SUFFIX,USER,PASSWORD}显式绑定（password可空但key存在，suffix非空），配置库名前缀≤47+16hexUUID独占schema、批准的建删/DML、基线两表唯一键、真实Spring事务代理。还需实际记录数据库身份/隔离、fresh exact11 tests/0skip/0error/0failure、线程终止和仅自有schema清理。本套没有真实Redis联验，固定测试日也不验证生产JVM/DB日界。
+
+其他精确未验条件：
+
+| 验收项 | 条件/现有入口覆盖 |
+|---|---|
+| HTTP输入与权限 | 真实authorized GET/null/blank/单边/拒绝格式/旧envelope；普通Java调用PASS不等于live HTTP，当前无本包登记的运行服务入口，不在Cloud启动或部署。 |
+| 普通SQL日界 | 真实XML放前日末秒、当日00:00与23:59:59、次日00:00，单日只计当日两条，保dedup/coverage/min/max；缺适用现有MySQL入口，NOT_RUN。 |
+| 最大合法日SQL候选 | 对真实MySQL记录version/sql_mode、DATE_ADD返回及warning；不同user-post放9999-12-30/31，两个单日各1、9999-10-31..12-31(62天)应2并保min/max/dedup/coverage；现有mock/BoundSql/H2 Java DATE_ADD别名不能签收，NOT_RUN/只读候选。 |
+| JVM/DB日期映射 | 实际观测JVM与DB时区、Date→DATE持久化及午夜两次有效打卡streak；现有普通受控时钟和固定并发测试日不代替，NOT_RUN/覆盖缺口。 |
+
+当前实际写者/活动检查者均0，READY0，新增确认生产bug0，已交回归修正1，条件性只读packet2。C00只登记这些精确事实与原作者锁，本队不改全局账。本轮完成后为EXHAUSTED_AFTER_CURRENT_CALLER_RECHECK；后续真实可修项在原白名单继续，实际失败只开原作者一条修复线。Cloud全程无编译、测试、HTTP、DB、lint、CI或VPS操作。
+
 ## 当前有效约束：保持现有入口，不新增
 
 用户已明确决定“保持现有入口，不新增”，由本地总控直接回传。此决定覆盖本文件和先前公共回执中的“新真库入口待批准”：新增隔离MySQL/Redis集成入口方案已关闭，当前没有该方案的待批准动作，也不再催用户批准相同方案。
@@ -18,7 +71,7 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 这只是约束更新，没有新增开发、服务、入口或补跑任务。冻结源码 `bde356f3f0944f4c1a00726fbf821de2267a3eea`、本地普通28PASS证据及旧候选独立历史全部保留；真MySQL11未执行、真实Redis/运行HTTP/设备业务/集成部署未验边界不变。EXHAUSTED、writer0/READY0/源码阻塞0，Cloud执行NOT_RUN。C00唯一编辑全局账，本队只维护自己的QUEUE/CLAIMS/DELIVERY与本队PR说明。
 
-## 最新交付候选：本地普通28实际通过，真MySQL11仍NOT_RUN
+## 既有生产候选：bde本地普通28实际通过，真MySQL11仍NOT_RUN
 
 最新冻结源码为 `bde356f3f0944f4c1a00726fbf821de2267a3eea`，分支与草稿PR72不变；前一项独立提交 `009664d74bc9a330b14a10e0696dba74e91ea291` 已包含其中。旧候选 `2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd` 的普通24PASS仅保留历史，不能覆盖新候选。本地已对这个新冻结源码完成编译及普通28实际测试，28pass/0failure/0error/0skip；真MySQL11仍NOT_RUN，整体保持SOURCE_DELIVERED_UNVERIFIED，Cloud未运行验证。
 
