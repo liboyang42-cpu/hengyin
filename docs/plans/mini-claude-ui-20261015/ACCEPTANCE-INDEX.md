@@ -8,6 +8,7 @@
 > - `ACCEPTANCE-BATCH9.md`（BL-115，PR #159，分支 `claude/bl-115-acceptance-batch9`）
 > - `ACCEPTANCE-BATCH10.md`（BL-123，PR #167，分支 `claude/bl-123-acceptance-batch10`）
 > - `ACCEPTANCE-BATCH11.md`（BL-131，PR #175，分支 `claude/bl-131-acceptance-batch11`）
+> - `ACCEPTANCE-BATCH13.md`（BL-147，第十二至十三批，分支 `claude/bl-147-acceptance-batch13`；BL-147 补入，来源列记 `B13`）
 >
 > 依赖：BL-123（#167）、BL-131（#175）。协调者补丁细节见 `COORDINATOR-PATCHES.md`（BL-126，#170）；合并顺序见 `MERGE-ORDER.md`（BL-127，#171）；冲突见 `CONFLICTS.md`（BL-135，#179）。
 > 来源列写法：`B3-4` = `ACCEPTANCE-BATCH3-4.md`，`B5-8` = `ACCEPTANCE-BATCH5-8.md`，`B9/B10/B11` 同理，`A` = `ACCEPTANCE.md`；`§#N` 指该文件里的 PR 小节或 BLOCKED 表行。
@@ -75,6 +76,7 @@
 | 俱乐部详情 → 帖子 → 点多图第 3 张 | 俱乐部详情 | 任意 | — | #57 | 从第 3 张开始预览 | A §#57 |
 | 深链 `pages/club/edit?id=…` / 详情 → 管理 → 编辑资料 | `pages/club/edit`、详情弹窗 | 主理人 | — | #59 | 物理返回弹放弃确认 | A §#59 |
 | 非主理人查看没有路线的俱乐部 | 俱乐部详情 | 非主理人 | — | #65 | 「发布后会显示在这里」 | A §#65 |
+| 编辑俱乐部 → 解散 →「解散前待处理」→ 处理一项 / 去结算页返回 | `components/cy/scene-club-edit` | 主理人（有待退保证金或待结算款） | 可能需重建 action-ledger | #183 | 回读后移除已结清行 | B13 §#183 |
 
 ### 2.4 举报（共用举报半屏 `components/cy/report-sheet`）
 
@@ -141,6 +143,7 @@
 | 进入商家工作台 | 工作台「开通前置检查」 | 资料不全的店主 / 无写权限岗位 | 重建 action-ledger（估 4480→4481）；get-auth-matrix 直接 GET 33→34（累加） | #128 | 只列未完成项 | B5-8 §#128 |
 | 商家 → 客户 → 管理 →「触达记录」 | `pages/merchant/crm-campaigns/index` | 店主 / 有 MARKETING_READ 岗位 | app.json 注册该页；get-auth-matrix 33→35（累加）；nav-page-title-spacing 71→72；重建台账；`MARKETING_READ` 不在 VALID_SCOPES（B11 §三） | #144 | 只读列表与逐人回执 | B5-8 §#144 |
 | 装修页 →「升级权益」展开 | 店铺装修 | 有 / 无生效权益商家 | 重建 action-ledger | #152 | 顶部「已开通」权益 | B9 §#152 |
+| 商家工作台 / 店铺装修 → 营业状态开关 | `pages/merchant/index`、`pages/merchant/decor` | 店主或有 PROFILE_WRITE 岗位 / 无写权限岗位 | 可能需重建 action-ledger | #184 | 回读一致才出成功提示 | B13 §#184 |
 
 ### 2.10 模板 / 我的项目 / 发布
 
@@ -179,6 +182,8 @@
 | #150 | 第八批合同测试；#144/#147 合入后其单测也应通过 | B5-8 §#150 |
 | #158 | 第九批测试，#152 合并后全量单测绿 | B9 §#158 |
 | #166 | 第十批合同测试 | B10 §#166 |
+| #186 / #187 / #188 / #189 | BL-143–145 单测补齐，各须在 #37 / #27 / #40 / #110 之后合并 | B13 §二 |
+| #190 | 第十三批合同测试（只读后端源码） | B13 §二 |
 
 **纯文档**
 
@@ -239,6 +244,7 @@
 | #165 | BL-121 两条开场链路，需产品决定 | B10 §二 |
 | #168 | BL-124 商家公开详情已等价（待定是否展示电话/官网） | B11 §二 |
 | #169 | BL-125 模板分类已等价（待定后端修复） | B11 §二 |
+| #185 | BL-142 合作候选池与按主题筛选的合作列表等价 | B13 §三 |
 
 ## 4. 跨 PR 注意事项
 
@@ -266,4 +272,6 @@
 | #178 | BL-134（文档） |
 | #179 | BL-135 `CONFLICTS.md`（文档） |
 | #180 | BL-136（文档） |
+| #181 / #182 | BL-137 / BL-138（文档；已收入 B13 §三） |
+| — | BL-139 已认领、快照时无 PR |
 | #101 / #126 / #151 / #159 / #167 / #175 | 验收清单本身（本索引的来源） |
