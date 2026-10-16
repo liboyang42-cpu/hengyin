@@ -118,7 +118,7 @@ Page({
         if (seq !== this._detailSeq) return;
         const detail = successObject(res) ? shapeCampaignDetail(res.data) : null;
         if (!detail) {
-          this.setData({ detailState: 'error', detailError: errorText(res, '触达回执加载失败') });
+          this.setData({ detailState: 'error', detailError: errorText(res, '触达明细加载失败') });
           return;
         }
         this.setData({ detail, detailState: 'ready' });
