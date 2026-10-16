@@ -3695,16 +3695,23 @@
       "delivery_comments": {
         "PR16": 6207432703,
         "PR24": 6207432892
+      },
+      "exact_local_ordinary_validation": {
+        "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+        "tests": 60,
+        "status": "TARGETED_ORDINARY_PASS_ONLY",
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "later_rr_sha_inherits_pass": false
       }
     },
     {
       "id": "E02-25",
       "lane": "E02",
       "title": "评论唯一冲突后RR重放读取赢家当前行",
-      "state": "IN_PROGRESS_SOURCE",
-      "status": "AUTHORIZED_SOURCE_IMPLEMENTATION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
-      "assigned_worker": "/root/external_e02",
+      "assigned_worker": null,
       "source_files": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
@@ -3713,20 +3720,46 @@
       "source_base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
       "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
-      "public_sha": null,
+      "public_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
       "verification": "NOT_RUN",
-      "delivery": "NOT_YET_DELIVERED",
+      "delivery": "SOURCE_DELIVERED_UNVERIFIED",
       "trigger": "Supported MySQL RR scenario: ordinary readview misses concurrent same-request winner after duplicate insert; ordinary recovery still sees null and409",
       "scope_limit": "Repository MySQL/Druid inherits isolation, no RC override; actual VPS/production isolation unknown, no service connection attempted",
       "minimal_fix_boundary": "Only duplicate-key recovery uses exact uncached current read; initial read unchanged; preserve E02-24 target identity and no global isolation change",
       "depends_on": [],
       "permission_request": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
-      "preparation": "Completed /tmp reviewable production.patch, fixture-E02_24.patch and README; no repo application",
+      "preparation": "APPLIED_AND_PUBLIC; do not reapply historical /tmp patch",
       "mysql_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
       "necessary_owned_fixture": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
       "child_source_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
       "grant_control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
-      "grant_document": "docs/plans/mini-codex-cloud-20261015/E02_25_SOURCE_GRANT.json"
+      "grant_document": "docs/plans/mini-codex-cloud-20261015/E02_25_SOURCE_GRANT.json",
+      "rolling_candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md"
+      ],
+      "regression_methods_written": 4,
+      "mysql_methods_written": 2,
+      "future_focused_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=E02_25Test,E02_24Test,CommunityPostServiceImplTest test",
+      "planned_methods": 64,
+      "future_mysql_command": "CHENGYIN_E02_25_MYSQL_IT=1 mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=E02_25MySqlIT test",
+      "planned_mysql_methods": 2,
+      "delivery_comments": {
+        "PR16": 6207741745,
+        "PR24": 6207741878
+      },
+      "grant_paths_confirmed_control_sha": "9ee26595044bba61b4f033966cae653e8658be9b",
+      "mysql_resource_status": "BLOCKED_RESOURCE_CHANNEL; 212 network none is not a real-storage entry; explicit gate is not resource approval",
+      "new_sha_inherits_faef_pass": false,
+      "dependencies": [
+        "Previous E02-24 parent binding is already in this branch; all 3 production pieces shipped atomically; no external source/dependency/config/DDL changes"
+      ]
     }
   ],
   "refill": "Coordinator adds a concrete nonduplicate authorized task when one is delivered/refuted/blocked; no fabricated defect or empty filler. New IDs never reuse old ones. If no justified candidate remains, record EXHAUSTED rather than invent work.",
@@ -3734,7 +3767,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 13,
+  "queue_revision": 14,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -3788,23 +3821,23 @@
   "resume_instructions": "Read LONGRUN_ROLLING and SOURCE_OWNERS at current control, this queue/CLAIMS, and PR16 newest comments. Inspect branch/worktree git status and remote SHA. Never overwrite uncommitted worker patch. Do not execute tests/lint/compile/DB/CI reruns. Parent serially commits frozen task paths then next same-lane task; replenish only concrete authorized nonduplicate findings, otherwise EXHAUSTED.",
   "active_claims": {
     "E01": null,
-    "E02": "E02-25",
+    "E02": null,
     "E03": null,
     "E04": null,
     "E05": null,
     "E06": null
   },
-  "candidate_sha_before_queue_commit": "b5eb886676d2bf1f5fcb9a8b5d9d77ac0d5e7036",
+  "candidate_sha_before_queue_commit": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
   "actual_counts": {
     "total_history": 111,
-    "source_delivered": 58,
+    "source_delivered": 59,
     "no_change_source_review": 40,
     "blocked": 7,
     "ready": 0,
-    "claimed": 1,
-    "actionable_or_inflight": 1
+    "claimed": 0,
+    "actionable_or_inflight": 0
   },
-  "control_latest_read_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
+  "control_latest_read_sha": "9ee26595044bba61b4f033966cae653e8658be9b",
   "publication_transport": "Shell git credentials unavailable after local offline; authorized GitHub Git Data connector publishes text trees/commits with expected-parent nonforced refs. Exact public SHA objects imported for local ancestry; no validation is executed.",
   "worker_assignments": [
     {
@@ -3816,9 +3849,9 @@
     },
     {
       "slot": "E02",
-      "task": "E02-25",
+      "task": null,
       "worker": "/root/external_e02",
-      "mode": "ACTIVE_AUTHORIZED_ORIGINAL_WRITER",
+      "mode": "SOURCE_DELIVERED_IDLE_NO_READY_TASK",
       "worktree": "/workspace/hengyin-extra-e02"
     },
     {
@@ -3846,15 +3879,15 @@
       "slot": "E06",
       "task": null,
       "worker": "/root/external_e06",
-      "mode": "SOURCE_DELIVERED_IDLE_PENDING_LOCAL_TARGETED_RETEST",
+      "mode": "TARGETED_REPAIR_CLOSED_IDLE_NO_READY_TASK",
       "worktree": "/workspace/hengyin-extra-e06"
     }
   ],
-  "refill_shortfall": 49,
-  "refill_status": "Continue concrete queued work; replenish proven independent slices or formally transferred modules. Do not count completed/blocked as READY or invent placeholder bugs to assert 50.",
+  "refill_shortfall": 50,
+  "refill_status": "EXHAUSTED: no concrete authorized READY item; request caller-backed independent scope via C00, never invent bugs or repeat delivered work to fill50",
   "lane_domain_status": {
     "E01": "Activity offer preflight and necessary fixtures source delivered; authorized independent candidates exhausted",
-    "E02": "faef two ordinary classes60PASS reported by local only; original E02 actively implementing authorizedRR current read, new source NOT_RUN",
+    "E02": "E02-25 current-read repair and 4 ordinary+2 MySQL methods SOURCE_DELIVERED_UNVERIFIED/NOT_RUN; faef ordinary60 actual PASS has public evidence and is not inherited",
     "E03": "E03-18 clues and relation lookup consistency delivered;5 methods NOT_RUN; NODE_COMPLETED follow-on is existing coercion compatibility, not a new task",
     "E04": "Redeem association lock delivered; completion receipt source contract pending",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -3868,9 +3901,9 @@
   },
   "scope_prepared_patch_notice": "Historical exact recovery patches now marked APPLIED_AND_PUBLIC. Candidate contains actual source/tests; do not reapply snapshots.",
   "next_priority": [
-    "Process actual local verification failure on one original-writer repair lane; other independent work continues",
-    "Receive C00 exact new backend domain transfers for actual caller requests6198338004",
-    "Keep policy/other-owner blockers scoped; do not recreate delivered E03-17 or restored patches"
+    "Process actual local failure on only one original-writer repair lane; independent authorized tasks continue",
+    "C00 original owners resolve E02-23 identity bridge and E04-07 original history contract, or grant concrete caller-backed independent scope",
+    "Do not repeat E01-19 solved by CORE or E03-17; no generic filler audit; real-storage/HTTP verification stays local"
   ],
   "validation_policy": "Local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 only for VPS/backend/database, C00 consolidates source and results; No new manual compilation/tests/CI triggers/retries or dedicated verification configuration; keep existing automatic CI and gates unchanged",
   "rolling_dispatch_policy": {
@@ -4175,10 +4208,11 @@
     "E03-18": "92a75e16c04a51f30069f8c1223c8f7a90656a5d",
     "E06-17": "5ed1b8de890f5bdacadb02a145385f465c196d52",
     "E06-17-fixture-repair": "a9d1dcda7d9944ace6c89000fc2aa5696018fdff",
-    "E02-24": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d"
+    "E02-24": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+    "E02-25": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d"
   },
   "actual_failed_validation_repairs": 0,
-  "actual_new_development_workers": 1,
+  "actual_new_development_workers": 0,
   "local_validation_results": [
     {
       "candidate_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
@@ -4328,7 +4362,7 @@
     {
       "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
       "scope": "TWO_ORDINARY_COMMENT_REPLAY_CLASSES_ONLY",
-      "status": "PASS_REPORTED_BY_LOCAL",
+      "status": "TARGETED_ORDINARY_PASS_ONLY",
       "classes": [
         "com.chengyinhub.business.longrun.E02_24Test",
         "com.chengyinhub.business.community.CommunityPostServiceImplTest"
@@ -4347,7 +4381,7 @@
       },
       "task": "cy-vps-extra-faefbaf8-20261016",
       "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
-      "completed_at_utc": "2026-10-16T03:47:03Z",
+      "completed_at_utc": "2026-10-16T03:47:03.564145+00:00",
       "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
       "cleanup": "Local coordinator explicitly confirmed own container absent via chengyin-aws",
       "admission_history": [
@@ -4361,10 +4395,60 @@
           "state": "normal admission after prior lock released"
         }
       ],
-      "source": "Direct local report; public PR24 summary pending",
-      "evidence_commit": null,
+      "source": "Public PR24 README and summary actually read; no Cloud execution",
+      "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
       "new_rr_candidate_inherits_pass": false,
-      "real_mysql_redis_acceptance": false
+      "real_mysql_redis_acceptance": false,
+      "published_evidence": {
+        "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+        "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/summary.json",
+        "read_scope": "Public README and summary actually read; only exact faef two ordinary classes60 actual PASS, no later SHA inheritance",
+        "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+        "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+        "reports": [
+          {
+            "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+            "tests": 55,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+          },
+          {
+            "class": "com.chengyinhub.business.longrun.E02_24Test",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+            "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+          }
+        ],
+        "actual_totals": {
+          "tests": 60,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 60
+        },
+        "fresh_exact_xml": true,
+        "guard": {
+          "returncode": 0,
+          "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584\"}\n",
+          "stderr": "",
+          "finished_at": "2026-10-16T03:47:03.564145+00:00"
+        },
+        "cleanup": {
+          "observed_absent": true,
+          "endpoint": "chengyin-aws",
+          "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+        }
+      },
+      "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+      "started_at_utc": "2026-10-16T03:44:19.150799+00:00"
     }
   ],
   "pending_local_failure_retests": [],
@@ -4417,7 +4501,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "latest_application_candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -4449,6 +4533,54 @@
       "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/README.md",
       "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/b5273c3233d1753c9488edc410e1a1c0d5b29fed/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b45664de/summary.json",
       "scope": "Exact b456 E06_17Test5 targeted PASS only; no full76 or runtime acceptance"
+    },
+    "faefbaf8947b6ff202849385d28473fe2eaaa21e": {
+      "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+      "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/README.md",
+      "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_faefbaf8/summary.json",
+      "read_scope": "Public README and summary actually read; only exact faef two ordinary classes60 actual PASS, no later SHA inheritance",
+      "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+      "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+      "reports": [
+        {
+          "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+          "tests": 55,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+        },
+        {
+          "class": "com.chengyinhub.business.longrun.E02_24Test",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+          "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+        }
+      ],
+      "actual_totals": {
+        "tests": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 60
+      },
+      "fresh_exact_xml": true,
+      "guard": {
+        "returncode": 0,
+        "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584\"}\n",
+        "stderr": "",
+        "finished_at": "2026-10-16T03:47:03.564145+00:00"
+      },
+      "cleanup": {
+        "observed_absent": true,
+        "endpoint": "chengyin-aws",
+        "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+      }
     }
   },
   "external_dependency_requests": {
@@ -4478,19 +4610,23 @@
     },
     "E02-25": {
       "requested_owner": "EXTRA6/E02 original writer",
-      "pending_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
       "requested_method": "selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
       "comment": 6207443710,
       "extra_new_method_write_allowed": true,
       "prepared_patch": "/tmp/e02-25-proposal/production.patch",
       "prepared_fixture_patch": "/tmp/e02-25-proposal/fixture-E02_24.patch",
       "prepared_plan": "/tmp/e02-25-proposal/README.md",
-      "prepared_status": "BEING_IMPLEMENTED_AFTER_FORMAL_GRANT",
-      "new_source_dependency_blocker": "Only exact new Mapper method grant; same original writer retains E02_24 fixture, no writer change",
+      "prepared_status": "APPLIED_AND_PUBLIC_DO_NOT_REAPPLY",
+      "new_source_dependency_blocker": null,
       "actual_source_writers": 0,
       "grant_control_sha": "5e7374f7f7619f0eef80fe96cd5ae3d8ec18b195",
       "ack_comment": 6207665975,
-      "source_dependency_blocker": null
+      "source_dependency_blocker": null,
+      "status": "APPLIED_AND_PUBLIC",
+      "public_child_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+      "rolling_candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+      "grant_paths_confirmed_control_sha": "9ee26595044bba61b4f033966cae653e8658be9b",
+      "authorized_exact_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java"
     }
   },
   "validation_queue_state": {
