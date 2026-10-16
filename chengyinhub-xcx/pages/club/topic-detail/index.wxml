@@ -546,7 +546,7 @@
         </view>
       </view>
     </block>
-    <!-- BL-98 报名按日趋势(只读):按参与日期列已支付报名人数,沿用名单行样式,不画图表。 -->
+    <!-- BL-98 报名按日趋势(只读):按参与日期列有效报名人数(registration_status=2),沿用名单行样式,不画图表。 -->
     <block wx:if="{{trendState !== 'idle'}}">
       <text class="tset-label">按参与日期 · 报名人数</text>
       <cy-skeleton wx:if="{{trendState === 'loading'}}" type="list" count="1" />

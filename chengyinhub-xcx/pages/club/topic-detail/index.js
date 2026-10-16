@@ -888,13 +888,13 @@ Page({
   loadRegistrationTrend() {
     if (!this._topicId) return;
     this.setData({ trendState: 'loading', trendError: '' });
-    const that = this;
+    const that = this; const seq = that._trendSeq = (that._trendSeq || 0) + 1;
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/registration/count_by_date', method: 'POST',
       data: { owner_type: 1, owner_id: this._topicId },
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      success(res) {
+      success(res) { if (seq !== that._trendSeq) return; // 只认最后一次请求的回包
         const rows = isSuccess(res) ? presentTrendRows(res.data) : null;
         if (!rows) {
           that.setData({ trendState: 'error', trendError: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' });
@@ -902,7 +902,7 @@ Page({
         }
         that.setData({ trendState: 'ready', trendRows: rows });
       },
-      fail() { that.setData({ trendState: 'error', trendError: '' }); },
+      fail() { if (seq === that._trendSeq) that.setData({ trendState: 'error', trendError: '' }); },
     });
   },
 
