@@ -4630,10 +4630,35 @@
     }
   },
   "validation_queue_state": {
-    "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
-    "status": "TARGETED_E06_REPAIR_CLOSED",
-    "actual_tests": 5,
-    "cloud_execution_allowed": false
+    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "status": "LOCAL_PREPARING_ORDINARY_RESULT_PENDING",
+    "executor": "local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "entry": "Existing approved VPS212 offline ordinary regression entry only",
+    "classes": [
+      "com.chengyinhub.business.longrun.E02_25Test",
+      "com.chengyinhub.business.longrun.E02_24Test",
+      "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+    ],
+    "declared_tests": 64,
+    "actual_tests": null,
+    "actual_result": null,
+    "receipt_source": "Direct local delegation: frozen candidate fetched; exact grant/7 paths/no dependency change reviewed; preparing existing212 ordinary run, no result reported",
+    "cloud_execution_allowed": false,
+    "source_delivery_status": "SOURCE_DELIVERED_UNVERIFIED",
+    "prior_faef60_pass_inherited": false,
+    "mysql": {
+      "class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
+      "declared_tests": 2,
+      "status": "NOT_RUN",
+      "resource_status": "BLOCKED_RESOURCE_CHANNEL; no new entry authorization; no network/CI change"
+    },
+    "on_failure": "Only original external_e02 repair lane; no repair dispatched without actual failure",
+    "previous_closed_targeted_repair": {
+      "candidate_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+      "class": "E06_17Test",
+      "actual_tests": 5,
+      "status": "TARGETED_PASS_ONLY"
+    }
   },
   "admission_history": [
     {
