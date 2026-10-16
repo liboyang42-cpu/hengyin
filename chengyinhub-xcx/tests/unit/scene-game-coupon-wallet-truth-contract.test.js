@@ -9,7 +9,7 @@ const MODULE = path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.js'
 
 function loadComponent() {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = Object.assign(flattenComponentToPage(config), { _hide: config.pageLifetimes.hide }) }
   global.wx = {}
   delete require.cache[require.resolve(MODULE)]

@@ -1,6 +1,8 @@
 <view class="wallet-body">
   <view class="wallet-tabs"><view wx:for="{{tabs}}" wx:key="*this" class="wallet-tab {{tab === index ? 'wallet-tab--on' : ''}}" hover-class="wallet-tab--press" hover-stay-time="60" bindtap="selectTab" data-tab="{{index}}">{{item}}</view></view>
-  <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" />
+  <cy-empty wx:if="{{state === 'login'}}" kind="no-permission" title="登录后查看我的优惠券" sub="登录后可查看当前账号领取的优惠券" cta="登录" bind:cta="retry" />
+  <cy-empty wx:elif="{{state === 'permission'}}" kind="no-permission" title="当前身份不能查看这些优惠券" sub="请使用具有查看权限的账号" cta="重试" bind:cta="retry" />
+  <cy-skeleton wx:elif="{{state === 'loading'}}" type="card" count="3" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="优惠券暂时没能打开" sub="{{errorMsg}}" retry="重试" bind:retry="retry" />
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty' || !items.length}}" fill size="lg" title="{{tab === 0 ? '这里还没有优惠券' : '当前筛选暂无优惠券'}}" sub="{{tab === 0 ? '完成探索或活动任务后，领取的券会出现在这里。' : '切换其他状态查看优惠券。'}}" />
   <view wx:else class="wallet-list cy-fade-in">

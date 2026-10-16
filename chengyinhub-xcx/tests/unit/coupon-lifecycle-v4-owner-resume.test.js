@@ -42,7 +42,7 @@ function mount(relativePath, kind, options = {}) {
       requests.push(record)
       return record
     },
-    getUserID: () => owner.value,
+    getAuthorization: () => 'current-session', getUserID: () => owner.value,
     getPageSize: () => 10,
     tips() {},
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,

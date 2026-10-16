@@ -196,3 +196,4 @@ chengyinhub-xcx/pages/publish/fabu/index.js 8  # edit-detail按作者/seq恢复�
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 模板读取由本页处理401/旧code2登录入口、403权限提示和tplErrorMsg；owner/token/代际隔离旧回包，myproject-login-recovery覆盖HTTP状态透传及失败重试，关闭通道toast避免重复反馈
