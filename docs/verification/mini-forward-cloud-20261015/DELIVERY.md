@@ -18,6 +18,10 @@ STAT 唯一写者 `/root/stat`；GROW 唯一写者 `/root/grow`。父协调者�
 
 该测试源码依赖bde已存在的取时方法，未编译/执行，NOT_RUN；不把bde的普通28PASS迁为d592成绩。普通两类与全部生产文件未改，未新增普通受影响类；root若需要核新Java测试源码编译，仅经现有212取用 `mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false test-compile`（这里只是命令文本，Cloud未执行），编译通过不等于11项运行。无理由重跑旧普通PASS。真MySQL11仍为现有入口覆盖缺口，关闭的新入口方案不恢复。
 
+### 本地编译请求回执（结果待守卫）
+
+本地总控已签收冻结源码 `d592334abee1a379963e7b72a58eec5e0f7bd5ad`，提交现有212的 **test-compile only** 请求：task `cy-vps-forward-d592334a-20261016`，源码包SHA256 `69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38`，source/cache独占。只核新测试和匿名时钟类编译，不重跑旧28，不执行11项MySQL。初始准入观测共享锁busy，守卫结果尚未收到，状态 `PENDING_GUARD_RESULT`；不推断已开始、已拒绝或已通过，不绕锁。此为总控消息签收，Cloud未访问VPS、编译或测试。身份/券业务决策由原负责队等待用户答复，与已关闭的新验证入口方案分开，不领取到F3。
+
 ### 本轮生产分支结论与只读packet
 
 STAT实际UI初始双null/可清空→GET参数→String绑定→Controller→Mapper已重读：funnel双空/blank不建条件、单边独立解析，非blank严格日历/正四位年份，完整反向在Mapper前拒；DATE列用>=/<=无next-day转换。pilot必填、严格解析/正四位、inclusive1–62及原五字段均未见新Controller遗漏。
