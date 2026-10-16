@@ -3,7 +3,7 @@
 > 只汇总，不改代码。范围：所有合入 `claude/mini-ui-features-20261015` 的 open PR（`claude/bl-*` 与 `claude/cl*`，共 124 个，#22–#171）。
 > 依据：每个 PR 的 issue 评论里**最新一条** `<!-- supervisor sha=... -->` 的结论、该评论之后是否有 `<!-- line-fix -->`、当前 head 是否等于被审 sha。file:line 照抄监督评论原文，未二次核对代码。
 > 监督线的结论词是 `OK` / `CHANGES NEEDED` / `CLOSE`（没有 `APPROVE`）。PR 状态以 GitHub 为准；本文件生成后的新评论不在其中。
-> 相关文档：`MERGE-ORDER.md`（BL-127，#171）、`COORDINATOR-PATCHES.md`（BL-126，#170）、`DECISIONS-NEEDED.md`（BL-128）。
+> 相关文档：`MERGE-ORDER.md`（BL-127，#171）、`COORDINATOR-PATCHES.md`（BL-126，#170）、`DECISIONS-NEEDED.md`（BL-128，#172）。
 
 ## 1. 最新结论为 CHANGES NEEDED（7 个）
 
@@ -13,9 +13,9 @@
 | #119 BL-76 | b2726587 = head | Must（只改正文）：`chengyinhub-xcx/app.json:141`、`scripts/uiaudit/route-matrix.json`、`scripts/uiaudit/action-ledger.json`、`tests/unit/action-ledger.test.js:555,765,1379`、`route-matrix-freshness.test.js:35-36`、`title-system-owner-contract.test.js:76,126,254-255`、`nav-page-title-spacing-contract.test.js:478,488` 已提交在分支，正文仍写「未提交」；需列为已提交的 C00 补丁并注明与 CL3 #23、#144 的计数冲突 | line-fix 23:57Z 声称已改正文（列 7 个文件、注明与 #23/#27/#25/#144 冲突） → 待复审 |
 | #120 BL-77 | 3795f1e3 = head | Must（只改正文）：`tests/lint/ui-integrity-baseline.js`（:261-262、:964、:1376-1377）+ `scripts/uiaudit/action-ledger.json` 需改称「交协调者整合的最小补丁」；写明台账只有 coupon.wxml 4 个控件行号 +2（控件数 4480）、u5Silent +1、ratchet.u5Silent 28→29、冻结上限 29 未动（删掉「冻结上限 28→29」）；「改动文件」补这两个文件；「未验证」旧数 161 换新数 | line-fix 23:22Z 声称已全部改正文 → 待复审 |
 | #128 BL-85 | de554bf2 = head | Must：`pages/merchant/index/index.js:747` 新增 `GET /api/merchant/ops/prerequisites` 未登记，正文协调者补丁需加 MATRIX 行（required / merchant-owner / self-merchant）和计数变化；nit：无 path 的行仍绑定空 bindtap | line-fix 22:35Z：Must 已在正文补（MATRIX 行 + 33→34）；nit 有意不改并写理由 → 待复审 |
-| #138 BL-95 | c166569a → **7ce671f4** | Must：`profile/index.js:958` 新增行使 `tests/lint/ui-integrity-baseline.js:1205` 的 `profile/index.js:1589` 键错位，`ui-integrity --warn-as-error` 失败（[U4] `profile/index.js:1590`、[BASELINE] `:1589`），需把 `'exploreStat.km'` 并到 `'exploreStat.shops'` 同一行；nit：正文「X km」有空格，模板为 `Xkm` | line-fix 23:56Z + 新提交 7ce671f4，声称两项已改、ui-integrity PASS → 待复审 |
+| #138 BL-95 | c166569a → **7ce671f4** | Must：`profile/index.js:958` 新增行使 `tests/lint/ui-integrity-baseline.js:1205` 的 `profile/index.js:1589` 键错位，`ui-integrity --warn-as-error` 失败（[U4] `profile/index.js:1590`、[BASELINE] `:1589`），需把 `'exploreStat.km'` 并到 `'exploreStat.shops'` 同一行；nit：正文「X km」有空格，模板为 `Xkm` | line-fix 23:56Z + 新提交 7ce671f4，声称两项已改、ui-integrity PASS → 待复审（更新：00:43Z 监督复审 7ce671f4 为 **OK**） |
 | #139 BL-96 | 690d9f7d = head | Must：`components/cy/scene-route-content` index.js:86,188-190,262-284 / index.wxml:39 / `shezhi.wxml:92` / `shezhi.js:41`——「唯一宿主是 mylike.js」不成立，需评估在 settings-likes 场景 src-favorites 补收藏活动，或写清不能的原因；nit：详情跳转需写具体路由 | line-fix 22:35Z：只改正文，路由写为 `/pages/activity/detail/index?id=`，评估后维持 BLOCKED 并写理由 → 待复审 |
-| #151 BL-107 | 0a572218 → **16360cbc** | `ACCEPTANCE-BATCH5-8.md:104`：#138 已非 BLOCKED，需移到第一节、照抄 4 条验收清单并注明碎片/彩蛋仍 BLOCKED；`:6` 依赖提示补 #138 的 action-ledger 重建；`:3` 更新快照说明 | line-fix 23:58Z + 新提交 16360cbc，声称三项已改 → 待复审 |
+| #151 BL-107 | 0a572218 → **16360cbc** | `ACCEPTANCE-BATCH5-8.md:104`：#138 已非 BLOCKED，需移到第一节、照抄 4 条验收清单并注明碎片/彩蛋仍 BLOCKED；`:6` 依赖提示补 #138 的 action-ledger 重建；`:3` 更新快照说明 | line-fix 23:58Z + 新提交 16360cbc，声称三项已改 → 待复审（更新：00:43Z 监督复审 16360cbc 为 **OK**，仅剩正文过时的 nit） |
 
 **结论**：7 个 CHANGES NEEDED 中 6 个已有 line-fix（#119/#120/#128/#138/#139/#151），1 个（#22）只改了正文没发 line-fix。全部等监督按当前 head 复审，没有本线仍需动手的项。
 
@@ -85,6 +85,8 @@
 | #166 BL-122 | `batch10-api-contract.test.js:49/:60` 正则断言脆弱（监督判可接受） |
 
 ## 5. 尚无监督结论
+
+> 这一节是 00:30Z 快照，早于 #172–#175 开出；这几个 PR 的监督状态以 GitHub 为准。
 
 | PR | 说明 |
 |---|---|
