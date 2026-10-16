@@ -218,3 +218,18 @@
 | 145 | 单测补齐·积分月份分组与商家 ID 校验 | 依 #180：#40 `rows.js` 的 `monthKey`/`monthLabel`（跨年、非法日期）与 #110 `validMerchantId`（0/负数/字符串）补单测；各从对应分支切出、分别开 PR 或在正文写清依赖 | tests；不改被测代码 |
 | 146 | 单测与合同测试·第十三批 | BL-140–142 新增纯函数/页面处理器单测 + 新调用接口合同测试（路径/方法/字段对照 Java 源码）；均 BLOCKED 则 BLOCKED | tests |
 | 147 | 验收清单更新·第十三批 | 把 BL-132–146 已开 PR 的本地验收清单补进 `ACCEPTANCE-BATCH13.md`，并在 BL-138 `ACCEPTANCE-INDEX.md`（#182）对应页面行注明 | docs |
+
+## 第十四批（148–157）：监督线补充（零调用接口池已核完，见 #177 `ZERO-CALL.md`，剩余均为用户排除/资金/Codex 宿主/需产品决定；本批按 #180 `TEST-GAPS.md` §2–§3 剩余缺口补单测；只加 `tests/unit/*`，不改被测代码与现有 UI，无迁移/新接口）
+
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 148 | 单测补齐·俱乐部勋章 | 为 #23（CL3）`pages/club/utils/club-badge.js` 的 `normalizeBadges`、`normalizeMembers`（`null`/非数组/缺 id 条目）、`grantReceipt`（成功/业务拒绝/结果未知，未知不得当成功）、`charLength`（emoji/代理对）、`positiveId`（`'0'`/负数/`'abc'`）补单测；从 #23 分支切出，正文注明依赖 #23、须在其后合并 | tests；不改被测代码 |
+| 149 | 单测补齐·昵称校验 | 为 #23 `utils/nickname-check.js` 的 `normalize`（首尾空白、全角空格）、`codePointLength`、`localIssue`（长度边界与 `MIN_LENGTH`/`MAX_LENGTH`、口径对照 `POST /api/user/nickname/check` 源码）补单测；从 #23 切出并注明依赖；已有测试已等价覆盖则 BLOCKED 附对照 | tests；不改被测代码 |
+| 150 | 单测补齐·举报详情视图 | 为 #25（CL2）`subpackageMember/report-common/view.js` 的 `appealEventCount`（时间线重复 APPEAL 事件）、`positiveId`（字符串数字/非法值）补单测；从 #25 切出并注明依赖 | tests；不改被测代码 |
+| 151 | 单测补齐·NPC 导出时间与积分规则值 | 为 #27（CL4）`components/cy/npc-chat/chat-export.js` 的 `timeText`（秒/毫秒时间戳、ISO 字符串、空值）与 `subpackageMember/components/cy/profile/points-rules.js` 的 `pointValue`（正负、0、缺字段兜底）补单测；从 #27 切出并注明依赖（与 BL-144 #187 同源，注意文件名不冲突） | tests；不改被测代码 |
+| 152 | 单测补齐·漫游商家访客来源键 | 为 #113（BL-70）`utils/roam-shop-visitors.js` 的 `sourceKey`（同商家不同来源不冲突、缺 id 行为）补单测；从 #113 切出并注明依赖 | tests；不改被测代码 |
+| 153 | 单测补齐·核销记录与触达任务单条映射 | 为 #119（BL-76）`pages/merchant/verify-records/view-model.js` 的 `shapeRecord`、#144（BL-100）`pages/merchant/crm-campaigns/view-model.js` 的 `shapeCampaign`（未知 status 兜底、计数缺失 `|| 0`、缺字段）补单条用例；各从对应分支切出，分别开 PR 或在正文写清依赖 | tests；不改被测代码 |
+| 154 | 处理器单测·私信解除拉黑回读 | 为 #104（BL-61）`subpackageB/pages/im/chat/index.js` 的 `_confirmUnblock` 补页面处理器单测：回读确认之前不得显示「已解除拉黑」、失败如实提示；若断言暴露现有缺陷，用 `todo` 标注并在 PR 正文与 #104 写清，不改被测代码；从 #104 切出并注明依赖 | tests；不改被测代码 |
+| 155 | 单测补齐·工作台前置检查跳转白名单 | 为 #128（BL-85）`pages/merchant/utils/merchant-prerequisites.js` 的 `pendingPrerequisites` 补用例：`actionTarget` 不在 `ALLOWED_PATHS` 时 `path` 为空、带 query 的白名单路径、空/非数组输入；现有 `merchant-prerequisites.test.js` 已等价覆盖则 BLOCKED 附对照；从 #128 切出并注明依赖 | tests；不改被测代码 |
+| 156 | 处理器单测·另存为模板结果未知 | 为 #164（BL-120）`subpackageA/pages/myproject/index.js` 的 `_postSaveAsTemplate` 补处理器单测：结果未知/失败时不提示成功、重复点击不重复发请求（若无防抖用 `todo` 标注并报 #164）；从 #164 切出并注明依赖（注意与 #166 BL-122 已有用例不重复） | tests；不改被测代码 |
+| 157 | 验收清单更新·第十四批 | 把 BL-148–156 已开 PR 的本地验收命令（`node --test` 文件、期望 pass/fail/todo、须在哪个 PR 之后合并）补进 `ACCEPTANCE-BATCH14.md`，并在 BL-138 `ACCEPTANCE-INDEX.md`（#182）§3 测试行注明 | docs |
