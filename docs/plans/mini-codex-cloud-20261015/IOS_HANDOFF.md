@@ -1,12 +1,16 @@
+## E02-24普通定向结果更新
+
+EXTRA `faefbaf8947b6ff202849385d28473fe2eaaa21e` 已由本地VPS212实际执行E02_24Test5＋CommunityPostServiceImplTest55，**60PASS/0失败/0错误/0跳过**，fresh精确2XML、guard0/completed、精确自有容器清理。开始03:44:19Z、结束03:47:03Z（2026-10-16 UTC）；首次03:40:30Z锁拒绝0项作为历史保留。独立公开PR24汇总待补，当前仅按本地实际回报登记，不编造证据SHA/日志哈希。普通SQL替身测试不等于真实MySQL RR/Redis/HTTP；后续E02-25新候选不能继承60PASS。第三bde于03:47:03Z进入同入口串行执行，尚无结果。Cloud不补跑，TEST_DEPLOYED=NO。
+
 ## E01-19普通定向结果更新
 
-CORE e0e3f517b8e6deb26ed3697a00d38ae14f015e76已获本地VPS212普通2类10实际PASS（0failure/error/skip，fresh精确类集、guard0/completed、精确容器清理）；已核读[PR24公开README及结构化summary](https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md)，证据提交`5a90a1e81db8274960c3d5dee9d6646aa73311be`；原始报告由本地保留。旧483不迁移，真MySQL/Redis、HTTP、设备/业务、合并部署仍未验。EXTRA faef/第三bde串行验证进行中，不影响原E02按已发精确grant继续RR源码；ACK未到不虚报worker运行。
+CORE e0e3f517b8e6deb26ed3697a00d38ae14f015e76已获本地VPS212普通2类10实际PASS（0failure/error/skip，fresh精确类集、guard0/completed、精确容器清理）；已核读[PR24公开README及结构化summary](https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md)，证据提交`5a90a1e81db8274960c3d5dee9d6646aa73311be`；原始报告由本地保留。旧483不迁移，真MySQL/Redis、HTTP、设备/业务、合并部署仍未验。EXTRA faef普通60项PASS已回报、公开报告待补；第三bde串行验证进行中，不影响原E02按已发精确grant继续RR源码；ACK未到不虚报worker运行。
 
 ## E01-19 显式取消收藏的并发ACK修复
 
 公共源码 `e0e3f517b8e6deb26ed3697a00d38ae14f015e76` / PR44，原0d之上一小提交，源码作者CORE/C03；Cloud未运行，本地新普通2类10项定向PASS，真实SQL/HTTP仍未验。`POST /api/topic/like` 显式type0两请求都读到旧行而DELETE1/0时，第二个body.code由500改为200、msg“取消点赞成功”，符合既有方向幂等合同；HTTP方法/路径/参数/字段/账号过滤/目标ID不变。空type旧toggle的DELETE0仍失败，负数失败、数据库异常仍传播，不增加自动重试或端侧写权。
 
-新5＋既有方向5=10为待验证源码声明，无新库/配置/DDL，已给本地212最小普通矩阵；新SHA未编译测试，不能沿用0d157PASS。真实数据库/HTTP/设备/合并部署未验收，TEST_DEPLOYED=NO。回执及精确文件见[E01_19_SOURCE_CLAIM](E01_19_SOURCE_CLAIM.json)。
+新5＋既有方向5已由本地在新SHA实际执行10/10通过；无新库/配置/DDL，不沿用0d157PASS。真实数据库/HTTP/设备/合并部署未验收，TEST_DEPLOYED=NO。回执及精确文件见[E01_19_SOURCE_CLAIM](E01_19_SOURCE_CLAIM.json)。
 
 ## 当前E06针对性复测闭环：5PASS／真实HTTP未验
 

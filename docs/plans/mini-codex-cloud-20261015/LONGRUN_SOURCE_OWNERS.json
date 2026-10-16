@@ -2970,7 +2970,7 @@
     "validation": {
       "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
-      "status": "NOT_RUN",
+      "status": "ORDINARY_TARGETED_PASS",
       "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
       "classes": [
         {
@@ -2985,13 +2985,14 @@
         }
       ],
       "source_declared_total": 10,
-      "actual_executed_tests": null,
+      "actual_executed_tests": 10,
       "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
       "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
       "new_database_acceptance": "NOT_RUN",
       "runtime_HTTP": "NOT_RUN",
       "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
-      "Cloud_execution": false
+      "Cloud_execution": false,
+      "evidence_commit": "5a90a1e81db8274960c3d5dee9d6646aa73311be"
     },
     "ordinary_validation_result": {
       "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
@@ -3061,5 +3062,50 @@
     "verification": "SOURCE_ONLY_NOT_RUN",
     "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
     "activation": "Published grant allows original writer to resume immediately; reply actual child/branch/base/path ACK. Until receipt actual writer count0, no general approval hold."
+  },
+  "latest_extra_e02_24_validation": {
+    "candidate_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 60,
+    "passed": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "classes": [
+      "com.chengyinhub.business.longrun.E02_24Test",
+      "com.chengyinhub.business.service.CommunityPostServiceImplTest"
+    ],
+    "class_test_counts": [
+      5,
+      55
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:44:19Z",
+    "finished_at": "2026-10-16T03:47:03Z",
+    "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584",
+    "cleanup": "Local explicitly confirmed exact container absent using chengyin-aws filter",
+    "task": "cy-vps-extra-faefbaf8-20261016",
+    "source_archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only; SQL collaborators mocked",
+    "evidence_pr": 24,
+    "evidence_commit": null,
+    "public_evidence_status": "Direct actual verifier report; public batch pending, no public report/log hash read claim",
+    "prior_admission_refusal": {
+      "observed_at": "2026-10-16T03:40:30Z",
+      "actual_tests": 0,
+      "retained": true
+    },
+    "not_accepted": [
+      "real MySQL RR/Redis concurrency",
+      "runtime HTTP",
+      "device/business acceptance",
+      "merge/deployment/migrations",
+      "later E02-25 candidate"
+    ],
+    "cloud_manual_runs": 0
   }
 }

@@ -8,7 +8,7 @@ E01-19（EXTRA旧packet，不另造bugID）已由正式移交的CORE/C03 writer�
 
 ## 三队新候选与后续派工
 
-最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA faefbaf8（E02-24评论重放父目标绑定，新普通60声明）、第三bde356f3（STAT02年份/GROW02午夜时点，新普通28声明）；CORE已获本地新10项定向PASS；EXTRA/第三仍NOT_RUN，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
+最新公共源码分别CORE e0e3f517（E01-19，普通10实际PASS）、EXTRA faefbaf8（E02-24评论重放父目标绑定，新普通60声明）、第三bde356f3（STAT02年份/GROW02午夜时点，新普通28声明）；CORE已获本地新10项定向PASS；EXTRA已回普通60PASS/公开报告待补，第三仍待执行结果，旧PASS只覆盖表中旧SHA。EXTRA/第三新交付只在原owner范围，未向CORE整枝灌入。
 
 E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：仅新Mapper方法与catch当前读、原SQL projection/WHERE、两唯一测试及说明，见[E02_25_SOURCE_GRANT](E02_25_SOURCE_GRANT.json)。不改初始读/全局隔离/权限/DDL，保E02-24父目标绑定；待原owner实际ACK，不假称已运行。真实VPS是否RR未知，不把条件触发说成现场已复现。
 
@@ -16,7 +16,7 @@ E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：
 
 ## 新候选本地验证进行中（开发是否有READY单独记录）
 
-本地最新已回CORE e0e3f517普通10项PASS；EXTRA faef首次03:40:30Z锁拒绝0项已公开保留；锁释放后重试启动，第三bde随后串行，未接结果。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
+本地最新已回CORE e0e3f517普通10项PASS；EXTRA faef首次03:40:30Z锁拒绝0项已公开保留；03:44:19Z正常准入重试，03:47:03Z结束普通2类60实际PASS/F0/E0/S0，公开PR24汇总待补。第三bde于03:47:03Z进入同入口串行执行，尚未回结果。旧源码任务EXHAUSTED不代表本地验证停止，也不关闭未验层级。
 
 ## 本地下一项验证
 
@@ -31,6 +31,7 @@ E02-25真实RR重复键恢复packet现由C00精确追加授权给原EXTRA/E02：
 | e72eff7e | EXTRA原2失败类56项针对性PASS | 后续源码、新305全跑 |
 | b45664de | EXTRA E06单类5项针对性PASS | 新76全跑、真库/HTTP/业务 |
 | 2babbe28 | 第三队编译＋普通2类24项PASS | 11真MySQL仍NOT_RUN、真实并发/HTTP |
+| faefbaf8 | 本地普通2类60实际PASS，公开报告待补 | 后续RR候选、真MySQL/Redis/HTTP未验 |
 | e0e3f517 | 本地普通2类10实际PASS、[公开报告已核读](https://github.com/liboyang42-cpu/hengyin/blob/5a90a1e81db8274960c3d5dee9d6646aa73311be/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md) | 真SQL/HTTP/业务均未验 |
 
 原69c初始化失败、f7的483失败、474的305失败、ed598的76项1失败，以及两次212锁拒绝均保留独立证据；对应失败已按各自针对性复测关闭，不改写原失败为PASS。[VPS_REPAIR_ROUND_1](VPS_REPAIR_ROUND_1.json)及PR24保留原报告/哈希。
