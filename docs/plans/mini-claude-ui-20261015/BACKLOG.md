@@ -305,3 +305,8 @@
 | # | 名称 | 内容 | 范围提示 |
 |---|---|---|---|
 | 187 | 商家客户定向广播 | 客户名单页已有筛选与多选，但后端定向广播 `POST /api/merchant/crm/broadcast/preview` 与 `POST /api/merchant/crm/broadcast`（`ApiMerchantCrmController.java:137/146`，`MerchantCrmBroadcastServiceImpl` 要 MARKETING_WRITE）小程序零调用。仅当 `normalizeMerchantAccess(...).canWriteMarketing` 为真时，在现有工具区（照 `goCampaigns` 那一项的写法）加一个「定向广播」入口，打开现有 `cy-sheet`：请求体字段只用 `MerchantCrmBroadcastRequest` 已有的 keyword/segment/tagId/sourceType/sourceStart/sourceEnd（与当前 `_customerQuery` 同源）+ scope（多选模式下 MEMBERS + memberIds，否则 ALL）+ content + requestId（`makeRequestId`，重试复用同一个）。先 preview，展示 `MerchantCrmBroadcastPreviewVO` 的 deliverableCount / noConsentCount / frequencyLimitedCount / merchantDailyRemaining；deliverableCount=0 或 remaining=0 时不让发。发送成功后用返回的 `MerchantCrmBroadcastVO` 的 deliveredCount/failedCount/frequencySkippedCount 如实提示，并可跳 `crm-campaigns` 查看；失败如实展示服务端文案（429/400/409），不假成功。不改名单页现有布局与样式，新可点元素带 hover-class，回调不依赖方法简写里的 `this`。单测随 PR 写 | `pages/merchant/customer/**` + 可选新 view-model；不碰后端 |
+
+## 交 Codex（文件归 Codex，Claude 线不做）
+- BL-185 主题发布前检查：只能接在 `pages/publish/fabu/index.js`「编辑既有主题 → 发布」之前，调 `GET /api/topic/publish-check?topicId=&scope=`（`ApiTopicStateKeyController.java:164`），有 error 就不发布，只有 warn 时提示后允许继续。
+- BL-186 章节阶段结算：`pages/play/index.wxml:1184` 已有「本章完成」半屏 `finsheet__result`。需要在 `pages/play/index.js` 里接 `GET /api/play/journey/stage-end`（`ApiPlayJourneyController.java:27`），取数与降级方式照 `utils/life-archive.js` 的 `/ending`。
+- BL-187 客户页定向广播：与 D-001/RUN-001 冲突，作废。如需恢复由用户决定。
