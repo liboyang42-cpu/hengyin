@@ -108,11 +108,16 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Map<String, Object> existing = mapper.selectMediaByOwnerRequest(memberId, request.getUploadRequestId());
         if (existing != null) {
             validateMediaReplay(existing, type, request);
-            return existing;
+            return mediaForRead(existing);
         }
-        if (!mediaReceiptService.verify(memberId, request.getObjectKey(), request.getByteSize(), request.getUploadReceipt())) {
-            throw error("媒体上传回执无效或已过期", 403);
+        boolean validReceipt = mediaReceiptService.verify(memberId, request.getObjectKey(), request.getByteSize(), request.getUploadReceipt());
+        String canonicalKey = null;
+        if (!validReceipt) {
+            canonicalKey = canonicalMediaKey(request.getObjectKey());
+            validReceipt = !canonicalKey.equals(request.getObjectKey())
+                    && mediaReceiptService.verify(memberId, canonicalKey, request.getByteSize(), request.getUploadReceipt());
         }
+        if (!validReceipt) throw error("媒体上传回执无效或已过期", 403);
         String receiptHash = sha256(request.getUploadReceipt());
         Map<String, Object> receiptOwner = mapper.selectMediaByReceiptHash(receiptHash);
         if (receiptOwner != null) {
@@ -120,13 +125,14 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 throw error("媒体上传回执已被使用", 409);
             }
             validateMediaReplay(receiptOwner, type, request);
-            return receiptOwner;
+            return mediaForRead(receiptOwner);
         }
+        String objectKey = canonicalKey == null ? canonicalMediaKey(request.getObjectKey()) : canonicalKey;
         Date now = new Date();
         try {
-            mapper.insertMedia(memberId, request.getUploadRequestId(), type, request.getObjectKey(), request.getMimeType(),
+            mapper.insertMedia(memberId, request.getUploadRequestId(), type, objectKey, request.getMimeType(),
                     request.getByteSize(), request.getWidth(), request.getHeight(), request.getDurationMs(),
-                    trimToNull(request.getAltText()), sha256(request.getObjectKey()), receiptHash, now);
+                    trimToNull(request.getAltText()), sha256(objectKey), receiptHash, now);
         } catch (DuplicateKeyException e) {
             existing = mapper.selectMediaByOwnerRequest(memberId, request.getUploadRequestId());
             if (existing == null) existing = mapper.selectMediaByReceiptHash(receiptHash);
@@ -135,7 +141,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             }
             validateMediaReplay(existing, type, request);
         }
-        return mapper.selectMediaByOwnerRequest(memberId, request.getUploadRequestId());
+        return mediaForRead(mapper.selectMediaByOwnerRequest(memberId, request.getUploadRequestId()));
     }
 
     @Override
@@ -197,8 +203,11 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         if (CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
             replacement.setVersion(decision.getVersion());
             replacement.setLifecycle(decision.getLifecycle());
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("post", replacement);
+            snapshot.put("media", mapper.selectMediaForSafety(postId));
             auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId, memberId,
-                    "EDIT_REVIEW", json(replacement));
+                    "EDIT_REVIEW", auditSnapshotForRead(json(snapshot)));
         }
         outbox(postId, "POST_EDITED", payload("version", expectedVersion + 1), now);
         return detail(memberId, postId);
@@ -226,7 +235,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         safety.setMemberId(memberId);
         safety.setOpenid(blank(openid) ? mapper.selectMemberWxOpenId(memberId) : openid);
         safety.setText(((current.getTitle() == null ? "" : current.getTitle() + "\n") + current.getBody()).trim());
-        List<Map<String, Object>> media = mapper.selectMediaForSafety(postId);
+        List<Map<String, Object>> media = mediaForRead(mapper.selectMediaForSafety(postId));
         List<String> mediaUrls = new ArrayList<>();
         for (Map<String, Object> row : media) {
             Object url = value(row, "derived_object_key");
@@ -1272,11 +1281,12 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private void validateMediaReplay(Map<String, Object> existing, String mediaType,
                                      CommunityPostRequests.MediaRegister request) {
         String existingType = String.valueOf(value(existing, "media_type"));
-        String existingKey = String.valueOf(value(existing, "derived_object_key"));
+        Object storedKey = value(existing, "object_key");
+        String existingKey = canonicalMediaKey(String.valueOf(storedKey == null ? value(existing, "derived_object_key") : storedKey));
         String existingMime = String.valueOf(value(existing, "mime_type"));
         Long existingSize = number(value(existing, "byte_size"));
         if (!mediaType.equalsIgnoreCase(existingType)
-                || !request.getObjectKey().equals(existingKey)
+                || !canonicalMediaKey(request.getObjectKey()).equals(existingKey)
                 || !request.getMimeType().equalsIgnoreCase(existingMime)
                 || !request.getByteSize().equals(existingSize)) {
             throw error("同一上传请求号不能用于不同媒体", 409);
@@ -1440,10 +1450,163 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         }
     }
 
+
+    /** A single repeatable-read snapshot binds preview media to the exact pending audit content. */
+    @Override
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public Map<String, Object> auditMediaPreview(AuditTask task) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("taskId", task == null ? null : task.getId());
+        result.put("taskVersion", task == null ? null : task.getVersion());
+        result.put("postId", task == null ? null : task.getBizId());
+        result.put("postVersion", null);
+        result.put("expiresInSeconds", 300);
+        result.put("status", "UNAVAILABLE");
+        result.put("items", Collections.emptyList());
+        if (task == null || !AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())
+                || task.getId() == null || task.getVersion() == null || task.getSubmitterId() == null) return result;
+        try {
+            AuditTask fresh = auditTaskService.selectAuditTaskById(task.getId());
+            if (fresh == null || !java.util.Objects.equals(task.getVersion(), fresh.getVersion())
+                    || !java.util.Objects.equals(task.getSnapshotJson(), fresh.getSnapshotJson())
+                    || !java.util.Objects.equals(task.getBizId(), fresh.getBizId())
+                    || !java.util.Objects.equals(task.getSubmitterId(), fresh.getSubmitterId())
+                    || !AuditTask.BIZ_COMMUNITY_POST.equals(fresh.getBizType())) {
+                result.put("status", "STALE");
+                return result;
+            }
+            com.alibaba.fastjson2.JSONObject snapshot = com.alibaba.fastjson2.JSON.parseObject(task.getSnapshotJson());
+            if (snapshot == null || !snapshot.containsKey("post") || !snapshot.containsKey("media")) return result;
+            com.alibaba.fastjson2.JSONObject expected = snapshot.getJSONObject("post");
+            com.alibaba.fastjson2.JSONArray expectedMedia = snapshot.getJSONArray("media");
+            if (expected == null || expectedMedia == null || expected.getInteger("version") == null) return result;
+            if (!java.util.Objects.equals(task.getBizId(), expected.getLong("id"))
+                    || !java.util.Objects.equals(task.getSubmitterId(), expected.getLong("authorId"))) return result;
+            Integer version = expected.getInteger("version");
+            String lifecycle = expected.getString("lifecycle");
+            if (CommunityPost.LIFECYCLE_DRAFT.equals(lifecycle)) version = Math.addExact(version, 1);
+            else if (!CommunityPost.LIFECYCLE_CHECKING.equals(lifecycle)) return result;
+            result.put("postVersion", version);
+            CommunityPost current = mapper.selectById(task.getBizId(), task.getSubmitterId());
+            if (current == null || !java.util.Objects.equals(version, current.getVersion())
+                    || !java.util.Objects.equals(task.getSubmitterId(), current.getAuthorId())
+                    || !CommunityPost.LIFECYCLE_CHECKING.equals(current.getLifecycle())
+                    || !java.util.Objects.equals(expected.getString("body"), current.getBody())
+                    || !java.util.Objects.equals(expected.getString("title"), current.getTitle())
+                    || !(AuditTask.STATUS_PENDING.equals(fresh.getStatus())
+                    || AuditTask.STATUS_ESCALATED.equals(fresh.getStatus()))) {
+                result.put("status", "STALE");
+                return result;
+            }
+            Map<Long, String> keys = new LinkedHashMap<>();
+            for (Object item : expectedMedia) {
+                if (!(item instanceof Map)) return result;
+                Map<?, ?> row = (Map<?, ?>) item;
+                Long id = number(row.get("id"));
+                Object reference = row.get("object_key");
+                if (reference == null) reference = row.get("objectKey");
+                if (id == null || id <= 0 || reference == null || keys.containsKey(id)) return result;
+                keys.put(id, canonicalMediaKey(reference.toString()));
+            }
+            List<Map<String, Object>> attached = mapper.selectMediaForSafety(task.getBizId());
+            if (attached == null || attached.size() != keys.size()) {
+                result.put("status", "STALE");
+                return result;
+            }
+            Set<Long> seen = new HashSet<>();
+            for (Map<String, Object> row : attached) {
+                Long id = number(value(row, "id"));
+                Object reference = value(row, "object_key");
+                if (id == null || reference == null || !seen.add(id)
+                        || !java.util.Objects.equals(keys.get(id), canonicalMediaKey(reference.toString()))) {
+                    result.put("status", "STALE");
+                    return result;
+                }
+            }
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (Map.Entry<Long, String> entry : keys.entrySet()) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("id", entry.getKey());
+                item.put("url", FileOssUploadUtils.generateCommunityMediaPresignedUrl(entry.getValue()));
+                items.add(item);
+            }
+            result.put("items", items);
+            result.put("status", "READY");
+        } catch (RuntimeException unavailable) {
+            // No storage URL or partial signature is returned when evidence or signing cannot be verified.
+            result.put("status", "UNAVAILABLE");
+            result.put("items", Collections.emptyList());
+        }
+        return result;
+    }
+
+    /** Only known community snapshot media fields are projected; user-authored text remains untouched. */
+    @Override
+    public String auditSnapshotForRead(String snapshotJson) {
+        if (blank(snapshotJson)) return snapshotJson;
+        try {
+            com.alibaba.fastjson2.JSONObject snapshot = com.alibaba.fastjson2.JSON.parseObject(snapshotJson);
+            if (snapshot == null || !snapshot.containsKey("media")) return snapshotJson;
+            com.alibaba.fastjson2.JSONArray rows = snapshot.getJSONArray("media");
+            if (rows == null) return snapshotJson;
+            for (Object item : rows) {
+                if (!(item instanceof Map)) continue;
+                @SuppressWarnings("unchecked") Map<String, Object> row = (Map<String, Object>) item;
+                for (String name : new ArrayList<>(row.keySet())) {
+                    if ("object_key".equalsIgnoreCase(name) || "objectKey".equalsIgnoreCase(name)
+                            || "derived_object_key".equalsIgnoreCase(name)
+                            || "derivedObjectKey".equalsIgnoreCase(name) || "url".equalsIgnoreCase(name)) {
+                        Object reference = row.get(name);
+                        try {
+                            row.put(name, reference == null ? null : canonicalMediaKey(reference.toString()));
+                        } catch (RuntimeException invalidReference) {
+                            row.put(name, null);
+                        }
+                    }
+                }
+            }
+            return snapshot.toJSONString();
+        } catch (RuntimeException invalidSnapshot) {
+            // Invalid JSON cannot provide a safely identifiable media projection.
+            return null;
+        }
+    }
+
+    private String canonicalMediaKey(String reference) {
+        try {
+            return FileOssUploadUtils.communityMediaObjectKey(reference);
+        } catch (IllegalArgumentException invalid) {
+            throw error("媒体必须来自当前配置的对象存储", 400);
+        }
+    }
+
+    private Map<String, Object> mediaForRead(Map<String, Object> stored) {
+        if (stored == null) return null;
+        Map<String, Object> result = new LinkedHashMap<>(stored);
+        Object original = value(stored, "object_key");
+        if (original == null) original = value(stored, "objectKey");
+        Object derived = value(stored, "derived_object_key");
+        if (derived == null) derived = value(stored, "derivedObjectKey");
+        result.keySet().removeIf(name -> "object_key".equalsIgnoreCase(name) || "objectKey".equalsIgnoreCase(name)
+                || "derived_object_key".equalsIgnoreCase(name) || "derivedObjectKey".equalsIgnoreCase(name));
+        if (original != null) result.put("object_key", canonicalMediaKey(original.toString()));
+        if (derived != null && !blank(derived.toString())) {
+            String key = canonicalMediaKey(derived.toString());
+            result.put("derived_object_key", FileOssUploadUtils.generateCommunityMediaPresignedUrl(key));
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> mediaForRead(List<Map<String, Object>> stored) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (stored != null) for (Map<String, Object> row : stored) result.add(mediaForRead(row));
+        return result;
+    }
+
     private Map<String, Object> hydrate(CommunityPost post, Long viewerId) {
         Map<String, Object> result = new HashMap<>();
         result.put("post", post);
-        result.put("media", mapper.selectMedia(post.getId()));
+        result.put("media", mediaForRead(mapper.selectMedia(post.getId())));
         result.put("references", mapper.selectReferences(post.getId()));
         boolean viewerIsAuthor = viewerId.equals(post.getAuthorId());
         result.put("mentions", viewerIsAuthor
@@ -1652,7 +1815,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private static boolean safeMediaObjectKey(String value) {
         if (blank(value)) return false;
         String normalized = value.trim().toLowerCase();
-        return normalized.startsWith("https://") || normalized.startsWith("/");
+        return normalized.startsWith("https://") || normalized.startsWith("/")
+                || value.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}");
     }
     private boolean hasLegacyMigrationLabel(CommunityPost post) {
         if (blank(post.getSafetyLabelsJson())) return false;
