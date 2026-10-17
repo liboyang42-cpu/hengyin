@@ -291,6 +291,7 @@
 - BL-44 NPC 保留天数：已在 CL4 retentionPolicy 文案里展示，无剩余工作，视为完成。
 - BL-62 我的处罚记录：处罚记录属于小程序未接入的 v1 社区发帖体系，接入前不做。
 - BL-65 官方活动集体进度：详情页已展示集体进度与参与人数，progress 只多一个完成人数，不值得单做，视为完成。
+- BL-185 主题发布前检查（2026-10-17 L1 补记，#240）：小程序发布主题的唯一入口是 `pages/publish/fabu/index.js`（发布确认在这里；`/api/topic/publish-check`、`/api/topic/publish-draft` 在 xcx 非测试代码中均无调用），该文件在 Codex `tasks.json` owned_files 内，Claude 线不能接；myproject 上/下架不经过发布检查。需协调者排序或交 Codex，按原卡要求接 `GET /api/topic/publish-check`（error 拦截、warn 可继续、检查失败用 cy-inline-error 说明且不挡原流程）。
 
 ## 第十八批（184–186）：主监督补充（2026-10-17；后端已有接口、小程序零调用，已用 git grep 核实；不改现有 UI 与标题，无迁移/新接口/新依赖）
 | # | 名称 | 内容 | 范围提示 |
