@@ -1,0 +1,31 @@
+<!-- 首屏一行:只放已接受的主办/协办,没有就整块不渲染 -->
+<view wx:if="{{mode === 'row' && vm.hero.length}}" class="oc-row {{onCover ? 'oc-row--cover' : ''}}" aria-label="{{title}}">
+  <view wx:for="{{vm.hero}}" wx:key="key" class="oc-row__item">
+    <cy-avatar size="xs" src="{{item.avatar}}" name="{{item.name}}" />
+    <text class="oc-row__name">{{item.name}}</text>
+    <text class="oc-row__role">{{item.roleLabel}}</text>
+  </view>
+  <text wx:if="{{vm.heroMore > 0}}" class="oc-row__more">等{{vm.hostCount}}方</text>
+</view>
+
+<!-- 完整列表 -->
+<view wx:elif="{{mode !== 'row' && (vm.list.length || showInviteEntry)}}" class="oc-sec {{bare ? 'oc-sec--bare' : ''}}">
+  <view wx:if="{{!bare}}" class="oc-sec__head">
+    <text class="oc-sec__title">{{title}}</text>
+    <text wx:if="{{vm.hostCount > 1}}" class="oc-sec__count">{{vm.hostCount}} 方共同主办</text>
+  </view>
+  <view class="oc-sec__card">
+    <view wx:for="{{vm.list}}" wx:key="key" class="oc-sec__item">
+      <cy-avatar size="sm" src="{{item.avatar}}" name="{{item.name}}" />
+      <view class="oc-sec__text">
+        <text class="oc-sec__name">{{item.name}}</text>
+        <text class="oc-sec__role">{{item.roleLabel}}</text>
+      </view>
+      <cy-badge wx:if="{{viewerIsManager && !item.isPublic}}" type="status" variant="{{item.statusVariant}}" label="{{item.statusText}}" />
+    </view>
+    <view wx:if="{{showInviteEntry}}" class="oc-sec__item oc-sec__invite" aria-disabled="true" aria-label="邀请协办方，接口待开放">
+      <text class="oc-sec__invite-label">邀请协办方</text>
+      <text class="oc-sec__invite-hint">待接口</text>
+    </view>
+  </view>
+</view>

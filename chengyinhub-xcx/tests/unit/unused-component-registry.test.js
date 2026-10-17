@@ -62,6 +62,9 @@ const REGISTERED_UNUSED = {
     + '「俱乐部端发布入口」页面拥有触发它的按钮 —— pages/club/workbench 只是转到 club/detail 的历史深链'
     + '兜底壳,pages/publish/fabu 是另一模块的大文件、不在本次改动范围。谁拥有「发布」入口按钮,谁接上'
     + 'show + bind:choose(={key:"city"|"explore"|"event"})并从这里删掉这一行。',
+  // 2026-10-15 CL6:宿主 pages/activity/official-detail 正由 CL4 另一 worker 改,本 PR 只交付组件;
+  // CL4 合并后按 PR 里的挂载补丁接线,并删掉这一行。
+  'official-coorganizers': '待接线(2026-10-15 CL6):宿主 official-detail 归 CL4,合并后按 PR 挂载补丁接上',
 }
 
 function walk(dir, acc = []) {
