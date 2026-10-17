@@ -958440,7 +958440,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1164"
+        "staticSource": "pages/square/detail/index.js:1165"
       }
     },
     {
@@ -958542,7 +958542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1014"
+        "staticSource": "pages/square/detail/index.js:1015"
       }
     },
     {
@@ -958721,7 +958721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1021"
       }
     },
     {
@@ -959095,7 +959095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:871"
+        "staticSource": "pages/square/detail/index.js:872"
       }
     },
     {
@@ -959165,7 +959165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1021"
       }
     },
     {
@@ -959264,7 +959264,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1173"
+        "staticSource": "pages/square/detail/index.js:1174"
       }
     },
     {
@@ -959616,7 +959616,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1021"
       }
     },
     {
@@ -960943,7 +960943,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1021"
       }
     },
     {
@@ -961314,7 +961314,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:929"
+        "staticSource": "pages/square/detail/index.js:930"
       }
     },
     {
