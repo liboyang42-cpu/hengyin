@@ -3635,13 +3635,18 @@ Page({
     return parts.join(' ');
   },
 
+  /** BL-200:在途标记 _cancelingRegistration。成功后保持置真直到页面返回,
+      防止 1.5 秒窗口内再取消一次、排两个 navigateBack 把上一页也退掉。 */
   cancelRegistration() {
     const that = this;
+    if (that._cancelingRegistration) return;
     cyModal.show({
       title: '确认取消',
       content: '确定要取消参与吗？取消后不可恢复。',
       success(res) {
         if (res.confirm) {
+          if (that._cancelingRegistration) return;
+          that._cancelingRegistration = true;
           app.sendRequest({
             url: '/api/registration/merchant/cancel',
             data: { id: that.data.regId },
@@ -3651,8 +3656,13 @@ Page({
                 cyToast.success('已取消');
                 setTimeout(() => wx.navigateBack(), 1500);
               } else {
+                that._cancelingRegistration = false;
                 app.tips(res.msg || '取消失败');
               }
+            },
+            fail(res) {
+              that._cancelingRegistration = false;
+              app.tips(app.getRequestErrorMessage(res, '网络异常，请重试'));
             }
           });
         }
