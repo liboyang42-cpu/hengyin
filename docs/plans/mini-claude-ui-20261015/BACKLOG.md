@@ -285,3 +285,9 @@
 | # | 名称 | 内容 | 范围提示 |
 |---|---|---|---|
 | 183 | 修圈层城市实例无法启用供给角色 | 真实缺陷：模板复制时圈层候选全部置 `circleEnabled=0`（`CmsTopicServiceImpl.java:698-702`「模板副本必须由城市代理重新选择」），唯一能重新启用的 `POST /api/circle-theme/instance/configure`（`ApiCircleThemeController.java:128-149`，body `{topicId, candidateCodes[], scope}`，返回 `changed`；服务端已做归属/`PROJECT_MANAGE`/3–4 个覆盖全部角色/`assertPublishable` 校验，改选会清 `circleReviewedAt`）小程序零调用，导致「确认本实例供给已复核」无可复核内容。在现有「30天供给复核」区（`pages/topic/components/project-host/index.wxml:87-94`，仅 `hostTopic.circleThemeCode` 时出现）加一行「选择供给角色」→ 现有 `cy-sheet` 列出该主题候选（复用 `pages/play/utils/circle-theme.js` 的 `THEMES`/`themeOf`/`validateSelection`），提交后重载项目首页并以复核文案回到「尚未完成城市供给复核」作为回读。**无读取当前已启用候选的接口**：半屏不预选、不编造已选状态，PR 写明；后端错误原文展示，不给假成功。先核实圈层主题确有城市实例在用、发布编辑器（`pages/publish/fabu`）没有同类选择，否则 BLOCKED | `pages/topic/components/project-host/**` + `pages/topic/merchantinfo/merchantinfo.js`（`reviewCircleSupplies` 旁薄接线）；不碰 `pages/play/index.js` |
+
+## 已确认阻塞（2026-10-17 监督，不要再领取，也不要为阻塞单独开 PR）
+- BL-35 举报官方活动：举报 ACTIVITY 目标是 cms_activity.id，官方活动只有 official_event.id；需要后端新增目标类型（交 Codex）。
+- BL-44 NPC 保留天数：已在 CL4 retentionPolicy 文案里展示，无剩余工作，视为完成。
+- BL-62 我的处罚记录：处罚记录属于小程序未接入的 v1 社区发帖体系，接入前不做。
+- BL-65 官方活动集体进度：详情页已展示集体进度与参与人数，progress 只多一个完成人数，不值得单做，视为完成。
