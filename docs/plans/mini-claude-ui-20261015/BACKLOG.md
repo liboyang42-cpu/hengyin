@@ -306,7 +306,14 @@
 |---|---|---|---|
 | 187 | 商家客户定向广播 | 客户名单页已有筛选与多选，但后端定向广播 `POST /api/merchant/crm/broadcast/preview` 与 `POST /api/merchant/crm/broadcast`（`ApiMerchantCrmController.java:137/146`，`MerchantCrmBroadcastServiceImpl` 要 MARKETING_WRITE）小程序零调用。仅当 `normalizeMerchantAccess(...).canWriteMarketing` 为真时，在现有工具区（照 `goCampaigns` 那一项的写法）加一个「定向广播」入口，打开现有 `cy-sheet`：请求体字段只用 `MerchantCrmBroadcastRequest` 已有的 keyword/segment/tagId/sourceType/sourceStart/sourceEnd（与当前 `_customerQuery` 同源）+ scope（多选模式下 MEMBERS + memberIds，否则 ALL）+ content + requestId（`makeRequestId`，重试复用同一个）。先 preview，展示 `MerchantCrmBroadcastPreviewVO` 的 deliverableCount / noConsentCount / frequencyLimitedCount / merchantDailyRemaining；deliverableCount=0 或 remaining=0 时不让发。发送成功后用返回的 `MerchantCrmBroadcastVO` 的 deliveredCount/failedCount/frequencySkippedCount 如实提示，并可跳 `crm-campaigns` 查看；失败如实展示服务端文案（429/400/409），不假成功。不改名单页现有布局与样式，新可点元素带 hover-class，回调不依赖方法简写里的 `this`。单测随 PR 写 | `pages/merchant/customer/**` + 可选新 view-model；不碰后端 |
 
+## 第十九批（188）：主监督补充（2026-10-17，对照《小程序改动清单》B11 的剩余项；已过补卡前置检查：`pages/index/index.wxml` 不在 Codex 文件清单里，测试里也没有相反的决定）
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 188 | 首页动态图片与标签列表 key | `pages/index/index.wxml:220,224,263,267` 的 `feedTags` 和 `feedImages` 用了 `wx:key="*this"`。同一条动态里两张相同的图片 URL（或两个相同标签）会造成 key 重复，渲染时可能错位。改为 `wx:key="index"`（`feedImages` 已有 `wx:for-index="gi"`，用 `wx:key="gi"` 即可）。只改 key，不改结构和样式。补一条单测，断言这四处不再是 `*this`。 | 现有页内修复 |
+
 ## 交 Codex（文件归 Codex，Claude 线不做）
 - BL-185 主题发布前检查：只能接在 `pages/publish/fabu/index.js`「编辑既有主题 → 发布」之前，调 `GET /api/topic/publish-check?topicId=&scope=`（`ApiTopicStateKeyController.java:164`），有 error 就不发布，只有 warn 时提示后允许继续。
 - BL-186 章节阶段结算：`pages/play/index.wxml:1184` 已有「本章完成」半屏 `finsheet__result`。需要在 `pages/play/index.js` 里接 `GET /api/play/journey/stage-end`（`ApiPlayJourneyController.java:27`），取数与降级方式照 `utils/life-archive.js` 的 `/ending`。
 - BL-187 客户页定向广播：与 D-001/RUN-001 冲突，作废。如需恢复由用户决定。
+- 改动清单 B9 退款被拒订阅：`utils/subscribe.js` 只定义了 `refundRejected` 模板，全仓没有一处请求它。报名时已经申请了 3 个模板（`pages/activity/baoming/baoming.js:1644`，一次最多 3 个），所以应改在取消报名或退款发起处请求 `['refund','refundRejected']`。`subscribe.js` 归 Codex B01。
+- 改动清单 P1-033（已复核，确认是缺陷）：`pages/mylike/mylike.js:257-260`。取消点赞成功后用点击时的 `index` 执行 `splice`。如果两条不同记录的取消先后返回，第二条会删错行。应改为按 `id` 过滤。`mylike.js` 归 Codex B01。
