@@ -44,6 +44,7 @@ class AuditTaskCommercialReviewTest {
     private ITopicLifecycleService lifecycleService;
     private ITopicSaleFinalizationService saleFinalizationService;
     private CmsTopicMapper cmsTopicMapper;
+    private com.chengyinhub.business.service.ITopicCommercialReviewService commercialReviewService;
     private CoopInviteMapper coopInviteMapper;
     private INotifyService notifyService;
     private CoopInviteServiceImpl coopInviteService;
@@ -60,6 +61,8 @@ class AuditTaskCommercialReviewTest {
         coopInviteMapper = mock(CoopInviteMapper.class);
         notifyService = mock(INotifyService.class);
         coopInviteService = spy(new CoopInviteServiceImpl());
+        org.springframework.test.util.ReflectionTestUtils.setField(coopInviteService, "commercialReviewService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(coopInviteService, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(coopInviteService, "coopInviteMapper", coopInviteMapper);
         ReflectionTestUtils.setField(coopInviteService, "notifyService", notifyService);
@@ -74,6 +77,10 @@ class AuditTaskCommercialReviewTest {
         ReflectionTestUtils.setField(service, "topicLifecycleService", lifecycleService);
         ReflectionTestUtils.setField(service, "topicSaleFinalizationService", saleFinalizationService);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", cmsTopicMapper);
+        commercialReviewService = mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class);
+        ObjectProvider<com.chengyinhub.business.service.ITopicCommercialReviewService> commercialProvider = mock(ObjectProvider.class);
+        when(commercialProvider.getObject()).thenReturn(commercialReviewService);
+        ReflectionTestUtils.setField(service, "commercialReviewServiceProvider", commercialProvider);
         ReflectionTestUtils.setField(service, "coopInviteServiceProvider", provider);
         imService = mock(com.chengyinhub.business.service.IImService.class);
         ObjectProvider<com.chengyinhub.business.service.IImService> imProvider = mock(ObjectProvider.class);
@@ -203,10 +210,14 @@ class AuditTaskCommercialReviewTest {
         when(lifecycleService.transition(9L, TopicLifecycleState.PENDING_REVIEW, TopicLifecycleState.PRICING))
                 .thenReturn(true);
 
+        CmsTopic approvedTopic = new CmsTopic();
+        approvedTopic.setId(9L); approvedTopic.setMemberId(3L);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(approvedTopic);
         service.review(80L, 100L, review(AuditTask.STATUS_APPROVED));
 
         verify(lifecycleService).transition(9L, TopicLifecycleState.PENDING_REVIEW, TopicLifecycleState.PRICING);
         verify(cmsTopicMapper).updateTopicDraftState(9L, 0);
+        verify(commercialReviewService).submitSaleReviewIfReady(9L, 3L);
 
         AuditTask rejected = task(81L, AuditTask.STATUS_PENDING,
                 "{\"requestedTarget\":\"RECRUITING\"}");

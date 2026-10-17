@@ -29,6 +29,20 @@ public class MerchantPublishedTopicTransferGate {
         assertCompleteOrganizer(topic, lineupSource.readEffectiveLineup(topic.getId()));
     }
 
+    /** 仅缺组织方是正常等待；坏合同/错 scope 等事实错误仍拒绝自动提审。 */
+    public String pendingTransferStep(CmsTopic topic) {
+        if (!isMerchantPublishedFreeExplore(topic)) return null;
+        CoopOrderLineupSource.ReadResult lineup = lineupSource.readEffectiveLineup(topic.getId());
+        if (lineup == null || !lineup.getRepairReasons().isEmpty()) {
+            assertCompleteOrganizer(topic, lineup);
+        }
+        boolean hasOrganizer = lineup.getEntries().stream()
+                .anyMatch(entry -> entry != null && "ORGANIZER".equals(entry.getRole()));
+        if (!hasOrganizer) return "请等待俱乐部接受主题合作邀请后再完成开售审核";
+        assertCompleteOrganizer(topic, lineup);
+        return null;
+    }
+
     /** finalize 使用刚从 coop_order 重读的阵容，避免审核回执或旧 invite 状态绕过。 */
     public void assertTransferred(CmsTopic topic, CoopOrderLineupSource.ReadResult lineup) {
         if (!isMerchantPublishedFreeExplore(topic)) return;

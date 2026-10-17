@@ -4,6 +4,7 @@ const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantIdentity = require('../../../utils/merchant-identity-policy.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 
 const STEP_TITLES = ['基础信息', '经营信息', '资质信息', '预览确认'];
 const STEP_EYEBROWS = ['商家入驻', '经营信息', '资质审核', '提交前确认'];
@@ -160,10 +161,12 @@ Page({
       if (!that.isBootstrapCurrent(bootstrapEpoch, identityKey)) return;
       if (!roleSnapshot || !roleGuard.hasSnapshot()) {
         that._bootstrapChecking = false;
+        // F-W1-12:未登录(游客)不是加载失败,给可见的登录说明;已登录账号读不到角色才按加载失败留白。
+        var guest = !(Number(currentIdentityKey()) > 0);
         that.setData({
           bootstrapState: 'error',
-          bootstrapError: '暂时无法确认当前账号的申请资格，请重新检查',
-          bootstrapErrorKind: 'error'
+          bootstrapError: guest ? '登录后即可提交商家入驻申请' : '暂时无法确认当前账号的申请资格，请重新检查',
+          bootstrapErrorKind: guest ? 'no-permission' : 'error'
         });
         return;
       }
@@ -176,7 +179,14 @@ Page({
     });
   },
 
-  retryBootstrap() { this.startBootstrap(); },
+  // PR10 F-W1-12:登录引导态的按钮是「登录」(走 retryLogin 重登后重查资格),不是只会再撞一次的「重新检查」。
+  retryBootstrap() {
+    if (this.data.bootstrapErrorKind === 'no-permission') {
+      retryLogin(this, app, function () { roleGuard.clear(); this.startBootstrap(); });
+      return;
+    }
+    this.startBootstrap();
+  },
 
   isBootstrapCurrent(bootstrapEpoch, identityKey) {
     if (bootstrapEpoch !== this._bootstrapEpoch) return false;
@@ -261,9 +271,13 @@ Page({
           });
         }
       },
-      fail: function (error) {
+      fail: function (error, statusCode) {
         if (!that.isBootstrapCurrent(bootstrapEpoch, identityKey)) return;
         that._bootstrapChecking = false;
+        if (isLoginRequired(app, error, statusCode)) {
+          that.setData({ bootstrapState: 'error', bootstrapError: '登录后即可提交商家入驻申请', bootstrapErrorKind: 'no-permission' });
+          return;
+        }
         var networkFailure = isNetworkFailure(error);
         that.setData({
           bootstrapState: 'error',

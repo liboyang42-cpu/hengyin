@@ -22,7 +22,7 @@
     title="这篇玩法说明不在了" sub="它可能已被下架。去玩法列表看看其它的。"
     cta="返回玩法列表" bind:cta="onMissingBack" />
 
-  <cy-error class="if-fill" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="加载失败" sub="{{errorMsg || '请稍后重试'}}" bind:retry="retryLoad" auto-back />
+  <cy-error load-failure class="if-fill" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="加载失败" sub="{{errorMsg || '请稍后重试'}}" bind:retry="retryLoad" auto-back />
 
   <!-- 内容区域 -->
   <view wx:else class="detail-content">

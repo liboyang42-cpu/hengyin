@@ -452,6 +452,39 @@ class ActivityCancelTest {
         assertEquals(0, new BigDecimal("200.00").compareTo(app.getRefundAmount()), "退汇总 200,不是从单假现金 100");
     }
 
+    /** F-L4-02:同单从单挂着待审退款申请时,主办方取消先取代它,再整单退一次,而不是 409 回滚整场取消。 */
+    @Test
+    void pendingApplicationInMultiTicketOrderIsSupersededBeforeCancelRefund() {
+        CmsRegistration first = reg(1L, "R001", "200.00", PARENT, 0);
+        CmsRegistration sub = reg(2L, "R002", "0.00", PARENT, 0);
+        sameMemberAs(sub, first);
+        List<CmsRegistration> order = new ArrayList<>(Arrays.asList(first, sub));
+        TeamGroupServiceImpl s = service(liveActivity(), order);
+        when(regMapper.selectByParentOrderNo(PARENT)).thenReturn(order);
+        when(regMapper.selectByParentOrderNoForUpdate(PARENT, ACTIVITY_ID)).thenReturn(order);
+        when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenReturn(1);
+        RefundApplication pending = new RefundApplication();
+        pending.setId(50L);
+        pending.setSourceId(2L);
+        pending.setStatus(0);
+        pending.setRefundAmount(new BigDecimal("100.00"));
+        when(refundService.selectRegistrationHistoryForUpdate(2L)).thenReturn(Arrays.asList(pending));
+        when(refundService.supersedePendingRegistrationRefunds(org.mockito.ArgumentMatchers.eq(2L), anyString()))
+                .thenAnswer(inv -> {
+                    pending.setStatus(2);
+                    return 1;
+                });
+
+        int n = s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "下雨").getRefundedOrders();
+
+        assertEquals(1, n);
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(refundService);
+        inOrder.verify(refundService).supersedePendingRegistrationRefunds(org.mockito.ArgumentMatchers.eq(2L), anyString());
+        inOrder.verify(refundService).saveRefund(any(RefundApplication.class));
+        verify(refundPayoutService, times(1)).payoutAfterReview(999L);
+        assertEquals(0, new BigDecimal("200.00").compareTo(capturedRefundApp().getRefundAmount()));
+    }
+
     @Test
     void verifiedRegistrationIsSkippedBecauseServiceWasConsumed() {
         // 已核销 = 用户已参加、服务已交付,主办方事后取消不该把这笔也退了

@@ -65,10 +65,12 @@ class MerchantCrmCampaignServiceImplTest {
     private IMerchantCrmRecipientDeliveryService recipientDeliveryService;
     private MerchantCrmCouponGrantAdapter couponGrantAdapter;
     private MerchantCrmCampaignServiceImpl service;
+    private com.chengyinhub.business.service.IWxContentSecurityService wxSec;
 
     @BeforeEach
     void setUp() {
         access = mock(IMerchantAccessService.class);
+        wxSec = mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
         segmentMapper = mock(MerchantCrmSegmentMapper.class);
         appMapper = mock(MerchantCrmAppMapper.class);
         campaignMapper = mock(MerchantCrmCampaignMapper.class);
@@ -87,6 +89,8 @@ class MerchantCrmCampaignServiceImplTest {
         ReflectionTestUtils.setField(service, "recipientDeliveryService", recipientDeliveryService);
         ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);
         ReflectionTestUtils.setField(service, "auditMapper", auditMapper);
+        ReflectionTestUtils.setField(service, "wxSec", wxSec);
+        ReflectionTestUtils.setField(service, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         MerchantCrmCampaignClaimTransactionService claimTransactions =
                 new MerchantCrmCampaignClaimTransactionService();
         ReflectionTestUtils.setField(claimTransactions, "campaignMapper", campaignMapper);
@@ -96,6 +100,27 @@ class MerchantCrmCampaignServiceImplTest {
         when(access.require(PRINCIPAL, MerchantPermission.MARKETING_WRITE)).thenReturn(context());
         when(access.require(PRINCIPAL, MerchantPermission.MARKETING_READ)).thenReturn(context());
         when(access.require(PRINCIPAL, MerchantPermission.COUPON_MANAGE)).thenReturn(context());
+    }
+
+    @Test
+    void duplicateCreateReadsCommittedWinnerBeyondTransactionSnapshot() {
+        MerchantCrmCampaignRequest request = request();
+        MerchantCrmCampaign winner = campaign(MerchantCrmCampaign.READY);
+        winner.setActorMemberId(PRINCIPAL);
+        winner.setTitle(request.getTitle());
+        winner.setContent(request.getContent());
+        when(segmentMapper.selectOwnedSegmentById(MERCHANT, 5L)).thenReturn(segment(MERCHANT));
+        when(merchantMapper.selectMmsMerchantById(MERCHANT)).thenReturn(merchant());
+        when(campaignMapper.insertCampaign(any()))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("request already committed"));
+        when(campaignMapper.selectByRequestIdForShare(MERCHANT, request.getRequestId())).thenReturn(winner);
+
+        assertEquals(8L, service.create(PRINCIPAL, request).getId());
+        verify(campaignMapper, never()).insertRecipient(any());
+        verify(auditMapper, never()).insertBusinessAuditEvent(any());
+        winner.setContent("不同的触达内容");
+        assertEquals(409, assertThrows(ServiceException.class,
+                () -> service.create(PRINCIPAL, request)).getCode());
     }
 
     @Test
@@ -252,6 +277,19 @@ class MerchantCrmCampaignServiceImplTest {
                 () -> service.create(PRINCIPAL, request()));
 
         assertEquals(409, error.getCode());
+    }
+
+    @Test
+    void flaggedOrUncheckableCampaignTextIsRejectedBeforeAnyCampaignWrite() {
+        when(segmentMapper.selectOwnedSegmentById(MERCHANT, 5L)).thenReturn(segment(MERCHANT));
+        when(wxSec.checkText(anyString(), any())).thenReturn("内容含违规信息");
+
+        assertEquals(400, assertThrows(ServiceException.class, () -> service.create(PRINCIPAL, request())).getCode());
+        verify(campaignMapper, never()).insertCampaign(any());
+        when(wxSec.checkText(anyString(), any())).thenReturn(
+                com.chengyinhub.business.service.IWxContentSecurityService.MSG_BUSY);
+        assertEquals(503, assertThrows(ServiceException.class, () -> service.create(PRINCIPAL, request())).getCode());
+        verify(campaignMapper, never()).insertCampaign(any());
     }
 
     @Test

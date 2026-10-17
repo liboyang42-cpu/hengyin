@@ -20,9 +20,12 @@ function loadPage(relativePath, wx, transform = source => source) {
     },
     wx,
     require(request) {
+      if (request.endsWith('/theme.js')) return { applyTheme: theme => { if (wx.onTheme) wx.onTheme(theme) } }
       if (request.includes('motion-preference')) return { readReducedMotion: () => false }
       if (request.includes('play-visual-tokens')) return { TOPIC_EDITOR_SWITCH_COLOR: '#000000' }
       if (request.includes('advanced-game-config')) return { defaultConfig: () => ({}) }
+      if (request.includes('node-game-catalog')) return require('../../pages/publish/utils/publish/node-game-catalog.js')
+      if (request.includes('template-tools')) return require('../../pages/publish/utils/publish/template-tools.js')
       if (request.includes('response-shape')) return { isRecordList: Array.isArray }
       if (request.includes('safe-user-message')) return { safeUserMessage: () => '' }
       if (request.includes('merchant-access-policy')) return require('../../utils/merchant-access-policy.js')
@@ -151,13 +154,13 @@ test('预览层内保存成功的“返回上一页”必须离开编辑器，�
   assert.equal(result.events[0].type, 'navigateBack')
   assert.equal(result.events[0].options.delta, 1)
   const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.match(source, /setTimeout\(function \(\) \{ that\.exitPage\(\); \}, 600\)/)
+  assert.match(source, /setTimeout\(function \(\) \{ if \(current\(\)\) that\.exitPage\(\); \}, 600\)/)
 })
 
 test('负控：成功离场误复用 goBack 时，previewVisible 会把用户留在编辑器', () => {
   const result = runEditorSuccessBack(source => source
     .replace("if (flow[key] === 'back') this.exitPage();", "if (flow[key] === 'back') this.goBack();")
-    .replace('setTimeout(function () { that.exitPage(); }, 600);', 'setTimeout(function () { that.goBack(); }, 600);'))
+    .replace('setTimeout(function () { if (current()) that.exitPage(); }, 600);', 'setTimeout(function () { if (current()) that.goBack(); }, 600);'))
   assert.equal(result.events.length, 0)
   assert.equal(result.page.data.previewVisible, false)
 })
@@ -183,8 +186,8 @@ test('负控：成功离场退回 redirectTo 时契约必须判红', () => {
   const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
   // ⚠️ 必须 replaceAll:本页有两条去模板库的离场路径,只换第一处会留下另一处仍是
   // reLaunch —— 那样这条负控就永远红不了(2026-09-06 实际踩到)。
-  const mutated = source.replaceAll("wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' })",
-    "wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' })")
+  const mutated = source.replaceAll("wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate'",
+    "wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate'")
   assert.notEqual(mutated, source, '负控必须真实改动成功离场 API')
   assert.equal(hasCleanTemplateLibraryExit(mutated), false)
 })
@@ -197,4 +200,60 @@ test('负控：清栈页丢失主页兜底时必须判红', () => {
   ))
   page.onBack()
   assert.notDeepEqual(events, [{ type: 'switchTab', options: { url: '/pages/template/index' } }])
+})
+
+test('命名页进入编辑器后返回可再次确认，在途连点仍只导航一次', () => {
+  const navigations = []
+  const page = loadPage('pages/publish/templateadd/templateadd.js', {
+    navigateTo(options) { navigations.push(options) },
+  })
+  page.onInputChange({ detail: { value: '返回后继续创建' } })
+  page.onCreateTemplate()
+  page.onCreateTemplate()
+  assert.equal(navigations.length, 1)
+  assert.equal(page.data.navigating, true)
+  navigations[0].success()
+  page.onShow()
+  assert.equal(page.data.navigating, false, '返回命名页不能一直转圈')
+  assert.equal(page.data.templateName, '返回后继续创建')
+  page.onCreateTemplate()
+  assert.equal(navigations.length, 2)
+})
+
+
+test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关闭后恢复', () => {
+  const themes = []
+  const wx = { onTheme(theme) { themes.push(theme) } }
+  for (const file of ['pages/publish/template-intro/index.js', 'pages/publish/templateadd/templateadd.js']) {
+    loadPage(file, wx).onShow()
+    assert.equal(themes.at(-1), 'light')
+  }
+  const page = loadPage('pages/publish/temp/index.js', wx)
+  page.onShow()
+  assert.equal(themes.at(-1), 'light')
+  page.data.previewVisible = true
+  page.data.pvKit = { mode: 'CARD' }
+  page.data.pvStepKey = 'challenge'
+  page.onShow()
+  assert.equal(themes.at(-1), 'dark')
+  page.destroyPreviewAudio = () => {}
+  page.goBack()
+  assert.equal(page.data.previewVisible, false)
+  assert.equal(themes.at(-1), 'light')
+})
+
+test('命名成功dirty只更新内部状态，失败仍保留未保存输入', () => {
+  const nav = []
+  const page = loadPage('pages/publish/templateadd/templateadd.js', {navigateTo(o){nav.push(o)}})
+  const patches = [], original = page.setData
+  page.setData = function(p) { patches.push(p); return original.call(this,p) }
+  page.onInputChange({detail:{value:'新玩法'}})
+  page.onCreateTemplate()
+  nav[0].fail()
+  assert.equal(page.data.dirty,true)
+  page.onCreateTemplate()
+  nav[1].success()
+  assert.equal(page.data.dirty,false)
+  assert.equal(page.data.navigating,false)
+  assert.equal(patches.some(p => Object.hasOwn(p,'dirty')),false)
 })

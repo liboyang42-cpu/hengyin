@@ -17,12 +17,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
              user_type 与 password/phone/openId 同属匿名响应禁止字段(ApiUserPublicInfoTest)。 -->
         <result property="identityKind" column="identity_kind"/>
         <result property="createTime" column="create_time"/>
+        <result property="friendNum" column="friend_num"/>
     </resultMap>
 
     <sql id="publicMemberColumns">
         m.id, m.nickname, m.avatar, coalesce(pg.level, 1) as level_id, m.introduction,
         m.case_pics, m.case_introducton, m.tag_ids,
-        CASE WHEN m.user_type = 2 THEN 'BIZ' ELSE NULL END AS identity_kind
+        CASE WHEN m.role = 'merchant' THEN 'BIZ' ELSE NULL END AS identity_kind
     </sql>
 
     <select id="selectPublicMemberList" resultMap="PublicMemberResult">
@@ -32,7 +33,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         WHERE m.status = 1
           AND m.del_flag = 0
         <if test="userType != null">
-          AND m.user_type = #{userType}
+          <choose>
+            <when test="userType == 2">AND m.role = 'merchant'</when>
+            <otherwise>AND m.role IN ('player', 'club')</otherwise>
+          </choose>
         </if>
         <if test="keyword != null and keyword != ''">
           AND m.nickname LIKE CONCAT('%', #{keyword}, '%')
@@ -51,7 +55,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectPublicMemberById" resultMap="PublicMemberResult">
-        SELECT <include refid="publicMemberColumns"/>
+        SELECT <include refid="publicMemberColumns"/>,
+            (SELECT COUNT(DISTINCT f.follow_member_id)
+               FROM ums_member_follow f
+               JOIN ums_member peer ON peer.id = f.follow_member_id AND peer.del_flag = 0 AND peer.status = 1
+              WHERE f.member_id = m.id AND f.follow_member_id &lt;&gt; m.id
+                AND EXISTS (SELECT 1 FROM ums_member_follow back
+                            WHERE back.member_id = f.follow_member_id AND back.follow_member_id = m.id)) AS friend_num
         FROM ums_member m
         left join player_growth pg on pg.member_id = m.id
         WHERE m.id = #{memberId}

@@ -5,12 +5,14 @@ import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.vo.DeregistrationStatusVO;
 import com.chengyinhub.common.config.ComplianceProperties;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.ip.TrustedProxyIpResolver;
 import com.chengyinhub.framework.web.service.SmsVerificationService;
+import com.chengyinhub.framework.web.service.WechatReconfirmationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /** 账号注销：预检、申请、撤销和状态查询均只作用于当前登录用户。 */
 @RestController
@@ -33,6 +35,8 @@ public class ApiAccountDeregistrationController extends BaseController {
     private IUmsMemberService umsMemberService;
     @Autowired
     private SmsVerificationService smsVerificationService;
+    @Autowired
+    private WechatReconfirmationService wechatReconfirmationService;
     @Autowired
     private IConsentRecordService consentRecordService;
     @Autowired
@@ -48,7 +52,7 @@ public class ApiAccountDeregistrationController extends BaseController {
 
     @Operation(summary = "提交账号注销申请")
     @PostMapping("/apply")
-    public AjaxResult apply(String smscode, String requestId, HttpServletRequest request) {
+    public AjaxResult apply(String smscode, String wxcode, String requestId, HttpServletRequest request) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         ConsentRecord latestConsent = consentRecordService.latest(memberId,
@@ -59,17 +63,29 @@ public class ApiAccountDeregistrationController extends BaseController {
             return error("请先同意账号注销须知");
         }
         UmsMember member = umsMemberService.selectUmsMemberById(memberId);
-        if (member == null || StringUtils.isEmpty(member.getPhone())) {
-            return error("请先绑定手机号后再申请注销");
-        }
+        if (member == null) return error("账号不存在");
         if (StringUtils.isEmpty(requestId) || requestId.length() > 64) {
             return error("请求标识不合法");
         }
-        if (!smsVerificationService.verify(
-                member.getPhone(), smscode, TrustedProxyIpResolver.resolve(request))) {
-            return error("验证码输入有误");
+        // F-R2S-07:首次提交已生效但回包丢失时,验证码已被原子消费;重试先回放已存在的 PENDING,
+        // 不再要求重新验证(只返回本人状态,不产生新的写入)。
+        DeregistrationStatusVO existing = deregistrationService.status(memberId);
+        if (existing != null && "PENDING".equals(existing.getStatus())) {
+            return success(existing);
+        }
+        String trustedIp = TrustedProxyIpResolver.resolve(request);
+        if (member.getPhone() != null && !member.getPhone().trim().isEmpty()) {
+            // A supplied WeChat code cannot bypass the bound-phone SMS check.
+            if (!smsVerificationService.verify(member.getPhone(), smscode, trustedIp)) return error("验证码输入有误");
+        } else if (!wechatReconfirmationService.verify(memberId, member.getWxOpenId(), wxcode, trustedIp)) {
+            return error("微信身份确认失败，请重新确认本人");
         }
         return success(deregistrationService.apply(memberId));
+    }
+
+    /** Existing Java callers use the SMS-only signature; only the four-argument method is HTTP mapped. */
+    public AjaxResult apply(String smscode, String requestId, HttpServletRequest request) {
+        return apply(smscode, null, requestId, request);
     }
 
     @Operation(summary = "撤销冷静期内的注销申请")

@@ -3,7 +3,9 @@
 const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
+const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
+const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 // H09 我的订单(方案 §5.2)。行卡沿用 D04 既有范式(订单号 + 状态 chip + 时间 + 地点 + 实付款 + 双动作)。
 //
 // ⚠️ 这里是订单列表的**唯一实现**。subpackageMember/order/order 已退化成薄壳,渲染的就是本组件 ——
@@ -12,8 +14,8 @@ const cancellationFeedback = require('../../../../utils/cancellation-feedback.js
 // 页面壳与场景弹窗的差别只有一处:打开订单详情时往哪走(见 openDetail 的 open 事件)。
 const app = getApp()
 const policy = require('../../../../utils/identity/identity-policy.js')
-const { summarizeOrderState, formatRefundDeadline } = require('../../../../utils/order-status.js')
-const { resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js')
+const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js')
+const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../../utils/checkout/checkout-workflow.js')
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js')
 
@@ -93,6 +95,8 @@ Component({
     isPaying: false,
     loading: false,
     errorMsg: '',
+    orderAuthRequired: false,
+    orderAccessDenied: false,
     canDiscoverRoutes: true,
     cancellingId: 0,
     verifyingPayment: false,
@@ -104,17 +108,21 @@ Component({
       this.getList()
     },
     detached() {
+      this._detached = true
+      this._listRequestId = (this._listRequestId || 0) + 1
       if (this._workflow) this._workflow.destroy()
     },
   },
   pageLifetimes: {
     // 首次 attached/show single-flight；支付/退款回来后的后续 show 从第一页替换刷新。
     show() {
+      this._hidden = false
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
       // 返回页刷新保留已确认列表；失败时给非阻断提示，不把订单替换成整屏错误。
       this.setData({ page_no: 1, nodata: false, errorMsg: '' })
       this.getList(true, true)
     },
+    hide() { this._hidden = true },
   },
   methods: {
     // 页面壳的 onReachBottom 转发进来。注意:后端 list 返回全量,hasMore 恒 false,
@@ -128,6 +136,13 @@ Component({
     getList(dedupe, replace) {
       const that = this
       const memberId = app.getUserID && app.getUserID()
+      if (that._detached) return
+      if (!memberId) {
+        that._listRequestId = (that._listRequestId || 0) + 1
+        that._listFetchInFlight = 0
+        that.setData({ list: [], hasOrders: false, loading: false, orderAuthRequired: true, orderAccessDenied: false, errorMsg: '登录后可查看你的路线订单' })
+        return
+      }
       if (dedupe && that._listFetchInFlight && that._listMemberId === memberId) return
       if (that._listMemberId !== undefined && that._listMemberId !== memberId) {
         that.setData({ list: [], hasOrders: false, page_no: 1 })
@@ -137,11 +152,21 @@ Component({
       that._listRequestId = requestId
       that._listFetchInFlight = requestId
       const activeTab = that.data.activeTab
-      const isCurrent = () => requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
+      const isCurrent = () => !that._detached && requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
       const settleFetch = function () {
         if (that._listFetchInFlight === requestId) that._listFetchInFlight = 0
       }
-      that.setData({ loading: true, errorMsg: '' })
+      that.setData({ loading: true, errorMsg: '', orderAuthRequired: false, orderAccessDenied: false })
+      const recover = (res, statusCode) => !that._detached && requestId === that._listRequestId && recoverReadSession(that, app, res,
+        function (anonymous) { this._listRequestId++; this._listFetchInFlight = 0; this._listMemberId = undefined; this.setData({ list: [], hasOrders: false, page_no: 1, loading: false, orderAuthRequired: anonymous, orderAccessDenied: false, errorMsg: anonymous ? '登录后可查看你的路线订单' : '' }); },
+        () => that.getList(false, true), statusCode)
+      const denied = (res, statusCode) => {
+        const code = Number(statusCode || res && (res.code || res.statusCode))
+        if (!isCurrent() || (code !== 401 && code !== 403)) return false
+        that.setData({ list: [], hasOrders: false, orderAuthRequired: code === 401, orderAccessDenied: code === 403,
+          errorMsg: code === 401 ? '登录后可查看你的路线订单' : '当前账号无法查看订单' })
+        return true
+      }
       app.sendRequest({
         hideLoading: true,
         url: '/api/registration/list',
@@ -156,6 +181,7 @@ Component({
         success(res) {
           if (!isCurrent()) return
           settleFetch()
+          if (denied(res)) return
           if (res && res.code == '200') {
             const rows = res.data && res.data.rows
             if (!Array.isArray(rows) || rows.some((item) => !item || typeof item !== 'object' || Array.isArray(item))) {
@@ -179,6 +205,8 @@ Component({
               item.refundStateText = summary.refundText
               // RUN-43:实付款只写现金(微信实付),积分抵扣不计入;存量无拆分行按回落链兜底
               item.actualPaidAmount = resolveActualPaidAmount(item)
+              item.isFreeOrder = isFreeOrder(item)
+              item.canRequestRefund = canRequestOrderRefund(item)
               return item
             })
             const list = activeTab === '0'
@@ -195,9 +223,11 @@ Component({
             that.setData({ errorMsg: app.getRequestErrorMessage(res, '订单加载失败') })
           }
         },
-        fail(res) {
-          if (!isCurrent()) return
+        successStatusAbnormal(res, statusCode) { if (!recover(res, statusCode) && isCurrent()) { settleFetch(); if (!denied(res, statusCode)) that.setData({ errorMsg: app.getRequestErrorMessage(res, '订单加载失败') }); } },
+        fail(res, statusCode) {
+          if (recover(res, statusCode) || !isCurrent()) return
           settleFetch()
+          if (denied(res, statusCode)) return
           that.setData({ errorMsg: app.getRequestErrorMessage(res, '订单加载失败') })
         },
         complete() {
@@ -214,6 +244,17 @@ Component({
     },
 
     retryList() {
+      if (this.data.orderAuthRequired) {
+        if (this._orderLoginPending) return
+        this._orderLoginPending = true
+        const login = app.getUserID && app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+          : typeof app.firstLogin === 'function' ? app.firstLogin() : null
+        Promise.resolve(login).then(result => {
+          this._orderLoginPending = false
+          if (!this._detached && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.getList(false, true)
+        }).catch(() => { this._orderLoginPending = false })
+        return
+      }
       this.setData({ page_no: 1 })
       this.getList(false, true)
     },
@@ -231,6 +272,7 @@ Component({
 
     cancelOrder(e) {
       const that = this
+      const memberId = app.getUserID && app.getUserID()
       const index = e.currentTarget.dataset.index
       const id = e.currentTarget.dataset.id
       const status = Number(e.currentTarget.dataset.status || 0)
@@ -241,11 +283,11 @@ Component({
       }
       that._cancelPromptOpen = true
       modal.show({
-        dangerKey: status === 2 ? 'order.cancel-refund' : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
+        dangerKey: status === 2 ? (isFreeOrder(that.data.list[index]) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
         dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
         success(res) {
           that._cancelPromptOpen = false
-          if (res.confirm) that.cancelOrderRequest(id, index, status)
+          if (res.confirm && memberId === (app.getUserID && app.getUserID())) that.cancelOrderRequest(id, index, status)
         },
         fail() { that._cancelPromptOpen = false },
         complete() { that._cancelPromptOpen = false },
@@ -254,6 +296,7 @@ Component({
 
     cancelOrderRequest(id, index, status) {
       const that = this
+      const memberId = app.getUserID && app.getUserID()
       if (!id || that._cancelRequestInFlight || that.data.cancellingId) return
       that._cancelRequestInFlight = true
       cyLoading.show('处理中...')
@@ -265,6 +308,7 @@ Component({
         data: { id },
         success(res) {
           cyLoading.hide()
+          if (memberId !== (app.getUserID && app.getUserID())) return
           if (res.code == '200') {
             toast.success(Number(status) === 2 ? cancellationFeedback(res) : '已取消', { duration: 5000 })
             // 退款的实际打款状态由 refund_application 回传,刷新而不是前端猜成“已退款”。
@@ -274,8 +318,15 @@ Component({
             toast(app.getRequestErrorMessage(res, '处理失败，请联系客服'), { duration: 2000 })
           }
         },
-        fail() {
+        fail(resp, statusCode) {
           cyLoading.hide()
+          if (memberId !== (app.getUserID && app.getUserID())) return
+          if (isUnknownHttpStatus(statusCode)) {
+            toast('取消结果暂未确认，正在刷新订单')
+            that.setData({ page_no: 1 })
+            that.getList(false, true)
+            return
+          }
           toast('网络错误，请重试', { duration: 2000 })
         },
         complete() {

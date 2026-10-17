@@ -8,6 +8,8 @@
   <cy-nav-bar />
   <cy-page-title title="发起协作邀请" safe-top="{{false}}" />
 
+  <cy-empty wx:if="{{topicsState === 'login' || targetsState === 'login'}}" title="登录后发起协作邀请" cta="去登录" bind:cta="onLogin" />
+  <block wx:else>
   <view class="send-receipt" wx:if="{{sendReceipt}}" aria-role="status" aria-live="polite">{{sendReceipt}}</view>
 
   <view class="card">
@@ -23,7 +25,7 @@
     </block>
     <cy-skeleton wx:elif="{{topicsState === 'loading'}}" type="list" count="1" />
     <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前账号不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
-    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题没加载出来" sub="请重试后再选择关联主题" bind:retry="retryTopics" />
+    <cy-error load-failure class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题没加载出来" sub="请重试后再选择关联主题" bind:retry="retryTopics" />
     <cy-dropdown merchant="{{true}}" wx:elif="{{myTopics.length}}" mode="selector" range="{{myTopics}}" range-key="label" value="{{topicIndex}}" bind:change="onTopicChange" aria-label="选择关联主题">
       <view class="picker-row"><text class="{{topicId ? '' : 'placeholder'}}">{{topicId ? (topicPick || topicName) : '选择我发布的主题'}}</text><cy-icon class="picker-arrow" name="arrow-right" size="28" /></view>
     </cy-dropdown>
@@ -61,7 +63,7 @@
     </view>
     <cy-skeleton wx:if="{{targetsState === 'loading'}}" type="list" count="3" />
     <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号不能读取合作对象" sub="{{targetsErrorText}}" bind:retry="retryTargets" />
-    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象没加载出来" sub="请稍后重试" bind:retry="retryTargets" />
+    <cy-error load-failure class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象没加载出来" sub="请稍后重试" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">
       <view class="target target--locked">
@@ -123,6 +125,7 @@
       <view class="iv-send {{submitting ? 'disabled' : ''}}" bindtap="confirmInvite" aria-role="button" aria-label="确认发送协作邀约" aria-disabled="{{submitting}}" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{submitting ? '发送中…' : '发送邀约(' + selected.length + ')'}}</view>
     </view>
   </cy-sheet>
+  </block>
 </view>
 
 <!-- 协作邀请结果面板。失败时不关邀约弹层:那里已经是「待重试 N 个对象」,

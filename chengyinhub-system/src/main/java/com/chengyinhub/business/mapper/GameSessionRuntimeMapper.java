@@ -18,6 +18,7 @@ import java.util.Map;
 
 public interface GameSessionRuntimeMapper {
     GameSession selectSessionByActivity(Long activityId);
+    List<Long> selectActiveTeamIds(Long activityId);
     GameSession selectSessionByActivityForUpdate(Long activityId);
     int readyRouteCheckpoints(@Param("sessionId") Long sessionId, @Param("startAt") Date startAt,
                               @Param("endAt") Date endAt, @Param("now") Date now);
@@ -78,6 +79,8 @@ public interface GameSessionRuntimeMapper {
     List<Map<String, Object>> selectClubStationRecaps(Long sessionId);
     List<Map<String, Object>> selectClubRoleCollaboration(@Param("sessionId") Long sessionId,
                                                           @Param("activityId") Long activityId);
+
+    List<GameStoryState> selectStoryStates(Long sessionId);
 
     GameStoryState selectStoryState(@Param("sessionId") Long sessionId, @Param("ownerType") String ownerType,
                                     @Param("ownerId") Long ownerId);

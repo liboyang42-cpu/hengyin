@@ -10,6 +10,7 @@ public class RoamSession {
     private String finishResultJson;
     private Date startedAt;
     private Date finishedAt;
+    private Date locationClearedAt;
     private Integer distanceM;
     private Integer tilesRevealed;
     private Integer poisFound;
@@ -27,6 +28,7 @@ public class RoamSession {
     private Date lastReportAt;
     /** 客户端算的本次探索度 0-99。服务端只存不算 —— 它是本机 20×20 格的口径,后端没有等价物。 */
     private Integer explorePct;
+    private Boolean presenceVisible;
     /** 0 进行中 1 已结算 */
     private Integer status;
     private Date createTime;
@@ -43,6 +45,8 @@ public class RoamSession {
     public void setStartedAt(Date startedAt) { this.startedAt = startedAt; }
     public Date getFinishedAt() { return finishedAt; }
     public void setFinishedAt(Date finishedAt) { this.finishedAt = finishedAt; }
+    public Date getLocationClearedAt() { return locationClearedAt; }
+    public void setLocationClearedAt(Date value) { locationClearedAt = value; }
     public Integer getDistanceM() { return distanceM; }
     public void setDistanceM(Integer distanceM) { this.distanceM = distanceM; }
     public Integer getTilesRevealed() { return tilesRevealed; }
@@ -65,6 +69,9 @@ public class RoamSession {
     public void setLastReportAt(Date lastReportAt) { this.lastReportAt = lastReportAt; }
     public Integer getExplorePct() { return explorePct; }
     public void setExplorePct(Integer explorePct) { this.explorePct = explorePct; }
+
+    public Boolean getPresenceVisible() { return presenceVisible; }
+    public void setPresenceVisible(Boolean presenceVisible) { this.presenceVisible = presenceVisible; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Date getCreateTime() { return createTime; }

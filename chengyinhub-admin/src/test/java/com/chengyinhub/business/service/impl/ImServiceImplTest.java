@@ -246,6 +246,48 @@ class ImServiceImplTest {
     }
 
     @Test
+    void userCannotSendToSystemConversation() {
+        ImServiceImpl service = service();
+        ImConversation system = new ImConversation();
+        system.setId(100L);
+        system.setType(ImConversation.TYPE_SYSTEM);
+        system.setStatus(0);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(system);
+
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.send(1L, 100L, null, ImMessage.MSG_TEXT, "伪造系统消息", null));
+
+        assertEquals("系统会话不允许用户发送消息", error.getMessage());
+        verify(messageMapper, never()).insertImMessage(any());
+        verify(conversationMapper, never()).updateLastMessage(anyLong(), anyInt(), any(), any());
+        verify(memberMapper, never()).addUnread(anyLong(), anyLong(), anyInt());
+    }
+
+    @Test
+    void internalSystemSendStillWritesSystemMessage() {
+        ImServiceImpl service = service();
+        ImConversation system = new ImConversation();
+        system.setId(100L);
+        system.setType(ImConversation.TYPE_SYSTEM);
+        system.setStatus(0);
+        when(conversationMapper.selectByTypeAndBizKey(ImConversation.TYPE_SYSTEM, "sys_2"))
+                .thenReturn(system);
+
+        service.sendSystem(2L, ImMessage.MSG_CARD, "系统通知", "{\"cardType\":\"notice\"}");
+
+        ArgumentCaptor<ImMessage> message = forClass(ImMessage.class);
+        verify(messageMapper).insertImMessage(message.capture());
+        assertEquals(0L, message.getValue().getSenderId());
+        assertEquals(2L, message.getValue().getReceiverId());
+        assertEquals(100L, message.getValue().getConversationId());
+        verify(conversationMapper).updateLastMessage(eq(100L), eq(ImMessage.MSG_CARD),
+                eq("系统通知"), any());
+        verify(memberMapper).addUnread(100L, 2L, 1);
+    }
+
+    @Test
     void closedGroupCannotAcceptLateMessageOrResurrectUnread() {
         ImServiceImpl service = service();
         ImConversation closed = groupConv(100L, "club_42");
@@ -344,6 +386,7 @@ class ImServiceImplTest {
                 () -> service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hi", null));
 
         assertEquals("已退出俱乐部，不能继续发送群消息", error.getMessage());
+        assertEquals(403, ((com.chengyinhub.common.exception.ServiceException) error).getCode());
         verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
     }
 
@@ -364,7 +407,7 @@ class ImServiceImplTest {
                 () -> service.listMessages(1L, 100L, null, 20));
 
         assertEquals("已退出俱乐部，无权查看群消息", error.getMessage());
-        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+        verify(messageMapper, never()).selectVisiblePage(anyLong(), anyLong(), any(), anyInt());
     }
 
     @Test
@@ -894,7 +937,7 @@ class ImServiceImplTest {
         when(conversationMapper.selectImConversationById(100L)).thenReturn(single);
         when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
         when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
-        when(messageMapper.selectPage(anyLong(), any(), anyInt())).thenReturn(Collections.emptyList());
+        when(messageMapper.selectVisiblePage(anyLong(), anyLong(), any(), anyInt())).thenReturn(Collections.emptyList());
 
         when(blockMapper.existsBetween(1L, 2L)).thenReturn(1);
         when(blockMapper.selectOne(1L, 2L)).thenReturn(new ImBlock());
@@ -910,4 +953,95 @@ class ImServiceImplTest {
         when(blockMapper.existsBetween(1L, 2L)).thenReturn(0);
         assertEquals(Boolean.FALSE, service.listMessages(1L, 100L, null, 20).get("blocked"));
     }
+    private ImServiceImpl messagePaginationService() {
+        ImServiceImpl service = service();
+        ImConversation conversation = new ImConversation();
+        conversation.setId(100L);
+        conversation.setType(1);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversation);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+        return service;
+    }
+
+    private List<ImMessage> descendingMessages(int count, long newestId) {
+        List<ImMessage> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < count; i++) rows.add(message(newestId - i, 100L, 0L));
+        return rows;
+    }
+
+    @Test
+    void messagePaginationExactlyThirtyDoesNotInventAnOlderPage() {
+        ImServiceImpl service = messagePaginationService();
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(0L), anyInt())).thenReturn(descendingMessages(30, 130L));
+        Map<String, Object> result = service.listMessages(1L, 100L, 0L, 30);
+        assertEquals(Boolean.FALSE, result.get("hasMore"));
+        List<ImMessage> rows = (List<ImMessage>) result.get("list");
+        assertEquals(30, rows.size());
+        assertEquals(101L, rows.get(0).getId());
+        assertEquals(130L, rows.get(29).getId());
+        assertEquals(101L, result.get("nextCursor"));
+        verify(messageMapper).selectVisiblePage(100L, 1L, 0L, 31);
+    }
+
+    @Test
+    void messagePaginationThirtyOneKeepsProbeOutOfRowsAndCursor() {
+        ImServiceImpl service = messagePaginationService();
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(0L), anyInt())).thenReturn(descendingMessages(31, 130L));
+        Map<String, Object> result = service.listMessages(1L, 100L, 0L, 30);
+        assertEquals(Boolean.TRUE, result.get("hasMore"));
+        List<ImMessage> rows = (List<ImMessage>) result.get("list");
+        assertEquals(30, rows.size());
+        assertEquals(101L, rows.get(0).getId());
+        assertEquals(130L, rows.get(29).getId());
+        assertEquals(101L, result.get("nextCursor"));
+    }
+
+    @Test
+    void messagePaginationEmptyPageHasNoCursorOrMore() {
+        ImServiceImpl service = messagePaginationService();
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(0L), anyInt())).thenReturn(Collections.emptyList());
+        Map<String, Object> result = service.listMessages(1L, 100L, 0L, 30);
+        assertEquals(Boolean.FALSE, result.get("hasMore"));
+        assertEquals(null, result.get("nextCursor"));
+        assertTrue(((List<?>) result.get("list")).isEmpty());
+    }
+
+    @Test
+    void messagePaginationNextPageUsesLastRetainedCursorWithoutRepeatingProbe() {
+        ImServiceImpl service = messagePaginationService();
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(0L), anyInt())).thenReturn(descendingMessages(31, 130L));
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(101L), anyInt())).thenReturn(Collections.singletonList(message(100L, 100L, 0L)));
+        Map<String, Object> first = service.listMessages(1L, 100L, 0L, 30);
+        Map<String, Object> second = service.listMessages(1L, 100L, (Long) first.get("nextCursor"), 30);
+        List<ImMessage> rows = (List<ImMessage>) second.get("list");
+        assertEquals(1, rows.size());
+        assertEquals(100L, rows.get(0).getId());
+        assertEquals(Boolean.FALSE, second.get("hasMore"));
+        assertEquals(100L, second.get("nextCursor"));
+        verify(messageMapper).selectVisiblePage(100L, 1L, 101L, 31);
+    }
+
+    @Test
+    void messagePaginationDeletedMessagesKeepExistingMapperVisibilityPredicate() throws Exception {
+        try (java.io.InputStream input = getClass().getClassLoader().getResourceAsStream("mapper/business/ImMessageMapper.xml")) {
+            assertTrue(input != null);
+            java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = input.read(buffer)) >= 0) output.write(buffer, 0, length);
+            String xml = new String(output.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+            String selectPage = xml.substring(xml.indexOf("<select id=\"selectPage\""), xml.indexOf("</select>", xml.indexOf("<select id=\"selectPage\"")));
+            assertTrue(selectPage.contains("status != 2"));
+            assertTrue(selectPage.contains("id &lt; #{cursorId}"));
+            assertTrue(selectPage.contains("order by id desc"));
+        }
+        ImServiceImpl service = messagePaginationService();
+        when(messageMapper.selectVisiblePage(eq(100L), eq(1L), eq(101L), anyInt())).thenReturn(descendingMessages(29, 99L));
+        Map<String, Object> result = service.listMessages(1L, 100L, 101L, 30);
+        assertEquals(Boolean.FALSE, result.get("hasMore"));
+        assertEquals(71L, result.get("nextCursor"));
+        assertEquals(29, ((List<?>) result.get("list")).size());
+    }
+
 }

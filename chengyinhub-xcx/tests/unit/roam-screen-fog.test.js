@@ -27,7 +27,7 @@ function assertScreenFogContract({ roamWxml, roamWxss, roamJs, mapWxml }) {
     '只有当前世代 image load 成功后才能把遮罩标为 ready')
   const errorMethod = /onFogScreenError\(e\) \{([\s\S]*?)\n  \},\n\n  retryScreenFog/.exec(roamJs)
   assert.ok(errorMethod, '必须保留可审计的 image error 处理器')
-  assert.match(errorMethod[1], /fogScreenGuard: true, fogScreenError: true/,
+  assert.match(errorMethod[1], /fogScreenGuard: true/,
     '当前 image 失败必须 fail-closed 为全黑保护层')
   assert.doesNotMatch(errorMethod[1], /_fogFallbackToPoly\(/,
     'screen image 失败不能回到会浮出原生文字的 map 内 polygon')
@@ -48,7 +48,7 @@ function assertScreenFogContract({ roamWxml, roamWxss, roamJs, mapWxml }) {
     '首张当前世代 image load 必须是漫游计时与持续定位的启动闸')
   assert.match(roamJs, /_completeRoamAfterFogLoad\(generation\)[\s\S]*?fogScreenReady[\s\S]*?_startClock\(\)[\s\S]*?_startReal\(true\)/,
     '只有遮罩 ready 后才允许真正激活漫游')
-  assert.match(roamJs, /this\._fogMode = 'blocked';[\s\S]*?fogScreenGuard: true, fogScreenError: true[\s\S]*?_finishFogSetup\(false, generation\)/,
+  assert.match(roamJs, /this\._fogMode = 'blocked';[\s\S]*?fogScreenGuard: true[\s\S]*?_finishFogSetup\(false, generation\)/,
     'screen 初始化失败必须显式 blocked，不能假装旧 map 内雾可用')
   assert.match(roamJs, /onRegionChange\(e\)[\s\S]*?phase === 'begin'[\s\S]*?_guardScreenViewportChange\(\)[\s\S]*?phase !== 'end'[\s\S]*?_guardScreenViewportChange\(\);[\s\S]*?_scheduleScreenFogRender\(\)/,
     '视野 begin 到新 image load 之间必须先全黑，不能让旧圆洞错位漏字')

@@ -73,7 +73,7 @@ test('A14：俱乐部目录按用户备注删除顶部搜索，旧占位 handler
 test('商家台账使用 view 条件链，已撤销合作分润 tab 不会产生孤立 wx:elif', () => {
   const source = read('pages/merchant/ledger/index.wxml');
   assert.match(source,
-    /<cy-state-shell[^>]*wx:if="\{\{routeError\}\}"[\s\S]*?<block wx:elif="\{\{view === 'redemptions'\}\}">[\s\S]*?<cy-skeleton wx:elif="\{\{loading && !hasLoaded\}\}"[\s\S]*?<cy-error wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<block wx:else>[\s\S]*?<block wx:if="\{\{view === 'settlement'\}\}">/,
+    /<cy-state-shell[^>]*wx:if="\{\{routeError\}\}"[\s\S]*?<block wx:elif="\{\{view === 'redemptions'\}\}">[\s\S]*?<cy-skeleton wx:elif="\{\{loading && !hasLoaded\}\}"[\s\S]*?<cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<block wx:else>[\s\S]*?<block wx:if="\{\{view === 'settlement'\}\}">/,
     '路由、核销、结算首载和正文必须组成合法条件链，正文内从 settlement 的 wx:if 开始');
   assert.match(source, /<block wx:else>/);
   assert.doesNotMatch(source, /tab===3|wx:elif="\{\{tab/);

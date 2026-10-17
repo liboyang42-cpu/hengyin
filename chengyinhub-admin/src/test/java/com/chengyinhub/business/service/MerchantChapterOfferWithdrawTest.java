@@ -13,6 +13,11 @@ import com.chengyinhub.common.constant.TermsMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.mockito.ArgumentCaptor;
+import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.mapper.RegistrationEntitlementMapper;
+import java.util.Arrays;
+import java.util.function.Supplier;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -34,6 +39,9 @@ class MerchantChapterOfferWithdrawTest {
     private MerchantChapterOffer offer;
     private CmsTopicChapter chapter;
     private CmsTopic topic;
+    private CommittedBusinessNotice notices;
+    private RegistrationEntitlementMapper entitlements;
+    private INotifyService notify;
 
     @BeforeEach
     void setUp() {
@@ -44,6 +52,13 @@ class MerchantChapterOfferWithdrawTest {
         topicService = mock(ICmsTopicService.class);
         canonical = mock(ITopicSaleCanonicalMutationService.class);
         service = new MerchantOfferServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class));
+        notices = mock(CommittedBusinessNotice.class);
+        entitlements = mock(RegistrationEntitlementMapper.class);
+        notify = mock(INotifyService.class);
+        ReflectionTestUtils.setField(service, "businessNotice", notices);
+        ReflectionTestUtils.setField(service, "registrationEntitlementMapper", entitlements);
+        ReflectionTestUtils.setField(service, "notifyService", notify);
         ReflectionTestUtils.setField(service, "offerMapper", offers);
         ReflectionTestUtils.setField(service, "applicationMapper", applications);
         ReflectionTestUtils.setField(service, "chapterMapper", chapters);
@@ -59,6 +74,7 @@ class MerchantChapterOfferWithdrawTest {
         topic = new CmsTopic();
         topic.setId(TOPIC); topic.setDelFlag(0); topic.setProductType(ProductType.FREE_EXPLORE);
         topic.setLifecycle(3); topic.setUserStatus(1);
+        topic.setMemberId(501L);
         when(offers.selectById(OFFER)).thenReturn(offer);
         when(offers.selectByIdForUpdate(OFFER)).thenReturn(offer);
         when(chapters.lockChaptersForCapacity(Collections.singletonList(CHAPTER)))
@@ -68,6 +84,23 @@ class MerchantChapterOfferWithdrawTest {
         when(topicService.casUserStatus(TOPIC, 1, 0)).thenReturn(1);
         when(offers.withdrawOwned(eq(OFFER), eq(MERCHANT), anyString(), anyBoolean())).thenReturn(1);
         when(applications.retireApprovedForSupplyExit(TOPIC, CHAPTER, MERCHANT)).thenReturn(1);
+    }
+
+    @Test
+    void exitNotifiesOnlyTheServerSelectedAffectedPaidPlayersAfterCommit() {
+        assertTrue(service.withdrawOwnChapterOffer(OFFER, MERCHANT, "暂停营业"));
+        verify(notices).sendAfterCommit(eq(501L), anyString(), anyString(),
+                eq("chapter-supply-withdraw-owner"), eq(OFFER));
+        ArgumentCaptor<Supplier<Boolean>> delivery = ArgumentCaptor.forClass(Supplier.class);
+        verify(notices).executeAfterCommit(eq("chapter-supply-withdraw-players"), eq(OFFER), delivery.capture());
+        verifyNoInteractions(entitlements, notify);
+        when(entitlements.selectAffectedPaidMembers(TOPIC, CHAPTER)).thenReturn(Arrays.asList(501L, 601L, 601L, null));
+        when(notify.notifyOfficialBroadcast(eq(601L), anyString(), anyString())).thenReturn(true);
+        assertTrue(delivery.getValue().get());
+        verify(notify, times(1)).notifyOfficialBroadcast(eq(601L), anyString(), anyString());
+        verifyNoMoreInteractions(notify);
+        when(notify.notifyOfficialBroadcast(eq(601L), anyString(), anyString())).thenReturn(false);
+        assertFalse(delivery.getValue().get(), "失败结果交共享 helper 告警，不伪称通知已送达");
     }
 
     @Test
@@ -126,6 +159,7 @@ class MerchantChapterOfferWithdrawTest {
         verify(applications, never()).retireApprovedForSupplyExit(anyLong(), anyLong(), anyLong());
         verify(topicService, never()).casUserStatus(anyLong(), anyInt(), anyInt());
         verifyNoInteractions(canonical);
+        verifyNoInteractions(notices);
         assertEquals("首次退出原因", offer.getWithdrawReason());
     }
 

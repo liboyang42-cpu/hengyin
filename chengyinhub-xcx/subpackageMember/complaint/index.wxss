@@ -31,3 +31,8 @@ page { background: var(--cy-bg-page); }
 .cp-submit-error { margin-top: var(--cy-space-4); margin-bottom: var(--cy-space-2); }
 .cp-submit { display: block; margin-top: var(--cy-space-4); }
 .cp-submit--after-error { margin-top: 0; }
+
+.cp-history { padding: var(--cy-space-4) var(--cy-page-x); }
+.cp-history-head { display: flex; align-items: center; justify-content: space-between; }
+.cp-history-title { display: block; color: var(--cy-text-title); font-size: var(--cy-font-body); }
+.cp-history-text { display: block; white-space: pre-wrap; color: var(--cy-text-secondary); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); }

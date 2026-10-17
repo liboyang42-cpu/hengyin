@@ -13,6 +13,8 @@ public interface MerchantCrmCampaignMapper {
     int insertDeliveryGuard(MerchantCrmDeliveryGuard guard);
     MerchantCrmCampaign selectByRequestId(@Param("merchantId") Long merchantId,
                                            @Param("requestId") String requestId);
+    MerchantCrmCampaign selectByRequestIdForShare(@Param("merchantId") Long merchantId,
+                                                   @Param("requestId") String requestId);
     MerchantCrmCampaign selectOwnedCampaign(@Param("merchantId") Long merchantId,
                                              @Param("campaignId") Long campaignId);
     List<MerchantCrmCampaign> selectOwnedCampaigns(@Param("merchantId") Long merchantId,
@@ -95,6 +97,10 @@ public interface MerchantCrmCampaignMapper {
                                    @Param("expectedVersion") Long expectedVersion,
                                    @Param("messageReceiptId") Long messageReceiptId,
                                    @Param("couponHistoryId") Long couponHistoryId);
+
+    int releaseDeliveryGuardForRetry(@Param("guardId") Long guardId,
+                                     @Param("leaseToken") String leaseToken,
+                                     @Param("expectedVersion") Long expectedVersion);
     int markDeliveryGuardOutcomeUnknown(@Param("guardId") Long guardId,
                                         @Param("leaseToken") String leaseToken,
                                         @Param("expectedVersion") Long expectedVersion,

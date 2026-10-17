@@ -12,9 +12,13 @@ import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.util.StateKeyRefs;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +41,7 @@ import java.util.Set;
  */
 @Service
 public class TopicStateKeyRefService {
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     /** 节点玩法块配置解析失败。 */
     public static final String KIND_BLOCK = "block";
@@ -71,7 +76,7 @@ public class TopicStateKeyRefService {
         List<CmsTopicNode> nodes = cmsTopicNodeMapper.selectCmsTopicNodeList(probe);
         if (nodes != null) {
             for (CmsTopicNode node : nodes) {
-                collectNode(node, refs);
+                collectNode(node, topic, refs);
             }
         }
         collectJourneyRules(topic, refs);
@@ -110,7 +115,7 @@ public class TopicStateKeyRefService {
         return "主题剧情配置无法解析,主题发布失败:" + error.getMessage();
     }
 
-    private void collectNode(CmsTopicNode node, RefCollection refs) {
+    private void collectNode(CmsTopicNode node, CmsTopic topic, RefCollection refs) {
         if (node == null) {
             return;
         }
@@ -124,11 +129,26 @@ public class TopicStateKeyRefService {
         }
         refs.nodeLabels.put(node.getId(), nodeLabel(node));
         try {
-            Set<String> keys = StateKeyRefs.collect(template.getAdvancedConfigJson());
+            String raw = template.getAdvancedConfigJson();
+            // 先按原合同校验 JSON（非法时给作者“不是合法 JSON”），再解析已绑定的资源槽
+            Set<String> keys = StateKeyRefs.collect(raw);
+            JsonNode config = JSON.readTree(raw);
+            if (config != null && config.path("interactionRules").has("resourceSlots")) {
+                ObjectNode nodes = JSON.createObjectNode();nodes.set(String.valueOf(node.getId()), config);
+                raw = GameplayTemplateRules.resolveNodeConfigs(ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson()),
+                        nodes, Collections.singletonMap(node.getId(), templateId)).path(String.valueOf(node.getId())).toString();
+                keys = StateKeyRefs.collect(raw);
+            }
+            if (config != null && config.path("outcomeRules").path("version").asInt() == 1) {
+                // R5 内置费用先核对主题启用状态，再从需要注册的作者键中排除。
+                ThemeRuntimeConfig.assertJourneyReferences((ObjectNode) JSON.readTree(raw), JourneyRules.parse(topic.getJourneyRulesJson()));
+                keys.remove("sys.hp");
+                keys.remove("sys.luck");
+            }
             if (!keys.isEmpty()) {
                 refs.refsByNode.put(node.getId(), keys);
             }
-        } catch (RuntimeException e) {
+        } catch (java.io.IOException | RuntimeException e) {
             refs.parseErrors.add(new ParseError(node.getId(), nodeLabel(node), KIND_BLOCK, e.getMessage()));
         }
     }

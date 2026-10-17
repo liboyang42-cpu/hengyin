@@ -1091,5 +1091,91 @@ class ExplicitConfigCliTest(unittest.TestCase):
                 connect.assert_called_once_with(runner.DEFAULT_CONFIG)
 
 
+class CommunityLegacyOwnerPreflightTest(unittest.TestCase):
+    def test_comment_counter_scope_requires_the_complete_reviewed_transaction(self):
+        runner = load_runner()
+        from ci.sql_splitter import split_statements
+        path = SCRIPT_PATH.parent.parent / 'chengyinhub-admin/sql/migration_community_legacy_comment_like_counts_20261015.sql'
+        statements = split_statements(path.read_text())
+        self.assertTrue(runner.exact_community_comment_counter_scope(statements, True))
+        for candidate, transaction in (
+                (statements, False), (statements[:1], True),
+                (statements + ['SELECT 1'], True),
+                (statements + ['DELETE FROM community_post_reference'], True),
+                ([s.replace("action_type='LIKE'", "action_type='BOOKMARK'") for s in statements], True),
+                ([s.replace('UPDATE community_post_comment', 'UPDATE other.community_post_comment') for s in statements], True)):
+            self.assertFalse(runner.exact_community_comment_counter_scope(candidate, transaction))
+
+    def test_comment_counter_scope_checks_identity_but_not_unrelated_snapshots(self):
+        runner = load_runner()
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = [(name,) for name in (
+            'ums_creative_square', 'ums_creative_square_like', 'ums_comment', 'ums_comment_like',
+            'community_post', 'community_post_comment', 'community_post_comment_action',
+            'community_post_reference', 'community_post_media', 'community_post_member_action')]
+        cursor.fetchone.return_value = (1,)
+        runner.assert_community_legacy_owner_preflight(cursor, 'scratch', comment_counter=True)
+        sql = '\n'.join(str(call.args[0]) for call in cursor.execute.call_args_list)
+        self.assertIn('legacy-square-comment-', sql)
+        self.assertIn('old_comment.member_id=n.author_id', sql)
+        self.assertNotIn('community_post_reference', sql)
+        self.assertNotIn('community_post_media', sql)
+        self.assertNotIn('community_post_member_action', sql)
+        cursor.reset_mock()
+        runner.assert_community_legacy_counter_preflight(cursor, 'scratch', [], comment_counter=True)
+        sql = '\n'.join(str(call.args[0]) for call in cursor.execute.call_args_list)
+        self.assertIn("a.request_id LIKE 'legacy-comment-like-%'", sql)
+        self.assertNotIn('community_post_member_action', sql)
+
+    def test_actual_write_shapes_cover_renamed_sql_and_inline_extracts(self):
+        runner = load_runner()
+        for statement in (
+            "INSERT IGNORE INTO community_post SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_media SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_comment SELECT * FROM ums_comment",
+            "INSERT IGNORE INTO community_post_comment_action SELECT * FROM ums_comment_like",
+            "INSERT IGNORE INTO scratch.community_post_media SELECT * FROM scratch.ums_creative_square",
+            "INSERT IGNORE INTO `scratch`.`community_post_media` SELECT * FROM `scratch`.`ums_creative_square`",
+            "INSERT IGNORE INTO `scratch` . `community_post_media` SELECT * FROM `scratch` . `ums_creative_square`",
+        ):
+            self.assertTrue(runner.requires_community_legacy_owner_guard([statement]))
+        self.assertFalse(runner.requires_community_legacy_owner_guard(["SELECT 1"]))
+        runner.assert_community_legacy_statement_scope([
+            "INSERT INTO scratch.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+        with self.assertRaisesRegex(ValueError, "cross-schema"):
+            runner.assert_community_legacy_statement_scope([
+                "INSERT INTO other.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+
+    def test_guard_failure_precedes_every_statement_and_transaction_probe(self):
+        runner = load_runner()
+        connection = FakeConnection()
+        args = types.SimpleNamespace(transaction=True, check=False, describe=None)
+        statements = ["CREATE TABLE marker(id INT)",
+                      "INSERT INTO community_post_media SELECT * FROM ums_creative_square"]
+        with mock.patch.object(runner, "assert_community_legacy_owner_preflight",
+                               side_effect=ValueError("conflict")) as guard:
+            with self.assertRaises(SystemExit) as error:
+                runner.run_connected(args, statements, None, connection, "scratch")
+        self.assertEqual(1, error.exception.code)
+        guard.assert_called_once()
+        self.assertFalse(any(sql in statements or sql.startswith("CREATE")
+                             for sql, _ in connection.cursor_instance.executed))
+
+    def test_false_missing_or_ambiguous_observation_never_passes(self):
+        runner = load_runner()
+        for observed in ((0,), None, (1, 1)):
+            cursor = mock.Mock()
+            cursor.fetchall.return_value = [("ums_creative_square",), ("ums_comment",),
+                                           ("ums_creative_square_like",), ("community_post",)]
+            cursor.fetchone.return_value = observed
+            with self.assertRaisesRegex(ValueError, "preflight conflict"):
+                runner.assert_community_legacy_owner_preflight(cursor, "scratch")
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = [("community_post",)]
+        cursor.fetchone.return_value = (1,)
+        with self.assertRaisesRegex(ValueError, "missing source"):
+            runner.assert_community_legacy_owner_preflight(cursor, "scratch")
+
+
 if __name__ == "__main__":
     unittest.main()

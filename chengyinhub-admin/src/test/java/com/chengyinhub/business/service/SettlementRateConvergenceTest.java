@@ -434,6 +434,10 @@ class SettlementRateConvergenceTest {
     @Test
     void futureTopicCreationRejectsMissingPublisherBeforeWrites() {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> service.createTopic(new TopicCreateDTO(), null, "operator"));
@@ -444,6 +448,10 @@ class SettlementRateConvergenceTest {
     @Test
     void platformAdminTopicCreationUsesConfiguredPublisherMember() {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         CmsTopicMapper mapper = mock(CmsTopicMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mapper);
         ReflectionTestUtils.setField(service, "productRoleService", mock(IProductRoleService.class));
@@ -485,6 +493,11 @@ class SettlementRateConvergenceTest {
         topicRuleService = mock(ISettlementRuleService.class);
 
         topicSvc = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(topicSvc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicSvc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicSvc, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(topicSvc, "cmsRegistrationMapper", topicRegMapper);
         // cmsRegistrationMerchantMapper 已随 distributeMerchantCommissions 拆除(2026-07-17),

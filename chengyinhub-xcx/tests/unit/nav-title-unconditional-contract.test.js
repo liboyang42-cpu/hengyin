@@ -46,6 +46,9 @@ const ALLOWED = [
   // 该分支自带 cy-nav-bar + cy-page-title 与「返回上一页」出口;其余三态(承接/主办/浏览)
   // 的导航各自在 project-join / project-host 组件内或浏览视图里无渲染,四态都不丢标题与返回。
   'pages/topic/merchantinfo/merchantinfo | cy-nav-bar | <block wx:if="{{ missingParam }}">',
+  // 身份恢复/拒绝是与缺参、host、join互斥的完整分支；该分支自己的nav绑定同一goBack，
+  // login与denied子态共享这条返回出口，不会在续期失败/403时留下无导航的空白页。
+  'pages/topic/merchantinfo/merchantinfo | cy-nav-bar | <block wx:elif="{{ projectReadAuth }}">',
   // 标签自带条件的 if/else 对偶：错误态用标准 cy-nav-bar（深底箭头可见），
   // 正常态走 wx:else 的 hero 顶栏自绘导航。两态都有返回出口。
   'pages/topic/index/index | cy-nav-bar | 自带 wx:if="{{loadError}}"',
@@ -158,3 +161,17 @@ test('负控:标签自闭合与属性里的尖括号不得让扫描器漏判', (
   const hits = scanRoute('probe', tricky)
   assert.equal(hits.length, 1, '自闭合的 <image /> 不应污染标签栈,条件祖先仍须被识别')
 })
+
+
+test('商家主题身份恢复的两子态共享真实返回出口，正常分支仍由各自组件负责', () => {
+  const wxml = read('pages/topic/merchantinfo/merchantinfo.wxml');
+  const branch = wxml.match(/<block wx:elif="\{\{ projectReadAuth \}\}">([\s\S]*?)<\/block>/);
+  assert.ok(branch);
+  assert.match(branch[1], /<cy-nav-bar custom-back bind:back="goBack"/);
+  assert.match(branch[1], /projectReadAuth === 'login'[\s\S]*?bind:cta="retryProjectLogin"/);
+  assert.match(branch[1], /<cy-empty wx:else[^>]*bind:cta="goBack"/);
+  for (const component of ['project-host', 'project-join']) {
+    assert.match(read('pages/topic/components/' + component + '/index.wxml'), /<cy-nav-bar/);
+  }
+  assert.throws(() => assert.match(branch[1].replace('<cy-nav-bar custom-back bind:back="goBack" />', ''), /<cy-nav-bar custom-back bind:back="goBack"/));
+});

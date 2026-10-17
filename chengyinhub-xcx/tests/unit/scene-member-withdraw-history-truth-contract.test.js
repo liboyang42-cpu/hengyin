@@ -10,6 +10,7 @@ const MODULE = path.join(ROOT, 'components/cy/scene-member-withdraw-history/inde
 function loadComponent() {
   const sandbox = { requests: [] }
   global.getApp = () => ({
+    getUserID: () => 7, /* Explicit authenticated private-list fixture. */
     getPageSize: () => 10,
     getTotalPage: (total, pageSize) => Math.ceil(total / pageSize),
     sendRequest: (options) => sandbox.requests.push(options),

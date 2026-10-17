@@ -7,8 +7,10 @@ import com.chengyinhub.common.utils.http.HttpUtils;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.system.service.ISysConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -18,17 +20,20 @@ import java.util.Map;
 @Service
 public class WeChatMiniSessionServiceImpl implements IWeChatMiniSessionService {
 
-    private static final String ENDPOINT = "https://api.weixin.qq.com/sns/jscode2session";
+    private static final String WECHAT_API_BASE = "https://api.weixin.qq.com";
 
     @Autowired
     private ISysConfigService configService;
+
+    @Autowired(required = false)
+    private Environment environment;
 
     @Override
     public WeChatMiniSession exchange(String jsCode) {
         String appid = miniAppId();
         String appsecret = Convert.toStr(configService.selectConfigByKey("app.wechat.appsecret"));
 
-        String url = ENDPOINT + "?appid=" + appid + "&grant_type=authorization_code"
+        String url = sessionBaseUrl() + "/sns/jscode2session?appid=" + appid + "&grant_type=authorization_code"
                 + "&js_code=" + jsCode + "&secret=" + appsecret;
         String result = sendHttpGet(url);
 
@@ -53,6 +58,25 @@ public class WeChatMiniSessionServiceImpl implements IWeChatMiniSessionService {
     public String miniAppId() {
         String appid = Convert.toStr(configService.selectConfigByKey("app.wechat.appid"));
         return StringUtils.isBlank(appid) ? "" : appid;
+    }
+
+    /**
+     * 与 ApiLoginController / WechatReconfirmationService 同一口径：只有显式激活 test/dev/local/preview
+     * 且未激活 prod/production 时才读 chengyin.test.wechat-api-base-url；其余一律固定官方基址。
+     */
+    String sessionBaseUrl() {
+        if (environment == null || environment.matchesProfiles("prod", "production")
+                || !environment.matchesProfiles("test", "dev", "local", "preview")) {
+            return WECHAT_API_BASE;
+        }
+        String base = environment.getProperty("chengyin.test.wechat-api-base-url", WECHAT_API_BASE).trim();
+        URI uri = URI.create(base);
+        if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) || uri.getHost() == null
+                || uri.getUserInfo() != null || uri.getRawQuery() != null || uri.getRawFragment() != null
+                || !(uri.getPath().isEmpty() || "/".equals(uri.getPath()))) {
+            throw new IllegalArgumentException("非生产微信API基址配置不合法");
+        }
+        return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }
 
     /** 单独一层好让单测把网络挡在外面 */

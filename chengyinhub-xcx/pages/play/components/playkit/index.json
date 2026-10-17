@@ -2,6 +2,8 @@
   "component": true,
   "styleIsolation": "isolated",
   "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-btn": "/components/cy/btn/index",
     "cy-playkit-timewindow": "/pages/play/components/playkit-timewindow/index",
     "cy-playkit-blindtaste": "/pages/play/components/playkit-blindtaste/index",
     "cy-playkit-silentorder": "/pages/play/components/playkit-silentorder/index",

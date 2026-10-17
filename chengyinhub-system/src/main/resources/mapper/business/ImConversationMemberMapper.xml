@@ -55,10 +55,40 @@
         where m.conversation_id = #{conversationId} and m.member_id = #{memberId}
     </update>
 
+    <sql id="storedReadCutoff">
+        select coalesce(visible_at, create_time) from im_message
+        where id = #{lastReadMsgId} and conversation_id = #{conversationId} and status != 2
+          and (msg_type != 2 or check_status = 1 or sender_id = #{memberId})
+    </sql>
     <update id="markRead">
         update im_conversation_member
-        set unread_count = 0, last_read_msg_id = #{lastReadMsgId}
+        set last_read_msg_id = #{lastReadMsgId},
+            last_read_visible_at = coalesce((<include refid="storedReadCutoff"/>), '1970-01-01 00:00:00.000000'),
+            unread_count = (select count(*) from im_message msg
+                where msg.conversation_id = #{conversationId} and msg.sender_id != #{memberId}
+                  and msg.status != 2 and (msg.msg_type != 2 or msg.check_status = 1)
+                  and (coalesce(msg.visible_at, msg.create_time) &gt; coalesce((<include refid="storedReadCutoff"/>), '1970-01-01 00:00:00.000000')
+                       or (coalesce(msg.visible_at, msg.create_time) = coalesce((<include refid="storedReadCutoff"/>), '1970-01-01 00:00:00.000000')
+                           and msg.id &gt; #{lastReadMsgId})))
         where conversation_id = #{conversationId} and member_id = #{memberId}
+    </update>
+
+    <update id="markReadVisible">
+        update im_conversation_member
+        set last_read_msg_id = #{lastReadMsgId}, last_read_visible_at = #{visibleOrderAt},
+            unread_count = (select count(*) from im_message msg
+                where msg.conversation_id = #{conversationId} and msg.sender_id != #{memberId}
+                  and msg.status != 2 and (msg.msg_type != 2 or msg.check_status = 1)
+                  and (coalesce(msg.visible_at, msg.create_time) &gt; #{visibleOrderAt}
+                       or (coalesce(msg.visible_at, msg.create_time) = #{visibleOrderAt}
+                           and msg.id &gt; #{lastReadMsgId})))
+        where conversation_id = #{conversationId} and member_id = #{memberId} and deleted = 0
+          and ((#{lastReadMsgId} = 0 and #{visibleOrderAt} = '1970-01-01 00:00:00.000000')
+               or exists (select 1 from im_message cutoff
+                    where cutoff.id = #{lastReadMsgId} and cutoff.conversation_id = #{conversationId}
+                      and cutoff.status != 2
+                      and (cutoff.msg_type != 2 or cutoff.check_status = 1 or cutoff.sender_id = #{memberId})
+                      and date_format(coalesce(cutoff.visible_at, cutoff.create_time), '%Y-%m-%d %H:%i:%s.%f') = #{visibleOrderAt}))
     </update>
 
     <select id="sumUnread" resultType="java.lang.Integer">

@@ -1,0 +1,1096 @@
+{
+  "templates": [
+    {
+      "id": 501,
+      "title": "核验与结算",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "scan": {
+          "enabled": true,
+          "kind": "TEXT",
+          "reply": "核对记录并确认行动"
+        },
+        "interactionRules": {
+          "resourceSlots": [
+            {
+              "key": "energy",
+              "kind": "VALUE",
+              "label": "状态值",
+              "required": true
+            }
+          ],
+          "statCosts": [
+            {
+              "statKey": "energy",
+              "amount": 1
+            }
+          ],
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": 502,
+      "title": "公共救援",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "scan": {
+          "enabled": true,
+          "kind": "TEXT",
+          "reply": "核对记录并确认行动"
+        },
+        "interactionRules": {
+          "resourceSlots": [
+            {
+              "key": "energy",
+              "kind": "VALUE",
+              "label": "状态值",
+              "required": true
+            },
+            {
+              "key": "aid",
+              "kind": "ITEM",
+              "label": "aid",
+              "required": true
+            },
+            {
+              "key": "food",
+              "kind": "ITEM",
+              "label": "food",
+              "required": true
+            }
+          ],
+          "costOptions": [
+            {
+              "resourceCosts": [
+                {
+                  "itemId": "aid",
+                  "quantity": 1
+                }
+              ],
+              "statCosts": [
+                {
+                  "statKey": "energy",
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "resourceCosts": [
+                {
+                  "itemId": "food",
+                  "quantity": 2
+                }
+              ],
+              "statCosts": [
+                {
+                  "statKey": "energy",
+                  "amount": 2
+                }
+              ]
+            }
+          ],
+          "scope": "WORLD",
+          "targetScope": "OWNER",
+          "limit": 1,
+          "worldEffects": [
+            {
+              "var": "clue.rescue",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 503,
+      "title": "共同表决",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "scan": {
+          "enabled": true,
+          "kind": "TEXT",
+          "reply": "核对记录并确认行动"
+        },
+        "interactionRules": {
+          "resourceSlots": [
+            {
+              "key": "fuel",
+              "kind": "ITEM",
+              "label": "fuel",
+              "required": true
+            },
+            {
+              "key": "power",
+              "kind": "ITEM",
+              "label": "power",
+              "required": true
+            },
+            {
+              "key": "parts",
+              "kind": "ITEM",
+              "label": "parts",
+              "required": true
+            },
+            {
+              "key": "medical",
+              "kind": "ITEM",
+              "label": "medical",
+              "required": true
+            }
+          ]
+        },
+        "interactionTools": {
+          "allowTrade": true,
+          "votePolicy": "MAJORITY_ACCEPTANCE",
+          "decidesEnding": true,
+          "plans": [
+            {
+              "endingKey": "end01",
+              "title": "撤离",
+              "materialCost": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 5
+                },
+                {
+                  "itemId": "power",
+                  "quantity": 2
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "endingKey": "end02",
+              "title": "留守",
+              "materialCost": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 4
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 4
+                },
+                {
+                  "itemId": "medical",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "endingKey": "end03",
+              "title": "停机",
+              "materialCost": [
+                {
+                  "itemId": "power",
+                  "quantity": 2
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "endingKey": "end04",
+              "title": "旁路",
+              "materialCost": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 6
+                },
+                {
+                  "itemId": "power",
+                  "quantity": 3
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 6
+                },
+                {
+                  "itemId": "medical",
+                  "quantity": 2
+                }
+              ],
+              "when": [
+                {
+                  "var": "clue.ev01",
+                  "op": "EQ",
+                  "value": 1
+                },
+                {
+                  "var": "clue.ev02",
+                  "op": "EQ",
+                  "value": 1
+                },
+                {
+                  "var": "clue.ev03",
+                  "op": "EQ",
+                  "value": 1
+                },
+                {
+                  "var": "clue.ev04",
+                  "op": "EQ",
+                  "value": 1
+                },
+                {
+                  "var": "clue.ev05",
+                  "op": "EQ",
+                  "value": 1
+                },
+                {
+                  "var": "clue.load_ok",
+                  "op": "EQ",
+                  "value": 1
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 504,
+      "title": "恢复挑战",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "ballShake": {
+          "enabled": true,
+          "kicker": "恢复挑战",
+          "goal": 10,
+          "timed": false,
+          "seconds": 12,
+          "xp": 0
+        }
+      }
+    },
+    {
+      "id": 505,
+      "title": "恢复问答",
+      "validationMethod": 1,
+      "answer": "恢复",
+      "config": {
+        "schemaVersion": 1,
+        "qa": {
+          "enabled": true,
+          "mode": "TYPE",
+          "title": "输入恢复口令",
+          "answerText": "恢复",
+          "maxTries": 0
+        }
+      }
+    },
+    {
+      "id": 506,
+      "title": "确认行动",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "scan": {
+          "enabled": true,
+          "kind": "TEXT",
+          "reply": "核对记录并确认行动"
+        }
+      }
+    },
+    {
+      "id": 507,
+      "title": "公共证据复核",
+      "validationMethod": 4,
+      "config": {
+        "schemaVersion": 1,
+        "scan": {
+          "enabled": true,
+          "kind": "TEXT",
+          "reply": "核对记录并确认行动"
+        },
+        "interactionRules": {
+          "resourceSlots": [
+            {
+              "key": "energy",
+              "kind": "VALUE",
+              "label": "状态值",
+              "required": true
+            }
+          ],
+          "statCosts": [
+            {
+              "statKey": "energy",
+              "amount": 1
+            }
+          ],
+          "limit": 1,
+          "worldEffects": [
+            {
+              "var": "clue.ev01",
+              "op": "SET",
+              "value": 1
+            },
+            {
+              "var": "clue.ev02",
+              "op": "SET",
+              "value": 1
+            },
+            {
+              "var": "clue.ev03",
+              "op": "SET",
+              "value": 1
+            },
+            {
+              "var": "clue.ev04",
+              "op": "SET",
+              "value": 1
+            },
+            {
+              "var": "clue.ev05",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "chapters": [
+    {
+      "id": 101,
+      "name": "A1 观测",
+      "nodes": [
+        {
+          "id": 1001,
+          "name": "记录核验",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 9001,
+          "name": "恢复挑战",
+          "templateId": 504,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 9002,
+          "name": "恢复问答",
+          "templateId": 505,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "name": "A2 档案",
+      "nodes": [
+        {
+          "id": 2001,
+          "name": "时间核验",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "name": "A3 补给",
+      "nodes": [
+        {
+          "id": 3001,
+          "name": "配给站",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 3002,
+          "name": "维修站",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 3003,
+          "name": "后勤站",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "name": "A4 选择",
+      "nodes": [
+        {
+          "id": 4001,
+          "name": "救援",
+          "templateId": 502,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 4002,
+          "name": "回收",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 4003,
+          "name": "固守",
+          "templateId": 506,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "name": "A5 证据",
+      "nodes": [
+        {
+          "id": 5001,
+          "name": "责任重建",
+          "templateId": 507,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "name": "A6 准备",
+      "nodes": [
+        {
+          "id": 6001,
+          "name": "整备",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        },
+        {
+          "id": 6002,
+          "name": "人工复核",
+          "templateId": 501,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "name": "A7 执行",
+      "nodes": [
+        {
+          "id": 7001,
+          "name": "共同执行",
+          "templateId": 503,
+          "nodeTime": 0,
+          "longitude": "0",
+          "latitude": "0"
+        }
+      ]
+    }
+  ],
+  "themeRuntimeConfig": {
+    "schemaVersion": 1,
+    "capacity": 14,
+    "hpName": "保温储备",
+    "actionName": "外勤次数",
+    "actionLimit": 8,
+    "items": [
+      {
+        "id": "ration",
+        "kind": "ITEM",
+        "name": "口粮",
+        "slotCost": 1,
+        "image": "media-asset:1",
+        "stat": "HP",
+        "delta": 3
+      },
+      {
+        "id": "fuel",
+        "kind": "ITEM",
+        "name": "燃料",
+        "slotCost": 2,
+        "image": "media-asset:1"
+      },
+      {
+        "id": "power",
+        "kind": "ITEM",
+        "name": "电源",
+        "slotCost": 1,
+        "image": "media-asset:1"
+      },
+      {
+        "id": "parts",
+        "kind": "ITEM",
+        "name": "维修件",
+        "slotCost": 1,
+        "image": "media-asset:1"
+      },
+      {
+        "id": "medical",
+        "kind": "ITEM",
+        "name": "医疗包",
+        "slotCost": 1,
+        "image": "media-asset:1"
+      }
+    ],
+    "chapters": [
+      {
+        "index": 0,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        }
+      },
+      {
+        "index": 1,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        }
+      },
+      {
+        "index": 2,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ANY_N",
+          "quantity": 2,
+          "overflowSlot": "mobile"
+        }
+      },
+      {
+        "index": 3,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        },
+        "exclusiveGroups": [
+          [
+            4001,
+            4002,
+            4003
+          ]
+        ]
+      },
+      {
+        "index": 4,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        }
+      },
+      {
+        "index": 5,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        },
+        "extraNodes": [
+          {
+            "nodeId": 6002,
+            "slot": "mobile"
+          }
+        ]
+      },
+      {
+        "index": 6,
+        "hpCost": 0,
+        "luckCost": 0,
+        "completion": {
+          "type": "ALL"
+        }
+      }
+    ],
+    "endings": [
+      {
+        "id": "end01",
+        "title": "撤离",
+        "success": true,
+        "when": [
+          {
+            "var": "clue.end01",
+            "op": "EQ",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "end02",
+        "title": "留守",
+        "success": true,
+        "when": [
+          {
+            "var": "clue.end02",
+            "op": "EQ",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "end03",
+        "title": "停机",
+        "success": true,
+        "when": [
+          {
+            "var": "clue.end03",
+            "op": "EQ",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "end04",
+        "title": "旁路",
+        "success": true,
+        "when": [
+          {
+            "var": "clue.end04",
+            "op": "EQ",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "fallback",
+        "title": "沉默的城市",
+        "fallback": true,
+        "success": false
+      }
+    ],
+    "gameplayRuntime": {
+      "runtimeScope": "TEAM",
+      "worldMode": "WORLD_SHARED",
+      "survival": {
+        "zeroHpPolicy": "CHALLENGE",
+        "zeroChallenge": {
+          "challengeNodeId": 9001,
+          "alternativeNodeIds": [
+            9002
+          ],
+          "restoreTo": 4,
+          "limit": 3
+        },
+        "actionLimitPolicy": "BLOCK_OVERFLOW",
+        "chapterRecovery": false,
+        "recoveries": [
+          {
+            "recoveryKey": "rest",
+            "kind": "REST",
+            "limit": 2,
+            "hpDelta": 2
+          },
+          {
+            "recoveryKey": "rescue",
+            "kind": "RESCUE",
+            "limit": 1,
+            "hpFloor": 4
+          }
+        ]
+      },
+      "initialGrants": [
+        {
+          "itemId": "ration",
+          "quantity": 1
+        },
+        {
+          "itemId": "fuel",
+          "quantity": 1
+        },
+        {
+          "itemId": "power",
+          "quantity": 1
+        }
+      ],
+      "acts": [
+        {
+          "actKey": "a1",
+          "questKeys": [
+            "q1001"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": true
+        },
+        {
+          "actKey": "a2",
+          "questKeys": [
+            "q2001"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": true
+        },
+        {
+          "actKey": "a3",
+          "questKeys": [
+            "q3001",
+            "q3002",
+            "q3003"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": false
+        },
+        {
+          "actKey": "a4",
+          "questKeys": [
+            "q4001",
+            "q4002",
+            "q4003"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": false
+        },
+        {
+          "actKey": "a5",
+          "questKeys": [
+            "q5001"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": true
+        },
+        {
+          "actKey": "a6",
+          "questKeys": [
+            "q6001",
+            "q6002"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": false
+        },
+        {
+          "actKey": "a7",
+          "questKeys": [
+            "q7001"
+          ],
+          "completionRule": {
+            "type": "ALL"
+          },
+          "hostUnlock": false
+        }
+      ],
+      "quests": [
+        {
+          "questKey": "q1001",
+          "actKey": "a1",
+          "nodeId": 1001,
+          "locationKey": "camp",
+          "settlementSlot": "q1001",
+          "actionCost": 1,
+          "choices": [
+            {
+              "choiceKey": "food",
+              "grants": [
+                {
+                  "itemId": "ration",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "choiceKey": "energy",
+              "grants": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 1
+                },
+                {
+                  "itemId": "power",
+                  "quantity": 1
+                }
+              ]
+            },
+            {
+              "choiceKey": "aid",
+              "grants": [
+                {
+                  "itemId": "parts",
+                  "quantity": 1
+                },
+                {
+                  "itemId": "medical",
+                  "quantity": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "questKey": "q2001",
+          "actKey": "a2",
+          "nodeId": 2001,
+          "locationKey": "camp",
+          "settlementSlot": "q2001",
+          "actionCost": 1
+        },
+        {
+          "questKey": "q3001",
+          "actKey": "a3",
+          "nodeId": 3001,
+          "locationKey": "camp",
+          "settlementSlot": "q3001",
+          "actionCost": 1,
+          "choices": [
+            {
+              "choiceKey": "food",
+              "grants": [
+                {
+                  "itemId": "ration",
+                  "quantity": 3
+                }
+              ]
+            },
+            {
+              "choiceKey": "aid",
+              "grants": [
+                {
+                  "itemId": "ration",
+                  "quantity": 1
+                },
+                {
+                  "itemId": "medical",
+                  "quantity": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "questKey": "q3002",
+          "actKey": "a3",
+          "nodeId": 3002,
+          "locationKey": "camp",
+          "settlementSlot": "q3002",
+          "actionCost": 1,
+          "choices": [
+            {
+              "choiceKey": "fuel",
+              "grants": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 2
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 1
+                }
+              ]
+            },
+            {
+              "choiceKey": "power",
+              "grants": [
+                {
+                  "itemId": "power",
+                  "quantity": 1
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "questKey": "q3003",
+          "actKey": "a3",
+          "nodeId": 3003,
+          "locationKey": "camp",
+          "settlementSlot": "q3003",
+          "actionCost": 1,
+          "choices": [
+            {
+              "choiceKey": "aid",
+              "grants": [
+                {
+                  "itemId": "medical",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "choiceKey": "power",
+              "grants": [
+                {
+                  "itemId": "power",
+                  "quantity": 1
+                },
+                {
+                  "itemId": "parts",
+                  "quantity": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "questKey": "q4001",
+          "actKey": "a4",
+          "nodeId": 4001,
+          "locationKey": "camp",
+          "settlementSlot": "q4001",
+          "actionCost": 1
+        },
+        {
+          "questKey": "q4002",
+          "actKey": "a4",
+          "nodeId": 4002,
+          "locationKey": "camp",
+          "settlementSlot": "q4002",
+          "actionCost": 1,
+          "grants": [
+            {
+              "itemId": "fuel",
+              "quantity": 1
+            },
+            {
+              "itemId": "parts",
+              "quantity": 1
+            }
+          ],
+          "hpCost": 1
+        },
+        {
+          "questKey": "q4003",
+          "actKey": "a4",
+          "nodeId": 4003,
+          "locationKey": "camp",
+          "settlementSlot": "q4003",
+          "actionCost": 1
+        },
+        {
+          "questKey": "q5001",
+          "actKey": "a5",
+          "nodeId": 5001,
+          "locationKey": "camp",
+          "settlementSlot": "q5001",
+          "actionCost": 1
+        },
+        {
+          "questKey": "q6001",
+          "actKey": "a6",
+          "nodeId": 6001,
+          "locationKey": "camp",
+          "settlementSlot": "q6001",
+          "actionCost": 1,
+          "choices": [
+            {
+              "choiceKey": "parts",
+              "grants": [
+                {
+                  "itemId": "parts",
+                  "quantity": 1
+                }
+              ]
+            },
+            {
+              "choiceKey": "fuel",
+              "grants": [
+                {
+                  "itemId": "fuel",
+                  "quantity": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "questKey": "q6002",
+          "actKey": "a6",
+          "nodeId": 6002,
+          "locationKey": "camp",
+          "settlementSlot": "q6002",
+          "actionCost": 1
+        },
+        {
+          "questKey": "q7001",
+          "actKey": "a7",
+          "nodeId": 7001,
+          "locationKey": "camp",
+          "settlementSlot": "q7001",
+          "actionCost": 0
+        }
+      ],
+      "facilities": [
+        {
+          "facilityKey": "heating",
+          "actKey": "a5",
+          "scope": "WORLD",
+          "targetScope": "WORLD",
+          "settlementSlot": "public_recovery",
+          "limit": 1,
+          "hpDelta": 3,
+          "resourceCosts": [
+            {
+              "itemId": "fuel",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "facilityKey": "verify",
+          "actKey": "a6",
+          "scope": "WORLD",
+          "targetScope": "OWNER",
+          "settlementSlot": "verification",
+          "limit": 1,
+          "resourceCosts": [
+            {
+              "itemId": "power",
+              "quantity": 1
+            }
+          ],
+          "worldEffects": [
+            {
+              "var": "clue.load_ok",
+              "op": "SET",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -11,6 +11,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Arrays;
+import java.util.HashSet;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,6 +57,7 @@ class TemplateEditOwnershipTest {
         capabilityGuard = mock(ICapabilityGuard.class);
 
         service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         memberMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         libraryMapper = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
         taskMapper = mock(com.chengyinhub.business.mapper.AuditTaskMapper.class);
@@ -132,6 +136,90 @@ class TemplateEditOwnershipTest {
         request.setQuestionAnswer("1997");
         request.setIsSync(0);
         return request;
+    }
+
+    @Test
+    void clearFieldsAreValidatedAndCopiedForDraftAndPublish() {
+        for (boolean draft : new boolean[]{true, false}) {
+            setUp();
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+            CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+            request.setClearFields(new HashSet<>(Arrays.asList("rewardRulesJson", "merchantGuide", "sensorType", "sensorConfig", "storyImg")));
+            request.setRewardRulesJson("invalid but explicitly cleared");
+            request.setMerchantGuide("old guide"); request.setStoryImg("old image");
+            if (draft) service.saveOrUpdateDraft(request, OWNER, "作者");
+            else service.publishTemplateWithTransaction(request, OWNER, "作者");
+            ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+            verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+            assertEquals(request.getClearFields(), saved.getValue().getClearFields());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getRewardRulesJson());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getMerchantGuide());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getStoryImg());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getSensorType());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getSensorConfig());
+        }
+    }
+
+    @Test
+    void missingClearFieldsDoNotSetTheInternalUpdateMarker() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setRewardRulesJson(" ");
+        service.saveOrUpdateDraft(request, OWNER, "作者");
+        ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getClearFields());
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getRewardRulesJson());
+    }
+
+    @Test
+    void unknownClearFieldsAreRejectedBeforeWrites() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+        for (String field : Arrays.asList("memberId", "title", "status", "story_img", "", null)) {
+            CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setClearFields(Collections.singleton(field));
+            assertTrue(assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, OWNER, "作者")).getMessage().contains("不支持清空字段"));
+            assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(request, OWNER, "作者"));
+        }
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void clearingRequiredSensorFieldsUsesStoredValidationMethodAndRejectsBeforeWrites() {
+        for (int method : new int[]{2, 7}) for (String field : Arrays.asList("sensorType", "sensorConfig")) {
+            CmsMemberTemplate stored = existing(OWNER, 0); stored.setValidationMethod(method);
+            stored.setSensorType(method == 2 ? "filter_shot" : "still");
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(stored);
+            for (Integer requestedMethod : Arrays.asList(null, method)) {
+                CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setValidationMethod(requestedMethod);
+                request.setClearFields(Collections.singleton(field));
+                assertTrue(assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, OWNER, "作者")).getMessage().contains("先切换"));
+                assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(request, OWNER, "作者"));
+            }
+        }
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void switchingAwayFromSensorAllowsExplicitClearButNeverBypassesOwnership() {
+        CmsMemberTemplate stored = existing(OWNER, 0); stored.setValidationMethod(7); stored.setSensorType("still");
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(stored);
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setClearFields(new HashSet<>(Arrays.asList("sensorType", "sensorConfig")));
+        assertThrows(RuntimeException.class, () -> service.saveOrUpdateDraft(request, STRANGER, "其他人"));
+        assertThrows(RuntimeException.class, () -> service.publishTemplateWithTransaction(request, STRANGER, "其他人"));
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+        service.saveOrUpdateDraft(request, OWNER, "作者");
+        verify(memberTemplateService).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void onlyRequestDtoAcceptsClearFieldsAndEntityJsonCannotInjectThem() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        String raw = "{\"clearFields\":[\"sensorConfig\"]}";
+        assertEquals(Collections.singleton("sensorConfig"), json.readValue(raw, CmsTemplatePublishRequest.class).getClearFields());
+        CmsMemberTemplate entity = json.readValue(raw, CmsMemberTemplate.class);
+        org.junit.jupiter.api.Assertions.assertNull(entity.getClearFields());
+        entity.setClearFields(Collections.singleton("sensorConfig"));
+        org.junit.jupiter.api.Assertions.assertFalse(json.readTree(json.writeValueAsString(entity)).has("clearFields"));
     }
 
     private CmsMemberTemplate existing(Long memberId, Integer delFlag) {

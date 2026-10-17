@@ -48,6 +48,49 @@ class ApiGameSessionControllerTest {
                 new MerchantAccessContext(77L, MERCHANT_ROW, OWNER, MerchantRoleCode.MERCHANT_OWNER));
     }
 
+    @Test void sharedActionsCarryAuthenticatedPlayerAndAuthorityEpoch() {
+        for (String action : java.util.Arrays.asList("ITEM_USE","ITEM_DISCARD","ITEM_RECEIVE","QUEST_START","QUEST_CANCEL","QUEST_RESOLVE")) {
+            org.mockito.Mockito.clearInvocations(service);
+            GameSessionCommand command=new GameSessionCommand();command.setActivityId(10L);command.setRequestId(action);command.setExpectedRevision(2);command.setAuthorityEpoch(1);command.setAction(action);
+            when(service.command(any(),any())).thenReturn(receipt(10L,action));
+            assertEquals(200,controller.command(command).get("code"));
+            ArgumentCaptor<GameActorContext> actor=ArgumentCaptor.forClass(GameActorContext.class);ArgumentCaptor<GameSessionCommand> body=ArgumentCaptor.forClass(GameSessionCommand.class);
+            verify(service).command(actor.capture(),body.capture());assertEquals(77L,actor.getValue().getMemberId());assertEquals("PLAYER",actor.getValue().getPerspective());assertEquals(1,body.getValue().getAuthorityEpoch());
+        }
+    }
+
+    @Test void sharedStaffGuidanceAndManualSignUseAuthenticatedClubPrincipal() {
+        for (String action : java.util.Arrays.asList("QUEST_GUIDE", "ARRIVAL_CONFIRM", "STAFF_MANUAL_SIGN", "RUN_PAUSE", "MANUAL_IMPORT")) {
+            org.mockito.Mockito.clearInvocations(service);
+            GameSessionCommand command = new GameSessionCommand(); command.setAction(action);
+            when(service.command(any(), any())).thenReturn(receipt(10L, action));
+            assertEquals(200, controller.command(command).get("code"));
+            ArgumentCaptor<GameActorContext> actor = ArgumentCaptor.forClass(GameActorContext.class);
+            verify(service).command(actor.capture(), any());
+            assertEquals("CLUB", actor.getValue().getPerspective()); assertEquals(77L, actor.getValue().getMemberId());
+        }
+    }
+
+    @Test void fallbackIsStaffActionWhilePlanRejectionAndExecutionRemainPlayerActions() {
+        for (String action : java.util.Arrays.asList("PLAN_FALLBACK", "PLAN_REJECT_ALL", "PLAN_EXECUTE")) {
+            org.mockito.Mockito.clearInvocations(service);
+            GameSessionCommand command = new GameSessionCommand(); command.setAction(action);
+            when(service.command(any(), any())).thenReturn(receipt(10L, action));
+            assertEquals(200, controller.command(command).get("code"));
+            ArgumentCaptor<GameActorContext> actor = ArgumentCaptor.forClass(GameActorContext.class);
+            verify(service).command(actor.capture(), any());
+            assertEquals("PLAN_FALLBACK".equals(action) ? "CLUB" : "PLAYER", actor.getValue().getPerspective());
+            assertEquals(77L, actor.getValue().getMemberId());
+        }
+    }
+
+    @Test void offlineAnchorUsesAuthenticatedClubPrincipalAndActualActivity() {
+        GameSessionCommand request=new GameSessionCommand();request.setActivityId(10L);
+        when(service.anchorSharedRun(any(),any())).thenReturn(Collections.singletonMap("authorityEpoch",1));
+        assertEquals(200,controller.sharedExportAnchor(request).get("code"));ArgumentCaptor<GameActorContext> actor=ArgumentCaptor.forClass(GameActorContext.class);
+        verify(service).anchorSharedRun(actor.capture(),org.mockito.ArgumentMatchers.eq(10L));assertEquals("CLUB",actor.getValue().getPerspective());assertEquals(77L,actor.getValue().getMemberId());
+    }
+
     @Test
     void merchantPerspectiveCarriesResolvedOperatorOwnerScopeAndRole() {
         when(merchantAccessService.resolve(77L)).thenReturn(
@@ -167,6 +210,37 @@ class ApiGameSessionControllerTest {
         assertEquals("GAME_STATE_CONFLICT", ((Map<?, ?>) result.get("data")).get("reasonCode"));
         verify(service).recordFailure(any(GameActorContext.class), any(GameSessionCommand.class),
                 any(GameSessionException.class));
+    }
+
+    @Test
+    void commandReturnsOnlyPersistedFailureReceiptForRevisionConflict() {
+        GameSessionCommand command = new GameSessionCommand();
+        command.setActivityId(10L); command.setRequestId("revision-conflict");
+        command.setExpectedRevision(2); command.setAction("PLAYER_CHOICE");
+        when(service.command(any(), any())).thenThrow(
+                new GameSessionException("GAME_STATE_CONFLICT", "游戏状态已变化"));
+        GameCommandReceiptView failed = receipt(10L, "revision-conflict");
+        failed.setOutcome("FAILED"); failed.setAction("PLAYER_CHOICE");
+        failed.setReasonCode("GAME_STATE_CONFLICT");
+        when(service.recordFailure(any(), any(), any())).thenReturn(failed);
+
+        AjaxResult result = controller.command(command);
+
+        assertEquals(200, result.get("code"));
+        assertEquals(failed, result.get("data"));
+        verify(service).recordFailure(any(), org.mockito.Mockito.eq(command), any());
+    }
+
+    @Test
+    void failedReceiptPersistenceKeepsCommandResultUnknown() {
+        GameSessionCommand command = new GameSessionCommand();
+        command.setActivityId(10L); command.setRequestId("no-receipt"); command.setAction("PLAYER_CHOICE");
+        when(service.command(any(), any())).thenThrow(
+                new GameSessionException("GAME_STATE_CONFLICT", "游戏状态已变化"));
+        when(service.recordFailure(any(), any(), any())).thenThrow(new IllegalStateException("storage unavailable"));
+        AjaxResult result = controller.command(command);
+        assertEquals(500, result.get("code"));
+        assertEquals("GAME_STATE_CONFLICT", ((Map<?, ?>) result.get("data")).get("reasonCode"));
     }
 
     @Test

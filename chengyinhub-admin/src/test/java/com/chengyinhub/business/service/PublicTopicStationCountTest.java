@@ -17,6 +17,10 @@ class PublicTopicStationCountTest {
     @Test
     void publicCardsUseCurrentVisibleNodesInsteadOfSavedSnapshot() throws Exception {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         CmsTopicMapper topics = mock(CmsTopicMapper.class);
         CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);

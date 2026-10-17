@@ -34,6 +34,7 @@ class CoopComplaintServiceImplTest {
     private IUmsMemberBalanceDetailService balanceDetailService;
     private IPlayerWithdrawalCooldownService cooldownService;
     private CoopComplaintServiceImpl svc;
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice notices;
 
     private final com.chengyinhub.business.service.support.SettlementDebtLedger debtLedger = org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class);
 
@@ -43,6 +44,8 @@ class CoopComplaintServiceImplTest {
         umsMemberService = mock(IUmsMemberService.class);
         balanceDetailService = mock(IUmsMemberBalanceDetailService.class);
         svc = new CoopComplaintServiceImpl();
+        notices = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
+        ReflectionTestUtils.setField(svc, "businessNotice", notices);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger", debtLedger);
         ReflectionTestUtils.setField(svc, "coopComplaintMapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
@@ -91,6 +94,7 @@ class CoopComplaintServiceImplTest {
         verify(mapper).claimAcceptedForAdvance(eq(1L), eq(new BigDecimal("50")), eq(999L), any());
         // 资金状态迁移不得再走无旧状态条件的通用 UPDATE —— 那正是双付的成因。
         verify(mapper, never()).updateCoopComplaint(any());
+        verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-advance"), eq(1L));
     }
 
     /** ★并发双付:第二个 advance 抢不到 CAS,必须在任何余额变动之前出局。 */
@@ -107,6 +111,7 @@ class CoopComplaintServiceImplTest {
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(balanceDetailService, never()).insertUmsMemberBalanceDetail(any());
         verify(cooldownService, never()).registerFromPositiveComplaintDetail(any(), any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notices);
     }
 
     /** 冷静期必须挂在刚插入那条明细的 generated id 上,不许按 complaintId 二次模糊查。 */
@@ -173,6 +178,8 @@ class CoopComplaintServiceImplTest {
         assertEquals(Integer.valueOf(CoopComplaint.STATUS_CLOSED), cap.getValue().getStatus(), "关闭=解冻");
         assertEquals(Integer.valueOf(70), cap.getValue().getFaultRatio());
         assertEquals(0, new BigDecimal("50").compareTo(cap.getValue().getDeductAmount()));
+        verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-close-reporter"), eq(1L));
+        verify(notices).sendAfterCommit(eq(200L), any(), any(), eq("complaint-close-respondent"), eq(1L));
     }
 
     @Test
@@ -188,6 +195,16 @@ class CoopComplaintServiceImplTest {
         assertEquals(0, new BigDecimal("30").compareTo(cap.getValue().getDeductAmount()), "记实扣30");
         // 9-16 拍板第 2 条:差额 20 记欠款,从过错方后续结算抵扣
         verify(debtLedger).record(200L, com.chengyinhub.business.service.support.SettlementDebtLedger.SOURCE_COMPLAINT, 1L, new BigDecimal("20"));
+    }
+
+    @Test
+    void mineUsesOnlyTheAuthenticatedReporterAndRejectsMissingIdentity() {
+        when(mapper.selectMine(100L)).thenReturn(java.util.Collections.emptyList());
+        assertEquals(java.util.Collections.emptyList(), svc.listMine(100L));
+        verify(mapper).selectMine(100L);
+        assertThrows(IllegalArgumentException.class, () -> svc.listMine(null));
+        assertThrows(IllegalArgumentException.class, () -> svc.listMine(0L));
+        verify(mapper, never()).selectMine(null);
     }
 
     @Test

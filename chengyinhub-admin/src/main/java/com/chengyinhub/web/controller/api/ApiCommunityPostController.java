@@ -81,6 +81,18 @@ public class ApiCommunityPostController extends BaseController {
         return withAuthenticatedPrincipal(memberId -> success(service.drafts(memberId, cursor, limit)));
     }
 
+    @GetMapping("/me/bookmarks")
+    public AjaxResult bookmarks(@RequestParam(required = false) Long cursor,
+                                @RequestParam(required = false) Integer limit) {
+        return withReadPrincipal(memberId -> success(service.bookmarks(memberId, cursor, limit)));
+    }
+
+    @GetMapping("/me/posts")
+    public AjaxResult ownPosts(@RequestParam(required = false) Long cursor,
+                               @RequestParam(required = false) Integer limit) {
+        return withAuthenticatedPrincipal(memberId -> success(service.ownPosts(memberId, cursor, limit)));
+    }
+
     @GetMapping("/posts/{id}/revisions")
     public AjaxResult revisions(@PathVariable Long id) {
         return withAuthenticatedPrincipal(memberId -> success(service.revisions(memberId, id)));

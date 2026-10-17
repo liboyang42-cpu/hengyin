@@ -12,7 +12,7 @@
   </view>
   <view class="templateadd-feedback">
     <cy-inline-error wx:if="{{validationError}}" title="还不能继续" sub="{{validationError}}" />
-    <cy-inline-error wx:if="{{navigationError}}" title="页面没有打开" sub="{{navigationError}}" action="重试" bind:action="onCreateTemplate" />
+    <cy-inline-error load-failure wx:if="{{navigationError}}" title="页面没有打开" sub="{{navigationError}}" action="重试" bind:action="onCreateTemplate" />
   </view>
   <view class="templateadd-footer">
     <cy-btn class="ta-cta" variant="primary" loading="{{navigating}}" disabled="{{!canSubmit}}" aria-disabled="{{!canSubmit || navigating}}" bindtap="onCreateTemplate" bind:disabledtap="onCreateTemplate">确认</cy-btn>

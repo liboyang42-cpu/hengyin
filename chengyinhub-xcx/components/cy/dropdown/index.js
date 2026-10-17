@@ -19,6 +19,12 @@ const exitMotion = require('../../../behaviors/exit-motion.js');
 // 面板每项高度(rpx)与最大可见项数。露出半项是给用户「还能往下滚」的暗示。
 const ITEM_H_RPX = 88;
 const MAX_VISIBLE = 5.5;
+// 两列卡片档(2026-10-10 主人：下拉弹层一行两项):每格约 136rpx,最多露出 4 行半。
+const CELL_H_RPX = 136;
+// 全部卡片只有名称(无说明/原因)时用紧凑高度:88rpx 卡片 + 16rpx 间距
+const CELL_H_COMPACT_RPX = 104;
+const HEADER_H_RPX = 84;
+const MAX_ROWS = 4.5;
 
 Component({
   options: { multipleSlots: true, addGlobalClass: true },
@@ -36,6 +42,12 @@ Component({
     measureDelay: {type:Number, value:0},
     range: { type: Array, value: [] },
     rangeKey: { type: String, value: '' },
+    // 两列卡片档:columns=2 时每项渲染为「名称 + 一行说明」卡片;subKey 取说明,reasonKey 取不可选原因
+    // (有原因即置灰不可点,原因代替说明显示)。header=true 时面板顶部留一个 header 插槽(分类标签)。
+    columns: { type: Number, value: 1 },
+    subKey: { type: String, value: '' },
+    reasonKey: { type: String, value: '' },
+    header: { type: Boolean, value: false },
     value: { type: Number, value: 0 },
     disabled: { type: Boolean, value: false },
   },
@@ -44,18 +56,27 @@ Component({
     // (展开时给触发器 open 态),不是死数据字段。
     show: false,
     labels: [],
+    cells: [],
+    compact: false,
     panelStyle: '',
     dropUp: false,
   },
   observers: {
-    'range, rangeKey': function (range, rangeKey) {
+    'range, rangeKey, subKey, reasonKey': function (range, rangeKey, subKey, reasonKey) {
       var list = range || [];
+      var labels = list.map(function (item) {
+        if (item === null || item === undefined) return '';
+        if (typeof item === 'object') return String(rangeKey ? item[rangeKey] : (item.name || item.label || ''));
+        return String(item);
+      });
+      var cells = list.map(function (item, i) {
+        var obj = item && typeof item === 'object' ? item : {};
+        return { label: labels[i], sub: subKey && obj[subKey] ? String(obj[subKey]) : '', reason: reasonKey && obj[reasonKey] ? String(obj[reasonKey]) : '' };
+      });
       this.setData({
-        labels: list.map(function (item) {
-          if (item === null || item === undefined) return '';
-          if (typeof item === 'object') return String(rangeKey ? item[rangeKey] : (item.name || item.label || ''));
-          return String(item);
-        }),
+        labels: labels,
+        cells: cells,
+        compact: !cells.some(function (cell) { return cell.sub || cell.reason; }),
       });
     },
   },
@@ -95,13 +116,17 @@ Component({
         var win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
         var winH = win.windowHeight || 667;
         var pxPerRpx = (win.windowWidth || 375) / 750;
-        var panelH = that.data.customPanel ? that.data.panelHeight : Math.min(that.data.labels.length, MAX_VISIBLE) * ITEM_H_RPX * pxPerRpx + 16;
+        var grid = that.data.columns > 1;
+        var panelH = that.data.customPanel ? that.data.panelHeight
+          : grid ? (Math.min(Math.ceil(that.data.labels.length / that.data.columns), MAX_ROWS) * (that.data.compact ? CELL_H_COMPACT_RPX : CELL_H_RPX) + (that.data.header ? HEADER_H_RPX : 0)) * pxPerRpx + 24
+          : Math.min(that.data.labels.length, MAX_VISIBLE) * ITEM_H_RPX * pxPerRpx + 16;
         // 下方放不下就朝上开 —— 否则面板会被挤出屏幕底部。
         var dropUp = !that.data.below && rect.bottom + panelH > winH - 12 && rect.top - panelH > 12;
         var top = dropUp ? rect.top - panelH - that.data.gap : rect.bottom + that.data.gap;
         panelH = Math.max(44, Math.min(panelH, winH - top - 16));
         if (that.data.customPanel) that.triggerEvent('open');
-        var width = that.data.panelWidth || rect.width;
+        // 两列档默认铺满屏宽(左右各留 12px),否则卡片会挤进触发器那一小截宽度。
+        var width = that.data.panelWidth || (grid ? (win.windowWidth || 375) - 24 : rect.width);
         var left = Math.max(12, rect.right - width);
         that.setData({
           show: true,
@@ -122,6 +147,9 @@ Component({
     onPick: function (e) {
       if (this.data._closing) return;
       var index = Number(e.currentTarget.dataset.index);
+      // 不可选项(两列档带原因)点了不收起也不回传:原因已就地写在卡片上。
+      var cell = (this.data.cells || [])[index];
+      if (cell && cell.reason) return;
       this.close();
       // 与原生 picker 一致:detail.value 是下标,不是值本身。
       this.triggerEvent('change', { value: index });

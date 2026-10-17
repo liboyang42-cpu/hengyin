@@ -32,7 +32,7 @@
   <view wx:if="{{loading && events.length===0}}">
     <cy-skeleton type="feed-card" count="3" />
   </view>
-  <cy-error class="cy-fade-in" wx:elif="{{curError && events.length===0}}"
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{curError && events.length===0}}"
             title="活动列表没能打开" sub="{{errorMsg}}" bind:retry="onRetry" />
   <cy-empty wx:elif="{{!loading && !curError && events.length===0}}" fill size="lg" class="fill-slot" kind="{{emptyKind}}" title="{{emptyTitle}}" sub="{{emptySub}}" />
   <text class="oe-sync" wx:if="{{loading && events.length>0}}"

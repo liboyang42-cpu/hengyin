@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CommunityPostMapperMyBatisTest {
     @Test
@@ -80,6 +81,52 @@ class CommunityPostMapperMyBatisTest {
     }
 
     @Test
+    void personalListsUseOnlyCanonicalOwnedActionsAndKeepReviewStates() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        String[] states = {"DRAFT", "CHECKING", "PUBLISHED", "LIMITED", "HIDDEN", "REMOVED", "DELETED"};
+        for (int i = 0; i < states.length; i++) post(jdbc, 10 + i, 8, states[i], "PUBLIC", "SH", 1, 1, "own");
+        post(jdbc, 30, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "public");
+        post(jdbc, 31, 12, "PUBLISHED", "FOLLOWERS", "SH", 1, 1, "private");
+        post(jdbc, 32, 13, "PUBLISHED", "PUBLIC", "SH", 1, 1, "blocked");
+        post(jdbc, 33, 11, "CHECKING", "PUBLIC", "SH", 1, 1, "checking");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (13,8)");
+        jdbc.update("insert into community_post_member_action(post_id,member_id,action_type) values (30,8,'BOOKMARK'),(31,8,'BOOKMARK'),(32,8,'BOOKMARK'),(33,8,'BOOKMARK'),(12,9,'BOOKMARK')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            CommunityPostFeedQuery q = query("BOOKMARKS");
+            List<CommunityPost> favorites = mapper.selectBookmarkedFeed(q);
+            assertEquals(1, favorites.size()); assertEquals(Long.valueOf(30), favorites.get(0).getId());
+            assertEquals(Integer.valueOf(1), favorites.get(0).getViewerBookmarked());
+            assertNull(favorites.get(0).getApproximateGeohash());
+            q.setCursor(30L); assertEquals(0, mapper.selectBookmarkedFeed(q).size()); q.setCursor(null);
+            jdbc.update("delete from community_post_member_action where member_id=8 and post_id=30 and action_type='BOOKMARK'");
+            session.clearCache();
+            assertEquals(0, mapper.selectBookmarkedFeed(q).size());
+            q.setMode("OWN_POSTS"); List<CommunityPost> own = mapper.selectOwnPosts(q);
+            assertEquals(6, own.size()); assertEquals(Long.valueOf(15), own.get(0).getId());
+            for (CommunityPost row : own) assertEquals(Long.valueOf(8), row.getAuthorId());
+            q.setCursor(13L); own = mapper.selectOwnPosts(q);
+            assertEquals(3, own.size()); assertEquals(Long.valueOf(12), own.get(0).getId());
+            q.setViewerId(9L); assertEquals(0, mapper.selectOwnPosts(q).size());
+        }
+    }
+
+    @Test
+    void ownerDetailRetainsOriginalLocationAndTopicsWithoutPublicGridDisclosure() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        post(jdbc, 40, 8, "PUBLISHED", "PUBLIC", "SH", 1, 1, "located");
+        jdbc.update("update community_post set location_precision='APPROXIMATE', approximate_geohash='original-grid' where id=40");
+        jdbc.update("insert into community_post_topic(post_id,topic_code) values (40,'WALK'),(40,'CITY')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals("original-grid",mapper.selectById(40L,8L).getApproximateGeohash());
+            assertNull(mapper.selectById(40L,9L).getApproximateGeohash());
+            assertNull(mapper.selectById(40L,0L).getApproximateGeohash());
+            assertEquals(java.util.Arrays.asList("CITY", "WALK"),mapper.selectTopicCodes(40L));
+        }
+    }
+
+    @Test
     void memberCanReadDirectAndPostScopedEnforcementsForAppeal() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
@@ -95,6 +142,30 @@ class CommunityPostMapperMyBatisTest {
             assertEquals(2L, ((Number) rows.get(0).get("id")).longValue());
             assertEquals(1L, ((Number) rows.get(1).get("id")).longValue());
             assertEquals(9L, ((Number) rows.get(1).get("appeal_id")).longValue());
+        }
+    }
+
+    @Test
+    void commentFollowingProjectionUsesCurrentViewerAndActualAuthor() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into ums_member_follow(member_id,follow_member_id) values (8,11),(9,12)");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'followed','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,12,null,null,'not followed','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(30,1,8,null,null,'self','PUBLISHED','VISIBLE',0,0,now())");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String,Object>> rows = mapper.selectComments(1L,8L,null,20);
+            assertEquals(3,rows.size());
+            assertEquals(0,((Number)rows.get(0).get("viewer_following")).intValue());
+            assertEquals(0,((Number)rows.get(1).get("viewer_following")).intValue());
+            assertEquals(1,((Number)rows.get(2).get("viewer_following")).intValue());
+            for (Map<String,Object> row : mapper.selectComments(1L,0L,null,20))
+                assertEquals(0,((Number)row.get("viewer_following")).intValue());
+            List<Map<String,Object>> other = mapper.selectComments(1L,9L,null,20);
+            assertEquals(1,((Number)other.get(1).get("viewer_following")).intValue());
+            assertEquals(0,((Number)other.get(2).get("viewer_following")).intValue());
         }
     }
 
@@ -118,6 +189,72 @@ class CommunityPostMapperMyBatisTest {
             List<Map<String, Object>> second = mapper.selectComments(1L, 8L, 20L, 1);
             assertEquals(1, second.size());
             assertEquals(10L, ((Number) second.get(0).get("id")).longValue());
+        }
+    }
+
+    @Test
+    void deletedRootsKeepVisibleDescendantsWithRedactedAncestorsAndStableRootPaging() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'old normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,12,null,null,'private deleted root','DELETED','VISIBLE',1,0,now()),"
+                + "(21,1,13,20,20,'private deleted middle','DELETED','VISIBLE',1,0,now()),"
+                + "(22,1,14,20,21,'visible grandchild','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(23,1,12,20,20,'private deleted leaf','DELETED','VISIBLE',1,0,now()),"
+                + "(24,2,14,20,20,'foreign post reply','PUBLISHED','VISIBLE',0,0,now())");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> first = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(20L, 21L, 22L, 23L), first.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals("", first.get(0).get("body"));
+            assertEquals("", first.get(1).get("body"));
+            assertEquals("visible grandchild", first.get(2).get("body"));
+            assertEquals("", first.get(3).get("body"), "even pruned deleted leaves must never load original text");
+            List<Map<String, Object>> second = mapper.selectComments(1L, 8L, 20L, 1);
+            assertEquals(List.of(10L), second.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals(List.of(), mapper.selectComments(1L, 8L, 10L, 1));
+            assertNull(mapper.selectCommentForReply(20L, 1L, 8L));
+            assertNull(mapper.selectCommentForReply(21L, 1L, 8L));
+            assertEquals(0, mapper.insertCommentAction(20L, 8L, "like-deleted-root", new java.util.Date()));
+            assertEquals(0, mapper.insertCommentAction(21L, 8L, "like-deleted-middle", new java.util.Date()));
+            assertEquals(0, jdbc.queryForObject("select count(*) from community_post_comment_action", Integer.class));
+        }
+    }
+
+    @Test
+    void deletedRootsWithoutLegallyVisibleRepliesDoNotConsumePageSlots() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,11,null,null,'no replies','DELETED','VISIBLE',1,0,now()),"
+                + "(30,1,11,null,null,'pending replies','DELETED','VISIBLE',1,0,now()),"
+                + "(31,1,12,30,30,'pending','PUBLISHED','PENDING',0,0,now()),"
+                + "(40,1,11,null,null,'checking replies','DELETED','VISIBLE',1,0,now()),"
+                + "(41,1,12,40,40,'checking','CHECKING','VISIBLE',0,0,now()),"
+                + "(50,1,11,null,null,'muted replies','DELETED','VISIBLE',1,0,now()),"
+                + "(51,1,13,50,50,'muted','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(60,1,11,null,null,'blocked replies','DELETED','VISIBLE',1,0,now()),"
+                + "(61,1,14,60,60,'blocked','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(70,1,14,null,null,'blocked root','DELETED','VISIBLE',1,0,now()),"
+                + "(71,1,11,70,70,'visible reply','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(80,1,11,null,null,'foreign replies','DELETED','VISIBLE',1,0,now()),"
+                + "(81,2,11,80,80,'foreign','PUBLISHED','VISIBLE',0,0,now())");
+        jdbc.update("insert into community_member_mute(member_id,muted_member_id) values (8,13)");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (14,8)");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> rows = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(10L), rows.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            List<Map<String, Object>> ownerRows = mapper.selectComments(1L, 12L, 50L, 1);
+            assertEquals(List.of(40L, 41L), ownerRows.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList(), "existing own CHECKING visibility remains unchanged");
         }
     }
 
@@ -245,6 +382,32 @@ class CommunityPostMapperMyBatisTest {
     }
 
     @Test
+    void checkingEditRetainsOwnerVersionAndRemovedDeletedGuards() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "CHECKING", "PUBLIC", "SH", 1, 1, "before");
+        post(jdbc, 2, 11, "REMOVED", "PUBLIC", "SH", 1, 1, "removed");
+        post(jdbc, 3, 11, "DELETED", "PUBLIC", "SH", 1, 1, "deleted");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            CommunityPost changed = mapper.selectByIdForUpdate(1L);
+            changed.setBody("after");
+            assertEquals(1, mapper.updateContentCas(changed, 0, "CHECKING", new java.util.Date()));
+            assertEquals(0, mapper.updateContentCas(changed, 0, "CHECKING", new java.util.Date()));
+            changed.setAuthorId(12L);
+            assertEquals(0, mapper.updateContentCas(changed, 1, "CHECKING", new java.util.Date()));
+            for (long id : new long[]{2L, 3L}) {
+                assertEquals(0, mapper.updateContentCas(mapper.selectByIdForUpdate(id), 0,
+                        "CHECKING", new java.util.Date()));
+            }
+        }
+        assertEquals("after", jdbc.queryForObject("select body from community_post where id=1", String.class));
+        assertEquals(1, jdbc.queryForObject("select version from community_post where id=1", Integer.class));
+        assertEquals("CHECKING", jdbc.queryForObject("select lifecycle from community_post where id=1", String.class));
+    }
+
+    @Test
     void editingPostMovesCommunityAndGuidelineAtomically() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
@@ -338,6 +501,26 @@ class CommunityPostMapperMyBatisTest {
         query.setMode(mode);
         query.setLimit(20);
         return query;
+    }
+
+    @Test
+    void activityReferenceProjectsOnlyItsCurrentPublicTopicAndPreservesLegacySnapshot() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        jdbc.execute("create table community_post_reference(id bigint primary key,post_id bigint,reference_type varchar(24),reference_id bigint,snapshot_json varchar(255),privacy_snapshot varchar(32),invalidated_at timestamp)");
+        jdbc.execute("create table cms_activity(id bigint primary key,topic_id bigint,del_flag int)");
+        jdbc.execute("create table cms_topic(id bigint primary key,status int,user_status int,del_flag int,is_template int)");
+        jdbc.update("insert into cms_topic values (900,1,1,0,0),(901,0,1,0,0),(902,1,0,0,0),(903,1,1,1,0),(904,1,1,0,1)");
+        jdbc.update("insert into cms_activity values (70,900,0),(71,null,0),(72,901,0),(73,902,0),(74,903,0),(75,904,0),(76,900,1)");
+        jdbc.update("insert into community_post_reference(id,post_id,reference_type,reference_id,snapshot_json) values (1,56,'ACTIVITY',70,'{\"legacy\":true}'),(2,56,'ACTIVITY',71,'{}'),(3,56,'ACTIVITY',72,'{}'),(4,56,'ACTIVITY',73,'{}'),(5,56,'ACTIVITY',74,'{}'),(6,56,'ACTIVITY',75,'{}'),(7,56,'ACTIVITY',76,'{}')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            List<Map<String, Object>> refs = session.getMapper(CommunityPostMapper.class).selectReferences(56L);
+            assertEquals(7, refs.size());
+            assertNotNull(refs.get(0).get("topic_id"), "activity reference must project its real public topic ID");
+            assertEquals(900L, ((Number) refs.get(0).get("topic_id")).longValue());
+            assertEquals(70L, ((Number) refs.get(0).get("reference_id")).longValue());
+            assertEquals("{\"legacy\":true}", refs.get(0).get("snapshot_json"));
+            for (int j = 1; j < refs.size(); j++) assertNull(refs.get(j).get("topic_id"));
+        }
     }
 
     private void schema(JdbcTemplate jdbc) {

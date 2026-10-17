@@ -3,6 +3,7 @@
 // 自审核握手:发起即 status=0,受邀方在 coop/list 接受。后端 /api/coop/invite
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 /* 结果面板终态停留时长(cy-result-sheet 的 duration 默认也是 2000)。
    成功后要跳走,跳转挂在面板的 close 上,时长只此一处。 */
 const RESULT_SHEET_MS = 2000;
@@ -70,7 +71,8 @@ function identityKey() {
 function failureKind(value) {
   const code = value && (value.code != null ? value.code : value.statusCode);
   const message = String(value && (value.msg || value.message) || '');
-  if (String(code) === '401' || String(code) === '403' || /请先登录|无权|仅.+可|资格|身份/.test(message)) return 'permission';
+  if (String(code) === '401') return 'login';
+  if (String(code) === '403' || /请先登录|无权|仅.+可|资格|身份/.test(message)) return 'permission';
   if (/request:fail|timeout/i.test(String(value && value.errMsg || ''))) return 'network';
   return 'server';
 }
@@ -186,7 +188,9 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
+    if (this._readSessionChanged) { this._readSessionChanged = false; this._reloadAfterLogin(); }
     const currentIdentity = identityKey();
     if (this._dataIdentity !== undefined && this._dataIdentity !== currentIdentity) {
       this._invalidateRequests();
@@ -206,8 +210,9 @@ Page({
       this.loadTargets();
     }
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._unloaded = true;
     this._invalidateRequests();
     this._submitting = false;
     this._navigating = false;
@@ -269,7 +274,31 @@ Page({
     this.setData({ fixedFee: Number.isFinite(value) && value > 0 ? value : null });
   },
 
+  _recoverReadSession(value, epoch, key) {
+    if (this._unloaded || epoch !== this['_' + key + 'Epoch']) return false;
+    return recoverReadSession(this, app, value, function (anonymous) {
+      this._invalidateRequests(); this._topicsLoadedScope = this._targetsLoadedScope = '';
+      this.setData({ myTopics: [], clubs: [], merchants: [], selected: [], selectedMap: {},
+        topicsState: anonymous ? 'login' : 'loading', targetsState: anonymous ? 'login' : 'loading',
+        topicsRefreshing: false, targetsRefreshing: false });
+    }, this._reloadAfterLogin);
+  },
+
+  _requireSession() {
+    if (memberId(app)) return true;
+    this._invalidateRequests();
+    this._topicsLoadedScope = this._targetsLoadedScope = '';
+    this.setData({ topicsState: 'login', targetsState: 'login', myTopics: [], clubs: [], merchants: [],
+      selected: [], selectedMap: {}, topicsRefreshing: false, targetsRefreshing: false });
+    stopPullDownRefresh();
+    waitForInitialSession(this, app, this._reloadAfterLogin);
+    return false;
+  },
+  _reloadAfterLogin() { if (!this.data.topicId) this.loadMyTopics(true); this.loadTargets(true); },
+  onLogin() { return retryLogin(this, app, this._reloadAfterLogin); },
+
   loadMyTopics(force) {
+    if (!this._requireSession()) return;
     const that = this;
     const scope = this._topicsScope();
     if (this._topicsLoading && this._topicsLoadingScope === scope) return;
@@ -291,12 +320,13 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'topics')) return;
       if (!settle()) return;
       const kind = failureKind(value);
       const text = failureText(value, '主题没加载出来');
-      if (kind === 'permission') {
+      if (kind === 'permission' || kind === 'login') {
         that._topicsLoadedScope = '';
-        that.setData({ myTopics: [], topicsState: 'permission', topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
+        that.setData({ myTopics: [], topicsState: kind, topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ topicsState: 'ready', topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
       } else {
@@ -324,6 +354,7 @@ Page({
         });
       },
       fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 
@@ -337,6 +368,7 @@ Page({
   onMessageInput(e) { this.setData({ message: e.detail.value }); },
 
   loadTargets(force) {
+    if (!this._requireSession()) return;
     const that = this;
     if (this.data.presetTarget) { this.setData({ targetsState: 'ready' }); return; }
     const scope = this._targetsScope();
@@ -360,12 +392,13 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'targets')) return;
       if (!settle()) return;
       const kind = failureKind(value);
       const text = failureText(value, '合作对象没加载出来');
-      if (kind === 'permission') {
+      if (kind === 'permission' || kind === 'login') {
         that._targetsLoadedScope = '';
-        that.setData({ clubs: [], merchants: [], targetsState: 'permission', targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
+        that.setData({ clubs: [], merchants: [], targetsState: kind, targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
       } else if (that.data.activeType === 1) {
@@ -387,6 +420,7 @@ Page({
           that.setData({ clubs: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
         fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     } else {
       // 后端 /api/club/merchants 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致列表加载不出
@@ -400,6 +434,7 @@ Page({
           that.setData({ merchants: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
         fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     }
   },

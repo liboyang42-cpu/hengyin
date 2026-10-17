@@ -24,6 +24,9 @@ public interface UmsMemberMapper
      */
     public UmsMember selectUmsMemberById(Long id);
 
+    /** 权限只读取角色与账号有效状态，不读取资料或兼容字段。 */
+    UmsMember selectRolePermissionSubject(Long id);
+
     /**
      * 对会员行加悲观行锁(SELECT ... FOR UPDATE),用于串行化该会员的配额敏感写操作(如主题上架)。
      * 必须在事务内调用,锁持有到事务结束。
@@ -72,6 +75,9 @@ public interface UmsMemberMapper
      */
     public int updateUmsMember(UmsMember umsMember);
 
+    /** 唯一角色写入口由 RoleService 调用；兼容 user_type 与 role 同语句。 */
+    int updateCanonicalRole(@Param("id") Long id, @Param("role") String role, @Param("userType") Long userType);
+
     /**
      * 仅当会员尚未绑定微信身份时原子绑定 OpenID。
      *
@@ -83,6 +89,15 @@ public interface UmsMemberMapper
     public int upgradePasswordIfMatches(@Param("id") Long id,
             @Param("observedPassword") String observedPassword,
             @Param("upgradedPassword") String upgradedPassword);
+
+    /** 按主键游标读取尚未哈希的存量口令（只返回 id/password），供一次性批量 BCrypt 使用。 */
+    public List<UmsMember> selectLegacyPlaintextPasswords(@Param("afterId") Long afterId,
+            @Param("limit") int limit);
+
+    /** 批量哈希的 CAS：仅当库里仍逐字节等于读到的旧明文时替换为哈希。 */
+    public int hashLegacyPasswordIfUnchanged(@Param("id") Long id,
+            @Param("observedPassword") String observedPassword,
+            @Param("hashedPassword") String hashedPassword);
 
     /**
      * 删除用户

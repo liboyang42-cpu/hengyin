@@ -1,7 +1,7 @@
 package com.chengyinhub.web.controller.system;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.system.domain.SysBanner;
 import com.chengyinhub.system.service.ISysBannerService;

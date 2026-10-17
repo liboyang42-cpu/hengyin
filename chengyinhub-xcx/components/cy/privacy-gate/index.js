@@ -18,8 +18,13 @@ Component({
   },
   data: {
     submitting: false,
+    serviceAgreed: false,
+    showServiceSheet: false,
   },
   methods: {
+    toggleService(event) { this.setData({ serviceAgreed: !!event.detail.value.length }); },
+    openService() { this.setData({ showServiceSheet: true }); },
+    closeService() { this.setData({ showServiceSheet: false }); },
     openPrivacyContract() {
       wx.openPrivacyContract({
         fail() { toast('隐私保护指引暂不可用'); },
@@ -29,23 +34,27 @@ Component({
     agreePrivacy(event) {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      app.recordConsent({ docType: 'privacy_policy', scene: 'app_launch', eventType: 'AGREE' })
+      app.agreeUsageConsent(event, this.data.serviceAgreed)
         .then(() => {
-          app.resolvePrivacyAuthorization({
-            event: 'agree',
-            buttonId: event && event.detail && event.detail.buttonId,
-          });
           this.setData({ submitting: false });
           this.triggerEvent('settled', { event: 'agree' });
         })
         .catch(() => {
-          toast('同意记录失败，请检查网络后重试');
           this.setData({ submitting: false });
+          // F-L5C-10:微信授权已结算、本机已记下明确同意时,留痕失败只是「待补传」(登录成功后自动补),
+          // 不把用户卡在不可关闭的弹窗里;本机选择也没留下(如条款已升版)才停在弹窗重试。
+          if (app.getUsageConsent && app.getUsageConsent().granted()) {
+            toast('已同意，联网后会自动补记同意记录');
+            this.triggerEvent('settled', { event: 'agree', recordPending: true });
+            return;
+          }
+          toast('同意记录失败，请检查网络后重试');
         });
     },
 
     disagreePrivacy() {
       if (this.data.submitting) return;
+      app.declineUsageConsent();
       app.resolvePrivacyAuthorization({ event: 'disagree' });
       this.triggerEvent('settled', { event: 'disagree' });
     },
@@ -56,6 +65,7 @@ Component({
     // 否则调用方仍会挂住 —— 这是伪弹窗那个 bug 的同源风险,在这里也堵上。
     detached() {
       if (app.hasPendingPrivacyAuthorization && app.hasPendingPrivacyAuthorization()) {
+        app.declineUsageConsent();
         app.resolvePrivacyAuthorization({ event: 'disagree', reason: 'gate_detached' });
       }
     },

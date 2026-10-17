@@ -18,6 +18,7 @@ const FULL_VARIANT_WHITELIST = new Set([
   'pages/merchant/game-node/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/publish/components/reward-selector/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/publish/fabu/index.wxml', // 长表单或详情，使用导航下方完整阅读区
+  'pages/publish/fabu/survival-editor.wxml', // 恢复、配给、设施前置与结果卡多步长表单；临时界面待协调者重设计
   'pages/publish/fabu/topic-detail-sheet.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/searchmap/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/talent/list/index.wxml', // 长表单或详情，使用导航下方完整阅读区

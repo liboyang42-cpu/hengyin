@@ -1,5 +1,5 @@
 <view class="ticket-scene">
-  <cy-error wx:if="{{state === 'error'}}" fill="{{true}}" size="lg" title="入场码没生成出来" sub="{{errorText}}" retry="重试" bind:retry="retry" />
+  <cy-error load-failure wx:if="{{state === 'error'}}" fill="{{true}}" size="lg" title="入场码没生成出来" sub="{{errorText}}" retry="重试" bind:retry="retry" />
 
   <block wx:else>
     <!-- #568 票券终态移入场景组件：白票、黑色 Code 带、咬口和放大码层都只保留一份。 -->

@@ -39,6 +39,7 @@ class TemplatePublishQuestionMediaTest
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
         ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));
@@ -94,9 +95,9 @@ class TemplatePublishQuestionMediaTest
         request.setQuestionA("外白渡桥");
         request.setQuestionB("四川路桥");
         request.setCorrectAnswer("A");
-        request.setQuestionImg("https://cdn/q.jpg");
-        request.setQuestionAudio("https://cdn/q.mp3");
-        request.setQuestionOptionMediaJson("{\"A\":{\"img\":\"https://cdn/a.jpg\"}}");
+        request.setQuestionImg("media-asset:1");
+        request.setQuestionAudio("media-asset:2");
+        request.setQuestionOptionMediaJson("{\"A\":{\"img\":\"media-asset:3\"}}");
         return request;
     }
 
@@ -107,16 +108,16 @@ class TemplatePublishQuestionMediaTest
 
         CmsMemberTemplate member = memberRow.get();
         assertNotNull(member, "我的模板必须落库");
-        assertEquals("https://cdn/q.jpg", member.getQuestionImg());
-        assertEquals("https://cdn/q.mp3", member.getQuestionAudio());
-        assertEquals("{\"A\":{\"img\":\"https://cdn/a.jpg\"}}", member.getQuestionOptionMediaJson());
+        assertEquals("media-asset:1", member.getQuestionImg());
+        assertEquals("media-asset:2", member.getQuestionAudio());
+        assertEquals("{\"A\":{\"img\":\"media-asset:3\"}}", member.getQuestionOptionMediaJson());
 
         CmsTemplateLibrary library = libraryRow.get();
         assertNotNull(library, "isSync=1 必须同步进模板库");
-        assertEquals("https://cdn/q.jpg", library.getQuestionImg(),
+        assertEquals("media-asset:1", library.getQuestionImg(),
                 "模板库漏字段 = 发布即丢，且没有任何报错");
-        assertEquals("https://cdn/q.mp3", library.getQuestionAudio());
-        assertEquals("{\"A\":{\"img\":\"https://cdn/a.jpg\"}}", library.getQuestionOptionMediaJson());
+        assertEquals("media-asset:2", library.getQuestionAudio());
+        assertEquals("{\"A\":{\"img\":\"media-asset:3\"}}", library.getQuestionOptionMediaJson());
     }
 
     @Test

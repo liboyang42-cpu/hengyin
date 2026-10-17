@@ -54,6 +54,7 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -101,12 +102,17 @@ class RegistrationEquityMybatisIntegrationTest {
 
     @BeforeEach
     void resetSchema() throws Exception {
-        execute("DROP TABLE IF EXISTS business_audit_event", "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS settlement_rule",
+        execute("DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS business_audit_event", "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS settlement_rule",
                 "DROP TABLE IF EXISTS sms_coupon_history", "DROP TABLE IF EXISTS sms_coupon",
                 "DROP TABLE IF EXISTS cms_registration_merchant", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS cms_activity", "DROP TABLE IF EXISTS roam_poi_reward_log");
+        String baseline = java.nio.file.Files.readString(java.nio.file.Paths.get("../sql/base_schema_20260818.sql"));
+        java.util.regex.Matcher memberDdl = java.util.regex.Pattern.compile(
+                "CREATE TABLE `ums_member` \\([\\s\\S]*?\\) ENGINE=InnoDB[^;]*;").matcher(baseline);
+        assertTrue(memberDdl.find(), "真实基线必须提供完整会员表，owner锁不得以mock绕过");
+        execute(memberDdl.group(), "INSERT INTO ums_member(id,role,status,del_flag) VALUES(7001,'player',1,0)");
         execute(
                 "CREATE TABLE roam_poi_reward_log (poi_id BIGINT, member_id BIGINT, coupon_id BIGINT, status INT, PRIMARY KEY(poi_id,member_id)) ENGINE=InnoDB",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT) ENGINE=InnoDB",
@@ -236,8 +242,13 @@ class RegistrationEquityMybatisIntegrationTest {
         SqlSessionTemplate session = new SqlSessionTemplate(buildFactory(dataSource));
         RoamMapper realMapper = session.getMapper(RoamMapper.class);
         // Detail and identity are preconditions; reward CAS, coupon stock/history and audit use real XML.
-        RoamMapper mapper = mock(RoamMapper.class, invocation ->
-                invocation.getMethod().invoke(realMapper, invocation.getArguments()));
+        RoamMapper mapper = mock(RoamMapper.class, invocation -> {
+            try {
+                return invocation.getMethod().invoke(realMapper, invocation.getArguments());
+            } catch (java.lang.reflect.InvocationTargetException failed) {
+                throw failed.getCause();
+            }
+        });
         CityNodeVO detail = new CityNodeVO();
         detail.setMerchantId(77L);
         detail.setStatus(0);
@@ -261,7 +272,9 @@ class RegistrationEquityMybatisIntegrationTest {
         ApiVerifyController controller = (ApiVerifyController) factory.getProxy();
         String code = VerifyDynCodeUtil.issue(51L, "citynode_7001", System.currentTimeMillis(),
                 60000L, 77L, "city-node-it-secret");
-        assertThrows(RuntimeException.class, () -> controller.redeemCityNodeCode(code));
+        com.chengyinhub.common.exception.ServiceException exhausted = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> controller.redeemCityNodeCode(code));
+        assertEquals("券库存不足,核销失败", exhausted.getMessage(), "首轮必须真实到达库存回滚，不得把SQL错误当成功负控");
         assertEquals(0, number("SELECT status FROM roam_poi_reward_log WHERE poi_id=51"));
         assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001"));
         assertEquals(0, number("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='CITY_NODE'"));

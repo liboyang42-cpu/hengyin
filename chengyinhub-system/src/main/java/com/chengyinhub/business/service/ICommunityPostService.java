@@ -20,9 +20,12 @@ public interface ICommunityPostService {
     void copyrightRemove(Long operatorUserId, Long postId, CommunityPostRequests.State request);
     Map<String, Object> detail(Long viewerId, Long postId);
     List<Map<String, Object>> revisions(Long viewerId, Long postId);
+    List<Map<String, Object>> filterPublicCompletedReferences(Long memberId, List<Map<String, Object>> completed);
     List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit);
     Map<String, Object> feed(Long viewerId, CommunityPostFeedQuery query);
     Map<String, Object> drafts(Long memberId, Long cursor, Integer limit);
+    Map<String, Object> bookmarks(Long memberId, Long cursor, Integer limit);
+    Map<String, Object> ownPosts(Long memberId, Long cursor, Integer limit);
     Map<String, Object> act(Long memberId, Long postId, CommunityPostRequests.Action request);
     Map<String, Object> unact(Long memberId, Long postId, String actionType, String requestId);
     Map<String, Object> comment(Long memberId, Long postId, CommunityPostRequests.Comment request);

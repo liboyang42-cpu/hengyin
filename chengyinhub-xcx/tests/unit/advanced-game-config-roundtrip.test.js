@@ -241,24 +241,23 @@ test('★推理类面板的 data-path 必须指向默认配置里真有的列表
   assert.deepEqual(bad, [], '这些 data-path 不在默认配置里,增删改写进不存在的数组也不报错:\n  ' + bad.join('\n  '))
 })
 
-test('★选项问答多选:multi 为真允许多个正确答案,关掉仍只许一个', () => {
-  const base = () => {
+test('★选项问答多选:与服务端同一合同 —— 至少两个正确、至少一个错误;单选只许一个;不判断对错时跳过', () => {
+  const base = (flags) => {
     const m = cfg.defaultConfig()
     m.qa.enabled = true
     m.qa.mode = 'PICK'
     m.qa.title = 't'
-    m.qa.options = [
-      { id: 'a', label: 'A', fb: '', correct: true },
-      { id: 'b', label: 'B', fb: '', correct: true },
-    ]
+    m.qa.options = ['a', 'b', 'c'].map((id, i) => ({ id, label: id.toUpperCase(), fb: '', correct: !!flags[i] }))
     return m
   }
-  assert.match(cfg.validate(base()), /只指定一个正确答案/, '多选没开时两个正确答案必须被拦')
-  const multi = base()
-  multi.qa.multi = true
-  assert.equal(cfg.validate(multi), '', '多选开着时两个正确答案应当放行')
-  const none = base()
-  none.qa.multi = true
-  none.qa.options = none.qa.options.map((o) => Object.assign({}, o, { correct: false }))
-  assert.match(cfg.validate(none), /至少/, '多选也不能一个正确答案都没有')
+  assert.match(cfg.validate(base([1, 1, 0])), /只指定一个正确答案/, '多选没开时两个正确答案必须被拦')
+  const multi = (flags) => { const m = base(flags); m.qa.multi = true; return m }
+  assert.equal(cfg.validate(multi([1, 1, 0])), '', '三个选项两个正确的多选放行')
+  assert.match(cfg.validate(multi([1, 0, 0])), /至少要指定两个正确答案/, '只有一个正确答案不是多选')
+  assert.match(cfg.validate(multi([0, 0, 0])), /至少要指定两个正确答案/)
+  assert.match(cfg.validate(multi([1, 1, 1])), /不能把全部选项都设为正确答案/, '全部正确等于随便点都过')
+  const off = multi([1, 1, 1]); off.qa.judge = false
+  assert.equal(cfg.validate(off), '', '不判断对错时正确答案要求跳过,原设置保留')
+  assert.deepEqual(off.qa.options.map((o) => o.correct), [true, true, true])
+  assert.equal(cfg.qaAnswerError(multi([1, 0, 0]).qa), '多选问答至少要指定两个正确答案')
 })

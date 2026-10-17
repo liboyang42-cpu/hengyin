@@ -2,6 +2,8 @@ package com.chengyinhub.framework.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -46,6 +48,7 @@ class SmsVerificationServiceTest
         redisCache = mock(RedisCache.class);
         configService = mock(ISysConfigService.class);
         sender = mock(SmsCodeSender.class);
+        when(redisCache.incrementWithinWindow(org.mockito.ArgumentMatchers.startsWith("sms_send_phone_day_"), eq(1), eq(TimeUnit.DAYS))).thenReturn(1L);
         environment = new MockEnvironment()
                 .withProperty("CHENGYIN_SMS_ACCESS_KEY_ID", "env-id")
                 .withProperty("CHENGYIN_SMS_ACCESS_KEY_SECRET", "env-secret")
@@ -79,13 +82,8 @@ class SmsVerificationServiceTest
 
         ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
         verify(redisCache).setCacheObject(eq("sms_13800138000_code"), code.capture(), eq(5), eq(TimeUnit.MINUTES));
-        ArgumentCaptor<Collection> resetKeys = ArgumentCaptor.forClass(Collection.class);
-        verify(redisCache).deleteObject(resetKeys.capture());
-        assertEquals(5, resetKeys.getValue().size());
-        assertTrue(resetKeys.getValue().contains("sms_verify_attempt_phone_13800138000_1"));
-        assertTrue(resetKeys.getValue().contains("sms_verify_attempt_phone_13800138000_5"));
-        assertEquals(false, resetKeys.getValue().stream()
-                .anyMatch(key -> key.toString().contains("_ip_")));
+        verify(redisCache, never()).deleteObject(any(Collection.class));
+        verify(redisCache).incrementWithinWindow("sms_send_phone_day_13800138000", 1, TimeUnit.DAYS);
         assertEquals("334567", code.getValue());
         assertEquals(900000, secureRandom.lastBound);
         assertEquals(1, secureRandom.calls);
@@ -172,6 +170,17 @@ class SmsVerificationServiceTest
         verify(redisCache).compareAndDelete("sms_limit_phone_13800138000", acquiredOwner.getValue());
         verify(redisCache, never()).compareAndDelete("sms_limit_phone_13800138000", "different-owner");
         verify(sender, never()).send(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void eleventhDailyPhoneAttemptCannotSendOrResetVerificationFailures() {
+        when(redisCache.setIfAbsent(anyString(), anyString(), eq(60), eq(TimeUnit.SECONDS))).thenReturn(true);
+        when(redisCache.incrementWithinWindow(anyString(), eq(60), eq(TimeUnit.SECONDS))).thenReturn(1L);
+        when(redisCache.incrementWithinWindow("sms_send_phone_day_13800138000", 1, TimeUnit.DAYS)).thenReturn(11L);
+        SmsVerificationService.SendResult result = service(new SecureRandom()).send("13800138000", "203.0.113.8");
+        assertFalse(result.isSuccess());
+        verify(sender, never()).send(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(redisCache, never()).deleteObject(any(Collection.class));
     }
 
     @Test

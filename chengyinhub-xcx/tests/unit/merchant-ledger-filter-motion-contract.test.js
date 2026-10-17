@@ -77,7 +77,7 @@ function assertLedgerFilterShellContract(js, wxml) {
     /<view class="ledger-redemption-content"[^>]*>[\s\S]*?<cy-skeleton wx:if="\{\{loading && !hasLoaded\}\}" type="list"/,
     '筛选切换只替换内容区为列表骨架')
   assert.match(wxml,
-    /<cy-error wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<cy-empty wx:elif="\{\{!loading && !error && !redemptionGroups\.length\}\}"/,
+    /<cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<cy-empty wx:elif="\{\{!loading && !error && !redemptionGroups\.length\}\}"/,
     '失败态必须先于业务空态且两者互斥')
   assert.match(js, /onRedemptionFilter\(event\)\s*\{[\s\S]*?_redemptionEpoch\s*=\s*\(this\._redemptionEpoch \|\| 0\) \+ 1/,
     '点击筛选必须立刻推进 epoch，不能等身份探针返回后才防迟到响应')

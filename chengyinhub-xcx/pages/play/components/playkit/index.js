@@ -40,6 +40,8 @@ Component({
        不逐个往上抛同名事件:页面要挂九组 bind 才接得全,漏一个就是静默失效。 */
     _emit(action, detail) {
       const kit = this.data.kit || {};
+      if (kit.terminal && action !== 'close' && action !== 'retry') return;
+      if (action === 'retry' && !(kit.terminal && kit.canRetry === true)) return;
       this.triggerEvent('kitaction', {
         type: kit.type || '',
         action,
@@ -60,6 +62,7 @@ Component({
     onSlowStart() { this._emit('slowstart'); },
     onSlowClaim() { this._emit('slowclaim'); },
     onClose() { this._emit('close'); },
+    onRetry() { this._emit('retry'); },
     onRequestClose(e) { this._emit('requestclose', e.detail); },
 
     /* 整屏那批的动作。同样收口成 kitaction —— 页面按 type + action 分派,

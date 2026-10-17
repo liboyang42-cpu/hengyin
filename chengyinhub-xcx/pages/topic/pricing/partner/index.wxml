@@ -7,7 +7,7 @@
 
   <cy-empty wx:if="{{invalidLink}}" fill kind="missing-param" title="合作链接已失效" sub="{{loadError}}"
             cta="返回上一页" bind:cta="goBack" />
-  <cy-error wx:elif="{{loadError}}" fill title="合作信息加载失败" sub="{{loadError}}"
+  <cy-error load-failure wx:elif="{{loadError}}" fill title="合作信息加载失败" sub="{{loadError}}"
             retry="重试" bind:retry="retryProfile" />
   <scroll-view wx:else scroll-y class="pr-scroll" enhanced show-scrollbar="{{false}}">
 

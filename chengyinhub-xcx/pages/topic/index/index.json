@@ -16,7 +16,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index"
+    "cy-result-sheet": "/components/cy/result-sheet/index",
+    "cy-theme-records": "/components/cy/theme-records/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white"

@@ -36,7 +36,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -96,6 +96,38 @@ class PublicReadEndpointsSecurityChainTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/analytics/admin"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void uploadEndpointsIncludingTrailingSlashRequireAuthentication() throws Exception {
+        for (String route : new String[]{"/api/common/upload", "/api/common/upload/",
+                "/api/common/uploads", "/api/common/uploads/",
+                "/api/common/uploadOSS", "/api/common/uploadOSS/"}) {
+            mockMvc.perform(post(route))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+    }
+
+    @Test
+    void officialEventsAreAnonymousOnlyForGet() throws Exception {
+        for (String route : new String[]{"/api/official/events", "/api/official/events/123"}) {
+            mockMvc.perform(get(route)).andExpect(status().isOk());
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        mockMvc.perform(post("/api/official/events/123/signup"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cityNodesRequireAuthenticationForGetAndPost() throws Exception {
+        for (String route : new String[]{"/api/city/nodes", "/api/city/nodes/123"}) {
+            mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
     }
 
     @Test
@@ -236,6 +268,26 @@ class PublicReadEndpointsSecurityChainTest {
         }
 
         @Bean
+        com.chengyinhub.system.mapper.SysUserMapper sysUserMapper() {
+            return mock(com.chengyinhub.system.mapper.SysUserMapper.class);
+        }
+
+        @Bean
+        com.chengyinhub.framework.web.service.SysPermissionService sysPermissionService() {
+            return mock(com.chengyinhub.framework.web.service.SysPermissionService.class);
+        }
+
+        @Bean
+        com.chengyinhub.system.service.ISysRoleService sysRoleService() {
+            return mock(com.chengyinhub.system.service.ISysRoleService.class);
+        }
+
+        @Bean
+        com.chengyinhub.system.service.ISysMenuService sysMenuService() {
+            return mock(com.chengyinhub.system.service.ISysMenuService.class);
+        }
+
+        @Bean
         UserDetailsService userDetailsService() {
             return username -> null;
         }
@@ -285,7 +337,9 @@ class PublicReadEndpointsSecurityChainTest {
         }
 
         @org.springframework.web.bind.annotation.RequestMapping({"/api/roam/share/snapshot",
-                "/api/roam/share/revoke", "/api/play/run-session/list"})
+                "/api/roam/share/revoke", "/api/play/run-session/list",
+                "/api/official/events", "/api/official/events/123", "/api/official/events/123/signup",
+                "/api/city/nodes", "/api/city/nodes/123"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();
         }

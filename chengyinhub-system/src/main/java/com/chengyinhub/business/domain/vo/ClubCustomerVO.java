@@ -117,7 +117,7 @@ public class ClubCustomerVO {
         public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
     }
 
-    /** 一条参与记录。statusCode ∈ VERIFIED / PENDING / REFUNDED。 */
+    /** 一条参与记录。statusCode ∈ VERIFIED / PENDING / REFUNDED / CANCELLED(免费报名取消)。 */
     public static class Record {
         private String key;
         private Long topicId;
@@ -239,6 +239,11 @@ public class ClubCustomerVO {
     /** Mapper 内部载体:主题内一行报名(带明文手机号,同样绝不下发)。 */
     public static class RawTopicRow {
         private Long registrationId;
+        private String participantName;
+        private Integer registrationStatus;
+        private Long pointUsed;
+        private java.math.BigDecimal payableAmount;
+
         private Long memberId;
         private String displayName;
         private String avatar;
@@ -252,6 +257,14 @@ public class ClubCustomerVO {
         /** 这单有没有被评价过(merchant_review.create_time)。K3 稿的第四态「已评价」按它判。 */
         private Date reviewTime;
 
+        public String getParticipantName() { return participantName; }
+        public void setParticipantName(String value) { participantName = value; }
+        public Integer getRegistrationStatus() { return registrationStatus; }
+        public void setRegistrationStatus(Integer value) { registrationStatus = value; }
+        public Long getPointUsed() { return pointUsed; }
+        public void setPointUsed(Long value) { pointUsed = value; }
+        public java.math.BigDecimal getPayableAmount() { return payableAmount; }
+        public void setPayableAmount(java.math.BigDecimal value) { payableAmount = value; }
         public Long getRegistrationId() { return registrationId; }
         public void setRegistrationId(Long registrationId) { this.registrationId = registrationId; }
         public Long getMemberId() { return memberId; }
@@ -368,6 +381,10 @@ public class ClubCustomerVO {
     /** 核销详情的原始行,整形前的样子。 */
     public static class RawCheckinRow {
         private Long registrationId;
+        private String participantName;
+        private Integer registrationStatus;
+        private Long pointUsed;
+
         private String displayName;
         private String avatar;
         private String phone;
@@ -387,6 +404,12 @@ public class ClubCustomerVO {
         private String operatorName;
         private String storeName;
 
+        public String getParticipantName() { return participantName; }
+        public void setParticipantName(String value) { participantName = value; }
+        public Integer getRegistrationStatus() { return registrationStatus; }
+        public void setRegistrationStatus(Integer value) { registrationStatus = value; }
+        public Long getPointUsed() { return pointUsed; }
+        public void setPointUsed(Long value) { pointUsed = value; }
         public Long getRegistrationId() { return registrationId; }
         public void setRegistrationId(Long v) { this.registrationId = v; }
         public String getDisplayName() { return displayName; }

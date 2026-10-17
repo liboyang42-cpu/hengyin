@@ -72,6 +72,8 @@ class ApiClubLifecycleTest {
         ReflectionTestUtils.setField(controller, "clubMemberService", memberService);
         ReflectionTestUtils.setField(controller, "clubLifecycleCommandService", lifecycleService);
         ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
     }
 
     private Club activeClub() {
@@ -528,5 +530,20 @@ class ApiClubLifecycleTest {
         result.setAffectedRows(affectedRows);
         result.setMembershipAccessEnd(accessEnd);
         return result;
+    }
+
+    @Test
+    void clubChatOutsiderGetsForbiddenWithoutCreatingConversation() {
+        com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
+        ReflectionTestUtils.setField(controller, "imService", im);
+        ReflectionTestUtils.setField(controller, "clubParticipationGuard",
+                mock(com.chengyinhub.business.service.IClubParticipationGuard.class));
+        when(clubService.selectClubById(CLUB_ID)).thenReturn(activeClub());
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        AjaxResult response = controller.chat(body);
+        assertEquals(403, response.get("code"));
+        assertEquals("加入俱乐部后才能进群聊", response.get("msg"));
+        verify(im, org.mockito.Mockito.never()).getOrCreateClubGroup(anyLong(), anyLong());
     }
 }

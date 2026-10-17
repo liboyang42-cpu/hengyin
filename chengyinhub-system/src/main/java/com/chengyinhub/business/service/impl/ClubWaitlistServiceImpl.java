@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.ClubEventCampaign;
+import com.chengyinhub.business.domain.ClubEventDelivery;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistClaim;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
@@ -25,6 +27,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 @Service
@@ -258,9 +261,46 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
             if (mapper.offerWaitingCas(entry.getId(), entry.getVersion(), tokenHash, now, deadline) != 1) {
                 throw conflict("候补队首状态已变化");
             }
+            enqueueWaitlistNotification(policy.getClubId(), lockedOwnerMemberId, activityId, entry.getMemberId(),
+                    "WAITLIST", "候补名额通知", "你已获得活动候补名额，请在候补截止时间前完成报名。", now);
             return true;
         }
         return false;
+    }
+
+    private void enqueueWaitlistNotification(Long clubId, Long actorMemberId, Long activityId,
+                                             Long recipientMemberId, String audienceType,
+                                             String title, String content, Date now) {
+        ClubEventCampaign campaign = new ClubEventCampaign();
+        campaign.setClubId(clubId);
+        campaign.setActivityId(activityId);
+        campaign.setAudienceType(audienceType);
+        campaign.setChannel("IN_APP");
+        campaign.setTitle(title);
+        campaign.setContent(content);
+        campaign.setStatus(ClubEventCampaign.PROCESSING);
+        campaign.setActorMemberId(actorMemberId);
+        campaign.setRequestId(UUID.randomUUID().toString());
+        campaign.setTotalCount(1);
+        campaign.setSuccessCount(0);
+        campaign.setFailedCount(0);
+        campaign.setCreateTime(now);
+        campaign.setUpdateTime(now);
+        if (mapper.insertCampaign(campaign) != 1 || campaign.getId() == null || campaign.getId() <= 0) {
+            throw conflict("候补通知任务创建失败");
+        }
+
+        ClubEventDelivery delivery = new ClubEventDelivery();
+        delivery.setCampaignId(campaign.getId());
+        delivery.setRecipientMemberId(recipientMemberId);
+        delivery.setChannel("IN_APP");
+        delivery.setStatus(ClubEventDelivery.PENDING);
+        delivery.setAttemptCount(0);
+        delivery.setVersion(0);
+        if (mapper.insertDelivery(delivery) != 1 || delivery.getId() == null || delivery.getId() <= 0
+                || mapper.insertOutbox(delivery.getId(), now) != 1) {
+            throw conflict("候补通知收件回执创建失败");
+        }
     }
 
     @Override
@@ -288,6 +328,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         if (ticketMapper.restoreInventory(entry.getTicketId(), 1L) != 1) {
             throw conflict("候补过期库存回补失败");
         }
+        enqueueWaitlistNotification(entry.getClubId(), lockedOwnerMemberId, entry.getActivityId(), entry.getMemberId(),
+                "ALL_MEMBERS", "候补名额已过期", "你的活动候补名额已过期，如仍需参加，请重新加入候补。", now);
         ClubEventSeries activePolicy = mapper.selectSeriesPolicyByActivity(entry.getActivityId());
         if (activePolicy != null) {
             promoteNextLocked(activePolicy, lockedOwnerMemberId,

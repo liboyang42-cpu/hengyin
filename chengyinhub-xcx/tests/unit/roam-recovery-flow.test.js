@@ -338,11 +338,11 @@ for (const boundary of ['account', 'newSession']) test('等待nearby时' + bound
   if (boundary === 'account') { app.getUserID = () => '10'; page.onShow() } else page._resetRoamRecoverySession()
   resolveNearby(); await settle(); assert.equal(pending.length, 0)
   page._nearbyReady = Promise.resolve(); page._fetchRoamPois({ lat: 31, lng: 121 }); await settle()
-  pending[0].fail({ errMsg: 'timeout' }); await settle(); assert.equal(page.data.poiOffline, true)
+  pending[0].fail({ errMsg: 'timeout' }); await settle(); assert.equal(page.data.poiOffline, undefined, '读取失败不再画离线横幅'); assert.equal(page._pois.length, 0)
   page._fetchRoamPois({ lat: 31, lng: 121 }); await settle()
   pending[1].success({ code: 200, data: [{ id: 88, type: 1, name: '当前地点', lat: 31, lng: 121, found: false }] }); await settle()
   // 2026-09-16 C-09:真 POI 的 marker id 从字符串 'r88' 改成数字段 700000+id(微信 <map> 数字契约)
-  assert.equal(page.data.poiOffline, false); assert.equal(page._pois[0].id, 700088); assert.equal(page._pois[0]._roamId, 88); assert.equal(page._pois[0].state, 'fog')
+  assert.equal(page.data.poiOffline, undefined); assert.equal(page._pois[0].id, 700088); assert.equal(page._pois[0]._roamId, 88); assert.equal(page._pois[0].state, 'fog')
 })
 
 for (const route of ['/api/map/nearby', '/api/roam/tiles/page']) test('同初始化链旧' + route + '回包不得改新账号地图或本机桶', async () => {
@@ -370,7 +370,7 @@ test('同账号主动新一轮后旧POI回包不能填入passed或覆盖新轮�
   page.setData({ poiOffline: true })
   oldRead.success({ code: 200, data: [{ id: 77, type: 1, name: '旧轮地点', lat: 31, lng: 121, found: true }] }); await settle()
   assert.deepEqual(page._pois, [])
-  assert.equal(page.data.poiOffline, true)
+  assert.equal(page.data.poiOffline, true, '旧回包不能改写新轮的哨兵数据')
 })
 
 test('换账号清空入口缓存和弹层，旧回包不能恢复上一账号入口', async () => {
@@ -425,3 +425,45 @@ test('同一漫游页面重建后保留累计用时，旧快照也不会归零',
     Date.now = originalNow
   }
 })
+
+test('游客附近入口可点登录，不发送两条私有读取或制造附近无活动', async () => {
+  app.getUserID = () => '';
+  const page = mount(); await settle();
+  assert.equal(calls.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 0);
+  assert.equal(page.data.entryReadAccess, 'login');
+  app.firstLogin = () => { app.getUserID = () => '9'; return Promise.resolve({ ok: true }); };
+  await page.loginForEntryRead(); await settle();
+  assert.equal(calls.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 2);
+});
+test('附近读取401/403明确区分；普通500不伪装无权限', async () => {
+  for (const code of [401, 403, 500]) {
+    const page = mount(); await settle();
+    app.sendRequest = o => o.success({ code });
+    page._loadEntryMap({ lat: 31, lng: 121 }); await settle();
+    assert.equal(page.data.entryReadAccess, code === 401 ? 'login' : code === 403 ? 'denied' : '');
+    assert.equal(page.data.entryLoadError, code === 500);
+  }
+});
+test('旧账号附近权限回包不覆盖新读取；登录在页面退出后完成不继续读', async () => {
+  const page = mount(); await settle(); const pending=[];
+  app.sendRequest=o=>pending.push(o); page._loadEntryMap({lat:31,lng:121});
+  app.getUserID=()=> '10'; page._loadEntryMap({lat:31,lng:121});
+  pending[0].success({code:401});pending[1].success({code:403});await settle();
+  assert.equal(page.data.entryReadAccess,'');
+  pending[2].success({code:200,data:{items:[]}});pending[3].success({code:200,data:[]});await settle();
+  assert.equal(page.data.entryLoadError,false);
+  let resolve;app.getUserID=()=>'';app.firstLogin=()=>new Promise(r=>{resolve=r;});
+  const login=page.loginForEntryRead();page._unloaded=true;app.getUserID=()=> '10';resolve({ok:true});
+  await login;assert.equal(pending.length,4);
+});
+
+
+test('入口保留真实HTTP401/403与续期失败状态，不将网关500或断网误判权限', async () => {
+  for (const callback of ['successStatusAbnormal','fail']) for (const code of [401,403,500]) {
+    const page=mount();await settle();
+    app.sendRequest=o=>o[callback]({code:500},code);
+    page._loadEntryMap({lat:31,lng:121});await settle();
+    assert.equal(page.data.entryReadAccess,code===401?'login':code===403?'denied':'');
+    assert.equal(page.data.entryLoadError,code===500);
+  }
+});

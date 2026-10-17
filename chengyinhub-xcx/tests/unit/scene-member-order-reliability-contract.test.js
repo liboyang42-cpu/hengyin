@@ -12,6 +12,7 @@ function historyVm() {
   const sandbox = { requests: [], modals: [], toasts: [] }
   global.getApp = () => ({
     getPageSize: () => 10,
+    getUserID: () => 7, // Explicit authenticated order reader fixture.
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest: (options) => sandbox.requests.push(options),
   })

@@ -145,7 +145,7 @@ class ApiTemplateSecretsGateTest {
     void myinfo_returns_safe_projection_for_non_owner_published_template() {
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(memberTplWithSecrets(OTHER_OWNER));
 
-        AjaxResult res = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult res = tplController.myInfo(String.valueOf(TPL), null);
 
         assertEquals(200, res.get("code"), res.toString());
         CmsMemberTemplate out = (CmsMemberTemplate) res.get("data");
@@ -160,9 +160,9 @@ class ApiTemplateSecretsGateTest {
         privateDraft.setPublishStatus(0L);
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(privateDraft);
 
-        AjaxResult forbidden = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult forbidden = tplController.myInfo(String.valueOf(TPL), null);
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(null);
-        AjaxResult missing = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult missing = tplController.myInfo(String.valueOf(TPL), null);
 
         assertEquals(missing.get("code"), forbidden.get("code"));
         assertEquals(missing.get("msg"), forbidden.get("msg"));
@@ -175,9 +175,9 @@ class ApiTemplateSecretsGateTest {
         deletedTemplate.setDelFlag(2);
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(deletedTemplate);
 
-        AjaxResult forbidden = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult forbidden = tplController.myInfo(String.valueOf(TPL), null);
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(null);
-        AjaxResult missing = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult missing = tplController.myInfo(String.valueOf(TPL), null);
 
         assertEquals(missing.get("code"), forbidden.get("code"));
         assertEquals(missing.get("msg"), forbidden.get("msg"));
@@ -188,7 +188,7 @@ class ApiTemplateSecretsGateTest {
     void myinfo_keeps_secrets_for_owner_edit_backfill() {
         when(tplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(memberTplWithSecrets(VIEWER));
 
-        AjaxResult res = tplController.myInfo(String.valueOf(TPL));
+        AjaxResult res = tplController.myInfo(String.valueOf(TPL), null);
 
         assertEquals(200, res.get("code"), res.toString());
         CmsMemberTemplate out = (CmsMemberTemplate) res.get("data");
@@ -565,6 +565,7 @@ class ApiTemplateSecretsGateTest {
 
         assertEquals(200, res.get("code"), res.toString());
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
+        assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
         assertEquals(1, detail.getChaptersList().size(), "公共详情仍保留章节级 teaser");
         TopicChapterVO chapter = detail.getChaptersList().get(0);
         assertTrue(chapter.getNodes() == null || chapter.getNodes().isEmpty(),
@@ -597,6 +598,7 @@ class ApiTemplateSecretsGateTest {
 
         assertEquals(200, res.get("code"), res.toString());
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
+        assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
         TopicChapterVO chapter = detail.getChaptersList().get(0);
         assertEquals(1, chapter.getNodes().size(), "承接方应当看得到自己承接的那一站");
         assertEquals(302L, chapter.getNodes().get(0).getId());
@@ -614,6 +616,7 @@ class ApiTemplateSecretsGateTest {
                 .topicInfo("300");
 
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
+        assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
         TopicChapterVO chapter = detail.getChaptersList().get(0);
         assertTrue(chapter.getNodes() == null || chapter.getNodes().isEmpty(),
                 "白名单为空必须回落到 2026-09-05 之前的 teaser 行为");
@@ -626,6 +629,7 @@ class ApiTemplateSecretsGateTest {
                 .topicInfo("300");
 
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
+        assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
         TopicChapterVO chapter = detail.getChaptersList().get(0);
         assertTrue(chapter.getNodes() == null || chapter.getNodes().isEmpty(),
                 "白名单里没有的节点被放行了 = 承接一站就能看全图");
@@ -651,6 +655,7 @@ class ApiTemplateSecretsGateTest {
 
         assertEquals(200, res.get("code"), res.toString());
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
+        assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
         assertEquals(1, detail.getChaptersList().size(), "未购票响应只能下发第一章");
         assertEquals(2, detail.getTotalChapterCount());
         assertEquals(1, detail.getUnlockedChapterCount());
@@ -699,7 +704,26 @@ class ApiTemplateSecretsGateTest {
         AjaxResult res = topicControllerWithSecretNode().topicInfoToMerchant("300");
 
         assertEquals(200, res.get("code"));
+        assertEquals(8L, ((TopicInfoVO) res.get("data")).getLocationCount());
+        assertEquals(Integer.valueOf(0), ((TopicInfoVO) res.get("data")).getDelFlag());
         assertTopicNodeSecretsStripped(firstTopicNode(res), false);
+    }
+
+    @Test
+    void topic_info_to_merchant_preservesActualDeletionFlagWithoutInventingLiveState() {
+        for (Integer flag : new Integer[] {null, 1, 2}) {
+            ApiTopicController controller = topicControllerWithSecretNode();
+            ICmsTopicService topicService = (ICmsTopicService)
+                    ReflectionTestUtils.getField(controller, "cmsTopicService");
+            CmsTopic actual = topicService.selectMerchantVisibleCmsTopicById(300L);
+            actual.setDelFlag(flag);
+
+            AjaxResult res = controller.topicInfoToMerchant("300");
+
+            assertEquals(200, res.get("code"));
+            assertEquals(flag, ((TopicInfoVO) res.get("data")).getDelFlag(),
+                    "读取投影不能把实际未知或删除标记改成可编辑的0");
+        }
     }
 
     @Test
@@ -905,6 +929,7 @@ class ApiTemplateSecretsGateTest {
 
         CmsTopic topic = new CmsTopic();
         topic.setId(300L);
+        topic.setLocationCount(8L); // Refreshed full-route scalar; viewer projection remains separate.
         topic.setMemberId(OTHER_OWNER);
         topic.setDelFlag(0);
         topic.setStatus(1);
@@ -971,7 +996,8 @@ class ApiTemplateSecretsGateTest {
         UmsMember merchant = new UmsMember();
         merchant.setId(VIEWER);
         merchant.setStatus(1L);
-        merchant.setUserType(2L);
+        merchant.setUserType(1L); // 旧兼容字段不能否决真实商家角色
+        merchant.setRole("merchant");
         when(memberSvc.selectUmsMemberById(anyLong())).thenReturn(merchant);
         return c;
     }

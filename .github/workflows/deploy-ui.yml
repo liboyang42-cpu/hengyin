@@ -5,12 +5,6 @@ name: Deploy admin UI to ECS
 # 反过来改后端也不会来动静态文件。
 
 on:
-  workflow_run:
-    workflows: [GitHub CI]
-    types: [completed]
-    # 不加 branches,每个 PR 的 CI 跑完都会凭空造一个 Deploy run:它会被下面 prepare 的
-    # if 挡掉,但 run 已经建出来了,占 concurrency 组、互相挤成 cancelled,看着像生产事故。
-    branches: [master]
   workflow_dispatch:
     inputs:
       ref:
@@ -40,11 +34,7 @@ env:
 jobs:
   prepare:
     if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'master') ||
-      github.event_name == 'workflow_dispatch'
+      github.repository == 'liboyang42-cpu/chengyin' && ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master') || github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     outputs:
       sha: ${{ steps.classify.outputs.sha }}
@@ -104,7 +94,8 @@ jobs:
 
   deploy:
     needs: prepare
-    if: needs.prepare.outputs.should_deploy == 'true'
+    if: >-
+      github.repository == 'liboyang42-cpu/chengyin' && (needs.prepare.outputs.should_deploy == 'true')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     environment: production
     timeout-minutes: 20

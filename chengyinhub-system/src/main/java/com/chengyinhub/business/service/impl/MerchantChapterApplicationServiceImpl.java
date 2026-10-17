@@ -24,6 +24,7 @@ import com.chengyinhub.system.service.ISysCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
@@ -40,8 +41,14 @@ import java.util.Set;
 @Service
 public class MerchantChapterApplicationServiceImpl implements IMerchantChapterApplicationService {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.TopicSupplyReviewService supplyReviewService;
+
     @Autowired
     private MerchantChapterApplicationMapper applicationMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice committedNotice;
 
     @Autowired
     private CmsTopicChapterMapper chapterMapper;
@@ -62,6 +69,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     private ISysCategoryService sysCategoryService;
 
     @org.springframework.beans.factory.annotation.Autowired
+    @Lazy
     private com.chengyinhub.business.service.IChapterMerchantNodeService chapterMerchantNodeService;
 
     @Override
@@ -74,6 +82,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             throw new IllegalStateException("请先登录");
         }
         // 与章节删除、审核和入驻共用锁：删除完成后不能再插入悬空申请。
+        supplyReviewService.lockBeforeChapter(chapterId);
         if (chapterMapper.lockChaptersForCapacity(Collections.singletonList(chapterId)).isEmpty()) {
             throw new IllegalStateException("章节不存在");
         }
@@ -173,6 +182,16 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MerchantChapterApplication audit(Long applicationId, Long publisherMemberId, boolean approved, String auditRemark) {
+        return decide(applicationId, publisherMemberId, approved, auditRemark, false);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MerchantChapterApplication respondInvite(Long applicationId, Long merchantMemberId, boolean accepted) {
+        return decide(applicationId, merchantMemberId, accepted, accepted ? "商家已接受邀请" : "商家已拒绝邀请", true);
+    }
+
+    private MerchantChapterApplication decide(Long applicationId, Long publisherMemberId, boolean approved, String auditRemark, boolean invitedResponse) {
         if (applicationId == null || applicationId <= 0) {
             throw new IllegalStateException("缺少申请");
         }
@@ -185,6 +204,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         }
 
         // 与 enroll 同一锁序：章节锁 -> 主题锁。审批通过会预占名额，必须和实际入驻串行。
+        supplyReviewService.lockBeforeChapter(application.getChapterId());
         if (chapterMapper.lockChaptersForCapacity(Collections.singletonList(application.getChapterId())).isEmpty()) {
             throw new IllegalStateException("章节不存在");
         }
@@ -198,24 +218,47 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         if (application.getTopicId() != null && !topic.getId().equals(application.getTopicId())) {
             throw new IllegalStateException("申请与章节归属不一致，暂不能处理");
         }
-        if (publisherMemberId.equals(application.getMerchantId())) {
-            throw new IllegalStateException("申请商家本人不能审核自己的申请");
-        }
-        if (!publisherMemberId.equals(topic.getMemberId())) {
-            throw new IllegalStateException("仅主题发布者可审核本章节申请");
+        if (invitedResponse) {
+            if (!Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE).equals(application.getSource())
+                    || !publisherMemberId.equals(application.getMerchantId())) {
+                throw new IllegalStateException("仅受邀商家可处理本邀请");
+            }
+        } else {
+            if (Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE).equals(application.getSource())) {
+                throw new IllegalStateException("邀请须由商家接受，主办方可撤回邀请");
+            }
+            if (publisherMemberId.equals(application.getMerchantId())) {
+                throw new IllegalStateException("申请商家本人不能审核自己的申请");
+            }
+            if (!publisherMemberId.equals(topic.getMemberId())) {
+                throw new IllegalStateException("仅主题发布者可审核本章节申请");
+            }
         }
         if (!Integer.valueOf(MerchantChapterApplication.STATUS_PENDING).equals(application.getStatus())) {
+            if (invitedResponse && Integer.valueOf(approved ? MerchantChapterApplication.STATUS_APPROVED
+                    : MerchantChapterApplication.STATUS_REJECTED).equals(application.getStatus())
+                    && Integer.valueOf(0).equals(application.getDelFlag())) return application;
             throw new IllegalStateException("该申请已处理");
         }
 
         if (approved) {
-            assertRecruitmentOpen(chapter, topic);
+            assertRecruitmentOpen(chapter, topic, invitedResponse && application.getReplacementOfOfferId() != null);
+            if (application.getReplacementOfOfferId() != null
+                    && (offerMapper.selectReplacementForUpdate(application.getReplacementOfOfferId()) != null
+                        || hasApprovedReplacement(application.getChapterId(), application.getReplacementOfOfferId(),
+                            application.getId()))) {
+                throw new IllegalStateException("原供给已有确认替补，请刷新后查看");
+            }
             assertMatchingActiveMerchant(chapter, application.getMerchantId());
             assertApprovalCapacity(chapter, application.getMerchantId());
         }
 
         Date handledAt = DateUtils.getNowDate();
         String normalizedRemark = normalizeText(auditRemark, "审核备注");
+        if (!approved && !invitedResponse && normalizedRemark == null) {
+            // F-R2F-05:主办驳回必须说明原因，商家据此修改后重申；通知正文也不会出现空原因
+            throw new IllegalStateException("请填写拒绝原因");
+        }
         int targetStatus = approved ? MerchantChapterApplication.STATUS_APPROVED
                 : MerchantChapterApplication.STATUS_REJECTED;
         if (applicationMapper.updateAudit(application.getId(), targetStatus, normalizedRemark,
@@ -230,7 +273,12 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         // 商家报名时就把点位填好,主办方看着实际玩法决定要不要这家;分两次审等于让他
         // 在不知道玩法的情况下先决定要不要人,商家还多等一轮。
         chapterMerchantNodeService.auditAlongApplication(
-                chapter.getId(), application.getMerchantId(), publisherMemberId, approved, normalizedRemark);
+                chapter.getId(), application.getMerchantId(), topic.getMemberId(), approved, normalizedRemark);
+        committedNotice.sendAfterCommit(invitedResponse ? topic.getMemberId() : application.getMerchantId(),
+                invitedResponse ? "章节邀请处理结果" : "章节申请审核结果",
+                invitedResponse ? (approved ? "商家已接受章节邀请" : "商家已拒绝章节邀请")
+                        : (approved ? "章节申请已通过" : "章节申请未通过：" + normalizedRemark),
+                invitedResponse ? "chapter-invite-decide" : "chapter-application-reviewed", application.getId());
         return application;
     }
 
@@ -368,6 +416,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             throw new IllegalStateException("不能邀请自己承接自己的主题");
         }
         // 与申请、审核共用同一把章节锁:删除完成后不能再插入悬空邀请。
+        supplyReviewService.lockBeforeChapter(chapterId);
         if (chapterMapper.lockChaptersForCapacity(Collections.singletonList(chapterId)).isEmpty()) {
             throw new IllegalStateException("章节不存在");
         }
@@ -389,19 +438,14 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             if (offerMapper.selectReplacementForUpdate(replacementOfOfferId) != null) {
                 throw new IllegalStateException("原供给已有确认的替补，请刷新查看当前退出供给");
             }
-            List<MerchantChapterApplication> approved = applicationMapper.selectByChapterAndStatus(
-                    chapterId, MerchantChapterApplication.STATUS_APPROVED);
-            if (approved != null) {
-                for (MerchantChapterApplication row : approved) {
-                    if (replacementOfOfferId.equals(row.getReplacementOfOfferId())) {
-                        throw new IllegalStateException("该供给已有补位邀请，请等待确认或撤回后另邀");
-                    }
-                }
+            // 邀请改为「待商家接受」后，待接受的补位邀请同样占住这条原供给的补位位，
+            // 否则可以对同一退出供给并发发出多份补位邀请、被多家同时接受。
+            if (hasReplacementApplication(chapterId, replacementOfOfferId, null)) {
+                throw new IllegalStateException("该供给已有补位邀请，请等待确认或撤回后另邀");
             }
         }
         assertMatchingActiveMerchant(chapter, merchantMemberId);
-        // 邀请即占名额 —— 与「审核通过占名额」同一口径,否则可以无限邀、到入驻才失败
-        assertApprovalCapacity(chapter, merchantMemberId);
+        // 待接受邀请不占名额；接受时在章节锁内检查并预占。
 
         MerchantChapterApplication existing = applicationMapper.selectByChapterAndMerchant(chapterId, merchantMemberId);
         if (existing != null) {
@@ -425,11 +469,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         invite.setReplacementOfOfferId(replacementOfOfferId);
         invite.setMerchantId(merchantMemberId);
         invite.setMessage(normalizedMessage);
-        // 预先批准:商家不用再等一轮审核,直接去填供给和点位
-        invite.setStatus(MerchantChapterApplication.STATUS_APPROVED);
+        invite.setStatus(MerchantChapterApplication.STATUS_PENDING);
         invite.setSource(MerchantChapterApplication.SOURCE_INVITE);
-        invite.setAuditMemberId(publisherMemberId);
-        invite.setHandleTime(now);
+        invite.setAuditMemberId(null);
+        invite.setHandleTime(null);
         invite.setDelFlag(0);
         invite.setCreateBy(String.valueOf(publisherMemberId));
         invite.setCreateTime(now);
@@ -438,6 +481,8 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             if (applicationMapper.reinviteWithdrawn(invite) != 1) {
                 throw new IllegalStateException("历史申请状态刚发生变化，请刷新后重试");
             }
+            committedNotice.sendAfterCommit(merchantMemberId, "章节承接邀请", "请在主题承接进度中接受或拒绝邀请",
+                    "chapter-invite", invite.getId());
             return invite;
         }
         try {
@@ -445,7 +490,61 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         } catch (DuplicateKeyException e) {
             throw new IllegalStateException("该商家已有本章节的申请,请刷新后查看");
         }
+        committedNotice.sendAfterCommit(merchantMemberId, "章节承接邀请", "请在主题承接进度中接受或拒绝邀请",
+                    "chapter-invite", invite.getId());
         return invite;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MerchantChapterApplication revokeInvite(Long applicationId, Long publisherMemberId) {
+        MerchantChapterApplication application = applicationMapper.selectByIdIncludingDeleted(applicationId);
+        if (application == null || application.getChapterId() == null
+                || !Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE).equals(application.getSource())) {
+            throw new IllegalStateException("邀请不存在");
+        }
+        supplyReviewService.lockBeforeChapter(application.getChapterId());
+        if (chapterMapper.lockChaptersForCapacity(Collections.singletonList(application.getChapterId())).isEmpty()) {
+            throw new IllegalStateException("章节不存在");
+        }
+        CmsTopicChapter chapter = requireChapter(application.getChapterId());
+        CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(chapter.getTopicId());
+        if (topic == null || publisherMemberId == null || !publisherMemberId.equals(topic.getMemberId())) {
+            throw new IllegalStateException("仅主题发布者可撤回邀请");
+        }
+        if (!Integer.valueOf(MerchantChapterApplication.STATUS_PENDING).equals(application.getStatus())) {
+            throw new IllegalStateException("已处理的邀请不可撤回");
+        }
+        if (Integer.valueOf(2).equals(application.getDelFlag())) return application;
+        if (applicationMapper.withdrawPending(applicationId, application.getMerchantId()) != 1) {
+            throw new IllegalStateException("邀请状态已变化，请刷新后重试");
+        }
+        application.setDelFlag(2);
+        committedNotice.sendAfterCommit(application.getMerchantId(), "章节邀请已撤回", "主办方已撤回待接受的章节邀请",
+                "chapter-invite-revoke", application.getId());
+        return application;
+    }
+
+    /** 本章节是否已有指向同一原供给的补位邀请(待接受或已接受)，可排除当前这一条。 */
+    private boolean hasReplacementApplication(Long chapterId, Long replacementOfOfferId, Long excludeId) {
+        return hasReplacementWithStatus(chapterId, replacementOfOfferId, excludeId, MerchantChapterApplication.STATUS_PENDING)
+                || hasApprovedReplacement(chapterId, replacementOfOfferId, excludeId);
+    }
+
+    private boolean hasApprovedReplacement(Long chapterId, Long replacementOfOfferId, Long excludeId) {
+        return hasReplacementWithStatus(chapterId, replacementOfOfferId, excludeId, MerchantChapterApplication.STATUS_APPROVED);
+    }
+
+    private boolean hasReplacementWithStatus(Long chapterId, Long replacementOfOfferId, Long excludeId, int status) {
+        List<MerchantChapterApplication> rows = applicationMapper.selectByChapterAndStatus(chapterId, status);
+        if (rows == null) return false;
+        for (MerchantChapterApplication row : rows) {
+            if (row != null && replacementOfOfferId.equals(row.getReplacementOfOfferId())
+                    && (excludeId == null || !excludeId.equals(row.getId()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -662,7 +761,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         if (topic.getProductType() == null || topic.getProductType() != ProductType.FREE_EXPLORE) {
             throw new IllegalStateException("该章节所属路线不是自由定向，暂不开放商家承接");
         }
-        if (topic.getStatus() == null || topic.getStatus() != 1
+        if ((!Integer.valueOf(1).equals(topic.getStatus())
+                && !(replacement && "pro".equals(topic.getPublishMode())
+                    && Integer.valueOf(0).equals(topic.getStatus())
+                    && Integer.valueOf(com.chengyinhub.business.domain.enums.TopicLifecycleState.PENDING_REVIEW.getCode()).equals(topic.getLifecycle())))
                 || topic.getUserStatus() == null
                 || (!Integer.valueOf(1).equals(topic.getUserStatus())
                     && !(replacement && Integer.valueOf(0).equals(topic.getUserStatus())))) {

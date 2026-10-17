@@ -1,6 +1,7 @@
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
 const app = getApp();
+const { currentOwnerId } = require('../../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const couponForm = require('../../utils/coupon-form.js');
 // 起止时刻的拆装(跨天必须按「日期+时刻」一起算,见该文件注释)
@@ -53,12 +54,44 @@ Page({
    */
   onLoad(options) {
     var that = this 
+    this._disposed = false;
+    this._visible = true;
+    this._formOwner = currentOwnerId(app);
     that.setData({ operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '' })
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    this._visible = true;
+    const owner = currentOwnerId(app);
+    if (owner !== this._formOwner) {
+      this._formOwner = owner;
+      this._submitContext = null;
+      this._cancelExitTimer();
+      this.setData({ isSubmitting: false });
+    }
+    merchantTheme.merchantPageShow();
+  },
+  onHide() {
+    this._visible = false;
+    this._cancelExitTimer();
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() {
+    this._disposed = true;
+    this._submitContext = null;
+    this.onHide();
+  },
+
+  _cancelExitTimer() {
+    if (this._exitTimer != null) clearTimeout(this._exitTimer);
+    this._exitTimer = null;
+  },
+
+  _isSubmitContextCurrent(context) {
+    return !this._disposed && this._submitContext === context
+      && currentOwnerId(app) === context.owner
+      && this.data.operationScope === context.scope;
+  },
 
   // 打开有效期选择器。起止一次选完,不再「确定开始 → 延时 300ms 自动弹出结束」——
   // 那个延时弹窗会盖住页面,而且选结束时看不到刚选的开始时间。
@@ -182,7 +215,9 @@ Page({
   onSubmit() {
     const that = this;
     // M0-4 发券防重:前端防抖,提交中直接拦掉重复点击
-    if (that.data.isSubmitting) return;
+    if (that.data.isSubmitting || that._disposed || that._visible === false) return;
+    const owner = currentOwnerId(app);
+    if (!owner) return;
     const formData = that.data.formData;
 
     const check = couponForm.validate(formData);
@@ -196,6 +231,10 @@ Page({
       return;
     }
 
+    that._cancelExitTimer();
+    that._formOwner = owner;
+    const context = { owner, scope: that.data.operationScope };
+    that._submitContext = context;
     that.setData({
       isSubmitting: true,
       submitError: '',
@@ -203,15 +242,21 @@ Page({
       submitErrorRetryable: false,
     });
     couponForm.submitCoupon(app, formData, {
-      scope: that.data.operationScope,
+      scope: context.scope,
       onSuccess() {
+        if (!that._isSubmitContextCurrent(context)) return;
         that.setData({ isSubmitting: false, submitError: '' });
+        if (that._visible === false) return;
         cyToast.success('发布成功', { duration: 2000 })
-        setTimeout(() => {
+        that._cancelExitTimer();
+        that._exitTimer = setTimeout(() => {
+          if (!that._isSubmitContextCurrent(context) || that._visible === false || that._exitTimer == null) return;
+          that._exitTimer = null;
           that.exitPage()
         }, 2000)
       },
       onError(message, reason) {
+        if (!that._isSubmitContextCurrent(context)) return;
         that.setData({
           isSubmitting: false,
           submitErrorTitle: '优惠券没有发布',
@@ -221,6 +266,7 @@ Page({
         });
       },
       onComplete() {
+        if (!that._isSubmitContextCurrent(context)) return;
         if (that.data.isSubmitting) that.setData({ isSubmitting: false });
       },
     });

@@ -66,6 +66,11 @@ class TopicCreativePostVisibilitySyncTest {
         squareService = mock(IUmsCreativeSquareService.class);
 
         topicService = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(topicService, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(topicService, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(topicService, "cmsActivityMapper", mock(CmsActivityMapper.class));
@@ -121,8 +126,12 @@ class TopicCreativePostVisibilitySyncTest {
 
         audit.review(TASK_ID, 1L, decision(AuditTask.STATUS_REJECTED));
         verify(providerTopicService).syncCreativeSquarePostVisibility(TOPIC_ID, false);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> audit.review(TASK_ID,1L,decision(AuditTask.STATUS_APPROVED)));
+        verify(providerTopicService,never()).syncCreativeSquarePostVisibility(TOPIC_ID,true);
 
-        audit.review(TASK_ID, 1L, decision(AuditTask.STATUS_APPROVED));
+        // The rejected task is closed. Author resubmission produces a new pending task.
+        audit.review(TASK_ID + 1, 1L, decision(AuditTask.STATUS_APPROVED));
         verify(providerTopicService).syncCreativeSquarePostVisibility(TOPIC_ID, true);
     }
 
@@ -156,18 +165,38 @@ class TopicCreativePostVisibilitySyncTest {
         ReflectionTestUtils.setField(svc, "quotaService", quotaService);
         ReflectionTestUtils.setField(svc, "cmsTopicServiceProvider", provider);
 
-        AuditTask task = new AuditTask();
-        task.setId(TASK_ID);
-        task.setBizType(AuditTask.BIZ_TOPIC);
-        task.setBizId(TOPIC_ID);
-        task.setStatus(AuditTask.STATUS_PENDING);
-        task.setVersion(0);
-        when(auditTaskMapper.selectAuditTaskById(TASK_ID)).thenReturn(task);
+        java.util.Map<Long, AuditTask> stored = new java.util.HashMap<>();
+        for (long id : new long[]{TASK_ID, TASK_ID + 1}) {
+            AuditTask task = new AuditTask(); task.setId(id);
+            task.setBizType(AuditTask.BIZ_TOPIC); task.setBizId(TOPIC_ID);
+            task.setStatus(AuditTask.STATUS_PENDING); task.setVersion(0);
+            stored.put(id, task);
+        }
+        when(auditTaskMapper.selectAuditTaskById(anyLong())).thenAnswer(call -> {
+            AuditTask row = stored.get(call.getArgument(0));
+            if (row == null) return null;
+            AuditTask snapshot = new AuditTask();
+            org.springframework.beans.BeanUtils.copyProperties(row, snapshot);
+            return snapshot;
+        });
         when(auditTaskMapper.updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any()))
-                .thenReturn(1);
+                .thenAnswer(call -> {
+                    AuditTask row = stored.get(call.getArgument(0));
+                    if (row == null || !row.getStatus().equals(call.getArgument(1))
+                            || !row.getVersion().equals(call.getArgument(4))) return 0;
+                    row.setStatus(call.getArgument(2)); row.setVersion(row.getVersion() + 1);
+                    return 1;
+                });
         when(auditRecordMapper.insertAuditRecord(any())).thenReturn(1);
         when(cmsTopicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(ownedTopic());
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard media =
+                com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(OWNER_ID);
+        ReflectionTestUtils.setField(media,"topics",cmsTopicMapper);
+        ReflectionTestUtils.setField(media,"chapters",mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class));
+        ReflectionTestUtils.setField(media,"nodes",mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class));
+        ReflectionTestUtils.setField(media,"templates",mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
+        ReflectionTestUtils.setField(svc,"mediaPublicationGuard",media);
         when(quotaService.lockAndCheckThemeOnline(OWNER_ID, TOPIC_ID)).thenReturn(quotaError);
         return svc;
     }
@@ -175,6 +204,7 @@ class TopicCreativePostVisibilitySyncTest {
     private AuditReviewDTO decision(Integer status) {
         AuditReviewDTO dto = new AuditReviewDTO();
         dto.setStatus(status);
+        dto.setExpectedVersion(0);
         dto.setReasonText("审核依据");
         return dto;
     }

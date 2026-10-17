@@ -158,8 +158,13 @@ test('六个代表性状态页的 error/empty/ready 主分支都挂内容淡入'
   assert.match(task, /cy-empty[^>]*class="cy-fade-in"/)
   const activity = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(activity, /class="cy-fade-in"[^>]*state === 'ready'/)
-  // 3 条 cy-empty 状态分支:missing / empty / gate(B-03 俱乐部门卡,和其余状态一样淡入)
-  assert.equal((activity.match(/cy-empty class="cy-fade-in"/g) || []).length, 3)
+  // 取消是独立状态，保留原 missing / empty / gate 分支及淡入。
+  // PR10 F-W1-12:新增未登录 login 状态(登录引导),同样挂淡入 —— 计数 4 → 5。
+  for (const state of ['missing', 'empty', 'gate', 'cancelled', 'login']) {
+    assert.ok(activity.includes('<cy-empty class="cy-fade-in" wx:elif="{{state === \'' + state + '\'}}"'), state)
+  }
+  assert.equal((activity.match(/cy-empty class="cy-fade-in"/g) || []).length, 5)
+  assert.match(activity, /state === 'cancelled'[^>]*title="活动已取消"[^>]*cancelledHasOwnOrder[^>]*bind:cta="onCancelledAction"/)
   const customer = read('pages/merchant/customer/index.wxml')
   // 与上面 4 个页面同用 [^>]* 形:CU-M-148 给这三条状态分支另挂了 cu-state-clear
   // (让出底栏 + 安全区),钉死 class="cy-fade-in" 会把「还挂着淡入」这条真判据漏判。
@@ -180,7 +185,7 @@ test('动态评论列表的关注图标必须真正绑定动作并回读服务�
     '评论头像上的 + 按钮不能只有图标，必须绑定当前行并有可读名称')
   assert.match(js, /commentFollowClick\(e\)[\s\S]*e\.currentTarget\.dataset\.index[\s\S]*follow_member_id:\s*item\.memberId/,
     '关注请求必须使用当前评论行的 memberId')
-  assert.match(js, /commentFollowClick\(e\)[\s\S]*sendUiStateRequest\(app,\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
+  assert.match(js, /commentFollowClick\(e\)[\s\S]*community\.request\(\{\s*url:\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
     '只有回读当前评论行的服务端权威终态后才能回写并报成功')
   assert.match(js, /已提交，但状态确认失败，请刷新/,
     '回读失败不能静默或伪报成功')

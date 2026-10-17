@@ -17,10 +17,12 @@ const F13_KEY = 'abcdef01'.repeat(4)
 let pageConfig
 let requests
 let storage
+let communityWrite = false
 
 global.getApp = () => ({
   globalData: { user_id: 9, features: {} },
   isDevEnv: () => false,
+  canUseCommunity: () => communityWrite,
   // F13 恢复链的所有权归属判据(_recoveryOwnerCurrent)依赖真实 getApp().getUserID(app.js 恒提供)。
   getUserID: () => '9',
   sendRequest: (request) => { requests.push(request) },
@@ -42,6 +44,7 @@ beforeEach(() => {
   pageConfig = null
   requests = []
   storage = {}
+  communityWrite = false
   global.wx.showModal = ({ success }) => success && success({ confirm: true, content: '分享内容' })
 })
 
@@ -67,6 +70,29 @@ function loadPage(modulePath) {
   }
   return page
 }
+
+test('三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下文', () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.game.nodeId = 11
+  page._withThoughtSync = write => write()
+  page._routeWritePayload = (_kind, nodeId, payload) => ({ ...payload, topicId: 7, nodeId, routeActionId: 'route_preference_1', expectedRouteVersion: 2 })
+  page.submitPreference({ choices: { first: 'a' } })
+  page.data.preference.pendingTag = { id: 9, tagValue: 'old' }
+  page.data.preference.availableTagValues = ['new']
+  page.onTagSheetSelect({ detail: { index: 0 } })
+  page.data.shopNpc.nodeId = 11
+  page._askShopNpc('询问线索')
+  assert.deepEqual(requests.map(row => row.url), ['/api/play/preference/11/submit', '/api/play/tag/9/correct', '/api/ai/npc/shop-chat'])
+  for (const request of requests) {
+    assert.equal(request.method, 'POST')
+    assert.equal(request.header['content-type'], 'application/json')
+  }
+  assert.equal(requests[0].data.routeActionId, 'route_preference_1')
+  assert.equal(requests[0].data.expectedRouteVersion, 2)
+  assert.deepEqual(requests[1].data, { tagValue: 'new' })
+  assert.equal(typeof requests[2].data.requestId, 'string')
+  assert.equal(requests[2].data.message, '询问线索')
+})
 
 test('游玩节点接口遇到携带 402 业务码的 HTTP 异常时仍进入失败恢复', async () => {
   const page = loadPage(PLAY_PAGE)
@@ -137,7 +163,7 @@ test('漫游地图 POI 列表拒绝非数组及空元素', async () => {
   await new Promise((resolve) => setImmediate(resolve))
   requests[0].success({ code: '200', data: [null] })
   await new Promise((resolve) => setImmediate(resolve))
-  assert.equal(page.data.poiOffline, true)
+  assert.equal(page.data.poiOffline, undefined, '读取失败留白')
   assert.deepEqual(page._pois, [])
 })
 
@@ -550,6 +576,7 @@ test('不相关节点的成功响应不能清除另一类待核对写锁', async
 })
 
 test('广场发帖 HTTP 异常后不能再次创建无幂等保护的公开帖子', async () => {
+  communityWrite = true
   const page = loadPage(ROAM_PAGE)
   page.data.share = { show: true, idx: 0 }
   page._roamSid = 9
@@ -637,9 +664,9 @@ test('漫游模板只在结果确定可重试时显示写请求重试入口', ()
   // 2026-09-22 到达写失败的重试条长在底部读数卡上,随地图层删除后改走全局 toast。
   // 这条断言换成钉死「失败仍然说得出话」——静默失败是本文件要防的第一件事。
   const playJs = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
-  assert.match(playJs, /recordArrivalNetworkFailure\(message\)\s*\{[\s\S]{0,200}?cyToast\(message\)/,
+  assert.match(playJs, /recordArrivalNetworkFailure\(message, attempt\)\s*\{[\s\S]{0,400}?cyToast\(message\)/,
     '到达/打卡写失败必须可见')
-  assert.match(playJs, /recordArrivalHttpUnknown\(message\)\s*\{[\s\S]{0,400}?cyToast\(/,
+  assert.match(playJs, /recordArrivalHttpUnknown\(message, nodeId\)\s*\{[\s\S]{0,600}?cyToast\(/,
     '结果未知必须可见:看不见它的人只会反复点')
   assert.doesNotMatch(playJs, /arrivalError/, '错误条已删,不得留下只写不读的错误态字段')
   assert.match(ROAM_WXML, /wx:if="\{\{paceCard\.checkinRetryable\}\}" bindtap="retryRoamPoiDiscover"/)
@@ -673,4 +700,30 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
   page.data.finish = { settleErr: 'server' }
   page.retrySettle()
   assert.equal(posted, 1, '确定的失败才允许重新结算')
+})
+
+test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒轮询,且轮询读取静默', async () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.activityId = 88
+  const intervals = []
+  const realSetInterval = global.setInterval
+  const realClearInterval = global.clearInterval
+  global.setInterval = (fn, ms) => { intervals.push(ms); return { fn } }
+  global.clearInterval = () => {}
+  try {
+    page.loadTeamProgress()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].url, '/api/club/lead/team-progress')
+    assert.equal(requests[0].silentError, true, '轮询读取失败不得自动 toast')
+    page.onUnload()
+    requests[0].success({ code: 200, data: { exists: true, status: 1, members: [] } })
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(page._leadTimer || null, null, '卸载后不得重建轮询定时器')
+    assert.deepEqual(intervals, [])
+    page.loadTeamProgress()
+    assert.equal(requests.length, 1, '卸载后不再发起队伍进度请求')
+  } finally {
+    global.setInterval = realSetInterval
+    global.clearInterval = realClearInterval
+  }
 })

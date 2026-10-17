@@ -20,7 +20,7 @@
  *   ③ 集中常量:              const URL_X = '/api/x'; … url: URL_X
  *   ④ 模板串:                `/api/x/${id}`                                 —— 现码 0 处,先兜住
  * 所以本门禁**不认 `url:` 这个键**,改为:词法扫出所有 JS 字符串字面量,凡以 `/api` 开头
- * 的一律算一处调用点。这样 ①③ 天然覆盖(常量定义处就是一个 /api 字面量);②④ 再由
+ * 的均算调用点；唯一非端点例外是经真实 Controller 类 namespace 验证、且仅用作 url: BASE+suffix 的 const 声明 token。直接请求 namespace 仍审查。这样 ①③ 天然覆盖(常量定义处就是一个 /api 字面量);②④ 再由
  * walkConcat 把整条拼接表达式走完 —— 变量段记成哨兵、后缀字面量照收,拼出
  * `/api/city/nodes/{}/favorite` 这样的形状,和后端逐段比。走不完的才降级成前缀匹配 + 未判定。
  *
@@ -330,7 +330,30 @@ function walkConcat(src, startIndex) {
   return { tail, complete: false };
 }
 
-function collectFrontendCalls(root) {
+// A class namespace is not an endpoint only when its const is exclusively used
+// as a concatenation base. Direct requests and unknown namespaces stay checked.
+function namespaceDeclarationOffsets(source, namespacePrefixes) {
+  const ignored = new Set();
+  const masked = maskJsNonCode(source);
+  for (const literal of scanJsStringLiterals(source)) {
+    if (!namespacePrefixes.has(literal.value)) continue;
+    const declaration = /\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*$/.exec(masked.slice(0, literal.startIndex));
+    if (!declaration) continue;
+    const name = declaration[1];
+    const nameAt = declaration.index + declaration[0].indexOf(name);
+    const uses = new RegExp('\\b' + name.replace(/[$]/g, '\\$&') + '\\b', 'g');
+    let match, count = 0, safe = true;
+    while ((match = uses.exec(masked))) {
+      if (match.index === nameAt) continue;
+      count += 1;
+      if (!/\burl\s*:\s*$/.test(masked.slice(0, match.index)) || !/^\s*\+(?![+=])/.test(masked.slice(match.index + name.length))) { safe = false; break; }
+    }
+    if (safe && count > 0) ignored.add(literal.startIndex);
+  }
+  return ignored;
+}
+
+function collectFrontendCalls(root, namespacePrefixes = collectBackendMappings(root).namespacePrefixes) {
   const calls = [];
   const files = [];
   walkFiles(path.join(root, XCX_DIR), (p, name, dirName) => {
@@ -342,7 +365,9 @@ function collectFrontendCalls(root) {
   for (const file of files) {
     const rel = path.relative(root, file);
     const src = fs.readFileSync(file, 'utf8');
+    const namespaceOffsets = namespaceDeclarationOffsets(src, namespacePrefixes);
     for (const lit of scanJsStringLiterals(src)) {
+      if (namespaceOffsets.has(lit.startIndex)) continue;
       if (!isApiLiteral(lit.value)) continue;
       // 字面量后面紧跟 + ⇒ 后面还要拼东西,把整条拼接表达式走完(见 walkConcat)
       const probe = src.slice(lit.endIndex, lit.endIndex + 8).replace(/^[\s\\]+/, '');
@@ -471,6 +496,7 @@ function normalizePath(p) {
 }
 
 function collectBackendMappings(root) {
+  const namespacePrefixes = new Set();
   const mappings = [];
   const files = [];
   for (const jroot of JAVA_GLOB_ROOTS) {
@@ -514,6 +540,7 @@ function collectBackendMappings(root) {
     for (const h of hits) {
       if (h.at < classAt && h.verb === 'Request') classPrefixes.push(...(h.paths.length ? h.paths : ['']));
     }
+    classPrefixes.filter(prefix => prefix.startsWith('/api/')).forEach(prefix => namespacePrefixes.add(prefix));
     const prefixes = classPrefixes.length ? classPrefixes : [''];
 
     for (const h of hits) {
@@ -526,7 +553,7 @@ function collectBackendMappings(root) {
       }
     }
   }
-  return { mappings, controllerFileCount, javaFileCount: files.length };
+  return { mappings, namespacePrefixes, controllerFileCount, javaFileCount: files.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -1225,7 +1252,7 @@ function main() {
 if (require.main === module) main();
 
 module.exports = {
-  scanJs, scanJsStringLiterals, maskJsNonCode, collectFrontendCalls, collectBackendMappings,
+  namespaceDeclarationOffsets, scanJs, scanJsStringLiterals, maskJsNonCode, collectFrontendCalls, collectBackendMappings,
   maskJavaComments, pathsFromAnnotationArgs, patternToRegex, staticPrefixOf, analyse,
   prefixCompatible, segmentMatch, MIN_SHARED_SEGMENTS,
   parseApiAllowlist, checkAllowlistRatchet, checkUndecidedRatchet,

@@ -5,18 +5,19 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onNavBack" />
   <cy-page-title title="{{pageTitle}}" subtitle="{{timeLocationLocked ? '已售出：只能改文字、图片与票务' : ''}}" />
-  <view class="publish-access-state" wx:if="{{accessState === 'checking'}}">
+  <cy-empty wx:if="{{accessState === 'login'}}" title="登录后发布活动" cta="去登录" bind:cta="onCreatorLogin" />
+  <view class="publish-access-state" wx:elif="{{accessState === 'checking'}}">
     <cy-skeleton type="card" count="3" />
   </view>
   <view class="publish-access-state" wx:elif="{{accessState === 'error'}}">
-    <cy-error fill="{{true}}" title="暂时无法确认身份" sub="{{accessError}}" bind:retry="retryAccessCheck" auto-back />
+    <cy-error load-failure fill="{{true}}" title="暂时无法确认身份" sub="{{accessError}}" bind:retry="retryAccessCheck" auto-back />
   </view>
   <view class="publish-access-state" wx:elif="{{accessState === 'denied'}}">
     <cy-error fill size="lg" title="当前身份不能发布活动" sub="{{deniedReason}}" retry="" bind:back="onNavBack" auto-back custom-back />
   </view>
   <block wx:elif="{{accessState === 'ready'}}">
   <view class="publish-access-state" wx:if="{{activityLoadError}}">
-    <cy-error fill="{{true}}" title="活动没能加载" sub="{{activityLoadError}}" bind:retry="loadExistingActivity" auto-back />
+    <cy-error load-failure fill="{{true}}" title="活动没能加载" sub="{{activityLoadError}}" bind:retry="loadExistingActivity" auto-back />
   </view>
   <view class="step-dots">
     <view class="step-dot step-dot--{{item.state}}" wx:for="{{progress}}" wx:key="key">
@@ -131,7 +132,7 @@
       </view>
 
       <view wx:if="{{step === 2}}">
-      <cy-inline-error wx:if="{{ownerLoadError}}" title="发起人信息未加载" sub="{{ownerLoadError}}" action="重试" bind:action="getUserData" />
+      <cy-inline-error load-failure wx:if="{{ownerLoadError}}" title="发起人信息未加载" sub="{{ownerLoadError}}" action="重试" bind:action="getUserData" />
       <view class="li">
         <view class="item-tit">合作者<text>*</text></view>
         <view class="item-cont2 hezuo">
@@ -223,7 +224,7 @@
       <view class="pop-cont">
         <view class="temp-list">
           <cy-skeleton wx:if="{{templateLoadState === 'loading' && !tempList.length}}" type="card" count="2" />
-          <cy-error wx:elif="{{templateLoadState === 'error'}}" title="模板加载失败" sub="{{templateError}}" bind:retry="getTempList" />
+          <cy-error load-failure wx:elif="{{templateLoadState === 'error'}}" title="模板加载失败" sub="{{templateError}}" bind:retry="getTempList" />
           <cy-empty wx:elif="{{templateLoadState === 'empty'}}" kind="empty" title="还没有可用模板" sub="先创建节点玩法，再回来选择。" cta="创建节点玩法" bind:cta="createTemplate" />
           <view class="ul flex-w" wx:else>
             <view bindtap="selectTemp" class="li {{selectedTempId === item.id ? 'selected' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" aria-role="radio" aria-checked="{{selectedTempId === item.id}}" aria-label="选择模板 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">

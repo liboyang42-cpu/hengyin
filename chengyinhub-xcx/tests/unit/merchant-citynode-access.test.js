@@ -78,6 +78,7 @@ function mountCityNodeCreatePage() {
   const toasts = [];
   const app = {
     globalData: { navBarHeight: 44 },
+    getUserID: () => 7,
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest(request) { requests.push(request); },
   };
@@ -95,6 +96,7 @@ function mountCityNodeCreatePage() {
       getApp: () => app,
       getCurrentPages: () => [{}],
       require: request => {
+        if (request.includes('login-reload')) return require('../../utils/session/login-reload.js');
         if (request.includes('merchant-access-policy')) {
           return {
             inactiveAccess: () => ({ active: false, canManageProjects: false }),

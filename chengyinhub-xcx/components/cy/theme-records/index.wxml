@@ -1,0 +1,40 @@
+<cy-sheet show="{{historyOpen && !cardSession}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeHistory" style="--cy-comp-sheet-role-glass:var(--cy-comp-sheet-player-page);--cy-comp-sheet-role-text:var(--cy-comp-sheet-player-text)">
+ <view class="tr-sheet">
+  <view class="tr-close" bindtap="closeHistory" aria-role="button" aria-label="关闭游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="36" /></view>
+  <text class="tr-title">我的游玩记录</text><text class="tr-sub">{{title}}</text>
+  <view class="tr-group">
+   <view class="tr-row" wx:for="{{rows}}" wx:key="sessionId" data-id="{{item.sessionId}}" bindtap="openCard" aria-role="button" aria-disabled="{{!item.hasCard}}" aria-label="{{item.resultTitle}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="tr-circle"><cy-icon name="{{item.hasCard ? 'check' : 'clock'}}" size="36" /></view>
+    <view class="tr-copy"><text class="tr-name">{{item.resultTitle}}</text><text class="tr-sub" wx:if="{{item.sceneName}}">{{item.sceneName}}</text><text class="tr-sub" wx:if="{{item.resultSummary}}">{{item.resultSummary}}</text></view>
+    <text class="tr-date">{{item.endedText || '游玩中'}}</text><cy-icon wx:if="{{item.hasCard}}" name="chevron-right" size="28" />
+   </view>
+  </view>
+  <text class="tr-sub tr-empty" wx:if="{{!rows.length && !busy && !error}}">还没有游玩记录</text>
+  <text class="tr-sub tr-empty" wx:if="{{busy}}" aria-live="polite">正在加载游玩记录</text>
+  <cy-inline-error class="tr-error" wx:if="{{error}}" aria-live="polite" kind="error" title="{{error}}" load-failure="{{readFailure}}" />
+  <view class="tr-button {{busy ? 'is-busy' : ''}}" wx:if="{{more}}" bindtap="moreHistory" aria-role="button" aria-disabled="{{busy}}" hover-class="cy-pressed" hover-stay-time="80">{{error && !readFailure ? '重新加载' : '查看更多'}}</view>
+ </view>
+</cy-sheet>
+<cy-sheet show="{{!!cardSession}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeCard" style="--cy-comp-sheet-role-glass:var(--cy-comp-sheet-player-page);--cy-comp-sheet-role-text:var(--cy-comp-sheet-player-text)">
+ <view class="tr-sheet">
+  <view class="tr-close" bindtap="closeCard" aria-role="button" aria-label="返回游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="36" /></view>
+  <text class="tr-sub">{{title}}</text><text class="tr-title">{{card.title || '本局结果'}}</text>
+  <image wx:if="{{card.cover}}" class="tr-cover" src="{{card.cover}}" mode="widthFix" />
+  <text class="tr-summary" wx:if="{{card.summary}}">{{card.summary}}</text>
+  <view class="tr-group" wx:if="{{card.scene || card.valueRows.length}}">
+   <view class="tr-detail" wx:if="{{card.scene}}"><text class="tr-label">场景</text><text class="tr-value">{{card.scene}}</text></view>
+   <view class="tr-detail" wx:for="{{card.valueRows}}" wx:key="name"><text class="tr-label">{{item.name}}</text><text class="tr-value">{{item.value}}</text></view>
+  </view>
+  <block wx:for="{{card.items}}" wx:key="name"><view class="tr-group tr-detail"><text class="tr-label">{{item.name}}</text><text class="tr-value">×{{item.quantity}}</text></view></block>
+  <block wx:for="{{card.medals}}" wx:key="name"><view class="tr-group tr-detail"><text class="tr-label">{{item.name}}</text><text class="tr-value">×{{item.quantity}}</text></view></block>
+  <view class="tr-group tr-copy tr-story" wx:for="{{card.epilogues}}" wx:key="name"><text class="tr-name">{{item.name}}</text><text class="tr-summary">{{item.line}}</text></view>
+  <view class="tr-group tr-story" wx:for="{{card.exhibits}}" wx:key="*this"><text class="tr-summary">{{item}}</text></view>
+  <view class="tr-group tr-story" wx:if="{{card.unlocks}}"><text class="tr-name">已发现的结局</text><text class="tr-sub" wx:for="{{card.unlocks.known}}" wx:key="id">{{item.title}}</text></view>
+  <text class="tr-sub" wx:if="{{card.nextScene.name}}">下次场景：{{card.nextScene.name}}</text>
+  <text class="tr-sub tr-empty" wx:if="{{busy}}" aria-live="polite">正在加载本局结果</text>
+  <cy-inline-error class="tr-error" wx:if="{{error}}" aria-live="polite" kind="error" title="{{error}}" load-failure="{{readFailure}}" />
+  <view wx:if="{{error && !readFailure && !card}}" class="tr-button" bindtap="retryCard" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">重新加载本局结果</view>
+  <view wx:if="{{replayAllowed}}" class="tr-button {{replayBusy || busy ? 'is-busy' : ''}}" bindtap="replay" aria-role="button" aria-disabled="{{replayBusy || busy}}" hover-class="cy-pressed" hover-stay-time="80">再玩一次</view>
+  <view wx:if="{{replayUnconfirmed && error}}" class="tr-button tr-button--muted {{replayBusy ? 'is-busy' : ''}}" bindtap="checkReplay" aria-role="button" aria-disabled="{{replayBusy}}" hover-class="cy-pressed" hover-stay-time="80">核对新一局</view>
+ </view>
+</cy-sheet>

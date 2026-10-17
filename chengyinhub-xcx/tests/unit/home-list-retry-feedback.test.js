@@ -242,7 +242,7 @@ test('首页旧内容重试时显示轻量同步态，离页会取消 onShow 延
   ]) {
     assert.match(wxml, new RegExp(`wx:if="\\{\\{${condition.replace(/\./g, '\\.') }\\}\\}"[^>]*aria-role="status"`));
   }
-  assert.match(wxml, /listErr\.recommendedTopicList && recoHero[\s\S]{0,260}bindtap="retryList"[\s\S]{0,180}已显示上次内容，本次刷新失败 · 重试/);
+  assert.doesNotMatch(wxml, /已显示上次内容，本次刷新失败 · 重试/);
   assert.match(js, /this\._onShowRefreshTimer\s*=\s*setTimeout/);
   assert.match(js, /clearTimeout\(this\._onShowRefreshTimer\)/);
 });

@@ -96,6 +96,9 @@ class MerchantOfferServiceImplTest {
         when(cmsTopicMapper.selectCmsTopicById(TOPIC)).thenAnswer(invocation -> stubTopic);
 
         svc = new MerchantOfferServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class));
+        ReflectionTestUtils.setField(svc, "businessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
         ReflectionTestUtils.setField(svc, "offerMapper", offerMapper);
         ReflectionTestUtils.setField(svc, "circleSupplyMapper", circleSupplyMapper);
         ReflectionTestUtils.setField(svc, "chapterMapper", chapterMapper);

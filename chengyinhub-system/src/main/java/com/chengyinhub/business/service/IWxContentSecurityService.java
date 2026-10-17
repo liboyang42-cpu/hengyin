@@ -7,11 +7,11 @@ package com.chengyinhub.business.service;
  * 命中违规内容直接拦截，避免被微信封禁小程序。
  *
  * 设计约定（重要）：
- *  - checkText 返回 null 表示「放行」（合规 / 检测被关闭）；检测接口异常时 fail-closed，
+ *  - checkText 返回 null 表示「放行」（合规或空文本）；检测关闭、缺 openid/token、接口异常时一律 fail-closed，
  *    返回非 null 字符串表示「拦截」，字符串即给用户的提示文案。
  *    控制器用法：String msg = wxSec.checkText(text, openid); if (msg != null) return error(msg);
- *  - 是否真正调用微信接口由系统配置 wx.sec.check.enabled 控制（"true" 开启），
- *    默认关闭，便于在未配置 appid/secret 时不阻断现有流程；上线前置为 true。
+ *  - 是否真正调用微信接口由配置 wx.sec-check.enabled 控制（WxPayConfig，默认 true）。
+ *    关闭不是「降级放行」：非空文本会返回 MSG_UNAVAILABLE 被拒写（F-L5C-07），并记 ERROR 日志。
  */
 public interface IWxContentSecurityService
 {
@@ -170,6 +170,17 @@ public interface IWxContentSecurityService
 
     /** 微信明确返回 token 失效时强制刷新；调用方每次业务请求最多调用一次。 */
     String refreshAccessToken();
+
+    /**
+     * 以会员身份送检:按 memberId 取 openid 再调 {@link #checkText}。会员查不到时 openid 为 null,
+     * 由 checkText 按既有口径 fail-closed 拦截。PR10 复审:收拢各写口里重复的「查 openid → checkText」。
+     */
+    static String checkTextAsMember(IWxContentSecurityService security, IUmsMemberService members,
+                                    Long memberId, String text)
+    {
+        com.chengyinhub.business.domain.UmsMember actor = members.selectUmsMemberById(memberId);
+        return security.checkText(text, actor == null ? null : actor.getWxOpenId());
+    }
 
     /**
      * 拼接多个文本字段为一段送检文本（自动忽略空字段，用换行分隔）。

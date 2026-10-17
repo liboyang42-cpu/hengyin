@@ -164,6 +164,9 @@ class ApiRegistrationRefundProjectionTest {
             @Override public Long getAppUserId() { return 99L; }
         };
         ReflectionTestUtils.setField(controller, "teamGroupService", teams);
+        ReflectionTestUtils.setField(controller, "cancellationReadService",
+                cancellationRead(mock(com.chengyinhub.business.service.ICmsRegistrationService.class),
+                        mock(IRefundService.class)));
         when(teams.cancelPaidRegistration(11L, 99L))
                 .thenReturn(com.chengyinhub.business.service.ITeamGroupService.CANCEL_MANUAL_REVIEW);
         when(teams.cancelPaidRegistrationByOwner(11L, 99L))
@@ -184,6 +187,40 @@ class ApiRegistrationRefundProjectionTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void repeatedPlayerCancellationReturnsExistingFinalCaseWithoutRunningRefundAgain() {
+        com.chengyinhub.business.service.ITeamGroupService teams =
+                mock(com.chengyinhub.business.service.ITeamGroupService.class);
+        com.chengyinhub.business.mapper.ActivityCancelManualRefundCaseMapper cases =
+                mock(com.chengyinhub.business.mapper.ActivityCancelManualRefundCaseMapper.class);
+        com.chengyinhub.business.service.ICmsRegistrationService registrations =
+                mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        IRefundService refunds = mock(IRefundService.class);
+        ApiRegistrationController controller = new ApiRegistrationController() {
+            @Override public Long getAppUserId() { return 99L; }
+        };
+        com.chengyinhub.business.service.support.RegistrationCancellationReadService projection =
+                new com.chengyinhub.business.service.support.RegistrationCancellationReadService(
+                        registrations, refunds);
+        ReflectionTestUtils.setField(projection, "activityCancelManualRefundCaseMapper", cases);
+        ReflectionTestUtils.setField(controller, "teamGroupService", teams);
+        ReflectionTestUtils.setField(controller, "cancellationReadService", projection);
+        when(cases.selectPlayerCaseStatus(11L, 99L))
+                .thenReturn(com.chengyinhub.business.domain.ActivityCancelManualRefundCase.STATUS_NO_REFUND);
+
+        com.chengyinhub.common.core.domain.AjaxResult result = controller.cancelRefund("11");
+
+        assertEquals(200, result.get("code"));
+        assertEquals("人工评估结果：不予退款", result.get("msg"));
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertEquals("NO_REFUND", data.get("manualRefundCaseStatus"));
+        assertEquals("MANUAL_REVIEW", data.get("cancellationStatus"));
+        assertEquals("MANUAL_REVIEW", data.get("cashRefundStatus"));
+        verify(cases).selectPlayerCaseStatus(11L, 99L);
+        org.mockito.Mockito.verifyNoInteractions(teams, registrations, refunds);
+    }
+
+    @Test
     void zeroCashCancellationDoesNotClaimMoneyOrPointsWereReturned() {
         com.chengyinhub.business.service.ITeamGroupService teams =
                 mock(com.chengyinhub.business.service.ITeamGroupService.class);
@@ -195,8 +232,7 @@ class ApiRegistrationRefundProjectionTest {
         ReflectionTestUtils.setField(controller, "teamGroupService", teams);
         ReflectionTestUtils.setField(controller, "registrationService", registrations);
         ReflectionTestUtils.setField(controller, "cancellationReadService",
-                new com.chengyinhub.business.service.support.RegistrationCancellationReadService(
-                        registrations, mock(IRefundService.class)));
+                cancellationRead(registrations, mock(IRefundService.class)));
         com.chengyinhub.business.domain.CmsRegistration row =
                 new com.chengyinhub.business.domain.CmsRegistration();
         row.setId(11L);
@@ -370,8 +406,19 @@ class ApiRegistrationRefundProjectionTest {
             ReflectionTestUtils.setField(controller, "registrationService", registrations);
             ReflectionTestUtils.setField(controller, "refundService", refunds);
             ReflectionTestUtils.setField(controller, "cancellationReadService",
-                    new com.chengyinhub.business.service.support.RegistrationCancellationReadService(registrations, refunds));
+                    cancellationRead(registrations, refunds));
         }
+    }
+
+    private static com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationRead(
+            com.chengyinhub.business.service.ICmsRegistrationService registrations,
+            IRefundService refunds) {
+        com.chengyinhub.business.service.support.RegistrationCancellationReadService service =
+                new com.chengyinhub.business.service.support.RegistrationCancellationReadService(
+                        registrations, refunds);
+        ReflectionTestUtils.setField(service, "activityCancelManualRefundCaseMapper",
+                mock(com.chengyinhub.business.mapper.ActivityCancelManualRefundCaseMapper.class));
+        return service;
     }
 
     private RefundApplication refund(Long sourceId, Integer payoutStatus) {

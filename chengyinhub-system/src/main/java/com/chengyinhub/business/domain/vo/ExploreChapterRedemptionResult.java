@@ -5,13 +5,21 @@ public class ExploreChapterRedemptionResult
 {
     private final Long redemptionId;
     private final int completionEarnedXp;
+    private final boolean replayed;
 
     public ExploreChapterRedemptionResult(Long redemptionId, int completionEarnedXp)
     {
+        this(redemptionId, completionEarnedXp, false);
+    }
+
+    public ExploreChapterRedemptionResult(Long redemptionId, int completionEarnedXp, boolean replayed)
+    {
         this.redemptionId = redemptionId;
         this.completionEarnedXp = completionEarnedXp;
+        this.replayed = replayed;
     }
 
     public Long getRedemptionId() { return redemptionId; }
     public int getCompletionEarnedXp() { return completionEarnedXp; }
+    public boolean isReplayed() { return replayed; }
 }

@@ -14,8 +14,8 @@
 .pt--right { text-align: right; }
 .pt__title {
   font-size: var(--cy-font-page-title, 58rpx);   /* ddd 标准(club/apply 主理人实名页) */
-  line-height: 1.22;
-  font-weight: 800;
+  line-height: var(--cy-page-title-leading, 1.22);
+  font-weight: var(--cy-page-title-weight, 800);
   letter-spacing: 0;                              /* 中文大字不加负字距 */
   color: var(--cy-text-title);
 }

@@ -44,7 +44,7 @@ test('工作台项目卡:承接签按确认关系判,主办签按真实档期判
 
 test('商家版主页:无成就 tab / tab 无整条底线 / 白卡退场文字落底', () => {
   const js = read('subpackageMember/components/cy/profile/index.js')
-  assert.match(js, /t\.key !== 'achievements'/, '商家版必须滤掉成就 tab')
+  assert.match(js, /tab\.key !== 'achievements'/, '商家版必须滤掉成就 tab')
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   // 2026-08-20 解冲突:master(#753)那侧按「用户定不要那条白线」改成一律关掉,
   // 不再按身份区分;本分支原来的 !isMerchantView 让位给它。

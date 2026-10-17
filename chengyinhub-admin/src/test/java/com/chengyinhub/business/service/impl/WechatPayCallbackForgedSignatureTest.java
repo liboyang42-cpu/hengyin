@@ -4,6 +4,9 @@ import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICoopInviteService;
 import com.chengyinhub.business.service.IRefundService;
 import com.chengyinhub.business.service.IMerchantCommerceService;
+import com.chengyinhub.business.service.IWxPaymentCallbackInboxService;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.wechat.pay.java.core.cipher.AeadAesCipher;
 import com.wechat.pay.java.core.exception.ValidationException;
 import com.wechat.pay.java.core.notification.NotificationConfig;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.math.BigDecimal;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -32,6 +36,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -156,6 +161,7 @@ class WechatPayCallbackForgedSignatureTest {
         assertTrue(resp.contains("SUCCESS"));
         verify(registrationService).handleWechatPayCallback(anyMap());
         verifyNoInteractions(coopInviteService);
+        verifyNoInteractions((AlarmService) ReflectionTestUtils.getField(service, "alarmService"));
     }
 
     @Test
@@ -201,6 +207,28 @@ class WechatPayCallbackForgedSignatureTest {
         // 核心断言:伪造回调必须在验签阶段被拦下,不能有任何一条路径先斩后奏碰到业务层。
         verifyNoInteractions(registrationService);
         verifyNoInteractions(coopInviteService);
+        // 验签失败按固定事件限频告警，不回显未验签请求内容（订单号也不可信）。
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+    }
+
+    @Test
+    void handleRefundCallbackBusinessFailureAlarmsWithVerifiedRefundNumber() throws Exception {
+        KeyPair kp = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        IRefundService refundBizService = mock(IRefundService.class);
+        wireParser(service, buildParser(kp.getPublic()), mock(ICmsRegistrationService.class),
+                mock(ICoopInviteService.class), refundBizService);
+        when(refundBizService.handleRefundNotify("RF12345", "SUCCESS")).thenReturn(false);
+
+        Forged n = buildValidRefundNotification(kp.getPrivate(), "RF12345", "SUCCESS");
+        String resp = service.handleRefundCallback(n.body, headersOf(n));
+
+        assertTrue(resp.contains("FAIL"));
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("refund.callback.failed", "退款回调业务处理失败",
+                "refund=RF12345 result=FAIL");
     }
 
     @Test
@@ -235,6 +263,9 @@ class WechatPayCallbackForgedSignatureTest {
         assertTrue(resp.contains("FAIL"));
         assertTrue(resp.contains("签名验证失败"));
         verifyNoInteractions(refundBizService);
+        AlarmService alarms = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        verify(alarms).alarmThrottled("refund.callback.signature", "退款回调验签失败",
+                "type=ValidationException result=FAIL");
     }
 
     @Test
@@ -309,6 +340,236 @@ class WechatPayCallbackForgedSignatureTest {
                 + "\"amount\":{\"refund\":5000,\"total\":5000,\"currency\":\"CNY\"}}");
     }
 
+    @Test
+    void verifiedUnsupportedMembershipIsAlarmedAndStillFailsWithoutRegistrationFallback() throws Exception {
+        KeyPair kp = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
+        wireParser(service, buildParser(kp.getPublic()), registration, mock(ICoopInviteService.class), mock(IRefundService.class));
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(service, "alarmService", alarm);
+        Forged notification = buildValidPayNotification(kp.getPrivate(), "CLM_UNKNOWN", "WX_TEST", "SUCCESS", 100);
+        assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.club-membership"),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.contains("order=CLM_UNKNOWN"));
+        verifyNoInteractions(registration);
+    }
+
+    @Test
+    void verifiedMissingRegistrationReportsItsRealOrderOnceAndDoesNotCreateInboxOrPaymentEffects() throws Exception {
+        KeyPair kp = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
+        com.chengyinhub.business.mapper.CmsRegistrationMapper mapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(registration, "cmsRegistrationMapper", mapper);
+        ReflectionTestUtils.setField(registration, "alarmService", alarm);
+        wireParser(service, buildParser(kp.getPublic()), registration, mock(ICoopInviteService.class), mock(IRefundService.class));
+        ReflectionTestUtils.setField(service, "alarmService", alarm);
+        Forged notification = buildValidPayNotification(kp.getPrivate(), "REG_MISSING", "WX_TEST", "SUCCESS", 100);
+        assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verify(mapper).selectByRegistrationNo("REG_MISSING");
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.registration_missing"),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.contains("order=REG_MISSING"));
+        org.mockito.Mockito.verifyNoMoreInteractions(mapper, alarm);
+    }
+
+    @Test
+    void registrationCallbackWithMissingPayloadOrFieldsAlertsInsteadOfFailingSilently() {
+        CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
+        com.chengyinhub.business.mapper.CmsRegistrationMapper mapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(registration, "cmsRegistrationMapper", mapper);
+        ReflectionTestUtils.setField(registration, "alarmService", alarm);
+        assertTrue("FAIL".equals(registration.handleWechatPayCallback(null)));
+        java.util.Map<String, String> partial = new java.util.HashMap<>();
+        partial.put("out_trade_no", "REG_PARTIAL");
+        assertTrue("FAIL".equals(registration.handleWechatPayCallback(partial)));
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.registration"),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.contains("reason=payload_missing"));
+        verify(alarm).alarmThrottled(org.mockito.ArgumentMatchers.eq("payment.callback.registration"),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.contains("order=REG_PARTIAL reason=required_field_missing"));
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void verifiedRegistrationAmountMismatchAlertsOnceAndKeepsFailWithoutPaymentEffects() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_AMOUNT");
+        assertTrue(fixture.callback("SUCCESS", 99).contains("FAIL"));
+        fixture.assertAlarm("REG_AMOUNT", "amount_mismatch");
+        verify(fixture.mapper).selectByRegistrationNo("REG_AMOUNT");
+        verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
+    void verifiedRegistrationRefundConflictAlertsOnceAndKeepsFail() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_REFUND");
+        when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+        assertTrue(fixture.callback("REFUND", 100).contains("FAIL"));
+        fixture.assertAlarm("REG_REFUND", "refund_state_conflict");
+        verify(fixture.mapper).selectByRegistrationNo("REG_REFUND");
+        verify(fixture.mapper).claimRegistrationRefundedByGateway(org.mockito.ArgumentMatchers.eq(17L),
+                org.mockito.ArgumentMatchers.eq("system"), org.mockito.ArgumentMatchers.any(java.util.Date.class));
+        verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+        verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
+    void verifiedRegistrationPaymentConflictAlertsOnceAndKeepsFail() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_PAYMENT");
+        when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+        assertTrue(fixture.callback("SUCCESS", 100).contains("FAIL"));
+        fixture.assertAlarm("REG_PAYMENT", "payment_state_conflict");
+        verify(fixture.mapper).selectByRegistrationNo("REG_PAYMENT");
+        verify(fixture.mapper).claimPaymentSuccess(org.mockito.ArgumentMatchers.eq(17L),
+                org.mockito.ArgumentMatchers.eq("WX_PRIVATE_TRANSACTION"), org.mockito.ArgumentMatchers.any(java.util.Date.class));
+        verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+        verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
+    void verifiedRegistrationCloseConflictAndDisappearedOrderEachAlertOnceAndKeepFail() throws Exception {
+        for (boolean disappeared : new boolean[]{false, true}) {
+            RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_CLOSED");
+            if (!disappeared) {
+                when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+            }
+            assertTrue(fixture.callback("CLOSED", 100).contains("FAIL"));
+            fixture.assertAlarm("REG_CLOSED", disappeared ? "order_disappeared" : "failure_state_conflict");
+            verify(fixture.mapper).selectByRegistrationNo("REG_CLOSED");
+            verify(fixture.mapper).claimPaymentFailure(org.mockito.ArgumentMatchers.eq(17L),
+                    org.mockito.ArgumentMatchers.any(java.util.Date.class));
+            verify(fixture.mapper).selectCmsRegistrationByIdForUpdate(17L);
+            verifyNoMoreInteractions(fixture.mapper);
+        }
+    }
+
+    @Test
+    void verifiedRegistrationUnsafeReferenceIsRedactedFromFailureAlarm() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("private-order@example.com");
+        assertTrue(fixture.callback("SUCCESS", 99).contains("FAIL"));
+        fixture.assertAlarm("INVALID_FORMAT", "amount_mismatch");
+        verify(fixture.mapper).selectByRegistrationNo("private-order@example.com");
+        verifyNoMoreInteractions(fixture.mapper);
+    }
+
+    @Test
+    void verifiedRegistrationAlreadyClosedAcknowledgesSuccessWithoutFailureAlarm() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_CLOSED");
+        fixture.registration.setPaymentStatus(3);
+        fixture.registration.setRegistrationStatus(1);
+        when(fixture.mapper.selectCmsRegistrationByIdForUpdate(17L)).thenReturn(fixture.registration);
+        assertTrue(fixture.callback("CLOSED", 100).contains("SUCCESS"));
+        verifyNoInteractions(fixture.alarm);
+    }
+
+    @Test
+    void forgedExistingRegistrationFailureCannotTriggerLookupOrAlarm() throws Exception {
+        RegistrationFailureFixture fixture = new RegistrationFailureFixture("REG_AMOUNT");
+        Forged notification = buildValidPayNotification(fixture.keys.getPrivate(), fixture.order,
+                "WX_PRIVATE_TRANSACTION", "SUCCESS", 99);
+        byte[] signature = Base64.getDecoder().decode(notification.signature);
+        signature[0] ^= 0xff;
+        notification.signature = Base64.getEncoder().encodeToString(signature);
+        assertTrue(fixture.service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verifyNoInteractions(fixture.mapper);
+        // 验签失败只允许固定、限频、不含任何请求内容的运维事件（平台证书轮换/配置错误时所有回调都会落到这里）；
+        // 不得出现带订单号的业务告警。
+        verify(fixture.alarm).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+        verifyNoMoreInteractions(fixture.alarm);
+    }
+
+    @Test
+    void verifiedBusinessExceptionIsAlarmedOnceAndKeepsFailWithOnlySafeOrderAndType() throws Exception {
+        KeyPair keys = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
+        wireParser(service, buildParser(keys.getPublic()), registration,
+                mock(ICoopInviteService.class), mock(IRefundService.class));
+        AlarmService alarm = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        when(registration.handleWechatPayCallback(anyMap()))
+                .thenThrow(new IllegalStateException("private financial failure detail"));
+        Forged notification = buildValidPayNotification(keys.getPrivate(), "REG_EXCEPTION",
+                "WX_PRIVATE_TRANSACTION", "SUCCESS", 100);
+        assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verify(registration).handleWechatPayCallback(anyMap());
+        verify(alarm).alarmThrottled("payment.callback.business_exception", "支付回调业务处理异常",
+                "order=REG_EXCEPTION type=IllegalStateException result=FAIL");
+        verifyNoMoreInteractions(alarm);
+    }
+
+    @Test
+    void signedButUnparseableNotificationCannotTriggerBusinessLookupOrAlarm() throws Exception {
+        KeyPair keys = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
+        wireParser(service, buildParser(keys.getPublic()), registration,
+                mock(ICoopInviteService.class), mock(IRefundService.class));
+        AlarmService alarm = (AlarmService) ReflectionTestUtils.getField(service, "alarmService");
+        Forged notification = sign(keys.getPrivate(), "transaction", "TRANSACTION.SUCCESS", "{invalid_json");
+        assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verifyNoInteractions(registration, alarm);
+    }
+
+    @Test
+    void forgedUnknownOrderCannotTriggerABusinessAlarm() throws Exception {
+        KeyPair kp = generateKeyPair();
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
+        wireParser(service, buildParser(kp.getPublic()), registration, mock(ICoopInviteService.class), mock(IRefundService.class));
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(service, "alarmService", alarm);
+        Forged notification = buildValidPayNotification(kp.getPrivate(), "CLM_UNKNOWN", "WX_TEST", "SUCCESS", 100);
+        byte[] signature = Base64.getDecoder().decode(notification.signature); signature[0] ^= 0xff;
+        notification.signature = Base64.getEncoder().encodeToString(signature);
+        assertTrue(service.handlePayCallback(notification.body, headersOf(notification)).contains("FAIL"));
+        verifyNoInteractions(registration);
+        verify(alarm).alarmThrottled("payment.callback.signature", "支付回调验签失败",
+                "type=ValidationException result=FAIL");
+        verifyNoMoreInteractions(alarm);
+    }
+
+    private static class RegistrationFailureFixture {
+        final KeyPair keys = generateKeyPair();
+        final WechatPayServiceImpl service = new WechatPayServiceImpl();
+        final CmsRegistrationMapper mapper = mock(CmsRegistrationMapper.class);
+        final AlarmService alarm = mock(AlarmService.class);
+        final CmsRegistration registration = new CmsRegistration();
+        final String order;
+
+        RegistrationFailureFixture(String order) throws Exception {
+            this.order = order;
+            registration.setId(17L);
+            registration.setRegistrationNo(order);
+            registration.setPaymentStatus(1);
+            registration.setRegistrationStatus(1);
+            registration.setWechatPaymentAmount(new BigDecimal("1.00"));
+            CmsRegistrationServiceImpl registrationService = new CmsRegistrationServiceImpl();
+            ReflectionTestUtils.setField(registrationService, "cmsRegistrationMapper", mapper);
+            ReflectionTestUtils.setField(registrationService, "alarmService", alarm);
+            ReflectionTestUtils.setField(registrationService, "wxPaymentCallbackInboxService",
+                    mock(IWxPaymentCallbackInboxService.class));
+            when(mapper.selectByRegistrationNo(order)).thenReturn(registration);
+            wireParser(service, buildParser(keys.getPublic()), registrationService,
+                    mock(ICoopInviteService.class), mock(IRefundService.class));
+            ReflectionTestUtils.setField(service, "alarmService", alarm);
+        }
+
+        String callback(String state, int cents) throws Exception {
+            Forged notification = buildValidPayNotification(keys.getPrivate(), order,
+                    "WX_PRIVATE_TRANSACTION", state, cents);
+            return service.handlePayCallback(notification.body, headersOf(notification));
+        }
+
+        void assertAlarm(String reference, String reason) {
+            verify(alarm).alarmThrottled("payment.callback.registration", "支付回调报名处理失败",
+                    "order=" + reference + " reason=" + reason + " result=FAIL");
+            verifyNoMoreInteractions(alarm);
+        }
+    }
+
     // ---------- 构造辅助:自建密钥对 + 手写符合 SDK 期望格式的签名报文/加密资源 ----------
 
     private static void wireParser(WechatPayServiceImpl service, NotificationParser parser,
@@ -323,6 +584,7 @@ class WechatPayCallbackForgedSignatureTest {
         ReflectionTestUtils.setField(service, "coopInviteService", coopInviteService);
         ReflectionTestUtils.setField(service, "refundBizService", refundBizService);
         ReflectionTestUtils.setField(service, "merchantCommerceService", mock(IMerchantCommerceService.class));
+        ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
     }
 
     private static Map<String, String> headersOf(Forged n) {

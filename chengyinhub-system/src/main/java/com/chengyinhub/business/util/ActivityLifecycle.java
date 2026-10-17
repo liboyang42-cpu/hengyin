@@ -1,6 +1,7 @@
 package com.chengyinhub.business.util;
 
 import java.util.Date;
+import com.chengyinhub.business.domain.CmsActivity;
 
 /**
  * 一场 cms_activity 在某一时刻的生命周期状态 —— 「我的项目」列表与活动详情共用这一个判定。
@@ -18,6 +19,12 @@ import java.util.Date;
 public final class ActivityLifecycle
 {
     private ActivityLifecycle() { }
+
+    public static String state(CmsActivity activity)
+    {
+        if (activity.getCancelTime() != null) return "cancelled";
+        return state(activity.getStatus(), activity.getPublishStatus(), activity.getStartDate(), activity.getEndDate());
+    }
 
     /** 活动归一 state(无草稿态):审核未过 > 审核中 > 已下架 > 按档期分桶。 */
     public static String state(Long status, Long publishStatus, Date start, Date end)
@@ -43,6 +50,7 @@ public final class ActivityLifecycle
     {
         switch (state == null ? "" : state)
         {
+            case "cancelled": return "已取消";
             case "draft": return "草稿";
             case "pending": return "审核中";
             case "notStarted": return "未开始";

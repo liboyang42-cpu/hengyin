@@ -46,6 +46,10 @@ class TopicSoldTimeLocationGuardTest {
     @BeforeEach
     void setUp() {
         svc = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         registrationMapper = mock(CmsRegistrationMapper.class);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", registrationMapper);
     }

@@ -1,6 +1,7 @@
 package com.chengyinhub.business.util;
 
 import org.junit.jupiter.api.Test;
+import com.chengyinhub.business.domain.CmsActivity;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -66,4 +67,19 @@ class ActivityLifecycleTest
     {
         assertEquals("running", ActivityLifecycle.state(1L, 1L, null, null));
     }
+    @Test
+    void cancelledActivityIsTerminalEvenWhenAuditAndDatesSuggestOtherwise()
+    {
+        CmsActivity activity = new CmsActivity();
+        activity.setStatus(0L);
+        activity.setPublishStatus(0L);
+        activity.setStartDate(at(1, 9));
+        activity.setEndDate(at(5, 18));
+        activity.setCancelTime(at(-1, 9));
+        assertEquals("cancelled", ActivityLifecycle.state(activity));
+        assertEquals("已取消", ActivityLifecycle.stateText(ActivityLifecycle.state(activity)));
+        activity.setCancelTime(null);
+        assertEquals("pending", ActivityLifecycle.state(activity));
+    }
+
 }

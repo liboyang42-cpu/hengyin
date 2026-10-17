@@ -173,6 +173,9 @@ public class Club extends BaseEntity
 
     /** 非持久：当前访问者的入会状态 0待审 1正常 2已拒绝 */
     private Integer myJoinStatus;
+    private String myJoinReviewReason = "";
+    public String getMyJoinReviewReason() { return myJoinReviewReason; }
+    public void setMyJoinReviewReason(String value) { myJoinReviewReason = value == null ? "" : value; }
 
     /** 非持久：当前访问者是否为管理员；仅用于成员接口失败时给出可观察提示 */
     private Boolean viewerIsAdmin;

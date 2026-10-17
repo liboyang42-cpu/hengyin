@@ -38,6 +38,24 @@ function loadVm() {
 }
 const infoReq = () => sandbox.requests.filter(r => r.url === '/api/registration/info')[0]
 
+test('订单详情头部与订单列表使用相同现金实付款，保留零值和应付明细', () => {
+  const wxml = fs.readFileSync(WXML, 'utf8')
+  const binding = wxml.match(/class="hero-amt">\{\{money\.amount\(info\.(\w+)\)\}\}/)
+  assert.ok(binding, '详情头部金额绑定存在')
+  for (const cash of [0.01, 0]) {
+    sandbox.requests = []
+    const vm = loadVm()
+    vm.data.orderId = '43'
+    vm.onLoad()
+    infoReq().success({ code: 200, data: {
+      id: 43, ownerType: 1, registrationStatus: 2, paymentStatus: 2,
+      totalAmount: 15, payableAmount: 9, pointPaymentAmount: 6, wechatPaymentAmount: cash,
+    } })
+    assert.equal(vm.data.info[binding[1]], cash)
+    assert.equal(vm.data.info.payableAmount, 9)
+  }
+})
+
 test('T3f ① 网络失败 / 后端无原因的业务失败:原因只说原因,不带「重新进入」指令', () => {
   let vm = loadVm()
   vm.data.orderId = '1001'
@@ -139,4 +157,70 @@ test('首次扫码完成订单不冒充活动结束，票夹和退款资格仍�
   assert.equal(vm.data.info.orderHint, '首次扫码成功，订单已完成')
   assert.equal(vm.data.showSecondaryTicket, true)
   assert.equal(vm.data.info.canRequestRefund, true)
+})
+
+test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票夹入口', () => {
+  const cases = [
+    {
+      label: '待支付', info: { registrationStatus: 1, paymentStatus: 0 },
+      state: 'pending_payment', primary: 'pay', secondary: false,
+    },
+    {
+      label: '已取消', info: { registrationStatus: 3, paymentStatus: 3 },
+      state: 'cancelled', primary: '', secondary: false,
+    },
+    {
+      label: '已过期', info: { registrationStatus: 4, paymentStatus: 3 },
+      state: 'expired', primary: '', secondary: false,
+    },
+    {
+      label: '退款中', info: {
+        registrationStatus: 3, paymentStatus: 4,
+        refundApplication: { status: 0, payoutStatus: 5, refundAmount: 69 },
+      },
+      state: 'refunding', primary: '', secondary: false,
+    },
+    {
+      label: '已退款', info: {
+        registrationStatus: 3, paymentStatus: 4,
+        refundApplication: { status: 1, payoutStatus: 1, refundAmount: 69 },
+      },
+      state: 'refunded', primary: '', secondary: false,
+    },
+    {
+      label: '进行中有效票', info: { registrationStatus: 2, paymentStatus: 2, verificationStatus: 0 },
+      state: 'in_progress', primary: 'ticket', secondary: false,
+    },
+    {
+      label: '自然结束有效票', info: {
+        registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
+        cmsActivity: { startDate: '2020-01-01 10:00:00', endDate: '2020-01-01 11:00:00' },
+      },
+      state: 'completed', primary: '', secondary: true,
+    },
+    {
+      label: '已核销有效票', info: { registrationStatus: 2, paymentStatus: 2, verificationStatus: 1 },
+      state: 'completed', primary: '', secondary: true,
+    },
+    {
+      label: '首次扫码完成有效票', info: {
+        registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
+        firstSuccessfulScanAt: '2026-10-01 18:16:47',
+      },
+      state: 'completed', primary: '', secondary: true,
+    },
+  ]
+
+  cases.forEach((entry, index) => {
+    const vm = loadVm()
+    vm.data.orderId = String(8000 + index)
+    vm.onLoad()
+    const request = sandbox.requests.filter(r => r.url === '/api/registration/info').slice(-1)[0]
+    request.success({ code: 200, data: Object.assign({
+      id: 8000 + index, ownerType: 2,
+    }, entry.info) })
+    assert.equal(vm.data.info.orderStateKey, entry.state, entry.label + ' 状态锚点')
+    assert.equal(vm.data.primaryCta, entry.primary, entry.label + ' 主 CTA')
+    assert.equal(vm.data.showSecondaryTicket, entry.secondary, entry.label + ' 次级票夹 CTA')
+  })
 })

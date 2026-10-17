@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -334,6 +335,34 @@ class ApiPlayProgressCompletionTruthTest
     }
 
     @Test
+    void genericGpsUsesFrozenCoordinatesAndOnlyItsValidatedOriginCreatesProof() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(101L);node.setLongitude("120.0");node.setLatitude("30.0");
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS")).thenReturn(Collections.singletonMap("version",1));
+        assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"NaN","31.23",null).get("code"));assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"120","30",null).get("code"));
+        AjaxResult result=controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"121.47","31.23",null);assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+    }
+
+    @Test
+    void genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards() {
+        topic.setProductType(ProductType.ORIENTEERING);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        when(runtime.recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null)).thenReturn(Collections.singletonMap("version",1));
+        AjaxResult result=controller.checkin(String.valueOf(ACTIVITY),CODE,null);
+        assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null);
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+        verify(completionAwardService,never()).grantOnce(anyLong(),anyLong(),anyLong(),any());
+    }
+
+    @Test
     void lastOpeningGameDoesNotAwardTheThemeBeforeDeparture()
     {
         topic.setProductType(ProductType.ORIENTEERING);
@@ -419,14 +448,34 @@ class ApiPlayProgressCompletionTruthTest
         CmsMemberTemplate tpl = new CmsMemberTemplate();
         tpl.setValidationMethod(1);
         tpl.setQuestionAnswer("正确答案");
-        tpl.setFeedbackText("再看一眼门口的牌子");
+        tpl.setFeedbackText("暗号正确，隐藏奖励已解锁");
         when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
 
         AjaxResult result = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "乱写一个", null);
 
         assertEquals(500, result.get("code"));
+        assertEquals("答案不正确", result.get("msg"), "完成反馈不能作为答错文案");
+        com.chengyinhub.business.mapper.PlayAttemptLogMapper attemptMapper =
+                (com.chengyinhub.business.mapper.PlayAttemptLogMapper)
+                        ReflectionTestUtils.getField(controller, "playAttemptLogMapper");
+        verify(attemptMapper).insertPlayAttemptLog(org.mockito.ArgumentMatchers.argThat(log ->
+                Integer.valueOf(0).equals(log.getResult()) && "乱写一个".equals(log.getWrongAnswer())));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
         assertEquals(Boolean.TRUE, ((Map<String, Object>) result.get("data")).get("answerWrong"),
                 "答错必须带标记,否则前端的错次/揭示无法与前端的业务拒绝区分");
+    }
+
+    @Test
+    void merchantCompletionFeedbackCannotReplaceWrongAnswerMessage() {
+        com.chengyinhub.business.service.INodeMerchantOverrideService overrides =
+                mock(com.chengyinhub.business.service.INodeMerchantOverrideService.class);
+        when(overrides.forNode(NODE)).thenReturn(
+                new com.chengyinhub.business.domain.vo.NodeMerchantOverride(99L, null,
+                        "商家隐藏奖励已解锁", null));
+        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService", overrides);
+        wrongAnswerResponseCarriesTheAnswerWrongMarker();
     }
 
     @Test
@@ -437,6 +486,7 @@ class ApiPlayProgressCompletionTruthTest
         node.setTemplateId(900L);
         CmsMemberTemplate tpl = new CmsMemberTemplate();
         tpl.setValidationMethod(1); tpl.setQuestionAnswer("答案");
+        tpl.setFeedbackText("暗号正确，隐藏奖励已解锁");
         when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
         when(progressService.insertPlayerNodeProgress(any())).thenAnswer(call -> {
             ((PlayerNodeProgress) call.getArgument(0)).setId(901L);
@@ -450,8 +500,11 @@ class ApiPlayProgressCompletionTruthTest
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
         when(coordinator.advance(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq("answer-1"),eq(2),
                 eq("player-node-progress:901"),isNull(),isNull())).thenReturn(state);
-        assertEquals(200, controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"答案",null,
-                "answer-1",2).get("code"));
+        AjaxResult result = controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"答案",null,
+                "answer-1",2);
+        assertEquals(200, result.get("code"));
+        assertEquals("答对了！", result.get("msg"));
+        assertEquals("暗号正确，隐藏奖励已解锁", tpl.getFeedbackText());
         verify(coordinator).advance(PLAYER,TOPIC,ACTIVITY,NODE,"answer-1",2,"player-node-progress:901",null,null);
         verify(proofService,never()).hasArrived(anyLong(),anyLong(),anyLong());
     }
@@ -605,6 +658,21 @@ class ApiPlayProgressCompletionTruthTest
         row.setVerificationStatus(0);
         row.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
         return row;
+    }
+
+    @Test void genericFrozenTextAndChoiceAnswersProduceOnlyControlledCurrentProof() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        CmsMemberTemplate live=new CmsMemberTemplate();live.setValidationMethod(1);live.setQuestionAnswer("changed");when(templateService.selectCmsMemberTemplateById(9L)).thenReturn(live);
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        AjaxResult wrong=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"changed",null);assertEquals(500,wrong.get("code"));verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
+        AjaxResult text=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"ab",null);assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"ANSWER");
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+        when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof")).thenReturn(true);
+        AjaxResult pick=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"c",null,"pick-proof",3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
 }

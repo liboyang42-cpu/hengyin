@@ -1,5 +1,5 @@
 <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" />
-<cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="据点暂时打不开" sub="{{errorText}}" retry="重试" bind:retry="retry" />
+<cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="据点暂时打不开" sub="{{errorText}}" retry="重试" bind:retry="retry" />
 <cy-empty class="cy-fade-in" wx:elif="{{state === 'unavailable'}}" fill title="据点未开放或已下线" sub="{{errorText}}" cta="返回地图" bind:cta="close" />
 <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" kind="missing-param" title="找不到这个据点" sub="该点位可能已经下线，请返回地图继续探索。" cta="返回地图" bind:cta="close" />
 <view wx:elif="{{state === 'ready'}}" class="poi-body cy-fade-in">
@@ -35,11 +35,11 @@
       <text class="poi-action poi-action--primary {{node.completed || (!node.needRedeem && !node.canInteract) || completing ? 'is-disabled' : ''}}" bindtap="startInteract" aria-role="button" aria-disabled="{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}" aria-label="{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}" hover-class="{{node.completed || (!node.needRedeem && !node.canInteract) || completing ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{node.completed ? '已完成' : (completing ? '处理中…' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动')))}}</text>
     </view>
   </view>
-  <view wx:if="{{merchantError}}" class="poi-recovery"><cy-error title="商家信息暂时打不开" sub="{{merchantError}}" retry="重试" bind:retry="retryMerchant" /></view>
+  <view wx:if="{{merchantError}}" class="poi-recovery"><cy-error load-failure title="商家信息暂时打不开" sub="{{merchantError}}" retry="重试" bind:retry="retryMerchant" /></view>
   <view wx:if="{{gallery.length}}" class="poi-section"><text class="poi-section__title">店铺相册</text><scroll-view scroll-x class="poi-gallery"><image wx:for="{{gallery}}" wx:key="*this" class="poi-gallery__image" src="{{item}}" mode="aspectFill" bindtap="previewGallery" data-src="{{item}}" aria-role="button" aria-label="预览店铺照片"  hover-class="cy-pressed" hover-stay-time="80"/></scroll-view></view>
   <view wx:if="{{merchant && (merchant.storyTitle || merchant.description)}}" class="poi-section"><text class="poi-section__title">{{merchant.storyTitle || '品牌故事'}}</text><text class="poi-story">{{merchant.description}}</text></view>
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
   <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" title="选择答案" items="{{choiceSheetItems}}" confirm-text="提交"
                    bind:select="onChoiceSheetSelect" bind:cancel="onChoiceSheetCancel" />
 </view>
-<cy-error wx:else fill title="页面暂时无法显示" sub="页面状态异常，请重新加载。" retry="重试" bind:retry="retry" />
+<cy-error load-failure wx:else fill title="页面暂时无法显示" sub="页面状态异常，请重新加载。" retry="重试" bind:retry="retry" />

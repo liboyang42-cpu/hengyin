@@ -14,6 +14,7 @@ function loadInvitePage() {
   const requests = []
   global.getApp = () => ({
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => 7,
     sendRequest(options) { requests.push(options) }
   })
   global.wx = { showToast() {}, navigateTo() {}, setStorageSync() {}, getStorageSync() { return '' } }

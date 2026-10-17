@@ -61,6 +61,7 @@ function loadPage(mutate) {
     close() { this.closed = true; },
   };
   const app = {
+    getUserID: () => 7,
     globalData: {},
     sendRequest(o) { requests.push(o); },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,

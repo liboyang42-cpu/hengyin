@@ -56,6 +56,8 @@ function loadDetail() {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error('unexpected require: ' + request)
     },
     setTimeout(fn) { scheduled.push(fn); return 1 },
@@ -64,6 +66,7 @@ function loadDetail() {
     Date,
     JSON,
     wx: {
+      stopPullDownRefresh() {},
       navigateTo(options) { navigations.push(options.url) },
       navigateBack() { navigations.push('__back__') },
       switchTab(options) { navigations.push(options.url) },
@@ -99,9 +102,9 @@ test('owner 入口业务失败 = 可重试错误态,不弹「没有俱乐部」�
 
   // 点「重新加载」:必须重发 /api/club/my,而不是对着空 clubId 空转(永久骨架)
   const before = requests.length
-  page.onRetry()
+  page.onPullDownRefresh()
   const again = requests.slice(before).filter((r) => r.url === '/api/club/my')
-  assert.equal(again.length, 1, 'clubId 为空时 onRetry 必须重走 owner 解析')
+  assert.equal(again.length, 1, 'clubId 为空时下拉刷新必须重走 owner 解析')
 
   again[0].success({ code: 200, data: { owned: [{ id: 7, name: '夜行团' }] } })
   assert.equal(page.data.clubId, 7)

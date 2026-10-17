@@ -10,7 +10,7 @@
 <cy-skeleton type="grid" count="6" wx:if="{{loadState === 'loading'}}" />
   <cy-empty size="lg" fill wx:elif="{{loadState === 'permission'}}" kind="no-permission"
     title="当前账号不能编辑门店相册" sub="请切换到已审核通过的商家账号后再试。" cta="返回" bind:cta="onNavBack" />
-  <cy-error class="dg-retry cy-fade-in" size="lg" fill wx:elif="{{loadState === 'error'}}"
+  <cy-error load-failure class="dg-retry cy-fade-in" size="lg" fill wx:elif="{{loadState === 'error'}}"
     icon="/images/no_data.svg" title="{{loadErrorKind === 'network' ? '网络没连上' : '相册加载失败'}}" sub="{{loadError}}" retry="重试" bind:retry="retryLoad" auto-back />
   <cy-empty size="lg" fill wx:elif="{{loadState === 'empty'}}" kind="empty"
     title="暂时无法上传门店相册" sub="这个账号还没有店铺，完成商家入驻后再上传门店相册。" cta="去商家入驻" bind:cta="goApply" />

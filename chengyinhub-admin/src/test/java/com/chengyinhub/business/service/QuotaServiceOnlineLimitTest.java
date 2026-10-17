@@ -2,6 +2,7 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UserPermission;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.QuotaServiceImpl;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,27 +55,73 @@ class QuotaServiceOnlineLimitTest {
     }
 
     @Test
-    void permissionProjectionReportsUnlimitedIncludingLegacyFallback() {
+    void permissionProjectionReportsUnlimitedFromPersistedRoleWithoutMutatingPolicy() {
         com.chengyinhub.business.service.impl.RoleServiceImpl roles =
                 new com.chengyinhub.business.service.impl.RoleServiceImpl();
         IUserPermissionService permissions = mock(IUserPermissionService.class);
-        ICapabilityService capabilities = mock(ICapabilityService.class);
+        UmsMemberMapper members = mock(UmsMemberMapper.class);
         ReflectionTestUtils.setField(roles, "userPermissionService", permissions);
-        ReflectionTestUtils.setField(roles, "capabilityService", capabilities);
+        ReflectionTestUtils.setField(roles, "umsMemberMapper", members);
         UserPermission old = new UserPermission();
+        old.setRole("player");
         old.setMaxNodesPerTheme(2);
         old.setMaxThemes(3);
         when(permissions.getByRole("player")).thenReturn(old);
-        when(permissions.getByRole("merchant")).thenReturn(old);
         UmsMember member = new UmsMember();
         member.setId(42L);
         member.setRole("merchant");
-        when(capabilities.getCapabilities(42L)).thenReturn(java.util.Arrays.asList("player", "merchant"));
-        assertNull(roles.getPermission(member).getMaxNodesPerTheme());
-        when(capabilities.getCapabilities(42L)).thenThrow(new RuntimeException("legacy schema"));
-        assertNull(roles.getPermission(member).getMaxNodesPerTheme());
-        assertEquals(Integer.valueOf(3), roles.getPermission(member).getMaxThemes());
+        when(members.selectRolePermissionSubject(42L)).thenReturn(persistedRole("player"));
+        UserPermission projected = roles.getPermission(member);
+        assertNotSame(old, projected);
+        assertNull(projected.getMaxNodesPerTheme());
+        assertEquals(Integer.valueOf(3), projected.getMaxThemes());
         assertEquals(Integer.valueOf(2), old.getMaxNodesPerTheme());
+        assertEquals(Integer.valueOf(3), old.getMaxThemes());
+        verify(members).selectRolePermissionSubject(42L);
+        verify(permissions).getByRole("player");
+        verify(permissions, never()).getByRole("merchant");
+    }
+
+    @Test
+    void staleClientRoleCannotOverridePersistedRole() {
+        com.chengyinhub.business.service.impl.RoleServiceImpl roles =
+                new com.chengyinhub.business.service.impl.RoleServiceImpl();
+        IUserPermissionService permissions = mock(IUserPermissionService.class);
+        UmsMemberMapper members = mock(UmsMemberMapper.class);
+        ReflectionTestUtils.setField(roles, "userPermissionService", permissions);
+        ReflectionTestUtils.setField(roles, "umsMemberMapper", members);
+        UserPermission playerPolicy = new UserPermission();
+        playerPolicy.setRole("player");
+        playerPolicy.setMaxThemes(3);
+        UserPermission merchantPolicy = new UserPermission();
+        merchantPolicy.setRole("merchant");
+        merchantPolicy.setMaxThemes(50);
+        when(permissions.getByRole("player")).thenReturn(playerPolicy);
+        when(permissions.getByRole("merchant")).thenReturn(merchantPolicy);
+        when(members.selectRolePermissionSubject(42L))
+                .thenReturn(persistedRole("player"), persistedRole("merchant"));
+        UmsMember staleClient = new UmsMember();
+        staleClient.setId(42L);
+        staleClient.setRole("merchant");
+
+        UserPermission actualPlayer = roles.getPermission(staleClient);
+        assertEquals("player", actualPlayer.getRole());
+        assertEquals(Integer.valueOf(3), actualPlayer.getMaxThemes());
+        staleClient.setRole("player");
+        UserPermission actualMerchant = roles.getPermission(staleClient);
+        assertEquals("merchant", actualMerchant.getRole());
+        assertEquals(Integer.valueOf(50), actualMerchant.getMaxThemes());
+        verify(permissions).getByRole("player");
+        verify(permissions).getByRole("merchant");
+    }
+
+    private static UmsMember persistedRole(String role) {
+        UmsMember member = new UmsMember();
+        member.setId(42L);
+        member.setStatus(1L);
+        member.setDelFlag(0);
+        member.setRole(role);
+        return member;
     }
 
     @BeforeEach

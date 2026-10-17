@@ -227,6 +227,26 @@ class ApiActivityTopicListQueryBudgetTest {
         verifyNoInteractions(f.topicLikeMapper, f.memberFollowMapper);
     }
 
+    /** F-W5-03:「我的」项目预览读 is_my=1;草稿标记与 /api/project/my 同一份 selectDraftTopicIds,公开列表不富化也不查。 */
+    @Test
+    void myTopicsCarryServerDraftFlagButPublicListNeverQueriesDrafts() {
+        TopicFixture f = topicFixture(Arrays.asList(topic(1L)), VIEWER);
+        when(f.topicService.selectCmsTopicList(any())).thenReturn(new ArrayList<>(Arrays.asList(topic(5L), topic(6L))));
+        when(f.topicService.selectDraftTopicIds(VIEWER)).thenReturn(Collections.singletonList(6L));
+
+        AjaxResult mine = f.controller.topicList("1", null, null, null, null, null);
+
+        assertEquals(200, mine.get("code"), mine.toString());
+        List<?> rows = rows(mine);
+        assertEquals(Boolean.FALSE, ((CmsTopic) rows.get(0)).getIsDraft());
+        assertEquals(Boolean.TRUE, ((CmsTopic) rows.get(1)).getIsDraft());
+
+        org.mockito.Mockito.clearInvocations(f.topicService);
+        AjaxResult pub = f.controller.topicList("0", null, null, null, null, null);
+        assertEquals(200, pub.get("code"), pub.toString());
+        verify(f.topicService, never()).selectDraftTopicIds(any());
+    }
+
     @Test
     void merchantScopedMyTopicsUseOwnerIdentityButBlankScopeStaysPersonal() {
         TopicFixture f = topicFixture(Collections.emptyList(), VIEWER);

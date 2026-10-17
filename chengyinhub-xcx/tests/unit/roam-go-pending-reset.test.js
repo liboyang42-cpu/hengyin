@@ -6,6 +6,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 
 const PAGE_MODULE = '../../pages/roam/index.js'
+const settle = () => new Promise(resolve => setImmediate(resolve))
 
 function loadRoamPage() {
   let definition
@@ -54,7 +55,7 @@ test('onShow 一并归零「开完就拍」的意图,别在下次出发时莫名
   }
 })
 
-test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个会话', () => {
+test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个会话', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
   const prevWx = global.wx
@@ -64,42 +65,47 @@ test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个�
   global.wx = {
     getStorageSync: () => undefined,
     setStorageSync: () => {},
+    showModal: options => options.success({ confirm: true }),
     getLocation: opts => { locOpts = opts },   // 扣住回调,模拟定位还没回来
   }
   global.getApp = () => ({
     globalData: {},
-    recordConsent: () => { consentCalls += 1; return new Promise(() => {}) },
+    getUserID: () => '9',
+    recordConsent: () => { consentCalls += 1; return Promise.resolve() },
   })
   page._openRoamMap = () => { openedSessions += 1 }
   try {
     page.onShow()
     page.goStart()                       // 本次 chain 捕获当前世代
+    await settle()                      // 明确确认并保存同意后才请求定位
     assert.ok(locOpts, 'goStart 应该走到 wx.getLocation')
     page.onShow()                        // 切走再回来 ⇒ 世代 +1,在途流程作废
     locOpts.success({ latitude: 31.23, longitude: 121.47 })  // 旧 chain 的回调这才回来
     assert.equal(openedSessions, 0, '已作废的 chain 不该再开第二个会话')
-    assert.equal(consentCalls, 0, '已作废的 chain 不该再补 recordConsent 留痕')
+    assert.equal(consentCalls, 1, '旧定位回包不能自动追加AGREE;仅确认前的已保存记录')
   } finally {
     global.getApp = prevGetApp
     global.wx = prevWx
   }
 })
 
-test('onShow 归零后 goStart 不再被首行守卫挡掉', () => {
+test('onShow 归零后 goStart 不再被首行守卫挡掉', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequested = false
-  global.getApp = () => ({ globalData: {} })
+  global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
   global.wx = {
     getStorageSync: () => undefined,
     setStorageSync: () => {},
+    showModal: options => options.success({ confirm: true }),
     getLocation: () => { locRequested = true },   // 只验证走到了请求定位这一步
   }
   try {
     page._roamStartPending = true
     page.onShow()
     page.goStart()
+    await settle()
     assert.equal(locRequested, true, 'goStart 应该走到 wx.getLocation,而不是被 _roamStartPending 挡在首行')
   } finally {
     global.getApp = prevGetApp
@@ -107,31 +113,30 @@ test('onShow 归零后 goStart 不再被首行守卫挡掉', () => {
   }
 })
 
-// 门闩是在 markRoamIntroSeen 之前置上的。这一步一旦抛,门闩已经 true 而 getLocation 永远不会被
-// 调用 ⇒ 之后每次点 GO 都在首行静默 return,页面毫无反应,冷启动前不自愈。
-// 注意抛点在哪:markRoamIntroSeen 内部已经把 wx.setStorageSync 裹了 try,真正裸奔的是它上一行的
-// buildRoamIntroSeenKey() —— 那里面直接调 getApp()/getUserID()。所以负控必须从 getApp 下手,
-// 拿 setStorageSync 构造异常会被内部 try 吞掉,测了个寂寞(本条最初就是这么写的,假绿)。
-test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', () => {
+// 业务同意不能被 getApp 不可用的匿名降级绕过。本负控直接击中真实引导标记，
+// 保留「非关键本地标记异常不毒死已明确同意的下一次出发」这个用户恢复契约。
+test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequests = 0
-  global.getApp = () => { throw new Error('getApp 在这一刻不可用') }
+  global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+  page.markRoamIntroSeen = () => { throw new Error('引导本地标记失败') }
   global.wx = {
     getStorageSync: () => undefined,
     setStorageSync: () => {},
+    showModal: options => options.success({ confirm: true }),
     getLocation: () => { locRequests += 1 },
   }
   try {
     page.goStart()
+    await settle()
     assert.equal(locRequests, 1, '取本地标记失败不该挡住这次出发')
-    // 更要紧的是别把下一次也毒死。注意 onShow 自己也调 getApp(读 avatar),所以这里要先把
-    // getApp 恢复正常再走自愈路径 —— 否则测的就变成「onShow 抗不抗 getApp 抛」了,不是本条的意图。
-    // (门闩归零排在 onShow 里读 getApp 之前,所以即便那一步抛,自愈本身仍然发生。)
-    global.getApp = () => ({ globalData: {} })
+    // 常驻页返回后仍能重新明确确认，非关键本地标记异常不影响后续出发。
+    global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
     page.onShow()
     page.goStart()
+    await settle()
     assert.equal(locRequests, 2, '第二次点 GO 仍须走到 getLocation,而不是被卡住的门闩静默吃掉')
   } finally {
     global.getApp = prevGetApp

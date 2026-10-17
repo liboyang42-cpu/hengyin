@@ -1,17 +1,20 @@
 package com.chengyinhub.business.service.impl;
 
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.common.core.redis.RedisCache;
 
 /**
  * 监控告警(C3/资损可观测):关键失败(发奖丢奖、券超发、结算异常)除落 error 日志外,
@@ -54,6 +57,14 @@ public class AlarmService {
 
     private WebhookTransport transport;
 
+    @Autowired
+    private RedisCache redisCache;
+
+    /** Redis 租约不可用时的进程内兜底限频:同一事件 10 分钟只尝试一次(event 键为固定集合,不会无限增长)。 */
+    private static final long LOCAL_THROTTLE_MS = 600_000L;
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> localAttempts =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     public AlarmService() {
         // transport 在 @PostConstruct 中根据注入的 timeout 配置创建
     }
@@ -69,6 +80,10 @@ public class AlarmService {
     void initTransport() {
         if (this.transport == null) {
             this.transport = new HttpWebhookTransport(connectTimeoutMs, readTimeoutMs);
+        }
+        // 未注入 ALARM_WEBHOOK 时所有告警只留在日志里：启动时显著提示一次（生产预检会拦截缺失）。
+        if (StringUtils.isEmpty(webhook)) {
+            log.error("[ALARM] alarm.webhook 未配置(ALARM_WEBHOOK):告警只写 error 日志,不会推送到值班群");
         }
     }
 
@@ -88,6 +103,44 @@ public class AlarmService {
 
     public void alarm(String title, String detail) {
         deliver(title, detail);
+    }
+
+    /** Limit attempts per fixed monitoring event for ten minutes, never claim delivery from a Redis lease. */
+    public void alarmThrottled(String event, String title, String detail) {
+        if (event == null || !event.matches("[a-z][a-z0-9_.-]{0,79}")) {
+            throw new IllegalArgumentException("Invalid alarm event key");
+        }
+        try {
+            Boolean claimed = redisCache.setIfAbsent("alarm:attempt:" + event, "1", 600, TimeUnit.SECONDS);
+            if (Boolean.FALSE.equals(claimed)) {
+                log.debug("[ALARM] Attempt rate limited event={}", event);
+                return;
+            }
+            if (claimed == null) {
+                log.warn("[ALARM] Attempt lease unknown event={}; falling back to local throttle", event);
+                if (!claimLocally(event)) return;
+            }
+        } catch (Exception failure) {
+            // Redis 故障时 runtime.redis.* / 5xx 事件会在每个请求上触发:不能退化为「每次都投递」,
+            // 否则请求线程排队等 webhook 超时、告警群被刷屏。改用进程内限频,每个实例每事件 10 分钟最多一次。
+            log.warn("[ALARM] Attempt lease failed event={} type={}; falling back to local throttle",
+                    event, failure.getClass().getSimpleName());
+            if (!claimLocally(event)) return;
+        }
+        alarm(title, detail);
+    }
+
+    /** @return true = 本实例在窗口内首次尝试该事件 */
+    boolean claimLocally(String event) {
+        long now = System.currentTimeMillis();
+        boolean[] claimed = {false};
+        localAttempts.compute(event, (key, last) -> {
+            if (last != null && now - last < LOCAL_THROTTLE_MS) return last;
+            claimed[0] = true;
+            return now;
+        });
+        if (!claimed[0]) log.debug("[ALARM] Attempt locally rate limited event={}", event);
+        return claimed[0];
     }
 
     AlarmDelivery deliver(String title, String detail) {
@@ -152,15 +205,20 @@ public class AlarmService {
             return;
         }
         try {
-            String failurePayload = "{\"msgtype\":\"text\",\"text\":{\"content\":\"[城瘾告警投递失败] "
-                    + safe(title) + "\\n主 webhook 投递失败,请检查告警通道\"}}";
+            String failurePayload = "{\"msgtype\":\"text\",\"text\":{\"content\":"
+                    + JSON.toJSONString("[城瘾告警投递失败] " + (title == null ? "" : title)
+                    + "\n主 webhook 投递失败,请检查告警通道") + "}}";
             TransportResponse failureResponse = transport.post(failureWebhook, failurePayload);
             if (failureResponse == null) {
                 log.error("[ALARM] 失败事件投递到独立出口失败(transport 返回 null) failureHost={}",
                         failureHost);
                 return;
             }
-            if (failureResponse.is2xx()) {
+            String errcode = failureResponse.is2xx() ? rejectionCode(failureResponse.getBody()) : null;
+            if (errcode != null) {
+                log.error("[ALARM] 失败事件投递到独立出口被第三方拒绝 failureHost={} errcode={}",
+                        failureHost, errcode);
+            } else if (failureResponse.is2xx()) {
                 log.info("[ALARM] 失败事件已投递到独立出口 failureHost={}", failureHost);
             } else {
                 log.error("[ALARM] 失败事件投递到独立出口失败 failureHost={} status={}",
@@ -172,8 +230,8 @@ public class AlarmService {
     }
 
     private String buildPayload(String title, String detail) {
-        String content = "[城瘾告警] " + safe(title) + "\\n" + safe(detail);
-        return "{\"msgtype\":\"text\",\"text\":{\"content\":\"" + content + "\"}}";
+        String content = "[城瘾告警] " + (title == null ? "" : title) + "\n" + (detail == null ? "" : detail);
+        return "{\"msgtype\":\"text\",\"text\":{\"content\":" + JSON.toJSONString(content) + "}}";
     }
 
     /**
@@ -218,12 +276,6 @@ public class AlarmService {
         } catch (Exception invalid) {
             return null;
         }
-    }
-
-    /** 转义换行与引号,避免破坏 JSON */
-    private static String safe(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
     }
 
 }

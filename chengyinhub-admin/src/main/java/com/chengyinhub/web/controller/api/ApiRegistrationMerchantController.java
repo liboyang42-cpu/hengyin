@@ -267,8 +267,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             if (umsMember == null) {
                 return error("用户不存在");
             }
-            //2商户会员
-            if (umsMember.getUserType() != 2) {
+            if (!com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT.equals(umsMember.getRole())) {
                 return error("商家才能报名");
             }
 

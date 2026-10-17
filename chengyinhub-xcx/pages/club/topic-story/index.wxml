@@ -9,7 +9,7 @@
   <!-- Tabs · 路线 / 玩法(Figma 228:135 / 228:152)。稿上没有整条底线,故 hairline=false。 -->
   <cy-tabs class="story-tabs" tabs="{{tabs}}" active="{{tab}}" hairline="{{false}}" bind:change="onTab" />
 
-  <cy-error wx:if="{{loadError}}" title="剧情与玩法打不开" sub="{{loadError}}"
+  <cy-error load-failure wx:if="{{loadError}}" title="剧情与玩法打不开" sub="{{loadError}}"
             retry="{{missingParam ? '返回' : '重试'}}" bind:retry="onRetry" />
   <cy-skeleton wx:elif="{{!loaded}}" type="list" loading-label="正在加载剧情与玩法" />
 
@@ -110,7 +110,7 @@
       <!-- CU-C-152:完整玩法名是副信息,可换行,不再挤进 nowrap 的弹层标题里被截断。 -->
       <view wx:if="{{answerNodeName}}" class="ans__node">{{answerNodeName}}</view>
       <view wx:if="{{answerLoading}}" class="ans__state">正在取答案…</view>
-      <cy-inline-error wx:elif="{{answerError}}" class="ans__err" kind="data"
+      <cy-inline-error load-failure wx:elif="{{answerError}}" class="ans__err" kind="data"
         title="答案没取到" sub="{{answerError}}" action="重试" bind:action="retryAnswer" />
       <block wx:elif="{{answer}}">
         <block wx:if="{{answer.question}}">

@@ -7,7 +7,8 @@
   <!-- 稿 356:5220:加载失败 = 零按钮的结果半屏,原因停 2s 后自动回订单列表。
        原来是三颗竖排大钮(重试/返回/客服)的整卡,底下再压一条同义 toast,一件事说两遍。
        失败不静默:标题 + 后端原因都在面板上,关闭(超时或手动)一律走 backToOrderList。 -->
-  <cy-result-sheet show="{{loadState==='failed_business' || loadState==='failed_network'}}" kind="fail" title="加载失败" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
+  <!-- 加载失败保持空白；参数与权限拒绝保留明确恢复出口。 -->
+  <cy-result-sheet show="{{loadFailureVisible}}" kind="fail" title="订单暂不可查看" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
 
   <view class="david" wx:if="{{loadState==='ready'}}">
   <!-- 稿 578:2298(D07):大金额与状态先行。头图上依次是实付金额(40px)、
@@ -18,7 +19,7 @@
     <image class="hero-img" lazy-load="true" src="{{heroImage}}" mode="aspectFill" />
     <view class="hero-mask"></view>
     <view class="hero-text">
-      <view class="hero-amt">{{money.amount(info.payableAmount)}}</view>
+      <view class="hero-amt">{{money.amount(info.actualPaidAmount)}}</view>
       <view class="hero-title ep1">{{productTitle}}</view>
       <view class="hero-when" wx:if="{{whenText}}">{{whenText}}</view>
       <view class="hero-pill hero-pill--{{statusTone}}" wx:if="{{info.statusText}}">{{info.statusText}}</view>

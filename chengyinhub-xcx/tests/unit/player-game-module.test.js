@@ -821,3 +821,23 @@ test('D05/F06 unknown 写同页内存只保留精确 PLAYER_HINT/PLAYER_REVEAL �
     },
   }, 7), null)
 })
+
+test('玩家读回优先顶层纪元、兼容 player 纪元；所有命令与内存重试保留原值', () => {
+  const raw = { sessionId: 91, activityId: 7, perspective: 'PLAYER', status: 'RUNNING', revision: 4,
+    player: { authorityEpoch: 2, nodes: [] }, authorityEpoch: 3 }
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, 3)
+  delete raw.authorityEpoch
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, 2)
+  delete raw.player.authorityEpoch
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, undefined)
+  const source = { activityId: 7, nodeId: 8, revision: 4, authorityEpoch: 3 }
+  const commands = [buildPlayerChoiceInput(source, 'A', 'req-player-choice'),
+    buildPlayerRoleConfirmInput(source, 'req-player-role'), buildPlayerHintInput(source, 1, 'req-player-hint'),
+    buildPlayerRevealInput(source, 'req-player-reveal'), buildPlayerSubmissionInput(source, 'SCAN', 'req-player-submit', ['scan:code'])]
+  for (const command of commands) {
+    assert.equal(command.authorityEpoch, 3)
+    const pending = normalizePlayerPendingWrite({ requestId: command.requestId, action: command.action, command }, 7)
+    assert.equal(pending.command.authorityEpoch, 3)
+    assert.equal(pending.command.expectedRevision, 4)
+  }
+})

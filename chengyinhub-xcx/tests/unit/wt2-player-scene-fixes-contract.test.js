@@ -28,6 +28,8 @@ function loadActivityComponent() {
       if (request.endsWith('datetime.js')) return { chinaDayStart: () => NaN, toTimestamp: () => NaN }
       if (request.endsWith('ticket-window.js')) return require('../../utils/ticket-window.js')
       if (request.endsWith('response-shape.js')) return require('../../utils/response-shape.js')
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected dependency: ${request}`)
     },
   }, { filename: path.join(ROOT, ACTIVITY_JS) })

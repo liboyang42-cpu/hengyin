@@ -229,7 +229,7 @@ test('★契约 §2 取值范围:越界一律拒,合法的放行', () => {
         { key: 'a', label: 'A', effects: [{ var: 'energy', op: 'INC', value: 1 }] },
         { key: 'b', label: 'B' },
       ])]
-    }, /counter\./],
+    }, /所需数值资源已变更，请重新选择/],
     ['加成变量 sys.luck 用了 SET', (m) => {
       m.profile.enabled = true
       m.profile.questions = [pickQuestion([
@@ -340,7 +340,7 @@ test('★契约 §2 取值范围:越界一律拒,合法的放行', () => {
       m.check.enabled = true
       m.check.checkId = 'x1'
       m.check.successEffects = [{ var: 'thought', op: 'INC', value: 1 }]
-    }, /counter\./],
+    }, /所需数值资源已变更，请重新选择/],
   ]
   for (const [name, mutate, pattern] of cases) {
     assert.match(rejectMessage(mutate), pattern, name + ' 应该被拒,却过了')

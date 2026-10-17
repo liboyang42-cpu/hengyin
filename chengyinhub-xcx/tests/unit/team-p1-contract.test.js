@@ -99,6 +99,9 @@ function loadTeamPage(relative) {
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       sendRequest(request) { requests.push(request) },
+      getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
+      // PR10 F-W1-12:本文件的读失败用例都是「已登录账号」;无会话的登录引导见 pr10-review-ui-fixes。
+      getUserID: () => '1001',
     }),
     Page(value) { definition = value },
     wx: {
@@ -401,4 +404,20 @@ test('订单详情建队入口覆盖 A/B 模式,场次开始后强制仅邀请',
   assert.match(orderJs, /info\.teamStarted = info\.teamOpen && !\(startMs > Date\.now\(\)\)/)
   assert.match(orderJs, /that\.data\.teamInviteOnly \|\| info\.teamStarted \? 1 : null/)
   assert.match(orderWxml, /<view class="link-row" wx:if="\{\{!info\.teamStarted\}\}">\s*<text class="link-label">仅邀请可加入/)
+})
+
+test('F-W1-12: surviving 401/403 shows a visible login/permission state; other read failures stay blank kinds', () => {
+  for (const [relative, start] of [['pages/team/detail/index.js', (page) => { page.onLoad({ teamId: '7' }); page.onShow() }],
+                                   ['pages/team/join/index.js', (page) => { page.onLoad({ code: 'abcDEF12' }) }]]) {
+    for (const code of ['401', '403', '500']) {
+      const harness = loadTeamPage(relative)
+      start(harness.page)
+      const request = harness.requests.find((item) => item.url === '/api/team/info')
+      assert.ok(request, relative + ' must read team info')
+      request.success({ code, msg: 'x' })
+      const denied = code !== '500'
+      assert.equal(harness.page.data.errorKind, denied ? 'no-permission' : 'data', relative + ' ' + code)
+      if (denied) assert.match(harness.page.data.error, /登录后/)
+    }
+  }
 })

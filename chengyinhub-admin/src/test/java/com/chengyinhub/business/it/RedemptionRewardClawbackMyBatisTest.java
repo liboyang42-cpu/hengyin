@@ -120,6 +120,44 @@ class RedemptionRewardClawbackMyBatisTest {
         }
     }
 
+    /** PR10 复审:整单核销撤销复用同一套到店积分/经验冲回,只冲一次,不碰通关奖励。 */
+    @Test
+    void wholeOrderReversalClawsStoreVerifyRewardsOnceAndKeepsCompletion() throws Exception {
+        try (SqlSession session = openSession("redemption_clawback_whole_order")) {
+            Connection c = session.getConnection();
+            createTables(c);
+            exec(c, "INSERT INTO ums_member (id, point, del_flag) VALUES (" + MEMBER + ", 30, 0)",
+                    "INSERT INTO member_growth (member_id, level_no, exp_value) VALUES (" + MEMBER + ", 1, 50)",
+                    "INSERT INTO ums_member_points_detail (member_id, change_points, event_type, event_id, change_type, del_flag)"
+                            + " VALUES (" + MEMBER + ", 10, 11, " + REGISTRATION + ", 1, 0),"
+                            + " (" + MEMBER + ", 5, 13, " + ACTIVITY + ", 1, 0)",
+                    "INSERT INTO growth_mission_progress (member_id, mission_code, biz_type, biz_id, progress_date, reward_exp)"
+                            + " VALUES (" + MEMBER + ", 'STORE_VERIFY_1', 'registration', " + REGISTRATION + ", '2026-09-10', 20)",
+                    "INSERT INTO store_verify_growth_delivery (registration_id, member_id, missions_json, create_time, next_attempt_at, processed_at)"
+                            + " VALUES (" + REGISTRATION + ", " + MEMBER + ", '[]', NOW(), NOW(), NOW())",
+                    "INSERT INTO topic_completion_xp_award (member_id, topic_id, xp_amount, granted_at) VALUES (" + MEMBER + ", " + TOPIC + ", 15, NOW())");
+            RedemptionRewardClawbackService service = service(session);
+
+            service.clawbackWholeOrderVerification(registration(), 6006L, "店员扫错票", 1L,
+                    "registration-verify-clawback-" + REGISTRATION + "-1");
+
+            assertEquals(20, number(c, "SELECT point FROM ums_member WHERE id=" + MEMBER), "只冲到店 10 分");
+            assertEquals(30, number(c, "SELECT exp_value FROM member_growth WHERE member_id=" + MEMBER), "只冲到店 20 经验");
+            assertEquals(0, number(c, "SELECT COUNT(*) FROM store_verify_growth_delivery"));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM topic_completion_xp_award"), "通关奖励不在整单撤销范围");
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM ums_member_points_detail WHERE change_type=1 AND event_type=13"));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM business_audit_event WHERE action='REGISTRATION_VERIFY_REWARD_CLAWBACK'"
+                    + " AND target_type='CMS_REGISTRATION' AND target_id=" + REGISTRATION));
+
+            // 再撤一次(下一代幂等键):原发放已摘出判重键,一分一点都不再扣
+            service.clawbackWholeOrderVerification(registration(), 6006L, "重复撤销", 1L,
+                    "registration-verify-clawback-" + REGISTRATION + "-2");
+            assertEquals(20, number(c, "SELECT point FROM ums_member WHERE id=" + MEMBER));
+            assertEquals(30, number(c, "SELECT exp_value FROM member_growth WHERE member_id=" + MEMBER));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM ums_member_points_detail WHERE change_type=2"));
+        }
+    }
+
     @Test
     void usedCompletionCouponIsOnlyAuditedNotRecovered() throws Exception {
         try (SqlSession session = openSession("redemption_clawback_used")) {
@@ -156,9 +194,11 @@ class RedemptionRewardClawbackMyBatisTest {
 
             awards.grantOnce(MEMBER, TOPIC, ACTIVITY, new java.util.Date());
             assertCompletionRewards(c, 5, 15, 1, 1);
+            assertEquals(15, number(c, "SELECT SUM(exp_value-revoked_exp) FROM member_exp_earned WHERE member_id=" + MEMBER));
 
             clawback.clawback(redemption(61L), registration(), false, true, "店员扫错票", 1L);
             assertCompletionRewards(c, 0, 0, 0, 0);
+            assertEquals(0, number(c, "SELECT SUM(exp_value-revoked_exp) FROM member_exp_earned WHERE member_id=" + MEMBER));
             assertEquals(0, number(c, "SELECT COUNT(*) FROM cms_topic_completion_coupon_reward_log"), "作废的通关券发放日志删掉");
 
             awards.grantOnce(MEMBER, TOPIC, ACTIVITY, new java.util.Date());   // 玩家重新通关(勋章已在)
@@ -177,6 +217,8 @@ class RedemptionRewardClawbackMyBatisTest {
             assertCompletionRewards(c, 0, 0, 0, 0);
             assertEquals(2, number(c, "SELECT COUNT(*) FROM ums_member_points_detail WHERE change_type=2"), "两次真冲回,重复那次不再扣");
             assertEquals(2, number(c, "SELECT COUNT(*) FROM sms_coupon_history WHERE use_status=2"));
+            assertEquals(30, number(c, "SELECT SUM(exp_value) FROM member_exp_earned"), "保留两笔真实发放历史");
+            assertEquals(30, number(c, "SELECT SUM(revoked_exp) FROM member_exp_earned"), "两笔分别扣回，重复撤销不再计入");
         }
     }
 
@@ -235,11 +277,9 @@ class RedemptionRewardClawbackMyBatisTest {
         when(progression.onTopicComplete(anyLong(), anyLong())).thenReturn(java.util.Collections.emptyList());
         com.chengyinhub.business.service.IXpBudgetService budget = mock(com.chengyinhub.business.service.IXpBudgetService.class);
         when(budget.computeBudget(TOPIC)).thenReturn(java.util.Collections.<String, Object>singletonMap("remain", 15));
-        com.chengyinhub.business.service.IGrowthService growth = mock(com.chengyinhub.business.service.IGrowthService.class);
-        when(growth.addExp(anyLong(), anyInt(), anyString())).thenAnswer(i -> {
-            exec(c, "UPDATE member_growth SET exp_value = exp_value + " + i.getArgument(1) + " WHERE member_id=" + i.getArgument(0));
-            return i.getArgument(1);
-        });
+        com.chengyinhub.business.service.impl.GrowthServiceImpl growth =
+                new com.chengyinhub.business.service.impl.GrowthServiceImpl();
+        ReflectionTestUtils.setField(growth, "memberGrowthMapper", session.getMapper(MemberGrowthMapper.class));
 
         com.chengyinhub.business.service.impl.TopicCompletionAwardServiceImpl awards =
                 new com.chengyinhub.business.service.impl.TopicCompletionAwardServiceImpl();
@@ -320,6 +360,9 @@ class RedemptionRewardClawbackMyBatisTest {
         exec(c, ddl(read("chengyinhub-admin/sql/migration_store_verify_growth_delivery_20260913.sql"), "store_verify_growth_delivery"),
                 ddl(read("chengyinhub-admin/sql/migration_20260817_tandianri_r6_product_contracts.sql"), "topic_completion_xp_award"),
                 ddl(read("chengyinhub-admin/sql/migration_business_audit_event_20260823.sql"), "business_audit_event"),
+                ddl(read("chengyinhub-admin/sql/migration_member_exp_earned_20261011.sql"), "member_exp_earned"),
+                "ALTER TABLE member_exp_earned ADD COLUMN revoked_exp INT NOT NULL DEFAULT 0",
+                "ALTER TABLE topic_completion_xp_award ADD COLUMN earned_exp_id BIGINT NULL",
                 "ALTER TABLE business_audit_event ADD COLUMN actor_type VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN' AFTER owner_member_id,"
                         + " MODIFY COLUMN request_id VARCHAR(64) NOT NULL");
     }

@@ -49,6 +49,17 @@ class ClubPostServiceImplLifecycleTest {
     }
 
     @Test
+    void interactionReadDelegatesToExistingPostRowLock() {
+        ClubPost post = post();
+        when(clubPostMapper.selectClubPostByIdForUpdate(81L)).thenReturn(post);
+
+        assertEquals(post, service.selectClubPostByIdForUpdate(81L));
+
+        verify(clubPostMapper).selectClubPostByIdForUpdate(81L);
+        verify(clubPostMapper, never()).selectClubPostById(any());
+    }
+
+    @Test
     void dissolvedClubIsRejectedBeforeMembershipReadOrInsert() {
         when(clubMapper.selectClubByIdForUpdate(CLUB_ID)).thenReturn(null);
 

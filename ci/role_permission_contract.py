@@ -96,9 +96,28 @@ def frontend_permissions(root: pathlib.Path = ROOT) -> Dict[str, Set[str]]:
     for path in root.glob("chengyinhub-ui/src/**/*.vue"):
         text = re.sub(r"<!--.*?-->", "", path.read_text(encoding="utf-8", errors="ignore"), flags=re.S)
         for binding in re.findall(r'v-hasPermi\s*=\s*"([^"]+)"', text):
-            for permission in re.findall(r"'([^']+)'", binding):
+            for permission in _binding_permissions(binding):
                 result.setdefault(permission, set()).add(str(path.relative_to(root)))
     return result
+
+
+def _binding_permissions(binding: str) -> Set[str]:
+    """Inspect literal permission arrays, including both arms of a conditional.
+
+    Condition literals are business values, not permissions. An unsupported
+    dynamic binding must fail rather than silently disappear from the audit.
+    """
+    array = r"\[\s*(?:'[^'\\]+'(?:\s*,\s*'[^'\\]+')*)?\s*\]"
+    direct = re.fullmatch(rf"\s*({array})\s*", binding)
+    conditional = re.fullmatch(
+        rf"\s*[^?\[\]]+\?\s*({array})\s*:\s*({array})\s*", binding)
+    if direct:
+        arrays = direct.groups()
+    elif conditional:
+        arrays = conditional.groups()
+    else:
+        raise ValueError(f"无法静态核验 v-hasPermi 绑定: {binding}")
+    return {permission for value in arrays for permission in re.findall(r"'([^']+)'", value)}
 
 
 def layer_problems(frontend: Dict[str, Set[str]], backend: Set[str]) -> List[str]:
@@ -148,7 +167,10 @@ def policy_grants(expression: str, permission: str) -> bool:
 def audit(root: pathlib.Path = ROOT) -> List[str]:
     problems: List[str] = []
     backend = backend_permissions(root)
-    frontend = frontend_permissions(root)
+    try:
+        frontend = frontend_permissions(root)
+    except ValueError as error:
+        return [str(error)]
     problems.extend(layer_problems(frontend, backend))
 
     sql = (root / ROLE_SQL.relative_to(ROOT)).read_text(encoding="utf-8")
@@ -253,6 +275,47 @@ def _strip_java_comments(text: str) -> str:
     return text
 
 
+def _java_annotation_groups(text: str):
+    """Yield adjacent annotations; a method/field/class body ends the group."""
+    group = []
+    previous_end = 0
+    cursor = 0
+    annotation = re.compile(r"@([A-Za-z_]\w*(?:\.\w+)*)")
+    while match := annotation.search(text, cursor):
+        if group and text[previous_end:match.start()].strip():
+            yield group
+            group = []
+        end = match.end()
+        while end < len(text) and text[end].isspace():
+            end += 1
+        if end < len(text) and text[end] == "(":
+            depth, quote = 0, None
+            while end < len(text):
+                char = text[end]
+                if quote:
+                    if char == "\\":
+                        end += 2
+                        continue
+                    if char == quote:
+                        quote = None
+                elif char in "\"'":
+                    quote = char
+                elif char == "(":
+                    depth += 1
+                elif char == ")":
+                    depth -= 1
+                    if depth == 0:
+                        end += 1
+                        break
+                end += 1
+        else:
+            end = match.end()
+        group.append((match.group(1).rsplit(".", 1)[-1], match.start(), end))
+        previous_end = cursor = end
+    if group:
+        yield group
+
+
 def admin_endpoint_problems(root: pathlib.Path = ROOT) -> List[str]:
     """后台业务端点必须带 @PreAuthorize 或 @Anonymous。
 
@@ -264,19 +327,17 @@ def admin_endpoint_problems(root: pathlib.Path = ROOT) -> List[str]:
         return []
     problems: List[str] = []
     for path in sorted(directory.glob("*.java")):
-        lines = _strip_java_comments(path.read_text(encoding="utf-8", errors="ignore")).split("\n")
-        for index, line in enumerate(lines):
-            if not _METHOD_MAPPING.search(line):
+        text = _strip_java_comments(path.read_text(encoding="utf-8", errors="ignore"))
+        for group in _java_annotation_groups(text):
+            mappings = [entry for entry in group if entry[0] in
+                        {"GetMapping", "PostMapping", "PutMapping", "DeleteMapping", "PatchMapping"}]
+            if not mappings:
                 continue
-            window = "\n".join(lines[max(0, index - 9):index + 1])
-            if "@PreAuthorize" in window or "@Anonymous" in window:
+            if any(entry[0] in {"PreAuthorize", "Anonymous"} for entry in group):
                 continue
-            name = "?"
-            for follow in lines[index + 1:index + 10]:
-                matched = re.search(r"public\s+.*?\s(\w+)\s*\(", follow)
-                if matched:
-                    name = matched.group(1)
-                    break
+            matched = re.match(r"\s*public\s+[^{};]*?\s(\w+)\s*\(", text[group[-1][2]:])
+            name = matched.group(1) if matched else "?"
+            index = text.count("\n", 0, mappings[0][1])
             problems.append(
                 f"后台端点 {path.name}:{index + 1} {name}() 没有 @PreAuthorize / @Anonymous："
                 f"任何登录后台的账号都能调，不分角色；这类端点不在权限契约的扫描范围内，"

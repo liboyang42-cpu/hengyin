@@ -74,11 +74,11 @@
   </cover-view>
 
   <!-- 请求失败/部分数据失败:身份卡仍可见,但不能把缺失的城市纪念章静默当成完整结果 -->
-  <cy-error class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
+  <cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
     icon="/images/no_data.svg"
     title="{{loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
-    sub="{{partialFail ? '当前结果不完整，请重试获取全部勋章。' : '网络或渲染暂时失败，重试会重新加载'}}"
-    retry="重试" bind:retry="loadData" />
+    sub="{{wallAuthRequired ? '登录后可查看你已获得的城市勋章' : wallAccessDenied ? '请确认当前账号的查看权限' : partialFail ? '当前结果不完整，请重试获取全部勋章。' : '网络或渲染暂时失败，重试会重新加载'}}"
+    retry="{{wallAuthRequired ? '登录' : '重试'}}" bind:retry="retryWall" />
 
   <!-- 详情 veil + sheet:同样必须在原生 canvas 之上;外观照玩家场景弹窗 cy-scene-sheet(标题行只放标题与叉) -->
   <cover-view class="bw-veil {{sheetOn ? 'on' : ''}}" bindtap="closeSheet" catchtouchmove="noop" hover-class="cy-pressed" hover-stay-time="80"></cover-view>

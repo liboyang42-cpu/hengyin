@@ -58,12 +58,28 @@ Component({
   methods: {
     // ===== 数据 =====
 
+    _currentForm() {
+      const memberId = String(app.getUserID() || '');
+      const nodeId = String(this.data.nodeId || '');
+      const version = this._formVersion;
+      return () => !this._destroyed && this._formVersion === version
+        && String(this.data.nodeId || '') === nodeId && String(app.getUserID() || '') === memberId;
+    },
+
     /** 打开即回填:没有配过就是空表单。读取失败 = 表单没法用,2s 后自动关半屏。 */
     _onOpen() {
       this._destroyed = false;
+      this._formVersion = (this._formVersion || 0) + 1;
+      const memberId = String(app.getUserID() || '');
+      const current = this._currentForm();
+      this._photoMember = this._voiceMember = memberId;
       this._closeFormAfterResult = false;
+      this._voiceSubmitted = this._resultSaved = false;
       this.setData({
         loading: true,
+        processing: false,
+        saving: false,
+        voiceBusy: false,
         form: { name: '', avatar: '', greeting: '' },
         source: 'preset',
         presetId: pixelAvatar.AVATAR_IDS[0],
@@ -80,7 +96,7 @@ Component({
       this._photoPath = '';
       this._request('/api/merchant/chapter-node/npc/detail', { nodeId: this.data.nodeId })
         .then((res) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           const d = res.data || null;
           const avatar = String((d && d.avatar) || '');
           const preset = pixelAvatar.isPixelAvatar(avatar);
@@ -96,13 +112,14 @@ Component({
           this.refreshVoice();
         })
         .catch((e) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           this.setData({ loading: false });
           this._fail(e.message || '读取失败，请重试', true);
         });
     },
 
     _onHide() {
+      this._formVersion = (this._formVersion || 0) + 1;
       this._teardown();
     },
 
@@ -133,6 +150,7 @@ Component({
     // ===== 照片形象(与门店形象同一端上像素化链路)=====
 
     choosePhoto() {
+      const current = this._currentForm();
       if (this.data.saving || this.data.processing) return;
       wx.chooseMedia({
         count: 1,
@@ -140,6 +158,7 @@ Component({
         sourceType: ['album'],
         sizeType: ['compressed'],
         success: (res) => {
+          if (!current()) return;
           const file = res.tempFiles && res.tempFiles[0];
           if (!file || !file.tempFilePath) return;
           // 先让商家自己裁一刀:没有人脸检测时,人自己框比任何启发式都准。
@@ -147,8 +166,9 @@ Component({
             wx.cropImage({
               src: file.tempFilePath,
               cropScale: '1:1',
-              success: (r) => this._processPhoto(r.tempFilePath || file.tempFilePath),
+              success: (r) => { if (current()) this._processPhoto(r.tempFilePath || file.tempFilePath); },
               fail: (err) => {
+                if (!current()) return;
                 if (!/cancel/i.test(err.errMsg || '')) this._fail('裁剪失败，请重新选择照片');
               },
             });
@@ -161,13 +181,17 @@ Component({
 
     /** 画到离屏 canvas 再 getImageData —— 小程序拿不到图片原始像素,只能过一遍 canvas。 */
     _processPhoto(tempPath) {
+      const memberId = String(app.getUserID() || '');
+      const current = this._currentForm();
       this.setData({ processing: true });
       this._canvas('#nnf-work')
         .then((cv) => {
+          if (!current()) return;
           const g = cv.getContext('2d');
           return new Promise((resolve, reject) => {
             const img = cv.createImage();
             img.onload = () => {
+              if (!current()) { resolve(null); return; }
               const box = pixelPortrait.squareCrop(img.width, img.height);
               const SIDE = 32 * PREVIEW_SCALE;
               cv.width = SIDE;
@@ -181,16 +205,18 @@ Component({
           });
         })
         .then((portrait) => {
+          if (!current()) return;
+          this._photoMember = memberId;
           this._portrait = portrait;
           return this._exportPortrait();
         })
         .then((path) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           this._photoPath = path;
           this.setData({ processing: false, source: 'photo', avatarPreview: path });
         })
         .catch(() => {
-          if (this._destroyed) return;
+          if (!current()) return;
           this._portrait = null;
           this.setData({ processing: false });
           this._fail('照片处理失败，换一张清晰的正面照片试试');
@@ -199,7 +225,9 @@ Component({
 
     /** 导出成文件准备上传。倍数比预览大,marker/主页都够用。 */
     _exportPortrait() {
+      const current = this._currentForm();
       return this._canvas('#nnf-work').then((cv) => {
+        if (!current()) return;
         const side = 32 * EXPORT_SCALE;
         cv.width = side;
         cv.height = side;
@@ -247,10 +275,14 @@ Component({
     // ===== 保存 =====
 
     _resolveAvatar() {
+      const memberId = String(app.getUserID() || '');
+      const current = this._currentForm();
       if (this.data.source !== 'photo') {
         return Promise.resolve(pixelAvatar.stringifyCode(this.data.presetId));
       }
+      if (this._photoMember !== memberId) return Promise.reject(Error('登录状态已变更，请重新选择照片'));
       if (this._photoPath) return this._upload(this._photoPath).then((url) => {
+        if (!current()) return;
         // 上传成功先记住 URL:保存失败重试不重复上传。
         this._photoPath = '';
         this.setData({ avatarPreview: url, 'form.avatar': url });
@@ -261,6 +293,7 @@ Component({
     },
 
     save() {
+      const current = this._currentForm();
       if (this.data.saving || this.data.processing) return;
       const name = (this.data.form.name || '').trim();
       if (!name) return this._fail('请填写角色名字');
@@ -270,14 +303,17 @@ Component({
       if (!this.data.avatarPreview) return this._fail('请选择形象');
       this.setData({ saving: true });
       this._resolveAvatar()
-        .then((avatar) => this._request('/api/merchant/chapter-node/npc/save', {
-          nodeId: this.data.nodeId,
-          name,
-          avatar,
-          greeting: (this.data.form.greeting || '').trim(),
-        }))
+        .then((avatar) => {
+          if (!current()) return;
+          return this._request('/api/merchant/chapter-node/npc/save', {
+            nodeId: this.data.nodeId,
+            name,
+            avatar,
+            greeting: (this.data.form.greeting || '').trim(),
+          });
+        })
         .then((res) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           const d = res.data || {};
           this.setData({
             saving: false,
@@ -288,7 +324,7 @@ Component({
           this._ok('已保存');
         })
         .catch((e) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           this.setData({ saving: false });
           this._fail(e.message || '保存失败，请重试');
         });
@@ -297,12 +333,15 @@ Component({
     // ===== 声音(可选)=====
 
     chooseVoice() {
+      const memberId = String(app.getUserID() || '');
+      const current = this._currentForm();
       if (this.data.voiceBusy || this.data.voiceStatus === 1) return;
       wx.chooseMessageFile({
         count: 1,
         type: 'file',
         extension: ['mp3', 'm4a', 'wav'],
         success: (res) => {
+          if (!current()) return;
           const file = res.tempFiles && res.tempFiles[0];
           if (!file) return;
           if (!/\.(mp3|m4a|wav)$/i.test(file.name)) {
@@ -318,13 +357,14 @@ Component({
           audio.src = file.path;
           let tries = 0;
           const read = () => {
-            if (this._destroyed) return;
+            if (!current()) return;
             const duration = audio.duration;
             if (duration > 0) {
               this.setData({ voiceBusy: false });
               if (duration < 10 || duration > 300) {
                 return this._fail('录音时长需要在 10 秒至 5 分钟之间');
               }
+              this._voiceMember = memberId;
               this.setData({
                 voiceFile: { path: file.path, name: file.name, size: file.size, duration: Math.round(duration) },
                 voiceFileText: file.name + ' · ' + Math.round(duration) + '″ · ' + (file.size / 1048576).toFixed(1) + 'MB',
@@ -341,11 +381,14 @@ Component({
     },
 
     uploadVoice() {
+      const memberId = String(app.getUserID() || '');
+      const current = this._currentForm();
       if (this.data.voiceBusy || this.data.voiceStatus === 1 || !this.data.voiceFile) return;
+      if (this._voiceMember !== memberId) return this._fail('登录状态已变更，请重新选择录音');
       if (this._audio) this._audio.stop();
       this.setData({ voiceBusy: true });
       const file = this.data.voiceFile;
-      const upload = file.url
+      const upload = () => file.url
         ? Promise.resolve(file.url)
         : new Promise((resolve, reject) => {
             app.getUploadClient().uploadAll([file.path], {
@@ -359,15 +402,16 @@ Component({
               },
             });
           });
-      upload
+      app.requestSeparateConsent('voice', current).then(() => current() ? upload() : null)
         .then((url) => {
+          if (!current()) return;
           this.setData({ 'voiceFile.url': url });
           this._voiceSubmitted = true;
           return this._request('/api/merchant/chapter-node/npc/voice/enroll',
             { nodeId: this.data.nodeId, voiceSample: url });
         })
         .then((res) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           const d = res.data || {};
           this.setData({
             voiceBusy: false,
@@ -379,48 +423,55 @@ Component({
           this.refreshVoice();
         })
         .catch((e) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           this.setData({ voiceBusy: false });
           this._fail(e.message || '声音生成失败，请重试');
           // 可能已经提交成功:先查状态再允许重试,避免重复生成烧两次上游。
           if (this._voiceSubmitted) this.refreshVoice();
         })
-        .then(() => { this._voiceSubmitted = false; });
+        .then(() => { if (current()) this._voiceSubmitted = false; });
     },
 
     /** 复刻中轮询:只查状态,不拿合成失败反推状态。 */
     refreshVoice() {
+      const form = this._currentForm();
+      const version = this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
+      const current = () => this.data.show && form() && this._voiceStatusVersion === version;
       clearTimeout(this._voiceTimer);
       if (this._destroyed || !this.data.show) return;
       return this._request('/api/merchant/chapter-node/npc/voice/status', { nodeId: this.data.nodeId })
         .then((res) => {
-          if (this._destroyed) return;
+          if (!current()) return;
           const d = res.data || {};
           const status = Number(d.voiceStatus);
           if ([0, 1, 2, 3].indexOf(status) < 0) return;
           this.setData({
             voiceStatus: status,
-            voiceSample: d.voiceSample || this.data.voiceSample,
+            voiceSample: d.voiceSample || '',
             voiceFile: status === 1 ? null : this.data.voiceFile,
             voiceFileText: status === 1 ? '' : this.data.voiceFileText,
           }, () => this._renderVoiceStatus());
-          if (status === 1) this._voiceTimer = setTimeout(() => this.refreshVoice(), 5000);
+          if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
         })
         .catch(() => {
-          // 状态查询失败不改判:保持上一次状态,等下次轮询。这里静默是**有意的**——
-          // 状态是背景事实,弹失败会把正在填表的人打断;下一次轮询就是重试。
+          // 失败不改判，仅当前表单仍生成中时继续查询。
+          if (current() && this.data.voiceStatus === 1)
+            this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
         });
     },
 
     resetVoice() {
+      const current = this._currentForm();
       if (this.data.voiceBusy) return;
       this._request('/api/merchant/chapter-node/npc/voice/reset', { nodeId: this.data.nodeId })
         .then(() => {
-          if (this._destroyed) return;
+          if (!current()) return;
+          this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
+          clearTimeout(this._voiceTimer);
           this.setData({ voiceStatus: 0, voiceSample: '', voiceFile: null, voiceFileText: '', voicePlaying: false },
             () => this._renderVoiceStatus());
         })
-        .catch((e) => this._fail(e.message || '清除失败，请重试'));
+        .catch((e) => { if (current()) this._fail(e.message || '清除失败，请重试'); });
     },
 
     _renderVoiceStatus() {

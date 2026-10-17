@@ -31,6 +31,9 @@ public interface ImConversationMemberMapper
     public int markRead(@Param("conversationId") Long conversationId,
                         @Param("memberId") Long memberId, @Param("lastReadMsgId") Long lastReadMsgId);
 
+    int markReadVisible(@Param("conversationId") Long conversationId, @Param("memberId") Long memberId,
+                        @Param("lastReadMsgId") Long lastReadMsgId, @Param("visibleOrderAt") String visibleOrderAt);
+
     /** 未读总数 */
     public Integer sumUnread(@Param("memberId") Long memberId);
 

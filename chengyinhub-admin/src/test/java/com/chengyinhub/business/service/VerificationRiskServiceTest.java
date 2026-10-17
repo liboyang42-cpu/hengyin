@@ -22,6 +22,8 @@ class VerificationRiskServiceTest {
         VerificationReviewMapper mapper = mock(VerificationReviewMapper.class);
         VerificationRiskService service = new VerificationRiskService(new BigDecimal("0.90"), 8, 5);
         ReflectionTestUtils.setField(service, "reviewMapper", mapper);
+        ReflectionTestUtils.setField(service, "committedBusinessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+        ReflectionTestUtils.setField(service, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
         when(mapper.insertIgnore(any())).thenReturn(1);
 
         // productType = 1(①② 经典定向)。③ 探店日的分支见 VerificationRiskFreeExploreTest。
@@ -34,6 +36,8 @@ class VerificationRiskServiceTest {
         VerificationReviewMapper mapper = mock(VerificationReviewMapper.class);
         VerificationRiskService service = new VerificationRiskService(new BigDecimal("0.90"), 8, 5);
         ReflectionTestUtils.setField(service, "reviewMapper", mapper);
+        ReflectionTestUtils.setField(service, "committedBusinessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+        ReflectionTestUtils.setField(service, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
 
         assertFalse(service.evaluateAndQueue(7L, 99L, 20, 12, 2, 1));
         verify(mapper, never()).insertIgnore(any());

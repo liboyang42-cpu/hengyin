@@ -11,7 +11,17 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl;
 import com.chengyinhub.business.service.support.ThemeStateKeyService;
+import com.chengyinhub.business.service.support.GameplayTemplateRules;
+import com.chengyinhub.business.service.support.GameplayOutcomeEngine;
+import com.chengyinhub.business.service.support.GameplaySurvivalEngine;
+import com.chengyinhub.business.service.support.RouteReachabilityProvider;
+import com.chengyinhub.business.service.support.TopicRouteEngine;
+import com.chengyinhub.business.domain.JourneyRules;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.business.service.support.TopicStateKeyRefService;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +67,10 @@ class CmsTopicPublishStateKeyGuardTest {
         chapterMapper = mock(CmsTopicChapterMapper.class);
         keyMapper = mock(ThemeStateKeyMapper.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -89,6 +103,7 @@ class CmsTopicPublishStateKeyGuardTest {
                         + "\"effects\":[{\"op\":\"INC\",\"var\":\"counter.coins\",\"value\":2}]}"));
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("counter.coins"), error.getMessage());
@@ -110,6 +125,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Arrays.asList(
                 registered("counter.coins"), registered("tag.hurried")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         ArgumentCaptor<CmsTopic> captured = ArgumentCaptor.forClass(CmsTopic.class);
@@ -130,6 +146,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList(),
                 Collections.singletonList(registered("tag.m_pest")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
         ArgumentCaptor<ThemeStateKey> upserted = ArgumentCaptor.forClass(ThemeStateKey.class);
         verify(keyMapper).upsertThemeStateKey(upserted.capture());
@@ -146,6 +163,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template(
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}"));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
@@ -165,6 +183,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 .thenReturn(Collections.<CmsTopicNode>emptyList());
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
@@ -182,6 +201,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("tag.injured")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
@@ -202,6 +222,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
@@ -217,6 +238,7 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson("{broken");
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("旅程数值规则"), error.getMessage());
@@ -248,6 +270,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 "{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}"));
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         service.publishApprovedRouteSnapshot(TOPIC_ID);
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
@@ -273,6 +296,7 @@ class CmsTopicPublishStateKeyGuardTest {
                                 + "\"when\":{\"var\":\"clue.receipt_071\",\"op\":\"GTE\",\"value\":1}}]")));
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.receipt_071"), error.getMessage());
@@ -296,6 +320,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(keyMapper.selectByTopicId(TOPIC_ID))
                 .thenReturn(Collections.singletonList(registered("clue.receipt_071")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
@@ -319,6 +344,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         service.publishApprovedRouteSnapshot(TOPIC_ID);
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
@@ -395,6 +421,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         service.publishApprovedRouteSnapshot(TOPIC_ID);
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
@@ -411,6 +438,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains("thought.other.done") && error.getMessage().contains("章节故事流"));
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
@@ -427,6 +455,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 + "\"var\":\"thought.window.done\",\"value\":1}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains("HAS_TAG"), error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
@@ -454,6 +483,133 @@ class CmsTopicPublishStateKeyGuardTest {
         return "{\"schemaVersion\":1,\"ending\":{\"endings\":["
                 + "{\"code\":\"awake\",\"title\":\"醒来\",\"when\":[{\"op\":\"HAS_TAG\",\"value\":\"" + tag + "\"}]},"
                 + "{\"code\":\"fallback\",\"title\":\"继续\",\"fallback\":true}]}}";
+    }
+
+    @Test
+    void genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks() {
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        when(runtime.freezePublication(any(CmsTopic.class), nullable(String.class))).thenReturn("{}");
+        CmsTopic topic = approvedTopic();
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":false,"
+                + "\"hp\":{\"enabled\":true,\"init\":8,\"max\":12},\"luck\":{\"enabled\":true,\"init\":4,\"max\":5}}");
+        String legacy = "{\"schemaVersion\":1,\"capacity\":8,\"items\":["
+                + "{\"id\":\"food\",\"name\":\"口粮\",\"image\":\"https://www.chengyinhub.com/food.png\",\"kind\":\"ITEM\",\"stat\":\"HP\",\"delta\":2},"
+                + "{\"id\":\"luck\",\"name\":\"好运\",\"image\":\"https://www.chengyinhub.com/luck.png\",\"kind\":\"ITEM\",\"stat\":\"LUCK\",\"delta\":1}],"
+                + "\"chapters\":[{\"index\":0,\"hpCost\":1,\"luckCost\":1}]}";
+        topic.setThemeRuntimeConfigJson(legacy.substring(0, legacy.length() - 1)
+                + ",\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\",\"acts\":[{\"actKey\":\"a\",\"questKeys\":[\"q\"],"
+                + "\"completionRule\":{\"type\":\"ALL\"}}],\"quests\":[{\"questKey\":\"q\",\"actKey\":\"a\","
+                + "\"nodeId\":1,\"locationKey\":\"gate\",\"settlementSlot\":\"q\"}]}}");
+        when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(topicNode(1L, "城门", null)));
+        when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.singletonList(chapter("[]")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service.publishApprovedRouteSnapshot(TOPIC_ID);
+        verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+        topic.setThemeRuntimeConfigJson(legacy);
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        assertThrows(IllegalArgumentException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+    }
+
+    @Test
+    void r5HpOutcomePublishesWithoutRegisteringSystemKeyAndFrozenFailClampsBeforeZeroPolicy() throws Exception {
+        CmsTopic topic = r5OutcomeDraft("sys.hp");
+        TopicRouteRuntimeServiceImpl runtime = new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class), topicMapper, nodeMapper, templateMapper,
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class), () -> 1L,
+                java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+        ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", chapterMapper);
+        ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", keyMapper);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+        String authored = templateMapper.selectCmsMemberTemplateById(101L).getAdvancedConfigJson();
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        assertTrue(service.publishDraft(TOPIC_ID));
+        ArgumentCaptor<String> snapshot = ArgumentCaptor.forClass(String.class);
+        verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), snapshot.capture(), any(Date.class));
+        JsonNode frozen = new ObjectMapper().readTree(snapshot.getValue());
+        assertEquals("sys.hp", frozen.path("nodeConfigs").path("1").path("outcomeRules").path("fail").path("costs").path(0).path("statKey").asText());
+        JourneyRules rules = JourneyRules.parse(frozen.path("journeyRules").toString());
+        TopicRouteEngine.State state = new TopicRouteEngine().initial(frozen.toString());
+        ReflectionTestUtils.invokeMethod(runtime, "applyJourneyInitials", rules, state);
+        GameplayOutcomeEngine outcomes = new GameplayOutcomeEngine();
+        ObjectNode decision = new ObjectMapper().createObjectNode().put("nodeId", 1).put("outcome", "FAIL");
+        ObjectNode receipt = outcomes.settle(frozen, rules, state, Collections.singletonMap(7L, state), "attempt:1", decision, 1000);
+        assertEquals(0, state.getVariables().get("sys.hp"));
+        assertEquals(9, receipt.path("costs").path(0).path("requested").asInt());
+        assertEquals(2, receipt.path("costs").path(0).path("charged").asInt());
+        new GameplaySurvivalEngine().syncZeroHp(frozen, rules, state, 1000);
+        assertEquals("HP_ZERO", state.getThemeRuntime().path("result").path("reason").asText());
+        assertEquals(authored, templateMapper.selectCmsMemberTemplateById(101L).getAdvancedConfigJson());
+        verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+    }
+
+    @Test
+    void r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter() throws Exception {
+        r5OutcomeDraft("sys.foo");
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        RuntimeException unknown = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
+        assertTrue(unknown.getMessage().contains("数值绑定类型无效"), unknown.getMessage());
+        r5OutcomeDraft("counter.unregistered");
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        RuntimeException counter = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
+        assertTrue(counter.getMessage().contains("状态键未注册") && counter.getMessage().contains("counter.unregistered"), counter.getMessage());
+        verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void r5OutcomeRejectsDisabledHpAndLuckDomains() throws Exception {
+        for (String target : Arrays.asList("sys.hp", "sys.luck")) {
+            CmsTopic topic = r5OutcomeDraft(target);
+            topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"hp\":{\"enabled\":false},\"luck\":{\"enabled\":false}}");
+            com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+            RuntimeException disabled = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
+            assertTrue(disabled.getMessage().contains("未启用"), disabled.getMessage());
+        }
+        verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
+    }
+
+    private CmsTopic r5OutcomeDraft(String target) throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode advanced = json.createObjectNode().put("schemaVersion", 1);
+        advanced.putObject("qa").put("enabled", true).put("mode", "TYPE").put("title", "年份？").put("answerText", "1930").put("maxTries", 0);
+        advanced.putObject("interactionRules").putArray("resourceSlots").addObject()
+                .put("key", "vital").put("kind", "VALUE").put("label", "生命值").put("required", true);
+        ObjectNode after = advanced.putObject("outcomeRules").put("version", 1);
+        after.putObject("pass").put("reply", "正确");
+        after.putObject("fail").put("reply", "错误").putArray("costs").addObject().put("statKey", "vital").put("amount", 9);
+        CmsMemberTemplate template = template(advanced.toString()); template.setId(101L); template.setValidationMethod(0);
+        when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(template));
+        CmsTopicNode node = topicNode(1L, "书房", 101L); node.setMerchantMemberId(310L);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        CmsTopic topic = simpleDraft(); topic.setRouteMode("LINEAR");
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"hp\":{\"enabled\":true,\"init\":2,\"max\":12}}");
+        if (target.startsWith("counter.")) {
+            ObjectNode rules = (ObjectNode) json.readTree(topic.getJourneyRulesJson());
+            rules.putArray("attributes").addObject().put("key", target).put("label", "数值")
+                    .put("initial", 2).put("min", 0).put("max", 12);
+            topic.setJourneyRulesJson(rules.toString());
+        }
+        ObjectNode theme = json.createObjectNode().put("schemaVersion", 1);
+        theme.putObject("gameplayRuntime").put("runtimeScope", "PLAYER").putObject("survival")
+                .put("zeroHpPolicy", "THEME_FAIL").put("actionLimitPolicy", "BLOCK_OVERFLOW");
+        ObjectNode binding = theme.putObject("templateBindings").putObject("1").put("templateId", 101)
+                .put("slotDigest", GameplayTemplateRules.slotDigest(advanced.path("interactionRules").path("resourceSlots")));
+        binding.putObject("values").put("vital", target); binding.putObject("items");
+        topic.setThemeRuntimeConfigJson(theme.toString());
+        when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
+        when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        return topic;
     }
 
     private static CmsTopic simpleDraft() {        CmsTopic topic = new CmsTopic();

@@ -23,6 +23,29 @@
                 #{eventType}, #{occurredAt}, #{requestId}, #{ipAddress}, #{createTime})
     </insert>
 
+    <select id="selectByRequestId" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        select * from consent_record where member_id=#{memberId} and request_id=#{requestId}
+    </select>
+
+    <sql id="roamLocationLatest">
+        select * from consent_record where member_id=#{memberId} and doc_type='privacy_policy' and scene='roam_location'
+        and scope_type is null and scope_id is null order by id desc limit 1
+    </sql>
+    <select id="selectLatestRoamLocationForUpdate" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        <include refid="roamLocationLatest"/> for update
+    </select>
+    <select id="selectLatestRoamLocation" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        <include refid="roamLocationLatest"/>
+    </select>
+    <select id="selectLatestRoamPresence" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        select c.* from consent_record c join roam_presence_revoke_intent e
+            on e.request_id=c.request_id and e.member_id=c.member_id and e.event_type=c.event_type
+        where c.member_id=#{memberId} and c.doc_type='privacy_policy' and c.scene='roam_presence'
+            and c.scope_type is null and c.scope_id is null
+            and e.id=(select max(latest.id) from roam_presence_revoke_intent latest where latest.member_id=#{memberId})
+        order by e.id desc limit 1
+    </select>
+
     <select id="selectLatest" resultMap="ConsentRecordResult">
         select id, member_id, doc_type, doc_version, scene, scope_type, scope_id,
                event_type, occurred_at, request_id, ip_address, create_time

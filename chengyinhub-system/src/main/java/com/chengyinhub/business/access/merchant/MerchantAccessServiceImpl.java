@@ -49,7 +49,8 @@ public class MerchantAccessServiceImpl implements IMerchantAccessService {
         if (merchant != null) {
             UmsMember owner = umsMemberMapper.selectUmsMemberById(principalMemberId);
             if (!isActiveOwner(merchant, principalMemberId)
-                    || !isActiveMember(owner, principalMemberId)) throw forbidden();
+                    || !isActiveMember(owner, principalMemberId)
+                    || !com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT.equals(owner.getRole())) throw forbidden();
             return new MerchantAccessContext(principalMemberId, merchant.getId(), merchant.getMemberId(),
                     MerchantRoleCode.MERCHANT_OWNER);
         }

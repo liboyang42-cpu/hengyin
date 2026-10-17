@@ -194,6 +194,10 @@ class ApiMerchantNodeOperatorAccessTest {
         CmsMemberTemplate body = new CmsMemberTemplate();
         body.setTitle("晚风暗号");
         body.setValidationMethod(0);
+        body.setImgUrl("https://cdn.chengyinhub.com/profile/upload/template.jpg");
+        IUmsMemberService members = (IUmsMemberService) ReflectionTestUtils.getField(controller, "umsMemberService");
+        UmsMember principal = new UmsMember(); principal.setId(PRINCIPAL); principal.setWxOpenId("fixture-operator-openid");
+        when(members.selectUmsMemberById(PRINCIPAL)).thenReturn(principal);
 
         AjaxResult result = controller.templateSubmit(body);
 
@@ -201,6 +205,9 @@ class ApiMerchantNodeOperatorAccessTest {
         assertEquals(801L, result.get(AjaxResult.DATA_TAG));
         verify(couponAuthorization).assertOwnedRewardCoupon(body.getCouponId(), OWNER);
         verify(templatePublishService).saveMerchantNodeTemplate(eq(body), eq(OWNER), any());
+        IWxContentSecurityService safety = (IWxContentSecurityService) ReflectionTestUtils.getField(controller, "wxSec");
+        verify(safety).submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_NODE_TEMPLATE, 801L,
+                body.getImgUrl(), "fixture-operator-openid");
     }
 
     @Test

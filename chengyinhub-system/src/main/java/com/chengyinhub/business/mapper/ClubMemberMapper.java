@@ -39,6 +39,10 @@ public interface ClubMemberMapper
 
     public int updateClubMember(ClubMember clubMember);
 
+    int recordJoinReview(@Param("clubId") Long clubId, @Param("memberId") Long memberId,
+                         @Param("status") Integer status, @Param("reason") String reason,
+                         @Param("reviewerId") Long reviewerId, @Param("reviewedAt") java.util.Date reviewedAt);
+
     public int updateMembershipState(@Param("id") Long id, @Param("status") Integer status,
                                      @Param("role") Integer role, @Param("joinTime") java.util.Date joinTime);
 

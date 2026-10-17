@@ -14,12 +14,41 @@ import java.util.Map;
 import java.util.Set;
 
 public interface ITopicRouteRuntimeService {
+    default JsonNode trustedGuidedRouteEffects(JsonNode frozen,Long nodeId,JsonNode verifiedAnswers) { throw new UnsupportedOperationException(); }
+    default boolean verifyGuidedRouteAnswer(JsonNode frozen, Long nodeId, JsonNode answers) { throw new UnsupportedOperationException(); }
+    default boolean genericPlayer(Long memberId, Long topicId, Long activityId) { return false; }
+    default JsonNode zeroChallenge(Long memberId,Long topicId,Long activityId,Long nodeId) { return null; }
+    default JsonNode recordZeroChallengeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String submissionId,boolean passed,Long hits,boolean retry) { throw new UnsupportedOperationException(); }
+    default Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey) { throw new UnsupportedOperationException(); }
+    default Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey,JsonNode discardRewards,String previewVersion) { return gameplayAction(memberId,sessionId,version,actionId,operation,contentId,choiceKey); }
+    default Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey,JsonNode discardRewards,String previewVersion,Integer costOption) { return gameplayAction(memberId,sessionId,version,actionId,operation,contentId,choiceKey,discardRewards,previewVersion); }
+    default String gameplayInstance(Long memberId,Long topicId,Long activityId,Long nodeId) { return playInstance(memberId,topicId,activityId); }
+    /** 仅由通过真实扫码校验的服务入口调用，本局到达事实随新局重置。 */
+    default Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion) { throw new UnsupportedOperationException(); }
+    default Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion,String kind) { return recordPlayerArrival(memberId,topicId,activityId,nodeId,actionId,expectedVersion); }
+    default JsonNode nodeArrivalConfig(Long memberId,Long topicId,Long activityId,Long nodeId) { return null; }
+    default Map<String,Object> gameplayPreview(Long memberId,Long sessionId,Integer version,String questKey,String choiceKey,JsonNode discardRewards) { throw new UnsupportedOperationException(); }
+    default Map<String,Object> gameplayPreview(Long memberId,Long sessionId,Integer version,String questKey,String choiceKey,JsonNode discardRewards,Integer costOption) { return gameplayPreview(memberId,sessionId,version,questKey,choiceKey,discardRewards); }
+    default Map<String,Object> gameplayPreview(Long memberId,Long sessionId,Integer version,String contentId,String choiceKey,JsonNode discardRewards,Integer costOption,String operation) { return gameplayPreview(memberId,sessionId,version,contentId,choiceKey,discardRewards,costOption); }
+    default JsonNode trustedChoiceEffects(JsonNode snapshot, Long nodeId, String kit, String option) { throw new UnsupportedOperationException(); }
+    default String compileTemplateRules(com.chengyinhub.business.domain.CmsTopic topic) { return topic.getThemeRuntimeConfigJson(); }
+    default String freezePublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot) { throw new UnsupportedOperationException(); }
+    default String freezePublishedJourney(com.chengyinhub.business.domain.CmsTopic topic) { throw new UnsupportedOperationException(); }
     default List<Map<String,Object>> themeHistory(Long memberId,Long topicId,Long beforeSessionId,Integer limit) {return themeHistory(memberId,topicId);}
     default Map<String,Object> themeCard(Long memberId,Long sessionId) {throw new UnsupportedOperationException();}
     default JsonNode nodeRuntimeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {return nodeRuntimeConfig(memberId,topicId,nodeId);}
+    default JsonNode publishedR5NodeConfig(Long memberId,Long topicId,Long nodeId,Long activityId){return null;}
+    default boolean recordOriginalGameplayOutcome(Long memberId,Long originalSessionId,Long nodeId,String instance,String attemptId,JsonNode decision,List<String[]> choices) { return false; }
+    default Long gameplaySessionId(Long memberId,Long topicId,Long activityId){throw new UnsupportedOperationException();}
+    default JsonNode gameplayFeedback(Long memberId,Long sessionId,String attemptId,String optionId){throw new UnsupportedOperationException();}
+    default void assertGameplayOutcomeStart(Long memberId,Long topicId,Long activityId,Long nodeId,String instance){throw new UnsupportedOperationException();}
+    default PlayCheckReceipt rollGameplayCheck(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String attemptId,boolean reroll){throw new UnsupportedOperationException();}
+    default com.fasterxml.jackson.databind.node.ObjectNode gameplayCheckActions(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String attemptId){throw new UnsupportedOperationException();}
+    default void recordGameplayOutcome(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String attemptId,JsonNode decision,List<String[]> choices) {throw new UnsupportedOperationException();}
     default void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices) {throw new UnsupportedOperationException();}
     default Map<String, Object> themeView(Long memberId, Long topicId, Long activityId, Long sessionId) { throw new UnsupportedOperationException(); }
     default Map<String, Object> themeAction(Long memberId, Long sessionId, Integer version, String actionId, String operation, String contentId) { throw new UnsupportedOperationException(); }
+    default Map<String, Object> themeAction(Long memberId, Long sessionId, Integer version, String actionId, String operation, String contentId, JsonNode discardOwned) { return themeAction(memberId,sessionId,version,actionId,operation,contentId); }
     default Map<String, Object> replayTheme(Long memberId, Long sessionId) { throw new UnsupportedOperationException(); }
     default List<Map<String, Object>> themeHistory(Long memberId, Long topicId) { throw new UnsupportedOperationException(); }
     default JsonNode nodeRuntimeConfig(Long memberId, Long topicId, Long nodeId) { return null; }
@@ -139,6 +168,7 @@ public interface ITopicRouteRuntimeService {
     default Map<String, Object> ask(Long memberId, Long topicId, Long nodeId, String questionId) {
         return ask(memberId, topicId, null, nodeId, questionId);
     }
+    java.util.Map<String,Object> syncZeroHpSteps(Long memberId,Long sessionId,Integer expectedVersion,String actionId,com.fasterxml.jackson.databind.JsonNode weRun);
     Map<String, Object> ask(Long memberId, Long topicId, Long activityId, Long nodeId, String questionId);
 
     /** 回应开场通话(R9-ACTIONS):选项在 journey_story_json.call.options 内;只允许一次。 */

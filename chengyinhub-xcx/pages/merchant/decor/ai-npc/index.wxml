@@ -7,7 +7,7 @@
   <cy-nav-bar title="{{view === 'home' ? 'AI 店铺角色' : '上传角色形象'}}" custom-back bind:back="onNavBack" />
   <view style="height:{{statusBarHeight + navBarHeight}}px;flex-shrink:0;" />
   <cy-skeleton wx:if="{{loading}}" type="detail" />
-  <cy-error
+  <cy-error load-failure
     wx:elif="{{loadError}}"
     title="角色资料没能打开"
     sub="{{loadError}}"

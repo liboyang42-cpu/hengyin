@@ -18,6 +18,7 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * R9-15:俱乐部核销详情(selectCheckinDetail)在真库上必须能跑 —— 它此前引用
@@ -53,6 +54,11 @@ class ClubCrmCheckinDetailMyBatisTest {
             assertEquals("/activity-cover.png", row.getTopicCover());
             assertEquals("小明", row.getDisplayName());
             assertEquals(86L, row.getRegistrationId());
+            assertNull(row.getParticipantName(), "合法空姓名不会伪装成已解密的 PII");
+            assertEquals(Integer.valueOf(2), row.getRegistrationStatus());
+            assertEquals(Long.valueOf(18L), row.getPointUsed());
+            assertNull(session.getMapper(ClubCrmMapper.class).selectCheckinDetail(CLUB_ID + 1, REGISTRATION_ID),
+                    "另一俱乐部不能读取这张报名单的签到详情");
         }
     }
 
@@ -73,6 +79,7 @@ class ClubCrmCheckinDetailMyBatisTest {
         try (Statement st = connection.createStatement()) {
             st.execute("CREATE TABLE cms_registration ("
                     + "id BIGINT PRIMARY KEY, member_id BIGINT, owner_id BIGINT, owner_type INT,"
+                    + "real_name VARCHAR(768), registration_status TINYINT NOT NULL DEFAULT 1, point_used INT DEFAULT 0,"
                     + "parent_order_no VARCHAR(64), ticket_name VARCHAR(128), order_num INT,"
                     + "payable_amount DECIMAL(10,2), payment_time DATETIME, payment_status INT,"
                     + "verification_status INT, verification_time DATETIME, verifier_id BIGINT)");
@@ -101,9 +108,9 @@ class ClubCrmCheckinDetailMyBatisTest {
                     + "VALUES (" + MEMBER_ID + ", '小明', '/avatar.png', '13800000000', 0)");
             st.execute("INSERT INTO cms_registration (id, member_id, owner_id, owner_type, parent_order_no,"
                     + " ticket_name, order_num, payable_amount, payment_time, payment_status,"
-                    + " verification_status, verification_time) "
+                    + " verification_status, verification_time, registration_status, point_used) "
                     + "VALUES (" + REGISTRATION_ID + ", " + MEMBER_ID + ", " + ACTIVITY_ID + ", 2, 'PO-86',"
-                    + " '早鸟票', 1, 99.00, '2026-09-01 10:00:00', 2, 1, '2026-09-20 19:35:00')");
+                    + " '早鸟票', 1, 99.00, '2026-09-01 10:00:00', 2, 1, '2026-09-20 19:35:00', 2, 18)");
         }
     }
 }

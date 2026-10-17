@@ -1,0 +1,4 @@
+.po-input,.po-reason{width:100%;box-sizing:border-box;margin-top:var(--cy-space-3);padding:var(--cy-space-3);background:var(--cy-comp-sheet-player-elevated);color:var(--cy-comp-sheet-player-text);border-radius:var(--cy-radius-md);font-size:var(--cy-type-body)}
+.po-input{min-height:var(--cy-btn-h)}
+.po-reason{min-height:var(--cy-space-8)}
+.po-proof{display:block;margin:var(--cy-space-4) 0;font-size:var(--cy-type-body);overflow-wrap:anywhere;word-break:break-all}

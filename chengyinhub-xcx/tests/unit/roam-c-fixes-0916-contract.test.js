@@ -94,6 +94,7 @@ test('C-06 未登录先补一次登录;登录不成给「登录没有成功」�
     globalData: {},
     getUserID: () => (logged ? '9' : ''),
     firstLogin: () => { logged = true; return Promise.resolve(); },
+    recordConsent: () => { calls.push('AGREE'); return Promise.resolve(); },
   };
   const page = loadRoamPage(appMock);
   const prevWx = global.wx;
@@ -102,6 +103,7 @@ test('C-06 未登录先补一次登录;登录不成给「登录没有成功」�
     global.getApp = () => appMock;
     global.wx = {
       getStorageSync: () => undefined,
+      showModal: o => { calls.push('confirm'); o.success({ confirm: true }); },
       getLocation: (o) => { calls.push('getLocation'); if (o.complete) o.complete(); },
     };
     await page.goStart();
@@ -110,7 +112,7 @@ test('C-06 未登录先补一次登录;登录不成给「登录没有成功」�
     global.wx = prevWx;
     global.getApp = prevApp;
   }
-  assert.deepEqual(calls, ['getLocation'], '补登录成功后必须继续原流程(走到取位)');
+  assert.deepEqual(calls, ['confirm', 'AGREE', 'getLocation'], '补登录后必须明确确认并保存同意，再取位');
   assert.equal(page._roamStartPending, false, '门闩必须放掉,不能把常驻实例焊死');
 
   // 登录始终不成:不取位、给一句能理解的话,并且门闩放掉可以再点
@@ -171,7 +173,8 @@ test('C-14 两处静默失败补内联态:原生 POI 点击有回应、商家图
     '成功要清掉失败态');
   assert.doesNotMatch(js, /!res\.data\.length\) \{\s*\n\s*\/\/[^\n]*\n\s*this\.setData\(\{ merchantOffline: true/,
     '200 + 空列表是「这一带没有店」,不是失败');
-  assert.match(WXML(), /poiOffline \|\| merchantOffline/, '两种离线共用同一条横幅');
+  assert.doesNotMatch(WXML(), /poiOffline \|\| merchantOffline/, '读取失败不展示离线横幅');
+  assert.match(WXML(), /revealWriteUnknown \|\| recoveryError/, '未确认写操作仍保留明确核对入口');
   assert.match(js, /onPoiRetry\(\) \{[\s\S]{0,320}?_fetchNearbyMerchants\(this\._c\)/,
     '横幅重试必须把两个图层都重拉,不能留下另一半永远卡着');
 });

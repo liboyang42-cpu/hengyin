@@ -74,9 +74,16 @@ Component({
        的 submitQa),给了就意味着可以亮。此前 answerIndex 在这个文件里被读、
        却从来没有人写过 —— 恒 undefined,于是「亮出正确答案」一次也没亮过。 */
     answerId: { type: String, value: '' },
+    /* 多选揭晓:服务端在同样的条件下给 answerIds(全部正确选项)。与 answerId 一样,给了才亮。 */
+    answerIds: { type: Array, value: [] },
     /* 多选(R3):选项题勾多个再提交。老配置服务端不给这个字段,缺省 false = 单选,
        行为与以前一字不差。 */
     multi: { type: Boolean, value: false },
+    judge: { type: Boolean, value: true },
+    failureSeq: { type: Number, value: 0 },
+    lastOptionId: { type: String, value: '' },
+    lastOptionIds: { type: Array, value: [] },
+    feedbackImages: { type: Array, value: [] },
     // 服务端已经判过几次(0 = 这一屏刚打开)。多选的回执条靠它区分「刚打开」与「判完了」
     attempts: { type: Number, value: 0 },
     passed: { type: Boolean, value: false },
@@ -94,6 +101,8 @@ Component({
     hasImage: false,
     playing: false,
     feedback: '',
+    shownFeedbackImages: [],
+    submitted: false,
     fbHead: HEAD_NO,
     intro: true,
     burning: false,
@@ -102,22 +111,47 @@ Component({
     ctaDisabled: false,
   },
   observers: {
-    'show, options, mode, multi, passed, finished': function (show, options, mode, multi, passed, finished) {
+    failureSeq: function (value) {
+      if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
+      this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });
+    },
+    'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages': function (show, options, mode, multi, passed, finished) {
       if (!show) return;
-      const opts = buildOptions(options);
-      const isMultiPick = mode === 'pick' && !!multi;
+      const chosen = this.data.lastOptionIds && this.data.lastOptionIds.length
+        ? this.data.lastOptionIds : [this.data.lastOptionId];
+      /* 正确答案标记与「你的选择」分开记:玩家选了什么来自 lastOptionId(s),
+         哪些是对的只来自服务端揭晓的 answerId(s),判断关闭时两者都不会有。 */
+      const answers = this.data.judge === false || !this.data.reveal ? []
+        : (this.data.answerIds && this.data.answerIds.length ? this.data.answerIds : [this.data.answerId]).filter(Boolean);
+      const opts = buildOptions(options).map(o => {
+        const isChosen = !!finished && chosen.includes(o.id);
+        const isAnswer = !!finished && answers.includes(o.id);
+        return Object.assign(o, {
+          chosen: isChosen,
+          answer: isAnswer,
+          state: isAnswer ? 'is-right' : (isChosen ? (answers.length ? 'is-wrong' : 'is-on') : ''),
+        });
+      });
+      const confirmPick = mode === 'pick' && this.data.judge === false;
+      const isMultiPick = mode === 'pick' && !!multi && !confirmPick;
       this.setData({
         optionList: opts,
         hasImage: !!this.data.imageUrl,
-        typed: '', feedback: passed ? (this.data.feedbackText || '') : '',
-        fbHead: passed ? HEAD_OK : HEAD_NO, playing: false, intro: !passed,
-        triesCap: cappedTries(this.data.maxTries, opts.length),
-        ctaLabel: passed ? '继续' : (mode === 'shot' ? '拍一张' : '提交'),
+        typed: '', feedback: (passed || finished || this.data.attempts > 0) ? (this.data.feedbackText || '') : '',
+        shownFeedbackImages: (passed || finished || this.data.attempts > 0)
+          ? (this.data.feedbackImages || []).slice() : [],
+        submitted: false,
+        fbHead: passed ? HEAD_OK : HEAD_NO, playing: false, intro: !passed && !finished,
+        triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
+        ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
-        ctaDisabled: !passed && (finished || isMultiPick),
+        ctaDisabled: !passed && (finished || isMultiPick || confirmPick),
       });
       const stage = this.selectComponent('#cy-play-stage');
-      if (stage) stage.begin();
+      if (stage) {
+        if (finished) stage._stopAll();
+        else stage.begin();
+      }
       // rAF 在这儿不行:页面不渲染时它不走,题会永远停在「只有题干」那一屏
       if (this._introTimer) clearTimeout(this._introTimer);
       this._introTimer = setTimeout(() => this.setData({ intro: false }), INTRO_MS);
@@ -147,8 +181,17 @@ Component({
     },
 
     onPick(e) {
+      if (this.data.finished || this.data.passed || this.data.submitted) return;
       const i = Number(e.currentTarget.dataset.i);
-      const picked = this.data.optionList[i] || {};
+      const picked = this.data.optionList[i];
+      if (!picked) return;
+      if (this.data.judge === false) {
+        this.setData({
+          optionList: this.data.optionList.map((o, at) => Object.assign({}, o, { state: at === i ? 'is-on' : '' })),
+          ctaDisabled: false,
+        });
+        return;
+      }
       /* 多选:点一下只是勾上/取消,提交走底部那颗按钮 —— 只报一个 id 会被服务端
          当成单选读,而多选要的是 optionIds 全集。
          ⚠️ 这一段必须在 ctaDisabled 早退之前:多选里那个标记只表示「一个都没勾」,
@@ -168,6 +211,7 @@ Component({
     },
     /** 多选的提交:报勾中的全部 id。一个都没勾时按钮是灰的,这里再兜一道。 */
     _submitPick() {
+      if (this.data.finished || this.data.passed || this.data.submitted) return;
       const ids = this.data.optionList.filter((o) => o.state === 'is-on').map((o) => o.id);
       if (!ids.length) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
@@ -177,6 +221,7 @@ Component({
     onCta() {
       if (this.data.ctaDisabled) return;
       if (this.data.passed) { this.triggerEvent('continue'); return; }
+      if (this.data.finished || this.data.submitted) return;
       if (this.data.mode === 'shot') {
         /* 拍照:交上来的是**图片地址**,不是「我拍过了」。判不了照片内容,
            但得留痕 —— 商家事后想看玩家到底交了什么,这是唯一的证据。 */
@@ -196,7 +241,12 @@ Component({
       }
       // 单选:点选项本身就是提交。多选:按钮才是提交,这里接住它
       if (this.data.mode === 'pick') {
-        if (this.data.multi) this._submitPick();
+        if (this.data.judge === false) {
+          const index = this.data.optionList.findIndex(o => o.state === 'is-on');
+          if (index < 0) return;
+          this.setData({ submitted: true, ctaDisabled: true });
+          this.triggerEvent('submit', { mode: 'pick', index, optionId: this.data.optionList[index].id });
+        } else if (this.data.multi) this._submitPick();
         return;
       }
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
@@ -231,7 +281,7 @@ Component({
          亮的方式是把那一条标成对的,不是另起一行写「正确答案:X」:
          那行字会盖过刚才的反馈,人先看到的是判决,不是解释。 */
       const answerIndex = this._answerIndex();
-      const reveal = pick && this.data.reveal && (multi ? Array.isArray(d.answerIds) : answerIndex >= 0);
+      const reveal = this.data.judge !== false && pick && this.data.reveal && (multi ? Array.isArray(d.answerIds) : answerIndex >= 0);
       // 字段写死成字面量,不拼 patch:动态 setData 门禁核不出写了哪些顶层字段
       this.setData({
         // 答错清空输入框:留着错答案,人得先自己删一遍才能再试
@@ -252,6 +302,12 @@ Component({
         ctaDisabled: exhausted,
       });
       if (exhausted && stage) stage.fail(false);
+    },
+
+    onPreviewFeedback(e) {
+      const urls = this.data.shownFeedbackImages;
+      const current = urls[Number(e.currentTarget.dataset.i)];
+      if (current) wx.previewImage({ current, urls });
     },
 
     onVerdict(e) { this.triggerEvent('verdict', e.detail); },

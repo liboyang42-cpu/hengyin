@@ -51,6 +51,7 @@ function lineNumber(source, offset) {
 // 计数找 properties 值的真实结束位置(而不是靠"两格缩进换行"这种格式假设)，因为
 // behaviors 文件不一定和组件主文件同一种排版(单行/多行都可能)。
 function extractPropertiesBlock(src) {
+  src = require('./lib/xcx-scan').maskNonCode(src);
   const startMatch = /properties:\s*\{/.exec(src);
   if (!startMatch) return [];
   const bodyStart = startMatch.index + startMatch[0].length;
@@ -65,9 +66,15 @@ function extractPropertiesBlock(src) {
   // ⚠️ 属性名可以含数字/下划线/$(如 playkit-steps 的 co2Label)。老正则是 [a-zA-Z]+,
   // 遇到 `co2Label:` 会从中间截出 `Label`,于是真正声明过的 co2Label 反被判成"未声明"。
   // 2026-08-28 泛化到全部组件时才暴露 —— cy-sheet 的属性名恰好全是纯字母。
-  const re = /(?:^|[\s,{])([A-Za-z_$][\w$]*):\s*\{\s*type:/g;
-  let mm;
-  while ((mm = re.exec(body))) keys.push(mm[1]);
+  const re = /(?:^|[\s,{])([A-Za-z_$][\w$]*):\s*(?:\{\s*type:|(?:String|Number|Boolean|Array|Object)(?=\s*(?:[,}]|$)))/g;
+  let mm, cursor = 0, nesting = 0;
+  while ((mm = re.exec(body))) {
+    for (; cursor < mm.index; cursor += 1) {
+      if (body[cursor] === '{') nesting += 1;
+      else if (body[cursor] === '}') nesting -= 1;
+    }
+    if (nesting === 0) keys.push(mm[1]);
+  }
   return keys;
 }
 
@@ -236,7 +243,8 @@ function runSelfTest() {
   const mergedProps = extractSheetProps(fakeComponentSrc, tmpDir);
   fs.rmSync(tmpDir, { recursive: true, force: true });
 
-  const ok = badViolations.length === 1 && badViolations[0].attr === 'totallyUnknownAttr' && badViolations[0].line === 1
+  const shorthand = extractPropertiesBlock('Component({ properties: { title: String, rows: Array, busy: Boolean, card: Object, count: Number } })');
+  const ok = shorthand.join(',') === 'title,rows,busy,card,count' && badViolations.length === 1 && badViolations[0].attr === 'totallyUnknownAttr' && badViolations[0].line === 1
     && goodViolations.length === 0
     && mergedProps.includes('fromBehavior')
     && mergedProps.includes('fromFactory');

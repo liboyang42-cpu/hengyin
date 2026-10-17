@@ -66,6 +66,10 @@ class CmsTopicSysVarPublishGateTest {
         templateMapper = mock(CmsMemberTemplateMapper.class);
         keyMapper = mock(ThemeStateKeyMapper.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -97,6 +101,7 @@ class CmsTopicSysVarPublishGateTest {
         publishDraftWithBlock("{\"requires\":["
                 + "{\"var\":\"sys.outcome.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
@@ -111,6 +116,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.outcome.5009\",\"op\":\"EQ\",\"value\":1}]}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
@@ -125,6 +131,7 @@ class CmsTopicSysVarPublishGateTest {
         publishDraftWithBlock("{\"requires\":["
                 + "{\"var\":\"sys.passed.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
@@ -139,6 +146,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.passed.5009\",\"op\":\"EQ\",\"value\":1}]}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
     }
 
@@ -152,6 +160,7 @@ class CmsTopicSysVarPublishGateTest {
         publishDraftWithBlock("{\"schemaVersion\":1,\"requires\":["
                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":9999}]}");
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("NODE_COMPLETED"), error.getMessage());
@@ -165,6 +174,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":5009}]}");
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
     }
 
@@ -177,6 +187,7 @@ class CmsTopicSysVarPublishGateTest {
         stubNodes(plainTemplate(), branchTemplate());
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("分支玩法"), error.getMessage());
@@ -191,6 +202,7 @@ class CmsTopicSysVarPublishGateTest {
         stubNodes(plainTemplate(), branchTemplate());
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
     }
 

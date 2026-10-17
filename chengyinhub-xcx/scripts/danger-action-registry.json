@@ -137,6 +137,13 @@
       "reason": "经营权限立即失效,恢复只能重新邀请"
     },
     {
+      "endpoint": "/api/merchant/chapter-application/invite/revoke",
+      "file": "pages/topic/merchantinfo/merchantinfo.js",
+      "irreversible": true,
+      "confirmKey": "merchant.chapterInvitation.revoke",
+      "reason": "撤回后原邀请无法接受，只能重新发起邀请"
+    },
+    {
       "endpoint": "/api/merchant/operators/invite/revoke",
       "file": "pages/merchant/team/index.js",
       "irreversible": true,
@@ -339,16 +346,16 @@
     {
       "endpoint": "/api/im/delete",
       "file": "subpackageB/pages/im/chat/index.js",
-      "irreversible": true,
+      "irreversible": false,
       "confirmKey": "im.conversation.delete",
-      "reason": "只删除本人会话入口，聊天记录不再显示；复用列表的不可撤销确认"
+      "reason": "只隐藏本人会话入口，历史消息保留，对方再发消息时会话重新显示"
     },
     {
       "endpoint": "/api/im/delete",
       "file": "subpackageB/pages/im/list/index.js",
-      "irreversible": true,
+      "irreversible": false,
       "confirmKey": "im.conversation.delete",
-      "reason": "本人会话入口删除后不能原样恢复；已有三段式确认"
+      "reason": "只隐藏本人会话入口，历史消息保留，对方再发消息时会话重新显示"
     },
     {
       "endpoint": "/api/registration/cancel",

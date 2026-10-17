@@ -91,6 +91,9 @@ class ClubLeadLeaderResolutionTest {
     private ApiClubLeadController spyAs(long uid) {
         ApiClubLeadController c = org.mockito.Mockito.spy(new ApiClubLeadController());
         org.mockito.Mockito.doReturn(uid).when(c).getAppUserId();
+        ReflectionTestUtils.setField(c, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(c, "wxContentSecurityService",
+                mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         ReflectionTestUtils.setField(c, "clubLeadMapper", clubLeadMapper);
         ReflectionTestUtils.setField(c, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(c, "cmsActivityService", cmsActivityService);

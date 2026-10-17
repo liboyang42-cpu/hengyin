@@ -1,3 +1,4 @@
+const { applyTheme } = require('../../../utils/theme.js');
 // 创建节点玩法 · 第0页(价值主张)
 //
 // 位置:publish-sheet 卡2 →【本页】→ templateadd(命名)→ temp(编辑器)
@@ -35,6 +36,7 @@ Page({
   },
 
   onShow() {
+    applyTheme('light');
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
   },

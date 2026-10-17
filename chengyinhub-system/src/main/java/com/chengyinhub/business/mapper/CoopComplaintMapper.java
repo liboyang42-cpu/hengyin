@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface CoopComplaintMapper {
+    List<com.chengyinhub.business.domain.vo.CoopComplaintProgressVO> selectMine(@Param("memberId") Long memberId);
     int insertCoopComplaint(CoopComplaint c);
 
     CoopComplaint selectCoopComplaintById(Long id);

@@ -102,7 +102,7 @@ Page({
       loadError: '',
     });
     app.sendRequest({
-      hideLoading: true, autoErrorToast: hasOldContent, url: '/api/merchant/coop-profile', method: 'POST',
+      hideLoading: true, autoErrorToast: false, url: '/api/merchant/coop-profile', method: 'POST',
       success(res) {
         if (!isCurrent()) return;
         const ok = res.code === '200' || res.code === 200;

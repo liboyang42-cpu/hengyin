@@ -867,6 +867,7 @@ class JourneyFullFlowMySqlIT {
      * 所有 SQL 照常打在真库上。
      */
     private static final class HandshakeSessionMapper implements TopicRouteSessionMapper {
+        public String selectMemberNickname(Long memberId) {return real.selectMemberNickname(memberId);}
         private final TopicRouteSessionMapper real;
         private final String watchedActionId;
         private final CountDownLatch readEmpty;
@@ -920,6 +921,9 @@ class JourneyFullFlowMySqlIT {
             return real.selectMemberTopicSessions(memberId, topicId);
         }
 
+
+        @Override
+        public TopicRouteSession selectAccessibleByIdForUpdate(Long id, Long memberId) { return real.selectAccessibleByIdForUpdate(id, memberId); }
 
         @Override
         public TopicRouteSession selectAccessibleById(Long id, Long memberId) {

@@ -12,6 +12,8 @@ public interface NpcChatRequestMapper
     NpcChatRequest selectByUserAndRequestId(@Param("userId") Long userId,
                                              @Param("requestId") String requestId);
 
+    int bindApprovedTextAudio(@Param("userId") Long userId,@Param("requestId") String requestId,@Param("assetId") Long assetId);
+
     int insertNpcChatRequest(NpcChatRequest request);
 
     /** 把失去 lease 的请求终态化，释放同一用户同一漫游会话的唯一进行中槽位。 */

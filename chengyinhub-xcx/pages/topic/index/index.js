@@ -2,11 +2,19 @@ const modal = require('../../../utils/modal.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { chinaParts } = require('../../../utils/datetime.js');
+const themeRecords = require('../../../utils/theme-records.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+function recordsRequest(url, method, data, header) {
+  return new Promise(resolve => app.sendRequest({ url, method, data, header, hideLoading: true, autoErrorToast: false,
+    success: res => resolve(res || {}), successStatusAbnormal: () => resolve({ code: 'fail' }), fail: () => resolve({ code: 'fail', netFail: true }) }));
+}
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { createCheckoutWorkflow, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
+const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
@@ -14,6 +22,7 @@ const { haversine } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -66,7 +75,10 @@ function hasTopicDetail(data) {
 }
 
 Page({
+  ...themeRecords.methods(recordsRequest, false),
+  openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   data: {
+    ...themeRecords.data,
     // 选场次 / 选票种弹层(稿 11 240:401 · 11a 240:446)
     sessionPicker: { show: false },
     clubSheetShow: false,
@@ -92,6 +104,8 @@ Page({
     loadError: false,
     topicLoaded: false,
     missingTopicId: false,
+    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍按 load-failure 留白
+    loginRequired: false,
     // 拍板 2026-09-16 #10:发布商家已打烊时,购票/报名入口直接提示「商家暂停营业」
     // (文案与后端 IMerchantBusinessStatusService.MERCHANT_CLOSED_MESSAGE 同源)。
     merchantClosed: false,
@@ -319,6 +333,8 @@ Page({
    * 页面卸载时
    */
   onUnload() {
+    this._themeRecordsDisposed = true;
+    this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
     if (this._workflow) this._workflow.destroy();
     if (this._scrollTimer) {
@@ -1026,11 +1042,15 @@ Page({
     const that = this;
     if (that.lockedTip()) return;
     const topicId = that._selfPlayTopicId || (that.data.info && that.data.info.id) || that.data.id;
-    if (!topicId || that.data.selfPlayConfirmLoading) return;
+    if (!topicId || that.data.selfPlayConfirmLoading || that._selfPlaySubmitting) return;
     if (!that.data.selfPlayConsentChecked) {
       // 单独同意只能用户自己勾,按钮不代勾;这里只提示,不算错误态
       that.setData({ selfPlayConsentHint: '请先勾选上面的同意，才能为你建单' });
       return;
+    }
+    // 保持用户点击手势：订阅拒绝/失败不阻塞既有同意记录和支付链。
+    if (that._hostShareConsentReady || app.recordConsent) {
+      subscribe.request(['signupSuccess', 'activityStart', 'refund']);
     }
     if (that._hostShareConsentReady) {
       that.setData({ selfPlayConfirmShow: false });
@@ -1431,7 +1451,12 @@ Page({
    */
   formatDate(dateString) {
     if (!dateString) return '';
+    if (typeof dateString === 'string' && /^\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2}(?:\.\d{1,9})?)?)?$/.test(dateString.trim())) {
+      const parts = chinaParts(dateString);
+      return parts ? `${parts.month}.${parts.day}` : '';
+    }
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     const month = date.getMonth() + 1;
     const day = date.getDate();
     return `${month}.${day}`;
@@ -1660,6 +1685,8 @@ Page({
             return;
           }
           res.data['chaptersList'] = normalizeChaptersList(res.data['chaptersList'])
+          // 主题文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y,在映射这一处解码。
+          for (const key of ['name', 'subtitle', 'description']) res.data[key] = decodeDisplayText(res.data[key])
           const totalChapterCount = Number(res.data.totalChapterCount || 0)
           const unlockedChapterCount = Number(
             res.data.unlockedChapterCount != null
@@ -1703,6 +1730,7 @@ Page({
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
             missingTopicId: false,
+            loginRequired: false,
             merchantClosed: res.data.merchantClosed === true,
             loadErrorTitle: '',
             loadErrorSub: '',
@@ -1723,10 +1751,11 @@ Page({
           });
         }
       },
-      fail: function (res) {
+      fail: function (res, statusCode) {
         that.setData({
           loadError: true,
           missingTopicId: false,
+          loginRequired: isLoginRequired(app, res, statusCode),
           loadErrorTitle: '主题详情加载失败',
           loadErrorSub: '网络连接异常，请稍后重试。',
           topicLoaded: false,
@@ -1743,6 +1772,14 @@ Page({
     }
     this.setData({ loadError: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
     this.getData();
+  },
+
+  // 登录引导「登录」:重登成功后重读详情
+  onLoginRetry: function () {
+    retryLogin(this, app, function () {
+      this.setData({ loadError: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+      this.getData();
+    });
   },
   
   /**
@@ -1805,6 +1842,8 @@ Page({
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
+      chapter.name = decodeDisplayText(chapter.name);
+      chapter.description = decodeDisplayText(chapter.description);
       // 稿 181:715:章节标题下面这行说的是**这一章**的时长 / 地点数 / 玩法数。
       // 原来读的是 info.*(整个主题的合计),挨着章节标题印,看上去就像这一章的 ——
       // 三章会印出三组一模一样的数,零报错。字段在 CmsTopicChapter 上本来就有。
@@ -1824,6 +1863,7 @@ Page({
         ns[n].businessTime = nodeText(ns[n].businessTime);
         ns[n].address = nodeText(ns[n].address);
         ns[n].name = nodeText(ns[n].name);
+        ns[n].description = decodeDisplayText(ns[n].description);
         const firstMerchant = (ns[n].registrationMerchantList || [])[0];
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);

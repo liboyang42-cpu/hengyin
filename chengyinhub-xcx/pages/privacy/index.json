@@ -7,7 +7,9 @@
     "cy-sheet": "/components/cy/sheet/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-agreement-sheet": "/components/cy/agreement-sheet/index",
+    "cy-media-model-preview": "/components/cy/media-model-preview/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white"

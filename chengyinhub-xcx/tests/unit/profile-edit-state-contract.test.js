@@ -28,6 +28,7 @@ function loadPage() {
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => 7,
+    setNickname() {}, setAvatar() {},
     tips() {},
     chooseImage() {},
     sendRequest(options) { requests.push(options) },
@@ -210,4 +211,49 @@ test('负控:去掉首载骨架或保存 pending 接线时状态契约必须判�
   const noPending = source.replace(' loading="{{saving}}"', '')
   assert.ok(noPending !== source, '保存 pending 负控锚点失效')
   assert.throws(() => assertStateContract(noPending, json), /保存按钮/)
+})
+
+test('只改签名时不重提服务器原昵称，其余资料载荷保持原样', () => {
+  const h = loadPage()
+  const profile = { name: '原昵称', nickname: '显示别名', avatar: 'avatar', introduction: '旧签名', website: 'website', caseIntroducton: '项目', casePics: 'pics', wechat: 'qr' }
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: profile })
+  h.page.data.userInfo.introduction = '新签名'
+  h.page.saveInfo()
+  const payload = JSON.parse(h.requests[1].data)
+  assert.equal(Object.hasOwn(payload, 'name'), false)
+  assert.deepEqual(payload, { avatar: 'avatar', introduction: '新签名', website: 'website', caseIntroducton: '项目', casePics: 'pics', wechat: 'qr', tagIds: '' })
+})
+
+test('实际改昵称仍提交name，409保留草稿并解除保存锁', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: '原昵称' } })
+  h.page.data.userInfo.name = '新昵称'
+  h.page.saveInfo()
+  assert.equal(JSON.parse(h.requests[1].data).name, '新昵称')
+  h.requests[1].success({ code: 409, msg: '昵称已被占用' })
+  assert.equal(h.page.data.userInfo.name, '新昵称')
+  assert.equal(h.page.data.saving, false)
+  assert.equal(h.page.data.saveSucceeded, false)
+  assert.match(h.page.data.saveError, /昵称已被占用/)
+})
+
+test('正常资料刷新更新原始name快照，失败刷新不得覆盖快照', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: '第一次昵称', nickname: '无关别名' } })
+  assert.equal(h.page._loadedProfileName, '第一次昵称')
+  h.page.getUserData()
+  h.requests[1].success({ code: 200, data: { name: '刷新昵称' } })
+  assert.equal(h.page._loadedProfileName, '刷新昵称')
+  h.page.getUserData()
+  h.requests[2].success({ code: 500, data: { name: '失败昵称' } })
+  assert.equal(h.page._loadedProfileName, '刷新昵称')
+  h.page.getUserData()
+  h.requests[3].fail()
+  assert.equal(h.page._loadedProfileName, '刷新昵称')
+  h.page.data.userInfo.introduction = '新签名'
+  h.page.saveInfo()
+  assert.equal(Object.hasOwn(JSON.parse(h.requests[4].data), 'name'), false)
 })

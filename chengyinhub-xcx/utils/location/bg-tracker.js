@@ -18,6 +18,9 @@ var stopping = false;
 var usingBackground = false;
 var generation = 0;
 var waiters = [];
+var revokedThroughGeneration = -1;
+var revisions = Object.create(null);
+var revokeListeners = Object.create(null);
 
 function count() { return Object.keys(owners).length; }
 function stopLocation() {
@@ -38,6 +41,14 @@ function stopLocation() {
 }
 
 function finishSuccess(gen, background) {
+  // 撤回前的系统 start 不能代替之后的新授权；补停完成后再为当前持有者真启动。
+  if (gen <= revokedThroughGeneration) {
+    started = false;
+    usingBackground = false;
+    if (starting) { starting = false; generation += 1; }
+    stopLocation();
+    return;
+  }
   // release 后旧启动才成功：没有新持有者就必须补偿 stop；若已有新一代启动在等，
   // 全局定位能力已经可用，可直接满足新一代，避免旧成功反过来停掉新行程。
   if (gen !== generation) {
@@ -130,5 +141,33 @@ function release(key, force) {
 
 function isBackground() { return started && usingBackground; }
 function isRunning() { return started; }
+function hasOwner(key) { return !!owners[key]; }
+function revision(key) { return revisions[key] || 0; }
 
-module.exports = { acquire: acquire, release: release, isBackground: isBackground, isRunning: isRunning };
+function observeRevocation(key, listener) {
+  var list = revokeListeners[key] || (revokeListeners[key] = []);
+  list.push(listener);
+  return function () {
+    revokeListeners[key] = (revokeListeners[key] || []).filter(function (item) { return item !== listener; });
+    if (revokeListeners[key].length === 0) delete revokeListeners[key];
+  };
+}
+
+/** 撤回的是用途授权；其他独立获准的持有者继续运行，最后一个才停系统定位。 */
+function revoke(key) {
+  revisions[key] = revision(key) + 1;
+  delete owners[key];
+  waiters = waiters.filter(function (item) { return item.key !== key; });
+  if (count() === 0) {
+    revokedThroughGeneration = generation;
+    generation += 1;
+    starting = false;
+    started = false;
+    usingBackground = false;
+    stopLocation();
+  }
+  (revokeListeners[key] || []).slice().forEach(function (listener) { listener(); });
+}
+
+module.exports = { acquire: acquire, release: release, revoke: revoke, revision: revision,
+  observeRevocation: observeRevocation, hasOwner: hasOwner, isBackground: isBackground, isRunning: isRunning };

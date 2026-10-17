@@ -2,6 +2,11 @@ package com.chengyinhub.e2e;
 
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.ICmsRegistrationService;
+import com.chengyinhub.business.service.IClubMembershipService;
+import com.chengyinhub.business.service.ICoopInviteService;
+import com.chengyinhub.business.service.IMerchantCommerceService;
+import com.chengyinhub.common.config.WxPayConfig;
+import org.springframework.beans.factory.ObjectProvider;
 import com.chengyinhub.business.service.IWechatPayService;
 import com.chengyinhub.business.service.RefundRequestResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +24,7 @@ import java.util.Map;
  *
  * <p>桩掉的只有【外部支付通道】这一层:商户凭据、SDK 构造、官方验签、预下单。
  * 「支付成功」仍然走【真实回调入口】 POST /api/registration/callback →
- * ICmsRegistrationService.handleWechatPayCallback(resultMap),因此金额冻结校验
+ * 会员、商城、押金或报名的真实业务服务,因此金额冻结校验
  * (matchesFrozenWechatAmount)、订单状态机、entitlement 等业务侧一条都没被绕过。
  * 绝不直接改 payment_status。
  */
@@ -33,6 +38,20 @@ public class E2eWechatPayStub implements IWechatPayService {
     @org.springframework.beans.factory.annotation.Autowired
     @org.springframework.context.annotation.Lazy
     private ICmsRegistrationService registrationService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private ObjectProvider<IClubMembershipService> clubMembershipServiceProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private IMerchantCommerceService merchantCommerceService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private ICoopInviteService coopInviteService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private WxPayConfig wxPayConfig;
 
     @Override
     public boolean isReady() {
@@ -85,7 +104,31 @@ public class E2eWechatPayStub implements IWechatPayService {
             if (root.hasNonNull("total")) {
                 resultMap.put("total", String.valueOf(root.path("total").asInt()));
             }
-            String result = registrationService.handleWechatPayCallback(resultMap);
+            String outTradeNo = resultMap.get("out_trade_no");
+            String transactionId = resultMap.get("transaction_id");
+            Integer total = root.hasNonNull("total") ? root.path("total").asInt() : null;
+            String result;
+            IClubMembershipService membership = clubMembershipServiceProvider == null
+                    ? null : clubMembershipServiceProvider.getIfAvailable();
+            if (outTradeNo != null && outTradeNo.startsWith("CLM")) {
+                boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
+                result = membership != null && membership.supportsOutTradeNo(outTradeNo)
+                        && membership.handlePaidInvoice(outTradeNo, paid, total, transactionId)
+                        ? "SUCCESS" : "FAIL";
+            } else if (merchantCommerceService.supportsOutTradeNo(outTradeNo)) {
+                boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
+                result = merchantCommerceService.handlePaidOrder(outTradeNo, paid, total, transactionId)
+                        ? "SUCCESS" : "FAIL";
+            } else if (outTradeNo != null && outTradeNo.startsWith("DEP")) {
+                boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
+                result = paid && total != null && "CNY".equals(root.path("currency").asText(null))
+                        && wxPayConfig.getMerchantId() != null
+                        && wxPayConfig.getMerchantId().equals(root.path("mchid").asText(null))
+                        && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId)
+                        ? "SUCCESS" : "FAIL";
+            } else {
+                result = registrationService.handleWechatPayCallback(resultMap);
+            }
             if (!"SUCCESS".equalsIgnoreCase(result)) {
                 return "{\"code\": \"FAIL\",\"message\": \"" + result + "\"}";
             }

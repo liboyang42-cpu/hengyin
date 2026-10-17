@@ -108,6 +108,8 @@ function loadClubDetail(activityList) {
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -148,6 +150,8 @@ function loadDirector(adapter, initialStorage, options) {
       if (request === '../utils/club-game-director-adapter.js') {
         return { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } }
       }
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -988,6 +992,32 @@ test('CU-C-76:发送被驳回时按原因码出话,认不出才回退通用文�
     '认不出的原因码不得编造解释,保留原通用文案')
 })
 
+test('F-L3-01:写操作被驳回(含版本冲突)后自动重读投影，不让下一次操作继续带旧 revision', async () => {
+  let loads = 0
+  const harness = loadDirector({
+    load() {
+      loads += 1
+      return Promise.resolve(runningClubProjection({
+        availableActions: ['BROADCAST'],
+        teams: [{ teamId: 11, name: '第一队', memberCount: 2 }],
+      }))
+    },
+    submit(input) {
+      return Promise.resolve({ state: 'rejected', requestId: input.requestId, raw: { reasonCode: 'GAME_STATE_CONFLICT' } })
+    },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  const before = loads
+  harness.page.openBroadcast()
+  harness.page.onBroadcastContentInput({ detail: { value: '请集合' } })
+  harness.page.confirmBroadcast()
+  await settle()
+  assert.equal(harness.page.data.writeLocked, false)
+  assert.ok(loads > before, '驳回后必须重新读取导演投影')
+})
+
 test('手动解锁必须填原因，且只提交章节开放动作', async () => {
   const writes = []
   const projection = {
@@ -1613,4 +1643,34 @@ test('route director carries server-ranked players and a reachable visibility co
   assert.deepEqual(projection.leaderboard.rows.map(row => [row.id, row.subtitle, row.value]),
     [[9, '第 1 名', '2 站'], [8, '第 2 名', '1 站']])
   assert.match(read(DIRECTOR_HOST_WXML), /aria-label="调整排行榜可见性"/)
+})
+
+test('导演宿主页经真实 adapter/client 透传纪元；冲突只提示与重读，不另起写请求', async () => {
+  const { createClubGameDirectorAdapter } = require(DIRECTOR_ADAPTER)
+  const { createGameSessionClient } = require('../../utils/game-session-client.js')
+  const calls = []
+  let reads = 0
+  const client = createGameSessionClient({ sendRequest(options) {
+    calls.push(options)
+    if (options.method === 'GET') {
+      reads += 1
+      options.success({ code: 200, data: { sessionId: 9001, activityId: 701, perspective: 'CLUB',
+        status: 'RUNNING', revision: reads + 8, authorityEpoch: reads + 3, availableActions: ['FINISH'], club: {} } })
+    } else options.success({ code: 500, msg: '本局权威版本已更新，请刷新', data: { reasonCode: 'GAME_AUTHORITY_CONFLICT' } })
+  } })
+  const adapter = createClubGameDirectorAdapter(client)
+  const harness = loadDirector(adapter)
+  harness.page.initDirector('701')
+  await settle()
+  harness.page.executeAction('FINISH', {})
+  await settle()
+  assert.equal(calls.find(call => call.method === 'POST').data.authorityEpoch, 4)
+  assert.equal(calls.find(call => call.method === 'POST').data.expectedRevision, 9)
+  assert.equal(calls.filter(call => call.method === 'POST').length, 1)
+  assert.equal(reads, 2)
+  assert.equal(harness.page.data.authorityEpoch, 5)
+  assert.equal(harness.page._pendingCommand, null)
+  assert.equal(harness.page.data.writeLocked, false)
+  assert.match(harness.toasts.at(-1).title, /权威版本/)
+  assert.equal(harness.page.retryUnknownWrite(), false)
 })

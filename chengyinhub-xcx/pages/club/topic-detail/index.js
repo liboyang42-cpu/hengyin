@@ -12,6 +12,7 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 // (executeAction 的「回执未知」落盘 / 对账 / 重试)原样搬进 ./director.js,
 // 由本页承载,渲染改用 cy-club-director-* 八个组件。见 director.js 顶部说明。
 const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('./director.js');
+const planFallback = require('./plan-fallback.js');
 const { listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
@@ -138,6 +139,9 @@ const CUSTOMER_CHIPS = [
   { value: 'verified', label: '已核销' },
 ];
 
+// 封面高 240px(--ctd-cover-h 480rpx)减去状态栏 + 导航约 88px:封面滚出导航下沿后转实底
+const NAV_SOLID_SCROLL_TOP = 150;
+
 const QUICK_ACTIONS = [
   { key: 'merchant', label: '商家', icon: 'discover-shop' },
   // CU-C-88(用户裁决 A):这个圆钮后面统计的是主题报名/购票参与者(cms_registration),
@@ -152,6 +156,8 @@ Page({
     loaded: false,
     loadError: false,
     chromeClearTop: 0,
+    // PR10 F-W5-08(c):滚过封面后导航转实底(cy-nav-bar scrolled),内容不再从状态栏/返回键底下透出来
+    navScrolled: false,
     topic: {},
     statusKey: 'reviewing',
     statusText: '',
@@ -171,6 +177,7 @@ Page({
     // 导演台自己的 44 个状态字段(见 director.js 的 DIRECTOR_DATA),
     // 用 Object.assign 并进来而不是逐个抄 —— 抄一遍就多一处会漂的真源。
     ...DIRECTOR_DATA,
+    ...planFallback.data,
     // 「结束活动」按稿是 T2 居中确认,旧页没有这个态,本页新增
     directorEndConfirmShow: false,
     // D5 队伍弹层 / D8 现场事件:旧 game-director 页没有这两个入口
@@ -225,6 +232,12 @@ Page({
     opsTimeSubmitting: false,
     opsTimeDraft: { date: '', time: '' },
     resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: OPS_RESULT_SHEET_MS },
+  },
+
+  // 与 activity/official-detail 同一做法:只在跨过阈值时 setData 一次,不逐帧传
+  onPageScroll(event) {
+    const next = Number(event && event.scrollTop) > NAV_SOLID_SCROLL_TOP;
+    if (next !== this.data.navScrolled) this.setData({ navScrolled: next });
   },
 
   onLoad(query) {
@@ -301,6 +314,10 @@ Page({
   },
 
   fetchDetail() {
+    const seq = (this._detailSeq || 0) + 1;
+    this._detailSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._detailSeq && memberId === (app.getUserID && app.getUserID());
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -310,10 +327,11 @@ Page({
       data: { id: this._topicId },
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
-        if (!isSuccess(res) || !res.data) { that.setData({ loaded: true, loadError: true }); return; }
+        if (!current()) return;
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); return; }
         that.applyDetail(res.data);
       },
-      fail() { that.setData({ loaded: true, loadError: true }); },
+      fail() { if (current() && !that._lastRaw) that.setData({ loaded: true, loadError: true }); },
     });
   },
 
@@ -593,7 +611,9 @@ Page({
   buildChips(raw, stats) {
     const chips = [];
     if (raw.playModeText) chips.push(raw.playModeText);
-    if (stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
+    // PR10 F-W5-08(b):没选定场次时 topic-manage-stats 的 sessionHeadcount 是全部场次之和,
+    // 叫「本场」就是错的 —— 只在已选定一场(导演台对象)时出这枚。
+    if (this._directorActivityId && stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
     return chips;
   },
 
@@ -616,10 +636,20 @@ Page({
 
   buildSessions(raw) {
     // E-06(2026-09-16):真源是 VO 里的 activityList(PublicActivitySummaryVO:id/name/startDate/endDate/addressName)。
-    const rows = Array.isArray(raw.activityList) ? raw.activityList : [];
+    const now = Date.now();
+    const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
+      .filter((s) => !s.cancelTime && s.selfHostShell !== true && toTimestamp(s.endDate || s.startDate) > now)
+      // 缺集合时刻的场次排在最后:NaN 参与比较会让 sort 结果不确定。
+      .sort((a, b) => {
+        const ta = toTimestamp(a.startDate), tb = toTimestamp(b.startDate);
+        return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb) || 0;
+      });
     return rows.map((s, i) => ({
       id: s.id || ('s' + i),
-      whenText: this.formatRange(s.startDate, s.endDate),
+      whenText: (() => {
+        const parts = chinaParts(s.startDate);
+        return parts ? parts.month + '月' + parts.day + '日 ' + String(parts.hours).padStart(2, '0') + ':' + String(parts.minutes).padStart(2, '0') : '';
+      })(),
       whoText: s.name || '',
       etaText: s.addressName || '',
       // 场次类型后端没下发,留空;wxml 会整格不出,不冒充足球/到店。
@@ -841,7 +871,7 @@ Page({
     this.setData({ customerSheetVisible: true });
     this.loadCustomers();
   },
-  closeCustomers() { this.setData({ customerSheetVisible: false }); },
+  closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
@@ -851,6 +881,10 @@ Page({
   },
 
   loadCustomers() {
+    const seq = (this._customerSeq || 0) + 1;
+    this._customerSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._customerSeq && memberId === (app.getUserID && app.getUserID());
     this.setData({ customerState: 'loading', customerErrorReason: '' });
     const that = this;
     app.sendRequest({
@@ -859,6 +893,7 @@ Page({
       data: jsonBody({ clubId: this._clubId, topicId: this._topicId, filter: this.data.customerFilter }),
       header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         if (!isSuccess(res) || !res.data) { that.setData({ customerState: 'error', customerErrorReason: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' }); return; }
         const d = res.data;
         that.setData({
@@ -873,7 +908,7 @@ Page({
           customerRows: flattenCustomerRows(d.sessions),
         });
       },
-      fail() { that.setData({ customerState: 'error' }); },
+      fail() { if (current()) that.setData({ customerState: 'error' }); },
     });
   },
 
@@ -1065,6 +1100,7 @@ Page({
   notReady(what) { toast(what + '：缺少俱乐部信息'); },
 
   ...DIRECTOR_METHODS,
+  ...planFallback.methods(),
 
   goBack() {
     const pages = getCurrentPages();

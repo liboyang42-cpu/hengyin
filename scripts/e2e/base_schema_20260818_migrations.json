@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sourceCommit": "737f0c2eab1dab2afaa51944d8654a7f803671c3",
-  "migrationCount": 249,
+  "migrationCount": 248,
   "reconciledCount": 1,
   "baseSchema": {
     "path": "sql/base_schema_20260818.sql",
@@ -42,11 +42,6 @@
       "path": "chengyinhub-admin/sql/migration_20260815_tandianri_h8_rate_convergence.sql",
       "sourceSha256": "ad37eddf8baf2105b15525a41b479426da0d938476457c877cca46a67f2d162f",
       "sha256": "ad37eddf8baf2105b15525a41b479426da0d938476457c877cca46a67f2d162f"
-    },
-    {
-      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_referral.sql",
-      "sourceSha256": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75",
-      "sha256": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75"
     },
     {
       "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_revisit_report_indexes.sql",

@@ -29,7 +29,8 @@ public interface CommunityTrustMapper {
     CommunityReportCase selectReportForOwnerForUpdate(@Param("id") Long id,
                                                        @Param("reporterMemberId") Long reporterMemberId);
     List<CommunityReportCase> selectReportsForOwner(@Param("reporterMemberId") Long reporterMemberId,
-                                                    @Param("stage") String stage);
+                                                    @Param("stage") String stage,
+                                                    @Param("requestId") String requestId);
     List<CommunityReportPlatformVO> selectPlatformReports(@Param("stage") String stage,
                                                           @Param("targetType") String targetType);
     CommunityReportSubjectVO selectSubjectReport(@Param("id") Long id,

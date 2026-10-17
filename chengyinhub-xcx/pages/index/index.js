@@ -18,6 +18,7 @@ const { buildActivityShare } = require('../../utils/activity-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
+const phoneReminder = require('../../utils/phone-reminder.js');
 
 function boundPhoneFromResponse(res) {
   if (!res) return '';
@@ -181,73 +182,6 @@ function decorateImgs(list) {
   );
 }
 
-// 开发版首页 UI 预览假数据(对齐 Figma 3579:11316,用 index-figma 切图)
-function buildIndexUiMock() {
-  const pad = function (n) { return String(n).padStart(2, '0'); };
-  const iso = function (offsetMs) {
-    const d = new Date(Date.now() + offsetMs);
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' '
-      + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
-  };
-  const feedGrid = '/images/home-route-city-placeholder.jpg;/images/home-route-free-placeholder.jpg;/images/index-figma/nearby-card.jpg;/images/index-figma/reco-hero.jpg;/images/home-banner-2.jpg';
-  const nearby = decorateImgs([
-    { id: 90001, name: 'WINDS OF DESTINY', imgUrl: '/images/index-figma/nearby-card.jpg', formattedDateTime: '今晚 20:00', addressName: '黄浦·外滩源', distance: '1.2km', started: true, startDate: iso(-3600000) },
-    { id: 90002, name: '霓虹夜行解谜', imgUrl: '/images/index-figma/nearby-card.jpg', formattedDateTime: '6月2日 19:30', addressName: '静安·静安寺', distance: '0.8km', startDate: iso(86400000) },
-    { id: 90003, name: '苏州河畔寻踪', imgUrl: '/images/home-route-city-placeholder.jpg', formattedDateTime: '6月3日 14:00', addressName: '普陀·苏州河', distance: '2.5km', startDate: iso(172800000) },
-    { id: 90004, name: '老城厢漫步', imgUrl: '/images/home-route-free-placeholder.jpg', formattedDateTime: '6月4日 10:00', addressName: '黄浦·豫园', distance: '3.1km', startDate: iso(259200000) },
-  ]);
-  const recommendedTopicList = decorateImgs([
-    {
-      id: 70001,
-      name: '城市夜跑 外滩 7 公里',
-      imgArr: '/images/index-figma/reco-hero.jpg',
-      imgUrl: '/images/index-figma/reco-hero.jpg',
-      formattedDateTime: '6/8 19:00',
-      addressName: '外滩观景台',
-      enrollCount: 86,
-      clubName: '夜行者俱乐部',
-      sysCategoryList: [{ categoryName: '运动健身' }, { categoryName: '城市探索' }],
-      startDate: iso(-1800000),
-    },
-    {
-      id: 70002,
-      name: '外滩光影解谜之夜',
-      imgArr: '/images/home-route-free-placeholder.jpg',
-      imgUrl: '/images/home-route-free-placeholder.jpg',
-      formattedDateTime: '6月8日 20:00',
-      addressName: '外滩源',
-      sysCategoryList: [{ categoryName: '文化叙事' }],
-    },
-  ]);
-  const upcomingRaw = [
-    { id: 80001, name: 'Ladies Bird Movie', imgUrl: '/images/index-figma/nearby-card.jpg', formattedDateTime: '6月6日 22:00', addressName: '黄浦·外滩 SOHO', startDate: iso(259200000) },
-    { id: 80002, name: '午夜霓虹 · 音乐现场', imgUrl: '/images/home-route-city-placeholder.jpg', formattedDateTime: '6月7日 21:00', addressName: '静安·现场音乐厅', startDate: iso(432000000) },
-    { id: 80003, name: '苏州河跨年夜行', imgUrl: '/images/home-route-free-placeholder.jpg', formattedDateTime: '6月10日 22:00', addressName: '普陀·苏州河', startDate: iso(86400000) },
-  ];
-  const upcomingActivityList = decorateImgs(upcomingRaw.map(function (item) {
-    const r = fmtRemain(item.startDate);
-    return Object.assign({}, item, { remainingTime: r.remainingTime, started: r.started });
-  }));
-  const bottomTopicList = decorateImgs([
-    { id: 71001, name: 'Skipass 城市定向', productType: 1, imgArr: feedGrid, feedBadgeCount: 2, minAmout: '68.00', formattedDateTime: '2025年6月12日 周四 下午07:00', addressName: 'AlpenGlide Resort', sysCategoryList: [{ categoryName: '亲子' }, { categoryName: '解谜' }] },
-    { id: 71002, name: '街角密码 · 黄昏版', productType: 2, imgArr: '/images/index-figma/nearby-card.jpg;/images/index-figma/reco-hero.jpg;/images/home-route-city-placeholder.jpg', minAmout: '0.00', formattedDateTime: '2025年6月13日 周五 下午06:30', addressName: '静安寺商圈', sysCategoryList: [{ categoryName: '漫步' }] },
-    { id: 71003, name: '单图路线预览', productType: 1, imgArr: '/images/home-route-city-placeholder.jpg', minAmout: '38.00', formattedDateTime: '2025年6月14日 周六 下午02:00', addressName: '外滩源', sysCategoryList: [{ categoryName: '城市探索' }] },
-  ]);
-  const bottomActivityList = decorateImgs([
-    { id: 72001, name: '派对在城市之巅', productType: 2, imgArr: feedGrid, minAmout: '128.00', formattedDateTime: '2025年6月14日 周六 下午10:00', addressName: '陆家嘴观景台', sysCategoryList: [{ categoryName: '夜场' }] },
-  ]);
-  return {
-    userInfo: { avatar: '/images/d_profile.png', nickname: 'Sarah', point: '1280' },
-    nearbyActivityList: nearby,
-    recommendedTopicList: recommendedTopicList,
-    upcomingActivityList: upcomingActivityList,
-    bottomTopicList: bottomTopicList,
-    bottomActivityList: bottomActivityList,
-    hasMoreBottomTopic: false,
-    hasMoreBottomActivity: false,
-  };
-}
-
 Page({
   /**
    * 页面的初始数据
@@ -362,7 +296,7 @@ Page({
     app.waitForAppReady().then(() => {
       // 登录落地后才知道真实身份:冷缓存冷启动时上面那次同步判定手里根本没有角色快照
       // (restore() 拿不到、登录是异步的),商家会停在玩家首页直到下一次 onShow ——
-      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getFuzzyLocation
+      // 2026-08-10 用户真机(体验版)实测的正是这个。必须排在 loadPageData/getHomeLocation
       // 之前,否则商家先被弹一次定位授权框再被跳走。
       // 本页已不是栈顶(用户自己切走了)就别抢导航。
       if (that._unloaded) return;
@@ -376,12 +310,11 @@ Page({
       }
       that.setData({ isAppReady: true });
       that.loadPageData();
-      that.getFuzzyLocation();
+      that.getHomeLocation();
       that.retryPendingInviter();
     }).catch(err => {
       if (that._unloaded) return;
       console.error('等待app初始化失败');
-      cyToast('加载失败，请重试');
     });
 
     // 初始化关键位置（只执行一次）
@@ -443,7 +376,7 @@ Page({
     }
     this.setData({ _needsRedirect: false, isAppReady: true });
     this.loadPageData();
-    this.getFuzzyLocation();
+    this.getHomeLocation();
   },
 
   // A-01:登录落地后补发一次邀请关系(onLoad 时新用户还没有 currentUserId)。
@@ -780,28 +713,6 @@ Page({
     this._buildRecoHero();
     // heroBannerList 在 data 里已经是同一份冻结常量(见上方 data 初始化),
     // 这里再 setData 一次只是白渲染一帧。
-    this._applyIndexUiMock();
-  },
-
-  // 开发版注入首页假数据,便于预览 Figma UI(体验版/正式版不执行)
-  _applyIndexUiMock() {
-    if (!(app.isDevEnv && app.isDevEnv())) return;
-    const mock = buildIndexUiMock();
-    // 开发工具也必须忠实呈现游客态；公开列表可以用预览数据，私人身份不能伪造。
-    if (!normalizeMemberId(app.getUserID())) delete mock.userInfo;
-    this.setData(mock, () => {
-      this.updateUpcomingActivitiesCountdown();
-      this.ensureCountdownTimerRunning();
-      this._buildRecoHero();
-      this._buildHeroBanners();
-    });
-  },
-
-  _applyIndexUiMockIfEmpty(listName, list) {
-    if (!(app.isDevEnv && app.isDevEnv())) return list;
-    if (list && list.length) return list;
-    const mock = buildIndexUiMock();
-    return mock[listName] || list;
   },
 
   // 计算固定顶栏对齐胶囊 + 滚动区高度
@@ -1047,6 +958,7 @@ Page({
   },
 
   closePhoneModal() {
+    phoneReminder.snooze(wx, normalizeMemberId(app.getUserID()));
     this.setData({ showPhoneModal: false });
   },
 
@@ -1070,10 +982,8 @@ Page({
         if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
         that._getUserDataRetryCount = 0;  // 成功后重置,避免下次调用从陈旧计数开始
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          // F-L5C-04/F-W1-14:首页不再主动弹窗索取手机号,只在确需的业务动作里按需请求或由用户在个人资料页绑定。
           that.setData({ userInfo: res.data, isLoading: false });
-          if (!res.data.phone || res.data.phone === '') {
-            that.setData({ showPhoneModal: true });
-          }
         } else if (res && res.code == "401") {
           that.firstLogin();
         } else {
@@ -1261,7 +1171,6 @@ Page({
   
           list = that.processTopicDate(list);
           list = decorateImgs(list);   // 多图拆分 imgArr → imgList/cover
-          list = that._applyIndexUiMockIfEmpty(listName, list);
 
           const dataObj = {};
           dataObj[listName] = list;
@@ -1365,7 +1274,6 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
         
         // 计算总页数
         const totalPages = Math.ceil(total / that.data.pageSize);
-        if (isRefresh) list = that._applyIndexUiMockIfEmpty('bottomTopicList', list);
         
         if (isRefresh) {
           // 刷新时替换数据
@@ -1473,7 +1381,6 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         
         // 计算总页数
         const totalPages = Math.ceil(total / that.data.pageSize);
-        if (isRefresh) list = that._applyIndexUiMockIfEmpty('bottomActivityList', list);
         
         if (isRefresh) {
           // 刷新时替换数据
@@ -1563,18 +1470,20 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     return indexFormat.processTopicDate(list);
   },
 
-  getFuzzyLocation() {
+  // F-L5C-14(用户决定:全站精确定位):漫游/游玩到点打卡需要精确定位,微信不允许 getFuzzyLocation 与
+  // getLocation 同时声明,首页改走同一条精确定位授权(scope.userLocation),用途仍是推荐附近内容。
+  getHomeLocation() {
     const that = this;
     const scope = captureLocationRequest(this);
 
     wx.getSetting({
       success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        const hasAuth = res.authSetting['scope.userFuzzyLocation'] || res.authSetting['scope.userLocation'];
+        const hasAuth = res.authSetting['scope.userLocation'];
         if (!hasAuth) {
-          that.requestFuzzyLocationPermission(scope);
+          that.requestHomeLocationPermission(scope);
         } else {
-          that.executeGetFuzzyLocation(scope);
+          that.executeGetHomeLocation(scope);
         }
       },
       // 原为 setData({errorMsg}),但 errorMsg 全页零渲染 ⇒ 错误写进 data 就死在那里。
@@ -1586,30 +1495,20 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     });
   },
 
-  requestFuzzyLocationPermission(locationScope) {
+  requestHomeLocationPermission(locationScope) {
     const that = this;
     const scope = locationScope || captureLocationRequest(this);
     if (!isCurrentLocationRequest(this, scope)) return;
 
     wx.authorize({
-      scope: 'scope.userFuzzyLocation',
+      scope: 'scope.userLocation',
       success() {
         if (!isCurrentLocationRequest(that, scope)) return;
-        that.executeGetFuzzyLocation(scope);
+        that.executeGetHomeLocation(scope);
       },
       fail(err) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        wx.authorize({
-          scope: 'scope.userLocation',
-          success() {
-            if (!isCurrentLocationRequest(that, scope)) return;
-            that.executeGetFuzzyLocation(scope);
-          },
-          fail(err2) {
-            if (!isCurrentLocationRequest(that, scope)) return;
-            that.handleAuthFail(scope);
-          }
-        });
+        that.handleAuthFail(scope);
       }
     });
   },
@@ -1620,7 +1519,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (!isCurrentLocationRequest(this, scope)) return;
     modal.show({
       title: '位置权限提示',
-      content: '需要您授权位置权限才能提供服务，是否前往设置开启？',
+      content: '授权位置可推荐附近活动，也可以继续浏览。是否前往设置开启？',
       confirmText: '去设置',
       cancelText: '取消',
       success(res) {
@@ -1629,10 +1528,10 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
           wx.openSetting({
             success(settingRes) {
               if (!isCurrentLocationRequest(that, scope)) return;
-              const hasAuth = settingRes.authSetting['scope.userFuzzyLocation'] || settingRes.authSetting['scope.userLocation'];
+              const hasAuth = settingRes.authSetting['scope.userLocation'];
               if (hasAuth) {
-                // 修复:此回调内 this 非页面实例,原 this.executeGetFuzzyLocation() 会失效
-                that.executeGetFuzzyLocation(scope);
+                // 修复:此回调内 this 非页面实例,原 this.executeGetHomeLocation() 会失效
+                that.executeGetHomeLocation(scope);
               }
             }
           });
@@ -1642,7 +1541,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     // 原这里还 setData 一个全页零渲染的 errorMsg;上面的 showModal 已是用户可见反馈。
   },
 
-  executeGetFuzzyLocation(locationScope) {
+  executeGetHomeLocation(locationScope) {
     const that = this;
     const scope = locationScope || captureLocationRequest(this);
 

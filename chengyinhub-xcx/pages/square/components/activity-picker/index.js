@@ -41,7 +41,7 @@ Component({
       const that = this;
       that.setData({ loading: true, errorMsg: '' });
       this._fetchTask = app.sendRequest({
-        url: '/api/play/my-completed',
+        url: '/api/play/my-completed?for_public_reference=true',
         method: 'POST',
         hideLoading: true,
         data: {},

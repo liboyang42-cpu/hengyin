@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -247,12 +248,10 @@ class PublicVisibilityMyBatisTest {
                 mock(com.chengyinhub.business.service.ICoopInviteService.class);
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteService);
         when(inviteService.selectCoopInviteList(any())).thenReturn(Collections.emptyList());
-        // 承办活动卡的「待核销 N」要查一次报名表。本用例只验归属派生,空返回即可 ——
-        // 但依赖必须注入,漏了会在 mapActivity 直接 NPE。
-        com.chengyinhub.business.service.ICmsRegistrationService registrationService =
-                mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
-        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        when(activityService.countSignedUpRegistrationsByActivityIds(anyList()))
+                .thenReturn(Collections.emptyMap());
+        when(activityService.countPendingVerificationByActivityIds(anyList()))
+                .thenReturn(Collections.emptyMap());
         when(topicService.selectDraftTopicIds(anyLong())).thenReturn(Collections.emptyList());
         when(topicService.selectCmsTopicList(any())).thenReturn(Collections.emptyList());
         when(activityService.selectCmsActivityList(any())).thenReturn(new ArrayList<>(ownerRows));

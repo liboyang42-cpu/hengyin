@@ -9,7 +9,7 @@
   <view class="session-shell__body">
     <block wx:if="{{sharedState}}">
       <view class="session-status" wx:if="{{sharedState === 'loading'}}" aria-role="status">正在打开朋友分享的足迹</view>
-      <cy-error wx:elif="{{sharedState === 'error'}}" fill title="这条足迹暂时打不开" sub="网络不太稳定，重试一次" retry="重试" bind:retry="retryShared" />
+      <cy-error load-failure wx:elif="{{sharedState === 'error'}}" fill title="这条足迹暂时打不开" sub="网络不太稳定，重试一次" retry="重试" bind:retry="retryShared" />
       <cy-empty wx:elif="{{sharedState === 'gone'}}" fill size="lg" kind="missing-param" title="这条足迹已不再公开" sub="分享者可能已关闭分享或清理了记录" cta="去漫游看看" bind:cta="goRoam" />
       <cy-scene-roam-session wx:else snapshot="{{snapshot}}" bind:back="goBack" bind:close="goBack" />
     </block>

@@ -47,7 +47,7 @@ class TopicCompletionAwardServiceTest {
         assertEquals(36, f.service.grantOnce(9L, 7L, 11L, redemptionTime).getEarnedXp());
         assertFalse(f.service.grantOnce(9L, 7L, 11L, redemptionTime).isFirstCompletion());
 
-        verify(f.growth, times(1)).addExp(9L, 36, "通关奖励");
+        verify(f.growth, times(1)).addCompletionExp(9L, 36, 7L);
         verify(f.xpAwardMapper, times(1)).insert(9L, 7L, 36, redemptionTime);
     }
 
@@ -75,7 +75,7 @@ class TopicCompletionAwardServiceTest {
         verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
         verify(f.events, never()).recordThemeCompletion(anyLong(), anyLong(), anyString(), any(Date.class));
         verify(f.progression).onTopicComplete(9L, 7L);
-        verify(f.growth).addExp(9L, 36, "通关奖励");
+        verify(f.growth).addCompletionExp(9L, 36, 7L);
     }
 
     // ---------------- 第二轮拍板第 4 条:通关奖励判重从「勋章插入成功」拆开
@@ -109,7 +109,7 @@ class TopicCompletionAwardServiceTest {
         order.verify(f.progressMapper).selectCompletionClawbackMarkersForUpdate(9L, 7L);
         verify(f.points).award(9L, 13L, 11L, "通关主题");
         verify(f.coupons).grantOnce(7L, 9L, 88L);
-        verify(f.growth).addExp(9L, 36, "通关奖励");
+        verify(f.growth).addCompletionExp(9L, 36, 7L);
         verify(f.progressMapper).deleteCompletionClawbackMarker(9L, 7L, POINTS);
         verify(f.progressMapper).deleteCompletionClawbackMarker(9L, 7L, XP);
         verify(f.progressMapper).deleteCompletionClawbackMarker(9L, 7L, COUPON);
@@ -126,7 +126,7 @@ class TopicCompletionAwardServiceTest {
 
         verify(f.points).award(9L, 13L, 11L, "通关主题");
         verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
-        verify(f.growth, never()).addExp(anyLong(), anyInt(), anyString());
+        verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
     }
 
     /** 历史通关者(无冲回标记)或标记已被上一次补发消费:什么都不发,不加锁 —— 换一场再通关不许再领。 */
@@ -138,7 +138,7 @@ class TopicCompletionAwardServiceTest {
 
         verify(f.points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
         verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
-        verify(f.growth, never()).addExp(anyLong(), anyInt(), anyString());
+        verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
         verify(f.members, never()).lockMemberById(anyLong());
     }
 
@@ -150,7 +150,7 @@ class TopicCompletionAwardServiceTest {
 
         f.service.grantOnce(9L, 7L, 11L, new Date(1000L));
 
-        verify(f.growth, never()).addExp(anyLong(), anyInt(), anyString());
+        verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
         verify(f.xpAwardMapper, never()).insert(any(), any(), any(), any());
     }
 
@@ -188,7 +188,9 @@ class TopicCompletionAwardServiceTest {
             when(badgeMapper.insertPlayerBadge(any(PlayerBadge.class))).thenReturn(1);
             when(progression.onTopicComplete(9L, 7L)).thenReturn(Collections.emptyList());
             when(budgets.computeBudget(7L)).thenReturn(Collections.emptyMap());
+            when(growth.addCompletionExp(anyLong(), anyInt(), anyLong())).thenReturn(901L);
             when(xpAwardMapper.insert(any(), any(), any(), any())).thenReturn(1);
+            when(xpAwardMapper.linkEarnedExp(any(), any(), any())).thenReturn(1);
         }
     }
 }

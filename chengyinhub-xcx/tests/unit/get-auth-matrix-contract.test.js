@@ -22,13 +22,33 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码GET调用点的显式权限清单（直接32 + req包装22）。
+// 当前源码71个GET调用点的显式权限清单（直接38 + req包装28 + 作者媒体包装5）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
+  ['pages/privacy/index.js', "this.requestOwnMedia('/api/media/asset/list', 'GET'", 'required', 'author', 'owned-media-asset'],
+  ['pages/privacy/index.js', 'loadOlderMedia() {', 'required', 'author', 'owned-media-asset'],
+  ['pages/privacy/index.js', 'checkOwnMedia(event) {', 'required', 'author', 'owned-media-asset'],
+  ['pages/privacy/index.js', 'previewOwnMedia(event) {', 'required', 'author', 'owned-media-asset'],
+  ['pages/privacy/index.js', 'copyApprovedMedia(event) {', 'required', 'author', 'owned-media-asset'],
+  // 媒体上传重试先回读自己本次pending asset：ApiMediaAssetController.status→owned严格作者uid。
+  ['utils/transport/upload-client.js', "sender({ url: '/api/media/asset/' + pendingId, method: 'GET'", 'required', 'author', 'owned-media-asset'],
+  // U04：本人主题历史、结果卡与四处重玩许可/新局核对；默认认证，服务端按登录会员校验归属。
+  ['utils/theme-records.js', "req('/api/play/theme/history'", 'required', 'member', 'self-member-history'],
+  ['utils/theme-records.js', "req('/api/play/theme/card'", 'required', 'member', 'self-member-history'],
+  ['utils/theme-records.js', "req('/api/play/theme/state', 'GET', { topicId: view.topicId", 'required', 'member', 'self-member-history'],
+  ['utils/theme-records.js', "req('/api/play/theme/state', 'GET', { topicId: old.topicId,", 'required', 'member', 'self-member-history'],
+  ['utils/theme-records.js', "req('/api/play/theme/state', 'GET', { topicId: old.topicId ||", 'required', 'member', 'self-member-history'],
+  ['utils/theme-records.js', "req('/api/play/theme/state', 'GET', { topicId: this._themeReplayAttempt.topicId", 'required', 'member', 'self-member-history'],
+  // 共享控制台按本场关联俱乐部 EVENT_OPERATE 校验，保留默认认证。
+  ['pages/club/topic-detail/plan-fallback.js', "url: '/api/game/session/shared/control'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
+  ['pages/club/topic-detail/plan-fallback.js', 'loadPlanFallback() {', 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
+  ['pages/publish/utils/publish/gameplay-support-matrix.js', "url: '/api/play/theme/support-matrix'", 'required', 'author', 'global-authenticated-read'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
+  ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
   ['pages/square/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
@@ -55,6 +75,7 @@ const MATRIX = [
   ['pages/topic/merchantinfo/merchantinfo.js', "url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true, silentError: true", 'required', 'merchant', 'self-merchant-game-entry'],
   ['utils/game-session-client.js', "url: '/api/game/session/recap/export'", 'required', 'club', 'club-owned-activity'],
   ['utils/game-session-client.js', "url: '/api/game/session/receipt'", 'required', 'player/merchant/club', 'activity-perspective-access'],
+  ['utils/game-session-client.js', "url: exported ? '/api/game/session/shared/export'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
@@ -116,13 +137,14 @@ const VALID_SCOPES = new Set([
   'self-member-history', 'activity-perspective-access',
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
-  'share-token-snapshot', 'owned-merchant-or-club-receivable',
+  'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
 ]);
 
 function productionJsFiles(dir) {
   const out = [];
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
-    if (['tests', 'node_modules', 'miniprogram_npm'].includes(entry.name)) return;
+    // 构建台账的 requiredRequests 是合同元数据，不是小程序运行时的 GET 调用。
+    if (['tests', 'scripts', 'node_modules', 'miniprogram_npm'].includes(entry.name)) return;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...productionJsFiles(full));
     else if (entry.isFile() && entry.name.endsWith('.js')) out.push(full);
@@ -134,7 +156,7 @@ function registeredCallSource(source, marker, markerAt) {
   const masked = maskJsNonCode(source);
   let callAt;
   let scanEnd = masked.length;
-  if (marker.endsWith('() {')) {
+  if (/\([^)]*\) \{$/.test(marker)) {
     const functionOpenAt = masked.indexOf('{', markerAt);
     assert.ok(functionOpenAt >= 0, `找不到 ${marker} 的函数体`);
     let braceDepth = 0;
@@ -151,10 +173,11 @@ function registeredCallSource(source, marker, markerAt) {
     }
     assert.ok(functionEnd >= 0, `${marker} 的函数体没有闭合`);
     scanEnd = functionEnd;
-    callAt = masked.indexOf('sendRequest(', markerAt);
+    const candidates = [masked.indexOf('sendRequest(', markerAt), masked.indexOf('this.requestOwnMedia(', markerAt)].filter(at => at >= 0 && at < scanEnd);
+    callAt = candidates.length ? Math.min(...candidates) : -1;
     if (callAt >= scanEnd) callAt = -1;
   }
-  else if (/^(?:sendUiStateRequest|req)\(/.test(marker)) callAt = markerAt;
+  else if (/^(?:(?:sendUiStateRequest|req|sender)\(|this\.requestOwnMedia\()/.test(marker)) callAt = markerAt;
   else callAt = masked.lastIndexOf('sendRequest(', markerAt);
   assert.ok(callAt >= 0, `找不到 ${marker} 所属请求调用`);
 
@@ -209,9 +232,11 @@ test('GET 矩阵窗口覆盖完整当前调用且不跨到下一请求', () => {
 test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵', () => {
   let directCount = 0;
   let wrapperCount = 0;
+  let ownMediaWrapperCount = 0;
   productionJsFiles(XCX_ROOT).forEach((file) => {
     const source = fs.readFileSync(file, 'utf8');
     directCount += (source.match(/method\s*:\s*['"]GET['"]/g) || []).length;
+    ownMediaWrapperCount += (source.match(/\bthis\.requestOwnMedia\([^\n]*?,\s*['"]GET['"]\s*,/g) || []).length;
     wrapperCount += (source.match(/\breq\([\s\S]{0,180}?,\s*['"]GET['"]\s*,/g) || []).length;
   });
   // 2026-09-15 合拢收尾:漫游页 f-hangout 死卡退场,roam 少一条 /api/roam/hangout/nearby GET,28 → 27。
@@ -224,10 +249,15 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-09-24 CU-C-68:merchantinfo 新增第二处 /api/game/session/merchant/entries GET
   //   (抽屉资格预探,权限档与上一处相同:required/merchant)⇒ 30 → 31。
   // 客户页退役触达：移除券候选、任务列表、任务详情三处 GET，31 → 28。
-  // 2026-10-14 漫游上线:我的队伍附近招募 + 那年今日 + 月度回顾三处 GET,29 → 32(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 32, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
-  assert.equal(wrapperCount, 22, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
-  assert.equal(MATRIX.length, directCount + wrapperCount);
+  // UI 门禁固定默认适配器路径和 GET 方法；适配器与注入调用点均归原 EVENT_OPERATE 权限。
+  // 2026-10-12 作者媒体审核pending查询增加1个真实sender GET，33→34。
+  // 2026-10-13 注销申请结果未知时只读回查本人 /api/user/deregister/status,同端点同权限档,34→35。
+  // 2026-10-14 漫游上线:我的队伍附近招募 + 那年今日 + 月度回顾三处 GET,35 → 38(权限档见 MATRIX 同日注释)。
+  assert.equal(directCount, 38, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
+  assert.equal(wrapperCount, 28, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
+  assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
   MATRIX.forEach(([file, marker, mode, role, scope]) => {
     const source = fs.readFileSync(path.join(XCX_ROOT, file), 'utf8');
@@ -250,7 +280,7 @@ const SECURITY_RULES = [
   'HttpMethod.GET,"/","/*.html","/**/*.html","/**/*.css","/**/*.js","/profile/**"=>permitAll',
   '"/swagger-ui.html","/swagger-resources/**","/webjars/**","/*/api-docs","/druid/**"=>permitAll',
   '"/dev-api/v3/api-docs/**","/dev-api/swagger-ui/**","/dev-api/webjars/**","/v3/api-docs/**","/swagger-ui/**","/webjars/**"=>permitAll',
-  '"/api/common/upload","/api/common/uploads","/api/common/uploadOSS"=>authenticated',
+  '"/api/common/upload","/api/common/upload/","/api/common/uploads","/api/common/uploads/","/api/common/uploadOSS","/api/common/uploadOSS/"=>authenticated',
   '"/api/creativesquare/list","/api/product/list"=>permitAll',
   '"/api/activity/list","/api/topic/list"=>permitAll',
   'HttpMethod.POST,"/api/template/homeData","/api/template/list","/api/template/info","/api/template/topic-template/list","/api/template/topic-template/info","/api/category/list"=>permitAll',

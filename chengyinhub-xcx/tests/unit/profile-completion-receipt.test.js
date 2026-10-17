@@ -40,3 +40,13 @@ test('profile 选章核销把首次 completionEarnedXp 显示一次,重放不重
   requests[1].success({ code: 200, msg: '核销成功', data: {} })
   assert.equal(toasts.at(-1), '核销成功')
 })
+
+test('profile 明确点选历史章节后只展示已核销回执', () => {
+  const { component, requests, toasts } = mountProfile();
+  component.data.chapterSheet = {code: 'C', items: [{id:31, replayed:true, redemptionId:66}]};
+  component.onChapterPick({ currentTarget: { dataset: { id: 31 } } });
+  assert.deepEqual(requests[0].data, {code:'C', chapterId:31});
+  requests[0].success({code:200, data:{replayed:true, redemptionId:66, completionEarnedXp:36}});
+  assert.equal(toasts.at(-1), '已核销：该章节已核销，请勿重复提供权益');
+  assert.equal(toasts.some(t => t.includes('探索值')), false);
+});

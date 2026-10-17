@@ -5,7 +5,9 @@ const path = require('node:path')
 const PAGE_PATH = path.resolve(__dirname, '../../subpackageP3/pages/growthcenter/leaderboard/index.js')
 let pageConfig
 
-global.getApp = () => ({ sendRequest() {} })
+global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated growth reader fixture.
+  sendRequest() {} })
 global.wx = { stopPullDownRefresh() {} }
 global.Page = (config) => { pageConfig = config }
 

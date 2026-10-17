@@ -101,6 +101,22 @@ class ClubEventAttendanceServiceImplTest {
     }
 
     @Test
+    void verifiedArrivalWithoutTimestampIsNotInventedOrListedAsNoShow() {
+        Map<String, Object> verified = row(51L, "已核销", null, null, 0);
+        verified.put("baseArrived", 1);
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(verified));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+        List<?> arrived = (List<?>) roster.get("arrived");
+        assertEquals(1, arrived.size());
+        assertEquals(null, ((Map<?, ?>) arrived.get(0)).get("arrivedAt"));
+        assertEquals(0, ((List<?>) roster.get("noShow")).size());
+        verified.put("correctedArrived", false);
+        roster = service.roster(ACTOR, CLUB, ACTIVITY);
+        assertEquals(0, ((List<?>) roster.get("arrived")).size(), "explicit correction remains authoritative");
+    }
+
+    @Test
     void rosterPublishesCorrectionWindowSoFutureSessionsCanBeDisabledUpFront() {
         when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(row(51L, "已报名", null, null, 0)));
         when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());

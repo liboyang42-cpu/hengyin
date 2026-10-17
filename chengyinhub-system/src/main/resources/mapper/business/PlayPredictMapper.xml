@@ -9,7 +9,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="nodeId"       column="node_id"       />
         <result property="topicId"      column="topic_id"      />
         <result property="activityId"   column="activity_id"   />
-        <result property="playDay"      column="play_day"      />
+        <result property="playDay"      column="play_day"      jdbcType="DATE" />
         <result property="memberId"     column="member_id"     />
         <result property="optionKey"    column="option_key"    />
         <result property="rewardStatus" column="reward_status" />
@@ -20,7 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap type="com.chengyinhub.business.domain.PlayPredictResult" id="ResultResult">
         <result property="id"            column="id"             />
         <result property="nodeId"        column="node_id"        />
-        <result property="playDay"       column="play_day"       />
+        <result property="playDay"       column="play_day"       jdbcType="DATE" />
         <result property="settledOption" column="settled_option" />
         <result property="settleStatus"  column="settle_status"  />
         <result property="settledBy"     column="settled_by"     />
@@ -33,17 +33,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into play_predict_bet
             (node_id, topic_id, activity_id, play_day, member_id, option_key, reward_status, create_time)
         values
-            (#{nodeId}, #{topicId}, #{activityId}, #{playDay}, #{memberId}, #{optionKey}, #{rewardStatus}, #{createTime})
+            (#{nodeId}, #{topicId}, #{activityId}, #{playDay,jdbcType=DATE}, #{memberId}, #{optionKey}, #{rewardStatus}, #{createTime})
     </insert>
 
     <select id="selectBet" resultMap="BetResult">
         select * from play_predict_bet
-        where node_id = #{nodeId} and play_day = #{playDay} and member_id = #{memberId}
+        where node_id = #{nodeId} and play_day = #{playDay,jdbcType=DATE} and member_id = #{memberId}
     </select>
 
     <select id="selectBetsForRound" resultMap="BetResult">
         select * from play_predict_bet
-        where node_id = #{nodeId} and play_day = #{playDay}
+        where node_id = #{nodeId} and play_day = #{playDay,jdbcType=DATE}
     </select>
 
     <!-- 条件更新:只有仍未结算的那一注才会被改,命中 0 行即为重复结算 -->
@@ -58,17 +58,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into play_predict_result
             (node_id, play_day, settle_status, create_time)
         values
-            (#{nodeId}, #{playDay}, 0, #{createTime})
+            (#{nodeId}, #{playDay,jdbcType=DATE}, 0, #{createTime})
     </insert>
 
     <select id="selectResult" resultMap="ResultResult">
-        select * from play_predict_result where node_id = #{nodeId} and play_day = #{playDay}
+        select * from play_predict_result where node_id = #{nodeId} and play_day = #{playDay,jdbcType=DATE}
     </select>
 
     <!-- 锁定读:和下注同事务把轮次行锁到提交;结算的条件 UPDATE 会等这把锁 -->
     <select id="selectResultForUpdate" resultMap="ResultResult">
         select * from play_predict_result
-        where node_id = #{nodeId} and play_day = #{playDay}
+        where node_id = #{nodeId} and play_day = #{playDay,jdbcType=DATE}
         for update
     </select>
 
@@ -79,7 +79,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                settle_status  = #{settleStatus},
                settled_by     = #{settledBy},
                settled_at     = #{settledAt}
-         where node_id = #{nodeId} and play_day = #{playDay} and settle_status = 0
+         where node_id = #{nodeId} and play_day = #{playDay,jdbcType=DATE} and settle_status = 0
     </update>
 
     <select id="selectStaleRounds" resultMap="ResultResult">

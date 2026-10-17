@@ -7,7 +7,7 @@ const path = require('node:path');
 // AuditReviewDTO 是 {taskId, status:Integer, reasonCode, reasonText}。
 // 前端一旦拿字符串('PENDING'/'APPROVED')去比/去传,按钮恒灰、提交必反序列化失败、原因静默丢失。
 // 本测试把 index.vue 的 <script> 取出真跑,断言的是行为而非源码长相。
-function loadComponent(listAuditTasks, getAuditTaskDetail) {
+function loadComponent(listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset) {
   const src = fs.readFileSync(
     path.resolve(__dirname, '../../src/views/business/audit/index.vue'),
     'utf8'
@@ -18,7 +18,8 @@ function loadComponent(listAuditTasks, getAuditTaskDetail) {
     .replace(/^\s*import[^\n]*\n/gm, '')
     .replace(/components:\s*\{[^}]+\},/, 'components: {},')
     .replace(/export\s+default\s*/, 'return ');
-  const component = new Function('listAuditTasks', 'getAuditTaskDetail', body)(listAuditTasks, getAuditTaskDetail);
+  const component = new Function('listAuditTasks', 'getAuditTaskDetail', 'reviewAuditTask', 'reviewMediaAsset', body)(
+    listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset);
   return component;
 }
 
@@ -27,6 +28,28 @@ function deferred() {
   const promise = new Promise((done, fail) => { resolve = done; reject = fail; });
   return { promise, resolve, reject };
 }
+
+test('审核提交按当前选中任务选择媒体或普通入口，不依赖旧详情，失败保留确认层', async () => {
+  const sent = [];
+  let rejectMedia = false;
+  const component = loadComponent(undefined, undefined,
+    data => { sent.push(['audit', data]); return Promise.resolve(); },
+    data => { sent.push(['media', data]); return rejectMedia ? Promise.reject(Error('拒绝')) : Promise.resolve(); });
+  const vm = { ...component.data(), ...component.methods, $modal: { msgSuccess() {} }, getList() {} };
+  for (const [bizType, expected] of [['MEDIA_ASSET', 'media'], ['TOPIC', 'audit']]) {
+    vm.detailTask = { bizType: bizType === 'MEDIA_ASSET' ? 'TOPIC' : 'MEDIA_ASSET' };
+    vm.openReview({ id: 42, version: 3, bizType }, 2);
+    vm.reviewForm.reasonText = '实际审核原因';
+    await vm.submitReview();
+    assert.deepEqual(sent.at(-1), [expected, { taskId: 42, expectedVersion: 3, status: 2, reasonText: '实际审核原因' }]);
+    assert.equal(vm.reviewOpen, false);
+  }
+  rejectMedia = true;
+  vm.detailTask = null;
+  vm.openReview({ id: 43, version: 4, bizType: 'MEDIA_ASSET' }, 1);
+  await assert.rejects(vm.submitReview());
+  assert.equal(vm.reviewOpen, true);
+});
 
 test('canReview 认后端的 Integer 状态:待审(0)/升级(3)可审,终态不可审', () => {
   const { canReview } = loadComponent().methods;

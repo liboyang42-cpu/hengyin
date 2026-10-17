@@ -18,7 +18,7 @@
     <cy-skeleton type="detail" />
   </view>
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
-    <cy-error class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
   <!-- ADA:成功态 hero 全出血,故 scroll 不再让顶(padding-top:0);nav 是 overlay pill,
@@ -88,6 +88,7 @@
         </view>
       </view>
 
+      <view class="xb-block" wx:if="{{isMyScope && info.reason}}"><text class="xb-body">审核反馈：{{info.reason}}</text></view>
       <view class="xb-stat-grid" wx:if="{{ detailStats.length }}">
         <view class="xb-stat-card" wx:for="{{ detailStats }}" wx:key="label">
           <view class="xb-stat-value">{{ item.value }}</view>
@@ -97,15 +98,22 @@
 
       <!-- 2026-08-05 §4.3 tab1 ③:规则说明就是这一页的「流程」,要紧跟简介 ——
            原来它排在「包含内容」之后,读者先看到包装再看到怎么玩,顺序反了。 -->
-      <view class="xb-block" wx:if="{{ info.ruleInstructions }}">
+      <view class="xb-block" wx:if="{{ ruleSteps.length }}">
         <view class="xb-section-title">
           <cy-icon name="route" size="30" />
           <text>规则</text>
         </view>
+        <!-- F-W5-06:规则按编辑器「一行一步」拆开,每步一个序号;收起态整组限高,「更多」看全部。 -->
         <view class="xb-rule-card">
-          <view class="xb-rule-mark">1</view>
-          <view class="xb-rule-copy">
-            <view id="tpl-rule" class="xb-body xb-body--soft {{ ruleExpanded ? '' : 'xb-body--clamp' }}">{{ info.ruleInstructions }}</view>
+          <view id="tpl-rule-box" class="xb-rule-box {{ ruleExpanded ? '' : 'xb-rule-box--clamp' }}">
+            <view id="tpl-rule" class="xb-rule-list">
+              <view class="xb-rule-step" wx:for="{{ ruleSteps }}" wx:key="index">
+                <view class="xb-rule-mark">{{ index + 1 }}</view>
+                <view class="xb-rule-copy">
+                  <text class="xb-body xb-body--soft">{{ item }}</text>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
         <view class="xb-link-more" wx:if="{{ ruleNeedMore || ruleExpanded }}" bindtap="toggleRuleMore" hover-class="cy-pressed" hover-stay-time="80">

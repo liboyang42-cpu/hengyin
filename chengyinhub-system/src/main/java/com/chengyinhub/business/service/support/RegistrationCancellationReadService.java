@@ -42,6 +42,45 @@ public class RegistrationCancellationReadService {
             return unconfirmedCancellationFeedback(registrationId, "取消操作已提交，结果暂时无法读取，请刷新订单确认");
         }
     }
+    /**
+     * 取消动作前只读本人既有人工案件；命中即返回权威进度，调用方不得再次执行退款。
+     * mapper 同时校验报名 member_id、payer_member_id、owner 和冻结报名集合，避免越权探测。
+     */
+    public Result readPlayerManualRefundCase(Long registrationId, Long memberId) {
+        if (registrationId == null || registrationId <= 0 || memberId == null || memberId <= 0) {
+            return null;
+        }
+        String status = activityCancelManualRefundCaseMapper.selectPlayerCaseStatus(registrationId, memberId);
+        if (StringUtils.isEmpty(status)) {
+            return null;
+        }
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("registrationId", registrationId);
+        data.put("cancellationStatus", "MANUAL_REVIEW");
+        data.put("cashRefundStatus", "MANUAL_REVIEW");
+        data.put("cashRefundAmount", null);
+        data.put("manualRefundCaseStatus", status);
+        return new Result(manualRefundCaseMessage(status, null), data);
+    }
+
+    private String manualRefundCaseMessage(String status, Boolean activityDetail) {
+        switch (status) {
+            case ActivityCancelManualRefundCase.STATUS_NO_REFUND:
+                return "人工评估结果：不予退款";
+            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_REQUIRED:
+                return "人工评估已通过，等待退款处理";
+            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_RECORDED:
+                return "人工退款已登记，等待凭证复核";
+            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED:
+                return "人工退款凭证已复核";
+            default:
+                if (activityDetail == null) {
+                    return "本单已转平台人工评估，尚未退款";
+                }
+                return activityDetail ? "活动已取消，该订单正在人工评估退款" : "该订单正在人工评估退款";
+        }
+    }
+
 
     private Result unconfirmedCancellationFeedback(Long registrationId, String message) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -169,14 +208,7 @@ public class RegistrationCancellationReadService {
         registration.setManualRefundCaseStatus(status);
         if (status == null) return;
         boolean activity = Long.valueOf(2L).equals(registration.getOwnerType());
-        String reason;
-        switch (status) {
-            case ActivityCancelManualRefundCase.STATUS_NO_REFUND: reason = "人工评估结果：不予退款"; break;
-            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_REQUIRED: reason = "人工评估已通过，等待退款处理"; break;
-            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_RECORDED: reason = "人工退款已登记，等待凭证复核"; break;
-            case ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED: reason = "人工退款凭证已复核"; break;
-            default: reason = activity ? "活动已取消，该订单正在人工评估退款" : "该订单正在人工评估退款";
-        }
+        String reason = manualRefundCaseMessage(status, activity);
         registration.setRefundInfo(new RefundPolicy.Verdict(
                 false, reason, null, !ActivityCancelManualRefundCase.STATUS_NO_REFUND.equals(status)
                 && !ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED.equals(status)));

@@ -18,6 +18,9 @@ import java.util.Date;
 public class TopicSaleCanonicalDraftServiceImpl implements ITopicSaleCanonicalDraftService {
     private final CmsTopicMapper topicMapper;
     private final TopicSaleSnapshotMapper snapshotMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.ITopicCommercialReviewService commercialReviewService;
 
     public TopicSaleCanonicalDraftServiceImpl(CmsTopicMapper topicMapper, TopicSaleSnapshotMapper snapshotMapper) {
         this.topicMapper = topicMapper;
@@ -69,6 +72,7 @@ public class TopicSaleCanonicalDraftServiceImpl implements ITopicSaleCanonicalDr
                 || !write.getCanonicalJson().equals(readback.getCanonicalJson())) {
             throw new IllegalStateException("canonical 草稿写后回读不一致");
         }
+        readback.setSaleReviewProgress(commercialReviewService.submitSaleReviewIfReady(topicId, topic.getMemberId()));
         return readback;
     }
 

@@ -24,7 +24,8 @@ public interface MemberLeaderboardMapper {
     List<LeaderboardItemVO> selectExpTotalTop(@Param("limit") int limit);
 
     /** 成长周榜:本周经验(growth_mission_progress.reward_exp)汇总降序 */
-    List<LeaderboardItemVO> selectExpWeekTop(@Param("weekStart") Date weekStart, @Param("limit") int limit);
+    List<LeaderboardItemVO> selectExpWeekTop(@Param("weekStart") Date weekStart, @Param("weekEnd") Date weekEnd,
+                                              @Param("limit") int limit);
 
     Map<String, Object> selectPointTotalMyRank(@Param("memberId") Long memberId);
 
@@ -32,5 +33,6 @@ public interface MemberLeaderboardMapper {
 
     Map<String, Object> selectExpTotalMyRank(@Param("memberId") Long memberId);
 
-    Map<String, Object> selectExpWeekMyRank(@Param("memberId") Long memberId, @Param("weekStart") Date weekStart);
+    Map<String, Object> selectExpWeekMyRank(@Param("memberId") Long memberId, @Param("weekStart") Date weekStart,
+                                             @Param("weekEnd") Date weekEnd);
 }

@@ -40,14 +40,15 @@ function blockAt(src, start) {
   return null
 }
 
-/** 全仓真源:一个 gameSection 一块。返回 { 段名: 整块 wxml }。 */
+/** 全仓真源:主玩法与旧模板启用段各取一块。返回 { 段名: 整块 wxml }。 */
 function sections(src) {
   const out = new Map()
-  const re = /<view class="cg-gcfg" wx:if="\{\{gameSection === '(\w+)'\}\}">/g
+  const re = /<view class="cg-gcfg" wx:if="\{\{(?:gameSection === '(\w+)'|advanced\.(\w+)\.enabled)(?: \|\| \([^}]+\)| \|\| segmentOn\.\w+)?\}\}">/g
   for (let m = re.exec(src); m; m = re.exec(src)) {
     const body = blockAt(src, m.index)
-    assert.ok(body, `段 ${m[1]} 的 <view> 没配平,先修标签再谈形状`)
-    out.set(m[1], body)
+    const name = m[1] || m[2]
+    assert.ok(body, `段 ${name} 的 <view> 没配平,先修标签再谈形状`)
+    out.set(name, body)
   }
   return out
 }
@@ -317,7 +318,8 @@ test('所有目录玩法都有配置段，九宫格明确指向主题级配置',
   const { ALL } = require('../../pages/publish/utils/publish/node-game-catalog.js')
   const src = read(); const secs = sections(src)
   for (const game of ALL) {
-    if (game.section) assert.ok(secs.has(game.section), game.key + ' 缺少编辑配置段')
+    if (['blindTaste', 'dailySign'].includes(game.section)) assert.ok(src.includes('advanced.' + game.section + '.enabled'), game.key + ' 缺少存量配置段')
+    else if (game.section) assert.ok(secs.has(game.section), game.key + ' 缺少编辑配置段')
     else { assert.equal(game.key, 'bingo'); assert.match(src, /gameKey === 'bingo'[\s\S]*?主题编辑页配置/) }
   }
 })

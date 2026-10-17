@@ -20,6 +20,13 @@ function parseImgUrls(raw) {
   return str.split(/[,;]/).map(function (s) { return s.trim(); }).filter(Boolean);
 }
 
+const { gameTemplateCover } = require('../../../utils/template-display.js');
+const { decodeDisplayFields } = require('../../../utils/display-text.js');
+
+// 详情页按纯文本展示的作者文字(含规则 ruleInstructions)。服务端过滤会把 x<y 存成 x&lt;y,在归一化这一处解码。
+var DISPLAY_TEXT_FIELDS = ['title', 'name', 'description', 'ruleInstructions', 'storyText', 'requiredMaterials',
+  'questionName', 'questionA', 'questionB', 'questionC', 'questionD', 'usageLocation', 'reason'];
+
 function buildGallery(info) {
   info = info || {};
   var seen = {};
@@ -34,6 +41,7 @@ function buildGallery(info) {
   parseImgUrls(info.imgUrls).forEach(push);
   push(info.imgUrl);
   push(info.storyImg);
+  if (!list.length) push(gameTemplateCover(info));
 
   return list;
 }
@@ -54,7 +62,7 @@ function buildGalleryColumns(urls) {
 }
 
 function normalizeTemplateDetail(info) {
-  info = info || {};
+  info = decodeDisplayFields(info || {}, DISPLAY_TEXT_FIELDS);
   var gallery = buildGallery(info);
   return {
     info: info,
@@ -66,7 +74,15 @@ function normalizeTemplateDetail(info) {
   };
 }
 
+// 编辑器把规则按「一行一步」存进 ruleInstructions(pages/publish/temp 的 ruleSteps ↔ join('\n')),
+// 详情页按同一规则拆回步骤,每步一个序号;空行不算一步。
+function splitRuleSteps(raw) {
+  if (raw === null || raw === undefined) return [];
+  return String(raw).split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+}
+
 module.exports = {
+  splitRuleSteps: splitRuleSteps,
   parseImgUrls: parseImgUrls,
   buildGallery: buildGallery,
   buildGalleryColumns: buildGalleryColumns,

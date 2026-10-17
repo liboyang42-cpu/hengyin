@@ -110,6 +110,16 @@ class ApiTopicJourneyStoryDeliveryTest {
         assertFalse(JSON.toJSONString(result).contains("journeyStory"));
     }
 
+    @Test
+    void playerTopicInfoPreservesRefreshedServiceLocationCount() {
+        // Controller projection only; real database refresh is covered by PublicTopicStationCountMySqlIT.
+        CmsTopic topic = topic(null);
+        topic.setLocationCount(4L);
+        AjaxResult result = playerTopicInfo(topic);
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals(4L, ((com.chengyinhub.business.domain.vo.TopicInfoVO) result.get("data")).getLocationCount());
+    }
+
     /** topicInfo 的最小依赖集:空章节/无票/无报名,足够走到组装 TopicInfoVO 并返回。 */
     private AjaxResult playerTopicInfo(CmsTopic topic) {
         ICmsTopicService topicService = mock(ICmsTopicService.class);

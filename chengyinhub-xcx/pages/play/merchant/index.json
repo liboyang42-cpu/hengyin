@@ -1,6 +1,6 @@
 {
   "navigationStyle": "custom",
-  "usingComponents": {
+  "usingComponents": {"cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-toast": "/components/cy/toast/index",

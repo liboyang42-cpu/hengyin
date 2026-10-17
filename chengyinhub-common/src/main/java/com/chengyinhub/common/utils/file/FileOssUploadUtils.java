@@ -7,6 +7,7 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.ServiceException;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
+import com.aliyun.oss.model.CannedAccessControlList;
 import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.ObjectMetadata;
@@ -153,6 +154,19 @@ public class FileOssUploadUtils {
         }
     }
 
+    public static JSONObject uploadPendingWithOwner(MultipartFile file,String ownerMemberId,String bizType) throws IOException {
+        if (StringUtils.isBlank(ownerMemberId)) throw new IllegalArgumentException("待审媒体缺少作者归属");
+        OSSClient client=createOssClient();
+        try {
+            return uploadPendingWithOwner(file,ownerMemberId,bizType,client,requiredEnv(OSS_BUCKET_NAME_ENV));
+        } finally { client.shutdown(); }
+    }
+
+    static JSONObject uploadPendingWithOwner(MultipartFile file,String ownerMemberId,String bizType,OSSClient client,String bucket) throws IOException {
+        if(StringUtils.isBlank(ownerMemberId))throw new IllegalArgumentException("待审媒体缺少作者归属");
+        return upload(file,false,client,bucket,ownerMetadata(ownerMemberId,bizType),false);
+    }
+
     private static JSONObject upload(MultipartFile file, boolean aftercareEvidence) throws IOException {
         OSSClient ossClient = createOssClient();
         try {
@@ -178,12 +192,18 @@ public class FileOssUploadUtils {
 
     private static JSONObject upload(MultipartFile file, boolean aftercareEvidence, OSSClient ossClient,
                                      String bucketName, ObjectMetadata ownerMetadata) throws IOException {
+        return upload(file,aftercareEvidence,ossClient,bucketName,ownerMetadata,true);
+    }
+    private static JSONObject upload(MultipartFile file, boolean aftercareEvidence, OSSClient ossClient,
+                                     String bucketName, ObjectMetadata ownerMetadata,boolean signPublic) throws IOException {
         JSONObject jsobj1 = new JSONObject();
         try {
             String fileRelName = aftercareEvidence
                     ? createAftercareEvidenceObjectKey(file) : createObjectKey(file);
 
-            // 上传至oss
+            // Set the ACL in the upload itself; inheriting a public bucket would expose pending media.
+            if (ownerMetadata == null) ownerMetadata = new ObjectMetadata();
+            ownerMetadata.setObjectAcl(CannedAccessControlList.Private);
             PutObjectResult result;
             try (InputStream input = file.getInputStream()) {
                 result = ownerMetadata == null
@@ -197,7 +217,7 @@ public class FileOssUploadUtils {
             jsobj1.put("fileName", fileRelName);
             if (aftercareEvidence) {
                 jsobj1.put("versionId", result.getVersionId());
-            } else {
+            } else if (signPublic) {
                 jsobj1.put("url", generatePresignedUrl(ossClient, fileRelName, bucketName));
             }
 //            jsobj1.put("orgName", orgName);

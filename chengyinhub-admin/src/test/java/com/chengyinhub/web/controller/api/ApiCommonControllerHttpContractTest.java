@@ -21,6 +21,39 @@ import static org.mockito.Mockito.when;
 class ApiCommonControllerHttpContractTest {
 
     @Test
+    void tokenRequestUsesStableJsonPostAndNeverPutsSecretInUrl() {
+        AppUploadService service = new AppUploadService();
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.http.HttpUtils> http =
+                org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.http.HttpUtils.class)) {
+            http.when(() -> com.chengyinhub.common.utils.http.HttpUtils.sendPost(
+                    org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(),
+                    org.mockito.ArgumentMatchers.eq("application/json"))).thenAnswer(invocation -> {
+                org.junit.jupiter.api.Assertions.assertEquals("https://api.weixin.qq.com/cgi-bin/stable_token", invocation.getArgument(0));
+                com.alibaba.fastjson2.JSONObject request = com.alibaba.fastjson2.JSONObject.parseObject(invocation.getArgument(1));
+                org.junit.jupiter.api.Assertions.assertEquals("wx-fixture", request.getString("appid"));
+                org.junit.jupiter.api.Assertions.assertEquals("fixture-secret", request.getString("secret"));
+                org.junit.jupiter.api.Assertions.assertEquals("client_credential", request.getString("grant_type"));
+                org.junit.jupiter.api.Assertions.assertEquals(Boolean.FALSE, request.getBoolean("force_refresh"));
+                return "{\"access_token\":\"fixture-token\",\"expires_in\":7200}";
+            });
+            assertTrue(service.requestWxAccessToken("wx-fixture", "fixture-secret").contains("fixture-token"));
+            http.verify(() -> com.chengyinhub.common.utils.http.HttpUtils.sendGet(org.mockito.ArgumentMatchers.anyString()), org.mockito.Mockito.never());
+        }
+    }
+
+    @Test
+    void disabledImageSecurityRefusesBeforeUploadAndTokenFetch() {
+        AppUploadService service = new AppUploadService();
+        com.chengyinhub.common.config.WxPayConfig config = new com.chengyinhub.common.config.WxPayConfig();
+        ReflectionTestUtils.setField(config, "secCheckEnabled", false);
+        ReflectionTestUtils.setField(service, "wxConfig", config);
+        org.springframework.mock.web.MockMultipartFile image = new org.springframework.mock.web.MockMultipartFile(
+                "file", "image.png", "image/png", new byte[] {1});
+        org.junit.jupiter.api.Assertions.assertThrows(UploadSecurityUnavailableException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "verifyContentSecurity", image));
+    }
+
+    @Test
     void tokenNetworkFailureBlocksUploadWithoutLoggingCredentials() {
         String secret = "app-secret-must-not-log";
         FailingTokenService service = new FailingTokenService(secret);

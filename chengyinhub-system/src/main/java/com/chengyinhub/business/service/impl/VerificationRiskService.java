@@ -15,6 +15,8 @@ import java.util.Map;
 @Service
 public class VerificationRiskService {
     @Autowired private VerificationReviewMapper reviewMapper;
+    @Autowired private AlarmService alarmService;
+    @Autowired private com.chengyinhub.business.service.support.CommittedBusinessNotice committedBusinessNotice;
     private final BigDecimal highRateThreshold;
     private final int oneMinuteThreshold;
     private final int minimumSample;
@@ -55,8 +57,14 @@ public class VerificationRiskService {
         review.setOneMinuteCount(oneMinuteCount);
         review.setStatus(0);
         review.setIdempotencyKey(verifierMemberId + ":" + topicId + ":" + review.getRiskType()
-                + ":" + java.time.LocalDate.now());
-        return reviewMapper.insertIgnore(review) == 1;
+                + ":" + java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")));
+        if (reviewMapper.insertIgnore(review) != 1) return false;
+        Long reviewId = review.getId();
+        String riskType = review.getRiskType();
+        committedBusinessNotice.executeAfterCommit("verification.risk", reviewId,
+                () -> alarmService.deliver("核销异常待人工复核", "reviewId=" + reviewId + " risk=" + riskType)
+                        == AlarmService.AlarmDelivery.SUCCESS);
+        return true;
     }
 
     public boolean inspectAndQueue(Long verifierMemberId, Long registrationId) {

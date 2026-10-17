@@ -11,7 +11,7 @@
         hover-class="st__press" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
 
   <!-- 限时条:开了限时才有。走完直接判负,不是把数字停住 -->
-  <view class="st__limit" style="top:{{topPad + 62}}px" wx:if="{{limitSeconds > 0}}">
+  <view class="st__limit" style="top:{{topPad + 62}}px" wx:if="{{limitSeconds > 0 || deadlineAt > 0}}">
     <text class="st__limit-t">限时</text>
     <view class="st__limit-bar"><view class="st__limit-fill" style="transform:scaleX({{limitScale}})"></view></view>
     <text class="st__limit-n">{{limitLeft}}s</text>

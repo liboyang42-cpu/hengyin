@@ -23,12 +23,12 @@
   <cy-page-title title="协作详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" loading-label="正在加载协作详情" />
-  <cy-error wx:elif="{{state === 'missing'}}" fill size="lg" title="打不开这条邀约" sub="{{errorText}}"
+  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="打不开这条邀约" sub="{{errorText}}"
             retry="回协作邀请" bind:retry="goBack" />
   <cy-error wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
             sub="它可能已经被撤回，或移到了另一侧。回列表看看最新的。"
             retry="回协作邀请" bind:retry="goBack" />
-  <cy-error wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情没加载出来" sub="{{errorText}}"
+  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情没加载出来" sub="{{errorText}}"
             auto-back custom-back bind:back="goBack" retry="重试" bind:retry="retry" />
 
   <block wx:else>
@@ -180,7 +180,7 @@
   <cy-sheet variant="full" class="theme-merchant" show="{{showPerkPick}}" title="申报本次供给" handle closable maskClosable bind:close="closePerkPick">
   <view class="pk-hint">勾选本次合作提供的礼品/券(来自你的常备权益)。到店玩家可领,成本按核销人头计入结算。</view>
   <cy-skeleton wx:if="{{perkState === 'loading'}}" type="list" count="3" />
-  <cy-error wx:elif="{{perkState === 'error'}}" title="常备权益没加载出来" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
+  <cy-error load-failure wx:elif="{{perkState === 'error'}}" title="常备权益没加载出来" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
   <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list">
     <view class="pk-item {{item.checked ? 'on' : ''}}" wx:for="{{perkTemplates}}" wx:key="id" catchtap="togglePerk" data-idx="{{index}}" aria-role="checkbox" aria-checked="{{item.checked}}" aria-label="选择供给：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="pk-box {{item.checked ? 'on' : ''}}"></view>

@@ -44,9 +44,9 @@ test('★四个新段在 KIT_PRIORITY / TYPE_OF / ACTION_OF 三张表里都在�
 
 test('负控:段名从优先级表里摘掉一条,上一条必须能红', () => {
   const src = read()
-  const ROW = "  'profile', 'photoCheck', 'note', 'typeIn',"
+  const ROW = "  'profile', 'photoCheck', 'album', 'note', 'typeIn',"
   assert.ok(src.includes(ROW), '负控构造失败:优先级表那行已经不是预期形状')
-  const stripped = src.replace(ROW, "  'photoCheck', 'note', 'typeIn',")
+  const stripped = src.replace(ROW, "  'photoCheck', 'album', 'note', 'typeIn',")
   assert.notEqual(stripped, src, '负控构造失败:没真摘掉')
   assert.ok(!stripped.includes(ROW), '坏版本里 profile 确实没了 —— 全表跑的断言会因此判红')
 })

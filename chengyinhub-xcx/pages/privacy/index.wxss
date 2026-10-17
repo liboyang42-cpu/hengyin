@@ -20,3 +20,8 @@ page { background: var(--cy-color-bg-page); }
 /* 原生 button:微信 open-type 强制,不能换 cy-btn;视觉对齐 cy-btn --primary */
 button.privacy-agree { flex: 1.4; margin: 0; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-btn-solid-fg); background: var(--cy-btn-solid-bg); }
 button.privacy-agree::after { border: 0; }
+
+.privacy-media-row { display: block; margin-top: var(--cy-space-3); }
+.privacy-media-preview { margin-top: var(--cy-space-3); }
+.privacy-media-preview image { width: 100%; }
+.privacy-media-preview cy-media-model-preview { display: block; width: 100%; height: 480rpx; }

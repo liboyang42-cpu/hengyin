@@ -47,7 +47,7 @@ function loadPage(options = {}) {
     setTimer: () => 1,
     clearTimer: () => {},
   })
-  const app = { globalData: {}, getUploadClient: () => client, sendRequest() {} }
+  const app = { globalData: {}, requestSeparateConsent: () => options.consentDenied ? Promise.reject(new Error('已拒绝声音克隆')) : Promise.resolve(), getUserID: () => '7', getUploadClient: () => client, sendRequest() {} }
   const wx = {
     authorize: () => options.authorizePromise || (options.authorizeError ? Promise.reject(options.authorizeError) : Promise.resolve()),
     getRecorderManager: () => recorder,
@@ -70,6 +70,7 @@ function loadPage(options = {}) {
     setTimeout, clearTimeout, setInterval, clearInterval, Promise, Object, Error, JSON, Math, Number, String, Array,
   }, { filename: PAGE })
   const page = Object.assign({}, state.page, { data: JSON.parse(JSON.stringify(state.page.data)) })
+  page._photoMember = page._voiceMember = '7';
   page.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]))
     if (cb) cb()
@@ -276,3 +277,14 @@ test('录音回调拒绝缺失、空、负数与非有限文件大小', () => {
     assert.ok(h.page.data.voiceError)
   }
 })
+
+
+test('拒绝第三方声音克隆单独同意保留合法录音且不上传、不发起复刻', async () => {
+  const h = loadPage({consentDenied:true});
+  h.page.onVoiceConsentChange({detail:{checked:true}}); h.page.onVoiceHoldStart(); await tick();
+  h.page.data.voiceSentenceConfirmed = 3;
+  h.onRecorderStop({tempFilePath:'/tmp/voice.mp3',duration:20000,fileSize:1024});
+  h.page.uploadVoice(); await tick();
+  assert.equal(h.wxUploads,0); assert.equal(h.requests.length,0); assert.ok(h.page.data.voiceFile);
+  assert.equal(h.page.data.voiceBusy,false); assert.match(h.page.data.voiceError,/拒绝/);
+});

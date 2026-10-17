@@ -106,6 +106,8 @@ public interface IClubMemberService
     /** 只有主理人可将待审申请通过或拒绝；管理员不获得审批权限。 */
     public void reviewJoinRequest(Long clubId, Long memberId, Long ownerId, boolean approve);
 
+    void reviewJoinRequest(Long clubId, Long memberId, Long ownerId, boolean approve, String reason);
+
     /** 只有主理人可读待审列表。 */
     public List<ClubMember> selectPendingJoinRequests(Long clubId, Long ownerId);
 

@@ -10,10 +10,11 @@
       <scroll-view class="sp-scroll" scroll-x enable-flex>
         <view class="sp-day {{pickedActivityId === item.id ? 'is-on' : ''}}"
               wx:for="{{days}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickDay"
-              aria-role="button" aria-label="选择 {{item.week}} {{item.day}}"
+              aria-role="button" aria-label="选择 {{item.whenText}} {{item.name}}"
               hover-class="cy-pressed" hover-stay-time="80">
           <text class="sp-day-w" wx:if="{{item.week}}">{{item.week}}</text>
           <text class="sp-day-d">{{item.day}}</text>
+          <text class="sp-day-w" wx:if="{{item.detailText}}">{{item.detailText}}</text>
         </view>
       </scroll-view>
     </block>
@@ -25,7 +26,7 @@
               title="{{ticketsError}}" sub="加入俱乐部后即可购买这场活动的票"
               cta="{{gateClubId ? '去加入俱乐部' : ''}}" bind:cta="goGateClub" />
     <!-- 读不到 ≠ 这场没票可买:分开说,否则玩家会以为卖光了 -->
-    <cy-error wx:elif="{{ticketsState === 'error'}}" title="票种没读出来"
+    <cy-error load-failure wx:elif="{{ticketsState === 'error'}}" title="票种没读出来"
               sub="{{ticketsError}}" retry="重试" bind:retry="retryTickets" />
     <cy-empty wx:elif="{{ticketsState === 'empty'}}" kind="empty" size="lg"
               title="这一场还没有放票" sub="{{singleDay ? '稍后再回来看一次，放票后会在这里列出可买的票种' : '换一个日期看看，或者晚点再来'}}" />

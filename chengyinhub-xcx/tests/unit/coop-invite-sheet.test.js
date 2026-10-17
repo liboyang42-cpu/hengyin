@@ -74,3 +74,13 @@ test('回程只匹配原主题且已打开管理弹窗的导览台，首页不�
   pages = [{ route: 'pages/index/index' }, { route: 'pages/club/detail/index' }];
   assert.equal(finish(99), false);
 });
+
+test('邀约返回不命中已卸载或属于旧账号的同主题页面',()=>{
+ const host={route:'pages/topic/merchantinfo/merchantinfo',_projectMemberId:'10',data:{topicId:99,clubSheet:{show:true}},loadProjectHome:()=>reads++};
+ let actor=20,reads=0;const navigations=[];
+ const sandbox={module:{exports:{}},getApp:()=>({getUserID:()=>actor}),getCurrentPages:()=>[host,{route:'pages/club/detail/index'}],wx:{navigateBack:x=>navigations.push(x)}};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'utils/coop-invite-return.js'),'utf8'),sandbox);const finish=sandbox.module.exports.returnToCoopOrigin;
+ assert.equal(finish(99),false);assert.equal(reads,0);assert.equal(navigations.length,0);
+ actor=10;host._disposed=true;assert.equal(finish(99),false);
+ host._disposed=false;assert.equal(finish(99),true);assert.equal(reads,1);assert.equal(navigations.length,1);
+});

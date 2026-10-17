@@ -16,7 +16,7 @@
         <result property="updateTime" column="update_time"/>
     </resultMap>
 
-    <insert id="insertIgnore">
+    <insert id="insertIgnore" useGeneratedKeys="true" keyProperty="id">
         insert ignore into verification_review
         (verifier_member_id, topic_id, risk_type, verification_rate, paid_count, verified_count,
          one_minute_count, status, idempotency_key, create_time)
@@ -27,6 +27,12 @@
 
     <!-- 核销率分母=同主题已支付报名；分子=该负责人实际核销过的不同报名。
          owner_type=2 的活动单通过 cms_activity.topic_id 回到主题，不能把 activity_id 当 topic_id。 -->
+    <select id="selectPendingQueueStats" resultType="map">
+        select count(*) as pendingCount,
+               coalesce(timestampdiff(second,min(create_time),now()),0) as oldestAgeSeconds
+          from verification_review where status=0
+    </select>
+
     <select id="selectVerifierStats" resultType="map">
         select current_topic.topic_id as topicId,
                <!-- 批 5 · T3:③ 探店日跳高核销率判据(rate ≈ A/N_service，G2 硬门要它 ≥80% ⇒ 越成功越误报)。
@@ -52,6 +58,7 @@
                     on registration.owner_type = 2 and activity.id = registration.owner_id
                  where registration.id = #{registrationId}) current_topic
           join cms_registration_scan scan on scan.member_id = #{verifierMemberId} and scan.registration_type = 1
+                                         and ifnull(scan.status, 0) &lt;&gt; 2
           join cms_registration scanned_registration on scanned_registration.id = scan.registration_id
           left join cms_activity scanned_activity
             on scanned_registration.owner_type = 2 and scanned_activity.id = scanned_registration.owner_id

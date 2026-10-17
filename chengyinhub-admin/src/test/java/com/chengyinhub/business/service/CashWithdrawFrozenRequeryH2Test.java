@@ -112,6 +112,8 @@ class CashWithdrawFrozenRequeryH2Test {
         wechatPayService = mock(IWechatPayService.class);
 
         CashWithdrawServiceImpl target = new CashWithdrawServiceImpl();
+        ReflectionTestUtils.setField(target, "transactionManager",
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource));
         ReflectionTestUtils.setField(target, "mapper", mapper);
         ReflectionTestUtils.setField(target, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(target, "wechatPayService", wechatPayService);
@@ -225,6 +227,27 @@ class CashWithdrawFrozenRequeryH2Test {
                 "未冻结单应走完 0→3→2,最终为『失败已退款』");
         assertEquals("微信转账失败", row.get("fail_reason"));
         assertNotNull(row.get("last_query_time"));
+    }
+
+    @Test
+    void automaticRefundRollsBackBalanceAndTerminalStatusWhenBalanceWriteFails() {
+        long id = insertProcessing(0);
+        wechatReturnsFail(id);
+        jdbc.execute("create table refund_balance (member_id bigint primary key, balance decimal(10,2))");
+        jdbc.update("insert into refund_balance values (?, 100.00)", MEMBER_ID);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            jdbc.update("update refund_balance set balance=balance+? where member_id=?", AMOUNT, MEMBER_ID);
+            throw new IllegalStateException("balance write interrupted");
+        }).when(umsMemberService).addBalance(MEMBER_ID, AMOUNT);
+
+        service.requery(id);
+
+        assertEquals(0, new BigDecimal("100.00").compareTo(jdbc.queryForObject(
+                "select balance from refund_balance where member_id=?", BigDecimal.class, MEMBER_ID)));
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_MANUAL, ((Number) row(id).get("status")).intValue());
+        org.mockito.Mockito.reset(umsMemberService);
+        service.requery(id);
+        verify(umsMemberService, never()).addBalance(any(), any());
     }
 
     /** (b2) 未冻结 + 微信 SUCCESS:确认到账这条正常路径同样不许被两道守卫改坏。 */

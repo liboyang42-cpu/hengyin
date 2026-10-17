@@ -84,7 +84,7 @@ test('C2:merchantinfo 核销数值位都有默认值兜底,不会渲染成 undef
 })
 
 test('C2 负控:去掉 verifiedCount 默认值时,由数值位兜底这道闸判红', () => {
-  const mutated = read(INFO_JS).replace('verifiedCount: 0,', 'verifiedCount: undefined,')
+  const mutated = read(INFO_JS).replaceAll('verifiedCount: 0,', 'verifiedCount: undefined,')
   assert.throws(() => assertMetricsDefaultToZero(mutated), /verifiedCount 必须有默认值兜底/)
 })
 

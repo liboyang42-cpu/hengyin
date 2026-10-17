@@ -28,6 +28,9 @@ public interface CommunityPostMapper {
     int countActiveMemberEnforcement(@Param("memberId") Long memberId,
                                      @Param("types") List<String> types, @Param("now") Date now);
     List<CommunityPost> selectFeed(CommunityPostFeedQuery query);
+    List<CommunityPost> selectBookmarkedFeed(CommunityPostFeedQuery query);
+    List<CommunityPost> selectOwnPosts(CommunityPostFeedQuery query);
+    List<String> selectTopicCodes(@Param("postId") Long postId);
     List<CommunityPost> selectAuthorDrafts(@Param("authorId") Long authorId,
                                            @Param("cursor") Long cursor, @Param("limit") int limit);
     int insertPost(CommunityPost post);
@@ -60,7 +63,7 @@ public interface CommunityPostMapper {
                     @Param("sortOrder") int sortOrder,
                     @Param("now") Date now);
     int detachMedia(@Param("postId") Long postId, @Param("ownerMemberId") Long ownerMemberId,
-                    @Param("now") Date now);
+                    @Param("retainedMediaIds") List<Long> retainedMediaIds, @Param("now") Date now);
     int orphanMedia(@Param("postId") Long postId, @Param("deleteAfter") Date deleteAfter,
                     @Param("now") Date now);
     List<Map<String, Object>> selectMedia(Long postId);
@@ -210,6 +213,8 @@ public interface CommunityPostMapper {
                       @Param("now") Date now);
     Map<String, Object> selectCommentByAuthorRequest(@Param("authorId") Long authorId,
                                                      @Param("clientRequestId") String clientRequestId);
+    Map<String, Object> selectCommentByAuthorRequestForUpdate(@Param("authorId") Long authorId,
+                                                              @Param("clientRequestId") String clientRequestId);
     Map<String, Object> selectCommentForReply(@Param("commentId") Long commentId,
                                               @Param("postId") Long postId,
                                               @Param("viewerId") Long viewerId);

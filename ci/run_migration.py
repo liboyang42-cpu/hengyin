@@ -33,7 +33,9 @@
   --sql 模式会去仓库里加载它;加载不到就【响亮地失败】,绝不退回裸 split。理由见 load_split_statements()。
 """
 import argparse
+import hashlib
 import importlib.util
+import json
 import os
 import re
 import subprocess
@@ -620,6 +622,226 @@ def close_preserving_active_exception(resource, label):
         print(f"{label}关闭失败（保留原始退出语义）: {error}")
 
 
+def requires_community_legacy_owner_guard(statements):
+    """Recognize the write itself, including renamed files and inline extracts."""
+    targets = r"community_post(?:_media|_reference|_comment_action|_comment|_member_action)?"
+    for statement in statements:
+        sql = _mask_literals_and_comments(executable_statement(statement)).lower()
+        if (re.search(r"\bcreate\s+temporary\s+table\s+community_legacy_route_repair\b", sql)
+                and "ums_creative_square" in sql):
+            return True
+        if (re.search(r"\b(?:insert\s+(?:ignore\s+)?into|update)\s+(?:(?:`[^`]+`|[a-z0-9_]+)\s*\.\s*)?`?" + targets + r"`?\b", sql)
+                and re.search(r"\b(?:ums_creative_square(?:_like)?|ums_comment(?:_like)?)\b", sql)):
+            return True
+    return False
+
+
+def exact_community_comment_counter_scope(statements, transaction):
+    """Only the complete reviewed counter transaction may omit unrelated replay checks.
+
+    Pin executable statements, not a filename. Preserve every literal, statement order
+    and internal whitespace; extracts or added/changed statements retain the full guard.
+    Immutable source SQL SHA256: 373013576832089c0240da8c695a268d4ef6194991b0de097d1e6b00adbfb32d.
+    """
+    if transaction is not True:
+        return False
+    executable = [executable_statement(statement).strip() for statement in statements]
+    encoded = json.dumps(executable, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest() == '4d875edc25ab45fb2121ed9ae7a80a62a9111f0ddd7f1fc116ee0fa0e82d3be9'
+
+
+def assert_community_legacy_statement_scope(statements, db):
+    for statement in statements:
+        sql = _mask_literals_and_comments(executable_statement(statement)).lower()
+        for schema in re.findall(
+                r"(`[^`]+`|[a-z0-9_]+)\s*\.\s*`?(?:community_post(?:_[a-z_]+)?|ums_creative_square(?:_like)?|ums_comment(?:_like)?)`?\b", sql):
+            if schema.strip('`') != db.lower():
+                raise ValueError("legacy owner preflight rejects cross-schema source/target")
+
+
+def assert_community_legacy_counter_preflight(cur, db, statements, comment_counter=False):
+    """Predict the retained broad prefix assertions, without weakening them."""
+    text = "\n".join(executable_statement(statement).lower() for statement in statements)
+    prefixes = (
+        ("legacy-square-like-%", "community_post_member_action", """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_member_action a
+            WHERE a.action_type='LIKE' AND a.request_id LIKE 'legacy-square-like-%' AND NOT EXISTS(
+              SELECT 1 FROM ums_creative_square_like l JOIN ums_creative_square s ON s.id=l.data_id
+              WHERE l.like_type=1 AND l.member_id=a.member_id AND s.member_id IS NOT NULL
+                AND a.post_id=l.data_id AND a.action_type='LIKE' AND BINARY a.source=BINARY 'LEGACY_MIGRATION'
+                AND BINARY a.request_id=BINARY CONCAT('legacy-square-like-',l.id)))"""),
+        ("legacy-comment-like-%", "community_post_comment_action", """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_comment_action a
+            WHERE a.action_type='LIKE' AND a.request_id LIKE 'legacy-comment-like-%' AND NOT EXISTS(
+              SELECT 1 FROM ums_comment_like l JOIN ums_comment c ON c.id=l.comment_id
+              JOIN ums_creative_square s ON s.id=c.owner_id AND s.member_id IS NOT NULL
+              WHERE c.owner_type=3 AND c.member_id IS NOT NULL AND l.member_id=a.member_id
+                AND a.comment_id=l.comment_id AND a.action_type='LIKE'
+                AND BINARY a.request_id=BINARY CONCAT('legacy-comment-like-',l.id)))"""),
+    )
+    for prefix, target, query in prefixes:
+        if comment_counter and target != 'community_post_comment_action':
+            continue
+        if not comment_counter and not re.search(r"request_id\s+like\s+'" + re.escape(prefix) + "'", text):
+            continue
+        cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_name=%s", (db, target))
+        if cur.fetchone() == (0,):
+            continue
+        cur.execute(query)
+        if cur.fetchone() != (1,):
+            raise ValueError("legacy owner preflight counter provenance ambiguous: " + target)
+
+
+def assert_community_legacy_owner_preflight(cur, db, comment_counter=False):
+    """Read all legacy identity conflicts before *any* statement can commit."""
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema=%s", (db,))
+    tables = {row[0].lower() for row in cur.fetchall()}
+    # Old nullable table shapes must not turn NOT(identity equality) into UNKNOWN.
+    identity_columns = {
+        'community_post': ('author_id', 'client_request_id'),
+        'community_post_comment': ('post_id', 'author_id', 'client_request_id'),
+        'community_post_media': ('owner_member_id', 'upload_request_id'),
+        'community_post_member_action': ('post_id', 'member_id', 'action_type', 'request_id'),
+        'community_post_comment_action': ('comment_id', 'member_id', 'action_type', 'request_id'),
+        'community_post_reference': ('post_id', 'reference_type', 'reference_id'),
+    }
+    if comment_counter:
+        identity_columns = {name: columns for name, columns in identity_columns.items()
+                            if name in {'community_post', 'community_post_comment', 'community_post_comment_action'}}
+    for table, columns in identity_columns.items():
+        if table in tables:
+            nulls = ' OR '.join('`' + column + '` IS NULL' for column in columns)
+            cur.execute('SELECT NOT EXISTS(SELECT 1 FROM `' + table + '` WHERE ' + nulls + ')')
+            if cur.fetchone() != (1,):
+                raise ValueError('legacy owner preflight conflict: nullable identity in ' + table)
+    comment_tree = """WITH RECURSIVE legacy_owner_comment_tree AS (
+      SELECT id, owner_id, id root_id FROM ums_comment
+      WHERE owner_type=3 AND (reply_id IS NULL OR reply_id=0)
+      UNION ALL
+      SELECT child.id, child.owner_id, tree.root_id FROM ums_comment child
+      JOIN legacy_owner_comment_tree tree ON child.reply_id=tree.id AND child.owner_id=tree.owner_id
+      WHERE child.owner_type=3) """
+    if {"ums_comment", "ums_creative_square"}.issubset(tables):
+        cur.execute(comment_tree + """SELECT NOT EXISTS (
+          SELECT 1 FROM ums_comment c JOIN ums_creative_square s ON s.id=c.owner_id
+          LEFT JOIN legacy_owner_comment_tree tree ON tree.id=c.id AND tree.owner_id=c.owner_id
+          WHERE c.owner_type=3 AND c.member_id IS NOT NULL AND s.member_id IS NOT NULL
+            AND tree.id IS NULL)""")
+        if cur.fetchone() != (1,):
+            raise ValueError("legacy owner preflight conflict: source comment tree")
+    checks = [
+        ("source-post-like-unique", {"ums_creative_square_like", "ums_creative_square"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_creative_square_like l JOIN ums_creative_square s ON s.id=l.data_id
+            WHERE l.like_type=1 AND l.member_id IS NOT NULL AND s.member_id IS NOT NULL
+            GROUP BY l.data_id,l.member_id HAVING COUNT(*)>1)"""),
+        ("source-comment-like-unique", {"ums_comment_like", "ums_comment", "ums_creative_square"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_comment_like l JOIN ums_comment c ON c.id=l.comment_id
+            JOIN ums_creative_square s ON s.id=c.owner_id AND s.member_id IS NOT NULL
+            WHERE c.owner_type=3 AND c.member_id IS NOT NULL AND l.member_id IS NOT NULL
+            GROUP BY l.comment_id,l.member_id HAVING COUNT(*)>1)"""),
+        ("comment-target", {"ums_comment", "ums_creative_square", "community_post"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_comment c JOIN community_post p ON p.id=c.owner_id
+            WHERE c.owner_type=3 AND c.member_id IS NOT NULL AND NOT EXISTS(
+              SELECT 1 FROM ums_creative_square s WHERE s.id=p.id AND s.member_id=p.author_id
+                AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)))"""),
+        ("post-like-target", {"ums_creative_square_like", "ums_creative_square", "community_post"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_creative_square_like l JOIN community_post p ON p.id=l.data_id
+            WHERE l.like_type=1 AND l.member_id IS NOT NULL AND NOT EXISTS(
+              SELECT 1 FROM ums_creative_square s WHERE s.id=p.id AND s.member_id=p.author_id
+                AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)))"""),
+        ("comment-like-target", {"ums_comment_like", "ums_comment", "ums_creative_square", "community_post", "community_post_comment"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_comment_like l JOIN community_post_comment n ON n.id=l.comment_id
+            WHERE l.member_id IS NOT NULL AND NOT EXISTS(
+              SELECT 1 FROM ums_comment c JOIN ums_creative_square s ON s.id=c.owner_id
+              JOIN community_post p ON p.id=s.id AND p.author_id=s.member_id
+                AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)
+              WHERE c.owner_type=3 AND c.member_id=n.author_id AND c.id=n.id AND c.owner_id=n.post_id
+                AND BINARY n.client_request_id=BINARY CONCAT('legacy-square-comment-',c.id)))"""),
+        ("post", {"ums_creative_square", "community_post"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_creative_square s JOIN community_post p
+            ON p.id=s.id OR (p.author_id=s.member_id AND p.client_request_id=CONCAT('legacy-square-',s.id))
+            WHERE s.member_id IS NOT NULL AND NOT
+              (p.id=s.id AND p.author_id=s.member_id AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)))"""),
+        ("comment", {"ums_comment", "ums_creative_square", "community_post_comment"}, comment_tree + """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_comment c
+            JOIN ums_creative_square s ON s.id=c.owner_id AND s.member_id IS NOT NULL
+            JOIN legacy_owner_comment_tree tree ON tree.id=c.id AND tree.owner_id=c.owner_id
+            JOIN community_post_comment n ON n.id=c.id OR
+              (n.author_id=c.member_id AND n.client_request_id=CONCAT('legacy-square-comment-',c.id))
+            WHERE c.owner_type=3 AND c.member_id IS NOT NULL AND NOT
+              (n.id=c.id AND (n.post_id<=>c.owner_id) AND n.author_id=c.member_id
+               AND BINARY n.client_request_id=BINARY CONCAT('legacy-square-comment-',c.id)
+               AND (n.parent_id <=> NULLIF(c.reply_id,0))
+               AND (n.root_id <=> CASE WHEN c.reply_id IS NULL OR c.reply_id=0 THEN NULL ELSE tree.root_id END)))"""),
+        ("media", {"ums_creative_square", "community_post", "community_post_media"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_media m WHERE
+            (m.upload_request_id LIKE 'legacy-square-media-%' OR
+             m.upload_request_id LIKE 'legacy-square-file-%' OR m.upload_request_id LIKE 'legacy-square-route-%')
+            AND NOT EXISTS(SELECT 1 FROM ums_creative_square s JOIN community_post p
+              ON p.id=s.id AND p.author_id=s.member_id AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)
+              WHERE m.owner_member_id=s.member_id AND m.post_id=p.id AND
+                (BINARY m.upload_request_id LIKE BINARY CONCAT('legacy-square-media-',s.id,'-%') OR
+                 BINARY m.upload_request_id LIKE BINARY CONCAT('legacy-square-file-',s.id,'-%') OR
+                 BINARY m.upload_request_id=BINARY CONCAT('legacy-square-route-',s.id))))"""),
+        ("post-like", {"ums_creative_square_like", "ums_creative_square", "community_post_member_action"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_creative_square_like l
+            JOIN ums_creative_square s ON s.id=l.data_id AND s.member_id IS NOT NULL
+            JOIN community_post_member_action a ON (a.post_id=l.data_id AND a.member_id=l.member_id AND a.action_type='LIKE')
+               OR (a.member_id=l.member_id AND a.request_id=CONCAT('legacy-square-like-',l.id))
+            WHERE l.like_type=1 AND l.member_id IS NOT NULL AND NOT
+              (a.post_id=l.data_id AND a.member_id=l.member_id AND a.action_type='LIKE'
+               AND BINARY a.request_id=BINARY CONCAT('legacy-square-like-',l.id) AND (BINARY a.source<=>BINARY 'LEGACY_MIGRATION')))"""),
+        ("comment-like", {"ums_comment_like", "ums_comment", "community_post_comment_action"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_comment_like l JOIN ums_comment c
+            ON c.id=l.comment_id AND c.owner_type=3 AND c.member_id IS NOT NULL
+            JOIN community_post_comment_action a ON (a.comment_id=l.comment_id AND a.member_id=l.member_id AND a.action_type='LIKE')
+              OR (a.member_id=l.member_id AND a.request_id=CONCAT('legacy-comment-like-',l.id))
+            WHERE l.member_id IS NOT NULL AND NOT
+              (a.comment_id=l.comment_id AND a.member_id=l.member_id AND a.action_type='LIKE'
+               AND BINARY a.request_id=BINARY CONCAT('legacy-comment-like-',l.id)))"""),
+        ("reference", {"ums_creative_square", "community_post", "community_post_reference"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_reference r
+            WHERE JSON_EXTRACT(r.snapshot_json,'$.legacy')=TRUE AND NOT EXISTS(
+              SELECT 1 FROM ums_creative_square s JOIN community_post p
+                ON p.id=s.id AND p.author_id=s.member_id AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)
+              WHERE r.post_id=p.id AND r.reference_id=s.data_id
+                AND r.reference_type=CASE WHEN s.data_type=1 THEN 'ACTIVITY' WHEN s.data_type=2 THEN 'TOPIC' WHEN s.data_type=3 THEN 'ROUTE' ELSE '' END))"""),
+        ("reference-key", {"ums_creative_square", "community_post", "community_post_reference"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM ums_creative_square s
+            JOIN community_post p ON p.id=s.id
+            JOIN community_post_reference r ON r.post_id=s.id AND r.reference_id=s.data_id
+              AND r.reference_type=CASE WHEN s.data_type=1 THEN 'ACTIVITY' WHEN s.data_type=2 THEN 'TOPIC' ELSE 'ROUTE' END
+            WHERE s.data_id>0 AND s.data_type IN(1,2,3) AND NOT
+              (p.author_id=s.member_id AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',s.id)
+               AND (JSON_EXTRACT(r.snapshot_json,'$.legacy') <=> TRUE)))"""),
+    ]
+    if comment_counter:
+        # Author edits legitimately rebuild reference snapshots; unlike/re-like replaces
+        # old LIKE request IDs. Neither is a replay target of the count-only UPDATE.
+        checks = [check for check in checks if check[0] in {'comment-target', 'post', 'comment'}]
+        checks.append(("counter-comment-source", {
+            "ums_comment", "ums_creative_square", "community_post", "community_post_comment"}, """
+          SELECT NOT EXISTS(SELECT 1 FROM community_post_comment n
+            WHERE BINARY n.client_request_id=BINARY CONCAT('legacy-square-comment-',n.id)
+              AND NOT EXISTS(SELECT 1 FROM ums_comment old_comment
+                JOIN community_post p ON p.id=old_comment.owner_id
+                JOIN ums_creative_square s ON s.id=p.id AND s.member_id=p.author_id
+                WHERE old_comment.id=n.id AND old_comment.owner_type=3
+                  AND old_comment.member_id=n.author_id AND old_comment.owner_id=n.post_id
+                  AND BINARY p.client_request_id=BINARY CONCAT('legacy-square-',p.id)))"""))
+    for label, required, query in checks:
+        targets = {name for name in required if name.startswith("community_")}
+        if not targets.issubset(tables):
+            continue  # First schema installation has no existing target rows to collide.
+        if not required.issubset(tables):
+            raise ValueError("legacy owner preflight missing source: " + label)
+        cur.execute(query)
+        row = cur.fetchone()
+        if row is None or len(row) != 1 or row[0] != 1:
+            raise ValueError("legacy owner preflight conflict: " + label + "; restore verified backup; no writes permitted")
+    print("legacy owner preflight: all existing identity mappings passed (read-only)")
+
+
 def run_connected(args, statements, splitter_src, conn, db):
     """Run the database-backed part of the CLI and always close its cursor."""
     cur = conn.cursor()
@@ -657,6 +879,21 @@ def run_connected(args, statements, splitter_src, conn, db):
 
         if splitter_src:
             print(f"分句器:{splitter_src}")
+
+        if requires_community_legacy_owner_guard(statements):
+            print("REQUIRED: exclusive maintenance window; stop application writes before legacy DDL/backfill. "
+                  "Without that locked window do not execute; read-only preflight is not a concurrency lock.")
+            try:
+                assert_community_legacy_statement_scope(statements, db)
+                if exact_community_comment_counter_scope(statements, args.transaction):
+                    assert_community_legacy_owner_preflight(cur, db, comment_counter=True)
+                    assert_community_legacy_counter_preflight(cur, db, statements, comment_counter=True)
+                else:
+                    assert_community_legacy_owner_preflight(cur, db)
+                    assert_community_legacy_counter_preflight(cur, db, statements)
+            except Exception as error:
+                print(f"legacy owner preflight failed before all DDL/DML: {error}")
+                sys.exit(1)
 
         if args.transaction:
             try:

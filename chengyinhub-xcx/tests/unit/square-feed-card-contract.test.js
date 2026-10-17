@@ -109,7 +109,7 @@ function assertImmersiveCardContract(files) {
   // 2026-09-02 Figma 297:1827:正文外面多包了一层 .post-card__body(装「正文 + 展开」两行),
   // wx:if 跟着上移到包层 —— 守的还是同一条:没正文就不渲染这一块。
   assert.match(files.postCardWxml, /class="post-card__body"[^>]*wx:if="\{\{post\.contents\}\}"/)
-  assert.match(files.postCardWxml, /class="post-card__body"[\s\S]*class="post-card__text"/)
+  assert.match(files.postCardWxml, /class="post-card__body"[\s\S]*class="post-card__text[^\"]*"/)
   assert.match(files.detailWxml, /class="post-text"[^>]*wx:if="\{\{\s*info\.contents\s*\}\}"/)
   // 2026-09-02 Figma 297:1827:scroll-view 外面多包了一层 .post-card__gallery(给页码 pill
   // 一个 position:relative 的锚),wx:if 跟着上移;守的还是同一条:有图就得渲染出来。

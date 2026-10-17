@@ -26,6 +26,7 @@ let requests
 let switched
 
 global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated leaderboard reader fixture.
   globalData: {},
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   sendRequest: (req) => { requests.push(req) },

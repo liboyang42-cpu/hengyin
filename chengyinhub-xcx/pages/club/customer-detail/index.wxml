@@ -13,9 +13,9 @@
             title="当前岗位没有客户查看权限" sub="{{errorText || '当前账号没有查看权限'}}"
             retry="" bind:back="goBack" auto-back custom-back />
   <!-- K2-E 加载失败 -->
-  <cy-error wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="客户详情加载失败"
+  <cy-error load-failure wx:elif="{{state === 'error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />
 
   <block wx:elif="{{state === 'ready'}}">

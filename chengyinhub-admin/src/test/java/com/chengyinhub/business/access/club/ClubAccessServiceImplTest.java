@@ -51,6 +51,10 @@ class ClubAccessServiceImplTest {
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "umsMemberMapper", accounts);
         when(accounts.lockActiveMemberById(any())).thenAnswer(call -> call.getArgument(0));
+        when(accounts.selectRolePermissionSubject(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.UmsMember owner = new com.chengyinhub.business.domain.UmsMember();
+            owner.setId(call.getArgument(0)); owner.setRole("club"); owner.setStatus(1L); owner.setDelFlag(0); return owner;
+        });
     }
 
     @Test
@@ -64,6 +68,16 @@ class ClubAccessServiceImplTest {
         assertEquals(900L, access.getOwnerMemberId());
         assertTrue(access.getRoleCodes().contains(ClubRoleCode.CLUB_OWNER));
         assertTrue(access.hasPermission(ClubPermission.ROLE_MANAGE));
+    }
+
+    @Test
+    void clubProfileDoesNotGrantOwnerPermissionToPlayerRole() {
+        when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));
+        com.chengyinhub.business.domain.UmsMember player = new com.chengyinhub.business.domain.UmsMember();
+        player.setId(900L); player.setRole("player");
+        when(accounts.selectRolePermissionSubject(900L)).thenReturn(player);
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.require(900L, 11L, null, ClubPermission.ROLE_MANAGE)).getCode());
     }
 
     @Test

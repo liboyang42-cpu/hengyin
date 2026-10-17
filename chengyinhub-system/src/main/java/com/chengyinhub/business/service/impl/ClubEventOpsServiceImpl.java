@@ -125,7 +125,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         ClubEventSeries series = clubEventOpsMapper.selectActiveSeriesByIdAndClub(seriesId, clubId);
         validateReadableSeries(series, clubId);
         List<ClubEventOccurrence> rows = clubEventOpsMapper.selectFutureOccurrences(
-                seriesId, clubId, new Date());
+                seriesId, clubId, futureDateBoundary());
         List<String> dates = new ArrayList<>();
         if (rows != null) for (ClubEventOccurrence row : rows) {
             if (row == null || !seriesId.equals(row.getSeriesId()) || !positive(row.getActivityId())
@@ -327,7 +327,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
         Map<LocalDate, ClubEventOccurrence> existingByDate = new HashMap<>();
         Date now = new Date();
-        List<ClubEventOccurrence> existing = clubEventOpsMapper.selectFutureOccurrencesForUpdate(series.getId(), now);
+        List<ClubEventOccurrence> existing = clubEventOpsMapper.selectFutureOccurrencesForUpdate(series.getId(), futureDateBoundary());
         if (existing != null) for (ClubEventOccurrence occurrence : existing) {
             if (occurrence == null || !series.getId().equals(occurrence.getSeriesId())
                     || occurrence.getId() == null || occurrence.getActivityId() == null
@@ -945,6 +945,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
      * 物化场次的集合绝对时刻(Asia/Shanghai)。occurrence_at 与 activity.start_date 都用它 ——
      * 两个字段必须是同一个值,否则场次列表显示 00:00、退款钟却按另一个时刻算。
      */
+    private Date futureDateBoundary() {
+        return Date.from(todayShanghai().plusDays(1).atStartOfDay(ZoneId.of("Asia/Shanghai")).toInstant());
+    }
+
     private Date assemblyMoment(LocalDate date, String startTime) {
         LocalTime time = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"));
         return Date.from(LocalDateTime.of(date, time).atZone(ZoneId.of("Asia/Shanghai")).toInstant());

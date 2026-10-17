@@ -13,7 +13,7 @@
     </view>
     <text class="cn-quota" wx:if="{{quotaState === 'ready'}}">在架据点 {{used}}/{{max}}<block wx:if="{{used >= max}}"> · {{max === 0 ? '当前没有据点配额，暂不能投放新据点' : '已满，先下线一个再投放'}}</block></text>
     <text class="cn-quota" wx:elif="{{quotaState === 'loading'}}">正在读取据点配额</text>
-    <cy-inline-error class="cn-quota-error" wx:elif="{{quotaState === 'unknown'}}"
+    <cy-inline-error load-failure class="cn-quota-error" wx:elif="{{quotaState === 'unknown'}}"
       kind="data" title="据点配额暂未取回" sub="请重新读取后再投放"
       action="重试" bind:action="retryQuota" />
   </view>
@@ -32,7 +32,7 @@
   </view>
 
   <cy-skeleton type="list" count="{{2}}" wx:if="{{accessState === 'loading' || (accessState === 'ready' && loading)}}" />
-  <cy-error class="cn-retry cy-fade-in" size="lg" style="display:flex;flex-direction:column;flex:1;min-height:0;"
+  <cy-error load-failure class="cn-retry cy-fade-in" size="lg" style="display:flex;flex-direction:column;flex:1;min-height:0;"
     icon="/images/no_data.svg" wx:elif="{{accessState === 'error' || (accessState === 'ready' && loadErr)}}" fill
     title="{{accessState === 'error' ? '商家权限加载失败' : '据点加载失败'}}"
     sub="{{accessState === 'error' ? accessErrorText : '网络可能不稳定，再试一次'}}" retry="重试" bind:retry="retry" auto-back="{{accessState === 'error' || !listEverLoaded}}" />
@@ -96,9 +96,9 @@
   <cy-sheet show="{{showClaim}}" title="认领平台节点" bind:close="toggleClaim">
     <view class="cn-claim">
       <cy-skeleton type="list" count="2" wx:if="{{claimState === 'loading'}}" />
-      <cy-error class="cn-claim-state" wx:elif="{{claimState === 'error' && !claimable.length}}"
+      <cy-error load-failure class="cn-claim-state" wx:elif="{{claimState === 'error' && !claimable.length}}"
         title="可认领节点加载失败" sub="{{claimError}}" retry="重试" bind:retry="retryClaimable" />
-      <cy-inline-error class="cn-claim-state" wx:elif="{{claimState === 'error'}}" kind="network"
+      <cy-inline-error load-failure class="cn-claim-state" wx:elif="{{claimState === 'error'}}" kind="network"
         title="可认领节点没有更新" sub="{{claimError}}" action="重试" bind:action="retryClaimable" />
       <cy-empty class="cy-fade-in" wx:elif="{{claimState === 'ready' && !claimable.length}}" title="还没有可认领的节点" />
       <view class="cn-claim-row" wx:for="{{claimable}}" wx:key="id">
@@ -124,7 +124,7 @@
       <cy-skeleton class="cn-poster-state" wx:if="{{posterSheet.state === 'loading'}}" type="detail" />
       <image class="cn-poster-img cy-fade-in" wx:elif="{{posterSheet.state === 'ready' && posterSheet.qrcodeUrl}}" src="{{posterSheet.qrcodeUrl}}"
         mode="aspectFit" show-menu-by-longpress />
-      <cy-error class="cn-poster-state" wx:elif="{{posterSheet.state === 'error'}}" size="lg" title="打卡码加载失败"
+      <cy-error load-failure class="cn-poster-state" wx:elif="{{posterSheet.state === 'error'}}" size="lg" title="打卡码加载失败"
         sub="{{posterSheet.errorText}}" retry="重新取码" bind:retry="retryPosterCode" />
       <block wx:if="{{posterSheet.state === 'ready'}}">
         <text class="cn-poster-name">{{posterSheet.nodeName}}</text>

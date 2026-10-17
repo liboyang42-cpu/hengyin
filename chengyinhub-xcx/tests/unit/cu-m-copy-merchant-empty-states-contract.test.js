@@ -113,7 +113,11 @@ test('CU-M-107 活动票种空态不再把责任固定指向主理人', () => {
 // CU-M-178:「过微信内容安全再落库」是后端审核与存储步骤,不是商家要看的产品说明。
 test('CU-M-178 作品命名不再写内部实现用语', () => {
   const wxml = readWxml('pages/publish/temp/index.wxml')
-  assert.match(wxml, /作品命名<\/view>[\s\S]{0,150}data-key="diyName" bindchange="onAdvancedToggle"/)
+  // R5 作品命名新入口已移除；旧值只读展示，审核实现文案仍禁止进入产品页面。
+  assert.doesNotMatch(wxml, /data-key="diyName" bindchange="onAdvancedToggle"/)
+  const row = require('../../pages/publish/temp/r5-editor.js').legacyRows({ diyName: { enabled: true, title: '旧作品', opaque: [3] } }).find(row => row.path === 'diyName')
+  assert.equal(row.readOnly, true); assert.deepEqual(JSON.parse(row.displayValue), { enabled: true, title: '旧作品', opaque: [3] })
+  assert.match(wxml, /item.displayValue/)
   assert.doesNotMatch(wxml, /<view class="cg-rw-sub">作品名称提交后需审核<\/view>/)
   assert.doesNotMatch(wxml, /内容安全|落库/)
 })

@@ -26,7 +26,7 @@ function hasPreviewMotionContract(wxml, wxss) {
     && /class="cg-pv-medal-ico"/.test(wxml)
     && !/cg-pv-roadmap|cg-pv-medal-coin|cg-pv-medal-face--back/.test(wxml)
     && /class="cg-gsheet-card[^"]*"/.test(wxml)
-    && /bindtap="pickGame"[^>]*hover-class="cy-pressed"/.test(wxml)
+    && /bindtap="pickR5GameFromSheet"[^>]*hover-class="cy-pressed"/.test(wxml)
     && /\.cg-pv-dot\s*\{[^}]*transition:[^;}]*var\(--cy-motion-/s.test(wxss)
     && /\.cg--reduced-motion[^}]*animation:\s*none\s*!important/s.test(wxss)
     && oneShotRules

@@ -76,6 +76,7 @@ class ApiRoamCoordinateBoundaryTest
 
         controller = new StubController();
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
+        ReflectionTestUtils.setField(controller,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         ReflectionTestUtils.setField(controller, "roamSessionWriteService", writeService);
         ReflectionTestUtils.setField(controller, "growthService", growthService);
         ReflectionTestUtils.setField(controller, "memberVisitedPoiMapper", visitedPoiMapper);

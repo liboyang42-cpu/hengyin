@@ -43,6 +43,7 @@ public class SelfMemberVO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     private Integer followNum;
+    private Integer friendNum;
     private Integer fansNum;
     private Integer topicNum;
     private Integer activityNum;
@@ -128,6 +129,9 @@ public class SelfMemberVO {
 
     public Integer getFollowNum() { return followNum; }
     public void setFollowNum(Integer value) { followNum = value; }
+
+    public Integer getFriendNum() { return friendNum; }
+    public void setFriendNum(Integer value) { friendNum = value; }
 
     public Integer getFansNum() { return fansNum; }
     public void setFansNum(Integer value) { fansNum = value; }

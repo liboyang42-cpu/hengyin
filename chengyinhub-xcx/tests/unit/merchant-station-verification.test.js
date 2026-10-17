@@ -142,3 +142,31 @@ test('参与详情快捷扫码识别多据点未核销态,不会退化为普通�
   assert.match(js, /d\.needChapterChoice\s*\|\|\s*d\.needStationChoice/);
   assert.match(js, /多个章节/);
 });
+
+test('商家扫码历史章与待核销章并存必须点选，重试返回原回执', () => {
+  const page=makePage(); page.goScanQR();
+  requests[0].success({code:500,data:{needChapterChoice:true, chapters:[{id:31,name:'历史章',replayed:true,redemptionId:66},{id:32,name:'待核销章'}]}});
+  assert.equal(requests.length,1);
+  assert.equal(page.data.chapterSheet.items.length,2);
+  assert.equal(page.data.verificationResult.show,false);
+  page.onChapterPick({currentTarget:{dataset:{id:31}}});
+  assert.deepEqual(requests[1].data,{code:'TICKET-1',chapterId:31});
+  requests[1].success({code:200,data:{replayed:true,redemptionId:66,completionEarnedXp:36}});
+  assert.equal(page.data.verificationResult.state,'duplicate');
+  assert.equal(page.data.verificationResult.message,'该章节已核销，请勿重复提供权益');
+});
+
+test('参与详情实际快捷扫码显示重复回执而非核销成功', () => {
+  let definition; const toasts=[];
+  global.Component = config => {definition=config;};
+  wx.showToast=options=>toasts.push(options);
+  const target=path.join(ROOT,'subpackageMember/components/scene-member-participation-detail/index.js');
+  delete require.cache[require.resolve(target)];require(target);
+  const component=Object.assign({},definition.methods);
+  component.data=JSON.parse(JSON.stringify(definition.data));
+  component.setData=patch=>Object.assign(component.data,patch);
+  component._submitVerification=(key,title,request,callback)=>callback({code:200,data:{replayed:true,redemptionId:66,completionEarnedXp:36}});
+  component.goScanQR();
+  assert.equal(toasts.at(-1).title,'已核销：该章节已核销，请勿重复提供权益');
+  assert.equal(toasts.at(-1).icon,'none');
+});

@@ -510,7 +510,7 @@ function assertFailSheet(wxml, json) {
   assert.ok(sheet, '失败态必须由 cy-result-sheet 承载')
   const tag = sheet[0]
   assert.equal(json.usingComponents['cy-result-sheet'], '/components/cy/result-sheet/index')
-  assert.match(tag, /show="\{\{loadState==='failed_business' \|\| loadState==='failed_network'\}\}"/, '两种失败态都要出面板')
+  assert.match(tag, /show="\{\{loadFailureVisible\}\}"/, '只有参数与权限错误保留可见面板')
   assert.match(tag, /kind="fail"/)
   assert.match(tag, /why="\{\{loadErrorText\}\}"/, '失败不静默:面板必须带原因')
   assert.match(tag, /duration="\{\{2000\}\}"/, '停 2s 让用户读到原因')
@@ -519,7 +519,7 @@ function assertFailSheet(wxml, json) {
   assert.doesNotMatch(wxml, /order-load-(error|retry|back|contact)/, '旧三按钮失败卡不得回潮')
 }
 
-test('orderinfo:加载失败按稿 356:5220 走零按钮结果半屏,2s 后回订单列表', () => {
+test('orderinfo:参数与权限错误保留零按钮结果半屏，读取失败留白', () => {
   const wxml = fs.readFileSync(ORDERINFO_WXML, 'utf8')
   const json = JSON.parse(fs.readFileSync(ORDERINFO_JS.replace(/js$/, 'json'), 'utf8'))
   assertFailSheet(wxml, json)
@@ -548,7 +548,7 @@ test('negative control: 失败面板加回按钮 / 丢掉原因 / 关闭不回�
   }
 })
 
-test('orderinfo:订单已在屏时后台刷新失败没有面板,toast 仍是唯一信号(不静默)', () => {
+test('orderinfo:订单已在屏时后台刷新失败保留旧内容，无面板和toast', () => {
   const vm = loadPage()
   vm.data.orderId = '1001'
   vm.onLoad()
@@ -557,7 +557,7 @@ test('orderinfo:订单已在屏时后台刷新失败没有面板,toast 仍是唯
   vm.getData('1001')
   infoRequests()[1].fail({ errMsg: 'request:fail timeout' })
   assert.equal(vm.data.loadState, 'ready', '刷新失败不顶掉已渲染订单')
-  assert.equal(sandbox.toasts.length, 1, '已在屏刷新失败必须仍有 toast')
+  assert.equal(sandbox.toasts.length, 0, '读取刷新失败保留内容且不弹提示')
 })
 
 // 2026-08-03 场景弹窗规范与 2026-08-04 交接覆盖 07-30 的页面级例外:
@@ -626,7 +626,7 @@ function detailChildrenOutsideGates(wxml) {
     if (parent === 'detail') {
       const cls = (raw.match(/class="([^"]*)"/) || [, ''])[1]
       const gated = /\border-load-loading\b|\bdavid\b/.test(cls)
-        || (tag === 'cy-result-sheet' && /show="\{\{loadState==='failed_/.test(raw))
+        || (tag === 'cy-result-sheet' && /show="\{\{loadFailureVisible\}\}"/.test(raw))
       const pageChrome = tag === 'cy-nav-bar' || tag === 'cy-page-title'
       if (!gated && !pageChrome && !NAV_SPACER.test(raw)) strays.push(raw)
     }

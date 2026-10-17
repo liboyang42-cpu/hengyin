@@ -44,3 +44,7 @@ export function submitTopicSaleReview(topicId) {
     method: 'post'
   })
 }
+
+export function reviewMediaAsset(data) {
+  return request({ url: data.status === 1 ? '/business/mediaReview/approve' : '/business/mediaReview/reject', method: 'post', data })
+}

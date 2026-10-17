@@ -49,3 +49,11 @@ test('通关探索值回执只在 earnedXp>0 的首次响应展示', () => {
     code: 200, msg: '核销成功', data: { completionEarnedXp: 36 }
   }, '核销成功'), '核销成功 · 玩家通关 +36 探索值已到账', 'profile toast 复用同一回执口径');
 });
+
+test('章节重放只展示原回执，严格布尔标记且不重复展示奖励', () => {
+  const replay = {code: 200, msg: '核销成功', data: {replayed: true, redemptionId: 66, completionEarnedXp: 36}};
+  assert.deepEqual(resolveVerificationResult(replay), {state: 'duplicate', title: '已核销', message: '该章节已核销，请勿重复提供权益', show: true});
+  assert.equal(completionReceiptMessage(replay, '核销成功'), '该章节已核销，请勿重复提供权益');
+  assert.equal(resolveVerificationResult({code: 500, msg: '已退款', data: {replayed: true}}).state, 'failure');
+  assert.equal(resolveVerificationResult({code: 200, data: {replayed: 'true'}}).state, 'success');
+});

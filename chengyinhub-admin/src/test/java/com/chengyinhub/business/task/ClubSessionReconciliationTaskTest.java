@@ -8,9 +8,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -41,8 +43,9 @@ class ClubSessionReconciliationTaskTest {
 
         task.run();
 
-        verify(alarmService).alarm(eq("俱乐部合作主题缺少带队场次"), contains("topicId=31"));
-        verify(alarmService).alarm(eq("俱乐部合作主题缺少带队场次"), contains("clubId=21"));
+        verify(alarmService).alarmThrottled(eq("monitor.club_session.missing"), eq("俱乐部合作主题缺少带队场次"),
+                contains("topicId=31/clubId=21"));
+        verify(alarmService, never()).alarm(anyString(), anyString());
     }
 
     private ClubSessionReconciliationTask task(CmsActivityMapper mapper, AlarmService alarmService) {

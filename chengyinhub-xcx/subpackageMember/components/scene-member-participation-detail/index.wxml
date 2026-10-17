@@ -11,7 +11,7 @@
 <!-- 缺参 ≠ 加载失败：缺参走 missing-param（info 图标 + 返回），真错误才走 cy-error。
      R2 动作槽：缺 id 给「返回参与列表」，有 id 给「重试」，标签与行为一一对应。 -->
 <cy-empty wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" title="缺少参与记录" sub="请返回列表重新进入" cta="返回参与列表" bind:cta="onErrorAction" fill class="cy-fill-state" size="lg" />
-<cy-error wx:elif="{{loadState === 'error'}}" title="参与详情没能打开" sub="{{loadErrorText}}" retry="{{errorActionText}}" bind:retry="onErrorAction" fill class="cy-fill-state" size="lg" />
+<cy-error load-failure wx:elif="{{loadState === 'error'}}" title="参与详情没能打开" sub="{{loadErrorText}}" retry="{{errorActionText}}" bind:retry="onErrorAction" fill class="cy-fill-state" size="lg" />
 
 <block wx:else>
 <view class="cyinfotop">

@@ -139,6 +139,51 @@ class ApiCoopMerchantAccessTest {
         org.junit.jupiter.api.Assertions.assertNull(received.getPartner().getPhone());
     }
 
+    @Test
+    void personalIdCollisionDoesNotExposeAnotherClubsInvite() {
+        assertEquals(0, sentForClubInvite(902L, false).size());
+    }
+
+    @Test
+    void ownedClubInviteAppearsOnceWhenClubIdEqualsMemberId() {
+        List<CoopInvite> sent = sentForClubInvite(PRINCIPAL, true);
+        assertEquals(1, sent.size());
+        assertEquals("发起俱乐部", sent.get(0).getViewerPartyName());
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<CoopInvite> sentForClubInvite(long clubOwner, boolean ownsClub) {
+        ICoopInviteService service = mock(ICoopInviteService.class);
+        IMerchantAccessService access = mock(IMerchantAccessService.class);
+        IClubService clubs = mock(IClubService.class);
+        when(access.require(PRINCIPAL, MerchantPermission.COOP_MANAGE))
+                .thenThrow(new ServiceException("无商家身份", 403));
+        Club from = new Club();
+        from.setId(PRINCIPAL); from.setMemberId(clubOwner); from.setName("发起俱乐部");
+        Club to = new Club();
+        to.setId(7002L); to.setMemberId(903L); to.setName("接收俱乐部");
+        when(clubs.selectClubById(PRINCIPAL)).thenReturn(from);
+        when(clubs.selectClubById(7002L)).thenReturn(to);
+        when(clubs.selectClubsByMemberId(PRINCIPAL)).thenReturn(
+                ownsClub ? Collections.singletonList(from) : Collections.emptyList());
+        CoopInvite invite = new CoopInvite();
+        invite.setId(10L); invite.setInviteType(1); invite.setStatus(0);
+        invite.setFromType("club"); invite.setFromId(PRINCIPAL);
+        invite.setToType("club"); invite.setToId(7002L);
+        when(service.selectCoopInviteListReadOnly(any(CoopInvite.class))).thenAnswer(call -> {
+            CoopInvite query = call.getArgument(0);
+            return Long.valueOf(PRINCIPAL).equals(query.getFromId())
+                    ? Collections.singletonList(invite) : Collections.emptyList();
+        });
+        ApiCoopController controller = loggedInController();
+        ReflectionTestUtils.setField(controller, "coopInviteService", service);
+        ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "mmsMerchantService", mock(IMmsMerchantService.class));
+        ReflectionTestUtils.setField(controller, "clubService", clubs);
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) controller.list(null).get(AjaxResult.DATA_TAG);
+        return (List<CoopInvite>) data.get("sent");
+    }
+
     private static ApiCoopController loggedInController() {
         ApiCoopController controller = spy(new ApiCoopController());
         doReturn(PRINCIPAL).when(controller).getAppUserId();

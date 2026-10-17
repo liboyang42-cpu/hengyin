@@ -4,6 +4,7 @@ const cyLoading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
@@ -23,7 +24,8 @@ function identityKey() {
 function failureKind(value) {
   const code = value && (value.code != null ? value.code : value.statusCode);
   const message = String(value && (value.msg || value.message) || '');
-  if (String(code) === '401' || String(code) === '403' || /请先登录|无权|仅.+可|资格|身份|主理人/.test(message)) return 'permission';
+  if (String(code) === '401') return 'login';
+  if (String(code) === '403' || /请先登录|无权|仅.+可|资格|身份|主理人/.test(message)) return 'permission';
   if (/request:fail|timeout/i.test(String(value && value.errMsg || ''))) return 'network';
   return 'server';
 }
@@ -85,8 +87,10 @@ function linkRepliedApplies(applies, sentInvites) {
   return (applies || []).map(function (it) {
     if (!it || it.status !== 3) return it;
     const inv = byApply[String(it.applyId)];
-    if (!inv) return it;
-    return Object.assign({}, it, {
+    const row = Object.assign({}, it, { statusText: '已回邀约' });
+    delete row.linkedInviteId;
+    if (!inv) return row;
+    return Object.assign(row, {
       linkedInviteId: inv.inviteId,
       statusText: inv.status === 1 ? '对方已接受' : '已回邀约',
     });
@@ -169,13 +173,15 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
     this.load();
     this._initWorkflow();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._unloaded = true;
     this._listEpoch = (this._listEpoch || 0) + 1;
     this._applyEpoch = (this._applyEpoch || 0) + 1;
     this._listLoading = false;
@@ -193,7 +199,54 @@ Page({
     merchantTheme.merchantPageRestore();
   },
 
+  _recoverReadSession(value, epoch, key) {
+    if (this._unloaded || epoch !== this['_' + key + 'Epoch']) return false;
+    return recoverReadSession(this, app, value, function (anonymous) {
+      this._requireSessionReset();
+      this.setData({ listState: anonymous ? 'login' : 'loading', listRefreshing: false,
+        receivedApplyState: 'loading', sentApplyState: 'loading' });
+    }, this.load);
+  },
+
+  _requireSession() {
+    if (memberId(app)) return true;
+    this._listEpoch = (this._listEpoch || 0) + 1;
+    this._applyEpoch = (this._applyEpoch || 0) + 1;
+    this._chapterEpoch = (this._chapterEpoch || 0) + 1;
+    this._regEpoch = (this._regEpoch || 0) + 1;
+    this._officialEpoch = (this._officialEpoch || 0) + 1;
+    this._listLoading = this._applyLoading = this._chapterLoading = this._regLoading = this._officialLoading = false;
+    this._sentAll = [];
+    this.setData({ listState: 'login', listRefreshing: false, listErrorText: '',
+      received: [], sent: [], receivedApplies: [], sentApplies: [], receivedRegs: [], officialInvites: [],
+      chapterReceived: [], chapterSent: [], chapterError: '' });
+    stopPullDownRefresh();
+    waitForInitialSession(this, app, this.load);
+    return false;
+  },
+  onLogin() { return retryLogin(this, app, this.load); },
+  _showReadAccessFailure(value) {
+    const status = failureStatus(value);
+    if (status !== 401 && status !== 403) return false;
+    this._requireSessionReset();
+    this.setData({ listState: status === 401 ? 'login' : 'permission', listRefreshing: false,
+      listErrorKind: status === 401 ? 'login' : 'permission', listErrorText: failureText(value, '当前账号不能查看协作邀请') });
+    return true;
+  },
+  _requireSessionReset() {
+    ['list', 'apply', 'chapter', 'reg', 'official'].forEach(key => {
+      this['_' + key + 'Epoch'] = (this['_' + key + 'Epoch'] || 0) + 1;
+      this['_' + key + 'Loading'] = false;
+    });
+    this._listLoadedScope = this._receivedApplyLoadedScope = this._sentApplyLoadedScope = this._regLoadedScope = '';
+    this._sentAll = [];
+    this.setData({ received: [], sent: [], receivedApplies: [], sentApplies: [], receivedRegs: [], officialInvites: [],
+      chapterReceived: [], chapterSent: [], chapterError: '' });
+    stopPullDownRefresh();
+  },
+
   load() {
+    if (!this._requireSession()) return;
     const that = this;
     const scope = identityKey();
     if (this._listLoading && this._listLoadingScope === scope) {
@@ -207,6 +260,7 @@ Page({
     const scopeChanged = this._listDataScope !== undefined && this._listDataScope !== scope;
     if (scopeChanged) {
       this._listLoadedScope = '';
+      this._sentAll = [];
       this.setData({ received: [], sent: [] });
     }
     this._listDataScope = scope;
@@ -228,12 +282,15 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'list')) return;
       if (!settle()) return;
       const kind = failureKind(value);
       const text = failureText(value, '协作邀请没加载出来');
-      if (kind === 'permission') {
+      if (kind === 'permission' || kind === 'login') {
         that._listLoadedScope = '';
-        that.setData({ received: [], sent: [], listState: 'permission', listRefreshing: false, listErrorKind: kind, listErrorText: text });
+        that._sentAll = [];
+        that.setData({ receivedApplies: linkRepliedApplies(that._receivedApplyLoadedScope === scope ? that.data.receivedApplies : [], []),
+          received: [], sent: [], listState: kind, listRefreshing: false, listErrorKind: kind, listErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ listState: 'ready', listRefreshing: false, listErrorKind: kind, listErrorText: text });
       } else {
@@ -257,11 +314,12 @@ Page({
         that.setData({
           received: that.applyTopicFilter(decorate(d.received, d.slots)),
           sent: that.applyTopicFilter(sent),
-          receivedApplies: that.applyTopicFilter(linkRepliedApplies(that.data.receivedApplies, sent)),
+          receivedApplies: that.applyTopicFilter(linkRepliedApplies(that._receivedApplyLoadedScope === scope ? that.data.receivedApplies : [], sent)),
           listState: 'ready', listRefreshing: false, listErrorKind: '', listErrorText: '',
         });
       },
-      fail(value) { fail(value); }
+      fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
     this.loadApplies();
     this.loadChapterApplications();
@@ -276,6 +334,7 @@ Page({
   },
 
   loadChapterApplications() {
+    if (!this._requireSession()) return;
     const scope = identityKey();
     if (this._chapterLoading && this._chapterScope === scope) return;
     const epoch = (this._chapterEpoch || 0) + 1;
@@ -291,7 +350,9 @@ Page({
     const received = [], sent = [], errors = [];
     legs.forEach((leg) => {
       const settle = (res) => {
+        if (this._recoverReadSession(res, epoch, 'chapter')) return;
         if (epoch !== this._chapterEpoch || scope !== identityKey()) return;
+        if (this._showReadAccessFailure(res)) return;
         if (res && res.code == 200 && isRecordList(res.data)) {
           this.applyTopicFilter(res.data).forEach((row) => {
             const invited = Number(row.source) === 1;
@@ -318,7 +379,8 @@ Page({
           : '/api/merchant/chapter-application/mine',
         method: 'POST', header: { 'Content-Type': 'application/json' },
         data: JSON.stringify(leg === 'owner' ? { scope: this._operationScope } : {}),
-        success: settle, fail(res) { settle(res); } });
+        success: settle, fail(res) { settle(res); },
+        successStatusAbnormal(res, status) { settle({ code: failureStatus(res, status), msg: res && res.msg }); } });
     });
   },
 
@@ -336,6 +398,7 @@ Page({
   //   先失败的 /pool/received 的错误会顶到「我发出的」tab 上(错误没有归属),
   //   且它一路的失败会把另一路的新数据一起丢掉。现在收到的失败只压收到的这一路。
   loadApplies() {
+    if (!this._requireSession()) return;
     const that = this;
     const scope = identityKey();
     if (this._applyLoading && this._applyLoadingScope === scope) return;
@@ -366,13 +429,15 @@ Page({
       that._stopRefreshWhenSettled();
     };
     const took = function (leg, res) {
+      if (that._recoverReadSession(res, epoch, 'apply')) return;
       if (epoch !== that._applyEpoch || scope !== identityKey()) { finish(); return; }
+      if (that._showReadAccessFailure(res)) return;
       if (res && res.code == '200' && isApplyList(res.data)) {
         if (leg === 'received') {
           that._receivedApplyLoadedScope = scope;
           that.setData({
             receivedApplies: that.applyTopicFilter(
-              linkRepliedApplies(decorateApplies(res.data, 'received'), that._sentAll || [])),
+              linkRepliedApplies(decorateApplies(res.data, 'received'), that._listLoadedScope === scope ? that._sentAll : [])),
             receivedApplyState: 'ready', receivedApplyErrorText: '',
           });
         } else {
@@ -407,18 +472,21 @@ Page({
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
       success(res) { took('received', res); },
       fail(value) { took('received', value); },
+      successStatusAbnormal(res, status) { took('received', { code: failureStatus(res, status), msg: res && res.msg }); },
     });
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/coop/pool/mine', method: 'POST',
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
       success(res) { took('sent', res); },
       fail(value) { took('sent', value); },
+      successStatusAbnormal(res, status) { took('sent', { code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 
   // 收到的:商家报名承接我主题节点的「报名候选」(跨主题聚合,原候选池页报名 tab 收编)。
   // 单请求拿全量(E2 后端按发布者归属聚合,分页/上限在端点内);失败只压这一块,保留旧快照。
   loadReceivedRegs() {
+    if (!this._requireSession()) return;
     const that = this;
     const scope = identityKey();
     if (this._regLoading && this._regLoadingScope === scope) return;
@@ -445,7 +513,9 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'reg')) return;
       if (!settle()) return;
+      if (that._showReadAccessFailure(value)) return;
       that.setData({
         receivedRegState: hadSnapshot ? 'ready' : 'error',
         receivedRegErrorText: failureText(value, '承接报名没加载出来'),
@@ -466,12 +536,14 @@ Page({
         });
       },
       fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 
   // 官方邀约只发给审核通过的商家:后端对非商家下发稳定机器码 NOT_ACTIVE_MERCHANT = 本来就没有,不是加载失败。
   // 只认机器码,不按文案/泛 403 猜身份 —— 文案一改或别的 403 都会把真实故障吞成空列表。
   loadOfficialInvites() {
+    if (!this._requireSession()) return;
     const scope = identityKey();
     // 同身份在途不重发;身份变了(切账号)要作废旧航班并清掉旧身份的官方邀约
     if (this._officialLoading && this._officialLoadingScope === scope) return;
@@ -490,9 +562,13 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'official')) return;
       if (!settle()) return;
       if (value && value.errorCode === 'NOT_ACTIVE_MERCHANT') that.setData({ officialInvites: [], officialErrorText: '' });
-      else that.setData({ officialErrorText: failureText(value, '官方邀约没加载出来') });
+      else {
+        that._showReadAccessFailure(value);
+        that.setData({ officialErrorText: failureText(value, '官方邀约没加载出来') });
+      }
     };
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/official/merchant-invites', method: 'GET',
@@ -502,6 +578,7 @@ Page({
         that.setData({ officialInvites: that.applyTopicFilter(decorateOfficial(res.data)), officialErrorText: '' });
       },
       fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 

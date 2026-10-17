@@ -126,6 +126,32 @@ function pending(wx, scope, memberId) {
   return current
 }
 
+function saveStage(wx, scope, memberId, key, patch) {
+  var current = read(wx, scope, memberId)
+  if (!current || String(current.memberId) !== String(memberId) || String(current.key) !== String(key)
+    || !patch || typeof patch !== 'object' || Array.isArray(patch)) return false
+  if (['key', 'memberId', 'payloadKey', 'createdAt'].some(function (field) {
+    return Object.prototype.hasOwnProperty.call(patch, field)
+  })) return false
+  try {
+    var next = Object.assign({}, current, JSON.parse(JSON.stringify(patch)))
+    if (!write(wx, scope, memberId, next)) return false
+    return JSON.stringify(wx.getStorageSync(storageKey(scope, memberId))) === JSON.stringify(next)
+  } catch (_) { return false }
+}
+
+// Only a key created by this caller, before its first full wire or HTTP write, may be removed.
+function removeUnsentPartial(wx, scope, memberId, key) {
+  var current = read(wx, scope, memberId)
+  if (!current || String(current.memberId) !== String(memberId) || current.key !== key
+    || current.status !== 'sending' || current.input || current.wire || current.writePhase
+    || current.createBody || current.patchBody || current.draftId) return false
+  try {
+    wx.removeStorageSync(storageKey(scope, memberId))
+    return !wx.getStorageSync(storageKey(scope, memberId))
+  } catch (_) { return false }
+}
+
 module.exports = {
   begin: begin,
   settle: settle,
@@ -134,5 +160,7 @@ module.exports = {
   read: read,
   payloadKey: payloadKey,
   storageKey: storageKey,
+  saveStage: saveStage,
+  removeUnsentPartial: removeUnsentPartial,
   isIntentKey: function (value) { return KEY_RE.test(String(value || '')) },
 }

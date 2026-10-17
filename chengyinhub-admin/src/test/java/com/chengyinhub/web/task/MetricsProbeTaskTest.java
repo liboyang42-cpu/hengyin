@@ -65,7 +65,42 @@ class MetricsProbeTaskTest {
         assertEquals(BigDecimal.ONE, fail.getNumerator());
         assertFalse(fail.getThresholdVersion().contains("secret-123"));
         assertFalse(fail.getThresholdVersion().contains("13800138000"));
-        verify(alarmService).alarm(eq("MetricsProbeTask采样失败"), contains("IllegalStateException"));
+        verify(alarmService).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), eq("MetricsProbeTask采样失败"), contains("IllegalStateException"));
+    }
+
+    @Test
+    void httpProbeDrainsOneProcessCountsWithoutIdentities() {
+        com.chengyinhub.business.metrics.HttpRequestMetrics metrics = new com.chengyinhub.business.metrics.HttpRequestMetrics();
+        for (int status : new int[]{200, 401, 403, 404, 426, 500, 503}) metrics.recordResponse(status);
+        metrics.recordSystemException();
+        com.chengyinhub.web.task.metrics.HttpMetricsProbe probe = new com.chengyinhub.web.task.metrics.HttpMetricsProbe(metrics);
+        Date now = new Date();
+        List<MetricSample> samples = probe.sample(now, now, now);
+        assertEquals("http", probe.source());
+        assertEquals(7, samples.get(0).getValue().intValueExact());
+        assertEquals(2, samples.get(1).getNumerator().intValueExact());
+        assertEquals(7, samples.get(1).getDenominator().intValueExact());
+        assertEquals(1, samples.get(2).getValue().intValueExact());
+        for (MetricSample empty : probe.sample(now, now, now)) assertEquals(0, empty.getValue().signum());
+    }
+
+    @Test
+    void httpFailureThresholdRequiresFiveErrorsAndFivePercent() {
+        Date now = new Date(1700000123456L);
+        for (int[] counts : new int[][]{{5,100}, {4,50}, {5,101}, {0,0}}) {
+            CapturingMetricsSnapshotMapper mapper = new CapturingMetricsSnapshotMapper();
+            MetricsSnapshotServiceImpl service = new MetricsSnapshotServiceImpl();
+            ReflectionTestUtils.setField(service, "metricsSnapshotMapper", mapper);
+            AlarmService alarm = mock(AlarmService.class);
+            newTask(service, alarm, Collections.singletonList(fixedProbe("http", MetricSample.ratio("http.responses.5xx.rate", "http",
+                    BigDecimal.valueOf(counts[0]), BigDecimal.valueOf(counts[1]), now))), now).run();
+            if (counts[0] == 5 && counts[1] == 100) {
+                verify(alarm).alarmThrottled(eq("monitor.metrics.http5xx"), eq("HTTP失败比例升高"), contains("errors=5 requests=100"));
+            } else {
+                org.mockito.Mockito.verify(alarm, org.mockito.Mockito.never()).alarmThrottled(eq("monitor.metrics.http5xx"),
+                        org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+            }
+        }
     }
 
     @Test
@@ -95,13 +130,13 @@ class MetricsProbeTaskTest {
         ReflectionTestUtils.setField(service, "metricsSnapshotMapper", mapper);
         AlarmService alarmService = mock(AlarmService.class);
         doThrow(new RuntimeException("webhook down"))
-                .when(alarmService).alarm(eq("MetricsProbeTask快照过期"), contains("lastSuccessAt=missing"));
+                .when(alarmService).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), eq("MetricsProbeTask快照过期"), contains("lastSuccessAt=missing"));
         MetricsProbeTask task = newTask(service, alarmService, Collections.emptyList(), new Date(1700000000000L));
 
         IllegalStateException thrown = assertThrows(IllegalStateException.class, task::checkFreshness);
 
         assertEquals("metrics alarm failed", thrown.getMessage());
-        verify(alarmService).alarm(eq("MetricsProbeTask快照过期"), contains("lastSuccessAt=missing"));
+        verify(alarmService).alarmThrottled(org.mockito.ArgumentMatchers.anyString(), eq("MetricsProbeTask快照过期"), contains("lastSuccessAt=missing"));
     }
 
     @Test

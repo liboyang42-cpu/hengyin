@@ -157,7 +157,7 @@ function buildRequests(keyword, categoryId, filters) {
     { type: 'topic', url: '/api/topic/list', data: Object.assign({}, common, categoryData), auth: false },
     { type: 'activity', url: '/api/activity/list', data: Object.assign({ is_my: 0 }, common, categoryData), auth: false },
     { type: 'club', url: '/api/club/list', data: JSON.stringify(clubData), header: { 'Content-Type': 'application/json' } },
-    { type: 'merchant', url: '/api/merchant/list', data: JSON.stringify(merchantData), header: { 'Content-Type': 'application/json' } },
+    { type: 'merchant', url: '/api/merchant/list', auth: false, data: JSON.stringify(merchantData), header: { 'Content-Type': 'application/json' } },
   ];
 }
 

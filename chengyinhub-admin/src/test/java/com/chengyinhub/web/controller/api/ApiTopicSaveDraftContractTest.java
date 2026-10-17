@@ -66,6 +66,7 @@ class ApiTopicSaveDraftContractTest {
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "umsCreativeSquareService", creativeSquareService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "omsTicketService", mock(com.chengyinhub.business.service.IOmsTicketService.class));
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
         when(security.checkText(anyString(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
@@ -140,14 +141,66 @@ class ApiTopicSaveDraftContractTest {
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO receipt =
                 new com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO(
                         TOPIC_ID, 901L, "PENDING", java.util.Collections.singletonList(71L));
-        when(topicService.publishDraftWithReview(TOPIC_ID)).thenReturn(receipt);
+        when(topicService.publishDraftWithReview(TOPIC_ID, MEMBER)).thenReturn(receipt);
 
         AjaxResult result = controller.publishDraft(String.valueOf(TOPIC_ID), null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
         assertEquals(receipt, result.get(AjaxResult.DATA_TAG));
-        verify(topicService).publishDraftWithReview(TOPIC_ID);
+        verify(topicService).publishDraftWithReview(TOPIC_ID, MEMBER);
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
+    }
+
+    /**
+     * 编辑器回读:edit-detail 下发 isDraft,小程序据此继续「保存草稿 / 发布草稿」;
+     * 已发布(未开始)的主题仍是 false + WHITELIST,不因这个字段变成草稿。
+     */
+    @Test
+    void ownerEditDetailReportsDraftFlag() {
+        java.util.Map<String, Object> draft = editDetail(0, 1);
+        assertEquals(Boolean.TRUE, draft.get("isDraft"));
+        assertEquals("FULL", draft.get("editScope"));
+
+        java.util.Map<String, Object> published = editDetail(1, 0);
+        assertEquals(Boolean.FALSE, published.get("isDraft"));
+        assertEquals("WHITELIST", published.get("editScope"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, Object> editDetail(int status, Integer isDraft) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC_ID);
+        topic.setMemberId(MEMBER);
+        topic.setDelFlag(0);
+        topic.setStatus(status);
+        topic.setUserStatus(status);
+        topic.setProductType(1);
+        topic.setPublishMode("pro");
+        topic.setLifecycle(0);
+        topic.setName("草稿主题");
+        topic.setStartDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        when(topicService.selectTopicIsDraft(TOPIC_ID)).thenReturn(isDraft);
+        ReflectionTestUtils.setField(controller, "merchantBusinessStatusService",
+                mock(com.chengyinhub.business.service.IMerchantBusinessStatusService.class));
+        com.chengyinhub.business.service.ICmsTopicChapterService chapters =
+                mock(com.chengyinhub.business.service.ICmsTopicChapterService.class);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapters);
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService",
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class));
+        com.chengyinhub.business.service.IOmsTicketService tickets =
+                mock(com.chengyinhub.business.service.IOmsTicketService.class);
+        when(tickets.selectOmsTicketList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", tickets);
+        com.chengyinhub.business.service.IViewCollaboratorsService collaborators =
+                mock(com.chengyinhub.business.service.IViewCollaboratorsService.class);
+        when(collaborators.selectViewCollaboratorsList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "viewCollaboratorsService", collaborators);
+
+        AjaxResult result = controller.topicEditDetail(String.valueOf(TOPIC_ID), null);
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        return (java.util.Map<String, Object>) result.get(AjaxResult.DATA_TAG);
     }
 
     /** 他人读草稿编辑器详情:在归属闸就被拒,不碰章节/票/合作者等下游读。 */

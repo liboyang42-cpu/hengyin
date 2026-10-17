@@ -16,7 +16,7 @@ public interface IRoleService
     String ROLE_MERCHANT = "merchant";
 
     /**
-     * 解析会员角色：member.role 非空取之；为空时按 userType 兜底（过渡期保险）。
+     * 仅接受合法持久角色；兼容字段/身份资料不能授予权限。
      *
      * @param member 会员
      * @return player/club/merchant
@@ -30,4 +30,7 @@ public interface IRoleService
      * @return 配额配置（可能为 null，调用方需判空）
      */
     UserPermission getPermission(UmsMember member);
+
+    /** 仅供已经完成业务权限/归属检查的审核、建会与转让流程调用；角色和兼容投影同事务。 */
+    void changeRole(Long memberId, String role, Long actorId);
 }

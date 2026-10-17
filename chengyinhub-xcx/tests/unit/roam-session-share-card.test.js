@@ -92,7 +92,7 @@ beforeEach(() => {
     getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     getMenuButtonBoundingClientRect: () => ({ left: 280, right: 368, bottom: 88 }),
     getStorageSync: () => [{
-      ts: 1717243200000,
+      ts: 1717243200000, sessionId: '12', finishedAt: Date.now(),
       zone: '这片街区',
       distance: '3.2',
       explorePct: 68,
@@ -200,7 +200,7 @@ test('深链回看使用共享导航壳，并把 ts 交给唯一正文组件', (
 
 test('深链分享卡遇到有限但超出 Date 范围的 ts 时显示“日期不可用”', () => {
   const invalidDateTs = Number.MAX_SAFE_INTEGER
-  global.wx.getStorageSync = () => [{ ts: invalidDateTs, pois: [], track: [] }]
+  global.wx.getStorageSync = () => [{ ts: invalidDateTs, sessionId: '12', finishedAt: Date.now(), pois: [], track: [] }]
   const page = loadPage()
 
   page.onLoad({ ts: String(invalidDateTs) })
@@ -213,12 +213,12 @@ test('深链分享卡遇到有限但超出 Date 范围的 ts 时显示“日期�
 test('非数组存储或目标记录损坏时进入读失败，并清理已经展示的旧记录', () => {
   const malformed = [
     {},
-    [{ ts: 1717243200000, pois: {} }],
-    [{ ts: 1717243200000, track: {} }],
-    [{ ts: 1717243200000, pois: [null] }],
-    [{ ts: 1717243200000, track: [{ lat: 31.2 }] }],
-    [{ ts: 1717243200000, track: [{ lat: true, lng: 121.4 }] }],
-    [{ ts: 1717243200000, track: [{ lat: [31.2], lng: 121.4 }] }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), pois: {} }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), track: {} }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), pois: [null] }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), track: [{ lat: 31.2 }] }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), track: [{ lat: true, lng: 121.4 }] }],
+    [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), track: [{ lat: [31.2], lng: 121.4 }] }],
   ]
 
   malformed.forEach((stored) => {
@@ -270,7 +270,7 @@ test('无效目标记录不显示重新生成，也不能绕过有效性门禁�
     prepareCalls += 1
     return Promise.resolve({ ok: true, imagePath: '/tmp/invalid-record-card.png' })
   }
-  const malformed = { ts: 1717243200000, pois: [], track: [{ lat: 31.2 }] }
+  const malformed = { ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), pois: [], track: [{ lat: 31.2 }] }
 
   global.wx.getStorageSync = () => [malformed]
   const first = await page.share({ detail: { session: malformed } })
@@ -286,7 +286,7 @@ test('无效目标记录不显示重新生成，也不能绕过有效性门禁�
 test('缺失或空数组字段保持既有空态，而不是把合法记录误报为读失败', () => {
   const page = loadPage()
   page.onLoad({ ts: '1717243200000' })
-  global.wx.getStorageSync = () => [{ ts: 1717243200000, zone: '空路线' }]
+  global.wx.getStorageSync = () => [{ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), zone: '空路线' }]
 
   page._load()
 
@@ -529,7 +529,7 @@ test('已有漫游记录点击分享会生成含完成事实的成果卡，而�
 test('历史深链正文与导出共享里程读模型，非法值未知且真实0保留', async () => {
   const page = loadPage()
   for (const [input, number, text] of [['bad', null, '—'], [null, null, '—'], [0, 0, '0'], ['0.2', 0.2, '0.2']]) {
-    assert.equal(page._setSessionView({ ts: 1717243200000, distance: input, pois: [], track: [] }), true)
+    assert.equal(page._setSessionView({ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), distance: input, pois: [], track: [] }), true)
     assert.equal(page.data.s.distance, number)
     assert.equal(page.data.s.distanceText, text)
     drawnTexts = []

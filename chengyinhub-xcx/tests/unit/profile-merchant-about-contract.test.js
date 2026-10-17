@@ -72,6 +72,7 @@ function mountProfile(opts) {
   let definition = null
 
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => options.loginId,
     getUserRole: () => options.role,
@@ -142,6 +143,8 @@ function mountProfile(opts) {
     Object.entries(patch).forEach(([key, value]) => setByPath(component.data, key, value))
     if (callback) callback()
   }
+  component.profileApp = app
+  component.profileShow = () => definition.pageLifetimes.show.call(component)
   component.requests = requests
   component.navigations = navigations
   component.themes = themes
@@ -203,7 +206,7 @@ test('§3.3 initialTab 白名单:合法值激活,非法值回退原默认(他人
 
 test('§3.3 负控:把他人视角写死回 posts,白名单契约必须红', () => {
   const mutated = read(PROFILE_JS)
-    .replace("activeTab: initialTab || (isSelf ? 'projects' : 'posts'),", "activeTab: isSelf ? 'projects' : 'posts',")
+    .replace("activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),", "activeTab: isSelf ? 'projects' : 'posts',")
   assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
   const component = mountProfile({ userId: '88', initialTab: 'about', source: mutated })
   component.initializeProfile()
@@ -952,3 +955,182 @@ test('H1 负控:type2 商家主页 CTA 回潮会判红', () => {
     + "wx.navigateTo({ url: '/pages/coop/invite/index?type=2' })"
   assert.throws(() => assert.doesNotMatch(mutation, /onCoopInvite|type=2|发起合作/))
 })
+
+
+function readyCachedPosts(opts) {
+  const component = mountProfile(Object.assign({ viewer: 'self', loginId: '5' }, opts))
+  component.data.isSelf = opts && opts.viewer === 'other' ? false : true
+  component.data.userId = opts && opts.userId || '5'
+  component.data.activeTab = 'posts'
+  component.data.page_no = 3
+  component.data.list = [{ id: 59, commentCount: 2 }]
+  component._profileAttached = true
+  component._profileShown = true
+  component._syncProfileReducedMotion = () => {}
+  component.syncViewerIdentity = () => {}
+  component.refreshCoopPublisherAccess = () => {}
+  component.computeIsSelf = () => component.data.isSelf
+  component.refreshAll = () => Promise.resolve()
+  component.refreshPublicProfile = () => Promise.resolve()
+  return component
+}
+const settlePosts = () => new Promise(resolve => setImmediate(resolve))
+
+test('缓存推文返回仅脏时重拉一次，不吞广场全局脏标', async () => {
+  const component = readyCachedPosts()
+  component.profileApp.globalData.squareListDirty = true
+  component.profileShow()
+  assert.equal(component.requests.length, 0)
+  component.markSquareListDirty()
+  component.profileShow()
+  component.profileShow()
+  assert.equal(component.requests.length, 1)
+  assert.equal(component.requests[0].url, '/api/v1/community/me/posts')
+  assert.equal(component.data.page_no, 1)
+  assert.equal(component.data.list[0].commentCount, 2, '后台刷新不可清旧列表')
+  component.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, authorId: 5, commentCount: 1 } }], hasMore: false } })
+  await settlePosts()
+  assert.equal(component.data.list[0].commentCount, 1)
+  assert.equal(component.profileApp.globalData.squareListDirty, true)
+  component.profileShow()
+  assert.equal(component.requests.length, 1)
+})
+
+test('脏推文失败保留列表和脏标，其他tab延迟刷新且他人scope保持', async () => {
+  const component = readyCachedPosts({ viewer: 'other', userId: '88', loginId: '5' })
+  component.data.activeTab = 'about'
+  component.markSquareListDirty()
+  component.profileShow()
+  assert.equal(component.requests.length, 0)
+  component.onTabChange({ detail: { key: 'posts' } })
+  assert.equal(component.requests.length, 1)
+  assert.match(component.requests[0].url, /\/api\/v1\/community\/feeds\/LATEST/)
+  assert.equal(component.requests[0].data.authorId, '88')
+  const url = component.requests[0].url
+  component.answer(url, 'fail')
+  await settlePosts()
+  assert.equal(component.data.list[0].commentCount, 2)
+  component.profileShow()
+  assert.equal(component.requests.length, 2)
+})
+
+test('后台在途再次置脏，旧成功不能吞掉新修改', async () => {
+  const component = readyCachedPosts()
+  component.markSquareListDirty()
+  component.profileShow()
+  component.markSquareListDirty()
+  component.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } })
+  await settlePosts()
+  component.profileShow()
+  assert.equal(component.requests.length, 2)
+})
+
+test('dirty首屏在途触底不得升页或并发，完成后替换旧列表', async () => {
+  const c = readyCachedPosts()
+  c.data.hasMore = true
+  c.markSquareListDirty()
+  c.profileShow()
+  c.onFeedReachBottom()
+  assert.equal(c.data.page_no, 1)
+  assert.equal(c.requests.length, 1)
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 1 } }], hasMore: true, nextCursor: 'next' } })
+  await settlePosts()
+  assert.equal(c.data.list.length, 1)
+  assert.equal(c.data.list[0].commentCount, 1)
+})
+
+test('旧分页成功或失败晚到均不得污染dirty首屏刷新结果', async () => {
+  for (const outcome of ['success', 'failure']) {
+    const c = readyCachedPosts()
+    c.data.page_no = 1
+    c.getCreativesquareList()
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59 } }], hasMore: true, nextCursor: 'next' } })
+    await settlePosts()
+    c.onFeedReachBottom()
+    const oldPage = c.requests[c.requests.length - 1]
+    c.markSquareListDirty()
+    c.profileShow()
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 1 } }], hasMore: true, nextCursor: 'new' } })
+    await settlePosts()
+    c.markSquareListDirty()
+    if (outcome === 'success') oldPage.success({ code: 200, data: { items: [{ post: { id: 99 } }], hasMore: false } })
+    else oldPage.fail({ errMsg: 'request:fail' })
+    await settlePosts()
+    assert.deepEqual(c.data.list.map(row => row.id), [59])
+    assert.equal(c.data.list[0].commentCount, 1)
+    assert.equal(c.data.hasMore, true)
+    assert.equal(c.data.feedErr, false)
+    assert.equal(c._squareListDirty, true)
+  }
+})
+
+test('attached后初始show未发生，首次返回posts的dirty仍须刷新', async () => {
+  const c = readyCachedPosts()
+  c._profileShown = false
+  c.markSquareListDirty()
+  c.profileShow()
+  assert.equal(c.requests.length, 1)
+  assert.equal(c.requests[0].url, '/api/v1/community/me/posts')
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 0 } }], hasMore: false } })
+  await settlePosts()
+  assert.equal(c.data.list[0].commentCount, 0)
+  assert.equal(c._squareListDirty, false)
+})
+
+test('首次show保持身份保护优先且非dirty不触发全量重拉', () => {
+  const c = readyCachedPosts()
+  c._profileShown = false
+  let full = 0
+  c.refreshAll = () => { full++ }
+  c.profileShow()
+  assert.equal(full, 0)
+  assert.equal(c.requests.length, 0)
+  c._profileShown = false
+  c.markSquareListDirty()
+  c.computeIsSelf = () => false
+  let initialized = 0
+  c.initializeProfile = () => { initialized++ }
+  c.profileShow()
+  assert.equal(initialized, 1)
+  assert.equal(c.requests.length, 0, '身份变化不得用旧scope刷新')
+})
+
+test('两个缓存主页分别刷新同一社区变更，广场清旧脏标不影响主页', async () => {
+  const first = readyCachedPosts(), second = readyCachedPosts();
+  const shared = { squareListDirty: false, squareListDirtyVersion: 1 };
+  first.profileApp.globalData = shared;
+  second.profileApp.globalData = shared;
+  first.profileShow(); second.profileShow();
+  assert.equal(first.requests.length, 1);
+  assert.equal(second.requests.length, 1);
+  for (const c of [first, second]) {
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } });
+    await settlePosts(); c.profileShow();
+    assert.equal(c.requests.length, 1);
+  }
+  assert.equal(shared.squareListDirtyVersion, 1);
+});
+test('社区版本在其他tab延迟读取，失败后继续重试且保留旧列表', async () => {
+  const c = readyCachedPosts();
+  c.data.activeTab = 'about';
+  c.profileApp.globalData.squareListDirtyVersion = 1;
+  c.onTabChange({ detail: { key: 'posts' } });
+  assert.equal(c.requests.length, 1);
+  c.answer('/api/v1/community/me/posts', 'fail');
+  await settlePosts();
+  assert.equal(c.data.list[0].id, 59);
+  c.profileShow();
+  assert.equal(c.requests.length, 2);
+});
+test('在途新社区版本不被旧成功吞掉', async () => {
+  const c = readyCachedPosts();
+  c.profileApp.globalData.squareListDirtyVersion = 1;
+  c.profileShow();
+  c.profileApp.globalData.squareListDirtyVersion = 2;
+  c.profileShow();
+  assert.equal(c.requests.length, 1);
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } });
+  await settlePosts();
+  c.profileShow();
+  assert.equal(c.requests.length, 2);
+});

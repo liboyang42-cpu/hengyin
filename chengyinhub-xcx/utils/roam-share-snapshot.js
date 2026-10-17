@@ -93,6 +93,9 @@ function revokeShareSnapshots(app, storage) {
 function publishShareSnapshot(app, storage, session) {
   const privacy = readSharePrivacy(storage)
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
+  const { exactSessionId } = require('./roam-recovery.js')
+  const sessionId = exactSessionId(session && session.sessionId)
+  if (!sessionId || session.locationExpired === true) return Promise.resolve({ token: '', reason: 'failed' })
   const clientTs = Number(session && session.ts)
   if (!Number.isSafeInteger(clientTs) || clientTs <= 0) return Promise.resolve({ token: '', reason: 'failed' })
   const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
@@ -101,7 +104,7 @@ function publishShareSnapshot(app, storage, session) {
     return send(app, {
       url: '/api/roam/share/snapshot',
       method: 'POST',
-      data: { clientTs, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
+      data: { clientTs, sessionId, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
     }).then((res) => {
       const token = isOk(res) && res.data && res.data.token
       return TOKEN_RE.test(token || '') ? { token, reason: '' } : { token: '', reason: 'failed' }

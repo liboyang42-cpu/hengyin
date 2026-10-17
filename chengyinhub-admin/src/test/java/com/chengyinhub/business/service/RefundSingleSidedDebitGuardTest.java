@@ -88,6 +88,8 @@ class RefundSingleSidedDebitGuardTest {
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "settlementDebtLedger", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
+        org.mockito.Mockito.when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> cmsRegistrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         when(cmsRegistrationMapper.claimRegistrationRefunded(anyLong(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "cmsActivityMapper", cmsActivityMapper);
         ReflectionTestUtils.setField(svc, "settlementDetailMapper", settlementDetailMapper);
@@ -112,6 +114,8 @@ class RefundSingleSidedDebitGuardTest {
         when(refundApplicationMapper.selectRefundApplicationById(1L)).thenReturn(refund);
 
         CmsRegistration reg = new CmsRegistration();
+        reg.setPaymentStatus(2);
+        reg.setPayableAmount(new BigDecimal("100"));
         reg.setId(REGISTRATION_ID);
         reg.setOwnerType(2L);
         reg.setOwnerId(ACTIVITY_ID);

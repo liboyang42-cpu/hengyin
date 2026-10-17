@@ -26,7 +26,9 @@ global.getApp = () => ({
   tips: (m) => { toasts.push(m); },
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
-  getUserID: () => 0,
+  getUserID: () => 7,
+  getNickname: () => '测试作者',
+  getAvatar: () => '',
   getUserInfo: () => null,
   getToken: () => '',
 });
@@ -378,6 +380,7 @@ test('普通自由探索的章节故事流保存走 V2，保留正文、节点�
 
 test('普通自由探索服务器回填还原无需地点的故事玩法，保留故事块位置', () => {
   const page = makePage();
+  page.data.editingTopicId = '77';
   const detail = editDetailFixture('FULL');
   detail.topic.productType = 2;
   detail.chapters[0].cmsTopicNodeList[0].templateId = 71;

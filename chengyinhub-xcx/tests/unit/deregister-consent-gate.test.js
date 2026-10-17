@@ -47,7 +47,8 @@ beforeEach(() => {
 
 function makePage() {
   const page = Object.assign({}, componentConfig.methods, { data: JSON.parse(JSON.stringify(componentConfig.data)) })
-  page.setData = (patch) => Object.assign(page.data, patch)
+  Object.assign(page.data, { status: 'ELIGIBLE', verificationMethod: 'SMS' })
+  page.setData = (patch, callback) => { Object.assign(page.data, patch); if (callback) callback() }
   return page
 }
 
@@ -140,4 +141,87 @@ test('注销提交和撤销都保持单飞，失败状态留在当前正文', as
   assert.equal(page.data.canceling, false)
   assert.match(page.data.cancelError, /网络|撤销/)
   assert.equal(cancelRequest.silentError, true)
+})
+
+test('状态核验失败后重试可恢复，首轮迟到回包不能覆盖新结果', () => {
+  const page = makePage()
+  page.loadStatus()
+  const firstStatus = requests.at(-1)
+  firstStatus.fail({ errMsg: 'request:fail timeout' })
+  assert.equal(page.data.status, 'ERROR')
+
+  page.loadStatus()
+  const retryStatus = requests.at(-1)
+  assert.notEqual(retryStatus, firstStatus)
+  retryStatus.success({ code: 200, data: { status: 'NORMAL' } })
+  const retryPrecheck = requests.at(-1)
+  retryPrecheck.success({ code: 200, data: { status: 'ELIGIBLE', blockers: [] } })
+  assert.equal(page.data.status, 'ELIGIBLE')
+
+  const recovered = JSON.parse(JSON.stringify(page.data))
+  firstStatus.success({ code: 200, data: { status: 'PENDING', executeAfter: '审核后7天' } })
+  firstStatus.fail({ errMsg: 'request:fail late' })
+  firstStatus.successStatusAbnormal({ code: 503 })
+  assert.deepEqual(page.data, recovered)
+})
+
+test('短信链路在组件离开后不续发短信，也不接收已发送请求的迟到回包', () => {
+  const beforeSms = makePage()
+  beforeSms.sendSms()
+  const infoRequest = requests.at(-1)
+  componentConfig.lifetimes.detached.call(beforeSms)
+  const infoDetachedState = JSON.parse(JSON.stringify(beforeSms.data))
+  infoRequest.success({ code: 200, data: { phone: '13800138000' } })
+  infoRequest.fail({ errMsg: 'request:fail late' })
+  infoRequest.successStatusAbnormal({ code: 503 })
+  assert.equal(requests.filter(request => request.url === '/api/sms/send').length, 0)
+  assert.deepEqual(beforeSms.data, infoDetachedState)
+
+  requests = []
+  const afterSms = makePage()
+  afterSms.sendSms()
+  requests.at(-1).success({ code: 200, data: { phone: '13800138000' } })
+  const smsRequest = requests.at(-1)
+  assert.equal(smsRequest.url, '/api/sms/send')
+  componentConfig.lifetimes.detached.call(afterSms)
+  const smsDetachedState = JSON.parse(JSON.stringify(afterSms.data))
+  smsRequest.success({ code: 200 })
+  smsRequest.fail({ errMsg: 'request:fail late' })
+  smsRequest.successStatusAbnormal({ code: 503 })
+  assert.deepEqual(afterSms.data, smsDetachedState)
+})
+
+test('注销申请响应在组件离开后不再改写正文状态', async () => {
+  consentResult = () => Promise.resolve()
+  const page = makePage()
+  Object.assign(page.data, { confirmed: true, smscode: '123456', canApply: true, status: 'ELIGIBLE' })
+  page.apply()
+  await new Promise(resolve => setImmediate(resolve))
+  const applyRequest = requests.find(request => request.url === '/api/user/deregister/apply')
+  assert.ok(applyRequest)
+
+  componentConfig.lifetimes.detached.call(page)
+  const detachedState = JSON.parse(JSON.stringify(page.data))
+  applyRequest.success({ code: 200, data: { status: 'PENDING', executeAfter: '审核后7天' } })
+  applyRequest.fail({ errMsg: 'request:fail late' })
+  applyRequest.successStatusAbnormal({ code: 503 })
+  assert.deepEqual(page.data, detachedState)
+})
+
+test('撤销申请响应在组件离开后不改状态，也不触发资格回读', () => {
+  const page = makePage()
+  page.data.status = 'PENDING'
+  page.cancel()
+  modals.at(-1).success({ confirm: true })
+  const cancelRequest = requests.find(request => request.url === '/api/user/deregister/cancel')
+  assert.ok(cancelRequest)
+
+  componentConfig.lifetimes.detached.call(page)
+  const detachedState = JSON.parse(JSON.stringify(page.data))
+  const requestCount = requests.length
+  cancelRequest.success({ code: 200, data: { status: 'CANCELLED' } })
+  cancelRequest.fail({ errMsg: 'request:fail late' })
+  cancelRequest.successStatusAbnormal({ code: 503 })
+  assert.deepEqual(page.data, detachedState)
+  assert.equal(requests.length, requestCount)
 })

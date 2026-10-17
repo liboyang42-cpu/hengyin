@@ -83,6 +83,18 @@ class AuditTopicBundleModerationTest {
         ReflectionTestUtils.setField(service, "auditRecordMapper", records);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", events);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaGuard =
+                com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(5L);
+        com.chengyinhub.business.mapper.CmsTopicChapterMapper mediaChapters =
+                mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper mediaNodes =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        when(mediaChapters.selectCmsTopicChapterList(any())).thenReturn(java.util.Collections.emptyList());
+        when(mediaNodes.selectCmsTopicNodeList(any())).thenReturn(java.util.Collections.emptyList());
+        ReflectionTestUtils.setField(mediaGuard, "topics", topics);
+        ReflectionTestUtils.setField(mediaGuard, "chapters", mediaChapters);
+        ReflectionTestUtils.setField(mediaGuard, "nodes", mediaNodes);
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", mediaGuard);
         ReflectionTestUtils.setField(service, "topicBundleReviewService", bundles);
         ReflectionTestUtils.setField(service, "quotaService", quota);
         ReflectionTestUtils.setField(service, "cmsTopicServiceProvider", provider(topicService));

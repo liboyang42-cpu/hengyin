@@ -36,7 +36,7 @@ class ConsentRecordServiceImplTest {
         ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
         ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
 
-        int rows = service.record(1001L, "privacy_policy", "v1.1", "roam_location",
+        int rows = service.record(1001L, "privacy_policy", "v1.1", "app_launch",
                 "AGREE", "consent-request-001", "127.0.0.1");
 
         assertEquals(1, rows);
@@ -46,7 +46,7 @@ class ConsentRecordServiceImplTest {
         assertEquals(1001L, recorded.getMemberId());
         assertEquals("privacy_policy", recorded.getDocType());
         assertEquals("v1.1", recorded.getDocVersion());
-        assertEquals("roam_location", recorded.getScene());
+        assertEquals("app_launch", recorded.getScene());
         assertEquals("AGREE", recorded.getEventType());
         assertEquals("consent-request-001", recorded.getRequestId());
         assertEquals("127.0.0.1", recorded.getIpAddress());
@@ -61,7 +61,7 @@ class ConsentRecordServiceImplTest {
         ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
         ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
 
-        assertEquals(0, service.record(1001L, "privacy_policy", "v1.1", "roam_location",
+        assertEquals(0, service.record(1001L, "privacy_policy", "v1.1", "app_launch",
                 "REVOKE", "consent-request-002", "127.0.0.1"));
     }
 
@@ -71,6 +71,11 @@ class ConsentRecordServiceImplTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.record(1001L, "privacy_policy", "v1.1",
                 "roam_location", "UNKNOWN", "consent-request-003", "127.0.0.1"));
+    }
+
+    @Test void genericConsentCannotBypassRoamLocationRevisionGate() {
+        ConsentRecordServiceImpl service=new ConsentRecordServiceImpl();
+        assertThrows(IllegalArgumentException.class,()->service.record(1001L,"privacy_policy","v1.1","roam_location","AGREE","stale-request",""));
     }
 
     @Test

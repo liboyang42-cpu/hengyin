@@ -37,6 +37,9 @@ public class PublicClubVO {
     private Integer merchantUndertakeOpen;
     private Boolean joinPolicySupported;
     private Integer myJoinStatus;
+    /** Filled only from the authenticated viewer's own membership in detail(). */
+    private String myJoinReviewReason = "";
+    public String getMyJoinReviewReason() { return myJoinReviewReason; }
     private Boolean viewerIsAdmin;
     private Boolean viewerIdentityUnavailable;
     private Integer pendingJoinRequestCount;
@@ -72,6 +75,7 @@ public class PublicClubVO {
         vo.memberPostAllowed = club.getMemberPostAllowed() == null ? 1 : club.getMemberPostAllowed();
         vo.merchantUndertakeOpen = club.getMerchantUndertakeOpen() == null ? 1 : club.getMerchantUndertakeOpen();
         vo.myJoinStatus = club.getMyJoinStatus();
+        vo.myJoinReviewReason = club.getMyJoinReviewReason();
         vo.viewerIsAdmin = club.getViewerIsAdmin();
         vo.viewerIdentityUnavailable = club.getViewerIdentityUnavailable();
         vo.pendingJoinRequestCount = club.getPendingJoinRequestCount();

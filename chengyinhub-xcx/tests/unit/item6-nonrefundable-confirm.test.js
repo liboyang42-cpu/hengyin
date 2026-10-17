@@ -61,5 +61,7 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
   const svc = fs.readFileSync(path.join(BE_ROOT,
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java'), 'utf8')
   assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\)/)
-  assert.match(svc, /result\.setRefundableNow\(deadline == null \? null : !new Date\(\)\.after\(deadline\)\)/)
+  assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
+  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
+  assert.match(svc, /result\.setRefundableNow\(deadline == null \? null\s*: free \? new Date\(\)\.before\(deadline\) : !new Date\(\)\.after\(deadline\)\);/)
 })

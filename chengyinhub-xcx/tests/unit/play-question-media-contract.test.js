@@ -154,6 +154,29 @@ test('没配音频的选项点了不出声,也不把播放器状态改掉', () =
   assert.equal(page.data.audioNodeId, null)
 })
 
+test('旧商家节奏题干与选项音映射到实际分包路径，源配置不改写', () => {
+  const page = makePage()
+  page.data.game = {
+    qAudio: '/audio/merchant-games/rhythm-three.mp3',
+    opts: [{ k: 'A', audio: '/audio/merchant-games/rhythm-one.mp3' }],
+  }
+  page.toggleQuestionAudio()
+  assert.equal(audio.src, '/pages/play/audio/merchant-games/rhythm-three.mp3')
+  assert.equal(page.data.game.qAudio, '/audio/merchant-games/rhythm-three.mp3')
+  page.toggleOptionAudio({ currentTarget: { dataset: { k: 'A' } } })
+  assert.equal(audio.src, '/pages/play/audio/merchant-games/rhythm-one.mp3')
+  assert.equal(page.data.game.opts[0].audio, '/audio/merchant-games/rhythm-one.mp3')
+})
+
+test('未知旧商家音频不创建播放器、不覆盖正在播放的状态', () => {
+  const page = makePage()
+  page.data.game = { qAudio: '/audio/merchant-games/missing.mp3' }
+  page.data.audioNodeId = 'optA'
+  page.toggleQuestionAudio()
+  assert.equal(audio, null)
+  assert.equal(page.data.audioNodeId, 'optA')
+})
+
 test('v5.1 盲品配置必须算 hasAdvanced，否则开始任务打不开 playkit', () => {
   const page = makePage()
   const node = page.normNode({
@@ -166,4 +189,33 @@ test('v5.1 盲品配置必须算 hasAdvanced，否则开始任务打不开 playk
 test('通关探索值不得用站点数乘 12', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../../pages/play/index.js'), 'utf8')
   assert.doesNotMatch(src, /finishScore:\s*this\.data\.total\s*\*\s*12/)
+})
+
+
+test('旧商家节奏题音频归一到已打包路径，源配置不改写', () => {
+  const page = makePage()
+  page.data.game = {
+    qAudio: '/audio/merchant-games/rhythm-three.mp3',
+    opts: [{ k: 'A', audio: '/audio/merchant-games/rhythm-one.mp3' }],
+  }
+  page.toggleQuestionAudio()
+  assert.equal(audio.src, '/pages/play/audio/merchant-games/rhythm-three.mp3')
+  assert.equal(page.data.game.qAudio, '/audio/merchant-games/rhythm-three.mp3')
+  page.toggleOptionAudio({ currentTarget: { dataset: { k: 'A' } } })
+  assert.equal(audio.src, '/pages/play/audio/merchant-games/rhythm-one.mp3')
+  assert.equal(page.data.game.opts[0].audio, '/audio/merchant-games/rhythm-one.mp3')
+})
+
+test('未知旧商家音频不创建播放器、不覆盖正在播放的状态', () => {
+  const page = makePage()
+  page.data.game = { qAudio: '/audio/merchant-games/missing.mp3' }
+  page.data.audioNodeId = 'optA'
+  page.toggleQuestionAudio()
+  assert.equal(audio, null)
+  assert.equal(page.data.audioNodeId, 'optA')
+  page._toggleMediaAudio('optA', 'https://cdn/current.mp3')
+  const before = { src: audio.src, played: audio.played, stopped: audio.stopped }
+  page.toggleQuestionAudio()
+  assert.deepEqual({ src: audio.src, played: audio.played, stopped: audio.stopped }, before)
+  assert.equal(page.data.audioNodeId, 'optA')
 })

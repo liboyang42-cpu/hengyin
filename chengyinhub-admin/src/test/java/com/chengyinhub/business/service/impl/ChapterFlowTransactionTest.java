@@ -186,6 +186,10 @@ class ChapterFlowTransactionTest
     private CmsTopicServiceImpl service(CmsTopicChapterMapper chapterMapper, CmsTopicNodeMapper nodeMapper)
     {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         CmsTopic existing = new CmsTopic();
         existing.setId(71L);
@@ -221,11 +225,28 @@ class ChapterFlowTransactionTest
         set(service, "xpBudgetService", mock(IXpBudgetService.class));
         set(service, "auditTaskService", mock(IAuditTaskService.class));
         set(service, "umsCreativeSquareService", mock(IUmsCreativeSquareService.class));
-        set(service, "commercialTopicPolicy", mock(com.chengyinhub.business.service.support.CommercialTopicPolicy.class));
+        set(service, "commercialTopicPolicy", new com.chengyinhub.business.service.support.CommercialTopicPolicy(
+                (OmsTicketMapper) ReflectionTestUtils.getField(service, "omsTicketMapper"), chapterMapper,
+                mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class), topicMapper));
         set(service, "omsTicketService", mock(IOmsTicketService.class));
         set(service, "distanceCalculatorUtils", mock(DistanceCalculatorUtils.class));
         set(service, "sysCategoryService", mock(ISysCategoryService.class));
         set(service, "cmsMemberTemplateMapper", mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
+        // Actual media schema/reference admission; only reviewed persistence is a fixture.
+        com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        for (long mediaId : new long[] {901L, 902L, 903L}) when(assets.select(mediaId)).thenReturn(java.util.Map.of(
+                "id", mediaId, "ownerType", "APP", "memberId", 19L, "reviewState", "APPROVED"));
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard references =
+                new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(references, "mapper", assets);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard media =
+                new com.chengyinhub.business.service.support.AppMediaPublicationGuard();
+        ReflectionTestUtils.setField(media, "references", references);
+        ReflectionTestUtils.setField(media, "topics", topicMapper);
+        ReflectionTestUtils.setField(media, "chapters", chapterMapper);
+        ReflectionTestUtils.setField(media, "nodes", nodeMapper);
+        ReflectionTestUtils.setField(media, "templates", (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) ReflectionTestUtils.getField(service, "cmsMemberTemplateMapper"));
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
         return service;
     }
 

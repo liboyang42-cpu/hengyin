@@ -64,6 +64,27 @@ class RefundPolicyTest {
     }
 
     @Test
+    void freeSessionCanReleaseCapacityWithin24HoursButNotAtStartOrAfterVerification() {
+        Date start = new Date(2000000000000L);
+        Date cutoff = RefundPolicy.sessionRefundDeadline(start);
+        Date justBefore = new Date(start.getTime() - 1L);
+        assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, start).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 1, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ONE, 0L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, 10L, justBefore).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, cutoff,
+                java.math.BigDecimal.ZERO, null, justBefore).refundable, "积分快照缺失不能当作免费票");
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, null, null, cutoff,
+                java.math.BigDecimal.ZERO, 0L, justBefore).refundable);
+    }
+
+    @Test
     void verified_notRefundable_evenInWindow() {
         Verdict v = RefundPolicy.evaluate(1L, 2, 1, 1, future, null, null, now);
         assertFalse(v.refundable);
@@ -258,5 +279,33 @@ class RefundPolicyTest {
         Date in23h = new Date(now.getTime() + 23 * H);
         assertFalse(!now.after(RefundPolicy.sessionRefundDeadline(in23h)),
                 "集合前 23 小时已过退款截止,报价侧不可判成可退");
+    }
+
+    /** F-W5-07:免费场次单(0 元且未用积分)在集合前 24h 内仍可取消并释放名额,开场后才关闭。 */
+    @Test
+    void freeSessionOrder_within24h_stillCancellableUntilStart() {
+        Date in2h = new Date(now.getTime() + 2 * H);
+        Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
+                java.math.BigDecimal.ZERO, 0L, now);
+        assertTrue(v.refundable, "免费单集合前 2 小时仍应可取消报名");
+        assertEquals(in2h, v.deadline);
+
+        Verdict started = RefundPolicy.evaluate(2L, 2, 0, null, null, null, past, null, null,
+                java.math.BigDecimal.ZERO, 0L, now);
+        assertFalse(started.refundable, "开场后免费单也不可取消");
+
+        Verdict verified = RefundPolicy.evaluate(2L, 2, 1, null, null, null, in2h, null, null,
+                java.math.BigDecimal.ZERO, 0L, now);
+        assertFalse(verified.refundable, "已核销免费单不可取消");
+    }
+
+    /** F-W5-07 负控:付费或用了积分的场次单仍守集合前 24h。 */
+    @Test
+    void paidOrPointSessionOrder_within24h_notRefundable() {
+        Date in2h = new Date(now.getTime() + 2 * H);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
+                new java.math.BigDecimal("9.90"), 0L, now).refundable);
+        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
+                java.math.BigDecimal.ZERO, 100L, now).refundable);
     }
 }

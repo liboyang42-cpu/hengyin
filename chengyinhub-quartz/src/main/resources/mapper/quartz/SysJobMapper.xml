@@ -46,6 +46,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="selectJobAll" resultMap="SysJobResult">
 		<include refid="selectJobVo"/>
 	</select>
+
+	<select id="selectJobAllForUpdate" resultMap="SysJobResult" useCache="false" flushCache="true">
+		<include refid="selectJobVo"/> order by job_id for update
+	</select>
 	
 	<select id="selectJobById" parameterType="Long" resultMap="SysJobResult">
 		<include refid="selectJobVo"/>
@@ -108,4 +112,4 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
  		)
 	</insert>
 
-</mapper> 
+</mapper>

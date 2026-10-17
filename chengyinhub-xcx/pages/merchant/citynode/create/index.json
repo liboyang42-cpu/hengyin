@@ -17,6 +17,7 @@
     "cy-timeline": "/components/cy/timeline/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-empty": "/components/cy/empty/index"
   }
 }

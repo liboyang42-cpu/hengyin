@@ -27,5 +27,9 @@ public interface ImMessageMapper
     public List<ImMessage> selectPage(@Param("conversationId") Long conversationId,
                                       @Param("cursorId") Long cursorId, @Param("size") Integer size);
 
+    List<ImMessage> selectVisiblePage(@Param("conversationId") Long conversationId,
+                                    @Param("viewerMemberId") Long viewerMemberId,
+                                    @Param("cursorId") Long cursorId, @Param("size") Integer size);
+
     public int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 }

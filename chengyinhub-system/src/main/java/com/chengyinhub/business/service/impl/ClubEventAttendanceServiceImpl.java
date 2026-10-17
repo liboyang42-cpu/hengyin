@@ -112,7 +112,7 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
             throw conflict("签到状态已变化，请刷新");
         }
         boolean originalArrived = latest == null
-                ? dateValue(target.get("baseArrivedAt")) != null : Boolean.TRUE.equals(latest.getNewArrived());
+                ? effectiveArrived(target) : Boolean.TRUE.equals(latest.getNewArrived());
         Date originalAt = latest == null ? dateValue(target.get("baseArrivedAt")) : latest.getNewArrivedAt();
         if (originalArrived == request.getArrived()) throw conflict("更正前后状态相同");
 
@@ -223,6 +223,9 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         Object corrected = row.get("correctedArrived");
         if (corrected instanceof Boolean) return (Boolean) corrected;
         if (corrected instanceof Number) return ((Number) corrected).intValue() == 1;
+        Object base = row.get("baseArrived");
+        if (base instanceof Boolean) return (Boolean) base;
+        if (base instanceof Number) return ((Number) base).intValue() == 1;
         return dateValue(row.get("baseArrivedAt")) != null;
     }
 

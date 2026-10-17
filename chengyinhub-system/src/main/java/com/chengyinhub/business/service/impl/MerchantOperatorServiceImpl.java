@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -43,6 +44,7 @@ import java.util.UUID;
 
 @Service
 public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
+    private static final ObjectMapper JSON = new ObjectMapper();
     private static final long INVITE_TTL_MILLIS = 24L * 60L * 60L * 1000L;
 
     @Autowired private IMerchantAccessService merchantAccessService;
@@ -427,7 +429,7 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
                 requestedRole, MerchantOperator.STATUS_ACTIVE, expectedVersion + 1);
         boolean exactBefore = false;
         for (String role : MerchantRoleCode.operatorRoles()) {
-            if (!requestedRole.equals(role) && Objects.equals(
+            if (!requestedRole.equals(role) && sameStateJson(
                     operatorStateJson(role, MerchantOperator.STATUS_ACTIVE, expectedVersion),
                     receipt.getBeforeJson())) {
                 exactBefore = true;
@@ -440,7 +442,7 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
         boolean currentIsLaterAuthoritativeState = current.getVersion() > expectedVersion + 1;
         if (!exactMutationReceipt(receipt, access, "MERCHANT_ROLE_CHANGED",
                 "MERCHANT_OPERATOR", current.getId(), requestId)
-                || !exactBefore || !Objects.equals(expectedAfter, receipt.getAfterJson())
+                || !exactBefore || !sameStateJson(expectedAfter, receipt.getAfterJson())
                 || receipt.getReason() != null
                 || (!currentIsOriginalResult && !currentIsLaterAuthoritativeState)) {
             throw conflict("改岗 requestId 与原请求不一致");
@@ -512,8 +514,8 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
                                             String beforeStatus, String afterStatus,
                                             Integer expectedVersion) {
         for (String role : MerchantRoleCode.operatorRoles()) {
-            if (Objects.equals(operatorStateJson(role, beforeStatus, expectedVersion), receipt.getBeforeJson())
-                    && Objects.equals(operatorStateJson(role, afterStatus, expectedVersion + 1),
+            if (sameStateJson(operatorStateJson(role, beforeStatus, expectedVersion), receipt.getBeforeJson())
+                    && sameStateJson(operatorStateJson(role, afterStatus, expectedVersion + 1),
                     receipt.getAfterJson())) return role;
         }
         return null;
@@ -523,11 +525,20 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
                                                   String beforeStatus, String afterStatus,
                                                   Integer expectedVersion) {
         for (String role : MerchantRoleCode.operatorRoles()) {
-            if (Objects.equals(inviteStateJson(role, beforeStatus, expectedVersion), receipt.getBeforeJson())
-                    && Objects.equals(inviteStateJson(role, afterStatus, expectedVersion + 1),
+            if (sameStateJson(inviteStateJson(role, beforeStatus, expectedVersion), receipt.getBeforeJson())
+                    && sameStateJson(inviteStateJson(role, afterStatus, expectedVersion + 1),
                     receipt.getAfterJson())) return role;
         }
         return null;
+    }
+
+    private boolean sameStateJson(String expected, String stored) {
+        if (stored == null) return false;
+        try {
+            return JSON.readTree(expected).equals(JSON.readTree(stored));
+        } catch (java.io.IOException invalid) {
+            return false;
+        }
     }
 
     private String operatorStateJson(String roleCode, String status, Integer version) {

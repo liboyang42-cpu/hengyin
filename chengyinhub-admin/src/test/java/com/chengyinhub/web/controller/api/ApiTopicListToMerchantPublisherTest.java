@@ -181,7 +181,8 @@ class ApiTopicListToMerchantPublisherTest {
         UmsMember merchant = new UmsMember();
         merchant.setId(MERCHANT_VIEWER);
         merchant.setStatus(1L);
-        merchant.setUserType(2L);
+        merchant.setUserType(1L); // 旧兼容字段不能否决真实商家角色
+        merchant.setRole("merchant");
         when(memberSvc.selectUmsMemberById(anyLong())).thenReturn(merchant);
 
         // 复刻真实投影的行为:就地把「来源」写进传入的 CmsTopic 列表,并原样返回同一个 List

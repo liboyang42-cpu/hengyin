@@ -31,6 +31,20 @@ public class ClubMember extends BaseEntity
     /** 入会申请留言（申请人自己写的一句话，可空。稿 P3 30:2 每条申请下面那一句） */
     private String joinMessage;
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    @com.fasterxml.jackson.annotation.JsonAlias("rejectReason")
+    private String reviewReason;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Long reviewerMemberId;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Date reviewedAt;
+    public String getReviewReason() { return reviewReason; }
+    public void setReviewReason(String value) { reviewReason = value; }
+    public Long getReviewerMemberId() { return reviewerMemberId; }
+    public void setReviewerMemberId(Long value) { reviewerMemberId = value; }
+    public Date getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(Date value) { reviewedAt = value; }
+
     /** 加入时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date joinTime;

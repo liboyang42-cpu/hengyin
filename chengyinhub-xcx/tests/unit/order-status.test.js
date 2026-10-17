@@ -175,3 +175,25 @@ test('ORDER-01:退款按钮只认后端明确可退和真实付款核销状态',
     refundApplication: { status: 2, payoutStatus: 5, refundAmount: 9 } }), true,
   '已驳回退款申请不阻断后端明确允许的再次自助退出');
 });
+
+
+test('真实活动取消使已核销免费票退出待使用，保留支付/报名原字段不猜退款', () => {
+  const row=registration({verificationStatus:1,paymentStatus:2,payableAmount:0,pointUsed:0,
+    cmsActivity:{cancelTime:'2026-07-21 11:00:00',startDate:'2026-07-21 13:00:00'}});
+  const before=JSON.stringify(row);const state=summarizeOrderState(row,NOW);
+  assert.equal(state.key,'cancelled');assert.equal(state.text,'活动已取消');assert.ok(!/退款已|已退款/.test(state.refundText));
+  assert.equal(['not_started','in_progress'].includes(state.key),false);assert.equal(JSON.stringify(row),before);
+});
+test('已核销付费活动取消仍以真实人工和退款进度优先，未取消已核销保持完成', () => {
+  const row=registration({verificationStatus:1,paymentStatus:2,payableAmount:99,
+    cmsActivity:{cancelTime:'2026-07-21 11:00:00'}});
+  assert.equal(summarizeOrderState({...row,manualRefundCaseStatus:'MANUAL_REFUND_REQUIRED'},NOW).key,'manual_refund');
+  assert.equal(summarizeOrderState({...row,refundApplication:{payoutStatus:1}},NOW).key,'refunded');
+  assert.equal(summarizeOrderState({...row,cmsActivity:{cancelTime:null}},NOW).key,'completed');
+});
+test('没有真实取消时刻的正常待使用订单不变，非法取消值不推造取消', () => {
+  for(const cancelTime of [undefined,null,'','invalid-date']){
+    const row=registration({cmsActivity:{cancelTime,startDate:'2026-07-21 13:00:00',endDate:'2026-07-21 18:00:00'}});
+    assert.equal(summarizeOrderState(row,NOW).key,'not_started');
+  }
+});

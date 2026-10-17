@@ -79,4 +79,12 @@
         order by id desc
     </select>
 
+    <select id="selectMine" resultType="com.chengyinhub.business.domain.vo.CoopComplaintProgressVO">
+        select c.id, c.topic_id as topicId, t.name as topicName, c.status,
+               c.advance_amount as advanceAmount, c.reason, c.handle_note as handleNote,
+               c.create_time as createTime, c.update_time as updateTime
+        from coop_complaint c left join cms_topic t on t.id = c.topic_id
+        where c.reporter_member_id = #{memberId} and c.del_flag = 0
+        order by c.id desc
+    </select>
 </mapper>

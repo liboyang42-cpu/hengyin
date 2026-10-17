@@ -48,10 +48,13 @@ class ClubAttendanceTimeMappingMyBatisIT {
                 MybatisItDatabase.user(), MybatisItDatabase.password());
              Statement sql = connection.createStatement()) {
             sql.execute("create table cms_registration (id bigint primary key, owner_type bigint,"
-                    + "owner_id bigint, member_id bigint, payment_status int, registration_status int)");
+                    + "owner_id bigint, member_id bigint, payment_status int, registration_status int,"
+                    + "verification_status int default 0, verification_time datetime)");
             sql.execute("create table ums_member (id bigint primary key, nickname varchar(64),"
                     + "name varchar(64), del_flag int)");
             sql.execute("create table club_lead_checkin (activity_id bigint, member_id bigint, arrived_at datetime)");
+            sql.execute("create table player_node_progress (activity_id bigint, member_id bigint,"
+                    + "checkin_time datetime, status int, del_flag int)");
             sql.execute("create table club_event_attendance_correction (id bigint auto_increment primary key,"
                     + "club_id bigint, activity_id bigint, member_id bigint, original_arrived boolean,"
                     + "new_arrived boolean, original_arrived_at datetime, new_arrived_at datetime,"
@@ -59,7 +62,9 @@ class ClubAttendanceTimeMappingMyBatisIT {
                     + "version int, corrected_at datetime)");
             sql.execute("insert into ums_member values (51,'签到成员','',0),(52,'更正成员','',0)");
             for (long activityId : new long[]{31L, 32L}) {
-                sql.execute("insert into cms_registration values (" + activityId * 10 + ",2,"
+                sql.execute("insert into cms_registration"
+                        + " (id,owner_type,owner_id,member_id,payment_status,registration_status)"
+                        + " values (" + activityId * 10 + ",2,"
                         + activityId + ",51,2,2),(" + (activityId * 10 + 1) + ",2,"
                         + activityId + ",52,2,2)");
                 sql.execute("insert into club_lead_checkin values (" + activityId

@@ -45,6 +45,7 @@ public class ImMessage extends BaseEntity
 
     /** 内容安全 0待检 1通过 2违规 */
     private Integer checkStatus;
+    private String visibleOrderAt;
 
     /** 图片异步检测trace_id */
     private String traceId;
@@ -95,6 +96,10 @@ public class ImMessage extends BaseEntity
 
     public Integer getCheckStatus() { return checkStatus; }
     public void setCheckStatus(Integer checkStatus) { this.checkStatus = checkStatus; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    public String getVisibleOrderAt() { return visibleOrderAt; }
+    public void setVisibleOrderAt(String visibleOrderAt) { this.visibleOrderAt = visibleOrderAt; }
 
     @JsonIgnore
     public String getTraceId() { return traceId; }

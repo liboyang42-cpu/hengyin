@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.JSON;
@@ -89,12 +90,15 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     private Clock clock = Clock.systemUTC();
 
     @Autowired
+    @Lazy
     private ICmsTopicService cmsTopicService;
 
     @Autowired
+    @Lazy
     private ICmsActivityService cmsActivityService;
 
     @Autowired
+    @Lazy
     private IClubPostService clubPostService;
 
     @Autowired
@@ -136,10 +140,16 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkText(String content, String openid)
     {
-        // 未启用 → 放行（与现有 checkTextSecurity 行为一致；配置 wx secCheckEnabled=true 后生效）
-        if (!isEnabled() || StringUtils.isEmpty(content))
+        if (StringUtils.isEmpty(content))
         {
             return null;
+        }
+
+        if (!isEnabled())
+        {
+            // F-L5C-07:总开关关闭 = 机审缺位,拒写而不是放行;ERROR 让关闭状态可被发现。
+            log.error("[内容安全] 文本检测总开关已关闭(wx.sec-check.enabled=false),fail-close 拦截");
+            return MSG_UNAVAILABLE;
         }
 
         // msgSecCheck v2 的 openid 必填:为空微信必判 40003(invalid openid)。当场 fail-close,

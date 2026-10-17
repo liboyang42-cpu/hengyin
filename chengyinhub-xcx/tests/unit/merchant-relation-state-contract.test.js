@@ -206,8 +206,8 @@ function assertNoLoginGate(view) {
 test('负控:把未登录整屏 cy-empty 加回合作页必须判红', () => {
   const view = read('pages/merchant/relation/index.wxml')
   const mutated = view.replace(
-    /<cy-inline-error class="rel-inline-error" wx:elif="\{\{pageState === 'error'\}\}"/,
-    '<cy-empty wx:elif="{{pageState === \'anonymous\'}}" title="登录已失效" cta="去登录" bind:cta="goLogin" />\n    <cy-inline-error class="rel-inline-error" wx:elif="{{pageState === \'error\'}}"',
+    /<cy-inline-error load-failure class="rel-inline-error" wx:elif="\{\{pageState === 'error'\}\}"/,
+    '<cy-empty wx:elif="{{pageState === \'anonymous\'}}" title="登录已失效" cta="去登录" bind:cta="goLogin" />\n    <cy-inline-error load-failure class="rel-inline-error" wx:elif="{{pageState === \'error\'}}"',
   )
   assert.notEqual(mutated, view, '负控锚点失效')
   assert.throws(() => assertNoLoginGate(mutated), /整屏登录\/无权限闸必须删除/)

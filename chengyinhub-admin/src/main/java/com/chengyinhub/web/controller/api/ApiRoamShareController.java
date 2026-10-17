@@ -38,6 +38,10 @@ public class ApiRoamShareController extends BaseController {
     private RoamSharePrivacyService privacyService;
     @Autowired
     private RoamShareSnapshotService snapshotService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired
+    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     /** 包级可见 + 非 final:测试用子类覆写注入身份。 */
     Long uid() {
@@ -46,19 +50,46 @@ public class ApiRoamShareController extends BaseController {
 
     @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌)")
     @PostMapping("/snapshot")
-    public AjaxResult publish(Long clientTs, String snapshot) {
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot) {
         Long memberId = uid();
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (clientTs == null || clientTs <= 0) return error("足迹记录无效");
-        String normalized;
+        com.alibaba.fastjson2.JSONObject normalizedJson;
         try {
-            normalized = privacyService.normalize(clientTs, snapshot).toJSONString();
+            normalizedJson = privacyService.normalize(clientTs, snapshot);
         } catch (RuntimeException e) {
             return error("足迹数据无效");
         }
-        String token = snapshotService.publish(memberId, clientTs, normalized);
+        // F-L5C-02:快照里的路线名、勋章名、地点名由客户端提交、对任何拿到链接的人可见,公开前送检。
+        String secText = shareTexts(normalizedJson);
+        if (!secText.isEmpty()) {
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, secText);
+            if (risk != null) return error(risk);
+        }
+        String normalized = normalizedJson.toJSONString();
+        String token;
+        try { token = snapshotService.publish(memberId, clientTs, sessionId, normalized); }
+        catch (IllegalStateException unavailable) { return error(unavailable.getMessage()); }
         if (token == null) return error("足迹分享暂时不可用，请重试");
         return success(Collections.singletonMap("token", token));
+    }
+
+    public AjaxResult publish(Long clientTs, String snapshot) { return publish(clientTs, null, snapshot); }
+
+    static String shareTexts(com.alibaba.fastjson2.JSONObject snapshot) {
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+        parts.add(snapshot.getString("routeName"));
+        parts.add(snapshot.getString("medal"));
+        parts.add(snapshot.getString("shopMedalName"));
+        com.alibaba.fastjson2.JSONArray pois = snapshot.getJSONArray("pois");
+        if (pois != null) for (int i = 0; i < pois.size(); i++) {
+            com.alibaba.fastjson2.JSONObject poi = pois.getJSONObject(i);
+            if (poi == null) continue;
+            parts.add(poi.getString("name"));
+            parts.add(poi.getString("catLabel"));
+        }
+        return com.chengyinhub.business.service.IWxContentSecurityService.joinText(parts.toArray(new String[0]));
     }
 
     @Operation(summary = "作废本人全部足迹分享快照")

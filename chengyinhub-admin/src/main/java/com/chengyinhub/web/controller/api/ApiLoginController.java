@@ -57,8 +57,8 @@ import com.chengyinhub.framework.web.service.SmsVerificationService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.domain.UmsMember;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 登录接口
@@ -93,6 +93,9 @@ public class ApiLoginController extends BaseController {
     private IUmsMemberService umsMemberService;
 
     @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
     private ISysConfigService configService;
 
     @Autowired
@@ -106,9 +109,15 @@ public class ApiLoginController extends BaseController {
 
     @Autowired
     private SmsVerificationService smsVerificationService;
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+    @Value("${chengyin.test.wechat-api-base-url:https://api.weixin.qq.com}")
+    private String wechatApiBaseUrl = "https://api.weixin.qq.com";
 
 
     @Operation(summary = "登录")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10,
+            limitType = com.chengyinhub.common.enums.LimitType.IP)
     @PostMapping("/login")
     @Parameters({
             @Parameter(name = "username", description = "用户名"),
@@ -177,102 +186,39 @@ public class ApiLoginController extends BaseController {
             @Parameter(name = "code", description = "小程序端获取用户的微信code")
     })
     public AjaxResult logincode(String code) {
-
-        String openid = "";
+        String openid;
         try {
             openid = getOpenID(code);
         } catch (Exception e) {
             return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
         }
-
-        AjaxResult ajax = AjaxResult.success();
-
-        UmsMember umsMember = new UmsMember();
-        umsMember.setWxOpenId(openid);
-        List<UmsMember> list = umsMemberService.selectUmsMemberList(umsMember);
-        if (list.size() > 0) {
-            if (list.get(0).getStatus() == 2) {
-                return AjaxResult.error("账号已被冻结");
-            }
-            if (list.get(0).getDelFlag() == 2) {
-                return AjaxResult.error("账号已删除");
-            }
-            // 生成令牌
-            String token = appLoginService.login(openid);
-
-            ajax = AjaxResult.success();
-            ajax.put(Constants.TOKEN, token);
-            ajax.put("data", LoginResponseVO.from(list.get(0)));
-            return ajax;
-
-//                if(list.get(0).getUserType()==1){ //用户类型：1普通会员
-//                    TuserJobSeekers tuserJobSeekers = new TuserJobSeekers();
-//                    tuserJobSeekers.setUserId(Long.parseLong(list.get(0).getId()));
-//                    List<TuserJobSeekers> tuserJobSeekersList = tuserJobSeekersService.selectTuserJobSeekersList(tuserJobSeekers);
-//                    if(tuserJobSeekersList.size()>0){
-//                        list.get(0).setJobSeekers(tuserJobSeekersList.get(0));
-//                    }
-//                }
-//                else{ //2商户会员
-//                    TuserRecruiter tuserRecruiter = new TuserRecruiter();
-//                    tuserRecruiter.setUserId(Long.parseLong(list.get(0).getId()));
-//                    List<TuserRecruiter> tuserRecruiterList = tuserRecruiterService.selectTuserRecruiterList(tuserRecruiter);
-//                    if(tuserRecruiterList.size()>0){
-//                        list.get(0).setRecruiter(tuserRecruiterList.get(0));
-//                    }
-//                }
-        } else {
-            //生成账号
-            umsMember = new UmsMember();
-            umsMember.setNickname("城瘾用户");
-            umsMember.setName("城瘾用户");
-            umsMember.setUserType(1L); //用户类型：1普通会员 2商户会员
-            umsMember.setRole("player"); //RBAC 角色：注册默认玩家
-            umsMember.setPhone("");
-            umsMember.setPassword("");
-            umsMember.setAvatar(defaultAvatarUrl);
-            umsMember.setWxOpenId(openid);
-            umsMember.setStatus(1L);
-            umsMember.setDelFlag(0);
-            umsMember.setPoint(Long.valueOf(50));
-            int rows = umsMemberService.insertUmsMember(umsMember);
-            if (rows > 0) {
-                // 生成令牌
-                String token = appLoginService.login(openid);
-
-                umsMember = new UmsMember();
-                umsMember.setWxOpenId(openid);
-                list = umsMemberService.selectUmsMemberList(umsMember);
-
-                ajax = AjaxResult.success();
-                ajax.put(Constants.TOKEN, token);
-                ajax.put("data", LoginResponseVO.from(list.get(0)));
-
-
-                int points = 0;
-                CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
-                if (cmsPointsSetting != null) {
-                    points = cmsPointsSetting.getValue().intValue();
-                }
-
-                UmsMemberPointsDetail umsMemberPointsDetail = new UmsMemberPointsDetail();
-                umsMemberPointsDetail.setMemberId(list.get(0).getId());
-                umsMemberPointsDetail.setCurrentPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setAfterPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangePoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangeReason("注册赠送");
-                umsMemberPointsDetail.setEventType(Long.valueOf(1));
-                umsMemberPointsDetail.setEventId(Long.valueOf(0));
-                umsMemberPointsDetail.setChangeType(1L);
-                umsMemberPointsDetail.setDelFlag(0);
-                umsMemberPointsDetail.setCreateTime(new Date());
-                umsMemberPointsDetailService.insertUmsMemberPointsDetail(umsMemberPointsDetail);
-
-                return ajax;
-            } else {
-                return AjaxResult.error("注册失败");
-            }
+        UmsMember member = umsMemberService.getOrCreateWechatMember(openid);
+        if (Long.valueOf(2L).equals(member.getStatus())) {
+            return AjaxResult.error("账号已被冻结");
         }
+        if (Integer.valueOf(2).equals(member.getDelFlag())) {
+            return AjaxResult.error("账号已删除");
+        }
+        String token = appLoginService.login(openid);
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put(Constants.TOKEN, token);
+        ajax.put("data", LoginResponseVO.from(member));
+        return ajax;
+    }
+
+    String wechatSessionBaseUrl() {
+        if (environment == null || environment.matchesProfiles("prod", "production")
+                || !environment.matchesProfiles("test", "dev", "local", "preview")) {
+            return "https://api.weixin.qq.com";
+        }
+        String configured = wechatApiBaseUrl == null ? "" : wechatApiBaseUrl.trim();
+        java.net.URI uri = java.net.URI.create(configured);
+        if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                || uri.getHost() == null || uri.getUserInfo() != null || uri.getRawQuery() != null
+                || uri.getRawFragment() != null || !(uri.getPath().isEmpty() || "/".equals(uri.getPath()))) {
+            throw new IllegalArgumentException("非生产微信API基址配置不合法");
+        }
+        return configured.endsWith("/") ? configured.substring(0, configured.length() - 1) : configured;
     }
 
     /**
@@ -285,7 +231,7 @@ public class ApiLoginController extends BaseController {
         String appid = Convert.toStr(configService.selectConfigByKey("app.wechat.appid"));
         String appsecret = Convert.toStr(configService.selectConfigByKey("app.wechat.appsecret"));
 
-        String url = "https://api.weixin.qq.com/sns/jscode2session?appid=" + appid + "&grant_type=authorization_code&js_code=" + code + "&secret=" + appsecret;
+        String url = wechatSessionBaseUrl() + "/sns/jscode2session?appid=" + appid + "&grant_type=authorization_code&js_code=" + code + "&secret=" + appsecret;
         String result = sendHttpGet(url);
 
         Map mp = JSON.parseObject(result);
@@ -317,10 +263,35 @@ public class ApiLoginController extends BaseController {
     @PostMapping("/userInfo")
     @Anonymous
     public AjaxResult userInfo() {
-        AppUser appUser = getLoginAppUser().getAppUser();
         AjaxResult ajax = AjaxResult.success();
-        ajax.put("appUser", appUser);
+        ajax.put("appUser", userInfoView(getLoginAppUser().getAppUser()));
         return ajax;
+    }
+
+    /** 会话对象只按白名单输出，口令/盐/查询参数等内部字段不进响应（与 Codex 90883a923e 字段集一致）。 */
+    static java.util.Map<String, Object> userInfoView(AppUser appUser) {
+        java.util.Map<String, Object> view = new java.util.LinkedHashMap<>();
+        if (appUser == null) {
+            return view;
+        }
+        view.put("createBy", appUser.getCreateBy());
+        view.put("createTime", appUser.getCreateTime());
+        view.put("updateBy", appUser.getUpdateBy());
+        view.put("updateTime", appUser.getUpdateTime());
+        view.put("remark", appUser.getRemark());
+        view.put("userId", appUser.getUserId());
+        view.put("userName", appUser.getUserName());
+        view.put("nickName", appUser.getNickName());
+        view.put("email", appUser.getEmail());
+        view.put("mobile", appUser.getMobile());
+        view.put("sex", appUser.getSex());
+        view.put("avatar", appUser.getAvatar());
+        view.put("status", appUser.getStatus());
+        view.put("delFlag", appUser.getDelFlag());
+        view.put("loginIp", appUser.getLoginIp());
+        view.put("loginDate", appUser.getLoginDate());
+        view.put("userType", appUser.getUserType());
+        return view;
     }
 
     // [P0-安全] 已移除 /api/login/withopenid:该端点直接拿客户端传入的 openid 签发 token,
@@ -472,6 +443,11 @@ public class ApiLoginController extends BaseController {
             openid = getOpenID(wxcode);
         } catch (RuntimeException e) {
             return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
+        }
+        // F-L5C-02:注册填的名字会出现在公开资料上,与 /user/update 同一道内容安全闸。
+        String nameSecMsg = wxContentSecurityService.checkText(name, openid);
+        if (nameSecMsg != null) {
+            return AjaxResult.error(nameSecMsg);
         }
 
         umsMember = new UmsMember();

@@ -76,6 +76,9 @@ public class ApiCoopPoolController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.support.ClubCoopWindowPolicy clubCoopWindowPolicy;
 
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+
     @Operation(summary = "合作池:可承接主题列表(俱乐部视角)")
     @PostMapping("/list")
     public AjaxResult list(@RequestBody(required = false) Map<String, Object> body) {
@@ -188,6 +191,12 @@ public class ApiCoopPoolController extends BaseController {
         if (topicId == null) return error("缺少主题");
         Long clubId = toLong(body.get("clubId"));
         String message = body.get("message") == null ? null : String.valueOf(body.get("message"));
+        // F-L5C-02:申请留言给主题发布者看,与 /coop/invite 留言同一道内容安全闸。
+        if (message != null && !message.trim().isEmpty()) {
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, message);
+            if (risk != null) return error(risk);
+        }
 
         CoopClubApply row;
         try {

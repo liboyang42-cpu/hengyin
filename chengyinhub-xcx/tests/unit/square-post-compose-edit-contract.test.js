@@ -37,6 +37,7 @@ function loadComponent(opts) {
     getApp: () => app,
     Component: (config) => { definition = config; },
     require(id) {
+      if (id.includes('community-post-api')) return require('../helpers/community-page-seam');
       if (id.includes('pro-editor-draft')) {
         return {
           saveDraft(wx, payload) { draftCalls.push(['save', payload]); return true; },

@@ -21,7 +21,7 @@
       <cy-empty fill size="lg" kind="missing-param" title="没有可裁剪的图片" sub="请返回上一页重新选择图片后再裁剪。" />
     </view>
     <view class="crop__missing" wx:elif="{{sourceState === 'error'}}">
-      <cy-error fill size="lg" title="图片没能打开" sub="{{sourceError}}" retry="重试" bind:retry="onRetrySource" auto-back />
+      <cy-error load-failure fill size="lg" title="图片没能打开" sub="{{sourceError}}" retry="重试" bind:retry="onRetrySource" auto-back />
     </view>
     <!-- waiting 明确为加载态，不使用裸文字占位，也不冒充无源空态。 -->
     <view class="crop__waiting"

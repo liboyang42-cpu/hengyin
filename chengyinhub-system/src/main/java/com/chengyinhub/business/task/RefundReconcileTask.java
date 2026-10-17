@@ -61,12 +61,17 @@ public class RefundReconcileTask {
         // "退款派发卡滞"告警对注册类退款近似恒哑。先记下扫描时点已卡滞 ≥STALE_MINUTES 的数量,
         // 重试完(无论成败)按这个数告警;本轮真修好的下一轮自然归 0。
         Integer stuckAtScan = null;
+        String stuckIdsAtScan = "UNKNOWN";
         try {
             stuckAtScan = refundApplicationMapper.countStuckPayoutDispatch(STALE_MINUTES);
+            if (stuckAtScan != null && stuckAtScan > 0) {
+                stuckIdsAtScan = sampleIds(() -> refundApplicationMapper.sampleStuckPayoutDispatchIds(STALE_MINUTES));
+            }
         } catch (Exception e) {
             log.error("退款派发卡滞计数失败，无法确认卡滞退款数量", e);
             try {
-                alarmService.alarm("退款派发卡滞计数失败", "退款派发卡滞计数异常，请排查数据访问和告警服务");
+                alarmService.alarmThrottled("monitor.refund.dispatch_count_failed", "退款派发卡滞计数失败",
+                        "退款派发卡滞计数异常，请排查数据访问和告警服务");
             } catch (Exception alarmException) {
                 log.error("退款派发卡滞计数异常告警发送失败", alarmException);
             }
@@ -106,7 +111,11 @@ public class RefundReconcileTask {
         try {
             int backlog = refundApplicationMapper.countManualPayoutBacklog();
             if (backlog > 0) {
-                alarmService.alarm("退款待人工积压", "待人工/待复核退款单=" + backlog + ",请财务及时处理");
+                // 巡检每 10~15 分钟一跑：按固定事件限频，并带前 20 个退款单 id 便于定位。
+                String ids = sampleIds(refundApplicationMapper::sampleManualPayoutBacklogIds);
+                log.warn("Refund monitor anomaly category=manual count={} refundIds={}", backlog, ids);
+                alarmService.alarmThrottled("monitor.refund.manual", "退款待人工积压",
+                        "待人工/待复核退款单=" + backlog + " refundIds=" + ids + ",请财务及时处理");
             }
         } catch (Exception e) {
             // 守门告警自身失明是最贵的静默:计数或告警投递挂了必须留痕，否则积压堆到天荒地老也无人知。
@@ -117,12 +126,27 @@ public class RefundReconcileTask {
         // 计数取的是重试前的 stuckAtScan(见方法开头),此处不能重查:重试已刷新 update_time。
         try {
             if (stuckAtScan != null && stuckAtScan > 0) {
-                alarmService.alarm("退款派发卡滞",
-                        "超过 " + STALE_MINUTES + " 分钟仍停在待派发/派发中的退款单=" + stuckAtScan + ",请排查派发失败原因");
+                log.warn("Refund monitor anomaly category=dispatch_stuck count={} refundIds={}", stuckAtScan, stuckIdsAtScan);
+                alarmService.alarmThrottled("monitor.refund.dispatch_stuck", "退款派发卡滞",
+                        "超过 " + STALE_MINUTES + " 分钟仍停在待派发/派发中的退款单=" + stuckAtScan
+                                + " refundIds=" + stuckIdsAtScan + ",请排查派发失败原因");
             }
         } catch (Exception e) {
             log.error("退款派发卡滞告警发送失败，卡滞退款单数={}", stuckAtScan, e);
         }
         if (depositFailure != null) throw depositFailure;
+    }
+
+    /** 样本只用于定位；取样失败不影响按计数告警。 */
+    private String sampleIds(java.util.function.Supplier<List<Long>> sample) {
+        try {
+            List<Long> ids = sample.get();
+            return ids == null ? "UNKNOWN" : ids.stream().limit(20)
+                    .map(id -> id == null ? "UNKNOWN" : id.toString())
+                    .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        } catch (Exception e) {
+            log.error("退款巡检样本读取失败 type={}", e.getClass().getSimpleName());
+            return "UNKNOWN";
+        }
     }
 }

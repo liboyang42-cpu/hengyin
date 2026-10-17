@@ -293,6 +293,18 @@ class MerchantAccessServiceImplTest {
                         () -> service.require(-1L, MerchantPermission.BASIC_READ)).getCode());
     }
 
+    @Test
+    void merchantProfileDoesNotGrantOwnerPermissionToPlayerRole() {
+        IMmsMerchantService merchants = mock(IMmsMerchantService.class);
+        UmsMemberMapper members = mock(UmsMemberMapper.class);
+        MerchantAccessServiceImpl service = service(merchants, mock(MerchantOperatorMapper.class), members);
+        when(merchants.selectMmsMerchantByMemberId(9001L)).thenReturn(activeMerchant(11L, 9001L));
+        UmsMember player = activeMember(9001L); player.setRole("player");
+        when(members.selectUmsMemberById(9001L)).thenReturn(player);
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.require(9001L, MerchantPermission.FINANCE_READ)).getCode());
+    }
+
     private static MmsMerchant activeMerchant(Long id, Long ownerMemberId) {
         MmsMerchant merchant = new MmsMerchant();
         merchant.setId(id);
@@ -364,6 +376,7 @@ class MerchantAccessServiceImplTest {
     private static UmsMember activeMember(Long id) {
         UmsMember member = new UmsMember();
         member.setId(id);
+        member.setRole("merchant");
         member.setStatus(1L);
         member.setDelFlag(0);
         return member;

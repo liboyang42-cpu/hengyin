@@ -50,3 +50,23 @@ test('任一地图图层失败都保持可见错误，不被另一路成功覆�
   errors.activities = false
   assert.equal(entryMap.hasLayerError(errors), false)
 })
+
+
+test('结束活动保留地图位置并提示已结束，不再展示招募队伍', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-10-07T04:00:00Z'))
+  const item = { id: 5, kind: 'activity', name: '已结束活动', latitude: 31.2, longitude: 121.4,
+    startDate: '2026-02-05 08:00:00', endDate: '2026-03-28 12:00:00' }
+  const teams = [{ teamId: 8, activityId: 5, latitude: 31.2, longitude: 121.4, viewerHasTicket: true }]
+  const card = entryMap.build([item], teams, {}, value => value).cards[0]
+  assert.equal(card.ended, true)
+  assert.equal(card.registered, true)
+  assert.match(card.meta, /已结束/)
+  assert.deepEqual(card.teams, [])
+  assert.equal(entryMap.activityView({ ...item, viewerHasTicket: true }, teams).registered, true)
+  for (const endDate of ['2026-10-07 12:00:00', '2026-10-08 12:00:00', null, 'invalid']) {
+    const current = entryMap.activityView({ ...item, endDate }, teams)
+    assert.equal(current.ended, false)
+    assert.equal(current.teams.length, 1)
+  }
+  assert.equal(entryMap.activityView({ ...item, kind: 'topic' }, []).ended, false)
+})

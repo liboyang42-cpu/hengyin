@@ -34,6 +34,7 @@ class TemplateMarketUseCountTest {
         libraryService = mock(ICmsTemplateLibraryService.class);
         auditService = mock(IAuditTaskService.class);
         service = new TemplatePublishServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
         ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));

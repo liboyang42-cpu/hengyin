@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.Redemption;
 import com.chengyinhub.business.domain.RegistrationEntitlement;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * P0-13/14/15/16/17 权益与核销账本(③ 自由定向的心脏)。
@@ -149,6 +150,14 @@ public interface IPerkLedgerService {
      */
     List<Long> resolveRedeemableChapters(Long registrationId, Long topicId, Long merchantId);
 
+    /** 扫码候选：应得章映射 null；本商家真正已核销章映射原流水，仅供回读选择。 */
+    Map<Long, Long> resolveScannableChapters(Long registrationId, Long topicId, Long merchantId);
+
+    /** 调用方须先按 activity→registration 锁序复核有效票；锁读同 key 的真实回执与权益。 */
+    Long findReplayableChapterRedemptionIdForUpdate(Long registrationId, Long topicId,
+                                                   Long chapterId, Long merchantId);
+
+
     /**
      * P0-14 核销(③ 按章):同一事务内 写 redemption(ACTIVE)+ 原子扣 quota_used
      * + entitlement 置已用。任一步失败整单回滚。
@@ -176,6 +185,10 @@ public interface IPerkLedgerService {
      *                       传 null 会因审计 actor_member_id NOT NULL 而整体回滚(fail-closed)
      * @return true=本次撤销;false=已被撤销过(幂等,调用方不该再回补配额)
      */
+    /** 原父单全部生效核销逐章撤销；失败全部回滚，返回实际已撤销流水ID。 */
+    List<Long> reverseParentOrderRedemptions(String parentOrderNo, String reason, Long operatorUserId,
+                                           boolean clawbackRewards);
+
     boolean reverseRedemption(Long redemptionId, String reason, Long operatorUserId);
 
     /**

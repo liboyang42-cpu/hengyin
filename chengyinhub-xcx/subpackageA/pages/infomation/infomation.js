@@ -1,6 +1,5 @@
 const { getScene } = require('../../../utils/scene-registry.js');
 const app = getApp();
-const mockData = require('../../../utils/mockData.js');
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 
@@ -195,20 +194,12 @@ Page({
           that.applyTemplates(res.data);
           return;
         }
-        if (app.isDevEnv && app.isDevEnv()) {
-          that.applyTemplates(mockData.getHomeData());
-          return;
-        }
         that.setData({
           templates: [],
           tplError: app.getRequestErrorMessage(res, '现成玩法加载失败'),
         });
       },
       fail(res) {
-        if (app.isDevEnv && app.isDevEnv()) {
-          that.applyTemplates(mockData.getHomeData());
-          return;
-        }
         that.setData({
           templates: [],
           tplError: app.getRequestErrorMessage(res, '现成玩法加载失败'),

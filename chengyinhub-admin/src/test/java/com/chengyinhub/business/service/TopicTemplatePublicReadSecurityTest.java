@@ -32,14 +32,19 @@ class TopicTemplatePublicReadSecurityTest
     private CmsTopicMapper topicMapper;
     private CmsTopicChapterMapper chapterMapper;
     private CmsTopicTemplateMetaMapper metaMapper;
+    private CmsTopicNodeMapper nodeMapper;
 
     @BeforeEach
     void setUp()
     {
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
-        CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        nodeMapper = mock(CmsTopicNodeMapper.class);
         metaMapper = mock(CmsTopicTemplateMetaMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
@@ -77,7 +82,32 @@ class TopicTemplatePublicReadSecurityTest
         assertNull(service.buildPublicTopicTemplateDetail(42L, null, false, null));
 
         verify(chapterMapper, never()).selectCmsTopicChapterList(any());
+        org.mockito.Mockito.verifyNoInteractions(nodeMapper);
         verify(metaMapper, never()).selectByTopicId(any());
+    }
+
+    @Test
+    void publicDetailUsesAuthoritativeTotalIncludingZeroWithoutChangingPrivateDetail() {
+        for (long count : new long[]{8L, 0L}) {
+            CmsTopic snapshot = new CmsTopic(); snapshot.setId(42L); snapshot.setProductType(1);
+            snapshot.setLocationCount(99L);
+            when(topicMapper.selectPublicTopicTemplateById(42L)).thenReturn(snapshot);
+            CmsTopic currentCount = new CmsTopic(); currentCount.setId(42L);
+            currentCount.setLocationCount(count); currentCount.setTemplateCount(0L);
+            when(topicMapper.selectPublicNodeCountsByTopicIds(Collections.singletonList(42L)))
+                    .thenReturn(count == 0L ? Collections.emptyList() : Collections.singletonList(currentCount));
+            TopicTemplateDetailVO detail = service.buildPublicTopicTemplateDetail(42L, null, false, null);
+            assertEquals(count, detail.getLocationCount());
+            assertTrue(detail.getChapters().isEmpty());
+            assertFalse(detail.getViewerIsPublisher());
+            assertFalse(detail.getViewerIsMerchant());
+        }
+        org.mockito.Mockito.clearInvocations(nodeMapper);
+        CmsTopic privateSnapshot = new CmsTopic(); privateSnapshot.setId(43L);
+        privateSnapshot.setProductType(1); privateSnapshot.setLocationCount(99L);
+        when(topicMapper.selectCmsTopicById(43L)).thenReturn(privateSnapshot);
+        assertEquals(99L, service.buildTopicTemplateDetail(43L, false).getLocationCount());
+        org.mockito.Mockito.verifyNoInteractions(nodeMapper);
     }
 
     @Test

@@ -42,8 +42,13 @@ public interface RedemptionMapper {
      */
     public Redemption selectActiveByIdempotencyKey(@Param("key") String key);
 
+    /** 当前锁读，与报名锁共同序列化丢回包重试、撤销和退款。 */
+    Redemption selectActiveByIdempotencyKeyForUpdate(@Param("key") String key);
+
+
     /** 某票的生效核销(status='ACTIVE');已撤销的不算数,不返 */
     public List<Redemption> selectActiveByRegistration(@Param("registrationId") Long registrationId);
+    List<Redemption> selectActiveByRegistrationForUpdate(@Param("registrationId") Long registrationId);
 
     /**
      * 某票的**全部**核销流水,含已撤销 —— 后台撤销入口的读回列表。

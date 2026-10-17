@@ -14,7 +14,8 @@ const entries = [
 
 function mount(file) {
   const requests = [], messages = [], dialogs = []
-  const app = { globalData: { user_id: 7, role: 'club', user_type: 1 }, sendRequest: r => requests.push(r) }
+  const app = { globalData: { user_id: 7, role: 'club', user_type: 1 }, sendRequest: r => requests.push(r),
+    getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback }
   global.getApp = () => app
   let definition
   const localRequire = createRequire(path.join(root, file))
@@ -43,7 +44,8 @@ function mount(file) {
   page._orderId = 9 // 详情组件的订单 id 在实例态(死数据字段门禁 A2)
   page.data.info = { id: 9, paymentStatus: 2, canRequestRefund: true }
   page.data.detail = { registrationId: 9, canRefund: true }
-  if (file.includes('order-history')) page.cancelOrderRequest(9, 0, 2)
+  if (file.includes('participation-detail')) page.cancelRequest(true)
+  else if (file.includes('order-history')) page.cancelOrderRequest(9, 0, 2)
   else {
     if (file.includes('order-detail')) page.cancelRegistration()
     else page.refund()
@@ -72,5 +74,18 @@ for (const [label, file] of entries) {
     const h = mount(file)
     h.request.success({ code: 200, msg: '现金已原路退款，积分已返还' })
     assert.deepEqual(h.messages, ['取消请求已受理，请刷新订单查看结果'])
+  })
+}
+
+for (const [label, file] of [...entries.slice(0, 2), ['参与详情', 'subpackageMember/components/scene-member-participation-detail/index.js']]) {
+  for (const status of [undefined, 408, 502]) test(label + '取消回执未知 ' + status + ' 自动回读，不重复提交', () => {
+    const h = mount(file); h.request.fail({ errMsg: 'request:fail timeout' }, status);
+    assert.equal(h.refreshes(), 1);
+    assert.match(h.messages.at(-1), /结果暂未确认/);
+  })
+  test(label + '取消 HTTP403 明确拒绝不回读或报成功', () => {
+    const h = mount(file); h.request.fail({ msg: '没有权限' }, 403);
+    assert.equal(h.refreshes(), 0);
+    assert.equal(h.messages.some(text => /结果暂未确认|已取消|成功/.test(text)), false);
   })
 }

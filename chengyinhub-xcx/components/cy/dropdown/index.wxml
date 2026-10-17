@@ -17,6 +17,21 @@
       <view class="cdd__panel {{dropUp ? 'cdd__panel--up' : ''}}" style="{{panelStyle}}" catchtap="noop">
         <scroll-view class="cdd__scroll" scroll-y="{{true}}" enhanced show-scrollbar="{{false}}" style="max-height:var(--cdd-scroll-height);">
           <slot wx:if="{{customPanel}}" name="panel" />
+          <!-- 两列卡片档(columns=2):名称 + 可选一行说明;不可选项置灰并显示原因;全部无说明时用紧凑卡片。header 插槽放分类标签。 -->
+          <block wx:elif="{{columns > 1}}">
+            <view class="cdd__header" wx:if="{{header}}"><slot name="header" /></view>
+            <view class="cdd__grid">
+              <view class="cdd__cell {{compact ? 'cdd__cell--compact' : ''}} {{index === value ? 'cdd__cell--on' : ''}} {{item.reason ? 'cdd__cell--off' : ''}}"
+                    wx:for="{{cells}}" wx:key="index"
+                    data-index="{{index}}" bindtap="onPick"
+                    hover-class="{{item.reason ? '' : 'cdd__item--press'}}" hover-stay-time="60"
+                    aria-role="button" aria-label="{{item.label}}{{item.reason ? '，' + item.reason : ''}}" aria-disabled="{{!!item.reason}}">
+                <text class="cdd__cell-name">{{item.label}}</text>
+                <text class="cdd__cell-sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text>
+                <text class="cdd__cell-mark" wx:if="{{index === value && index !== uncheckedValue}}">已选</text>
+              </view>
+            </view>
+          </block>
           <block wx:else>
           <view class="cdd__item {{index === value ? 'cdd__item--on' : ''}}"
                 wx:for="{{labels}}" wx:key="index"

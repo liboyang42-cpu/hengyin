@@ -27,15 +27,18 @@ function positiveId(value) {
 // 「今天」,非上海时区的设备上表单显示的是设备日历的今天、后端比的是上海日历的今天 ——
 // 表单里明明写着今天,回包却说「场次日期不能早于今天」。
 function shanghaiToday() { return chinaDateKey(new Date()) }
+// 「仅改未来」的服务端边界是上海明日 00:00:今天的场次不在编辑范围内,表单也不能回填或选今天。
+function shanghaiTomorrow() { return chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
-// 只可能是今天这一档:物化器保证所有日期 >= 今天,WEEKLY 的后续场次都是 +7 天。
+// 页面跨过上海午夜时，表单仍可能保留前一天的日期。
 function assemblyAlreadyPast(dates, startTime, now) {
   const clock = chinaParts(now)
   const parts = /^(\d{2}):(\d{2})$/.exec(String(startTime || ''))
   if (!clock || !parts) return false
   const today = clock.year + '-' + (clock.month < 10 ? '0' + clock.month : clock.month)
     + '-' + (clock.day < 10 ? '0' + clock.day : clock.day)
+  if ((dates || []).some(date => date && date < today)) return true
   if (!(dates || []).some(date => date === today)) return false
   return (Number(parts[1]) * 60 + Number(parts[2])) <= (clock.hours * 60 + clock.minutes)
 }
@@ -367,6 +370,7 @@ Page({
     // 集合时刻是场次退款钟(集合前 24h)的锚点,后端缺它会拒绝开场(5.9 起)。
     startTime: '09:00',
     minDate: shanghaiToday(),
+    futureMinDate: shanghaiTomorrow(),
     occurrenceCount: 4,
     customDates: [shanghaiToday()],
     capacity: '',
@@ -650,8 +654,11 @@ Page({
           return
         }
         that._expectedVersion = series.version
-        const dates = series.futureDates.length ? series.futureDates : [that.data.minDate]
+        const futureMinDate = shanghaiTomorrow()
+        const futureDates = series.futureDates.filter(date => date >= futureMinDate)
+        const dates = futureDates.length ? futureDates : [futureMinDate]
         that.setData({
+          futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
           recurrenceType: series.recurrenceType,
@@ -782,6 +789,15 @@ Page({
     if (this.data.recurrenceType === 'CUSTOM_DATES' && customDates.length === 0) {
       toast('请至少选择一个日期')
       return
+    }
+    if (editingSeriesId) {
+      const futureMinDate = shanghaiTomorrow()
+      const editedDates = this.data.recurrenceType === 'CUSTOM_DATES' ? customDates : [this.data.startDate]
+      if (editedDates.some(date => !date || date < futureMinDate)) {
+        this.setData({ futureMinDate })
+        toast('只能改明天及之后的场次')
+        return
+      }
     }
     const startTime = String(this.data.startTime || '').trim()
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) {

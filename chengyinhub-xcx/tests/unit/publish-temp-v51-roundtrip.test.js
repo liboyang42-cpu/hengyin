@@ -11,6 +11,7 @@ const PAGE = '../../pages/publish/temp/index.js';
 
 let pageConfig = null;
 let imageCallback;
+let navigationColor;
 
 const testApp = {
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -24,6 +25,7 @@ const testApp = {
 };
 global.getApp = () => testApp;
 global.wx = {
+  setNavigationBarColor: value => { navigationColor = value; },
   getStorageSync: () => undefined,
   setStorageSync: () => {},
   removeStorageSync: () => {},
@@ -54,6 +56,24 @@ function loadPage() {
   page.hasModule = () => false;
   return page;
 }
+test('发布自己的模板带原 id 与清空意图，新建和公共复制不带 id', () => {
+  const page = loadPage();
+  page.validateForm = () => true;
+  page.prepareFormData = () => ({ id: 999, title: '玩法', clearFields: ['merchantGuide'] });
+  const sent = [];
+  page.sendData = (body, url) => sent.push({ body, url });
+  page._templateId = 45; page.data.isMyScope = true;
+  page.publishGame();
+  assert.equal(sent[0].url, '/api/template/publish');
+  assert.equal(sent[0].body.id, 45);
+  assert.deepEqual(sent[0].body.clearFields, ['merchantGuide']);
+  page.data.isMyScope = false; page.publishGame();
+  assert.equal(Object.hasOwn(sent[1].body, 'id'), false);
+  page._templateId = 0; page.publishGame();
+  assert.equal(Object.hasOwn(sent[2].body, 'id'), false);
+  page.data.from = 'fabu'; page._boundDraftId = 46; page.publishGame();
+  assert.equal(sent[3].url, '/api/template/draft');assert.equal(sent[3].body.id, 46);
+});
 
 beforeEach(() => { pageConfig = null; });
 
@@ -145,9 +165,16 @@ test('故事玩法预览按编辑值运行，头像、留言和照片不上传�
     const before = JSON.stringify(page.data.advanced);
     page.previewGameFromSheet(event(key));
     assert.equal(page.data.previewVisible, true);
+    assert.equal(navigationColor.frontColor, '#ffffff');
     assert.equal(JSON.stringify(page.data.advanced), before);
     page.closePreview();
-    page.pickGame(event(key));
+    assert.equal(navigationColor.frontColor, '#000000');
+    if (key === 'typeIn') {
+      // R5 新选输入挑战禁用；存量模板仍须保留并可本地预览。
+      page.fillFormWithTemplateData({ title: '存量输入挑战', validationMethod: 0, advancedConfigJson: JSON.stringify({
+        schemaVersion: 1, typeIn: { enabled: true, title: '旧输入挑战', target: '正确答案', seconds: 30 },
+      }) });
+    } else page.pickGame(event(key));
     page.data.advanced[key].title = '现在编辑的内容';
     page.tryCurrentGame();
     assert.equal(page.data.pvKit.title, '现在编辑的内容');

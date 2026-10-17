@@ -7,9 +7,12 @@ name: GitHub CI
 on:
   workflow_dispatch:
   pull_request:
-    branches: [master, feature/mini-unify-1003, feature/popup-ship-1005]
+    branches: [master, feature/mini-unify-1003, feature/popup-ship-1005, feature/prelaunch-audit-1007]
   push:
     branches: [master]
+
+env:
+  CHENGYIN_REPO: ${{ github.workspace }}
 
 permissions:
   contents: read
@@ -64,6 +67,11 @@ jobs:
               - 'pom.xml'
               # Backend tests 直接执行的门禁脚本也必须触发本 job。
               - 'ci/backend-test.sh'
+              - 'ci/test_wechat_registration_ci_contract.py'
+              - 'ci/upgrade-startup-smoke.sh'
+              - 'ci/upgrade-startup/**'
+              - 'ci/upgrade_startup_network.py'
+              - 'ci/test_upgrade_startup_network.py'
               - 'ci/role_permission_contract.py'
               - 'ci/test_role_permission_contract.py'
               - 'ci/deploy-restart.sh'
@@ -96,6 +104,8 @@ jobs:
               - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/test_community_legacy_owner_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/test_migration_runner_ci_contract.py'
               - 'ci/funds-mysql-it-gate.sh'
               # 改后端 job 自身时必须跑后端测试，不能靠 skipped 通过。
@@ -159,6 +169,8 @@ jobs:
               - 'ci/test_quartz_jobs_pause_repair_mysql_integration.py'
               - 'ci/test_migration_historical_schema_forward_fix_mysql_integration.py'
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
+              - 'ci/test_community_legacy_owner_mysql_integration.py'
+              - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
               - 'ci/classify-runtime.sh'
@@ -173,12 +185,18 @@ jobs:
               - '.github/workflows/ci.yml'
       - name: Verify CI cost routing contract
         run: python3 ci/test_ci_cost_contract.py
+      - name: Verify fresh test administrator bootstrap contracts
+        run: python3 ci/test_bootstrap_test_admin.py
       - name: Verify template cover contract
         # 挂**无条件** job:封面契约横跨 docs/assets、ci/ 与 chengyinhub-admin/sql,
         # 挂任一 path filter 都会让另两处的 PR 整个 skip = 假绿。
         # 2026-08-25 之前这个测试文件存在但没接进任何 workflow,从来没跑过。
         # 纯 stdlib、毫秒级,不引入扫描成本。
         run: python3 ci/test_template_cover_contract.py
+      - name: Verify licensed seed assets and read-only replacement preparation
+        run: |
+          node --test chengyinhub-xcx/tests/unit/licensed-seed-icon-assets.test.js
+          python3 scripts/test_prepare_licensed_seed_assets.py
       - name: Run control-plane readback negative controls
         # Detect changed areas 是 required context 且每次都跑；部署/镜像/漂移脚本不能落到可 skip 的盲区。
         run: bash ci/test_control_plane_readbacks.sh
@@ -261,6 +279,9 @@ jobs:
     # GitHub-hosted 有 Docker,继续用按 run 唯一的 docker run(不是 services:),避免并发互删容器。
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
       # 镜像 tag 放 env MYSQL_IMAGE,供 ci/test_migration_runner_ci_contract.py 锁版本。
       # 继续 docker run 而不是 services:,因为容器名/端口必须按 run 唯一(见下方 IT_NAME)。
       - name: Ensure Docker is available
@@ -353,11 +374,21 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '21'
           cache: maven
       - name: Build and test backend
-        run: bash ci/backend-test.sh
+        run: |
+          python3 -m unittest ci/test_wechat_registration_ci_contract.py
+          test "$(docker exec "$IT_NAME" mysql -uroot -proot -Nse "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}'")" = 0
+          docker exec "$IT_NAME" mysql -uroot -proot -e "CREATE DATABASE ${CHENGYIN_TEST_MYSQL_DATABASE_BASE}_wechat_identity${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+          bash ci/backend-test.sh
         env:
+          CHENGYIN_WECHAT_IDENTITY_MYSQL_IT: "true"
+          CHENGYIN_TEST_MYSQL_DATABASE_BASE: chengyin_ci
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
+          IT_NAME: chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }}
+          MAVEN_OPTS: -Xmx1024m
+          MAVEN_ARGS: -DargLine=-Xmx2048m -Dspring.test.context.cache.maxSize=4
           # 2026-08-19 一类一库:MyBatis 真库 IT 各自建自己的 schema(见 MybatisItDatabase),
           # 建库要的权限 ituser 没有(service 只把 chengyin_mybatis_it 授给它)⇒ 走 root。
           # 本机 root 是空口令、这个 service 是 root/root,所以密码在这里显式给,不写进代码默认值。
@@ -365,6 +396,19 @@ jobs:
           CHENGYIN_MYBATIS_IT_PASSWORD: root
           # 端口按 run 动态分配(见 Start MySQL 步的注释),不再是固定 3307
           CHENGYIN_MYBATIS_IT_PORT: ${{ env.IT_PORT }}
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: root
+      - name: Verify isolated full application startup
+        run: |
+          python3 -I ci/test_upgrade_startup_network.py
+          if ! command -v strace >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y strace
+          fi
+          mvn -B -DskipTests package
+          bash ci/upgrade-startup-smoke.sh
       - name: Run localhost atomic migration MySQL IT by exact class
         run: |
           python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
@@ -403,8 +447,8 @@ jobs:
     runs-on: ubuntu-latest
     # ★2026-09-01:单测只跑一遍 TZ=Asia/Shanghai。第二遍 America/Los_Angeles 把 ~4800 条
     #   翻倍,额度上不值;UTC+8 已经能抓住「本地日 ≠ UTC 日」那类结构性缺陷。
-    # 全量单测在 hosted runner 约 16 分钟，保留后续静态门禁的执行时间。
-    timeout-minutes: 30
+    # 全量单测在 hosted runner 已达 28 分钟，保留后续静态门禁的执行时间。
+    timeout-minutes: 60
     # ★ 用**生产用户的时区**跑,不要用 runner 默认的 UTC。
     # 时区相关的缺陷在 UTC 下结构性地抓不到:UTC 机器上「UTC 日」恒等于「本地日」,
     # 于是 toISOString() 与本地取值两种写法完全等价,写错了也永远绿。
@@ -541,6 +585,7 @@ jobs:
           curl -fsSL "$release/gitleaks_8.24.3_checksums.txt" -o "$scanner/checksums.txt"
           (cd "$scanner" && sha256sum --check --ignore-missing checksums.txt)
           tar -xzf "$scanner/gitleaks_8.24.3_linux_x64.tar.gz" -C "$scanner" gitleaks
+          python3 ci/test_secret_inventory_allowlist.py --gitleaks "$scanner/gitleaks"
           "$scanner/gitleaks" git --redact --log-opts='origin/master..HEAD' .
           git archive HEAD | tar -x -C "$source_tree"
           "$scanner/gitleaks" dir --redact --config .gitleaks.toml "$source_tree"
@@ -560,6 +605,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test dependency gate contract
         run: python3 -m unittest ci/test_dependency_audit_gate.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build backend artifact for dependency scan
+        run: |
+          mvn -B -q -pl chengyinhub-admin -am -DskipTests package
+          test -s chengyinhub-admin/target/chengyinhub-admin.jar
       - name: Generate SBOM (syft)
         uses: anchore/sbom-action@v0.24.0
         with:
@@ -637,5 +691,7 @@ jobs:
       # 缺了它 unittest 是 ImportError 而不是跳过 —— 装上,别让负控静默消失。
       - name: Install e2e chain test deps
         run: python3 -m pip install --quiet pymysql
+      - name: Verify isolated candidate objects and packaged resource provenance
+        run: python3 -m unittest ci/test_shallow_source_custody.py ci/test_candidate_resource_manifest.py ci/test_prelaunch_business_seeds.py
       - name: Run versioned migration runner unit and CI wiring contracts
         run: python3 -m unittest -v ci/test_run_migration.py ci/test_migration_runner_ci_contract.py ci/test_migration_h8_registration_columns.py ci/test_migration_h8_rate_scope.py ci/test_migration_h8_detail_move.py ci/test_mapper_h8_column_isolation.py ci/test_migration_h8_publisher_guard.py scripts/e2e/test_build_schema.py scripts/e2e/test_chain_lib.py scripts/e2e/test_chain_merchant_club.py scripts/e2e/test_chain_platform.py scripts/e2e/test_chain_sale_close.py

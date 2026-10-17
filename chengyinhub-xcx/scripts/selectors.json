@@ -290,7 +290,7 @@
   "min": 1
  },
  "F01": {
-  "selector": ".mp-empty__b",
+  "selector": ".mp-empty",
   "min": 1,
   "viewNodeMin": 3
  },
@@ -858,7 +858,7 @@
   "min": 5
  },
  "B70": {
-  "selector": ".gc-score-rank",
+  "selector": ".gc-row-me",
   "min": 1
  },
  "B71": {

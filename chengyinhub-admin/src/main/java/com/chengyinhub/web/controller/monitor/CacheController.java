@@ -21,6 +21,7 @@ import com.chengyinhub.common.constant.CacheConstants;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.system.domain.SysCache;
+import com.chengyinhub.web.controller.system.SysConfigController;
 
 /**
  * 缓存监控
@@ -80,6 +81,10 @@ public class CacheController
     @GetMapping("/getKeys/{cacheName}")
     public AjaxResult getCacheKeys(@PathVariable String cacheName)
     {
+        if (!listedCacheName(cacheName))
+        {
+            return AjaxResult.error("不支持的缓存名称");
+        }
         Set<String> cacheKeys = redisTemplate.keys(cacheName + "*");
         return AjaxResult.success(new TreeSet<>(cacheKeys));
     }
@@ -88,7 +93,13 @@ public class CacheController
     @GetMapping("/getValue/{cacheName}/{cacheKey}")
     public AjaxResult getCacheValue(@PathVariable String cacheName, @PathVariable String cacheKey)
     {
-        String cacheValue = redisTemplate.opsForValue().get(cacheKey);
+        // 只允许读取列出的缓存分组内的键；会话、验证码与敏感参数只显示掩码，
+        // 否则这里就是绕过参数设置掩码、读取任意 Redis 值（短信验证码、会话）的旁路。
+        if (!listedCacheName(cacheName) || cacheKey == null || !cacheKey.startsWith(cacheName))
+        {
+            return AjaxResult.error("不支持的缓存键");
+        }
+        String cacheValue = maskedValue(cacheName, cacheKey) ? MASK : redisTemplate.opsForValue().get(cacheKey);
         SysCache sysCache = new SysCache(cacheName, cacheKey, cacheValue);
         return AjaxResult.success(sysCache);
     }
@@ -97,6 +108,10 @@ public class CacheController
     @DeleteMapping("/clearCacheName/{cacheName}")
     public AjaxResult clearCacheName(@PathVariable String cacheName)
     {
+        if (!listedCacheName(cacheName))
+        {
+            return AjaxResult.error("不支持的缓存名称");
+        }
         Collection<String> cacheKeys = redisTemplate.keys(cacheName + "*");
         redisTemplate.delete(cacheKeys);
         return AjaxResult.success();
@@ -106,8 +121,29 @@ public class CacheController
     @DeleteMapping("/clearCacheKey/{cacheKey}")
     public AjaxResult clearCacheKey(@PathVariable String cacheKey)
     {
+        if (cacheKey == null || caches.stream().noneMatch(c -> cacheKey.startsWith(c.getCacheName())))
+        {
+            return AjaxResult.error("不支持的缓存键");
+        }
         redisTemplate.delete(cacheKey);
         return AjaxResult.success();
+    }
+
+    private static final String MASK = "******";
+
+    private static boolean listedCacheName(String cacheName)
+    {
+        return cacheName != null && caches.stream().anyMatch(c -> c.getCacheName().equals(cacheName));
+    }
+
+    static boolean maskedValue(String cacheName, String cacheKey)
+    {
+        if (CacheConstants.LOGIN_TOKEN_KEY.equals(cacheName) || CacheConstants.CAPTCHA_CODE_KEY.equals(cacheName))
+        {
+            return true;
+        }
+        return CacheConstants.SYS_CONFIG_KEY.equals(cacheName)
+                && SysConfigController.sensitiveKey(cacheKey.substring(cacheName.length()));
     }
 
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")

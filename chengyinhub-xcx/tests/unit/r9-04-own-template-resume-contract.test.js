@@ -47,7 +47,7 @@ function installGlobals() {
     navigateTo(options) { navigations.push({ method: 'navigateTo', url: options.url }) },
     redirectTo(options) { navigations.push({ method: 'redirectTo', url: options.url }) },
     navigateBack() {},
-    reLaunch() {},
+    reLaunch(options) { navigations.push({ method: 'reLaunch', url: options.url }) },
     createSelectorQuery: () => ({ in: () => ({ select: () => ({ boundingClientRect: () => ({ exec() {} }) }), exec() {} }) }),
   }
 }
@@ -112,6 +112,27 @@ test('公共库模板的应用跳转保持原样(不额外塞 scope)', () => {
   }])
 })
 
+test('商家公开详情应用后采用和作者回读仍使用商家作用域', () => {
+  const detail = loadPage('pages/templatedetail/templatedetail.js')
+  detail.onLoad({ id: '62', operationScope: 'MERCHANT' })
+  detail.goPrimary()
+  const url = new URL(navigations.at(-1).url, 'https://local.invalid')
+  assert.equal(url.searchParams.get('scope'), 'MERCHANT')
+  requests = []
+  const editor = loadPage('pages/publish/temp/index.js')
+  editor.onLoad(Object.fromEntries(url.searchParams))
+  assert.equal(editor.data.isMyScope, false)
+  const source = templateRequest()
+  assert.equal(source.url, '/api/template/info')
+  source.success({ code: 200, data: { id: 62, title: '今日城市签' } })
+  const adopt = requests.find(item => item.url === '/api/template/adopt-draft')
+  assert.equal(JSON.parse(adopt.data).scope, 'MERCHANT')
+  adopt.success({ code: 200, data: 990067 })
+  const readback = requests.find(item => item.url === '/api/template/myinfo')
+  assert.equal(readback.data.id, 990067)
+  assert.equal(readback.data.scope, 'MERCHANT')
+})
+
 test('RED 锚点:编辑页带 scope=my 时查个人草稿接口,不再查公共库', () => {
   const page = loadPage('pages/publish/temp/index.js')
   page.onLoad({ id: '6029', scope: 'my' })
@@ -155,6 +176,50 @@ test('续编:个人草稿保存草稿时仍带原 id 走 /api/template/draft', (
   const body = JSON.parse(draft.data)
   assert.equal(body.id, 6029, '续编必须更新原草稿而不是另建一份')
   assert.equal(body.scope, '')
+})
+
+test('商家草稿列表、详情、继续编辑与保存返回完整保留作用域；个人入口不转商家', () => {
+  for (const scope of ['', 'MERCHANT']) {
+    requests = []
+    navigations = []
+    const list = loadPage('subpackageMember/mytemplate/mytemplate.js')
+    list.onLoad({ scope })
+    const listRequest = requests.find(item => item.url === '/api/template/my-list')
+    assert.equal(listRequest.data.scope || '', scope)
+    listRequest.success({ code: 200, data: { rows: [{ id: 6029, title: '已采用草稿' }], total: 1 } })
+    listRequest.complete()
+    list.goInfo({ currentTarget: { dataset: { index: 0 } } })
+    const query = url => Object.fromEntries(new URL(url, 'https://local.invalid').searchParams)
+
+    const detail = loadPage('pages/templatedetail/templatedetail.js')
+    detail.onLoad(query(navigations.at(-1).url))
+    assert.equal(requests.filter(item => item.url === '/api/template/myinfo').at(-1).data.scope || '', scope)
+    detail.goPrimary()
+
+    const editor = loadPage('pages/publish/temp/index.js')
+    editor.onLoad(query(navigations.at(-1).url))
+    assert.equal(editor.data.isMyScope, true)
+    assert.equal(editor.data.operationScope, scope)
+    const readback = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
+    assert.equal(readback.data.scope || '', scope)
+    readback.success({ code: 200, data: { id: 6029, title: '已采用草稿', originalTemplateId: 16, validationMethod: 1 } })
+    editor.validateForm = () => true
+    editor.saveDraft()
+    const body = JSON.parse(requests.filter(item => item.url === '/api/template/draft').at(-1).data)
+    assert.equal(body.id, 6029)
+    assert.equal(body.scope, scope)
+    assert.equal(body.originalTemplateId, 16)
+
+    const expected = '/subpackageMember/mytemplate/mytemplate' + (scope ? '?scope=MERCHANT' : '')
+    editor.onResultSheetClose()
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+    editor.data.creationSuccess = { secondaryAction: 'templates' }
+    editor._leaveCreationSuccess('secondaryAction')
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+    editor._adoptionUnconfirmed = true
+    editor.retryGetData()
+    assert.deepEqual(navigations.at(-1), { method: 'reLaunch', url: expected })
+  }
 })
 
 test('主题内玩法完整保存为私有草稿并回传呈现和规则，不独立发布', () => {

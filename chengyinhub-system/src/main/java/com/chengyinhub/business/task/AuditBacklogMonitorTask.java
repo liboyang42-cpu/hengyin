@@ -1,6 +1,8 @@
 package com.chengyinhub.business.task;
 
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +53,22 @@ public class AuditBacklogMonitorTask {
             log.info("审核积压巡检:待审超{}h积压 {} 条(阈值{})、已超期 {} 条", slaHours, backlog, backlogThreshold, overdue);
 
             if (backlog > backlogThreshold || overdue > 0) {
-                alarmService.alarm("UGC审核积压",
+                String backlogIds = ids(auditTaskMapper.samplePendingBacklogIds(cutoff));
+                String overdueIds = ids(auditTaskMapper.samplePendingOverdueIds(now));
+                log.warn("Audit monitor anomaly backlog={} overdue={} backlogTaskIds={} overdueTaskIds={}",
+                        backlog, overdue, backlogIds, overdueIds);
+                alarmService.alarmThrottled("monitor.audit.backlog", "UGC审核积压",
                         "待审超" + slaHours + "h积压 " + backlog + " 条(阈值" + backlogThreshold + ")、已超期 " + overdue
-                                + " 条,请安排审核人及时处理 HOLD 队列。");
+                                + " 条 backlogTaskIds=" + backlogIds + " overdueTaskIds=" + overdueIds);
             }
         } catch (Exception e) {
-            log.error("审核积压巡检异常", e);
+            log.error("审核积压巡检异常 type={}", e.getClass().getSimpleName());
+            throw new IllegalStateException("Audit backlog monitor failed", e);
         }
+    }
+
+    private String ids(List<Long> values) {
+        return values == null ? "UNKNOWN" : values.stream().limit(20)
+                .map(id -> id == null ? "UNKNOWN" : id.toString()).collect(Collectors.joining(",", "[", "]"));
     }
 }

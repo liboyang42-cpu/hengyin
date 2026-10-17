@@ -17,6 +17,8 @@ Component({
     // 单一局部恢复动作；空值时不渲染 CTA。
     action: { type: String, value: '' },
     aria: { type: String, value: '' },
+    // loadFailure:加载/刷新类失败不展示;操作失败与表单校验不要传。
+    loadFailure: { type: Boolean, value: false },
   },
   data: {
     _glyph: 'info',

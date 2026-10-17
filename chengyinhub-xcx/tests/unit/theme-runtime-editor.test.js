@@ -24,8 +24,8 @@ p.onRuntimePolicy(event('allowDiscard',false));assert.equal(editor.config(p.data
 p.openChapterEggs();p.addRuntimeEgg();p.onRuntimeEgg(event('name','消息'));p.onRuntimeEgg(event('content','消息内容'));p.onRuntimeEgg(event('trigger',1));p.onRuntimeEgg(event('threshold',300));
 assert.equal(editor.config(p.data.formData.themeRuntimeConfig).chapters[0].eggs[0].trigger,'STEPS');
 p._removeRuntimeChapter(0);assert.equal(editor.config(p.data.formData.themeRuntimeConfig).chapters.length,0);
-const bag = player.present({capacity:6,contents:[{id:'a',kind:'ITEM',stat:'HP',quantity:2},{id:'b',kind:'ITEM',name:'天气图',quantity:1},{id:'m',kind:'MEDAL',quantity:1}],events:[{id:'e',name:'消息',content:'内容'}],pending:{p:{quantity:1}}});
-assert.equal(bag.slots.length,6);assert.equal(bag.slots.filter(s=>s.filled).length,3);assert.equal(bag.items.length,1);assert.equal(bag.clues.length,3);assert.equal(bag.pendingRows[0].id,'p');
+const bag = player.present({used:3,capacity:6,contents:[{id:'a',kind:'ITEM',stat:'HP',quantity:2},{id:'b',kind:'ITEM',name:'天气图',quantity:1},{id:'m',kind:'MEDAL',quantity:1}],events:[{id:'e',name:'消息',content:'内容'}],pending:{p:{quantity:1}}});
+assert.equal(bag.used,3);assert.equal(bag.capacity,6);assert.equal(bag.items.length,2);assert.equal(bag.clues.length,2);assert.equal(bag.pendingRows[0].id,'p');
 async function retry() {
  const requests=[];
  const p = {data:Object.assign({},player.data,{topicId:2,themeBag:{sessionId:4,version:7}}),setData(patch){Object.assign(this.data,patch);},_sessionParams:()=>({topicId:2}),refreshRouteState:()=>Promise.resolve(true)};

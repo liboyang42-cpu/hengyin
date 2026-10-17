@@ -208,6 +208,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         seedNodes(ACTIVITY_TOPIC, 2);
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
+        activity.setCancelTime(new java.util.Date());
         activity.setTopicId(ACTIVITY_TOPIC);
         activity.setName("活动场次");
         activity.setImgUrl("https://cdn/act.png");
@@ -226,6 +227,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertEquals(ACTIVITY, ((Number) item.get("dataId")).longValue(), "统一关联 ID 指向活动");
         assertEquals("活动场次", item.get("name"));
         assertEquals(2, item.get("doneCount"));
+        assertEquals(list, controller.myCompleted(false).get("data"), "default preserves cancelled completed history");
     }
 
     @Test
@@ -367,4 +369,29 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertEquals(sharedTopic, ((Number) selfPlayItem.get("dataId")).longValue());
         assertNull(selfPlayItem.get("activityId"));
     }
+    @Test
+    void publicReferencePurposePreservesDefaultHistoryAndErrors()
+    {
+        com.chengyinhub.business.service.ICommunityPostService references =
+                mock(com.chengyinhub.business.service.ICommunityPostService.class);
+        ReflectionTestUtils.setField(controller, "communityPostService", references);
+        List<Map<String, Object>> history = new ArrayList<>();
+        Map<String, Object> cancelled = new LinkedHashMap<>();
+        cancelled.put("dataType", 1); cancelled.put("dataId", 63L); cancelled.put("completed", true);
+        history.add(cancelled);
+        AjaxResult original = AjaxResult.success(history);
+        doReturn(original).when(controller).myCompleted();
+        org.junit.jupiter.api.Assertions.assertSame(original, controller.myCompleted(false));
+        org.mockito.Mockito.verify(references, org.mockito.Mockito.never()).filterPublicCompletedReferences(anyLong(), any());
+        when(references.filterPublicCompletedReferences(PLAYER, history)).thenReturn(Collections.emptyList());
+        AjaxResult publicResult = controller.myCompleted(true);
+        assertTrue(publicResult.isSuccess());
+        assertEquals(Collections.emptyList(), publicResult.get("data"));
+        assertEquals(1, history.size(), "filtering must not erase historical rows");
+        AjaxResult failure = AjaxResult.error("please login");
+        doReturn(failure).when(controller).myCompleted();
+        org.junit.jupiter.api.Assertions.assertSame(failure, controller.myCompleted(true));
+        org.mockito.Mockito.verify(references, org.mockito.Mockito.times(1)).filterPublicCompletedReferences(anyLong(), any());
+    }
+
 }

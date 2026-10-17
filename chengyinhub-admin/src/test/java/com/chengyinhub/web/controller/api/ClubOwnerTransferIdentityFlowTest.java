@@ -97,6 +97,12 @@ class ClubOwnerTransferIdentityFlowTest {
             if (Long.valueOf(OWNER).equals(patch.getId())) ownerAccount.setRole(patch.getRole());
             return 1;
         });
+        org.mockito.Mockito.doAnswer(call -> {
+            Long id = call.getArgument(0, Long.class); String role = call.getArgument(1, String.class);
+            if (id.equals(TARGET)) targetAccount.setRole(role);
+            if (id.equals(OWNER)) ownerAccount.setRole(role);
+            return null;
+        }).when(roleService).changeRole(anyLong(), any(String.class), anyLong());
         when(roleService.resolveRole(any(UmsMember.class))).thenAnswer(call -> {
             String role = call.getArgument(0, UmsMember.class).getRole();
             return role == null ? IRoleService.ROLE_PLAYER : role;

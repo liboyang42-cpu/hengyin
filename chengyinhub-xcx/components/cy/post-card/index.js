@@ -8,6 +8,7 @@ Component({
     showMore: { type: Boolean, value: false },
     showShare: { type: Boolean, value: false },
     showFavorite: { type: Boolean, value: false },
+    expandableText: { type: Boolean, value: false },
     interactiveActions: { type: Boolean, value: false },
     interactiveUser: { type: Boolean, value: false },
     interactiveClub: { type: Boolean, value: false },
@@ -18,7 +19,17 @@ Component({
     light: { type: Boolean, value: false },
     accessibilityLabel: { type: String, value: '查看帖文' },
   },
+  data: { textExpanded: false, textLong: false },
+  observers: {
+    'post.id': function () { this.setData({ textExpanded: false }); },
+    // 收起态夹 2 行:超过约 40 字,或换行把正文分成 3 段以上(短句多段的公告/规则),都要给「展开」。
+    'post.contents': function (contents) {
+      const text = typeof contents === 'string' ? contents : '';
+      this.setData({ textLong: text.length > 40 || text.split(/\r?\n/).length > 2 });
+    },
+  },
   methods: {
+    toggleText() { this.setData({ textExpanded: !this.data.textExpanded }); },
     eventDetail() {
       const post = this.data.post || {};
       return { index: this.data.index, postId: post.id, memberId: post.memberId, clubId: post.clubId };

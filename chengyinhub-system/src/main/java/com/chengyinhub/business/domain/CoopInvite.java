@@ -12,6 +12,10 @@ import com.chengyinhub.common.core.domain.BaseEntity;
  * 历史 type2 仅保留读取兼容，不得再创建或变更状态。
  */
 public class CoopInvite extends BaseEntity {
+    private com.chengyinhub.business.domain.vo.TopicSaleReviewProgress saleReviewProgress;
+    public com.chengyinhub.business.domain.vo.TopicSaleReviewProgress getSaleReviewProgress() { return saleReviewProgress; }
+    public void setSaleReviewProgress(com.chengyinhub.business.domain.vo.TopicSaleReviewProgress value) { this.saleReviewProgress = value; }
+
     private static final long serialVersionUID = 1L;
 
     public static final int TYPE_OFFICIAL_MERCHANT = 3;

@@ -366,14 +366,11 @@ class ClubGovernanceServiceImplTest {
         assertEquals(0, promotedProfile.getValue().getLevel());
         assertEquals(1, promotedProfile.getValue().getStatus());
         assertEquals(0, promotedProfile.getValue().getDelFlag());
-        verify(capabilityService).grant(TARGET, MemberCapability.CAP_CLUB_LEADER, OWNER);
-        verify(capabilityService).revoke(OWNER, MemberCapability.CAP_CLUB_LEADER);
-        ArgumentCaptor<UmsMember> roleUpdates = ArgumentCaptor.forClass(UmsMember.class);
-        verify(umsMemberService, times(2)).updateUmsMember(roleUpdates.capture());
-        assertTrue(roleUpdates.getAllValues().stream().anyMatch(row -> TARGET == row.getId()
-                && IRoleService.ROLE_CLUB.equals(row.getRole())));
-        assertTrue(roleUpdates.getAllValues().stream().anyMatch(row -> OWNER == row.getId()
-                && IRoleService.ROLE_PLAYER.equals(row.getRole())));
+        verify(roleService).changeRole(TARGET, IRoleService.ROLE_CLUB, OWNER);
+        verify(roleService).changeRole(OWNER, IRoleService.ROLE_PLAYER, 0L);
+        verify(capabilityService, never()).grant(any(), any(), any());
+        verify(capabilityService, never()).revoke(any(), any());
+        verify(umsMemberService, never()).updateUmsMember(any());
         ArgumentCaptor<BusinessAuditEvent> audit = ArgumentCaptor.forClass(BusinessAuditEvent.class);
         verify(audits).insertBusinessAuditEvent(audit.capture());
         assertEquals("CLUB_OWNER_TRANSFERRED", audit.getValue().getAction());
@@ -513,10 +510,9 @@ class ClubGovernanceServiceImplTest {
         service.transferOwner(OWNER, CLUB, TARGET, "仍有另一俱乐部", "transfer-keep-leader");
 
         verify(capabilityService, never()).revoke(OWNER, MemberCapability.CAP_CLUB_LEADER);
-        ArgumentCaptor<UmsMember> roleUpdates = ArgumentCaptor.forClass(UmsMember.class);
-        verify(umsMemberService).updateUmsMember(roleUpdates.capture());
-        assertEquals(TARGET, roleUpdates.getValue().getId());
-        assertEquals(IRoleService.ROLE_CLUB, roleUpdates.getValue().getRole());
+        verify(roleService).changeRole(TARGET, IRoleService.ROLE_CLUB, OWNER);
+        verify(roleService, never()).changeRole(eq(OWNER), any(), any());
+        verify(umsMemberService, never()).updateUmsMember(any());
     }
 
     @Test

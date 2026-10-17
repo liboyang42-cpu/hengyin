@@ -128,14 +128,20 @@ public class ApiCommonController extends BaseController {
                     appUploadService.uploadOss(file, bizType, memberId, merchantId, refundId);
             AjaxResult ajax = AjaxResult.success();
             ajax.put("fileName", jsonObject.get("fileName"));
+            if(jsonObject.containsKey("assetId")) {
+                ajax.put("assetId",jsonObject.get("assetId"));
+                ajax.put("reviewState",jsonObject.get("reviewState"));
+                ajax.put("reviewReason",jsonObject.get("reviewReason"));
+            }
             if (!UploadImagePolicy.MERCHANT_AFTERCARE_EVIDENCE_BIZ_TYPE.equals(bizType)) {
                 ajax.put("url", jsonObject.get("url"));
             }
             if (communityMemberId != null) {
                 String objectKey = String.valueOf(jsonObject.get("url"));
-                ajax.put("byteSize", file.getSize());
+                long byteSize = jsonObject.getLongValue("byteSize");
+                ajax.put("byteSize", byteSize);
                 ajax.put("mimeType", StringUtils.defaultIfEmpty(file.getContentType(), "application/octet-stream"));
-                ajax.put("uploadReceipt", communityMediaReceiptService.issue(communityMemberId, objectKey, file.getSize()));
+                ajax.put("uploadReceipt", communityMediaReceiptService.issue(communityMemberId, objectKey, byteSize));
             }
             return ResponseEntity.ok(ajax);
         } catch (UploadRejectedException e) {

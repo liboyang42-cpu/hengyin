@@ -22,7 +22,7 @@
 
     <!-- errorMsg 原样透传,不吞后端文案 -->
     <block wx:elif="{{errorMsg}}">
-      <cy-error fill class="cy-fill-state" size="lg" title="可投诉活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
+      <cy-error load-failure fill class="cy-fill-state" size="lg" title="可投诉活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
     </block>
 
     <block wx:elif="{{topics.length === 0}}">
@@ -70,6 +70,20 @@
                 loading="{{submitting}}" disabled="{{!canSubmit}}" bindtap="submit">提交投诉</cy-btn>
       </view>
     </block>
+  </view>
+
+  <view class="cp-history">
+    <view class="cp-history-head">
+      <text class="cp-label">我的处理进展</text>
+      <cy-btn variant="text" size="sm" loading="{{historyLoading}}" bindtap="loadHistory">刷新进展</cy-btn>
+    </view>
+    <cy-inline-error wx:if="{{historyAccessError}}" kind="data" title="处理进展不可查看" sub="{{historyAccessError}}" />
+    <view class="cp-field" wx:for="{{history}}" wx:key="id">
+      <text class="cp-history-title">{{item.topicName}}</text>
+      <text class="cp-label">{{item.statusText}}</text>
+      <text class="cp-history-text">{{item.reason}}</text>
+      <text class="cp-history-text" wx:if="{{item.handleNote}}">处理说明：{{item.handleNote}}</text>
+    </view>
   </view>
 
   <cy-sheet show="{{pickerSheet === 'topic'}}" title="选择投诉活动" bind:close="closePickerSheet">

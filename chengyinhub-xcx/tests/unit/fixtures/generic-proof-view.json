@@ -1,0 +1,32 @@
+{
+  "scope": "TEAM",
+  "sessionId": 7,
+  "activityId": 5,
+  "revision": 12,
+  "authorityEpoch": 4,
+  "teamId": 8,
+  "status": "RUNNING",
+  "gameplay": {
+    "activeQuest": "q"
+  },
+  "availableActions": [
+    "QUEST_RESOLVE",
+    "QUEST_CANCEL"
+  ],
+  "quests": [
+    {
+      "operation": "QUEST_RESOLVE",
+      "enabled": false,
+      "trustedPass": false,
+      "disabledReason": "PROOF_PENDING",
+      "questKey": "q",
+      "nodeId": 41,
+      "actionSummary": {
+        "operation": "QUEST_RESOLVE",
+        "enabled": false,
+        "trustedPass": false,
+        "disabledReason": "PROOF_PENDING"
+      }
+    }
+  ]
+}

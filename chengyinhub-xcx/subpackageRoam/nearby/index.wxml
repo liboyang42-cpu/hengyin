@@ -41,8 +41,8 @@
     <view class="mt-foot" wx:if="{{!listRows.length}}">这个范围内暂时没有队伍,放大范围再看看</view>
   </scroll-view>
 
-  <view class="nb-load-error" wx:if="{{loadError}}" style="top:{{hudTop + 56}}px;">
-    <cy-error title="附近的队伍没能读到" sub="地图还在，队伍这次没读到" retry="重试" bind:retry="retryNearby" />
+  <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + 56}}px;">
+    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息没能读到'}}" sub="地图仍可查看，队伍或活动没有读到" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
   </view>
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
@@ -110,6 +110,9 @@
     <view class="pbody">
       <text class="ph1">我的队伍</text>
       <text class="psub">只显示你已加入或申请过的队伍</text>
+      <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前账号无法查看队伍'}}</view>
+      <view class="mt-sbtn mt-sbtn--w" wx:if="{{myReadAccess === 'login'}}" bindtap="loginForMyTeams" aria-role="button" aria-label="去登录" hover-class="cy-pressed" hover-stay-time="80">去登录</view>
+      <view class="mt-notice mt-notice--plain" wx:if="{{myReadError}}" aria-role="text">队伍信息未完整读取，请重新打开重试</view>
       <view class="mt-row" wx:for="{{myRows}}" wx:key="key">
         <view class="mt-row__body">
           <text class="mt-row__n">{{item.name}}</text>
@@ -117,7 +120,7 @@
         </view>
         <view class="mt-sbtn mt-sbtn--{{item.action.kind === 'primary' ? 'w' : 's'}} {{busy ? 'is-busy' : ''}}" data-index="{{index}}" bindtap="onMyRowAction" aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
       </view>
-      <text class="mt-foot" wx:if="{{!myLoading && !myRows.length}}">还没有加入或申请过队伍,在地图上点一支看看</text>
+      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">还没有加入或申请过队伍,在地图上点一支看看</text>
     </view>
   </view>
   </block>

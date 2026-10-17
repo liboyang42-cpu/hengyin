@@ -8,6 +8,15 @@ import java.util.Map;
 
 public interface GameRuntimeSessionMapper {
     int insert(GameRuntimeSession session);
+    GameRuntimeSession selectByIdForUpdate(@Param("id") Long id);
+    GameRuntimeSession selectOwnerByInstance(@Param("activityId") Long activityId, @Param("topicId") Long topicId,
+                                             @Param("nodeId") Long nodeId, @Param("ownerType") Integer ownerType,
+                                             @Param("ownerId") Long ownerId, @Param("playInstanceId") String playInstanceId);
+
+    GameRuntimeSession selectLatestZeroChallenge(@Param("activityId") Long activityId, @Param("topicId") Long topicId,
+            @Param("nodeId") Long nodeId, @Param("ownerType") Integer ownerType, @Param("ownerId") Long ownerId,
+            @Param("gameSessionId") Long gameSessionId, @Param("routeSessionId") Long routeSessionId,
+            @Param("authorityEpoch") Integer authorityEpoch);
 
     GameRuntimeSession selectByOwner(@Param("activityId") Long activityId,
                                      @Param("topicId") Long topicId,
@@ -42,6 +51,8 @@ public interface GameRuntimeSessionMapper {
 
     /** session.version 是调用方看到的旧版本；成功后数据库 version 自增。 */
     int updateStateCas(GameRuntimeSession session);
+    /** 已结算反馈只更新状态JSON，不改主玩法结果或分数。 */
+    int updateFeedbackStateCas(GameRuntimeSession session);
 
     /** 仅允许失败/超时会话原位重开，保留唯一键并用 version 防并发覆盖。 */
     int restartTerminalCas(GameRuntimeSession session);
