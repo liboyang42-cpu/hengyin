@@ -67,6 +67,14 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         }
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
+        Date now = new Date();
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) {
+            throw conflict("活动未上架或已结束，不能加入候补");
+        }
+        Date signupDeadline = ticket.getSignupDeadline() != null ? ticket.getSignupDeadline() : ticket.getStartTime();
+        if (signupDeadline != null && !signupDeadline.after(now)) {
+            throw conflict("票种报名已截止，不能加入候补");
+        }
         long remaining = ticket.getRemainingInventory() == null ? -1L : ticket.getRemainingInventory();
         if (remaining < 0) throw conflict("票库存状态未知");
         if (remaining > 0) throw conflict("当前仍有名额，请直接报名");
@@ -76,7 +84,6 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         if (mapper.selectActiveWaitlist(memberId, activityId, ticketId) != null) {
             throw conflict("你已在该票种候补队列中");
         }
-        Date now = new Date();
         ClubWaitlistEntry entry = new ClubWaitlistEntry();
         entry.setClubId(policy.getClubId());
         entry.setActivityId(activityId);
