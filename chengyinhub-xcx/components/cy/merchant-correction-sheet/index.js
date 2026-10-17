@@ -105,5 +105,10 @@ Component({
     },
     backToForm() { if (!this._busy) this.setData({ stage: 'form' }) },
     close() { if (!this._busy) this.triggerEvent('close') },
+    // BL-184:成功态唯一次按钮,进入「我的纠错」看审核进度
+    openMine() {
+      this.triggerEvent('close')
+      wx.navigateTo({ url: '/subpackageMember/correction-mine/index' })
+    },
   },
 })
