@@ -39,7 +39,7 @@ function mount(relativePath, kind, options = {}) {
   const clock = options.clock || { now: Date.parse('2026-09-14T08:59:58+08:00') }
   let client = null
   const app = {
-    getUserID: () => 'member-A', // 合法读取夹具明确当前账号；缺账号另有负控。
+    getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', // 合法读取夹具明确当前账号；缺账号另有负控。
     sendRequest(options) {
       if (mode === 'plain') {
         requests.push(options)
@@ -121,7 +121,7 @@ function futureCouponRow(extra = {}) {
 
 function loadWallet(rows) {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -165,7 +165,7 @@ test('钱包负控:把可查看退回可核销判定时,未来券入口必须判
   const mutated = source.replace('_canView: status === 0,', '_canView: status === 0 && started,')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 _canView')
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   vm.runInNewContext(mutated, {

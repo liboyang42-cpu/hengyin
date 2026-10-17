@@ -168,6 +168,7 @@ Page({
   // 上传个人项目图片
   uploadCasePics: function() {
     const that = this;
+    const context = this.profileContext();
     const remainingCount = 9 - that.data.tempCasePics.length;
     
     if (remainingCount <= 0) {
@@ -176,9 +177,9 @@ Page({
     }
 
     app.chooseImage(function(res) {
-      const newPics = [...that.data.tempCasePics, ...res];
-      that.setData({
-        tempCasePics: newPics
+      that.applyProfileResult(context, () => {
+        const newPics = [...that.data.tempCasePics, ...res];
+        that.setData({ tempCasePics: newPics });
       });
     }, remainingCount);
   },
@@ -226,10 +227,11 @@ Page({
   // 上传微信二维码
   uploadWechat: function() {
     const that = this;
+    const context = this.profileContext();
     
     app.chooseImage(function(res) {
-      that.setData({
-        tempWechat: res[0]
+      that.applyProfileResult(context, () => {
+        that.setData({ tempWechat: res[0] });
       });
     }, 1);
   },
@@ -289,11 +291,15 @@ Page({
   onLoad(options) {
     var that = this
     this._unloaded = false;
+    this._hidden = false;
     that.getUserData()
   },
 
   onUnload() {
     this._unloaded = true;
+    this.releaseProfilePhoneLoading();
+    this._profileReadSeq = (this._profileReadSeq || 0) + 1;
+    this._profileDeferred = [];
     this._profileLoading = false;
     if (this._profileReturnTimer) {
       clearTimeout(this._profileReturnTimer);
@@ -305,7 +311,81 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
- 
+    this._hidden = false;
+    this.profileContext();
+    const pending = this._profileDeferred || [];
+    this._profileDeferred = [];
+    pending.forEach(item => this.applyProfileResult(item.context, item.apply));
+    if (this.data.saveSucceeded) this.scheduleProfileReturn();
+    if (!this.data.loaded && !this._profileLoading) this.getUserData();
+  },
+
+  onHide() {
+    this._hidden = true;
+    this.releaseProfilePhoneLoading();
+    this._profileViewEpoch = (this._profileViewEpoch || 0) + 1;
+    this._profileReadSeq = (this._profileReadSeq || 0) + 1;
+    this._profileLoading = false;
+    this.setData({ loading: false, refreshing: false });
+    if (this._profileReturnTimer) {
+      clearTimeout(this._profileReturnTimer);
+      this._profileReturnTimer = null;
+    }
+  },
+
+  scheduleProfileReturn() {
+    if (this._profileReturnTimer) return;
+    const context = this.profileContext();
+    const viewEpoch = this._profileViewEpoch || 0;
+    const timer = setTimeout(() => {
+      if (this._profileReturnTimer !== timer) return;
+      this._profileReturnTimer = null;
+      if (!this.currentProfileContext(context) || this._hidden || viewEpoch !== (this._profileViewEpoch || 0)) return;
+      this.exitPage();
+    }, 2000);
+    this._profileReturnTimer = timer;
+  },
+
+  profileContext() {
+    const owner = String(app.getUserID && app.getUserID() || '');
+    if (this._profileOwner !== undefined && owner !== this._profileOwner) {
+      this.releaseProfilePhoneLoading();
+      this._profileEpoch = (this._profileEpoch || 0) + 1;
+      this._profileReadSeq = (this._profileReadSeq || 0) + 1;
+      this._profileLoading = false;
+      this._profileDeferred = [];
+      this._loadedProfileName = undefined;
+      if (this._profileReturnTimer) clearTimeout(this._profileReturnTimer);
+      this._profileReturnTimer = null;
+      this.setData({
+        userInfo: { name: '', introduction: '', website: '', caseIntroducton: '',
+          avatar: '', tag_ids: '', casePics: '', wechat: '', phone: '' },
+        phoneMasked: '', casePicsList: [], tempCasePics: [], tempCaseIntroducton: '',
+        tempWechat: '', tempIntroduction: '', tempName: '', selectedCategoryIds: [],
+        selectedCategoryNames: [], selectedCategoryNamesStr: '', categoryList: [],
+        categorySheetVisible: false, categorySheetIds: '', popDavid: false,
+        popDavid2: false, popDavid3: false, popDavid4: false, loaded: false,
+        canSave: false, saving: false, saveError: '', saveSucceeded: false,
+        loading: false, refreshing: false, loadError: '', loadErrorSub: ''
+      });
+    }
+    this._profileOwner = owner;
+    return { owner, epoch: this._profileEpoch || 0 };
+  },
+
+  currentProfileContext(context) {
+    if (this._unloaded) return false;
+    const current = this.profileContext();
+    return context.owner === current.owner && context.epoch === current.epoch;
+  },
+
+  applyProfileResult(context, apply) {
+    if (!this.currentProfileContext(context)) return;
+    if (this._hidden) {
+      (this._profileDeferred || (this._profileDeferred = [])).push({ context, apply });
+      return;
+    }
+    apply();
   },
 
   // 输入框内容变化处理
@@ -326,7 +406,9 @@ Page({
   },
 
   getUserData: function () {
-    if (this._profileLoading) return;
+    const context = this.profileContext();
+    if (this._unloaded || this._hidden || this._profileLoading) return;
+    const seq = this._profileReadSeq = (this._profileReadSeq || 0) + 1;
     this._profileLoading = true;
     const that = this;
     const hadLoaded = !!this.data.loaded;
@@ -345,7 +427,7 @@ Page({
       },
       method: "POST",
       success: function (res) {
-        if (that._unloaded) return;
+        if (!that.currentProfileContext(context) || that._hidden || seq !== that._profileReadSeq) return;
         that._profileLoading = false;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           that._loadedProfileName = res.data.name;
@@ -391,10 +473,9 @@ Page({
             loadErrorSub: hadLoaded ? '' : ((res && res.msg) || '请稍后重新加载')
           });
         }
-        cyLoading.hide();
       },
       fail: function (res) {
-        if (that._unloaded) return;
+        if (!that.currentProfileContext(context) || that._hidden || seq !== that._profileReadSeq) return;
         that._profileLoading = false;
         that.setData({
           loading: false,
@@ -403,12 +484,13 @@ Page({
           loadErrorKind: 'network',
           loadErrorSub: hadLoaded ? '' : '检查网络连接后重试'
         });
-        cyLoading.hide();
       }
     })
   },
 
   saveInfo: function () {
+    const context = this.profileContext();
+    if (this._unloaded || this._hidden) return;
     const that = this;
     const userInfo = this.data.userInfo;
     if (!this.data.canSave || this.data.saving || this.data.saveSucceeded) return;
@@ -440,28 +522,26 @@ Page({
         'Content-Type': 'application/json'
       },
       success: function (res) {
-        if (that._unloaded) return;
+        that.applyProfileResult(context, () => {
         if (res.code == "200") {
           // 只回写本次真正提交的字段:昵称未改时 data.name 是 undefined,写进会话会把现有昵称清空。
           if (typeof data.name === 'string' && data.name.trim()) app.setNickname(data.name);
           if (typeof data.avatar === 'string' && data.avatar) app.setAvatar(data.avatar);
           that.setData({ saving: false, saveError: '', saveSucceeded: true });
           toast.success('资料已保存', { duration: 2000 });
-          that._profileReturnTimer = setTimeout(() => {
-            that._profileReturnTimer = null;
-            if (that._unloaded) return;
-            that.exitPage();
-          }, 2000);
+          that.scheduleProfileReturn();
         } else {
           that.setData({
             saving: false,
             saveError: res.msg || '资料暂时没有保存，请重试'
           });
         }
+        });
       },
       fail: function (res) {
-        if (that._unloaded) return;
-        that.setData({ saving: false, saveError: '网络没连上，请检查后重试' });
+        that.applyProfileResult(context, () => {
+          that.setData({ saving: false, saveError: '网络没连上，请检查后重试' });
+        });
       }
     });
   },
@@ -473,15 +553,25 @@ Page({
 
   uploadPic() {
     let that = this;
+    const context = this.profileContext();
     app.chooseImage(function (res) {
-      that.setData({
-        'userInfo.avatar': res[0]
+      that.applyProfileResult(context, () => {
+        that.setData({ 'userInfo.avatar': res[0] });
       });
     }, 1, { crop: true, cropScale: '1:1' });
   },
 
+  releaseProfilePhoneLoading(token = this._profilePhoneLoading) {
+    if (!token || !token.active) return;
+    token.active = false;
+    if (this._profilePhoneLoading === token) this._profilePhoneLoading = null;
+    cyLoading.hide();
+  },
+
   getPhoneNumber(e) {
     const that = this;
+    const context = this.profileContext();
+    if (this._unloaded || this._hidden) return;
     if (!e || !e.detail || e.detail.errMsg !== 'getPhoneNumber:ok') {
       toast('您已取消授权');
       return;
@@ -491,13 +581,16 @@ Page({
       toast('获取手机号失败');
       return;
     }
+    if (this._profilePhoneLoading) return;
+    const loading = this._profilePhoneLoading = { active: true };
     cyLoading.show('获取中...');
     app.sendRequest({
       url: '/api/getwxbindphone',
       method: 'POST',
       data: { code: code },
       success(res) {
-        cyLoading.hide();
+        that.releaseProfilePhoneLoading(loading);
+        that.applyProfileResult(context, () => {
         if (res.code == '200') {
           const phone = boundPhoneFromResponse(res);
           if (!phone) {
@@ -511,10 +604,13 @@ Page({
         } else {
           toast(res.msg || '获取手机号失败');
         }
+        });
       },
       fail() {
-        cyLoading.hide();
-        toast('网络错误，请重试');
+        that.releaseProfilePhoneLoading(loading);
+        that.applyProfileResult(context, () => {
+          toast('网络错误，请重试');
+        });
       }
     });
   },

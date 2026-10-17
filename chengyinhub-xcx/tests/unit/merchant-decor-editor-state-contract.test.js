@@ -33,6 +33,10 @@ function loadPage(relativePath, options = {}) {
     getRequestErrorMessage(error, fallback) { return error && error.msg || fallback },
     chooseImage() {},
   }
+  if (relativePath === 'pages/merchant/decor/gallery/index.js') {
+    app.getUserID = () => '3';
+    app.globalData.authorization = 'gallery-test-token';
+  }
   const wx = {
     getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     navigateBack() { navigations.push('back') },
@@ -257,7 +261,9 @@ test('门店相册刷新保留旧图片，区分权限和网络，并阻止并�
 
 test('门店相册保存锁重复，失败保留编辑结果，成功留下回执且 payload 不变', () => {
   const h = loadPage('pages/merchant/decor/gallery/index.js')
-  Object.assign(h.page.data, { loadState: 'ready', gallery: ['a.jpg', 'b.jpg'], dirty: true })
+  h.page.load()
+  h.requests.shift().success({ code: 200, data: { memberId: 3, gallery: '["a.jpg","b.jpg"]' } })
+  Object.assign(h.page.data, { dirty: true })
   h.page.onNavBack = () => {}
 
   h.page.data.refreshing = true
@@ -306,7 +312,7 @@ test('门店相册空态、原位错误和图片动作满足恢复及 88rpx aria
   assert.match(json, /"cy-icon"/)
 })
 
-test('负控：移除门店相册读取 epoch guard 后，卸载迟到回调契约必须变红', () => {
+test('负控：移除门店相册读取 epoch guard 后，前台旧请求覆盖契约必须变红', () => {
   const relativePath = 'pages/merchant/decor/gallery/index.js'
   const source = fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
   const mutated = source.replace(/\s*if \(epoch !== that\._loadEpoch\) return false;/g, '')
@@ -314,10 +320,12 @@ test('负控：移除门店相册读取 epoch guard 后，卸载迟到回调契�
   assert.throws(() => {
     const h = loadPage(relativePath, { source: mutated })
     h.page.load()
-    h.page.onUnload()
+    h.page.onHide()
+    h.page.onShow()
+    assert.equal(h.requests.length, 2, '回到前台确实已启动新请求')
     h.requests[0].success({ code: 200, data: { memberId: 3, gallery: '["late.jpg"]' } })
-    assert.deepEqual(h.page.data.gallery, [], '卸载后的旧相册响应不得写回')
-  }, /卸载后的旧相册响应不得写回/)
+    assert.deepEqual(h.page.data.gallery, [], '前台旧相册响应不得覆盖新请求')
+  }, /前台旧相册响应不得覆盖新请求/)
 })
 
 test('常备权益刷新保留旧清单，拒绝并发，并区分权限与网络', () => {

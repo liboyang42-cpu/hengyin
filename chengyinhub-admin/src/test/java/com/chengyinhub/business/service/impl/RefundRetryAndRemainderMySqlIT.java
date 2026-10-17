@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -139,11 +140,11 @@ class RefundRetryAndRemainderMySqlIT {
         payouts.payoutAfterReview(second.getId());
         verify(wechat).submitRefund(eq("REG99"), eq(first.getRefundNo()), eq(new BigDecimal("20.00")), eq(new BigDecimal("68.00")), any());
         verify(wechat).submitRefund(eq("REG99"), eq(second.getRefundNo()), eq(new BigDecimal("48.00")), eq(new BigDecimal("68.00")), any());
-        assertTrue(service.handleRefundNotify(first.getRefundNo(), "SUCCESS"));
+        assertTrue(service.handleRefundNotify(facts(first)));
         assertEquals(RefundApplication.PAYOUT_SUCCESS, refunds.selectRefundApplicationById(first.getId()).getPayoutStatus());
         assertEquals(RefundApplication.PAYOUT_PROCESSING, refunds.selectRefundApplicationById(second.getId()).getPayoutStatus());
-        assertTrue(service.handleRefundNotify(second.getRefundNo(), "SUCCESS"));
-        assertTrue(service.handleRefundNotify(first.getRefundNo(), "SUCCESS"));
+        assertTrue(service.handleRefundNotify(facts(second)));
+        assertTrue(service.handleRefundNotify(facts(first)));
         assertEquals(2, db.queryForObject("select count(distinct biz_id) from wx_payment_callback_inbox where biz_type=2", Integer.class));
         assertEquals(new BigDecimal("68.00"), db.queryForObject("select sum(refund_amount) from refund_application where status=1", BigDecimal.class));
         assertEquals(0, service.reviewRefund(review(first.getId(), 1), 7L));
@@ -215,6 +216,12 @@ class RefundRetryAndRemainderMySqlIT {
         assertEquals(0, refunds.selectRefundApplicationById(request.getId()).getStatus());
         assertEquals(2, db.queryForObject("select payment_status from cms_registration where id=99", Integer.class));
         assertEquals(2, db.queryForObject("select registration_status from cms_registration where id=99", Integer.class));
+    }
+
+    private static Map<String, String> facts(RefundApplication refund) {
+        return Map.of("outRefundNo", refund.getRefundNo(), "outTradeNo", "REG99", "status", "SUCCESS",
+                "refund", Long.toString(refund.getRefundAmount().movePointRight(2).longValueExact()),
+                "total", "6800", "currency", "CNY");
     }
 
     private boolean approveAfter(CountDownLatch start, Long id, Long operator) throws InterruptedException {

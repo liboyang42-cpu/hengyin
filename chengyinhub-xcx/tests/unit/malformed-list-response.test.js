@@ -29,6 +29,7 @@ function harness(relativePath, kind) {
     setUserRole() {},
     getImgUrl(value) { return value || ''; },
   };
+  if (relativePath === 'subpackageA/pages/myproject/index.js' || relativePath === 'subpackageMember/components/cy/profile/index.js') app.getAuthorization = () => 'current-session';
   global.getApp = () => app;
   global.wx = {
     getStorageSync() { return ''; },
@@ -135,7 +136,7 @@ test('官方活动列表 200 非数组载荷进入可重试错误态', () => {
   const h = harness('pages/activity/list/index.js', 'page');
   h.vm.fetchAll();
   assert.doesNotThrow(() => h.requests[0].success({ code: 200, data: {} }));
-  assert.equal(h.vm.data.loadError, true);
+  assert.equal(h.vm.data.curError, true);
 });
 
 test('官方邀约 200 非数组载荷进入错误态', () => {

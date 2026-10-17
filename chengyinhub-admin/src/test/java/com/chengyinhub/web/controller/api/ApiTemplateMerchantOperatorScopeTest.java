@@ -320,7 +320,7 @@ class ApiTemplateMerchantOperatorScopeTest {
             row.setCheckStatus(0);
             String expected = "模版审核中";
             if ("deleted".equals(state)) { row.setDelFlag(2); expected = "模版已删除"; }
-            if ("rejected".equals(state)) { row.setStatus(2L); row.setCheckStatus(2); }
+            if ("rejected".equals(state)) { row.setStatus(2L); row.setCheckStatus(2); expected = "模版审核未通过"; }
             if ("unlisted".equals(state)) { row.setStatus(1L); expected = "模版已下架"; }
             if ("unknown-draft".equals(state)) row.setDraftStatus(2);
             if ("null-status".equals(state)) row.setStatus(null);

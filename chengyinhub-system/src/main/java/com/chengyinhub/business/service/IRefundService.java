@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IRefundService {
     List<RefundApplication> selectRefundList(RefundApplication query);
@@ -60,5 +61,5 @@ public interface IRefundService {
      * 退款结果通知回调:按 out_refund_no(=refund_no)反查退款单,回写打款终态。
      * SUCCESS→原路成功(1);ABNORMAL/CLOSED→待人工(2);PROCESSING→保持。返回 true=已受理(可回 ACK)。
      */
-    boolean handleRefundNotify(String outRefundNo, String refundStatus);
+    boolean handleRefundNotify(Map<String, String> facts);
 }

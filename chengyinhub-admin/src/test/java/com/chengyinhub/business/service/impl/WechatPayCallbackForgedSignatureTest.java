@@ -220,7 +220,7 @@ class WechatPayCallbackForgedSignatureTest {
         IRefundService refundBizService = mock(IRefundService.class);
         wireParser(service, buildParser(kp.getPublic()), mock(ICmsRegistrationService.class),
                 mock(ICoopInviteService.class), refundBizService);
-        when(refundBizService.handleRefundNotify("RF12345", "SUCCESS")).thenReturn(false);
+        when(refundBizService.handleRefundNotify(org.mockito.ArgumentMatchers.anyMap())).thenReturn(false);
 
         Forged n = buildValidRefundNotification(kp.getPrivate(), "RF12345", "SUCCESS");
         String resp = service.handleRefundCallback(n.body, headersOf(n));
@@ -238,13 +238,16 @@ class WechatPayCallbackForgedSignatureTest {
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         IRefundService refundBizService = mock(IRefundService.class);
         wireParser(service, parser, mock(ICmsRegistrationService.class), mock(ICoopInviteService.class), refundBizService);
-        when(refundBizService.handleRefundNotify("RF12345", "SUCCESS")).thenReturn(true);
+        when(refundBizService.handleRefundNotify(org.mockito.ArgumentMatchers.anyMap())).thenReturn(true);
 
         Forged n = buildValidRefundNotification(kp.getPrivate(), "RF12345", "SUCCESS");
         String resp = service.handleRefundCallback(n.body, headersOf(n));
 
         assertTrue(resp.contains("SUCCESS"));
-        verify(refundBizService).handleRefundNotify("RF12345", "SUCCESS");
+        verify(refundBizService).handleRefundNotify(org.mockito.ArgumentMatchers.argThat(facts ->
+                "RF12345".equals(facts.get("outRefundNo")) && "ORDER001".equals(facts.get("outTradeNo"))
+                        && "SUCCESS".equals(facts.get("status")) && "1250".equals(facts.get("refund"))
+                        && "3000".equals(facts.get("total")) && "CNY".equals(facts.get("currency"))));
     }
 
     @Test
@@ -632,7 +635,7 @@ class WechatPayCallbackForgedSignatureTest {
     private static Forged buildValidRefundNotification(PrivateKey signingKey, String outRefundNo,
                                                          String refundStatus) throws Exception {
         String plaintext = String.format(
-                "{\"out_refund_no\":\"%s\",\"refund_id\":\"WXREF001\",\"refund_status\":\"%s\"}",
+                "{\"out_refund_no\":\"%s\",\"out_trade_no\":\"ORDER001\",\"refund_id\":\"WXREF001\",\"refund_status\":\"%s\",\"amount\":{\"refund\":1250,\"total\":3000,\"currency\":\"CNY\"}}",
                 outRefundNo, refundStatus);
         return sign(signingKey, "refund.gzh", "REFUND.SUCCESS", plaintext);
     }

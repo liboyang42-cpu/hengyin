@@ -29,7 +29,9 @@
     </view>
   </view>
 
-  <view wx:if="{{loading && events.length===0}}">
+  <cy-empty wx:if="{{tab === 3 && mineAuthRequired}}" kind="no-permission" title="登录后查看我的活动" sub="登录后可查看你参与的官方活动" cta="登录" bind:cta="onRetry" />
+  <cy-empty wx:elif="{{tab === 3 && mineAccessDenied}}" kind="no-permission" title="当前身份不能查看这些活动" sub="请使用具有查看权限的账号" cta="重试" bind:cta="onRetry" />
+  <view wx:elif="{{loading && events.length===0}}">
     <cy-skeleton type="feed-card" count="3" />
   </view>
   <cy-error load-failure class="cy-fade-in" wx:elif="{{curError && events.length===0}}"

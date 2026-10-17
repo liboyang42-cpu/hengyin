@@ -103,13 +103,68 @@ class AppMediaReferenceGuardTest {
             assertThrows(ServiceException.class,()->guard.processingUrl("media-asset:7",null));
         }
     }
-    @Test void realLocalContextPathResolvesRegistryAndSupplierUsesActualDiskKey() {
+    @Test void systemLocalMediaIsVisibleButCannotBeProcessedAsTheCurrentUsersUpload() {
         String key="/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
         when(mapper.selectByObjectKey(key)).thenReturn(Map.of("id",7L,"memberId",11L,"ownerType","SYSTEM",
                 "reviewState","APPROVED","storageType","LOCAL","objectKey",key));
         assertEquals("approved-storage-url",guard.visibleUrl("https://foreign.invalid/prod-api"+key,null));
-        assertEquals(key,guard.processingUrl("https://foreign.invalid/prod-api"+key,11L));
+        assertEquals(403,assertThrows(ServiceException.class,
+                () -> guard.processingUrl("https://foreign.invalid/prod-api"+key,11L)).getCode());
     }
+    @Test void approvedAppPhotosAndAudioCanOnlyBeProcessedByTheirUploader() {
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> signer =
+                     mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            for (String type : new String[]{"IMAGE", "AUDIO"}) {
+                String key = "upload/0123456789abcdef0123456789abcdef." + ("IMAGE".equals(type) ? "png" : "mp3");
+                Map<String,Object> row = Map.of("id",7L,"memberId",11L,"ownerType","APP",
+                        "objectKey",key,"reviewState","APPROVED","mediaType",type);
+                when(mapper.select(7L)).thenReturn(row);
+                when(mapper.selectByObjectKey(key)).thenReturn(row);
+                assertEquals("media-asset:7", guard.requireAttachment(22L,"media-asset:7",true));
+                assertEquals("approved-storage-url", guard.visibleUrl("media-asset:7",22L));
+                for (String reference : new String[]{"media-asset:7", "https://foreign.invalid/"+key}) {
+                    ServiceException rejected = assertThrows(ServiceException.class,
+                            () -> guard.processingUrl(reference,22L,type));
+                    assertEquals(403,rejected.getCode());
+                }
+                signer.verifyNoInteractions();
+                signer.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils
+                        .generateShortLivedPresignedUrl(key,300)).thenReturn("owned-processing-url");
+                assertEquals("owned-processing-url",guard.processingUrl("media-asset:7",11L,type));
+                signer.verify(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils
+                        .generateShortLivedPresignedUrl(key,300));
+                signer.clearInvocations();
+            }
+        }
+    }
+
+    @Test void localPathCannotTurnAnotherAppUploadIntoSystemProcessingMaterial() {
+        String key = "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
+        Map<String,Object> row = Map.of("id",7L,"memberId",11L,"ownerType","APP",
+                "objectKey",key,"reviewState","APPROVED","mediaType","IMAGE","storageType","LOCAL");
+        when(mapper.select(7L)).thenReturn(row);
+        when(mapper.selectByObjectKey(key)).thenReturn(row);
+        for (String reference : new String[]{"media-asset:7",key,"https://foreign.invalid/prod-api"+key}) {
+            assertEquals("media-asset:7",guard.requireAttachment(22L,reference,true));
+            assertEquals(403,assertThrows(ServiceException.class,
+                    () -> guard.processingUrl(reference,22L,"IMAGE")).getCode());
+            assertEquals(key,guard.processingUrl(reference,11L,"IMAGE"));
+        }
+    }
+
+    @Test void aNonAppOwnerDoesNotGrantTheCurrentUserProcessingPrivilege() {
+        for (String ownerType : new String[]{"", "LEGACY", "SYSTEM"}) {
+            when(mapper.select(7L)).thenReturn(Map.of("id",7L,"memberId",11L,"ownerType",ownerType,
+                    "objectKey",KEY,"reviewState","APPROVED"));
+            try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> signer =
+                         mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+                assertEquals(403,assertThrows(ServiceException.class,
+                        () -> guard.processingUrl("media-asset:7",11L)).getCode());
+                signer.verifyNoInteractions();
+            }
+        }
+    }
+
     @Test void stockRhythmAudioIsVisibleButCannotBecomeAVoiceOrAiProcessingInputWithoutRegistry() {
         for (String prefix : new String[]{"/audio/merchant-games/","/pages/play/audio/merchant-games/"}) {
             for (String clip : new String[]{"one","two","three"}) {

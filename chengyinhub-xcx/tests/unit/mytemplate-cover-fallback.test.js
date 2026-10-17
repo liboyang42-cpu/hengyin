@@ -35,6 +35,8 @@ function assertCoverFallback(source) {
 function loadMyTemplatePage() {
   const sandbox = { requests: [] }
   global.getApp = () => ({
+    getUserID: () => '7',
+    getAuthorization: () => 'Bearer unit-fixture',
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
     sendRequest: request => sandbox.requests.push(request),
   })

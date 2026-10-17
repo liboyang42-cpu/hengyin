@@ -91,6 +91,12 @@ class RefundNotificationMybatisIntegrationTest {
         org.springframework.test.util.ReflectionTestUtils.setField(target, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(target, "refundApplicationMapper", mapper);
+        CmsRegistration registration = new CmsRegistration();
+        registration.setRegistrationNo("REG11");
+        registration.setWechatPaymentAmount(new BigDecimal("30.00"));
+        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
+        when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "notifyService", notifications);
         // 2026-09-16: 回调 inbox 去重是 handleRefundNotify 的必经一步(cc36b4552),本套此前从未真跑过
         // ⇒ 手工装配漏注入即 NPE。inbox 语义另有 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉。
@@ -119,7 +125,7 @@ class RefundNotificationMybatisIntegrationTest {
 
     @Test void confirmedCashRefundNotifiesPayerOnlyAfterCommitAndOnlyOnce() {
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
             assertTrue(delivered.isEmpty(), "提交前不能发送到账通知");
         });
         assertEquals(1, payoutStatus());
@@ -128,7 +134,7 @@ class RefundNotificationMybatisIntegrationTest {
         assertEquals(NotifyEvent.REFUND, delivered.get(0).event());
         assertEquals(91L, delivered.get(0).memberId());
         assertEquals("12.50", delivered.get(0).get("amount"), "取退款单真实部分退款额，不取原支付额30");
-        assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+        assertTrue(service.handleRefundNotify(facts("SUCCESS")));
         assertEquals(1, delivered.size(), "重复回调不能再通知");
     }
 
@@ -217,13 +223,13 @@ class RefundNotificationMybatisIntegrationTest {
 
 @Test void rolledBackSuccessRemainsRetryableAndOnlyCommittedRetryNotifies() {
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
             assertEquals(1, payoutStatus());
             tx.setRollbackOnly();
         });
         assertEquals(0, payoutStatus());
         assertTrue(delivered.isEmpty());
-        assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+        assertTrue(service.handleRefundNotify(facts("SUCCESS")));
         assertEquals(1, payoutStatus());
         assertEquals(1, delivered.size());
     }
@@ -236,7 +242,7 @@ class RefundNotificationMybatisIntegrationTest {
             Callable<Boolean> callback = () -> {
                 ready.countDown();
                 if (!start.await(5, TimeUnit.SECONDS)) throw new AssertionError("start timeout");
-                return service.handleRefundNotify("RF11", "SUCCESS");
+                return service.handleRefundNotify(facts("SUCCESS"));
             };
             Future<Boolean> a = pool.submit(callback);
             Future<Boolean> b = pool.submit(callback);
@@ -253,10 +259,10 @@ class RefundNotificationMybatisIntegrationTest {
     }
 
     @Test void processingAndManualPendingCannotClaimArrival() {
-        assertTrue(service.handleRefundNotify("RF11", "PROCESSING"));
+        assertTrue(service.handleRefundNotify(facts("PROCESSING")));
         assertTrue(delivered.isEmpty());
         jdbc.update("UPDATE refund_application SET payout_status=2 WHERE id=7");
-        assertTrue(service.handleRefundNotify("RF11", "PROCESSING"));
+        assertTrue(service.handleRefundNotify(facts("PROCESSING")));
         assertTrue(delivered.isEmpty());
         jdbc.update("UPDATE refund_application SET payout_status=3,payout_handler_id=41 WHERE id=7");
         assertThrows(IllegalStateException.class, () -> service.verifyManualPayout(7L, 41L));
@@ -279,10 +285,10 @@ class RefundNotificationMybatisIntegrationTest {
                     if (throwsFailure) throw new IllegalStateException("controlled delivery failure");
                     return false;
                 });
-                assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+                assertTrue(service.handleRefundNotify(facts("SUCCESS")));
                 assertEquals(1, payoutStatus());
                 assertEquals(1, attempted.get());
-                assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
+                assertTrue(service.handleRefundNotify(facts("SUCCESS")));
                 assertEquals(1, attempted.get(), "当前best-effort没有重试合同，不能把重复回调当重发");
             }
             assertTrue(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("全部通道未送达")));
@@ -296,8 +302,9 @@ class RefundNotificationMybatisIntegrationTest {
         for (String change : new String[]{"member_id=NULL", "member_id=0", "refund_amount=0"}) {
             jdbc.update("UPDATE refund_application SET payout_status=0,member_id=91,refund_amount=12.50 WHERE id=7");
             jdbc.update("UPDATE refund_application SET " + change + " WHERE id=7");
-            assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
-            assertEquals(1, payoutStatus());
+            boolean zeroAmount = "refund_amount=0".equals(change);
+            assertEquals(!zeroAmount, service.handleRefundNotify(facts("SUCCESS")));
+            assertEquals(zeroAmount ? 0 : 1, payoutStatus());
             assertTrue(delivered.isEmpty());
         }
     }
@@ -311,6 +318,11 @@ class RefundNotificationMybatisIntegrationTest {
         });
         assertTrue(delivered.isEmpty());
         verifyNoInteractions(payout);
+    }
+
+    private static Map<String, String> facts(String status) {
+        return Map.of("outRefundNo", "RF11", "outTradeNo", "REG11", "status", status,
+                "refund", "1250", "total", "3000", "currency", "CNY");
     }
 
     private int payoutStatus() {

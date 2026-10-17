@@ -109,9 +109,10 @@ Component({
       if (this._detached || this._hidden) return;
       this._loadIdentity = identityKey();
       const epoch = this._loadEpoch = (this._loadEpoch || 0) + 1;
-      this._clearData();
+      if (this._dataIdentity !== this._loadIdentity) this._clearData();
       if (!memberId(app)) { waitForInitialSession(this, app, () => this.load()); this.setData({ loaded: true, loadErr: true, authRequired: true, accessDenied: false }); return; }
-      this.setData({ loaded: false, loadErr: false, authRequired: false, accessDenied: false });
+      this.setData({ loaded: false, loadErr: false, authRequired: false, accessDenied: false,
+        canWithdraw: false, withdrawState: 'unknown' });
       const that = this;
       const recover = (res, statusCode) => !that._detached && epoch === that._loadEpoch && recoverReadSession(that, app, res,
         function (anonymous) { this._loadEpoch++; this._clearData(); this.setData({ loaded: true, loadErr: true, authRequired: anonymous, accessDenied: false }); }, that.load, statusCode);

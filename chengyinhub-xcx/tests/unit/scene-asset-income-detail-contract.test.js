@@ -149,6 +149,30 @@ test('当前筛选分页仍追加记录，加载中不能重复发起下一页',
   assert.equal(vm.data.hasMore, false)
 })
 
+test('失败页重试保留既有流水，连续失败后加载更多仍重试原页且不重复追加', () => {
+  const { vm, sandbox } = loadComponent()
+  const response = id => ({ code: 200, data: {
+    rows: [{ id, changeBalance: id, changeType: 1 }], total: 31,
+  } })
+  vm.getList()
+  sandbox.requests[0].success(response(1))
+  vm.loadMore()
+  sandbox.requests[1].success(response(2))
+  vm.loadMore()
+  sandbox.requests[2].fail({ code: 500 })
+  const saved = JSON.stringify(vm.data.list)
+  vm.onRetry()
+  assert.equal(JSON.stringify(vm.data.list), saved)
+  assert.equal(sandbox.requests[3].data.pageNum, 3)
+  sandbox.requests[3].successStatusAbnormal({ code: 500 })
+  assert.equal(JSON.stringify(vm.data.list), saved)
+  vm.loadMore()
+  assert.equal(sandbox.requests[4].data.pageNum, 3)
+  sandbox.requests[4].success(response(3))
+  assert.deepEqual(vm.data.list.map(row => row.id), [1, 2, 3])
+  assert.equal(vm.data.loadErr, false)
+})
+
 test('wxml 的占位分支确实存在(否则上面的 null 无处落地)', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-asset-income-detail/index.wxml'), 'utf8')
   // 符号已经进了 amountText,wxml 不许再自己拼 —— 拼了支出就会变成 +¥-50.00

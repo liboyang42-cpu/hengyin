@@ -110,8 +110,10 @@ function permissionProblems(usedApis, app) {
   const permissionDesc = permission && typeof permission.desc === 'string' ? permission.desc : '';
   // 微信规定 requiredPrivateInfos 里模糊定位与精确定位互斥,同时声明会被开发者工具与审核拒绝。
   const declared = declaredPrivateInfos(app);
-  const exclusive = declared.includes('getFuzzyLocation') && declared.includes('getLocation')
-    ? ['getFuzzyLocation and getLocation cannot both be declared in requiredPrivateInfos'] : [];
+  const preciseApi = ['getLocation', 'onLocationChange', 'startLocationUpdate', 'startLocationUpdateBackground']
+    .find((api) => declared.includes(api));
+  const exclusive = declared.includes('getFuzzyLocation') && preciseApi
+    ? [`getFuzzyLocation and ${preciseApi} cannot both be declared in requiredPrivateInfos`] : [];
   if (!usedApis.length) return exclusive.concat(permissionDesc.length > 30 ? ['scope.userLocation desc exceeds 30 characters'] : []);
   return exclusive.concat([
     !permissionDesc.trim() ? 'scope.userLocation desc is missing' : null,

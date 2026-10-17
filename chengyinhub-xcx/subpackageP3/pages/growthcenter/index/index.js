@@ -172,19 +172,43 @@ Page({
   },
 
   onLoad() {
-    this.setData({ profile: {
+    const profile = {
       name: typeof app.getNickname === 'function' ? app.getNickname() || '' : '',
       avatarUrl: typeof app.getAvatar === 'function' ? app.getAvatar() || '' : ''
-    } })
+    }
+    this._growthSessionProfile = { owner: String(app.getUserID && app.getUserID() || ''), ...profile }
+    this.setData({ profile })
     this.loadOverview()
     this.loadMyRank()
   },
 
   onShow() {
     this._hidden = false
-    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadOverview(); this.loadMyRank(); return }
+    const profile = {
+      name: typeof app.getNickname === 'function' ? app.getNickname() || '' : this.data.profile.name,
+      avatarUrl: typeof app.getAvatar === 'function' ? app.getAvatar() || '' : this.data.profile.avatarUrl
+    }
     const owner = String(app.getUserID && app.getUserID() || '')
+    const previous = this._growthSessionProfile
+    const profileChanged = !!previous && previous.owner === owner
+      && (profile.name !== previous.name || profile.avatarUrl !== previous.avatarUrl)
+    this._growthSessionProfile = { owner, ...profile }
+    if (profileChanged) {
+      this._growthProfileOverride = Object.assign({}, this._growthProfileOverride && this._growthProfileOverride.owner === owner
+        ? this._growthProfileOverride : {}, { owner })
+      if (profile.name !== previous.name) this._growthProfileOverride.name = profile.name
+      if (profile.avatarUrl !== previous.avatarUrl) this._growthProfileOverride.avatarUrl = profile.avatarUrl
+      this.setData({ profile: {
+        name: this._growthProfileOverride.name !== undefined ? this._growthProfileOverride.name : this.data.profile.name,
+        avatarUrl: this._growthProfileOverride.avatarUrl !== undefined ? this._growthProfileOverride.avatarUrl : this.data.profile.avatarUrl
+      } })
+      // 资料已保存后，旧排名回包不能再把本人昵称和头像覆盖回去。
+      this._rankEpoch = (this._rankEpoch || 0) + 1
+      this._rankLoading = false
+    }
+    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadOverview(); this.loadMyRank(); return }
     if (this._growthOwner !== undefined && owner !== this._growthOwner) { this.loadOverview(); this.loadMyRank(); }
+    else if (profileChanged && owner && owner !== '0') this.loadMyRank()
   },
 
   onPullDownRefresh() {
@@ -219,6 +243,7 @@ Page({
     const owner = String(app.getUserID && app.getUserID() || '')
     if (owner !== this._growthOwner) {
       this._growthOwner = owner
+      this._growthProfileOverride = null
       this._rankEpoch = (this._rankEpoch || 0) + 1
       this._overviewEpoch = (this._overviewEpoch || 0) + 1
       this._rankLoading = false; this._overviewLoading = false; this._badgeCodes = null
@@ -356,26 +381,24 @@ Page({
 
   buildMyRank(data) {
     const unit = this.data.metric === 'exp' ? 'EXP' : '积分'
+    const owner = String(app.getUserID && app.getUserID() || '')
+    const savedProfile = this._growthProfileOverride && this._growthProfileOverride.owner === owner ? this._growthProfileOverride : {}
+    const profile = {
+      name: savedProfile.name !== undefined ? savedProfile.name : data.me.nickname || this.data.profile.name || '',
+      avatarUrl: savedProfile.avatarUrl !== undefined ? savedProfile.avatarUrl : data.me.avatar || this.data.profile.avatarUrl || ''
+    }
     let me = null
     if (data.me && data.me.rank !== null && data.me.rank !== undefined) {
-      const name = data.me.nickname || '我'
+      const name = profile.name || '我'
       me = {
         rank: data.me.rank,
         name,
         initial: initial(name),
         scoreText: fmt(data.me.score),
-        avatarUrl: data.me.avatar || ''
+        avatarUrl: profile.avatarUrl
       }
     }
-    this.setData({
-      unit,
-      me,
-      scoreText: fmt(data.me.score),
-      profile: {
-        name: data.me.nickname || this.data.profile.name || '',
-        avatarUrl: data.me.avatar || this.data.profile.avatarUrl || ''
-      }
-    })
+    this.setData({ unit, me, scoreText: fmt(data.me.score), profile })
   },
 
   goLeaderboard() {

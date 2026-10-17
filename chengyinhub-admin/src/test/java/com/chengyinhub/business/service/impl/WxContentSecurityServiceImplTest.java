@@ -443,6 +443,77 @@ class WxContentSecurityServiceImplTest {
     }
 
     @Test
+    void blankOpenidsNeverReadTokenOrSendTextOrMediaReviews() {
+        java.util.concurrent.atomic.AtomicInteger requests = new java.util.concurrent.atomic.AtomicInteger();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                requests.incrementAndGet();
+                return "{\"errcode\":0,\"trace_id\":\"unexpected-trace\",\"result\":{\"suggest\":\"pass\"}}";
+            }
+        });
+        RedisCache redis = (RedisCache) ReflectionTestUtils.getField(service,"redisCache");
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        ReflectionTestUtils.setField(service,"callbackInboxService",inbox);
+        for (String openid : new String[]{null,""," ","\t\r\n"}) {
+            assertSame(IWxContentSecurityService.MSG_UNAVAILABLE,service.checkText("待审核文本",openid));
+            assertNull(service.checkMediaAsync("https://fixture.invalid/photo.jpg",openid));
+            assertNull(service.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                    42L,"https://fixture.invalid/photo.jpg",openid));
+            service.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                    42L,"https://fixture.invalid/photo.jpg",openid);
+        }
+        assertEquals(0,requests.get());
+        org.mockito.Mockito.verifyNoInteractions(redis,inbox);
+    }
+
+    @Test
+    void blankMediaNeverReadsTokenOrSendsAnAsyncReview() {
+        java.util.concurrent.atomic.AtomicInteger requests = new java.util.concurrent.atomic.AtomicInteger();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                requests.incrementAndGet();
+                return "{\"errcode\":0,\"trace_id\":\"unexpected-trace\"}";
+            }
+        });
+        RedisCache redis = (RedisCache) ReflectionTestUtils.getField(service,"redisCache");
+        for (String media : new String[]{null,""," ","\t\r\n"}) {
+            assertNull(service.checkMediaAsync(media,"fixture-openid"));
+        }
+        assertEquals(0,requests.get());
+        org.mockito.Mockito.verifyNoInteractions(redis);
+    }
+
+    @Test
+    void validMediaKeepsItsActualOpenidAndRegistersOnlyTheReturnedReviewTrace() {
+        java.util.List<String> bodies = new java.util.ArrayList<>();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                assertTrue(url.contains("/wxa/media_check_async?access_token="));
+                assertEquals("application/json",contentType);
+                bodies.add(body);
+                return "{\"errcode\":0,\"trace_id\":\"fixture-review-trace\"}";
+            }
+        });
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.register("fixture-review-trace",IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                42L,"https://fixture.invalid/photo.jpg")).thenReturn(true);
+        ReflectionTestUtils.setField(service,"callbackInboxService",inbox);
+        assertEquals("fixture-review-trace",service.checkMediaAsync(
+                "https://fixture.invalid/photo.jpg","fixture-openid"));
+        assertEquals("fixture-review-trace",service.submitMediaCheckOne(
+                IWxContentSecurityService.BIZ_TYPE_SQUARE,42L,"https://fixture.invalid/photo.jpg","fixture-openid"));
+        assertEquals(2,bodies.size());
+        for (String body : bodies) {
+            com.alibaba.fastjson2.JSONObject payload = com.alibaba.fastjson2.JSON.parseObject(body);
+            assertEquals("fixture-openid",payload.getString("openid"));
+            assertEquals("https://fixture.invalid/photo.jpg",payload.getString("media_url"));
+            assertEquals(2,payload.getIntValue("version"));
+        }
+        verify(inbox).register("fixture-review-trace",IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                42L,"https://fixture.invalid/photo.jpg");
+    }
+
+    @Test
     void unknownErrcodeStaysRetryableBusy() {
         WxContentSecurityServiceImpl service =
                 enabledTextService(new UnknownErrorResponseService());
