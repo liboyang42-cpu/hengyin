@@ -30,7 +30,7 @@
        与 IM 会话是两套数据源,读不到只在这里局部报错,不影响下面的会话列表。 -->
   <view wx:if="{{activeTab === 'sys' && (reportNotices.length || reportNoticeError)}}" class="report-notices">
     <cy-inline-error wx:if="{{reportNoticeError}}" kind="data" title="{{reportNoticeError}}" sub="会话消息不受影响" action="重试" bind:action="loadReportNotices" />
-    <view wx:for="{{reportNotices}}" wx:key="key" class="report-notice" data-report-id="{{item.reportId}}" bindtap="openReportNotice"
+    <view wx:for="{{reportNotices}}" wx:key="key" class="report-notice" data-report-id="{{item.reportId}}" data-notice-id="{{item.notificationId}}" data-unread="{{item.unread}}" bindtap="openReportNotice"
           aria-role="button" aria-label="举报进度：{{item.title}}，举报编号 {{item.reportId}}，查看详情"
           hover-class="cy-pressed-bg" hover-stay-time="80">
       <view class="sys-avatar"><cy-icon name="bell" size="48" /></view>

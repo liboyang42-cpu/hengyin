@@ -998468,11 +998468,13 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "baseActionClass": "read",
       "effectClasses": [
-        "navigation"
+        "read",
+        "navigation",
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -998481,16 +998483,54 @@
         "routes": [
           "subpackageMember/report-detail/index"
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/login/code",
+          "/api/role/info",
+          "/api/v1/community/notifications",
+          "/api/v1/community/notifications/{param}/read"
+        ],
+        "primaryApis": [
+          "/api/v1/community/notifications",
+          "/api/v1/community/notifications/{param}/read"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/notifications",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/notifications/{param}/read",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,

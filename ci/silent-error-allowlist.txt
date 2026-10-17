@@ -147,7 +147,7 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-08-25 状态底�
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 5  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-10-13 B包 +2 = send-receipt 原请求只读回读(失败保持原气泡失败/未知态与手动重试,不造新请求)、轮询内路线卡隐私重核(失败保持「路线已不可用」占位,每轮 toast 会刷屏)
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-15 BL-87 处理结果半屏回读审核记录:失败(含 403/404)由半屏内 cy-inline-error 如实回显并可重试,关闭全局 toast 免双弹
 chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
-chengyinhub-xcx/subpackageB/pages/im/list/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;CL2 系统 tab 举报进度通知失败落 reportNoticeError 局部错误
+chengyinhub-xcx/subpackageB/pages/im/list/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;CL2 系统 tab 举报进度通知失败落 reportNoticeError 局部错误;BL-31 标记已读失败同落 reportNoticeError,红点保留,不挡跳转
 chengyinhub-xcx/subpackageMember/complaint/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
