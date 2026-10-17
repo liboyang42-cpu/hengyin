@@ -468,6 +468,9 @@ Page({
   },
 
   doSignup() {
+    // BL-199:报名/完成任务共用在途标记,连点只发一次。
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     // 报名人只会收到活动开始提醒；招募状态发给主题发布者，不能在这里代授权。
     if (subscribe && subscribe.request) {
       subscribe.request(['activityStart']).then((result) => {
@@ -484,7 +487,8 @@ Page({
         } else {
           toast((res && res.msg) || '报名失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 
@@ -493,6 +497,8 @@ Page({
       toast('任务完成需现场验证');
       return;
     }
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     app.sendRequest({
       url: '/api/official/events/' + this.data.id + '/complete', method: 'POST',
       success: (res) => {
@@ -502,7 +508,8 @@ Page({
         } else {
           toast((res && res.msg) || '操作失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 
