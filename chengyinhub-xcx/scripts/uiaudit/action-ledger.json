@@ -1028829,7 +1028829,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:34"
+        "staticSource": "subpackageMember/report-detail/index.js:35"
       }
     },
     {
@@ -1028896,7 +1028896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:77"
+        "staticSource": "subpackageMember/report-detail/index.js:78"
       }
     },
     {
@@ -1028966,7 +1028966,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:162"
+        "staticSource": "subpackageMember/report-detail/index.js:164"
       }
     },
     {
@@ -1029073,7 +1029073,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:154"
+        "staticSource": "subpackageMember/report-detail/index.js:156"
       }
     },
     {
@@ -1029180,7 +1029180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:154"
+        "staticSource": "subpackageMember/report-detail/index.js:156"
       }
     },
     {
@@ -1029250,7 +1029250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:163"
+        "staticSource": "subpackageMember/report-detail/index.js:165"
       }
     },
     {
@@ -1029317,7 +1029317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:82"
+        "staticSource": "subpackageMember/report-detail/index.js:83"
       }
     },
     {
@@ -1029384,7 +1029384,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:85"
+        "staticSource": "subpackageMember/report-detail/index.js:86"
       }
     },
     {
@@ -1029451,7 +1029451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:90"
+        "staticSource": "subpackageMember/report-detail/index.js:91"
       }
     },
     {
@@ -1029559,11 +1029559,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:91"
+        "staticSource": "subpackageMember/report-detail/index.js:92"
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:82:bindtap:closeSheet:10",
+      "id": "subpackageMember/report-detail/index.wxml:83:bindtap:closeSheet:10",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1029586,7 +1029586,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 82,
+        "line": 83,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1029666,11 +1029666,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:154"
+        "staticSource": "subpackageMember/report-detail/index.js:156"
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:86:bindtap:closeSheet:11",
+      "id": "subpackageMember/report-detail/index.wxml:87:bindtap:closeSheet:11",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1029693,7 +1029693,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 86,
+        "line": 87,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1029773,11 +1029773,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:154"
+        "staticSource": "subpackageMember/report-detail/index.js:156"
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:91:bindtap:closeSheet:12",
+      "id": "subpackageMember/report-detail/index.wxml:92:bindtap:closeSheet:12",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1029800,7 +1029800,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 91,
+        "line": 92,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1029880,11 +1029880,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:154"
+        "staticSource": "subpackageMember/report-detail/index.js:156"
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:92:bindtap:submitAppeal:13",
+      "id": "subpackageMember/report-detail/index.wxml:93:bindtap:submitAppeal:13",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1029907,7 +1029907,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitAppeal",
-        "line": 92,
+        "line": 93,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1029988,7 +1029988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/report-detail/index.js:91"
+        "staticSource": "subpackageMember/report-detail/index.js:92"
       }
     },
     {

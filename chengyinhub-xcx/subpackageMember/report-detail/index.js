@@ -22,6 +22,7 @@ Page({
     reason: '',
     reasonError: '',
     failText: '',
+    receiptText: '', // BL-52 申诉回执摘要,见 view.appealReceiptText
     maxLength: view.APPEAL_MAX,
   },
   onLoad(options) {
@@ -101,13 +102,13 @@ Page({
       this._requestReason = checked.reason
     }
     this._appealing = true
-    this.setData({ sheet: 'busy', failText: '' })
+    this.setData({ sheet: 'busy', failText: '', receiptText: '' })
     app.sendRequest({
       url: '/api/community-trust/reports/appeal', method: 'POST', hideLoading: true, silentError: true,
       data: JSON.stringify({ reportId: this._reportId, reason: checked.reason, requestId: this._requestId }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
-        if (isBizOk(res)) { that.confirmByReadBack(true); return }
+        if (isBizOk(res)) { that.confirmByReadBack(true, res.data); return }
         that._appealing = false
         that.setData({ sheet: 'fail', failText: bizFailureMessage(res, '申诉没有提交成功，请稍后再试') })
       },
@@ -125,27 +126,28 @@ Page({
     })
   },
   // accepted=服务端已返回成功回执;回读只用于确认与刷新页面,回读失败不推翻服务端回执
-  confirmByReadBack(accepted) {
+  confirmByReadBack(accepted, receipt) {
     const that = this
     const id = this._reportId
     app.sendRequest({
       url: `/api/community-trust/reports/${id}`, method: 'GET', hideLoading: true, silentError: true,
-      success(res) { that._afterAppeal(accepted, isBizOk(res) ? res.data : null) },
-      fail() { that._afterAppeal(accepted, null) },
-      successStatusAbnormal() { that._afterAppeal(accepted, null) },
+      success(res) { that._afterAppeal(accepted, isBizOk(res) ? res.data : null, receipt) },
+      fail() { that._afterAppeal(accepted, null, receipt) },
+      successStatusAbnormal() { that._afterAppeal(accepted, null, receipt) },
     })
   },
-  _afterAppeal(accepted, raw) {
+  _afterAppeal(accepted, raw, receipt) {
     this._appealing = false
     if (view.appealConfirmed(this._beforeAppeals, raw) || accepted) {
       this._requestId = ''
+      const receiptText = view.appealReceiptText(receipt, this._reportId)
       const report = raw ? view.normalizeReport(raw, {}) : null
       if (report) {
         report.reasonText = this.data.report.reasonText
         this._beforeAppeals = view.appealEventCount(raw.timeline)
-        this.setData({ sheet: 'ok', reason: '', report, nodes: view.timelineNodes(raw.timeline, report.stage) })
+        this.setData({ sheet: 'ok', reason: '', receiptText, report, nodes: view.timelineNodes(raw.timeline, report.stage) })
       } else {
-        this.setData({ sheet: 'ok', reason: '' })
+        this.setData({ sheet: 'ok', reason: '', receiptText })
       }
       return
     }
