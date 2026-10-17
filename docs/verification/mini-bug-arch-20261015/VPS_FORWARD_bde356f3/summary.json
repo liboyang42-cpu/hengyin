@@ -1,0 +1,80 @@
+{
+  "team": "forward",
+  "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "classes": [
+    "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+    "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+  ],
+  "declared_tests": 28,
+  "archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+  "task": "cy-vps-forward-bde356f3-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "New production fix; only directly affected ordinary tests. True database, Redis and running HTTP remain separate.",
+  "started_at": "2026-10-16T03:47:03.567744+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-forward-bde356f3",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-forward-bde356f3-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-forward-bde356f3-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-forward-bde356f3-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.web.controller.business.AnalyticsControllerTest,com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T03:49:49.990667+00:00"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+    }
+  ],
+  "totals": {
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 28
+  },
+  "fresh_exact_xml": true,
+  "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+  "evidence_layer": "ordinary regression only; no true MySQL/Redis/HTTP/device/business or merge/deploy acceptance",
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "PASS",
+  "counts": {
+    "tests": 24,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_classes_match": true,
+  "fresh_reports": true,
+  "source_archive_sha256": "8740184baf0fbe8e9d873d6c6a2c226818e18f9f2943dda9ec2882d43946567f",
+  "started_at": "2026-10-15T20:44:37.183604+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-forward-2babbe28-unit",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-forward-2babbe28-20261015/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-forward-2babbe28-20261015/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-forward-2babbe28-20261015/source/vps-unit.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.web.controller.business.AnalyticsControllerTest,com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"55813804e48154622238ae78c3687d6444221e95cb7d504a16b59a958a5189ab\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:47:21.589299+00:00"
+  },
+  "log_sha256": "934783e1f65f240f41379ccea314dc5c989ec6e452ea3a308ae77e14c00c8bee",
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml",
+      "sha256": "2ec94992410be4866192470bc70afd21645d0a6af43f97ae3f6275ec1d91433c",
+      "fresh": true,
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml",
+      "sha256": "e7e7b0791bed67e7bc95c0985547d55bb3bd9896a6a67dfb061027a55985ebc5",
+      "fresh": true,
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "failures": [],
+  "scope_note": "Two ordinary test classes only; excludes eleven real MySQL tests and HTTP/device/business acceptance."
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "team": "core",
+    "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "registered_in_funds_gate": [],
+    "not_registered_in_funds_gate": [
+      "com.chengyinhub.business.longrun.E04_13Test",
+      "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "com.chengyinhub.business.longrun.OWN_C06_30Test",
+      "com.chengyinhub.business.service.impl.OWN_C01_51Test"
+    ]
+  },
+  {
+    "team": "extra",
+    "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "registered_in_funds_gate": [
+      "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+      "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest"
+    ],
+    "not_registered_in_funds_gate": [
+      "com.chengyinhub.business.longrun.E01_06Test",
+      "com.chengyinhub.business.longrun.E01_09Test",
+      "com.chengyinhub.business.longrun.E01_10Test",
+      "com.chengyinhub.business.longrun.E01_18Test",
+      "com.chengyinhub.business.longrun.E02_01Test",
+      "com.chengyinhub.business.longrun.E02_06Test",
+      "com.chengyinhub.business.longrun.E02_10Test",
+      "com.chengyinhub.business.longrun.E02_11Test",
+      "com.chengyinhub.business.longrun.E02_15Test",
+      "com.chengyinhub.business.longrun.E02_16Test",
+      "com.chengyinhub.business.longrun.E02_18Test",
+      "com.chengyinhub.business.longrun.E02_20Test",
+      "com.chengyinhub.business.longrun.E02_22Test",
+      "com.chengyinhub.business.longrun.E04_06Test",
+      "com.chengyinhub.business.longrun.E04_10Test",
+      "com.chengyinhub.business.longrun.E04_13Test",
+      "com.chengyinhub.business.longrun.E04_14Test",
+      "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+      "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+      "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+      "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT"
+    ]
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "protocol": "CY-COORD-20261015-v1",
+  "handoff": "CY-HANDOFF: CODEX",
+  "verified_at_utc": "2026-10-15T12:18:22.954379+00:00",
+  "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "source_archive_sha256": "1362acc7a4b42b7e3b5972838903d0f66b8da9745ead1292d19791635760b2dd",
+  "target": "authorized development/test VPS, task-owned isolated MySQL container, no published ports",
+  "mysql_version": "8.0.45",
+  "java": "Eclipse Temurin 21",
+  "maven": "3.9.11",
+  "suite": "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
+  "surefire": {
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.046"
+  },
+  "container_exit_code": 0,
+  "oom_killed": false,
+  "business_test_methods_executed": 7,
+  "expected_business_test_methods": 7,
+  "cases": [
+    {
+      "name": "nullPointAndMissingMemberDoNotCreatePhantomLedgerCredit",
+      "passed": true
+    },
+    {
+      "name": "unchangedPositiveBatchesCanStillConfirmPayAndIssueAnInvoice",
+      "passed": true
+    },
+    {
+      "name": "concurrentFreezePreventsBlueInvoiceEvenAfterTheServiceSawAnUnfrozenBatch",
+      "passed": true
+    },
+    {
+      "name": "concurrentClawbackToNonPositiveAmountBlocksAllThreeProgressions",
+      "passed": true
+    },
+    {
+      "name": "concurrentSameEventStillCommitsOnlyOneReward",
+      "passed": true
+    },
+    {
+      "name": "concurrentDifferentEventsHaveAContinuousLedgerAndConserveBalance",
+      "passed": true
+    },
+    {
+      "name": "priorRepeatableReadAndMemberCacheDoNotCorruptRewardSnapshotAfterAnotherBusinessDeducts",
+      "passed": true
+    }
+  ],
+  "result": "PASS",
+  "candidate_modified": false,
+  "business_source_modified": false,
+  "not_verified": [
+    "Other backend VPS suites",
+    "VPS application deployment and runtime/database binding",
+    "WeChat and iOS device acceptance",
+    "Migration, merge and release"
+  ]
+}

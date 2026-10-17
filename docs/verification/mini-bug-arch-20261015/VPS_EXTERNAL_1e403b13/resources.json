@@ -1,0 +1,54 @@
+{
+  "observed_at_utc": "2026-10-15T12:23:41.277085+00:00",
+  "host_cpu_count": 2,
+  "available_memory_kib": 5168280,
+  "containers": [
+    {
+      "name": "cy-c99-1e403b13-tests",
+      "running": false,
+      "memory_limit_mib": 1152,
+      "cpu_limit": 1.5,
+      "published_host_ports": false,
+      "network_mode": "cy-c99-1e403b13-net",
+      "oom_killed": false
+    },
+    {
+      "name": "cy-c99-1e403b13-regression",
+      "running": false,
+      "memory_limit_mib": 1152,
+      "cpu_limit": 1.5,
+      "published_host_ports": false,
+      "network_mode": "none",
+      "oom_killed": false
+    },
+    {
+      "name": "cy-c99-1e403b13-ai-storage",
+      "running": false,
+      "memory_limit_mib": 1152,
+      "cpu_limit": 1.5,
+      "published_host_ports": false,
+      "network_mode": "container:e26f0b83181e146e38b5c9dc505e7cd76af60e1250cc585541a0756ed83d4ad7",
+      "oom_killed": false
+    },
+    {
+      "name": "cy-c99-1e403b13-mysql",
+      "running": true,
+      "memory_limit_mib": 384,
+      "cpu_limit": 0.5,
+      "published_host_ports": false,
+      "network_mode": "cy-c99-1e403b13-net",
+      "oom_killed": false
+    },
+    {
+      "name": "cy-c99-1e403b13-redis",
+      "running": true,
+      "memory_limit_mib": 64,
+      "cpu_limit": 0.5,
+      "published_host_ports": false,
+      "network_mode": "container:e26f0b83181e146e38b5c9dc505e7cd76af60e1250cc585541a0756ed83d4ad7",
+      "oom_killed": false
+    }
+  ],
+  "maximum_one_task_maven_container_running": true,
+  "task_resources_only": true
+}

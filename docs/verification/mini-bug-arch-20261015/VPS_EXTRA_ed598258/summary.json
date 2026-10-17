@@ -1,0 +1,171 @@
+{
+  "source_sha": "ed598258c0f614385940f326099b9626531fab02",
+  "previous_source_sha": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "FAIL",
+  "counts": {
+    "tests": 76,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_classes_match": true,
+  "fresh_reports": true,
+  "source_archive_sha256": "9f46ec9b90b040063f86d3ba126e69b0f0453cebc8589a15c5b39e8c0312ede7",
+  "started_at": "2026-10-15T20:48:40.733990+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-ed598258-unit",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-ed598258-20261015/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-ed598258-20261015/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-ed598258-20261015/source/vps-unit.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E03_01Test,com.chengyinhub.business.longrun.E03_02Test,com.chengyinhub.business.longrun.E03_16Test,com.chengyinhub.business.longrun.E03_17Test,com.chengyinhub.business.longrun.E03_18Test,com.chengyinhub.business.longrun.E06_17Test,com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest,com.chengyinhub.business.service.support.SeventhPierFixtureTest,com.chengyinhub.web.controller.api.ApiRoamShareControllerTest,com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+    "test"
+  ],
+  "guard": {
+    "returncode": 1,
+    "stdout": "{\"exitCode\": 1, \"reason\": \"child_command_failed\", \"containerId\": \"ebc1e652ffc118670fcab121814027d3953e1298bbab16e3ca5878a8adb45262\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:51:23.130334+00:00"
+  },
+  "log_sha256": "d42d6bc3d47e480b7b88e6928d6bdee5052846004b5482bb6e6ee4e3baa05c1f",
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E03_16Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_16Test.xml",
+      "sha256": "3d297c4d877c2238b67c410f6ded23ca4b50cdb00915cd383302ee9c7a762032",
+      "fresh": true,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.A03EndingSnapshotReadTest.xml",
+      "sha256": "ed14840ff3cecad652922fe79c062e708873d600ef1036e64e11cc42dec3e778",
+      "fresh": true,
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.JourneyPublishFreezeTest.xml",
+      "sha256": "3ed10e5cfb410b6dc43631621099c8c6bd246fc84d31cadd86b0af5da9b40d46",
+      "fresh": true,
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_01Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_01Test.xml",
+      "sha256": "454174c1496e6e5db8b33ebb5568ae855cec5342ce7cdc0d269344b64baae12e",
+      "fresh": true,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
+      "sha256": "115a73a714ddb73c5451bdb726564a5487d6ed7deab1db83afa500182bb4dc83",
+      "fresh": true,
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_17Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_17Test.xml",
+      "sha256": "5a4019714fb7cdfe524dc9be9a57bdda77df459a6c95194871ce756bce461c76",
+      "fresh": true,
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.support.SeventhPierFixtureTest.xml",
+      "sha256": "ee26c0335980e9048af0a40a5ec1e4ad2d12e59bfdf921da503fdb4379670dbe",
+      "fresh": true,
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_02Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_02Test.xml",
+      "sha256": "3d5756b0c7a3f92b5b7ca40cfad0d6655011f14174af2014913a7daae2fde05b",
+      "fresh": true,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiRoamShareControllerTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiRoamShareControllerTest.xml",
+      "sha256": "43c1fff513c07f23dce7d9c1806ab9e56b431743db14ab142356e7b32af9048d",
+      "fresh": true,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_18Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_18Test.xml",
+      "sha256": "c5bf6c57b4552662c8d8fb8080123fb18470238cdcba1ba45b401dd0f55eccb6",
+      "fresh": true,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E06_17Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E06_17Test.xml",
+      "sha256": "0a99f30f0f9209b83441e35f96818660cf62da3f0d4d77b79f8beac6002881d9",
+      "fresh": true,
+      "tests": 5,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "failures": [
+    {
+      "class": "com.chengyinhub.business.longrun.E06_17Test",
+      "method": "unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice",
+      "kind": "failure",
+      "type": "java.lang.AssertionError",
+      "message": "JSON path \"$.msg\" expected:<系统繁忙，请稍后重试> but was:<SQL SELECT private unrelated table>",
+      "stack": "java.lang.AssertionError: JSON path \"$.msg\" expected:<系统繁忙，请稍后重试> but was:<SQL SELECT private unrelated table>\n\tat org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)\n\tat org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)\n\tat org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:125)\n\tat org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)\n\tat org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)\n\tat com.chengyinhub.business.longrun.E06_17Test.unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice(E06_17Test.java:111)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\n\tat org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)\n\tat org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)\n\tat org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)\n\tat org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)\n\tat org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)\n\tat org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)\n\tat org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\n\tat org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService"
+    }
+  ],
+  "scope_note": "Eleven ordinary impacted classes; actual real MySQL/Redis and running HTTP/device/business acceptance excluded."
+}

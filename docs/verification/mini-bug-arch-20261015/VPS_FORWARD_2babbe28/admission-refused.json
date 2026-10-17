@@ -1,0 +1,21 @@
+{
+  "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "pull_request": 72,
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "NOT_RUN_ADMISSION_REFUSED",
+  "source_archive_sha256": "8740184baf0fbe8e9d873d6c6a2c226818e18f9f2943dda9ec2882d43946567f",
+  "selected_classes": [
+    "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+    "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+  ],
+  "declared_tests_not_executed": 24,
+  "real_mysql_declared_tests_not_executed": 11,
+  "guard": {
+    "returncode": 75,
+    "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:35:49.300199+00:00"
+  },
+  "evidence_directory": "/home/ubuntu/previews/cy-vps-forward-2babbe28-20261015",
+  "tests_executed": 0
+}

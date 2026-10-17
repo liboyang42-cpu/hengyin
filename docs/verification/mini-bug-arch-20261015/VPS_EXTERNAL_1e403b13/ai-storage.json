@@ -1,0 +1,61 @@
+{
+  "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "verified_at_utc": "2026-10-15T12:23:57.245357+00:00",
+  "group": "ai_mysql_redis_integration",
+  "expected_tests": 22,
+  "observed_tests": 22,
+  "container_exit_code": 0,
+  "oom_killed": false,
+  "reports_newer_than_container_start": true,
+  "report_directory": "source/chengyinhub-admin/target/surefire-reports",
+  "mysql_version": "8.0.45",
+  "redis_version": "7.4.11",
+  "network": "JVM and Redis share task-owned MySQL container network namespace; no published host ports",
+  "suites": [
+    {
+      "suite": "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "test_methods": [
+        "gatewayOldGenerationCannotRefundRecreatedCounter",
+        "actualGatewayCompensatesAppliedLostReplyOnlyOnce",
+        "invalidCounterRejectsReserveBeforeReceiptOrCounterChanges",
+        "concurrentRefundsDebitOnlyOnce",
+        "playerOldGenerationCannotRefundRecreatedCounter",
+        "invalidCounterRetainsReceiptAndZeroNeverGoesNegative",
+        "productionSerializerUsesIntegerTtlAndRejectsLongBeforeWriting",
+        "actualPlayerServiceCompensatesAppliedLostReply",
+        "playerConcurrentReservationsCapThreeAndNonceReplayDoesNotIncrement",
+        "missingOldDayDoesNotRecreateAndReplayDoesNotTouchLaterCounter",
+        "actualRefundUsesOriginalDayAndRejectsOtherMemberOrPool",
+        "notAppliedLostReplyCancelsLateReservationWithoutCreatingCount",
+        "positiveCounterTtlDoesNotRenewAndOrdinaryOverLimitStillCounts",
+        "photoUnknownReplyPreservesUnmeteredFallbackAfterActualCompensation",
+        "generationLossConservativelyProtectsNewReservations"
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "test_methods": [
+        "retainedViolationNeverEntersRecoveryDebit",
+        "crashAfterModelStartedDoesNotRefundUnknownOutcome",
+        "expiredReceiptAndExistingCounterIsUncertainEvenBeforeReview",
+        "restartAfterChargeBeforeReceiptPersistenceCancelsExactNonce",
+        "concurrentWorkersRefundOneReservationOnlyOnce",
+        "recreatedCounterCannotBeDebitedByOldGeneration",
+        "durableDefinitiveFailureSurvivesRedisOutageAndRestart"
+      ]
+    }
+  ],
+  "result": "PASS",
+  "not_verified": [
+    "Real AI provider requests, content review and billing",
+    "Application deployment, runtime HTTP business flows and device acceptance"
+  ]
+}

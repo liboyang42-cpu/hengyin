@@ -1,0 +1,20 @@
+{
+  "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "previous_source_sha": "ed598258c0f614385940f326099b9626531fab02",
+  "classes": [
+    "com.chengyinhub.business.longrun.E06_17Test"
+  ],
+  "declared_tests": 5,
+  "basis": "Only this test fixture and delivery document changed; production unchanged, preserve generic and strengthened no-leak assertions",
+  "archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "NOT_RUN_ADMISSION_REFUSED",
+  "tests_executed": 0,
+  "guard": {
+    "returncode": 75,
+    "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:58:53.261865+00:00"
+  },
+  "evidence_directory": "/home/ubuntu/previews/cy-vps-extra-b45664de-20261015"
+}

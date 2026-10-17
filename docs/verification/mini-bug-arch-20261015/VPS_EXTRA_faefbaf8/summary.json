@@ -1,0 +1,80 @@
+{
+  "team": "extra",
+  "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "classes": [
+    "com.chengyinhub.business.longrun.E02_24Test",
+    "com.chengyinhub.business.community.CommunityPostServiceImplTest"
+  ],
+  "declared_tests": 60,
+  "archive_sha256": "e410f0410f7f84f14a5e201136fce68718a92112226223dab85f614d1a02f857",
+  "task": "cy-vps-extra-faefbaf8-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "New production fix; only directly affected ordinary tests. True database, Redis and running HTTP remain separate.",
+  "started_at": "2026-10-16T03:44:19.150799+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-faefbaf8",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-faefbaf8-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-faefbaf8-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-faefbaf8-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E02_24Test,com.chengyinhub.business.community.CommunityPostServiceImplTest",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T03:47:03.564145+00:00"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "08953436f00638686a88acf598730a8a8aeac36b338339a7825ce14c686e8a90",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E02_24Test",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "4c52de3f748dcdb9ebb233a136551cc627c0c087035b293f878f3f63d1a4a095",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_24Test.xml"
+    }
+  ],
+  "totals": {
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 60
+  },
+  "fresh_exact_xml": true,
+  "log_sha256": "0f9d900cd645459b18f38ab0869f0c199efe320e00c71a979cc966e053cdf420",
+  "evidence_layer": "ordinary regression only; no true MySQL/Redis/HTTP/device/business or merge/deploy acceptance",
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "b98a6a61b1788f06cb8fb4f72f246f64e39f0077e600884aa374d268be02b584"
+  }
+}

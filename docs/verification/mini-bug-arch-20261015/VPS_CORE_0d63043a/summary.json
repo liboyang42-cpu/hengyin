@@ -1,0 +1,107 @@
+{
+  "source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "previous_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "PASS",
+  "counts": {
+    "tests": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_classes_match": true,
+  "fresh_reports": true,
+  "source_archive_sha256": "1b863845183aedeefc9e7ecabb911e8d77265784603b7935e13c985efb319b13",
+  "started_at": "2026-10-15T20:23:49.505347+00:00",
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"3d4aebe4085db4bd9caaafb2a50ec2ef9244f6d45e89325f732f2804016ade2a\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T20:26:34.035720+00:00"
+  },
+  "log_sha256": "20f136760c990852114d808df8a03a0c5ea093c94b6cffd35beaf84668ee163a",
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_22Test.xml",
+      "sha256": "3e76229aab0d1d7796c1d6e2be9105702dad595705d2f079cf90231a15d846b4",
+      "fresh": true,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_24Test.xml",
+      "sha256": "27a0ee917162c6bae313d3ae9467cbdce69b569220baf531d7be50fac028f68c",
+      "fresh": true,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_21Test.xml",
+      "sha256": "dbdfc52641b0e32c6464c854d79b78fb04a0a1798a9f96422a5a6fc84a9130ea",
+      "fresh": true,
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_22Test.xml",
+      "sha256": "1f9e13b11c54d0d00267f7923d63f69ce5845c5538b974748d23d5246b2dcd28",
+      "fresh": true,
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_25Test.xml",
+      "sha256": "bf67e6b62989cbddfa407e789640c6178ec0683f9807fa25f1eb164a16305176",
+      "fresh": true,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_29Test.xml",
+      "sha256": "b841b81d8fc832b04d7a4927efc5d1e6f9ff8615bb1705ee51a61addb0b9fa11",
+      "fresh": true,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.xml",
+      "sha256": "a8404d0abceee4c369408022e65b7e731158b3fd8910729fed1c6be0d3e137aa",
+      "fresh": true,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.xml",
+      "sha256": "4b6d003a0e7897ed1bd8b67238537ec63588b2f3153ffc9fc62aae5b48cfeb69",
+      "fresh": true,
+      "tests": 122,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "failures": [],
+  "scope_note": "Targeted retest of eight repaired classes; does not claim a new 483-case full run or MySQL/runtime acceptance."
+}
