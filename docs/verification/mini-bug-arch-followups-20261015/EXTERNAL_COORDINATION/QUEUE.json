@@ -363,7 +363,7 @@
     {
       "id": "E02-03",
       "lane": "E02",
-      "status": "AUDIT_THEN_FIX",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
       "title": "引用聚合不复活撤回内容",
       "trigger": "旧引用指向已撤回帖子或受限资源",
       "invariant": "引用hydrate遵守当前现有可见性，旧快照不当永久授权",
@@ -375,7 +375,7 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java"
       ],
-      "state": "BLOCKED_DECISION",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
       "owner": "EXTRA6/E02",
       "verification": "NOT_RUN",
       "delivery": "SOURCE_DELIVERED_UNVERIFIED",
@@ -388,8 +388,13 @@
       "branch": "codex/extra-e02-regression-20261015",
       "worktree": "/workspace/hengyin-extra-e02",
       "depends_on": [],
-      "public_sha": "15669133859edabe3a2e11641a0cbdb0ed593ccf",
-      "regression_methods_written": 0
+      "public_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "regression_methods_written": 4,
+      "rolling_candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "child_public_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
+      "planned_methods": 4,
+      "source_change_summary": "Only selectReferences uses correlated NOT EXISTS to suppress ACTIVITY references whose current target has publish_status=0 OR cancel_time IS NOT NULL. Original five fields/order/post/invalidated filters retained; body and persisted snapshots unchanged; no membership/registration check or other reference-type policy.",
+      "implemented_policy": "Only explicit ACTIVITY cancelled/offline card suppression; body/snapshot preserved, no author eligibility filter or other reference types."
     },
     {
       "id": "E02-04",
@@ -4093,7 +4098,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 27,
+  "queue_revision": 28,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -4178,9 +4183,9 @@
       "slot": "E02",
       "task": null,
       "worker": "/root/external_e02",
-      "mode": "REPAIR_CLOSED_TARGETED8_PASS_IDLE_ORIGINAL_LOCK_RETAINED",
+      "mode": "ACTIVITY_REFERENCE_SOURCE_DELIVERED_STOPPED_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e02",
-      "public_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950"
+      "public_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92"
     },
     {
       "slot": "E03",
@@ -4216,7 +4221,7 @@
   "refill_status": "Two concrete previouslyblocked items implemented across3 publiccommits, not newbugIDs; no independentREADY remaining, no filler50. Local newcandidate verification does not block future clearlygranted work.",
   "lane_domain_status": {
     "E01": "E01-13 new WAITING eligibility delivered, new6+old24 declarations NOT_RUN; existing WAITING/shared policy unchanged.",
-    "E02": "E02-23 delivered; 6 new + 18 old invocations = 24 declared NOT_RUN (controller 8 plain + 6 parameter rows). Combined candidate 6 classes/35 declared, admission refused/actual0; no source failure.",
+    "E02": "E02-03 ACTIVITY cancelled/offline card suppression delivered with body and snapshot preserved; no registration-eligibility filtering. New4 ordinaryNOT_RUN; five old trueMySQL scratch prerequisites recorded separately.",
     "E03": "E03-04 frozen stage node gate delivered, new4+old25 declarations NOT_RUN; missing/malformed/empty evidence and live chapter protection retained.",
     "E04": "A schema-compatibleunknown audit delivered; sameauthorB exactreceipt/newnullablemigration prepared and delivered;11 ordinary/8trueMySQL plannedNOT_RUN; noDDLexecution/backfill",
     "E05": "Restored assigned source and required old fixtures delivered; NOT_RUN; ready for single-line original-author failure repair or next genuine transferred task",
@@ -5067,7 +5072,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+  "latest_application_candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -5308,47 +5313,55 @@
     }
   },
   "validation_queue_state": {
-    "candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-    "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS",
+    "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+    "status": "NEW_SOURCE_NOT_RUN",
     "classes": [
-      "com.chengyinhub.business.longrun.E01_13Test",
-      "com.chengyinhub.business.longrun.E03_04Test",
-      "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
-      "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest"
+      "com.chengyinhub.business.longrun.E02_03Test"
     ],
-    "planned_declared_tests_preserved": 59,
-    "actual_tests": 60,
-    "totals": {
-      "tests": 60,
-      "failures": 0,
-      "errors": 0,
-      "skipped": 0,
-      "passed": 60
-    },
-    "fresh_xml_count": 4,
-    "exact_source_methods_match_XML": true,
-    "count_audit": {
-      "planned_tests_preserved": 59,
-      "source_annotation_counts": {
-        "com.chengyinhub.business.longrun.E01_13Test": 6,
-        "com.chengyinhub.business.longrun.E03_04Test": 4,
-        "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
-        "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 26
-      },
-      "actual_tests": 60,
-      "exact_source_method_names_match_fresh_xml": true,
-      "cause": "Initial static count missed fully qualified @org.junit.jupiter.api.Test on one existing archive test; no parameterization, duplicate execution or new source change.",
-      "original_collector_result": "NOT_PASS due solely to planned-count mismatch; original summary archived",
-      "rerun_performed": false,
-      "result": "PASS"
-    },
-    "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
-    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+    "declared_tests": 4,
+    "actual_tests": null,
+    "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
+    "environment": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
     "cloud_execution_allowed": false,
     "old_pass_inherited": false,
-    "real_DB_Redis_HTTP_integration": "NOT_ACCEPTED",
-    "migration_status": "NOT_EXECUTED",
-    "next_action": "Source frozen. No failure repair or repeat validation from the count audit. E02 reference-card output policy remains unselected."
+    "no_external_DB_Redis_for_new_ordinary_class": true,
+    "old_true_mysql_fixture_gaps": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+        "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
+        "call": "service.detail",
+        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+        "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
+        "call": "service.feed -> hydrate",
+        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+        "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
+        "call": "service.comments -> detail -> hydrate",
+        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+        "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+        "call": "service.comment -> commentResult -> detail -> hydrate",
+        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+        "gate": "CHENGYIN_B05_MYSQL_IT=1",
+        "call": "post helper -> detail",
+        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+      }
+    ]
   },
   "admission_history": [
     {
@@ -5890,6 +5903,86 @@
         "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
         "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
       }
+    },
+    {
+      "id": "E02-03",
+      "package": "E02-03-ACTIVITY-CARD-OUTPUT",
+      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
+      "child_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
+      "child_parent_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_03Test.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-03.md"
+      ],
+      "owner": "EXTRA6/E02",
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "new_execution": "NOT_RUN",
+      "minimal_diff": "Only selectReferences uses correlated NOT EXISTS to suppress ACTIVITY references whose current target has publish_status=0 OR cancel_time IS NOT NULL. Original five fields/order/post/invalidated filters retained; body and persisted snapshots unchanged; no membership/registration check or other reference-type policy.",
+      "unchanged_targets": "Missing activity row, null publish_status without cancel_time, unrelated types and null reference_type retain previous output behavior.",
+      "ordinary_classes": [
+        "com.chengyinhub.business.longrun.E02_03Test"
+      ],
+      "declared_tests": 4,
+      "actual_tests": null,
+      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
+      "prerequisites": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
+      "dependency_version_changes": [],
+      "production_DDL_changes": [],
+      "new_external_service_requirements": [],
+      "other_owner_overlap": "No PR231 production/service/interface/old test path edited.",
+      "old_true_mysql_fixture_gaps": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
+          "call": "service.detail",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
+          "call": "service.feed -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
+          "call": "service.comments -> detail -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+          "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+          "call": "service.comment -> commentResult -> detail -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "gate": "CHENGYIN_B05_MYSQL_IT=1",
+          "call": "post helper -> detail",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        }
+      ],
+      "fixture_gap_exclusions": [
+        "E02_10Test revisions path does not call hydrate; not listed as required.",
+        "E02_22Test like/unlike returns void without this query; not listed as required.",
+        "Existing ordinary CommunityPostMapperMyBatisTest has no selectReferences call; not a confirmed missing-table failure."
+      ],
+      "old_pass_inherited": false,
+      "old_530_four_class60_repeated": false,
+      "Cloud_execution": false,
+      "migration_executed": false,
+      "merge_deploy": false,
+      "public_coordination_comments": false,
+      "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "execution": "NOT_RUN"
     }
   ],
   "pending_validation_candidates": [
@@ -6070,6 +6163,86 @@
         "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
         "scope": "Two ordinary classes only within original35 NOT_PASS; trueMySQL stillNOT_RUN; result not transferred to b034 repair SHA"
       }
+    },
+    {
+      "id": "E02-03",
+      "package": "E02-03-ACTIVITY-CARD-OUTPUT",
+      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
+      "child_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
+      "child_parent_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_03Test.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+        "docs/verification/mini-longrun-20261015/EXTRA6/E02-03.md"
+      ],
+      "owner": "EXTRA6/E02",
+      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+      "new_execution": "NOT_RUN",
+      "minimal_diff": "Only selectReferences uses correlated NOT EXISTS to suppress ACTIVITY references whose current target has publish_status=0 OR cancel_time IS NOT NULL. Original five fields/order/post/invalidated filters retained; body and persisted snapshots unchanged; no membership/registration check or other reference-type policy.",
+      "unchanged_targets": "Missing activity row, null publish_status without cancel_time, unrelated types and null reference_type retain previous output behavior.",
+      "ordinary_classes": [
+        "com.chengyinhub.business.longrun.E02_03Test"
+      ],
+      "declared_tests": 4,
+      "actual_tests": null,
+      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
+      "prerequisites": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
+      "dependency_version_changes": [],
+      "production_DDL_changes": [],
+      "new_external_service_requirements": [],
+      "other_owner_overlap": "No PR231 production/service/interface/old test path edited.",
+      "old_true_mysql_fixture_gaps": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
+          "call": "service.detail",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
+          "call": "service.feed -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
+          "call": "service.comments -> detail -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+          "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+          "call": "service.comment -> commentResult -> detail -> hydrate",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "gate": "CHENGYIN_B05_MYSQL_IT=1",
+          "call": "post helper -> detail",
+          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
+          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
+        }
+      ],
+      "fixture_gap_exclusions": [
+        "E02_10Test revisions path does not call hydrate; not listed as required.",
+        "E02_22Test like/unlike returns void without this query; not listed as required.",
+        "Existing ordinary CommunityPostMapperMyBatisTest has no selectReferences call; not a confirmed missing-table failure."
+      ],
+      "old_pass_inherited": false,
+      "old_530_four_class60_repeated": false,
+      "Cloud_execution": false,
+      "migration_executed": false,
+      "merge_deploy": false,
+      "public_coordination_comments": false,
+      "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "execution": "NOT_RUN"
     }
   ],
   "latest_worker_round": {
@@ -6200,7 +6373,7 @@
     "actual_combined_tests": 0,
     "source_changed": false
   },
-  "production_source_unchanged_since": "530e72281a9bd1a443f58a21119367d55eca3623",
+  "production_source_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
   "latest_local_actual_result": {
     "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
     "direct_parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
@@ -6309,7 +6482,7 @@
     "old_8_35_64_inherited": false,
     "no_rerun": true
   },
-  "worker_runtime_note": "Original E01/E03 both directly read and acknowledged530 four-class60 ordinaryPASS; original source locks frozen. Running sourcewriters0, repair0, no newly assigned independentREADY. E02 reference-card keep/hide policy remains unselected. Cloud runs0.",
+  "worker_runtime_note": "Original E02 completed narrow ACTIVITY card query source and stopped, sourcewriters0. New ordinary4 NOT_RUN. Prior530 four-class60 belongs only to530. Five old gated scratch schemas need explicit prerequisite follow-up; no tests changed here.",
   "local_actual_result_history": [
     {
       "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
@@ -6436,93 +6609,16 @@
     }
   ],
   "latest_source_delivery_batch": {
-    "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-    "direct_parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-    "previous_source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+    "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+    "parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
     "packages": [
-      {
-        "id": "E03-04",
-        "package": "E03-04-FROZEN-STAGE-GATE",
-        "owner": "EXTRA6/E03",
-        "source_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-        "parent_sha": "acbd5f5411c6176db604d6297852c7772bdaa28d",
-        "child_sha": "362f8a6bae6bd213700f5d1bc7bae858d2da3fc6",
-        "child_parent_sha": "003ad6eae97281f3e8c581a76a1cebc765116ccc",
-        "write_files": [
-          "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_04Test.java",
-          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
-          "docs/verification/mini-longrun-20261015/EXTRA6/E03-04.md"
-        ],
-        "production_delta": "Stage completion uses unique valid nonempty frozen nodeIds; malformed/missing/empty evidence retains existing live gate. Current deleted/reassigned chapter guard remains. No runtime/DTO/shared helper/mapper edits.",
-        "new_class": "com.chengyinhub.business.longrun.E03_04Test",
-        "new_declarations": 4,
-        "old_class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
-        "old_declarations": 25,
-        "planned_declarations": 29,
-        "status": "SOURCE_DELIVERED_UNVERIFIED",
-        "execution": "NOT_RUN",
-        "old_pass_inherited": false,
-        "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E03_04Test,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest test",
-        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito/Jackson and current shared TopicRouteSessionScope; no external DB/Redis/env/dependency changes.",
-        "ordinary_result_in_combined_frozen_source": {
-          "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-          "tests": 30,
-          "passed": 30,
-          "failures": 0,
-          "errors": 0,
-          "skipped": 0,
-          "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
-          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
-          "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
-        },
-        "static_count_correction": {
-          "old_class_declarations_original": 25,
-          "old_class_complete_annotation_count": 26,
-          "package_planned_original": 29,
-          "package_complete_declarations": 30,
-          "reason": "Fully qualified @org.junit.jupiter.api.Test omitted by initial short-annotation count; source unchanged."
-        }
-      },
-      {
-        "id": "E01-13",
-        "package": "E01-13-NEW-WAITING-ELIGIBILITY",
-        "owner": "EXTRA6/E01",
-        "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-        "parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-        "child_sha": "d3468d3835fc170bd465b6b9908cfb552ace8263",
-        "child_parent_sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
-        "write_files": [
-          "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java",
-          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
-          "docs/verification/mini-longrun-20261015/EXTRA6/E01-13.md"
-        ],
-        "production_delta": "Only join reuses existing exact activity lock-read and checks signupDeadline, falling back to startTime. One shared now for gate and joinedAt; no sale_* gate, existing WAITING/shared policies/cancel/expire/release/offer/refund changes. Mapper Java/XML unchanged.",
-        "new_class": "com.chengyinhub.business.longrun.E01_13Test",
-        "new_declarations": 6,
-        "old_class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
-        "old_declarations": 24,
-        "planned_declarations": 30,
-        "status": "SOURCE_DELIVERED_UNVERIFIED",
-        "execution": "NOT_RUN",
-        "old_pass_inherited": false,
-        "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E01_13Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest test",
-        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito service dependencies; no external DB/Redis/env/dependency changes. Existing24 fixtures unchanged.",
-        "ordinary_result_in_combined_frozen_source": {
-          "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-          "tests": 30,
-          "passed": 30,
-          "failures": 0,
-          "errors": 0,
-          "skipped": 0,
-          "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
-          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
-          "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
-        }
-      }
+      "E02-03"
     ],
-    "combined_class_count": 4,
-    "combined_declared_invocations": 59,
-    "actual_new_tests": null,
+    "ordinary_classes": [
+      "com.chengyinhub.business.longrun.E02_03Test"
+    ],
+    "declared_tests": 4,
+    "actual_tests": null,
     "new_execution": "NOT_RUN",
     "old_pass_inherited": false
   }

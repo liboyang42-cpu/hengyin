@@ -1,5 +1,7 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
+最新源码：E02-03仅隐藏明确取消/下架活动的旧引用卡，正文及存储快照保留。完整冻结6143c37f3c32753bd22208ace9c4d3c4520b9fd6（父ff6c15679d3249987eb74ee150c1121a2effe250）；新真实XML/H2普通回归4声明，NOT_RUN，不继承530四类60或旧8/35/64。以下旧未选政策/已验候选均为阶段历史，本节及文末为当前范围。
+
 最新签收：固定530e72281a9bd1a443f58a21119367d55eca3623本地原212四类60实际PASS/0F/E/S；原E01/E03均已直接核读公共dc74c300ef11e203ac98b1baaf15efe77bcfbd20并签收冻结。原计划59与初次计数回执保留，漏全限定@Test已按源码方法名和fresh XML核为60，无源码修改/重跑。以下NOT_RUN/59计划数均保留阶段历史，以本节及文末实际结果为准。
 
 最新源码：E03-04冻结节点完成门槛与E01-13新增WAITING准入已交付，完整候选530e72281a9bd1a443f58a21119367d55eca3623（父0ee9a998ff04f033c9518e7c7139a62a0f6dc585）。新回归4+6方法；直接影响旧类25+24方法，四类59仅声明、NOT_RUN，不继承此前通过。E02-03政策未选、源码不改。下方既有阶段状态保留历史。
@@ -438,3 +440,14 @@ E01-13完整候选530e72281a9bd1a443f58a21119367d55eca3623，父0ee9a998ff04f033
 精确自有容器829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822由本地显式chengyin-aws确认清理，无活动Java；source/cache/4327源文件核对/日志/4XML/原run与guard及计数审计按公共manifest签收，Cloud未自行访问VPS或重算原件。原E01/E03已停写保留锁，源码不变，writer0/失败修复0，无新READY则不造任务。
 
 E02-03只是概念解释，保留或隐藏历史引用卡尚未选择，源码政策冻结。真实MySQL SQL/事务/锁交错、Redis、运行HTTP、设备业务及集成未验；既有迁移未执行、不合并部署。保持现有入口不新增，Cloud无编译测试/手动CI，本次提交仅本队三份交付账。新普通60不替代上述验收边界。
+
+
+## E02-03：ACTIVITY明确取消/下架隐藏卡片，保留正文及快照
+
+原作者child ec0067a97b8d28cbc20fee8d6b02dec429af6f92（父992b9ea146db16f9c9a12f4041925e2c6b386950）；完整rolling 6143c37f3c32753bd22208ace9c4d3c4520b9fd6（父ff6c15679d3249987eb74ee150c1121a2effe250）。仅CommunityPostMapper.xml/selectReferences、E02_03Test和原说明三路径。相关NOT EXISTS只排除ACTIVITY且实际目标publish_status=0或cancel_time非NULL；原投影/排序/post过滤/invalidated过滤不变，不读报名资格，不写或刷新正文/快照，不改其他类型、缺行或NULL状态的旧行为。PR231重叠的Service/接口/旧测试均未改。
+
+新增com.chengyinhub.business.longrun.E02_03Test为生产XML/H2实际SELECT及独立JDBC存储读回，4个@Test声明；覆盖取消、下架、保留正文快照、历史投影、资格变化、其他类型/缺行/NULL/原行过滤。没有真实Service详情/HTTP或完整取消业务验证。最小普通选择仅该新类；既有离线依赖，无外部MySQL/Redis、新env或依赖版本变化。编译/实际通过数均NOT_RUN。
+
+生产cms_activity及字段已经存在，无生产DDL。但五个旧显式MySQL gate scratch夹具确认通过真实hydrate触及新查询而尚无cms_activity：E02_01Test、E02_11Test、E02_06Test、E02_25MySqlIT、B05CommunityVisibilityMySqlIT；各自后续需要精确补空cms_activity(id,publish_status,cancel_time)前提。本次未改这些路径，不把它们当普通4项，也不声称旧真库兼容已验。E02_10/22未经过该读取，不列必改；旧普通Mapper类无已确认selectReferences调用。完整路径/gate/调用锚点留source_delivery_packages，后续测试文件写权需逐一核实。
+
+新候选SOURCE_DELIVERED_UNVERIFIED，旧530的60PASS及其59计数审定、旧b0348PASS和923异常/拒绝历史各属原SHA。Cloud未编译测试/手动CI/VPS，不新增入口/网络/服务，不执行迁移/合并部署。原E02停写保留锁，实际新源码writer0。
