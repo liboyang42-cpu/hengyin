@@ -291,3 +291,12 @@
 - BL-44 NPC 保留天数：已在 CL4 retentionPolicy 文案里展示，无剩余工作，视为完成。
 - BL-62 我的处罚记录：处罚记录属于小程序未接入的 v1 社区发帖体系，接入前不做。
 - BL-65 官方活动集体进度：详情页已展示集体进度与参与人数，progress 只多一个完成人数，不值得单做，视为完成。
+
+## 第十八批（184–186）：主监督补充（2026-10-17；后端已有接口、小程序零调用，已用 git grep 核实；不改现有 UI 与标题，无迁移/新接口/新依赖）
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 184 | 我的商家纠错记录与补证 | 纠错半屏 `components/cy/merchant-correction-sheet` 提交成功后，目前看不到进度。接 `GET /api/community-trust/contributions/mine`（列表）、`GET /api/community-trust/contributions/{id}`（详情）、`POST /api/community-trust/contributions/supplement`（补证，DTO 见 `MerchantContributionSupplementRequest`）。新增「我的纠错」列表和详情两个页面，照搬现有「举报进度」`subpackageMember/report-list`、`report-detail` 的结构、组件和样式；入口放在纠错半屏的成功态里，只有一个次按钮「查看我的纠错」。状态文案只用 VO 里已有的字段，不要编造。新页面的 app.json 补丁交给协调者。 | 新页面（照搬现有页） |
+| 185 | 主题发布前检查 | 创作者发布主题（`/api/topic/publish-draft`、现有发布路径）前，先调 `GET /api/topic/publish-check?topicId=&scope=`，它只读，一次列出所有 error 和 warn。在现有发布确认处展示：有 error 时列出并且不发布，只有 warn 时列出后允许继续。展示结构照搬官方活动主办控制台 `pages/activity/official-organizer` 已有的「发布检查」区块。先 grep 现有主题发布入口（fabu / myproject 等），只接在入口里，不改页面样式。检查接口失败时不能挡住原发布流程，要用 cy-inline-error 说明「检查没有完成」。 | 现有页内补齐 |
+| 186 | 章节阶段结算 | `GET /api/play/journey/stage-end?topicId=&activityId=&chapterId=` 返回本章完成后的阶段结算。先在 `pages/play/index.js` 找到章节全部完成的时刻；如果现有 UI 已有章末或章节完成的展示位，就把服务端结算接进去，复用 `/ending` 的取数与降级方式（见 `utils/life-archive.js`）。如果没有现成展示位，只在 PR 正文写明「需要产品决定展示位置」后停止，不要新造 UI，也不要开空 PR，在本条后面追加一行说明即可。 | 现有页内补齐 |
+
+待用户决定、不要领取：`/api/im/poll/*`（群投票）、`/api/roam/hangout/*`（漫游约伴，漫游上线时已裁掉）、`/api/spoiler/*`（剧透偏好）、`/api/content-draft/*`（通用草稿）、`/api/club/chat`（俱乐部群聊入口）。涉及资金的接口（会员发票/续费/退款审核、钱包提现、余额）按边界规则一律不做。
