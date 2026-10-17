@@ -11,13 +11,46 @@
  *    后台版**不能**在 onHide 停 —— 玩家锁屏塞兜里走路正是它存在的理由。
  *    停的时机只有一个:这次行程结束(通关/退出/离开页面)。
  */
-var owners = Object.create(null);   // sessionKey -> true
+var owners = Object.create(null);   // sessionKey -> acquisition identity
 var started = false;
 var starting = false;
 var stopping = false;
 var usingBackground = false;
 var generation = 0;
 var waiters = [];
+// A batch stays cancellable while consumer callbacks run, even after failure
+// has cleared owners. Reusing a key must never revive its previous callback.
+var notifying = [];
+
+function cancelNotifications(key, force) {
+  notifying.forEach(function (batch) {
+    batch.forEach(function (item) {
+      if (force || item.key === key) item.cancelled = true;
+    });
+  });
+}
+
+function notify(batch, callback, value) {
+  var hasError = false;
+  var firstError;
+  notifying.push(batch);
+  try {
+    batch.forEach(function (item) {
+      if (item.cancelled) return;
+      if (callback === 'success' && owners[item.key] !== item) return;
+      try {
+        if (item.opts[callback]) item.opts[callback](value);
+      } catch (err) {
+        // One consumer must not prevent the remaining live owners from
+        // learning the outcome. Preserve the first thrown value for the caller.
+        if (!hasError) { hasError = true; firstError = err; }
+      }
+    });
+  } finally {
+    notifying.splice(notifying.indexOf(batch), 1);
+  }
+  if (hasError) throw firstError;
+}
 
 function count() { return Object.keys(owners).length; }
 function stopLocation() {
@@ -33,6 +66,9 @@ function stopLocation() {
   try {
     wx.stopLocationUpdate({ success: finish, fail: finish, complete: finish });
   } catch (e) {
+    // finish marks completion before starting waiting owners. An exception
+    // from that callback chain must not be swallowed as a stop API failure.
+    if (completed) throw e;
     finish();
   }
 }
@@ -57,9 +93,7 @@ function finishSuccess(gen, background) {
   usingBackground = background;
   var ready = waiters;
   waiters = [];
-  ready.forEach(function (item) {
-    if (owners[item.key] && item.opts.success) item.opts.success(background);
-  });
+  notify(ready, 'success', background);
 }
 
 function finishFailure(gen, err) {
@@ -67,12 +101,28 @@ function finishFailure(gen, err) {
   starting = false;
   started = false;
   usingBackground = false;
-  var failed = waiters.filter(function (item) { return owners[item.key]; });
+  var failed = waiters.filter(function (item) { return owners[item.key] === item; });
   waiters = [];
   owners = Object.create(null);
-  failed.forEach(function (item) {
-    if (item.opts.fail) item.opts.fail(err);
-  });
+  notify(failed, 'fail', err);
+}
+
+function callStart(start, success, fail) {
+  var callbackStarted = false;
+  function wrap(callback) {
+    return function (value) {
+      callbackStarted = true;
+      return callback(value);
+    };
+  }
+  try {
+    start.call(wx, { success: wrap(success), fail: wrap(fail) });
+  } catch (err) {
+    // A synchronous consumer callback may throw through the platform call.
+    // It is not a startup failure and must not trigger fallback/second delivery.
+    if (callbackStarted) throw err;
+    fail(err);
+  }
 }
 
 function beginStart() {
@@ -84,17 +134,14 @@ function beginStart() {
   var toForeground = function (bgErr) {
     if (gen !== generation || count() === 0 || started) return;
     // 后台权限没开通/用户拒绝 → 退回前台版,功能降级但不中断行程。
-    wx.startLocationUpdate({
-      success: function () { finishSuccess(gen, false); },
-      fail: function (e) { finishFailure(gen, e || bgErr); },
-    });
+    callStart(wx.startLocationUpdate,
+      function () { finishSuccess(gen, false); },
+      function (e) { finishFailure(gen, e || bgErr); });
   };
 
   if (!wx.startLocationUpdateBackground) { toForeground(null); return; }
-  wx.startLocationUpdateBackground({
-    success: function () { finishSuccess(gen, true); },
-    fail: toForeground,
-  });
+  callStart(wx.startLocationUpdateBackground,
+    function () { finishSuccess(gen, true); }, toForeground);
 }
 
 /**
@@ -105,14 +152,19 @@ function beginStart() {
 function acquire(key, opts) {
   opts = opts || {};
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
-  owners[key] = true;
+  // A failure batch has already cleared owners. A fresh acquisition replaces
+  // that key's old notification even when the consumer did not release first.
+  cancelNotifications(key, false);
+  var owner = { key: key, opts: opts, cancelled: false };
+  owners[key] = owner;
   if (started) { opts.success && opts.success(usingBackground); return; }
-  waiters.push({ key: key, opts: opts });
+  waiters.push(owner);
   beginStart();
 }
 
 /** 释放一个持有者;归零才真停。传 force=true 用于「无论如何都收干净」的兜底。 */
 function release(key, force) {
+  cancelNotifications(key, force);
   delete owners[key];
   waiters = waiters.filter(function (item) { return item.key !== key; });
   if (!force && count() > 0) return;

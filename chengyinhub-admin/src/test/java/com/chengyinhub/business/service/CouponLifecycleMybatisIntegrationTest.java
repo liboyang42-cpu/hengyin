@@ -335,27 +335,15 @@ class CouponLifecycleMybatisIntegrationTest {
     }
 
     @Test
-    void revokeAfterInitialReadIsResolvedFromCurrentFactWithoutExpiryOrRedemptionSideEffects() throws Exception {
-        Object target = org.springframework.test.util.AopTestUtils.getUltimateTargetObject(couponHistoryService);
-        SmsCouponHistoryMapper real = historyMapper;
+    void revocationCommittedBeforeLockedReadRejectsWithoutExpiryOrRedemptionSideEffects() throws Exception {
         for (long id : new long[]{11L, 12L}) {
-            SmsCouponHistoryMapper interleaved = org.mockito.Mockito.mock(SmsCouponHistoryMapper.class,
-                    org.mockito.AdditionalAnswers.delegatesTo(real));
-            org.mockito.Mockito.doAnswer(call -> {
-                SmsCouponHistory before = real.selectSmsCouponHistoryById(id);
-                // 独立连接在原普通读后提交撤销；后续真实CAS/当前读必须看到del_flag=2。
-                execute("UPDATE sms_coupon_history SET del_flag=2 WHERE id=" + id);
-                return before;
-            }).when(interleaved).selectSmsCouponHistoryById(id);
-            ReflectionTestUtils.setField(target, "smsCouponHistoryMapper", interleaved);
-            try {
-                assertEquals(ISmsCouponHistoryService.RedemptionResult.NOT_FOUND,
-                        couponHistoryService.redeemCoupon(id, 99L, 77L, 99L, "MERCHANT_OWNER"));
-                assertEquals(0, number("SELECT use_status FROM sms_coupon_history WHERE id=" + id));
-                assertEquals(2, number("SELECT del_flag FROM sms_coupon_history WHERE id=" + id));
-            } finally {
-                ReflectionTestUtils.setField(target, "smsCouponHistoryMapper", real);
-            }
+            // A current history lock prevents the old ordinary-read-then-independent-edit window.
+            // This fixture covers revocation committed before lock acquisition; E04_14Test covers the waiter.
+            execute("UPDATE sms_coupon_history SET del_flag=2 WHERE id=" + id);
+            assertEquals(ISmsCouponHistoryService.RedemptionResult.NOT_FOUND,
+                    couponHistoryService.redeemCoupon(id, 99L, 77L, 99L, "MERCHANT_OWNER"));
+            assertEquals(0, number("SELECT use_status FROM sms_coupon_history WHERE id=" + id));
+            assertEquals(2, number("SELECT del_flag FROM sms_coupon_history WHERE id=" + id));
         }
         assertEquals(0, number("SELECT use_count FROM sms_coupon WHERE id=30"));
         assertEquals(0, number("SELECT COUNT(*) FROM settlement_detail"));

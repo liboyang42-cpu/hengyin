@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper;
+import com.chengyinhub.business.mapper.SmsCouponMapper;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import com.chengyinhub.business.service.ITopicCompletionCouponRewardService;
 import org.slf4j.Logger;
@@ -18,6 +19,9 @@ public class TopicCompletionCouponRewardServiceImpl implements ITopicCompletionC
     private CmsTopicCompletionCouponRewardMapper rewardMapper;
 
     @Autowired
+    private SmsCouponMapper smsCouponMapper;
+
+    @Autowired
     private ISmsCouponHistoryService smsCouponHistoryService;
 
     @Override
@@ -32,9 +36,15 @@ public class TopicCompletionCouponRewardServiceImpl implements ITopicCompletionC
             return false;
         }
         if (rewardMapper.insertIgnore(topicId, memberId, couponId) == 0) return false;
-        if (!smsCouponHistoryService.grantCouponById(memberId, couponId))
+        Long historyId = smsCouponHistoryService.grantCouponWithReceipt(memberId,
+                smsCouponMapper.selectSmsCouponById(couponId));
+        if (historyId == null || historyId <= 0)
         {
             throw new IllegalStateException("主题通关奖励券发放失败");
+        }
+        if (rewardMapper.bindHistoryId(topicId, memberId, couponId, historyId) != 1)
+        {
+            throw new IllegalStateException("主题通关奖励券原回执写入失败");
         }
         return true;
     }

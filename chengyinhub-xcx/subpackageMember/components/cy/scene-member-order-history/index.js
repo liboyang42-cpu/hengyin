@@ -100,17 +100,33 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._listDisposed = false
+      this._listGeneration = (this._listGeneration || 0) + 1
+      this._cancelDisposed = false
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1
+      this._syncCancellationAccount()
       this.setData({ canDiscoverRoutes: canReachDiscoverRoutes() })
       this._initWorkflow()
       this.getList()
     },
     detached() {
+      // Retire this instance's list request before late transport callbacks arrive.
+      this._listDisposed = true
+      this._listGeneration = (this._listGeneration || 0) + 1
+      this._listFetchInFlight = 0
+      this.setData({ loading: false })
+      if (this._finishCancelPrompt) this._finishCancelPrompt()
+      if (this._finishCancellation) this._finishCancellation()
+      this._cancelDisposed = true
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1
       if (this._workflow) this._workflow.destroy()
     },
   },
   pageLifetimes: {
     // 首次 attached/show single-flight；支付/退款回来后的后续 show 从第一页替换刷新。
     show() {
+      if (this._listDisposed) return
+      this._syncCancellationAccount()
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
       // 返回页刷新保留已确认列表；失败时给非阻断提示，不把订单替换成整屏错误。
       this.setData({ page_no: 1, nodata: false, errorMsg: '' })
@@ -128,6 +144,8 @@ Component({
 
     getList(dedupe, replace) {
       const that = this
+      if (that._listDisposed) return
+      const generation = that._listGeneration
       const memberId = app.getUserID && app.getUserID()
       if (dedupe && that._listFetchInFlight && that._listMemberId === memberId) return
       if (that._listMemberId !== undefined && that._listMemberId !== memberId) {
@@ -138,7 +156,8 @@ Component({
       that._listRequestId = requestId
       that._listFetchInFlight = requestId
       const activeTab = that.data.activeTab
-      const isCurrent = () => requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
+      const isCurrent = () => !that._listDisposed && generation === that._listGeneration
+        && requestId === that._listRequestId && memberId === (app.getUserID && app.getUserID())
       const settleFetch = function () {
         if (that._listFetchInFlight === requestId) that._listFetchInFlight = 0
       }
@@ -230,8 +249,24 @@ Component({
       wx.switchTab({ url: '/pages/index/index' })
     },
 
+    _syncCancellationAccount() {
+      const member = app.getUserID && app.getUserID()
+      if (this._cancelMemberId !== undefined && this._cancelMemberId !== member) {
+        if (this._finishCancelPrompt) this._finishCancelPrompt()
+        if (this._finishCancellation) this._finishCancellation()
+        this._cancelGeneration = (this._cancelGeneration || 0) + 1
+      }
+      this._cancelMemberId = member
+    },
+
     cancelOrder(e) {
       const that = this
+      that._syncCancellationAccount()
+      if (that._cancelDisposed) return
+      const generation = that._cancelGeneration
+      const member = that._cancelMemberId
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID())
       const index = e.currentTarget.dataset.index
       const id = e.currentTarget.dataset.id
       const status = Number(e.currentTarget.dataset.status || 0)
@@ -241,34 +276,56 @@ Component({
         return
       }
       that._cancelPromptOpen = true
+      const finishCancelPrompt = () => {
+        if (that._finishCancelPrompt !== finishCancelPrompt) return false
+        that._finishCancelPrompt = null
+        that._cancelPromptOpen = false
+        return true
+      }
+      that._finishCancelPrompt = finishCancelPrompt
       modal.show({
         dangerKey: status === 2 ? 'order.cancel-refund' : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
         dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
         success(res) {
-          that._cancelPromptOpen = false
+          if (!finishCancelPrompt() || !isCurrent()) return
           if (res.confirm) {
             if (status === 2) subscribe.request(['refund', 'refundRejected'])
             that.cancelOrderRequest(id, index, status)
           }
         },
-        fail() { that._cancelPromptOpen = false },
-        complete() { that._cancelPromptOpen = false },
+        fail: finishCancelPrompt,
+        complete: finishCancelPrompt,
       })
     },
 
     cancelOrderRequest(id, index, status) {
       const that = this
+      that._syncCancellationAccount()
+      if (that._cancelDisposed) return
+      const generation = that._cancelGeneration
+      const member = that._cancelMemberId
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID())
+        && that._finishCancellation === finishCancellation
       if (!id || that._cancelRequestInFlight || that.data.cancellingId) return
       that._cancelRequestInFlight = true
       cyLoading.show('处理中...')
       that.setData({ cancellingId: Number(id) })
+      const finishCancellation = () => {
+        if (that._finishCancellation !== finishCancellation) return
+        that._finishCancellation = null
+        that._cancelRequestInFlight = false
+        cyLoading.hide()
+        that.setData({ cancellingId: 0 })
+      }
+      that._finishCancellation = finishCancellation
       app.sendRequest({
         // 已支付(报名成功 registrationStatus==2)走退款接口,与详情页一致;待支付订单仍用普通取消
         url: Number(status) === 2 ? '/api/registration/cancel-refund' : '/api/registration/cancel',
         method: 'POST',
         data: { id },
         success(res) {
-          cyLoading.hide()
+          if (!isCurrent()) return
           if (res.code == '200') {
             toast.success(Number(status) === 2 ? cancellationFeedback(res) : '已取消', { duration: 5000 })
             // 退款的实际打款状态由 refund_application 回传,刷新而不是前端猜成“已退款”。
@@ -279,13 +336,10 @@ Component({
           }
         },
         fail() {
-          cyLoading.hide()
+          if (!isCurrent()) return
           toast('网络错误，请重试', { duration: 2000 })
         },
-        complete() {
-          that._cancelRequestInFlight = false
-          that.setData({ cancellingId: 0 })
-        },
+        complete: finishCancellation,
       })
     },
 

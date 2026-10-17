@@ -127,6 +127,9 @@ class SmsCouponReverseTransactionBoundaryTest {
         });
         when(histories.reverseUsedCoupon(eq(301L), any())).thenAnswer(call -> jdbc.update(
                 "update coupon_history set use_status=0 where id=? and use_status=1", (Object) call.getArgument(0)));
+        // 撤销现走当前锁读；保留普通读供同一夹具中的重新核销循环使用。
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenAnswer(
+                call -> histories.selectSmsCouponHistoryById(301L));
         // 固定数据库可存储的秒值，覆盖快速重核销时 use_time 不能区分周期的情况。
         when(histories.claimUnusedCoupon(eq(301L), any())).thenAnswer(call -> jdbc.update(
                 "update coupon_history set use_status=1,use_time='2026-09-16 10:00:00' where id=? and use_status=0",

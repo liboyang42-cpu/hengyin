@@ -67,6 +67,14 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         }
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
+        Date now = new Date();
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) {
+            throw conflict("活动未上架或已结束，不能加入候补");
+        }
+        Date signupDeadline = ticket.getSignupDeadline() != null ? ticket.getSignupDeadline() : ticket.getStartTime();
+        if (signupDeadline != null && !signupDeadline.after(now)) {
+            throw conflict("票种报名已截止，不能加入候补");
+        }
         long remaining = ticket.getRemainingInventory() == null ? -1L : ticket.getRemainingInventory();
         if (remaining < 0) throw conflict("票库存状态未知");
         if (remaining > 0) throw conflict("当前仍有名额，请直接报名");
@@ -76,7 +84,6 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         if (mapper.selectActiveWaitlist(memberId, activityId, ticketId) != null) {
             throw conflict("你已在该票种候补队列中");
         }
-        Date now = new Date();
         ClubWaitlistEntry entry = new ClubWaitlistEntry();
         entry.setClubId(policy.getClubId());
         entry.setActivityId(activityId);
@@ -147,7 +154,9 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         // myStatus 自身在事务内；这里沿用统一 series -> club -> ticket -> waitlist 锁序，
         // 成功则真实释放 hold，CAS 竞争失败也会重读并在响应层去掉付款能力。
         expireOffered(entry.getId(), now);
-        ClubWaitlistEntry refreshed = mapper.selectLatestWaitlist(memberId, activityId, ticketId);
+        // 普通 latest 读可能仍在 myStatus 的 RR 旧快照中，把并发已 CLAIMED 的 offer
+        // 再读成 OFFERED 并误标 EXPIRED。沿前面的锁序当前读同一 offer，保留真实终态。
+        ClubWaitlistEntry refreshed = mapper.selectWaitlistByIdForUpdate(entry.getId());
         if (refreshed == null) {
             entry.setState(ClubWaitlistEntry.EXPIRED);
             entry.setOfferToken(null);
@@ -228,6 +237,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private boolean promoteNextLocked(ClubEventSeries policy, Long lockedOwnerMemberId,
                                       Long activityId, Long ticketId, Date now) {
         if (!Boolean.TRUE.equals(policy.getWaitlistEnabled())) return false;
+        // 只拦新 hold；下架/结束后旧 offer 的取消与释放仍必须提交。前序 policy 已锁同一 activity。
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) return false;
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
         if (ticket.getRemainingInventory() == null || ticket.getRemainingInventory() <= 0) return false;

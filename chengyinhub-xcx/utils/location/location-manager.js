@@ -27,10 +27,16 @@ function resolveWx(env) {
 
 // 坐标兜底闸:chooseLocation 正常必带坐标,这里防的是异常返回(空/0/越界)。
 // 5 个调用点全都消费坐标,判据统一收在这里:没可用坐标就不算选到地点。
+function coordinateNumber(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') return NaN;
+  if (typeof value === 'string' && value.trim() === '') return NaN;
+  return Number(value);
+}
+
 function hasCoords(poi) {
   if (!poi) return false;
-  var lng = Number(poi.longitude);
-  var lat = Number(poi.latitude);
+  var lng = coordinateNumber(poi.longitude);
+  var lat = coordinateNumber(poi.latitude);
   return isFinite(lng) && isFinite(lat) && lng !== 0 && lat !== 0
     && lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90;
 }

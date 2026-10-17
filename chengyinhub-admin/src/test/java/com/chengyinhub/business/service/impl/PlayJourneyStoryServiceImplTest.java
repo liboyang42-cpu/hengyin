@@ -97,6 +97,15 @@ class PlayJourneyStoryServiceImplTest {
         nodeMapper = mock(CmsTopicNodeMapper.class);
         sessionMapper = mock(TopicRouteSessionMapper.class);
         keyMapper = mock(ThemeStateKeyMapper.class);
+        // Resolve the exact current scope from each test's actual, mutable session fixture.
+        when(sessionMapper.selectCurrentByOwner(0L, TOPIC, MEMBER)).thenAnswer(inv -> {
+            List<TopicRouteSession> rows = sessionMapper.selectMemberTopicSessions(MEMBER, TOPIC);
+            TopicRouteSession current = rows != null && rows.size() == 1 ? rows.get(0) : null;
+            return current != null && Long.valueOf(MEMBER).equals(current.getMemberId())
+                    && Long.valueOf(TOPIC).equals(current.getTopicId())
+                    && Long.valueOf(0L).equals(current.getActivityId()) ? current : null;
+        });
+
         npcProfileService = mock(NpcProfileService.class);
         encounterService = mock(IPlayEncounterService.class);
 
