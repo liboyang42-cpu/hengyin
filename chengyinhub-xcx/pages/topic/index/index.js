@@ -709,6 +709,9 @@ Page({
       toast('请输入评价内容');
       return;
     }
+    // BL-198:单飞,请求在途时忽略重复点击,避免同一条评价发两次。
+    if (that._commentSubmitting) return;
+    that._commentSubmitting = true;
     app.sendRequest({
       url: '/api/comment/add',
       data: {
@@ -729,6 +732,9 @@ Page({
         } else {
           app.tips(res.msg);
         }
+      },
+      complete: function () {
+        that._commentSubmitting = false;
       }
     });
   },
