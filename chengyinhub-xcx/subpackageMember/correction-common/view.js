@@ -14,8 +14,8 @@ const SUPPLEMENT_MAX = model.DESCRIPTION_MAX // 服务端 requireText(descriptio
 const STATUS = {
   PENDING: { tone: 'blue', hint: '平台正在审核，审核后才会更新商家信息' },
   NEEDS_EVIDENCE: { tone: 'warning', hint: '平台需要你补充说明后再审核' },
-  APPROVED: { tone: 'done', hint: '审核已通过，等待更新到商家信息' },
-  MERGED: { tone: 'done', hint: '商家信息已按你的纠错更新' },
+  APPROVED: { tone: 'green', hint: '审核已通过，等待更新到商家信息' },
+  MERGED: { tone: 'green', hint: '商家信息已按你的纠错更新' },
   REJECTED: { tone: 'mono', hint: '审核没有通过' },
 }
 const DECIDED = { APPROVED: 1, MERGED: 1, REJECTED: 1 }
