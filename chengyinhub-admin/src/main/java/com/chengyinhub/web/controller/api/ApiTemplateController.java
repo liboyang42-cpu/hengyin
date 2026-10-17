@@ -662,7 +662,7 @@ public class ApiTemplateController extends BaseController {
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
             } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {
-                return error("模版审核中");
+                return error(Long.valueOf(2L).equals(cmsMemberTemplate.getStatus()) ? "模版审核未通过" : "模版审核中");
             } else if (!isDraft && !isOwnerPending && cmsMemberTemplate.getPublishStatus() == 0) {
                 return error("模版已下架");
             } else {
