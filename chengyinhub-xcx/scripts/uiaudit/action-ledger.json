@@ -958440,7 +958440,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1164"
+        "staticSource": "pages/square/detail/index.js:1168"
       }
     },
     {
@@ -958542,7 +958542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1014"
+        "staticSource": "pages/square/detail/index.js:1018"
       }
     },
     {
@@ -958721,7 +958721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1024"
       }
     },
     {
@@ -958992,7 +958992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:826"
+        "staticSource": "pages/square/detail/index.js:830"
       }
     },
     {
@@ -959095,7 +959095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:871"
+        "staticSource": "pages/square/detail/index.js:875"
       }
     },
     {
@@ -959165,7 +959165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1024"
       }
     },
     {
@@ -959264,7 +959264,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1173"
+        "staticSource": "pages/square/detail/index.js:1177"
       }
     },
     {
@@ -959616,7 +959616,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1024"
       }
     },
     {
@@ -960032,7 +960032,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:739"
+        "staticSource": "pages/square/detail/index.js:743"
       }
     },
     {
@@ -960125,7 +960125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:745"
+        "staticSource": "pages/square/detail/index.js:749"
       }
     },
     {
@@ -960200,7 +960200,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:745"
+        "staticSource": "pages/square/detail/index.js:749"
       }
     },
     {
@@ -960297,7 +960297,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:745"
+        "staticSource": "pages/square/detail/index.js:749"
       }
     },
     {
@@ -960364,7 +960364,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:802"
+        "staticSource": "pages/square/detail/index.js:806"
       }
     },
     {
@@ -960463,7 +960463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:806"
+        "staticSource": "pages/square/detail/index.js:810"
       }
     },
     {
@@ -960873,7 +960873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:735"
+        "staticSource": "pages/square/detail/index.js:739"
       }
     },
     {
@@ -960943,7 +960943,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1020"
+        "staticSource": "pages/square/detail/index.js:1024"
       }
     },
     {
@@ -961314,7 +961314,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:929"
+        "staticSource": "pages/square/detail/index.js:933"
       }
     },
     {
