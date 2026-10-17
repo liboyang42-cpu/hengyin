@@ -300,3 +300,8 @@
 | 186 | 章节阶段结算 | `GET /api/play/journey/stage-end?topicId=&activityId=&chapterId=` 返回本章完成后的阶段结算。先在 `pages/play/index.js` 找到章节全部完成的时刻；如果现有 UI 已有章末或章节完成的展示位，就把服务端结算接进去，复用 `/ending` 的取数与降级方式（见 `utils/life-archive.js`）。如果没有现成展示位，只在 PR 正文写明「需要产品决定展示位置」后停止，不要新造 UI，也不要开空 PR，在本条后面追加一行说明即可。 | 现有页内补齐 |
 
 待用户决定、不要领取：`/api/im/poll/*`（群投票）、`/api/roam/hangout/*`（漫游约伴，漫游上线时已裁掉）、`/api/spoiler/*`（剧透偏好）、`/api/content-draft/*`（通用草稿）、`/api/club/chat`（俱乐部群聊入口）。涉及资金的接口（会员发票/续费/退款审核、钱包提现、余额）按边界规则一律不做。
+
+## 第十九批（187）：监督补充（2026-10-17 04:4xZ；10-16 规则 3：用户可见新功能 + 已有接口 + 不改现有 UI；零调用复扫本轮只找到这一项）
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 187 | 商家客户定向广播 | 客户名单页已有筛选与多选，但后端定向广播 `POST /api/merchant/crm/broadcast/preview` 与 `POST /api/merchant/crm/broadcast`（`ApiMerchantCrmController.java:137/146`，`MerchantCrmBroadcastServiceImpl` 要 MARKETING_WRITE）小程序零调用。仅当 `normalizeMerchantAccess(...).canWriteMarketing` 为真时，在现有工具区（照 `goCampaigns` 那一项的写法）加一个「定向广播」入口，打开现有 `cy-sheet`：请求体字段只用 `MerchantCrmBroadcastRequest` 已有的 keyword/segment/tagId/sourceType/sourceStart/sourceEnd（与当前 `_customerQuery` 同源）+ scope（多选模式下 MEMBERS + memberIds，否则 ALL）+ content + requestId（`makeRequestId`，重试复用同一个）。先 preview，展示 `MerchantCrmBroadcastPreviewVO` 的 deliverableCount / noConsentCount / frequencyLimitedCount / merchantDailyRemaining；deliverableCount=0 或 remaining=0 时不让发。发送成功后用返回的 `MerchantCrmBroadcastVO` 的 deliveredCount/failedCount/frequencySkippedCount 如实提示，并可跳 `crm-campaigns` 查看；失败如实展示服务端文案（429/400/409），不假成功。不改名单页现有布局与样式，新可点元素带 hover-class，回调不依赖方法简写里的 `this`。单测随 PR 写 | `pages/merchant/customer/**` + 可选新 view-model；不碰后端 |
