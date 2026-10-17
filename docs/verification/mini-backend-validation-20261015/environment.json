@@ -1,0 +1,41 @@
+{
+  "environment_kind": "CLOUD_EPHEMERAL_DIAGNOSTIC_NOT_APPROVED_VPS_ACCEPTANCE",
+  "location_policy": "Stopped after correction; no further Cloud Java/Maven/test/CI setup",
+  "toolchain": {
+    "java": "21.0.12.1",
+    "maven": "3.9.3"
+  },
+  "runs": [
+    {
+      "candidate": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am test-compile",
+      "exit_code": 1,
+      "main_source_compile": "SUCCESS",
+      "test_source_files_attempted": 1392,
+      "compiler_diagnostics": 18,
+      "business_tests_executed": 0,
+      "raw_log": "core-compile.log"
+    },
+    {
+      "candidate": "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am test-compile",
+      "exit_code": 143,
+      "result": "STOPPED_LOCATION_POLICY",
+      "main_source_compile": "SUCCESS_BEFORE_STOP",
+      "test_source_files_attempted": 1349,
+      "business_tests_executed": 0,
+      "raw_log": "extra-compile.log"
+    }
+  ],
+  "containers_started": 0,
+  "databases_started": 0,
+  "redis_started": 0,
+  "vps_access_performed": false,
+  "ci_workflows_added_or_manually_triggered": false,
+  "source_archive_sha256": {
+    "2b1984b59a0929a360e8095d5fc1955a1aed7964": "932e6bfe50a7e2cb04dbd4bab3166c6ee87291084de66878cdb9bd3f889c0bfe",
+    "25ede65815d26d1514d3b6c3b92b26d2898a3e45": "14133770ddc6c3f6ed76589670cc9e3afb9277d8cd4d9b3f8ce554031ac038a4"
+  },
+  "future_validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "new_fix_compile_status": "NOT_RUN_LOCAL_VPS_PENDING"
+}

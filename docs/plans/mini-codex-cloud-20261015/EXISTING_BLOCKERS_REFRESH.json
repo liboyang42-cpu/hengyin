@@ -1,0 +1,183 @@
+{
+  "protocol": "CY-EXISTING-BLOCKER-REFRESH-20261015",
+  "scope": "Two preexisting blockers read against EXTRA b456, not new bugs or new write grants",
+  "coupon": {
+    "item": "E04-07",
+    "candidate": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "method": "Public anonymous fetch + git show/grep only; no branch checkout, source/test/control edits, credentials, builds, tests, CI, DB or production access",
+    "decision": "BLOCKED_OWNERSHIP is stale; retain BLOCKED_CONTRACT, not ready for consumer-only implementation",
+    "ownership": {
+      "consumer": "LONGRUN_SOURCE_OWNERS assigns RedemptionRewardClawbackService.java and SmsCouponHistoryMapper.xml to EXTRA6/E04 ASSIGNED_SOURCE_ONLY",
+      "control_gap": "LONGRUN_REMAINING E04-07 still BLOCKED_OWNERSHIP with empty detail; candidate E04-07.md and BACKLOG.md:178 explicitly corrected to BLOCKED_CONTRACT"
+    },
+    "actual_caller_trigger": {
+      "entry": "CmsRegistrationController.reverseRedemption POST /redemption/reverse lines155-174 passes request.clawbackRewards",
+      "chain": "PerkLedgerServiceImpl.reverseRedemption lines415-494: original redemption CAS succeeds; clawbackRewards true; original completed -> now incomplete; RedemptionRewardClawbackService.clawback -> voidCompletionCoupon",
+      "producer": "CmsRegistrationServiceImpl:3077 and TopicRouteRuntimeServiceImpl:292 -> TopicCompletionAwardServiceImpl.grantOnce FULL -> TopicCompletionCouponRewardServiceImpl.grantOnce -> log insertIgnore -> boolean grantCouponById",
+      "refund_boundary": "RefundServiceImpl:750, CmsRegistrationServiceImpl:2138, TeamGroupServiceImpl:1312/1440 call FirstReviewPointsClawbackService.onRegistrationRefunded -> shared clawPoints only. They do not call voidCompletionCoupon; do not enlarge E04-07 to refund policy."
+    },
+    "identity_facts": {
+      "reward_log": "cms_topic_completion_coupon_reward_log has id/topic_id/member_id/coupon_id/created_at; unique(topic_id,member_id), no history_id. Producer discards actual history identity behind boolean.",
+      "history": "sms_coupon_history has id PK, member/coupon/get_type/get_time/status/order/note, no topic/source foreign identity. get_type=0 is generic backend gift; grantCouponWithReceipt supplies no topic-specific marker.",
+      "selector": "SmsCouponHistoryMapper.xml:190 selectCompletionRewardHistoryId joins same member/template, get_time within log.created_at +/-1 minute, order h.id DESC limit1. These are candidates, not original award identity.",
+      "other_receipts": "coupon_source_grant unique source/history exists but grantCouponBySource accepts only reward_drop and requires matching drop intent; no completion producer record. CRM receipts identify CRM grants but do not prove remaining history is completion award.",
+      "available_future_primitive": "SmsCouponHistoryServiceImpl.grantCouponWithReceipt lines266-301 already returns real inserted historyId transactionally; completion producer still does not persist it."
+    },
+    "counterexample": {
+      "sequence": "Completion topic700/member501/template30 creates history41 at T; legitimate MerchantCrmCouponGrantAdapter.grant creates history43 same member/template within one minute. Current selector picks43; CAS voids43 and deletes completion grant;41 remains. If41 was USED and43 unused, this violates existing original-used audit-only behavior.",
+      "why_real": "MerchantCrmCouponGrantAdapter:28-33 uses grantCouponWithReceipt after owned active template check; no member-template lifetime uniqueness. ASC would instead choose a prior node reward40; shorter/same-second time windows do not prove identity."
+    },
+    "minimum_repair_path": {
+      "future_identity": "Original E04 author needs narrowly granted producer/receipt scope: persist exact historyId returned by grantCouponWithReceipt in same transaction as topic/member grant receipt. Extend existing completion log receipt (nullable history_id for old rows, new migration, mapper read/write); retain unique(topic,member), reject failed/absent receipt write so transaction rolls back. Consumer uses stored historyId, locks and validates member/template, preserves existing 0->2 / USED_NOT_RECOVERED / delete-log-and-marker only on successful original void. No ASC/DESC fallback.",
+      "precise_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+        "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+        "new migration in repo-agreed migration directory",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java"
+      ],
+      "not_authorized_by_this_worker": "No producer ownership transfer or schema/historical policy decision is made here. Existing helper can be reused, so no need to expand reward_drop source types.",
+      "unresolved_old_rows": "Original history cannot be recovered safely from current fields. Must explicitly decide established handling for legacy missing identity (e.g. no automatic coupon mutation + explicit unknown audit or reject operation), including whether other reversal effects proceed. This worker does not invent that behavior. New receipt cannot retroactively establish old identity."
+    },
+    "current_tests": {
+      "coverage": "RedemptionRewardClawbackMyBatisTest:59 original41 + preceding node40 + NULL-time42 passes DESC; :124 used original41 alone; :148 recompletion semantics. No later same-template43 negative control.",
+      "required_vectors": [
+        "original unused41 + later unrelated unused43: only41 voided",
+        "original USED41 + later unrelated unused43:41 remains USED,43 unchanged, original grant retained/no coupon reopen",
+        "earlier node40 + original41:40 unchanged",
+        "producer receipt/history/log atomic rollback and exactly-once new identity",
+        "legacy missing receipt follows explicit chosen contract without inferred candidate",
+        "recompletion new original receipt does not point to old voided history"
+      ],
+      "verification": "NOT_RUN; only coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59 may execute real verification"
+    },
+    "evidence_doc": "candidate docs/verification/mini-longrun-20261015/EXTRA6/E04-07.md already contains the same producer and legacy contract blocker, so this is confirmed existing defect, not a new audit discovery."
+  },
+  "square": {
+    "status": "BLOCKED_CONTRACT",
+    "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "scope": "E02-23 legacy square/community post bookmark identity mismatch",
+    "callers": [
+      {
+        "path": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+        "lines": [
+          499,
+          511,
+          513
+        ],
+        "fact": "New publish calls /api/creativesquare/action; bookmark callers submit legacy square.id."
+      },
+      {
+        "path": "chengyinhub-xcx/pages/square/detail/index.js",
+        "line": 560,
+        "fact": "Calls legacy bookmark endpoint."
+      },
+      {
+        "path": "chengyinhub-xcx/pages/square/list/index.js",
+        "line": 242,
+        "fact": "Calls legacy bookmark endpoint."
+      },
+      {
+        "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+        "line": 1676,
+        "fact": "Calls legacy bookmark endpoint."
+      },
+      {
+        "path": "chengyinhub-xcx/pages/mylike/mylike.js",
+        "line": 334,
+        "fact": "Calls legacy bookmark endpoint."
+      }
+    ],
+    "evidence": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "lines": [
+          656,
+          690,
+          1020,
+          1031,
+          1033
+        ],
+        "fact": "Publish persists legacy square; bookmark treats supplied legacy ID directly as community post ID."
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+        "lines": [
+          54,
+          57,
+          65,
+          88
+        ],
+        "fact": "Legacy publication and idempotency write only ums_creative_square."
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "lines": [
+          404,
+          405,
+          414,
+          428
+        ],
+        "fact": "Looks up new post by supplied ID, then writes action; missing target gives 404; colliding visible PUBLIC target can receive wrong bookmark. No private bypass claim."
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+        "lines": [
+          71,
+          77,
+          129,
+          139
+        ],
+        "fact": "Favorite filter and bookmark state associate legacy IDs with new post IDs numerically."
+      },
+      {
+        "path": "chengyinhub-admin/sql/migration_community_post_platform_20260909.sql",
+        "lines": [
+          853,
+          865
+        ],
+        "fact": "Explicit one-time offline migration, no dual write, preserve IDs; client_request_id legacy-square-<square id> and LEGACY_MIGRATED label identify backfilled rows."
+      }
+    ],
+    "marker_limit": {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+      "lines": [
+        143,
+        155,
+        1585,
+        1586
+      ],
+      "fact": "New create accepts clientRequestId; request ID validator checks length only. A legacy-square-* string alone is client-forgeable, not authoritative source identity. Any historic resolver must additionally establish protected migration provenance and original author consistency; those checks do not create mappings for post-migration legacy publications."
+    },
+    "minimum_stop_wrong_target": "Resolve only proven historic migration identity consistently for bookmark write, favorite list, and bookmark-state enrichment; reject missing mapping and never fall back to equal numeric IDs. This is containment only and does not complete bookmark support for later legacy publications.",
+    "contract_needed": "Freeze whether legacy publisher cuts over to community aggregate or receives an explicitly authorized bridge/projection, including update, audit, and delete responsibilities. Existing one-time/no-dual-write migration contract does not authorize invented dual writes or a global shared ID assumption. Current mappings cannot restore complete functionality; no DDL necessity inferred.",
+    "owners": {
+      "EXTRA6/E02_existing": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+      ],
+      "existing_owner_limit": "CommunityPostMapper.java current grant note only covers nullable notification-preference signature; resolver additions require C00 expansion.",
+      "C00_exact_grant_needed": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml"
+      ],
+      "conditional_interface_grant": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICommunityPostService.java",
+      "read_only_legacy_writer": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+      "xcx": "Caller evidence only; retain existing UI ownership, no takeover."
+    },
+    "verification": {
+      "source_changes": false,
+      "tests_run": false,
+      "compile_run": false,
+      "database_or_production_access": false,
+      "runtime_validated": false,
+      "notes": "Static read-only inspection only. Root AGENTS and global LONGRUN_SOURCE_OWNERS.json read. No business/test/control files modified. Real validation remains assigned to local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59."
+    }
+  },
+  "source_changes": "NONE",
+  "next": "Original producers/owners must freeze precise identity and legacy contract before either implementation; no DDL/dual-write/reward policy assumed"
+}

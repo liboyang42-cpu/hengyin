@@ -1,0 +1,138 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] chengyinhub                                                        [pom]
+[INFO] chengyinhub-common                                                 [jar]
+[INFO] chengyinhub-system                                                 [jar]
+[INFO] chengyinhub-framework                                              [jar]
+[INFO] chengyinhub-quartz                                                 [jar]
+[INFO] chengyinhub-generator                                              [jar]
+[INFO] chengyinhub-admin                                                  [jar]
+[INFO] 
+[INFO] --------------------< com.chengyinhub:chengyinhub >---------------------
+[INFO] Building chengyinhub 3.9.0                                         [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -----------------< com.chengyinhub:chengyinhub-common >-----------------
+[INFO] Building chengyinhub-common 3.9.0                                  [2/7]
+[INFO]   from chengyinhub-common/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-common ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-common/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-common ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 143 source files to /workspace/backend-validation-20261015/extra/chengyinhub-common/target/classes
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/ImageUtils.java: Some input files use or override a deprecated API.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/ImageUtils.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-common ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-common/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-common ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] -----------------< com.chengyinhub:chengyinhub-system >-----------------
+[INFO] Building chengyinhub-system 3.9.0                                  [3/7]
+[INFO]   from chengyinhub-system/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-system ---
+[INFO] Copying 249 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-system ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1706 source files to /workspace/backend-validation-20261015/extra/chengyinhub-system/target/classes
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java: Some input files use or override a deprecated API.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java: Recompile with -Xlint:deprecation for details.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ImageSegClient.java: Some input files use unchecked or unsafe operations.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ImageSegClient.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-system ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-system/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-system ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] ---------------< com.chengyinhub:chengyinhub-framework >----------------
+[INFO] Building chengyinhub-framework 3.9.0                               [4/7]
+[INFO]   from chengyinhub-framework/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-framework ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-framework/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-framework ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 50 source files to /workspace/backend-validation-20261015/extra/chengyinhub-framework/target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-framework ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-framework/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-framework ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] -----------------< com.chengyinhub:chengyinhub-quartz >-----------------
+[INFO] Building chengyinhub-quartz 3.9.0                                  [5/7]
+[INFO]   from chengyinhub-quartz/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-quartz ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-quartz ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 18 source files to /workspace/backend-validation-20261015/extra/chengyinhub-quartz/target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-quartz ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-quartz/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-quartz ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] ---------------< com.chengyinhub:chengyinhub-generator >----------------
+[INFO] Building chengyinhub-generator 3.9.0                               [6/7]
+[INFO]   from chengyinhub-generator/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-generator ---
+[INFO] Copying 16 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-generator ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 13 source files to /workspace/backend-validation-20261015/extra/chengyinhub-generator/target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-generator ---
+[INFO] skip non existing resourceDirectory /workspace/backend-validation-20261015/extra/chengyinhub-generator/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-generator ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] -----------------< com.chengyinhub:chengyinhub-admin >------------------
+[INFO] Building chengyinhub-admin 3.9.0                                   [7/7]
+[INFO]   from chengyinhub-admin/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+[INFO] 
+[INFO] --- git-commit-id:5.0.0:revision (get-the-git-infos) @ chengyinhub-admin ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ chengyinhub-admin ---
+[INFO] Copying 7 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.8.1:compile (default-compile) @ chengyinhub-admin ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 249 source files to /workspace/backend-validation-20261015/extra/chengyinhub-admin/target/classes
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AppUploadService.java: Some input files use or override a deprecated API.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AppUploadService.java: Recompile with -Xlint:deprecation for details.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java: /workspace/backend-validation-20261015/extra/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java uses unchecked or unsafe operations.
+[INFO] /workspace/backend-validation-20261015/extra/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ chengyinhub-admin ---
+[INFO] Copying 25 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.8.1:testCompile (default-testCompile) @ chengyinhub-admin ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1349 source files to /workspace/backend-validation-20261015/extra/chengyinhub-admin/target/test-classes

@@ -1,0 +1,101 @@
+{
+  "item": "EXTRA/E04-07 通关券冲正限定原奖励",
+  "evidence_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "control_read_head": "e4a069ac2a5dd8bb2c82a910998822ed57852e23",
+  "status": "USER_DECIDED_SOURCE_DELIVERED_UNVERIFIED",
+  "proved": [
+    {
+      "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+      "method": "grantOnce(topicId,memberId,couponId):25-39",
+      "fact": "line34 inserts topic/member/template log; line35 calls boolean grantCouponById; no historyId obtained or persisted."
+    },
+    {
+      "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+      "method": "grantCouponById:369 -> grantCoupon:260-261 -> grantCouponWithReceipt:266-301",
+      "fact": "Actual insertion produces historyId; grantCoupon converts ID to boolean at261, losing identity before producer returns. Existing grantCouponWithReceipt is public interface capability, no need for reward_drop new source type."
+    },
+    {
+      "file": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+      "method": "insertIgnore/selectCouponId/deleteGrant",
+      "fact": "Log persists topic_id/member_id/coupon_id/created_at only; unique(topic_id,member_id). Schema confirmed by chengyinhub-admin/sql/migration_topic_completion_coupon_20260722.sql and sql/base_schema_20260818.sql:1541."
+    },
+    {
+      "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+      "method": "voidCompletionCoupon:210-239; call:92; selector:216",
+      "fact": "Uses selected candidate ID, voidUnusedCoupon CAS0->2, deletes original grant and reopens coupon only on successful void; original USED should only audit."
+    },
+    {
+      "file": "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+      "method": "selectCompletionRewardHistoryId:190; selectSmsCouponHistoryByIdForUpdate; voidUnusedCoupon",
+      "fact": "Same member/template and log time +/-1min, highest history.id. Later legitimate CRM same-template grant43 can replace original41, including original41 USED/later43 unused. CRM adapter grant:28-33 independently returns real receipt. No current source field proves original topic identity."
+    }
+  ],
+  "minimal_decisions_for_root": [
+    {
+      "id": "D1_future_receipt",
+      "choice": "Approve exact original history_id persistence in existing completion reward log, same grant transaction",
+      "minimum_field": "nullable history_id BIGINT on cms_topic_completion_coupon_reward_log; existing topic/member/template plus exact PK are sufficient. Keep old rows NULL, no guessed backfill. New successful receipts require nonnull real inserted ID.",
+      "implementation_shape": "Keep topic/member insertIgnore gate; obtain original ID via existing grantCouponWithReceipt using resolved template; conditionally attach it to the newly occupied receipt, require one affected row and rollback on missing ID/write failure. Consumer loads receipt ID and validates locked history member/template before CAS. No temporal fallback.",
+      "business_effect": "New awards become exactly attributable; unchanged template inventory/status checks, topic/member once-only gate, USED audit-only behavior and successful-clawback/recompletion semantics.",
+      "DDL_required": true,
+      "DDL_currently_authorized": false,
+      "unknown": "Root must approve migration and exact cross-owner source/fixture scope; helper exposes coupon object rather than by-ID receipt convenience, so producer needs template lookup or a narrow receipt-by-ID adapter. No mandated new API entry."
+    },
+    {
+      "id": "D2_legacy_unknown",
+      "decision_required": "Select one explicit behavior for legacy log history_id=NULL or confirmed absent identity; repository cannot decide this from lost facts. Both avoid mutating any candidate coupon or deleting its grant/reopen marker.",
+      "choices": [
+        {
+          "option": "UNKNOWN_AUDIT_AND_CONTINUE",
+          "effect": "Original redemption reversal and its existing point/XP effects can commit; coupon is unchanged, original grant retained, audit explicitly says unknown identity. Legacy unused original may remain usable; automatic coupon recovery incomplete.",
+          "minimum_paths": "Consumer private helper + existing BusinessAuditEvent afterJson; no new endpoint/table required. Future receipt still requires D1 DDL."
+        },
+        {
+          "option": "REJECT_CLAWBACK_OPERATION",
+          "effect": "When clawbackRewards requests coupon recovery but identity is unknown, throw in existing transaction: entire reversal including point/XP/payable/status effects rolls back. Operator must use separately established handling; do not invent bypass or new endpoint. Stronger protection but blocks legitimate legacy reversal.",
+          "minimum_paths": "Consumer private helper and focused transaction-boundary fixture; no new endpoint/table required. Future receipt still requires D1 DDL."
+        }
+      ],
+      "not_safe_choices": "ASC/DESC, shorter window, selecting unused, or unique-candidate inference are not original identity proof. No automatic backfill or reissuing legacy reward. Explicitly decide handling of dangling/mismatched nonnull receipts too; fail closed on corruption is proposed, not an existing proved policy."
+    }
+  ],
+  "owner_boundary": {
+    "known": "LONGRUN_SOURCE_OWNERS files assigns RedemptionRewardClawbackService.java, SmsCouponHistoryServiceImpl.java and SmsCouponHistoryMapper.xml EXTRA6/E04. Business implementation stays original E04 author; this worker has no write role.",
+    "producer_and_table_owner": "C00 formally reserves exact minimal producer/reward mapper/new migration source to original EXTRA/E04 per implementation grant; no active previous claimant found. No execution grant.",
+    "git_attribution_is_not_ownership": "Last recorded producer change at candidate is imported snapshot a20fb9b602008ffbdac8bb95f792289626b008f1 by Bob (OpenClaw Agent), not proof of current active producer/table owner.",
+    "minimum_cross_owner_paths": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+      "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+      "one NEW completion receipt migration (do not edit existing migration)",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java"
+    ],
+    "conditional_only": "SmsCouponMapper lookup/interface or narrow existing-history-service receipt-by-ID convenience only if producer cannot reuse existing template retrieval; not a blanket source grant. No refund policy, reward_drop protocol, UI, network or CI expansion."
+  },
+  "acceptance_vectors_not_run": [
+    "original41 unused + later unrelated43 unused: only41 voids",
+    "original41 USED + later unrelated43 unused: both unchanged, USED_NOT_RECOVERED, no reopen",
+    "earlier node40 unchanged",
+    "new grant receipt and actual history insert atomic rollback",
+    "chosen legacy NULL behavior enforced without temporal selection",
+    "recompletion gets new exact receipt after old successful void"
+  ],
+  "already_resolved": "BLOCKED_OWNERSHIP label is stale for consumer; candidate E04-07.md already says BLOCKED_CONTRACT. Current real blocker is D1 persistence scope/DDL and D2 explicit legacy semantics, not missing consumer authorization.",
+  "actions": "Only wrote /tmp/e04-07-decision-packet.json; no repository/source/test/control edits, no Java/Node/DB/tests/CI/VPS/network-entry change.",
+  "current_coordination": "RESUME_KNOWN_BLOCKERS.json; user existing-entry-only constraint unchanged; this is source/input/identity evidence, not awaiting new verification resources",
+  "previous_decision_state": "READ_ONLY_DECISION_PACKET; all execution NOT_RUN; no implementation/DDL authorized",
+  "effective_decision": {
+    "source": "Explicit human choices relayed by authorized local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; latest delegation in C00 chat",
+    "choices": {
+      "E02-23": "No trusted legacy-to-community mapping: explicitly reject bookmark; same numeric ID and client legacy-square-* are not proof. Read list/bookmark state must not identify unrelated new post as old post.",
+      "E04-07_legacy": "Unknown original completion coupon identity: audit only, coupon unchanged, continue other already-authorized reward reversals. Preserve USED audit-only; no time/MAX/substitute inference or refund policy change.",
+      "E04-07_future": "Prepare minimal production/regression/new migration source for exact original coupon history ID persistence; review only, no migration execution, merge/deployment or guessed historical backfill."
+    }
+  },
+  "implementation_grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+  "old_choices_are_historical_not_pending": true,
+  "current_source_delivery_packet": "E04_07_B_SOURCE_DELIVERY.json",
+  "current_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "actual_author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
+}

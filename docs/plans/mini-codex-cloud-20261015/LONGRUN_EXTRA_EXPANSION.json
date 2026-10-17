@@ -1,0 +1,135 @@
+{
+  "protocol": "CY-LONGRUN-EXTRA-EXPANSION-20261015-v1",
+  "base_sha": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
+  "authorization": "EXTRA source writer starts after reading this public control and sends actual child/path ACK; no Mac dependency",
+  "source_assignments": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java": "EXTRA6/E05",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamSharePrivacyService.java": "EXTRA6/E05",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java": "EXTRA6/E06",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamShareSnapshotService.java": "EXTRA6/E06",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamShareSnapshotMapper.java": "EXTRA6/E06",
+    "chengyinhub-system/src/main/resources/mapper/business/RoamShareSnapshotMapper.xml": "EXTRA6/E06"
+  },
+  "prior_public_source_commits": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamSharePrivacyService.java": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamShareSnapshotService.java": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamShareSnapshotMapper.java": "a20fb9b602008ffbdac8bb95f792289626b008f1",
+    "chengyinhub-system/src/main/resources/mapper/business/RoamShareSnapshotMapper.xml": "a20fb9b602008ffbdac8bb95f792289626b008f1"
+  },
+  "old_test_files": "read-only unless already assigned; new per-task E05/E06 regression/evidence allowed with unique new IDs in own QUEUE",
+  "candidate_modules": [
+    {
+      "id": "SHARE_PRIVACY",
+      "suggested_lane": "E06 or same E05 serial",
+      "source_files": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamSharePrivacyService.java"
+      ],
+      "caller": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java publish/read (dependency only, group SHARE_STORE owns controller)",
+      "fixtures": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRoamShareControllerTest.java"
+      ],
+      "candidates": [
+        "normalize/normalizeStored/coordinate: publish -> stored -> anonymous read must retain <=3 decimal coordinates, whitelist only; reject nonfinite/out-of-range values under existing limits.",
+        "points/point/pois: track and optional POI coordinate pairs must obey existing 500/50 limits, preserve order and avoid returning raw precision/unknown identity keys.",
+        "normalize/normalizeStored: hour rounding and read-write normalization should agree at hour boundaries; inspect early positive timestamps that round to0. Any change of accepted timestamp/product range BLOCKED until existing caller domain evidenced.",
+        "text/normalize: truncation at 40/16 chars must preserve usable Unicode strings and strip existing controls; audit surrogate split without new text moderation or length policy."
+      ],
+      "boundary": "Pure existing serializer helpers; no controller edits here, no new privacy precision/retention policy.",
+      "status": "AUDIT_THEN_FIX",
+      "lock_review": "No exact match in current LONGRUN_SOURCE_OWNERS except RUN_SESSION XML CORE/C04. No exact backend path match found in OWNERSHIP Claude locks; C00 must verify external PR locks before transfer. Not a lock grant."
+    },
+    {
+      "id": "SHARE_STORE",
+      "suggested_lane": "E05",
+      "source_files": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamShareSnapshotService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamShareSnapshotMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/RoamShareSnapshotMapper.xml"
+      ],
+      "caller": "chengyinhub-xcx/utils/roam-share-snapshot.js -> subpackageRoam/session/index.js and pages/roam/index.js (read only; no UI transfer)",
+      "fixtures": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRoamShareControllerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShareSnapshotConcurrencyMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ShareSnapshotRunSessionMybatisIntegrationTest.java"
+      ],
+      "candidates": [
+        "publish/selectTokenByMemberTs/upsertSnapshot: same member+clientTs replay keeps token while updating normalized content; audit affected-row/returned-token failure without claiming duplicate insert always1.",
+        "publish/countByMember/deleteOldestByMember: 50 existing rows + new footprint must evict overflow only under member lock; existing-token update must not evict unrelated footprint.",
+        "revoke/deleteByMember versus publish: trace actual transaction/lock interleaving; deletion only caller and no stale success token claim. New post-revoke tombstone/generation semantics BLOCKED policy, do not invent.",
+        "read/selectSnapshotJsonByToken: malformed token, missing row, stored malformed snapshot all existing GONE; valid snapshot passes read-time privacy. Preserve anonymous token read and response shape."
+      ],
+      "boundary": "Only snapshot storage/controller orchestration. UmsMemberMapper lock producer read-only; no account global changes, endpoint/visibility/retention policy or DDL.",
+      "status": "AUDIT_THEN_FIX",
+      "lock_review": "No exact match in current LONGRUN_SOURCE_OWNERS except RUN_SESSION XML CORE/C04. No exact backend path match found in OWNERSHIP Claude locks; C00 must verify external PR locks before transfer. Not a lock grant."
+    }
+  ],
+  "confirmed_source_packet": {
+    "key": "E03-08 delegated consumer repair to E05",
+    "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+    "methods": [
+      "allowedActions",
+      "outcomeContract"
+    ],
+    "contract": "missing key only keeps original live fallback; explicit null/wrong object/array/scalar is existing ServiceException(\"玩法配置不可用\"); playables {} and branchOutcomes [] remain normal, valid [] still graph destinations merge; no NodeJourneySnapshot normalization/DTO/permission change"
+  },
+  "upcoming_current_scope_producer": {
+    "state": "SOURCE_DELIVERED_UNVERIFIED",
+    "public_sha": "5162ef45bb42486575619871ff24b4b694941f09",
+    "method": "TopicRouteSessionScope.findCurrent",
+    "legacy_find": "UNCHANGED",
+    "consumer_import": "42cd374d08676bf570db505a454264d5c4178775",
+    "verification": "NOT_RUN"
+  },
+  "no_transfer": [
+    "RUN_SESSION group remains CORE/C04 for now",
+    "CART_NON_SETTLEMENT group not granted: no current mini caller found, shared settlement excluded",
+    "all global plans/control tables remain C00 only"
+  ],
+  "verification": "NOT_RUN; source-only no manual compile/test/DB/lint/DevTools/CI rerun/deploy/merge; existing auto CI natural",
+  "notes": "Seed concrete audits are not confirmed bugs or claim of restoring50. Extra coordinator appends unique IDs and actual remaining counts; policy or source mismatch blocks the item and next item rolls.",
+  "formal_ack": {
+    "comment_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6195023061",
+    "read_control_sha": "cc5b7deaad4a37cf1c24fc8ff22d724a1b3f1809",
+    "source_baseline": "7e5882addb7269373b2b95daa0a4ceeb4485fd10",
+    "E05": {
+      "child": "/root/external_e05",
+      "worktree": "/workspace/hengyin-extra-e05",
+      "branch": "codex/extra-e05-regression-20261015",
+      "producer_import_public_sha": "42cd374d08676bf570db505a454264d5c4178775",
+      "task": "E05-14"
+    },
+    "E06": {
+      "child": "/root/external_e06",
+      "worktree": "/workspace/hengyin-extra-e06",
+      "branch": "codex/extra-e06-regression-20261015",
+      "head_at_ack": "00802fa7ef5f63a5648bd341736605aa1470428f",
+      "task": "E06-14"
+    },
+    "other_workers": "source owners E01/E02/E03/E04 support exact new test/evidence only under original lane producer; no concurrent business-source writer"
+  },
+  "supplemental_transfers": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java": "EXTRA6/E01",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistPromotionMembershipRaceTransactionTest.java": "EXTRA6/E01",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java": "EXTRA6/E01",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java": "EXTRA6/E02",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java": "EXTRA6/E02"
+  },
+  "later_fixture_transfers": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java": "EXTRA6/E03",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java": "EXTRA6/E05",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java": "EXTRA6/E05"
+  },
+  "comment_like_receipt_contract": {
+    "packet_sha": "76bfabcb46b30c0aa1fe1ddfc13d4c89bd49d7b9",
+    "source_writer": "EXTRA6/E02",
+    "scope": "new immutable COMMENT_LIKE receipts plus still-existing legacy action before UNLIKE; exact mapper methods current-owned reads allowed",
+    "legacy_collision": "Never overwrite mismatched immutable receipt; proceed authorized UNLIKE preserving winner, later LIKE original request returns existing binding409, not resurrection",
+    "irrecoverable": "old action deleted before upgrade and no immutable receipt; no invented history/TTL/DDL",
+    "verification": "NOT_RUN"
+  }
+}

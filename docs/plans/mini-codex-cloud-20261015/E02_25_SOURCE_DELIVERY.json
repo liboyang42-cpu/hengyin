@@ -1,0 +1,94 @@
+{
+  "task": "E02-25",
+  "owner": "EXTRA6/E02",
+  "worker": "/root/external_e02",
+  "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "parent_sha": "dd211a8acbc0fbe370c02a086a8c9d6aa29f5aed",
+  "previous_source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "source_branch": "codex/extra-six-rolling-20261015",
+  "pr": 36,
+  "docs_head": "e9b9e1912fa449e1ee1c0344ac2ff0dc4cb268ec",
+  "docs_head_is_application_change": false,
+  "original_child_sha": "6b98aabcdf20bbc55b05b78187f52f2321be3a1d",
+  "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+  "writer_state": "FROZEN_LOCK_RETAINED",
+  "actual_source_writers": 0,
+  "ready": 0,
+  "writer_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207773214",
+  "grant_control": "9ee26595044bba61b4f033966cae653e8658be9b",
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md"
+  ],
+  "scope": "Only comment DuplicateKey catch uses exact author/request current read, MapperJava exact new method, XML same projection/WHERE plusFOR UPDATE/useCache=false/flushCache=true. First ordinary read/normal insert read/post-body-parent identity/auth/isolation/HTTP/DDL/dependencies/CI unchanged. E02_24Test duplicate fixture only; old55 unchanged.",
+  "c00_review": "Read public source diff fromfaef plus7-file source commit and delivery; docs e9 direct parent29fe and only three own coordinator docs. No Cloud compilation/tests.",
+  "ordinary": {
+    "status": "ORDINARY_TARGETED_PASS",
+    "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": [
+      {
+        "name": "com.chengyinhub.business.longrun.E02_25Test",
+        "source_declarations": 4
+      },
+      {
+        "name": "com.chengyinhub.business.longrun.E02_24Test",
+        "source_declarations": 5
+      },
+      {
+        "name": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "source_declarations": 55
+      }
+    ],
+    "source_declared_total": 64,
+    "actual_executed_tests": 64,
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_25Test,com.chengyinhub.business.longrun.E02_24Test,com.chengyinhub.business.community.CommunityPostServiceImplTest test",
+    "environment": "Existing approved212 offline entry and cached dependencies; no DB/Redis required",
+    "inherited_pass": false,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e"
+  },
+  "mysql": {
+    "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
+    "source_declarations": 2,
+    "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+    "requires": [
+      "MySQL8+ nonMariaDB task-isolated scratch",
+      "explicit CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD; suffix nonempty",
+      "approved CREATE/DROP/DML and cleanup task-owned schema only",
+      "approved shared lock/resource/network entry;212 network none cannot execute"
+    ],
+    "mock_boundary": "External safety gateway only; actual mapper/service/transaction/unique conflict/current read/outbox/independent JDBC assertions in source, NOT_RUN",
+    "real_redis_required": false,
+    "entry_policy": "No new entry per user; preserve existing212/CI and do not request same closed proposal"
+  },
+  "not_accepted": [
+    "real MySQL RR2",
+    "runtime HTTP",
+    "device/business acceptance",
+    "merged candidate integration",
+    "merge/deployment/migrations"
+  ],
+  "cloud_manual_runs": 0,
+  "repair_policy": "Only actual local failure resumes original E02 single repair writer; others continue real independent ready items; no invented task.",
+  "ordinary_layer_status": "64_ACTUAL_PASS_TRUE_MYSQL2_NOT_RUN",
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  }
+}

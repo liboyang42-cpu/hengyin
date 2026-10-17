@@ -1,0 +1,80 @@
+{
+  "candidate_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+  "branch": "codex/mini-bug-arch-followups-20261015",
+  "pr": 28,
+  "parent_frozen_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "executed_node_source_tree_commit": "d8a0cf8bfa0c1d0cbde930d32152d2c70db80518",
+  "node_executable_sources_unchanged_to_candidate": true,
+  "record_kind": "followup_only_not_inherited_231",
+  "cloud_checks": {
+    "full_node": {
+      "sha256": "88c93a1c6b27c21ac485b5bdb842721aa919f91f00c3828af9a63b0dce90e48e",
+      "bytes": 768419,
+      "tests": 8361,
+      "pass": 8359,
+      "fail": 0,
+      "skipped": 2,
+      "retained_skips": [
+        "gerenziliao bottom bar R5 migrated historical contract",
+        "design vault absent: external local document contract"
+      ]
+    },
+    "ui_gate": {
+      "sha256": "312058e654e1587071bbbf41a6840a06c52bd8e7419a626596e00778115cb091",
+      "bytes": 7678,
+      "status": "PASS"
+    },
+    "l01": {
+      "sha256": "d8b2bfe0306b44a4f2782c4b9a304f1b262f0e1dc2ef1f5f740f60ed8a34c38c",
+      "bytes": 6201,
+      "tests": 65,
+      "pass": 65,
+      "fail": 0,
+      "skipped": 0
+    },
+    "l05_related": {
+      "sha256": "10178f3fd7e250a1c4a8605769f4fa6a84588a27d2320131d4b6dd165c7b5433",
+      "bytes": 8730,
+      "tests": 97,
+      "pass": 97,
+      "fail": 0,
+      "skipped": 0
+    },
+    "backend_ui": {
+      "sha256": "43e610e9ce09ba90c6e4586e06d02cc1c3bc9d7d02046e78e7f69ec757dd3342",
+      "bytes": 2205,
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0
+    },
+    "source_inventory": {
+      "controls": 4480,
+      "control_ids_and_classifications_unchanged": true,
+      "local_tap": 1792,
+      "evidence_hashes_refreshed": 459,
+      "ui_baseline_key_relocations": 25,
+      "ratchets_and_reasons_unchanged": true
+    }
+  },
+  "java_ci": {
+    "run_id": 38738836009,
+    "source_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+    "status": "in_progress",
+    "expected_tests": 39,
+    "observed_tests": null
+  },
+  "ci_history": [
+    {
+      "source_sha": "eab62274a19f549623ad1818088ba51f23b6ca8e",
+      "run_id": 38738526470,
+      "status": "workflow_validation_failure_no_jobs_no_tests",
+      "fix": "MySQL mapped port job context moved from job env into step env"
+    }
+  ],
+  "vps_followup": "NOT_RUN_NEW_RESOURCE_CHANNEL_UNVERIFIED",
+  "test_deployed": false,
+  "merge": false,
+  "migration": false,
+  "device_acceptance": false
+}

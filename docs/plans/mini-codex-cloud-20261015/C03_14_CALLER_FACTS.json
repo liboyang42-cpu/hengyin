@@ -1,0 +1,100 @@
+{
+  "item": "OWN-C03-14",
+  "baseline": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "status": "BLOCKED_DECISION_RECONFIRMED_WITH_NEW_CALLER_EVIDENCE",
+  "mode": "SOURCE_ONLY / NOT_RUN",
+  "repository_writes": false,
+  "conclusion": "既有caller对读回ID要求有效正整数，但无重复拒收/过滤合同；不足以唯一决定写入null/duplicate应整包拒绝、过滤还是保留。未取得CmsTopicServiceImpl写权，未修源码。",
+  "evidence": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java:59",
+      "fact": "collaboratorIds仅List<Long>与字段说明，无元素非空、正数、去重约束；TopicUpdateDTO直接继承。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:5616",
+      "fact": "saveCollaborators逐元素插入，null与重复均保留；create 4124/update 4531均调用；4660仅整集合缺席保护。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsCollaboratorsMapper.xml:47",
+      "fact": "动态insert遇memberId=null略去该列；没有元素校验或去重。"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql:956",
+      "fact": "member_id DEFAULT NULL；只有id主键，无三元唯一键；现有schema允许null/重复，不可称持久化失败。"
+    },
+    {
+      "path": "docs/verification/mini-bug-arch-20261015/B02/CLAUDE_CONTRACT.md",
+      "fact": "chapters/tickets/collaboratorIds全量替换，缺席且库中非空拒绝，[]清空；未定义数组内null/duplicate。"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js:142",
+      "fact": "isEditingTopicPayload对edit-detail读回collaboratorIds逐元素要求正安全整数（number或数字string），拒绝null；不检测重复。"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/fabu-edit-existing-topic.test.js:176",
+      "fact": "现有源码负例含collaboratorIds:[null]，证明读回payload拒绝null；该测试本次未运行。"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js:2485",
+      "fact": "edit-detail读回名单map(Number)，保留重复；3178旧草稿恢复名单直接沿用sourceData.collaboratorIds；6561保存名单原样上送。"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js:4872",
+      "fact": "getUserData默认当前用户单元素名单；4911在未恢复草稿且非编辑时才重置，不归一已有多成员名单。"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/fabu/index.js:7194",
+      "fact": "合作者选择器按既有用户裁决移除；仅署名，不是邀请或协作权限；保留名单字段供署名/全量替换。"
+    },
+    {
+      "path": "chengyinhub-ui/src/views/business/topic/index.vue:1365",
+      "fact": "admin新增payload无collaboratorIds；1431编辑payload亦无。实际business Controller add用CmsTopicCreateDTO、edit用CmsTopicEditDTO，不是TopicCreateDTO/TopicUpdateDTO名单保存caller。detail.vue:1888仅读cmsCollaboratorsList展示。"
+    }
+  ],
+  "options": [
+    {
+      "policy": "整包拒绝null/duplicate（是否拒绝非正ID另需明确）",
+      "impact": "新增写错误合同；已有含重复的合法读回名单可编辑但将无法保存，旧草稿也受影响；有效名单顺序与数量不变。"
+    },
+    {
+      "policy": "过滤null并稳定去重（非正ID是否过滤另需明确）",
+      "impact": "写成功但改变名单行数与原顺序含义；[null]可变[]，在全量替换更新中可能清空署名；已有重复读回/草稿被静默压缩。"
+    },
+    {
+      "policy": "维持逐元素原样保存",
+      "impact": "符合当前DTO/Mapper/schema行为；null/重复关联继续存在，读回若暴露null会被小程序形状校验拒收（view是否透出null需独立证据，不能假称必然）。"
+    }
+  ],
+  "if_policy_frozen": {
+    "scope": "仅CmsTopicServiceImpl既有create/update进入写入前的输入校验或saveCollaborators归一，取决于明确政策；不改权限/邀请/DDL。",
+    "tests": "真实Service保存路径覆盖null/duplicate输入与政策、有效多成员顺序、[]显式清空、整集合缺席旧行拒绝；拒绝策略断言无写副作用，过滤策略断言实际删除/插入名单。测试源码待合同冻结，NOT_RUN。"
+  },
+  "not_done": [
+    "Java/Maven/Node/compile/test/lint/CI",
+    "DB/VPS/HTTP业务验证",
+    "git暂存/提交",
+    "任何仓库或控制账编辑"
+  ],
+  "followup_split_analysis": {
+    "suggested_split": "可拆A(null/非正数的ID形状保护)与B(duplicate政策)。A有现有小程序读回正整数不变量支持，B读回明确允许重复，不能共用一个去重政策。A的写错误类型/位置仍需root正式grant确认，不假称数据库拒绝。",
+    "write_exception_conventions": [
+      "ApiTopicController create internal catch ChapterFlowValidationException -> AjaxResult code400；ServiceException/IllegalStateException/IllegalArgumentException -> AjaxResult.error(...)默认500并保留安全业务文案（569-577）。",
+      "update catch ChapterFlowValidationException ->400；其余RuntimeException ->error(e.getMessage())默认500（684-688）。因此不能声称所有非法元素都400。",
+      "CmsTopicServiceImpl.compileChapterFlow:5109在写前遍历验证，5112空node抛ChapterFlowValidationException；但assertAiSimpleNodeLocations:4930发布null节点抛IllegalArgumentException、草稿null节点continue。因此无跨集合唯一拒绝/过滤规则。",
+      "同Service RouteNodeMaps 5439/5446/5453重复node id/clientNodeKey/chapter id抛IllegalArgumentException；saveTickets:5751重复已有票id也抛IllegalArgumentException。这些有各自身份映射合同，不能机械外推合作者署名去重。"
+    ],
+    "draft_null_reachability": [
+      "pro-editor-draft.js:89 clone完整formData；loadDraft:115-140只查存储/身份/revision，不校验collaboratorIds；JSON clone保留数组null。",
+      "fabu._applyDraftEnvelope:682-706直接采用envelope.formData并setData，且_localDraftRestored=true；getUserData:4911不覆盖恢复名单。旧sourceData草稿路径3178也原样保留数组。",
+      "fabu._buildValidationBag:5767委托pages/publish/utils/publish/publish-validation-bag.js；该文件与页面validateForm均没有collaboratorIds校验。保存6561原样上送。故已含[null]/[0]/[-1]的既有本地草稿可沿真实源码恢复/提交，不需声称正常UI主动产生null。没有运行验证或证明某份用户草稿实际存在。"
+    ],
+    "read_invariant_limits": [
+      "fabu isEditingTopicPayload:142-147明确拒绝null/0/负数，同时要求JS安全整数；重复正整数允许。",
+      "ApiTopicController edit-detail:802-805直接逐条add(c.getMemberId())，没有过滤/去重；ViewCollaboratorsMapper从view_collaborators读取并映射member_id；仓库无该view DDL（既有B02测试323明确）。因此若视图透出坏ID，会导致成功保存后读回客户端拒绝；若视图过滤孤立行，则表现为静默丢署名。不能断言真实DB必然哪个结果。",
+      "若A仅保护null/<=0，不能宣称完整匹配JS安全整数上界；Long大于Number.MAX_SAFE_INTEGER的合法性是另一输入合同边界，不擅自扩大。"
+    ],
+    "minimal_A_if_granted": "建议先在真实createTopicInternal与updateTopicByOwnerInternal的FULL重建路径、任何删除/插入前验证显式名单元素null或<=0；使用既有IllegalArgumentException短中文失败(默认500)，保留集合null缺席/[]清空及重复正ID原样。不改WHITELIST忽略名单政策、不查成员、不做DDL/邀请。需root确认正式方法边界与sole writer。",
+    "meaningful_source_tests_A": "真实Service create与FULL update输入null/0/负数应整包失败且无主题/集合写入；有效名单含重复正ID仍逐项保存；[]显式清空与缺席已有行闸保留；异常通过现有Controller映射默认500。NOT_RUN。"
+  },
+  "current_coordination": "RESUME_KNOWN_BLOCKERS.json; user existing-entry-only constraint unchanged; this is source/input/identity evidence, not awaiting new verification resources"
+}
