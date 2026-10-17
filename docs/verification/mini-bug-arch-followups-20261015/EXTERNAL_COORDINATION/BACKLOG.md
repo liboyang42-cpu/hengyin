@@ -1,5 +1,9 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
+最新签收：6143c37f3c32753bd22208ace9c4d3c4520b9fd6的E02_03Test4实际普通H2全PASS，公开1eb823ebad101e57e3be2e7f7b391bd7787e4988已由协调者/原E02核读。后续fixture-only6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4仅补E02_25空表，真库2项未跑；4项PASS不转移新SHA，剩余四个scratch前提未改。
+
+最新fixture-only候选6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4（父c35a46357cbbadfbcc61c881db46b6e51e7cc725），仅E02_25MySqlIT加一行自有scratch空cms_activity；生产及新普通类仍同6143。2方法/断言/gate不变，真MySQL未跑。其余四个旧scratch前提未修改；不计新增生产BUG，旧成绩不继承。
+
 最新源码：E02-03仅隐藏明确取消/下架活动的旧引用卡，正文及存储快照保留。完整冻结6143c37f3c32753bd22208ace9c4d3c4520b9fd6（父ff6c15679d3249987eb74ee150c1121a2effe250）；新真实XML/H2普通回归4声明，NOT_RUN，不继承530四类60或旧8/35/64。以下旧未选政策/已验候选均为阶段历史，本节及文末为当前范围。
 
 最新签收：固定530e72281a9bd1a443f58a21119367d55eca3623本地原212四类60实际PASS/0F/E/S；原E01/E03均已直接核读公共dc74c300ef11e203ac98b1baaf15efe77bcfbd20并签收冻结。原计划59与初次计数回执保留，漏全限定@Test已按源码方法名和fresh XML核为60，无源码修改/重跑。以下NOT_RUN/59计划数均保留阶段历史，以本节及文末实际结果为准。
@@ -451,3 +455,21 @@ E02-03只是概念解释，保留或隐藏历史引用卡尚未选择，源码�
 生产cms_activity及字段已经存在，无生产DDL。但五个旧显式MySQL gate scratch夹具确认通过真实hydrate触及新查询而尚无cms_activity：E02_01Test、E02_11Test、E02_06Test、E02_25MySqlIT、B05CommunityVisibilityMySqlIT；各自后续需要精确补空cms_activity(id,publish_status,cancel_time)前提。本次未改这些路径，不把它们当普通4项，也不声称旧真库兼容已验。E02_10/22未经过该读取，不列必改；旧普通Mapper类无已确认selectReferences调用。完整路径/gate/调用锚点留source_delivery_packages，后续测试文件写权需逐一核实。
 
 新候选SOURCE_DELIVERED_UNVERIFIED，旧530的60PASS及其59计数审定、旧b0348PASS和923异常/拒绝历史各属原SHA。Cloud未编译测试/手动CI/VPS，不新增入口/网络/服务，不执行迁移/合并部署。原E02停写保留锁，实际新源码writer0。
+
+
+## E02-03新增读取依赖：E02_25自有scratch空表前提已补
+
+完整fixture-only源码6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4（父c35a46357cbbadfbcc61c881db46b6e51e7cc725），child9a27f6b0d8fe532320cbe646775464cf49ba1d10（父ec0067a97b8d28cbc20fee8d6b02dec429af6f92）。唯一修改为E02_25MySqlIT.schema加入空cms_activity(id bigint primary key,publish_status int,cancel_time datetime)。原created保护的DROP自有scratch DATABASE自然清理该表；未新增额外DROP/seed操作，原2方法/断言/显式gate保持。全部NOT_RUN/现有真库入口覆盖缺口。
+
+原E02_01Test、E02_06Test、E02_11Test及共享B05CommunityVisibilityMySqlIT未修改，四个scratch表前提仍须后续完成；不是四个或五个生产BUG。本次不把普通XML/H2回归当真MySQL门禁验收。生产XML与E02_03Test自6143未变，本地已报告6143正式准入新4项，尚未收到最终结果，不要求因一行gated fixture补表重复普通4项，不继承旧60/8/35/64。
+
+Cloud未编译测试/手动CI/VPS，无新真库入口、网络/服务/CI变更，无生产迁移或合并部署。原作者停写保留锁；本次只交实际已补的一个前提，不把剩余四项说成已完成。
+
+
+## 6143活动引用卡普通4项签收，与6c fixture补丁分开
+
+已实际核读[公共README](https://github.com/liboyang42-cpu/hengyin/blob/1eb823ebad101e57e3be2e7f7b391bd7787e4988/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6143c37f/README.md)及summary。固定6143c37f3c32753bd22208ace9c4d3c4520b9fd6的com.chengyinhub.business.longrun.E02_03Test，1类4实际PASS/0FAIL/0ERROR/0SKIP，fresh1XML精确，原212guard0/completed/BUILD SUCCESS。精确容器0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760由本地显式确认清理，无活动Java。准备阶段run.py尚未到的Python exit2未启动守卫/Maven/测试；与后续正式四项结果分开保留。公开manifest只是核读引用，Cloud未取得远端原件或重算hash。
+
+原E02已直接核读并签收冻结，无源码失败、不占修复槽。4项仅生产XML/H2查询及独立JDBC保留正文/快照合同，不代表真实Service详情、MySQL、Redis、HTTP/设备业务或集成验收。旧530四类60和旧8/35/64未重跑、不继承；本4不继承到后续6c fixture-only候选。
+
+6c仍仅E02_25MySqlIT一行scratch表前提，2项真库NOT_RUN；E02_01Test、E02_11Test、E02_06Test与共享B05四文件保持只读，未完成回归前提不因本4通过而消失。原方法/断言/gate无放宽，无新真库入口或CI配置，不执行迁移/合并部署。此后只更新本队三交付文档。

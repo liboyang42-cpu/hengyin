@@ -394,7 +394,15 @@
       "child_public_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
       "planned_methods": 4,
       "source_change_summary": "Only selectReferences uses correlated NOT EXISTS to suppress ACTIVITY references whose current target has publish_status=0 OR cancel_time IS NOT NULL. Original five fields/order/post/invalidated filters retained; body and persisted snapshots unchanged; no membership/registration check or other reference-type policy.",
-      "implemented_policy": "Only explicit ACTIVITY cancelled/offline card suppression; body/snapshot preserved, no author eligibility filter or other reference types."
+      "implemented_policy": "Only explicit ACTIVITY cancelled/offline card suppression; body/snapshot preserved, no author eligibility filter or other reference types.",
+      "ordinary_validation_at6143": {
+        "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+        "status": "H2_TARGETED4_PASS",
+        "tests": 4,
+        "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+        "original_author_ACK": true,
+        "remaining_true_mysql_fixture_prerequisites": 4
+      }
     },
     {
       "id": "E02-04",
@@ -4098,7 +4106,7 @@
   "thread_id": "01a13f9c-e8ba-753e-9c39-03840bb4900b",
   "host_id": "durable",
   "branch": "codex/extra-six-rolling-20261015",
-  "queue_revision": 28,
+  "queue_revision": 29,
   "initial_deliveries": [
     {
       "lane": "E01",
@@ -4183,9 +4191,9 @@
       "slot": "E02",
       "task": null,
       "worker": "/root/external_e02",
-      "mode": "ACTIVITY_REFERENCE_SOURCE_DELIVERED_STOPPED_LOCK_RETAINED",
+      "mode": "FIXTURE25_SOURCE_DELIVERED_STOPPED_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e02",
-      "public_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92"
+      "public_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10"
     },
     {
       "slot": "E03",
@@ -5072,7 +5080,7 @@
     "E06": "Confirmed independent transport-boundary source E06-17",
     "execution": "STATIC_SOURCE_READING_ONLY; no validation"
   },
-  "latest_application_candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+  "latest_application_candidate_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
   "actual_targeted_discovery_workers": 0,
   "targeted_numeric_candidate_conclusion": {
     "status": "NO_NEW_ITEM_EXISTING_COMPATIBILITY",
@@ -5313,55 +5321,23 @@
     }
   },
   "validation_queue_state": {
-    "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
-    "status": "NEW_SOURCE_NOT_RUN",
-    "classes": [
-      "com.chengyinhub.business.longrun.E02_03Test"
-    ],
-    "declared_tests": 4,
+    "candidate_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+    "status": "FIXTURE_ONLY_SOURCE_NOT_RUN",
+    "production_and_new_ordinary_class_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+    "ordinary_class_at6143": "E02_03Test4 actualPASS at6143; no rerun for fixture-only6c. Changed realMySQL class2 stillNOT_RUN.",
+    "changed_true_mysql_class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
+    "changed_class_declarations": 2,
     "actual_tests": null,
-    "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
-    "environment": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
-    "cloud_execution_allowed": false,
+    "true_mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "old_pass_inherited": false,
-    "no_external_DB_Redis_for_new_ordinary_class": true,
-    "old_true_mysql_fixture_gaps": [
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
-        "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
-        "call": "service.detail",
-        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
-        "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
-        "call": "service.feed -> hydrate",
-        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
-        "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
-        "call": "service.comments -> detail -> hydrate",
-        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
-        "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
-        "call": "service.comment -> commentResult -> detail -> hydrate",
-        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
-        "gate": "CHENGYIN_B05_MYSQL_IT=1",
-        "call": "post helper -> detail",
-        "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-        "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-      }
-    ]
+    "cloud_execution_allowed": false,
+    "ordinary_result_at_prior_source": {
+      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "tests": 4,
+      "passed": 4,
+      "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+      "not_transferred_to_candidate6c": true
+    }
   },
   "admission_history": [
     {
@@ -5925,7 +5901,7 @@
         "com.chengyinhub.business.longrun.E02_03Test"
       ],
       "declared_tests": 4,
-      "actual_tests": null,
+      "actual_tests": 4,
       "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
       "prerequisites": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
       "dependency_version_changes": [],
@@ -5981,8 +5957,40 @@
       "merge_deploy": false,
       "public_coordination_comments": false,
       "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN"
+      "status": "SOURCE_DELIVERED_ORDINARY4_PASS_REAL_DB_UNVERIFIED",
+      "execution": "NOT_RUN",
+      "ordinary_result": {
+        "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+        "tests": 4,
+        "passed": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1eb823ebad101e57e3be2e7f7b391bd7787e4988/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6143c37f/summary.json",
+        "scope": "6143 productionXML/H2 only, not fixture6c or realDB."
+      }
+    },
+    {
+      "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "parent_sha": "c35a46357cbbadfbcc61c881db46b6e51e7cc725",
+      "child_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+      "child_parent_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
+      "write_files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+      ],
+      "patch": "One CREATE TABLE cms_activity(id bigint primary key,publish_status int,cancel_time datetime) in E02_25MySqlIT.schema only. Original created-protected DROP DATABASE cleans its own scratch table; methods/assertions/gate unchanged.",
+      "test_class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
+      "declared_methods": 2,
+      "actual_tests": null,
+      "execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+      "production_and_E02_03Test_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "package": "E02-03-SCRATCH-PREREQUISITE-E02-25",
+      "candidate_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "status": "FIXTURE_SOURCE_DELIVERED_UNVERIFIED",
+      "cleanup": "Original created-protected DROP DATABASE removes only the test-owned scratch DB, including added table; no separate table/drop or seed change.",
+      "old_pass_inherited": false
     }
   ],
   "pending_validation_candidates": [
@@ -6165,84 +6173,25 @@
       }
     },
     {
-      "id": "E02-03",
-      "package": "E02-03-ACTIVITY-CARD-OUTPUT",
-      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
-      "parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
-      "child_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
-      "child_parent_sha": "992b9ea146db16f9c9a12f4041925e2c6b386950",
+      "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "parent_sha": "c35a46357cbbadfbcc61c881db46b6e51e7cc725",
+      "child_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+      "child_parent_sha": "ec0067a97b8d28cbc20fee8d6b02dec429af6f92",
       "write_files": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_03Test.java",
-        "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
-        "docs/verification/mini-longrun-20261015/EXTRA6/E02-03.md"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
       ],
-      "owner": "EXTRA6/E02",
-      "source_status": "SOURCE_DELIVERED_UNVERIFIED",
-      "new_execution": "NOT_RUN",
-      "minimal_diff": "Only selectReferences uses correlated NOT EXISTS to suppress ACTIVITY references whose current target has publish_status=0 OR cancel_time IS NOT NULL. Original five fields/order/post/invalidated filters retained; body and persisted snapshots unchanged; no membership/registration check or other reference-type policy.",
-      "unchanged_targets": "Missing activity row, null publish_status without cancel_time, unrelated types and null reference_type retain previous output behavior.",
-      "ordinary_classes": [
-        "com.chengyinhub.business.longrun.E02_03Test"
-      ],
-      "declared_tests": 4,
+      "patch": "One CREATE TABLE cms_activity(id bigint primary key,publish_status int,cancel_time datetime) in E02_25MySqlIT.schema only. Original created-protected DROP DATABASE cleans its own scratch table; methods/assertions/gate unchanged.",
+      "test_class": "com.chengyinhub.business.longrun.E02_25MySqlIT",
+      "declared_methods": 2,
       "actual_tests": null,
-      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_03Test test",
-      "prerequisites": "Existing offline212 JDK/Maven/H2/MyBatis/JUnit/Spring test dependencies; no external DB/Redis/new env/dependency-version change. New ordinary fixture includes cms_activity.",
-      "dependency_version_changes": [],
-      "production_DDL_changes": [],
-      "new_external_service_requirements": [],
-      "other_owner_overlap": "No PR231 production/service/interface/old test path edited.",
-      "old_true_mysql_fixture_gaps": [
-        {
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
-          "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
-          "call": "service.detail",
-          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-        },
-        {
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
-          "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
-          "call": "service.feed -> hydrate",
-          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-        },
-        {
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
-          "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
-          "call": "service.comments -> detail -> hydrate",
-          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-        },
-        {
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
-          "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
-          "call": "service.comment -> commentResult -> detail -> hydrate",
-          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-        },
-        {
-          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
-          "gate": "CHENGYIN_B05_MYSQL_IT=1",
-          "call": "post helper -> detail",
-          "prerequisite": "Its scratch schema must include empty cms_activity(id BIGINT PRIMARY KEY,publish_status INT,cancel_time DATETIME) before the new selectReferences can run.",
-          "state": "NOT_MODIFIED_IN_THIS_PACKET_NOT_RUN"
-        }
-      ],
-      "fixture_gap_exclusions": [
-        "E02_10Test revisions path does not call hydrate; not listed as required.",
-        "E02_22Test like/unlike returns void without this query; not listed as required.",
-        "Existing ordinary CommunityPostMapperMyBatisTest has no selectReferences call; not a confirmed missing-table failure."
-      ],
-      "old_pass_inherited": false,
-      "old_530_four_class60_repeated": false,
-      "Cloud_execution": false,
-      "migration_executed": false,
-      "merge_deploy": false,
-      "public_coordination_comments": false,
-      "candidate_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN"
+      "execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "gate": "CHENGYIN_E02_25_MYSQL_IT=1",
+      "production_and_E02_03Test_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "package": "E02-03-SCRATCH-PREREQUISITE-E02-25",
+      "candidate_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "status": "FIXTURE_SOURCE_DELIVERED_UNVERIFIED",
+      "cleanup": "Original created-protected DROP DATABASE removes only the test-owned scratch DB, including added table; no separate table/drop or seed change.",
+      "old_pass_inherited": false
     }
   ],
   "latest_worker_round": {
@@ -6375,57 +6324,24 @@
   },
   "production_source_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
   "latest_local_actual_result": {
-    "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-    "direct_parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-    "started_at": "2026-10-17T11:36:28.685565+00:00",
+    "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+    "direct_parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
+    "started_at": "2026-10-17T12:33:34.889063+00:00",
     "totals": {
-      "tests": 60,
+      "tests": 4,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "passed": 60
+      "passed": 4
     },
     "reports": [
       {
-        "class": "com.chengyinhub.business.longrun.E01_13Test",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_13Test.xml",
-        "sha256": "f069ed7a3349de46333a50524cbe55c40a6dcdccad2153cf4a962e56d7bfb859",
-        "fresh": true,
-        "testcases": 6,
-        "tests": 6,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.longrun.E03_04Test",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_04Test.xml",
-        "sha256": "b0cad381f966c746a0c90894109aedd471505aec03c53b6356d5713ed37dc24e",
+        "class": "com.chengyinhub.business.longrun.E02_03Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_03Test.xml",
+        "sha256": "23f8808fd76ea5b3f7540386bae998d84696cbe42c8b54b411e880b33bc495ce",
         "fresh": true,
         "testcases": 4,
         "tests": 4,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ClubWaitlistServiceImplTest.xml",
-        "sha256": "a13d87f6448c159b8f31ad8bfe79728420f0da203dc307bdf60809901e392fd2",
-        "fresh": true,
-        "testcases": 24,
-        "tests": 24,
-        "failures": 0,
-        "errors": 0,
-        "skipped": 0
-      },
-      {
-        "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
-        "sha256": "0a4e09e24ad5422b1879b8684bdfaea65f557238ed6bc50b36175bd5b457647e",
-        "fresh": true,
-        "testcases": 26,
-        "tests": 26,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -6434,55 +6350,32 @@
     "guard_receipt": {
       "exitCode": 0,
       "reason": "completed",
-      "containerId": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822"
-    },
-    "test_count_audit": {
-      "planned_tests_preserved": 59,
-      "source_annotation_counts": {
-        "com.chengyinhub.business.longrun.E01_13Test": 6,
-        "com.chengyinhub.business.longrun.E03_04Test": 4,
-        "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
-        "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 26
-      },
-      "actual_tests": 60,
-      "exact_source_method_names_match_fresh_xml": true,
-      "cause": "Initial static count missed fully qualified @org.junit.jupiter.api.Test on one existing archive test; no parameterization, duplicate execution or new source change.",
-      "original_collector_result": "NOT_PASS due solely to planned-count mismatch; original summary archived",
-      "rerun_performed": false,
-      "result": "PASS"
-    },
-    "retained_original_count_receipt": {
-      "path": "targeted-summary-before-count-audit.json",
-      "sha256": "0ab506a0d9a59f7a79403686ef76df65881c290d301c61e1d63637ba15c71c13",
-      "planned_tests": 59,
-      "initial_collector_result": "NOT_PASS solely due to missed fully qualified test annotation",
-      "test_rerun": false
-    },
-    "evidence_scope": "Ordinary mock persistence/service regression only. No true database, Redis, runtime HTTP, device, business, integration, migration execution, merge or deploy acceptance.",
-    "log_sha256": "a2f064aaf88eb951608d382e3e8612d1b3e654522e2f72615f1c6b25b2c1f402",
-    "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
-    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
-    "actual_tests": 60,
-    "fresh_xml_count": 4,
-    "fresh_exact_xml": true,
-    "finished_at": "2026-10-17T11:39:15.680563+00:00",
-    "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS",
-    "read_scope": "Coordinator and both original E01/E03 authors actually read public README and summary. Remote original log/XML hashes are cited, not independently retrieved/recomputed by Cloud.",
-    "author_ACK": {
-      "E01": "Actual public README+summary read; frozen original lock retained; no edits or execution",
-      "E03": "Actual public README+summary read; frozen original lock retained; no edits or execution"
+      "containerId": "0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760"
     },
     "container_cleanup": {
       "context": "chengyin-aws",
-      "exact_id": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822",
-      "observed_remaining_containers": 0,
-      "query_exit_code": 0
+      "exact_id": "0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760",
+      "query_exit_code": 0,
+      "observed_remaining_containers": 0
     },
-    "cloud_execution": false,
-    "old_8_35_64_inherited": false,
-    "no_rerun": true
+    "evidence_scope": "New production XML H2 regression only; not real MySQL, Redis, running HTTP, device, business or integration acceptance. No migration, merge or deployment.",
+    "preparation_receipt": {
+      "early_invocation": "run.py had not arrived before source transfer finished; python exit2, no guard/Maven/tests started",
+      "formal_invocation": "After SCP completion; original212 with fixed archive and one class4 tests"
+    },
+    "log_sha256": "2270793d741b74aeaec77144594af4a5e69046af274fdc27d19cb62d5e1daec8",
+    "finished_at": "2026-10-17T12:36:18.010531+00:00",
+    "status": "LOCAL_ONE_CLASS4_ORDINARY_H2_PASS",
+    "actual_tests": 4,
+    "fresh_xml_count": 1,
+    "fresh_exact_xml": true,
+    "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1eb823ebad101e57e3be2e7f7b391bd7787e4988/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6143c37f/summary.json",
+    "author_ACK": "Original E02 directly read public README and summary, acknowledged6143 ordinary4 PASS and froze source; no files changed or Cloud execution.",
+    "read_scope": "Public manifest actually read. Remote original log/XML/source hashes cited, not independently retrieved or recomputed by Cloud.",
+    "pass_transferred_to_fixture6c": false
   },
-  "worker_runtime_note": "Original E02 completed narrow ACTIVITY card query source and stopped, sourcewriters0. New ordinary4 NOT_RUN. Prior530 four-class60 belongs only to530. Five old gated scratch schemas need explicit prerequisite follow-up; no tests changed here.",
+  "worker_runtime_note": "Original E02 directly read and signed6143 ordinary4PASS, stopped with original lock retained. E02_25 empty scratch table delivered at6c separately, 2 realMySQL methods NOT_RUN. Three other original tests and sharedCORE B05 unchanged; no new source failure/repair slot. Cloud executions0.",
   "local_actual_result_history": [
     {
       "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
@@ -6606,6 +6499,20 @@
         "passed": 60
       },
       "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS"
+    },
+    {
+      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "status": "LOCAL_ONE_CLASS4_ORDINARY_H2_PASS",
+      "actual_tests": 4,
+      "totals": {
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 4
+      },
+      "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1eb823ebad101e57e3be2e7f7b391bd7787e4988/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6143c37f/summary.json"
     }
   ],
   "latest_source_delivery_batch": {
@@ -6621,5 +6528,33 @@
     "actual_tests": null,
     "new_execution": "NOT_RUN",
     "old_pass_inherited": false
+  },
+  "latest_fixture_prerequisite_followup": {
+    "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+    "modified": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+    ],
+    "status": "ONE_OF_FIVE_SCRATCH_PREREQUISITES_ADDED_SOURCE_ONLY",
+    "remaining": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+      }
+    ],
+    "production_migration": false,
+    "existing_methods_assertions_gates_unchanged": true,
+    "real_mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
   }
 }
