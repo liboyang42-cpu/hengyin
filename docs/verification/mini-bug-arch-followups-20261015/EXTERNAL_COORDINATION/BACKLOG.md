@@ -1,5 +1,7 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
+最新源码：E03-04冻结节点完成门槛与E01-13新增WAITING准入已交付，完整候选530e72281a9bd1a443f58a21119367d55eca3623（父0ee9a998ff04f033c9518e7c7139a62a0f6dc585）。新回归4+6方法；直接影响旧类25+24方法，四类59仅声明、NOT_RUN，不继承此前通过。E02-03政策未选、源码不改。下方既有阶段状态保留历史。
+
 最新闭环：固定b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf已由本地原212复测两原异常类8实际全PASS，公共证据254af5080abac41878357a56ef85bde86b59da1d已读；原E02签收停写、唯一修复槽释放。仅8 targetedPASS，不是新35全跑，不继承旧28。源码冻结，当前writer0/READY0/修复0。下方NOT_RUN/待复测措辞为阶段历史，本节与文末闭环优先。
 
 CY-HANDOFF: CODEX。真实Cloud任务 `01a13f9c-e8ba-753e-9c39-03840bb4900b` / durable；原E02/E04均gpt-6.1-sol，本轮最多2业务写者，E01仅只读新包审阅。工作树 `/workspace/hengyin-extra-*` / [PR36](https://github.com/liboyang42-cpu/hengyin/pull/36)。
@@ -414,3 +416,12 @@ A独立候选准入拒绝证据f3569c2b5f04912ba75b3f0ead8c916a94fd2743继续保
 已实际核读[公共README](https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/README.md)与summary：固定b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf，原212于14:03:53.575927Z—14:06:40.642804Z两类8实际PASS/0FAIL/0ERROR/0SKIP，fresh2XML类集与testcase精确，guard0/completed/BUILD SUCCESS。原E02_23Test6与旧ViewCreativeSquareCommunityPolicyMyBatisTest2均通过。manifest载精确容器8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8由本地显式chengyin-aws确认清理；source/cache/日志/报告/回执保留，Cloud未访问VPS或重算原件。
 
 原作者external_e02已实际签收闭环并停写，唯一修复槽释放，文件锁保留；活动源码writer0/独立READY0/未解失败0。不重复测试、不凑任务，后续仅真实独立grant或失败再原作者处理。原923六类35=28P/0F/7E/0S及两次0项准入拒绝永久保留；新SHA仅这8 targetedPASS，不把旧28转移成新35通过。真实MySQL新5+旧3、Redis/HTTP/设备业务/集成未验，迁移仅源码未执行，不合并部署。C00唯一更新全局索引，本队只自有三账/PR36；Cloud不补跑、入口/CI/网络不变。
+
+
+## E03-04 / E01-13 新源码交付
+
+E03-04独立候选0ee9a998ff04f033c9518e7c7139a62a0f6dc585，父acbd5f5411c6176db604d6297852c7772bdaa28d；child362f8a6bae6bd213700f5d1bc7bae858d2da3fc6（父003ad6eae97281f3e8c581a76a1cebc765116ccc）。仅StoryService、E03_04Test及原说明三路径。唯一、有效且非空冻结nodeIds检查本局完成事实；实时章删除/换绑仍拒绝，其余形状原live兼容不变。新4+原Story25=29声明，NOT_RUN。
+
+E01-13完整候选530e72281a9bd1a443f58a21119367d55eca3623，父0ee9a998ff04f033c9518e7c7139a62a0f6dc585；childd3468d3835fc170bd465b6b9908cfb552ace8263（父f4b807958290d5a3cdf34615b9244ab5b9d9a4aa）。仅WaitlistService.join、新E01_13Test及原说明三路径。复用既有活动锁读，正常发布/未结束、signupDeadline优先空fallback startTime，截止<=同一now拒绝；sale_*不生效，现有WAITING及共享policy/取消/到期/释放/退款不变。新6+原Waitlist24=30声明，NOT_RUN；Mapper Java/XML未改。
+
+两项均SOURCE_DELIVERED_UNVERIFIED，Cloud未编译/测试/CI/VPS；新四类59为静态声明，实际数待本地新鲜报告。仅现有离线依赖，无新增MySQL/Redis类或外部环境前提。源码及交付说明含最小测试命令；原b034两类8PASS及923原35=28P/7E和资源拒绝历史不转移。旧迁移仍仅源码未执行，不合并部署、不新增入口/网络/CI。两作者已停写保留锁，当前源码writer0、无未分派READY。
