@@ -12,7 +12,7 @@ Page({
     moreSheetShow: false,
     // CU-C-120:系统通知(type=2)没有可交流的对象,举报/拉黑的目标也是空的 ⇒ 面板只留真能做的清空聊天。
     // 初始值按可回复的私信给,onLoad 里再按会话类型收窄(见 _moreItemsFor)。
-    moreSheetItems: ['举报', '举报对方', '拉黑', '清空聊天'],
+    moreSheetItems: ['举报这条消息', '举报对方', '拉黑', '清空聊天'],
     reportShow: false,
     reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
@@ -115,7 +115,7 @@ Page({
       avatar: decodeURIComponent(options.avatar || ''),
       type: type,
       readOnly: readOnly,
-      moreSheetItems: readOnly ? ['清空聊天'] : ['举报', '举报对方', '拉黑', '清空聊天'],
+      moreSheetItems: readOnly ? ['清空聊天'] : ['举报这条消息', '举报对方', '拉黑', '清空聊天'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
     });
@@ -609,7 +609,7 @@ Page({
   onMoreSelect(e) {
     const label = e.detail.label;
     this.setData({ moreSheetShow: false });
-    if (label === '举报') this.doReport();
+    if (label === '举报这条消息') this.doReport();
     else if (label === '举报对方') this.doReportPeer();
     else if (label === '拉黑') this.doBlock();
     else if (label === '解除拉黑') this.doUnblock();

@@ -10,7 +10,7 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8')
 
 test('BL-36: 可回复私信的更多菜单有「举报对方」，系统通知只读不出现', () => {
   const js = read('subpackageB/pages/im/chat/index.js')
-  assert.match(js, /moreSheetItems: readOnly \? \['清空聊天'\] : \['举报', '举报对方', '拉黑', '清空聊天'\],/)
+  assert.match(js, /moreSheetItems: readOnly \? \['清空聊天'\] : \['举报这条消息', '举报对方', '拉黑', '清空聊天'\],/)
   assert.match(js, /else if \(label === '举报对方'\) this\.doReportPeer\(\);/)
   const wxml = read('subpackageB/pages/im/chat/index.wxml')
   assert.match(wxml, /<cy-report-sheet wx:if="\{\{!readOnly\}\}" show="\{\{reportShow\}\}" target-type="MEMBER" target-id="\{\{reportPeerId\}\}"/)
