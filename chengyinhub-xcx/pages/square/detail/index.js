@@ -847,12 +847,13 @@ Page({
           },
           success(resp) {
             if (resp.code == '200') {
-              const list = that.data.list.slice();
-              list.splice(index, 1);
-              that.setData({
-                list: list,
-                nodata: list.length < 1
-              });
+              const list = that.data.list.filter(function (row) { return !row || row.id !== item.id; });
+              if (list.length !== that.data.list.length) {
+                that.setData({
+                  list: list,
+                  nodata: list.length < 1
+                });
+              }
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
