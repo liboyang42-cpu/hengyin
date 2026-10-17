@@ -509,6 +509,8 @@ Page({
     postHistoryRows: [],
     openCommentPost: null,
     comments: [],
+    commentsLoaded: false,
+    commentsError: '',
     commentText: '',
     commenting: false,
     leaderboard: [],
@@ -2824,20 +2826,37 @@ Page({
   // 展开/收起评论区
   onToggleComments(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [] }); return; }
-    this.setData({ openCommentPost: id, comments: [], commentText: '' });
+    if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [], commentsLoaded: false, commentsError: '' }); return; }
+    this.setData({ openCommentPost: id, comments: [], commentsLoaded: false, commentsError: '', commentText: '' });
     this.loadComments(id);
   },
 
+  // BL-196:失败不能渲染成「还没有评论」;回包时已切到别的动态就丢弃,免得 A 的评论写到 B 下面
   loadComments(postId) {
     const that = this;
     app.sendRequest({
       hideLoading: true, url: '/api/club/post/comment/list', method: 'POST', data: jsonBody({ postId: postId }), header: jsonHeader(),
       success(res) {
-        const rows = (res.code == '200' && res.data) || [];
-        that.setData({ comments: rows.map(function (c) { return Object.assign({}, c, { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+        if (that.data.openCommentPost !== postId) return;
+        if (!res || res.code != '200') {
+          that.setData({ comments: [], commentsLoaded: false, commentsError: bizFailureMessage(res, '评论没能加载出来') });
+          return;
+        }
+        const rows = Array.isArray(res.data) ? res.data : [];
+        that.setData({ commentsLoaded: true, commentsError: '', comments: rows.map(function (c) { return Object.assign({}, c, { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+      },
+      fail() {
+        if (that.data.openCommentPost !== postId) return;
+        that.setData({ comments: [], commentsLoaded: false, commentsError: '网络异常，请重试' });
       },
     });
+  },
+
+  retryLoadComments() {
+    const postId = this.data.openCommentPost;
+    if (!postId) return;
+    this.setData({ commentsError: '' });
+    this.loadComments(postId);
   },
 
   onCommentInput(e) { this.setData({ commentText: e.detail.value }); },
