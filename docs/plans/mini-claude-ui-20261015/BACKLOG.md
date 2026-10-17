@@ -299,4 +299,6 @@
 | 185 | 主题发布前检查 | 创作者发布主题（`/api/topic/publish-draft`、现有发布路径）前，先调 `GET /api/topic/publish-check?topicId=&scope=`，它只读，一次列出所有 error 和 warn。在现有发布确认处展示：有 error 时列出并且不发布，只有 warn 时列出后允许继续。展示结构照搬官方活动主办控制台 `pages/activity/official-organizer` 已有的「发布检查」区块。先 grep 现有主题发布入口（fabu / myproject 等），只接在入口里，不改页面样式。检查接口失败时不能挡住原发布流程，要用 cy-inline-error 说明「检查没有完成」。 | 现有页内补齐 |
 | 186 | 章节阶段结算 | `GET /api/play/journey/stage-end?topicId=&activityId=&chapterId=` 返回本章完成后的阶段结算。先在 `pages/play/index.js` 找到章节全部完成的时刻；如果现有 UI 已有章末或章节完成的展示位，就把服务端结算接进去，复用 `/ending` 的取数与降级方式（见 `utils/life-archive.js`）。如果没有现成展示位，只在 PR 正文写明「需要产品决定展示位置」后停止，不要新造 UI，也不要开空 PR，在本条后面追加一行说明即可。 | 现有页内补齐 |
 
+> BL-186 说明（2026-10-17 L2）：现成展示位在 `pages/play/index.wxml:1184` 结算半屏 `finsheet__result`（「本章完成」），但取数与章节完成时刻都在 Codex 独占的 `pages/play/index.js`（TASKS.md 公共规则），Claude 线不能接；需协调者排序或交 Codex，按 `utils/life-archive.js` 的 `/ending` 取数与降级方式接 `GET /api/play/journey/stage-end`。
+
 待用户决定、不要领取：`/api/im/poll/*`（群投票）、`/api/roam/hangout/*`（漫游约伴，漫游上线时已裁掉）、`/api/spoiler/*`（剧透偏好）、`/api/content-draft/*`（通用草稿）、`/api/club/chat`（俱乐部群聊入口）。涉及资金的接口（会员发票/续费/退款审核、钱包提现、余额）按边界规则一律不做。
