@@ -49,10 +49,47 @@ class RefundServiceImplTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(service,"refundApplicationMapper",mock(RefundApplicationMapper.class));
         for (String state : new String[]{"SUCCESS","CLOSED","ABNORMAL"}) {
-            assertFalse(service.handleRefundNotify("RDEP1T100",state));
-            assertFalse(service.handleRefundNotify("RF1",state));
-            assertTrue(service.handleRefundNotify("UNRELATED1",state));
+            assertFalse(service.handleRefundNotify(java.util.Map.of("outRefundNo", "RDEP1T100", "status", state)));
+            assertFalse(service.handleRefundNotify(java.util.Map.of("outRefundNo", "RF1", "status", state)));
+            assertTrue(service.handleRefundNotify(java.util.Map.of("outRefundNo", "UNRELATED1", "status", state)));
         }
+    }
+
+    @Test
+    void refundFactsRejectMalformedCentsBeforeInboxOrTerminalWrite() {
+        RefundServiceImpl service = new RefundServiceImpl();
+        RefundApplicationMapper refunds = mock(RefundApplicationMapper.class);
+        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.IWxPaymentCallbackInboxService inbox =
+                mock(com.chengyinhub.business.service.IWxPaymentCallbackInboxService.class);
+        com.chengyinhub.business.service.INotifyService notifications =
+                mock(com.chengyinhub.business.service.INotifyService.class);
+        RefundApplication refund = new RefundApplication();
+        refund.setId(7L);
+        refund.setSourceType("registration");
+        refund.setSourceId(11L);
+        refund.setRefundAmount(new BigDecimal("12.50"));
+        CmsRegistration registration = new CmsRegistration();
+        registration.setRegistrationNo("REG11");
+        registration.setWechatPaymentAmount(new BigDecimal("30.00"));
+        when(refunds.selectByRefundNo("RF11")).thenReturn(refund);
+        when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);
+        ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
+        ReflectionTestUtils.setField(service, "wxPaymentCallbackInboxService", inbox);
+        ReflectionTestUtils.setField(service, "notifyService", notifications);
+        for (String key : new String[]{"refund", "total"}) {
+            for (String malformed : new String[]{"", "12.50", "not-a-number", "9223372036854775808"}) {
+                java.util.Map<String, String> facts = new java.util.HashMap<>(java.util.Map.of(
+                        "outRefundNo", "RF11", "outTradeNo", "REG11", "status", "SUCCESS",
+                        "refund", "1250", "total", "3000", "currency", "CNY"));
+                facts.put(key, malformed);
+                assertFalse(service.handleRefundNotify(facts));
+            }
+        }
+        assertFalse(service.handleRefundNotify(null));
+        org.mockito.Mockito.verifyNoInteractions(inbox, notifications);
+        verify(refunds, never()).updatePayoutResult(any(), any(), any());
     }
 
     @Test
