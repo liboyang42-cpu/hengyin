@@ -10,6 +10,9 @@ function nonNegativeNumber(value) {
 }
 
 Component({
+  properties: {
+    tools: { type: Boolean, value: false }, // 宿主页接了 bind:tool 才显示那年今日/月度回顾/导出
+  },
   data: {
     list: [],
     state: 'loading',
@@ -122,5 +125,6 @@ Component({
       this.triggerEvent('close')
     },
     retry() { this._load() },
+    openTool(event) { const key = event.currentTarget.dataset.key; if (key) this.triggerEvent('tool', { key }) },
   },
 })

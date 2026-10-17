@@ -16506,5 +16506,157 @@
   "target": "cy-playkit",
   "dropped": [],
   "switchKeys": []
+ },
+ "F96": {
+  "data": {
+   "loading": false,
+   "mineError": false,
+   "tab": "mine",
+   "stats": [
+    {
+     "k": "已通过",
+     "v": 1
+    },
+    {
+     "k": "审核中",
+     "v": 0
+    },
+    {
+     "k": "带队",
+     "v": 0
+    },
+    {
+     "k": "未通过",
+     "v": 0
+    }
+   ],
+   "groups": [
+    {
+     "key": "ok",
+     "title": "已通过",
+     "rows": [
+      {
+       "key": "j1",
+       "teamId": 1,
+       "name": "一起出发的玩家队伍",
+       "avatars": [
+        {
+         "k": 0,
+         "src": "/images/d_profile.png"
+        },
+        {
+         "k": 1,
+         "src": "/images/d_profile.png"
+        }
+       ],
+       "members": "已组 2/4",
+       "sub": "10/20 10:00 开始",
+       "badge": "已通过",
+       "tone": "ok",
+       "action": {
+        "text": "进入队伍",
+        "kind": "primary",
+        "act": "enter"
+       }
+      }
+     ]
+    }
+   ],
+   "openRows": [
+    {
+     "v": "示例v",
+     "k": "示例k",
+     "name": "示例name",
+     "badge": "示例badge",
+     "avatars": "示例avatars",
+     "sub": "示例sub",
+     "tone": "示例tone",
+     "members": "示例members",
+     "action": "示例action",
+     "id": 1
+    }
+   ],
+   "openLoading": false,
+   "openLoaded": true,
+   "openError": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "loading",
+   "mineError",
+   "groups",
+   "stats",
+   "openRows",
+   "openLoading",
+   "openLoaded",
+   "openError"
+  ]
+ },
+ "F97": {
+  "data": null,
+  "dropped": [
+   "status",
+   "busy",
+   "composing",
+   "items"
+  ],
+  "switchKeys": []
+ },
+ "F98": {
+  "data": null,
+  "dropped": [
+   "monthLabel",
+   "isCurrentMonth",
+   "counts",
+   "kindIndex"
+  ],
+  "switchKeys": []
+ },
+ "F99": {
+  "data": {
+   "busy": false,
+   "creating": false,
+   "rows": [
+    {
+     "id": "1",
+     "metric": "DISTINCT_ROUTES",
+     "target": 5,
+     "progress": 2,
+     "state": "ACTIVE",
+     "stateText": "进行中",
+     "metricText": "不同路线数",
+     "unit": "条路线",
+     "badge": "tu-badge--wait",
+     "progressText": "2 / ",
+     "pct": 40,
+     "startDate": "2026-10-15",
+     "endDateExclusive": "2026-11-01"
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F100": {
+  "data": {
+   "busy": false,
+   "dateLabel": "10.15",
+   "rows": [
+    {
+     "id": "1",
+     "topicId": "1",
+     "title": "外滩夜行",
+     "yearsAgo": 1,
+     "completedText": "2025-10-15 14:00"
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F101": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
  }
 }

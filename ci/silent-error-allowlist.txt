@@ -78,10 +78,11 @@ chengyinhub-xcx/pages/merchant/relation/index.js 1  # UNREVIEWED_BASELINE_202608
 chengyinhub-xcx/pages/play/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/publish/fabu/index.js 0  # UNREVIEWED_BASELINE_20260818:2 2026-10-13 逐调用及回调审完，真实9处转下方实名理由；冻结2不变，零额收据保留
 chengyinhub-xcx/pages/publish/template-intro/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
-chengyinhub-xcx/pages/roam/index.js 6  # UNREVIEWED_BASELINE_20260818:7 存量未审查,禁止新增;2026-09-15 搭子局下架删掉其中 1 处,申报 7→6(冻结数 7 不动,按册子规则只改申报)
+chengyinhub-xcx/pages/roam/index.js 5  # UNREVIEWED_BASELINE_20260818:7 存量未审查,禁止新增;2026-09-15 搭子局下架删掉其中 1 处,申报 7→6;2026-10-15 漫游两栏改版删掉 /api/registration/list,申报 6→5(冻结数 7 不动,按册子规则只改申报)
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-10 附近还在走的人:位置心跳的上行 _reportPresence(30 s 一次)与下行 _fetchRunners(45 s 一次)。两条都是背景轮询,失败下一轮自然重来;真失效的表现是自己从别人地图上消失(服务端 5 分钟收不到即摘掉)、或附近显示没人,不是弹一个框 —— 页面里也没有可给的重试动作。
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-11 原型 f-topic/f-city 与 f-hangout:点主题针时拉一次主题详情(拉不到就退回原来那张商家白卡,fail 里有明确退路,不静默吞掉);附近有人在组局是 120 s 一次的背景轮询,拉不到保持上一张不闪 —— 地图上没有局本来就是常态,这一层报错会把「本来就没人组局」说成「出问题了」,页面里也没有可给的重试动作。
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-21 漫游入口地图活动层与队伍层:两路失败汇总到 entryLoadError 并提供重新加载；拖图会后台刷新，关闭通用 toast 避免与页内错误态重复报错。
+chengyinhub-xcx/subpackageRoam/my-teams/index.js 4  # 2026-10-14 我的队伍页:/api/team/my 与 /api/team/my-applications 两条读取失败由页内 mt-err「点按重试」承接(两条都失败才显示,只拿到一条就先显示那一条);附近招募 /api/team/nearby 失败同样落到页内 mt-err 重试;撤回申请失败用 resolveTeamError 的具体文案 cyToast 一次 —— 不关自动 toast 就是双弹。
 chengyinhub-xcx/subpackageRoam/nearby/index.js 2  # 2026-09-11 原型 h-place:①拉附近别人打过卡的地方,跟着地图中心走的背景读取,读不到就这一次列表为空,拖一下图就会再拉(弹错等于每拖一下弹一个框);②拉「谁在这儿打过卡」的头像与人数,半屏的名字与地址已经先渲染出来了,补不上就只显示名字。
 chengyinhub-xcx/pages/square/list/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/talent/list/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增

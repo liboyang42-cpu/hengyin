@@ -1,0 +1,75 @@
+<!-- 时光胶囊:漫游护照方卡进入。开启日前不显示正文,仅本人可见;封存/找回回执/删除沿用归档 capsule(index.js)。 -->
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="时光胶囊" />
+
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{status === 'error' || status === 'conflict' || status === 'no-permission'}}"><text>{{message || '暂时没读到，请重试'}}</text><view class="tu-retry" bindtap="onRetry" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-msg tu-msg--wait" wx:if="{{status === 'unknown' || pendingCreate}}">上次封存还没收到回执，先核对再决定是否重试。</view>
+  <view class="tu-btns" wx:if="{{status === 'unknown' || pendingCreate}}">
+    <view class="tu-btn tu-btn--w" bindtap="recover" aria-role="button" aria-label="核对上次封存" hover-class="cy-pressed" hover-stay-time="80">核对上次封存</view>
+    <view class="tu-btn tu-btn--s" bindtap="retryCreate" aria-role="button" aria-label="用原内容重试封存" hover-class="cy-pressed" hover-stay-time="80">用原内容重试</view>
+  </view>
+
+  <!-- 打开的那一枚 -->
+  <view class="cp-open" wx:if="{{result && result.state === 'OPEN'}}">
+    <text class="cp-k">{{result.unlockText}} 开启 · {{result.createdText}} 封存</text>
+    <text class="cp-body">{{result.body}}</text>
+    <image wx:if="{{result.photoUrl}}" class="cp-photo" src="{{result.photoUrl}}" mode="widthFix" />
+    <view class="cp-acts">
+      <view class="tu-sbtn" bindtap="closeDetail" aria-role="button" aria-label="收好了" hover-class="cy-pressed" hover-stay-time="80">收好了</view>
+      <view class="tu-sbtn cp-del" bindtap="askRemove" aria-role="button" aria-label="删除这枚胶囊" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+    </view>
+  </view>
+  <view class="tu-msg tu-msg--ok tu-msg--row" wx:if="{{result && result.state === 'DELETED'}}"><text>已删除</text><view class="tu-retry" bindtap="closeDetail" aria-role="button" aria-label="返回列表" hover-class="cy-pressed" hover-stay-time="80">返回列表</view></view>
+
+  <!-- 写一枚 -->
+  <block wx:if="{{composing}}">
+    <view class="tu-field">
+      <text class="tu-field__l">胶囊正文</text>
+      <textarea class="tu-field__ta" value="{{body}}" data-field="body" bindinput="input" maxlength="4000" disabled="{{busy || pendingCreate}}" placeholder="写给那一天的自己…" />
+      <text class="tu-field__n">{{body.length}} / 4000</text>
+    </view>
+    <view class="tu-group" style="margin-top:23rpx">
+      <view class="tu-row" bindtap="{{photoUrl ? 'clearPhoto' : 'choosePhoto'}}" aria-role="button" aria-label="{{photoUrl ? '移除照片' : '附一张照片'}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image wx:if="{{photoUrl}}" class="tu-row__ic" src="{{photoUrl}}" mode="aspectFill" />
+        <view wx:else class="tu-row__ic"><cy-icon name="plus" size="34" /></view>
+        <view class="tu-row__body"><text class="tu-row__t">{{photoUrl ? '已附照片' : '附一张照片'}}</text><text class="tu-row__s">{{photoUrl ? '点一下移除' : '可选'}}</text></view>
+      </view>
+    </view>
+    <view class="rd-label rd-label--row"><text>开启日期</text><text class="rd-label__v">{{unlockDate}}</text></view>
+    <view class="tu-chips" style="padding-top:0">
+      <view wx:for="{{unlockOptions}}" wx:key="date" class="tu-chip {{unlockDate === item.date ? 'is-on' : ''}}" data-date="{{item.date}}" bindtap="pickUnlock"
+            aria-role="button" aria-label="{{item.label}}开启" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+      <cy-date-field mode="date" start="{{minDate}}" value="{{unlockDate || minDate}}" bind:change="pickCustom">
+        <view class="tu-chip {{unlockCustom ? 'is-on' : ''}}" aria-role="button" aria-label="自定义开启日期" hover-class="cy-pressed" hover-stay-time="80">自定义</view>
+      </cy-date-field>
+    </view>
+    <view class="tu-btns">
+      <view class="tu-btn tu-btn--w {{busy || !body || !unlockDate ? 'is-off' : ''}}" bindtap="create" aria-role="button" aria-label="封存胶囊" hover-class="cy-pressed" hover-stay-time="80">封存胶囊</view>
+      <view class="tu-btn tu-btn--s" bindtap="toggleCompose" aria-role="button" aria-label="先不写" hover-class="cy-pressed" hover-stay-time="80">先不写</view>
+    </view>
+  </block>
+
+  <!-- 打开/删除某一枚时 run() 会清空列表(只呈现这一次的结果);此时不画列表与空态,「收好了」后重读 -->
+  <block wx:if="{{!(result && (result.state === 'OPEN' || result.state === 'DELETED'))}}">
+  <view class="tu-sec">我的胶囊<text class="tu-sec__aside" wx:if="{{items.length || 0}}">{{items.length || 0}} 枚</text></view>
+  <view class="tu-loading" wx:if="{{busy && !items.length}}">正在读取…</view>
+  <block wx:for="{{items}}" wx:key="id">
+    <view wx:if="{{item.state === 'OPEN'}}" class="cp-card cp-card--open cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="detail" aria-role="button" aria-label="打开今天开启的胶囊" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="cp-k cp-k--ok">已到开启日 · {{item.createdText}} 封存</text>
+      <text class="cp-t">打开看看</text>
+    </view>
+    <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{item.daysLeft || 0}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="cp-k">{{item.createdText}} 写下</text>
+      <text class="cp-days">{{item.daysLeft || 0}} 天</text>
+      <text class="cp-m">{{item.unlockText}} 开启</text>
+    </view>
+  </block>
+  <view class="tu-empty" wx:if="{{!busy && !items.length && status !== 'error'}}"><text class="tu-empty__t">还没有胶囊</text></view>
+  <view class="tu-more" wx:if="{{hasMore && !busy}}" bindtap="next" aria-role="button" aria-label="读取更多胶囊" hover-class="cy-pressed" hover-stay-time="80">读取更多</view>
+  </block>
+
+  <view class="tu-fab" wx:if="{{!composing}}" bindtap="toggleCompose" aria-role="button" aria-label="写一枚胶囊" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="46" /></view>
+</view>

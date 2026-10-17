@@ -26,6 +26,13 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 
 // 完整路由盘点：总数断言只能防止数量漂移，逐路由集合才能防止两个页面互换后仍然假绿。
 const EXPECTED_NAV_ROUTES = [
+  // 2026-10-14 漫游上线 +6:cy-nav-bar plain + cy-page-title 标准二级页(队伍工具、费用均摊、随机开局已撤下)
+  'subpackageRoam/my-teams/index',
+  'subpackageTools/anniversary/index',
+  'subpackageTools/capsule/index',
+  'subpackageTools/exploration-export/index',
+  'subpackageTools/exploration-goals/index',
+  'subpackageTools/monthly-recap/index',
   'subpackageRoam/nearby/index',
   // 2026-08-04 收口:漫游历史从手写 .hs-back/.hs-title 换成 cy-nav-bar plain + cy-page-title
   'subpackageRoam/history/index', 'subpackageRoam/session/index',
@@ -87,6 +94,13 @@ const EXPECTED_NAV_ROUTES = [
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
+  // 2026-10-14 漫游上线 +6:cy-nav-bar plain + cy-page-title 标准二级页(队伍工具、费用均摊、随机开局已撤下)
+  'subpackageRoam/my-teams/index',
+  'subpackageTools/anniversary/index',
+  'subpackageTools/capsule/index',
+  'subpackageTools/exploration-export/index',
+  'subpackageTools/exploration-goals/index',
+  'subpackageTools/monthly-recap/index',
   /* 2026-09-06 本分支曾把 coop-center 按稿 234:278 迁进这份盘点(返回箭头 + 左对齐大标题)。
      2026-09-11 那一页整块摘回 master 的 #1058 ⇒ 它的标题形态也回到 master 的居中 nav 标题,
      这里跟着摘除;上面 EXPECTED_NAV_ROUTES 里那一条仍然在,两份盘点不重复登记。 */
@@ -245,8 +259,10 @@ function assertTitleInventory(readSource = read) {
   /* 2026-09-22 +1:Phase 3 藏品册页(object-cards/index),同为 custom 导航 + cy-nav-bar +
      cy-page-title 的普通玩家二级页 ⇒ 131+1 = 132;custom 计数同步 132(按实测重取)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
-  assert.equal(rows.length, 130, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 130)
+  /* 2026-10-14 +6:漫游上线 —— 我的队伍与 subpackageTools 5 个工具页,
+     均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 ⇒ 130+6 = 136;custom 同步 136。 */
+  assert.equal(rows.length, 136, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 136)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

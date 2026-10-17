@@ -22,6 +22,7 @@ const path = require('path');
 // wxml-handler-lint 只剩判据 + 自证,所以这里分两处 require —— 别再从 lint 模块要解析函数。
 const {
   extractHandlerNames,
+  extractOwnHandlerEntries,
   findEventBindings,
   maskNonCode,
   matchBrace,
@@ -522,6 +523,19 @@ function jsReferencesMethod(source, name) {
 function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
   const violations = [];
   const candidates = [];
+  // 2026-10-14(取自 cloud22 归档已审逻辑):Page 工厂(subpackageTools/lib/runtime 等)里的共享方法,
+  // 只要挂同一工厂的某个真实页面在 WXML 里绑定了它,就不算孤儿 —— 否则每个工厂页都会把没用到的共享方法报一遍。
+  // 只放行「定义在别的文件、且被别页真实绑定」的那一份定义;页面自己文件里的方法仍按原规则判。
+  const sharedBound = new Set();
+  const ownDefs = new Map();
+  for (const file of jsFiles) {
+    const wxmlFile = file.replace(/\.js$/, '.wxml');
+    if (!fs.existsSync(wxmlFile)) continue;
+    const entries = extractOwnHandlerEntries(file);
+    ownDefs.set(file, new Map(entries.map((entry) => [entry.name, entry])));
+    const names = new Set(findEventBindings(collectWxmlSource(wxmlFile)).flatMap((binding) => binding.value.match(/[A-Za-z_$][\w$]*/g) || []));
+    entries.forEach((entry) => { if (entry.file !== file && names.has(entry.name)) sharedBound.add(`${entry.file}#${entry.name}`); });
+  }
   for (const file of jsFiles) {
     const wxmlFile = file.replace(/\.js$/, '.wxml');
     if (!fs.existsSync(wxmlFile)) continue;
@@ -544,6 +558,8 @@ function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
     for (const name of new Set(extractHandlerNames(file))) {
       if (!HANDLER_LIKE_RE.test(name) || PAGE_LIFECYCLES.has(name) || bound.has(name)
           || jsReferencesMethod(jsScope, name)) continue;
+      const def = ownDefs.get(file) && ownDefs.get(file).get(name);
+      if (def && def.file !== file && sharedBound.has(`${def.file}#${name}`)) continue;
       const key = `${repoRel(file)}#${name}`;
       const allowed = debtBaseline.get(key);
       const item = { key, line: methodLine(source, name), allowed };

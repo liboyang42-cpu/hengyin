@@ -1,0 +1,7 @@
+@import '../../style/tool-ui.wxss';
+.ex-prog { margin-top: 31rpx; }
+.ex-top { display: flex; align-items: baseline; justify-content: space-between; }
+.ex-pct { font-size: 77rpx; font-weight: 900; font-style: italic; letter-spacing: -2rpx; } /* ds-ok 原型 NRC 读数 */
+.ex-n { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.ex-file { display: flex; align-items: center; gap: 27rpx; }
+.ex-file__ic { flex: none; width: 92rpx; height: 108rpx; border-radius: var(--cy-radius-sm); background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-micro); font-weight: 800; }

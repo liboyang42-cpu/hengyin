@@ -7,7 +7,7 @@
   <cy-nav-bar plain custom-back bind:back="goBack" />
   <cy-page-title title="漫游历史" safe-top="{{false}}" />
   <view class="hs-shell__body">
-    <cy-scene-roam-history id="roamHistory" bind:open="openSession" bind:close="goBack" />
+    <cy-scene-roam-history id="roamHistory" tools bind:tool="openRoamTool" bind:open="openSession" bind:close="goBack" />
   </view>
 </view>
 </view>

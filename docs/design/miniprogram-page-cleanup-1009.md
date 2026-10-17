@@ -6,7 +6,9 @@
 
 | 注册页面 | DELETE | KEEP | UNSURE | 未注册孤立 Page+WXML |
 | --- | --- | --- | --- | --- |
-| 130 | **0** | **126** | **4** | 0 |
+| 136 | **0** | **132** | **4** | 0 |
+
+2026-10-17 漫游上线新增 6 个注册页(我的队伍 + 5 个漫游工具页),均由漫游入口或漫游记录直接引用,判定 KEEP。
 
 基线：`feature/generic-gameplay@1fb2e72217`；工作分支：`feature/gg-r2-anchor-cleanup`。**本轮不删除任何页面、app.json 条目、测试、台账声明或后端接口。** 当前能证明的是保留依据，不能把“搜不到字面量”解释为“无人访问”。协调者已确认保留四个不确定兼容壳；不能为了制造删除数量而破坏跨页契约或历史链接。
 
@@ -193,6 +195,12 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageRoam/session/index` | 否 | `chengyinhub-xcx/subpackageRoam/history/index.js:11` | KEEP |
 | `subpackageRoam/nearby/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/report.html:106` | KEEP |
 | `subpackageRoam/citystamp/index` | 否 | `chengyinhub-xcx/components/cy/proto-cam/index.js:1` | KEEP |
+| `subpackageRoam/my-teams/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:743` | KEEP |
+| `subpackageTools/capsule/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:721` | KEEP |
+| `subpackageTools/monthly-recap/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:739` | KEEP |
+| `subpackageTools/exploration-goals/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:720` | KEEP |
+| `subpackageTools/anniversary/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:738` | KEEP |
+| `subpackageTools/exploration-export/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:740` | KEEP |
 
 ## 验证与未验证
 

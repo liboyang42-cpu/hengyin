@@ -1,0 +1,47 @@
+/* 我的队伍:深色,NRC 斜体读数 + Revolut 分组卡。卡/徽色与地图 P6 同一套(mt-badge 色值) */
+page { background: var(--cy-color-bg-page); }
+.mt { min-height: 100vh; padding-bottom: calc(80rpx + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); color: var(--cy-comp-sheet-player-text); }
+.mt-map { min-height: 72rpx; padding: 0 27rpx; border-radius: var(--cy-radius-pill); background: var(--cy-comp-sheet-player-elevated); display: flex; align-items: center; gap: 10rpx; font-size: var(--cy-type-body); font-weight: 600; }
+.mt-stats { display: flex; padding: 15rpx 31rpx 0; }
+.mt-stat { flex: 1; display: flex; flex-direction: column; }
+.mt-stat__v { font-size: 54rpx; font-weight: 900; font-style: italic; letter-spacing: -2rpx; } /* ds-ok NRC 读数 */
+.mt-stat__k { margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.mt-seg { display: flex; margin: 38rpx 31rpx 0; padding: 6rpx; border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-player-bg); }
+.mt-seg__i { flex: 1; height: 72rpx; border-radius: var(--cy-radius-sm); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-comp-sheet-player-text-secondary); }
+.mt-seg__i.is-on { background: var(--cy-comp-sheet-player-surface-strong); color: var(--cy-comp-sheet-player-text); }
+.mt-sec { display: flex; align-items: baseline; justify-content: space-between; padding: 50rpx 38rpx 19rpx; font-size: var(--cy-type-section-title); font-weight: 700; }
+.mt-card { margin: 0 31rpx 19rpx; padding: 27rpx 31rpx; border-radius: var(--cy-radius-xl); background: var(--cy-comp-sheet-player-bg); display: flex; flex-direction: column; gap: 23rpx; }
+.mt-card__top { display: flex; align-items: center; gap: 23rpx; }
+.mt-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
+.mt-card__n { font-size: var(--cy-type-button); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mt-card__m { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mt-card__foot { display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.mt-card__go { color: var(--cy-comp-sheet-player-text); }
+.mt-badge { flex: none; padding: 4rpx 15rpx; border-radius: var(--cy-radius-pill); font-size: var(--cy-type-label); font-weight: 600; }
+.mt-badge--ok { background: rgba(74,222,128,.18); color: #4ADE80; } /* ds-ok 同地图 mt-badge--ok */
+.mt-badge--wait { background: rgba(245,180,70,.18); color: #F5B446; } /* ds-ok 同地图 mt-badge--wait */
+.mt-badge--bad { background: rgba(248,113,113,.18); color: #F87171; } /* ds-ok 同地图 mt-badge--bad */
+.mt-badge--lead { background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); }
+.mt-badge--plain { background: var(--cy-comp-sheet-player-elevated); color: var(--cy-comp-sheet-player-text-secondary); }
+.mt-act { min-height: 66rpx; padding: 0 27rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; font-size: var(--cy-type-label); font-weight: 600; }
+.mt-act--primary { background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); }
+.mt-act--secondary { background: var(--cy-comp-sheet-player-elevated); color: var(--cy-comp-sheet-player-text); }
+.mt-state { padding: 54rpx 38rpx; text-align: center; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.mt-err { margin: 31rpx; padding: 27rpx; border-radius: 27rpx; background: rgba(248,113,113,.14); color: #F87171; font-size: 25rpx; text-align: center; } /* ds-ok 同 mt-notice--bad */
+.mt-empty { display: flex; flex-direction: column; align-items: center; padding: 62rpx 62rpx 0; text-align: center; }
+/* 空态:两个 Memoji + 一个「加入」位,叠成一排 */
+.mt-empty__faces { display: flex; align-items: center; }
+.mt-empty__face, .mt-empty__plus { width: 124rpx; height: 124rpx; border-radius: 50%; border: 6rpx solid var(--cy-color-bg-page); box-sizing: border-box; }
+.mt-empty__face + .mt-empty__face, .mt-empty__face + .mt-empty__plus { margin-left: -31rpx; }
+.mt-empty__plus { display: flex; align-items: center; justify-content: center; background: var(--cy-comp-sheet-player-surface-strong); color: var(--cy-comp-sheet-player-text); }
+.mt-empty__t { margin-top: 31rpx; font-size: var(--cy-type-section-title); font-weight: 700; }
+.mt-btn { margin-top: 38rpx; min-height: 88rpx; padding: 0 54rpx; border-radius: var(--cy-radius-pill); background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); display: flex; align-items: center; font-size: var(--cy-type-body); font-weight: 700; }
+.cy-pressed { opacity: .82; }
+/* 队伍头像叠层(替代首字方块):最多 3 个圆形头像,后一个压前一个 */
+.mt-av { flex: none; width: 100rpx; height: 100rpx; position: relative; }
+.mt-av__i { position: absolute; width: 66rpx; height: 66rpx; border-radius: 50%; border: 4rpx solid var(--cy-comp-sheet-player-bg); box-sizing: border-box; background: var(--cy-comp-sheet-player-surface-strong); transition: transform var(--cy-motion-standard) var(--cy-ease-out); }
+.mt-av--1 .mt-av__i { width: 100rpx; height: 100rpx; left: 0; top: 0; }
+.mt-av--2 .mt-av__i:nth-child(1) { left: 0; top: 0; } .mt-av--2 .mt-av__i:nth-child(2) { left: 34rpx; top: 34rpx; }
+.mt-av--3 .mt-av__i:nth-child(1) { left: 17rpx; top: 0; } .mt-av--3 .mt-av__i:nth-child(2) { left: 0; top: 34rpx; } .mt-av--3 .mt-av__i:nth-child(3) { left: 34rpx; top: 34rpx; }
+.mt-card:active .mt-av__i { transform: scale(1.06); }
+.cy-motion-reduced .mt-av__i { transition: none; }

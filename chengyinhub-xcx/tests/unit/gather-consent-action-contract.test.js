@@ -50,7 +50,8 @@ test('签到撤销定位/取消弹窗须零请求零签到事实；GPS成功仍�
 })
 test('漫游AGREE fresh latest→write与固定基线超时重试明确分开，REVOKE不读前置', () => {
   const starts = ledger.controls.filter(c => c.entry.js === 'pages/roam/index.js' && ['goStart', 'goStartAndShoot'].includes(c.control.handler))
-  assert.equal(starts.length, 4)
+  // 2026-10-17 漫游两栏改版删掉拍照开局 goStartAndShoot,只剩 goStart 的 3 个入口。
+  assert.equal(starts.length, 3)
   for (const entry of starts) {
     assert.deepEqual(entry.requiredRequests.map(r => [r.urlTemplate, r.method, r.kind]), [
       ['/api/compliance/consents/latest', 'POST', 'read'], ['/api/compliance/consents', 'POST', 'write'],

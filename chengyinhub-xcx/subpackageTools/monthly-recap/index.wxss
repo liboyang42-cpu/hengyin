@@ -1,0 +1,13 @@
+@import '../../style/tool-ui.wxss';
+.mr-nav { display: flex; align-items: center; justify-content: space-between; padding: 27rpx 31rpx 0; }
+.mr-arrow { width: 88rpx; height: 88rpx; border-radius: 50%; background: var(--cy-comp-sheet-player-bg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-sheet-title); }
+.mr-arrow.is-off { opacity: .3; }
+.mr-month { font-size: var(--cy-type-button); font-weight: 700; }
+/* 周柱:单系列,细柱 4px 圆角顶,2px 间隔;最高一根实白并标数,其余半透明 */
+.mr-chart { display: flex; align-items: flex-end; gap: 15rpx; height: 330rpx; margin: 0 31rpx; padding: 27rpx 31rpx 19rpx; border-radius: var(--cy-radius-xl); background: var(--cy-comp-sheet-player-bg); }
+.mr-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.mr-val { font-size: var(--cy-type-label); font-weight: 700; opacity: 0; }
+.mr-val.is-on { opacity: 1; }
+.mr-bar { width: 62rpx; min-height: 0; margin-top: 8rpx; border-radius: 8rpx 8rpx 0 0; background: rgba(255,255,255,.55); } /* ds-ok 单系列柱(非最高) */
+.mr-bar.is-max { background: var(--cy-comp-sheet-player-text); }
+.mr-lab { margin-top: 12rpx; font-size: var(--cy-type-caption); color: var(--cy-comp-sheet-player-text-secondary); }
