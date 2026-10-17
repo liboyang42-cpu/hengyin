@@ -381,8 +381,14 @@
     </select>
     <delete id="deleteReferences">DELETE FROM community_post_reference WHERE post_id=#{postId}</delete>
     <select id="selectReferences" resultType="map">
-      SELECT id,reference_type,reference_id,snapshot_json,privacy_snapshot
-      FROM community_post_reference WHERE post_id=#{postId} AND invalidated_at IS NULL ORDER BY id
+      SELECT r.id,r.reference_type,r.reference_id,r.snapshot_json,r.privacy_snapshot
+      FROM community_post_reference r WHERE r.post_id=#{postId} AND r.invalidated_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM cms_activity a
+          WHERE a.id=r.reference_id AND r.reference_type='ACTIVITY'
+            AND (a.publish_status=0 OR a.cancel_time IS NOT NULL)
+        )
+      ORDER BY r.id
     </select>
     <insert id="insertMemberAction">
       INSERT INTO community_post_member_action(post_id,member_id,action_type,request_id,source,create_time,update_time)
