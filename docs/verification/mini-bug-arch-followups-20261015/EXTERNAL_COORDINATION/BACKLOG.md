@@ -1,5 +1,7 @@
 # EXTRA6源码交付、单线修复与恢复入口
 
+最新签收：固定530e72281a9bd1a443f58a21119367d55eca3623本地原212四类60实际PASS/0F/E/S；原E01/E03均已直接核读公共dc74c300ef11e203ac98b1baaf15efe77bcfbd20并签收冻结。原计划59与初次计数回执保留，漏全限定@Test已按源码方法名和fresh XML核为60，无源码修改/重跑。以下NOT_RUN/59计划数均保留阶段历史，以本节及文末实际结果为准。
+
 最新源码：E03-04冻结节点完成门槛与E01-13新增WAITING准入已交付，完整候选530e72281a9bd1a443f58a21119367d55eca3623（父0ee9a998ff04f033c9518e7c7139a62a0f6dc585）。新回归4+6方法；直接影响旧类25+24方法，四类59仅声明、NOT_RUN，不继承此前通过。E02-03政策未选、源码不改。下方既有阶段状态保留历史。
 
 最新闭环：固定b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf已由本地原212复测两原异常类8实际全PASS，公共证据254af5080abac41878357a56ef85bde86b59da1d已读；原E02签收停写、唯一修复槽释放。仅8 targetedPASS，不是新35全跑，不继承旧28。源码冻结，当前writer0/READY0/修复0。下方NOT_RUN/待复测措辞为阶段历史，本节与文末闭环优先。
@@ -425,3 +427,14 @@ E03-04独立候选0ee9a998ff04f033c9518e7c7139a62a0f6dc585，父acbd5f5411c6176d
 E01-13完整候选530e72281a9bd1a443f58a21119367d55eca3623，父0ee9a998ff04f033c9518e7c7139a62a0f6dc585；childd3468d3835fc170bd465b6b9908cfb552ace8263（父f4b807958290d5a3cdf34615b9244ab5b9d9a4aa）。仅WaitlistService.join、新E01_13Test及原说明三路径。复用既有活动锁读，正常发布/未结束、signupDeadline优先空fallback startTime，截止<=同一now拒绝；sale_*不生效，现有WAITING及共享policy/取消/到期/释放/退款不变。新6+原Waitlist24=30声明，NOT_RUN；Mapper Java/XML未改。
 
 两项均SOURCE_DELIVERED_UNVERIFIED，Cloud未编译/测试/CI/VPS；新四类59为静态声明，实际数待本地新鲜报告。仅现有离线依赖，无新增MySQL/Redis类或外部环境前提。源码及交付说明含最小测试命令；原b034两类8PASS及923原35=28P/7E和资源拒绝历史不转移。旧迁移仍仅源码未执行，不合并部署、不新增入口/网络/CI。两作者已停写保留锁，当前源码writer0、无未分派READY。
+
+
+## 530e7228四类60普通回归实际通过，原作者冻结签收
+
+协调者及原E01/E03均实际核读[公共README](https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/README.md)与summary。固定530e72281a9bd1a443f58a21119367d55eca3623，本地现有212实际四类60PASS/0FAIL/0ERROR/0SKIP，fresh4XML类集与源码测试方法名逐项相等，guard0/completed/BUILD SUCCESS。分布为E01_13Test6、E03_04Test4、原ClubWaitlistServiceImplTest24、原PlayJourneyStoryServiceImplTest26。
+
+原计划59保持：此前静态正则漏原Story类一个全限定@org.junit.jupiter.api.Test，原25应为26。本地仅审定源码完整方法名与已产生fresh XML，未改源码/断言/选择器或重跑；初次收集NOT_PASS仅计数不符，原targeted-summary-before-count-audit.json及哈希保留，不是源码失败、不占修复槽。两个包在本次组合530各30实际普通项，不声称中间0ee单独测试或继承旧8/35/64。
+
+精确自有容器829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822由本地显式chengyin-aws确认清理，无活动Java；source/cache/4327源文件核对/日志/4XML/原run与guard及计数审计按公共manifest签收，Cloud未自行访问VPS或重算原件。原E01/E03已停写保留锁，源码不变，writer0/失败修复0，无新READY则不造任务。
+
+E02-03只是概念解释，保留或隐藏历史引用卡尚未选择，源码政策冻结。真实MySQL SQL/事务/锁交错、Redis、运行HTTP、设备业务及集成未验；既有迁移未执行、不合并部署。保持现有入口不新增，Cloud无编译测试/手动CI，本次提交仅本队三份交付账。新普通60不替代上述验收边界。

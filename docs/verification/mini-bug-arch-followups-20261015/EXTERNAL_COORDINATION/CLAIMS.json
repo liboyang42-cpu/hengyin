@@ -801,13 +801,13 @@
     "E05": "f01b5c06657cfb654a0cdc86dc77159ac53b6940",
     "E06": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad"
   },
-  "worker_runtime_note": "E01 and E03 completed new source packets and stopped; source writers0, no current unassigned READY. New test execution NOT_RUN; previous b034 targeted8 PASS retained only at its own SHA. E02 reference policy remains unselected and unchanged.",
+  "worker_runtime_note": "Original E01/E03 both directly read and acknowledged530 four-class60 ordinaryPASS; original source locks frozen. Running sourcewriters0, repair0, no newly assigned independentREADY. E02 reference-card keep/hide policy remains unselected. Cloud runs0.",
   "worker_assignments": [
     {
       "slot": "E01",
       "task": null,
       "worker": "/root/external_e01",
-      "mode": "SOURCE_DELIVERED_STOPPED_ORIGINAL_LOCK_RETAINED",
+      "mode": "LOCAL_ORDINARY60_ACK_FROZEN_ORIGINAL_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e01",
       "public_sha": "d3468d3835fc170bd465b6b9908cfb552ace8263"
     },
@@ -823,7 +823,7 @@
       "slot": "E03",
       "task": null,
       "worker": "/root/external_e03",
-      "mode": "SOURCE_DELIVERED_STOPPED_ORIGINAL_LOCK_RETAINED",
+      "mode": "LOCAL_ORDINARY60_ACK_FROZEN_ORIGINAL_LOCK_RETAINED",
       "worktree": "/workspace/hengyin-extra-e03",
       "public_sha": "362f8a6bae6bd213700f5d1bc7bae858d2da3fc6"
     },
@@ -1668,22 +1668,46 @@
   },
   "validation_queue_state": {
     "candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-    "status": "NEW_SOURCE_NOT_RUN",
-    "packages": [
-      "E03-04",
-      "E01-13"
-    ],
+    "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS",
     "classes": [
-      "com.chengyinhub.business.longrun.E03_04Test",
-      "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
       "com.chengyinhub.business.longrun.E01_13Test",
-      "com.chengyinhub.business.service.ClubWaitlistServiceImplTest"
+      "com.chengyinhub.business.longrun.E03_04Test",
+      "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+      "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest"
     ],
-    "declared_tests": 59,
-    "actual_tests": null,
-    "old_pass_inherited": false,
+    "planned_declared_tests_preserved": 59,
+    "actual_tests": 60,
+    "totals": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 60
+    },
+    "fresh_xml_count": 4,
+    "exact_source_methods_match_XML": true,
+    "count_audit": {
+      "planned_tests_preserved": 59,
+      "source_annotation_counts": {
+        "com.chengyinhub.business.longrun.E01_13Test": 6,
+        "com.chengyinhub.business.longrun.E03_04Test": 4,
+        "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
+        "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 26
+      },
+      "actual_tests": 60,
+      "exact_source_method_names_match_fresh_xml": true,
+      "cause": "Initial static count missed fully qualified @org.junit.jupiter.api.Test on one existing archive test; no parameterization, duplicate execution or new source change.",
+      "original_collector_result": "NOT_PASS due solely to planned-count mismatch; original summary archived",
+      "rerun_performed": false,
+      "result": "PASS"
+    },
+    "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
     "cloud_execution_allowed": false,
-    "no_external_DB_Redis": true
+    "old_pass_inherited": false,
+    "real_DB_Redis_HTTP_integration": "NOT_ACCEPTED",
+    "migration_status": "NOT_EXECUTED",
+    "next_action": "Source frozen. No failure repair or repeat validation from the count audit. E02 reference-card output policy remains unselected."
   },
   "admission_history": [
     {
@@ -2169,7 +2193,25 @@
       "old_pass_inherited": false,
       "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E03_04Test,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest test",
       "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito/Jackson and current shared TopicRouteSessionScope; no external DB/Redis/env/dependency changes.",
-      "candidate_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585"
+      "candidate_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
+      "ordinary_result_in_combined_frozen_source": {
+        "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+        "tests": 30,
+        "passed": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+        "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
+      },
+      "static_count_correction": {
+        "old_class_declarations_original": 25,
+        "old_class_complete_annotation_count": 26,
+        "package_planned_original": 29,
+        "package_complete_declarations": 30,
+        "reason": "Fully qualified @org.junit.jupiter.api.Test omitted by initial short-annotation count; source unchanged."
+      }
     },
     {
       "id": "E01-13",
@@ -2195,7 +2237,18 @@
       "old_pass_inherited": false,
       "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E01_13Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest test",
       "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito service dependencies; no external DB/Redis/env/dependency changes. Existing24 fixtures unchanged.",
-      "candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623"
+      "candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "ordinary_result_in_combined_frozen_source": {
+        "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+        "tests": 30,
+        "passed": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+        "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
+      }
     }
   ],
   "pending_validation_candidates": [
@@ -2376,58 +2429,6 @@
         "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
         "scope": "Two ordinary classes only within original35 NOT_PASS; trueMySQL stillNOT_RUN; result not transferred to b034 repair SHA"
       }
-    },
-    {
-      "id": "E03-04",
-      "package": "E03-04-FROZEN-STAGE-GATE",
-      "owner": "EXTRA6/E03",
-      "source_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-      "parent_sha": "acbd5f5411c6176db604d6297852c7772bdaa28d",
-      "child_sha": "362f8a6bae6bd213700f5d1bc7bae858d2da3fc6",
-      "child_parent_sha": "003ad6eae97281f3e8c581a76a1cebc765116ccc",
-      "write_files": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_04Test.java",
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
-        "docs/verification/mini-longrun-20261015/EXTRA6/E03-04.md"
-      ],
-      "production_delta": "Stage completion uses unique valid nonempty frozen nodeIds; malformed/missing/empty evidence retains existing live gate. Current deleted/reassigned chapter guard remains. No runtime/DTO/shared helper/mapper edits.",
-      "new_class": "com.chengyinhub.business.longrun.E03_04Test",
-      "new_declarations": 4,
-      "old_class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
-      "old_declarations": 25,
-      "planned_declarations": 29,
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN",
-      "old_pass_inherited": false,
-      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E03_04Test,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest test",
-      "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito/Jackson and current shared TopicRouteSessionScope; no external DB/Redis/env/dependency changes.",
-      "candidate_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585"
-    },
-    {
-      "id": "E01-13",
-      "package": "E01-13-NEW-WAITING-ELIGIBILITY",
-      "owner": "EXTRA6/E01",
-      "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
-      "parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
-      "child_sha": "d3468d3835fc170bd465b6b9908cfb552ace8263",
-      "child_parent_sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
-      "write_files": [
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java",
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java",
-        "docs/verification/mini-longrun-20261015/EXTRA6/E01-13.md"
-      ],
-      "production_delta": "Only join reuses existing exact activity lock-read and checks signupDeadline, falling back to startTime. One shared now for gate and joinedAt; no sale_* gate, existing WAITING/shared policies/cancel/expire/release/offer/refund changes. Mapper Java/XML unchanged.",
-      "new_class": "com.chengyinhub.business.longrun.E01_13Test",
-      "new_declarations": 6,
-      "old_class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
-      "old_declarations": 24,
-      "planned_declarations": 30,
-      "status": "SOURCE_DELIVERED_UNVERIFIED",
-      "execution": "NOT_RUN",
-      "old_pass_inherited": false,
-      "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E01_13Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest test",
-      "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito service dependencies; no external DB/Redis/env/dependency changes. Existing24 fixtures unchanged.",
-      "candidate_sha": "530e72281a9bd1a443f58a21119367d55eca3623"
     }
   ],
   "latest_worker_round": {
@@ -2570,23 +2571,21 @@
   },
   "production_source_unchanged_since": "530e72281a9bd1a443f58a21119367d55eca3623",
   "latest_local_actual_result": {
-    "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
-    "direct_parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
-    "actual_tests": 8,
+    "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+    "direct_parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
+    "started_at": "2026-10-17T11:36:28.685565+00:00",
     "totals": {
-      "tests": 8,
+      "tests": 60,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "passed": 8
+      "passed": 60
     },
-    "fresh_xml_count": 2,
-    "fresh_exact_xml": true,
     "reports": [
       {
-        "class": "com.chengyinhub.business.longrun.E02_23Test",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
-        "sha256": "8ffc20454781a45d2169075b3359282caee25e4a4546aff1dc2e29a9e7ef5ac3",
+        "class": "com.chengyinhub.business.longrun.E01_13Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_13Test.xml",
+        "sha256": "f069ed7a3349de46333a50524cbe55c40a6dcdccad2153cf4a962e56d7bfb859",
         "fresh": true,
         "testcases": 6,
         "tests": 6,
@@ -2595,34 +2594,89 @@
         "skipped": 0
       },
       {
-        "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
-        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
-        "sha256": "8a0e21e02482cac036a00cb1659aaea3e27e79ec4e3e4c4ac08e174bf7beaa25",
+        "class": "com.chengyinhub.business.longrun.E03_04Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_04Test.xml",
+        "sha256": "b0cad381f966c746a0c90894109aedd471505aec03c53b6356d5713ed37dc24e",
         "fresh": true,
-        "testcases": 2,
-        "tests": 2,
+        "testcases": 4,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ClubWaitlistServiceImplTest.xml",
+        "sha256": "a13d87f6448c159b8f31ad8bfe79728420f0da203dc307bdf60809901e392fd2",
+        "fresh": true,
+        "testcases": 24,
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
+        "sha256": "0a4e09e24ad5422b1879b8684bdfaea65f557238ed6bc50b36175bd5b457647e",
+        "fresh": true,
+        "testcases": 26,
+        "tests": 26,
         "failures": 0,
         "errors": 0,
         "skipped": 0
       }
     ],
-    "started_at": "2026-10-16T14:03:53.575927+00:00",
     "guard_receipt": {
       "exitCode": 0,
       "reason": "completed",
-      "containerId": "8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8"
+      "containerId": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822"
     },
-    "log_sha256": "d37b5935726b87bea9698f6c988b942f52aa834a98bdf4cce76953cdf9725b1b",
-    "build_success": true,
-    "evidence_result": "PASS",
-    "not_inherited": "This new SHA has only8 actual targeted PASS, not35 rerun or inherited28 PASS.",
-    "finished_at": "2026-10-16T14:06:40.642804+00:00",
-    "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
-    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
-    "status": "LOCAL_TWO_CLASS8_TARGETED_PASS",
-    "read_scope": "Public README and summary actually read; remote original log/XML hashes cited, not retrieved/recomputed by Cloud",
-    "cleanup": "chengyin-aws; exact id=8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8; empty result exit0",
-    "original_author_ack": "Original external_e02 acknowledged8 targetedPASS and stopped; repair slot released, original file locks retained"
+    "test_count_audit": {
+      "planned_tests_preserved": 59,
+      "source_annotation_counts": {
+        "com.chengyinhub.business.longrun.E01_13Test": 6,
+        "com.chengyinhub.business.longrun.E03_04Test": 4,
+        "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
+        "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 26
+      },
+      "actual_tests": 60,
+      "exact_source_method_names_match_fresh_xml": true,
+      "cause": "Initial static count missed fully qualified @org.junit.jupiter.api.Test on one existing archive test; no parameterization, duplicate execution or new source change.",
+      "original_collector_result": "NOT_PASS due solely to planned-count mismatch; original summary archived",
+      "rerun_performed": false,
+      "result": "PASS"
+    },
+    "retained_original_count_receipt": {
+      "path": "targeted-summary-before-count-audit.json",
+      "sha256": "0ab506a0d9a59f7a79403686ef76df65881c290d301c61e1d63637ba15c71c13",
+      "planned_tests": 59,
+      "initial_collector_result": "NOT_PASS solely due to missed fully qualified test annotation",
+      "test_rerun": false
+    },
+    "evidence_scope": "Ordinary mock persistence/service regression only. No true database, Redis, runtime HTTP, device, business, integration, migration execution, merge or deploy acceptance.",
+    "log_sha256": "a2f064aaf88eb951608d382e3e8612d1b3e654522e2f72615f1c6b25b2c1f402",
+    "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+    "actual_tests": 60,
+    "fresh_xml_count": 4,
+    "fresh_exact_xml": true,
+    "finished_at": "2026-10-17T11:39:15.680563+00:00",
+    "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS",
+    "read_scope": "Coordinator and both original E01/E03 authors actually read public README and summary. Remote original log/XML hashes are cited, not independently retrieved/recomputed by Cloud.",
+    "author_ACK": {
+      "E01": "Actual public README+summary read; frozen original lock retained; no edits or execution",
+      "E03": "Actual public README+summary read; frozen original lock retained; no edits or execution"
+    },
+    "container_cleanup": {
+      "context": "chengyin-aws",
+      "exact_id": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822",
+      "observed_remaining_containers": 0,
+      "query_exit_code": 0
+    },
+    "cloud_execution": false,
+    "old_8_35_64_inherited": false,
+    "no_rerun": true
   },
   "local_actual_result_history": [
     {
@@ -2733,6 +2787,20 @@
       "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
       "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/summary.json",
       "status": "LOCAL_TWO_CLASS8_TARGETED_PASS"
+    },
+    {
+      "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+      "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+      "actual_tests": 60,
+      "totals": {
+        "tests": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 60
+      },
+      "status": "LOCAL_FOUR_CLASS60_ORDINARY_PASS"
     }
   ],
   "latest_source_delivery_batch": {
@@ -2763,7 +2831,25 @@
         "execution": "NOT_RUN",
         "old_pass_inherited": false,
         "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E03_04Test,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest test",
-        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito/Jackson and current shared TopicRouteSessionScope; no external DB/Redis/env/dependency changes."
+        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito/Jackson and current shared TopicRouteSessionScope; no external DB/Redis/env/dependency changes.",
+        "ordinary_result_in_combined_frozen_source": {
+          "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+          "tests": 30,
+          "passed": 30,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+          "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
+        },
+        "static_count_correction": {
+          "old_class_declarations_original": 25,
+          "old_class_complete_annotation_count": 26,
+          "package_planned_original": 29,
+          "package_complete_declarations": 30,
+          "reason": "Fully qualified @org.junit.jupiter.api.Test omitted by initial short-annotation count; source unchanged."
+        }
       },
       {
         "id": "E01-13",
@@ -2788,7 +2874,18 @@
         "execution": "NOT_RUN",
         "old_pass_inherited": false,
         "command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E01_13Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest test",
-        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito service dependencies; no external DB/Redis/env/dependency changes. Existing24 fixtures unchanged."
+        "prerequisites": "Existing offline212 JDK/Maven/JUnit/Mockito service dependencies; no external DB/Redis/env/dependency changes. Existing24 fixtures unchanged.",
+        "ordinary_result_in_combined_frozen_source": {
+          "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+          "tests": 30,
+          "passed": 30,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+          "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+          "scope": "Subset of actual four-class60 ordinary regression at530 only. No separate intermediate-SHA test or real database acceptance."
+        }
       }
     ],
     "combined_class_count": 4,
