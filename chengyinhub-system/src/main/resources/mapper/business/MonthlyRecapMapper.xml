@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MonthlyRecapMapper">
+  <!-- Existing business DATETIME columns use Asia/Shanghai wall time. Bounds are strings,
+       intentionally not java.util.Date (which would depend on the driver's JVM timezone). -->
+  <sql id="facts">
+    <bind name="viewerMemberId" value="memberId"/>
+    <choose>
+      <when test="kind == 'routes'">
+        select s.id,cast(s.topic_id as char) as objectId,cms_topic.name as title,
+          date_format(s.completed_at,'%Y-%m-%d %H:%i:%s') as occurredAt
+        from topic_route_session s join cms_topic on cms_topic.id=s.topic_id
+        where s.member_id=#{memberId} and s.status=1 and s.completed_at &gt;= #{start} and s.completed_at &lt; #{end}
+          and cms_topic.status=1 and cms_topic.user_status=1 and cms_topic.del_flag=0 and cms_topic.is_draft=0
+          and (cms_topic.club_id is null or cms_topic.club_id=0 or exists (
+            select 1 from club live_club where live_club.id=cms_topic.club_id and live_club.del_flag=0))
+          and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+          and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.clubMemberOnlyGate"/>
+          and (s.activity_id=0 or s.activity_id is null or exists(
+            select 1 from cms_activity a where a.id=s.activity_id and a.topic_id=s.topic_id
+              and a.status=1 and a.publish_status=1 and a.del_flag=0 and a.cancel_time is null
+              and (a.club_id is null or a.club_id=0 or (exists (
+                select 1 from club active_club where active_club.id=a.club_id and active_club.del_flag=0)
+                and (a.member_id=#{memberId} or exists (select 1 from club_member active_member
+                  where active_member.club_id=a.club_id and active_member.member_id=#{memberId}
+                    and active_member.status=1 and active_member.del_flag=0))))))
+      </when>
+      <when test="kind == 'places'">
+        select f.id,cast(f.poi_id as char) as objectId,p.name as title,
+          date_format(f.found_at,'%Y-%m-%d %H:%i:%s') as occurredAt
+        from roam_poi_found f join roam_session s on s.id=f.session_id and s.member_id=f.member_id and s.status=1
+          join roam_poi p on p.id=f.poi_id
+        where f.member_id=#{memberId} and f.found_at &gt;= #{start} and f.found_at &lt; #{end}
+          and p.status=1 and (p.application_type is null or p.application_type=2 or (p.application_type=1 and p.audit_status=1))
+      </when>
+      <otherwise>
+        select s.id,cast(s.id as char) as objectId,'城市签' as title,
+          date_format(s.create_time,'%Y-%m-%d %H:%i:%s') as occurredAt
+        from roam_stamp s where s.member_id=#{memberId} and s.del_flag=0 and s.check_state!=2
+          and s.create_time &gt;= #{start} and s.create_time &lt; #{end}
+      </otherwise>
+    </choose>
+  </sql>
+  <select id="count" resultType="long">select count(*) from (<include refid="facts"/>) facts</select>
+  <select id="page" resultType="java.util.LinkedHashMap">
+    select cast(facts.id as char) as id,objectId,title,occurredAt from (<include refid="facts"/>) facts
+    <if test="beforeId != null">where facts.id &lt; #{beforeId}</if>
+    order by facts.id desc limit #{limit}
+  </select>
+</mapper>

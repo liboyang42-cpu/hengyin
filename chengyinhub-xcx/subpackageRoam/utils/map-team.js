@@ -57,17 +57,17 @@ function teamCardState(t, now) {
     const left = expireLeft(t && t.applyExpireTime, now);
     return { mode: 'pending', notice: { tone: 'wait', text: '◷ 已申请 · 等队长同意' }, primary: null,
       secondary: { text: '撤回申请', action: 'withdraw' },
-      foot: left ? '队长没处理的话,申请 ' + left + '后自动失效' : '队长没处理或活动开始时,申请自动失效' };
+      foot: left ? left + '后自动失效' : '开场前未处理会自动失效' };
   }
   if (s === 'REJECTED') {
     return { mode: 'rejected', notice: { tone: 'bad', text: '不能再申请这支队伍' }, primary: null, secondary: null, foot: '' };
   }
   if (t && t.viewerHasTicket === true) {
     return { mode: 'apply', notice: { tone: 'ok', text: '✓ 你已持有这一场的票' }, primary: { text: '申请加入', action: 'apply' },
-      secondary: null, foot: '队长同意后即可一起出发（沟通请用微信群）' };
+      secondary: null, foot: '' };
   }
   return { mode: 'buy', notice: { tone: 'plain', text: '加入队伍需要先持有这一场的票' }, primary: { text: '去买这场的票', action: 'buy' },
-    secondary: null, foot: '买完回到地图,这张卡会变成「申请加入」' };
+    secondary: null, foot: '' };
 }
 
 /** nearby 一行 → 卡片视图。白名单取字段,私密字段进不来。 */
@@ -235,12 +235,8 @@ function leaderSub(t) {
   return '你是队长 · 已组 ' + j + '/' + m + ' · 还能再加 ' + Math.max(0, m - j) + ' 人';
 }
 
-function leaderFoot(t) {
-  const left = Math.max(0, (num(t && t.maxMembers) || 0) - (num(t && t.joinedCount) || 0));
-  return '同意 ' + left + ' 人后队伍满员:从地图上消失,其余申请自动失效';
-}
 
 module.exports = {
   RADII, TEAM_MARKER_TAG, teamCardState, decorateTeam, headerText, rangeText, nextRadius, myTeamsText,
-  resolveTeamError, myTeamRows, teamMarkerSpec, teamIconKey, buildTeamMarkers, applicantRows, leaderSub, leaderFoot,
+  resolveTeamError, myTeamRows, teamMarkerSpec, teamIconKey, buildTeamMarkers, applicantRows, leaderSub,
 };

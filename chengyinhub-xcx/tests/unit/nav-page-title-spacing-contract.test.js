@@ -6,8 +6,9 @@ const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 // 2026-08-07 压主包体积:member/roam/talent 的非 tabBar 子页搬进了各自分包。
 // 它们仍是页面,必须留在扫描范围内 —— 漏掉的话这份清单会从「锁死」退化成「只锁主包」。
+// 2026-10-14:+subpackageTools(随漫游上线的 5 个工具页),新分包同样受返回导航与大标题间距约束
 const PAGE_ROOTS = ['pages', 'subpackageA', 'subpackageB', 'subpackageP3',
-  'subpackageMember', 'subpackageRoam']
+  'subpackageMember', 'subpackageRoam', 'subpackageTools']
 const SHARED_TITLE_CSS = 'components/cy/page-title/index.wxss'
 const HIDDEN_TITLE = new Set(['subpackageMember/orderinfo/orderinfo.wxml'])
 const SELF_DRAWN_NAV = new Set()
@@ -475,7 +476,7 @@ function assertSelfDrawnTitleSpacing(rel, cssOverride) {
 //   (editorPage 1 创作 / 2 票务,靠底部 sheet 切屏),全页没有 cy-nav-bar ——
 //   返回是页面级浮钮 .slopes-back,离开的是整个编辑器。所以「nav → canonical spacer → 标题」
 //   这一段结构在这里不成立,它走 assertEditorStepTitleSpacing(见下面那张名单)。
-test('全仓 68 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
+test('全仓 74 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
   assertSharedTitleSpacing()
   const files = pageTitleFiles()
   /* 2026-09-08 +1:pages/coop/invite-detail(02d 协作详情)。自定义导航 + 实底顶栏无标题,
@@ -483,7 +484,9 @@ test('全仓 68 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   /* 2026-09-08 +1:新增 pages/club/checkin-detail(Figma K3 俱乐部端核销详情)。 */
   /* 2026-09-11 并 github/master:本分支把 club/apply 从自绘 cy-h1 改回共享 cy-page-title,
      master 的 68 不含这一页 ⇒ 68+1=69。 */
-  assert.equal(files.length, 68, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  /* 2026-10-14 +6:漫游上线 —— 我的队伍(subpackageRoam/my-teams)
+     与 subpackageTools 下 5 个工具页,全部 cy-nav-bar plain + cy-page-title 标准二级页 ⇒ 68+6=74。 */
+  assert.equal(files.length, 74, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

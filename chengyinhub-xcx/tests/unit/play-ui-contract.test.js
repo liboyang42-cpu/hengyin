@@ -497,8 +497,8 @@ test('自由漫游只在玩家点击出发后请求定位，玩法说明不自�
   assert.match(roamJs, /openRoamLocationSetting\(\)/)
   // 走查 B04:进页不许自动弹玩法说明。负向断言 —— 谁把自动弹加回 onLoad 就红。
   assert.doesNotMatch(onLoad, /openScene\('roam-rules'\)/)
-  // 不自动弹的前提是「随时看得到」:两个手动入口一个都不能少,少一个这条就红。
-  assert.match(roamWxml, /class="go-side" bindtap="openRoamRules"[^>]*aria-label="查看自由漫游玩法说明"/)
+  // 首页直接出发，原地图内仍可主动打开玩法说明。
+  assert.match(roamWxml, /class="intro-card" bindtap="goStart"/)
   assert.match(roamWxml, /class="pcard__rules" catchtap="openRoamRules"[^>]*aria-label="查看玩法说明"/)
   assert.match(roamWxml, /bindtap="openRoamHistory"|bindtap="onPassportTileTap"[\s\S]*history/)
   assert.match(roamWxml, /<cy-state-shell[^>]*wx:if="\{\{introError\}\}"[^>]*bind:primary="openRoamLocationSetting"/s)

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PersonalExplorationExportMapper">
+ <sql id="ownedCompleted">
+  s.member_id=#{owner} and s.status=1 and s.completed_at &gt;= #{start}
+  and s.completed_at &lt; #{end} and s.completed_at &lt;= #{asOf}
+ </sql>
+ <select id="upper" resultType="long">select coalesce(max(s.id),0) from topic_route_session s where <include refid="ownedCompleted"/></select>
+ <select id="boundedCount" resultType="int">
+  select count(*) from (select s.id from topic_route_session s where <include refid="ownedCompleted"/> and s.id &lt;= #{upper} limit 1001) bounded
+ </select>
+ <select id="page" resultType="java.util.HashMap">
+  select s.id as recordId,
+   concat(left(date_format(s.completed_at,'%Y-%m-%dT%H:%i:%s.%f'),23),'+08:00') as completedAt,
+   s.config_version as routeVersion,
+   case when s.create_time is not null and s.completed_at &gt;= s.create_time
+    then timestampdiff(second,s.create_time,s.completed_at) else null end as elapsedSeconds,
+   case when cms_topic.id is null then 'UNAVAILABLE' else 'AVAILABLE' end as routeAvailability,
+   cms_topic.name as routeTitle
+  from topic_route_session s
+  left join cms_topic on cms_topic.id=s.topic_id and cms_topic.status=1 and cms_topic.user_status=1
+   and cms_topic.del_flag=0 and cms_topic.is_draft=0 and cms_topic.is_template=0
+   and (cms_topic.club_id is null or cms_topic.club_id=0 or exists
+    (select 1 from club active_club where active_club.id=cms_topic.club_id and active_club.del_flag=0))
+   and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+   and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.clubMemberOnlyGate"/>
+  where <include refid="ownedCompleted"/> and s.id &lt;= #{upper}
+  <if test="before != null">and s.id &lt; #{before}</if>
+  order by s.id desc limit #{limit}
+ </select>
+</mapper>

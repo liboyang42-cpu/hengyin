@@ -1,0 +1,15 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "我的队伍",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-toast": "/components/cy/toast/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index"
+  }
+}

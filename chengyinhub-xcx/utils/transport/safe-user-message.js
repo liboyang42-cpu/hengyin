@@ -21,6 +21,11 @@ function safeUserMessage(input, fallback) {
   if (/timeout/i.test(raw) && /request|network|gateway|timed?\s*out|超时/i.test(raw)) {
     return '请求超时，请稍后重试';
   }
+  // 售卖闸(SaleAvailabilityPolicy)的诊断文案带字段名(lifecycle / sellingStartedAt / saleEndAt),
+  // 测试靠这些词定位是哪道闸;到用户这里统一换成能看懂的一句。
+  if (/\blifecycle\b|sellingStartedAt|saleEndAt|拒绝售卖|不可再售/.test(raw)) {
+    return '这张票当前不在售卖期内，请稍后再看';
+  }
   if (/Error querying database|SQLSyntaxErrorException|bad SQL grammar|nested exception/i.test(raw)) {
     return '当前数据暂不可用，请稍后重试';
   }

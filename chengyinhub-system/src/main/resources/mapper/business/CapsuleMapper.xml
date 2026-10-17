@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CapsuleMapper">
+  <resultMap id="record" type="com.chengyinhub.business.domain.CapsuleRecord">
+    <id property="id" column="id"/><result property="memberId" column="member_id"/>
+    <result property="requestId" column="request_id"/><result property="payloadHash" column="payload_hash"/>
+    <result property="body" column="body"/><result property="photoKey" column="photo_key"/>
+    <result property="unlockAtMs" column="unlock_at_ms"/><result property="createdAtMs" column="created_at_ms"/>
+    <result property="deleted" column="deleted"/>
+  </resultMap>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    insert into member_time_capsule(member_id,request_id,payload_hash,body,photo_key,unlock_at_ms,created_at_ms,deleted)
+    values(#{memberId},#{requestId},#{payloadHash},#{body},#{photoKey},#{unlockAtMs},#{createdAtMs},0)
+  </insert>
+  <select id="byRequest" resultMap="record">select * from member_time_capsule where member_id=#{memberId} and request_id=#{requestId}</select>
+  <select id="byId" resultMap="record">select * from member_time_capsule where member_id=#{memberId} and id=#{id} and deleted=0</select>
+  <!-- List deliberately never fetches body/photo_key, including after release. -->
+  <select id="page" resultMap="record">
+    select id,unlock_at_ms,created_at_ms,deleted from member_time_capsule where member_id=#{memberId} and deleted=0
+    <if test="beforeId != null">and id &lt; #{beforeId}</if> order by id desc limit #{limit}
+  </select>
+  <update id="delete">update member_time_capsule set deleted=1,body=null,photo_key=null where member_id=#{memberId} and id=#{id} and deleted=0</update>
+</mapper>

@@ -142,6 +142,18 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '队员已移出', text: '对方已收到站内通知。' },
   },
+  // 2026-10-15:地图队长卡「拒绝」申请。被拒后对方不能再申请这支队伍(服务端 REJECTED 终态),回不来
+  'team.reject': {
+    irreversible: true,
+    title: '拒绝「{name}」的申请?',
+    consequences: [
+      { icon: 'bell', text: '对方会在「我的队伍」里看到「未通过」' },
+      { icon: 'warning', text: '此操作不可撤销;对方不能再申请加入这支队伍' },
+    ],
+    confirmText: '拒绝申请',
+    alt: null,
+    done: { title: '已拒绝', text: '这条申请已处理。' },
+  },
   'team.quit': {
     irreversible: true,
     title: '退出这支队伍?',

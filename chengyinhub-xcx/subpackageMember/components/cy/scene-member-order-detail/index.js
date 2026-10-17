@@ -458,7 +458,7 @@ Component({
     startOrderTeam() {
       const info = this.data.info || {}
       const activity = info.cmsActivity || {}
-      if (Number(info.ownerType) !== 2 || Number(activity.teamMode) !== 2 || !info.ownerId) return
+      if (!info.teamOpen || !info.ownerId) return
       /* 2026-09-02:原来这里弹 wx.showActionSheet(系统弹层,设计体系外)。 */
       const sheet = teamUp.memberSheet(activity.teamMaxMembers)
       this._teamSheetOptions = sheet.options   // 仅供回调查表,不渲染 ⇒ 不进 data(死数据字段门禁)
@@ -475,7 +475,7 @@ Component({
       const members = (that._teamSheetOptions || [])[e.detail.index]
       if (!members || !info.ownerId) return
       that.setData({ teamSheetShow: false })
-      teamUp.createActivityTeam(app, info.ownerId, members, that.data.teamInviteOnly ? 1 : null, {
+      teamUp.createActivityTeam(app, info.ownerId, members, that.data.teamInviteOnly || info.teamStarted ? 1 : null, {
         success(teamId) { that._leave('/pages/team/detail/index?teamId=' + teamId) },
         fail(message) { toast(message) }
       })
@@ -934,6 +934,16 @@ Component({
                 eventTime = dt.time;
               }
             }
+
+            // 建队入口:A(报名时组队)/B(报名后邀请)都落在订单详情 —— 报名页那份已随「买完直接跳」删掉
+            // (2026-09-06),只认 B 会让 A 模式主题没有任何建队入口。
+            // 场次开始后后端仍允许建队(队员中途重组),但「附近的队伍」只列开始前的队伍 ⇒ 开始后只建仅邀请队伍。
+            const teamModeValue = info.cmsActivity ? Number(info.cmsActivity.teamMode) : 0;
+            const startRaw = info.cmsActivity && info.cmsActivity.startDate ? String(info.cmsActivity.startDate) : '';
+            const startMs = startRaw ? Date.parse(startRaw.indexOf('T') > 0 ? startRaw : startRaw.replace(/-/g, '/')) : NaN;
+            info.teamOpen = Number(info.ownerType) === 2 && Number(info.registrationStatus) === 2
+              && (teamModeValue === 1 || teamModeValue === 2);
+            info.teamStarted = info.teamOpen && !(startMs > Date.now());
 
             const qty = Number(info.orderNum) > 0 ? Number(info.orderNum) : 1;
             const pointAmt = Number(info.pointPaymentAmount);

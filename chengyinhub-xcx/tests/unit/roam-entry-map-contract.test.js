@@ -8,19 +8,21 @@ const WXML = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.wxm
 const WXSS = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.wxss'), 'utf8')
 const NEARBY_JS = fs.readFileSync(path.resolve(__dirname, '../../subpackageRoam/nearby/index.js'), 'utf8')
 
-test('漫游 tab 默认进入真实地图浏览态且不会直接启动漫游', () => {
+test('漫游 tab 默认进入双菜单首页，地图预览不采集定位', () => {
   assert.match(JS, /screen:\s*'entry-map'/)
-  assert.match(WXML, /wx:if="\{\{screen=='entry-map'\}\}"/)
+  assert.match(WXML, /class="intro" wx:if="\{\{screen=='entry-map'\|\|screen=='intro'\}\}"/)
   assert.match(WXML, /<free-map[^>]+entryMap/s)
-  assert.match(WXML, /bindtap="openEntryRoamSheet"/)
-  assert.doesNotMatch(WXML.match(/wx:if="\{\{screen=='entry-map'\}\}"[\s\S]*?<\/view>\s*\n\s*<!--/)[0], /bindtap="goStart"/)
+  assert.match(WXML, /interactive="\{\{false\}\}"/)
+  assert.match(WXML, /introTabs[\s\S]*bind:change="switchIntroTab"/)
 })
 
-test('地图入口保留白色搜索、图层开关、活动抽屉与单独的开始漫游按钮', () => {
-  assert.match(WXML, /entry-map__roam[^>]+bindtap="openEntryRoamSheet"/)
-  assert.match(WXML, /cy-map-address-search[^>]+entry="\{\{true\}\}"/s)
-  assert.match(WXML, /entry-map__layers[^>]+bindtap="openEntryLayers"/)
-  assert.doesNotMatch(WXML, /entry-map__tools|entry-map__tool|entry-map__locate|openEntryRecords|locateEntryMap/)
+test('首页保留章节入口，移除浮动记录、搜索与图层按钮', () => {
+  const home = WXML.slice(WXML.indexOf('class="intro"'), WXML.indexOf('<!-- ===================== B1'))
+  assert.match(home, /bindtap="goStart"/)
+  assert.doesNotMatch(home, /cy-map-address-search|entry-map__layers|entry-map__roam|class="go-wrap"/)
+  assert.match(JS, /key: 'start'[^\n]+title: '开始漫游'/)
+  assert.match(JS, /key: 'map'[^\n]+title: '打开地图'/)
+  assert.match(JS, /key: 'my-teams'[^\n]+title: '我的队伍'/)
 })
 
 test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内', () => {
@@ -29,11 +31,12 @@ test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内',
   assert.doesNotMatch(WXML, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch|entry-peek__cards"[^>]*scroll-y/)
   assert.doesNotMatch(JS, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch/)
   assert.doesNotMatch(WXML, />查看全部</)
-  assert.match(WXML, /<cy-error wx:if="\{\{entryLoadError\}\}" load-failure="\{\{true\}\}"\s*\/>/)
-  assert.match(WXSS, /\.entry-peek\s*\{[^}]*bottom:0[^}]*z-index:223[^}]*height:var\(--entry-peek-h\)[^}]*background:[^}]*var\(--cy-comp-sheet-player-glass\)/s)
-  assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:var\(--cy-type-section-title\)/s)
-  assert.match(WXSS, /\.entry-card\s*\{[^}]*height:340rpx/s)
-  assert.match(WXSS, /\.entry-card__title\s*\{[^}]*font-size:var\(--cy-type-section-title\)/s)
+  assert.match(WXML, /<cy-state-shell wx:if="\{\{entryReadAccess\}\}" kind="no-permission"/)
+  assert.match(WXML, /<cy-error wx:elif="\{\{entryLoadError\}\}" load-failure="\{\{true\}\}"\s*\/>/)
+  assert.match(WXSS, /\.entry-peek\s*\{[^}]*position:relative[^}]*linear-gradient/s)
+  assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:29rpx/s)
+  assert.match(WXSS, /\.entry-card\s*\{[^}]*height:242rpx/s)
+  assert.match(WXSS, /\.entry-card__title\s*\{[^}]*font-size:27rpx/s)
 })
 
 test('活动详情使用紧凑摘要卡，不再使用整幅英雄图', () => {
@@ -42,10 +45,13 @@ test('活动详情使用紧凑摘要卡，不再使用整幅英雄图', () => {
   assert.doesNotMatch(WXML, /entry-activity__hero/)
 })
 
-test('地图入口保留标题和图文漫游按钮，并且不渲染底栏', () => {
-  assert.match(WXML, /entry-map__title[^>]*>漫游</)
-  assert.match(WXML, /entry-map__roam[^>]*>[\s\S]*?name="route"[\s\S]*?开始漫游/)
-  assert.match(WXML, /<tabBar\s+wx:if="\{\{screen=='intro'\}\}"/)
+test('两个首页都有现有底栏，活动与章节首卡对齐', () => {
+  assert.match(WXML, /intro-title">漫游</)
+  assert.match(WXML, /<tabBar\s+wx:if="\{\{screen=='entry-map'\|\|screen=='intro'\}\}"/)
+  // 2026-10-14 用户确认的漫游原型:章节卡与附近活动左缘对齐标题(46rpx = 24px),卡片尺寸不变(310×100)
+  assert.match(WXML, /previous-margin="46rpx"/)
+  assert.match(WXSS, /--roam-card-inset:46rpx/)
+  assert.match(WXSS, /\.entry-peek__track\{[^}]*padding:0 var\(--roam-card-inset\)/)
 })
 
 test('报名按钮使用白色 token，入口弹层按内容定高并统一透明玻璃 token', () => {
@@ -93,5 +99,5 @@ test('队伍入口复用附近队伍的持票申请链，定位失败在入口�
   assert.match(JS, /\/subpackageRoam\/nearby\/index\?teamId=/)
   assert.match(NEARBY_JS, /_requestedTeamId/)
   assert.match(NEARBY_JS, /openTeam\(teamId\)/)
-  assert.match(WXML, /entry-map__permission[^>]+wx:if="\{\{introError\}\}"/)
+  assert.match(WXML, /intro-permission[^>]+wx:if="\{\{introError\}\}"/)
 })

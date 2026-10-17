@@ -101,3 +101,11 @@ test('失败体里的 11 位号仍消毒,成功体夹带号码的诊断文案也
   sanitizeResponseMessage(leak, '操作失败');
   assert.equal(leak.msg, '操作失败');
 });
+
+// 2026-10-15:售卖闸诊断文案(字段名)不直接给用户
+test('sale gate diagnostics become a readable message', () => {
+  for (const raw of ['lifecycle 必须为 SELLING', 'sellingStartedAt 尚未到达，拒绝售卖', 'saleEndAt 已到，票种不可再售']) {
+    assert.equal(safeUserMessage(raw), '这张票当前不在售卖期内，请稍后再看')
+  }
+  assert.equal(safeUserMessage('该场次已开始，停止报名'), '该场次已开始，停止报名')
+})

@@ -17,7 +17,7 @@ test('P2 没票:主按钮白「去买这场的票」,无次级', () => {
   assert.deepEqual(s.primary, { text: '去买这场的票', action: 'buy' });
   assert.equal(s.secondary, null);
   assert.equal(s.notice.text, '加入队伍需要先持有这一场的票');
-  assert.equal(s.foot, '买完回到地图,这张卡会变成「申请加入」');
+  assert.equal(s.foot, '', '2026-10-15 精简:状态行已说明需先买票,卡片不再加底注');
 });
 
 test('P3 有票:主按钮「申请加入」', () => {
@@ -25,7 +25,7 @@ test('P3 有票:主按钮「申请加入」', () => {
   assert.equal(s.mode, 'apply');
   assert.deepEqual(s.primary, { text: '申请加入', action: 'apply' });
   assert.equal(s.notice.tone, 'ok');
-  assert.equal(s.foot, '队长同意后即可一起出发（沟通请用微信群）');
+  assert.equal(s.foot, '', '2026-10-15 精简:有票卡不加底注(也就不会再承诺任何群聊)');
 });
 
 test('P4 申请中:只剩次级「撤回申请」+ 失效说明,即使有票也不出主按钮', () => {
@@ -34,7 +34,7 @@ test('P4 申请中:只剩次级「撤回申请」+ 失效说明,即使有票也�
   assert.equal(s.primary, null);
   assert.deepEqual(s.secondary, { text: '撤回申请', action: 'withdraw' });
   // 没有 applyExpireTime 时只许说通用规则;写死「24 小时」会撒谎(见 apply-expire-contract.test.js)
-  assert.equal(s.foot, '队长没处理或活动开始时,申请自动失效');
+  assert.equal(s.foot, '开场前未处理会自动失效');
 });
 
 test('P5 队长:进审批模式,不出申请/买票按钮', () => {
@@ -159,7 +159,6 @@ test('申请列表行:「持本场票 · N 分钟前申请」', () => {
   const r = T.applicantRows([{ memberId: 5, memberName: '阿杰', memberAvatar: 'x', appliedAt: '2026-09-15 12:08:00' }], now);
   assert.equal(r[0].sub, '持本场票 · 2 分钟前申请');
   assert.equal(T.leaderSub({ joinedCount: 3, maxMembers: 4 }), '你是队长 · 已组 3/4 · 还能再加 1 人');
-  assert.equal(T.leaderFoot({ joinedCount: 3, maxMembers: 4 }), '同意 1 人后队伍满员:从地图上消失,其余申请自动失效');
 });
 
 test('TEAM_NOT_PUBLIC 不冒充「已满/已开始」', () => {

@@ -441,7 +441,7 @@ test('baoming:A 模式确认报名页不再提供报名后建队分支', () => {
 
 /* 2026-09-06 用户裁决:买完就直接跳,成功面板不放按钮 —— B 模式也一样。
  * 建队入口没有消失,它在**落地页**:订单详情的「和队友一起出发」卡
- * (subpackageMember/components/cy/scene-member-order-detail/index.wxml 的 teamMode == 2 分支)。
+ * (subpackageMember/components/cy/scene-member-order-detail/index.wxml 的 info.teamOpen 分支(A/B 两种模式))。
  * 所以本用例从「面板上有建队按钮」改成钉两件事:
  *   ① B 模式和 A 模式一样自愈(无按钮 + duration>0),不再半路拦一次;
  *   ② 面板收掉后跳的正是那个带建队卡的订单详情页。
@@ -499,7 +499,7 @@ test('baoming:B 模式成功弹窗与 A 模式一样自愈,建队入口交给订
 
   const orderWxml = fs.readFileSync(
     path.join(__dirname, '../../subpackageMember/components/cy/scene-member-order-detail/index.wxml'), 'utf8');
-  assert.match(orderWxml, /teamMode == 2[\s\S]{0,400}叫上队友/,
+  assert.match(orderWxml, /info\.teamOpen[\s\S]{0,400}叫上队友/,
     '建队入口必须真的在落地的订单详情页上,否则这一删就是把入口弄丢了');
 });
 

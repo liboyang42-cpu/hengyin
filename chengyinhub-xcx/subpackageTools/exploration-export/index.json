@@ -1,0 +1,14 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "导出探索记录",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-date-field": "/components/cy/date-field/index",
+    "cy-toast": "/components/cy/toast/index"
+  }
+}

@@ -1,0 +1,18 @@
+@import '../../style/tool-ui.wxss';
+.rd-label--row { display: flex; justify-content: space-between; }
+.rd-label__v { color: var(--cy-comp-sheet-player-text); }
+.rd-label { padding: 31rpx 31rpx 15rpx; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+/* 封存中的卡:深蓝渐变 + NRC 斜体倒计时;到期的卡:深绿。原型 .capc */
+.cp-card { margin: 0 31rpx 23rpx; padding: 31rpx; border-radius: var(--cy-radius-xl); display: flex; flex-direction: column; gap: 8rpx;
+  background: linear-gradient(135deg, #1F2530, #14171C); } /* ds-ok 原型 .capc.locked */
+.cp-card--open { background: linear-gradient(135deg, #2C3B2A, #141C13); } /* ds-ok 原型 .capc 已开启 */
+.cp-k { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.cp-k--ok { color: #9FE3AF; } /* ds-ok 原型已开启提示 */
+.cp-days { font-size: 58rpx; font-weight: 900; font-style: italic; letter-spacing: -2rpx; } /* ds-ok 原型 .capc .cd 30px */
+.cp-m { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
+.cp-t { margin-top: 8rpx; font-size: var(--cy-type-body); font-weight: 700; }
+.cp-open { margin: 31rpx 31rpx 0; padding: 35rpx; border-radius: var(--cy-radius-xl); background: var(--cy-comp-sheet-player-bg); display: flex; flex-direction: column; gap: 19rpx; }
+.cp-body { font-size: var(--cy-type-button); line-height: 1.7; white-space: pre-wrap; }
+.cp-photo { width: 100%; border-radius: var(--cy-radius-md); }
+.cp-acts { display: flex; gap: 15rpx; }
+.cp-del { color: #F87171; } /* ds-ok 删除 */

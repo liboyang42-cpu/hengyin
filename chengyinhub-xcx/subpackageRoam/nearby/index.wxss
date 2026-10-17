@@ -20,9 +20,21 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* P1 顶部条(稿 591:1017):白底 358×44 · radius 22 · 左 18 标题 15/600 黑。
    稿上右侧那个「筛选」2026-09-15 已删(见下一条注释),所以这里只剩标题一个子节点,
    space-between 一并撤掉 —— 单子节点下它是空转,留着会让人以为右边还该有东西。 */
-.mt-top { position: absolute; left: 31rpx; right: 31rpx; z-index: 20; height: 85rpx; padding: 0 35rpx; box-sizing: border-box; border-radius: 42rpx; /* ds-ok 稿 591:1017 radius 22,与行尾 24 行同一条规则 */
-  display: flex; align-items: center; background: var(--cy-color-play-accent); } /* ds-ok 稿 591:1017 尺寸 */
-.mt-top__t { font-size: 29rpx; font-weight: 600; color: var(--cy-color-play-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 稿 15px/600 */
+/* 2026-10-14 地图优化(用户确认原型):白条 → 深色玻璃计数条 + 地图/列表切换,同一行 */
+.mt-top { position: absolute; left: 23rpx; right: 23rpx; z-index: 20; height: 85rpx; display: flex; align-items: center; gap: 15rpx; }
+.mt-top__pill { flex: 1; min-width: 0; height: 85rpx; padding: 0 31rpx; box-sizing: border-box; border-radius: var(--cy-radius-2xl); display: flex; align-items: center; gap: 15rpx;
+  background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 原型 .nb-title 玻璃 */
+.mt-top__dot { flex: none; width: 15rpx; height: 15rpx; border-radius: 50%; background: #22C55E; box-shadow: 0 0 0 8rpx rgba(34,197,94,.2); } /* ds-ok 原型在线点 */
+.mt-top__t { font-size: 29rpx; font-weight: 600; color: var(--cy-color-play-accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 稿 15px/600 */
+.mt-mode { flex: none; height: 85rpx; padding: 6rpx; box-sizing: border-box; border-radius: 42rpx; display: flex; background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 原型 .nb-mode */
+.mt-mode__i { min-width: 88rpx; padding: 0 23rpx; border-radius: 37rpx; display: flex; align-items: center; justify-content: center; font-size: 25rpx; font-weight: 600; color: rgba(255,255,255,.6); } /* ds-ok 原型 .nb-mode 未选 */
+.mt-mode__i.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
+.mt-list { position: absolute; left: 0; right: 0; bottom: 0; z-index: 15; padding: 0 31rpx 260rpx; box-sizing: border-box; background: var(--cy-comp-sheet-player-page); border-radius: var(--cy-radius-2xl) var(--cy-radius-2xl) 0 0; }
+.mt-list__sec { padding: 35rpx 8rpx 8rpx; font-size: 25rpx; color: #8A93A0; } /* ds-ok 同 .mt-row__s */
+.mt-row--list:first-of-type { margin-top: 15rpx; }
+.mt-list .mt-foot { padding: 0 8rpx; } /* 与上方「范围内 · N 支」同一左缘 */
+.mt-badge--plain { background: #292929; color: #C4CBD4; } /* ds-ok 同 .mt-sbtn--s */
+.mt-badge--lead { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
 /* 稿 591:1019 的「筛选」2026-09-15 随「无筛选维度定义」删除,.mt-top__f / ::after 命中区一并撤。 */
 
 /* P1 角控件(稿 591:1020 / 591:1022):#1A1A1A · 1px 白 12% 描边 · 44 高 · radius 22 · 14/600 白 */

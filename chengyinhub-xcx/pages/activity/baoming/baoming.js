@@ -35,8 +35,14 @@ function ticketIsSoldOut(ticket) {
 
 function parseOfferDeadline(value) {
   if (!value) return '';
-  let date = new Date(value);
-  if (Number.isNaN(date.getTime())) date = new Date(String(value).replace(/-/g, '/'));
+  // 「yyyy-MM-dd HH:mm:ss」先换斜杠再解析(iOS 不认横杠带时分秒);带 T 的 ISO 原样解析
+  // 数字时间戳 / Date 直接用;字符串才需要处理横杠
+  if (typeof value !== 'string') {
+    const direct = new Date(value);
+    return Number.isNaN(direct.getTime()) ? null : direct;
+  }
+  let date = new Date(value.indexOf('T') > 0 ? value : value.replace(/-/g, '/'));
+  if (Number.isNaN(date.getTime())) date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
@@ -1236,7 +1242,7 @@ Page({
      到点会对着死页面 setData 并强行 redirect。 */
   /* 2026-09-06 用户裁决:买完就直接跳,面板上不放按钮 —— B 模式(teamMode=2)也一样。
      建队入口没有丢:落地的订单详情页有「和队友一起出发」整张卡(见
-     components/cy/scene-member-order-detail/index.wxml 的 teamMode == 2 分支,
+     components/cy/scene-member-order-detail/index.wxml 的 info.teamOpen 分支(A/B 两种模式),
      文案同样写明「组队与否不影响活动举行」)。面板本来就是要跳去那一页的,
      等于把入口放在了用户下一秒就会看到的地方,而不是拦在半路让他先选一次。 */
   showSignupSuccess({ title, detail }) {
