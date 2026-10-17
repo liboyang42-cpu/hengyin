@@ -168,7 +168,8 @@
                    点下去走完「举报 → 确认 → 已举报」,给自己开一张无意义审核单。删除入口保留。 -->
               <text wx:if="{{cm.memberId != myMemberId}}" catchtap="onReportComment" data-id="{{cm.id}}" class="comment-mod" aria-role="button" aria-label="举报评论" hover-class="cy-pressed" hover-stay-time="80">举报</text>
             </view>
-            <cy-empty wx:if="{{!comments.length}}" size="sm" title="还没有评论，来抢沙发" />
+            <cy-error wx:if="{{commentsError}}" size="sm" title="评论没能加载出来" sub="{{commentsError}}" retry="重试" bind:retry="retryLoadComments" />
+            <cy-empty wx:elif="{{commentsLoaded && !comments.length}}" size="sm" title="还没有评论，来抢沙发" />
             <view class="comment-bar" wx:if="{{canSeeMembers}}">
               <input class="comment-input" value="{{commentText}}" bindinput="onCommentInput" placeholder="写评论…" placeholder-class="post-ph" confirm-type="send" bindconfirm="onCommentSubmit" />
               <view class="comment-send {{commenting ? 'disabled' : ''}}" catchtap="onCommentSubmit" aria-role="button" aria-label="发送评论" aria-disabled="{{commenting}}" hover-class="{{commenting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">发送</view>
