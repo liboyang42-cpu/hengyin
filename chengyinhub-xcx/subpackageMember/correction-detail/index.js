@@ -125,7 +125,8 @@ Page({
     if (view.supplementConfirmed(this._beforeVersion, raw) || accepted) {
       this._requestId = ''
       const item = raw ? view.normalizeContribution(raw) : null
-      this.setData(item ? { sheet: 'ok', supplement: '', item } : { sheet: 'ok', supplement: '' })
+      if (item) this.setData({ sheet: 'ok', supplement: '', item })
+      else this.setData({ sheet: 'ok', supplement: '' })
       return
     }
     this.setData({ sheet: 'unknown' })

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4639,
+  "controlCount": 4640,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -156583,7 +156583,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:23:bind:close:close:11",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:23:bind:close:close:12",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -156779,7 +156779,107 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:close:close:14",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:23:bind:secondary:openMine:11",
+      "route": "component:components/cy/merchant-correction-sheet/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-merchant-correction-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-merchant-correction-sheet",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/merchant-correction-sheet/index.wxml",
+        "js": "components/cy/merchant-correction-sheet/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-result-sheet",
+        "event": "bind:secondary",
+        "handler": "openMine",
+        "line": 23,
+        "selectorHint": "cy-result-sheet[bind:secondary]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/correction-mine/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/merchant-correction-sheet/index.js:109"
+      }
+    },
+    {
+      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:close:close:15",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -156877,7 +156977,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:primary:backToForm:12",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:primary:backToForm:13",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -156974,7 +157074,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:secondary:close:13",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:25:bind:secondary:close:14",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -157072,7 +157172,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:close:close:17",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:close:close:18",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -157170,7 +157270,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:primary:submit:15",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:primary:submit:16",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -157302,7 +157402,7 @@
       }
     },
     {
-      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:secondary:close:16",
+      "id": "components/cy/merchant-correction-sheet/index.wxml:27:bind:secondary:close:17",
       "route": "component:components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",

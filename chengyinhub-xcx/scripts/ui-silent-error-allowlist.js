@@ -9,6 +9,8 @@ module.exports = [
   { file: 'subpackageMember/points-history/index.js', count: 1, reason: '积分明细首次失败落 state=error（带重试），下拉刷新失败用自管 toast。' },
   { file: 'subpackageMember/report-mine/index.js', count: 2, reason: '我的举报列表首次失败落 state=error（cy-state-shell 带重试），刷新失败用自管 toast；原因表读不到只用兜底名「举报原因」，不挡列表。' },
   { file: 'subpackageMember/report-detail/index.js', count: 4, reason: '举报进度读取失败落 state=error/no-permission 页内可见态（error 带重试），刷新失败用自管 toast；原因表读不到只用兜底名；申诉提交失败落 cy-sheet fail（含后端原因），结果未知先回读再落 unknown 可同幂等键重试。' },
+  { file: 'subpackageMember/correction-mine/index.js', count: 1, reason: '我的纠错列表首次失败落 state=error（cy-state-shell 带重试），刷新失败用自管 toast，不再叠加统一 toast。' },
+  { file: 'subpackageMember/correction-detail/index.js', count: 3, reason: '纠错进度读取失败落 state=error/no-permission 页内可见态（error 带重试），刷新失败用自管 toast；补证提交失败落 cy-sheet fail（含后端原因），结果未知先回读再落 unknown 可同幂等键重试。' },
   { file: 'pages/team/report-sheet/index.js', count: 1, reason: '举报失败落结果半屏 fail 态（含后端原因与重试），不再叠加统一 toast。' },
   { file: 'pages/publish/components/topic-state-keys/index.js', count: 3, reason: '状态键读取落 cy-error 重试；注册失败落表单 formError；删除失败落危险确认的 error 态，均为可见反馈。' },
   { file: 'components/cy/club-direct-ledger/index.js', count: 1, reason: '计酬账目读取失败显示 cy-inline-error 并提供重试；epoch 拒绝过期或切号响应，关闭通道 toast 避免与页内错误提示重复。' },
