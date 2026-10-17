@@ -210,6 +210,8 @@ public interface CommunityPostMapper {
                       @Param("now") Date now);
     Map<String, Object> selectCommentByAuthorRequest(@Param("authorId") Long authorId,
                                                      @Param("clientRequestId") String clientRequestId);
+    Map<String, Object> selectCommentByAuthorRequestForUpdate(@Param("authorId") Long authorId,
+                                                              @Param("clientRequestId") String clientRequestId);
     Map<String, Object> selectCommentForReply(@Param("commentId") Long commentId,
                                               @Param("postId") Long postId,
                                               @Param("viewerId") Long viewerId);
@@ -228,6 +230,10 @@ public interface CommunityPostMapper {
                             @Param("requestId") String requestId, @Param("now") Date now);
     Map<String, Object> selectCommentActionByRequest(@Param("memberId") Long memberId,
                                                      @Param("requestId") String requestId);
+    Map<String, Object> selectCommentLikeActionForUpdate(@Param("commentId") Long commentId,
+                                                         @Param("memberId") Long memberId);
+    Map<String, Object> selectCommandReceiptForUpdate(@Param("memberId") Long memberId,
+                                                      @Param("requestId") String requestId);
     int deleteCommentAction(@Param("commentId") Long commentId, @Param("memberId") Long memberId);
     int recomputeCommentLikes(Long commentId);
     List<Map<String, Object>> selectComments(@Param("postId") Long postId,
@@ -282,9 +288,9 @@ public interface CommunityPostMapper {
                                                   @Param("limit") int limit);
     Map<String, Object> selectNotificationPreferences(@Param("memberId") Long memberId);
     int upsertNotificationPreferences(@Param("memberId") Long memberId,
-                                      @Param("interactionEnabled") boolean interactionEnabled,
-                                      @Param("mentionEnabled") boolean mentionEnabled,
-                                      @Param("socialEnabled") boolean socialEnabled,
+                                      @Param("interactionEnabled") Boolean interactionEnabled,
+                                      @Param("mentionEnabled") Boolean mentionEnabled,
+                                      @Param("socialEnabled") Boolean socialEnabled,
                                       @Param("now") Date now);
     int markNotificationRead(@Param("id") Long id, @Param("memberId") Long memberId,
                              @Param("now") Date now);
