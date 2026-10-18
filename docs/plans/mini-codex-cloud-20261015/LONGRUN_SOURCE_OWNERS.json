@@ -3023,10 +3023,45 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java": {
       "owner": "EXTRA6/E01",
       "worker": "original E01 author",
-      "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
-      "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
-      "scope": "Trace actual activity creation/publish/cancel/end/sale cutoff and existing waitlistjoin contract. If unique existing invariant provesbug minimal source repair within original ownership; else precise unresolved field/state decision. Do notguess sale cutoff semantics or put new predicates on sharedseriesPolicy harming existingOFFERED expiry/payment/release.",
-      "verification": "NOT_RUN"
+      "state": "SOURCE_DELIVERED_ACKED_FROZEN_LOCK_RETAINED",
+      "base_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "frozen_source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "scope": "Delivered E01-13 regression for new WAITING eligibility using existing published/not-ended activity and ticket signup-deadline checks. No sale_* policy, existing WAITING/OFFERED/shared-policy change or new source write grant.",
+      "verification": "EXACT_SOURCE_SINGLE_CLASS6_ORDINARY_PASS_ONLY",
+      "actual_writer": 0,
+      "lock_retained": true,
+      "historical_authorization_snapshot": {
+        "owner": "EXTRA6/E01",
+        "worker": "original E01 author",
+        "state": "AUTHORIZED_PENDING_ORIGINAL_OWNER_ACK",
+        "base_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+        "scope": "Trace actual activity creation/publish/cancel/end/sale cutoff and existing waitlistjoin contract. If unique existing invariant provesbug minimal source repair within original ownership; else precise unresolved field/state decision. Do notguess sale cutoff semantics or put new predicates on sharedseriesPolicy harming existingOFFERED expiry/payment/release.",
+        "verification": "NOT_RUN"
+      },
+      "original_author_ack": {
+        "commit_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
+        "claims_url": "https://github.com/liboyang42-cpu/hengyin/blob/ff6c15679d3249987eb74ee150c1121a2effe250/docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/CLAIMS.json",
+        "receipt": "Original E01 actually read public README+summary and signed off frozen original lock retained; no edits or execution.",
+        "worker_identity_in_ack": "/root/external_e01",
+        "c00_read_scope": "Read public ff6c commit and its CLAIMS original E01 ACK; no new author ACK or source task requested."
+      },
+      "ordinary_result": {
+        "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+        "class": "com.chengyinhub.business.longrun.E01_13Test",
+        "actual_tests": 6,
+        "passed": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "fresh_xml": true,
+        "xml_sha256": "f069ed7a3349de46333a50524cbe55c40a6dcdccad2153cf4a962e56d7bfb859",
+        "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+        "evidence_packet": "EVIDENCE_VPS_EXTRA_530e7228.json",
+        "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/README.md",
+        "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/summary.json",
+        "c00_read_scope": "Public README/summary for exact530e actually read; no raw VPS XML/log retrieval or Cloud rerun.",
+        "acceptance_boundary": "Only this six-method class at exact530e, subset of existing four-class60 run. Not inherited by6c or any other source; no real MySQL/Redis, runtime HTTP, device/business, integration, migration/merge/deploy acceptance."
+      }
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java": {
       "owner": "CORE/C03",
