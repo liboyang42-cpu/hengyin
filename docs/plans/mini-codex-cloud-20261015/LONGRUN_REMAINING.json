@@ -2,7 +2,7 @@
   "protocol": "CY-REMAINING-DEVELOPMENT-SNAPSHOT-20261015",
   "core_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
   "extra_source": "923170abd8e468d62eb8404b16b990609a4da42a",
-  "counts_are": "Actual remaining source work, not cumulative history, testcase count or initial50",
+  "counts_are": "Current status is explicit in core/current_known_ready and extra.current. extra.historical_snapshot preserves prior queue slices and counts only; historical totals, initial50 and testcase counts are not remaining bugs.",
   "core": {
     "proven_actionable_undelivered": 0,
     "source_deliveries_unverified_history": 136,
@@ -11,33 +11,63 @@
     "user_confirmed_existing_contract_no_source_change": 2
   },
   "extra": {
-    "last_queue_source_deliveries": 52,
-    "last_queue_history": 105,
-    "last_queue_claimed": 3,
-    "already_public_from_those_claims": [
-      "E03-16",
-      "E05-17"
-    ],
-    "effective_known_undelivered_active": [],
-    "blocked_queue_items": 6,
-    "decision_blocked": 4,
-    "ownership_blocked": 1,
-    "dependency_blocked": 1,
-    "note": "Latestoriginalteam publicQUEUE111history/60source/40counterevidence/6blocked/5otherdelegated, actualREADY0/claimed0; these are historical slices, not111remainingbugs",
-    "latest_public_queue": {
-      "head": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
-      "total_history": 111,
-      "source_delivered": 60,
-      "no_change_source_review": 40,
-      "blocked": 6,
-      "ready": 0,
-      "claimed": 0,
-      "actionable_or_inflight": 0
+    "historical_snapshot": {
+      "last_queue_source_deliveries": 52,
+      "last_queue_history": 105,
+      "last_queue_claimed": 3,
+      "already_public_from_those_claims": [
+        "E03-16",
+        "E05-17"
+      ],
+      "effective_known_undelivered_active": [],
+      "blocked_queue_items": 6,
+      "decision_blocked": 4,
+      "ownership_blocked": 1,
+      "dependency_blocked": 1,
+      "note": "Latestoriginalteam publicQUEUE111history/60source/40counterevidence/6blocked/5otherdelegated, actualREADY0/claimed0; these are historical slices, not111remainingbugs",
+      "latest_public_queue": {
+        "head": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+        "total_history": 111,
+        "source_delivered": 60,
+        "no_change_source_review": 40,
+        "blocked": 6,
+        "ready": 0,
+        "claimed": 0,
+        "actionable_or_inflight": 0
+      },
+      "current_authorized_new_source_lanes": 0,
+      "claimed_new_source_lanes": 0,
+      "remaining_counts_note": "Prior queue counts preserved as history, not currentREADY; two old IDs now authorized, E04 A/B sequential same writer, no new bug count.",
+      "current_user_decided_packets_delivered": 3
     },
-    "current_authorized_new_source_lanes": 0,
-    "claimed_new_source_lanes": 0,
-    "remaining_counts_note": "Prior queue counts preserved as history, not currentREADY; two old IDs now authorized, E04 A/B sequential same writer, no new bug count.",
-    "current_user_decided_packets_delivered": 3
+    "historical_snapshot_note": "Entire previous extra object preserved verbatim in structure and values as historical snapshots. In particular decision_blocked4, ownership_blocked1, blocked_queue_items6 and total_history111 are not current remaining work or bug counts.",
+    "current": {
+      "product_decisions_pending": 0,
+      "four_fixture_file_authorization_pending": 0,
+      "four_fixture_source_delivery": "ALL_FOUR_GRANTED_ACKED_SOURCE_DELIVERED",
+      "four_fixture_source_packet": "FOUR_FIXTURE_SOURCE_BATCH.json",
+      "confirmed_actionable_undelivered_source_items": 0,
+      "active_source_writers": 0,
+      "B05": {
+        "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+        "compile": "TEST_COMPILE_PASS",
+        "actual_tests": 0,
+        "true_mysql_methods_not_run": 3,
+        "evidence_packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+      },
+      "EXTRA_E02": {
+        "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+        "compile": "NOT_RUN",
+        "blocker": "CACHE_PREPARATION_ENOSPC_BEFORE_212_AND_MAVEN",
+        "guard_invoked": false,
+        "actual_tests": 0,
+        "true_mysql_methods_not_run": 3,
+        "source_failure": false,
+        "evidence_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+      },
+      "real_storage_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; separate from cache ENOSPC, product decisions and file authorization",
+      "policy": "Keep existing entry; no immediate retry, Cloud substitute, new source/test/CI/migration changes or invented remaining bugs"
+    }
   },
   "blocked_records": [
     {
