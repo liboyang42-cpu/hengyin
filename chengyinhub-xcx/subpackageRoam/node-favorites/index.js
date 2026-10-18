@@ -14,7 +14,7 @@ Page({
   },
   onLoad() { this.load() },
   onShow() {
-    // 从详情里取消收藏后返回,列表要回读,不本地猜。
+    this._navigating = false // 从详情里取消收藏后返回,列表要回读,不本地猜。兜底清跳转中标记
     if (this._loadedOnce) this.load({ quiet: true })
   },
   load(opts) {
@@ -44,8 +44,8 @@ Page({
     })
   },
   openNode(e) {
-    const id = e.currentTarget.dataset.id
-    if (id) wx.navigateTo({ url: `/subpackageRoam/poi-detail/index?poiId=${encodeURIComponent(id)}` })
+    const id = e.currentTarget.dataset.id; if (!id || this._navigating) return // 跳转中不响应连点,免得叠两层详情
+    this._navigating = true; wx.navigateTo({ url: `/subpackageRoam/poi-detail/index?poiId=${encodeURIComponent(id)}`, complete: () => { this._navigating = false } })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
