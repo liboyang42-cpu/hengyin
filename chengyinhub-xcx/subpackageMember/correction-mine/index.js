@@ -36,8 +36,8 @@ Page({
   },
   // 列表失败 → 首屏失败态 / 已有数据时轻提示
   _settle(st, list) {
-    if (st.seq !== this._seq) return
     if (st.fromPull) wx.stopPullDownRefresh()
+    if (st.seq !== this._seq) return
     const all = list ? view.normalizeList(list) : null
     if (!all) {
       if (!st.keep) this.setData({ state: 'error' })
@@ -46,7 +46,7 @@ Page({
     }
     this._loadedOnce = true
     this._all = all
-    this._shown = view.PAGE_SIZE
+    if (!st.quiet) this._shown = view.PAGE_SIZE // 静默回读保留已展开条数
     this._sync()
   },
   _sync() {
