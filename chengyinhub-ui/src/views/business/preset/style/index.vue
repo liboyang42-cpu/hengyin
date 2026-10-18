@@ -128,9 +128,10 @@ export default {
   methods: {
     getList() {
       this.loading = true
-      listPresetStyle(this.queryParams).then(response => {
+      return listPresetStyle(this.queryParams).then(response => {
         this.styleList = response.rows
         this.total = response.total
+      }).catch(() => {}).finally(() => {
         this.loading = false
       })
     },
