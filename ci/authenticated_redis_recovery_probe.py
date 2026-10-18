@@ -5,11 +5,16 @@ import datetime
 import hashlib
 import importlib.util
 import io
+import ipaddress
 import json
 import os
 import re
+import select
+import socket
+import socketserver
 import subprocess
 import sys
+import threading
 import time
 import zipfile
 from pathlib import Path
@@ -32,6 +37,8 @@ def require_absent(kind, identifier, returncode, stderr):
     text = stderr.decode(errors='replace') if isinstance(stderr, bytes) else str(stderr)
     target = re.escape(identifier)
     missing = r'Error: No such ' + kind + ': ' + target
+    if kind == 'container':
+        missing += r'|Error response from daemon: No such container: ' + target
     if kind == 'network':
         missing += r'|Error response from daemon: network ' + target + r' not found'
     require(returncode != 0 and re.fullmatch(missing, text.strip()) is not None,
@@ -156,6 +163,161 @@ def write_report(out, name, report):
     path.chmod(0o600)
 
 
+def mysql_endpoint(name):
+    obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
+    network = json.loads(command(DOCKER + ['network', 'inspect', name], timeout=5))[0]
+    require(obj['Name'] == '/' + name + '-mysql'
+            and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
+            and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
+            'MySQL relay target not owned')
+    require(network['Name'] == name and network['Internal'] is True
+            and network.get('Labels', {}).get('chengyin.auth-recovery') == name
+            and set(obj['NetworkSettings']['Networks']) == {name}, 'MySQL relay network not owned')
+    attachment = obj['NetworkSettings']['Networks'][name]
+    address = ipaddress.ip_address(attachment['IPAddress'])
+    require(attachment['NetworkID'] == network['Id'] and address.version == 4
+            and address.is_private and not address.is_loopback
+            and any(address in ipaddress.ip_network(c['Subnet']) for c in network['IPAM']['Config']
+                    if ':' not in c['Subnet']), 'MySQL relay address not in owned network')
+    require(obj['State']['Running'] and not obj['State']['Paused'] and not obj['State']['OOMKilled']
+            and not obj['State']['Restarting'] and obj['State']['Pid'] > 0, 'MySQL relay target not running')
+    return {'id': obj['Id'], 'networkId': network['Id'], 'ip': str(address), 'pid': obj['State']['Pid']}
+
+
+@contextlib.contextmanager
+def mysql_relay(name, baseline):
+    """Host-only transport for the original loopback-only builder/bootstrap."""
+    expected = baseline['endpoint']
+    require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before bind')
+    closing = threading.Event()
+    sockets = set()
+    guard = threading.Lock()
+    failures = []
+
+    class Handler(socketserver.BaseRequestHandler):
+        def handle(self):
+            upstream = None
+            try:
+                require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before connect')
+                upstream = socket.create_connection((expected['ip'], 3306), timeout=5)
+                with guard:
+                    sockets.update((self.request, upstream))
+                self.request.settimeout(5)
+                upstream.settimeout(5)
+                active = time.monotonic()
+                readers = [self.request, upstream]
+                while readers and not closing.is_set():
+                    readable, _, _ = select.select(readers, [], [], 0.2)
+                    require(time.monotonic() - active < 120, 'MySQL relay idle timeout')
+                    for source in readable:
+                        data = source.recv(65536)
+                        destination = upstream if source is self.request else self.request
+                        if not data:
+                            destination.shutdown(socket.SHUT_WR)
+                            readers.remove(source)
+                            continue
+                        destination.sendall(data)
+                        active = time.monotonic()
+            except BaseException as exc:
+                if not closing.is_set():
+                    failures.append(type(exc).__name__ + ': ' + redact(str(exc), SECRET_VALUES))
+            finally:
+                with guard:
+                    sockets.discard(self.request)
+                    sockets.discard(upstream)
+                if upstream:
+                    upstream.close()
+
+    server = socketserver.ThreadingTCPServer(('127.0.0.1', 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.1})
+    thread.start()
+    phase_error = None
+    try:
+        yield server.server_address[1]
+        require(mysql_endpoint(name) == expected, 'MySQL relay identity changed after phase')
+    except BaseException as exc:
+        phase_error = exc
+        raise
+    finally:
+        closing.set()
+        try:
+            server.shutdown()
+        except BaseException as exc:
+            failures.append('listener shutdown: ' + type(exc).__name__)
+        with guard:
+            for active_socket in sockets:
+                try:
+                    active_socket.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                try:
+                    active_socket.close()
+                except OSError as exc:
+                    failures.append('socket close: ' + type(exc).__name__)
+        try:
+            server.server_close()  # Joins every accepted-connection worker.
+        except BaseException as exc:
+            failures.append('worker close/join: ' + type(exc).__name__)
+        thread.join(timeout=5)
+        if thread.is_alive():
+            failures.append('listener thread did not exit')
+        if phase_error is None:
+            require(not failures, 'MySQL relay failed: ' + '; '.join(failures))
+
+
+def mysql_ready(name, schema, out, private, port):
+    """Wait for the one created server, not its socket-only initialization server."""
+    deadline = time.monotonic() + 120
+    cid = None
+    facts = {'result': 'NOT_READY'}
+    try:
+        while time.monotonic() < deadline:
+            obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
+            require(obj['Name'] == '/' + name + '-mysql'
+                    and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
+                    and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
+                    'MySQL readiness target not owned')
+            cid = cid or obj['Id']
+            require(obj['Id'] == cid, 'MySQL readiness target replaced')
+            facts.update(id=cid, state={k: obj['State'][k] for k in
+                         ('Pid', 'Running', 'Paused', 'Restarting', 'ExitCode', 'OOMKilled')},
+                         requestedPortBindings=obj['HostConfig'].get('PortBindings'),
+                         actualPorts=obj['NetworkSettings'].get('Ports'))
+            write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+            require(obj['State']['Running'] and not obj['State']['OOMKilled']
+                    and not obj['State']['Restarting'], 'MySQL exited or unhealthy before TCP readiness')
+            try:
+                check = subprocess.run(DOCKER + ['exec', cid, 'sh', '-c',
+                    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql --protocol=TCP -h127.0.0.1 '
+                    '--connect-timeout=2 -uroot -N -e "SELECT @@server_uuid,VERSION()"'],
+                    capture_output=True, timeout=5)
+                if check.returncode == 0:
+                    uuid, version = check.stdout.decode().strip().split('\t')
+                    require(version == '8.0.45' and re.fullmatch(r'[a-f0-9-]{36}', uuid) is not None,
+                            'unexpected MySQL native identity/version')
+                    facts.update(endpoint=mysql_endpoint(name), serverUuid=uuid, version=version)
+                    facts['result'] = 'OWNED_MYSQL_TCP_READY'
+                    break
+            except subprocess.TimeoutExpired:
+                pass
+            time.sleep(1)
+        require(facts['result'] == 'OWNED_MYSQL_TCP_READY', 'MySQL TCP readiness deadline')
+    except BaseException as exc:
+        facts.update(result='FAIL_NO_RESTART', failureType=type(exc).__name__,
+                     reason=redact(str(exc), SECRET_VALUES))
+        raise
+    finally:
+        if cid:
+            try:
+                logs = subprocess.run(DOCKER + ['logs', '--tail', '100', cid],
+                                      capture_output=True, timeout=10)
+                facts.update(logExit=logs.returncode,
+                             logTail=redact((logs.stdout + logs.stderr).decode(errors='replace'), SECRET_VALUES))
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                facts['logFailureType'] = type(exc).__name__
+        write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+
+
 def prepare(name, schema, out, private, port):
     import secrets
     import crypt
@@ -165,9 +327,7 @@ def prepare(name, schema, out, private, port):
     require(owned['Name'] == '/' + name + '-mysql'
             and owned['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
             and set(owned['NetworkSettings']['Networks']) == {name}, 'initial MySQL ownership changed')
-    binding = owned['NetworkSettings']['Ports']['3306/tcp']
-    require(len(binding) == 1 and binding[0] == {'HostIp': '127.0.0.1', 'HostPort': str(port)},
-            'not the owned loopback MySQL binding')
+    require(not owned['HostConfig'].get('PortBindings'), 'MySQL published ports forbidden')
     network = json.loads(command(DOCKER + ['network', 'inspect', name]))[0]
     require(network['Internal'] is True and network.get('Labels', {}).get('chengyin.auth-recovery') == name
             and owned['NetworkSettings']['Networks'][name]['NetworkID'] == network['Id'],
@@ -181,7 +341,9 @@ def prepare(name, schema, out, private, port):
     with database(port) as db, db.cursor() as cur:
         cur.execute('SELECT @@server_uuid,VERSION()')
         uuid, version = cur.fetchone()
-        require(str(version).startswith('8.'), 'MySQL8 required')
+        baseline = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+        require((uuid, version) == (baseline['serverUuid'], baseline['version']),
+                'loopback relay differs from native MySQL identity/version')
         cur.execute('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s', (schema,))
         require(cur.fetchone()[0] == 0, 'schema already exists; no replay')
     bootstrap.validate_target(schema, uuid, True)
@@ -196,7 +358,8 @@ def prepare(name, schema, out, private, port):
             exit_code = builder.main()
     finally:
         sys.argv = old_args
-        write_report(out, 'schema-summary.json', {
+        readiness = json.loads((out / 'schema-summary.json').read_text())
+        write_report(out, 'schema-summary.json', {**readiness,
             'schema': schema, 'serverUuid': uuid, 'builderExit': exit_code,
             'actualCheckout': os.environ['GITHUB_SHA'], 'embeddedCheckoutMatched': True,
             'nativeJarSha256': hashlib.sha256(jar.read_bytes()).hexdigest(),
@@ -356,6 +519,11 @@ def exercise(name, schema, out, private, port):
         mark('captcha_negative_control', classification=classification, **status)
 
     with database(port, schema) as db:
+        with db.cursor() as identity:
+            identity.execute('SELECT @@server_uuid,VERSION()')
+            baseline = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+            require(identity.fetchone() == (saved['serverUuid'], baseline['version']),
+                    'exercise relay MySQL identity/version mismatch')
         def rows(sql, args=()):
             with db.cursor() as cur:
                 cur.execute(sql, args)
@@ -511,17 +679,27 @@ def main():
     mode, name, schema, output, private_file, port = sys.argv[1:]
     require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
             and schema == 'cy_e2e_auth_' + name[8:], 'fixed fixture scope required')
-    require(mode in ('prepare', 'exercise', 'cleanup'), 'unknown fixture phase')
+    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup'), 'unknown fixture phase')
     require(command(DOCKER + ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}']).strip()
             == b'unix:///var/run/docker.sock', 'not local hosted daemon')
     SECRET_VALUES.extend([os.environ['CHENGYIN_AUTH_FIXTURE_DB_PASSWORD'], 'synthetic-local-only'])
     out = Path(output); require(out.is_dir(), 'evidence directory missing')
     private = Path(private_file)
     try:
-        {'prepare': prepare, 'exercise': exercise, 'cleanup': cleanup}[mode](name, schema, out, private, port)
+        if mode in ('prepare', 'exercise'):
+            baseline = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+            require(baseline['result'] == 'OWNED_MYSQL_TCP_READY', 'native MySQL readiness missing')
+            with mysql_relay(name, baseline) as relay_port:
+                {'prepare': prepare, 'exercise': exercise}[mode](name, schema, out, private, relay_port)
+        else:
+            {'mysql-ready': mysql_ready, 'cleanup': cleanup}[mode](name, schema, out, private, port)
     except BaseException as exc:
-        print(json.dumps({'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
-                          'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}))
+        failure = {'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                   'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}
+        report_path = out / 'authenticated-redis-recovery.json'
+        report = json.loads(report_path.read_text()) if report_path.exists() else {}
+        write_report(out, report_path.name, {**report, **failure})
+        print(json.dumps(failure))
         raise SystemExit(1)
 
 

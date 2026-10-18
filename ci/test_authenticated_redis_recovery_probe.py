@@ -136,10 +136,76 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
         self.assertIn('q' * 6000, clean)
         self.assertTrue(clean.endswith('END_DIAGNOSTICS\n'))
 
+    def test_mysql_relay_binds_loopback_owned_target_and_closes_on_failure(self):
+        name = 'cy-auth-' + 'a' * 32
+        expected = {'id': 'b' * 64, 'networkId': 'c' * 64, 'ip': '172.19.0.2', 'pid': 123}
+        obj = {'Id': expected['id'], 'Name': '/' + name + '-mysql',
+               'Config': {'Labels': {'chengyin.auth-recovery': name}},
+               'State': {'Running': True, 'Paused': False, 'OOMKilled': False,
+                         'Restarting': False, 'Pid': expected['pid']},
+               'NetworkSettings': {'Networks': {name: {'NetworkID': expected['networkId'],
+                                                      'IPAddress': expected['ip']}}}}
+        network = {'Id': expected['networkId'], 'Name': name, 'Internal': True,
+                   'Labels': {'chengyin.auth-recovery': name},
+                   'IPAM': {'Config': [{'Subnet': '172.19.0.0/16'}]}}
+        with mock.patch.object(probe, 'command', side_effect=[json.dumps([obj]), json.dumps([network])]):
+            self.assertEqual(probe.mysql_endpoint(name), expected)
+        foreign = copy.deepcopy(obj)
+        foreign['Config']['Labels']['chengyin.auth-recovery'] = 'other-task'
+        with mock.patch.object(probe, 'command', side_effect=[json.dumps([foreign]), json.dumps([network])]), \
+                self.assertRaises(RuntimeError):
+            probe.mysql_endpoint(name)
+
+        baseline = {'endpoint': expected}
+        with mock.patch.object(probe, 'mysql_endpoint', return_value=dict(expected, pid=124)), \
+                mock.patch.object(probe.socketserver, 'ThreadingTCPServer') as bind, \
+                self.assertRaises(RuntimeError):
+            with probe.mysql_relay(name, baseline):
+                self.fail('changed endpoint must not bind')
+        bind.assert_not_called()
+
+        for failure in ('phase', 'endpoint', 'late-close'):
+            with self.subTest(failure=failure):
+                accept_changed = failure == 'endpoint'
+                server, listener, client, upstream = (mock.Mock() for _ in range(4))
+                server.server_address = ('127.0.0.1', 35000)
+                listener.is_alive.return_value = False
+                client.recv.return_value = b''
+                upstream.recv.side_effect = [b'tail-after-client-eof', b'']
+                server.server_close.side_effect = RuntimeError('close failure')
+                endpoints = [expected, dict(expected, pid=124) if accept_changed else expected, expected]
+                with mock.patch.object(probe, 'mysql_endpoint', side_effect=endpoints), \
+                        mock.patch.object(probe.socketserver, 'ThreadingTCPServer', return_value=server) as bind, \
+                        mock.patch.object(probe.threading, 'Thread', return_value=listener), \
+                        mock.patch.object(probe.socket, 'create_connection', return_value=upstream) as connect, \
+                        mock.patch.object(probe.select, 'select', side_effect=[
+                            ([client], [], []), ([upstream], [], []), ([upstream], [], [])]):
+                    with self.assertRaisesRegex(RuntimeError, 'phase failure' if failure == 'phase' else 'relay failed'):
+                        with probe.mysql_relay(name, baseline) as port:
+                            self.assertEqual(port, 35000)
+                            self.assertEqual(bind.call_args.args[0], ('127.0.0.1', 0))
+                            handler = object.__new__(bind.call_args.args[1])
+                            handler.request = client
+                            handler.handle()
+                            if not accept_changed:
+                                connect.assert_called_once_with((expected['ip'], 3306), timeout=5)
+                                upstream.shutdown.assert_called_once_with(probe.socket.SHUT_WR)
+                                client.sendall.assert_called_once_with(b'tail-after-client-eof')
+                                client.shutdown.assert_called_once_with(probe.socket.SHUT_WR)
+                                upstream.close.assert_called_once()
+                                if failure == 'phase':
+                                    raise RuntimeError('phase failure')
+                    if accept_changed:
+                        connect.assert_not_called()
+                    server.shutdown.assert_called_once()
+                    server.server_close.assert_called_once()
+                    listener.join.assert_called_once_with(timeout=5)
+
     def test_cleanup_requires_typed_missing_exact_resource_not_context_error(self):
         cid = 'a' * 64
         network = 'cy-auth-' + 'b' * 32
         probe.require_absent('container', cid, 1, ('Error: No such container: ' + cid + '\n').encode())
+        probe.require_absent('container', cid, 1, 'Error response from daemon: No such container: ' + cid)
         probe.require_absent('network', network, 1, 'Error: No such network: ' + network)
         probe.require_absent('network', network, 1, 'Error response from daemon: network ' + network + ' not found')
         cases = [
