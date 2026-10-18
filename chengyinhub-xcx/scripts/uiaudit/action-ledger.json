@@ -1032751,7 +1032751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:167"
+        "staticSource": "subpackageMember/coupon/coupon.js:171"
       }
     },
     {
@@ -1032821,7 +1032821,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:218"
+        "staticSource": "subpackageMember/coupon/coupon.js:227"
       }
     },
     {
@@ -1032888,7 +1032888,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:176"
+        "staticSource": "subpackageMember/coupon/coupon.js:180"
       }
     },
     {
@@ -1032996,7 +1032996,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:185"
+        "staticSource": "subpackageMember/coupon/coupon.js:189"
       }
     },
     {
@@ -1033103,7 +1033103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/coupon/coupon.js:150"
+        "staticSource": "subpackageMember/coupon/coupon.js:154"
       }
     },
     {
