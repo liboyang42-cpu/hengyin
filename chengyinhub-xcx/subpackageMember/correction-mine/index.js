@@ -17,7 +17,7 @@ Page({
   },
   onLoad() { this.load() },
   onShow() {
-    // 从详情/补证返回时回读一次,状态以服务端为准
+    this._navigating = false // 从详情/补证返回时回读一次,状态以服务端为准;兜底清跳转中标记
     if (this._loadedOnce) this.load(false, true)
   },
   onPullDownRefresh() { this.load(true) },
@@ -72,8 +72,8 @@ Page({
   },
   openDetail(e) {
     const id = view.positiveId(e && e.currentTarget && e.currentTarget.dataset.id)
-    if (!id) return
-    wx.navigateTo({ url: '/subpackageMember/correction-detail/index?contributionId=' + id })
+    if (!id || this._navigating) return // 跳转中不响应连点,免得叠两层详情
+    this._navigating = true; wx.navigateTo({ url: '/subpackageMember/correction-detail/index?contributionId=' + id, complete: () => { this._navigating = false } })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
