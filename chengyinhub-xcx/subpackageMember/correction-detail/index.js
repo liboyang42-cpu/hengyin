@@ -141,13 +141,14 @@ Page({
 
   // 从列表点进来时返回列表,不叠页;从系统消息/成功态进来时照旧打开列表
   goMine() {
-    const pages = getCurrentPages()
-    const prev = pages.length > 1 ? pages[pages.length - 2] : null
-    if (prev && prev.route === 'subpackageMember/correction-mine/index') wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageMember/correction-mine/index' }) })
-    else wx.navigateTo({ url: '/subpackageMember/correction-mine/index' })
+    if (this._navigating) return // 跳转中不响应连点,免得连退两页或叠两层列表
+    const pages = getCurrentPages(), prev = pages.length > 1 ? pages[pages.length - 2] : null, done = () => { this._navigating = false }
+    this._navigating = true; if (prev && prev.route === 'subpackageMember/correction-mine/index') wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageMember/correction-mine/index' }), complete: done })
+    else wx.navigateTo({ url: '/subpackageMember/correction-mine/index', complete: done })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
     else wx.redirectTo({ url: '/subpackageMember/correction-mine/index' })
   },
+  onShow() { this._navigating = false }, // 返回本页时兜底清跳转中标记
 })
