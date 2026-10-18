@@ -115,7 +115,7 @@ Page({
     this.setData({ isOwner: false, createVisible: false, memberPickerVisible: false, grantBadge: null })
   },
 
-  onPullDownRefresh() { this.loadAll() },
+  onPullDownRefresh() { if (this._clubId) this.loadAll(); else wx.stopPullDownRefresh() },
 
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
