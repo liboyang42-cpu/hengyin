@@ -62,9 +62,10 @@
         "scope": "Exact3baseline SHA256 checked, 3singleline patches then stopped, no other path edit/Git/test",
         "core_transfer": "Original E02 separately confirmed B05 stopped and no future concurrent writes"
       },
-      "source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
-      "parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
-      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
+      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785"
     },
     {
       "id": "CORE_B05_SINGLE_FIXTURE",

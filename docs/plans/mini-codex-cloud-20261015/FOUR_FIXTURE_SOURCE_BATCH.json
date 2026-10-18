@@ -9,12 +9,13 @@
   },
   "deliveries": [
     {
-      "source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
-      "parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
       "files": 3,
       "added_lines": 3,
       "deleted_lines": 0,
-      "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
+      "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
+      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785"
     },
     {
       "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
@@ -40,5 +41,6 @@
     "merge/deploy",
     "wholebranch integration"
   ],
-  "remaining": "Existing CORE production/architecture actionable0; NPC requestidentity/AI aftersend count contracts unresolved, no new audit/filler. F3 READY0 maxdate realDB warning/metric evidence and mapper writegrant absent; RR actualisolation/legalparallelcaller notproven. Previously E01-13/E03-04/E02-03 delivered60/4 not awaiting userdecision."
+  "remaining": "Existing CORE production/architecture actionable0; NPC requestidentity/AI aftersend count contracts unresolved, no new audit/filler. F3 READY0 maxdate realDB warning/metric evidence and mapper writegrant absent; RR actualisolation/legalparallelcaller notproven. Previously E01-13/E03-04/E02-03 delivered60/4 not awaiting userdecision.",
+  "integration_topology": "Two sibling candidates off26d: EXTRA rolling6c4463 changesonly3E02files; CORE2ac55d changesonlyB05. No joint4filecandidate/integration/test claim."
 }

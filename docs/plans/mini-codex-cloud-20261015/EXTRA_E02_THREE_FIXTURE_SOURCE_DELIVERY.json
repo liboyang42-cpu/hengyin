@@ -1,8 +1,8 @@
 {
   "id": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY",
-  "source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
-  "parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
-  "branch": "codex/extra-e02-regression-20261015",
+  "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+  "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "branch": "codex/extra-six-rolling-20261015",
   "owner": "EXTRA6/E02",
   "writer": "original /root/external_e02",
   "paths": [
@@ -50,5 +50,8 @@
   "dependencies_gate_assertions_methods_cleanup_unchanged": true,
   "old_ordinary_pass_inherited": false,
   "integration": "OriginalE02 child published in existingPR30; EXTRA coordinator alone publishes rollingPR36 exactsame3hunks. No C00 edit to its source branch, no rebase/force or crossbranch acceptance. B05 is separateCORE candidate, not silently included.",
-  "resources": "Existingentryonly; each old CHENGYIN_E02_01/06/11_MYSQL_IT=1 + explicit sixscratchvars and MySQL8/ownedschema remain. No newentry/gate/config/CI/network or trueDB execution."
+  "resources": "Existingentryonly; each old CHENGYIN_E02_01/06/11_MYSQL_IT=1 + explicit sixscratchvars and MySQL8/ownedschema remain. No newentry/gate/config/CI/network or trueDB execution.",
+  "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+  "original_child_parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+  "rolling_readback": "Completepubliccommit exact3files/add3del0; eachgitblobSHA identical originalf74child, sameexactgrant; noB05change or other source change"
 }
