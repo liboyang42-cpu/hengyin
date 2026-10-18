@@ -1572,7 +1572,7 @@ Page({
       title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
-        app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); } });
+        app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
       }
     });
   },
@@ -2552,7 +2552,7 @@ Page({
       title: '举报评论', content: '确认举报?平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
-        app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); } });
+        app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
       }
     });
   },
@@ -2813,13 +2813,23 @@ Page({
   },
 
   // 动态点赞/取消
+  // BL-197:接口是切换式,同一条在返回前的重复点击忽略(否则先赞后取消);失败如实提示,成功只回读不乐观改数
   onLikePost(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
+    if (!id) return;
+    const key = String(id);
+    const liking = this._likingPosts || (this._likingPosts = {});
+    if (liking[key]) return;
+    liking[key] = true;
     const that = this;
     app.sendRequest({
       url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
-      success(res) { if (res.code == '200') that.loadPosts(); },
-      fail() { cyToast('操作失败'); },
+      success(res) {
+        delete liking[key];
+        if (res && res.code == '200') that.loadPosts();
+        else cyToast(bizFailureMessage(res, '点赞没成功'));
+      },
+      fail() { delete liking[key]; cyToast('网络异常，请重试'); },
     });
   },
 
