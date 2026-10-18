@@ -74,6 +74,230 @@
       {
         "type": "file",
         "value": "components/cy/error/README.md"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-publish-sheet/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-publish-sheet/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-publish-sheet/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-publish-sheet/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-groupcode/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-groupcode/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-groupcode/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-groupcode/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-merchants/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-merchants/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-merchants/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-merchants/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-settings/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-settings/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-settings/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-settings/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/identity-tag/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/identity-tag/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/identity-tag/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/identity-tag/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/level-progress/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/level-progress/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/level-progress/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/level-progress/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/node/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/node/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/node/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/node/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/play-pause/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/play-pause/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/play-pause/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/play-pause/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/scene-topic-customers/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/scene-topic-customers/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/scene-topic-customers/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/scene-topic-customers/index.wxss"
+      },
+      {
+        "type": "file",
+        "value": "images/home-banner-2.jpg"
+      },
+      {
+        "type": "file",
+        "value": "images/home-route-free-placeholder.jpg"
+      },
+      {
+        "type": "file",
+        "value": "images/home-route-city-placeholder.jpg"
+      },
+      {
+        "type": "file",
+        "value": "images/group1.png"
+      },
+      {
+        "type": "file",
+        "value": "images/icon_air.png"
+      },
+      {
+        "type": "file",
+        "value": "images/publish-sheet-template.svg"
+      },
+      {
+        "type": "file",
+        "value": "images/publish-sheet-topic.svg"
+      },
+      {
+        "type": "file",
+        "value": "images/publish-sheet-activity.svg"
+      },
+      {
+        "type": "file",
+        "value": "images/d_ok.png"
+      },
+      {
+        "type": "file",
+        "value": "images/publish-sheet-lock.svg"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/icon/spec.json"
+      },
+      {
+        "type": "file",
+        "value": "images/publish-quick/README.md"
+      },
+      {
+        "type": "file",
+        "value": ".gitignore"
+      },
+      {
+        "type": "file",
+        "value": "project.private.config.json"
+      },
+      {
+        "type": "file",
+        "value": "project.config.json"
+      },
+      {
+        "type": "file",
+        "value": "utils/publish/guide-progress.js"
       }
     ],
     "include": []
