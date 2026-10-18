@@ -669704,7 +669704,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:350"
+        "staticSource": "pages/activity/official-organizer/index.js:357"
       }
     },
     {
@@ -669771,7 +669771,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:233"
+        "staticSource": "pages/activity/official-organizer/index.js:240"
       }
     },
     {
@@ -669838,7 +669838,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:197"
+        "staticSource": "pages/activity/official-organizer/index.js:204"
       }
     },
     {
@@ -669905,7 +669905,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:233"
+        "staticSource": "pages/activity/official-organizer/index.js:240"
       }
     },
     {
@@ -669972,7 +669972,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:205"
+        "staticSource": "pages/activity/official-organizer/index.js:212"
       }
     },
     {
@@ -670039,7 +670039,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:197"
+        "staticSource": "pages/activity/official-organizer/index.js:204"
       }
     },
     {
@@ -670106,7 +670106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:233"
+        "staticSource": "pages/activity/official-organizer/index.js:240"
       }
     },
     {
@@ -670222,7 +670222,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:256"
+        "staticSource": "pages/activity/official-organizer/index.js:263"
       }
     },
     {
@@ -670338,7 +670338,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:257"
+        "staticSource": "pages/activity/official-organizer/index.js:264"
       }
     },
     {
@@ -670454,7 +670454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/official-organizer/index.js:258"
+        "staticSource": "pages/activity/official-organizer/index.js:265"
       }
     },
     {
