@@ -43,8 +43,9 @@ Page({
   // 两路都回来后再落数据;举报列表失败 → 首屏失败态 / 已有数据时轻提示。原因文案读不到只用兜底名,不挡列表。
   _settle(st) {
     st.pending -= 1
-    if (st.pending > 0 || st.seq !== this._seq) return
+    if (st.pending > 0) return
     if (st.fromPull) wx.stopPullDownRefresh()
+    if (st.seq !== this._seq) return
     const all = st.list ? view.normalizeList(st.list, st.labels || {}) : null
     if (!all) {
       if (!st.keep) this.setData({ state: 'error' })
@@ -53,7 +54,7 @@ Page({
     }
     this._loadedOnce = true
     this._all = all
-    this._shown = view.PAGE_SIZE
+    if (!st.quiet) this._shown = view.PAGE_SIZE // 静默回读保留已展开条数
     this._sync()
   },
   _sync() {
