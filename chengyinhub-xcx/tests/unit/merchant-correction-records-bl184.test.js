@@ -157,3 +157,9 @@ test('入口:纠错半屏成功态只多一个次按钮「查看我的纠错」;
     assert.match(w, /<cy-page-title title="[^"]+" safe-top="\{\{false\}\}" \/>/)
   }
 })
+
+test('BL-184: 通过/已更新用绿色对勾，不用「已结束」的 × 样式；未通过保持中性', () => {
+  assert.equal(view.STATUS.APPROVED.tone, 'green')
+  assert.equal(view.STATUS.MERGED.tone, 'green')
+  assert.equal(view.STATUS.REJECTED.tone, 'mono')
+})

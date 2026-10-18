@@ -317,3 +317,8 @@
 - BL-187 客户页定向广播：与 D-001/RUN-001 冲突，作废。如需恢复由用户决定。
 - 改动清单 B9 退款被拒订阅：`utils/subscribe.js` 只定义了 `refundRejected` 模板，全仓没有一处请求它。报名时已经申请了 3 个模板（`pages/activity/baoming/baoming.js:1644`，一次最多 3 个），所以应改在取消报名或退款发起处请求 `['refund','refundRejected']`。`subscribe.js` 归 Codex B01。
 - 改动清单 P1-033（已复核，确认是缺陷）：`pages/mylike/mylike.js:257-260`。取消点赞成功后用点击时的 `index` 执行 `splice`。如果两条不同记录的取消先后返回，第二条会删错行。应改为按 `id` 过滤。`mylike.js` 归 Codex B01。
+
+## 第二十批（189）：监督补充（2026-10-17；真实缺陷，同 BL-188 类。已过补卡前置检查：涉及文件均不在 Codex `tasks.json` files/owned_files 与 TASKS.md Codex 独占清单内；`tests/unit` 无断言要求这些位置保留 `*this`（`list-render-perf-contract` 只说 `*this` 合法）；纯模板修正、不接接口）
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 189 | 主题详情与商家申请图片/标签列表 key | 已合并的 BL-22（`96675007`）改了 16 个 wxml，漏了这几处可能重复的展示列表，仍是 `wx:key="*this"`：`pages/topic/index/index.wxml:83`（主题图 `img.list(info.imgArr)` 轮播，同图可重复）、`:241`（`info.contentIncludes` 活动内容）、`:585`（评价 `uploadImages`，删除按 `index`）；`pages/topic/merchantapply/index.wxml:113`（`picUrl.split(',')` 场地照片，删除按 `data-imgindex`）；`pages/topic/components/project-join/index.wxml:217,483`（`play.chips` / `nodeSheet.play.chips`）。全部改为 `wx:key="index"`。只改 key，不改结构、样式和文案；不动静态选项/刻度/星级（`starList` 已是下标数组）；补一条静态单测断言这 6 处不再是 `*this` | `pages/topic/**` wxml；不碰 Codex 文件 |
