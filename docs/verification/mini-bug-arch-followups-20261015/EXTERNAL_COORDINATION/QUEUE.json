@@ -6375,7 +6375,7 @@
     "read_scope": "Public manifest actually read. Remote original log/XML/source hashes cited, not independently retrieved or recomputed by Cloud.",
     "pass_transferred_to_fixture6c": false
   },
-  "worker_runtime_note": "Original E02 directly read and signed6143 ordinary4PASS, stopped with original lock retained. E02_25 empty scratch table delivered at6c separately, 2 realMySQL methods NOT_RUN. Three other original tests and sharedCORE B05 unchanged; no new source failure/repair slot. Cloud executions0.",
+  "worker_runtime_note": "Original E02 delivered exactly three empty-table prerequisites and stopped. No compilation/test/CI execution. B05 belongs to external CORE receiver and is unchanged here. No failure repair slot.",
   "local_actual_result_history": [
     {
       "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
@@ -6530,31 +6530,79 @@
     "old_pass_inherited": false
   },
   "latest_fixture_prerequisite_followup": {
-    "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+    "child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+    "child_parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
     "modified": [
-      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java"
     ],
-    "status": "ONE_OF_FIVE_SCRATCH_PREREQUISITES_ADDED_SOURCE_ONLY",
+    "status": "THREE_EXISTING_FIXTURE_PREREQUISITES_SOURCE_DELIVERED_UNVERIFIED",
+    "diff": {
+      "files": 3,
+      "insertions": 3,
+      "deletions": 0,
+      "line": "jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");"
+    },
+    "declared_methods": 3,
+    "actual_tests": 0,
+    "compile": "NOT_RUN",
+    "real_mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "existing_methods_assertions_gates_cleanup_unchanged": true,
+    "production_dependency_migration_CI_changes": false,
+    "production_source_unchanged_since": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+    "old_pass_inherited": false,
+    "previous_E02_25_source_unchanged": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
     "remaining": [
       {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
-        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
-        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
-      },
-      {
-        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
-        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
-      },
-      {
         "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
-        "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+        "state": "EXTERNAL_CORE_OWNER_READ_ONLY_NOT_INCLUDED"
       }
-    ],
-    "production_migration": false,
-    "existing_methods_assertions_gates_unchanged": true,
-    "real_mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    ]
+  },
+  "fixture_prerequisite_history": [
+    {
+      "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "modified": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+      ],
+      "status": "ONE_OF_FIVE_SCRATCH_PREREQUISITES_ADDED_SOURCE_ONLY",
+      "remaining": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "state": "SCRATCH_SCHEMA_PREREQUISITE_NOT_YET_MODIFIED"
+        }
+      ],
+      "production_migration": false,
+      "existing_methods_assertions_gates_unchanged": true,
+      "real_mysql_execution": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    }
+  ],
+  "latest_static_source_evidence": {
+    "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+    "evidence_commit": "fb56b38de2e6eed9011023325789b7470aac06e6",
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/SOURCE_EXTRA_6c6f82d7",
+    "verification_type": "STATIC_ONLY",
+    "actual_tests": 0,
+    "compile_status": "NOT_RUN",
+    "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_GAP",
+    "ordinary_4_result_inherited": false
+  },
+  "lane_public_heads": {
+    "E02": "f74dd9be0c17a17db506ee8e0c46c60804a1a785"
   }
 }

@@ -473,3 +473,12 @@ Cloud未编译测试/手动CI/VPS，无新真库入口、网络/服务/CI变更�
 原E02已直接核读并签收冻结，无源码失败、不占修复槽。4项仅生产XML/H2查询及独立JDBC保留正文/快照合同，不代表真实Service详情、MySQL、Redis、HTTP/设备业务或集成验收。旧530四类60和旧8/35/64未重跑、不继承；本4不继承到后续6c fixture-only候选。
 
 6c仍仅E02_25MySqlIT一行scratch表前提，2项真库NOT_RUN；E02_01Test、E02_11Test、E02_06Test与共享B05四文件保持只读，未完成回归前提不因本4通过而消失。原方法/断言/gate无放宽，无新真库入口或CI配置，不执行迁移/合并部署。此后只更新本队三交付文档。
+
+
+## 三个既有真库夹具的空表前提已补齐
+
+完整源码 `6c44636974220ca9876386ee638c99981488db42`，直接父 `26d8245b458d18497eb9040a4c7d9f1509b41bb1`。原E02 child `f74dd9be0c17a17db506ee8e0c46c60804a1a785`，父 `9a27f6b0d8fe532320cbe646775464cf49ba1d10`。E02_01Test、E02_11Test、E02_06Test各仅在reference建表后增加一行空cms_activity(id bigint primary key,publish_status int,cancel_time datetime)。精确三文件、3新增、0删除；原各1方法、三个显式真库gate、全部断言/负控和created保护的自有scratch库清理均保留，无seed或其他源码/依赖/入口变化。已交E02_25未重改；B05由外部CORE负责，本队只读且未纳入本提交。
+
+全部SOURCE_DELIVERED_UNVERIFIED：Cloud编译NOT_RUN、实际0、真MySQL NOT_RUN/现有入口覆盖缺口，不把3个静态声明计作执行。生产与E02_03Test自6143未变，6143新4PASS及530四类60PASS仍属于各自精确候选，未重跑或继承。没有迁移执行、合并部署。
+
+此前E02_25单行前提6c6f82d7的本地静态证据现合并索引：[fb56b38de2e6eed9011023325789b7470aac06e6](https://github.com/liboyang42-cpu/hengyin/tree/fb56b38de2e6eed9011023325789b7470aac06e6/docs/verification/mini-bug-arch-20261015/SOURCE_EXTRA_6c6f82d7)。STATIC_ONLY、实际0、compile NOT_RUN、真实MySQL NOT_RUN；不以静态检查声称真库通过。
