@@ -148,7 +148,7 @@ Page({
         this._beforeAppeals = view.appealEventCount(raw.timeline)
         this.setData({ sheet: 'ok', reason: '', receiptText, report, nodes: view.timelineNodes(raw.timeline, report.stage) })
       } else {
-        this.setData({ sheet: 'ok', reason: '', receiptText })
+        this.setData({ sheet: 'ok', reason: '', receiptText, 'report.appealable': false }) // 已受理即进入申诉中,回读前不再可申诉
       }
       return
     }
@@ -158,8 +158,8 @@ Page({
     const sheet = this.data.sheet
     if (sheet === 'busy') return
     this.setData({ sheet: '' })
-    // 明确失败后阶段可能已被平台改变,回读一次以服务端为准
-    if (sheet === 'fail' || sheet === 'unknown') this.load(true)
+    // 成功/失败/未知后状态都可能已变,回读一次以服务端为准
+    if (sheet === 'ok' || sheet === 'fail' || sheet === 'unknown') this.load(true)
   },
 
   // 从列表点进来时返回列表,不叠页;从系统消息/成功态进来时照旧打开列表
