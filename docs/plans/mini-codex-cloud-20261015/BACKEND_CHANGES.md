@@ -1,5 +1,7 @@
 ## CORE5752单类31项通过／原作者签收并释放修复槽
 
+四个旧夹具均已在公共grant fa3f及逐作者ACK后源码交付：[批次](FOUR_FIXTURE_SOURCE_BATCH.json)。原E02三文件`f74dd9be0c17a17db506ee8e0c46c60804a1a785`（父`9a27f6b0d8fe532320cbe646775464cf49ba1d10`，PR30）；CORE/B05单文件`2ac55d20a9f4932be8d411e53191c69e5141772c`（父`26d8245b458d18497eb9040a4c7d9f1509b41bb1`，独占branch）。总共4文件各仅+1空表行/-0，逐文件移除新增行即恢复原文；原gate/6方法/全部断言和created清理不变。原E02已明确B05冻结交接，双方完成停写/锁保留。均STATIC_ONLY、实际测试0/未编译/真库未验，不把6143普通4PASS或b034普通8PASS套用。无新生产BUG/新入口/合并部署。
+
 CORE/B05已按fa3f公共grant明确ACK后交付：`2ac55d20a9f4932be8d411e53191c69e5141772c`，父`26d8245b458d18497eb9040a4c7d9f1509b41bb1`；[单文件交付包](CORE_B05_FIXTURE_SOURCE_DELIVERY.json)。仅新增一行既有cms_activity空表，去掉该行逐字恢复原文；3原方法/gate/全部断言/created清理不变。STATIC_ONLY、实际0/未编译/真库NOT_RUN；不借普通4PASS代替真库。新接收者完成停写、锁保留，未改EXTRA集成分支。root已私有转发原E02三文件grant，不等CORE验证；等待实际post-grant作者回执，不公开代发内部协调。
 
 已实际核读[近期PR24证据索引](RECENT_EXTERNAL_EVIDENCE_ACK.json)：923170ab原六类35=28PASS/7ERROR（H2别名夹具）保留为失败历史，b034a4aa仅两原异常类8定向PASS闭环且原E02修复槽已释放；530e7228四类60PASS，保原59声明/计数审计及不重跑记录；6143c37f单类4PASS仅H2生产XML。6c6f82d7仅一行建表前提STATIC_ONLY、实际0/未编译/真库未跑。旧E02声明18漏6CsvSource已更正24，未改源码凑数，不能把8/60/4跨SHA累加为一次通过。普通PASS不代表真实MySQL/Redis/HTTP、设备业务或部署；未迁移合并。四个旧fixture新grant仍只补既有表前提，不是四个生产BUG。

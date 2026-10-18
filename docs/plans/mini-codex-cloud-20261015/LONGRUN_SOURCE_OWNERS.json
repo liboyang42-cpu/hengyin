@@ -2781,35 +2781,44 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "original /root/external_e02",
-      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "state": "SOURCE_FROZEN_STATIC_ONLY_LOCK_RETAINED",
       "actual_writer": 0,
       "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
       "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
       "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
       "old_test_creator": "EXTRA6/E02",
-      "transfer": "Originaltestauthor resumes own3files"
+      "transfer": "Originaltestauthor resumes own3files",
+      "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+      "frozen_source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "original /root/external_e02",
-      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "state": "SOURCE_FROZEN_STATIC_ONLY_LOCK_RETAINED",
       "actual_writer": 0,
       "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
       "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
       "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
       "old_test_creator": "EXTRA6/E02",
-      "transfer": "Originaltestauthor resumes own3files"
+      "transfer": "Originaltestauthor resumes own3files",
+      "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+      "frozen_source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java": {
       "owner": "EXTRA6/E02",
       "worker": "original /root/external_e02",
-      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "state": "SOURCE_FROZEN_STATIC_ONLY_LOCK_RETAINED",
       "actual_writer": 0,
       "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
       "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
       "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
       "old_test_creator": "EXTRA6/E02",
-      "transfer": "Originaltestauthor resumes own3files"
+      "transfer": "Originaltestauthor resumes own3files",
+      "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+      "frozen_source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java": {
       "owner": "CORE/B05",
@@ -2823,7 +2832,8 @@
       "transfer": "Formal specificCORE takeover per latest user",
       "frozen_source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
       "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
-      "source_packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json"
+      "source_packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json",
+      "old_author_transfer_ack": "C00 directly read originalEXTRA/E02 privatechild final confirmingB05 stopped and willnotwrite; transparentCORE takeover"
     }
   },
   "reserved_not_transferred": [
@@ -4488,9 +4498,10 @@
   "current_EXTRA_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
   "four_fixture_minimal_grant": {
     "packet": "FOUR_FIXTURE_MINIMAL_GRANT.json",
-    "state": "PUBLIC_GRANT_AWAITING_POST_PUBLICATION_ACK",
+    "state": "ALL_FOUR_SOURCE_DELIVERED_UNVERIFIED",
     "actual_writers": 0,
-    "core_new_receiver_transparent": true
+    "core_new_receiver_transparent": true,
+    "source_batch": "FOUR_FIXTURE_SOURCE_BATCH.json"
   },
   "recent_external_evidence_ack": {
     "id": "RECENT_EXTERNAL_EVIDENCE_ACK_20261018",
@@ -4637,5 +4648,103 @@
     ],
     "current_minimal_task": "CORE/B05 exact onefile prerequisite delivered separately; no sourcepolicy expanded",
     "third": "READY0; DATE_ADD maxdate realMySQL/warning/source metric evidence absent and aggregationMappernotgranted; RRactualisolation/legitparallelcallernotproven"
+  },
+  "extra_three_fixture_source_delivery": {
+    "id": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY",
+    "source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+    "parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+    "branch": "codex/extra-e02-regression-20261015",
+    "owner": "EXTRA6/E02",
+    "writer": "original /root/external_e02",
+    "paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java"
+    ],
+    "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+    "post_grant_author_ack": "C00 directly read two completed originalE02 private child turns: fetched complete publicgrant via GitHubconnector before writing, exact3baseline hashes, only3lines added, stopped; separate B05 freeze/handoff acknowledgement",
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "verification_type": "STATIC_ONLY",
+    "static_review": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+        "exact_after_removing_added_line": true,
+        "methods": 1,
+        "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_01_MYSQL_IT\", matches = \"1\")",
+        "cleanup_preserved": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+        "exact_after_removing_added_line": true,
+        "methods": 1,
+        "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_11_MYSQL_IT\", matches = \"1\")",
+        "cleanup_preserved": true
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+        "exact_after_removing_added_line": true,
+        "methods": 1,
+        "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_06_MYSQL_IT\", matches = \"1\")",
+        "cleanup_preserved": true
+      }
+    ],
+    "added_lines": 3,
+    "deleted_lines": 0,
+    "public_readback": "Fullpubliccommit/parent/3patches and each completefile read; each removing exactaddedline byte-identical to control26d source",
+    "actual_source_writers": 0,
+    "original_author_stopped_lock_retained": true,
+    "compile_status": "NOT_RUN",
+    "actual_tests": 0,
+    "declared_methods": 3,
+    "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "production_changes": false,
+    "dependencies_gate_assertions_methods_cleanup_unchanged": true,
+    "old_ordinary_pass_inherited": false,
+    "integration": "OriginalE02 child published in existingPR30; EXTRA coordinator alone publishes rollingPR36 exactsame3hunks. No C00 edit to its source branch, no rebase/force or crossbranch acceptance. B05 is separateCORE candidate, not silently included.",
+    "resources": "Existingentryonly; each old CHENGYIN_E02_01/06/11_MYSQL_IT=1 + explicit sixscratchvars and MySQL8/ownedschema remain. No newentry/gate/config/CI/network or trueDB execution."
+  },
+  "four_fixture_source_batch": {
+    "id": "FOUR_FIXTURE_SOURCE_BATCH_20261018",
+    "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+    "status": "ALL_FOUR_SOURCE_DELIVERED_UNVERIFIED",
+    "author_acknowledgements": {
+      "original_E02": "Full publicgrant personallyread beforeexact3file write; C00 directly read completedchildACK and source summary",
+      "CORE_B05": "Transparentnewreceiver explicitfullpublicgrantACK beforewrite; originaltestauthor separatelyfrozen/releasedB05",
+      "not_original_author_claim": "B05test creatorEXTRA/E02; formalCORE takeover perlatestuser, no invented oldCORE testwriter"
+    },
+    "deliveries": [
+      {
+        "source_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+        "parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+        "files": 3,
+        "added_lines": 3,
+        "deleted_lines": 0,
+        "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json"
+      },
+      {
+        "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+        "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+        "files": 1,
+        "added_lines": 1,
+        "deleted_lines": 0,
+        "packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json"
+      }
+    ],
+    "actual_source_writers_now": 0,
+    "locks_retained": true,
+    "compile_status": "NOT_RUN",
+    "actual_tests": 0,
+    "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "already_reference_fixture": "6c6f82d7 only static2methodE02_25MySqlIT, not re-edited or re-tested",
+    "new_bug_count": 0,
+    "scope": "Existing table scratch prerequisite only; no production/gate/dependency/method/assertion/created cleanup change",
+    "not_done": [
+      "New realMySQL/Redis or runtimeHTTP acceptance",
+      "new verificationentry/CI/network",
+      "migration execution",
+      "merge/deploy",
+      "wholebranch integration"
+    ],
+    "remaining": "Existing CORE production/architecture actionable0; NPC requestidentity/AI aftersend count contracts unresolved, no new audit/filler. F3 READY0 maxdate realDB warning/metric evidence and mapper writegrant absent; RR actualisolation/legalparallelcaller notproven. Previously E01-13/E03-04/E02-03 delivered60/4 not awaiting userdecision."
   }
 }

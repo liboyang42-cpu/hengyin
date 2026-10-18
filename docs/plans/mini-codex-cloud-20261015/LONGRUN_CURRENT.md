@@ -1,37 +1,36 @@
 # 当前恢复入口
 
-CORE/B05已按fa3f公共grant明确ACK后交付：`2ac55d20a9f4932be8d411e53191c69e5141772c`，父`26d8245b458d18497eb9040a4c7d9f1509b41bb1`；[单文件交付包](CORE_B05_FIXTURE_SOURCE_DELIVERY.json)。仅新增一行既有cms_activity空表，去掉该行逐字恢复原文；3原方法/gate/全部断言/created清理不变。STATIC_ONLY、实际0/未编译/真库NOT_RUN；不借普通4PASS代替真库。新接收者完成停写、锁保留，未改EXTRA集成分支。root已私有转发原E02三文件grant，不等CORE验证；等待实际post-grant作者回执，不公开代发内部协调。
+四个旧夹具均已在公共grant fa3f及逐作者ACK后源码交付：[批次](FOUR_FIXTURE_SOURCE_BATCH.json)。原E02三文件`f74dd9be0c17a17db506ee8e0c46c60804a1a785`（父`9a27f6b0d8fe532320cbe646775464cf49ba1d10`，PR30）；CORE/B05单文件`2ac55d20a9f4932be8d411e53191c69e5141772c`（父`26d8245b458d18497eb9040a4c7d9f1509b41bb1`，独占branch）。总共4文件各仅+1空表行/-0，逐文件移除新增行即恢复原文；原gate/6方法/全部断言和created清理不变。原E02已明确B05冻结交接，双方完成停写/锁保留。均STATIC_ONLY、实际测试0/未编译/真库未验，不把6143普通4PASS或b034普通8PASS套用。无新生产BUG/新入口/合并部署。
 
-已实际核读[近期PR24证据索引](RECENT_EXTERNAL_EVIDENCE_ACK.json)：923170ab原六类35=28PASS/7ERROR（H2别名夹具）保留为失败历史，b034a4aa仅两原异常类8定向PASS闭环且原E02修复槽已释放；530e7228四类60PASS，保原59声明/计数审计及不重跑记录；6143c37f单类4PASS仅H2生产XML。6c6f82d7仅一行建表前提STATIC_ONLY、实际0/未编译/真库未跑。旧E02声明18漏6CsvSource已更正24，未改源码凑数，不能把8/60/4跨SHA累加为一次通过。普通PASS不代表真实MySQL/Redis/HTTP、设备业务或部署；未迁移合并。四个旧fixture新grant仍只补既有表前提，不是四个生产BUG。
+## 四文件精确交付
 
-四个旧真库夹具新增读取前提已[精确登记](FOUR_FIXTURE_MINIMAL_GRANT.json)：E02_01Test/E02_11Test/E02_06Test仍原EXTRA/E02；B05CommunityVisibilityMySqlIT实际测试创建者也为EXTRA/E02，现按用户要求正式转CORE/B05唯一接收者core_b05_fixture_sol（明确新接收，不冒称原作者在线）。45开放PR全分页仅PR30/36同作者及集成触达，无第二writer。仅补同一行cms_activity空表，原created自有scratch清理已正确，保gate/6原方法及断言；公共SHA逐作者ACK前不写。Cloud不编译测试/CI/VPS，不改生产/入口，已有6c6不重改。内部协调不写公开PR评论；非敏感权限表按要求保存公共GitHub。
-
-本次三项真人决定已全部形成公共源码：A `dedb44d54a4a277273943c0cbbca9f6e7528482a` → E02 `13be997646c88b9eea282cc8c8225b42820dc3b3` → B `923170abd8e468d62eb8404b16b990609a4da42a`，完整父链/精确路径/本地文本命令见[源码批次](BUSINESS_DECISIONS_SOURCE_BATCH.json)、[E02](E02_23_SOURCE_DELIVERY.json)、[B](E04_07_B_SOURCE_DELIVERY.json)。原两作者已按225b grant真实ACK并完成停写、保留独占锁，当前源码writer0，非仍等三项决定。E02真实行为变化：无可信旧帖映射收藏/取消返回原错误封装，收藏筛选/状态同一受保护来源谓词；无新URL，但不能标无行为变化。B原发券boolean外部签名不变，仅精确回执与审计内部合同，旧未知只审计不动券、其他冲正继续。静态逐源码声明A3、E02四类18、B两类11；B新5+旧3真库8均NOT_RUN/现有入口覆盖缺口，不能累加不同SHA为一个已跑矩阵。B唯一新增迁移仅审查，旧行NULL不回填，先加列才可未来部署B；当前无执行/集成合并部署，TEST_DEPLOYED=NO。
-
-## 当前真实状态
-
-本轮恢复的原E02-23、E04-07三最小包均已push，不再沿旧EXHAUSTED停等；原两作者真实接收并源码交付后停写，锁保留，当前源码writer0/未交付READY0。实际出现失败只回原作者一条修复线，同队其他真实独立项继续；不凑任务或运行数，不新增第四队。每队最多6个gpt-6.1-sol。
-
-| 包 | 完整公共源与直接父 | 本地待验范围 |
+| 责任 | 公共源码/直接父 | 原作者接收与范围 |
 |---|---|---|
-| E04-A未知仅审计 | dedb44d54a4a277273943c0cbbca9f6e7528482a / a76268d5454c8a5c5e3181ae7574bfb93932f800 | E04_07Test3声明，NOT_RUN；无新schema依赖 |
-| E02旧帖收藏读写隔离 | 13be997646c88b9eea282cc8c8225b42820dc3b3 / dedb44d54a4a277273943c0cbbca9f6e7528482a | 新6+直接影响旧8+2+2=18声明，普通H2/委托边界NOT_RUN；不是真MySQLJSON/HTTP证明 |
-| E04-B未来精确回执 | 923170abd8e468d62eb8404b16b990609a4da42a / 13be997646c88b9eea282cc8c8225b42820dc3b3 | 普通7+4=11声明；真MySQL新5+旧3=8声明，均未跑；先迁移后才可未来部署 |
+| 原EXTRA/E02三夹具 | `f74dd9be0c17a17db506ee8e0c46c60804a1a785` / `9a27f6b0d8fe532320cbe646775464cf49ba1d10` | E02_01Test/E02_11Test/E02_06Test，各一行；原作者亲自读完整fa3f后ACK开写并停写 |
+| CORE/B05单夹具 | `2ac55d20a9f4932be8d411e53191c69e5141772c` / `26d8245b458d18497eb9040a4c7d9f1509b41bb1` | B05CommunityVisibilityMySqlIT仅一行；原测试创建者EXTRA/E02已冻结交接，新接收CORE已明确ACK，不冒称原作者在线 |
 
-本地root统一现有212串行验证，Cloud不编译/测试/Node/lint/手动CI/DB/HTTP/VPS。A3结果不迁移B7，E02独立结果不称B/整枝通过。现有自动CI自然运行是策略，不是假定候选有结果；无手动触发。用户已定“保持现有入口，不新增”，新MySQL/Redis入口提案关闭、不再催批，不改212/CI/网络。未覆盖实库继续NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP。
+完整路径/基线hash/门禁/文本前提见[精确grant](FOUR_FIXTURE_MINIMAL_GRANT.json)、[E02交付](EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json)、[B05交付](CORE_B05_FIXTURE_SOURCE_DELIVERY.json)。45开放PR全分页仅原PR30和集成PR36触达，无第二writer。新4文件不含已完成6c6的E02_25MySqlIT；未改任何生产/依赖/SQL mapper/gate/方法/断言。各自created保护清理本就正确，不改以免误伤别库。
 
-## 兼容与身份依据
+新夹具均SOURCE_DELIVERED_UNVERIFIED/STATIC_ONLY，实际0/未编译/真实MySQL NOT_RUN。仅局部建表字符串修正不需要重跑旧普通4项来冒充真库。原作者源writer当前0，锁保留；EXTRA协调者维护本队rolling源码/三账，C00只全局账与CORE精确B05分支，未强改对方分支/合并代码。双方内部协调走私有聊天和授权读取，不发公开PR内部协调评论；非敏感源码/授权清单按用户要求持久化公共GitHub。
 
-E02仅既有旧bookmark的无可信映射止错。真实旧行+迁移保留ID/作者+exact requestId+JSON_ARRAY内LEGACY_MIGRATED共同成立才关联；作者create/edit白名单拒绝该服务端标签。单同号/requestId/作者不能放行，edit/erase擦标即拒绝，不修复数据/扩持续桥，不改publisher/UI/community接口（活跃PR231保持原写者）。三处resolver/favoriteOnly/batch同一SQL片段。H2 JSON别名只有限语义，非真MySQL或存量部署证明。
+## 本次补齐的独立证据
 
-E04仅原完成券：未知、失联或身份不符审计并保券/log/券重开标记，其他已授权冲正继续。未来新发放复用grantCouponWithReceipt，topic/member once占位+原正historyId绑定同事务失败回滚；原USED审计，只有原未用券成功CAS才删grant/重开。唯一新迁移为chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql，旧行NULL、无猜测回填，不执行迁移。未改退款/积分XP政策、history共享接口或券Mapper。
+[公共证据索引](RECENT_EXTERNAL_EVIDENCE_ACK.json)逐份README/summary已由C00实际读取，未取原VPS日志/XML重解析、未Cloud补跑。
 
-## 已签收历史仍按原SHA分层
+| 固定源码 | 实际范围 | 结论与保留历史 |
+|---|---|---|
+| 923170abd8e468d62eb8404b16b990609a4da42a | 6类35=28P/0F/7E/0S | H2别名夹具导致2类7异常，原失败和两次0项内存拒绝保留；不是35项均失败或7个生产BUG |
+| b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf | 原两异常类8实际PASS | 原E02已ACK并释放修复槽；不新35全跑或继承旧28 |
+| 530e72281a9bd1a443f58a21119367d55eca3623 | E01/E03直接影响4类60实际PASS | 原59静态漏一个全限定@Test、初始收集器NOT_PASS与计数审计保留，无源码改/重跑 |
+| 6143c37f3c32753bd22208ace9c4d3c4520b9fd6 | E02_03Test4实际PASS | 仅H2生产XML合同；不是真MySQL/HTTP/完整业务 |
+| 6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4 | E02_25MySqlIT单行前提 | STATIC_ONLY，实际0/未编译/真实MySQL未跑，不继承6143的4PASS |
 
-CORE5752单类31实际PASS，原adf51=35P/1F/15E/0S历史保留，不声称新51全跑；原作者已ACK、旧修复槽释放。EXTRA1bfa H2/XML2实际PASS；第三d592仅test-compile guard0、fresh主/匿名时钟类、实际测试0，Growth11真库NOT_RUN。详见[C03](C03_5752_TARGETED_VPS_RESULT.json)、[旧FAIL](C03_ADF51_VPS_FAILURE.json)、[POI](E02_12_ORDINARY_VPS_RESULT.json)、[第三编译](FORWARD_D592_TEST_COMPILE_RESULT.json)。旧1e231/0d157/e0普通10/EXTRA56、5、60、64/第三24、28各自源与层级签收，不迁移到新候选；所有锁拒绝历史保留。
+E02旧18声明遗漏6CsvSource调用，已更正24；再加E04普通11为原35实际选择。只算@Test注解不是执行调用数。各SHA成绩不跨候选累计；旧CORE5752定向31、adf51失败、EXTRA1bfa2、第三d592编译0/真库11未跑等历史继续原证据保留。
 
-## 其他范围
+## 可继续范围与验证约束
 
-E01-13 WAITING准入/存量保留、其他可见性/AI/NPC政策没有被这三决定覆盖，仍按精确缺口处理，不猜售卖窗口规则。第三9999末日SQLdate_add/条件RR勋章候选仍NEEDS_REACHABILITY，不凑bug、不扩Mapper/caller。Claude UI/新功能、原生iOS独立、Flutter排除。本轮仅EXTRA既有两作者续作，无第三/第四新职责。
+E01-13/E03-04/E02-03合同已由后续真实候选交付并各有60/4普通证据，不再说待产品裁决。复用现有CORE清单，当前合同明确+精确写权可继续生产/架构项0，NPC不同命令请求身份和AI发送后计次政策仍未决，不泛审计或补任务凑数。F3 READY0：最大日期缺真实MySQL DATE_ADD/warning/原指标对照且聚合Mapper表外；RR缺实际隔离与合法并行caller，不由当前packet直接改生产。
 
-[唯一源账](LONGRUN_SOURCE_OWNERS.json)、[当前余量](LONGRUN_REMAINING.json)、[精确grant](BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json)、[验证移交](BACKEND_VALIDATION_VPS_HANDOFF.json)是公共恢复依据。CORE178/EXTRA111是历史切片，不是剩余bug或通过数；本轮交付不靠新增ID凑队列。运行HTTP/真实身份、设备业务、跨候选集成/合并/迁移部署均未验收，TEST_DEPLOYED=NO。
+本地root统一现有212必要新源验证；Cloud不Java/Maven/Node/编译测试/lint/手动CI/DB/HTTP/VPS。用户已定“保持现有入口，不新增”，新真库入口方案关闭、不再催批，212/CI/网络不改，未覆盖实库继续NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP。既有自动CI自然运行不等于当前候选有实际结果。
+
+既有三项身份/券决策源码链A dedb→E02 13be→B9231保留，各候选/层级分别登记；B未来history_id迁移仅源码，旧行NULL不回填，未执行迁移/合并部署。Claude UI/新功能、原生iOS独立、Flutter排除；最多6个gpt-6.1-sol/队，失败仅原作者1修复槽。运行HTTP/真实身份、设备业务、跨候选集成仍未验，TEST_DEPLOYED=NO。见[源账](LONGRUN_SOURCE_OWNERS.json)、[余量](LONGRUN_REMAINING.json)、[验证移交](BACKEND_VALIDATION_VPS_HANDOFF.json)。
