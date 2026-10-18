@@ -42,9 +42,9 @@
         <text wx:if="{{check.pass}}" class="oo-meta">发布检查已通过。</text>
         <view wx:else>
           <text class="oo-meta">发布检查未通过，需先处理：</text>
-          <text wx:for="{{check.blockers}}" wx:key="*this" class="oo-item oo-item--block">{{item}}</text>
+          <text wx:for="{{check.blockers}}" wx:key="index" class="oo-item oo-item--block">{{item}}</text>
         </view>
-        <text wx:for="{{check.risks}}" wx:key="*this" class="oo-item">风险：{{item}}</text>
+        <text wx:for="{{check.risks}}" wx:key="index" class="oo-item">风险：{{item}}</text>
       </block>
       <text wx:else class="oo-meta">发布检查结果没读到，下拉刷新后再试。</text>
       <text wx:if="{{!avail.schedule.enabled}}" class="oo-hint">{{avail.schedule.hint}}</text>
