@@ -97,7 +97,7 @@ Page({
       dangerKey: 'template.delete', dangerParams: { name: item.title },   // 三段式文案在 utils/danger-actions.js
       success: (res) => {
         if (res.confirm) {
-          this.deleteTemplate(item.id, index);
+          this.deleteTemplate(item.id);
         }
       }
     });
@@ -306,7 +306,7 @@ Page({
   },
 
   // 删除模板API调用
-  deleteTemplate: function (id, index) {
+  deleteTemplate: function (id) {
     const that = this;
     app.sendRequest({
       url: '/api/template/delete',
@@ -315,10 +315,9 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           toast.success('删除成功');
-          // 从列表中移除
-          const list = that.data.list;
-          list.splice(index, 1);
-          that.setData({ list });
+          // 从列表中移除：按 id 生成新数组，请求期间列表重载过也不会删错行
+          const list = that.data.list.filter(function (row) { return !row || row.id !== id; });
+          if (list.length !== that.data.list.length) that.setData({ list });
         } else {
           toast(res.msg || '删除失败');
         }
