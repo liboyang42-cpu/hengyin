@@ -100,7 +100,7 @@
     "chengyinhub-admin/sql/migration_preset_menu.sql": "b0a3532cd4a79a17fd11228979bcc5d5bc67894af3396af23c4ad3c197ac875a",
     "sql/ry_20250522.sql": "2664b5d5bba1742778cb7668d6e25fda8179bdf8b2e597143b6813f3f38c788a",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsProductController.java": "d9b43e91235511e7d7ff973a2e32f77ad860c3b681b47c536b21bae1734e1c5f",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsInfomationController.java": "f64bb158de0f314bb85d4d0be07f382f046fe83644e97215022d5959f4db66ff",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsInfomationController.java": "fa57c59ade0d5a5bd8c9bfba0d0c36cac6ac4076748710397de0e9395dc5f05f",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SmsCouponController.java": "547af3490978c0fa80e0fcb55c3c2751a9904e8e3ee362a745c9b497ab55a823",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsOrderController.java": "13eb3c92163952232b4b472b6a86490471196f01a15c6264d3b392896c2b2cba",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsGiftController.java": "8f5a64a0651a58388f924eecd6b7717e9f53a2d47b2731d821af001d854f4863",
