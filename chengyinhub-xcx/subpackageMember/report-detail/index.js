@@ -31,7 +31,7 @@ Page({
     if (!reportId) { this.setData({ state: 'missing-param' }); return }
     this.load()
   },
-  onPullDownRefresh() { this.load(false, true) },
+  onPullDownRefresh() { if (this._reportId) this.load(false, true); else wx.stopPullDownRefresh() },
   retry() { this.load() },
   load(quiet, fromPull) {
     const that = this
@@ -61,8 +61,9 @@ Page({
   // 两路都回来后再落数据。403 = 不是本人的举报;其他失败给可重试的失败态。
   _settle(st) {
     st.pending -= 1
-    if (st.pending > 0 || st.seq !== this._seq) return
+    if (st.pending > 0) return
     if (st.fromPull) wx.stopPullDownRefresh()
+    if (st.seq !== this._seq) return
     const report = st.body ? view.normalizeReport(st.body, st.labels || {}) : null
     if (!report) {
       if (st.keep) { if (!st.quiet) cyToast('刷新失败，稍后再试'); return }
@@ -161,7 +162,13 @@ Page({
     if (sheet === 'fail' || sheet === 'unknown') this.load(true)
   },
 
-  goMine() { wx.navigateTo({ url: '/subpackageMember/report-mine/index' }) },
+  // 从列表点进来时返回列表,不叠页;从系统消息/成功态进来时照旧打开列表
+  goMine() {
+    const pages = getCurrentPages()
+    const prev = pages.length > 1 ? pages[pages.length - 2] : null
+    if (prev && prev.route === 'subpackageMember/report-mine/index') wx.navigateBack()
+    else wx.navigateTo({ url: '/subpackageMember/report-mine/index' })
+  },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
     else wx.redirectTo({ url: '/subpackageMember/report-mine/index' })
