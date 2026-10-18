@@ -79,7 +79,7 @@ Page({
     this._loadSeq = (this._loadSeq || 0) + 1;
   },
 
-  onPullDownRefresh() { this.load(); },
+  onPullDownRefresh() { if (this._id) this.load(); else wx.stopPullDownRefresh(); },
 
   onBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
