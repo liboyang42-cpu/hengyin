@@ -116,6 +116,8 @@ Page({
   // 获取列表
   getList: function () {
     var that = this;
+    // 过期回包丢弃:onShow/重试/停发后回读并发时只认最后一次
+    const seq = that._listSeq = (that._listSeq || 0) + 1;
     that.setData({ loadState: 'loading', errorMsg: '' });
     app.sendRequest({
       hideLoading: true,
@@ -128,6 +130,7 @@ Page({
         scope: that.data.operationScope
       },
       success: function (res) {
+        if (seq !== that._listSeq) return;
         if ((res.code == "200" || res.code === 200) && Array.isArray(res.data)) {
           const list = res.data.map(normalizeCoupon).filter(Boolean);
           that.setData({
@@ -139,6 +142,7 @@ Page({
         }
       },
       fail: function () {
+        if (seq !== that._listSeq) return;
         that.setData({ loadState: 'error', errorMsg: '网络可能不稳定，请稍后再试' });
       },
       complete: function () {
@@ -186,12 +190,15 @@ Page({
     const fromRow = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.item : null;
     const item = fromRow || this.data.currentCoupon;
     if (!item || !item.id || !item.canStop) return;
+    // 在途闸:确认后到回包前不再打开确认、不再发停发
+    if (this._stopping) return;
     const that = this;
     modal.show({
       dangerKey: 'merchant.coupon.stop',
       dangerParams: { name: item.name },
       success(r) {
-        if (!r.confirm) return;
+        if (!r.confirm || that._stopping) return;
+        that._stopping = true;
         app.sendRequest({
           url: '/api/coupon/stop',
           method: 'POST',
@@ -199,6 +206,7 @@ Page({
             ? { couponId: item.id, scope: that.data.operationScope }
             : { couponId: item.id },
           success(res) {
+            that._stopping = false;
             if (res.code == '200' || res.code === 200) {
               cyToast.success('已停发「' + item.name + '」');
               that.setData({ tpShow: false, currentCoupon: {} });
@@ -208,6 +216,7 @@ Page({
             }
           },
           fail(err) {
+            that._stopping = false;
             cyToast.error((err && err.msg) || '停发结果待确认，已刷新列表');
             that.getList();
           },
