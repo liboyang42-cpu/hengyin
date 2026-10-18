@@ -38,6 +38,8 @@ Component({
       this.loadTaxonomy()
     },
     loadTaxonomy() {
+      // 关掉重开或重试后,先发后到的旧回包一律丢弃,不冲掉正在填的表单(BL-218)。
+      const seq = this._taxSeq = (this._taxSeq || 0) + 1
       if (!model.validTarget(this.properties.targetType, this.properties.targetId)) {
         this.setData({ stage: 'loadfail', failText: '举报对象信息不完整，暂时无法举报' })
         return
@@ -46,6 +48,7 @@ Component({
       app.sendRequest({
         url: '/api/community-trust/reports/taxonomy', method: 'GET', hideLoading: true, silentError: true,
         success: (res) => {
+          if (seq !== this._taxSeq) return
           const taxonomy = isBizOk(res) ? model.normalizeTaxonomy(res.data) : null
           if (!taxonomy) {
             this.setData({ stage: 'loadfail', failText: '举报原因没有读取成功，请稍后再试' })
@@ -55,8 +58,8 @@ Component({
           this._policyVersion = taxonomy.policyVersion
           this.setData({ stage: 'pick', reasonLabels: taxonomy.reasons.map((r) => r.label) })
         },
-        fail: () => { this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
-        successStatusAbnormal: () => { this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
+        fail: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
+        successStatusAbnormal: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
       })
     },
     onReasonSelect(e) {
@@ -106,6 +109,6 @@ Component({
       })
     },
     backToForm() { if (!this._busy) this.setData({ stage: 'form' }) },
-    close() { if (!this._busy) this.triggerEvent('close') },
+    close() { if (!this._busy) { this._taxSeq = (this._taxSeq || 0) + 1; this.triggerEvent('close') } },
   },
 })
