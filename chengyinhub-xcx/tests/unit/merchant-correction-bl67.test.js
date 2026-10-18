@@ -4,10 +4,10 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
-const model = require('../../components/cy/merchant-correction-sheet/model.js')
+const model = require('../../subpackageMember/components/cy/merchant-correction-sheet/model.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const SHEET_JS = path.join(ROOT, 'components/cy/merchant-correction-sheet/index.js')
+const SHEET_JS = path.join(ROOT, 'subpackageMember/components/cy/merchant-correction-sheet/index.js')
 
 test('taxonomy:只收 ISSUE_REPORT 且只展示已知问题码', () => {
   const t = model.normalizeTaxonomy({ contributionTypes: ['INFO_UPDATE', 'ISSUE_REPORT'], issueTypes: ['CLOSED', 'WEIRD', 'OTHER'] })

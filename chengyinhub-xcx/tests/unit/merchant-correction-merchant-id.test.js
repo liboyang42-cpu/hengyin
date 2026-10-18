@@ -3,7 +3,7 @@
 // BL-145:补 #110(BL-67)merchant-correction-sheet/model.js 的 validMerchantId 单测(依 #180 TEST-GAPS.md),不改被测代码。
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const model = require('../../components/cy/merchant-correction-sheet/model.js')
+const model = require('../../subpackageMember/components/cy/merchant-correction-sheet/model.js')
 
 test('BL-145 validMerchantId:正安全整数(数字或数字字符串)才放行', () => {
   for (const v of [1, 12, '12', ' 12 ', Number.MAX_SAFE_INTEGER, String(Number.MAX_SAFE_INTEGER)]) {

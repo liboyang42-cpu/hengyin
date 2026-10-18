@@ -2,7 +2,7 @@
 // 只做纯文字问题上报;问题类型只取后端 taxonomy。网络结果未知时用同一幂等键重试
 // (后端同键同内容重放返回同一条记录,不会重复受理)。
 const app = getApp()
-const { isBizOk } = require('../../../utils/response-shape.js')
+const { isBizOk } = require('../../../../utils/response-shape.js')
 const model = require('./model.js')
 
 const NET_FAIL = '网络不太稳定，暂时不知道纠错是否已提交。再试一次不会重复提交。'
