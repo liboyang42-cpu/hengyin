@@ -29,7 +29,7 @@ Page({
         that._loadedOnce = true
         const list = isBizOk(res) ? normalizeFavoriteNodes(res.data) : null
         if (!list) {
-          if (quiet && that.data.state === 'ready') return
+          if (quiet && (that.data.state === 'ready' || that.data.state === 'empty')) return
           that.setData({ state: 'error', errorSub: errorSubOf(res) })
           return
         }
@@ -38,7 +38,7 @@ Page({
       },
       fail() {
         if (seq !== that._seq) return
-        if (quiet && that.data.state === 'ready') return
+        if (quiet && (that.data.state === 'ready' || that.data.state === 'empty')) return
         that.setData({ state: 'error', errorSub: '网络不太稳，点重试再拉一次' })
       },
     })
