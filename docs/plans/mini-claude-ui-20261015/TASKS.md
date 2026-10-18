@@ -58,3 +58,5 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 - #243–#256（BL-188–201）已合入（`cba50ab8`）。按钮台账按合并后实测重建为 4658 控件；单测 8711 通过，失败仍是原有的 8 条冻结计数，ui-integrity / a11y / validity 输出与合并前逐条一致。
 - **行号锚点规则（开发线必读）**：`tests/lint/ui-integrity-baseline.js` 的豁免项按「文件:行号」登记，key 集合有冻结 digest，协调者也不改。改动 `scene-route-content`、`cy/profile`、`square/*`、`merchantinfo`、`topic/index` 等已有豁免锚点的文件时，锚点**上方**的净增减行数必须为 0（可把多行写法收成同行数，或加一行注释抵消）。提交前在本地跑 `node tests/lint/ui-integrity.js`，与集成分支的输出逐条对比（去掉行号后 diff），多出 `[BASELINE] … 基线已未命中` 就是锚点漂移了，必须修好再开 PR。#245 曾因上方 +1 行导致锚点漂移，合并时已收成原来的 3 行。
 - 第二十七批 BL-202–205 是对本线新建 9 个页面逐页复查后的优化卡，见 BACKLOG 末尾。
+- **主包体积（2026-10-18 实测，同 `scripts/preflight-release.js` 4.5 口径）**：本分支主包未压缩 3,195,196 B，已超 3 MiB 棘轮 49,468 B。Codex PR #259（`codex/prelaunch-pack-budget-230` → master，精确排除 56 个未引用文件）套到本分支后为 3,046,543 B，余 99 KB；本线合入 master 以 #259 为前提（已在 #259 留复核意见）。开发线新增的组件/图片一律放进使用它的分包（如 `subpackageMember/components/`），不要再放根目录 `components/` 或 `images/`；监督审查时把「新文件进了主包」判 CHANGES NEEDED。
+- BL-202（#257）、BL-203（#258）已合入。
