@@ -322,3 +322,10 @@
 | # | 名称 | 内容 | 范围提示 |
 |---|---|---|---|
 | 189 | 主题详情与商家申请图片/标签列表 key | 已合并的 BL-22（`96675007`）改了 16 个 wxml，漏了这几处可能重复的展示列表，仍是 `wx:key="*this"`：`pages/topic/index/index.wxml:83`（主题图 `img.list(info.imgArr)` 轮播，同图可重复）、`:241`（`info.contentIncludes` 活动内容）、`:585`（评价 `uploadImages`，删除按 `index`）；`pages/topic/merchantapply/index.wxml:113`（`picUrl.split(',')` 场地照片，删除按 `data-imgindex`）；`pages/topic/components/project-join/index.wxml:217,483`（`play.chips` / `nodeSheet.play.chips`）。全部改为 `wx:key="index"`。只改 key，不改结构、样式和文案；不动静态选项/刻度/星级（`starList` 已是下标数组）；补一条静态单测断言这 6 处不再是 `*this` | `pages/topic/**` wxml；不碰 Codex 文件 |
+
+## 第二十一批（190–192）：主监督补充（2026-10-17；真实缺陷，与已交 Codex 的 P1-033 同类：异步成功回调里用点击时的 `index` 执行 `splice`，列表在请求期间变化（另一条操作先返回、下拉刷新、重新加载）就会删错行。已过补卡前置检查：涉及文件均不在 Codex `tasks.json` files/owned_files 与 TASKS.md Codex 独占清单内；`tests/unit` 无断言要求保留按下标删除；接口均已有调用，只改回调里的本地移除，不新增接口）
+| # | 名称 | 内容 | 范围提示 |
+|---|---|---|---|
+| 190 | 路线内容取消点赞删错行 | `components/cy/scene-route-content/index.js:346-366` `topicUnlike` 在确认弹窗后发 `/api/topic/like`（type 0），成功回调用点击时的 `index` 执行 `items.splice(index, 1)`。连续取消两条时，先返回的那条删掉后，后返回的那条下标已偏移，会删掉别的行。改为在成功回调里按 `item.id` 从 `this.data.items` 过滤（找不到就不动），`state` 仍按剩余条数算。只改回调里的移除逻辑，不改结构、样式和文案；补一条单测：两条先后返回时删掉的是正确的两条 | `components/cy/scene-route-content/index.js` |
+| 191 | 广场动态删除/举报与评论举报删错行 | `pages/square/list/index.js:371-388`（`deleteCurrentSquarePost`，`/api/creativesquare/delete`）、`:418-444`（`reportSquare`，`/api/creativesquare/report`）、`pages/square/detail/index.js:826-851`（`reportComment`，`/api/comment/report`）都在成功回调里用发起时的 `index` 执行 `list.splice(index, 1)`；请求期间下拉刷新或另一条先返回就会摘掉别人的行。三处统一改为按发起时记下的 `item.id` 过滤（找不到就不动），`nodata` 按剩余条数算。不改弹窗、文案、样式；补单测覆盖「请求期间列表被替换」与「两条先后返回」 | `pages/square/list/index.js`、`pages/square/detail/index.js` |
+| 192 | 我的模板删除删错行 | `subpackageMember/mytemplate/mytemplate.js:92-100` `deleteItem` 把点击时的 `index` 传给 `deleteTemplate`，`:309-320` 成功后直接对 `that.data.list` 原地 `splice(index, 1)`。下拉刷新/翻页重载后返回会删错行，而且原地改 `this.data` 不安全。改为成功后按 `id` 生成新数组再 `setData`（找不到就不动），保留现有空态/错误态逻辑。不改结构、样式和文案；补一条单测 | `subpackageMember/mytemplate/mytemplate.js` |
