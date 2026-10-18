@@ -126,7 +126,7 @@ Page({
       this._requestId = ''
       const item = raw ? view.normalizeContribution(raw) : null
       if (item) this.setData({ sheet: 'ok', supplement: '', item })
-      else this.setData({ sheet: 'ok', supplement: '' })
+      else this.setData({ sheet: 'ok', supplement: '', 'item.canSupplement': false }) // 回读失败:服务端已受理即 PENDING 不可再补,免得旧版本号再提交被 409
       return
     }
     this.setData({ sheet: 'unknown' })
