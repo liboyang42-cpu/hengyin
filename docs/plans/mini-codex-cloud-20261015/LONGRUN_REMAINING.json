@@ -106,9 +106,10 @@
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
       ],
-      "detail": "Latest actual user decisions supersede earlier policy holds; no source claimed delivered yet",
+      "detail": "Original E04 confirms source delivered at923170abd8e468d62eb8404b16b990609a4da42a. Two real-MySQL classes/eight methods remain NOT_RUN; migration source unexecuted. No confirmed missing implementation; ordinary fixture retest evidence remains scoped to its own SHA.",
       "status": "OLD_POLICY_HOLD_RESOLVED_BY_USER_NO_NEW_SOURCE_REMAINING",
-      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a"
+      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "previous_detail_history": "Latest actual user decisions supersede earlier policy holds; no source claimed delivered yet"
     },
     {
       "team": "EXTRA",
@@ -128,17 +129,31 @@
       "team": "EXTRA",
       "id": "E02-13",
       "title": "迟到帖文审核回调的内容版本绑定",
-      "state": "BLOCKED_DEPENDENCY",
+      "state": "ORIGINAL_OWNER_IMPLEMENTED_NOT_INTEGRATED",
       "paths": [
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
       ],
-      "detail": "Producer review-version identity remains unresolved; no new callback policy guessed.",
-      "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      "detail": "Original E02 reconciled public PR231 exact b0dc1019f9d2485dc8ea8ca74184eb6728e4474a: producer post version/snapshot refresh/task version increment/stale review rejection implemented; control candidate retains older flow. No concrete missing code for original trigger. Not integrated or accepted at runtime.",
+      "status": "NO_NEW_WRITER_NO_DUPLICATE_IMPLEMENTATION",
+      "source_sha": "b0dc1019f9d2485dc8ea8ca74184eb6728e4474a",
+      "source_pr": 231,
+      "original_blocker_history": {
+        "team": "EXTRA",
+        "id": "E02-13",
+        "title": "迟到帖文审核回调的内容版本绑定",
+        "state": "BLOCKED_DEPENDENCY",
+        "paths": [
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java"
+        ],
+        "detail": "Producer review-version identity remains unresolved; no new callback policy guessed.",
+        "status": "NOT_A_NEW_TEAM_WRITE_GRANT"
+      },
+      "reconciliation_packet": "THREE_TEAM_REMAINING_RECEIPT_20261018.json"
     }
   ],
   "candidate_findings_to_confirm": [
     "Existing ownership E04-07 original reward identity scope must be checked before expanding",
-    "E02-13 real audit producer/version contract must be identified; no guessed callback version policy",
+    "E02-13 original owner implementation present atPR231 b0dc; not integrated. No new source gap/producer-identity hold; see THREE_TEAM_REMAINING_RECEIPT_20261018.json",
     "Local new-SHA compile/test failures pending evidence; none guessed as bugs"
   ],
   "new_third_fourth_cloud_ready_packages": 0,
@@ -2062,5 +2077,14 @@
     "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
     "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
     "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  },
+  "three_team_remaining_receipt": {
+    "packet": "THREE_TEAM_REMAINING_RECEIPT_20261018.json",
+    "CORE_source_ready": 0,
+    "EXTRA_source_ready": 0,
+    "F3_source_ready": 0,
+    "new_source_sha": null,
+    "original_owner_evidence_routes_identified": true,
+    "new_owner_dispatch_ack": false
   }
 }
