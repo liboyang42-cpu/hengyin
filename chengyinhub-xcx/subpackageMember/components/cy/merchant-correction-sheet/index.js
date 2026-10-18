@@ -35,6 +35,8 @@ Component({
       this.loadTaxonomy()
     },
     loadTaxonomy() {
+      // 关掉重开或重试后,先发后到的旧回包一律丢弃,不冲掉正在填的表单(BL-219)。
+      const seq = this._taxSeq = (this._taxSeq || 0) + 1
       if (!model.validMerchantId(this.properties.merchantId)) {
         this.setData({ stage: 'loadfail', failText: '商家信息不完整，暂时无法纠错' })
         return
@@ -43,6 +45,7 @@ Component({
       app.sendRequest({
         url: '/api/community-trust/contributions/taxonomy', method: 'GET', hideLoading: true, silentError: true,
         success: (res) => {
+          if (seq !== this._taxSeq) return
           const taxonomy = isBizOk(res) ? model.normalizeTaxonomy(res.data) : null
           if (!taxonomy) {
             this.setData({ stage: 'loadfail', failText: '纠错类型没有读取成功，请稍后再试' })
@@ -51,8 +54,8 @@ Component({
           this._issues = taxonomy.issues
           this.setData({ stage: 'pick', issueLabels: taxonomy.issues.map((item) => item.label) })
         },
-        fail: () => { this.setData({ stage: 'loadfail', failText: '网络不太稳定，纠错类型没有读取成功' }) },
-        successStatusAbnormal: () => { this.setData({ stage: 'loadfail', failText: '网络不太稳定，纠错类型没有读取成功' }) },
+        fail: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，纠错类型没有读取成功' }) },
+        successStatusAbnormal: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，纠错类型没有读取成功' }) },
       })
     },
     onIssueSelect(e) {
@@ -104,7 +107,7 @@ Component({
       })
     },
     backToForm() { if (!this._busy) this.setData({ stage: 'form' }) },
-    close() { if (!this._busy) this.triggerEvent('close') },
+    close() { if (!this._busy) { this._taxSeq = (this._taxSeq || 0) + 1; this.triggerEvent('close') } },
     // BL-184:成功态唯一次按钮,进入「我的纠错」看审核进度
     openMine() {
       if (this._navigating) return // 跳转中不响应连点,免得叠两层列表
