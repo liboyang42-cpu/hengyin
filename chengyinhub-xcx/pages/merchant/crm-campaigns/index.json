@@ -4,6 +4,7 @@
   "backgroundColor": "#F3F4F4",
   "backgroundColorTop": "#F3F4F4",
   "backgroundColorBottom": "#F3F4F4",
+  "enablePullDownRefresh": true,
   "usingComponents": {
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
