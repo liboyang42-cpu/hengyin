@@ -1774,7 +1774,9 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      var current = that.data.list[index];
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      var current = Object.assign({}, that.data.list[pos]);
       if (type == 1) {
         if (current.isLiked == 0) { current.likeCount = (current.likeCount || 0) + 1; current.isLiked = 1; }
         else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 0; }
@@ -1784,7 +1786,7 @@ Component({
         else if (current.isLiked == 1) { current.likeCount = (current.likeCount || 1) - 1; current.isLiked = 2; }
         else if (current.isLiked == 2) current.isLiked = 0;
       }
-      that.setData({ ['list[' + index + ']']: current });
+      that.setData({ ['list[' + pos + ']']: current });
     });
   },
 
@@ -1808,7 +1810,9 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      that.setData({ ['list[' + index + '].isBookmarked']: next });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      that.setData({ ['list[' + pos + ']']: Object.assign({}, that.data.list[pos], { isBookmarked: next }) });
     });
   },
 
