@@ -128,6 +128,7 @@ Component({
     },
 
     onClose() {
+      if (this.data.submitting) return;
       this._epoch = (this._epoch || 0) + 1;
       this.triggerEvent('close');
     },
