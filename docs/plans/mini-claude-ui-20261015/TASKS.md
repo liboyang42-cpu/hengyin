@@ -60,3 +60,4 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 - 第二十七批 BL-202–205 是对本线新建 9 个页面逐页复查后的优化卡，见 BACKLOG 末尾。
 - **主包体积（2026-10-18 实测，同 `scripts/preflight-release.js` 4.5 口径）**：本分支主包未压缩 3,195,196 B，已超 3 MiB 棘轮 49,468 B。Codex PR #259（`codex/prelaunch-pack-budget-230` → master，精确排除 56 个未引用文件）套到本分支后为 3,046,543 B，余 99 KB；本线合入 master 以 #259 为前提（已在 #259 留复核意见）。开发线新增的组件/图片一律放进使用它的分包（如 `subpackageMember/components/`），不要再放根目录 `components/` 或 `images/`；监督审查时把「新文件进了主包」判 CHANGES NEEDED。
 - BL-202（#257）、BL-203（#258）已合入。
+- BL-204（#260）、BL-205（#261）已合入。BL-203 合入后全量单测多出一条 `all-page-back-stack-contract`「可见返回入口均经过根栈安全审计」失败：`goMine` 有 `wx.navigateBack` 却没有根栈兜底。已在集成分支补 `navigateBack({ fail: () => wx.redirectTo(列表) })`。**开发线与监督：只要改动里出现 `wx.navigateBack`，提交前必须跑全量 `node --test "tests/unit/**/*.test.js"`，与集成分支对比失败名单，不能只跑相关测试**（协调者合并 #258 时也只跑了相关测试，所以漏了）。

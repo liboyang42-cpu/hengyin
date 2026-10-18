@@ -166,7 +166,7 @@ Page({
   goMine() {
     const pages = getCurrentPages()
     const prev = pages.length > 1 ? pages[pages.length - 2] : null
-    if (prev && prev.route === 'subpackageMember/report-mine/index') wx.navigateBack()
+    if (prev && prev.route === 'subpackageMember/report-mine/index') wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageMember/report-mine/index' }) })
     else wx.navigateTo({ url: '/subpackageMember/report-mine/index' })
   },
   goBack() {

@@ -742675,7 +742675,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:66"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:67"
       }
     },
     {
@@ -742745,7 +742745,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:37"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:38"
       }
     },
     {
@@ -742844,7 +742844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:91"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:118"
       }
     },
     {
@@ -742911,7 +742911,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:101"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:128"
       }
     },
     {
@@ -743010,7 +743010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:99"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:126"
       }
     },
     {
@@ -743080,7 +743080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/crm-campaigns/index.js:37"
+        "staticSource": "pages/merchant/crm-campaigns/index.js:38"
       }
     },
     {
@@ -777782,7 +777782,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:68"
+        "staticSource": "pages/merchant/verify-records/index.js:69"
       }
     },
     {
@@ -777852,7 +777852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:38"
+        "staticSource": "pages/merchant/verify-records/index.js:39"
       }
     },
     {
@@ -777919,7 +777919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:93"
+        "staticSource": "pages/merchant/verify-records/index.js:120"
       }
     },
     {
@@ -777986,7 +777986,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:93"
+        "staticSource": "pages/merchant/verify-records/index.js:120"
       }
     },
     {
@@ -778056,7 +778056,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/verify-records/index.js:38"
+        "staticSource": "pages/merchant/verify-records/index.js:39"
       }
     },
     {
