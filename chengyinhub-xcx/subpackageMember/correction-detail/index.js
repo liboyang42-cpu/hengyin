@@ -28,7 +28,7 @@ Page({
     if (!id) { this.setData({ state: 'missing-param' }); return }
     this.load()
   },
-  onPullDownRefresh() { this.load(false, true) },
+  onPullDownRefresh() { if (this._id) this.load(false, true); else wx.stopPullDownRefresh() },
   retry() { this.load() },
   load(quiet, fromPull) {
     const that = this
@@ -48,8 +48,8 @@ Page({
   },
   // 403 = 不是本人的纠错;其他失败给可重试的失败态
   _settle(st, body, code, msg) {
-    if (st.seq !== this._seq) return
     if (st.fromPull) wx.stopPullDownRefresh()
+    if (st.seq !== this._seq) return
     const item = body ? view.normalizeContribution(body) : null
     if (!item) {
       if (st.keep) { if (!st.quiet) cyToast('刷新失败，稍后再试'); return }
@@ -139,7 +139,13 @@ Page({
     if (sheet === 'ok' || sheet === 'fail' || sheet === 'unknown') this.load(true)
   },
 
-  goMine() { wx.navigateTo({ url: '/subpackageMember/correction-mine/index' }) },
+  // 从列表点进来时返回列表,不叠页;从系统消息/成功态进来时照旧打开列表
+  goMine() {
+    const pages = getCurrentPages()
+    const prev = pages.length > 1 ? pages[pages.length - 2] : null
+    if (prev && prev.route === 'subpackageMember/correction-mine/index') wx.navigateBack()
+    else wx.navigateTo({ url: '/subpackageMember/correction-mine/index' })
+  },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
     else wx.redirectTo({ url: '/subpackageMember/correction-mine/index' })
