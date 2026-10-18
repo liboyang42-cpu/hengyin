@@ -180,8 +180,9 @@ Page({
           toast(res.msg || '操作失败');
           return;
         }
-        let newlist = that.data.list
-        let currentItem = newlist[index]
+        const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(id); });
+        if (pos < 0) return;
+        let currentItem = Object.assign({}, that.data.list[pos])
         
         if (type == 1) { // 点赞
           if (currentItem['isLiked'] == 0) {
@@ -206,7 +207,7 @@ Page({
         }
         
         // 更新列表数据
-        const key = `list[${index}]`;
+        const key = `list[${pos}]`;
         that.setData({
           [key]: currentItem
         });
@@ -288,9 +289,12 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           const nextFollowState = intendedFollow;
-          const nextList = topicList.slice();
-          nextList[index] = Object.assign({}, topicList[index], { isFollowTheUser: nextFollowState });
-          that.setData({ list: nextList });
+          const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+          if (pos >= 0) {
+            const nextList = that.data.list.slice();
+            nextList[pos] = Object.assign({}, nextList[pos], { isFollowTheUser: nextFollowState });
+            that.setData({ list: nextList });
+          }
 
           toast(nextFollowState ? '关注成功' : '已取消关注');
         } else {
