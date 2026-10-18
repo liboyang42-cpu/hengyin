@@ -48,9 +48,9 @@ Page({
     else merchantTheme.merchantPageRestore();
   },
 
-  onPullDownRefresh() { this.fetch(); },
+  onPullDownRefresh() { this.fetch('pull'); },
 
-  fetch() {
+  fetch(source) {
     const requestId = (this._fetchSeq || 0) + 1;
     this._fetchSeq = requestId;
     const hasSnapshot = !!this._loaded || !!(this.data.invites && this.data.invites.length);
@@ -90,9 +90,9 @@ Page({
           this._loaded = true;
           this.setData({ invites, error: '', loading: false, refreshing: false });
           this._checkReadback(invites);
-        } else setInboxFetchFailure(this, res, hasSnapshot, requestId);
+        } else setInboxFetchFailure(this, res, hasSnapshot, requestId, source);
       },
-      fail: (res) => setInboxFetchFailure(this, res, hasSnapshot, requestId),
+      fail: (res) => setInboxFetchFailure(this, res, hasSnapshot, requestId, source),
     });
   },
 
@@ -226,9 +226,17 @@ Page({
   },
 });
 
-function setInboxFetchFailure(page, res, hasSnapshot, requestId) {
+// BL-207 已有列表时刷新失败:动作后回读与下拉要告诉用户列表不是最新;普通 onShow 静默回读仍不提示。
+function setInboxFetchFailure(page, res, hasSnapshot, requestId, source) {
   if (page._unloaded || requestId !== page._fetchSeq) return;
   const message = app.getRequestErrorMessage(res, '邀约加载失败');
-  if (hasSnapshot) page.setData({ loading: false, refreshing: false });
-  else page.setData({ loading: false, refreshing: false, error: message });
+  if (!hasSnapshot) {
+    page.setData({ loading: false, refreshing: false, error: message });
+    return;
+  }
+  page.setData({ loading: false, refreshing: false });
+  if (page._expectReadback) { // 动作成功后的回读(含被下拉/onShow 取代的那次)没拿到服务端事实
+    page._expectReadback = null;
+    toast('已提交，状态未同步，稍后下拉刷新');
+  } else if (source === 'pull') toast('刷新失败，稍后再试');
 }
