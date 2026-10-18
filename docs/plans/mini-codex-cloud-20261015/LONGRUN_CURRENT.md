@@ -1,3 +1,14 @@
+# 当前恢复入口：四文件源码完成，B05编译通过，E02空间阻塞
+
+四文件 grant、逐作者 ACK 与源码交付均已完成，原作者停写、独占锁保留。C00已核读 PR24 固定证据 [`8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac`](https://github.com/liboyang42-cpu/hengyin/commit/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac) 的两份 README/summary；以下为当前结果，后文较早“均未编译/待 ACK”仅为历史快照。
+
+- CORE/B05 源码 `2ac55d20a9f4932be8d411e53191c69e5141772c`：现有212 `test-compile` **PASS**，guard0/completed/BUILD SUCCESS，指定 fresh class1；无 Surefire XML，实际测试 **0**，原3项真实MySQL仍 **NOT_RUN**。见[B05编译证据签收](B05_2AC55_TEST_COMPILE_RESULT.json)。
+- EXTRA/E02 源码 `6c44636974220ca9876386ee638c99981488db42`：4328源码文件逐hash核齐，缓存复制 **ENOSPC**，发生在212/Maven启动前；guard未调用、containerId null，**compile NOT_RUN／实际0／XML0**，3项真实MySQL仍NOT_RUN。见[E02准备阻塞签收](E02_6C446_PREPARATION_BLOCKED_RESULT.json)。本地报告剩约16MiB，仅清本次未完成cache12MiB，源包/源码/回执保留；未动他人资源。
+
+当前阻塞是验证准备空间不足，未判源码失败，不开修复槽、不快速重试或Cloud替代，不新增入口/网络/CI。两个候选仍为同父26d的独立分支，未组合成四文件集成候选。原失败历史保留；无真实MySQL/Redis、HTTP、设备业务、迁移、合并或部署验收。两项CORE业务选择已由本地root向真人提问，未答前不猜规则。无需EXTRA为本回执重复改本队文档。完整索引见[四文件批次](FOUR_FIXTURE_SOURCE_BATCH.json)。
+
+## 先前记录（按原SHA保留历史，不覆盖上述当前状态）
+
 # 当前恢复入口
 
 E02协调者已将原child f74的完全相同3个补丁blob串行交到现有PR36：完整rolling源`6c44636974220ca9876386ee638c99981488db42`，父`26d8245b458d18497eb9040a4c7d9f1509b41bb1`。C00已实际读完整commit并逐blob SHA核与原child相同；没有新增源码或测试结果。CORE/B05 `2ac55d20...`是同父的另一单文件候选，未静默合成四文件分支，仍各STATIC_ONLY/实际0。下文f74保作原作者child交付来源，以本行rolling完整SHA作为EXTRA完整候选。

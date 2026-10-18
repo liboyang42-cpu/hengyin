@@ -12,7 +12,7 @@
   "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
   "grant_ack": "Direct receiver explicitly ACKed complete public grant SHA and exactpath; C00 released onefile /tmp patch only after ACK",
   "status": "SOURCE_DELIVERED_UNVERIFIED",
-  "verification_type": "STATIC_ONLY",
+  "verification_type": "STATIC_SOURCE_REVIEW_AND_LOCAL_VPS_TEST_COMPILE",
   "source_diff": {
     "added_lines": 1,
     "deleted_lines": 0,
@@ -28,7 +28,7 @@
   "public_readback": "Full public commit parent/exact1file/add1del0patch actually read; same source base26d, no wholebranch transfer or force",
   "actual_source_writers": 0,
   "author_stopped_lock_retained": true,
-  "compile_status": "NOT_RUN",
+  "compile_status": "TEST_COMPILE_PASS",
   "actual_tests": 0,
   "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
   "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
@@ -45,5 +45,18 @@
   "scratch": "MySQL8+nonMariaDB, explicitunique suffix, fail on schema collision not predrop, created true only after ownCREATE; drop own schema after run only. User current existing-entry rule unchanged, no permitted newDB entry inferred.",
   "ordinary_result_inherited": false,
   "handoff": "Local root executes only applicable existing entry; no Cloudcompile/test/CI/VPS, no old6143 or231 result inherited",
-  "integration": "Branch commit based exact26d. EXTRA coordinator may integrate exact singlefile after its own3fixture commit by declared SHA; C00 did not change EXTRA source branch or mix CORE production branch. No merge/deploy/migration"
+  "integration": "Branch commit based exact26d. EXTRA coordinator may integrate exact singlefile after its own3fixture commit by declared SHA; C00 did not change EXTRA source branch or mix CORE production branch. No merge/deploy/migration",
+  "validation_packet": "B05_2AC55_TEST_COMPILE_RESULT.json",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false
+  }
 }

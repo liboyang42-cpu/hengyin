@@ -13,7 +13,7 @@
   "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
   "post_grant_author_ack": "C00 directly read two completed originalE02 private child turns: fetched complete publicgrant via GitHubconnector before writing, exact3baseline hashes, only3lines added, stopped; separate B05 freeze/handoff acknowledgement",
   "status": "SOURCE_DELIVERED_UNVERIFIED",
-  "verification_type": "STATIC_ONLY",
+  "verification_type": "STATIC_SOURCE_REVIEW_LOCAL_PREPARATION_BLOCKED",
   "static_review": [
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
@@ -53,5 +53,18 @@
   "resources": "Existingentryonly; each old CHENGYIN_E02_01/06/11_MYSQL_IT=1 + explicit sixscratchvars and MySQL8/ownedschema remain. No newentry/gate/config/CI/network or trueDB execution.",
   "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
   "original_child_parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
-  "rolling_readback": "Completepubliccommit exact3files/add3del0; eachgitblobSHA identical originalf74child, sameexactgrant; noB05change or other source change"
+  "rolling_readback": "Completepubliccommit exact3files/add3del0; eachgitblobSHA identical originalf74child, sameexactgrant; noB05change or other source change",
+  "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "status": "NOT_STARTED_PREPARATION_DISK_FULL",
+    "compile_status": "NOT_RUN",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false
+  }
 }

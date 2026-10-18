@@ -1,6 +1,6 @@
 {
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "state": "CURRENT_FOCUSED_BATCH_COMPLETE_NO_LOCAL_JAVA_ACTIVE",
+  "state": "FOUR_FIXTURE_SOURCE_COMPLETE_B05_COMPILE_PASS_E02_PREPARATION_DISK_BLOCKED",
   "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
   "entry_decision": "VALIDATION_ENTRY_DECISION.json",
   "candidates": {
@@ -109,9 +109,9 @@
       "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json"
     }
   },
-  "retry": "No repeatpassing tests; onlynewreal source or unresolvedfailure viaexisting212; no newentry/manualCI",
+  "retry": "No immediate retry for ENOSPC; local verifier owns existing-entry resource queue. No source repair worker or Cloud substitute.",
   "repair_slots": "RELEASED_CURRENT_ORDINARY_FAILURE_CLOSED_FILE_LOCK_RETAINED",
-  "source_work": "Only explicit real independent source tasks may continue; no new task invented from queue",
+  "source_work": "All four exact fixture source changes delivered after grant/ACK; ownership retained, no missing file permission or source failure from preparation block.",
   "business_decisions": {
     "pending_local_user_answers": true,
     "questions_reported": 3,
@@ -139,5 +139,58 @@
     "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "ordinary28_not_repeated": true
   },
-  "local_java_active": false
+  "local_java_active": false,
+  "four_fixture_local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "source_delivery": "ALL_FOUR_COMPLETE_GRANTED_ACKED_FROZEN",
+    "B05": {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "compile": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    },
+    "E02": {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "compile": "NOT_RUN",
+      "state": "PREPARATION_DISK_FULL_BEFORE_GUARD_MAVEN",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "actual_source_writers": 0,
+    "locks_retained": true,
+    "repair_slot_opened": false,
+    "missing_file_authorization": false,
+    "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+    "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
+    "two_CORE_policy_choices": "Local root has asked human; awaiting actual answer, no policy/source change",
+    "joint_four_file_candidate": false
+  },
+  "latest_fixture_candidates": {
+    "B05": {
+      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "status": "TEST_COMPILE_PASS",
+      "compile_status": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "fresh_surefire_xml": 0,
+      "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "declared_mysql_methods": 3,
+      "repair_slot_opened": false
+    },
+    "E02": {
+      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "status": "NOT_STARTED_PREPARATION_DISK_FULL",
+      "compile_status": "NOT_RUN",
+      "actual_tests": 0,
+      "fresh_surefire_xml": 0,
+      "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "declared_mysql_methods": 3,
+      "repair_slot_opened": false
+    }
+  }
 }

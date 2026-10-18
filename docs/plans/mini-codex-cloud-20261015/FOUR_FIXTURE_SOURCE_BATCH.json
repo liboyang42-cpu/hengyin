@@ -15,7 +15,8 @@
       "added_lines": 3,
       "deleted_lines": 0,
       "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
-      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785"
+      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
     },
     {
       "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
@@ -23,12 +24,13 @@
       "files": 1,
       "added_lines": 1,
       "deleted_lines": 0,
-      "packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json"
+      "packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json",
+      "validation_packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
     }
   ],
   "actual_source_writers_now": 0,
   "locks_retained": true,
-  "compile_status": "NOT_RUN",
+  "compile_status": "MIXED_B05_PASS_E02_PREPARATION_NOT_STARTED",
   "actual_tests": 0,
   "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
   "already_reference_fixture": "6c6f82d7 only static2methodE02_25MySqlIT, not re-edited or re-tested",
@@ -42,5 +44,32 @@
     "wholebranch integration"
   ],
   "remaining": "Existing CORE production/architecture actionable0; NPC requestidentity/AI aftersend count contracts unresolved, no new audit/filler. F3 READY0 maxdate realDB warning/metric evidence and mapper writegrant absent; RR actualisolation/legalparallelcaller notproven. Previously E01-13/E03-04/E02-03 delivered60/4 not awaiting userdecision.",
-  "integration_topology": "Two sibling candidates off26d: EXTRA rolling6c4463 changesonly3E02files; CORE2ac55d changesonlyB05. No joint4filecandidate/integration/test claim."
+  "integration_topology": "Two sibling candidates off26d: EXTRA rolling6c4463 changesonly3E02files; CORE2ac55d changesonlyB05. No joint4filecandidate/integration/test claim.",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "source_delivery": "ALL_FOUR_COMPLETE_GRANTED_ACKED_FROZEN",
+    "B05": {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "compile": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    },
+    "E02": {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "compile": "NOT_RUN",
+      "state": "PREPARATION_DISK_FULL_BEFORE_GUARD_MAVEN",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "actual_source_writers": 0,
+    "locks_retained": true,
+    "repair_slot_opened": false,
+    "missing_file_authorization": false,
+    "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+    "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
+    "two_CORE_policy_choices": "Local root has asked human; awaiting actual answer, no policy/source change",
+    "joint_four_file_candidate": false
+  }
 }
