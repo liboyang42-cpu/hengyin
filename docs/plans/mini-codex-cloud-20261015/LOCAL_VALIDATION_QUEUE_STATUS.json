@@ -1,6 +1,6 @@
 {
   "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
-  "state": "FOUR_FIXTURE_SOURCE_COMPLETE_B05_COMPILE_PASS_E02_PREPARATION_DISK_BLOCKED",
+  "state": "FOUR_FIXTURE_SOURCE_COMPLETE_BOTH_INDEPENDENT_CANDIDATES_TEST_COMPILE_PASS_ONLY",
   "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
   "entry_decision": "VALIDATION_ENTRY_DECISION.json",
   "candidates": {
@@ -109,7 +109,7 @@
       "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json"
     }
   },
-  "retry": "No immediate retry for ENOSPC; local verifier owns existing-entry resource queue. No source repair worker or Cloud substitute.",
+  "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
   "repair_slots": "RELEASED_CURRENT_ORDINARY_FAILURE_CLOSED_FILE_LOCK_RETAINED",
   "source_work": "All four exact fixture source changes delivered after grant/ACK; ownership retained, no missing file permission or source failure from preparation block.",
   "business_decisions": {
@@ -160,20 +160,25 @@
     },
     "E02": {
       "source_sha": "6c44636974220ca9876386ee638c99981488db42",
-      "compile": "NOT_RUN",
-      "state": "PREPARATION_DISK_FULL_BEFORE_GUARD_MAVEN",
+      "compile": "TEST_COMPILE_PASS",
+      "state": "TEST_COMPILE_PASS",
       "actual_tests": 0,
       "true_mysql3": "NOT_RUN",
-      "packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "fresh_selected_classes": 3,
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
     },
     "actual_source_writers": 0,
     "locks_retained": true,
     "repair_slot_opened": false,
     "missing_file_authorization": false,
     "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
-    "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
+    "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
     "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
-    "joint_four_file_candidate": false
+    "joint_four_file_candidate": false,
+    "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "current_disk_blocker": false,
+    "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
   },
   "latest_fixture_candidates": {
     "B05": {
@@ -189,16 +194,19 @@
       "repair_slot_opened": false
     },
     "E02": {
-      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
       "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
       "source_sha": "6c44636974220ca9876386ee638c99981488db42",
-      "status": "NOT_STARTED_PREPARATION_DISK_FULL",
-      "compile_status": "NOT_RUN",
+      "status": "TEST_COMPILE_PASS",
+      "compile_status": "TEST_COMPILE_PASS",
       "actual_tests": 0,
       "fresh_surefire_xml": 0,
+      "fresh_selected_classes": 3,
       "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
       "declared_mysql_methods": 3,
-      "repair_slot_opened": false
+      "repair_slot_opened": false,
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
     }
   },
   "core_compatibility_decision_receipt": {
@@ -214,6 +222,22 @@
     "new_bug_count": 0,
     "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
     "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
-    "fixture_validation_unchanged": "All four fixture sources delivered; B05 test-compile PASS only/actual0/MySQL3 NOT_RUN; E02 preparation ENOSPC before guard/Maven, compile NOT_RUN/actual0/MySQL3 NOT_RUN."
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  },
+  "current_preparation_blocker": null,
+  "latest_E02_compile_result": {
+    "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "fresh_selected_classes": 3,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false,
+    "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+    "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
   }
 }

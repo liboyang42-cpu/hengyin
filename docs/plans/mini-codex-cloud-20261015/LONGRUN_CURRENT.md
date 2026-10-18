@@ -5,16 +5,16 @@
 - OWN-C04-01：保留同玩家／同NPC／同请求号重放第一次结果，新问题换新请求号；原scope检查与既有terminalReplay回归合同不变。不加内容指纹、列或迁移，不推测旧回执身份。收口 **NO_SOURCE_CHANGE**，不计新增修复BUG。
 - OWN-C05-22：保留照片AI异常退还照片池次数，沿既有照片合同；不改为通用网关UNKNOWN占用，不改降级／放行／奖励。收口 **NO_SOURCE_CHANGE**，不新增政策源码、迁移或付费调用。
 
-CORE这两项待真人裁决数现为 **0**；历史BLOCKED提案保留，原owner与文件锁不变，不唤起作者重扫或测试、不复跑旧PASS。当前已确认可行动未交源码仍0，不造任务。四夹具源码已交；B05仅test-compile PASS／实际0，E02缓存ENOSPC发生在guard/Maven前、compile NOT_RUN／实际0；各3项真MySQL仍NOT_RUN，现有入口不新增，验证状态未受本决定改变。下方旧“待真人选择”只为历史，已由本段覆盖。
+CORE这两项待真人裁决数现为 **0**；历史BLOCKED提案保留，原owner与文件锁不变，不唤起作者重扫或测试、不复跑旧PASS。当前已确认可行动未交源码仍0，不造任务。四夹具源码已交；B05仅test-compile PASS／实际0，E02空间自然恢复后已沿原212完成test-compile PASS／实际0，原ENOSPC保留历史；各3项真MySQL仍NOT_RUN，现有入口不新增，验证状态未受本决定改变。下方旧“待真人选择”只为历史，已由本段覆盖。
 
-# 当前恢复入口：四文件源码完成，B05编译通过，E02空间阻塞
+# 当前恢复入口：四文件源码完成，两个独立候选均仅编译通过
 
-四文件 grant、逐作者 ACK 与源码交付均已完成，原作者停写、独占锁保留。C00已核读 PR24 固定证据 [`8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac`](https://github.com/liboyang42-cpu/hengyin/commit/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac) 的两份 README/summary；以下为当前结果，后文较早“均未编译/待 ACK”仅为历史快照。
+四文件 grant、逐作者 ACK 与源码交付均已完成，原作者停写、独占锁保留。C00已核读 PR24 固定证据 [`8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac`](https://github.com/liboyang42-cpu/hengyin/commit/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac) 的两份 README/summary；E02后续恢复编译的新证据为 [`90b81ee7af715f0c72598a7b7a9f59e235910ea6`](https://github.com/liboyang42-cpu/hengyin/commit/90b81ee7af715f0c72598a7b7a9f59e235910ea6)，C00亦已核读其README/summary。以下为当前结果，后文较早“均未编译/待 ACK”仅为历史快照。
 
 - CORE/B05 源码 `2ac55d20a9f4932be8d411e53191c69e5141772c`：现有212 `test-compile` **PASS**，guard0/completed/BUILD SUCCESS，指定 fresh class1；无 Surefire XML，实际测试 **0**，原3项真实MySQL仍 **NOT_RUN**。见[B05编译证据签收](B05_2AC55_TEST_COMPILE_RESULT.json)。
-- EXTRA/E02 源码 `6c44636974220ca9876386ee638c99981488db42`：4328源码文件逐hash核齐，缓存复制 **ENOSPC**，发生在212/Maven启动前；guard未调用、containerId null，**compile NOT_RUN／实际0／XML0**，3项真实MySQL仍NOT_RUN。见[E02准备阻塞签收](E02_6C446_PREPARATION_BLOCKED_RESULT.json)。本地报告剩约16MiB，仅清本次未完成cache12MiB，源包/源码/回执保留；未动他人资源。
+- EXTRA/E02 源码 `6c44636974220ca9876386ee638c99981488db42`：4328文件再次逐hash一致，资源自然恢复后沿原212于02:23:12.350784Z—02:25:47.051161Z完成 **test-compile PASS**，guard0/completed/BUILD SUCCESS，三个指定fresh class及hash已核；无Surefire XML，实际测试 **0**，真MySQL3项仍 **NOT_RUN**。精确自有容器已确认清理，当前无活动Java。见[E02恢复编译签收](E02_6C446_TEST_COMPILE_RESULT.json)。原8fdb ENOSPC准备失败、原summary及远端preparation-result-disk-full-020540Z.json完整保留在[历史准备回执](E02_6C446_PREPARATION_BLOCKED_RESULT.json)，不再作为当前磁盘阻塞。
 
-当前阻塞是验证准备空间不足，未判源码失败，不开修复槽、不快速重试或Cloud替代，不新增入口/网络/CI。两个候选仍为同父26d的独立分支，未组合成四文件集成候选。原失败历史保留；无真实MySQL/Redis、HTTP、设备业务、迁移、合并或部署验收。两项CORE业务选择均已由真人确认保留现状，按CORE_COMPATIBILITY_DECISIONS_20261018.json收口NO_SOURCE_CHANGE，无待裁决源码。无需EXTRA为本回执重复改本队文档。完整索引见[四文件批次](FOUR_FIXTURE_SOURCE_BATCH.json)。
+原空间阻塞已自然恢复并完成未完编译；无需源码修复槽、不再重试或Cloud替代，不新增入口/网络/CI。两个候选仍为同父26d的独立分支，未组合成四文件集成候选。原失败历史保留；无真实MySQL/Redis、HTTP、设备业务、迁移、合并或部署验收。两项CORE业务选择均已由真人确认保留现状，按CORE_COMPATIBILITY_DECISIONS_20261018.json收口NO_SOURCE_CHANGE，无待裁决源码。无需EXTRA为本回执重复改本队文档。完整索引见[四文件批次](FOUR_FIXTURE_SOURCE_BATCH.json)。
 
 ## 先前记录（按原SHA保留历史，不覆盖上述当前状态）
 

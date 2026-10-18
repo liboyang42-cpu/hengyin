@@ -74,5 +74,32 @@
     "source_archive_receipts_retained": true,
     "unrelated_resources_untouched": true
   },
-  "next_action": "No immediate retry or Cloud substitute. Local verifier owns any resource recovery under existing rules; no additional cleanup or resource authorization inferred."
+  "next_action": "No immediate retry or Cloud substitute. Local verifier owns any resource recovery under existing rules; no additional cleanup or resource authorization inferred.",
+  "record_role": "HISTORICAL_PREPARATION_FAILURE_PRESERVED_NOT_CURRENT_BLOCKER",
+  "current": {
+    "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "fresh_selected_classes": 3,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false,
+    "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+    "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+  },
+  "resolution": {
+    "state": "RESOLVED_BY_RESUMING_UNCOMPLETED_TEST_COMPILE",
+    "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+    "natural_resource_recovery": true,
+    "other_task_resources_untouched": true,
+    "existing_entry_unchanged": true,
+    "new_source_fix_required": false,
+    "actual_tests": 0,
+    "true_mysql3": "NOT_RUN"
+  }
 }

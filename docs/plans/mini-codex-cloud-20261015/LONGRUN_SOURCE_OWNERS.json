@@ -2803,8 +2803,8 @@
       "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
       "frozen_source_sha": "6c44636974220ca9876386ee638c99981488db42",
       "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
-      "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
-      "compile_status": "NOT_RUN_PREPARATION_DISK_FULL",
+      "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "compile_status": "TEST_COMPILE_PASS",
       "actual_tests": 0
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java": {
@@ -2820,8 +2820,8 @@
       "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
       "frozen_source_sha": "6c44636974220ca9876386ee638c99981488db42",
       "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
-      "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
-      "compile_status": "NOT_RUN_PREPARATION_DISK_FULL",
+      "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "compile_status": "TEST_COMPILE_PASS",
       "actual_tests": 0
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java": {
@@ -2837,8 +2837,8 @@
       "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
       "frozen_source_sha": "6c44636974220ca9876386ee638c99981488db42",
       "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
-      "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
-      "compile_status": "NOT_RUN_PREPARATION_DISK_FULL",
+      "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "compile_status": "TEST_COMPILE_PASS",
       "actual_tests": 0
     },
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java": {
@@ -4743,7 +4743,7 @@
     "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
     "post_grant_author_ack": "C00 directly read two completed originalE02 private child turns: fetched complete publicgrant via GitHubconnector before writing, exact3baseline hashes, only3lines added, stopped; separate B05 freeze/handoff acknowledgement",
     "status": "SOURCE_DELIVERED_UNVERIFIED",
-    "verification_type": "STATIC_SOURCE_REVIEW_LOCAL_PREPARATION_BLOCKED",
+    "verification_type": "STATIC_SOURCE_REVIEW_AND_LOCAL_VPS_TEST_COMPILE",
     "static_review": [
       {
         "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
@@ -4772,7 +4772,7 @@
     "public_readback": "Fullpubliccommit/parent/3patches and each completefile read; each removing exactaddedline byte-identical to control26d source",
     "actual_source_writers": 0,
     "original_author_stopped_lock_retained": true,
-    "compile_status": "NOT_RUN",
+    "compile_status": "TEST_COMPILE_PASS",
     "actual_tests": 0,
     "declared_methods": 3,
     "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
@@ -4784,19 +4784,23 @@
     "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
     "original_child_parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
     "rolling_readback": "Completepubliccommit exact3files/add3del0; eachgitblobSHA identical originalf74child, sameexactgrant; noB05change or other source change",
-    "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
+    "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json",
     "local_validation": {
-      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
       "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
       "source_sha": "6c44636974220ca9876386ee638c99981488db42",
-      "status": "NOT_STARTED_PREPARATION_DISK_FULL",
-      "compile_status": "NOT_RUN",
+      "status": "TEST_COMPILE_PASS",
+      "compile_status": "TEST_COMPILE_PASS",
       "actual_tests": 0,
       "fresh_surefire_xml": 0,
+      "fresh_selected_classes": 3,
       "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
       "declared_mysql_methods": 3,
-      "repair_slot_opened": false
-    }
+      "repair_slot_opened": false,
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "preparation_failure_history_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
   },
   "four_fixture_source_batch": {
     "id": "FOUR_FIXTURE_SOURCE_BATCH_20261018",
@@ -4816,7 +4820,7 @@
         "deleted_lines": 0,
         "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
         "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
-        "validation_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+        "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json"
       },
       {
         "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
@@ -4830,7 +4834,7 @@
     ],
     "actual_source_writers_now": 0,
     "locks_retained": true,
-    "compile_status": "MIXED_B05_PASS_E02_PREPARATION_NOT_STARTED",
+    "compile_status": "BOTH_INDEPENDENT_CANDIDATES_TEST_COMPILE_PASS_ONLY",
     "actual_tests": 0,
     "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
     "already_reference_fixture": "6c6f82d7 only static2methodE02_25MySqlIT, not re-edited or re-tested",
@@ -4857,20 +4861,25 @@
       },
       "E02": {
         "source_sha": "6c44636974220ca9876386ee638c99981488db42",
-        "compile": "NOT_RUN",
-        "state": "PREPARATION_DISK_FULL_BEFORE_GUARD_MAVEN",
+        "compile": "TEST_COMPILE_PASS",
+        "state": "TEST_COMPILE_PASS",
         "actual_tests": 0,
         "true_mysql3": "NOT_RUN",
-        "packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+        "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+        "fresh_selected_classes": 3,
+        "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
       },
       "actual_source_writers": 0,
       "locks_retained": true,
       "repair_slot_opened": false,
       "missing_file_authorization": false,
       "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
-      "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
+      "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
       "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
-      "joint_four_file_candidate": false
+      "joint_four_file_candidate": false,
+      "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+      "current_disk_blocker": false,
+      "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
     }
   },
   "latest_extra_fixture_source_sha": "6c44636974220ca9876386ee638c99981488db42",
@@ -4886,20 +4895,25 @@
     },
     "E02": {
       "source_sha": "6c44636974220ca9876386ee638c99981488db42",
-      "compile": "NOT_RUN",
-      "state": "PREPARATION_DISK_FULL_BEFORE_GUARD_MAVEN",
+      "compile": "TEST_COMPILE_PASS",
+      "state": "TEST_COMPILE_PASS",
       "actual_tests": 0,
       "true_mysql3": "NOT_RUN",
-      "packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "fresh_selected_classes": 3,
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
     },
     "actual_source_writers": 0,
     "locks_retained": true,
     "repair_slot_opened": false,
     "missing_file_authorization": false,
     "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
-    "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
+    "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
     "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
-    "joint_four_file_candidate": false
+    "joint_four_file_candidate": false,
+    "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "current_disk_blocker": false,
+    "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
   },
   "core_compatibility_decision_receipt": {
     "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
@@ -4914,7 +4928,7 @@
     "new_bug_count": 0,
     "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
     "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
-    "fixture_validation_unchanged": "All four fixture sources delivered; B05 test-compile PASS only/actual0/MySQL3 NOT_RUN; E02 preparation ENOSPC before guard/Maven, compile NOT_RUN/actual0/MySQL3 NOT_RUN."
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
   },
   "existing_contract_owner_records": {
     "OWN-C04-01": {
