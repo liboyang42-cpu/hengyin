@@ -190,7 +190,7 @@ function loadPage(rel, responder) {
   })
   global.Page = (c) => { config = c }
   global.wx = {
-    navigateTo: (o) => nav.push(o.url), navigateBack: () => nav.push('back'), redirectTo: (o) => nav.push(o.url),
+    navigateTo: (o) => { nav.push(o.url); if (o.complete) o.complete() }, navigateBack: () => nav.push('back'), redirectTo: (o) => nav.push(o.url),
     switchTab: (o) => nav.push(o.url), stopPullDownRefresh: () => {}, showToast: () => {}, showModal: () => {},
     getSystemInfoSync: () => ({ windowWidth: 375 }),
   }
@@ -434,4 +434,23 @@ test('N1 入口: 只从系统消息进入；不在设置页放入口；两页注
     assert.match(read('subpackageMember/' + p + '/index.wxml'), /<cy-state-shell/, p + ' 四态走 cy-state-shell')
     assert.doesNotMatch(read('subpackageMember/' + p + '/index.wxss'), /#[0-9a-fA-F]{3,6}\b/, p + ' 不硬编码颜色')
   }
+})
+
+test('BL-212 处理器: 举报进度通知连点只跳一层详情、只发一次已读；complete 后可再次打开', () => {
+  const h = loadPage('subpackageB/pages/im/list/index.js', () => {})
+  try {
+    const pending = []
+    global.wx.navigateTo = (o) => { h.nav.push(o.url); pending.push(o) }
+    const tap = { currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: true } } }
+    h.vm.openReportNotice(tap)
+    h.vm.openReportNotice(tap)
+    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'], '连点只跳 1 次')
+    assert.equal(h.requests.filter((r) => r.url === '/api/v1/community/notifications/3/read').length, 1, '只发 1 个已读请求')
+    pending[0].complete()
+    h.vm.openReportNotice(tap)
+    assert.equal(h.nav.length, 2, 'complete 后可再次打开')
+    h.vm.onShow()
+    h.vm.openReportNotice(tap)
+    assert.equal(h.nav.length, 3, 'onShow 后可再次打开')
+  } finally { h.restore() }
 })
