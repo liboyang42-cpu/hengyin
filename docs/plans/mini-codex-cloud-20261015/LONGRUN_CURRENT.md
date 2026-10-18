@@ -1,3 +1,12 @@
+## 2026-10-18 两项既有合同已确认：NO_SOURCE_CHANGE
+
+两项真人选择已由本地协调者明确转交、C00实际签收并更新原剩余表及owner记录：[决定与签收](CORE_COMPATIBILITY_DECISIONS_20261018.json)。
+
+- OWN-C04-01：保留同玩家／同NPC／同请求号重放第一次结果，新问题换新请求号；原scope检查与既有terminalReplay回归合同不变。不加内容指纹、列或迁移，不推测旧回执身份。收口 **NO_SOURCE_CHANGE**，不计新增修复BUG。
+- OWN-C05-22：保留照片AI异常退还照片池次数，沿既有照片合同；不改为通用网关UNKNOWN占用，不改降级／放行／奖励。收口 **NO_SOURCE_CHANGE**，不新增政策源码、迁移或付费调用。
+
+CORE这两项待真人裁决数现为 **0**；历史BLOCKED提案保留，原owner与文件锁不变，不唤起作者重扫或测试、不复跑旧PASS。当前已确认可行动未交源码仍0，不造任务。四夹具源码已交；B05仅test-compile PASS／实际0，E02缓存ENOSPC发生在guard/Maven前、compile NOT_RUN／实际0；各3项真MySQL仍NOT_RUN，现有入口不新增，验证状态未受本决定改变。下方旧“待真人选择”只为历史，已由本段覆盖。
+
 # 当前恢复入口：四文件源码完成，B05编译通过，E02空间阻塞
 
 四文件 grant、逐作者 ACK 与源码交付均已完成，原作者停写、独占锁保留。C00已核读 PR24 固定证据 [`8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac`](https://github.com/liboyang42-cpu/hengyin/commit/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac) 的两份 README/summary；以下为当前结果，后文较早“均未编译/待 ACK”仅为历史快照。

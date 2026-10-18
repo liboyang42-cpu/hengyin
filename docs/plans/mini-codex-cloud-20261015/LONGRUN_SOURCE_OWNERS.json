@@ -106,7 +106,13 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7"
+      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "existing_contract_decision": {
+        "id": "OWN-C04-01",
+        "state": "NO_SOURCE_CHANGE",
+        "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+        "new_writer": false
+      }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java": {
       "owner": "CORE/C04",
@@ -114,7 +120,13 @@
       "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
       "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7"
+      "frozen_source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+      "existing_contract_decision": {
+        "id": "OWN-C04-01",
+        "state": "NO_SOURCE_CHANGE",
+        "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+        "new_writer": false
+      }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatDataService.java": {
       "owner": "CORE/C04",
@@ -4668,12 +4680,53 @@
   "existing_CORE_remaining_disposition": {
     "source": "LONGRUN_REMAINING existingCORE list",
     "confirmed_actionable_production_or_architecture": 0,
-    "unresolved": [
+    "unresolved": [],
+    "current_minimal_task": "CORE/B05 exact onefile prerequisite delivered separately; no sourcepolicy expanded",
+    "third": "READY0; DATE_ADD maxdate realMySQL/warning/source metric evidence absent and aggregationMappernotgranted; RRactualisolation/legitparallelcallernotproven",
+    "previous_unresolved": [
       "OWN-C04-01 NPC request identity contract",
       "OWN-C05-22 AI post-send failure charge-count policy"
     ],
-    "current_minimal_task": "CORE/B05 exact onefile prerequisite delivered separately; no sourcepolicy expanded",
-    "third": "READY0; DATE_ADD maxdate realMySQL/warning/source metric evidence absent and aggregationMappernotgranted; RRactualisolation/legitparallelcallernotproven"
+    "resolved_existing_contracts": [
+      {
+        "id": "OWN-C04-01",
+        "owner": "CORE/C04",
+        "original_owner_record": "a02_sol",
+        "state": "NO_SOURCE_CHANGE",
+        "reason": "USER_CONFIRMED_EXISTING_COMPATIBILITY_CONTRACT",
+        "contract": "Same player, same NPC and same request ID replay the first result. A new question requires a new request ID; existing target/scope checks remain.",
+        "existing_regression": "NpcChatServiceTest.terminalReplayReturnsSameResultWithoutCallingGatewayAgain",
+        "excluded_changes": [
+          "content fingerprint",
+          "new column",
+          "migration",
+          "guessed legacy receipt identity"
+        ],
+        "new_bug_count": 0,
+        "new_source_changes": 0,
+        "new_tests_run": 0,
+        "new_owner_write_grant": false
+      },
+      {
+        "id": "OWN-C05-22",
+        "owner": "CORE/C05",
+        "original_owner_record": "feature_coorganizer_sol",
+        "state": "NO_SOURCE_CHANGE",
+        "reason": "USER_CONFIRMED_EXISTING_COMPATIBILITY_CONTRACT",
+        "contract": "Photo AI exceptions continue refunding the photo-pool count under its existing contract. Do not replace this with generic gateway UNKNOWN reservation semantics.",
+        "existing_regression": "PhotoCheckVisionServiceTest.负控_模型调用抛异常时降级并退还额度",
+        "excluded_changes": [
+          "degradation/admission/reward policy",
+          "new policy source",
+          "migration",
+          "paid provider invocation"
+        ],
+        "new_bug_count": 0,
+        "new_source_changes": 0,
+        "new_tests_run": 0,
+        "new_owner_write_grant": false
+      }
+    ]
   },
   "extra_three_fixture_source_delivery": {
     "id": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY",
@@ -4790,7 +4843,7 @@
       "merge/deploy",
       "wholebranch integration"
     ],
-    "remaining": "Existing CORE production/architecture actionable0; NPC requestidentity/AI aftersend count contracts unresolved, no new audit/filler. F3 READY0 maxdate realDB warning/metric evidence and mapper writegrant absent; RR actualisolation/legalparallelcaller notproven. Previously E01-13/E03-04/E02-03 delivered60/4 not awaiting userdecision.",
+    "remaining": "Existing CORE production/architecture actionable0; OWN-C04-01 and OWN-C05-22 closed by explicit user confirmation as NO_SOURCE_CHANGE, decisionblocked0. F3 READY0: maxdate actual MySQL warning/metric evidence and aggregation Mapper grant absent; RR actual isolation/legal parallel caller unproven. No filler task or new source grant. E01-13/E03-04/E02-03 remain delivered60/4 ordinary only.",
     "integration_topology": "Two sibling candidates off26d: EXTRA rolling6c4463 changesonly3E02files; CORE2ac55d changesonlyB05. No joint4filecandidate/integration/test claim.",
     "local_validation": {
       "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
@@ -4816,7 +4869,7 @@
       "missing_file_authorization": false,
       "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
       "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
-      "two_CORE_policy_choices": "Local root has asked human; awaiting actual answer, no policy/source change",
+      "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
       "joint_four_file_candidate": false
     }
   },
@@ -4845,7 +4898,38 @@
     "missing_file_authorization": false,
     "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
     "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
-    "two_CORE_policy_choices": "Local root has asked human; awaiting actual answer, no policy/source change",
+    "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
     "joint_four_file_candidate": false
+  },
+  "core_compatibility_decision_receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 test-compile PASS only/actual0/MySQL3 NOT_RUN; E02 preparation ENOSPC before guard/Maven, compile NOT_RUN/actual0/MySQL3 NOT_RUN."
+  },
+  "existing_contract_owner_records": {
+    "OWN-C04-01": {
+      "owner": "CORE/C04",
+      "original_owner_record": "a02_sol",
+      "state": "NO_SOURCE_CHANGE",
+      "new_file_write_grant": false,
+      "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json"
+    },
+    "OWN-C05-22": {
+      "owner": "CORE/C05",
+      "original_owner_record": "feature_coorganizer_sol",
+      "state": "NO_SOURCE_CHANGE",
+      "new_file_write_grant": false,
+      "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json"
+    }
   }
 }

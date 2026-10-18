@@ -113,19 +113,27 @@
   "repair_slots": "RELEASED_CURRENT_ORDINARY_FAILURE_CLOSED_FILE_LOCK_RETAINED",
   "source_work": "All four exact fixture source changes delivered after grant/ACK; ownership retained, no missing file permission or source failure from preparation block.",
   "business_decisions": {
-    "pending_local_user_answers": true,
-    "questions_reported": 3,
-    "scope": [
-      "E02-23 authoritative legacy identity bridge or missing-map handling",
-      "E04-07 legacy missing history identity reversal behavior",
-      "E04-07 future exact historyID migration-source scope"
-    ],
-    "not_authorized": [
-      "identity bridge policy changes",
-      "coupon identity/legacy behavior choice",
-      "DDL source changes"
-    ],
-    "independent_source_blocked_by_wait": false
+    "state": "EARLIER_IDENTITY_COUPON_DECISIONS_ALREADY_RESOLVED_SOURCE_DELIVERED",
+    "pending_local_user_answers": false,
+    "earlier_question_snapshot": {
+      "pending_local_user_answers": true,
+      "questions_reported": 3,
+      "scope": [
+        "E02-23 authoritative legacy identity bridge or missing-map handling",
+        "E04-07 legacy missing history identity reversal behavior",
+        "E04-07 future exact historyID migration-source scope"
+      ],
+      "not_authorized": [
+        "identity bridge policy changes",
+        "coupon identity/legacy behavior choice",
+        "DDL source changes"
+      ],
+      "independent_source_blocked_by_wait": false
+    },
+    "source_batch": "BUSINESS_DECISIONS_SOURCE_BATCH.json",
+    "current_CORE_decision_packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "current_CORE_decision_state": "BOTH_NO_SOURCE_CHANGE",
+    "new_authorization_inferred": false
   },
   "prior_passes": "Preserved exact old SHAs; not inherited by current candidates",
   "cloud_manual_runs": 0,
@@ -164,7 +172,7 @@
     "missing_file_authorization": false,
     "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
     "retry": "NO_IMMEDIATE_RETRY_NO_CLOUD_SUBSTITUTE",
-    "two_CORE_policy_choices": "Local root has asked human; awaiting actual answer, no policy/source change",
+    "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
     "joint_four_file_candidate": false
   },
   "latest_fixture_candidates": {
@@ -192,5 +200,20 @@
       "declared_mysql_methods": 3,
       "repair_slot_opened": false
     }
+  },
+  "core_compatibility_decision_receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 test-compile PASS only/actual0/MySQL3 NOT_RUN; E02 preparation ENOSPC before guard/Maven, compile NOT_RUN/actual0/MySQL3 NOT_RUN."
   }
 }
