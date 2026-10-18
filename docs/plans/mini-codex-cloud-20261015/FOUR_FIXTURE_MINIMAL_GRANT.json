@@ -1,0 +1,158 @@
+{
+  "id": "FOUR_EXISTING_MYSQL_FIXTURE_PREREQUISITES_20261018",
+  "authorization": "Latest explicit user via local root: exact4files only empty cms_activity prerequisite/self scratch cleanup; source only, root validates existing entry",
+  "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "reference_source": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+  "policy": "Existing entry only; no CI/212/network/test execution/dependency/gate/production change; no migration/merge/deploy",
+  "source_status": "NOT_DELIVERED_PUBLIC_GRANT_ACK_REQUIRED_BEFORE_WRITE",
+  "global_editor": "C00 only",
+  "packages": [
+    {
+      "id": "EXTRA_E02_THREE_FIXTURES",
+      "owner": "EXTRA6/E02",
+      "writer": "original /root/external_e02",
+      "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+      "child_thread": "01a13fa2-edb5-73da-99d7-848a5391f002",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "baseline_sha256": "2627ca71ca9992e5290989adf3a012c0573cc0b6304eef91fe853609c1f4dfb7",
+          "insert_after_line": 131,
+          "insert_before_line": 132,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 94,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "baseline_sha256": "02613df6ce654fba1d52ef36e765c4906b9bfb14ba4e5cf2ffc40d771ca1ba22",
+          "insert_after_line": 144,
+          "insert_before_line": 145,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 94,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "baseline_sha256": "4bc235033bdd93649ba0e262aa3c21088ea147df3515070715f0a8336ac5ee7a",
+          "insert_after_line": 133,
+          "insert_before_line": 134,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 93,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        }
+      ],
+      "state": "PUBLIC_GRANT_READY_POST_PUBLICATION_ACK_REQUIRED",
+      "actual_writers": 0,
+      "preparation_receipt": "C00 actually read latest EXTRA chat: original E02 readonly exact3file prep, insert132/145/134, guarded cleanup94/94/93; no edit",
+      "communication": "Private tool not available to C00; local root forwards grant. Never substitute public internal comments."
+    },
+    {
+      "id": "CORE_B05_SINGLE_FIXTURE",
+      "owner": "CORE/B05",
+      "writer": "/root/core_b05_fixture_sol",
+      "model": "gpt-6.1-sol",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "baseline_sha256": "ea819e85946dd9336c430cb1f879884a3e61b8311f18373368571a5426f6fdfb",
+          "insert_after_line": 156,
+          "insert_before_line": 157,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 67,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 3,
+          "gate": "CHENGYIN_B05_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        }
+      ],
+      "state": "FORMAL_TRANSFER_FROM_FROZEN_EXTRA_TEST_AUTHOR_TO_CORE_PER_USER",
+      "actual_writers": 0,
+      "old_owner": "EXTRA6/E02 test creator",
+      "transfer_evidence": [
+        "EXTERNAL_SIX_HANDOFF E02 explicitly assigned B05 test and acknowledged launch; no prior activeCORE test writer",
+        "Public sole creator ba910732f9275ec6a2990830df072f6dc80685f9",
+        "Current45openPR allfiles paginated hits only same owner PR30/integrationPR36; current EXTRA original author stopped and explicitly refuses B05 without CORE handoff",
+        "Latest user requests preciseCORE responsibility; new receiver explicitly declared, not pretending historical author online. CORE production policy owner remains C00."
+      ],
+      "pre_publication_ack": "NewCORE receiver read AGENTS and exact public source, explicitly accepts solepath, confirmed3 methods/B05 gate/created-protected cleanup; stopped until full public grant and newACK",
+      "post_publication_ack": "PENDING; only then may prepare onefile patch in own/tmp, no Git or control edits",
+      "delivery": "C00 serial source publication based exact26d snapshot; no broad branch integration"
+    }
+  ],
+  "method_totals": {
+    "extra3": 3,
+    "core_b05": 3,
+    "actual_tests": 0,
+    "execution": "NOT_RUN_REAL_MYSQL_EXISTING_ENTRY_COVERAGE_GAP"
+  },
+  "conflict_scan": {
+    "open_prs": 45,
+    "full_pagination": true,
+    "hits": [
+      {
+        "pr": 30,
+        "sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+        "title": "[E02] CY-HANDOFF 社区读取快照与隐私回归（未验证）",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+            "status": "added"
+          }
+        ]
+      },
+      {
+        "pr": 36,
+        "sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+        "title": "fix: hide cancelled or unpublished activity reference cards",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+            "status": "added"
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "non_granted": [
+    "All production/mapper/app/dependency/config/CI/gate files",
+    "Existing migration/base schema/entry/VPS/network/DB",
+    "Other tests including already delivered E02_25MySqlIT",
+    "Assertion/method deletion/skip/default/mock hiding prerequisites"
+  ],
+  "remaining": "Only existingCORE remaining items with proven caller/contract+ownedpaths; E01-13/E03-04/E02-03 already delivered per evidence, no refill/filler audit"
+}

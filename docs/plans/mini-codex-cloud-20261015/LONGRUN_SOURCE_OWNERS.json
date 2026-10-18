@@ -2764,6 +2764,50 @@
       "frozen_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
       "last_task": "E04-07-B-EXACT_RECEIPT_SOURCE",
       "author_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "actual_writer": 0,
+      "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
+      "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+      "old_test_creator": "EXTRA6/E02",
+      "transfer": "Originaltestauthor resumes own3files"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "actual_writer": 0,
+      "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
+      "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+      "old_test_creator": "EXTRA6/E02",
+      "transfer": "Originaltestauthor resumes own3files"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java": {
+      "owner": "EXTRA6/E02",
+      "worker": "original /root/external_e02",
+      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "actual_writer": 0,
+      "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
+      "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+      "old_test_creator": "EXTRA6/E02",
+      "transfer": "Originaltestauthor resumes own3files"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java": {
+      "owner": "CORE/B05",
+      "worker": "/root/core_b05_fixture_sol",
+      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "actual_writer": 0,
+      "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
+      "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+      "old_test_creator": "EXTRA6/E02",
+      "transfer": "Formal specificCORE takeover per latest user"
     }
   },
   "reserved_not_transferred": [
@@ -4425,5 +4469,11 @@
     "deployment": "NO",
     "old_history_preserved": true
   },
-  "current_EXTRA_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a"
+  "current_EXTRA_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "four_fixture_minimal_grant": {
+    "packet": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+    "state": "PUBLIC_GRANT_AWAITING_POST_PUBLICATION_ACK",
+    "actual_writers": 0,
+    "core_new_receiver_transparent": true
+  }
 }

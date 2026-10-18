@@ -1,5 +1,7 @@
 # 当前恢复入口
 
+四个旧真库夹具新增读取前提已[精确登记](FOUR_FIXTURE_MINIMAL_GRANT.json)：E02_01Test/E02_11Test/E02_06Test仍原EXTRA/E02；B05CommunityVisibilityMySqlIT实际测试创建者也为EXTRA/E02，现按用户要求正式转CORE/B05唯一接收者core_b05_fixture_sol（明确新接收，不冒称原作者在线）。45开放PR全分页仅PR30/36同作者及集成触达，无第二writer。仅补同一行cms_activity空表，原created自有scratch清理已正确，保gate/6原方法及断言；公共SHA逐作者ACK前不写。Cloud不编译测试/CI/VPS，不改生产/入口，已有6c6不重改。内部协调不写公开PR评论；非敏感权限表按要求保存公共GitHub。
+
 本次三项真人决定已全部形成公共源码：A `dedb44d54a4a277273943c0cbbca9f6e7528482a` → E02 `13be997646c88b9eea282cc8c8225b42820dc3b3` → B `923170abd8e468d62eb8404b16b990609a4da42a`，完整父链/精确路径/本地文本命令见[源码批次](BUSINESS_DECISIONS_SOURCE_BATCH.json)、[E02](E02_23_SOURCE_DELIVERY.json)、[B](E04_07_B_SOURCE_DELIVERY.json)。原两作者已按225b grant真实ACK并完成停写、保留独占锁，当前源码writer0，非仍等三项决定。E02真实行为变化：无可信旧帖映射收藏/取消返回原错误封装，收藏筛选/状态同一受保护来源谓词；无新URL，但不能标无行为变化。B原发券boolean外部签名不变，仅精确回执与审计内部合同，旧未知只审计不动券、其他冲正继续。静态逐源码声明A3、E02四类18、B两类11；B新5+旧3真库8均NOT_RUN/现有入口覆盖缺口，不能累加不同SHA为一个已跑矩阵。B唯一新增迁移仅审查，旧行NULL不回填，先加列才可未来部署B；当前无执行/集成合并部署，TEST_DEPLOYED=NO。
 
 ## 当前真实状态

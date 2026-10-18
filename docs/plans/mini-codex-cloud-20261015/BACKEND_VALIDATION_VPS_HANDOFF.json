@@ -2588,5 +2588,12 @@
       "No cross-team CORE/FORWARD/Claude branch integration or merge performed"
     ],
     "confirmed_new_bug_id": false
+  },
+  "four_fixture_minimal_grant": {
+    "packet": "FOUR_FIXTURE_MINIMAL_GRANT.json",
+    "state": "GRANTED_PENDING_POST_PUBLICATION_ACK",
+    "actual_writers": 0,
+    "new_code_delivered": false,
+    "actual_tests": 0
   }
 }
