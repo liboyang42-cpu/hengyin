@@ -43,7 +43,7 @@ Page({
     this.loadReportNotices();
   },
   onShow() {
-    // 从聊天页返回时刷新未读/最后一条
+    this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
     if (this.data.loaded) {
       this.loadConversations(true);
       this.loadReportNotices();
@@ -142,8 +142,8 @@ Page({
   },
 
   openReportNotice(e) {
-    const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId);
-    if (url) { wx.navigateTo({ url: url }); this.markReportNoticeRead(e.currentTarget.dataset); }
+    const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId); if (!url || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } }); this.markReportNoticeRead(e.currentTarget.dataset);
   },
 
   // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
