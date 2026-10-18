@@ -1,0 +1,80 @@
+{
+  "team": "core",
+  "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "classes": [
+    "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+    "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+  ],
+  "declared_tests": 10,
+  "archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+  "task": "cy-vps-core-e0e3f517-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "New production fix; only directly affected ordinary tests. True database, Redis and running HTTP remain separate.",
+  "started_at": "2026-10-16T03:35:37.743053+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-core-e0e3f517",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-core-e0e3f517-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-core-e0e3f517-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-core-e0e3f517-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T03:38:22.314565+00:00"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+    }
+  ],
+  "totals": {
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 10
+  },
+  "fresh_exact_xml": true,
+  "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+  "evidence_layer": "ordinary regression only; SQL collaborator mocked; no true MySQL/Redis/HTTP/device/business or merge/deploy acceptance",
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
+  }
+}

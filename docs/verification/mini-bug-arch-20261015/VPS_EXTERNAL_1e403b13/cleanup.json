@@ -1,0 +1,35 @@
+{
+  "completed_at_utc": "2026-10-15T12:24:59.481311+00:00",
+  "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "task_owner_label_checked": true,
+  "maven_intervals": [
+    {
+      "container": "cy-c99-1e403b13-tests",
+      "started_at": "2026-10-15T12:16:51.715018459Z",
+      "finished_at": "2026-10-15T12:17:52.63984676Z"
+    },
+    {
+      "container": "cy-c99-1e403b13-regression",
+      "started_at": "2026-10-15T12:20:50.272037351Z",
+      "finished_at": "2026-10-15T12:21:44.72194631Z"
+    },
+    {
+      "container": "cy-c99-1e403b13-ai-storage",
+      "started_at": "2026-10-15T12:22:46.375189825Z",
+      "finished_at": "2026-10-15T12:23:37.289929717Z"
+    }
+  ],
+  "maven_intervals_non_overlapping": true,
+  "remaining_non_system_mysql_schemas_before_teardown": 0,
+  "redis_db0_key_count_before_teardown": 0,
+  "removed_task_containers": [
+    "cy-c99-1e403b13-tests",
+    "cy-c99-1e403b13-regression",
+    "cy-c99-1e403b13-ai-storage",
+    "cy-c99-1e403b13-redis",
+    "cy-c99-1e403b13-mysql"
+  ],
+  "removed_task_network": "cy-c99-1e403b13-net",
+  "other_resources_touched": false,
+  "logs_reports_source_and_task_dependency_cache_retained": true
+}

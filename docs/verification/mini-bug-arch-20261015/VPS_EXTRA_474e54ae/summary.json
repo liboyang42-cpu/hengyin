@@ -1,0 +1,550 @@
+{
+  "source_sha": "474e54aea6351856e7e4dd23ab4561932958522d",
+  "source_pr": 36,
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "source_archive_sha256": "db9713c0d95b5b0caf29ed023fd75fbafc58d2c875a7837ec46dd3143a508f31",
+  "compile": {
+    "status": "PASS_REACHED_SUREFIRE",
+    "admin_test_sources": 1352,
+    "note": "Single test command compiled sources then reached all 34 selected test classes; whole command failed on test results."
+  },
+  "unit": {
+    "status": "FAIL",
+    "counts": {
+      "tests": 305,
+      "failures": 1,
+      "errors": 2,
+      "skipped": 0
+    },
+    "passed": 302,
+    "expected_classes": 34,
+    "actual_report_classes": 34,
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "started_at": "2026-10-15T17:51:09.832206+00:00",
+    "guard": {
+      "returncode": 1,
+      "stdout": "{\"exitCode\": 1, \"reason\": \"child_command_failed\", \"containerId\": \"ca783bc424a4d987f663567347d9485d08f57675e99501fbf2ee72604f76a2dd\"}\n",
+      "stderr": "",
+      "finished_at": "2026-10-15T17:54:04.252791+00:00"
+    },
+    "log_sha256": "4f6be5a1c6751fafd47aa090aad4bbb2a4d7ce93b2087ac82e04fae6e025c60b",
+    "failures": [
+      {
+        "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "test": "concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox",
+        "kind": "error",
+        "exception": "com.chengyinhub.common.exception.ServiceException",
+        "message": "同一请求号不能用于不同命令",
+        "relevant_frames": [
+          "com.chengyinhub.common.exception.ServiceException: 同一请求号不能用于不同命令",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.error(CommunityPostServiceImpl.java:1595)",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.requireCommentLikeReceipt(CommunityPostServiceImpl.java:1447)",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.likeComment(CommunityPostServiceImpl.java:607)",
+          "at com.chengyinhub.business.community.CommunityPostServiceImplTest.concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox(CommunityPostServiceImplTest.java:797)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "test": "commentLikeAndUnlikeWritePostScopedOutboxEvents",
+        "kind": "error",
+        "exception": "com.chengyinhub.common.exception.ServiceException",
+        "message": "同一请求号不能用于不同命令",
+        "relevant_frames": [
+          "com.chengyinhub.common.exception.ServiceException: 同一请求号不能用于不同命令",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.error(CommunityPostServiceImpl.java:1595)",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.requireCommentLikeReceipt(CommunityPostServiceImpl.java:1447)",
+          "at com.chengyinhub.business.service.impl.CommunityPostServiceImpl.likeComment(CommunityPostServiceImpl.java:607)",
+          "at com.chengyinhub.business.community.CommunityPostServiceImplTest.commentLikeAndUnlikeWritePostScopedOutboxEvents(CommunityPostServiceImplTest.java:780)"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_14Test",
+        "test": "publishingExistingCommunityDraftRechecksMembershipBeforeSafetyOrWrites",
+        "kind": "failure",
+        "exception": "org.opentest4j.AssertionFailedError",
+        "message": "expected: <403> but was: <409>",
+        "relevant_frames": [
+          "at com.chengyinhub.business.longrun.E02_14Test.publishingExistingCommunityDraftRechecksMembershipBeforeSafetyOrWrites(E02_14Test.java:40)"
+        ]
+      }
+    ],
+    "reports": [
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.community.CommunityPostServiceImplTest.xml",
+        "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "sha256": "e9a1efeb6d562ca75fd6bb097eb70664ebbeb9c304ad8bce4e05e3357c0e6375",
+        "fresh_since_start": true,
+        "tests": 55,
+        "failures": 0,
+        "errors": 2,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_07Test.xml",
+        "class": "com.chengyinhub.business.longrun.E01_07Test",
+        "sha256": "778f70b83bb8684eef7677d4f48e1f1ebe17647cffea89102598c4436ff05806",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_12Test.xml",
+        "class": "com.chengyinhub.business.longrun.E01_12Test",
+        "sha256": "612b92e8fe12cdec5b908d714d4f0e9dcdb947c373007ff7ed3a95027e585fdd",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_14Test.xml",
+        "class": "com.chengyinhub.business.longrun.E01_14Test",
+        "sha256": "b0bac9a611c6e1563ee56b3300a3053c1556c19b16ea811dcb3243eeec58a113",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.E01_16Test",
+        "sha256": "1abd73bc10e5c9d68ca3186f187a8f94a72a40920c94a477756fb6872ccaa4bf",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.E01_17Test",
+        "sha256": "e1751ffcfc49dce9052e3cc9232176acba036ff33d034ade6d0dec28a131b25e",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_14Test.xml",
+        "class": "com.chengyinhub.business.longrun.E02_14Test",
+        "sha256": "e5c66f32008b90e55e81e2d072937bf36079d0ba0c3e235bc7f3eabb096b97d1",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_01Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_01Test",
+        "sha256": "b24736e7c573c87a633b47789378caff78f79b17ba7a4a29fbc40624adbecadb",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_02Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_02Test",
+        "sha256": "4a95ef7e1e750600082bda9bfab37d9f8a9527d652e877a26d67cd4fa1555fd4",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_11Test",
+        "sha256": "9851edb3870b0689101928833396dcb21d49623f2891e2b99419c1c1e666f25a",
+        "fresh_since_start": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_14Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_14Test",
+        "sha256": "349d9851a43c1ad023476864719e39ff15c2def21d232e437b831fb62c5a478d",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_16Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_16Test",
+        "sha256": "86765d2e4c7badd9e33ea5498c963dc87c1ccbc4bd57000d45cc64e2ce55b133",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.E03_17Test",
+        "sha256": "916cd93b47c10b1a51dd721aedf194b1541a208a9cb54bfafbeb68b3446306ac",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_03Test.xml",
+        "class": "com.chengyinhub.business.longrun.E04_03Test",
+        "sha256": "78fe92eaad1d5beeec20ad894036fd9c70b5135642790f4e8d3aeebf18d08b29",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_09Test.xml",
+        "class": "com.chengyinhub.business.longrun.E04_09Test",
+        "sha256": "43d24da03652f15bc9c5d90cec140365bcd1bcfa159efc3524000451ff0ae51e",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_11Test.xml",
+        "class": "com.chengyinhub.business.longrun.E04_11Test",
+        "sha256": "8ca737f31a5724dc70db2213cfbe6d452cbe713818d1c470e336fd7cae5e7fcc",
+        "fresh_since_start": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E05_14Test.xml",
+        "class": "com.chengyinhub.business.longrun.E05_14Test",
+        "sha256": "a93ca552bb57989604871fa78755c3fcf37198338f12e60b7938df4be138367a",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E05_15Test.xml",
+        "class": "com.chengyinhub.business.longrun.E05_15Test",
+        "sha256": "cf208456dea2270104e3bed7b85322153aaf58da73d3d2522f0a9ae863074063",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E05_17Test.xml",
+        "class": "com.chengyinhub.business.longrun.E05_17Test",
+        "sha256": "424834010905a8b419c923aaa5fbbae9b995a5cd488ca768ad1886ce302d1d29",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ClubWaitlistPromotionMembershipRaceTransactionTest.xml",
+        "class": "com.chengyinhub.business.service.ClubWaitlistPromotionMembershipRaceTransactionTest",
+        "sha256": "29fdeea09e8339ab557257c7c6c5856a039f2769a9491a2542eb49f4e4f6ec61",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ClubWaitlistServiceImplTest.xml",
+        "class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+        "sha256": "9798b3fc5ef8be9b14e307a9a78f89f114021703152a0f0fd6107b8c87ef24ac",
+        "fresh_since_start": true,
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.CouponSourceGrantTest.xml",
+        "class": "com.chengyinhub.business.service.CouponSourceGrantTest",
+        "sha256": "099bba4dc8b9940bdf05c5de2f154e0289fafbacc2dc36f68a99c5a3e808a10c",
+        "fresh_since_start": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.RegistrationEquityAtomicityContractTest.xml",
+        "class": "com.chengyinhub.business.service.RegistrationEquityAtomicityContractTest",
+        "sha256": "717e7fb4c766561af5fa37bf6ab6ac2282d968257eff5479e33f12b8f4c1e435",
+        "fresh_since_start": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponDisabledTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponDisabledTest",
+        "sha256": "e6dacb6994766b39f5a6386095dd4d09121d7f666f0934c42d9648b75582d9fb",
+        "fresh_since_start": true,
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponRedemptionAuditTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionAuditTest",
+        "sha256": "e79d44c894a45d41419150f28d5be6e173041b7999bfd3cbb7f477e14d973af1",
+        "fresh_since_start": true,
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponRedemptionStartTimeTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionStartTimeTest",
+        "sha256": "302abb2f5e67d722a297f64118460ddef859aac84b6f225cd356f1ec44094326",
+        "fresh_since_start": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponRedemptionTransactionBoundaryTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionTransactionBoundaryTest",
+        "sha256": "06c552692251429bca2ea70b978aa913fd4649f982daf1ca3691ce4dd54fdfdf",
+        "fresh_since_start": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponReverseTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponReverseTest",
+        "sha256": "a0606c8ab8c61c7b0ae8270c90f4354369312bda1494e5456d2ef612519baa2a",
+        "fresh_since_start": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.SmsCouponReverseTransactionBoundaryTest.xml",
+        "class": "com.chengyinhub.business.service.SmsCouponReverseTransactionBoundaryTest",
+        "sha256": "ccfee95d5522ae6c347faebc4f6ff0809050d06ebf9f2571c3a9adcb78f65cdd",
+        "fresh_since_start": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest.xml",
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest",
+        "sha256": "14726c582fd0eb529f2f688e5999d6c52cae5c0f18ea1d2b1ef05ce5e917f3a2",
+        "fresh_since_start": true,
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+        "sha256": "0dfff51dcf637106ff3f3e37fe9c576f30423e6a8cfe3100e6205e8ad6bd4dcf",
+        "fresh_since_start": true,
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.support.SeventhPierFixtureTest.xml",
+        "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+        "sha256": "e7af1521067e79ab6c8d7460c7310328a427f63e8419e87b920ea196a147b3d4",
+        "fresh_since_start": true,
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest.xml",
+        "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest",
+        "sha256": "af109e2ce221077042e5b85f8221a3a9a4919a876dc16db1a35f59e202fd54b4",
+        "fresh_since_start": true,
+        "tests": 54,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "file": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest.xml",
+        "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest",
+        "sha256": "0dbb71101c62d27b1afad5d04f6fd2fa6bce331242185a223ef620079b238a40",
+        "fresh_since_start": true,
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "deferred_gated_or_jdbc_classes": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_06Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E01_06Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_09Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E01_09Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_10Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E01_10Test",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_18Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E01_18Test",
+      "declared_test_annotations": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_01Test",
+      "declared_test_annotations": 1
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_06Test",
+      "declared_test_annotations": 1
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_10Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_10Test",
+      "declared_test_annotations": 1
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_11Test",
+      "declared_test_annotations": 1
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_15Test",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_16Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_16Test",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_18Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_18Test",
+      "declared_test_annotations": 1
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_20Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_20Test",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_22Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E02_22Test",
+      "declared_test_annotations": 9
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_06Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_10Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_10Test",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_14Test.java",
+      "class_name": "com.chengyinhub.business.longrun.E04_14Test",
+      "declared_test_annotations": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+      "class_name": "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
+      "class_name": "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+      "declared_test_annotations": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
+      "class_name": "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+      "declared_test_annotations": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+      "class_name": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+      "declared_test_annotations": 3
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java",
+      "class_name": "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+      "declared_test_annotations": 7
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponLifecycleMybatisIntegrationTest.java",
+      "class_name": "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
+      "declared_test_annotations": 12
+    }
+  ],
+  "static_annotation_warning": "Initial simple @Test count304 differs from actual305. Only XML execution totals are acceptance evidence.",
+  "not_accepted": [
+    "MySQL/Redis integration",
+    "runtime HTTP/business state",
+    "device acceptance",
+    "merge/deployment/migration"
+  ],
+  "resources": {
+    "memory_mib": 1536,
+    "memory_swap_mib": 1536,
+    "cpus": 1,
+    "pids": 256,
+    "network": "none",
+    "min_start_available_mib": 2560,
+    "abort_available_mib": 768,
+    "shared_lock": "java-build.lock",
+    "guard_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba"
+  }
+}

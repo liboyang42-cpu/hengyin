@@ -1,0 +1,62 @@
+{
+  "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "previous_source_sha": "ed598258c0f614385940f326099b9626531fab02",
+  "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+  "status": "PASS",
+  "counts": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_classes_match": true,
+  "fresh_reports": true,
+  "source_archive_sha256": "2ab95e689599d4c67bf1777bb7e00293faf2ef50248ab40b695f393d214c5db3",
+  "started_at": "2026-10-15T21:06:06.658359+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-b45664de-retest",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-b45664de-20261015/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-b45664de-20261015/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-b45664de-20261015/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E06_17Test",
+    "test"
+  ],
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"2881d9b7940b057242cfff6dfb5a4a833136345b48077c19270a6d1d8866de20\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-15T21:08:53.059460+00:00"
+  },
+  "log_sha256": "78675a2828ab008680d994815d834da4731917a98fbe6513145d7c346f0e8ea8",
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E06_17Test",
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E06_17Test.xml",
+      "sha256": "0e0dd03a5b9e3d2c9cc9fe28d7f2a6a598100c64c43ae1285f571937add702f3",
+      "fresh": true,
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "failures": [],
+  "scope_note": "Targeted five-method retest of the repaired E06 class only; no new 76-case full run or real database/HTTP/business acceptance."
+}
