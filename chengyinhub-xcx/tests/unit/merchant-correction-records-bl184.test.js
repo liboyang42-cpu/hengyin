@@ -147,10 +147,10 @@ test('详情页:业务拒绝原话展示,不给成功', () => {
 })
 
 test('入口:纠错半屏成功态只多一个次按钮「查看我的纠错」;新页沿用 cy-nav-bar + cy-page-title', () => {
-  const wxml = read('components/cy/merchant-correction-sheet/index.wxml')
+  const wxml = read('subpackageMember/components/cy/merchant-correction-sheet/index.wxml')
   assert.match(wxml, /kind="success"[\s\S]*?secondary-text="查看我的纠错"[^>]*bind:secondary="openMine"/)
   assert.equal((wxml.match(/查看我的纠错/g) || []).length, 1)
-  assert.match(read('components/cy/merchant-correction-sheet/index.js'), /\/subpackageMember\/correction-mine\/index/)
+  assert.match(read('subpackageMember/components/cy/merchant-correction-sheet/index.js'), /\/subpackageMember\/correction-mine\/index/)
   for (const page of ['correction-mine', 'correction-detail']) {
     const w = read('subpackageMember/' + page + '/index.wxml')
     assert.match(w, /<cy-nav-bar plain custom-back bind:back="goBack" \/>/)

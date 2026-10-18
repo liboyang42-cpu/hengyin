@@ -5,7 +5,7 @@
 //   补证只在 canSupplement=true 且状态为 NEEDS_EVIDENCE / REJECTED 时可用;成功后服务端把状态改回 PENDING、version+1。
 //   rewardStatus ∈ PENDING_REVIEW / PROVISIONAL / CREDITED / VOIDED / NOT_CREDITED(来自 getContributionTaxonomy)。
 // /contributions/mine 不分页、一次返回本人全部纠错,分页在端上做。VO 没有商家名,页面不编造。
-const model = require('../../components/cy/merchant-correction-sheet/model.js')
+const model = require('../components/cy/merchant-correction-sheet/model.js')
 const report = require('../report-common/view.js')
 
 const PAGE_SIZE = 20
