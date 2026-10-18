@@ -821,6 +821,9 @@ Page({
     const that = this;
     const topicId = that.data.id;
     if (!topicId) return;
+    // BL-201:移交每调一次服务端就复制一份新草稿;成功后入口仍在、页面不回读,本实例内不再放行。
+    if (that._transferredToClub) { app.tips('已移交，请到新主题继续配置'); return; }
+    if (that._transferringToClub) return;
     app.sendRequest({
       hideLoading: true, url: '/api/club/my', method: 'POST', data: {},
       success(res) {
@@ -854,6 +857,8 @@ Page({
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
+        if (that._transferredToClub || that._transferringToClub) return;
+        that._transferringToClub = true;
         app.sendRequest({
           url: '/api/topic/transfer-to-club',
           // 后端 transferToClub(String topicId, String clubId, …) 是 form 绑定(ApiTopicController:783):
@@ -862,6 +867,7 @@ Page({
           method: 'POST',
           success(r) {
             if (r.code == '200') {
+              that._transferredToClub = true; // 成功后保持在途标记,直到页面重新加载
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
@@ -874,10 +880,11 @@ Page({
                 }
               });
             } else {
+              that._transferringToClub = false;
               app.tips(r.msg || '移交失败');
             }
           },
-          fail() { app.tips('网络异常，请重试'); }
+          fail() { that._transferringToClub = false; app.tips('网络异常，请重试'); }
         });
       }
     });
