@@ -2083,8 +2083,6 @@
     "CORE_source_ready": 0,
     "EXTRA_source_ready": 0,
     "F3_source_ready": 0,
-    "new_source_sha": null,
-    "original_owner_evidence_routes_identified": true,
-    "new_owner_dispatch_ack": false
+    "new_source_sha": null
   }
 }
