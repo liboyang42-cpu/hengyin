@@ -122,7 +122,7 @@ Page({
             risks: stringList(body.risks),
           },
         });
-        this._loadEventState(seq);
+        this._loadEventState(seq, hasSnapshot);
       },
       fail: () => {
         if (!current()) return;
@@ -138,7 +138,7 @@ Page({
   },
 
   // 已排期以后公开详情能读;草稿在公开详情里不可见,回落到「我发布的」里的同一条服务端记录。
-  _loadEventState(seq) {
+  _loadEventState(seq, hasSnapshot) {
     const current = () => !this._unloaded && seq === this._loadSeq;
     app.sendRequest({
       url: '/api/official/events/' + this._id, method: 'GET',
@@ -149,16 +149,16 @@ Page({
           this._applyState(res.data);
           return;
         }
-        this._loadStateFromMine(seq);
+        this._loadStateFromMine(seq, hasSnapshot);
       },
       fail: () => {
         if (!current()) return;
-        this._loadStateFromMine(seq);
+        this._loadStateFromMine(seq, hasSnapshot);
       },
     });
   },
 
-  _loadStateFromMine(seq) {
+  _loadStateFromMine(seq, hasSnapshot) {
     const current = () => !this._unloaded && seq === this._loadSeq;
     app.sendRequest({
       url: '/api/official/my-published', method: 'GET',
@@ -169,9 +169,16 @@ Page({
         const row = events.find((item) => item && String(item.id) === String(this._id));
         this._applyState(row || null);
       },
+      // 两路都断网 = 什么都没读到:同 publish-check 断网,不当成「读到了」,有快照不冲掉
       fail: () => {
         if (!current()) return;
-        this._applyState(null);
+        this._readBackDone(null);
+        if (hasSnapshot) {
+          this.setData({ refreshing: false });
+          toast('网络没连上，显示上次读到的状态');
+          return;
+        }
+        this.setData({ phase: 'error', loadErrKind: 'network', loadError: '网络没连上，连接恢复后可以重试。' });
       },
     });
   },
