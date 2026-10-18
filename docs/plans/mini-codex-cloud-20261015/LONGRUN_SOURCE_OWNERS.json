@@ -228,9 +228,14 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistServiceImpl.java": {
       "owner": "EXTRA6/E01",
       "worker": "EXTRA6/E01",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_PARTIAL_EXACT_SHA_ORDINARY_PASS_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "last_task": "E01-13",
+      "actual_writer": 0,
+      "ordinary_evidence": "EVIDENCE_VPS_EXTRA_530e7228.json",
+      "real_db": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubWaitlistTokenCodec.java": {
       "owner": "EXTRA6/E01",
@@ -255,16 +260,19 @@
     "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml": {
       "owner": "EXTRA6/E02",
       "worker": "original /root/external_e02",
-      "state": "SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED",
+      "state": "SOURCE_FROZEN_PARTIAL_EXACT_SHA_ORDINARY_PASS_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
       "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
-      "frozen_source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "frozen_source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
       "latest_task": "E02-12",
       "actual_writer": 0,
       "ordinary_verification": "H2_PRODUCTION_XML_2_ACTUAL_PASS",
       "result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
       "real_database_verification": "NOT_RUN",
-      "actual_receipt": "PR16#6209021853"
+      "actual_receipt": "PR16#6209021853",
+      "last_task": "E02-03",
+      "ordinary_evidence": "EVIDENCE_VPS_EXTRA_6143c37f.json",
+      "real_db": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java": {
       "owner": "EXTRA6/E02",
@@ -283,9 +291,14 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java": {
       "owner": "EXTRA6/E03",
       "worker": "EXTRA6/E03",
-      "state": "ASSIGNED_SOURCE_ONLY",
+      "state": "SOURCE_FROZEN_PARTIAL_EXACT_SHA_ORDINARY_PASS_LOCK_RETAINED",
       "base_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
-      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes"
+      "transfer_evidence": "prior candidate owner stopped and committed; public c24202f/1e403b13 or 4a943501; no active source writer in prior lanes",
+      "frozen_source_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
+      "last_task": "E03-04",
+      "actual_writer": 0,
+      "ordinary_evidence": "EVIDENCE_VPS_EXTRA_530e7228.json",
+      "real_db": "NOT_RUN"
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java": {
       "owner": "EXTRA6/E03",
@@ -2801,13 +2814,16 @@
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java": {
       "owner": "CORE/B05",
       "worker": "/root/core_b05_fixture_sol",
-      "state": "EXCLUSIVE_GRANTED_ACK_REQUIRED_BEFORE_WRITE",
+      "state": "SOURCE_FROZEN_STATIC_ONLY_LOCK_RETAINED",
       "actual_writer": 0,
       "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
       "scope": "One existing scratch cms_activity emptytable; all methods/gates/assertions/created cleanup preserved",
       "grant": "FOUR_FIXTURE_MINIMAL_GRANT.json",
       "old_test_creator": "EXTRA6/E02",
-      "transfer": "Formal specificCORE takeover per latest user"
+      "transfer": "Formal specificCORE takeover per latest user",
+      "frozen_source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "grant_ack_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+      "source_packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json"
     }
   },
   "reserved_not_transferred": [
@@ -4475,5 +4491,151 @@
     "state": "PUBLIC_GRANT_AWAITING_POST_PUBLICATION_ACK",
     "actual_writers": 0,
     "core_new_receiver_transparent": true
+  },
+  "recent_external_evidence_ack": {
+    "id": "RECENT_EXTERNAL_EVIDENCE_ACK_20261018",
+    "owner": "C00",
+    "records": [
+      {
+        "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+        "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
+        "packet": "EVIDENCE_VPS_EXTRA_923170ab.json",
+        "totals": {
+          "tests": 35,
+          "failures": 0,
+          "errors": 7,
+          "skipped": 0,
+          "passed": 28
+        },
+        "verification_type": "ordinary targeted repair retest",
+        "result": "ORDINARY_TARGETED_35_NOT_PASS"
+      },
+      {
+        "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+        "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+        "packet": "EVIDENCE_VPS_EXTRA_b034a4aa.json",
+        "totals": {
+          "tests": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 8
+        },
+        "verification_type": "targeted retest of original two error classes only",
+        "result": "PASS"
+      },
+      {
+        "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+        "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+        "packet": "EVIDENCE_VPS_EXTRA_530e7228.json",
+        "totals": {
+          "tests": 60,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 60
+        },
+        "verification_type": "two newly changed services: new regressions plus two directly affected existing classes",
+        "result": "PASS"
+      },
+      {
+        "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+        "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+        "packet": "EVIDENCE_VPS_EXTRA_6143c37f.json",
+        "totals": {
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": 4
+        },
+        "verification_type": "new activity-reference visibility SQL: focused production XML H2 regression",
+        "result": "PASS"
+      },
+      {
+        "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+        "evidence_commit": "fb56b38de2e6eed9011023325789b7470aac06e6",
+        "packet": "EVIDENCE_SOURCE_EXTRA_6c6f82d7.json",
+        "totals": {
+          "tests": 0
+        },
+        "verification_type": "STATIC_ONLY",
+        "result": "STATIC_ONLY"
+      }
+    ],
+    "old35_history": "923170ab actual35=28PASS/0FAIL/7ERROR/0SKIP. H2 FOR Java method quoting fixture failure, not35 failed methods or7 productionbugs; retain exact six freshXML and two admission-refusal histories.",
+    "targeted8_closure": "b034a4aa only two affectedclasses8 actualPASS; originalE02 ACK/slotrelease evidence PR24#6217343282 actually read. No new35 rerun or inherited28.",
+    "sixty_count_audit": "530e7228 actual60 after original planned59 missed fullyqualified@Test; exact source methodnames=freshXML audited, original collector NOT_PASS/count receipt retained, no rerun/source adjustment.",
+    "four_boundary": "6143c37f actual4 H2 productionXML ordinaryPASS; no realMySQL/HTTP/transaction claim. New read dependency cms_activity exposes old scratch prerequisite gaps only.",
+    "sixc6": "6c6f82d7 one Java SQL string static ONLY, tests0/compileNOT_RUN/realMySQLNOT_RUN, no6143PASS inherited; four otherfixtures granted separately.",
+    "counter_correction": "OldE02 batch declarations18 missed6 CsvSource invocations: 6+(8ordinary+6parameter)+2+2=24; withE04 ordinary11, actual selectedbatch35. Test methodannotation counts are not executed invocation counts.",
+    "policy": "保持现有入口，不新增. RealMySQL/Redis/runtimeHTTP/device/business/crossbranch integration/migration/merge/deployment unaccepted; no new entry/CI changes.",
+    "not_internal_coordination_public_comments": true
+  },
+  "latest_external_targeted8": {
+    "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+    "actual_pass": 8,
+    "repairslot": "RELEASED_AFTER_ORIGINAL_AUTHOR_ACK",
+    "production_same_as9231": true,
+    "history35_not_overwritten": true
+  },
+  "core_b05_fixture_source_delivery": {
+    "id": "CORE_B05_FIXTURE_ACTIVITY_PREREQUISITE",
+    "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+    "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+    "branch": "codex/core-b05-fixture-20261018",
+    "paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java"
+    ],
+    "owner": "CORE/B05",
+    "sole_writer": "/root/core_b05_fixture_sol",
+    "original_test_author": "EXTRA6/E02; formal takeover per latest user after source owner/read-only checks; receiver does not pretend to be original author",
+    "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+    "grant_ack": "Direct receiver explicitly ACKed complete public grant SHA and exactpath; C00 released onefile /tmp patch only after ACK",
+    "status": "SOURCE_DELIVERED_UNVERIFIED",
+    "verification_type": "STATIC_ONLY",
+    "source_diff": {
+      "added_lines": 1,
+      "deleted_lines": 0,
+      "exact_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+      "location": "schema after existing community_post_reference creation",
+      "old_file_sha256": "ea819e85946dd9336c430cb1f879884a3e61b8311f18373368571a5426f6fdfb",
+      "new_file_sha256": "cddbc58be63ccb9ba74bf5c466db72be199e92ce5666be41419eefab2bdd6f9a",
+      "exact_after_removing_added_line": true,
+      "production_changes": false,
+      "methods_assertions_gate_dependencies_unchanged": true,
+      "created_cleanup_unchanged": true
+    },
+    "public_readback": "Full public commit parent/exact1file/add1del0patch actually read; same source base26d, no wholebranch transfer or force",
+    "actual_source_writers": 0,
+    "author_stopped_lock_retained": true,
+    "compile_status": "NOT_RUN",
+    "actual_tests": 0,
+    "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+    "declared_methods": 3,
+    "gate": "CHENGYIN_B05_MYSQL_IT=1",
+    "env": [
+      "CHENGYIN_TEST_MYSQL_HOST",
+      "CHENGYIN_TEST_MYSQL_PORT",
+      "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+      "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+      "CHENGYIN_TEST_MYSQL_USER",
+      "CHENGYIN_TEST_MYSQL_PASSWORD"
+    ],
+    "scratch": "MySQL8+nonMariaDB, explicitunique suffix, fail on schema collision not predrop, created true only after ownCREATE; drop own schema after run only. User current existing-entry rule unchanged, no permitted newDB entry inferred.",
+    "ordinary_result_inherited": false,
+    "handoff": "Local root executes only applicable existing entry; no Cloudcompile/test/CI/VPS, no old6143 or231 result inherited",
+    "integration": "Branch commit based exact26d. EXTRA coordinator may integrate exact singlefile after its own3fixture commit by declared SHA; C00 did not change EXTRA source branch or mix CORE production branch. No merge/deploy/migration"
+  },
+  "existing_CORE_remaining_disposition": {
+    "source": "LONGRUN_REMAINING existingCORE list",
+    "confirmed_actionable_production_or_architecture": 0,
+    "unresolved": [
+      "OWN-C04-01 NPC request identity contract",
+      "OWN-C05-22 AI post-send failure charge-count policy"
+    ],
+    "current_minimal_task": "CORE/B05 exact onefile prerequisite delivered separately; no sourcepolicy expanded",
+    "third": "READY0; DATE_ADD maxdate realMySQL/warning/source metric evidence absent and aggregationMappernotgranted; RRactualisolation/legitparallelcallernotproven"
   }
 }

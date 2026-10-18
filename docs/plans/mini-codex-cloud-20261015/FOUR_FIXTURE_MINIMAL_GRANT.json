@@ -4,7 +4,7 @@
   "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
   "reference_source": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
   "policy": "Existing entry only; no CI/212/network/test execution/dependency/gate/production change; no migration/merge/deploy",
-  "source_status": "NOT_DELIVERED_PUBLIC_GRANT_ACK_REQUIRED_BEFORE_WRITE",
+  "source_status": "CORE_B05_PUBLIC_DELIVERED_EXTRA_THREE_POST_GRANT_ACK_PENDING",
   "global_editor": "C00 only",
   "packages": [
     {
@@ -54,7 +54,8 @@
       "state": "PUBLIC_GRANT_READY_POST_PUBLICATION_ACK_REQUIRED",
       "actual_writers": 0,
       "preparation_receipt": "C00 actually read latest EXTRA chat: original E02 readonly exact3file prep, insert132/145/134, guarded cleanup94/94/93; no edit",
-      "communication": "Private tool not available to C00; local root forwards grant. Never substitute public internal comments."
+      "communication": "Private tool not available to C00; local root forwards grant. Never substitute public internal comments.",
+      "root_private_forward": "Root actually read publicfa3f grant and successfully privately forwarded to originalE02; C00 has not yet independently read post-grant authorACK"
     },
     {
       "id": "CORE_B05_SINGLE_FIXTURE",
@@ -75,7 +76,7 @@
           "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
         }
       ],
-      "state": "FORMAL_TRANSFER_FROM_FROZEN_EXTRA_TEST_AUTHOR_TO_CORE_PER_USER",
+      "state": "PUBLIC_SOURCE_DELIVERED_STATIC_ONLY_AUTHOR_STOPPED",
       "actual_writers": 0,
       "old_owner": "EXTRA6/E02 test creator",
       "transfer_evidence": [
@@ -85,8 +86,17 @@
         "Latest user requests preciseCORE responsibility; new receiver explicitly declared, not pretending historical author online. CORE production policy owner remains C00."
       ],
       "pre_publication_ack": "NewCORE receiver read AGENTS and exact public source, explicitly accepts solepath, confirmed3 methods/B05 gate/created-protected cleanup; stopped until full public grant and newACK",
-      "post_publication_ack": "PENDING; only then may prepare onefile patch in own/tmp, no Git or control edits",
-      "delivery": "C00 serial source publication based exact26d snapshot; no broad branch integration"
+      "post_publication_ack": {
+        "state": "ACK_RECEIVED_SOURCE_PREPARATION_RELEASED",
+        "control_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+        "writer": "/root/core_b05_fixture_sol",
+        "basis": "Direct child ACK exact publicSHA and onepath; C00 then released only /tmp sourcepatch; no repo/Git/validation",
+        "current_source": "PREPARING_NOT_PUBLIC_DELIVERED"
+      },
+      "delivery": "C00 serial source publication based exact26d snapshot; no broad branch integration",
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "source_packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json"
     }
   ],
   "method_totals": {

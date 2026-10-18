@@ -101,5 +101,20 @@
     "Original E04 A then B same writer; E02 independent source inserted in rolling parent, does not change E04 files",
     "No cross-team CORE/FORWARD/Claude branch integration or merge performed"
   ],
-  "confirmed_new_bug_id": false
+  "confirmed_new_bug_id": false,
+  "exact_source_ordinary_evidence": {
+    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "classes": [
+      "com.chengyinhub.business.longrun.E04_07Test",
+      "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+    ],
+    "tests": 11,
+    "passed": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "part_of_batch35_not_all_pass": true,
+    "packet": "EVIDENCE_VPS_EXTRA_923170ab.json",
+    "true_mysql": "NOT_RUN"
+  }
 }
