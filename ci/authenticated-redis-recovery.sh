@@ -63,6 +63,7 @@ docker run -d --name "$RUN_NAME-app" --label "chengyin.auth-recovery=$RUN_NAME" 
   --entrypoint /trace/strace "$JDK_IMAGE" -f -s 0 -e trace=connect,sendto,sendmsg -o /evidence/network.trace \
   java -Xmx512m -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
   -jar /application.jar --spring.config.location=file:/fixture/application.properties \
+  --spring.messages.basename=i18n/messages \
   "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/$SCHEMA?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
   "--spring.data.redis.host=$REDIS_IP" >/dev/null
 APP_CID=$(docker inspect "$RUN_NAME-app" --format '{{.Id}}')
