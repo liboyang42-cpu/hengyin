@@ -13,6 +13,9 @@ public interface ImMessageMapper
 
     public ImMessage selectImMessageById(Long id);
 
+    ImMessage selectLatestViewerVisibleForUpdate(@Param("conversationId") Long conversationId,
+            @Param("viewerMemberId") Long viewerMemberId);
+
     ImMessage selectByClientMessageIdForUpdate(@Param("conversationId") Long conversationId,
             @Param("senderId") Long senderId, @Param("clientMessageId") String clientMessageId);
 

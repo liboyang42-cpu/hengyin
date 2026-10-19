@@ -51,6 +51,7 @@
         order by id desc limit 1
     </select>
 
+
     <select id="selectPage" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and status != 2
@@ -78,6 +79,12 @@
                      and id &lt; #{cursorId}))
         </if>
         order by coalesce(visible_at, create_time) desc, id desc limit #{size}
+    </select>
+
+    <select id="selectLatestViewerVisibleForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and <include refid="viewerVisible"/>
+        order by coalesce(visible_at, create_time) desc, id desc limit 1 for update
     </select>
 
     <update id="updateStatus">

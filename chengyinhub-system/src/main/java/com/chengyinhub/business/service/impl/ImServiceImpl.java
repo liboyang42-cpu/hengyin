@@ -744,10 +744,15 @@ public class ImServiceImpl implements IImService
         {
             throw new ServiceException("系统会话不允许用户发送消息");
         }
+        ImConversationMember currentSender = memberMapper.selectByConvAndMemberForUpdate(convId, memberId);
+        if (currentSender == null || Integer.valueOf(1).equals(currentSender.getDeleted()))
+        {
+            throw new ServiceException("无权在该会话发送", 403);
+        }
         boolean isGroup = conv != null && conv.getType() != null && conv.getType() == ImConversation.TYPE_GROUP;
         if (isGroup && !Integer.valueOf(0).equals(conv.getStatus()))
         {
-            throw new ServiceException("群聊已结束");
+            throw closedConversationError();
         }
 
         Long receiverId = 0L;
@@ -885,7 +890,7 @@ public class ImServiceImpl implements IImService
                 {
                     if (!p.getMemberId().equals(memberId))
                     {
-                        memberMapper.addUnread(convId, p.getMemberId(), 1);
+                        memberMapper.addUnreadForActiveMember(convId, p.getMemberId(), 1);
                     }
                 }
             }
@@ -1044,26 +1049,47 @@ public class ImServiceImpl implements IImService
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void markRead(Long memberId, Long conversationId)
     {
-        ImConversationMember mine = memberMapper.selectByConvAndMember(conversationId, memberId);
+        ImConversationMember mine = lockReadAccess(memberId, conversationId);
         if (mine == null)
         {
             return;
         }
-        ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
-        if (!hasActiveGroupAccess(conversation, memberId, false))
-        {
-            throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权操作群聊"
-                    : teamIdOf(conversation) == null
-                    ? "已退出俱乐部，无权操作群聊" : "已退出队伍，无权操作群聊");
-        }
-        List<ImMessage> latest = messageMapper.selectVisiblePage(conversationId, memberId, null, 1);
-        Long lastId = (latest == null || latest.isEmpty()) ? 0L : latest.get(0).getId();
-        String cutoff = latest == null || latest.isEmpty() ? "1970-01-01 00:00:00.000000" : latest.get(0).getVisibleOrderAt();
+        // 当前读最新可见消息：RR 旧快照不能把已读截止点停在锁外新提交之前。
+        ImMessage latest = messageMapper.selectLatestViewerVisibleForUpdate(conversationId, memberId);
+        Long lastId = latest == null ? 0L : latest.getId();
+        String cutoff = latest == null ? "1970-01-01 00:00:00.000000" : latest.getVisibleOrderAt();
         if (memberMapper.markReadVisible(conversationId, memberId, lastId, cutoff) <= 0) {
             throw new ServiceException("消息可见状态已变化，请刷新后重试");
         }
+    }
+
+    private ImConversationMember lockReadAccess(Long memberId, Long conversationId)
+    {
+        ImConversation conversation = conversationMapper.selectImConversationByIdForUpdate(conversationId);
+        ImConversationMember mine = memberMapper.selectByConvAndMemberForUpdate(conversationId, memberId);
+        if (mine == null)
+        {
+            return null;
+        }
+        if (Integer.valueOf(1).equals(mine.getDeleted())
+                || !hasActiveGroupAccess(conversation, memberId, false))
+        {
+            throw new ServiceException("无权操作该会话", 403);
+        }
+        if (conversation != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType())
+                && !Integer.valueOf(0).equals(conversation.getStatus()))
+        {
+            throw closedConversationError();
+        }
+        return mine;
+    }
+
+    private ServiceException closedConversationError()
+    {
+        return new ServiceException("群聊已结束", 409).setDetailMessage("IM_CONVERSATION_CLOSED");
     }
 
     @Override
@@ -1130,6 +1156,7 @@ public class ImServiceImpl implements IImService
             c.setStatus(0);
             conversationMapper.insertImConversation(c);
         }
+        conversationMapper.selectImConversationByIdForUpdate(c.getId());
         ensureMember(c.getId(), toMemberId, 0);
 
         int type = msgType == null ? ImMessage.MSG_CARD : msgType;
@@ -1251,6 +1278,7 @@ public class ImServiceImpl implements IImService
             c.setStatus(0);
             conversationMapper.insertImConversation(c);
         }
+        conversationMapper.selectImConversationByIdForUpdate(c.getId());
         ensureMember(c.getId(), toMemberId, 0);
 
         int type = msgType == null ? ImMessage.MSG_TEXT : msgType;
