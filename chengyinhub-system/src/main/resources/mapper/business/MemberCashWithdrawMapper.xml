@@ -144,6 +144,10 @@
 
     <!-- D-02 定时查询:扫处理中的单(status=0),最久未查优先(NULL 先)。
          P块冻结:冻结中的单跳过,暂停自动化处理,等运营解冻或人工处置。 -->
+    <select id="selectByIdForUpdate" resultMap="MemberCashWithdrawResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from member_cash_withdraw where id = #{id} for update
+    </select>
+
     <select id="selectPendingForQuery" resultMap="MemberCashWithdrawResult">
         select <include refid="cols"/> from member_cash_withdraw
         where del_flag = 0 and status = 0 and (frozen is null or frozen = 0)

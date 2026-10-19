@@ -76,6 +76,8 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         ReflectionTestUtils.setField(bankLeg, "umsMemberBalanceDetailMapper", balanceDetailMapper);
         ReflectionTestUtils.setField(bankLeg, "withdrawalPiiProtector", mock(WithdrawalPiiProtector.class));
         ReflectionTestUtils.setField(bankLeg, "frozenAmountResolver", resolver);
+        ReflectionTestUtils.setField(bankLeg, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
 
         wechatLeg = new CashWithdrawServiceImpl();
         ReflectionTestUtils.setField(wechatLeg, "mapper", cashMapper);
@@ -88,6 +90,8 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
           // R1 起 withdraw 要按来源选同源 appid,不注入这个新依赖就是 NPE
           ReflectionTestUtils.setField(wechatLeg, "wxPayConfig", __cfg); }
         ReflectionTestUtils.setField(wechatLeg, "frozenAmountResolver", resolver);
+        ReflectionTestUtils.setField(wechatLeg, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, cashMapper, resolver));
 
         UmsMember member = new UmsMember();
         member.setId(MEMBER);

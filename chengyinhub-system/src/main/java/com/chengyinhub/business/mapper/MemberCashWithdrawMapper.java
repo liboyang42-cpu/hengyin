@@ -14,6 +14,8 @@ public interface MemberCashWithdrawMapper {
 
     public int updateMemberCashWithdraw(MemberCashWithdraw w);
 
+    public MemberCashWithdraw selectByIdForUpdate(@Param("id") Long id);
+
     public MemberCashWithdraw selectById(@Param("id") Long id);
 
     /** 某会员提现记录(倒序) */

@@ -49,6 +49,8 @@ class WithdrawalPiiStorageTest {
                 .thenReturn(java.math.BigDecimal.ZERO);
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(bountySvc, cooldownStub));
+        ReflectionTestUtils.setField(service, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(memberMapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "umsMemberBalanceDetailMapper", detailMapper);
         ReflectionTestUtils.setField(service, "withdrawalPiiProtector",
