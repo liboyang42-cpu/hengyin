@@ -221,7 +221,7 @@ Page({
 
   onShow() {
     var isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
-    this.setData({ isMerchant: isMerchant });
+    this.setData({ isMerchant: isMerchant }); this._navigating = false;
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
     var context = this.detailContext();
@@ -502,7 +502,7 @@ Page({
   },
 
   goPrimary() {
-    var that = this;
+    var that = this; if (that._navigating) return; that._navigating = true; // 跳转中不响应连点
     if (that.data.scope !== 'my') {
       analytics.track('template_reuse', {
         bizType: 'template',
@@ -519,7 +519,8 @@ Page({
           : (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')),
       success: function () {
         if (ownTemplate && !that._disposed && context === that.detailContext()) that._editorContext = context;
-      }
+      },
+      complete: function () { that._navigating = false; }
     });
   },
 

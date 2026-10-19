@@ -811,8 +811,8 @@ Page({
       : null;
     var up = this.data.upcoming;
     id = id || (up && up.id);
-    if (!id) return;
-    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id });
+    if (!id || this._navigating) return; var self = this; self._navigating = true; // 跳转中不响应连点
+    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id, complete: function () { self._navigating = false; } });
   },
 
   // 为节点选择地点
@@ -1009,7 +1009,7 @@ Page({
    */
   onShow() {
     this._syncCommunityAccess();
-    wx.hideTabBar(); // 重试一次
+    wx.hideTabBar(); this._navigating = false; // 重试一次
     // 广场属于玩家内容域：身份只影响能力，不改变页面/原生 chrome 的深色归属。
     merchantTheme.merchantPageRestore();
     // A-05:从详情返回且详情删/改过 → 刷一次首屏,别让用户看到旧卡;没脏标就不动,不每次 onShow 重拉。

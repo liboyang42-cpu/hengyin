@@ -82,7 +82,7 @@ Component({
   pageLifetimes: {
     // BL-140:从结算页处理完一项返回时,以 /api/club/dissolution-blockers 回读为准重新核对阻断列表。
     show() {
-      if (!this._blockerReturnCheck) return
+      this._navigating = false; if (!this._blockerReturnCheck) return
       this._blockerReturnCheck = false
       if (!this.data.dissolutionBlockerItems.length) return
       this.setData({ showDissolutionBlockers: true, dissolutionBlockerText: '正在重新核对解散阻断明细…' })
@@ -386,10 +386,10 @@ Component({
       const item = this.data.dissolutionBlockerItems[Number(e.currentTarget.dataset.index)];
       if (!item || !item.url) return;
       const target = resolveDissolutionBlockerTarget(item.url);
-      if (target.kind === 'deposit') { this.retryDissolutionDeposit(target.id, item); return; }
+      if (target.kind === 'deposit') { this.retryDissolutionDeposit(target.id, item); return; } if (this._navigating) return; // 跳转中不响应连点
       if (dissolutionBlockerKey(item.url)) this._blockerReturnCheck = true;
       this.setData({ showDissolutionBlockers: false });
-      wx.navigateTo({ url: target.url });
+      this._navigating = true; wx.navigateTo({ url: target.url, complete: () => { this._navigating = false; } });
     },
 
     retryDissolutionDeposit(inviteId, item) {
