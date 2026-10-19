@@ -150,8 +150,9 @@ public class RedemptionRewardClawbackService {
             throw new IllegalStateException("积分发放行冲回标记失败 id=" + grant.getId());
         }
         long requested = grant.getChangePoints();
-        com.chengyinhub.business.domain.UmsMember member = umsMemberMapper.selectUmsMemberById(memberId);
-        long before = member == null || member.getPoint() == null ? 0L : Math.max(0L, member.getPoint());
+        // 外层撤销可能已建立RR快照；持会员锁后仍须当前读，不能用普通读记旧余额流水。
+        Long currentPoints = umsMemberMapper.selectPointsForUpdate(memberId);
+        long before = currentPoints == null ? 0L : Math.max(0L, currentPoints);
         long deducted = Math.min(requested, before);
         if (deducted > 0 && umsMemberMapper.deductPoints(memberId, (int) deducted) != 1) {
             throw new IllegalStateException("冲回积分扣减失败 memberId=" + memberId);
