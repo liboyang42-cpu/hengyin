@@ -74,6 +74,14 @@
         "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT"
       ]
     },
+    "topic-completion-lock": {
+      "lineage": "MASTER claude/topic-completion-member-lock-20261019",
+      "registered_source": "f75568f857a77f5c7805f5af4a8b3d003f8c75b6",
+      "note": "Master-side fix for the f3-growth same-topic deadlock: a concurrent duplicate completion waits on the member row and returns firstCompletion=false; a REPEATABLE READ caller with an old snapshot (merchant scan) still confirms the committed badge with a current read. Not part of the three-team remaining receipt.",
+      "classes": [
+        "com.chengyinhub.business.it.TopicCompletionMemberLockMySqlIT"
+      ]
+    },
     "extra-storage": {
       "lineage": "EXTRA codex/extra-six-rolling-20261015",
       "registered_source": "6c44636974220ca9876386ee638c99981488db42",
@@ -295,6 +303,11 @@
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "note": "12 at the EXTRA lineage; master has 16. Running a master-based source needs a reviewed count change."
+    },
+    "com.chengyinhub.business.it.TopicCompletionMemberLockMySqlIT": {
+      "tests": 2,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
     },
     "com.chengyinhub.business.it.JourneyFullFlowMySqlIT": {
       "tests": 4,
