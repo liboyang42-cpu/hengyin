@@ -13,10 +13,12 @@
 //   - getUserID():           当前会员，重试沿用发起身份。
 //   - reLogin(cb):           单航班静默重登,cb(ok)。
 //   - showToast(msg)/hideToast()
+//   - promptUpdate():        426 时补弹重启提示(默认 app-update),true = 已弹、省略 toast。
 //   - getErrorMessage(res, fallback) / shouldAutoToast(param, body):沿用 app.js 既有纯函数。
 
 var sanitizeResponseMessage = require('./safe-user-message.js').sanitizeResponseMessage;
 var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
+var promptUpdateIfAvailable = require('../app-update.js').promptUpdateIfAvailable;
 
 function createRequestClient(deps) {
   deps = deps || {};
@@ -25,6 +27,7 @@ function createRequestClient(deps) {
   var getAuthorization = deps.getAuthorization || function () { return ''; };
   var getClientVersion = deps.getClientVersion || function () { return ''; };
   var upgradePrompted = false;
+  var promptUpdate = deps.promptUpdate || promptUpdateIfAvailable;
   var getUserID = deps.getUserID || function () { return ''; };
   var reLogin = deps.reLogin || function (cb) { cb(false); };
   var showToast = deps.showToast || function () {};
@@ -108,7 +111,7 @@ function createRequestClient(deps) {
         var bodyCode = res.data && (res.data.code == null ? null : Number(res.data.code));
         if (res.statusCode == 426 || (res.statusCode == 200 && bodyCode == 426)) {
           hideToast();
-          if (!upgradePrompted) {
+          if (!promptUpdate() && !upgradePrompted) {
             upgradePrompted = true;
             showToast('版本需更新，请保存后重开');
           }
