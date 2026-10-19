@@ -584,7 +584,7 @@ page { background: var(--cy-bg-page); }
    · line-height 回到 master 的 1.65 —— 稿 379:2528 是 leading-[normal],没给具体值,
      我原来改 1.55 没有稿子依据,不该动既有值
    · margin-bottom 去掉 —— 正文现在在 .post-body(flex-column + gap)里,留着会叠成双倍间距 */
-.detail.theme-dark .post-text { font-size: var(--cy-font-body); line-height: 1.65; color: var(--cy-color-text-primary); overflow-wrap: anywhere; word-break: break-word; } /* ds-ok */
+.detail.theme-dark .post-text { font-size: var(--cy-font-body); line-height: 1.65; color: var(--cy-color-text-primary); overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; } /* ds-ok */
 
 /* 无关联图帖的实景图 */
 .detail.theme-dark .media { white-space: nowrap; }
