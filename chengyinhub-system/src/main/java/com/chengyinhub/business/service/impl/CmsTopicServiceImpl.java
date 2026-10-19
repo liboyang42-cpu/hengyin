@@ -3553,7 +3553,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private void persistJourneyStoryAfterChapterRebuild(Long topicId, String storedStory,
                                                        RouteNodeMaps routeNodeMaps, String username) {
-        String content = JourneyStory.withOpeningChapterId(storedStory, null);
+        // 来源剧情先按旧节点身份换期；结局章随后独立映射，避免把新 ID 再作旧 ID。
+        String content = JourneyStory.withOpeningChapterId(
+                JourneyStory.remapNodeIds(storedStory, routeNodeMaps.oldToNew), null);
         String remapped = JourneyStory.withOpeningChapterId(
                 JourneyStory.remapChapterIds(content, routeNodeMaps.chapterOldToNew), routeNodeMaps.openingChapterId);
         if (!routeNodeMaps.endingChapters.isEmpty()) {
