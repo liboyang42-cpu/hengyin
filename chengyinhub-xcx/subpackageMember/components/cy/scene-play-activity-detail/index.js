@@ -148,11 +148,11 @@ Component({
       this._cancelToken = (this._cancelToken || 0) + 1
       this._commentToken = (this._commentToken || 0) + 1
     },
-  },
+  }, pageLifetimes: { show() { this._navigating = false } },
   methods: {
     goTopic() {
       const id = Number(this.data.info.topicId)
-      if (Number.isSafeInteger(id) && id > 0) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      if (Number.isSafeInteger(id) && id > 0 && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
     },
     load(id) {
       const requestedId = String(id || '')
@@ -323,7 +323,7 @@ Component({
     },
 
     openSignup() {
-      if (!this.data.canConfirmSignup) return
+      if (!this.data.canConfirmSignup || this._navigating) return
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
         return
@@ -357,21 +357,21 @@ Component({
         toast('该票种已截止报名')
         return
       }
-      wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}` })
+      this._navigating = true; wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}`, complete: () => { this._navigating = false } })
     },
 
     goPlay() {
-      wx.navigateTo({ url: '/subpackageMember/signup/index' })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false } })
     },
 
     goUserInfo(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}`, complete: () => { this._navigating = false } }) }
     },
 
     goTemplateDetail(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my`, complete: () => { this._navigating = false } }) }
     },
 
     openLocation() {
