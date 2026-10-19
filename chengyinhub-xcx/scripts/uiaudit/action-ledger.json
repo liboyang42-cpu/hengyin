@@ -724247,7 +724247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:585"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:587"
       }
     },
     {
@@ -724421,7 +724421,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:483"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:485"
       }
     },
     {
@@ -724491,7 +724491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:655"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:657"
       }
     },
     {
@@ -724590,7 +724590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:498"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:500"
       }
     },
     {
@@ -724791,7 +724791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:357"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:359"
       }
     },
     {
@@ -724897,7 +724897,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:339"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:341"
       }
     },
     {
@@ -725098,7 +725098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:408"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:410"
       }
     },
     {
@@ -725204,7 +725204,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:397"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:399"
       }
     },
     {
@@ -725445,7 +725445,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:483"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:485"
       }
     },
     {
@@ -725619,7 +725619,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:324"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:326"
       }
     },
     {
@@ -725725,7 +725725,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:660"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:662"
       }
     },
     {
@@ -725824,7 +725824,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:320"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:322"
       }
     },
     {
@@ -725923,7 +725923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:320"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:322"
       }
     },
     {
@@ -726057,7 +726057,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:433"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:435"
       }
     },
     {
@@ -726124,7 +726124,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:429"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:431"
       }
     },
     {
@@ -726290,7 +726290,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:669"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:671"
       }
     },
     {
@@ -726558,7 +726558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:365"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:367"
       }
     },
     {
@@ -726625,7 +726625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:422"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:424"
       }
     },
     {
@@ -726737,7 +726737,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:585"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:587"
       }
     },
     {
