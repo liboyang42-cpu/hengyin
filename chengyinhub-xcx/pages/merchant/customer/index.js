@@ -126,7 +126,7 @@ Page({
   },
 
   onShow() {
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     const memberId = currentMemberId();
     if (this._scopeMemberId === undefined) {
       this._scopeMemberId = memberId;
@@ -896,9 +896,10 @@ Page({
 
   // BL-100:触达任务记录只读页;页内自己再按 access/me 判 MARKETING_READ。
   goCampaigns() {
-    if (!this.data.canCampaigns) return;
+    if (!this.data.canCampaigns || this._navigating) return; // 跳转中不响应连点,免得叠两层触达记录页
+    this._navigating = true;
     this.setData({ toolsOpen: false });
-    wx.navigateTo({ url: '/pages/merchant/crm-campaigns/index' });
+    wx.navigateTo({ url: '/pages/merchant/crm-campaigns/index', complete: () => { this._navigating = false; } });
   },
 });
 

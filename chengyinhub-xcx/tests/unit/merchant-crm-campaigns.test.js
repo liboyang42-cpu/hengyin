@@ -85,5 +85,5 @@ test('客户页「管理」半屏按 canReadMarketing 显示「触达记录」�
   const js = fs.readFileSync(path.join(root, 'pages/merchant/customer/index.js'), 'utf8');
   assert.match(wxml, /wx:if="\{\{canCampaigns\}\}" class="cu-tool" bindtap="goCampaigns"/);
   assert.match(js, /canCampaigns: access\.canReadMarketing/);
-  assert.match(js, /goCampaigns\(\) \{\s*if \(!this\.data\.canCampaigns\) return;[\s\S]*?wx\.navigateTo\(\{ url: '\/pages\/merchant\/crm-campaigns\/index' \}\)/);
+  assert.match(js, /goCampaigns\(\) \{\s*if \(!this\.data\.canCampaigns \|\| this\._navigating\) return;[^\n]*\s*this\._navigating = true;\s*this\.setData\(\{ toolsOpen: false \}\);\s*wx\.navigateTo\(\{ url: '\/pages\/merchant\/crm-campaigns\/index', complete: \(\) => \{ this\._navigating = false; \} \}\)/);
 });
