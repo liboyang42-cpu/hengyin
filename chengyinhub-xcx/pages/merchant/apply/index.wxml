@@ -33,6 +33,7 @@
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
     <view class="intro__fine">审核团队会用你填的联系电话与你确认。</view>
+    <view class="intro__fine intro__claim" bindtap="openClaim" aria-role="button" aria-label="认领已有门店" hover-class="cy-pressed" hover-stay-time="80">门店已在城瘾上线？认领已有门店</view>
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变,几何与约束见 utils/wizard-morph.js -->
@@ -177,7 +178,7 @@
       <view class="sec-label mt">品牌形象图（选填）</view>
       <cy-card class="apply-card wizard-card">
         <view class="imgs">
-          <view class="img-item" wx:for="{{derivatives}}" wx:key="*this">
+          <view class="img-item" wx:for="{{derivatives}}" wx:key="index">
             <image lazy-load="true" src="{{item}}" mode="aspectFill" />
             <view class="img-del" catchtap="removeDerivative" data-i="{{index}}" aria-role="button" aria-label="删除品牌形象图 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="img-del__glyph"><cy-icon name="close-sm" size="28" /></view>
@@ -210,7 +211,7 @@
       <view class="sec-label mt" wx:if="{{derivatives.length}}">品牌形象图</view>
       <cy-card class="apply-card wizard-card" wx:if="{{derivatives.length}}">
         <view class="imgs">
-          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
+          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="index" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
         </view>
       </cy-card>
       <!-- RUN-52 经营者实名:用户裁定这一段【不套白卡】,字段直接铺在灰页底上。
@@ -295,6 +296,7 @@
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='form' && step===5}}">
     <cy-btn variant="primary" bindtap="onHome">返回首页</cy-btn>
   </view>
+  <cy-merchant-claim-sheet show="{{claimShow}}" bind:close="closeClaim" />
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='status'}}">
     <cy-btn variant="primary" bindtap="onStatusAction">{{apply.canReapply ? '重新申请' : '返回'}}</cy-btn>
   </view>

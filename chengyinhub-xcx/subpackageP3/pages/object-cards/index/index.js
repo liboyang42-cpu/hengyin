@@ -2,12 +2,12 @@
 // 物品从上往下掉、堆在地面线上;右上角 ✦ 聚成一团,再按一下落回去;点一件放大看。
 //
 // 堆是一块 2d canvas:最近 40 件,分类筛选在服务端做(计数与分页跟着筛过的走)。
-// 物理在 utils/object-pile.js;这里只管拉数据、加载图、逐帧画,全停住以后停掉逐帧重画(省电)。
+// 物理在 subpackageP3/utils/object-pile.js;这里只管拉数据、加载图、逐帧画,全停住以后停掉逐帧重画(省电)。
 // ponytail: 只画最近 40 件,更早的不进堆;真有人收到上百件再加「往前翻」。
 const app = getApp();
 const session = require('../../../../utils/session/login-reload.js');
 const { toCard } = require('../../../../utils/object-card.js');
-const pile = require('../../../../utils/object-pile.js');
+const pile = require('../../../utils/object-pile.js');
 const motionPreference = require('../../../../utils/motion-preference.js');
 const cyToast = require('../../../../utils/toast.js');
 
