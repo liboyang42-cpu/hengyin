@@ -27,7 +27,7 @@ global.getApp = () => ({
 
 global.wx = {
   showToast() {}, showModal() {}, showLoading() {}, hideLoading() {}, stopPullDownRefresh() {},
-  navigateTo: (option) => navigations.push(option.url),
+  navigateTo: (option) => { navigations.push(option.url); if (option.complete) option.complete() },
   redirectTo: (option) => redirects.push(option.url),
   showShareMenu() {},
 };

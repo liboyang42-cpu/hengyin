@@ -106,7 +106,7 @@ function createDetailHarness(storage = {}) {
     JSON,
     wx: {
       navigateBack() {},
-      navigateTo(options) { navigations.push(options.url) },
+      navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       showModal() {},
       showToast() {},
       showActionSheet(options) {
