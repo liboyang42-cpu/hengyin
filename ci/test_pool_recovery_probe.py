@@ -34,4 +34,9 @@ class OwnedPoolProfileTest(unittest.TestCase):
   error=probe.subprocess.CalledProcessError(1,['mysql'],stderr=raw)
   with mock.patch.object(probe.subprocess,'check_output',side_effect=error),self.assertRaises(probe.subprocess.CalledProcessError):probe.command(['mysql'])
   self.assertEqual(probe.CLIENT_STDERR,[clean])
+ def test_native_druid_exception_requires_expected_pool_and_bounded_wait(self):
+  actual='Caused by: com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 5001, active 20, maxActive 20, creating 0'
+  self.assertEqual(probe.native_pool_timeout_wait(actual),5001)
+  for bad in [actual.replace('GetConnectionTimeoutException','SQLTimeoutException'),actual.replace('active 20','active 19'),actual.replace('maxActive 20','maxActive 21'),actual.replace('millis 5001','millis 1000'),actual.replace('millis 5001','millis 10000')]:
+   with self.subTest(log=bad),self.assertRaises(RuntimeError):probe.native_pool_timeout_wait(bad)
 if __name__=='__main__':unittest.main()
