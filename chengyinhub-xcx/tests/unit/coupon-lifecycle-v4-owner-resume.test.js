@@ -14,7 +14,7 @@ const vm = require('node:vm')
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 

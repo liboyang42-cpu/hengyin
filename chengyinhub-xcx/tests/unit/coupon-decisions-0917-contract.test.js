@@ -15,7 +15,7 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 const COUPON_PAGE = 'subpackageMember/coupon/coupon.js'
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 const CREDENTIAL = 'utils/coupon-credential.js'

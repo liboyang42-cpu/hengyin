@@ -1,10 +1,10 @@
 'use strict'
 
 const app = getApp()
-const credential = require('../../../utils/coupon-credential.js')
-const { isRecordList } = require('../../../utils/response-shape.js')
-const datetime = require('../../../utils/datetime.js')
-const { isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
+const credential = require('../../../../utils/coupon-credential.js')
+const { isRecordList } = require('../../../../utils/response-shape.js')
+const datetime = require('../../../../utils/datetime.js')
+const { isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js')
 
 function authorization() {
   return typeof app.getAuthorization === 'function' ? app.getAuthorization()

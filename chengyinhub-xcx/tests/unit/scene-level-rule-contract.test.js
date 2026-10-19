@@ -137,7 +137,7 @@ test('club-edit 复用完整编辑组件,不得退化成通用七字段表单', 
 test('scene-sheet 是唯一纵向滚动区,club-edit 深链也保留脏表单确认闸', () => {
   const verticalSceneComponents = [
     'components/cy/scene-club-edit/index.wxml',
-    'components/cy/scene-game-coupon-wallet/index.wxml',
+    'subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml',
     'components/cy/scene-roam-history/index.wxml',
     'components/cy/scene-roam-discover/index.wxml',
     'components/cy/scene-roam-task-list/index.wxml',

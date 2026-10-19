@@ -1720,7 +1720,7 @@
     },
     {
       "component": "scene-game-coupon-wallet",
-      "dir": "components/cy/scene-game-coupon-wallet",
+      "dir": "subpackageMember/components/cy/scene-game-coupon-wallet",
       "twin": {
         "route": "subpackageMember/coupon-wallet/index",
         "score": 12

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
-const file = path.resolve(__dirname, '../../components/cy/scene-game-coupon-wallet/index.js');
+const file = path.resolve(__dirname, '../../subpackageMember/components/cy/scene-game-coupon-wallet/index.js');
 const realRequire = createRequire(file);
 function mount(owner = '', token = '') {
   let definition;

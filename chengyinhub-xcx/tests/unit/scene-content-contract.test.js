@@ -213,10 +213,10 @@ test('活动详情场景读取真实活动接口，票种选择后只进入既�
 test('游戏券夹读取真实领取记录，并把未使用券推入动态核销码场景', () => {
   const hostJson = JSON.parse(read('pages/roam/index.json'))
   const hostWxml = read('pages/roam/index.wxml')
-  const componentWxml = read('components/cy/scene-game-coupon-wallet/index.wxml')
-  const componentJs = read('components/cy/scene-game-coupon-wallet/index.js')
+  const componentWxml = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
+  const componentJs = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.js')
 
-  assert.equal(hostJson.usingComponents['cy-scene-game-coupon-wallet'], '/components/cy/scene-game-coupon-wallet/index')
+  assert.equal(hostJson.usingComponents['cy-scene-game-coupon-wallet'], '/subpackageMember/components/cy/scene-game-coupon-wallet/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'game-coupon-wallet'/)
   assert.match(componentJs, /url: '\/api\/coupon\/myrecvlist'/)
   assert.match(componentJs, /id: 'qr-coupon'/)

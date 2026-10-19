@@ -14,7 +14,7 @@ const { createRequestClient } = require('../../utils/transport/request-client.js
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 
@@ -154,7 +154,7 @@ test('钱包 NoGo-1:未来券仍可打开等待详情(可查看),但不得被当
   instance.openCode({ currentTarget: { dataset: { item: instance.data.all[2] } } })
   assert.equal(sandbox.events.length, 1, '已用/过期券不承担开码入口')
 
-  const wxml = read('components/cy/scene-game-coupon-wallet/index.wxml')
+  const wxml = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
   assert.match(wxml, /item\._canView/, '卡片入口由可查看驱动')
   assert.match(wxml, /item\._isUsable \? '出示核销码'/, '只有可核销才显示出示核销码')
   assert.match(wxml, /查看可用时间/, '未来券入口文案需说明是查看而非亮码')

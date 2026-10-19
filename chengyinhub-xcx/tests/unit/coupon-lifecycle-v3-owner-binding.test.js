@@ -15,7 +15,7 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 // 真实 utils/toast.js 在沙箱外 require,依赖进程级 wx;给失败提示路径一个最小桩。
 global.wx = global.wx || { showToast() {}, hideToast() {}, getStorageSync() { return '' } }
 
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 
