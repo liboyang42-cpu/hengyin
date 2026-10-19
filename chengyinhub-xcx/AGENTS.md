@@ -7,7 +7,7 @@
 - 原生微信小程序：主包 60+ 页面 + 3 个分包（subpackageP3 成长/世界·星图RPG/创作者；subpackageA 资产中心；subpackageB IM）
 - 登录：`app.js` firstLogin → 后端 AppLoginService 换 JWT；RBAC `role` 登录即落地（单一真源）
 - 主题基调：**全站默认深色**（玩家域 consumer-night，`app.js onLaunch applyTheme('dark')`）；商家域页面根节点挂 `theme-merchant`/`theme-light`，创建域挂 `theme-topic-editor`。与 Brand Handbook「玩家默认暗、商家灰底白卡」一致。（2026-09-01 更正：此处原写「全站浅色、仅首页切深色」，与 `app.js:32` 及手册均不符。）
-- 配置：`utils/config.js`（baseUrl / baseImgUrl）；mock：`utils/mockData.js`（仅 dev 用）
+- 配置：`utils/config.js`（baseUrl / baseImgUrl）；mock：`pages/club/utils/mockData.js`（仅 dev 用，随 pages/club 分包，不进主包）
 
 ## 命令 / 验证
 - 用微信开发者工具打开本目录预览（CLI 自动化见 wechat-miniprogram-devtools skill）

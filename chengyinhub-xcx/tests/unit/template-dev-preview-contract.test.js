@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../..');
 const PAGE_JS = path.join(ROOT, 'pages/template/index.js');
 const PAGE_WXML = path.join(ROOT, 'pages/template/index.wxml');
-const mockData = require('../../utils/mockData');
+const mockData = require('../../pages/club/utils/mockData');
 
 const INTERACTION_TITLES = [
   '今晚的暗号', '老板的秘密题', '拍下这一刻', '收集这枚风味印章',

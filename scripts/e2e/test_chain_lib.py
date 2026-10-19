@@ -1,7 +1,8 @@
 import hashlib
 import unittest
 
-from scripts.e2e.chain_lib import FORBIDDEN_SHA256, load_db_config, validate_db_config, verify_connected_database
+from scripts.e2e.chain_lib import (FORBIDDEN_SHA256, load_base, load_db_config, validate_db_config,
+                                   verify_connected_database)
 
 
 class ChainLibDatabaseConfigTest(unittest.TestCase):
@@ -62,6 +63,22 @@ class ChainLibDatabaseConfigTest(unittest.TestCase):
         verify_connected_database(self.Connection("cy_e2e_52"), "cy_e2e_52")
         with self.assertRaisesRegex(RuntimeError, "cy_e2e_51.*cy_e2e_52"):
             verify_connected_database(self.Connection("cy_e2e_51"), "cy_e2e_52")
+
+    def test_base_defaults_to_local_backend_and_refuses_production_override(self):
+        self.assertEqual("http://127.0.0.1:8099", load_base({}))
+        self.assertEqual("http://127.0.0.1:18099",
+                         load_base({"CHENGYIN_E2E_BASE": "http://127.0.0.1:18099/"}))
+        # 生产地址不写明文:夹具地址分别走环境变量黑名单与 SHA-256 黑名单两条路径。
+        fixture_host = "203.0.113.7"
+        fixture_base = {"CHENGYIN_E2E_BASE": "http://%s:8080" % fixture_host}
+        denylist = frozenset({hashlib.sha256(fixture_host.encode("utf-8")).hexdigest()})
+        with self.assertRaises(SystemExit):
+            load_base(fixture_base, denylist)
+        with self.assertRaises(SystemExit):
+            load_base(dict(fixture_base, CHENGYIN_FORBIDDEN_DB_HOSTS=fixture_host), frozenset())
+        self.assertEqual("http://%s:8080" % fixture_host, load_base(fixture_base, frozenset()))
+        with self.assertRaises(SystemExit):
+            load_base({"CHENGYIN_E2E_BASE": "not-a-url"})
 
 
 if __name__ == "__main__":
