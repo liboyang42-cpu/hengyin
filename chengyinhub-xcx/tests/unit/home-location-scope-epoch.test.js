@@ -148,3 +148,49 @@ test('首页用途已撤回时不自动弹同意，也不取位置',()=>{
   latest(page(),consent({eventType:'REVOKE'}))
   assert.equal(locations.length,0);assert.equal(modals.length,0)
 })
+
+test('游客首页原地同意并正常登录后刷新本人内容，仍先确认独立城市同意',()=>{
+  const p=page();p.data.privacyGateShow=true
+  member='';token='';p.getHomeCityLocation();assert.equal(requests.length,0)
+  member='1001';token='normal-session';app.getUsageConsent=()=>({granted:()=>true})
+  let refreshed=0;p.loadPageData=()=>{refreshed++}
+  p.onPrivacyGateSettled({detail:{event:'agree'}})
+  assert.equal(p.data.privacyGateShow,false);assert.equal(refreshed,1)
+  const read=requests.find(x=>x.url==='/api/compliance/consents/latest');assert.ok(read)
+  assert.equal(locations.length,0);assert.equal(writes.length,0)
+  read.success({code:200,data:null});assert.equal(modals.length,1)
+  modals[0].success({confirm:false});assert.equal(locations.length,0);assert.equal(writes.length,0)
+})
+test('原地同意后已有本账号当前城市同意才可自动定位，隐藏后旧GPS仍失效',()=>{
+  const p=page();app.getUsageConsent=()=>({granted:()=>true});p.loadPageData=()=>{}
+  p.onPrivacyGateSettled({detail:{event:'agree'}})
+  assert.equal(locations.length,0)
+  const read=requests.find(x=>x.url==='/api/compliance/consents/latest');assert.ok(read)
+  read.success({code:200,data:consent()});assert.equal(locations.length,1)
+  p.onHide();locations[0].success({latitude:31.23,longitude:121.47})
+  assert.equal(requests.some(x=>x.url==='/api/map/reverse-geocode'),false)
+})
+test('拒绝、未成立的基本同意、匿名、演示会话及隐藏卸载不由settled触发刷新或取位',()=>{
+  const cases=[
+    {event:'disagree'}, {event:undefined}, {granted:false}, {member:''}, {token:''},
+    {token:'dev-token'}, {hidden:true}, {unloaded:true}
+  ]
+  for(const row of cases) {
+    member=row.member===undefined?'1001':row.member;token=row.token===undefined?'normal-session':row.token
+    app.getUsageConsent=()=>({granted:()=>row.granted!==false})
+    const p=page();p._homeLocationHidden=!!row.hidden;p._unloaded=!!row.unloaded
+    let refreshed=0;p.loadPageData=()=>{refreshed++}
+    p.onPrivacyGateSettled({detail:{event:Object.prototype.hasOwnProperty.call(row,'event')?row.event:'agree'}})
+    assert.equal(refreshed,0);assert.equal(requests.length,0);assert.equal(locations.length,0)
+  }
+})
+test('原地同意登录为商家时先分流，不读取城市同意也不加载玩家首页',()=>{
+  const p=page();app.getUsageConsent=()=>({granted:()=>true});let refreshed=0
+  p.loadPageData=()=>{refreshed++}
+  const oldStorage=wx.getStorageSync,oldRedirect=wx.redirectTo;const redirects=[]
+  wx.getStorageSync=key=>key==='role'?'merchant':'';wx.redirectTo=options=>redirects.push(options.url)
+  try { p.onPrivacyGateSettled({detail:{event:'agree'}}) }
+  finally { wx.getStorageSync=oldStorage;wx.redirectTo=oldRedirect }
+  assert.deepEqual(redirects,['/pages/merchant/index/index'])
+  assert.equal(refreshed,0);assert.equal(requests.length,0);assert.equal(locations.length,0)
+})
