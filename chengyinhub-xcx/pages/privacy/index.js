@@ -349,7 +349,7 @@ Page({
     try {
       modal.show({
         title: '首页城市定位',
-        content: '同意使用精确位置并发送至服务端转换为首页城市，后续自动定位且不用于附近排序吗？',
+        content: '同意使用精确位置并发送给城瘾以确定首页城市，后续自动定位且不用于附近排序吗？',
         confirmText: '同意定位',
         cancelText: '暂不定位',
         success: result => { if (result.confirm && current()) save(); else finish(); },

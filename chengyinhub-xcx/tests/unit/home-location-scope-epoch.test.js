@@ -44,7 +44,7 @@ test('当前账号有效单独同意后自动取精确位置',()=>{
 })
 test('首次弹窗拒绝不定位不写AGREE',()=>{
   latest(page(),null);assert.equal(locations.length,0);assert.equal(modals.length,1)
-  assert.match(modals[0].content,/精确位置/);assert.match(modals[0].content,/服务端/)
+  assert.match(modals[0].content,/精确位置/);assert.match(modals[0].content,/发送给城瘾以确定首页城市/)
   modals[0].success({confirm:false});assert.equal(locations.length,0);assert.equal(writes.length,0)
   assert.deepEqual(toasts,[])
 })

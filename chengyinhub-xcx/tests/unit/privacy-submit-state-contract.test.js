@@ -113,7 +113,7 @@ test('关闭首页自动定位只撤回该用途，不改变漫游权限',async(
 test('重新开启必须再次明确同意，并等服务端匹配留痕回执',async()=>{
   const {page,sandbox}=loadPage(()=>Promise.resolve(homeReceipt('AGREE')),{pending:false})
   page.enableHomeCityLocation();assert.equal(sandbox.records.length,0)
-  assert.match(sandbox.modals[0].content,/精确位置/);assert.match(sandbox.modals[0].content,/服务端/)
+  assert.match(sandbox.modals[0].content,/精确位置/);assert.match(sandbox.modals[0].content,/发送给城瘾以确定首页城市/)
   sandbox.modals[0].success({confirm:true});await settle()
   assert.deepEqual(sandbox.records,[{docType:'privacy_policy',scene:'home_city_location',eventType:'AGREE'}])
   assert.deepEqual(sandbox.toasts,['已开启首页城市自动定位'])
