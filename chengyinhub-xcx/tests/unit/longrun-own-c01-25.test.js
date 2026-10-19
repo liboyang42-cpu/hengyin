@@ -27,7 +27,8 @@ test('ending chapter and its after callback cannot open in a new account', async
   assert.deepEqual(h.opened, []); assert.deepEqual(h.cards, []);
 });
 test('mode2 old ending cannot write error into a changed topic', async () => {
-  const h = load(); h.page.loadEnding(); h.page.data.topicId = 18;
+  // 有 activityId 时 _sessionParams 只认 activityId;按主题游玩(无 activityId)时换主题才是换会话。
+  const h = load(); h.page.data.activityId = 0; h.page.loadEnding(); h.page.data.topicId = 18;
   h.requests[0].fail({}); await new Promise(resolve => setImmediate(resolve));
   assert.equal(h.page.data.endingError, false);
 });

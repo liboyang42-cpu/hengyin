@@ -22,7 +22,15 @@ for (const action of ['leadArrive', 'leadStart']) {
     await new Promise(resolve => setImmediate(resolve));
     assert.deepEqual(h.feedback, []); assert.deepEqual(h.reads, []);
   });
-  test(action + ' latest response keeps its own original activity and reads once', async () => {
+  // master 的 leadArrive 是单飞:请求在途时第二次点击直接忽略(_leadArriving),只验在途那一条。
+  if (action === 'leadArrive') test(action + ' second press while in flight is ignored and the response reads once', async () => {
+    const h = load(); h.page[action](); h.page[action]();
+    assert.equal(h.requests.length, 1); assert.equal(h.requests[0].data.activityId, 9);
+    h.requests[0].success({ code: 200, msg: 'fixture success' });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(h.feedback, ['fixture success']); assert.equal(h.reads.length, 1);
+  });
+  else test(action + ' latest response keeps its own original activity and reads once', async () => {
     const h = load(); h.page[action](); h.page[action]();
     assert.equal(h.requests[0].data.activityId, 9);
     h.requests[1].success({ code: 200, msg: 'new fixture success' });

@@ -78,8 +78,9 @@ const MATRIX = [
   ['utils/game-session-client.js', "url: exported ? '/api/game/session/shared/export'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
-     行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
-  ['pages/play/index.js', "req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => { // 补拉", 'required', 'member', 'current-session'],
+     行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。
+     2026-10-19 移植 CORE C01:先把 this._sessionParams() 存进 params 用于迟到回包比对,入参与权限档不变。 */
+  ['pages/play/index.js', "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14 旅程检定:节点卡打开时探测这一拍有没有检定。后端 ApiPlayEncounterController
      currentMemberId()<=0 直接拒,resolve(memberId, topicId, nodeId) 读的是本人这一局的 run —— 与 /api/play/nodes 同档。 */
   ['pages/play/index.js', "req('/api/play/encounter'", 'required', 'member', 'current-session'],
@@ -95,7 +96,8 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/preference/' + nodeId", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/ending'", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/leaderboard'", 'required', 'member', 'current-session'],
-  ['pages/play/index.js', "req('/api/play/os/' + this.data.topicId", 'required', 'member', 'self-member-history'],
+  // 2026-10-19 移植 CORE C01:topicId 先取成局部量供迟到回包比对,端点与权限档不变。
+  ['pages/play/index.js', "req('/api/play/os/' + topicId", 'required', 'member', 'self-member-history'],
   // 2026-09-05 漫游·附近的局:走默认认证(后端 anyRequest().authenticated()),viewer 视角决定 isMember 与拉黑过滤。
   //   (原文写「两条 GET」——另一条 /api/roam/hangout/detail 同日随组局下线撤走,这里只剩 nearby 一条。)
   ['subpackageRoam/nearby/index.js', "url: '/api/roam/hangout/nearby'", 'required', 'member', 'global-authenticated-read'],
