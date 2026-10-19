@@ -68,8 +68,8 @@
     },
     "f3-growth": {
       "lineage": "F3 codex/mini-forward-source-20261015",
-      "registered_source": "763dcb43f2e2d23df78501ae2836e8873b4906e3",
-      "note": "Growth concurrency (12): same-topic duplicate completion goes through the @DeadlockRetry boundary and returns firstCompletion=false, plus a no-retry negative control that stays a deadlock victim. Source is the draft fix branch fix/f3-growth-deadlock-retry-20261019 on top of the F3 lineage (d592334a was 11). The max-year and RR old read view questions still need dedicated evidence tests; they are not covered by this class.",
+      "registered_source": "88e01452604dc52996dc2b839975b4b77bffa876",
+      "note": "Growth concurrency (12): same-topic duplicate completion goes through the @DeadlockRetry boundary and returns firstCompletion=false, plus a no-retry negative control that stays a deadlock victim. Source is the draft fix branch fix/f3-growth-deadlock-retry-20261019 on top of the F3 lineage (d592334a was 11; 763dcb43 raced on hosted runners, 88e01452 waits for the InnoDB LOCK WAIT before releasing the first request). The max-year and RR old read view questions still need dedicated evidence tests; they are not covered by this class.",
       "classes": [
         "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT"
       ]
