@@ -1097,6 +1097,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的数值规则:冻结快照优先;老局快照没有该键时才查实时主题列。 */
     private JourneyRules sessionRules(TopicRouteSession session) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.JOURNEY_RULES_KEY)
+                && snapshot.get(NodeJourneySnapshot.JOURNEY_RULES_KEY).isNull()) {
+            throw new IllegalStateException("旅程数值规则不可用");
+        }
         String frozen = NodeJourneySnapshot.journeyRules(
                 session == null ? null : session.getConfigSnapshotJson());
         if (frozen != null) return JourneyRules.parse(frozen);
@@ -2016,6 +2025,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的数值规则:优先读建局冻结值;老局快照没有该键时回退实时主题配置。 */
     private JourneyRules journeyRules(TopicRouteSession session, CmsTopic topic) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.JOURNEY_RULES_KEY)
+                && snapshot.get(NodeJourneySnapshot.JOURNEY_RULES_KEY).isNull()) {
+            throw new IllegalStateException("旅程数值规则不可用");
+        }
         String frozen = NodeJourneySnapshot.journeyRules(
                 session == null ? null : session.getConfigSnapshotJson());
         return frozen == null ? journeyRules(topic) : JourneyRules.parse(frozen);
