@@ -215,6 +215,9 @@ public class OrderCloseTask {
                         firstFailure = "registrationId=" + id + " " + e.getMessage();
                     }
                     log.error("支付中过期订单对账失败 registrationId={}", id, e);
+                } finally {
+                    // 含 continue 分支的已尝试行都保留进度，后页查询异常不重扫整个前缀。
+                    reconcileCursor = afterId;
                 }
             }
         }

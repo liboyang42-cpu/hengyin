@@ -5109,6 +5109,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return routeNodeMaps;
         }
 
+        long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
             CmsTopicChapter chapter = new CmsTopicChapter();
 
@@ -5121,6 +5122,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             chapter.setId(null);
             // 配色不靠 copyProperties 隐式透传:枚举必须当场收敛(存量别名也在这里被写成新档)
             chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()));
+            chapter.setSortId(++chapterSortId);
             chapter.setTopicId(topicId);
             chapter.setCreateBy(username);
             chapter.setCreateTime(new Date());
@@ -5333,6 +5335,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return;
         }
 
+        long nodeSortId = 0L;
         for (NodeDTO nodeDTO : nodes) {
             CmsTopicNode node = new CmsTopicNode();
             BeanUtils.copyProperties(nodeDTO, node);
@@ -5343,6 +5346,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
             node.setTopicId(topicId);
             node.setChapterId(chapterId);
+            node.setSortId(++nodeSortId);
             node.setStatus(1L); // 默认显示
             node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", "")); // 节点打卡码
             node.setCreateBy(username);
