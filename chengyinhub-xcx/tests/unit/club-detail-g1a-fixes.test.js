@@ -41,7 +41,7 @@ global.wx = {
   showLoading() {},
   hideLoading() {},
   stopPullDownRefresh() {},
-  navigateTo: (option) => navigations.push(option.url),
+  navigateTo: (option) => { navigations.push(option.url); if (option.complete) option.complete() },
   redirectTo: (option) => navigations.push(option.url),
   pageScrollTo() {},
   scanCode(option) { scans.push(option); },
