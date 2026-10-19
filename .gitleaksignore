@@ -54,3 +54,6 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 7986c9796abd2dc65639ce8c7846c7ca6d32fe71:docs/evidence/popup-style-1003/before/source-inventory.json:generic-api-key:12378
 7986c9796abd2dc65639ce8c7846c7ca6d32fe71:docs/evidence/popup-style-1003/before/source-inventory.json:generic-api-key:12422
 7986c9796abd2dc65639ce8c7846c7ca6d32fe71:docs/evidence/popup-style-1003/before/source-inventory.json:generic-api-key:12424
+
+# 精确忽略 EXTRA E06-17 回归测试的 32 位十六进制占位分享令牌（非密钥；当前源码已改为拼接构造，见 5a0ce06a）。
+3b7cafa54ee858c36bebfe70f5c0f4438ea89272:chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java:generic-api-key:28
