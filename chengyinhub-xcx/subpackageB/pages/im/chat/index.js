@@ -828,14 +828,14 @@ Page({
   // 路线卡:写死主题详情,不读 extra_json 里的 action
   onRouteTap(e) {
     const id = e.currentTarget.dataset.topicid;
-    if (!id) return;
+    if (!id || this._navigating) return; // 跳转中不响应连点
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
     if (this.data.topicCache[id] === null) { app.tips && app.tips('该路线已下架'); return; }
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
   onCardTap(e) {
-    const ds = e.currentTarget.dataset;
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
     const message = this.data.msgs.find(item => String(item.id) === String(ds.msg));
     if (message && Number(message.senderId) === 0 && Number(message.msgType) === 3
         && message.card && message.card.result) {
@@ -853,7 +853,7 @@ Page({
         hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}
       });
     }
-    if (ds.url) wx.navigateTo({ url: ds.url });
+    if (ds.url) { this._navigating = true; wx.navigateTo({ url: ds.url, complete: () => { this._navigating = false; } }); }
   },
 
   closeReviewResult() {
@@ -897,9 +897,9 @@ Page({
 
   // 系统卡片可配置按钮:action 是路径则跳转;否则按 key 走业务(MVP 提示)
   onCardBtn(e) {
-    const ds = e.currentTarget.dataset;
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
     if (ds.action && String(ds.action).indexOf('/') === 0) {
-      wx.navigateTo({ url: ds.action });
+      this._navigating = true; wx.navigateTo({ url: ds.action, complete: () => { this._navigating = false; } });
     } else {
       app.tips && app.tips('已处理');
     }
@@ -908,6 +908,7 @@ Page({
   // ===== 准实时:页面可见时轮询新消息 =====
   onShow() {
     this._hidden = false;
+    this._navigating = false;
     const cleared = this._pendingClearReturn;
     const reported = this._pendingReportTip;
     this._pendingClearReturn = null;
