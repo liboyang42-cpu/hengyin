@@ -46,6 +46,7 @@ function mount(relativePath, kind, options = {}) {
     tips() {},
   }
   if (options.identityAvailable !== false) {
+    app.getAuthorization = () => 'current-session'
     app.getUserID = () => owner.value
     app.globalData = { user_id: owner.value }
   }
@@ -201,7 +202,7 @@ test('场景 owner:宿主页 hide→show 换代,旧 owner 码下屏且旧回包�
 // G. 钱包:未来等待→到点→过期/已核销 + 两账号切换,全程不触发核销/状态请求。
 function loadWallet(rows) {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -287,7 +288,7 @@ test('负控:独立页 onShow 不清理已渲染旧码时必须判红', () => {
   const mutated = source.replace('    if (!this._keepRenderedCredential()) this._clearRenderedCredential();\n    this.refreshToken();', '    this.refreshToken();')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 onShow 清理')
   const sandbox = { requests: [], events: [] }
-  const app = { sendRequest: (options) => sandbox.requests.push({ opts: options }), getUserID: () => 'B' }
+  const app = { sendRequest: (options) => sandbox.requests.push({ opts: options }), getAuthorization: () => 'current-session', getUserID: () => 'B' }
   let definition
   const context = {
     Date, console,
@@ -317,7 +318,7 @@ test('负控:场景 refresh 不校验独立 seq 时旧回调必须能覆盖(证�
   const mutated = source.replace(/seq === this\._refreshSeq/g, 'true')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 seq 校验')
   const sandbox = { requests: [], intervals: [] }
-  const app = { getUserID: () => 'member-A', sendRequest(options) { const r = { opts: options, aborted: false, abort() { r.aborted = true } }; sandbox.requests.push(r); return r } }
+  const app = { getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest(options) { const r = { opts: options, aborted: false, abort() { r.aborted = true } }; sandbox.requests.push(r); return r } }
   let definition
   const context = {
     Date, console,
