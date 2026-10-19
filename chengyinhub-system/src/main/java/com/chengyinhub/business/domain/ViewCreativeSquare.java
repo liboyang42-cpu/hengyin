@@ -135,6 +135,8 @@ public class ViewCreativeSquare extends BaseEntity
     private String routePreviewImg;
     /** 关联主题是否为可复用模板(仅 dataType=2 有意义) */
     private Boolean isTopicTemplate;
+    /** 非持久(CL-39)：仅作者本人可见——PASS=图片全部机审通过，PENDING=尚有图片未通过(他人看不到这些图) */
+    private String mediaReviewState;
 
     /** 查询用(非DB列):已登录调用者ID。设置后列表放行"本人 status=0/2 待审/驳回"行,他人仍仅见 PASS */
     private Long selfPendingMemberId;
@@ -150,6 +152,8 @@ public class ViewCreativeSquare extends BaseEntity
 
     public String getRoutePreviewImg() { return routePreviewImg; }
     public void setRoutePreviewImg(String routePreviewImg) { this.routePreviewImg = routePreviewImg; }
+    public String getMediaReviewState() { return mediaReviewState; }
+    public void setMediaReviewState(String mediaReviewState) { this.mediaReviewState = mediaReviewState; }
     public Long getSelfPendingMemberId() { return selfPendingMemberId; }
     public void setSelfPendingMemberId(Long selfPendingMemberId) { this.selfPendingMemberId = selfPendingMemberId; }
     public Long getFollowingMemberId() { return followingMemberId; }

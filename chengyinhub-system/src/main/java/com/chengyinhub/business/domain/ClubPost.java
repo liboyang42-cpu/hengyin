@@ -81,6 +81,9 @@ public class ClubPost extends BaseEntity
     /** 非持久：当前查看者在该俱乐部是否拥有内容管理权限。 */
     private Boolean viewerCanManage;
 
+    /** 非持久(CL-39)：仅作者本人可见——PASS=图片全部机审通过，PENDING=尚有图片未通过(他人看不到这些图)。 */
+    private String mediaReviewState;
+
     public String getClubName() { return clubName; }
     public void setClubName(String clubName) { this.clubName = clubName; }
     public String getClubLogo() { return clubLogo; }
@@ -89,6 +92,8 @@ public class ClubPost extends BaseEntity
     public void setEdited(Boolean edited) { this.edited = edited; }
     public Boolean getViewerCanManage() { return viewerCanManage; }
     public void setViewerCanManage(Boolean viewerCanManage) { this.viewerCanManage = viewerCanManage; }
+    public String getMediaReviewState() { return mediaReviewState; }
+    public void setMediaReviewState(String mediaReviewState) { this.mediaReviewState = mediaReviewState; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

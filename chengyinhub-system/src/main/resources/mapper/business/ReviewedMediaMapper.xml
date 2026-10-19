@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ReviewedMediaMapper">
+
+    <!-- CL-39 只读:仅「回调已落地且判 pass」的媒体算通过。待派发/等回调/重试/过期(stale)/转人工/risky 均不算。
+         走 idx_wx_content_callback_target(biz_type, biz_id)。 -->
+    <select id="selectPassedMedia" resultType="java.util.HashMap">
+        select biz_id, media_hash from wx_content_callback_inbox
+        where biz_type = #{bizType}
+          and state = 2 and verdict = 0 and media_hash is not null
+          and biz_id in
+          <foreach collection="bizIds" item="bid" open="(" separator="," close=")">#{bid}</foreach>
+    </select>
+</mapper>

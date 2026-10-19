@@ -45,4 +45,10 @@ public interface IClubPostService
 
     /** 聚合动态流:按俱乐部集合取,clubIds 为空直接返回空列表。 */
     List<ClubPost> selectFeedByClubIds(java.util.List<Long> clubIds, int limit);
+
+    /**
+     * CL-39：他人只看机审 PASS 的图片(正文照常)，作者本人保留全部图片并带 mediaReviewState。
+     * viewerId 为 null 视为他人(未登录)。原地修改 posts。
+     */
+    void applyMediaVisibility(List<ClubPost> posts, Long viewerId);
 }

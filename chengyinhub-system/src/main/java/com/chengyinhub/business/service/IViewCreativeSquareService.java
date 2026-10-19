@@ -90,4 +90,10 @@ public interface IViewCreativeSquareService
     public List<Map<String, Object>> selectRequiredChapterCountsByTopicIds(List<Long> topicIds);
 
     public List<Map<String, Object>> selectRedeemedRequiredChapterCountsByRegistrations(List<Long> registrationIds);
+
+    /**
+     * CL-39：他人只看机审 PASS 的图片(正文照常)，作者本人保留全部图片并带 mediaReviewState。
+     * viewerId 为 null/0 视为他人(未登录)。原地修改 list。
+     */
+    void applyMediaVisibility(List<ViewCreativeSquare> list, Long viewerId);
 }

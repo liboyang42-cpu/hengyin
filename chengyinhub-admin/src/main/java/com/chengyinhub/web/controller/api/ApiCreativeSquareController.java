@@ -943,6 +943,8 @@ public class ApiCreativeSquareController extends BaseController {
         int pageSize = clampPageSize(Math.max(Convert.toInt(ServletUtils.getParameter("pageSize"), 10), 1));
         PageHelper.startPage(pageNum, pageSize);
         list = viewCreativeSquareService.selectViewCreativeSquareList(viewCreativeSquare);
+        // CL-39:他人只看机审 PASS 的图片(正文照常),作者本人看全部图片 + mediaReviewState。
+        viewCreativeSquareService.applyMediaVisibility(list, member_id);
 
         enrichCreativeSquareList(list, member_id);
 
@@ -998,6 +1000,7 @@ public class ApiCreativeSquareController extends BaseController {
 
             List<ViewCreativeSquare> single = new ArrayList<>();
             single.add(viewCreativeSquare);
+            viewCreativeSquareService.applyMediaVisibility(single, member_id);
             enrichCreativeSquareList(single, member_id);
 
             return success(viewCreativeSquare);

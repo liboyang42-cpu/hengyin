@@ -1542,6 +1542,10 @@ public class ApiClubController extends BaseController {
         ClubPost q = new ClubPost();
         q.setClubId(body.getClubId());
         List<ClubPost> posts = clubPostService.selectClubPostList(q);
+        Long viewerId = null;
+        try { viewerId = currentMemberId(); } catch (Exception ignore) { /* 未登录按他人处理 */ }
+        // CL-39:他人只看机审 PASS 的图片,作者本人看自己全部图片 + mediaReviewState。
+        clubPostService.applyMediaVisibility(posts, viewerId);
         projectPostReferences(posts);
         try {
             Long memberId = currentMemberId();
@@ -1644,6 +1648,7 @@ public class ApiClubController extends BaseController {
         }
 
         List<ClubPost> posts = clubPostService.selectFeedByClubIds(new ArrayList<>(scope), limit);
+        clubPostService.applyMediaVisibility(posts, memberId); // CL-39:同俱乐部页
         // 聚合流与俱乐部页是同一批帖子,引用投影也得给 —— 不给的话前端拿不到 sportName,
         // variant 判定恒假,成绩卡/模板卡在达人页永远不出现(俱乐部页里却出现),同一条帖两种样子。
         projectPostReferences(posts);

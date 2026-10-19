@@ -1,11 +1,17 @@
 package com.chengyinhub.business.service.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import com.chengyinhub.business.domain.UmsCreativeSquare;
 import com.chengyinhub.business.domain.UmsCreativeSquareLike;
 import com.chengyinhub.business.domain.UmsMemberFollow;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.common.utils.DateUtils;
+import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.mapper.ViewCreativeSquareMapper;
@@ -23,6 +29,48 @@ public class ViewCreativeSquareServiceImpl implements IViewCreativeSquareService
 {
     @Autowired
     private ViewCreativeSquareMapper viewCreativeSquareMapper;
+
+    @Autowired
+    private ReviewedMediaVisibility reviewedMediaVisibility;
+
+    /**
+     * CL-39：广场帖 pics 发布即 status=1、图片异步送检(bizType=9)，回调 PASS 不写广场表。
+     * 他人只看 inbox 已落地 PASS 的图；主题同步帖(dataType=2)的图按主题(bizType=1)送检，主题的 PASS 同样算数。
+     * 风险回调仍走既有 status=2 整帖下架，这里不改。
+     */
+    @Override
+    public void applyMediaVisibility(List<ViewCreativeSquare> list, Long viewerId)
+    {
+        if (list == null || list.isEmpty()) return;
+        List<Long> squareIds = new ArrayList<>();
+        List<Long> topicIds = new ArrayList<>();
+        for (ViewCreativeSquare square : list) {
+            if (square == null || square.getId() == null || StringUtils.isEmpty(square.getPics())) continue;
+            squareIds.add(square.getId());
+            if (Long.valueOf(2L).equals(square.getDataType()) && square.getDataId() != null && square.getDataId() > 0) {
+                topicIds.add(square.getDataId());
+            }
+        }
+        if (squareIds.isEmpty()) return;
+        Map<Long, Set<String>> passedSquare = reviewedMediaVisibility.passedMediaHashes(
+                IWxContentSecurityService.BIZ_TYPE_SQUARE, squareIds);
+        Map<Long, Set<String>> passedTopic = reviewedMediaVisibility.passedMediaHashes(
+                IWxContentSecurityService.BIZ_TYPE_TOPIC, topicIds);
+        for (ViewCreativeSquare square : list) {
+            if (square == null || !squareIds.contains(square.getId())) continue;
+            Set<String> hashes = new HashSet<>(passedSquare.getOrDefault(square.getId(), Collections.<String>emptySet()));
+            if (Long.valueOf(2L).equals(square.getDataType())) {
+                hashes.addAll(passedTopic.getOrDefault(square.getDataId(), Collections.<String>emptySet()));
+            }
+            boolean allPassed = ReviewedMediaVisibility.allPassed(square.getPics(), hashes);
+            if (viewerId != null && viewerId > 0 && viewerId.equals(square.getMemberId())) {
+                square.setMediaReviewState(allPassed ? ReviewedMediaVisibility.STATE_PASS
+                        : ReviewedMediaVisibility.STATE_PENDING);
+            } else if (!allPassed) {
+                square.setPics(ReviewedMediaVisibility.passedOnly(square.getPics(), hashes));
+            }
+        }
+    }
 
     /**
      * 查询VIEW

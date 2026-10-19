@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import com.chengyinhub.business.access.club.ClubAccessContext;
@@ -26,6 +28,7 @@ import com.chengyinhub.business.mapper.ClubPostMapper;
 import com.chengyinhub.business.mapper.ClubPostRevisionMapper;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IClubPostMediaReviewService;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.DateUtils;
@@ -65,6 +68,9 @@ public class ClubPostServiceImpl implements IClubPostService
 
     @Autowired
     private IClubPostMediaReviewService clubPostMediaReviewService;
+
+    @Autowired
+    private ReviewedMediaVisibility reviewedMediaVisibility;
 
     @Override
     public ClubPost selectClubPostById(Long id)
@@ -306,6 +312,31 @@ public class ClubPostServiceImpl implements IClubPostService
             return new java.util.ArrayList<>();
         }
         return clubPostMapper.selectFeedByClubIds(clubIds, limit <= 0 ? 20 : Math.min(limit, 50));
+    }
+
+    @Override
+    public void applyMediaVisibility(List<ClubPost> posts, Long viewerId)
+    {
+        if (posts == null || posts.isEmpty()) return;
+        List<Long> withMedia = new java.util.ArrayList<>();
+        for (ClubPost p : posts) {
+            if (p != null && p.getId() != null && p.getImages() != null && !p.getImages().trim().isEmpty()) {
+                withMedia.add(p.getId());
+            }
+        }
+        Map<Long, Set<String>> passed = reviewedMediaVisibility.passedMediaHashes(
+                IWxContentSecurityService.BIZ_TYPE_CLUB_POST, withMedia);
+        for (ClubPost p : posts) {
+            if (p == null || p.getId() == null || !withMedia.contains(p.getId())) continue;
+            Set<String> hashes = passed.getOrDefault(p.getId(), Collections.<String>emptySet());
+            boolean allPassed = ReviewedMediaVisibility.allPassed(p.getImages(), hashes);
+            if (viewerId != null && viewerId.equals(p.getAuthorMemberId())) {
+                p.setMediaReviewState(allPassed ? ReviewedMediaVisibility.STATE_PASS
+                        : ReviewedMediaVisibility.STATE_PENDING);
+            } else if (!allPassed) {
+                p.setImages(ReviewedMediaVisibility.passedOnly(p.getImages(), hashes));
+            }
+        }
     }
 
     private void audit(ClubAccessContext access, String action, ClubPost post,
