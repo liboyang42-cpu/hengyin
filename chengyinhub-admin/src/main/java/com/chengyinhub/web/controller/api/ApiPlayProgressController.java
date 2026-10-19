@@ -1478,7 +1478,7 @@ public class ApiPlayProgressController extends BaseController
     @PostMapping("/answer")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
-            String routeActionId, Integer expectedRouteVersion, String accuracy)
+            String routeActionId, Integer expectedRouteVersion)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
@@ -1952,7 +1952,7 @@ public class ApiPlayProgressController extends BaseController
     @PostMapping("/arrive")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
-            String routeActionId, Integer expectedRouteVersion)
+            String routeActionId, Integer expectedRouteVersion, String accuracy)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
