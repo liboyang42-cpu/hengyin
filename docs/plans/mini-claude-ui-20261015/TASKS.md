@@ -74,3 +74,27 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 - BL-222（#278，申诉提交时作废在途刷新，旧回包不再把「提交申诉」放出来）已合入；已核对 `_settle` 在比对序号前先收下拉转圈、申诉只能在 ready 态发起，作废刷新不会留下转圈或 loading；台账重建；全量单测 8798 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
 - BL-223（#279，纠错进度同一缺陷：补证提交时作废在途刷新）已合入；同样核对过 `_settle` 先收转圈、补证只能在 ready 态发起；台账重建；全量单测 8800 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
 - 合 master 前注意：Codex #69（`feature/prelaunch-code-tail-20261015` → master，209 个文件，2026-10-18 仍在更新）也改小程序 `app.json`、`pages/index`、`pages/member/index`、`pages/activity/list`、若干 `components/cy/scene-*`；它若先进 master，同步 master 进本分支时这些文件要一并解冲突，并按 4.5 口径重测主包体积。
+
+## 合 master 方案(2026-10-19,协调者)
+
+**不把 master 合进本集成分支。** 本分支基线 d551c6ba 是 Codex PR11–15 的组合候选,后端(资金回调收件箱、提现失败回补等)与 master 是两套实现;手工混合有重复退款/回调风险,且合并会让基线提交成为 master 的祖先而内容被丢,#18(Codex 集成 → master)将来会被静默跳过。基线由 Codex 经 #18 进 master。
+
+**改为移植分支 `claude/mini-ui-on-master-20261019`**(基于 master 883064e3,只含本线改动,零后端改动;本线页面调用的 57 个接口 master 均有)。现状(f9ca0b22):
+- 单测 11213 过 / 9 失败,9 个全是下面 A–E 的冻结数值;silent-error 门禁通过;route-matrix、action-ledger `--check` 通过。
+- ui-integrity:U1–U5、Legacy 全部通过,只剩 6 项棘轮/digest/上限(G、H)。
+- 随本线功能带上 4 个基线依赖(接口 master 均有):积分明细页 + 个人主页积分入口、集邮册「收到的」tab、AI 对话「清除记录」、media-preview / last-location。
+- 私信用 master 的拉黑/解除/隐藏会话(本线 BL-61 解除实现及其单测退场),保留「举报这条消息 / 举报对方」;漫游以 master 上线版为底重放 BL-01/02/03/23/41/70。
+
+**待用户审批的冻结台账数值**(均为新增页面/调用后的实测值,未改动):
+- A `tests/unit/action-ledger.test.js`:tap 2022→2092;控件 4706→4892;inventory digest 419c88…→6673ea…
+- B `nav-page-title-spacing-contract`:cy-page-title 页 74→84
+- C `title-system-owner-contract`:注册页 136→145(custom 同)
+- D `route-matrix-freshness`:路由 136→145
+- E `get-auth-matrix-contract`:直接 GET 38→63、req 包装 28→29(21 条新 GET 已逐条归类入矩阵)
+- F `scripts/shot-matrix.js` STATS:total 332→341、P1 189→198、actionable P1 182→191 / total 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117
+- G `tests/lint/ui-integrity-baseline.js`:ratchet u4Dynamic 58→64、u5Silent 28→37;keyDigest u1Variable→edd72b…、u4Dynamic→03bb12…、u5Silent→8e9594…
+- H `tests/lint/ui-integrity.js`:`NON_INCREASING_CEILING.u5Silent` 30→37(本线新增 9 处静默调用,逐项已写理由)
+
+**主包体积阻塞(发版 preflight 硬限)**:移植分支主包未压缩 3,235,112 B,超 3 MiB 棘轮 89,384 B;master 自身只剩约 1.7 KB(#259 之后)。本线主包增量 91,123 B,其中只有约 13 KB 是单一分包独用、可下沉的工具(nickname-check、audit-detail、merchant-subscription-view、safety-rating、merchant-safety-summary、merchant-node-favorite);其余在主包 tab 页漫游(BL-01/02/03/41/70 约 20 KB)、多分包共用组件(举报半屏 12 KB、circle-theme 9 KB)、AI 对话导出/清除、集邮册等。需要决策后才能合 master。
+
+**集成分支照旧作为云端开发基线**:新 PR 照常合入,并同步移植到移植分支(#280 / BL-224 已同步)。待定位置:收藏据点页(node-favorites)未注册、无入口;官方路线入口随 master 漫游改版消失。
