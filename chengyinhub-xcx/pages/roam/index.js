@@ -604,7 +604,7 @@ Page({
     const t = this.data.topicView;
     if (!t || !t.topicId) return;
     this.setData({ topicView: null });
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + encodeURIComponent(t.topicId) });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + encodeURIComponent(t.topicId), complete: () => { this._navigating = false; } });
   },
 
   /* 原型 f-game(点商家 · 这家有游戏)在本仓没有单独一屏:
@@ -628,12 +628,12 @@ Page({
     const place = (this.data.checkinView && this.data.checkinView.place) || this.data.currentAddress || '这一站';
     this.setData({ checkinView: null });
     // 不带 kind 会落到默认的「今日城市签」(3-24)
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sticker&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sticker&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   onCheckinSign() {
     const place = (this.data.checkinView && this.data.checkinView.place) || this.data.currentAddress || '这一站';
     this.setData({ checkinView: null });
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
 
   /* ══ 原型 f-multi:谁点亮了哪块 ══
@@ -755,7 +755,7 @@ Page({
     else if (key === 'stamp') this.goStampAlbum();
     // ⚠️ 勋章墙只能走页面:它是 <canvas type="webgl">,旧式原生组件不支持同层渲染,
     //    塞进场景弹窗会盖在遮罩和关闭钮之上(页面里那层 cover-view 就是为此存在的)
-    else if (key === 'badge') wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' });
+    else if (key === 'badge') { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } }); }
     else if (key === 'goals') wx.navigateTo({ url: '/subpackageTools/exploration-goals/index' });
     else if (key === 'capsule') wx.navigateTo({ url: '/subpackageTools/capsule/index' });
     else this.openPassport();
@@ -986,7 +986,7 @@ Page({
     this._hidden = false;
     if (this._clock) this._syncStats();
     this.setData({ fontScaleStyle: readPageStyle() });
-    this._syncPresencePrivacy(); this._eventNavigating = false; // 返回时兜底清「官方活动」跳转锁
+    this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();
     this._syncCommunityEntry();
@@ -2578,14 +2578,14 @@ Page({
   /** 「打个招呼」= 开一条真的私信会话。开不起来就说清楚,不假装发出去了。 */
   runnerSayHi() {
     const row = this.data.runnerView;
-    if (!row || !row.memberId) return;
+    if (!row || !row.memberId || this._navigating) return; this._navigating = true; // 开会话到跳转完成前不响应连点
     req('/api/im/start', 'POST', { target_member_id: row.memberId }).then((res) => {
       const cid = res && res.code == '200' && res.data && res.data.conversationId;
-      if (!cid) { cyToast((res && res.msg) || '这会儿开不了会话，晚点再试'); return; }
+      if (!cid) { this._navigating = false; cyToast((res && res.msg) || '这会儿开不了会话，晚点再试'); return; }
       wx.navigateTo({
         url: '/subpackageB/pages/im/chat/index?conversationId=' + cid
           + '&name=' + encodeURIComponent(row.nickname || '')
-          + '&avatar=' + encodeURIComponent(row.avatar || '') + '&type=1',
+          + '&avatar=' + encodeURIComponent(row.avatar || '') + '&type=1', complete: () => { this._navigating = false; },
       });
     });
   },
@@ -2594,7 +2594,7 @@ Page({
   runnerOpenProfile() {
     const row = this.data.runnerView;
     if (!row || !row.memberId) return;
-    wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + row.memberId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + row.memberId, complete: () => { this._navigating = false; } });
   },
 
   _updateHeading(from, to) {
@@ -5500,7 +5500,7 @@ Page({
      去勋章墙页面:navigateTo 保留本页,计时/定位照常,返回即回地图。 */
   openRoamPassport() {
     this.closeScene();
-    wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } });
   },
   /* 「附近正在走的人」:人在地图上,这一行给最近的那个开半屏;一个都没有就说清楚,
      不做那种点下去毫无反应的行。 */
@@ -5538,8 +5538,8 @@ Page({
   },
   openBadge3d() {
     const m = this.data.medal || {};
-    wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?name=' + encodeURIComponent(m.name || '徽章')
-      + (m.sub ? '&sub=' + encodeURIComponent(m.sub) : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?name=' + encodeURIComponent(m.name || '徽章')
+      + (m.sub ? '&sub=' + encodeURIComponent(m.sub) : ''), complete: () => { this._navigating = false; } });
   },
   /* 结束本次漫游的入口只剩两个:主键长按 3 秒(onCenterHoldStart)、抽屉里的 endRoamSession。
      原来那枚「结束」方键连同 onRoamStop 一起删了 —— 它和 endRoamSession 是同一段代码的两份。 */
@@ -5676,7 +5676,7 @@ Page({
     const path = activity.topicId
       ? '/pages/topic/index/index?id=' + encodeURIComponent(activity.topicId)
       : '/pages/activity/detail/index?id=' + encodeURIComponent(activity.id);
-    wx.navigateTo({ url: path });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: path, complete: () => { this._navigating = false; } });
   },
   openEntryTeam(e) {
     const teamId = e.currentTarget.dataset.id;
