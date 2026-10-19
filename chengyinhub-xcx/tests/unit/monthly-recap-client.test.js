@@ -1,5 +1,5 @@
 const test=require('node:test'); const assert=require('node:assert/strict');
-const {createMonthlyRecapClient}=require('../../utils/features/monthly-recap-client');
+const {createMonthlyRecapClient}=require('../../subpackageTools/lib/features/monthly-recap-client');
 function setup() { let owner='7:session1';const sent=[];return {sent,owner(v){owner=v;},client:createMonthlyRecapClient({getIdentity:()=>owner,sendRequest:r=>sent.push(r),timeoutMs:30})}; }
 function result(overrides) {return Object.assign({month:'2026-10',kind:'routes',counts:{routes:2,places:0,stamps:0},items:[{id:'99',title:'路线'}],hasMore:false,nextBeforeId:null},overrides);}
 function ok(req,data){req.success({code:200,data});}

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createExplorationAnniversaryClient } = require('../../utils/features/exploration-anniversary');
+const { createExplorationAnniversaryClient } = require('../../subpackageTools/lib/features/exploration-anniversary');
 const row = { id: '9007199254740999', topicId: '9007199254740998', title: '当前可见名称', completedAt: '2025-10-12 12:00:00.123', year: 2025, yearsAgo: 1 };
 const page = { month: 10, day: 12, referenceYear: 2026, timeZone: 'Asia/Shanghai', asOfMs: Date.parse('2026-10-12T12:00:00Z'),
   coverage: 'RECORDED_OWN_COMPLETED_SESSIONS_WITH_CURRENT_VISIBLE_ROUTE', metadataMode: 'CURRENT_ROUTE_METADATA', leapDayRule: 'EXACT_MONTH_DAY_ONLY', items: [row], hasMore: false, nextCursor: null };

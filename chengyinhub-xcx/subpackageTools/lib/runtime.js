@@ -1,9 +1,9 @@
 const modal = require('../../utils/modal');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const factories = {
-  goals: require('../../utils/features/exploration-goals').createExplorationGoalsClient,
-  anniversary: require('../../utils/features/exploration-anniversary').createExplorationAnniversaryClient,
-  export: require('../../utils/features/exploration-export').createExplorationExportClient
+  goals: require('./features/exploration-goals').createExplorationGoalsClient,
+  anniversary: require('./features/exploration-anniversary').createExplorationAnniversaryClient,
+  export: require('./features/exploration-export').createExplorationExportClient
 };
 function requestId() { return 'tools_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2).padEnd(12, '0'); }
 function safeNumber(value) { if (!/^[1-9]\d*$/.test(String(value)) || !Number.isSafeInteger(Number(value))) throw new Error('请选择有效编号或正整数'); return Number(value); }
