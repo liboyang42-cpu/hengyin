@@ -132,8 +132,16 @@ class PlayerGrowthConcurrencyMySqlIT {
 
     @BeforeEach
     void reset() {
-        db.update("delete from player_badge");
-        db.update("delete from player_growth");
+        // 用 TRUNCATE 而不是 DELETE：DELETE 留下未 purge 的删除标记记录，间隙锁会挂在上一个用例的
+        // TOPIC_CLEAR/TOPIC_FINISH 残留上，同主题并发是否成环随之取决于用例顺序和 purge 时机。
+        db.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
+            try (java.sql.Statement statement = connection.createStatement()) {
+                statement.execute("set session lock_wait_timeout = 10");
+                statement.execute("truncate table player_badge");
+                statement.execute("truncate table player_growth");
+            }
+            return null;
+        });
         definitions = mock(GrowthBadgeMapper.class);
         when(definitions.selectByCode(anyString())).thenAnswer(call -> {
             String code = call.getArgument(0);
@@ -254,9 +262,6 @@ class PlayerGrowthConcurrencyMySqlIT {
     /** 首请求持成长锁时让第二请求撞上未提交的 TOPIC_FINISH_11；返回第二请求，首请求已断言为首次通关。 */
     private Future<TopicCompletionAwardVO> sameTopicDuplicate(boolean retryBoundary, AtomicInteger markerInserts)
             throws Exception {
-        // delete 留下的未 purge 删除标记行（前面用例的 TOPIC_CLEAR/MILE_*）会落在插入点与 TOPIC_FINISH_11 之间，
-        // 首请求的插入就不再撞第二请求等待中的间隙锁，成环与否随 purge 进度漂移；重建表让索引里只有本用例的行。
-        db.execute("truncate table player_badge");
         seed(4, "8.50", 2);
         CountDownLatch firstLocked = new CountDownLatch(1);
         CountDownLatch releaseFirst = new CountDownLatch(1);
@@ -287,7 +292,7 @@ class PlayerGrowthConcurrencyMySqlIT {
             assertTrue(firstLocked.await(5, TimeUnit.SECONDS));
             two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
             assertTrue(secondMarkerAttempted.await(5, TimeUnit.SECONDS));
-            awaitBadgeLockWait();
+            awaitMarkerInsertLockWait();
             assertFalse(two.isDone(), "首个通关事实尚未提交时，第二请求不能确认通关");
             releaseFirst.countDown();
             assertTrue(one.get(5, TimeUnit.SECONDS).isFirstCompletion());
@@ -489,17 +494,16 @@ class PlayerGrowthConcurrencyMySqlIT {
         db.execute(ddl.substring(start, end + 1));
     }
 
-    /** 第二请求的判重插入真正在 InnoDB 里排上 player_badge 的锁等待后才放行首请求，否则放行过早时不成环。 */
-    private void awaitBadgeLockWait() throws InterruptedException {
+    /** latch 只说明第二请求要插了；等它在 InnoDB 里真正排上锁再放行首请求，否则首请求可能先提交、死锁不出现。 */
+    private void awaitMarkerInsertLockWait() throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (System.nanoTime() < deadline) {
-            Integer waits = db.queryForObject("select count(*) from performance_schema.data_lock_waits w"
-                    + " join performance_schema.data_locks l on l.engine_lock_id = w.requesting_engine_lock_id"
-                    + " where l.object_schema = database() and l.object_name = 'player_badge'", Integer.class);
-            if (waits != null && waits > 0) return;
+            Integer waiting = admin.queryForObject("select count(*) from information_schema.innodb_trx"
+                    + " where trx_state = 'LOCK WAIT' and trx_query like '%player_badge%'", Integer.class);
+            if (waiting != null && waiting > 0) return;
             Thread.sleep(10);
         }
-        fail("第二请求未在 player_badge 上排队等锁");
+        fail("第二请求的通关事实插入没有进入锁等待，时序前提不成立");
     }
 
     private static void await(CountDownLatch latch) {
