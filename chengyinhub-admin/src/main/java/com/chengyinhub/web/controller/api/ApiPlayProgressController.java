@@ -2716,6 +2716,7 @@ public class ApiPlayProgressController extends BaseController
         if (node.getTopicId() == null || !node.getTopicId().equals(tId)) { c.error = error("该节点不属于本主题"); return c; }
         CmsRegistration pass;
         // 已开局的自玩路线：通行证开局时有效即可打完本局(中途到期不打断)；未开局仍需有效通行证。
+        // 「已开局」由路线运行时判定：有进行中的路线局，或不建局的普通线性路线已记过节点进度。
         boolean continuing = topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L);
         try { pass = continuing
                 ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(

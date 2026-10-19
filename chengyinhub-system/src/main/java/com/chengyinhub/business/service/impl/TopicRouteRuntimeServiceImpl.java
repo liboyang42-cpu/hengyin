@@ -2347,8 +2347,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) throw new IllegalArgumentException("主题不存在");
         long actId = activityId == null ? 0L : activityId;
         List<CmsRegistration> current=null;
+        boolean started = newUse && routeStarted(memberId,topicId,actId);
         // 新使用只认当前锁读仍有效的原报名；保留全部有效报名，原「任一成功报名可授权」候选策略不收窄为第一张。
-        if(newUse) current=runningSession(memberId,topicId,actId)!=null
+        if(newUse) current=started
                 // 已开局的路线：自玩通行证开局时有效即可打完本局；活动场次/探索票仍按活动结束等原规则。
                 ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAllToContinue(
                         activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date())
@@ -2374,8 +2375,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             for (CmsRegistration row : rows) {
                 if (row.getExpiresAt() == null || row.getExpiresAt().after(now)) currentRegistrations.add(row);
             }
-            // newUse 已由 CurrentPlayRegistration 锁读判定(继续本局时通行证中途到期仍可打完)，不在此按快照再拒。
-            if (currentRegistrations.isEmpty() && !newUse) throw new IllegalStateException("自玩通行证已过期");
+            if (currentRegistrations.isEmpty() && !started) throw new IllegalStateException("自玩通行证已过期");
         } else currentRegistrations.addAll(rows);
         if(newUse) {
             currentRegistrations.clear();
@@ -3512,7 +3512,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     @Override
     public boolean hasRunningSession(Long memberId, Long topicId, Long activityId) {
-        return memberId != null && topicId != null && runningSession(memberId, topicId, activityId == null ? 0L : activityId) != null;
+        return memberId != null && topicId != null && routeStarted(memberId, topicId, activityId == null ? 0L : activityId);
+    }
+
+    // 已开局：有进行中的路线局；普通线性路线不建局，以本人默认游玩实例下已记的节点进度为准(记进度时已校验当时有效)。
+    private boolean routeStarted(Long member, Long topic, long activity) {
+        if (runningSession(member, topic, activity) != null) return true;
+        if (currentSession(member, topic, activity) != null) return false; // 已结束的局不算在玩
+        PlayerNodeProgress probe = new PlayerNodeProgress(); probe.setMemberId(member);
+        probe.setActivityId(activity); probe.setTopicId(topic); probe.setPlayInstanceId(DEFAULT_INSTANCE);
+        List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);
+        return rows != null && !rows.isEmpty();
     }
 
     private TopicRouteSession runningSession(Long member, Long topic, long activity) {
