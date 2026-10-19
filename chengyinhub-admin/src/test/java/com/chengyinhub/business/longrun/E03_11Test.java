@@ -93,14 +93,47 @@ class E03_11Test {
     }
 
     @Test
-    void absentReferencesPreserveRawAndDoNotExpandOtherSystemVariableScope() {
+    void knownSystemVariablesMapAndAskedPreservesItsQuestionSuffix() throws Exception {
+        for (String name : new String[]{"sys.outcome.11", "sys.mistakes.11", "sys.passed.11", "sys.asked.11.Q_1-last"}) {
+            String raw = variableStory(name);
+            String mapped = JSON.readTree(JourneyStory.remapNodeIds(raw, mapping())).path("ending")
+                    .path("exhibits").get(0).path("when").path("var").asText();
+            assertEquals(name.replace(".11", ".111"), mapped);
+            assertThrows(IllegalArgumentException.class,
+                    () -> JourneyStory.remapNodeIds(raw, Collections.emptyMap()));
+        }
+        for (String malformed : new String[]{"sys.asked.11", "sys.asked.11.", "sys.asked.11.a.b",
+                "sys.asked.01.q", "sys.asked.11.q!", "sys.asked.11.abcdefghijklmnopqrstuvwxyz1234567",
+                "sys.mistakes.0", "sys.passed.9223372036854775808"}) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> JourneyStory.remapNodeIds(variableStory(malformed), mapping()));
+        }
+    }
+
+    @Test
+    void newAskedConditionsMapOnceAndLeaveAlreadyMappedRootUntouched() throws Exception {
+        String prepared = JourneyStory.remapNodeIds(variableStory("sys.passed.11"), mapping());
+        JsonNode chapter = JSON.readTree("{\"when\":[{\"op\":\"EQ\",\"var\":\"sys.asked.22.Q_1-last\",\"value\":1}]}");
+        String out = JourneyStory.withEndingChapters(prepared, Collections.singletonList(
+                new JourneyStory.EndingChapter(88L, "chosen", "", chapter)), mapping());
+        JsonNode ending = JSON.readTree(out).path("ending");
+        assertEquals("sys.passed.111", ending.path("exhibits").get(0).path("when").path("var").asText());
+        assertEquals("sys.asked.222.Q_1-last", ending.path("endings").get(0).path("when").get(0).path("var").asText());
+        assertEquals("sys.asked.22.Q_1-last", chapter.path("when").get(0).path("var").asText());
+    }
+
+    @Test
+    void absentReferencesPreserveRawAndUnknownVariableFields() {
         assertNull(JourneyStory.remapNodeIds(null, null));
         assertEquals("  ", JourneyStory.remapNodeIds("  ", null));
         String raw = "{ \"ending\": {\"dispositionNodeId\":null,\"exhibits\":["
-                + "{\"when\":{\"op\":\"EQ\",\"var\":\"sys.passed.11\",\"value\":1}},"
-                + "{\"when\":{\"op\":\"EQ\",\"var\":\"sys.asked.11.q\",\"value\":1}},"
-                + "{\"when\":{\"op\":\"EQ\",\"var\":\"sys.mistakes.11\",\"value\":1}}]}}";
+                + "{\"when\":{\"op\":\"EQ\",\"var\":\"counter.custom\",\"value\":1}},"
+                + "{\"when\":{\"op\":\"EQ\",\"var\":\"sys.future.11\",\"value\":1}}]}}";
         assertEquals(raw, JourneyStory.remapNodeIds(raw, null));
+    }
+
+    private static String variableStory(String variable) {
+        return "{\"ending\":{\"exhibits\":[{\"when\":{\"op\":\"EQ\",\"var\":\"" + variable + "\",\"value\":1}}]}}";
     }
 
     private static Map<Long, Long> mapping() {
