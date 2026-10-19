@@ -19,7 +19,7 @@
     />
 
     <cy-empty wx:if="{{!loading && !errorMsg && list.length==0 && !hasOrders}}" fill class="cy-fill-state" size="lg"
-              icon="/images/d_yhqon.png" title="还没有城市路线订单" sub="报名或购买城市路线后，订单会出现在这里。"
+              icon="/subpackageMember/images/d_yhqon.png" title="还没有城市路线订单" sub="报名或购买城市路线后，订单会出现在这里。"
               cta="{{canDiscoverRoutes ? '去发现城市路线' : ''}}" bind:cta="goDiscoverRoutes" />
     <cy-empty wx:if="{{!loading && !errorMsg && list.length==0 && hasOrders}}" fill class="cy-fill-state" size="lg"
               kind="empty" title="当前筛选暂无订单" sub="试试切换其他状态查看订单。" />

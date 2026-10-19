@@ -10,7 +10,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
 const REMOVED_ASSET = path.join(ROOT, 'images/d_cy.jpg');
-const mockData = require('../../utils/mockData');
+const mockData = require('../../pages/club/utils/mockData');
 
 function runtimeSources(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
