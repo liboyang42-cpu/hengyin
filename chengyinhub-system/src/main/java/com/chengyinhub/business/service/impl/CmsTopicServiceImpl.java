@@ -4640,7 +4640,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             patch.setStatus(0);
             patch.setReason("");
         }
-        cmsTopicMapper.updateCmsTopic(patch);
+        if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
+            throw new IllegalStateException("主题内容保存失败，未重建章节与节点");
+        }
         syncInitialAttributeKeys(patch);
 
         boolean allowBundledDraft = chapterFlowV2
