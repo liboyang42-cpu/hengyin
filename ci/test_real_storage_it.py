@@ -181,6 +181,28 @@ class JavaScanTest(unittest.TestCase):
             with self.assertRaises(rs.GateError):
                 rs.precheck(reg, root, "com.example.Missing")
 
+    def test_hard_coded_database_base_must_match_registry(self):
+        pinned = SAMPLE_JAVA.replace("    @Test void a() { }",
+                                     '    @BeforeAll void setUp() {\n'
+                                     '        assertEquals("e04_scratch", System.getenv("CHENGYIN_TEST_MYSQL_DATABASE_BASE"));\n'
+                                     '    }\n    @Test void a() { }', 1)
+        self.assertIn("e04_scratch", pinned)
+        self.assertEqual(["e04_scratch"], rs.scan_java(pinned)["required_database_bases"])
+        reg = {"module": "admin", "jdk_for_java_version": {"1.8": "11"}, "default_database_base": "cyit",
+               "classes": {"com.example.SampleTest": {"tests": 4, "storage": ["mysql"],
+                                                      "gates": {"CHENGYIN_RUN_SAMPLE_MYSQL": "true"},
+                                                      "nested": ["RealMysql"]}}}
+        with tempfile.TemporaryDirectory() as root:
+            path = pathlib.Path(root, "admin/src/test/java/com/example/SampleTest.java")
+            path.parent.mkdir(parents=True)
+            path.write_text(pinned, encoding="utf-8")
+            pathlib.Path(root, "pom.xml").write_text("<properties><java.version>1.8</java.version></properties>",
+                                                     encoding="utf-8")
+            problems = rs.precheck(reg, root, "com.example.SampleTest")[1]
+            self.assertTrue(any("e04_scratch" in problem for problem in problems), problems)
+            reg["classes"]["com.example.SampleTest"]["database_base"] = "e04_scratch"
+            self.assertEqual([], rs.precheck(reg, root, "com.example.SampleTest")[1])
+
 
 class ReportGateTest(unittest.TestCase):
     def verify(self, cases, files=1, **kwargs):
