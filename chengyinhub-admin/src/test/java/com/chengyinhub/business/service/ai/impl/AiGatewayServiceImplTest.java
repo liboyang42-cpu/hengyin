@@ -305,12 +305,17 @@ class AiGatewayServiceImplTest {
 
     @Test
     void refundRequestsAtomicCompensationWithoutStandaloneDelete() {
-        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        // Missing key is rejected locally before any provider request starts.
+        LlmClient unavailable = org.mockito.Mockito.spy(
+                new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient(
+                        "deepseek", "https://unused.invalid", "", "test", true, 1));
+        ReflectionTestUtils.setField(service, "llmClients", Collections.singletonList(unavailable));
         assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
         assertEquals(1, refunded.size());
         assertEquals(reserved.get(0), refunded.get(0));
         verify(redisTemplate, never()).delete(anyString());
         verify(valueOperations, never()).decrement(anyString());
+        verify(unavailable, never()).chat(anyString(), anyString());
     }
 
     /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
@@ -328,10 +333,15 @@ class AiGatewayServiceImplTest {
     /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
     @Test
     void refundUsesSameOriginalDayGenerationAndNonceKeys() {
-        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        // Missing key is rejected locally before any provider request starts.
+        LlmClient unavailable = org.mockito.Mockito.spy(
+                new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient(
+                        "deepseek", "https://unused.invalid", "", "test", true, 1));
+        ReflectionTestUtils.setField(service, "llmClients", Collections.singletonList(unavailable));
         assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
         assertEquals(1, reserved.size());
         assertEquals(reserved, refunded);
+        verify(unavailable, never()).chat(anyString(), anyString());
     }
 
     // ---- trace ID ----
