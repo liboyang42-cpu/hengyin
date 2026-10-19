@@ -492,7 +492,9 @@ class NpcChatServiceTest {
             return 0;
         });
         NpcChatResp result=service.chat(req("lost-after-provider","hi"),USER_ONE);
-        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertEquals("UNKNOWN",result.getSafetyDecision());
+        assertTrue(!result.isRetryable());
         assertTrue(!"旧答案".equals(result.getSafeText()));
         verify(npcChatLogMapper, never()).insertNpcChatLog(any());
         verifyNoInteractions(voiceCloneClient);

@@ -311,6 +311,7 @@ public class NpcChatService
             return finish(processing);
         }
 
+        boolean providerResultReceived = false;
         try
         {
             if (profile == null || !nonBlank(profile.getPersona()))
@@ -329,10 +330,11 @@ public class NpcChatService
             }
             AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), "player", bizType,
                     system, message);
+            providerResultReceived = true;
             terminalize(processing, NpcChatRequest.STATUS_SUCCEEDED, "PASS", null, null, false,
                     truncateCodePoints(result.getText(), SAFE_TEXT_MAX_CODE_POINTS));
             NpcChatResp response = finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
-                    profileId, message, result.getText(), 0, result.getModel(), (int) (System.currentTimeMillis() - startMs)));
+                    profileId, message, result.getText(), 0, result.getModel(), (int) (System.currentTimeMillis() - startMs)), true);
             if (NpcChatRequest.STATUS_SUCCEEDED.equals(response.getOutcomeStatus())
                     && ("npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType)))
             {
@@ -340,7 +342,7 @@ public class NpcChatService
             }
             // Voice synthesis is another network call. Re-read after it so deletion cannot expose
             // an answer/audio retained in this worker while the persistent answer has been erased.
-            NpcChatResp current = storedOrUnavailable(processing.getUserId(), processing.getRequestId());
+            NpcChatResp current = storedOrUnavailable(processing.getUserId(), processing.getRequestId(), true);
             if (current.getSafeText() != null && current.getSafeText().equals(response.getSafeText())
                     && NpcChatRequest.STATUS_SUCCEEDED.equals(current.getOutcomeStatus()))
                 current.setAudioUrl(response.getAudioUrl());
@@ -351,7 +353,8 @@ public class NpcChatService
             applyGatewayFailure(processing, e);
             return finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
                     profile == null ? null : profile.getId(), message, null,
-                    safetyFlagOf(e), null, (int) (System.currentTimeMillis() - startMs)));
+                    safetyFlagOf(e), null, (int) (System.currentTimeMillis() - startMs)),
+                    providerResultReceived || e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException);
         }
         catch (Exception e)
         {
@@ -361,7 +364,7 @@ public class NpcChatService
                     SAFE_UPSTREAM_FAILED);
             return finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
                     profile == null ? null : profile.getId(), message, null, 3, null,
-                    (int) (System.currentTimeMillis() - startMs)));
+                    (int) (System.currentTimeMillis() - startMs)), providerResultReceived);
         }
         finally
         {
@@ -481,27 +484,56 @@ public class NpcChatService
 
     private NpcChatResp finish(NpcChatRequest terminal, NpcChatLog entry)
     {
+        return finish(terminal, entry, false);
+    }
+
+    private NpcChatResp finish(NpcChatRequest terminal, NpcChatLog entry, boolean providerOutcomePossible)
+    {
         try
         {
             NpcChatRequest stored = npcChatWriteService.finish(terminal, entry);
-            return stored != null ? fromStored(stored) : requestStateUnavailable(terminal.getRequestId());
+            return stored != null ? persistedOutcome(stored, providerOutcomePossible)
+                    : unavailableOutcome(terminal.getRequestId(), providerOutcomePossible);
         }
         catch (Exception e)
         {
             log.error("[NpcChat] terminal state write failed userId={} requestId={}", terminal.getUserId(),
                     terminal.getRequestId(), e);
-            return storedOrUnavailable(terminal.getUserId(), terminal.getRequestId());
+            return storedOrUnavailable(terminal.getUserId(), terminal.getRequestId(), providerOutcomePossible);
         }
     }
 
     private NpcChatResp storedOrUnavailable(Long userId, String requestId)
     {
+        return storedOrUnavailable(userId, requestId, false);
+    }
+
+    private NpcChatResp storedOrUnavailable(Long userId, String requestId, boolean providerOutcomePossible)
+    {
         try
         {
             NpcChatRequest stored = npcChatWriteService.read(userId, requestId);
-            return stored != null ? fromStored(stored) : requestStateUnavailable(requestId);
+            return stored != null ? persistedOutcome(stored, providerOutcomePossible)
+                    : unavailableOutcome(requestId, providerOutcomePossible);
         }
-        catch (RuntimeException unavailable) { return requestStateUnavailable(requestId); }
+        catch (RuntimeException unavailable) { return unavailableOutcome(requestId, providerOutcomePossible); }
+    }
+
+    private NpcChatResp persistedOutcome(NpcChatRequest stored, boolean providerOutcomePossible)
+    {
+        // A rolled-back finish can leave the original live PROCESSING row. Knowing the provider
+        // already ran prevents this worker from reporting its old NOT_RUN classification.
+        if (providerOutcomePossible && NpcChatRequest.STATUS_PROCESSING.equals(stored.getStatus()))
+            return unavailableOutcome(stored.getRequestId(), true);
+        return fromStored(stored);
+    }
+
+    private NpcChatResp unavailableOutcome(String requestId, boolean providerOutcomePossible)
+    {
+        if (providerOutcomePossible)
+            return response(requestId, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
+                    null, false, true, "原请求结果待确认，请稍后查看原请求。");
+        return requestStateUnavailable(requestId);
     }
 
     private NpcChatResp persistTerminal(NpcChatRequest terminal)
