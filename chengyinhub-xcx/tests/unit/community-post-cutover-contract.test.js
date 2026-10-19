@@ -31,6 +31,13 @@ test('legacy detail ID is retained while transport reads canonical; viewerFollow
   const h = harness([bundle()]); const res = await h.request('/api/creativesquare/info', { id: 56 });
   assert.equal(h.calls[0].url, '/api/v1/community/posts/56'); assert.equal(res.data.id, 56); assert.equal(res.data.isFollowTheUser, 0);
 });
+test('normalized media retains stable IDs separately from expiring display URLs without exporting internal keys', () => {
+  const b=bundle();b.media=[{id:12,objectKey:'upload/stable.png',derived_object_key:'https://owned.example/stable.png?Expires=old'}];
+  const old=normalizePost(b);b.media[0].derived_object_key='https://owned.example/stable.png?Expires=new';
+  const renewed=normalizePost(b);
+  assert.notEqual(old.pics,renewed.pics);assert.equal(old.media[0].id,12);assert.equal(renewed.media[0].id,12);
+  assert.equal(Object.hasOwn(renewed.media[0],'objectKey'),false);assert.equal(renewed.media[0].url,renewed.pics);
+});
 test('own/bookmark cursor pages do not use fake totals and failure does not advance cursor', async () => {
   const h = harness([{ items: [bundle()], hasMore: true, nextCursor: 56 }, { code: 500, msg: '失败' }, { items: [], hasMore: false, nextCursor: null }]);
   await h.request('/api/creativesquare/list', { favorite_only: 1, pageNum: 1, pageSize: 1 });
