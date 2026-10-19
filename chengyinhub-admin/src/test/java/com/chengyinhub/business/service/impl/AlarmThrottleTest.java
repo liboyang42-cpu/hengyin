@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.common.core.redis.RedisCache;
+import com.chengyinhub.framework.web.exception.RuntimeFailureAlarmFilter;
+import io.lettuce.core.RedisCommandTimeoutException;
+import org.springframework.dao.QueryTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import ch.qos.logback.classic.Logger;
@@ -14,6 +17,40 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class AlarmThrottleTest {
+    @Test void knownRedisFailuresNeverAskTheFailedRedisForAnAlarmLease() {
+        RedisCache redis = mock(RedisCache.class);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        alarm.alarmThrottled("runtime.redis.connection", "cache", "type=RedisCommandTimeoutException");
+        alarm.alarmThrottled("runtime.redis.connection", "cache", "type=RedisCommandTimeoutException");
+        alarm.alarmThrottled("runtime.redis.timeout", "cache", "type=RedisCommandTimeoutException");
+        assertEquals(2, calls.get(), "同窗口同事件只投递一次，不同Redis事件独立");
+        verifyNoInteractions(redis);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Long> local = (java.util.Map<String, Long>) ReflectionTestUtils.getField(alarm, "localAttempts");
+        local.put("runtime.redis.connection", System.currentTimeMillis() - 601_000L);
+        alarm.alarmThrottled("runtime.redis.connection", "cache", "type=RedisCommandTimeoutException");
+        assertEquals(3, calls.get(), "复用原本地10分钟窗口，过期后允许重试");
+        verifyNoInteractions(redis);
+    }
+
+    @Test void actualFilterAndAlarmHandleWrappedLettuceTimeoutWithoutASecondRedisCommand() {
+        RedisCache redis = mock(RedisCache.class);
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = spy(service(redis, calls, 200, "https://alerts.example.test/stub"));
+        RuntimeFailureAlarmFilter filter = new RuntimeFailureAlarmFilter(alarm);
+        RuntimeException failure = new IllegalStateException("private-provider-detail",
+                new QueryTimeoutException("private-command-detail",
+                        new RedisCommandTimeoutException("private-redis-detail")));
+        filter.systemFailure(failure);
+        filter.systemFailure(failure);
+        verify(alarm, times(2)).alarmThrottled("runtime.redis.connection", "缓存连接异常",
+                "type=RedisCommandTimeoutException");
+        verify(alarm, never()).alarmThrottled(eq("runtime.request.unhandled"), anyString(), anyString());
+        assertEquals(1, calls.get());
+        verifyNoInteractions(redis);
+    }
+
     @Test void oneAtomicEventLeaseLimitsAttemptsAndExpiryAllowsRetry() {
         RedisCache redis = mock(RedisCache.class);
         when(redis.setIfAbsent(eq("alarm:attempt:monitor.audit.backlog"), eq("1"), eq(600), eq(TimeUnit.SECONDS)))
@@ -83,6 +120,9 @@ class AlarmThrottleTest {
         AtomicInteger calls = new AtomicInteger();
         AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
         assertThrows(IllegalArgumentException.class, () -> alarm.alarmThrottled("https://invalid.example/path", "title", "detail"));
+        assertThrows(IllegalArgumentException.class, () -> alarm.alarmThrottled(null, "title", "detail"));
+        assertThrows(IllegalArgumentException.class, () -> alarm.alarmThrottled("", "title", "detail"));
+        assertThrows(IllegalArgumentException.class, () -> alarm.alarmThrottled("runtime.redis.connection?token=private", "title", "detail"));
         verifyNoInteractions(redis);
         assertEquals(0, calls.get());
     }
