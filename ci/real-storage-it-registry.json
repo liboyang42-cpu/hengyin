@@ -100,6 +100,14 @@
         "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
         "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
       ]
+    },
+    "funnel-max-date": {
+      "lineage": "master",
+      "registered_source": "4810fe14935a2eaf6d7b2c44ffe1448f40c33cb6",
+      "note": "F3 analytics_max_date evidence: selectCommunityQualifiedPilotMetric at 9999-12-30/31, DATE_ADD (master XML) and TIMESTAMPADD (528e9486 verbatim), with SHOW WARNINGS after each query. Evidence only; no product change.",
+      "classes": [
+        "com.chengyinhub.business.it.FunnelMaxDateMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -306,6 +314,11 @@
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "note": "Asserts the server version is exactly 8.0.45."
+    },
+    "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
+      "tests": 2,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
     }
   }
 }
