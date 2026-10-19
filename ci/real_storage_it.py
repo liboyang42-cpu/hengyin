@@ -282,6 +282,10 @@ NESTED_RE = re.compile(
 GATE_START_RE = re.compile(r"@(?:[\w.]*\.)?EnabledIfEnvironmentVariable\s*\(")
 CONDITION_RE = re.compile(r"@(?:[\w.]*\.)?((?:Disabled|Enabled)\w*)(?![A-Za-z0-9_$])")
 JAVA_VERSION_RE = re.compile(r"<java\.version>\s*([^<\s]+)\s*</java\.version>")
+# 部分类在 @BeforeAll 里写死 assertEquals("e04_scratch", System.getenv("CHENGYIN_TEST_MYSQL_DATABASE_BASE"))；
+# 登记的 database_base 不一致时整类只报 initializationError，静态预检要提前拦下。
+REQUIRED_BASE_RE = re.compile(
+    r'assertEquals\s*\(\s*"([A-Za-z0-9_]+)"\s*,\s*System\.getenv\s*\(\s*"CHENGYIN_TEST_MYSQL_DATABASE_BASE"\s*\)')
 
 
 def strip_java_comments(source, keep_strings=True):
@@ -365,6 +369,7 @@ def scan_java(source):
         "nested": NESTED_RE.findall(bare),
         "gates": gates,
         "conditions": sorted({name for name in CONDITION_RE.findall(bare) if name != "EnabledIfEnvironmentVariable"}),
+        "required_database_bases": sorted(set(REQUIRED_BASE_RE.findall(code))),
     }
 
 
@@ -424,6 +429,10 @@ def precheck(registry, source_dir, fqcn):
         problems.append("@Nested 类 %s 与登记 %s 不一致（surefire 只在显式点名嵌套类时才跑它的方法）"
                         % (sorted(scan["nested"]), sorted(entry.get("nested", []))))
     problems.extend(check_gates(scan["gates"], entry.get("gates", {})))
+    base = entry.get("database_base", registry.get("default_database_base"))
+    for required in scan["required_database_bases"]:
+        if required != base:
+            problems.append("源码要求 CHENGYIN_TEST_MYSQL_DATABASE_BASE=%s，登记给的是 %s" % (required, base))
     java_version = read_java_version(Path(source_dir) / "pom.xml")
     jdk = registry["jdk_for_java_version"].get(java_version or "")
     if jdk is None:
