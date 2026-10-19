@@ -132,6 +132,11 @@ Page({
     const acct = this._account
     const hadData = this.data.state === 'ready' || this.data.state === 'empty'
     this.setData({ refreshing: hadData, refreshError: '', state: hadData ? this.data.state : 'loading' })
+    // 选人半屏没开、也不在颁发中:作废成员名单,下次「颁发」重读(新入团的能选到、已退团的不再出现)
+    if (!this.data.memberPickerVisible && !this.data.granting) {
+      this._membersSeq = (this._membersSeq || 0) + 1
+      this.setData({ membersState: 'idle', members: [] })
+    }
     let pending = 2
     const finish = () => {
       pending -= 1
@@ -334,7 +339,9 @@ Page({
     if (!this.data.isOwner) return
     const that = this
     const acct = this._account
-    const stale = () => that._unloaded || that.accountStale(acct)
+    const seq = (this._membersSeq || 0) + 1
+    this._membersSeq = seq
+    const stale = () => that._unloaded || that.accountStale(acct) || seq !== that._membersSeq
     const onFailure = (text) => {
       if (stale()) return
       that.setData({ membersState: 'error', membersError: text })
