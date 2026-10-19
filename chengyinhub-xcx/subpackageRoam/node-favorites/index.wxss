@@ -1,8 +1,0 @@
-page { background: var(--cy-color-bg-page); }
-.orl { min-height: 100vh; color: var(--cy-color-text-primary); }
-.orl__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); display: flex; flex-direction: column; gap: var(--cy-space-3); }
-.orl-card { display: flex; flex-direction: column; border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-elevated); }
-.orl-card__cover { width: 100%; height: 320rpx; background: var(--cy-color-bg-elevated); }
-.orl-card__body { padding: var(--cy-space-3) var(--cy-space-4); display: flex; flex-direction: column; gap: var(--cy-space-1); }
-.orl-card__name { font-size: var(--cy-type-card-title); font-weight: 600; }
-.orl-card__meta { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }

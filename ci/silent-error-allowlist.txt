@@ -226,4 +226,3 @@ chengyinhub-xcx/pages/merchant/index/index.js 1  # BL-141 营业状态写后回�
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # BL-69 商家主页在架据点读取失败即不展示收藏按钮(只读附加块,不打扰主页);收藏切换失败用 cyToast 明确提示且不改本地态,以接口返回的 favorited 为准
 chengyinhub-xcx/components/cy/scene-share-invite/index.js 1  # 个人码签发失败落 qrState=code-error 并显示 qrErrorText(含后端原因)供重试,epoch 丢弃迟到回包;关全局 toast 免双弹
 chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js 2  # BL-67 商家纠错半屏:读纠错类型失败落 loadfail 结果态(带重试),提交失败落 fail/unknown 结果态(含后端原因,同键可重试);关全局 toast 免双弹
-chengyinhub-xcx/subpackageRoam/node-favorites/index.js 1  # BL-69 我收藏的据点:首屏失败落 state=error 页内错误态带重试,静默回读失败保留现有列表/空态;seq 丢弃过期回包,关全局 toast 免双弹

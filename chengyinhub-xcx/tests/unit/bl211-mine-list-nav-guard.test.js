@@ -1,5 +1,5 @@
 'use strict'
-// BL-211:我的举报/我的纠错/收藏据点列表行连点只跳一次;complete 回调或 onShow 后可再次打开。
+// BL-211:我的举报/我的纠错列表行连点只跳一次(收藏据点页暂不进 master,待定入口);complete 回调或 onShow 后可再次打开。
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
@@ -7,7 +7,6 @@ const path = require('node:path')
 const CASES = [
   { rel: 'subpackageMember/report-mine/index.js', handler: 'openDetail', id: 7, url: '/subpackageMember/report-detail/index?reportId=7' },
   { rel: 'subpackageMember/correction-mine/index.js', handler: 'openDetail', id: 8, url: '/subpackageMember/correction-detail/index?contributionId=8' },
-  { rel: 'subpackageRoam/node-favorites/index.js', handler: 'openNode', id: 'n9', url: '/subpackageRoam/poi-detail/index?poiId=n9' },
 ]
 
 function boot(rel) {

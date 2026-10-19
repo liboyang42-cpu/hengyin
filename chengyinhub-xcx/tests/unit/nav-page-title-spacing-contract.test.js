@@ -476,7 +476,7 @@ function assertSelfDrawnTitleSpacing(rel, cssOverride) {
 //   (editorPage 1 创作 / 2 票务,靠底部 sheet 切屏),全页没有 cy-nav-bar ——
 //   返回是页面级浮钮 .slopes-back,离开的是整个编辑器。所以「nav → canonical spacer → 标题」
 //   这一段结构在这里不成立,它走 assertEditorStepTitleSpacing(见下面那张名单)。
-test('全仓 74 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
+test('全仓 83 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
   assertSharedTitleSpacing()
   const files = pageTitleFiles()
   /* 2026-09-08 +1:pages/coop/invite-detail(02d 协作详情)。自定义导航 + 实底顶栏无标题,
@@ -486,7 +486,8 @@ test('全仓 74 个 cy-page-title 页面：共享标题统一提供上 space-5 /
      master 的 68 不含这一页 ⇒ 68+1=69。 */
   /* 2026-10-14 +6:漫游上线 —— 我的队伍(subpackageRoam/my-teams)
      与 subpackageTools 下 5 个工具页,全部 cy-nav-bar plain + cy-page-title 标准二级页 ⇒ 68+6=74。 */
-  assert.equal(files.length, 74, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  /* 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) +9:俱乐部勋章、核销记录、触达记录、主办控制台、积分明细、我的举报、举报进度、我的纠错、纠错进度,均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 74+9=83。 */
+  assert.equal(files.length, 83, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

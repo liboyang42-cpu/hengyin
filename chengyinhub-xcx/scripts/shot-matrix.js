@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 332
- *   按 priority 计全部行：P0 133 / P1 189 / P2 10
+ *   total 341
+ *   按 priority 计全部行：P0 133 / P1 198 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 182 / P2 2 = 308
- *   按域：A 53 / B 67 / C 54 / D 39 / E 27 / F 86
- *   按 control：setData 171 / identity+setData 116 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
+ *   按域：A 53 / B 68 / C 56 / D 44 / E 27 / F 93
+ *   按 control：setData 179 / identity+setData 117 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -642,11 +642,14 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
 // total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
+// 2026-10-19：Claude 小程序线移植到 master(用户批准冻结数值更新)补 9 条 P1 actionable:B92 主办控制台、C61 核销记录、C62 触达记录、
+// D90 积分明细、D91–D94 我的举报/举报进度/我的纠错/纠错进度(均 setData)、F102 俱乐部勋章(identity+setData);
+// total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
 const STATS = {
-  "total": 332,
+  "total": 341,
   "byPriority": {
     "P0": 133,
-    "P1": 189,
+    "P1": 198,
     "P2": 10
   },
   "blockedByPriority": {
@@ -656,22 +659,22 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 182,
+    "P1": 191,
     "P2": 2,
-    "total": 308
+    "total": 317
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 67,
-    "C": 54,
-    "D": 39,
+    "B": 68,
+    "C": 56,
+    "D": 44,
     "E": 27,
-    "F": 92
+    "F": 93
   },
   "control": {
-    "setData": 171,
-    "identity+setData": 116,
+    "setData": 179,
+    "identity+setData": 117,
     "real-data": 38,
     "real-device": 7
   },
