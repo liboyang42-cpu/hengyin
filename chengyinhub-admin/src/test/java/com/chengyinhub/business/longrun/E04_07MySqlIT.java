@@ -158,7 +158,7 @@ class E04_07MySqlIT {
     }
 
     private void reverse(long id) {
-        Redemption r=new Redemption(); r.setId(id); r.setTopicId(700L); r.setRegistrationId(9001L);
+        Redemption r=new Redemption(); r.setId(id); r.setTopicId(700L); r.setRegistrationId(9001L); r.setMerchantId(8001L);
         CmsRegistration reg=new CmsRegistration(); reg.setMemberId(501L); reg.setOwnerId(8001L);
         tx.execute(status->{consumer.clawback(r,reg,false,true,"E04-07",1L);return null;});
     }
