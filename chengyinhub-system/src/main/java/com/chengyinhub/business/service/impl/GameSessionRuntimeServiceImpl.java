@@ -2554,7 +2554,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {
         requireActor(actor);
         validateCommand(command);
-        command.setAction(command.getAction().trim().toUpperCase());
+        command.setAction(command.getAction().trim().toUpperCase(Locale.ROOT));
         String requestHash = requestHash(command);
         command.setRequestHash(requestHash);
 
@@ -5454,7 +5454,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         canonical.put("activityId", command.getActivityId());
         canonical.put("nodeId", command.getNodeId());
         canonical.put("expectedRevision", command.getExpectedRevision());
-        canonical.put("action", command.getAction().trim().toUpperCase());
+        canonical.put("action", command.getAction().trim().toUpperCase(Locale.ROOT));
         if (command.getAuthorityEpoch() != null) canonical.put("authorityEpoch", command.getAuthorityEpoch());
         canonical.put("payload", command.getPayload());
         try {
