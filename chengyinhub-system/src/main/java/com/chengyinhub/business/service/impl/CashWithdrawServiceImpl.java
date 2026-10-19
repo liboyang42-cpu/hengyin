@@ -182,11 +182,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setTransferBatchId(res.get("batchId"));
             upd.setWechatBatchStatus(res.get("batchStatus"));
-            upd.setStatus(MemberCashWithdraw.STATUS_PROCESSING);
             upd.setSubmitTime(now);
-            mapper.updateMemberCashWithdraw(upd);
-            logger.info("提现已受理待确认 id={} member={} amount={} batchId={} trace={}", id, memberId, amount, res.get("batchId"), traceId);
-            return mapper.selectById(id);
+            int observed = mapper.updateReceiptIfProcessing(upd);
+            if (observed > 0) logger.info("提现已受理待确认 id={} member={} amount={} batchId={} trace={}", id, memberId, amount, res.get("batchId"), traceId);
+            else logger.info("提现受理观察未改原持久回执 id={} trace={}", id, traceId);
+            return mapper.selectByIdForUpdate(id);
         }
 
         // 5a. ★结果不确定(超时/网络/验签异常,res==null 或 ambiguous):微信可能已受理并已打款。
@@ -198,10 +198,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setSubmitTime(now);
             upd.setWechatBatchStatus("UNCERTAIN");
-            mapper.updateMemberCashWithdraw(upd);
-            logger.warn("提现发起结果不确定,保持处理中待查询核实 id={} member={} amount={} err={} trace={}",
+            int observed = mapper.updateReceiptIfProcessing(upd);
+            if (observed > 0) logger.warn("提现发起结果不确定,保持处理中待查询核实 id={} member={} amount={} err={} trace={}",
                     id, memberId, amount, res == null ? "无响应" : res.get("error"), traceId);
-            return mapper.selectById(id);
+            else logger.info("提现不确定观察未改原持久回执 id={} trace={}", id, traceId);
+            return mapper.selectByIdForUpdate(id);
         }
 
         // 5b. 确定性未受理(微信拒绝/参数非法/服务未就绪),钱未出 → 原路退回余额一次(退款也失败则待人工,不丢钱)
@@ -293,7 +294,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setWechatBatchStatus(bs);
         }
         upd.setWechatDetailId(emptyToNull(q == null ? null : q.get("detailId")));
-        mapper.updateMemberCashWithdraw(upd);
+        if (mapper.updateReceiptIfProcessing(upd) == 0) return;
 
         if (isStuck(w, now)) {
             MemberCashWithdraw esc = new MemberCashWithdraw();
@@ -419,7 +420,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (w != null && Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(w.getStatus())) {
             syncOne(w);
         }
-        return mapper.selectById(id);
+        return mapper.selectByIdForUpdate(id);
     }
 
     @Override
