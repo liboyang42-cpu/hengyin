@@ -72,6 +72,18 @@ class ApiCreativeSquareCommunityPolicyTest {
         assertEquals(Long.valueOf(8L), query.getValue().getViewerMemberId());
     }
 
+    /** CL-39:广场列表按查看者裁剪未 PASS 的图片(匿名按 0 = 他人)。 */
+    @Test
+    void squareListAppliesMediaVisibilityForTheViewer() {
+        IViewCreativeSquareService viewService = mock(IViewCreativeSquareService.class);
+        java.util.List<ViewCreativeSquare> rows = new java.util.ArrayList<>();
+        when(viewService.selectViewCreativeSquareList(org.mockito.ArgumentMatchers.any())).thenReturn(rows);
+        ApiCreativeSquareController controller = controller(8L, viewService, null, null, null);
+        requestParameter("feed_mode", "latest");
+        controller.viewCreativeSquareList("0", null, null);
+        verify(viewService).applyMediaVisibility(rows, 8L);
+    }
+
     @Test
     void followingFeedRejectsGuestInsteadOfPretendingToBePersonalized() {
         IViewCreativeSquareService viewService = mock(IViewCreativeSquareService.class);

@@ -1,6 +1,8 @@
 package com.chengyinhub.business.mapper;
 
 import com.chengyinhub.business.domain.ClubPost;
+import com.chengyinhub.business.service.impl.ClubPostServiceImpl;
+import com.chengyinhub.business.service.impl.ReviewedMediaVisibility;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -11,13 +13,19 @@ import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * CL-39：俱乐部动态图片审核态与他人可见性。
@@ -31,8 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>他人读路径：selectClubPostList(/api/club/post/list，标注「公开」)、
  * selectFeedByClubIds(/api/club/feed 聚合流)。
  *
- * <p>驳回(risky 回调)已证明隐藏；待审 / 送检失败 / 回调永不到达在当前代码里对他人可见——
- * 下面 *_DEFECT_CL39 用例把这一现状钉住作为 DEFECT_FOUND 证据(不改产品代码)，修复后应翻转断言。
+ * <p>驳回(risky 回调)已证明隐藏。待审 / 送检失败 / 回调永不到达原先对他人可见(#346 钉住的 DEFECT_CL39)；
+ * 修复后读侧按 wx_content_callback_inbox 的 PASS 事实(ReviewedMediaVisibility)只向他人下发 PASS 图片，
+ * 正文照常，作者本人保留全部图片并带 mediaReviewState。
  */
 class ClubPostReviewVisibilityMyBatisTest {
     private static final long CLUB = 7L;
@@ -41,6 +50,9 @@ class ClubPostReviewVisibilityMyBatisTest {
     private static final long REJECTED = 3L;
     private static final long APPROVED = 4L;
     private static final long NEVER_CALLED_BACK = 5L;
+    private static final long MIXED = 6L;
+    private static final long AUTHOR = 11L;
+    private static final long OTHER = 8L;
 
     @Test
     void rejectedMediaPostIsHiddenAndApprovedPostIsShownOnClubPageAndAggregateFeed() throws Exception {
@@ -61,22 +73,47 @@ class ClubPostReviewVisibilityMyBatisTest {
     }
 
     @Test
-    void pendingFailedAndNeverCalledBackMediaPostsAreVisibleToOtherMembers_DEFECT_CL39() throws Exception {
+    void pendingFailedAndNeverCalledBackMediaIsHiddenFromOtherMembersWhileAuthorKeepsItWithState_CL39() throws Exception {
         DriverManagerDataSource ds = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         seed(jdbc);
         try (SqlSession session = factory(ds).openSession(true)) {
             ClubPostMapper mapper = session.getMapper(ClubPostMapper.class);
+            ClubPostServiceImpl service = service(session);
             ClubPost q = new ClubPost();
             q.setClubId(CLUB);
-            // 读侧无 viewer 参数：作者与他人得到同一结果，审核未完成的图片已公开。
-            assertEquals(List.of(NEVER_CALLED_BACK, APPROVED, FAILED, PENDING), ids(mapper.selectClubPostList(q)),
-                    "DEFECT_FOUND CL-39: club page lists posts whose media review is pending/failed/never answered");
-            assertEquals(List.of(NEVER_CALLED_BACK, APPROVED, FAILED, PENDING),
-                    ids(mapper.selectFeedByClubIds(List.of(CLUB), 50)),
-                    "DEFECT_FOUND CL-39: aggregate feed lists posts whose media review is pending/failed/never answered");
-            assertEquals("https://cdn.example/pending.jpg", mapper.selectClubPostById(PENDING).getImages(),
-                    "the unreviewed image URL is projected to every viewer");
+            for (Long viewer : new Long[] {OTHER, null}) {
+                // 每次查询模拟一个新请求：一级缓存会把上一轮已就地裁剪的对象原样还回来。
+                session.clearCache();
+                List<ClubPost> page = mapper.selectClubPostList(q);
+                service.applyMediaVisibility(page, viewer);
+                session.clearCache();
+                List<ClubPost> feed = mapper.selectFeedByClubIds(List.of(CLUB), 50);
+                service.applyMediaVisibility(feed, viewer);
+                for (List<ClubPost> rows : List.of(page, feed)) {
+                    // 正文已同步机审，帖子照常列出；未 PASS 的图片 URL 不下发给他人。
+                    assertEquals(List.of(MIXED, NEVER_CALLED_BACK, APPROVED, FAILED, PENDING), ids(rows));
+                    Map<Long, String> images = images(rows);
+                    assertEquals("", images.get(PENDING), "queued media hidden from viewer " + viewer);
+                    assertEquals("", images.get(FAILED), "failed dispatch hidden from viewer " + viewer);
+                    assertEquals("", images.get(NEVER_CALLED_BACK), "never-answered media hidden from viewer " + viewer);
+                    assertEquals("https://cdn.example/approved.jpg", images.get(APPROVED));
+                    assertEquals("https://cdn.example/approved.jpg", images.get(MIXED), "only the PASS image of a mixed post");
+                    assertEquals("post", rows.get(0).getContent());
+                    rows.forEach(p -> assertNull(p.getMediaReviewState(), "review state is author-only"));
+                }
+            }
+            session.clearCache();
+            List<ClubPost> own = mapper.selectClubPostList(q);
+            service.applyMediaVisibility(own, AUTHOR);
+            Map<Long, String> images = images(own);
+            assertEquals("https://cdn.example/pending.jpg", images.get(PENDING), "author keeps own unreviewed media");
+            assertEquals("https://cdn.example/failed.jpg", images.get(FAILED));
+            assertEquals("https://cdn.example/lost.jpg", images.get(NEVER_CALLED_BACK));
+            assertEquals("https://cdn.example/approved.jpg,https://cdn.example/held.jpg", images.get(MIXED));
+            Map<Long, String> states = own.stream().collect(Collectors.toMap(ClubPost::getId, ClubPost::getMediaReviewState));
+            assertEquals(Map.of(PENDING, "PENDING", FAILED, "PENDING", NEVER_CALLED_BACK, "PENDING",
+                    MIXED, "PENDING", APPROVED, "PASS"), states);
         }
     }
 
@@ -106,15 +143,56 @@ class ClubPostReviewVisibilityMyBatisTest {
         post(jdbc, REJECTED, "rejected.jpg", 2);
         post(jdbc, APPROVED, "approved.jpg", 0);
         post(jdbc, NEVER_CALLED_BACK, "lost.jpg", 0);
+        post(jdbc, MIXED, "approved.jpg", 0);
         jdbc.update("insert into club_post_media_review_outbox values "
                 + "(1,?,0,now()),(2,?,5,now()),(3,?,2,now()),(4,?,2,now()),(5,?,2,dateadd('DAY',-30,now()))",
                 PENDING, FAILED, REJECTED, APPROVED, NEVER_CALLED_BACK);
         jdbc.update("update club_post set create_time=dateadd('DAY',-30,now()) where id=?", NEVER_CALLED_BACK);
+        jdbc.update("update club_post set images=? where id=?",
+                "https://cdn.example/approved.jpg,https://cdn.example/held.jpg", MIXED);
+        // 回调 inbox：送检登记 media_hash=SHA-256(url)；state 2=已落地，verdict 0=pass / 1=risky。
+        // PENDING / FAILED 从未送检成功 ⇒ 无 inbox 行；NEVER_CALLED_BACK 等回调(state=0)；MIXED 一张 pass、一张转人工(state=5)。
+        jdbc.execute("create table wx_content_callback_inbox(id bigint auto_increment primary key,trace_hash varbinary(32),biz_type int,biz_id bigint,media_hash varbinary(32),verdict int,state int)");
+        inbox(jdbc, "t-approved", APPROVED, "approved.jpg", 0, 2);
+        inbox(jdbc, "t-rejected", REJECTED, "rejected.jpg", 1, 2);
+        inbox(jdbc, "t-lost", NEVER_CALLED_BACK, "lost.jpg", null, 0);
+        inbox(jdbc, "t-mixed-pass", MIXED, "approved.jpg", 0, 2);
+        inbox(jdbc, "t-mixed-held", MIXED, "held.jpg", 0, 5);
+        // 同一 URL 在别的业务类型下 PASS 不算本帖通过。
+        jdbc.update("insert into wx_content_callback_inbox(trace_hash,biz_type,biz_id,media_hash,verdict,state) values (?,9,?,?,0,2)",
+                sha("t-other-biz"), PENDING, sha("https://cdn.example/pending.jpg"));
+    }
+
+    private void inbox(JdbcTemplate jdbc, String trace, long postId, String image, Integer verdict, int state) {
+        jdbc.update("insert into wx_content_callback_inbox(trace_hash,biz_type,biz_id,media_hash,verdict,state) values (?,3,?,?,?,?)",
+                sha(trace), postId, sha("https://cdn.example/" + image), verdict, state);
+    }
+
+    private static byte[] sha(String value) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void post(JdbcTemplate jdbc, long id, String image, int delFlag) {
         jdbc.update("insert into club_post(id,club_id,author_member_id,content,images,type,like_count,comment_count,del_flag,is_pinned,version,create_time,update_time) "
                 + "values (?,?,11,'post',?,0,0,0,?,0,0,now(),now())", id, CLUB, "https://cdn.example/" + image, delFlag);
+    }
+
+    private static Map<Long, String> images(List<ClubPost> rows) {
+        Map<Long, String> out = new HashMap<>();
+        rows.forEach(p -> out.put(p.getId(), p.getImages()));
+        return out;
+    }
+
+    private static ClubPostServiceImpl service(SqlSession session) {
+        ClubPostServiceImpl service = new ClubPostServiceImpl();
+        ReflectionTestUtils.setField(service, "clubPostMapper", session.getMapper(ClubPostMapper.class));
+        ReflectionTestUtils.setField(service, "reviewedMediaVisibility",
+                new ReviewedMediaVisibility(session.getMapper(ReviewedMediaMapper.class)));
+        return service;
     }
 
     private static List<Long> ids(List<ClubPost> rows) {
@@ -135,10 +213,12 @@ class ClubPostReviewVisibilityMyBatisTest {
                 "club-post-review-visibility", new JdbcTransactionFactory(), dataSource));
         configuration.getTypeAliasRegistry().registerAlias("ClubPost", ClubPost.class);
         configuration.addMapper(ClubPostMapper.class);
-        String resource = "mapper/business/ClubPostMapper.xml";
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
-            if (input == null) throw new IllegalStateException("missing " + resource);
-            new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+        configuration.addMapper(ReviewedMediaMapper.class);
+        for (String resource : new String[] {"mapper/business/ClubPostMapper.xml", "mapper/business/ReviewedMediaMapper.xml"}) {
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
+                if (input == null) throw new IllegalStateException("missing " + resource);
+                new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+            }
         }
         return new SqlSessionFactoryBuilder().build(configuration);
     }

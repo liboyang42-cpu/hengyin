@@ -102,6 +102,27 @@ class ClubPostFeedScopeTest {
         return b;
     }
 
+    /** CL-39:聚合流与俱乐部页都要按查看者裁剪未 PASS 的图片。 */
+    @Test
+    @Timeout(5)
+    void feedAndClubPageApplyMediaVisibilityForTheViewer() {
+        when(memberSvc.selectClubIdsByMember(ME)).thenReturn(Arrays.asList(1L));
+        List<ClubPost> feed = new java.util.ArrayList<>();
+        when(postSvc.selectFeedByClubIds(any(), anyInt())).thenReturn(feed);
+        controller.postFeed(body(null));
+        verify(postSvc).applyMediaVisibility(org.mockito.ArgumentMatchers.same(feed), org.mockito.ArgumentMatchers.eq(ME));
+
+        Club club = new Club();
+        club.setId(1L);
+        when(clubSvc.selectClubById(1L)).thenReturn(club);
+        List<ClubPost> page = new java.util.ArrayList<>();
+        when(postSvc.selectClubPostList(any())).thenReturn(page);
+        ClubPost q = new ClubPost();
+        q.setClubId(1L);
+        controller.postList(q);
+        verify(postSvc).applyMediaVisibility(org.mockito.ArgumentMatchers.same(page), org.mockito.ArgumentMatchers.eq(ME));
+    }
+
     /** 玩家:我加入的俱乐部(创建者也在 club_member 里,所以自建的一并覆盖)。 */
     @Test
     @Timeout(5)
