@@ -96,6 +96,13 @@ class A02NpcDeleteBarrierMySqlIT
         String requestSchema = new String(Files.readAllBytes(migration), StandardCharsets.UTF_8);
         sql(requestSchema.substring(requestSchema.indexOf("CREATE TABLE IF NOT EXISTS npc_chat_request"),
                 requestSchema.indexOf(';', requestSchema.indexOf("CREATE TABLE IF NOT EXISTS npc_chat_request"))));
+        // master 的 NpcChatRequestMapper 读写 audio_asset_id：按仓库迁移原样补列（与 NpcGeneratedAudioMySqlIT 同口径）。
+        Path mediaMigration = Paths.get("chengyinhub-admin/sql/migration_20261012_npc_chat_media_asset.sql");
+        if (!Files.exists(mediaMigration)) mediaMigration = Paths.get("sql/migration_20261012_npc_chat_media_asset.sql");
+        try (java.sql.Connection connection = source.getConnection()) {
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(mediaMigration.toFile()));
+        }
         Configuration cfg = new Configuration();
         cfg.setEnvironment(new Environment("a02-delete", new SpringManagedTransactionFactory(), source));
         cfg.addInterceptor(new FinishPause(afterFinish));
