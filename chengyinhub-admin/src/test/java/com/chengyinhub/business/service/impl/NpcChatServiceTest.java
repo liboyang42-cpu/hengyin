@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -110,6 +111,82 @@ class NpcChatServiceTest {
         ReflectionTestUtils.setField(service, "npcChatRequestMapper", npcChatRequestMapper);
         ReflectionTestUtils.setField(service, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(service, "scheduledExecutorService", scheduledExecutorService);
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = shopDirectory();
+        when(merchants.selectMmsMerchantById(42L)).thenReturn(ownedMerchant(42L, 420L));
+    }
+
+    @Test
+    void shopChatResolvesOwnerMemberToMerchantRowAndRetainsPlayerAndNegativeNodeSession() {
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = shopDirectory(ownedMerchant(700L, 70L));
+        NpcProfile profile = new NpcProfile(); profile.setId(901L); profile.setPersona("owned shop persona");
+        when(npcProfileMapper.selectEnabledByScope(2, 700L)).thenReturn(Collections.singletonList(profile));
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new AiGatewayResult("trace", "欢迎。", "test", 0));
+
+        NpcChatResp response = service.chatWithShop(requestId("shop-different"), USER_ONE, 31L, 70L, "公开店铺事实", "你好");
+
+        assertEquals("SUCCEEDED", response.getOutcomeStatus()); assertEquals("PASS", response.getSafetyDecision());
+        verify(npcProfileMapper).selectEnabledByScope(2, 700L);
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 70L);
+        verify(npcProfileMapper, never()).selectGlobalNpc();
+        verify(aiGatewayService).generate(eq(USER_ONE), eq("player"), eq("npc_shop_chat"), anyString(), eq("你好"));
+        ArgumentCaptor<NpcChatRequest> state = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).insertNpcChatRequest(state.capture());
+        assertEquals(-31L, state.getValue().getSessionId()); assertEquals(USER_ONE, state.getValue().getUserId());
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(npcChatRequestMapper, merchants, npcProfileMapper);
+        order.verify(npcChatRequestMapper).selectByUserAndRequestId(USER_ONE, requestId("shop-different"));
+        order.verify(merchants).selectMmsMerchantList(any()); order.verify(npcProfileMapper).selectEnabledByScope(2, 700L);
+    }
+
+    @Test
+    void unavailableShopIdentityUsesExistingFailedTerminalWithoutCallingAnyProvider() {
+        com.chengyinhub.business.domain.MmsMerchant disabled = ownedMerchant(700L, 70L); disabled.setAccountStatus(0L);
+        com.chengyinhub.business.domain.MmsMerchant foreign = ownedMerchant(70L, 71L);
+        for (java.util.List<com.chengyinhub.business.domain.MmsMerchant> rows : java.util.Arrays.asList(
+                Collections.<com.chengyinhub.business.domain.MmsMerchant>emptyList(), Collections.singletonList(disabled),
+                Collections.singletonList(foreign), java.util.Arrays.asList(ownedMerchant(700L,70L), ownedMerchant(701L,70L)))) {
+            com.chengyinhub.business.mapper.MmsMerchantMapper merchants = shopDirectory();
+            when(merchants.selectMmsMerchantList(any())).thenReturn(rows);
+            NpcChatResp response = service.chatWithShop(requestId("unavailable-" + rows.size()), USER_ONE, 31L, 70L, "事实", "你好");
+            assertEquals("FAILED", response.getOutcomeStatus()); assertEquals("NOT_RUN", response.getSafetyDecision());
+            assertEquals("NPC_PROFILE_UNAVAILABLE", response.getErrorCode());
+        }
+        verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
+        verify(npcProfileMapper, never()).selectGlobalNpc();
+        verifyNoInteractions(aiGatewayService, voiceCloneClient);
+    }
+
+    @Test
+    void shopDirectoryFailureIsFailedTerminalNotSuccessfulAnswerOrMerchantAlias() {
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = shopDirectory();
+        when(merchants.selectMmsMerchantList(any())).thenThrow(new IllegalStateException("directory offline"));
+        NpcChatResp response = service.chatWithShop(requestId("offline"), USER_ONE, 31L, 70L, "事实", "你好");
+        assertEquals("FAILED", response.getOutcomeStatus()); assertEquals("NPC_PROFILE_UNAVAILABLE", response.getErrorCode());
+        verifyNoInteractions(aiGatewayService, voiceCloneClient); verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
+    }
+
+    @Test
+    void shopTerminalReplayPrecedesDirectoryAndProfileLookup() {
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = shopDirectory();
+        NpcChatRequest terminal = terminal("shop-replay", USER_ONE, "SUCCEEDED", "PASS", null, false, "已完成。");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("shop-replay"))).thenReturn(terminal);
+        NpcChatResp response = service.chatWithShop(requestId("shop-replay"), USER_ONE, 31L, 70L, "事实", "你好");
+        assertEquals("SUCCEEDED", response.getOutcomeStatus()); assertEquals("已完成。", response.getSafeText());
+        verifyNoInteractions(merchants, aiGatewayService, voiceCloneClient);
+        verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
+    }
+
+    private com.chengyinhub.business.mapper.MmsMerchantMapper shopDirectory(com.chengyinhub.business.domain.MmsMerchant... rows) {
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
+        when(merchants.selectMmsMerchantList(any())).thenReturn(java.util.Arrays.asList(rows));
+        ReflectionTestUtils.setField(service, "merchantNpcIdentityDirectory",
+                new com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory(merchants));
+        return merchants;
+    }
+
+    private static com.chengyinhub.business.domain.MmsMerchant ownedMerchant(Long id, Long memberId) {
+        com.chengyinhub.business.domain.MmsMerchant row = new com.chengyinhub.business.domain.MmsMerchant();
+        row.setId(id); row.setMemberId(memberId); row.setStatus(1L); row.setAccountStatus(1L); row.setDelFlag(0); return row;
     }
 
     @Test

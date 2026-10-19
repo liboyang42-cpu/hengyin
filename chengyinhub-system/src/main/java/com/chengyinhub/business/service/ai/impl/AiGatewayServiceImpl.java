@@ -125,12 +125,22 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public AiGatewayResult generate(Long memberId, String role, String bizType,
                                      String systemPrompt, String userPrompt)
     {
-        // 0. 全链路 traceId:必须先于任何 saveLog 生成,否则 input-blocked / cache-only
-        //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
-        String traceId = IdUtils.simpleUUID();
+        return generateWithTrace(IdUtils.simpleUUID(), memberId, role, bizType, systemPrompt, userPrompt);
+    }
+
+    @Override
+    public AiGatewayResult generateWithTrace(String traceId, Long memberId, String role, String bizType,
+                                             String systemPrompt, String userPrompt)
+    {
+        // Caller correlation is server-generated metadata, never authority or prompt instructions.
+        if (traceId == null || !traceId.matches("[a-f0-9]{32}"))
+            throw new IllegalArgumentException("server-generated traceId required");
+
+        requireScopedModeration(bizType);
 
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
+<<<<<<< public
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
         String openid = resolveOpenid(memberId);
         stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
@@ -152,6 +162,41 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
             }
             retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
+=======
+        String rateKey = null;
+        Long used = null;
+        if (!playerThemeDraft)
+        {
+            String today = LocalDate.now().format(DATE_FMT);
+            String rateGroup = rateGroupOf(bizType);
+            rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
+            used = redisTemplate.opsForValue().increment(rateKey);
+            if (isScopedNpc(bizType) && (used == null || used <= 0))
+                throw new AiServiceException("Scoped NPC quota unavailable");
+            // A prior INCR may have succeeded while EXPIRE failed: re-confirm scoped expiry.
+            if (isScopedNpc(bizType) || (used != null && used == 1))
+            {
+                Boolean expires = redisTemplate.expire(rateKey, 86400, TimeUnit.SECONDS);
+                if (isScopedNpc(bizType) && !Boolean.TRUE.equals(expires))
+                    throw new AiServiceException("Scoped NPC quota expiry unavailable");
+            }
+            int dailyLimit = dailyLimitOf(rateGroup);
+            if (used != null && used > dailyLimit)
+            {
+                log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
+                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+            }
+        }
+
+        // 2. 入参内容安全
+        String openid = resolveOpenid(memberId);
+        requireScopedModeration(bizType);
+        String secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);
+        requireScopedModeration(bizType);
+        if (secIn != null)
+        {
+            log.info("[AiGateway] input-blocked memberId={} bizType={}", memberId, bizType);
+>>>>>>> private-github/featu
             saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
             // 人工复核及未知拒绝仍沿用 UNKNOWN；只有现有微信明确违规文案改变分类。
@@ -203,8 +248,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
         catch (RuntimeException e)
         {
-            log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
+            if (isScopedNpc(bizType))
+                log.warn("[AiGateway] scoped-model-error traceId={} provider={}", traceId, modelName);
+            else log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
+<<<<<<< public
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
                     0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
             // MODEL_STARTED preserves the original receipt for the existing recovery worker.
@@ -212,6 +260,25 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // Never refund or resend merely because no answer reached this service.
             throw new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
                 "AI 请求结果待确认，请保留原请求(traceId=" + traceId + ")", e);
+=======
+            try
+            {
+                saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
+                        0, (int) (System.currentTimeMillis() - t0), tokenIn, 0);
+            }
+            finally
+            {
+                // Scoped audit failures also fail closed, but must not strand a failed provider's quota.
+                if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);
+            }
+            if (isConfigurationFailure(e))
+            {
+                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
+            }
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                "AI 繁忙,请稍后重试(traceId=" + traceId + ")", e);
+>>>>>>> private-github/featu
         }
 
         int latencyMs = (int) (System.currentTimeMillis() - t0);
@@ -219,6 +286,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         int tokenOut = estimateSingle(modelText);
 
         // 4. 出参内容安全
+<<<<<<< public
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
@@ -226,6 +294,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
+=======
+        requireScopedModeration(bizType);
+        String secOut = wxContentSecurityService.checkText(modelText, openid);
+        requireScopedModeration(bizType);
+>>>>>>> private-github/featu
         if (secOut != null)
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
@@ -395,7 +468,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     {
         // npc_event 刻意不在此列:它是 cache-only(不调模型),且今天并不经本网关
         //  (ApiAiNpcController /event 直连 NpcEventService)。真要收编时再单独判。
-        if ("npc_chat".equals(bizType))
+        if ("npc_chat".equals(bizType) || isScopedNpc(bizType))
         {
             return RATE_GROUP_NPC;
         }
@@ -433,6 +506,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         // 单测/旧路径兼容:sceneRouter 未注入时走旧 resolveClient
         if (sceneRouter == null)
         {
+            if (isScopedNpc(bizType)) throw new AiServiceException("Scoped NPC route unavailable");
             return resolveClient(aiModelConfig.getProvider());
         }
 
@@ -471,7 +545,22 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 }
             }
         }
+<<<<<<< public
         return requireAvailableClient(m.get(providerName), providerName);
+=======
+        LlmClient c = m.get(providerName);
+        if (c == null)
+        {
+            if (isScopedNpc(bizType)) throw new AiServiceException("Scoped NPC provider unavailable");
+            log.warn("[AiGateway] unknown provider={}, fallback to mock", providerName);
+            c = m.get("mock");
+        }
+        if (c == null)
+        {
+            throw new AiServiceException("无可用的 AI 模型");
+        }
+        return c;
+>>>>>>> private-github/featu
     }
 
     /** 旧单 provider 选择(兼容单测/未注入 sceneRouter 场景)。 */
@@ -553,8 +642,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
             l.setRole(role);
             l.setBizType(bizType);
             l.setProvider(provider);
-            l.setInputBrief(truncate(input, BRIEF_MAX));
-            l.setOutputBrief(truncate(output, BRIEF_MAX));
+            // Scoped retrieval may contain player/run data. Detailed correlation uses the separate
+            // redacted scoped ledger (scope/source IDs and prompt digest), never content briefs.
+            l.setInputBrief(isScopedNpc(bizType) ? "[scoped NPC input omitted]" : truncate(input, BRIEF_MAX));
+            l.setOutputBrief(isScopedNpc(bizType) ? "[scoped NPC output omitted]" : truncate(output, BRIEF_MAX));
             l.setSafetyFlag(safetyFlag);
             l.setLatencyMs(latencyMs);
             // Missing output is unknown usage, not a measured zero. All present counts are estimates.
@@ -562,12 +653,28 @@ public class AiGatewayServiceImpl implements AiGatewayService
             l.setTokenIn(tokenIn);
             l.setTokenOut(tokenOut);
             l.setTraceId(traceId);
-            aiGenerationLogMapper.insertAiGenerationLog(l);
+            int inserted = aiGenerationLogMapper.insertAiGenerationLog(l);
+            if (isScopedNpc(bizType) && inserted != 1)
+                throw new IllegalStateException("Scoped NPC audit write unconfirmed");
         }
         catch (Exception e)
         {
+            if (isScopedNpc(bizType))
+                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, "Scoped NPC audit unavailable");
             log.error("[AiGateway] log-failed", e);
         }
+    }
+
+    private void requireScopedModeration(String bizType)
+    {
+        // The legacy moderator deliberately bypasses checks while disabled. Scoped delivery cannot.
+        if (isScopedNpc(bizType) && !wxContentSecurityService.isEnabled())
+            throw new AiServiceException("Scoped NPC moderation unavailable");
+    }
+
+    private static boolean isScopedNpc(String bizType)
+    {
+        return "scoped_store_npc".equals(bizType) || "scoped_theme_npc".equals(bizType);
     }
 
     /** 粗略 token 估算: 中文 ~ 字符数/2, 英文 ~ 字符数/4, 混合取 字符数/3 */

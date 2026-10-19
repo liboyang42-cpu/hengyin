@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -103,8 +105,18 @@ class ApiTemplateMerchantOperatorScopeTest {
 
     @Test
     void merchantDeleteToggleAndListUseOwnerScope() {
+        com.chengyinhub.business.service.ICmsTemplateLibraryService libraryService =
+                mock(com.chengyinhub.business.service.ICmsTemplateLibraryService.class);
+        com.chengyinhub.business.domain.CmsTemplateLibrary library =
+                new com.chengyinhub.business.domain.CmsTemplateLibrary();
+        library.setId(171L);
+        library.setMemberTemplateId(71L);
+        library.setMemberId(OWNER);
+        library.setDelFlag(0);
+        when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(Collections.singletonList(library));
+        ReflectionTestUtils.setField(controller, "templateLibraryService", libraryService);
         when(publishService.deleteTemplateWithSync(71L, OWNER)).thenReturn(true);
-        when(publishService.updateTemplateLibraryStatus(71L, 1, OWNER)).thenReturn(true);
+        when(publishService.updateTemplateLibraryStatus(eq(71L), eq(1), eq(OWNER), any(TemplateLibraryRepublishReview.class))).thenReturn(true);
 
         assertEquals(200, controller.deleteTemplate("71", "MERCHANT").get(AjaxResult.CODE_TAG));
         assertEquals(200, controller.updateTemplateLibraryStatus("71", "1", "MERCHANT")

@@ -12,6 +12,9 @@ import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IOmsTicketService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
+import com.chengyinhub.business.service.ITopicRouteRuntimeService;
+import com.chengyinhub.business.domain.PlayerNodeProgress;
+import com.chengyinhub.business.domain.route.TopicRouteState;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,8 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -43,6 +48,7 @@ class ApiPlayPuzzleHintTest
     private ApiPlayProgressController controller;
     private PlayAttemptLogMapper attemptMapper;
     private IPlayerNodeProgressService progressService;
+    private ITopicRouteRuntimeService runtime;
 
     @BeforeEach
     void setUp()
@@ -99,13 +105,30 @@ class ApiPlayPuzzleHintTest
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attemptMapper);
         com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper =
                 mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class);
-        when(progressMapper.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        when(progressMapper.selectPlayerNodeProgressListForInstance(argThat(p -> p != null
+                && Long.valueOf(MEMBER).equals(p.getMemberId()) && Long.valueOf(TOPIC).equals(p.getTopicId())
+                && Long.valueOf(NODE).equals(p.getNodeId()) && Long.valueOf(0L).equals(p.getActivityId())), eq("default")))
+                .thenReturn(Collections.emptyList());
         com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
                 mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService",
-                new com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl(
-                        templateService, attemptMapper, progressMapper, memberMapper));
+        runtime = mock(ITopicRouteRuntimeService.class);
+        when(runtime.playInstance(MEMBER, TOPIC, 0L)).thenReturn("default");
+        when(runtime.assertCurrentPlayInstance(MEMBER, TOPIC, 0L, "default")).thenReturn(false);
+        when(runtime.canPlay(MEMBER, TOPIC, 0L, NODE, null)).thenReturn(true);
+        TopicRouteState linear = new TopicRouteState(); linear.setRouteMode(TopicRouteState.LINEAR);
+        when(runtime.state(MEMBER, TOPIC, 0L)).thenReturn(linear);
+        when(runtime.beginOriginalNodeAward(MEMBER, TOPIC, 0L, NODE, "default")).thenAnswer(invocation -> {
+            org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(java.sql.Connection.TRANSACTION_READ_COMMITTED,
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
+            return new ITopicRouteRuntimeService.NodeAwardPermit(MEMBER, TOPIC, 0L, NODE, "default", true);
+        });
+        com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl puzzle =
+                new com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl(templateService, attemptMapper, progressMapper, memberMapper);
+        ReflectionTestUtils.setField(puzzle, "routeRuntimeService", runtime);
+        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzle);
+        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));
         com.chengyinhub.business.service.IPlayerProgressionService progression =
@@ -120,7 +143,18 @@ class ApiPlayPuzzleHintTest
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
+<<<<<<< public
         CurrentPlayControllerFixtures.install(controller);
+=======
+        org.springframework.jdbc.datasource.DriverManagerDataSource ds = new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                "jdbc:h2:mem:puzzle-http-" + java.util.UUID.randomUUID(), "sa", "");
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(controller);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        controller = (ApiPlayProgressController) proxy.getProxy();
+>>>>>>> private-github/featu
     }
 
     @SuppressWarnings("unchecked")
@@ -169,7 +203,7 @@ class ApiPlayPuzzleHintTest
                 ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
         when(service.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(template);
 
-        AjaxResult result = controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC));
+        AjaxResult result = controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC), null, null);
 
         assertEquals(200, result.get("code"));
         Map<String, Object> data = (Map<String, Object>) result.get("data");
@@ -181,6 +215,8 @@ class ApiPlayPuzzleHintTest
         verify(progressService).insertPlayerNodeProgress(progress.capture());
         assertEquals(0, progress.getValue().getPuzzleScore());
         assertEquals("REVEALED", progress.getValue().getCompletionMode());
+        assertEquals("default", progress.getValue().getPlayInstanceId());
+        verify(runtime).assertCurrentPlayInstance(MEMBER, TOPIC, 0L, "default");
     }
 
     @Test
@@ -208,6 +244,47 @@ class ApiPlayPuzzleHintTest
 
         physicalTask.setValidationMethod(5);
         assertEquals(500, controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC)).get("code"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void hintStillRecordsItsFactWithoutRequiringACompletionInstanceOrAwardPermit() {
+        when(runtime.playInstance(MEMBER, TOPIC, 0L)).thenReturn(null);
+        AjaxResult result = controller.puzzleHint(null, String.valueOf(NODE), String.valueOf(TOPIC), 1);
+        assertEquals(200, result.get("code"));
+        verify(attemptMapper).insertPlayAttemptLog(any());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(runtime, never()).playInstance(MEMBER, TOPIC, 0L);
+        verify(runtime, never()).beginOriginalNodeAward(MEMBER, TOPIC, 0L, NODE, "default");
+    }
+
+    private void configureReveal() {
+        ICmsMemberTemplateService templates = (ICmsMemberTemplateService) ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+        templates.selectCmsMemberTemplateById(TEMPLATE).setAnswerReveal("1932，门楣最左边的年份");
+    }
+
+    @Test
+    void revealMissingInstanceRejectsBeforeAttemptOrCompletionWrites() {
+        configureReveal();
+        when(runtime.playInstance(MEMBER, TOPIC, 0L)).thenReturn(null);
+        com.chengyinhub.common.exception.ServiceException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC), null, null));
+        assertEquals("本局不可读取", failure.getMessage());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void anotherOwnersPermitCannotAuthorizeRevealCompletion() {
+        configureReveal();
+        org.mockito.Mockito.doReturn(new ITopicRouteRuntimeService.NodeAwardPermit(MEMBER + 1, TOPIC, 0L, NODE, "default", true))
+                .when(runtime).beginOriginalNodeAward(MEMBER, TOPIC, 0L, NODE, "default");
+        com.chengyinhub.common.exception.ServiceException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> controller.revealPuzzle(null, String.valueOf(NODE), String.valueOf(TOPIC), null, null));
+        assertEquals("原始奖励范围不可读取", failure.getMessage());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 }

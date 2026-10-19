@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousConsentMapper">
+  <resultMap id="ticketRow" type="com.chengyinhub.business.service.rendezvous.RendezvousConsentMapper$TicketRow">
+    <id property="id" column="id"/><result property="actor" column="actor_id"/>
+    <result property="pool" column="pool"/><result property="eligibilityVersion" column="eligibility_version"/>
+    <result property="expiresAt" column="expires_at"/><result property="state" column="state"/>
+    <result property="matchId" column="match_id"/>
+  </resultMap>
+  <resultMap id="matchRow" type="com.chengyinhub.business.service.rendezvous.RendezvousConsentMapper$MatchRow">
+    <id property="id" column="id"/><result property="firstTicket" column="first_ticket"/>
+    <result property="secondTicket" column="second_ticket"/><result property="publicPlace" column="public_place"/>
+    <result property="expiresAt" column="expires_at"/><result property="version" column="version"/>
+    <result property="firstAcceptedAt" column="first_accepted_at"/><result property="secondAcceptedAt" column="second_accepted_at"/>
+    <result property="state" column="state"/>
+  </resultMap>
+  <select id="lockGuard" resultType="java.lang.Integer" useCache="false" flushCache="true">SELECT id FROM w16_consent_guard WHERE id = 1 FOR UPDATE</select>
+  <select id="activeTicket" resultMap="ticketRow" useCache="false">SELECT * FROM w16_match_ticket WHERE active_actor_id = #{actor}</select>
+  <select id="ticket" resultMap="ticketRow" useCache="false">SELECT * FROM w16_match_ticket WHERE id = #{id}</select>
+  <select id="match" resultMap="matchRow" useCache="false">SELECT * FROM w16_rendezvous_match WHERE id = #{id}</select>
+  <insert id="insertTicket">
+    INSERT INTO w16_match_ticket(id, actor_id, pool, eligibility_version, expires_at, state, match_id)
+    VALUES(#{id}, #{actor}, #{pool}, #{eligibilityVersion}, #{expiresAt}, #{state}, #{matchId,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateTicket">
+    UPDATE w16_match_ticket SET state=#{state}, match_id=#{matchId,jdbcType=VARCHAR}
+    WHERE id=#{id} AND actor_id=#{actor} AND pool=#{pool} AND eligibility_version=#{eligibilityVersion} AND expires_at=#{expiresAt}
+  </update>
+  <insert id="insertMatch">
+    INSERT INTO w16_rendezvous_match(id, first_ticket, second_ticket, public_place, expires_at, version, first_accepted_at, second_accepted_at, state)
+    VALUES(#{id}, #{firstTicket}, #{secondTicket}, #{publicPlace}, #{expiresAt}, #{version}, #{firstAcceptedAt,jdbcType=BIGINT}, #{secondAcceptedAt,jdbcType=BIGINT}, #{state})
+  </insert>
+  <update id="updateMatch">
+    UPDATE w16_rendezvous_match SET version=#{version}, first_accepted_at=#{firstAcceptedAt,jdbcType=BIGINT},
+      second_accepted_at=#{secondAcceptedAt,jdbcType=BIGINT}, state=#{state}
+    WHERE id=#{id} AND first_ticket=#{firstTicket} AND second_ticket=#{secondTicket} AND public_place=#{publicPlace}
+      AND expires_at=#{expiresAt} AND version=#{version}-1
+      AND (first_accepted_at IS NULL OR first_accepted_at=#{firstAcceptedAt,jdbcType=BIGINT})
+      AND (second_accepted_at IS NULL OR second_accepted_at=#{secondAcceptedAt,jdbcType=BIGINT})
+  </update>
+  <select id="reservation" resultType="java.lang.String" useCache="false">SELECT match_id FROM w16_match_reservation WHERE ticket_id=#{ticketId}</select>
+  <insert id="insertReservation">INSERT INTO w16_match_reservation(ticket_id, match_id) VALUES(#{ticketId}, #{matchId})</insert>
+  <delete id="deleteReservation">DELETE FROM w16_match_reservation WHERE ticket_id=#{ticketId} AND match_id=#{matchId}</delete>
+</mapper>

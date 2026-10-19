@@ -22,6 +22,7 @@ import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IClubPostCommentService;
 import com.chengyinhub.business.service.impl.AuditTaskServiceImpl;
 import com.chengyinhub.business.service.support.JourneyReviewTextService;
+import com.chengyinhub.business.service.support.release.ContentCaptureReviewConflictException;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -264,6 +265,10 @@ public class AuditWorkbenchController extends BaseController {
             }
             AjaxResult conflict = new AjaxResult(HttpStatus.CONFLICT, "审核状态已变化，请刷新后重试");
             conflict.put("errorCode", "AUDIT_STATE_CONFLICT");
+            return conflict;
+        } catch (ContentCaptureReviewConflictException e) {
+            AjaxResult conflict = new AjaxResult(HttpStatus.CONFLICT, "候选绑定或版本已变化，请刷新后核对证据");
+            conflict.put("errorCode", "AUDIT_SNAPSHOT_STALE");
             return conflict;
         } catch (IllegalArgumentException e) {
             AjaxResult badRequest = new AjaxResult(HttpStatus.BAD_REQUEST, e.getMessage());

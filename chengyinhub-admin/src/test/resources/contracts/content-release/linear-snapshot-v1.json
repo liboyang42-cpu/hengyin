@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1, "startNodeId": 1, "terminalNodeIds": [3], "variables": {},
+  "nodeJourney": {}, "nodeAnswers": {"1": {}, "2": {}, "3": {}},
+  "journeyRules": null, "journeyStory": "", "topicCompleteRule": null,
+  "thoughtChapters": [], "stateKeys": []
+}

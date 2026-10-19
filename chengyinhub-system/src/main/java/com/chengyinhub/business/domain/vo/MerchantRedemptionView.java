@@ -14,6 +14,9 @@ public class MerchantRedemptionView {
     private String customerDisplayName;
     private String verificationCodeTail;
     private String settlementAmount;
+    /** Frozen single-person original accrual basis; absent when not provable. */
+    private String unitFee;
+    private Integer headCount;
     private String fulfillmentState;
     private String settlementState;
     private String settlementRoute;
@@ -39,6 +42,10 @@ public class MerchantRedemptionView {
     public void setCustomerDisplayName(String value) { customerDisplayName = value; }
     public String getVerificationCodeTail() { return verificationCodeTail; }
     public void setVerificationCodeTail(String value) { verificationCodeTail = value; }
+    public String getUnitFee() { return unitFee; }
+    public void setUnitFee(String value) { unitFee = value; }
+    public Integer getHeadCount() { return headCount; }
+    public void setHeadCount(Integer value) { headCount = value; }
     public String getSettlementAmount() { return settlementAmount; }
     public void setSettlementAmount(String value) { settlementAmount = value; }
     public String getFulfillmentState() { return fulfillmentState; }

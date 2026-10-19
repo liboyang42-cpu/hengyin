@@ -1951,6 +1951,8 @@ public class ApiMerchantController extends BaseController {
     private void redactRedemptionFinance(MerchantRedemptionView row) {
         if (row == null) return;
         row.setSettlementAmount(null);
+        row.setUnitFee(null);
+        row.setHeadCount(null);
         row.setSettlementState(null);
         row.setSettlementRoute(null);
         row.setDisplayState(null);

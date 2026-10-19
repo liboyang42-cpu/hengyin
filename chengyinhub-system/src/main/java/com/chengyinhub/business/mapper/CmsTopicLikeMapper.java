@@ -23,6 +23,10 @@ public interface CmsTopicLikeMapper
      */
     public int selectUmsMemberLikeNumByMemberId(Long member_id);
 
+    long countOwnTopicLikes(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
+
+    int deleteOwnTopicLikes(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
+
 
     /**
      * 查询主题点赞

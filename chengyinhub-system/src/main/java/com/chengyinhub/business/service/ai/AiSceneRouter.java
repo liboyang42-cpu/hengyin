@@ -44,6 +44,8 @@ public class AiSceneRouter
         //  ① 两轨的合规范围不同(漫游自由追问 vs 只谈本店),成本与配额要能分别看;
         //  ② 漏注册的代价见下面 FALLBACK 那段注释 —— 生产静默返回假文案、全链零信号。
         m.put("merchant_npc_chat",     "deepseek");
+        m.put("scoped_store_npc",      "deepseek");
+        m.put("scoped_theme_npc",      "deepseek");
         m.put("npc_event",             "cache");
         ROUTES = Collections.unmodifiableMap(m);
     }

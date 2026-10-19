@@ -66,6 +66,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -74,6 +75,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.argThat;
 
 /**
  * R18-FREEZE V8:新发布不改写进行中的一局。
@@ -117,11 +121,14 @@ class JourneyPublishFreezeTest {
     private final IPointsAwardService pointsAwardService = mock(IPointsAwardService.class);
     private final UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);
     private final PlayAttemptLogMapper puzzleAttemptMapper = mock(PlayAttemptLogMapper.class);
+    private final PlayerNodeProgressMapper puzzleProgressMapper = mock(PlayerNodeProgressMapper.class);
     private final PuzzlePlayServiceImpl puzzlePlayService = new PuzzlePlayServiceImpl(
             mock(ICmsMemberTemplateService.class), puzzleAttemptMapper,
-            mock(PlayerNodeProgressMapper.class), memberMapper);
+            puzzleProgressMapper, memberMapper);
     private final PreferencePlayService preferencePlayService = mock(PreferencePlayService.class);
-    private final ApiPlayProgressController controller = spy(new ApiPlayProgressController());
+    private ApiPlayProgressController controller = spy(new ApiPlayProgressController());
+    private ApiPlayProgressController unproxiedController;
+    private org.springframework.jdbc.datasource.DataSourceTransactionManager transactions;
 
     private TopicRouteRuntimeServiceImpl runtime;
     private TopicRouteSession[] stored;
@@ -134,9 +141,9 @@ class JourneyPublishFreezeTest {
 
     @BeforeEach
     void setUp() {
-        runtime = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
+        runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
                 progressMapper, activityMapper, registrationMapper, roleMapper, shopDayProofService,
-                () -> 12345L, () -> 12, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                () -> 12345L, () -> 12, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), templateMapper);
         stored = new TopicRouteSession[1];
         actions = new ArrayList<TopicRouteAction>();
 
@@ -190,8 +197,15 @@ class JourneyPublishFreezeTest {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(template);
         when(templateService.selectCmsMemberTemplateById(TEMPLATE)).thenReturn(template);
 
-        when(routeMapper.selectByOwner(anyLong(), eq(TOPIC), eq(MEMBER), eq("default")))
+        when(routeMapper.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
                 .thenAnswer(inv -> stored[0]);
+        when(routeMapper.selectByOwnerForUpdate(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenAnswer(inv -> stored[0]);
+        when(routeMapper.selectCurrentByOwnerForUpdate(ACTIVITY, TOPIC, MEMBER)).thenAnswer(inv -> stored[0]);
+        when(routeMapper.selectCurrentCandidatesByOwners(argThat(scopes -> scopes != null && scopes.size() == 1
+                && MEMBER.equals(scopes.get(0).getMemberId()) && TOPIC.equals(scopes.get(0).getTopicId())
+                && ACTIVITY.equals(scopes.get(0).getActivityId()))))
+                .thenAnswer(inv -> stored[0] == null ? Collections.emptyList() : Collections.singletonList(stored[0]));
         when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenAnswer(inv -> java.util.Collections.singletonList(stored[0]));
         when(routeMapper.insertSession(any(TopicRouteSession.class))).thenAnswer(inv -> {
             TopicRouteSession value = inv.getArgument(0);
@@ -215,10 +229,31 @@ class JourneyPublishFreezeTest {
         when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
                 .thenReturn(Collections.emptyList());
         when(shopDayProofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
+        ReflectionTestUtils.setField(runtime, "originalAwardMemberMapper", memberMapper);
+        Map<String, Object> unconsumed = new java.util.LinkedHashMap<>();
+        unconsumed.put("legacyCompleted", false); unconsumed.put("dropConsumed", false); unconsumed.put("couponConsumed", false);
+        when(progressMapper.selectOriginalNodeAwardEvidence(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(unconsumed);
+        when(progressMapper.selectOriginalInstanceAwardSessions(MEMBER, ACTIVITY, NODE)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(puzzlePlayService, "routeRuntimeService", runtime);
+        when(puzzleProgressMapper.selectPlayerNodeProgressListForInstance(argThat(p -> p != null
+                && MEMBER.equals(p.getMemberId()) && TOPIC.equals(p.getTopicId()) && ACTIVITY.equals(p.getActivityId())
+                && NODE.equals(p.getNodeId())), eq("default"))).thenReturn(Collections.emptyList());
 
         wireController();
+<<<<<<< public
         CurrentPlayControllerFixtures.install(controller);
         com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
+=======
+        unproxiedController = controller;
+        transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(
+                new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                        "jdbc:h2:mem:freeze-" + java.util.UUID.randomUUID(), "sa", ""));
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(controller);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        controller = (ApiPlayProgressController) proxy.getProxy();
+>>>>>>> private-github/featu
     }
 
     private void wireController() {
@@ -252,7 +287,7 @@ class JourneyPublishFreezeTest {
         when(progressionService.onNodeDone(anyLong())).thenReturn(new ArrayList<>());
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
-        when(memberMapper.lockMemberById(anyLong())).thenReturn(MEMBER);
+        when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
         when(puzzleAttemptMapper.insertPlayAttemptLog(any())).thenReturn(1);
     }
 
@@ -260,6 +295,40 @@ class JourneyPublishFreezeTest {
     private void startRun() {
         runtime.state(MEMBER, TOPIC, ACTIVITY);
         assertNotNull(stored[0], "开局必须建局");
+    }
+
+    @Test
+    void unproxiedCompletionCannotPretendToHaveTheMappedRcTransaction() {
+        startRun();
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> unproxiedController.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null));
+        assertEquals("节点奖励必须在原始读已提交事务内判定", failure.getMessage());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void mappedRcCompletionCannotSilentlyOverrideAnExistingRrTransaction() {
+        startRun();
+        org.springframework.transaction.support.TransactionTemplate rr = new org.springframework.transaction.support.TransactionTemplate(transactions);
+        rr.setIsolationLevel(java.sql.Connection.TRANSACTION_REPEATABLE_READ);
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> rr.execute(status -> controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null)));
+        assertEquals("节点奖励必须在原始读已提交事务内判定", failure.getMessage());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void wrongOwnerReturnedByCurrentLockingReadCannotCompleteTheFrozenNode() {
+        startRun();
+        TopicRouteSession foreign = new TopicRouteSession();
+        foreign.setId(199L); foreign.setMemberId(MEMBER + 1); foreign.setTopicId(TOPIC);
+        foreign.setActivityId(ACTIVITY); foreign.setPlayInstanceId("default");
+        when(routeMapper.selectByOwnerForUpdate(ACTIVITY, TOPIC, MEMBER, "default")).thenReturn(foreign);
+        com.chengyinhub.common.exception.ServiceException failure = assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null));
+        assertEquals("无权访问这一局", failure.getMessage());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(memberMapper, never()).lockMemberById(MEMBER);
     }
 
     // ==================== 1. 模板答案按开局快照判定 ====================

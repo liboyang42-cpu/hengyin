@@ -104,12 +104,22 @@ class RoamSessionWriteMybatisIntegrationTest {
                 + "radius_m INT, address VARCHAR(100), description TEXT, xp INT, coupon_template_id BIGINT, city_code VARCHAR(30),"
                 + "status INT, audit_status INT, application_type VARCHAR(30), applicant_merchant_id BIGINT, audit_reason TEXT,"
                 + "create_time DATETIME, merchant_id BIGINT, template_id BIGINT, node_level INT, tags TEXT, cover_img TEXT, sort INT) ENGINE=InnoDB");
+<<<<<<< public
         db.update("INSERT INTO roam_poi(id,name,type,lat,lng,radius_m,xp,status) VALUES(1,'test poi',1,31,121,100,20,1)");
         db.execute("CREATE TABLE roam_poi_reward_log(id bigint primary key auto_increment,member_id bigint,poi_id bigint,coupon_id bigint,trigger_lat decimal(10,6),trigger_lng decimal(10,6),status int,create_time datetime) engine=InnoDB");
         try(java.sql.Connection connection=db.getDataSource().getConnection()) {
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,new org.springframework.core.io.FileSystemResource("sql/migration_20261012_roam_claim_fingerprints.sql"));
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,new org.springframework.core.io.FileSystemResource("sql/migration_20261012_roam_anonymous_shop_visitors.sql"));
         }
+=======
+        // Exact columns used by playerLegacyTemplateReadable. This is a canonical legacy
+        // source row, not a license or a substitute permission provider.
+        db.execute("CREATE TABLE cms_member_template(id BIGINT PRIMARY KEY, member_id BIGINT, title VARCHAR(255),"
+                + "w18_provenance_kind VARCHAR(32) NULL) ENGINE=InnoDB");
+        db.execute("CREATE TABLE w18_cms_template_provenance(template_id BIGINT PRIMARY KEY) ENGINE=InnoDB");
+        db.update("INSERT INTO cms_member_template(id,member_id,title,w18_provenance_kind) VALUES(501,77,'ordinary legacy source',NULL)");
+        db.update("INSERT INTO roam_poi(id,name,type,lat,lng,radius_m,xp,status,template_id) VALUES(1,'test poi',1,31,121,100,20,1,501)");
+>>>>>>> private-github/featu
     }
 
     @AfterAll void cleanup() { if (databaseCreated && database != null && admin != null) admin.execute("DROP DATABASE " + database); }
@@ -142,10 +152,15 @@ class RoamSessionWriteMybatisIntegrationTest {
         couponProxy.addAdvice(new TransactionInterceptor(transactions, couponTx));
         coupons = (com.chengyinhub.business.service.ISmsCouponHistoryService) couponProxy.getProxy();
         db.update("UPDATE roam_poi SET type=1 WHERE id=1");
+<<<<<<< public
         new com.chengyinhub.business.security.PiiCryptoService(java.util.Base64.getEncoder().encodeToString(new byte[32]),"test-roam-claim-hmac").register();
         badgeWriter = mock(PlayerBadgeMapper.class, org.mockito.AdditionalAnswers.delegatesTo(sql.getMapper(PlayerBadgeMapper.class)));
         badgeDelivery = new com.chengyinhub.business.service.impl.RoamBadgeDeliveryService(
                 sql.getMapper(com.chengyinhub.business.mapper.RoamBadgeDeliveryMapper.class), badgeWriter, mapper, transactions);
+=======
+        assertEquals(1, sql.getMapper(RoamMapper.class).selectPlayerPoisByIds(java.util.Collections.singletonList(1L)).size(),
+                "Every action/race fixture must begin with a real readable canonical legacy source");
+>>>>>>> private-github/featu
         owner = controller(77L);
         stranger = controller(88L);
     }

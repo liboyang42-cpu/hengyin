@@ -173,6 +173,7 @@ class ChapterFlowWriteServiceTest
         set("sysCategoryService", mock(ISysCategoryService.class));
         memberTemplateMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         set("cmsMemberTemplateMapper", memberTemplateMapper);
+<<<<<<< public
         // Actual media schema/reference admission; only reviewed persistence is a fixture.
         com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         for (long mediaId : new long[] {901L, 902L, 903L}) when(assets.select(mediaId)).thenReturn(java.util.Map.of(
@@ -188,6 +189,14 @@ class ChapterFlowWriteServiceTest
         ReflectionTestUtils.setField(media, "nodes", nodeMapper);
         ReflectionTestUtils.setField(media, "templates", memberTemplateMapper);
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
+=======
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
+>>>>>>> private-github/featu
     }
 
     @Test

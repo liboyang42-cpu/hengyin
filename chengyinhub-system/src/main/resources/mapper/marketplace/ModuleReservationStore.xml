@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.reservation.store.ModuleReservationStore">
+  <resultMap id="Reservation" type="com.chengyinhub.business.marketplace.reservation.store.ModuleReservationRow">
+    <result property="reservationKey" column="reservation_key"/>
+    <result property="buyerKind" column="buyer_kind"/>
+    <result property="buyerId" column="buyer_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="licenseKey" column="license_key"/>
+    <result property="licenseId" column="license_id"/>
+    <result property="payloadHash" column="payload_hash"/>
+    <result property="authorityHash" column="authority_hash"/>
+    <result property="moduleId" column="module_id"/>
+    <result property="versionId" column="version_id"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="offerVersion" column="offer_version"/>
+    <result property="termsHash" column="terms_hash"/>
+    <result property="sellerKind" column="seller_kind"/>
+    <result property="sellerId" column="seller_id"/>
+    <result property="sourceEventId" column="source_event_id"/>
+    <result property="grantEvidenceReference" column="grant_evidence_reference"/>
+    <result property="approvalReference" column="approval_reference"/>
+    <result property="draftId" column="draft_id"/>
+    <result property="draftRevision" column="draft_revision"/>
+    <result property="actorId" column="actor_id"/>
+    <result property="state" column="state"/>
+    <result property="reservedAt" column="reserved_at"/>
+    <result property="expiresAt" column="expires_at"/>
+    <result property="terminalAt" column="terminal_at"/>
+  </resultMap>
+  <insert id="ensureMutex">
+    INSERT INTO w18_module_install_mutex (lock_key) VALUES (#{key})
+    ON DUPLICATE KEY UPDATE lock_key = VALUES(lock_key)
+  </insert>
+  <select id="lockMutex" resultType="string">
+    SELECT lock_key FROM w18_module_install_mutex WHERE lock_key = #{key} FOR UPDATE
+  </select>
+  <select id="find" resultMap="Reservation">
+    SELECT * FROM w18_module_install_reservation WHERE reservation_key = #{key}
+  </select>
+  <select id="findForUpdate" resultMap="Reservation">
+    SELECT * FROM w18_module_install_reservation WHERE reservation_key = #{key} FOR UPDATE
+  </select>
+  <insert id="insertReservation">
+    INSERT INTO w18_module_install_reservation
+    (reservation_key, buyer_kind, buyer_id, request_id, license_key, license_id, payload_hash, authority_hash, module_id, version_id, content_hash, offer_version, terms_hash, seller_kind, seller_id, source_event_id, grant_evidence_reference, approval_reference, draft_id, draft_revision, actor_id, state, reserved_at, expires_at, terminal_at)
+    VALUES (#{reservationKey}, #{buyerKind}, #{buyerId}, #{requestId}, #{licenseKey}, #{licenseId}, #{payloadHash}, #{authorityHash}, #{moduleId}, #{versionId}, #{contentHash}, #{offerVersion}, #{termsHash}, #{sellerKind}, #{sellerId}, #{sourceEventId}, #{grantEvidenceReference}, #{approvalReference}, #{draftId}, #{draftRevision}, #{actorId}, #{state}, #{reservedAt}, #{expiresAt}, #{terminalAt})
+  </insert>
+  <insert id="insertScope">
+    INSERT INTO w18_module_install_scope (reservation_key, scope_kind, scope_id) VALUES (#{key}, #{kind}, #{id})
+  </insert>
+  <insert id="insertBinding">
+    INSERT INTO w18_module_install_binding
+      (reservation_key, placeholder_key, placeholder_name, resource_kind, resource_id, merchant_id,
+       authority_reference, region, valid_until)
+    VALUES (#{key}, #{placeholderKey}, #{placeholder}, #{kind}, #{resourceId}, #{merchantId},
+            #{authorityReference}, #{region}, #{validUntil})
+  </insert>
+  <select id="activeScopes" resultType="long">
+    SELECT s.scope_id FROM w18_module_install_scope s
+      JOIN w18_module_install_reservation r ON r.reservation_key = s.reservation_key
+    WHERE r.license_key = #{licenseKey}
+      AND (r.state = 'CONSUMED' OR (r.state = 'RESERVED' AND r.expires_at &gt; #{now}))
+      AND s.scope_kind = #{kind}
+    ORDER BY s.scope_id FOR UPDATE
+  </select>
+  <update id="expireLicense">
+    UPDATE w18_module_install_reservation SET state = 'EXPIRED', terminal_at = #{now}
+    WHERE license_key = #{licenseKey} AND state = 'RESERVED' AND expires_at &lt;= #{now}
+  </update>
+  <update id="release">
+    UPDATE w18_module_install_reservation SET state = #{state}, terminal_at = #{now}
+    WHERE reservation_key = #{key} AND buyer_kind = #{buyerKind} AND buyer_id = #{buyerId} AND state = 'RESERVED'
+  </update>
+</mapper>

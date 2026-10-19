@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.chengyinhub.business.domain.dto.ContentDraftCommand;
+import com.chengyinhub.business.domain.ContentDraft;
+import com.chengyinhub.business.domain.vo.ContentDraftRestoreView;
+import com.chengyinhub.business.marketplace.editor.InstalledDraftReceiptReader;
+import com.chengyinhub.business.marketplace.editor.InstalledDraftReceipts;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -22,6 +26,10 @@ public class ApiContentDraftController extends BaseController {
     @Autowired
     private IMerchantAccessService merchantAccessService;
 
+    // Default absent: no W18 bean, migration or content-use activation is implied by this seam.
+    @Autowired(required = false)
+    private InstalledDraftReceiptReader installedDraftReceiptReader;
+
     @PostMapping("/save")
     public AjaxResult save(@RequestBody ContentDraftCommand command) {
         return invoke(() -> draftService.save(ownerMemberId(getAppUserId(), command.getScope()), command));
@@ -30,7 +38,20 @@ public class ApiContentDraftController extends BaseController {
     @PostMapping("/restore")
     public AjaxResult restore(String draft_id, String scope) {
         Long id = com.chengyinhub.common.core.text.Convert.toLong(draft_id, 0L);
-        return invoke(() -> draftService.restore(ownerMemberId(getAppUserId(), scope), id));
+        return invoke(() -> {
+            Long principal = getAppUserId();
+            Long owner = ownerMemberId(principal, scope);
+            ContentDraft draft = draftService.restore(owner, id);
+            InstalledDraftReceipts receipts;
+            if (MerchantOperationScope.isMerchant(scope) || !java.util.Objects.equals(principal, owner)) {
+                receipts = InstalledDraftReceipts.unavailable(InstalledDraftReceipts.Availability.OWNER_ONLY);
+            } else if (installedDraftReceiptReader == null) {
+                receipts = InstalledDraftReceipts.unavailable(InstalledDraftReceipts.Availability.NOT_ENABLED);
+            } else {
+                receipts = installedDraftReceiptReader.read(principal, draft.getId(), draft.getVersion(), draft.getPayloadHash());
+            }
+            return new ContentDraftRestoreView(draft, receipts);
+        });
     }
 
     @PostMapping("/list")

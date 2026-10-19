@@ -4,6 +4,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.MmsMerchantMapper">
 
+    <select id="selectNpcScopeOwnerById" resultMap="MmsMerchantResult">
+        SELECT id, member_id, status, account_status, del_flag
+        FROM mms_merchant WHERE id = #{id}
+    </select>
+
     <resultMap type="MmsMerchant" id="MmsMerchantResult">
         <result property="id"    column="id"    />
         <result property="memberId"    column="member_id"    />

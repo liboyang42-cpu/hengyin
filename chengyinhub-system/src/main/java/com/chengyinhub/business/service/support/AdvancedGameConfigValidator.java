@@ -780,6 +780,7 @@ public class AdvancedGameConfigValidator {
             // 相等既可以读成"全天开放"也可以读成"永不开放",歧义比不合法更危险
             throw new IllegalArgumentException("开放时段的起止不能相同");
         }
+        TimeWindowSchedule.zone(timeWindow);
         optionalText(timeWindow, "eyebrow", 32, "时段限定眉标不能超过 32 字");
         optionalText(timeWindow, "title", 32, "时段限定标题不能超过 32 字");
         optionalText(timeWindow, "subscribeTmplId", 64, "订阅消息模板 id 不能超过 64 字");
@@ -1858,7 +1859,8 @@ public class AdvancedGameConfigValidator {
         String op = item.path("op").asText("");
         if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
             if (!item.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !item.path("quantity").isIntegralNumber()
-                    || item.path("quantity").asInt() < 1 || item.path("quantity").asLong() > 999) throw new IllegalArgumentException(label + " 的物资条件不合法");
+                    || !item.path("quantity").canConvertToLong() || item.path("quantity").asLong() < 1
+                    || item.path("quantity").asLong() > 999) throw new IllegalArgumentException(label + " 的物资条件不合法");
             return;
         }
         if ("NODE_COMPLETED".equals(op)) {

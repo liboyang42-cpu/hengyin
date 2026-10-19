@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidProfessionalOperationStore">
+ <insert id="insertIfAbsent">
+  INSERT INTO w18_paid_professional_operation(operation_key,owner_member_id,request_id,command_hash,command_data,state,rejection_code,created_at,updated_at)
+  VALUES(#{operationKey},#{ownerMemberId},#{requestId},#{commandHash},#{commandData},#{state},#{rejectionCode},#{createdAt},#{updatedAt})
+  ON DUPLICATE KEY UPDATE operation_key=operation_key
+ </insert>
+ <select id="lock" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalOperationRow" useCache="false" flushCache="true">
+  SELECT operation_key AS operationKey,owner_member_id AS ownerMemberId,request_id AS requestId,command_hash AS commandHash,
+   LENGTH(command_data) AS commandBytes,CASE WHEN LENGTH(command_data)&lt;=4096 THEN command_data ELSE NULL END AS commandData,
+   state,rejection_code AS rejectionCode,created_at AS createdAt,updated_at AS updatedAt
+  FROM w18_paid_professional_operation WHERE operation_key=#{key} AND owner_member_id=#{actor} FOR UPDATE
+ </select>
+ <select id="history" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalOperationRow" useCache="false" flushCache="true">
+  SELECT operation_key AS operationKey,owner_member_id AS ownerMemberId,request_id AS requestId,command_hash AS commandHash,
+   LENGTH(command_data) AS commandBytes,CASE WHEN LENGTH(command_data)&lt;=4096 THEN command_data ELSE NULL END AS commandData,
+   state,rejection_code AS rejectionCode,created_at AS createdAt,updated_at AS updatedAt
+  FROM w18_paid_professional_operation WHERE owner_member_id=#{actor}
+  <if test="before != null">AND operation_key &lt; #{before}</if> ORDER BY operation_key DESC LIMIT 51
+ </select>
+ <update id="finish">
+  UPDATE w18_paid_professional_operation SET state=#{state},rejection_code=#{reason},updated_at=#{at}
+  WHERE operation_key=#{key} AND owner_member_id=#{actor} AND command_hash=#{hash} AND state='PREPARED'
+ </update>
+</mapper>

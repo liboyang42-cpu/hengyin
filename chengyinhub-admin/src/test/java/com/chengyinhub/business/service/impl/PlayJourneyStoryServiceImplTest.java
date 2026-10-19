@@ -270,7 +270,9 @@ class PlayJourneyStoryServiceImplTest {
     }
 
     @Test
-    void stageEndRejectsChapterThatDoesNotBelongToTopic() {
+    void stageEndRejectsChapterThatDoesNotBelongToTopic() throws Exception {
+        when(sessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Collections.singletonList(
+                session(TopicRouteSession.STATUS_RUNNING, state(null, null, longSet()))));
         CmsTopicChapter foreign = new CmsTopicChapter();
         foreign.setId(CHAPTER);
         foreign.setTopicId(999L);
@@ -280,6 +282,7 @@ class PlayJourneyStoryServiceImplTest {
                 () -> service.stageEnd(MEMBER, TOPIC, CHAPTER));
 
         assertTrue(error.getMessage().contains("章节不存在"), error.getMessage());
+        org.mockito.Mockito.verify(chapterMapper).selectCmsTopicChapterById(CHAPTER);
     }
 
     @Test

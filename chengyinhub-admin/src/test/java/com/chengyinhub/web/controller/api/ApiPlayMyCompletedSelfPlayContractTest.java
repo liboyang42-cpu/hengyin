@@ -78,7 +78,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeService);
 
         when(registrationService.selectExplorePassesByActivity(PLAYER)).thenReturn(Collections.emptyMap());
-        when(routeService.sessionStatuses(any())).thenReturn(Collections.emptyMap());
+        when(routeService.currentSessionFacts(any())).thenReturn(Collections.emptyMap());
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
     }
 
@@ -108,6 +108,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         p.setTopicId(topicId);
         p.setNodeId(nodeId);
         p.setStatus(status);
+        p.setPlayInstanceId("default");
         return p;
     }
 
@@ -177,9 +178,10 @@ class ApiPlayMyCompletedSelfPlayContractTest
         when(topicService.selectCmsTopicById(SELF_TOPIC)).thenReturn(topic(SELF_TOPIC, "分支自玩"));
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.singletonList(
                 row(0L, SELF_TOPIC, 11L, 1)));
-        Map<String, Integer> statuses = new HashMap<>();
-        statuses.put(ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC, 0L), com.chengyinhub.business.domain.TopicRouteSession.STATUS_COMPLETED);
-        when(routeService.sessionStatuses(any())).thenReturn(statuses);
+        Map<String, ITopicRouteRuntimeService.CurrentSessionFact> facts = new HashMap<>();
+        facts.put(ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC, 0L), new ITopicRouteRuntimeService.CurrentSessionFact(
+                com.chengyinhub.business.domain.TopicRouteSession.STATUS_COMPLETED, "default", false));
+        stubSelfPlayFacts(facts);
 
         List<Map<String, Object>> list = call();
 
@@ -195,9 +197,10 @@ class ApiPlayMyCompletedSelfPlayContractTest
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Arrays.asList(
                 row(0L, SELF_TOPIC, 11L, 1),
                 row(0L, SELF_TOPIC, 12L, 1)));
-        Map<String, Integer> statuses = new HashMap<>();
-        statuses.put(ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC, 0L), com.chengyinhub.business.domain.TopicRouteSession.STATUS_RUNNING);
-        when(routeService.sessionStatuses(any())).thenReturn(statuses);
+        Map<String, ITopicRouteRuntimeService.CurrentSessionFact> facts = new HashMap<>();
+        facts.put(ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC, 0L), new ITopicRouteRuntimeService.CurrentSessionFact(
+                com.chengyinhub.business.domain.TopicRouteSession.STATUS_RUNNING, "default", false));
+        stubSelfPlayFacts(facts);
 
         assertTrue(call().isEmpty(), "分支会话未完成不得因节点计数像满就进入");
     }
@@ -370,6 +373,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertNull(selfPlayItem.get("activityId"));
     }
     @Test
+<<<<<<< public
     void publicReferencePurposePreservesDefaultHistoryAndErrors()
     {
         com.chengyinhub.business.service.ICommunityPostService references =
@@ -392,6 +396,34 @@ class ApiPlayMyCompletedSelfPlayContractTest
         doReturn(failure).when(controller).myCompleted();
         org.junit.jupiter.api.Assertions.assertSame(failure, controller.myCompleted(true));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.times(1)).filterPublicCompletedReferences(anyLong(), any());
+=======
+    void foreignCompletedFactsCannotCompleteTheRequestedSelfPlayScope() {
+        seedNodes(SELF_TOPIC, 5);
+        when(topicService.selectCmsTopicById(SELF_TOPIC)).thenReturn(topic(SELF_TOPIC, "分支自玩"));
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.singletonList(
+                row(0L, SELF_TOPIC, 11L, 1)));
+        for (String foreignKey : Arrays.asList(
+                ITopicRouteRuntimeService.sessionKey(PLAYER + 1, SELF_TOPIC, 0L),
+                ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC + 1, 0L),
+                ITopicRouteRuntimeService.sessionKey(PLAYER, SELF_TOPIC, ACTIVITY))) {
+            stubSelfPlayFacts(Collections.singletonMap(foreignKey,
+                    new ITopicRouteRuntimeService.CurrentSessionFact(
+                            com.chengyinhub.business.domain.TopicRouteSession.STATUS_COMPLETED, "default", false)));
+            assertTrue(call().isEmpty(), "外来 member/topic/activity 的完成事实不得推进本人主题: " + foreignKey);
+        }
+    }
+
+    private void stubSelfPlayFacts(Map<String, ITopicRouteRuntimeService.CurrentSessionFact> facts) {
+        org.mockito.Mockito.doAnswer(call -> {
+            List<com.chengyinhub.business.domain.TopicRouteSession> scopes = call.getArgument(0);
+            assertEquals(1, scopes.size());
+            assertEquals(Long.valueOf(PLAYER), scopes.get(0).getMemberId());
+            assertEquals(Long.valueOf(SELF_TOPIC), scopes.get(0).getTopicId());
+            assertEquals(Long.valueOf(0L), scopes.get(0).getActivityId());
+            assertEquals("default", scopes.get(0).getPlayInstanceId());
+            return facts;
+        }).when(routeService).currentSessionFacts(any());
+>>>>>>> private-github/featu
     }
 
 }

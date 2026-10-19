@@ -108,4 +108,9 @@ public interface SmsCouponMapper
      * @return 受影响行数(1=本次停发,0=未改动)
      */
     public int stopIssuingCoupon(@Param("id") Long id, @Param("ownerMemberId") Long ownerMemberId);
+    /** 命令停发同时在 SQL 中固定商家与归属，不改变旧接口。 */
+    int stopIssuingMerchantCommand(@Param("id") Long id, @Param("ownerMemberId") Long ownerMemberId,
+                                  @Param("merchantId") Long merchantId);
+    SmsCoupon selectMerchantCommandCurrent(@Param("id") Long id,
+            @Param("ownerMemberId") Long ownerMemberId, @Param("merchantId") Long merchantId);
 }

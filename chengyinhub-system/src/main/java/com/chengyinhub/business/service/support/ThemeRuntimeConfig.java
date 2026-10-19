@@ -5,11 +5,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** 通用主题配置。目录、触发和场景只含受控数据，不接受脚本或系统属性写入。 */
 public final class ThemeRuntimeConfig {
     private static final ObjectMapper JSON = new ObjectMapper();
+<<<<<<< public
     private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "actionName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters", "gameplayRuntime", "templateBindings");
+=======
+    // 与 AdvancedGameConfigValidator / JourneyStoryValidator 的只读条件语法一致。
+    private static final Pattern SYS_ASKED_REFERENCE =
+            Pattern.compile("^sys\\.asked\\.([1-9][0-9]*)\\.([A-Za-z0-9_-]{1,32})$");
+    private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters");
+>>>>>>> private-github/featu
     public static ObjectNode parse(String raw) { return parse(raw,false); }
     public static ObjectNode parseDraft(String raw) { return parse(raw,true); }
     public static ObjectNode parseForNodeSave(String raw) { return parse(raw, true, true); }
@@ -23,6 +32,7 @@ public final class ThemeRuntimeConfig {
             if (!node.isObject() || raw.length() > 200000) fail("主题配置格式或长度不正确");
             ObjectNode config = (ObjectNode) node;
             fields(config, ROOT); integer(config, "schemaVersion", 1, 1);
+            validateReferenceShapes(config);
             if(config.path("items").size()>0)integer(config,"capacity",1,999);
             else if(config.has("capacity"))integer(config,"capacity",0,999);else config.put("capacity",0);
             if(config.has("actionLimit"))integer(config,"actionLimit",1,99999);
@@ -60,12 +70,21 @@ public final class ThemeRuntimeConfig {
                 grants(scene, items); events(scene, items); endings(scene, items);
                 if(scene.has("nodeConfigs")) {
                     if(!scene.get("nodeConfigs").isObject() || scene.get("nodeConfigs").size()>200)fail("场景节点玩法格式不正确");
+<<<<<<< public
                     java.util.Iterator<String> nodeKeys=scene.get("nodeConfigs").fieldNames();
                     while(nodeKeys.hasNext()) {
                         String key=nodeKeys.next();
                         boolean client = allowClientKeys && key.startsWith("client:") && key.length()>7 && key.length()<=71 && key.substring(7).equals(key.substring(7).trim());
                         if(!key.matches("[1-9][0-9]{0,17}") && !client)fail("场景节点 ID 不正确");
                         new AdvancedGameConfigValidator().validateAndNormalize(scene.get("nodeConfigs").get(key).toString());
+=======
+                    ObjectNode nodeConfigs = (ObjectNode) scene.get("nodeConfigs");
+                    java.util.Iterator<String> nodeKeys=nodeConfigs.fieldNames();
+                    while(nodeKeys.hasNext()) {
+                        String key=nodeKeys.next();sceneNodeId(key);
+                        String normalized = new AdvancedGameConfigValidator().validateAndNormalize(nodeConfigs.get(key).toString());
+                        nodeConfigs.set(key, JSON.readTree(normalized));
+>>>>>>> private-github/featu
                     }
                 }
                 if (scene.has("journeyStory")) new JourneyStoryValidator().validate(scene.get("journeyStory").toString(), JourneyStoryValidator.Context.none());
@@ -265,12 +284,39 @@ public final class ThemeRuntimeConfig {
     }
     public static void assertReferences(ObjectNode config, Set<Long> nodeIds, Set<String> stateKeys) {
         if (config == null) return;
+<<<<<<< public
         walkReferences(config, nodeIds, stateKeys, Collections.emptyMap());
         TemplateResourceSlots.assertReferences(config, nodeIds, stateKeys);
         GameplayRuntimeConfig.assertChallengeNodes(config.path("gameplayRuntime").path("survival"), nodeIds);
         assertPlanEndings(config);
+=======
+        validateReferenceShapes(config);
+        walkReferences(config, nodeIds, stateKeys);
+>>>>>>> private-github/featu
         assertItemReferences(config,config);
-        for(JsonNode scene:config.path("scenes"))scene.path("nodeConfigs").fieldNames().forEachRemaining(id->{if(!nodeIds.contains(Long.valueOf(id)))fail("场景引用外来节点");});
+        for(JsonNode scene:config.path("scenes"))scene.path("nodeConfigs").fieldNames().forEachRemaining(id->{if(!nodeIds.contains(sceneNodeId(id)))fail("场景引用外来节点");});
+    }
+    /** Registered state references in a parsed config, including inactive scene overrides. No facts are created. */
+    public static Set<String> referencedStateKeys(ObjectNode config) {
+        Set<String> keys = new LinkedHashSet<String>();
+        collectStateKeys(config, keys);
+        return Collections.unmodifiableSet(keys);
+    }
+    private static void collectStateKeys(JsonNode node, Set<String> keys) {
+        if (node == null) return;
+        if (node.isObject()) {
+            for (String field : Arrays.asList("relationKey", "var")) {
+                String key = registeredStateReference(node, field);
+                if (key != null) keys.add(key);
+            }
+            node.elements().forEachRemaining(child -> collectStateKeys(child, keys));
+        } else if (node.isArray()) node.forEach(child -> collectStateKeys(child, keys));
+    }
+    /** The read collector and publication validator must agree on which fields require registration. */
+    private static String registeredStateReference(JsonNode node, String field) {
+        if (!node.has(field)) return null;
+        String key = node.path(field).asText();
+        return "var".equals(field) && key.startsWith("sys.") ? null : key;
     }
     static void assertPlanEndings(JsonNode config) {
         for (JsonNode plan : config.path("gameplayRuntime").path("plans")) if (plan.path("terminal").asBoolean(true)) {
@@ -294,6 +340,7 @@ public final class ThemeRuntimeConfig {
     }
     private static void walkReferences(JsonNode n, Set<Long> nodeIds, Set<String> stateKeys, Map<String, String> inheritedSlots) {
         if (n.isObject()) {
+<<<<<<< public
             Map<String, String> slots = TemplateResourceSlots.referenceSlots(n, inheritedSlots);
             boolean variableSlot = n.has("var") && TemplateResourceSlots.isSlot(n, "var", "VALUE", slots);
             if (n.has("nodeId") && !nodeIds.contains(n.get("nodeId").asLong())) fail("主题配置引用外来节点");
@@ -306,6 +353,19 @@ public final class ThemeRuntimeConfig {
             if (n.has("var") && !variableSlot && !n.path("var").asText().startsWith("sys.") && !stateKeys.contains(n.path("var").asText())) fail("剧情状态未注册");
             n.fields().forEachRemaining(entry -> { if (!"templateBindings".equals(entry.getKey())) walkReferences(entry.getValue(), nodeIds, stateKeys, slots); });
         } else if (n.isArray()) n.forEach(child -> walkReferences(child, nodeIds, stateKeys, inheritedSlots));
+=======
+            if (n.has("nodeId") && !nodeIds.contains(referenceNodeId(n,"nodeId"))) fail("主题配置引用外来节点");
+            if(n.has("dispositionNodeId") && !nodeIds.contains(referenceNodeId(n,"dispositionNodeId")))fail("剧情处置节点不属于本主题");
+            if(n.has("var") && n.path("var").asText().matches("sys\\.(passed|outcome|mistakes|damage)\\.[0-9]+")) {String key=n.path("var").asText();if(!nodeIds.contains(Long.valueOf(key.substring(key.lastIndexOf('.')+1))))fail("条件引用外来节点");}
+            Matcher asked = askedReference(n.path("var").asText());
+            if (asked != null && !nodeIds.contains(Long.valueOf(asked.group(1)))) fail("问答条件引用外来节点");
+            String relationKey = registeredStateReference(n, "relationKey");
+            if (relationKey != null && !stateKeys.contains(relationKey)) fail("人物关系状态未注册");
+            String variable = registeredStateReference(n, "var");
+            if (variable != null && !stateKeys.contains(variable)) fail("剧情状态未注册");
+            n.elements().forEachRemaining(child -> walkReferences(child, nodeIds, stateKeys));
+        } else if (n.isArray()) n.forEach(child -> walkReferences(child, nodeIds, stateKeys));
+>>>>>>> private-github/featu
     }
     public static String remapAll(String raw, Map<Long,Long> nodes, Map<Long,Long> chapters, Map<Long,Long> npcs) {
         ObjectNode config=parseDraft(raw); if(config==null)return raw==null?null:""; remap(config,nodes);
@@ -317,7 +377,7 @@ public final class ThemeRuntimeConfig {
             if(!warnings.isEmpty())fail("场景人物复制没有对应目标: "+String.join(";",warnings));
             try { ((ObjectNode)scene).set("journeyStory",JSON.readTree(mapped)); } catch(Exception ex) { throw new IllegalArgumentException("场景剧情复制失败",ex); }
         }
-        return config.toString();
+        return parseDraft(config.toString()).toString();
     }
     private static void remapBindingEndings(JsonNode binding, Map<Long,Long> chapters) {
         binding.path("planEndings").fields().forEachRemaining(plan -> {
@@ -328,10 +388,11 @@ public final class ThemeRuntimeConfig {
         });
     }
     public static String remapNodes(String raw, Map<Long, Long> map) {
-        ObjectNode n = parseDraft(raw); if (n == null) return raw==null?null:""; remap(n, map); return n.toString();
+        ObjectNode n = parseDraft(raw); if (n == null) return raw==null?null:""; remap(n, map); return parseDraft(n.toString()).toString();
     }
     private static void remap(JsonNode n, Map<Long, Long> map) {
         if (n.isObject()) {
+<<<<<<< public
             if(n.has("var") && n.path("var").asText().matches("sys\\.(asked|passed|outcome|mistakes|damage)\\.[0-9]+(?:\\..+)?")) {String[] parts=n.path("var").asText().split("\\.",4);Long target=map.get(Long.valueOf(parts[2]));if(target==null)fail("复制时条件节点没有对应目标");((ObjectNode)n).put("var",parts[0]+"."+parts[1]+"."+target+(parts.length==4?"."+parts[3]:""));}
             if(n.has("operationNodeId")){Long target=map.get(n.path("operationNodeId").asLong());if(target==null)fail("复制时方案操作节点没有对应目标");((ObjectNode)n).put("operationNodeId",target);}
             if(n.has("challengeNodeId")){Long target=map.get(n.path("challengeNodeId").asLong());if(target==null)fail("复制时挑战节点没有对应目标");((ObjectNode)n).put("challengeNodeId",target);}
@@ -351,8 +412,18 @@ public final class ThemeRuntimeConfig {
             }
             if(n.has("dispositionNodeId")){Long target=map.get(n.path("dispositionNodeId").asLong());if(target==null)fail("复制时处置节点没有对应目标");((ObjectNode)n).put("dispositionNodeId",target);}
             if (n.has("nodeId")) { Long target = map.get(n.get("nodeId").asLong()); if (target == null) fail("复制时节点引用没有对应目标"); ((ObjectNode)n).put("nodeId", target); }
+=======
+            if(n.has("var") && n.path("var").asText().matches("sys\\.(passed|outcome|mistakes|damage)\\.[0-9]+")) {String key=n.path("var").asText();int dot=key.lastIndexOf('.');Long target=remappedNodeId(map,Long.valueOf(key.substring(dot+1)));((ObjectNode)n).put("var",key.substring(0,dot+1)+target);}
+            Matcher asked = askedReference(n.path("var").asText());
+            if (asked != null) {
+                Long target = remappedNodeId(map,Long.valueOf(asked.group(1)));
+                ((ObjectNode)n).put("var", "sys.asked." + target + "." + asked.group(2));
+            }
+            if(n.has("dispositionNodeId")){Long target=remappedNodeId(map,referenceNodeId(n,"dispositionNodeId"));((ObjectNode)n).put("dispositionNodeId",target);}
+            if (n.has("nodeId")) { Long target = remappedNodeId(map,referenceNodeId(n,"nodeId")); ((ObjectNode)n).put("nodeId", target); }
+>>>>>>> private-github/featu
             if(n.has("nodeConfigs")) {
-                ObjectNode renamed=JSON.createObjectNode();n.get("nodeConfigs").fields().forEachRemaining(row->{Long target=map.get(Long.valueOf(row.getKey()));if(target==null)fail("复制时场景节点没有对应目标");renamed.set(String.valueOf(target),row.getValue());});((ObjectNode)n).set("nodeConfigs",renamed);
+                ObjectNode renamed=JSON.createObjectNode();n.get("nodeConfigs").fields().forEachRemaining(row->{Long target=remappedNodeId(map,sceneNodeId(row.getKey()));String key=String.valueOf(target);if(renamed.has(key))fail("复制时场景节点目标重复");renamed.set(key,row.getValue());});((ObjectNode)n).set("nodeConfigs",renamed);
             }
             if (n.has("templateBindings")) {
                 ObjectNode renamed = JSON.createObjectNode();
@@ -424,6 +495,41 @@ public final class ThemeRuntimeConfig {
             if (node.path("luckCost").asInt() > 0 && (!rules.hasRuntimeState() || !rules.getLuck().isEnabled())) fail("幸运费用目标未启用");
             node.fields().forEachRemaining(entry -> { if (!"templateBindings".equals(entry.getKey())) assertJourneyReferences(entry.getValue(), rules, gameplay, slots); });
         } else if (node.isArray()) node.forEach(child -> assertJourneyReferences(child, rules, gameplay, inheritedSlots));
+    }
+    private static Matcher askedReference(String key) {
+        if (!key.equals("sys.asked") && !key.startsWith("sys.asked.")) return null;
+        Matcher asked = SYS_ASKED_REFERENCE.matcher(key);
+        if (!asked.matches()) fail("问答条件状态引用格式不正确");
+        // 超出 Long 的节点 ID 必须拒绝，不能截断后核对或重映射。
+        Long.valueOf(asked.group(1));
+        return asked;
+    }
+    // 场景不得继承旧条件读取中的数字别名；先验原始 JSON，再调用既有规范化器。
+    private static void validateReferenceShapes(JsonNode node) {
+        if(node.isObject()) {
+            if(node.has("nodeId"))referenceNodeId(node,"nodeId");
+            if(node.has("dispositionNodeId"))referenceNodeId(node,"dispositionNodeId");
+            if(node.has("nodeConfigs")) {
+                if(!node.get("nodeConfigs").isObject())fail("场景节点玩法格式不正确");
+                node.get("nodeConfigs").fieldNames().forEachRemaining(ThemeRuntimeConfig::sceneNodeId);
+            }
+            askedReference(node.path("var").asText());
+            node.elements().forEachRemaining(ThemeRuntimeConfig::validateReferenceShapes);
+        } else if(node.isArray())node.forEach(ThemeRuntimeConfig::validateReferenceShapes);
+    }
+    private static Long referenceNodeId(JsonNode node,String field) {
+        JsonNode value=node.path(field);
+        if(!value.isIntegralNumber() || !value.canConvertToLong() || value.asLong()<=0)fail(field+" 须为正整数节点 ID");
+        return value.asLong();
+    }
+    private static Long remappedNodeId(Map<Long,Long> nodes,Long source) {
+        Long target=nodes==null?null:nodes.get(source);
+        if(target==null || target<=0)fail("复制时节点没有合法对应目标");
+        return target;
+    }
+    private static Long sceneNodeId(String key) {
+        if(!key.matches("[1-9][0-9]*"))fail("场景节点 ID 须为规范正整数");
+        return Long.valueOf(key);
     }
     public static List<JsonNode> rows(JsonNode n, String key, int limit) {
         JsonNode array = n.path(key); if (array.isMissingNode() || array.isNull()) return Collections.emptyList();

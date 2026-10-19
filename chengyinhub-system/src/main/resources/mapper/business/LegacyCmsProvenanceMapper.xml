@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper">
+    <!-- Both signals are observed in one query. Unknown/empty markers and any sidecar block.
+         No status/deleted filter on sidecar: damaged or retired provenance is never legacy.
+         Missing canonical rows return no row (null), not a synthetic legacy value. -->
+    <select id="selectLegacyBlockState" resultType="java.lang.Integer">
+        select case when template.w18_provenance_kind is not null
+            or exists (
+                select 1 from w18_cms_template_provenance provenance
+                where provenance.template_id = template.id
+            ) then 1 else 0 end
+        from cms_member_template template
+        where template.id = #{templateId}
+    </select>
+</mapper>

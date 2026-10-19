@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -71,10 +73,23 @@ class TopicCopyTemplateOwnershipTest {
         memberTemplateMapper = mock(CmsMemberTemplateMapper.class);
         productRoleService = mock(IProductRoleService.class);
         service = new CmsTopicServiceImpl();
+<<<<<<< public
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+=======
+        // These existing fixtures exercise legacy copying; provenance denial has dedicated tests.
+        LegacyCmsProvenanceMapper provenanceMapper = mock(LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(provenanceMapper.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(0);
+        ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard", new LegacyCmsProvenanceGuard(provenanceMapper));
+        com.chengyinhub.business.mapper.MerchantAuthoringCopyMapper authoringCopies =
+                mock(com.chengyinhub.business.mapper.MerchantAuthoringCopyMapper.class);
+        when(authoringCopies.selectCopyBlockState(SOURCE_TEMPLATE)).thenReturn(0);
+        ReflectionTestUtils.setField(service, "merchantAuthoringCopyGuard",
+                new com.chengyinhub.business.service.support.MerchantAuthoringCopyGuard(authoringCopies));
+>>>>>>> private-github/featu
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);

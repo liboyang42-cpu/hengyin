@@ -60,7 +60,7 @@ class PublicTopicFeedGateMyBatisTest {
             assertTrue(ids.contains(12L), "end_date 已过去的主题同样出得来 —— 主题不是场次");
             assertFalse(ids.contains(13L), "下架(user_status=0)仍然不可见");
             assertFalse(ids.contains(14L), "未过审(status≠1)仍然不可见");
-            assertEquals(List.of(11L, 12L), ids, "公开 feed 只留这两条");
+            assertEquals(java.util.Arrays.asList(11L, 12L), ids, "公开 feed 只留这两条");
         }
     }
 

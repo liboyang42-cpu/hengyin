@@ -174,11 +174,12 @@ class ApiCityNodeSearchTest {
                     + "id bigint primary key, name varchar(100), logo varchar(255), address varchar(255), "
                     + "phone varchar(32), category_id bigint, city_role varchar(100))");
             statement.execute("create table cms_member_template ("
-                    + "id bigint primary key, title varchar(100), interaction_type varchar(32), "
+                    + "id bigint primary key, w18_provenance_kind varchar(32), title varchar(100), interaction_type varchar(32), "
                     + "validation_method varchar(32), coupon_id bigint, "
                     // vm=3 选项问答的题面与选项(玩家侧要看到)。⚠️ correct_answer 不进这张投影 —— 选进来就是泄题。
                     + "question_name varchar(255), question_a varchar(255), question_b varchar(255), "
                     + "question_c varchar(255), question_d varchar(255))");
+            statement.execute("create table w18_cms_template_provenance(template_id bigint primary key)");
             statement.execute("create table roam_poi ("
                     + "id bigint primary key, name varchar(100), description varchar(255), lat double, lng double, "
                     + "radius_m int, node_level int, tags varchar(255), cover_img varchar(255), city_code varchar(32), "

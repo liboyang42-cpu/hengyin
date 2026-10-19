@@ -58,6 +58,12 @@ class NodeTemplateOwnershipTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
     }
 

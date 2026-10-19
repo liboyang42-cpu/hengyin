@@ -7,6 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap type="CmsMemberTemplate" id="CmsMemberTemplateResult">
         <result property="id"    column="id"    />
         <result property="originalTemplateId"    column="original_template_id"    />
+        <result property="w18ProvenanceKind" column="w18_provenance_kind" />
         <result property="memberId"    column="member_id"    />
         <result property="categoryId"    column="category_id"    />
         <result property="title"    column="title"    />
@@ -82,7 +83,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectCmsMemberTemplateVo">
-        select id, original_template_id, member_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, medal_img, medal_name, medal_style, reward_rules_json, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, draft_status, reason, del_flag,rating,use_num,check_status, xp_value, interaction_type, merchant_node_enabled, node_submit_status, create_by, create_time, update_by, update_time from cms_member_template
+        select id, original_template_id, w18_provenance_kind, member_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, medal_img, medal_name, medal_style, reward_rules_json, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, draft_status, reason, del_flag,rating,use_num,check_status, xp_value, interaction_type, merchant_node_enabled, node_submit_status, create_by, create_time, update_by, update_time from cms_member_template
     </sql>
 
     <select id="selectCmsMemberTemplateList" parameterType="CmsMemberTemplate" resultMap="CmsMemberTemplateResult">
@@ -119,6 +120,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="checkStatus != null"> and check_status = #{checkStatus}</if>
 
             <if test="topicId != null"> and id in (select template_id from cms_topic_node where topic_id = #{topicId} and template_id > 0 ) </if>
+
+            AND cms_member_template.w18_provenance_kind IS NULL
+            AND NOT EXISTS (SELECT 1 FROM w18_cms_template_provenance provenance
+                            WHERE provenance.template_id = cms_member_template.id)
         </where>
         order by id desc
     </select>
@@ -211,6 +216,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null "> and mt.status = #{status}</if>
             <if test="draftStatus != null "> and mt.draft_status = #{draftStatus}</if>
             <if test="title != null  and title != ''"> and mt.title like concat('%', #{title}, '%')</if>
+
+            AND mt.w18_provenance_kind IS NULL
+            AND NOT EXISTS (SELECT 1 FROM w18_cms_template_provenance provenance
+                            WHERE provenance.template_id = mt.id)
         </where>
         ORDER BY
             mt.create_time DESC
@@ -227,6 +236,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+            AND cms_member_template.w18_provenance_kind IS NULL
+            AND NOT EXISTS (SELECT 1 FROM w18_cms_template_provenance provenance
+                            WHERE provenance.template_id = cms_member_template.id)
     </select>
 
     <select id="selectCmsMemberTemplateByIdsForUpdate" parameterType="java.util.List" resultMap="CmsMemberTemplateResult">

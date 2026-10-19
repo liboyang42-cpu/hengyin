@@ -3,6 +3,8 @@ package com.chengyinhub.business.service.support;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.common.constant.ProductType;
+import com.chengyinhub.business.service.ITopicRouteRuntimeService;
+import com.chengyinhub.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class PureContentExploreService {
     @Autowired private CmsRegistrationMapper registrationMapper;
     @Autowired private CmsActivityMapper activityMapper;
     @Autowired private PlayerNodeProgressMapper progressMapper;
+    @Autowired private TopicRouteSessionMapper routeSessionMapper;
+    @Autowired private ITopicRouteRuntimeService routeRuntimeService;
 
     public boolean isPureContent(Long topicId) {
         CmsTopic topic = topicId == null ? null : topicMapper.selectCmsTopicById(topicId);
@@ -56,37 +60,122 @@ public class PureContentExploreService {
     }
 
     public List<Map<String, Object>> completionFacts(Long topicId) {
-        List<Map<String, Object>> rows = registrationMapper.selectPureContentExploreCompletion(topicId);
-        return rows == null ? Collections.emptyList() : rows;
+        if (!isPureContent(topicId)) return Collections.emptyList();
+        Map<Long, Integer> byMember = new LinkedHashMap<>();
+        Map<String, TopicRouteSession> observed = new LinkedHashMap<>();
+        Long after = null;
+        final int pageSize = 100;
+        while (true) {
+            List<CmsRegistration> page = registrationMapper.selectPureContentExploreScopes(topicId, after, pageSize);
+            if (page == null || page.size() > pageSize) throw unreadable();
+            for (CmsRegistration row : page) {
+                if (row == null || row.getId() == null || row.getId() <= 0
+                        || (after != null && row.getId() <= after) || !validRegistration(row)) throw unreadable();
+                after = row.getId();
+                Completion result = completion(row, topicId, observed);
+                if (result.participant) byMember.merge(row.getMemberId(), result.complete ? 1 : 0, Math::max);
+            }
+            if (page.size() < pageSize) break;
+        }
+        requireUnchanged(observed);
+        List<Map<String, Object>> facts = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : byMember.entrySet()) {
+            Map<String, Object> fact = new LinkedHashMap<>();
+            fact.put("memberId", entry.getKey()); fact.put("completed", entry.getValue()); facts.add(fact);
+        }
+        return facts;
     }
 
     public Set<Long> completedChapters(Long registrationId, Long topicId) {
-        Set<Long> completed = new LinkedHashSet<>();
         CmsRegistration registration = registrationId == null ? null
                 : registrationMapper.selectCmsRegistrationById(registrationId);
-        if (!isPureContent(topicId) || registration == null
-                || !Integer.valueOf(3).equals(registration.getPurchaseKind())
-                || !Integer.valueOf(2).equals(registration.getPaymentStatus())
-                || !Integer.valueOf(2).equals(registration.getRegistrationStatus())
-                || !Long.valueOf(2).equals(registration.getOwnerType())) return completed;
+        if (!isPureContent(topicId) || !validRegistration(registration)) return Collections.emptySet();
+        Map<String, TopicRouteSession> observed = new LinkedHashMap<>();
+        Completion result = completion(registration, topicId, observed);
+        requireUnchanged(observed);
+        return result.chapters;
+    }
+
+    private boolean validRegistration(CmsRegistration row) {
+        return row != null && row.getMemberId() != null && row.getMemberId() > 0
+                && row.getOwnerId() != null && row.getOwnerId() > 0
+                && Integer.valueOf(3).equals(row.getPurchaseKind())
+                && Integer.valueOf(2).equals(row.getPaymentStatus())
+                && Integer.valueOf(2).equals(row.getRegistrationStatus())
+                && Long.valueOf(2).equals(row.getOwnerType());
+    }
+
+    private Completion completion(CmsRegistration registration, Long topicId,
+                                  Map<String, TopicRouteSession> observed) {
+        Completion result = new Completion();
         CmsActivity activity = activityMapper.selectCmsActivityById(registration.getOwnerId());
-        if (activity == null || !topicId.equals(activity.getTopicId())) return completed;
+        if (activity == null || !registration.getOwnerId().equals(activity.getId()) || !topicId.equals(activity.getTopicId())
+                || !Integer.valueOf(0).equals(activity.getDelFlag())) return result;
+        if (routeRuntimeService == null || routeSessionMapper == null) throw unreadable();
+        TopicRouteSession current = TopicRouteSessionScope.find(routeSessionMapper,
+                registration.getMemberId(), topicId, activity.getId());
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        // Also observe absence. An explicit start racing this read must not silently change its scope.
+        boolean unstartedTheme = current == null && ThemeRuntimeFeaturePolicy.isConfigured(
+                topic == null ? null : topic.getPublishedThemeRuntimeConfigJson());
+        String instance = unstartedTheme ? null
+                : routeRuntimeService.playInstance(registration.getMemberId(), topicId, activity.getId());
+        if (!unstartedTheme && (instance == null || instance.trim().isEmpty())) throw unreadable();
+        TopicRouteSession scope = new TopicRouteSession();
+        scope.setMemberId(registration.getMemberId()); scope.setTopicId(topicId);
+        scope.setActivityId(activity.getId()); scope.setPlayInstanceId(instance);
+        String key = ITopicRouteRuntimeService.sessionKey(scope.getMemberId(), topicId, activity.getId());
+        TopicRouteSession earlier = observed.putIfAbsent(key, scope);
+        if (earlier != null && !java.util.Objects.equals(instance, earlier.getPlayInstanceId())) throw changed();
+        if (unstartedTheme) return result;
         PlayerNodeProgress probe = new PlayerNodeProgress();
         probe.setMemberId(registration.getMemberId());
         probe.setActivityId(activity.getId());
         probe.setTopicId(topicId);
         Set<Long> done = new HashSet<>();
-        List<PlayerNodeProgress> progress = progressMapper.selectPlayerNodeProgressList(probe);
-        if (progress != null) for (PlayerNodeProgress row : progress) {
+        List<PlayerNodeProgress> progress = progressMapper.selectPlayerNodeProgressListForInstance(probe, instance);
+        if (progress == null) throw unreadable();
+        for (PlayerNodeProgress row : progress) {
+            if (row == null || !probe.getMemberId().equals(row.getMemberId())
+                    || !topicId.equals(row.getTopicId()) || !activity.getId().equals(row.getActivityId())
+                    || !instance.equals(row.getPlayInstanceId()) || !Integer.valueOf(0).equals(row.getDelFlag())) throw unreadable();
             if (Integer.valueOf(1).equals(row.getStatus())) done.add(row.getNodeId());
         }
+        result.participant = !done.isEmpty();
         List<CmsTopicNode> nodes = nodes(topicId);
-        for (CmsTopicChapter chapter : requiredChapters(topicId)) {
+        List<CmsTopicChapter> required = requiredChapters(topicId);
+        for (CmsTopicChapter chapter : required) {
             Set<Long> games = gameNodes(nodes, chapter.getId());
-            if (!games.isEmpty() && done.containsAll(games)) completed.add(chapter.getId());
+            if (!games.isEmpty() && done.containsAll(games)) result.chapters.add(chapter.getId());
         }
-        return completed;
+        result.complete = !required.isEmpty() && result.chapters.size() == required.size();
+        return result;
     }
+
+    private void requireUnchanged(Map<String, TopicRouteSession> observed) {
+        for (TopicRouteSession scope : observed.values()) {
+            CmsActivity activity = activityMapper.selectCmsActivityById(scope.getActivityId());
+            if (activity == null || !scope.getActivityId().equals(activity.getId())
+                    || !scope.getTopicId().equals(activity.getTopicId())
+                    || !Integer.valueOf(0).equals(activity.getDelFlag())) throw changed();
+            if (scope.getPlayInstanceId() == null) {
+                CmsTopic topic = topicMapper.selectCmsTopicById(scope.getTopicId());
+                if (TopicRouteSessionScope.find(routeSessionMapper, scope.getMemberId(), scope.getTopicId(),
+                        scope.getActivityId()) != null || !ThemeRuntimeFeaturePolicy.isConfigured(
+                        topic == null ? null : topic.getPublishedThemeRuntimeConfigJson())) throw changed();
+            } else if (!scope.getPlayInstanceId().equals(routeRuntimeService.playInstance(
+                    scope.getMemberId(), scope.getTopicId(), scope.getActivityId()))) throw changed();
+        }
+    }
+
+    private static final class Completion {
+        final Set<Long> chapters = new LinkedHashSet<>();
+        boolean participant;
+        boolean complete;
+    }
+
+    private ServiceException unreadable() { return new ServiceException("探索完成事实不可读取"); }
+    private ServiceException changed() { return new ServiceException("本局已更新，请刷新", 409); }
 
     private List<CmsTopicNode> nodes(Long topicId) {
         CmsTopicNode probe = new CmsTopicNode();

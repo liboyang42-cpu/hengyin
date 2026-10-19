@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.editor.store.InstalledDraftReceiptStore">
+  <select id="findOwnedTarget" resultType="com.chengyinhub.business.marketplace.editor.store.InstalledDraftTargetRow" useCache="false" flushCache="true">
+    SELECT d.id,d.owner_member_id AS ownerMemberId,d.version,d.payload_hash AS payloadHash,d.business_type AS businessType,d.status
+    FROM content_draft d JOIN ums_member m ON m.id=d.owner_member_id AND m.status=1 AND m.del_flag=0
+    WHERE d.id=#{draftId} AND d.owner_member_id=#{actor}
+  </select>
+  <!-- Deliberately no content_json, source_content, terms_document, frozen_rights, licence ID,
+       source template ID, seller fields, approval/evidence refs or client request IDs. A receipt is
+       retained after grant expiry/revocation. This query does not assert any present usage right. -->
+  <select id="findReceipts" resultType="com.chengyinhub.business.marketplace.editor.store.InstalledDraftReceiptRow" useCache="false" flushCache="true">
+    SELECT /*+ JOIN_PREFIX(d) INDEX(d idx_w18_owned_receipt_read) */ d.id AS installationId,d.target_draft_id AS targetDraftId,d.target_revision AS targetRevision,
+      u.committed_at AS installedAt,CASE WHEN CHAR_LENGTH(r.version_id)&lt;=512 THEN r.version_id ELSE NULL END AS versionId,r.content_hash AS contentHash,r.terms_hash AS termsHash,
+      s.payload_hash AS scopePayloadHash
+    FROM content_draft t
+    JOIN ums_member m ON m.id=t.owner_member_id AND m.status=1 AND m.del_flag=0
+    JOIN w18_module_owned_draft d ON d.target_draft_id=t.id AND d.buyer_kind='INDIVIDUAL' AND d.buyer_id=t.owner_member_id
+    JOIN w18_module_install_reservation r ON r.reservation_key=d.reservation_key
+      AND r.buyer_kind=d.buyer_kind AND r.buyer_id=d.buyer_id AND r.draft_id=d.target_draft_id
+      AND r.draft_revision=d.target_revision AND r.actor_id=d.installed_by AND r.state='CONSUMED'
+    JOIN w18_module_install_usage u ON u.owned_draft_id=d.id AND u.reservation_key=d.reservation_key
+      AND u.committed_at=d.installed_at AND u.committed_at=r.terminal_at
+    LEFT JOIN w18_content_draft_install_scope s ON s.draft_id=d.target_draft_id
+      AND s.draft_version=d.target_revision AND s.owner_member_id=d.buyer_id
+    WHERE t.id=#{draftId} AND t.owner_member_id=#{actor} AND t.status='DRAFT'
+      AND t.business_type IN ('TOPIC','ACTIVITY') AND d.buyer_id=#{actor} AND d.installed_by=#{actor}
+      AND EXISTS (SELECT 1 FROM w18_module_draft_component c WHERE c.draft_id=d.id
+        AND c.local_key='template' AND c.component_kind='TEXT_TEMPLATE' AND c.schema_version=1)
+    ORDER BY d.installed_at DESC,d.id DESC LIMIT 51
+  </select>
+</mapper>

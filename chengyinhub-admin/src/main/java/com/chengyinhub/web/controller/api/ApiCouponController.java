@@ -35,6 +35,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.chengyinhub.business.service.impl.CouponCommandService;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Date;
@@ -54,6 +57,9 @@ public class ApiCouponController extends BaseController {
 
     @Autowired
     private ISmsCouponService smsCouponService;
+
+    @Autowired
+    private CouponCommandService couponCommandService;
 
     @Autowired
     private com.chengyinhub.business.service.IQuotaService quotaService;
@@ -134,7 +140,16 @@ public class ApiCouponController extends BaseController {
     @Operation(summary = "发布优惠券")
     @Log(title = "发布优惠券", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
-    public AjaxResult publish(@Validated @RequestBody CouponPublisDTO request) {
+    public AjaxResult publish(@Validated @RequestBody CouponPublisDTO request,
+                             @RequestHeader(value = "X-Coupon-Command-Id", required = false) String commandId,
+                             @RequestHeader(value = "X-Coupon-Merchant-Id", required = false) String expectedMerchantId) {
+        if (commandId != null || expectedMerchantId != null) {
+            return couponCommandService.publish(commandActor(), commandId, commandMerchant(expectedMerchantId), request);
+        }
+        return publish(request);
+    }
+
+    public AjaxResult publish(CouponPublisDTO request) {
         // 添加调试日志
         logger.info("接收到请求参数: {}", request);
         Long member_id = 0L;
@@ -205,6 +220,33 @@ public class ApiCouponController extends BaseController {
     @Log(title = "停发优惠券", businessType = BusinessType.UPDATE)
     @PostMapping("/stop")
     @Parameters({@Parameter(name = "couponId", description = "优惠券ID")})
+    public AjaxResult stopIssuing(@RequestParam(value = "couponId", required = false) Long couponId,
+                                 @RequestParam(value = "scope", required = false) String scope,
+                                 @RequestHeader(value = "X-Coupon-Command-Id", required = false) String commandId,
+                                 @RequestHeader(value = "X-Coupon-Merchant-Id", required = false) String expectedMerchantId) {
+        if (commandId != null || expectedMerchantId != null) {
+            return couponCommandService.stop(commandActor(), commandId, commandMerchant(expectedMerchantId), couponId, scope);
+        }
+        return stopIssuing(couponId, scope);
+    }
+
+    @PostMapping("/command-receipt")
+    @Operation(summary = "查询本人商家优惠券命令结果；未找到不表示未执行")
+    public AjaxResult commandReceipt(@RequestParam(value = "requestId", required = false) String requestId,
+                                     @RequestParam(value = "merchantId", required = false) Long merchantId,
+                                     @RequestParam(value = "scope", required = false) String scope) {
+        return couponCommandService.read(commandActor(), requestId, merchantId, scope);
+    }
+
+    private Long commandMerchant(String value) {
+        if (value == null || !value.matches("[1-9][0-9]{0,18}")) return null;
+        try { return Long.valueOf(value); } catch (NumberFormatException exception) { return null; }
+    }
+
+    private Long commandActor() {
+        try { return getAppUserId(); } catch (Exception exception) { return null; }
+    }
+
     public AjaxResult stopIssuing(Long couponId, String scope) {
         Long member_id = 0L;
         try {

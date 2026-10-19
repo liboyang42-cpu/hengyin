@@ -81,9 +81,15 @@
         select <include refid="columns"/> from game_runtime_session s
         where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
           and s.owner_type=#{ownerType} and s.owner_id=#{ownerId}
-          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
-              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
-              order by r.id desc limit 1),'default')
+          and s.play_instance_id='default'
+        limit 1
+    </select>
+
+    <select id="selectByOwnerForInstance" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=#{ownerType} and s.owner_id=#{ownerId}
+          and s.play_instance_id=#{playInstanceId}
         limit 1
     </select>
 
@@ -105,9 +111,7 @@
     <select id="selectStateJsonsByTopic" resultType="java.lang.String">
         select s.state_json from game_runtime_session s
         where s.topic_id=#{topicId} and s.activity_id=#{activityId}
-          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
-              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
-              order by r.id desc limit 1),'default')
+          and s.play_instance_id='default'
           and (
             (s.owner_type=1 and s.owner_id=#{memberId})
             or (s.owner_type=2 and exists (
@@ -118,20 +122,40 @@
         order by s.node_id, s.id
     </select>
 
+    <select id="selectStateJsonsByTopicForInstance" resultType="java.lang.String">
+        select s.state_json from game_runtime_session s
+        where s.topic_id=#{topicId} and s.activity_id=#{activityId}
+          and s.owner_type=1 and s.owner_id=#{memberId} and s.play_instance_id=#{playInstanceId}
+        order by s.node_id, s.id
+    </select>
+
     <select id="selectPlayerByOwner" resultMap="GameRuntimeSessionResult">
         select <include refid="columns"/> from game_runtime_session s
         where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
           and s.owner_type=1 and s.owner_id=#{memberId}
-          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
-              where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
-              order by r.id desc limit 1),'default')
+          and s.play_instance_id='default'
+        limit 1
+    </select>
+
+    <select id="selectPlayerByOwnerForInstance" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=1 and s.owner_id=#{memberId}
+          and s.play_instance_id=#{playInstanceId}
         limit 1
     </select>
 
     <select id="selectPlayerSessionsByTopic" resultMap="GameRuntimeSessionResult">
         select <include refid="columns"/> from game_runtime_session s
         where s.activity_id=#{activityId} and s.topic_id=#{topicId}
-          and s.owner_type=1 and s.owner_id=#{memberId}
+          and s.owner_type=1 and s.owner_id=#{memberId} and s.play_instance_id='default'
+        order by s.id
+    </select>
+
+    <select id="selectPlayerSessionsByTopicForInstance" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId}
+          and s.owner_type=1 and s.owner_id=#{memberId} and s.play_instance_id=#{playInstanceId}
         order by s.id
     </select>
 
@@ -139,7 +163,7 @@
         select <include refid="columns"/> from game_runtime_session s
         join play_team_member m on m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1
         where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
-          and s.owner_type=2
+          and s.owner_type=2 and s.play_instance_id='default'
         order by s.id desc
         limit 1
     </select>
@@ -150,6 +174,7 @@
             completed_units=#{completedUnits}, completed_at=#{completedAt},
             version=version+1, update_time=#{updateTime}
         where id=#{id} and version=#{version} and status=0
+          and play_instance_id=coalesce(#{playInstanceId},'default')
     </update>
 
     <update id="updateFeedbackStateCas" parameterType="com.chengyinhub.business.domain.GameRuntimeSession">
@@ -164,6 +189,7 @@
             status=0, score=0, completed_units=0, started_at=#{startedAt},
             deadline_at=#{deadlineAt}, completed_at=null, version=version+1, update_time=#{updateTime}
         where id=#{id} and version=#{version} and status in (2, 3)
+          and play_instance_id=coalesce(#{playInstanceId},'default')
     </update>
 
     <select id="selectLeaderboard" resultType="map">
@@ -193,5 +219,23 @@
             </otherwise>
         </choose>
         limit #{limit}
+    </select>
+    <select id="selectAccessibleByIdForUpdate" resultMap="GameRuntimeSessionResult" useCache="false" flushCache="true">
+        select <include refid="columns"/> from game_runtime_session s where s.id=#{id} and
+        ((s.owner_type=1 and s.owner_id=#{memberId}) or (s.owner_type=2 and exists(select 1 from play_team_member m where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1))) for update
+    </select>
+    <select id="selectTeamByMemberForInstance" resultMap="GameRuntimeSessionResult" useCache="false" flushCache="true">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=2 and s.owner_id=#{teamId} and s.play_instance_id=#{playInstanceId}
+          and exists(select 1 from play_team_member m where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1)
+        limit 1 for update
+    </select>
+    <select id="selectSessionsForMemberAndTeam" resultMap="GameRuntimeSessionResult" useCache="false" flushCache="true">
+        select <include refid="columns"/> from game_runtime_session s where s.activity_id=#{activityId} and s.topic_id=#{topicId}
+          and ((s.owner_type=1 and s.owner_id=#{memberId} and s.play_instance_id=#{personalInstance})
+          or (s.owner_type=2 and s.owner_id=#{teamId} and s.play_instance_id=#{teamInstance}
+            and exists(select 1 from play_team_member m where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1)))
+        order by s.node_id,s.id
     </select>
 </mapper>

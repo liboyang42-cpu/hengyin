@@ -330,4 +330,114 @@ class TopicStateKeyRefServiceTest {
         topic.setJourneyStoryJson(journeyStoryJson);
         return topic;
     }
+
+    @Test
+    void runtimeRootAndInactiveScenesProtectAllProductionStateReferences() {
+        CmsTopic topic = runtimeTopic(runtimeConfig());
+        RefCollection refs = service.collect(topic);
+        assertTrue(refs.getParseErrors().isEmpty());
+        java.util.Set<String> expected = new java.util.LinkedHashSet<String>(Arrays.asList(
+                "clue.entry", "counter.seen", "clue.reward", "clue.ending", "relation.later",
+                "counter.scene", "clue.scene_gate", "relation.npc"));
+        assertEquals(expected, refs.getThemeRuntimeKeys());
+        for (String key : expected) {
+            assertEquals(Collections.singletonList("主题运行配置"), service.referencesOf(topic, key));
+        }
+        assertTrue(service.referencesOf(topic, "clue.unused").isEmpty());
+        assertTrue(refs.getStoryKeys().isEmpty(), "Runtime keys must not become auto-registration inputs");
+        assertTrue(refs.getChapterKeys().isEmpty());
+    }
+
+    @Test
+    void runtimeCollectionAndProductionAssertionShareExactStateReferenceSemantics() {
+        com.fasterxml.jackson.databind.node.ObjectNode config =
+                com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(runtimeConfig());
+        String before = config.toString();
+        java.util.Set<String> keys = com.chengyinhub.business.service.support.ThemeRuntimeConfig.referencedStateKeys(config);
+        java.util.Set<Long> nodes = Collections.singleton(NODE_ID);
+        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(config, nodes, keys);
+        for (String key : keys) {
+            java.util.Set<String> missing = new java.util.LinkedHashSet<String>(keys);
+            missing.remove(key);
+            assertThrows(IllegalArgumentException.class, () ->
+                    com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(config, nodes, missing));
+        }
+        assertEquals(before, config.toString());
+        assertThrows(UnsupportedOperationException.class, () -> keys.add("clue.extra"));
+    }
+
+    @Test
+    void systemFactsAreExcludedOnlyForVarNotForRelationKey() throws Exception {
+        com.fasterxml.jackson.databind.node.ObjectNode fields = (com.fasterxml.jackson.databind.node.ObjectNode)
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree("{\"var\":\"sys.hp\",\"relationKey\":\"sys.relationship\"}");
+        java.util.Set<String> refs = com.chengyinhub.business.service.support.ThemeRuntimeConfig.referencedStateKeys(fields);
+        assertEquals(Collections.singleton("sys.relationship"), refs);
+        assertThrows(IllegalArgumentException.class, () ->
+                com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(fields, Collections.emptySet(), Collections.emptySet()));
+        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(fields, Collections.emptySet(), refs);
+        assertTrue(service.referencesOf(runtimeTopic(runtimeConfig()), "sys.hp").isEmpty());
+        assertTrue(service.referencesOf(runtimeTopic(runtimeConfig()), "sys.asked.501.question").isEmpty());
+    }
+
+    @Test
+    void malformedRuntimeConfigurationBlocksDeletionAndHasItsOwnErrorLabel() {
+        for (String raw : Arrays.asList("{broken", "[]", "{\"schemaVersion\":1,\"unknown\":true}",
+                "{\"schemaVersion\":1,\"events\":[{\"id\":\"event\",\"content\":\"x\",\"when\":[{\"var\":\"sys.private\",\"op\":\"EQ\",\"value\":1}]}]}")) {
+            CmsTopic topic = runtimeTopic(raw);
+            RefCollection refs = service.collect(topic);
+            assertEquals(1, refs.getParseErrors().size());
+            assertEquals(TopicStateKeyRefService.KIND_THEME_RUNTIME, refs.getParseErrors().get(0).getKind());
+            assertTrue(TopicStateKeyRefService.parseErrorMessage(refs.getParseErrors().get(0)).startsWith("主题运行配置无法解析"));
+            assertTrue(assertThrows(ServiceException.class, () -> service.referencesOf(topic, "clue.unused"))
+                    .getMessage().contains("主题运行配置"));
+        }
+    }
+
+    @Test
+    void missingClearedAndValidIncompleteDraftsKeepUnreferencedKeyDeletionAvailable() {
+        for (String raw : Arrays.asList(null, "", " \n", "{\"schemaVersion\":1}",
+                "{\"schemaVersion\":1,\"capacity\":2,\"items\":[{\"id\":\"gift\",\"kind\":\"MEDAL\"}]}")) {
+            assertTrue(service.referencesOf(runtimeTopic(raw), "clue.unused").isEmpty());
+        }
+    }
+
+    @Test
+    void loadedAndMapperBackedRuntimeCollectionAgreeWithoutWritesOrInferredFacts() {
+        CmsTopic topic = runtimeTopic(runtimeConfig());
+        RefCollection mapped = service.collect(topic);
+        org.mockito.Mockito.clearInvocations(nodeMapper, templateMapper, chapterMapper);
+        RefCollection loaded = TopicStateKeyRefService.collectLoaded(topic, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
+        assertEquals(mapped.positionsByKey(), loaded.positionsByKey());
+        assertEquals(mapped.getThemeRuntimeKeys(), loaded.getThemeRuntimeKeys());
+        org.mockito.Mockito.verifyNoInteractions(nodeMapper, templateMapper, chapterMapper);
+        topic.setThemeRuntimeConfigJson("broken");
+        RefCollection broken = TopicStateKeyRefService.collectLoaded(topic, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
+        assertEquals(TopicStateKeyRefService.KIND_THEME_RUNTIME, broken.getParseErrors().get(0).getKind());
+    }
+
+    @Test
+    void rootReferencesRemainProtectedWhenScenesExplicitlyOverrideWithEmptyLists() {
+        String raw = "{\"schemaVersion\":1,\"events\":[{\"id\":\"root\",\"content\":\"x\",\"effects\":[{\"var\":\"counter.root\",\"op\":\"INC\",\"value\":1}]}],"
+                + "\"currentScene\":\"empty\",\"scenes\":[{\"id\":\"empty\",\"name\":\"空\",\"events\":[]}]}";
+        assertEquals(Collections.singletonList("主题运行配置"), service.referencesOf(runtimeTopic(raw), "counter.root"));
+    }
+
+    private static CmsTopic runtimeTopic(String raw) {
+        CmsTopic topic = topic(null);
+        topic.setThemeRuntimeConfigJson(raw);
+        return topic;
+    }
+
+    private static String runtimeConfig() {
+        return "{\"schemaVersion\":1,\"capacity\":2,\"items\":[{\"id\":\"gift\",\"kind\":\"MEDAL\"}],"
+                + "\"events\":[{\"id\":\"entry\",\"content\":\"开场\",\"when\":[{\"var\":\"clue.entry\",\"op\":\"EQ\",\"value\":1},{\"var\":\"sys.hp\",\"op\":\"GT\",\"value\":0}],"
+                + "\"effects\":[{\"var\":\"counter.seen\",\"op\":\"INC\",\"value\":1}]}],"
+                + "\"grants\":[{\"id\":\"grant\",\"source\":\"NODE\",\"nodeId\":501,\"itemId\":\"gift\",\"quantity\":1,\"when\":[{\"var\":\"clue.reward\",\"op\":\"EQ\",\"value\":1}]}],"
+                + "\"endings\":[{\"id\":\"end\",\"title\":\"收尾\",\"fallback\":true,\"when\":[{\"var\":\"clue.ending\",\"op\":\"EQ\",\"value\":1}]}],"
+                + "\"currentScene\":\"first\",\"scenes\":[{\"id\":\"first\",\"name\":\"首景\"},{\"id\":\"later\",\"name\":\"后景\","
+                + "\"events\":[{\"id\":\"later_event\",\"content\":\"以后\",\"when\":[{\"var\":\"relation.later\",\"op\":\"GT\",\"value\":0}],\"effects\":[{\"var\":\"counter.scene\",\"op\":\"INC\",\"value\":1}]}],"
+                + "\"nodeConfigs\":{\"501\":{\"schemaVersion\":1,\"requires\":[{\"var\":\"clue.scene_gate\",\"op\":\"EQ\",\"value\":1},{\"var\":\"sys.asked.501.question\",\"op\":\"EQ\",\"value\":1}]}},"
+                + "\"journeyStory\":{\"schemaVersion\":1,\"ending\":{\"endings\":[{\"code\":\"end\",\"title\":\"收尾\",\"fallback\":true}],\"epilogues\":[{\"npcId\":7,\"relationKey\":\"relation.npc\",\"ally\":\"友\",\"neutral\":\"中\",\"guarded\":\"敌\"}]}}}]}";
+    }
+
 }

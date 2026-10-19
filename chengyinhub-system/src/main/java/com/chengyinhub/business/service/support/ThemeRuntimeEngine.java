@@ -14,13 +14,14 @@ public final class ThemeRuntimeEngine {
     public void initialize(JsonNode config, TopicRouteEngine.State state) {
         if (config == null || config.isMissingNode() || !config.isObject()) return;
         ObjectNode t = state.getThemeRuntime();
+        if (!t.isEmpty()) return;
         t.putObject("inventory"); t.putObject("acquired"); t.putObject("sources"); t.putObject("pending");
         t.putArray("events"); t.putArray("journal");
         state.getVariables().put("sys.actions", 0);
     }
     public void signal(JsonNode config, TopicRouteEngine.State state, JourneyRules rules,
                        String source, Long nodeId, String step, String option, int outcome, String sourceKey) {
-        if (config == null || !config.isObject() || state.getThemeRuntime().isEmpty()) return;
+        if (!mutable(config,state)) return;
         ObjectNode t = state.getThemeRuntime();
         String signalKey = "signal:" + sourceKey;
         if (t.with("sources").has(signalKey)) return;
@@ -36,7 +37,7 @@ public final class ThemeRuntimeEngine {
         events(config, state, rules);
     }
     public void events(JsonNode config, TopicRouteEngine.State state, JourneyRules rules) {
-        if (config == null || !config.isObject() || state.getThemeRuntime().isEmpty()) return;
+        if (!mutable(config,state)) return;
         // 单次有限遍历到固定点；事件只能触发一次，因此最多 events.size() 轮。
         for (int pass = 0; pass <= config.path("events").size(); pass++) {
             boolean changed = false;
@@ -55,6 +56,7 @@ public final class ThemeRuntimeEngine {
         }
     }
     private void grant(JsonNode config, TopicRouteEngine.State state, JourneyRules rules, String source, String id, int qty) {
+        requireUnfinished(state);
         ObjectNode t = state.getThemeRuntime();
         if (t.with("sources").has(source)) return;
         JsonNode item = item(config,id);
@@ -118,6 +120,7 @@ public final class ThemeRuntimeEngine {
         ObjectNode receipt=JSON.createObjectNode().put("source",source).put("itemId",id).put("quantity",quantity);receipt.set("discardOwned",discarded);return receipt;
     }
     public void receive(JsonNode config, TopicRouteEngine.State state, JourneyRules rules, String source, boolean required) {
+        requireUnfinished(state);
         ObjectNode t = state.getThemeRuntime(); JsonNode pending = t.with("pending").get(source);
         if (pending == null) throw new IllegalStateException("没有待领取内容");
         String id = pending.path("itemId").asText(); int qty = pending.path("quantity").asInt(); JsonNode item = item(config,id);
@@ -136,8 +139,14 @@ public final class ThemeRuntimeEngine {
         journal(state,"RECEIVE",id,qty);
     }
     public void use(JsonNode config, TopicRouteEngine.State state, JourneyRules rules, String id) {
+<<<<<<< public
         JsonNode item = item(config,id); requireStatEnabled(config,item,rules);
         if (!"ITEM".equals(item.path("kind").asText()) || (!item.has("stat") && !item.has("statKey")) || item.path("wear").asBoolean()) throw new IllegalStateException("此内容不能点击使用");
+=======
+        requireUnfinished(state);
+        JsonNode item = item(config,id); requireStatEnabled(item,rules);
+        if (!"ITEM".equals(item.path("kind").asText()) || !item.has("stat") || item.path("wear").asBoolean()) throw new IllegalStateException("此内容不能点击使用");
+>>>>>>> private-github/featu
         requireHeld(state,id); int previous = number(state,stat(item));
         change(state,rules,item,1);
         if (number(state,stat(item)) == previous && !config.path("gameplayRuntime").path("survival").path("consumeOnNoEffect").asBoolean())
@@ -145,6 +154,7 @@ public final class ThemeRuntimeEngine {
         remove(state,id); project(config,state); journal(state,"USE",id,1); events(config,state,rules);
     }
     public void discard(JsonNode config, TopicRouteEngine.State state, JourneyRules rules, String id) {
+        requireUnfinished(state);
         if(config.has("allowDiscard") && !config.path("allowDiscard").asBoolean())throw new IllegalStateException("本主题不允许丢弃物品");
         JsonNode item = item(config,id);
         if (!"ITEM".equals(item.path("kind").asText())) throw new IllegalStateException("收藏勋章不可丢弃");
@@ -158,7 +168,7 @@ public final class ThemeRuntimeEngine {
     }
     /** 持续修正独立记账。原旅程动作的实际变化同步回基础值，不用反向增减来解除。 */
     public void reconcileHeld(JsonNode config,TopicRouteEngine.State state,JourneyRules rules) {
-        if(config==null || !config.isObject() || state.getThemeRuntime().isEmpty())return;
+        if(!mutable(config,state))return;
         ObjectNode modifiers=state.getThemeRuntime().with("modifiers");
         Set<String> targets = new LinkedHashSet<>(Arrays.asList("sys.hp", "sys.luck"));
         for (JsonNode item : catalog(config)) if (item.has("statKey") && item.path("wear").asBoolean() && "HELD".equals(item.path("mode").asText())) targets.add(stat(item));
@@ -179,15 +189,7 @@ public final class ThemeRuntimeEngine {
         }
     }
     public boolean conditions(JsonNode conditions,TopicRouteEngine.State state) {
-        if(!conditions.isArray())return true;
-        for(JsonNode c:conditions) {
-            String op=c.path("op").asText();
-            if("ITEM_HELD".equals(op)||"ITEM_ACQUIRED".equals(op)) {
-                String field="ITEM_HELD".equals(op)?"inventory":"acquired";
-                if(state.getThemeRuntime().path(field).path(c.path("itemId").asText()).asInt()<c.path("quantity").asInt())return false;
-            } else { ArrayNode one=JSON.createArrayNode();one.add(c);if(!route.conditionsPass(one,state))return false; }
-        }
-        return true;
+        return route.conditionsPass(conditions,state);
     }
     public void terminal(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,String reason,long now) {
         TopicRouteEngine.State next=state.copy();terminalResult(config,next,rules,reason,now);
@@ -234,12 +236,14 @@ public final class ThemeRuntimeEngine {
         return reduceStatCost(config, state, "sys.hp", cost);
     }
     public void chapterStart(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,JsonNode ch,long now) {
+        if(!mutable(config,state))return;
         ObjectNode states=state.getThemeRuntime().with("chapters");String key=String.valueOf(ch.path("index").asInt());
         if(states.has(key))return;
         ObjectNode progress=states.putObject(key);progress.put("startedAt",now);progress.put("steps",0);progress.put("ended",false);
         chapterGrants(config,state,rules,ch,"START");
     }
     public void chapterEnd(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,JsonNode ch,long now) {
+        if(!mutable(config,state))return;
         chapterStart(config,state,rules,ch,now);
         ObjectNode progress=state.getThemeRuntime().with("chapters").with(String.valueOf(ch.path("index").asInt()));
         if(progress.path("ended").asBoolean())return;
@@ -258,10 +262,11 @@ public final class ThemeRuntimeEngine {
         for(JsonNode g:ch.path("grants"))if(timing.equals(g.path("timing").asText()))grant(config,state,rules,"chapter:"+ch.path("index").asInt()+":"+timing+":"+g.path("itemId").asText(),g.path("itemId").asText(),g.path("quantity").asInt());
     }
     public void chapterSteps(TopicRouteEngine.State state,int delta) {
-        if(delta<=0)return;
+        if(delta<=0 || state.getThemeRuntime().isEmpty() || state.getThemeRuntime().has("result"))return;
         for(JsonNode p:state.getThemeRuntime().with("chapters"))if(!p.path("ended").asBoolean())((ObjectNode)p).put("steps",Math.min(999999,p.path("steps").asInt()+delta));
     }
     public void chapterTick(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,long now) {
+        if(!mutable(config,state))return;
         for(JsonNode ch:config.path("chapters")) {
             JsonNode p=state.getThemeRuntime().path("chapters").path(String.valueOf(ch.path("index").asInt()));
             if(!p.isObject() || p.path("ended").asBoolean())continue;
@@ -309,6 +314,13 @@ public final class ThemeRuntimeEngine {
         return card;
     }
     private ArrayNode catalog(JsonNode config) {ArrayNode all=JSON.createArrayNode();for(JsonNode item:config.path("items"))all.add(item);for(JsonNode medal:config.path("legacyMedals"))all.add(medal);return all;}
+    // 路线可先标记 COMPLETED，可信终点发放后才生成 result；result 才是主题终局的冻结边界。
+    private boolean mutable(JsonNode config,TopicRouteEngine.State state) {
+        return config!=null && config.isObject() && !state.getThemeRuntime().isEmpty() && !state.getThemeRuntime().has("result");
+    }
+    private void requireUnfinished(TopicRouteEngine.State state) {
+        if(state.getThemeRuntime().has("result"))throw new IllegalStateException("本局已结束");
+    }
     public void legacyMedal(JsonNode config,TopicRouteEngine.State state,JourneyRules rules,String id) {grant(config,state,rules,"legacy:"+id,id,1);}
     private boolean contains(JsonNode values,String text){for(JsonNode value:values)if(text.equals(value.asText()))return true;return false;}
     public int used(JsonNode config,TopicRouteEngine.State state) {long total=0;for(JsonNode item:catalog(config))if("ITEM".equals(item.path("kind").asText()))total+=(long)state.getThemeRuntime().path("inventory").path(item.path("id").asText()).asInt()*item.path("slotCost").asInt(1);return Math.toIntExact(total);}

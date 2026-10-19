@@ -362,18 +362,25 @@ class RefundServiceImplTest {
         registration.setId(99L);
         registration.setVerificationStatus(0);
         java.util.concurrent.atomic.AtomicInteger paymentStatus = new java.util.concurrent.atomic.AtomicInteger(2);
+        java.util.concurrent.atomic.AtomicReference<java.util.Date> mutatedAt =
+                new java.util.concurrent.atomic.AtomicReference<>();
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund(10L, 99L, 2L));
         when(refundMapper.selectRefundApplicationById(11L)).thenReturn(refund(11L, 99L, 2L));
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
         when(refundMapper.updateRefundStatusIfPending(any(), eq(1), any(), any(), any())).thenReturn(1);
         when(registrationMapper.claimRegistrationRefunded(eq(99L), any(), any()))
-                .thenAnswer(inv -> paymentStatus.compareAndSet(2, 4) ? 1 : 0);
+                .thenAnswer(inv -> {
+                    if (!paymentStatus.compareAndSet(2, 4)) return 0;
+                    mutatedAt.set(inv.getArgument(2));
+                    return 1;
+                });
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(99L)).thenAnswer(inv -> {
             CmsRegistration current = new CmsRegistration();
             current.setPayableAmount(new BigDecimal("100.00"));
             current.setId(99L);
             current.setPaymentStatus(paymentStatus.get());
             current.setRegistrationStatus(paymentStatus.get() == 4 ? 3 : 2);
+            current.setUpdateTime(mutatedAt.get());
             return current;
         });
 
@@ -828,6 +835,20 @@ class RefundServiceImplTest {
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(any()))
                 .thenAnswer(call -> registrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         when(registrationMapper.claimRegistrationRefunded(any(), any(), any())).thenReturn(1);
+        // Successful default CAS fixture supplies its persisted terminal snapshot.
+        // Race-specific tests override this read and timestamp with their own state.
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(any())).thenAnswer(inv -> {
+            CmsRegistration row = new CmsRegistration();
+            row.setId(inv.getArgument(0));
+            row.setPaymentStatus(4);
+            row.setRegistrationStatus(3);
+            row.setUpdateTime(new java.util.Date());
+            return row;
+        });
+        com.chengyinhub.business.mapper.BusinessAuditEventMapper lifecycle =
+                mock(com.chengyinhub.business.mapper.BusinessAuditEventMapper.class);
+        when(lifecycle.insertBusinessAuditEvent(any())).thenReturn(1);
+        ReflectionTestUtils.setField(service, "registrationLifecycleAuditMapper", lifecycle);
         ReflectionTestUtils.setField(service, "settlementDetailMapper", settlementDetailMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -836,7 +857,17 @@ class RefundServiceImplTest {
         // [P2-20] 告警出口用哑 mock:不注入会 NPE(手工装配不走 Spring 容器),
         //         而 NPE 恰好被 alarm() 的 best-effort catch 接住,会让告警断言变成假绿。
         ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
-        return service;
+        // Exercise the real @Transactional boundary, including worker-thread cases.
+        org.h2.jdbcx.JdbcDataSource dataSource = new org.h2.jdbcx.JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:refund-fixture-" + java.util.UUID.randomUUID());
+        org.springframework.transaction.interceptor.TransactionInterceptor advice =
+                new org.springframework.transaction.interceptor.TransactionInterceptor(
+                        new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource),
+                        new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource());
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(service);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(advice);
+        return (RefundServiceImpl) proxy.getProxy();
     }
 
     private RefundReviewDTO review(Long id, Integer status) {

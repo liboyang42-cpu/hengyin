@@ -323,7 +323,10 @@ class AuditGovernanceContractTest {
                 () -> service.revert(TASK_ID, ACTOR_ID + 1, false, revertRequest()));
 
         assertEquals(Integer.valueOf(HttpStatus.FORBIDDEN), error.getCode());
-        verify(tasks, never()).selectAuditTaskById(any());
+        // Reserved-type denial must happen before any receipt lookup, even for a replay.
+        verify(tasks).selectAuditTaskById(TASK_ID);
+        verify(records, never()).insertAuditRecord(any());
+        verify(audits, never()).insertBusinessAuditEvent(any());
     }
 
     @Test

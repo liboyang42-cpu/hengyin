@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.chengyinhub.business.domain.NpcProfile;
 import com.chengyinhub.business.domain.vo.ai.NpcProfileVO;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
+import com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory;
 
 /**
  * NPC 出场解析服务。
@@ -23,6 +24,9 @@ public class NpcProfileService
 
     @Autowired
     private NpcProfileMapper npcProfileMapper;
+
+    @Autowired
+    private MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
 
     /**
      * 取全局 NPC(scope_type=3,常驻地图/我的页)。
@@ -96,7 +100,14 @@ public class NpcProfileService
     public NpcProfileVO resolveForNodeOrMerchant(Long nodeId, Long merchantMemberId)
     {
         NpcProfileVO nodeNpc = resolveForNode(nodeId);
-        return nodeNpc != null ? nodeNpc : resolveForMerchant(merchantMemberId);
+        return nodeNpc != null ? nodeNpc : resolveForMerchant(
+                merchantNpcIdentityDirectory.availableMerchantIdForMember(merchantMemberId));
+    }
+
+    /** 节点记录的是 owner member ID；所有门店叙事 NPC 必须先解析唯一公开商户行。 */
+    public List<NpcProfileVO> resolveEnabledForMerchantMember(Long merchantMemberId)
+    {
+        return resolveEnabledList(2, merchantNpcIdentityDirectory.availableMerchantIdForMember(merchantMemberId));
     }
 
     /**

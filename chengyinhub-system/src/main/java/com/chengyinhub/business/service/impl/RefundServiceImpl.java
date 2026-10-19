@@ -79,6 +79,9 @@ public class RefundServiceImpl implements IRefundService {
     private String payoutReceiptAllowedHosts;
 
     @Autowired
+    private com.chengyinhub.business.mapper.BusinessAuditEventMapper registrationLifecycleAuditMapper;
+
+    @Autowired
     private RefundApplicationMapper refundApplicationMapper;
 
     /** [P0-15] ③ 退款释放权益容量。后台审核路不经 TeamGroupServiceImpl,必须自己接。 */
@@ -851,6 +854,14 @@ public class RefundServiceImpl implements IRefundService {
         }
         registration.setPaymentStatus(4);
         registration.setRegistrationStatus(3);
+        CmsRegistration persistedLifecycle = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+        if (persistedLifecycle == null) throw new IllegalStateException("Registration lifecycle row missing after refund");
+        com.chengyinhub.business.service.support.RegistrationLifecycleAudit.append(
+                registrationLifecycleAuditMapper,
+                com.chengyinhub.business.service.support.RegistrationLifecycleAudit.changed(
+                        persistedLifecycle.getId(), persistedLifecycle.getMemberId(),
+                        persistedLifecycle.getPaymentStatus(), persistedLifecycle.getRegistrationStatus(),
+                        persistedLifecycle.getUpdateTime(), new Date(), "REFUND_INVALIDATED", persistedLifecycle.getPaymentTime()));
         // [P0-15] 释放 ③ 的权益容量。
         // ⚠️ 这处不能省:后台运营审核路(RefundController → reviewRefund → 本方法)**压根不经过
         // TeamGroupServiceImpl**,只接玩家自退那两处会漏掉整条后台退款路 —— 钱退了、库存回补了,

@@ -1082,6 +1082,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and phone_hash is null
     </update>
 
+    <select id="selectPureContentExploreScopes" resultMap="CmsRegistrationResult" flushCache="true" useCache="false">
+        select r.id, r.member_id, r.owner_type, r.owner_id,
+               r.payment_status, r.registration_status, r.purchase_kind
+        from cms_registration r join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
+        where a.topic_id = #{topicId} and a.del_flag = 0
+          and r.payment_status = 2 and r.registration_status = 2 and r.purchase_kind = 3
+          and r.member_id &gt; 0
+          <if test="afterId != null">and r.id &gt; #{afterId}</if>
+        order by r.id limit #{limit}
+    </select>
+
     <select id="selectPureContentExploreCompletion" resultType="java.util.HashMap">
         select r.member_id as memberId,
           max(case when not exists (

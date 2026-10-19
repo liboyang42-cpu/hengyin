@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.service.support.RegistrationLifecycleMySqlFixture;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -52,6 +53,7 @@ import static org.mockito.Mockito.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RefundNotificationMybatisIntegrationTest {
     private MysqlIntegrationTestConfig mysql;
+    private com.chengyinhub.business.mapper.BusinessAuditEventMapper lifecycleAudit;
     private JdbcTemplate jdbc;
     private boolean created;
     private TransactionTemplate transaction;
@@ -70,6 +72,8 @@ class RefundNotificationMybatisIntegrationTest {
         created = true;
         DriverManagerDataSource ds = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
         jdbc = new JdbcTemplate(ds);
+        RegistrationLifecycleMySqlFixture.createTable(jdbc);
+        lifecycleAudit = RegistrationLifecycleMySqlFixture.mapper(ds);
         System.out.println("Refund notification MySQL version=" + jdbc.queryForObject("SELECT VERSION()", String.class));
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         int start = base.indexOf("CREATE TABLE `refund_application` (");
@@ -106,6 +110,7 @@ class RefundNotificationMybatisIntegrationTest {
 
     @BeforeEach void reset() {
         jdbc.update("DELETE FROM refund_application");
+        jdbc.update("DELETE FROM business_audit_event");
         delivered.clear();
         observedPayoutStates.clear();
         setChannel(this::captureCommittedRefund);
@@ -158,6 +163,7 @@ class RefundNotificationMybatisIntegrationTest {
         for (long points : new long[]{0, 20}) {
             for (String cash : new String[]{"0", "30.00"}) {
                 delivered.clear();
+                jdbc.update("DELETE FROM business_audit_event");
                 IRefundPayoutService payout = mock(IRefundPayoutService.class);
                 TeamGroupServiceImpl cancellation = cancellation(cash, points, payout);
                 transaction.executeWithoutResult(tx -> {
@@ -166,7 +172,10 @@ class RefundNotificationMybatisIntegrationTest {
                     verifyNoInteractions(payout);
                 });
                 assertTrue(delivered.isEmpty(), "提交取消也不等于渠道到账");
-                if ("0".equals(cash)) verifyNoInteractions(payout);
+                if ("0".equals(cash)) {
+                    verifyNoInteractions(payout);
+                    RegistrationLifecycleMySqlFixture.assertEvent(jdbc, 11L, "REFUND_INVALIDATED", 4, 3);
+                }
                 else verify(payout).payoutAfterReview(7L);
             }
         }
@@ -182,8 +191,18 @@ class RefundNotificationMybatisIntegrationTest {
         CmsRegistrationMapper registrations =
                 mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
-        when(registrations.claimRegistrationRefunded(
-                eq(11L), any(), any())).thenReturn(1);
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> persisted =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenAnswer(call -> persisted.get());
+        when(registrations.claimRegistrationRefunded(eq(11L), any(), any())).thenAnswer(call -> {
+            CmsRegistration terminal = new CmsRegistration();
+            org.springframework.beans.BeanUtils.copyProperties(registration, terminal);
+            terminal.setPaymentStatus(4);
+            terminal.setRegistrationStatus(3);
+            terminal.setUpdateTime(call.getArgument(2, Date.class));
+            persisted.set(terminal);
+            return 1;
+        });
         when(registrations.claimPointsReturn(
                 eq(11L), any(), any())).thenReturn(1);
         UmsMemberMapper members =
@@ -206,6 +225,7 @@ class RefundNotificationMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
+        ReflectionTestUtils.setField(target, "registrationLifecycleAuditMapper", lifecycleAudit);
         ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(target, "umsMemberMapper", members);
         ReflectionTestUtils.setField(target, "refundService", application);

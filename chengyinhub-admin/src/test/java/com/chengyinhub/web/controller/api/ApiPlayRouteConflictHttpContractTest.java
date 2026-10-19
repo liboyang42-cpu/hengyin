@@ -55,6 +55,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -146,12 +149,27 @@ class ApiPlayRouteConflictHttpContractTest {
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
         when(playerProgressionService.onNodeDone(anyLong())).thenReturn(new ArrayList<>());
         when(runtimeService.canPlay(anyLong(), anyLong(), anyLong(), anyLong(), any())).thenReturn(true);
+        when(runtimeService.playInstance(MEMBER, TOPIC, ACTIVITY)).thenReturn("default");
+        when(runtimeService.beginOriginalNodeAward(MEMBER, TOPIC, ACTIVITY, NODE, "default"))
+                .thenAnswer(invocation -> {
+                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    org.junit.jupiter.api.Assertions.assertEquals(java.sql.Connection.TRANSACTION_READ_COMMITTED,
+                            org.springframework.transaction.support.TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
+                    return new ITopicRouteRuntimeService.NodeAwardPermit(MEMBER, TOPIC, ACTIVITY, NODE, "default", true);
+                });
 
         TopicRouteState branch = new TopicRouteState();
         branch.setRouteMode(TopicRouteState.BRANCH_GRAPH);
         when(runtimeService.state(eq(MEMBER), eq(TOPIC), eq(ACTIVITY))).thenReturn(branch);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        org.springframework.jdbc.datasource.DriverManagerDataSource ds = new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                "jdbc:h2:mem:route-http-" + java.util.UUID.randomUUID(), "sa", "");
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(controller);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        mockMvc = MockMvcBuilders.standaloneSetup(proxy.getProxy())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
         CurrentPlayControllerFixtures.install(controller);
@@ -171,6 +189,8 @@ class ApiPlayRouteConflictHttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(HttpStatus.CONFLICT))
                 .andExpect(jsonPath("$.msg").value("路线状态已更新，请刷新后重试"));
+        verify(runtimeService).advance(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(0), eq("client-action"),
+                eq("CHOICE"), any(NodeOutcome.class));
     }
 
     @Test
@@ -192,6 +212,8 @@ class ApiPlayRouteConflictHttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(HttpStatus.CONFLICT))
                 .andExpect(jsonPath("$.data.routeState.version").value(4));
+        verify(runtimeService).advance(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(0), eq("client-action"),
+                eq("CHOICE"), any(NodeOutcome.class));
     }
 
     @Test
@@ -208,6 +230,8 @@ class ApiPlayRouteConflictHttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(HttpStatus.ERROR))
                 .andExpect(jsonPath("$.msg").value("节点当前不可用"));
+        verify(runtimeService).advance(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(0), eq("client-action"),
+                eq("CHOICE"), any(NodeOutcome.class));
     }
 
     private CmsTopicNode nodeEntity() {
@@ -231,7 +255,7 @@ class ApiPlayRouteConflictHttpContractTest {
         return activity;
     }
 
-    private static class TestController extends ApiPlayProgressController {
+    static class TestController extends ApiPlayProgressController {
         @Override
         public Long getAppUserId() {
             return MEMBER;
@@ -247,6 +271,28 @@ class ApiPlayRouteConflictHttpContractTest {
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.msg").value("本站尚未开放或已暂停，请联系带队主理人"));
         org.mockito.Mockito.verify(progressService, org.mockito.Mockito.never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void missingCurrentInstanceCannotBeReplacedByAnotherOwnersDefault() throws Exception {
+        when(runtimeService.playInstance(MEMBER, TOPIC, ACTIVITY)).thenReturn(null);
+        when(runtimeService.playInstance(MEMBER + 1, TOPIC, ACTIVITY)).thenReturn("default");
+        mockMvc.perform(post("/api/play/checkin").param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.msg").value("本局不可读取"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(runtimeService, never()).advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(), any(NodeOutcome.class));
+    }
+
+    @Test
+    void wrongNodePermitCannotReachRouteCompletion() throws Exception {
+        doReturn(new ITopicRouteRuntimeService.NodeAwardPermit(MEMBER, TOPIC, ACTIVITY, NODE + 1, "default", true))
+                .when(runtimeService).beginOriginalNodeAward(MEMBER, TOPIC, ACTIVITY, NODE, "default");
+        mockMvc.perform(post("/api/play/checkin").param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.msg").value("原始奖励范围不可读取"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(runtimeService, never()).advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(), any(NodeOutcome.class));
     }
 
 }

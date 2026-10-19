@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.free.store.FreeModuleClaimStore">
+  <select id="findActiveMember" resultType="java.lang.Long" useCache="false" flushCache="true">
+    SELECT id FROM ums_member WHERE id=#{memberId} AND status=1 AND del_flag=0
+  </select>
+  <update id="retirePublication">
+    UPDATE w18_free_publication_policy SET state='RETIRED' WHERE publication_id=#{publicationId} AND state='LISTED'
+  </update>
+  <update id="withdrawPublication">
+    UPDATE w18_free_publication_policy SET state='EMERGENCY_BLOCKED'
+    WHERE publication_id=#{publicationId} AND state IN ('LISTED','RETIRED')
+  </update>
+  <update id="revokeOwnedClaim">
+    UPDATE w18_free_claim SET state='REVOKED' WHERE buyer_member_id=#{buyer} AND claim_id=#{claimId} AND state IN ('ACTIVE','SUSPENDED')
+  </update>
+  <!-- Existing member truth, same predicate as UmsMemberMapper.lockActiveMemberById. -->
+  <select id="lockActiveMember" resultType="java.lang.Long" useCache="false" flushCache="true">
+    SELECT id FROM ums_member WHERE id=#{memberId} AND status=1 AND del_flag=0 FOR UPDATE
+  </select>
+  <select id="lockPublication" resultType="com.chengyinhub.business.marketplace.free.store.FreePublicationRow" useCache="false" flushCache="true">
+    SELECT p.publication_id AS publicationId,p.seller_member_id AS sellerMemberId,p.source_template_id AS sourceTemplateId,
+      p.ownership_key AS ownershipKey,p.document_hash AS documentHash,p.snapshot_json AS snapshotJson,p.content,p.terms,p.grant_valid_until AS grantValidUntil,s.state
+    FROM w18_free_publication p JOIN w18_free_publication_policy s ON s.publication_id=p.publication_id
+    WHERE p.publication_id=#{publicationId} FOR UPDATE
+  </select>
+  <sql id="claimColumns">claim_id AS claimId,buyer_member_id AS buyerMemberId,request_key AS requestKey,
+    publication_id AS publicationId,document_hash AS documentHash,state,created_at AS createdAt,valid_until AS validUntil</sql>
+  <select id="findRequest" resultType="com.chengyinhub.business.marketplace.free.store.FreeClaimRow" useCache="false" flushCache="true">
+    SELECT <include refid="claimColumns"/> FROM w18_free_claim WHERE buyer_member_id=#{buyer} AND request_key=#{requestKey} FOR UPDATE
+  </select>
+  <select id="findOwned" resultType="com.chengyinhub.business.marketplace.free.store.FreeClaimRow" useCache="false" flushCache="true">
+    SELECT <include refid="claimColumns"/> FROM w18_free_claim WHERE buyer_member_id=#{buyer} AND publication_id=#{publicationId} FOR UPDATE
+  </select>
+  <select id="findClaim" resultType="com.chengyinhub.business.marketplace.free.store.FreeClaimRow" useCache="false" flushCache="true">
+    SELECT <include refid="claimColumns"/> FROM w18_free_claim WHERE buyer_member_id=#{buyer} AND claim_id=#{claimId} FOR UPDATE
+  </select>
+  <insert id="insertClaim">
+    INSERT INTO w18_free_claim(claim_id,buyer_member_id,request_key,publication_id,document_hash,state,created_at,valid_until)
+    VALUES(#{claimId},#{buyerMemberId},#{requestKey},#{publicationId},#{documentHash},#{state},#{createdAt},#{validUntil})
+  </insert>
+</mapper>

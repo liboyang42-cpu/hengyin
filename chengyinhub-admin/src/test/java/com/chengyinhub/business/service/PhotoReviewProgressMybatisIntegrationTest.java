@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.PlayerNodeProgress;
+import com.chengyinhub.business.domain.TopicRouteSession;
 import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
 import com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -19,6 +20,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 拍照一律机审(2026-09-17 拍板)的真库语义:{@code markPhotoMachineApproved} 的条件更新谓词
@@ -208,12 +215,27 @@ class PhotoReviewProgressMybatisIntegrationTest {
     @Test
     void legacyPendingRowIsNotASubmitToCompleteRowForListReaders() {
         seedPending("https://oss/upload/22222222222222222222222222222222.jpg", new Date());
+        // member + activity 的跨主题列表必须经运行时选局；只补读侧 fixture，不放宽生产 gate。
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        when(runtime.playInstances(anyList())).thenAnswer(call -> {
+            List<TopicRouteSession> scopes = call.getArgument(0);
+            assertEquals(1, scopes.size());
+            assertEquals(Long.valueOf(71L), scopes.get(0).getMemberId());
+            assertEquals(Long.valueOf(73L), scopes.get(0).getTopicId());
+            assertEquals(Long.valueOf(72L), scopes.get(0).getActivityId());
+            return Collections.singletonMap(ITopicRouteRuntimeService.sessionKey(71L, 73L, 72L), "default");
+        });
+        PlayerNodeProgressServiceImpl reader = new PlayerNodeProgressServiceImpl();
+        ReflectionTestUtils.setField(reader, "playerNodeProgressMapper", mapper);
+        ReflectionTestUtils.setField(reader, "routeRuntimeService", runtime);
         PlayerNodeProgress probe = new PlayerNodeProgress();
         probe.setMemberId(71L);
         probe.setActivityId(72L);
-        List<PlayerNodeProgress> rows = service.selectPlayerNodeProgressList(probe);
+        List<PlayerNodeProgress> rows = reader.selectPlayerNodeProgressList(probe);
         assertEquals(1, rows.size());
         assertEquals(0, rows.get(0).getStatus(), "存量待审行存在但 status=0,读侧不得当完成");
         assertEquals(0, rows.get(0).getReviewStatus());
+        assertEquals("default", rows.get(0).getPlayInstanceId());
+        verify(runtime, times(2)).playInstances(anyList()); // SQL 读取前选局，读取后再次确认未换局。
     }
 }

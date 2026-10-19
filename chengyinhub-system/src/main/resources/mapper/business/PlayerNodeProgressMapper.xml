@@ -2,6 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.PlayerNodeProgressMapper">
 
+    <!-- No current-topic JOIN or del_flag filter: this denies an already-consumed original opportunity,
+         never restores historical ownership or contributes to current completion. -->
+    <select id="selectOriginalNodeAwardEvidence" resultType="map" flushCache="true" useCache="false">
+        select exists(select 1 from player_node_progress p
+          where p.member_id=#{memberId} and p.activity_id=#{activityId} and p.node_id=#{nodeId}
+            and p.play_instance_id='default' and p.status=1) as legacyCompleted,
+          exists(select 1 from reward_drop_log d
+          where d.member_id=#{memberId} and d.activity_id=#{activityId} and d.topic_id=#{topicId}
+            and d.node_id=#{nodeId} and d.scene_key='topic_node') as dropConsumed,
+          exists(select 1 from business_audit_event a
+          where a.domain_type='TOPIC_NODE' and a.domain_id=#{nodeId}
+            and a.actor_type='MEMBER' and a.actor_member_id=#{memberId}
+            and a.action='NODE_COUPON_GRANT' and a.target_type='SMS_COUPON'
+            and a.relation_id=#{activityId}) as couponConsumed
+    </select>
+
+    <resultMap id="FirstAwardSession" type="com.chengyinhub.business.domain.TopicRouteSession">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/><result property="topicId" column="topic_id"/>
+        <result property="activityId" column="activity_id"/><result property="playInstanceId" column="play_instance_id"/>
+        <result property="configSnapshotJson" column="config_snapshot_json"/>
+    </resultMap>
+    <select id="selectOriginalInstanceAwardSessions" resultMap="FirstAwardSession" flushCache="true" useCache="false">
+        select r.id,r.member_id,r.topic_id,r.activity_id,r.play_instance_id,r.config_snapshot_json
+        from player_node_progress p left join topic_route_session r
+          on r.member_id=p.member_id and r.activity_id=p.activity_id
+          and r.topic_id=p.topic_id and r.play_instance_id=p.play_instance_id
+        where p.member_id=#{memberId} and p.activity_id=#{activityId} and p.node_id=#{nodeId}
+          and p.status=1 and (p.play_instance_id like 'theme-first:%' or p.play_instance_id like 'team-replay:%')
+    </select>
+
     <resultMap type="PlayerNodeProgress" id="PlayerNodeProgressResult">
         <result property="playInstanceId" column="play_instance_id" />
         <result property="id"           column="id"           />
@@ -32,12 +63,80 @@
             <if test="activityId != null"> and activity_id = #{activityId}</if>
             <if test="topicId != null"> and topic_id = #{topicId}</if>
             <if test="nodeId != null"> and node_id = #{nodeId}</if>
+            and play_instance_id = 'default'
             <if test="playInstanceId != null"> and play_instance_id = #{playInstanceId}</if>
-            <if test="playInstanceId == null and memberId != null and activityId != null">
-                and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=player_node_progress.member_id and r.topic_id=player_node_progress.topic_id and r.activity_id=player_node_progress.activity_id order by r.id desc limit 1),'default')
-            </if>
             and del_flag = 0
         </where>
+    </select>
+
+    <!-- 实例参数来自受保护的运行时；不允许空实例退回 default 或最新行。 -->
+    <select id="selectPlayerNodeProgressListForInstance" resultMap="PlayerNodeProgressResult" flushCache="true" useCache="false">
+        <include refid="selectPlayerNodeProgressVo"/>
+        where member_id = #{probe.memberId}
+          and activity_id = #{probe.activityId}
+          and topic_id = #{probe.topicId}
+          and play_instance_id = #{playInstanceId}
+          <if test="probe.nodeId != null">and node_id = #{probe.nodeId}</if>
+          and del_flag = 0
+    </select>
+
+    <!-- Only sibling-arrival existence checks may include deleted evidence; never a player read. -->
+    <select id="countPlayerNodeProgressForInstanceIncludingDeleted" resultType="int" flushCache="true" useCache="false">
+        select count(*) from player_node_progress
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+          and node_id = #{nodeId} and play_instance_id = #{playInstanceId}
+    </select>
+
+    <!-- 只枚举真实进度中的归属，不查路线表、不解析主题配置、不猜最新局。 -->
+    <select id="selectProgressScopes" resultMap="PlayerNodeProgressResult">
+        select distinct member_id, activity_id, topic_id from player_node_progress
+        where del_flag = 0 and member_id &gt; 0 and topic_id &gt; 0 and activity_id &gt;= 0
+        <choose>
+            <when test="probe.memberId != null or (probe.activityId != null and probe.topicId != null)">
+                <if test="probe.memberId != null">and member_id = #{probe.memberId}</if>
+                <if test="probe.activityId != null">and activity_id = #{probe.activityId}</if>
+                <if test="probe.topicId != null">and topic_id = #{probe.topicId}</if>
+                <if test="probe.nodeId != null">and node_id = #{probe.nodeId}</if>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        order by activity_id, topic_id, member_id
+    </select>
+
+    <!-- 全部四个字段都来自 Java 校验后的同一个归属，不允许 null 回退。 -->
+    <sql id="resolvedProgressScopes">
+        <choose>
+            <when test="scopes != null and scopes.size() &gt; 0">
+                and <foreach collection="scopes" item="scope" open="(" separator=" or " close=")">
+                    (member_id = #{scope.memberId} and activity_id = #{scope.activityId}
+                     and topic_id = #{scope.topicId} and play_instance_id = #{scope.playInstanceId})
+                </foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectProgressForResolvedScopes" resultMap="PlayerNodeProgressResult">
+        <include refid="selectPlayerNodeProgressVo"/>
+        where del_flag = 0
+        <include refid="resolvedProgressScopes"/>
+        <if test="nodeId != null">and node_id = #{nodeId}</if>
+        order by activity_id, topic_id, member_id, id
+    </select>
+
+    <select id="selectLeaderboardForResolvedScopes"
+            resultType="com.chengyinhub.business.mapper.PlayerNodeProgressMapper$LeaderboardScopeScore">
+        select p.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+               p.activity_id as activityId, p.topic_id as topicId, p.play_instance_id as playInstanceId,
+               count(*) as score, max(p.checkin_time) as lastCheckinTime
+        from (
+            select member_id, activity_id, topic_id, play_instance_id, checkin_time from player_node_progress
+            where del_flag = 0 and status = 1
+              and activity_id = #{activityId} and topic_id = #{topicId}
+            <include refid="resolvedProgressScopes"/>
+        ) p
+        left join ums_member m on m.id = p.member_id
+        group by p.member_id, m.nickname, m.avatar, p.activity_id, p.topic_id, p.play_instance_id
     </select>
 
     <select id="countPlayersByTopicId" resultType="long">
@@ -99,7 +198,16 @@
     <update id="updateShopDayPhoto">
         update player_node_progress
         set pic_url = #{picUrl}, review_status = 0
-        where id = #{id} and status in (0, 1) and del_flag = 0 and pic_url is null
+        where id = #{id} and play_instance_id = 'default'
+          and status in (0, 1) and del_flag = 0 and pic_url is null
+    </update>
+
+    <update id="updateShopDayPhotoForInstance">
+        update player_node_progress
+        set pic_url = #{picUrl}, review_status = 0
+        where id = #{id} and member_id = #{memberId} and activity_id = #{activityId}
+          and topic_id = #{topicId} and node_id = #{nodeId} and play_instance_id = #{playInstanceId}
+          and status in (0, 1) and del_flag = 0 and checkin_time is not null and pic_url is null
     </update>
 
     <!-- ★拍照一律机审(2026-09-17 用户拍板,人工审核开关已下线)。
@@ -109,7 +217,15 @@
     <update id="markPhotoMachineApproved">
         update player_node_progress
         set status = 1, review_status = 1, checkin_time = now()
-        where id = #{id} and status = 0 and del_flag = 0
+        where id = #{id} and play_instance_id = 'default' and status = 0 and del_flag = 0
+    </update>
+
+    <update id="markPhotoMachineApprovedForInstance">
+        update player_node_progress
+        set status = 1, review_status = 1, checkin_time = now()
+        where id = #{id} and member_id = #{memberId} and activity_id = #{activityId}
+          and topic_id = #{topicId} and play_instance_id = #{playInstanceId}
+          and status = 0 and del_flag = 0
     </update>
 
     <!-- B5 收窄(2026-08-15):mode2 的行由扫码进店先建(status=0),游戏完成走条件更新 0→1。
@@ -119,7 +235,16 @@
         set status = 1
         where member_id = #{memberId} and activity_id = #{activityId}
           and topic_id = #{topicId} and node_id = #{nodeId}
-          and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=#{memberId} and r.topic_id=#{topicId} and r.activity_id=#{activityId} order by r.id desc limit 1),'default')
+          and play_instance_id = 'default'
+          and status = 0 and del_flag = 0
+    </update>
+
+    <update id="markShopDayGameDoneForInstance">
+        update player_node_progress
+        set status = 1
+        where member_id = #{memberId} and activity_id = #{activityId}
+          and topic_id = #{topicId} and node_id = #{nodeId}
+          and play_instance_id = #{playInstanceId}
           and status = 0 and del_flag = 0
     </update>
 
@@ -169,7 +294,7 @@
           from player_node_progress p
           left join ums_member m on m.id = p.member_id
          where p.del_flag = 0 and p.status = 1
-           and p.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=p.member_id and r.topic_id=p.topic_id and r.activity_id=p.activity_id order by r.id desc limit 1),'default')
+           and p.play_instance_id = 'default'
            <if test="activityId != null"> and p.activity_id = #{activityId}</if>
            <if test="topicId != null"> and p.topic_id = #{topicId} and p.activity_id = 0</if>
          group by p.member_id, m.nickname, m.avatar

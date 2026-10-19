@@ -1,6 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
+
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
+import com.chengyinhub.business.service.support.LegacyCmsMutationGuard;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.mapper.AuditTaskMapper;
 
@@ -76,6 +80,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Autowired
     private AuditTaskMapper auditTaskMapper;
 
+    @Autowired
+    private LegacyCmsProvenanceGuard legacyCmsProvenanceGuard;
+    @Autowired
+    private LegacyCmsMutationGuard legacyCmsMutationGuard;
+
 
     @Autowired
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
@@ -83,8 +92,12 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long publishTemplateWithTransaction(CmsTemplatePublishRequest request, Long memberId, String username) {
+<<<<<<< public
         Date now = new Date();
 
+=======
+        if (request == null) throw new IllegalArgumentException("模板不能为空");
+>>>>>>> private-github/featu
         // 编辑既有模板:request 带 id 即为改写自己已发布的那一份。
         // 没有这条,商家承接玩法包之后只能"换掉"不能"改" —— 副本模板的归属已经是他的
         // (CmsTopicServiceImpl#copyTemplateForOwner 深拷贝过),却没有任何入口能改题面与答案。
@@ -99,13 +112,22 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 // 不区分"不存在"与"不是你的":区分了就等于给出一个模板 id 探测器
                 throw new RuntimeException("模板不存在或无权修改");
             }
+            legacyCmsProvenanceGuard.requireLegacy(editingId);
+            request.setOriginalTemplateId(existing.getOriginalTemplateId());
         }
 
+<<<<<<< public
         prepareClearFields(request, existing);
+=======
+>>>>>>> private-github/featu
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         normalizeAdoptedReward(request);
         assertCapabilities(request, memberId);
+<<<<<<< public
+=======
+        Date now = new Date();
+>>>>>>> private-github/featu
 
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
@@ -139,7 +161,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
 
         // 如果是引用别人的模板，设置originalTemplateId
-        if (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0) {
+        if (editing) {
+            memberTemplate.setOriginalTemplateId(existing.getOriginalTemplateId());
+        } else if (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0) {
             memberTemplate.setOriginalTemplateId(request.getOriginalTemplateId());
         } else {
             memberTemplate.setOriginalTemplateId(0L);
@@ -268,6 +292,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 || !Integer.valueOf(1).equals(template.getCheckStatus())) {
             throw new ServiceException("玩法个人审核通过后才能提交模板广场", HttpStatus.BAD_REQUEST);
         }
+        // The canonical row is already locked and owner/review gates have passed. Check BOTH
+        // provenance signals in this same write transaction before copying into the public
+        // projection or submitting any market audit. No paid-use approval is inferred here.
+        if (legacyCmsMutationGuard == null) throw new ServiceException("模板暂不可提交广场");
+        legacyCmsMutationGuard.requireLegacyForMutation(template.getId());
         validatePreferenceForReview(template);
         Date now = new Date();
         CmsTemplateLibrary projection = findLiveProjection(templateId);
@@ -399,11 +428,24 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         // 内容字段沿发布 DTO 白名单复制，客户端不能恢复删除状态或伪造审核状态。
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
         BeanUtils.copyProperties(input, request);
+        // BeanUtils 不会将 Long 转成 Integer；分钟数必须精确转换，不能截断溢出。
+        if (input.getDuration() != null) {
+            try {
+                request.setDuration(Math.toIntExact(input.getDuration()));
+            } catch (ArithmeticException e) {
+                throw new ServiceException("时长超出支持范围");
+            }
+        }
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         CmsMemberTemplate saved = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, saved);
+<<<<<<< public
         mediaPublicationGuard.requireTemplate(memberId, saved, true);
+=======
+        // 更新未传/传 null 时交给动态 SQL 保留原列；新建仍沿用既有的 0 默认值。
+        if (existing != null && input.getDuration() == null) saved.setDuration(null);
+>>>>>>> private-github/featu
         saved.setInteractionType(input.getInteractionType());
         saved.setId(existing == null ? null : existing.getId());
         saved.setMemberId(memberId); saved.setDelFlag(0); saved.setDraftStatus(1);
@@ -573,6 +615,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username) {
+<<<<<<< public
         if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             if (request.getId() != null || request.getOriginalTemplateId() == null
                     || request.getOriginalTemplateId() <= 0) {
@@ -609,6 +652,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 }
             }
         }
+=======
+        if (request == null) throw new IllegalArgumentException("模板不能为空");
+>>>>>>> private-github/featu
         CmsMemberTemplate existingDraft = null;
         if (request.getId() != null && request.getId() > 0) {
             existingDraft = lockTemplate(request.getId());
@@ -616,8 +662,14 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                     || !memberId.equals(existingDraft.getMemberId())) {
                 throw new RuntimeException("草稿不存在或无权修改");
             }
+<<<<<<< public
         }
         prepareClearFields(request, existingDraft);
+=======
+            legacyCmsProvenanceGuard.requireLegacy(request.getId());
+            request.setOriginalTemplateId(existingDraft.getOriginalTemplateId());
+        }
+>>>>>>> private-github/featu
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         normalizeAdoptedReward(request);
@@ -641,9 +693,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (StringUtils.isNotBlank(cats)) {
             t.setCategoryId(Long.valueOf(cats.split(",")[0].trim()));
         }
-        t.setOriginalTemplateId(
-            (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0)
-                ? request.getOriginalTemplateId() : 0L);
+        if (existingDraft != null) {
+            t.setOriginalTemplateId(existingDraft.getOriginalTemplateId());
+        } else {
+            t.setOriginalTemplateId(
+                    (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0)
+                            ? request.getOriginalTemplateId() : 0L);
+        }
 
         if (request.getId() != null && request.getId() > 0) {
             t.setId(request.getId());
@@ -1122,6 +1178,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId) {
+        return updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId,
+                                               TemplateLibraryRepublishReview review) {
         if (!Integer.valueOf(0).equals(publishStatus) && !Integer.valueOf(1).equals(publishStatus)) {
             throw new RuntimeException("发布状态仅支持 0 或 1");
         }
@@ -1141,6 +1204,19 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (libraryTemplates == null || libraryTemplates.isEmpty()) {
             // M-06:业务拒绝用 ServiceException,controller 才透传原因,不会被吞成「请稍后重试」
             throw new ServiceException("该模板还没有提交到模板广场，审核通过后才能上架", HttpStatus.BAD_REQUEST);
+        }
+        // 完整批次校验先于任何更新/撤销任务，后排漂移也不能产生部分写入。
+        if (Integer.valueOf(1).equals(publishStatus)) {
+            for (CmsTemplateLibrary projection : libraryTemplates) {
+                if (projection != null && Integer.valueOf(0).equals(projection.getDelFlag())
+                        && !Long.valueOf(1L).equals(projection.getStatus())) {
+                    throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
+                }
+            }
+            if (review == null || !memberTemplateId.equals(memberTemplate.getId())
+                    || !review.matches(memberTemplateId, memberId, libraryTemplates)) {
+                throw new ServiceException("上架复检暂不可用，请刷新后重试", HttpStatus.BAD_REQUEST);
+            }
         }
         boolean hasActiveProjection = false;
         for (CmsTemplateLibrary libraryTemplate : libraryTemplates) {

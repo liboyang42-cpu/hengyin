@@ -79,10 +79,10 @@ class TopicRouteCheckServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        runtime = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
+        runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
                 progressMapper, activityMapper, registrationMapper, roleMapper, proofService,
                 () -> 12345L, () -> diceQueue.removeFirst(), Clock.systemUTC(),
-                RouteReachabilityProvider.UNKNOWN);
+                RouteReachabilityProvider.UNKNOWN), templateMapper);
         ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", themeStateKeyMapper);
         ReflectionTestUtils.setField(runtime, "playEncounterService", encounterService);
         when(encounterService.resolve(anyLong(), anyLong(), anyLong(), anyLong())).thenReturn(null);

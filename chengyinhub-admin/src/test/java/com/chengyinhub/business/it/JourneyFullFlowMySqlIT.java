@@ -1,5 +1,8 @@
 package com.chengyinhub.business.it;
 
+import com.chengyinhub.business.service.support.LegacyCmsMutationGuard;
+import com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader;
+import com.chengyinhub.business.mapper.LegacyCmsTemplateReadMapper;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -271,7 +274,7 @@ class JourneyFullFlowMySqlIT {
         cfg.getTypeAliasRegistry().registerAlias("TopicRouteSession", TopicRouteSession.class);
         cfg.getTypeAliasRegistry().registerAlias("TopicRouteAction", TopicRouteAction.class);
         for (String name : Arrays.asList("CmsTopicMapper", "CmsTopicNodeMapper", "CmsTopicChapterMapper",
-                "CmsMemberTemplateMapper", "CmsRegistrationMapper", "PlayerNodeProgressMapper",
+                "CmsMemberTemplateMapper", "LegacyCmsTemplateReadMapper", "CmsRegistrationMapper", "PlayerNodeProgressMapper",
                 "ThemeStateKeyMapper", "NpcProfileMapper", "TopicRouteSessionMapper")) {
             String path = "mapper/business/" + name + ".xml";
             try (InputStream in = JourneyFullFlowMySqlIT.class.getClassLoader().getResourceAsStream(path)) {
@@ -622,12 +625,24 @@ class JourneyFullFlowMySqlIT {
 
     // ==================== 装配 ====================
 
+    @SuppressWarnings("unchecked")
+    private static <T> T mutationProxy(T target) {
+        ProxyFactory factory = new ProxyFactory(target);
+        factory.setProxyTargetClass(true);
+        factory.addAdvice(new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource()));
+        return (T) factory.getProxy();
+    }
+
     private static void wireServices() {
         CmsTopicNodeServiceImpl nodeService = new CmsTopicNodeServiceImpl();
         ReflectionTestUtils.setField(nodeService, "cmsTopicNodeMapper", sql.getMapper(CmsTopicNodeMapper.class));
         CmsMemberTemplateServiceImpl templateService = new CmsMemberTemplateServiceImpl();
         ReflectionTestUtils.setField(templateService, "cmsMemberTemplateMapper",
                 sql.getMapper(CmsMemberTemplateMapper.class));
+        ReflectionTestUtils.setField(templateService, "legacyCmsMutationGuard",
+                mutationProxy(new LegacyCmsMutationGuard(sql.getMapper(LegacyCmsTemplateReadMapper.class))));
+        ReflectionTestUtils.setField(templateService, "legacyCmsTemplateBodyReader", mutationProxy(new LegacyCmsTemplateBodyReader(
+                sql.getMapper(LegacyCmsTemplateReadMapper.class), sql.getMapper(CmsMemberTemplateMapper.class))));
         PlayerNodeProgressServiceImpl progressService = new PlayerNodeProgressServiceImpl();
         ReflectionTestUtils.setField(progressService, "playerNodeProgressMapper",
                 sql.getMapper(PlayerNodeProgressMapper.class));
@@ -641,7 +656,7 @@ class JourneyFullFlowMySqlIT {
 
         encounterService = new PlayEncounterServiceImpl();
         ReflectionTestUtils.setField(encounterService, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(encounterService, "cmsMemberTemplateService", templateService);
+        ReflectionTestUtils.setField(encounterService, "cmsMemberTemplateService", mutationProxy(templateService));
         ReflectionTestUtils.setField(encounterService, "topicRouteSessionMapper",
                 sql.getMapper(TopicRouteSessionMapper.class));
         ReflectionTestUtils.setField(encounterService, "shopDayProofService", shopProof);
@@ -665,6 +680,8 @@ class JourneyFullFlowMySqlIT {
                 sql.getMapper(CmsMemberTemplateMapper.class), sql.getMapper(PlayerNodeProgressMapper.class),
                 null, sql.getMapper(CmsRegistrationMapper.class), null, shopProof,
                 () -> 12345L, d20, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+        ReflectionTestUtils.setField(target, "legacyTemplateBodyReader", mutationProxy(new LegacyCmsTemplateBodyReader(
+                sql.getMapper(LegacyCmsTemplateReadMapper.class), sql.getMapper(CmsMemberTemplateMapper.class))));
         ReflectionTestUtils.setField(target, "cmsTopicChapterMapper", sql.getMapper(CmsTopicChapterMapper.class));
         ReflectionTestUtils.setField(target, "themeStateKeyMapper", sql.getMapper(ThemeStateKeyMapper.class));
         ProxyFactory proxyFactory = new ProxyFactory(target);
@@ -685,6 +702,9 @@ class JourneyFullFlowMySqlIT {
         ItSchema.apply(connection, "it-schema/cms-topic-it-schema.sql");
         ItSchema.apply(connection, "it-schema/journey-full-flow-it-schema.sql");
         ItSchema.apply(connection, "it-schema/merchant-chapter-offer-it-schema.sql");
+        // Test-only consumer schema; no external database is touched by source editing.
+        connection.createStatement().execute("ALTER TABLE cms_member_template ADD w18_provenance_kind VARCHAR(32) NULL");
+        connection.createStatement().execute("CREATE TABLE w18_cms_template_provenance(template_id BIGINT PRIMARY KEY)");
         ItSchema.applyMigrations(connection, "sql/migration_theme_state_key_20260916.sql",
                 "sql/migration_20260823_topic_route_graph.sql",
                 "sql/migration_20260930_registration_first_successful_scan.sql",
@@ -695,7 +715,7 @@ class JourneyFullFlowMySqlIT {
     private static void wipe() throws Exception {
         try (Connection c = open(); Statement st = c.createStatement()) {
             for (String table : Arrays.asList("topic_route_action", "topic_route_session", "player_node_progress",
-                    "cms_registration", "theme_state_key", "cms_member_template", "cms_topic_node",
+                    "cms_registration", "theme_state_key", "w18_cms_template_provenance", "cms_member_template", "cms_topic_node",
                     "cms_topic_chapter", "cms_topic", "npc_profile")) {
                 st.execute("delete from " + table);
             }
@@ -868,7 +888,16 @@ class JourneyFullFlowMySqlIT {
      * 所有 SQL 照常打在真库上。
      */
     private static final class HandshakeSessionMapper implements TopicRouteSessionMapper {
+<<<<<<< public
         public String selectMemberNickname(Long memberId) {return real.selectMemberNickname(memberId);}
+=======
+        @Override public List<TopicRouteSession> selectCurrentCandidatesByOwners(List<TopicRouteSession> scopes) {return real.selectCurrentCandidatesByOwners(scopes);}
+
+        @Override public TopicRouteSession selectCurrentByOwnerForUpdate(Long activityId,Long topicId,Long memberId) {return real.selectCurrentByOwnerForUpdate(activityId,topicId,memberId);}
+        @Override public TopicRouteSession selectByOwnerForUpdate(Long activityId,Long topicId,Long memberId,String instance) {return real.selectByOwnerForUpdate(activityId,topicId,memberId,instance);}
+        @Override public TopicRouteSession selectAccessibleByIdForUpdate(Long id,Long memberId) {return real.selectAccessibleByIdForUpdate(id,memberId);}
+
+>>>>>>> private-github/featu
         private final TopicRouteSessionMapper real;
         private final String watchedActionId;
         private final CountDownLatch readEmpty;

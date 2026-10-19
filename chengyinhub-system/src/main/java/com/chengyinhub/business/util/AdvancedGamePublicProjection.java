@@ -144,6 +144,7 @@ public final class AdvancedGamePublicProjection {
         if (!on) return;
         value.put("openFrom", source.path("openFrom").asText(""));
         value.put("openTo", source.path("openTo").asText(""));
+        putIfText(value, "timeZone", source);
         putIfText(value, "eyebrow", source);
         putIfText(value, "title", source);
         putIfText(value, "subscribeTmplId", source);

@@ -1,0 +1,18 @@
+{
+  "fixtureSchemaVersion": 1,
+  "active": false,
+  "notice": "Illustrative review-only values, not approved business defaults or an HTTP schema",
+  "canonicalModule": "{\"schemaVersion\":1,\"title\":\"Fixture module\",\"requiredBindings\":{\"start\":\"LOCATION\",\"reward\":\"PRODUCT\"},\"serverOnlyAnswer\":\"fixture-answer\"}",
+  "canonicalTerms": "fixture-reviewed-terms-v1: one theme; one merchant; ten runs; local adaptation; commercial use; no translation; no redistribution; exact version; region test-region",
+  "moduleId": "fixture-package",
+  "versionId": "fixture-version-1",
+  "version": "1.0.0",
+  "sourceKind": "MEMBER_TEMPLATE",
+  "sourceId": 7001,
+  "sourceRevision": "reviewed-template-revision-5",
+  "legacyClientHints": {"paid": true, "use_num": 50000, "registrationId": 88, "ticketId": 99},
+  "legacyClientHintsExpectedResult": "LICENSE_NOT_VERIFIED",
+  "frozenFreeOffer": {"version": "free-v1", "priceMinor": 0},
+  "laterPaidOffer": {"version": "paid-v2", "priceMinor": 1200, "currency": "CNY"},
+  "requiredBindings": {"start": {"kind": "LOCATION", "id": 501}, "reward": {"kind": "PRODUCT", "id": 601}}
+}

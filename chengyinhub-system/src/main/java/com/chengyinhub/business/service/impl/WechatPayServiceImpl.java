@@ -97,6 +97,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
     private NotificationParser notificationParser;
 
+    /** New W18 ingress only; no default bean, checkout activation or subscription fallback. */
+    @Autowired(required = false)
+    private ObjectProvider<com.chengyinhub.business.marketplace.paid.WorkshopPaidPaymentHandler> workshopPaidPaymentHandler;
+
     @Autowired
     private IUmsMemberService memberService;
 
@@ -722,8 +726,18 @@ public class WechatPayServiceImpl implements IWechatPayService {
             String route = "registration";
             IClubMembershipService clubMembershipService = clubMembershipServiceProvider == null
                     ? null : clubMembershipServiceProvider.getIfAvailable();
+<<<<<<< public
             if (otn != null && otn.startsWith("CLM")) {
                 route = "club-membership";
+=======
+            if (otn != null && otn.startsWith("W18_")) {
+                // This branch is reached ONLY after notificationParser.parse verifies the signature.
+                // Missing capability rejects the dedicated prefix rather than falling into subscriptions/tickets.
+                com.chengyinhub.business.marketplace.paid.WorkshopPaidPaymentHandler handler = workshopPaidPaymentHandler == null
+                        ? null : workshopPaidPaymentHandler.getIfAvailable();
+                result = WorkshopPaidNotificationRoute.dispatch(transaction, handler) ? "SUCCESS" : "FAIL";
+            } else if (otn != null && otn.startsWith("CLM")) {
+>>>>>>> private-github/featu
                 boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
                 Integer paidAmountFen = transaction.getAmount() == null ? null : transaction.getAmount().getTotal();
                 result = clubMembershipService != null && clubMembershipService.supportsOutTradeNo(otn)

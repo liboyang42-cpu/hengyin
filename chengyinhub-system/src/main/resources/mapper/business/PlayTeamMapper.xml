@@ -307,4 +307,9 @@
             or activity.end_date &lt;= #{now}
           )
     </update>
+    <!-- Team row must already be held. Do not lock nickname/avatar user rows. -->
+    <select id="selectActiveMembersForUpdate" resultMap="PlayTeamMemberResult" useCache="false" flushCache="true">
+        select id, team_id, member_id, role, status, apply_message, apply_expire_time, create_time, update_time
+        from play_team_member where team_id=#{teamId} and status=1 order by member_id for update
+    </select>
 </mapper>

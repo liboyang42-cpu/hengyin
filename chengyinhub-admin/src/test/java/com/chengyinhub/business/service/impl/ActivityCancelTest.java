@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.ActivityCancelManualRefundCase;
@@ -128,6 +129,21 @@ class ActivityCancelTest {
         ReflectionTestUtils.setField(s, "refundPayoutService", refundPayoutService);
         ReflectionTestUtils.setField(s, "manualRefundCaseService", manualRefundCaseService);
         return s;
+    }
+
+    /** The CAS persists a separate row; pre-read order snapshots remain unchanged. */
+    private void claimRefundedRows(List<CmsRegistration> rows) {
+        java.util.Map<Long, CmsRegistration> persisted = new java.util.HashMap<>();
+        for (CmsRegistration row : rows) persisted.put(row.getId(), row);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
+                .thenAnswer(inv -> persisted.get(inv.getArgument(0, Long.class)));
+        when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenAnswer(inv -> {
+            Long id = inv.getArgument(0, Long.class);
+            CmsRegistration source = persisted.get(id);
+            if (source == null) return 0;
+            persisted.put(id, RegistrationLifecycleFixture.persisted(source, 4, 3, inv.getArgument(2, Date.class)));
+            return 1;
+        });
     }
 
     /** 捕获建单参数:退哪一单、退多少,现在体现在退款单上(sourceId ⇒ out_trade_no)。 */
@@ -441,7 +457,8 @@ class ActivityCancelTest {
         when(regMapper.selectByParentOrderNo(PARENT)).thenReturn(order);
         when(regMapper.selectByParentOrderNoForUpdate(PARENT, ACTIVITY_ID)).thenReturn(order);
         // 未核销的已付从单,真库 claim 必然领到;mock 默认 0 = 「被并发核销/退款抢走」,RV-p1 1-43 起会拒退
-        when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenReturn(1);
+        claimRefundedRows(order);
+        s = RegistrationLifecycleFixture.transactional(s);
 
         int n = s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "下雨").getRefundedOrders();
 
@@ -675,8 +692,8 @@ class ActivityCancelTest {
             TeamGroupServiceImpl s = service(liveActivity(), order);
             when(regMapper.selectByParentOrderNoForUpdate(PARENT, ACTIVITY_ID)).thenReturn(order);
             when(regMapper.selectByParentOrderNo(PARENT)).thenReturn(order);
-            when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class)))
-                    .thenReturn(1);
+            claimRefundedRows(order);
+            s = RegistrationLifecycleFixture.transactional(s);
             when(regMapper.claimPointsReturn(anyLong(), anyString(), any(Date.class))).thenReturn(1);
             UmsMemberMapper members = (UmsMemberMapper) ReflectionTestUtils.getField(s, "umsMemberMapper");
             when(members.addPoints(first.getMemberId(), 200)).thenReturn(1);
@@ -893,7 +910,14 @@ class ActivityCancelTest {
                     ? java.util.Collections.singletonList(pending)
                     : java.util.Collections.<CmsRegistration>emptyList();
         });
-        when(regMapper.cancelUnpaidIfActive(9L, 509L, "activity-cancel:" + OTHER_MEMBER)).thenReturn(1);
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> persisted =
+                new java.util.concurrent.atomic.AtomicReference<>(pending);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(9L)).thenAnswer(inv -> persisted.get());
+        when(regMapper.cancelUnpaidIfActive(9L, 509L, "activity-cancel:" + OTHER_MEMBER)).thenAnswer(inv -> {
+            persisted.set(RegistrationLifecycleFixture.persisted(pending, 3, 3, new Date()));
+            return 1;
+        });
+        s = RegistrationLifecycleFixture.transactional(s);
 
         ActivityCancelResult result = s.cancelActivityByClubOperator(
                 ACTIVITY_ID, OWNER_ID, OTHER_MEMBER, "场地临时不可用");

@@ -14,6 +14,7 @@ import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.RefundServiceImpl;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -92,6 +93,7 @@ class RefundBalanceFloorTest {
         holdMapper = mock(com.chengyinhub.business.mapper.ActivitySettlementHoldMapper.class);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger", settlementDebtLedger);
         ReflectionTestUtils.setField(svc, "activitySettlementHoldMapper", holdMapper);
+        svc = RegistrationLifecycleFixture.transactional(svc);
     }
 
     /** 系统1 已结算过该活动(is_settlement=1)⇒ 商家真收到过分成 ⇒ 退款该扣回。 */
@@ -137,6 +139,7 @@ class RefundBalanceFloorTest {
         reg.setOwnerId(77L);
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
         when(cmsRegistrationMapper.claimRegistrationRefunded(eq(10L), any(), any())).thenReturn(1);
+        RegistrationLifecycleFixture.refundWinner(cmsRegistrationMapper, reg);
         givenSystem1AlreadyPaid();
         when(refundApplicationMapper.updateRefundStatusIfPending(anyLong(), anyInt(), any(), any(), any()))
                 .thenReturn(1);
@@ -222,7 +225,9 @@ class RefundBalanceFloorTest {
         RefundReviewDTO req = approveFullRefund("50.00");
         when(umsMemberMapper.deductBalance(5L, new BigDecimal("50.00"))).thenReturn(0);
 
-        assertThrows(IllegalStateException.class, () -> svc.reviewRefund(req, 42L));
+        IllegalStateException error = assertThrows(IllegalStateException.class, () -> svc.reviewRefund(req, 42L));
+        assertEquals("退款冲销余额原子扣减失败 receiverId=5", error.getMessage());
+        verify(umsMemberMapper).deductBalance(5L, new BigDecimal("50.00"));
 
         verify(umsMemberBalanceDetailMapper, never()).insertUmsMemberBalanceDetail(any());
     }

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import com.chengyinhub.business.mapper.CmsTopicLikeMapper;
 import com.chengyinhub.business.domain.CmsTopicLike;
 import com.chengyinhub.business.service.ICmsTopicLikeService;
+import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.common.exception.ServiceException;
 
 /**
  * 主题点赞Service业务层处理
@@ -20,6 +23,7 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
     @Autowired
     private CmsTopicLikeMapper cmsTopicLikeMapper;
 
+<<<<<<< public
     @Override
     public int setLiked(Long memberId, Long topicId, boolean liked) {
         if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) {
@@ -28,6 +32,10 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
         return liked ? cmsTopicLikeMapper.ensureOwnedLike(memberId, topicId)
                 : cmsTopicLikeMapper.deleteOwnedLike(memberId, topicId);
     }
+=======
+    @Autowired
+    private ICmsTopicService cmsTopicService;
+>>>>>>> private-github/featu
 
 
     /**
@@ -67,6 +75,34 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
     @Override
     public List<CmsTopicLike> selectCmsTopicLikesByMemberAndDataIds(Long memberId, List<Long> dataIds) {
         return cmsTopicLikeMapper.selectCmsTopicLikesByMemberAndDataIds(memberId, dataIds);
+    }
+
+    @Override
+    public boolean readOwnTopicLikeState(Long memberId, Long topicId) {
+        requireVisibleOwnTopic(memberId, topicId);
+        long count = cmsTopicLikeMapper.countOwnTopicLikes(memberId, topicId);
+        if (count < 0) throw new IllegalStateException("收藏状态不可用");
+        requireVisibleOwnTopic(memberId, topicId);
+        return count > 0;
+    }
+
+    @Override
+    public boolean cancelOwnTopicLike(Long memberId, Long topicId) {
+        requireVisibleOwnTopic(memberId, topicId);
+        // Single fixed-pair DELETE also removes legacy duplicates; never toggles or inserts.
+        cmsTopicLikeMapper.deleteOwnTopicLikes(memberId, topicId);
+        // A fresh observation, not forced false or a permanent/CAS cancellation guarantee.
+        return readOwnTopicLikeState(memberId, topicId);
+    }
+
+    private void requireVisibleOwnTopic(Long memberId, Long topicId) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) {
+            throw new IllegalArgumentException("当前用户和主题参数无效");
+        }
+        CmsTopic visible = cmsTopicService.selectCmsTopicDetailById(topicId, memberId);
+        if (visible == null || !topicId.equals(visible.getId())) {
+            throw new ServiceException("主题不可访问");
+        }
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
+
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
@@ -29,6 +31,9 @@ class TemplatePublishAuditQueueTest {
     private com.chengyinhub.business.mapper.AuditTaskMapper taskMapper;
 
     private void wireLocks(TemplatePublishServiceImpl service) {
+        // Audit-queue unit fixture only; real transaction/OR predicate cases are covered separately.
+        ReflectionTestUtils.setField(service, "legacyCmsMutationGuard",
+                mock(com.chengyinhub.business.service.support.LegacyCmsMutationGuard.class));
         memberMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         libraryMapper = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
         taskMapper = mock(com.chengyinhub.business.mapper.AuditTaskMapper.class);
@@ -413,13 +418,15 @@ class TemplatePublishAuditQueueTest {
         CmsTemplateLibrary projection = new CmsTemplateLibrary();
         projection.setId(191L);
         projection.setMemberTemplateId(91L);
+        projection.setMemberId(7L);
         projection.setStatus(1L);
         projection.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(projection));
         when(libraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
 
-        assertTrue(service.updateTemplateLibraryStatus(91L, 1, 7L));
+        assertTrue(service.updateTemplateLibraryStatus(91L, 1, 7L,
+                TemplateLibraryRepublishReview.freeze(91L, 7L, java.util.Collections.singletonList(projection))));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
         verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(1L).equals(row.getStatus())
                 && Long.valueOf(1L).equals(row.getPublishStatus())));
@@ -446,10 +453,14 @@ class TemplatePublishAuditQueueTest {
         template.setDelFlag(0);
         CmsTemplateLibrary first = new CmsTemplateLibrary();
         first.setId(191L);
+        first.setMemberTemplateId(91L);
+        first.setMemberId(7L);
         first.setStatus(1L);
         first.setDelFlag(0);
         CmsTemplateLibrary second = new CmsTemplateLibrary();
         second.setId(192L);
+        second.setMemberTemplateId(91L);
+        second.setMemberId(7L);
         second.setStatus(1L);
         second.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
@@ -457,7 +468,10 @@ class TemplatePublishAuditQueueTest {
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Arrays.asList(first, second));
         when(libraryService.updateCmsTemplateLibrary(any())).thenReturn(1, 0);
 
-        assertThrows(RuntimeException.class, () -> service.updateTemplateLibraryStatus(91L, 1, 7L));
+        assertThrows(RuntimeException.class, () -> service.updateTemplateLibraryStatus(91L, 1, 7L,
+                TemplateLibraryRepublishReview.freeze(91L, 7L, java.util.Arrays.asList(first, second))));
+        verify(libraryService).updateCmsTemplateLibrary(first);
+        verify(libraryService).updateCmsTemplateLibrary(second);
     }
 
     @Test

@@ -1201,6 +1201,57 @@ public class ApiTopicController extends BaseController {
         return success("已转为正式主题");
     }
 
+    /** Exact own state. This never infers absence from a paginated public list. */
+    @Operation(summary = "当前用户的主题收藏状态")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @PostMapping("/like-state")
+    public AjaxResult ownTopicLikeState(String id) {
+        return ownTopicLikeStateResult(id, false);
+    }
+
+    /** Delete-only target state; the legacy /like toggle below remains unchanged. */
+    @Operation(summary = "取消当前用户的主题收藏")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @PostMapping("/unlike")
+    public AjaxResult unlikeOwnTopic(String id) {
+        return ownTopicLikeStateResult(id, true);
+    }
+
+    private AjaxResult ownTopicLikeStateResult(String id, boolean remove) {
+        final Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (RuntimeException unavailablePrincipal) {
+            return AjaxResult.error(HttpStatus.UNAUTHORIZED, "请先登录");
+        }
+        if (memberId == null || memberId <= 0) {
+            return AjaxResult.error(HttpStatus.UNAUTHORIZED, "请先登录");
+        }
+        // ASCII canonical decimal only; no trimming, signs, fractions or overflow.
+        if (id == null || !id.matches("[1-9][0-9]{0,18}")) {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "主题参数无效");
+        }
+        final long topicId;
+        try {
+            topicId = Long.parseLong(id);
+        } catch (NumberFormatException outOfRange) {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "主题参数无效");
+        }
+        try {
+            boolean liked = remove
+                    ? cmsTopicLikeService.cancelOwnTopicLike(memberId, topicId)
+                    : cmsTopicLikeService.readOwnTopicLikeState(memberId, topicId);
+            Map<String, Object> state = new LinkedHashMap<>();
+            state.put("memberId", memberId);
+            state.put("topicId", topicId);
+            state.put("isLiked", liked);
+            return success(state);
+        } catch (ServiceException inaccessible) {
+            // Missing and inaccessible topics disclose neither existence nor a like bit.
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "主题不可访问");
+        }
+    }
+
     @Operation(summary = "主题点赞")
     @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     @PostMapping("/like")

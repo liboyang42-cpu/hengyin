@@ -61,6 +61,7 @@ class PlayerNodeArrivalSharingH2Test {
             "create table player_node_progress ("
                     + "id bigint primary key auto_increment,"
                     + "member_id bigint not null,"
+                    + "play_instance_id varchar(64) not null default 'default',"
                     + "activity_id bigint,"
                     + "topic_id bigint,"
                     + "node_id bigint not null,"
@@ -74,9 +75,9 @@ class PlayerNodeArrivalSharingH2Test {
                     + "completion_mode varchar(16),"
                     + "del_flag tinyint not null default 0,"
                     + "create_time datetime,"
-                    + "constraint uk_progress unique (member_id, activity_id, topic_id, node_id))";
+                    + "constraint uk_progress unique (member_id, activity_id, topic_id, node_id, play_instance_id))";
 
-    private static final String DDL_NODE =
+    static final String DDL_NODE =
             "create table cms_topic_node ("
                     + "id bigint primary key auto_increment, topic_id bigint, chapter_id bigint, name varchar(80), "
                     + "description varchar(255), address varchar(255), longitude varchar(40), latitude varchar(40), "
@@ -92,6 +93,7 @@ class PlayerNodeArrivalSharingH2Test {
     private CmsTopicNodeMapper nodeMapper;
     private PlayerNodeProgressMapper progressMapper;
     private IShopDayProofService service;
+    private ShopDayH2RuntimeFixture runtime;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -103,8 +105,7 @@ class PlayerNodeArrivalSharingH2Test {
 
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute(DDL_PROGRESS);
-        jdbc.execute("create table topic_route_session(id bigint primary key,activity_id bigint,topic_id bigint,member_id bigint,play_instance_id varchar(64))");
-        jdbc.execute("alter table player_node_progress add column play_instance_id varchar(64) default 'default'");
+        jdbc.execute(ShopDayH2RuntimeFixture.DDL_ROUTE);
         jdbc.execute(DDL_NODE);
         jdbc.execute("create table merchant_chapter_offer (id bigint primary key, chapter_id bigint, "
                 + "merchant_id bigint, status int, withdraw_reason varchar(200))");
@@ -114,7 +115,8 @@ class PlayerNodeArrivalSharingH2Test {
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(
                 new ClassPathResource("mapper/business/PlayerNodeProgressMapper.xml"),
-                new ClassPathResource("mapper/business/CmsTopicNodeMapper.xml"));
+                new ClassPathResource("mapper/business/CmsTopicNodeMapper.xml"),
+                new ClassPathResource("mapper/business/TopicRouteSessionMapper.xml"));
         SqlSessionFactory sqlSessionFactory = factory.getObject();
         progressMapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(PlayerNodeProgressMapper.class);
         nodeMapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(CmsTopicNodeMapper.class);
@@ -122,7 +124,8 @@ class PlayerNodeArrivalSharingH2Test {
         ShopDayProofServiceImpl target = new ShopDayProofServiceImpl();
         ReflectionTestUtils.setField(target, "playerNodeProgressMapper", progressMapper);
         ReflectionTestUtils.setField(target, "cmsTopicNodeMapper", nodeMapper);
-        service = target;
+        runtime = new ShopDayH2RuntimeFixture(dataSource, sqlSessionFactory, nodeMapper, progressMapper);
+        service = runtime.service(target);
 
         seed();
     }
@@ -232,6 +235,73 @@ class PlayerNodeArrivalSharingH2Test {
         assertFalse(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP), "只玩玩法不给兄弟节点到店");
     }
 
+    @Test
+    void sharedArrivalsStayInsideEachServerSelectedReplay() {
+        scan(MEMBER, ACTIVITY, SRC);
+        service.submitPhoto(MEMBER, ACTIVITY, SAME_SHOP, "https://img/default.jpg");
+        int legacyRows = countRows(MEMBER, ACTIVITY);
+        runtime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-old");
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP));
+        scan(MEMBER, ACTIVITY, SRC);
+        service.markGameDone(MEMBER, ACTIVITY, TOPIC, SAME_SHOP);
+        service.submitPhoto(MEMBER, ACTIVITY, SAME_SHOP, "https://img/old.jpg");
+        runtime.theme(2L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP));
+        PlayerNodeProgress fresh = scan(MEMBER, ACTIVITY, SRC);
+        assertEquals("theme-current", fresh.getPlayInstanceId());
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, CROSS_CHAPTER));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, CROSS_TOPIC));
+        assertFalse(service.hasArrived(OTHER_MEMBER, ACTIVITY, SAME_SHOP));
+        assertFalse(service.hasArrived(MEMBER, OTHER_ACTIVITY, SAME_SHOP));
+        assertEquals(legacyRows * 3, countRows(MEMBER, ACTIVITY));
+        assertEquals(0, jdbc.queryForObject("select status from player_node_progress where node_id=? and play_instance_id=?",
+                Integer.class, SAME_SHOP, "theme-current"));
+        assertNull(jdbc.queryForObject("select pic_url from player_node_progress where node_id=? and play_instance_id=?",
+                String.class, SAME_SHOP, "theme-current"));
+        assertEquals("https://img/old.jpg", jdbc.queryForObject("select pic_url from player_node_progress where node_id=? and play_instance_id=?",
+                String.class, SAME_SHOP, "theme-old"));
+        assertEquals("https://img/default.jpg", jdbc.queryForObject("select pic_url from player_node_progress where node_id=? and play_instance_id=?",
+                String.class, SAME_SHOP, "default"));
+    }
+
+    @Test
+    void aSiblingWriteFailureRollsBackTheSourceAndEarlierSiblingWrites() {
+        runtime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        jdbc.execute("alter table player_node_progress add constraint fail_shared_row check(node_id <> " + GAME_ONLY + ")");
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
+                () -> scan(MEMBER, ACTIVITY, SRC));
+        assertEquals(0, countRows(MEMBER, ACTIVITY), "real Spring transaction must roll back partial sharing");
+    }
+
+    @Test
+    void callerSuppliedChapterAndMerchantCannotExpandArrivalSharing() {
+        CmsTopicNode forged = nodeMapper.selectCmsTopicNodeById(SRC);
+        forged.setChapterId(OTHER_CHAPTER);
+        forged.setMerchantMemberId(OTHER_MERCHANT);
+        service.markArrived(MEMBER, ACTIVITY, forged);
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, CROSS_CHAPTER));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, OTHER_SHOP));
+    }
+
+    @Test
+    void softDeletedSiblingEvidenceIsPreservedWithoutBlockingTheSourceArrival() {
+        runtime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,"
+                        + "status,pic_url,review_status,checkin_time,del_flag) values(?,?,?,?,?,1,?,1,current_timestamp,1)",
+                MEMBER, ACTIVITY, TOPIC, SAME_SHOP, "theme-current", "https://img/deleted-evidence.jpg");
+        java.util.Map<String,Object> evidence = jdbc.queryForMap("select * from player_node_progress where node_id=?", SAME_SHOP);
+        PlayerNodeProgress arrived = scan(MEMBER, ACTIVITY, SRC);
+        assertNotNull(arrived.getCheckinTime());
+        assertEquals("theme-current", arrived.getPlayInstanceId());
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, SRC));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, SAME_SHOP), "deleted evidence stays hidden");
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, GAME_ONLY));
+        assertEquals(evidence, jdbc.queryForMap("select * from player_node_progress where node_id=?", SAME_SHOP));
+        assertEquals(1, jdbc.queryForObject("select count(*) from player_node_progress where node_id=?", Integer.class, SAME_SHOP));
+    }
+
     private int rows(long memberId, long activityId, long nodeId) {
         return jdbc.queryForObject("select status from player_node_progress where member_id=" + memberId
                 + " and activity_id=" + activityId + " and node_id=" + nodeId, Integer.class);
@@ -265,5 +335,70 @@ class PlayerNodeArrivalSharingH2Test {
         jdbc.update("insert into cms_topic_node(id, topic_id, chapter_id, name, status, merchant_member_id, "
                         + "node_audit_status, address, latitude, longitude) values (?,?,?,?,1,?,?,?,?,?)",
                 id, topicId, chapterId, name, merchantId, auditStatus, address, latitude, longitude);
+    }
+}
+
+/** Shared only by the two real H2 suites; route/progress/node SQL and transaction advice are real. */
+class ShopDayH2RuntimeFixture {
+    static final String DDL_ROUTE = "create table topic_route_session (id bigint primary key, activity_id bigint,"
+            + "topic_id bigint, member_id bigint, play_instance_id varchar(64), config_version int,"
+            + "config_snapshot_json clob, state_json clob, status int, current_node_id bigint,"
+            + "recommended_node_id bigint, seed bigint, version int, completed_at timestamp,"
+            + "create_time timestamp, update_time timestamp, unique(activity_id,topic_id,member_id,play_instance_id))";
+    final DataSource dataSource;
+    final JdbcTemplate jdbc;
+    final com.chengyinhub.business.mapper.CmsTopicMapper topics = org.mockito.Mockito.mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+    final com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy policy = new com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy();
+    final ITopicRouteRuntimeService route;
+    Runnable beforeGuard;
+    Runnable afterGuard;
+    int guardCalls;
+
+    ShopDayH2RuntimeFixture(DataSource dataSource, SqlSessionFactory factory,
+            CmsTopicNodeMapper nodes, PlayerNodeProgressMapper progress) {
+        this.dataSource = dataSource;
+        this.jdbc = new JdbcTemplate(dataSource);
+        com.chengyinhub.business.mapper.TopicRouteSessionMapper sessions = new SqlSessionTemplate(factory)
+                .getMapper(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
+        com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl target =
+                new com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl(sessions, topics, nodes, progress, null, null);
+        ReflectionTestUtils.setField(target, "themeRuntimePolicy", policy);
+        ITopicRouteRuntimeService advised = transactional(target, ITopicRouteRuntimeService.class);
+        route = (ITopicRouteRuntimeService) java.lang.reflect.Proxy.newProxyInstance(
+                ITopicRouteRuntimeService.class.getClassLoader(), new Class<?>[] { ITopicRouteRuntimeService.class },
+                (proxy, method, args) -> {
+                    boolean guard = "assertCurrentPlayInstance".equals(method.getName());
+                    if (guard) {
+                        assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                        assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(dataSource));
+                        guardCalls++;
+                        if (beforeGuard != null) beforeGuard.run();
+                    }
+                    try {
+                        Object result = method.invoke(advised, args);
+                        if (guard && afterGuard != null) afterGuard.run();
+                        return result;
+                    } catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
+                });
+    }
+
+    IShopDayProofService service(ShopDayProofServiceImpl target) {
+        ReflectionTestUtils.setField(target, "routeRuntimeService", route);
+        return transactional(target, IShopDayProofService.class);
+    }
+
+    <T> T transactional(Object target, Class<T> contract) {
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(target);
+        proxy.setInterfaces(contract);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        return contract.cast(proxy.getProxy());
+    }
+
+    void theme(long id, long member, long activity, long topic, String instance) {
+        ReflectionTestUtils.setField(policy, "enabled", true);
+        jdbc.update("insert into topic_route_session(id,activity_id,topic_id,member_id,play_instance_id,config_snapshot_json,status,version)"
+                        + " values(?,?,?,?,?,?,0,0)", id, activity, topic, member, instance, "{\"themeConfig\":{}}");
     }
 }

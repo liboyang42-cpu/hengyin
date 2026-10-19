@@ -40,6 +40,12 @@ public interface ICmsTopicLikeService
 
     public List<CmsTopicLike> selectCmsTopicLikesByMemberAndDataIds(Long memberId, List<Long> dataIds);
 
+    /** Current visible topic state for an already authenticated positive member. */
+    boolean readOwnTopicLikeState(Long memberId, Long topicId);
+
+    /** Delete this exact pair only, then return observed state (concurrent re-add may be true). */
+    boolean cancelOwnTopicLike(Long memberId, Long topicId);
+
     /**
      * 新增主题点赞
      * 

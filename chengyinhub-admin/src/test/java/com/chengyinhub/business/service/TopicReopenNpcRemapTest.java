@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -95,6 +97,14 @@ class TopicReopenNpcRemapTest {
         service = new TopicEditionReopenServiceImpl(reopenMapper, productRoleMapper, templateMapper,
                 mock(ClubMapper.class), mock(UmsMemberMapper.class), npcMapper);
         ReflectionTestUtils.setField(service, "platformMemberId", PLATFORM_MEMBER);
+        LegacyCmsProvenanceMapper provenance = mock(LegacyCmsProvenanceMapper.class);
+        when(provenance.selectLegacyBlockState(701L)).thenReturn(0);
+        ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard", new LegacyCmsProvenanceGuard(provenance));
+        com.chengyinhub.business.mapper.MerchantAuthoringCopyMapper authoringCopies =
+                mock(com.chengyinhub.business.mapper.MerchantAuthoringCopyMapper.class);
+        when(authoringCopies.selectCopyBlockState(701L)).thenReturn(0);
+        ReflectionTestUtils.setField(service, "merchantAuthoringCopyGuard",
+                new com.chengyinhub.business.service.support.MerchantAuthoringCopyGuard(authoringCopies));
 
         when(reopenMapper.insertReopenRequest(any(TopicEditionReopenRequest.class))).thenAnswer(invocation -> {
             invocation.getArgument(0, TopicEditionReopenRequest.class).setId(8010L);

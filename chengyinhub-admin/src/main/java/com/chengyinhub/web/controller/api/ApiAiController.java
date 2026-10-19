@@ -18,6 +18,7 @@ import com.chengyinhub.business.domain.dto.ai.AiSafetyPrecheckReq;
 import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
 import com.chengyinhub.business.domain.dto.ai.AiChapterOverviewReq;
 import com.chengyinhub.business.service.IAiCreatorService;
+import com.chengyinhub.business.service.ai.MerchantBoundTemplateDraftService;
 import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -50,6 +51,9 @@ public class ApiAiController extends BaseController
 
     @Autowired
     private IAiCreatorService aiCreatorService;
+
+    @Autowired(required = false)
+    private MerchantBoundTemplateDraftService merchantBoundTemplateDraftService;
 
 
     @Autowired
@@ -217,11 +221,19 @@ public class ApiAiController extends BaseController
         }
         try
         {
+            if (req.getMerchantFacts() != null || req.getMerchantConstraints() != null) {
+                if (merchantBoundTemplateDraftService == null) return new AjaxResult(503, "店铺来源草稿服务尚未配置");
+                return success(merchantBoundTemplateDraftService.generate(req, memberId));
+            }
             return success(aiCreatorService.templateFill(req, memberId));
         }
         catch (AiServiceException e)
         {
             return error(e.getMessage());
+        }
+        catch (ServiceException e)
+        {
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 

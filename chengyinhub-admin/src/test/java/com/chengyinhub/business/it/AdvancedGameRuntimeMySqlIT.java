@@ -130,6 +130,7 @@ class AdvancedGameRuntimeMySqlIT {
     }
 
     @Test
+<<<<<<< public
     void zeroChallengeHistoryRequiresExactCurrentRunReceiptOrFrozenOrigin() throws Exception {
         try (Connection connection = DriverManager.getConnection(MybatisItDatabase.url("advanced_zero_origin"),
                 MybatisItDatabase.user(), MybatisItDatabase.password())) {
@@ -144,10 +145,34 @@ class AdvancedGameRuntimeMySqlIT {
                     + "(51,'challenge:old',9,19,29,39,1,49,'{}','{\"zeroChallengeInstance\":\"old\"}',2,3,NOW(),NOW(),NOW()),"
                     + "(52,'game:50:challenge:old',9,19,29,39,2,88,'{}','{\"zeroChallengeInstance\":\"old\",\"runtimeAuthorityEpoch\":3}',2,3,NOW(),NOW(),NOW())");
             Configuration config = new Configuration();
+=======
+    void nativeChallengeCasAndAssertionCounterRollbackTogetherOnRealMysql() throws Exception {
+        String url = MybatisItDatabase.url("native_platform_runtime");
+        try (Connection connection = DriverManager.getConnection(url, MybatisItDatabase.user(), MybatisItDatabase.password())) {
+            createTemplateTables(connection);
+            ItSchema.applyMigrations(connection, "sql/migration_20260822_advanced_game_runtime.sql");
+            // This legacy migration predates instance scoping; the current mapper requires the column.
+            execute(connection, "ALTER TABLE game_runtime_session ADD play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default'");
+            execute(connection, "CREATE TABLE native_test_counter (id INT PRIMARY KEY, counter BIGINT NOT NULL) ENGINE=InnoDB");
+            execute(connection, "INSERT INTO native_test_counter VALUES (1,0)");
+            execute(connection, "CREATE TABLE native_test_receipt (request_key VARCHAR(64) PRIMARY KEY) ENGINE=InnoDB");
+            execute(connection, "INSERT INTO native_test_receipt VALUES ('raced-key')");
+            execute(connection, "INSERT INTO game_runtime_session(activity_id,topic_id,node_id,template_id,"
+                    + "owner_type,owner_id,config_snapshot_json,state_json,status,version,started_at,create_time,update_time) "
+                    + "VALUES (0,19,29,39,1,7,'{\"steps\":{\"enabled\":true}}','{}',0,0,NOW(),NOW(),NOW())");
+            Configuration config = new Configuration();
+            // Without an explicit JDBC factory, openSession(Connection) uses managed transactions,
+            // whose commit/rollback are intentionally no-ops. This fixture owns its scratch transaction.
+            config.setEnvironment(new org.apache.ibatis.mapping.Environment("native-platform-it",
+                    new org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory(),
+                    new org.apache.ibatis.datasource.unpooled.UnpooledDataSource(
+                            "com.mysql.cj.jdbc.Driver", url, MybatisItDatabase.user(), MybatisItDatabase.password())));
+>>>>>>> private-github/featu
             String resource = "mapper/business/GameRuntimeSessionMapper.xml";
             try (InputStream xml = getClass().getClassLoader().getResourceAsStream(resource)) {
                 new XMLMapperBuilder(xml, config, resource, config.getSqlFragments()).parse();
             }
+<<<<<<< public
             try (SqlSession sql = new SqlSessionFactoryBuilder().build(config).openSession(connection)) {
                 GameRuntimeSessionMapper mapper = sql.getMapper(GameRuntimeSessionMapper.class);
                 assertEquals(51L, mapper.selectLatestZeroChallenge(9L,19L,29L,1,49L,null,88L,null).getId());
@@ -542,6 +567,55 @@ class AdvancedGameRuntimeMySqlIT {
         assertEquals("1", scalar(readback, "SELECT COUNT(*) FROM play_attempt_log WHERE idempotency_key IN ('race-7','race-9')"));
         assertEquals(String.valueOf(version + 1), scalar(readback, "SELECT version FROM game_runtime_session"));
         assertEquals("1", scalar(readback, "SELECT completed_units FROM game_runtime_session"));
+=======
+            connection.setAutoCommit(false);
+            try (SqlSession sql = new SqlSessionFactoryBuilder().build(config).openSession(connection)) {
+                GameRuntimeSessionMapper mapper = sql.getMapper(GameRuntimeSessionMapper.class);
+                GameRuntimeSession row = mapper.selectByOwner(0L,19L,29L,1,7L);
+                com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode state = json.createObjectNode();
+                com.chengyinhub.business.service.support.NativeStepProtocol protocol = new com.chengyinhub.business.service.support.NativeStepProtocol();
+                org.springframework.test.util.ReflectionTestUtils.setField(protocol,"enabled",true);
+                org.springframework.test.util.ReflectionTestUtils.setField(protocol,"verifier",
+                        new com.chengyinhub.business.service.support.NativeStepAssertionVerifier() {
+                            public boolean isReady() { return true; }
+                            public boolean isEnrolledIPhoneKey(long actor,String key) { return actor==7 && "test-key".equals(key); }
+                            public long verifyAndConsume(Request request,String assertion) {
+                                // Synthetic verifier only. Its durable counter shares the business transaction.
+                                try { execute(connection,"UPDATE native_test_counter SET counter=counter+1 WHERE id=1"); return 1L; }
+                                catch(SQLException e) { throw new IllegalStateException(e); }
+                            }
+                        });
+                java.time.Instant now = java.time.Instant.parse("2026-10-02T10:00:00Z");
+                java.util.Map<String,Object> p = new java.util.LinkedHashMap<>();
+                p.put("provider","IOS_CMPEDOMETER_V1"); p.put("deviceKeyId","test-key");
+                protocol.act("ISSUE_NATIVE_STEP_CHALLENGE",p,state,row,7,"issue",now);
+                row.setStateJson(json.writeValueAsString(state)); row.setUpdateTime(Date.from(now));
+                assertEquals(1,mapper.updateStateCas(row));
+                assertEquals(0,mapper.updateStateCas(row),"A racing old-version challenge cannot overwrite the winner");
+                sql.commit(); sql.clearCache();
+                row=mapper.selectByOwner(0L,19L,29L,1,7L);
+                state=(com.fasterxml.jackson.databind.node.ObjectNode)json.readTree(row.getStateJson());
+                com.fasterxml.jackson.databind.JsonNode challenge=state.path("nativeSteps").path("challenge");
+                p.put("challengeId",challenge.path("challengeId").asText()); p.put("dayKey",challenge.path("dayKey").asText());
+                p.put("sampleStartAt",challenge.path("dayStartAt").asLong()); p.put("sampleEndAt",now.plusSeconds(1).toEpochMilli());
+                p.put("cumulativeSteps",4000); p.put("assertion","c3ludGhldGlj");
+                protocol.act("SUBMIT_NATIVE_STEPS",p,state,row,7,"submit",now.plusSeconds(1));
+                row.setStateJson(json.writeValueAsString(state)); row.setUpdateTime(Date.from(now.plusSeconds(1)));
+                assertEquals(1,mapper.updateStateCas(row));
+                assertEquals("1",scalar(connection,"SELECT counter FROM native_test_counter WHERE id=1"));
+                assertThrows(SQLException.class, () -> execute(connection,
+                        "INSERT INTO native_test_receipt VALUES ('raced-key')"));
+                sql.rollback(); sql.clearCache(); // A late duplicate receipt rolls both writes back.
+                GameRuntimeSession rolledBack=mapper.selectByOwner(0L,19L,29L,1,7L);
+                assertEquals(1,rolledBack.getVersion());
+                assertEquals("0",scalar(connection,"SELECT counter FROM native_test_counter WHERE id=1"));
+                org.junit.jupiter.api.Assertions.assertFalse(json.readTree(rolledBack.getStateJson()).path("nativeSteps").has("baselineSteps"));
+                org.junit.jupiter.api.Assertions.assertFalse(json.readTree(rolledBack.getStateJson()).path("nativeSteps").path("challenge").path("consumed").asBoolean());
+                assertEquals(0,rolledBack.getScore());
+            }
+        }
+>>>>>>> private-github/featu
     }
 
     private static void createTemplateTables(Connection connection) throws SQLException {

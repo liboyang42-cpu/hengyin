@@ -25,6 +25,11 @@
     <result column="merchant_name" property="merchantName"/>
   </resultMap>
 
+  <select id="selectMerchantNpcScopeIdentity" resultMap="BaseResultMap">
+    SELECT id, scope_type, scope_id, enabled, audit_status, del_flag
+    FROM npc_profile WHERE id = #{id} AND scope_type = 2
+  </select>
+
   <select id="selectEnabledByScope" resultMap="BaseResultMap">
     SELECT * FROM npc_profile
     WHERE scope_type = #{param1} AND scope_id = #{param2}

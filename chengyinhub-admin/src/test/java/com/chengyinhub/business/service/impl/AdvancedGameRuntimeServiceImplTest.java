@@ -17,6 +17,11 @@ import com.chengyinhub.business.service.IPlayEncounterService;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
+import com.chengyinhub.business.service.support.NativeStepProtocol;
+import com.chengyinhub.business.service.support.NativeStepAssertionVerifier;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -343,6 +348,7 @@ class AdvancedGameRuntimeServiceImplTest {
     @Test
     void routeReceptionGateProtectsAdvancedStartAndOldSessionActions() {
         ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("default");
         ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
         when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID))
                 .thenThrow(new IllegalStateException("请先由商家扫描带队主理人的团码完成上一站接待"));
@@ -876,7 +882,8 @@ class AdvancedGameRuntimeServiceImplTest {
         when(route.nodeRuntimeConfig(MEMBER_ID,TOPIC_ID,NODE_ID,ACTIVITY_ID))
                 .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().readTree(randomOnlyConfig()));
         when(route.canPlay(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(true);
-        when(route.playInstance(MEMBER_ID,TOPIC_ID,ACTIVITY_ID)).thenReturn("default","replay:80");
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default")).thenReturn(true);
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "replay:80")).thenReturn(true);
         GameRuntimeSession first=runningSession(randomOnlyConfig(),"{\"draws\":[]}");
         first.setPlayInstanceId("default");
         GameRuntimeSession second=runningSession(randomOnlyConfig(),"{\"draws\":[]}");
@@ -904,6 +911,414 @@ class AdvancedGameRuntimeServiceImplTest {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(null));
         when(route.canPlay(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(true);
         assertThrows(ServiceException.class,()->service.completeGate(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID));
+    }
+
+
+    @Test
+    void themeNativeDefaultAndReplayKeepRawCanonicalBytesAndIndependentReceipts() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        NativeStepAssertionVerifier verifier = nativeVerifier();
+        Map<String, PlayAttemptLog> receipts = rememberReceipts();
+        java.util.List<String> signedBytes = new java.util.ArrayList<>();
+        java.util.concurrent.atomic.AtomicLong counter = new java.util.concurrent.atomic.AtomicLong();
+        when(verifier.verifyAndConsume(any(), any())).thenAnswer(i -> {
+            NativeStepAssertionVerifier.Request request = i.getArgument(0);
+            signedBytes.add(request.canonicalPayload);
+            return counter.incrementAndGet();
+        });
+        for (long id : new long[] {51L, 52L}) {
+            GameRuntimeSession session = nativeSampleSession(id, id == 51L ? "default" : "replay:80");
+            when(sessionMapper.selectAccessibleById(id, MEMBER_ID)).thenReturn(session);
+            when(sessionMapper.updateStateCas(any())).thenReturn(1);
+            Map<String, Object> payload = nativeSamplePayload(session);
+            Map<String, Object> view = service.act(MEMBER_ID, id, 1, "same.raw-key:1",
+                    NativeStepProtocol.SUBMIT, payload);
+            String golden = "CHENGYIN_NATIVE_STEPS_V1\nIOS_CMPEDOMETER_V1\n7\n" + id
+                    + "\n1775000000000\ndevice-key\n" + String.join("", Collections.nCopies(64, "a"))
+                    + "\n1775000000000\n1775000120000\nAsia/Shanghai\n2026-04-01"
+                    + "\n1774972800000\n1775059200000\n1774972800000\n1775000000000\n4000\n1\nsame.raw-key:1";
+            org.junit.jupiter.api.Assertions.assertArrayEquals(golden.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    signedBytes.get(signedBytes.size() - 1).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            assertEquals(NativeStepProtocol.requestDigest(NativeStepProtocol.SUBMIT, payload, 1, "same.raw-key:1"),
+                    view.get("nativeRequestDigest"));
+            assertEquals(19, session.getScore());
+            assertEquals(3, session.getCompletedUnits());
+            assertEquals(GameRuntimeSession.STATUS_RUNNING, session.getStatus());
+            assertFalse(new ObjectMapper().readTree(session.getStateJson()).has("steps"));
+            Map<?, ?> nativeView = (Map<?, ?>) playKit(view, "steps").get("nativeSteps");
+            assertEquals("AUDIT_ONLY", nativeView.get("status"));
+            assertEquals(false, nativeView.get("rewardEnabled"));
+            assertEquals(view.toString(), service.act(MEMBER_ID, id, 1, "same.raw-key:1",
+                    NativeStepProtocol.SUBMIT, payload).toString());
+        }
+        assertEquals(2, receipts.size());
+        assertTrue(receipts.containsKey(themeReceiptKey(51L, "same.raw-key:1")));
+        assertTrue(receipts.containsKey(themeReceiptKey(52L, "same.raw-key:1")));
+        verify(attemptMapper, never()).selectByIdempotencyKey("same.raw-key:1");
+        verify(verifier, org.mockito.Mockito.times(2)).verifyAndConsume(any(), any());
+        assertNoNativeJourneyRewards(route);
+    }
+
+    @Test
+    void nativeThemeReceiptRejectsChangedPayloadActionAndVersion() throws Exception {
+        themeRoute();
+        nativeVerifier();
+        rememberReceipts();
+        GameRuntimeSession session = nativeSampleSession(51L, "default");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        Map<String, Object> payload = nativeSamplePayload(session);
+        service.act(MEMBER_ID, 51L, 1, "native-once", NativeStepProtocol.SUBMIT, payload);
+        Map<String, Object> changed = new LinkedHashMap<>(payload);
+        changed.put("cumulativeSteps", 4001);
+        assertNativeFailure("NATIVE_STEPS_IDEMPOTENCY_MISMATCH", () -> service.act(MEMBER_ID, 51L, 1,
+                "native-once", NativeStepProtocol.SUBMIT, changed));
+        assertNativeFailure("NATIVE_STEPS_IDEMPOTENCY_MISMATCH", () -> service.act(MEMBER_ID, 51L, 2,
+                "native-once", NativeStepProtocol.SUBMIT, payload));
+        assertNativeFailure("NATIVE_STEPS_IDEMPOTENCY_MISMATCH", () -> service.act(MEMBER_ID, 51L, 1,
+                "native-once", NativeStepProtocol.ISSUE, nativeIssuePayload()));
+        assertNativeFailure("NATIVE_STEPS_IDEMPOTENCY_MISMATCH", () -> service.act(MEMBER_ID, 51L, 1,
+                "native-once", "DRAW", Collections.emptyMap()));
+        verify(sessionMapper).updateStateCas(any());
+        verify(attemptMapper).insertPlayAttemptLog(any());
+    }
+
+    @Test
+    void nativeIssueInThemeSessionNeverSignalsNodeRewards() {
+        ITopicRouteRuntimeService route = themeRoute();
+        nativeVerifier();
+        GameRuntimeSession session = runningSession("{\"steps\":{\"enabled\":true}}", "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        service.act(MEMBER_ID, 51L, 0, "native-issue", NativeStepProtocol.ISSUE, nativeIssuePayload());
+        assertNoNativeJourneyRewards(route);
+    }
+
+    @Test
+    void nativeThemeTeamAndWrongOwnerAreRejectedBeforeReceiptLookup() throws Exception {
+        themeRoute();
+        nativeVerifier();
+        for (int ownerType : new int[] {GameRuntimeSession.OWNER_TEAM, GameRuntimeSession.OWNER_PLAYER}) {
+            GameRuntimeSession session = nativeSampleSession(51L, "default");
+            session.setOwnerType(ownerType);
+            session.setOwnerId(88L);
+            when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+            assertNativeFailure("NATIVE_STEPS_UNSUPPORTED_OWNER", () -> service.act(MEMBER_ID, 51L, 1,
+                    "native-owner", NativeStepProtocol.SUBMIT, nativeSamplePayload(session)));
+        }
+        verify(attemptMapper, never()).selectByIdempotencyKey(any());
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void disabledNativeAndDisabledThemeFailBeforeAnyMutation() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        GameRuntimeSession session = nativeSampleSession(51L, "default");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        assertNativeFailure("NATIVE_STEPS_DISABLED", () -> service.act(MEMBER_ID, 51L, 1,
+                "native-disabled", NativeStepProtocol.SUBMIT, nativeSamplePayload(session)));
+        nativeVerifier();
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default"))
+                .thenThrow(new ServiceException("主题运行时未启用"));
+        ServiceException disabled = assertThrows(ServiceException.class, () -> service.act(MEMBER_ID, 51L, 1,
+                "theme-disabled", NativeStepProtocol.SUBMIT, nativeSamplePayload(session)));
+        assertEquals("主题运行时未启用", disabled.getMessage());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
+        assertNoNativeJourneyRewards(route);
+    }
+
+    @Test
+    void historicalPlayInstanceCannotActReplayExpireRestartOrComplete() {
+        ITopicRouteRuntimeService route = themeRoute();
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default"))
+                .thenThrow(new ServiceException("历史局不可修改"));
+        GameRuntimeSession old = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        old.setDeadlineAt(new Date(NOW - 1));
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(old);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(old);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(attemptLog(MEMBER_ID, 51L));
+        assertThrows(ServiceException.class, () -> service.act(MEMBER_ID, 51L, 0,
+                "historical", "DRAW", Collections.emptyMap()));
+        assertThrows(ServiceException.class, () -> service.state(MEMBER_ID, 51L));
+        assertThrows(ServiceException.class, () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        old.setStatus(GameRuntimeSession.STATUS_FAILED);
+        assertThrows(ServiceException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(attemptMapper, never()).selectByIdempotencyKey(any());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(sessionMapper, never()).restartTerminalCas(any());
+    }
+
+    @Test
+    void lateMatchingThemeReceiptStillRejectsLosingTransaction() {
+        themeRoute();
+        GameRuntimeSession session = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null, attemptLog(MEMBER_ID, 51L));
+        when(attemptMapper.insertPlayAttemptLog(any())).thenThrow(new DuplicateKeyException("late winner"));
+        assertThrows(DuplicateKeyException.class, () -> service.act(MEMBER_ID, 51L, 0,
+                "late-theme", "DRAW", Collections.emptyMap()));
+    }
+
+
+    @Test
+    void themeCompletionCannotBypassFrozenMechanicByUnbindingLiveTemplate() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        nodeMapper.selectCmsTopicNodeById(NODE_ID).setTemplateId(null);
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID))
+                .thenReturn(new ObjectMapper().readTree(randomOnlyConfig()));
+        ServiceException blocked = assertThrows(ServiceException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals("请先完成高级玩法", blocked.getMessage());
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void themeStartUsesFrozenConfigAndTemplateIdAfterLiveTemplateIsDeletedOrRebound() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        nodeMapper.selectCmsTopicNodeById(NODE_ID).setTemplateId(null);
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID))
+                .thenReturn(new ObjectMapper().readTree(randomOnlyConfig()));
+        when(route.nodeRuntimeTemplateId(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID)).thenReturn(TEMPLATE_ID);
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("replay:80");
+        AtomicReference<GameRuntimeSession> inserted = new AtomicReference<>();
+        when(sessionMapper.insert(any())).thenAnswer(i -> {
+            GameRuntimeSession row = i.getArgument(0); row.setId(52L); inserted.set(row); return 1;
+        });
+        assertEquals(52L, service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null).get("sessionId"));
+        assertEquals(TEMPLATE_ID, inserted.get().getTemplateId());
+        assertEquals("replay:80", inserted.get().getPlayInstanceId());
+        assertTrue(new ObjectMapper().readTree(inserted.get().getConfigSnapshotJson()).path("random").path("enabled").asBoolean());
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper).selectPlayerByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID, "replay:80");
+        verify(sessionMapper, never()).selectPlayerByOwner(any(), any(), any(), any());
+    }
+
+    @Test
+    void themeFrozenEmptyConfigNeverFallsBackToLiveMechanicsAndMissingTemplateIdFailsClosed() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(randomOnlyConfig()));
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID)).thenReturn(new ObjectMapper().createObjectNode());
+        assertNull(service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertThrows(IllegalStateException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID))
+                .thenReturn(new ObjectMapper().readTree(randomOnlyConfig()));
+        IllegalStateException blocked = assertThrows(IllegalStateException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        assertEquals("节点玩法模板快照不可用", blocked.getMessage());
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper, never()).insert(any());
+    }
+
+    @Test
+    void replayResumeAndCompletionUseExplicitInstanceAndNeverTheOldDefaultGame() {
+        ITopicRouteRuntimeService route = themeRoute();
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("replay:80");
+        GameRuntimeSession replay = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        replay.setId(52L); replay.setPlayInstanceId("replay:80");
+        when(sessionMapper.selectPlayerByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID, "replay:80"))
+                .thenReturn(replay);
+        assertEquals(52L, service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null).get("sessionId"));
+        assertThrows(ServiceException.class, () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        verify(sessionMapper, org.mockito.Mockito.times(2))
+                .selectPlayerByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID, "replay:80");
+        verify(sessionMapper, never()).selectPlayerByOwner(any(), any(), any(), any());
+    }
+
+
+    @Test
+    void personalReplayStartsAndCompletesItsOwnMechanicWithoutDefaultTeamFallback() throws Exception {
+        ITopicRouteRuntimeService route = themeRoute();
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("replay:80");
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID))
+                .thenReturn(new ObjectMapper().readTree(randomOnlyConfig()));
+        when(route.nodeRuntimeTemplateId(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID)).thenReturn(TEMPLATE_ID);
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default"))
+                .thenThrow(new ServiceException("历史团队局不可修改"));
+        GameRuntimeSession oldTeam = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        oldTeam.setOwnerType(GameRuntimeSession.OWNER_TEAM); oldTeam.setOwnerId(88L);
+        oldTeam.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectTeamByMember(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(oldTeam);
+        ServiceException blocked = assertThrows(ServiceException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals("请先完成高级玩法", blocked.getMessage());
+        AtomicReference<GameRuntimeSession> inserted = new AtomicReference<>();
+        when(sessionMapper.insert(any())).thenAnswer(i -> {
+            GameRuntimeSession row = i.getArgument(0); row.setId(52L); inserted.set(row); return 1;
+        });
+        assertEquals(52L, service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null).get("sessionId"));
+        assertEquals("replay:80", inserted.get().getPlayInstanceId());
+        assertEquals(GameRuntimeSession.OWNER_PLAYER, inserted.get().getOwnerType());
+        assertEquals(MEMBER_ID, inserted.get().getOwnerId());
+        verify(sessionMapper, never()).selectTeamByMember(any(), any(), any(), any());
+        verify(teamMapper, never()).selectPlayTeamById(any());
+    }
+
+    @Test
+    void defaultInstanceStillUsesAuthorizedLegacyTeamFallbackForCompletion() {
+        ITopicRouteRuntimeService route = themeRoute();
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("default");
+        when(route.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default")).thenReturn(false);
+        GameRuntimeSession team = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        team.setOwnerType(GameRuntimeSession.OWNER_TEAM); team.setOwnerId(88L);
+        team.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectTeamByMember(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(team);
+        assertNull(service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        verify(sessionMapper).selectTeamByMember(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID);
+        verify(sessionMapper, never()).selectPlayerByOwnerForInstance(any(), any(), any(), any(), any());
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Tag("h2")
+    void realMapperDefaultAndExplicitInstanceReadsRemainSeparateAndCasBindsTheInstance() throws Exception {
+        org.springframework.jdbc.datasource.DriverManagerDataSource ds =
+                new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                        "jdbc:h2:mem:game_instances_" + java.util.UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
+        org.springframework.jdbc.core.JdbcTemplate jdbc = new org.springframework.jdbc.core.JdbcTemplate(ds);
+        jdbc.execute("create table game_runtime_session(id bigint auto_increment primary key,play_instance_id varchar(80) not null,activity_id bigint,topic_id bigint,node_id bigint,template_id bigint,owner_type int,owner_id bigint,config_snapshot_json clob,state_json clob,status int,score int,completed_units int,version int,started_at timestamp,deadline_at timestamp,completed_at timestamp,create_time timestamp,update_time timestamp,unique(activity_id,topic_id,node_id,owner_type,owner_id,play_instance_id))");
+        jdbc.execute("create table play_team_member(team_id bigint,member_id bigint,status int)");
+        org.mybatis.spring.SqlSessionFactoryBean factory = new org.mybatis.spring.SqlSessionFactoryBean();
+        factory.setDataSource(ds);
+        factory.setMapperLocations(new org.springframework.core.io.ClassPathResource("mapper/business/GameRuntimeSessionMapper.xml"));
+        org.mybatis.spring.SqlSessionTemplate template = new org.mybatis.spring.SqlSessionTemplate(factory.getObject());
+        GameRuntimeSessionMapper mapper = template.getMapper(GameRuntimeSessionMapper.class);
+        GameRuntimeSession first = runningSession(randomOnlyConfig(), "{\"instance\":\"default\"}");
+        first.setId(null); assertEquals(1, mapper.insert(first));
+        GameRuntimeSession second = runningSession(randomOnlyConfig(), "{\"instance\":\"replay\"}");
+        second.setId(null); second.setPlayInstanceId("replay:80"); assertEquals(1, mapper.insert(second));
+        GameRuntimeSession team = runningSession(randomOnlyConfig(), "{\"instance\":\"team\"}");
+        team.setId(null); team.setOwnerType(GameRuntimeSession.OWNER_TEAM); team.setOwnerId(88L); assertEquals(1, mapper.insert(team));
+        jdbc.update("insert into play_team_member values(88,?,1)", MEMBER_ID);
+        assertEquals(first.getId(), mapper.selectByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, 1, MEMBER_ID).getId());
+        assertEquals(first.getId(), mapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID).getId());
+        assertEquals(second.getId(), mapper.selectByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, 1, MEMBER_ID, "replay:80").getId());
+        assertEquals(second.getId(), mapper.selectPlayerByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID, "replay:80").getId());
+        assertEquals(java.util.Arrays.asList(first.getStateJson(), team.getStateJson()),
+                mapper.selectStateJsonsByTopic(MEMBER_ID, TOPIC_ID, ACTIVITY_ID));
+        assertEquals(java.util.Collections.singletonList(second.getStateJson()),
+                mapper.selectStateJsonsByTopicForInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "replay:80"));
+        java.util.List<GameRuntimeSession> explicitlyScoped=mapper.selectSessionsForMemberAndTeam(
+                ACTIVITY_ID,TOPIC_ID,MEMBER_ID,"replay:80",88L,"default");
+        assertEquals(2,explicitlyScoped.size());assertEquals(second.getId(),explicitlyScoped.get(0).getId());assertEquals(team.getId(),explicitlyScoped.get(1).getId());
+        assertEquals(team.getId(), mapper.selectTeamByMember(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID).getId());
+        java.util.List<GameRuntimeSession> defaultArchive = mapper.selectPlayerSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID);
+        java.util.List<GameRuntimeSession> replayArchive = mapper.selectPlayerSessionsByTopicForInstance(ACTIVITY_ID, TOPIC_ID, MEMBER_ID, "replay:80");
+        assertEquals(1, defaultArchive.size()); assertEquals(first.getId(), defaultArchive.get(0).getId());
+        assertEquals(1, replayArchive.size()); assertEquals(second.getId(), replayArchive.get(0).getId());
+        second.setPlayInstanceId("default");
+        assertEquals(0, mapper.updateStateCas(second), "An ID/version pair cannot change another instance");
+        second.setPlayInstanceId("replay:80");
+        assertEquals(1, mapper.updateStateCas(second));
+        jdbc.update("update game_runtime_session set status=2 where id=?", first.getId());
+        first.setPlayInstanceId("replay:80");
+        assertEquals(0, mapper.restartTerminalCas(first));
+        first.setPlayInstanceId("default");
+        assertEquals(1, mapper.restartTerminalCas(first));
+        assertNull(mapper.selectPlayerByOwnerForInstance(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID + 1, "replay:80"));
+    }
+
+    private ITopicRouteRuntimeService themeRoute() {
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("default");
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.assertCurrentPlayInstance(org.mockito.ArgumentMatchers.eq(MEMBER_ID),
+                org.mockito.ArgumentMatchers.eq(TOPIC_ID), org.mockito.ArgumentMatchers.eq(ACTIVITY_ID), any())).thenReturn(true);
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(true);
+        return route;
+    }
+
+    private NativeStepAssertionVerifier nativeVerifier() {
+        NativeStepAssertionVerifier verifier = mock(NativeStepAssertionVerifier.class);
+        when(verifier.isReady()).thenReturn(true);
+        when(verifier.isEnrolledIPhoneKey(MEMBER_ID, "device-key")).thenReturn(true);
+        when(verifier.verifyAndConsume(any(), any())).thenReturn(1L);
+        NativeStepProtocol protocol = new NativeStepProtocol();
+        ReflectionTestUtils.setField(protocol, "enabled", true);
+        ReflectionTestUtils.setField(protocol, "verifier", verifier);
+        ReflectionTestUtils.setField(service, "nativeStepProtocol", protocol);
+        return verifier;
+    }
+
+    private Map<String, PlayAttemptLog> rememberReceipts() {
+        Map<String, PlayAttemptLog> receipts = new LinkedHashMap<>();
+        when(attemptMapper.selectByIdempotencyKey(any())).thenAnswer(i -> receipts.get(i.getArgument(0)));
+        when(attemptMapper.insertPlayAttemptLog(any())).thenAnswer(i -> {
+            PlayAttemptLog receipt = i.getArgument(0);
+            receipts.put(receipt.getIdempotencyKey(), receipt);
+            return 1;
+        });
+        return receipts;
+    }
+
+    private GameRuntimeSession nativeSampleSession(long id, String instance) throws Exception {
+        GameRuntimeSession session = runningSession("{\"steps\":{\"enabled\":true,\"goal\":1000,\"xp\":30}}", "{}");
+        session.setId(id);
+        session.setPlayInstanceId(instance);
+        session.setVersion(1);
+        session.setScore(19);
+        session.setCompletedUnits(3);
+        ObjectNode root = new ObjectMapper().createObjectNode();
+        ObjectNode c = root.putObject("nativeSteps").putObject("challenge");
+        c.put("provider", NativeStepProtocol.PROVIDER);
+        c.put("accountId", MEMBER_ID);
+        c.put("sessionId", id);
+        c.put("attemptStartedAt", NOW);
+        c.put("sessionVersion", 1);
+        c.put("deviceKeyId", "device-key");
+        c.put("challengeId", String.join("", Collections.nCopies(64, "a")));
+        c.put("issuedAt", NOW);
+        c.put("expiresAt", NOW + 120_000);
+        c.put("timeZone", "Asia/Shanghai");
+        c.put("dayKey", "2026-04-01");
+        c.put("dayStartAt", 1_774_972_800_000L);
+        c.put("dayEndAt", 1_775_059_200_000L);
+        session.setStateJson(root.toString());
+        return session;
+    }
+
+    private Map<String, Object> nativeIssuePayload() {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("provider", NativeStepProtocol.PROVIDER);
+        payload.put("deviceKeyId", "device-key");
+        return payload;
+    }
+
+    private Map<String, Object> nativeSamplePayload(GameRuntimeSession session) {
+        try {
+            JsonNode c = new ObjectMapper().readTree(session.getStateJson()).path("nativeSteps").path("challenge");
+            Map<String, Object> payload = nativeIssuePayload();
+            payload.put("challengeId", c.path("challengeId").asText());
+            payload.put("dayKey", c.path("dayKey").asText());
+            payload.put("sampleStartAt", c.path("dayStartAt").asLong());
+            payload.put("sampleEndAt", NOW);
+            payload.put("cumulativeSteps", 4000);
+            payload.put("assertion", "cHJvb2Y=");
+            return payload;
+        } catch (java.io.IOException e) { throw new AssertionError(e); }
+    }
+
+    private String themeReceiptKey(long session, String rawKey) throws Exception {
+        byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(rawKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        StringBuilder key = new StringBuilder("theme:").append(session).append(':');
+        for (int i = 0; i < 16; i++) key.append(String.format(java.util.Locale.ROOT, "%02x", digest[i] & 255));
+        return key.toString();
+    }
+
+    private void assertNativeFailure(String reason, Runnable action) {
+        ServiceException failure = assertThrows(ServiceException.class, action::run);
+        assertEquals(reason, ((Map<?, ?>) failure.getData()).get("reasonCode"));
+    }
+
+    private void assertNoNativeJourneyRewards(ITopicRouteRuntimeService route) {
+        verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(),
+                org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
+        verify(route, never()).recordPassed(any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean());
+        verify(route, never()).recordMistake(any(), any(), any(), any());
+        verify(route, never()).recordOutcome(any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyInt());
+        verify(route, never()).recordChoice(any(), any(), any(), any(), any(), any());
     }
 
     private GameRuntimeSession runningSession(String config, String state) {
@@ -2901,5 +3316,56 @@ class AdvancedGameRuntimeServiceImplTest {
 
         assertEquals("NONE", scan.get("arMode"));
         assertFalse(scan.containsKey("markerUrl"));
+    }
+    private ITopicRouteRuntimeService sharedTeamRoute(GameRuntimeSession session,String actorInstance) throws Exception {
+        ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);
+        ITopicRouteRuntimeService.TeamGameScope scope=new ITopicRouteRuntimeService.TeamGameScope(88L,501L,"team-replay:501",actorInstance,TEMPLATE_ID,new ObjectMapper().readTree(multiplayerConfig()));
+        when(route.resolveTeamGameScope(eq(MEMBER_ID),eq(TOPIC_ID),eq(ACTIVITY_ID),eq(NODE_ID),any(),anyBoolean())).thenReturn(scope);
+        when(route.canPlay(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(true);
+        when(route.playInstance(MEMBER_ID,TOPIC_ID,ACTIVITY_ID)).thenReturn(actorInstance);
+        when(route.assertCurrentPlayInstance(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,actorInstance)).thenReturn(true);
+        when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectAccessibleByIdForUpdate(51L,MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);return route;
+    }
+    private GameRuntimeSession teamGenerationSession() {
+        GameRuntimeSession session=runningSession(multiplayerConfig(),"{\"multiplayer\":{\"roles\":{\"7\":\"pacer\",\"8\":\"closer\"},\"members\":[],\"completedUnitIds\":[],\"turnIndex\":0}}");
+        session.setOwnerType(GameRuntimeSession.OWNER_TEAM);session.setOwnerId(88L);session.setPlayInstanceId("team-replay:501");return session;
+    }
+    @Test void teamGenerationUsesSharedGameTokenAndLateJoinersOwnFactToken() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();ITopicRouteRuntimeService route=sharedTeamRoute(session,"default");Map<String,PlayAttemptLog> receipts=rememberReceipts();
+        Map<String,Object> result=service.act(MEMBER_ID,51L,0,"team-unit","COMPLETE_UNIT",Collections.singletonMap("unitId","u1"));
+        assertEquals("team-replay:501",result.get("playInstanceId"));assertNotNull(result.get("teamRequestDigest"));assertEquals(1,receipts.size());
+        verify(route).recordNodeResult(eq(MEMBER_ID),eq(TOPIC_ID),eq(ACTIVITY_ID),eq(NODE_ID),eq("default"),anyString(),any(),eq(false),eq(0),any());
+        verify(sessionMapper).selectAccessibleByIdForUpdate(51L,MEMBER_ID);
+    }
+    @Test void teamGenerationSameActorKeyCannotChangePayload() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();sharedTeamRoute(session,"default");rememberReceipts();
+        service.act(MEMBER_ID,51L,0,"same","COMPLETE_UNIT",Collections.singletonMap("unitId","u1"));
+        assertThrows(ServiceException.class,()->service.act(MEMBER_ID,51L,0,"same","COMPLETE_UNIT",Collections.singletonMap("unitId","changed")));
+        verify(sessionMapper,org.mockito.Mockito.times(1)).updateStateCas(any());
+    }
+    @Test void teamGenerationOldGameIsRejectedBeforeGameLockOrMutation() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();sharedTeamRoute(session,"default");session.setPlayInstanceId("team-replay:400");
+        assertThrows(ServiceException.class,()->service.act(MEMBER_ID,51L,0,"stale","COMPLETE_UNIT",Collections.singletonMap("unitId","u")));
+        verify(sessionMapper,never()).selectAccessibleByIdForUpdate(any(),any());verify(sessionMapper,never()).updateStateCas(any());
+    }
+    @Test void teamGenerationNativeStillRejectsBeforeResolvingGroupOrConsumingCounter() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();ITopicRouteRuntimeService route=sharedTeamRoute(session,"default");NativeStepAssertionVerifier verifier=nativeVerifier();
+        assertNativeFailure("NATIVE_STEPS_UNSUPPORTED_OWNER",()->service.act(MEMBER_ID,51L,0,"native-team",NativeStepProtocol.ISSUE,nativeIssuePayload()));
+        verify(route,never()).resolveTeamGameScope(any(),any(),any(),any(),any(),anyBoolean());verify(verifier,never()).verifyAndConsume(any(),any());verify(sessionMapper,never()).updateStateCas(any());
+    }
+    @Test void teamTimeWindowReadsFrozenScopeWithoutWriteResolverOrOpeningCreation() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();ITopicRouteRuntimeService route=sharedTeamRoute(session,"default");
+        service.timeWindow(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID);
+        verify(route).resolveTeamGameScope(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID,null,false);
+        verify(route,never()).resolveTeamGameScope(any(),any(),any(),any(),any(),eq(true));
+        verify(route,never()).requireOpeningAccess(any(),any(),any(),any());verify(sessionMapper,never()).insert(any());
+    }
+    @Test void initialDefaultThemeTeamAlsoGetsActorScopedReceiptNamespace() throws Exception {
+        GameRuntimeSession session=teamGenerationSession();session.setPlayInstanceId("default");ITopicRouteRuntimeService route=sharedTeamRoute(session,"default");
+        when(route.resolveTeamGameScope(any(),any(),any(),any(),any(),anyBoolean())).thenReturn(null);Map<String,PlayAttemptLog> receipts=rememberReceipts();
+        service.act(MEMBER_ID,51L,0,"same-initial","COMPLETE_UNIT",Collections.singletonMap("unitId","u1"));
+        assertTrue(receipts.keySet().iterator().next().startsWith("theme:51:"));assertFalse(receipts.containsKey("same-initial"));
     }
 }

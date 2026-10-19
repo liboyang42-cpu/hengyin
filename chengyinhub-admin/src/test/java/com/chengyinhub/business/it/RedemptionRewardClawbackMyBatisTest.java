@@ -7,11 +7,14 @@ import com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper;
 import com.chengyinhub.business.mapper.GrowthMissionProgressMapper;
 import com.chengyinhub.business.mapper.MemberGrowthMapper;
 import com.chengyinhub.business.mapper.SmsCouponHistoryMapper;
+import com.chengyinhub.business.mapper.SmsCouponMapper;
 import com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper;
 import com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper;
+import com.chengyinhub.business.mapper.TopicCompletionCouponReceiptMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.service.impl.RedemptionRewardClawbackService;
+import com.chengyinhub.business.service.coupon.TopicCompletionCouponHistoryResolver;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.mapping.Environment;
@@ -21,6 +24,13 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
+import org.springframework.transaction.interceptor.MatchAlwaysTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,9 +42,12 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -54,6 +67,34 @@ class RedemptionRewardClawbackMyBatisTest {
     private static final long REGISTRATION = 9001L;
     private static final long ACTIVITY = 8001L;
     private static final long TOPIC = 700L;
+    private final Map<SqlSession, SingleConnectionDataSource> transactionSources = new IdentityHashMap<>();
+
+    @Test
+    void missingHistoryGuardRejectsAndRollsBackLegacyClawback() throws Exception {
+        try (SqlSession session = openSession("redemption_clawback_missing_guard")) {
+            Connection c = session.getConnection();
+            createTables(c);
+            exec(c, "INSERT INTO ums_member (id, point, del_flag) VALUES (" + MEMBER + ", 5, 0)",
+                    "INSERT INTO ums_member_points_detail (member_id, change_points, event_type, event_id, change_type, del_flag)"
+                            + " VALUES (" + MEMBER + ", 5, 13, " + ACTIVITY + ", 1, 0)",
+                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, created_at)"
+                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, NOW())",
+                    "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
+                            + " VALUES (41, 30, " + MEMBER + ", 'C41', 0, NOW(), 0)");
+            RedemptionRewardClawbackService service = service(session);
+            ReflectionTestUtils.setField(service, "completionCouponReceipts", null);
+
+            IllegalStateException failure = assertThrows(IllegalStateException.class,
+                    () -> service.clawback(redemption(61L), registration(), false, true, "缺少必需历史守卫", 1L));
+            assertEquals("Completion receipt history guard is unavailable", failure.getMessage());
+            assertEquals(5, number(c, "SELECT point FROM ums_member WHERE id=" + MEMBER));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM ums_member_points_detail WHERE change_type=1"));
+            assertEquals(0, number(c, "SELECT COUNT(*) FROM ums_member_points_detail WHERE change_type=2"));
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=41"));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM cms_topic_completion_coupon_reward_log"));
+            assertEquals(0, number(c, "SELECT COUNT(*) FROM business_audit_event"));
+        }
+    }
 
     @Test
     void clawsOnceFloorsAtZeroAndLetsReVerificationEarnAgain() throws Exception {
@@ -262,6 +303,7 @@ class RedemptionRewardClawbackMyBatisTest {
                 new com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl();
         ReflectionTestUtils.setField(coupons, "rewardMapper", session.getMapper(CmsTopicCompletionCouponRewardMapper.class));
         ReflectionTestUtils.setField(coupons, "smsCouponHistoryService", couponHistory);
+        ReflectionTestUtils.setField(coupons, "receiptProtocol", receiptResolver(session));
 
         com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
         topic.setId(TOPIC);
@@ -287,7 +329,7 @@ class RedemptionRewardClawbackMyBatisTest {
         ReflectionTestUtils.setField(awards, "playerBadgeMapper", badges);
         ReflectionTestUtils.setField(awards, "pointsAwardService", points);
         ReflectionTestUtils.setField(awards, "playerProgressionService", progression);
-        ReflectionTestUtils.setField(awards, "couponRewardService", coupons);
+        ReflectionTestUtils.setField(awards, "couponRewardService", transactional(coupons, session));
         ReflectionTestUtils.setField(awards, "officialEventV2Service", mock(com.chengyinhub.business.service.IOfficialEventV2Service.class));
         ReflectionTestUtils.setField(awards, "xpBudgetService", budget);
         ReflectionTestUtils.setField(awards, "growthService", growth);
@@ -296,7 +338,7 @@ class RedemptionRewardClawbackMyBatisTest {
         com.chengyinhub.business.service.IUmsMemberService locker = mock(com.chengyinhub.business.service.IUmsMemberService.class);
         when(locker.lockMemberById(anyLong())).thenAnswer(i -> members.lockMemberById(i.getArgument(0)));
         ReflectionTestUtils.setField(awards, "umsMemberService", locker);
-        return awards;
+        return transactional(awards, session);
     }
 
     private static Redemption redemption(long id) {
@@ -328,7 +370,34 @@ class RedemptionRewardClawbackMyBatisTest {
         ReflectionTestUtils.setField(service, "completionCouponRewardMapper", session.getMapper(CmsTopicCompletionCouponRewardMapper.class));
         ReflectionTestUtils.setField(service, "smsCouponHistoryMapper", session.getMapper(SmsCouponHistoryMapper.class));
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", session.getMapper(BusinessAuditEventMapper.class));
-        return service;
+        ReflectionTestUtils.setField(service, "completionCouponReceipts", receiptResolver(session));
+        return transactional(service, session);
+    }
+
+    private SingleConnectionDataSource transactionSource(SqlSession session) {
+        // Use the exact connection already used by original mappers and legacy-schema assertions.
+        // Spring owns each service transaction; SqlSession still owns final connection closure.
+        return transactionSources.computeIfAbsent(session,
+                value -> new SingleConnectionDataSource(value.getConnection(), true));
+    }
+
+    private TopicCompletionCouponHistoryResolver receiptResolver(SqlSession session) {
+        return new TopicCompletionCouponHistoryResolver(session.getMapper(TopicCompletionCouponReceiptMapper.class),
+                transactionSource(session));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T transactional(T target, SqlSession session) {
+        DataSourceTransactionManager manager = new DataSourceTransactionManager(transactionSource(session));
+        ProxyFactory proxy = new ProxyFactory(target);
+        proxy.setProxyTargetClass(true);
+        // The real redemption caller starts a transaction before invoking MANDATORY clawback.
+        // Supply that caller boundary here, then retain each real service's annotation semantics.
+        MatchAlwaysTransactionAttributeSource caller = new MatchAlwaysTransactionAttributeSource();
+        caller.setTransactionAttribute(new DefaultTransactionAttribute());
+        proxy.addAdvice(new TransactionInterceptor(manager, caller));
+        proxy.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
+        return (T) proxy.getProxy();
     }
 
     private SqlSession openSession(String db) throws Exception {
@@ -339,7 +408,7 @@ class RedemptionRewardClawbackMyBatisTest {
         for (Class<?> mapper : new Class<?>[] {UmsMemberPointsDetailMapper.class, UmsMemberMapper.class,
                 GrowthMissionProgressMapper.class, MemberGrowthMapper.class, StoreVerifyGrowthDeliveryMapper.class,
                 TopicCompletionXpAwardMapper.class, CmsTopicCompletionCouponRewardMapper.class,
-                SmsCouponHistoryMapper.class, BusinessAuditEventMapper.class}) {
+                SmsCouponMapper.class, SmsCouponHistoryMapper.class, BusinessAuditEventMapper.class, TopicCompletionCouponReceiptMapper.class}) {
             String resource = "mapper/business/" + mapper.getSimpleName() + ".xml";
             cfg.addMapper(mapper);
             try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)) {

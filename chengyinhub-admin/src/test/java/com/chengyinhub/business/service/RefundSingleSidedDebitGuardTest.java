@@ -13,6 +13,7 @@ import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.RefundServiceImpl;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -101,6 +102,7 @@ class RefundSingleSidedDebitGuardTest {
         when(umsMemberMapper.lockMemberById(anyLong())).thenAnswer(invocation -> invocation.getArgument(0));
         when(umsMemberMapper.deductBalance(anyLong(), any())).thenReturn(1);
         when(umsMemberBalanceDetailMapper.insertUmsMemberBalanceDetail(any())).thenReturn(1);
+        svc = RegistrationLifecycleFixture.transactional(svc);
     }
 
     /** 活动报名:owner_type=2 指向 cms_activity。 */
@@ -120,6 +122,7 @@ class RefundSingleSidedDebitGuardTest {
         reg.setOwnerType(2L);
         reg.setOwnerId(ACTIVITY_ID);
         when(cmsRegistrationMapper.selectCmsRegistrationById(REGISTRATION_ID)).thenReturn(reg);
+        RegistrationLifecycleFixture.refundWinner(cmsRegistrationMapper, reg);
 
         when(refundApplicationMapper.updateRefundStatusIfPending(anyLong(), anyInt(), any(), any(), any()))
                 .thenReturn(1);

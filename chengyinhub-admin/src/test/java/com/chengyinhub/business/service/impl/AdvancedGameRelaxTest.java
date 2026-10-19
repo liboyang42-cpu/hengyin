@@ -3,6 +3,8 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.TopicRouteSession;
 import com.chengyinhub.business.domain.GameRuntimeSession;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -11,6 +13,9 @@ import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.GameRuntimeSessionMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
@@ -23,12 +28,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import com.chengyinhub.common.exception.ServiceException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.atLeastOnce;
 
 /**
  * 阶段 4 自适应难度的**运行期**那一半。
@@ -72,6 +81,10 @@ class AdvancedGameRelaxTest {
         PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
         PlayAttemptLogMapper attemptMapper = mock(PlayAttemptLogMapper.class);
         topicRouteRuntimeService = mock(ITopicRouteRuntimeService.class);
+        // This legacy, non-theme actor has a precise default namespace even without a journey run.
+        when(topicRouteRuntimeService.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("default");
+        when(topicRouteRuntimeService.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default"))
+                .thenReturn(false);
 
         service = new AdvancedGameRuntimeServiceImpl();
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
@@ -94,8 +107,8 @@ class AdvancedGameRelaxTest {
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY_ID); activity.setTopicId(TOPIC_ID);
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
-        when(teamMapper.hasPaidRegistration(anyLong(), any(), anyLong())).thenReturn(1);
-        when(sessionMapper.selectByOwner(anyLong(), anyLong(), anyLong(), any(), anyLong()))
+        when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(1);
+        when(sessionMapper.selectByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, GameRuntimeSession.OWNER_PLAYER, MEMBER_ID))
                 .thenReturn(null);
         when(sessionMapper.insert(any(GameRuntimeSession.class))).thenAnswer(inv -> {
             saved = inv.getArgument(0);
@@ -107,7 +120,61 @@ class AdvancedGameRelaxTest {
 
     private JsonNode startAndReadSnapshot() throws Exception {
         service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null);
+        assertEquals(MEMBER_ID, saved.getOwnerId());
+        assertEquals(TOPIC_ID, saved.getTopicId());
+        assertEquals(ACTIVITY_ID, saved.getActivityId());
+        assertEquals("default", saved.getPlayInstanceId());
         return json.readTree(saved.getConfigSnapshotJson());
+    }
+
+    @Test
+    void missingInstanceFailsClosedBeforeGameInsert() {
+        when(topicRouteRuntimeService.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn(null);
+        ServiceException failure = assertThrows(ServiceException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        assertEquals("本局范围不可读取，请刷新", failure.getMessage());
+        assertNull(saved);
+        verify(sessionMapper, never()).insert(any(GameRuntimeSession.class));
+    }
+
+    @Test
+    void anotherOwnersDefaultCannotSupplyThisPlayersInstance() {
+        when(topicRouteRuntimeService.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn(null);
+        when(topicRouteRuntimeService.playInstance(MEMBER_ID + 1, TOPIC_ID, ACTIVITY_ID)).thenReturn("default");
+        assertThrows(ServiceException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(topicRouteRuntimeService).playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID);
+        verify(topicRouteRuntimeService, never()).playInstance(MEMBER_ID + 1, TOPIC_ID, ACTIVITY_ID);
+        verify(sessionMapper, never()).insert(any(GameRuntimeSession.class));
+    }
+
+    @Test
+    void currentInstanceChangeRejectsBeforePersistingRelaxedGame() {
+        when(topicRouteRuntimeService.assertCurrentPlayInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, "default"))
+                .thenThrow(new ServiceException("本局已更新，请刷新", 409));
+        assertThrows(ServiceException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(sessionMapper, never()).insert(any(GameRuntimeSession.class));
+    }
+
+    @Test
+    void realNonThemeRuntimeWithoutRouteKeepsDefaultAndDoesNotRelaxOrCreateJourney() throws Exception {
+        TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC_ID);
+        when(topics.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        TopicRouteRuntimeServiceImpl real = new TopicRouteRuntimeServiceImpl(routes, topics,
+                mock(CmsTopicNodeMapper.class), mock(PlayerNodeProgressMapper.class),
+                mock(CmsActivityMapper.class), mock(CmsRegistrationMapper.class));
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", real);
+
+        JsonNode snapshot = startAndReadSnapshot();
+
+        assertEquals(60, snapshot.path("timer").path("durationSeconds").asInt());
+        assertEquals(2, snapshot.path("sort").path("maxAttempts").asInt());
+        verify(routes, atLeastOnce()).selectByOwner(ACTIVITY_ID, TOPIC_ID, MEMBER_ID, "default");
+        verify(routes, atLeastOnce()).selectByOwnerForUpdate(ACTIVITY_ID, TOPIC_ID, MEMBER_ID, "default");
+        verify(routes, never()).insertSession(any(TopicRouteSession.class));
     }
 
     @Test

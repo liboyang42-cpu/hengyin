@@ -2,8 +2,11 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.PlayBingoCard;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
+import com.chengyinhub.business.domain.TopicRouteSession;
 import com.chengyinhub.business.mapper.PlayBingoCardMapper;
 import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.support.ThemeFirstIdentity;
 import com.chengyinhub.business.service.IPlayBingoService;
 import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
@@ -28,6 +31,8 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * 宾果任务格。
@@ -53,6 +58,9 @@ public class PlayBingoServiceImpl implements IPlayBingoService {
 
     @Autowired
     private PlayerNodeProgressMapper progressMapper;
+
+    @Autowired
+    private TopicRouteSessionMapper routeSessionMapper;
 
     @Autowired
     private IGrowthService growthService;
@@ -300,14 +308,53 @@ public class PlayBingoServiceImpl implements IPlayBingoService {
         List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);
         List<Long> nodeIds = new ArrayList<>();
         List<Date> times = new ArrayList<>();
+        Set<String> originalOpportunities = new HashSet<>();
         if (rows != null) {
             for (PlayerNodeProgress row : rows) {
                 // R10-09 收尾:只认 status==1 正式完成。mapper 不吃 probe.status,必须在 Java 侧过滤,
                 // 否则到店/凭证 status=0 行会点亮格子并在下次节点完成时提前解锁宾果档位(发探索值)。
                 if (!Integer.valueOf(1).equals(row.getStatus())) continue;
+                originalOpportunities.add(row.getActivityId() + ":" + row.getNodeId());
                 if (row.getNodeId() != null) nodeIds.add(row.getNodeId());
                 if (row.getCheckinTime() != null) times.add(row.getCheckinTime());
             }
+        }
+        // A bingo card is a lifetime member/topic card. Replay cannot manufacture new days or bursts.
+        // Only a persisted, owner-bound FIRST session can contribute a new original completion.
+        if (routeSessionMapper == null) throw new IllegalStateException("原始本局记录不可读取");
+        Long before = null;
+        final int pageSize = 100;
+        while (true) {
+            List<TopicRouteSession> page = routeSessionMapper.selectHistoryPage(memberId, topicId, before, pageSize);
+            if (page == null || page.size() > pageSize) throw new IllegalStateException("原始本局记录不可读取");
+            for (TopicRouteSession session : page) {
+                if (session == null || session.getId() == null || session.getId() <= 0
+                        || (before != null && session.getId() >= before)
+                        || !memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())) {
+                    throw new IllegalStateException("原始本局记录范围异常");
+                }
+                before = session.getId();
+                if (!ThemeFirstIdentity.isFirst(session)) continue;
+                PlayerNodeProgress firstProbe = new PlayerNodeProgress();
+                firstProbe.setMemberId(memberId); firstProbe.setTopicId(topicId);
+                firstProbe.setActivityId(session.getActivityId());
+                List<PlayerNodeProgress> firstRows = progressMapper.selectPlayerNodeProgressListForInstance(
+                        firstProbe, session.getPlayInstanceId());
+                if (firstRows == null) throw new IllegalStateException("原始完成记录不可读取");
+                for (PlayerNodeProgress row : firstRows) {
+                    if (row == null || !memberId.equals(row.getMemberId()) || !topicId.equals(row.getTopicId())
+                            || !session.getActivityId().equals(row.getActivityId())
+                            || !session.getPlayInstanceId().equals(row.getPlayInstanceId())
+                            || !Integer.valueOf(0).equals(row.getDelFlag()) || row.getNodeId() == null) {
+                        throw new IllegalStateException("原始完成记录范围异常");
+                    }
+                    if (!Integer.valueOf(1).equals(row.getStatus())
+                            || !originalOpportunities.add(row.getActivityId() + ":" + row.getNodeId())) continue;
+                    nodeIds.add(row.getNodeId());
+                    if (row.getCheckinTime() != null) times.add(row.getCheckinTime());
+                }
+            }
+            if (page.size() < pageSize) break;
         }
         return new BingoCells.Progress(nodeIds, times);
     }

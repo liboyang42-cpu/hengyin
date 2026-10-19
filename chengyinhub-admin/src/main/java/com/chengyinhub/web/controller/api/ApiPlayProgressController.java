@@ -245,7 +245,7 @@ public class ApiPlayProgressController extends BaseController
     private IPlayerNodeProgressService playerNodeProgressService;
 
     /** 主题级地点路线权威状态；与节点级高级玩法 session 分离。 */
-    @Autowired(required = false)
+    @Autowired
     private ITopicRouteRuntimeService topicRouteRuntimeService;
 
     @Autowired(required = false)
@@ -385,6 +385,16 @@ public class ApiPlayProgressController extends BaseController
             timeErr = null; // 自玩无场次时效;有效期由通行证 expires_at 管
         }
 
+        // Resolve one server-owned instance token before reading any theme progress/config.
+        com.chengyinhub.business.domain.CmsTopic routeTopic = cmsTopicService.selectCmsTopicById(tId);
+        TopicRouteState initializedThemeState = null;
+        if (registered && topicRouteRuntimeService != null && routeTopic != null
+                && com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy.isConfigured(routeTopic.getPublishedThemeRuntimeConfigJson())) {
+            initializedThemeState = topicRouteRuntimeService.state(memberId, tId, progActId);
+        }
+        final String responseInstance = topicRouteRuntimeService == null ? "default"
+                : topicRouteRuntimeService.playInstance(memberId, tId, progActId);
+
         // 节点列表
         CmsTopicNode nodeProbe = new CmsTopicNode();
         nodeProbe.setTopicId(tId);
@@ -395,6 +405,8 @@ public class ApiPlayProgressController extends BaseController
         PlayerNodeProgress progProbe = new PlayerNodeProgress();
         progProbe.setMemberId(memberId);
         progProbe.setActivityId(progActId);
+        progProbe.setTopicId(tId);
+        progProbe.setPlayInstanceId(responseInstance);
         List<PlayerNodeProgress> doneList = playerNodeProgressService.selectPlayerNodeProgressList(progProbe);
         List<Long> doneNodeIds = new ArrayList<>();
         Map<Long, Date> doneAtMap = new LinkedHashMap<>(); // P0 剧情成书:完成时间(前端按"我的完成顺序"排手记)
@@ -437,11 +449,10 @@ public class ApiPlayProgressController extends BaseController
         SpoilerAccessSnapshot spoilerAccess = spoilerProtectionService == null ? null
                 : spoilerProtectionService.snapshot(memberId, ISpoilerProtectionService.CONTENT_NODE);
         int playMode = resolveMode(progActId, tId); // 复用既有 helper,循环内 + 出参共用
-        TopicRouteState routeState = null;
-        com.chengyinhub.business.domain.CmsTopic routeTopic = cmsTopicService.selectCmsTopicById(tId);
+        TopicRouteState routeState = initializedThemeState;
         boolean hasJourneyState = routeTopic != null
                 && com.chengyinhub.business.domain.JourneyRules.parse(routeTopic.getJourneyRulesJson()).hasRuntimeState();
-        if (registered && topicRouteRuntimeService != null
+        if (routeState == null && registered && topicRouteRuntimeService != null
                 && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
                 routeState = topicRouteRuntimeService.state(memberId, tId, progActId);
@@ -958,9 +969,31 @@ public class ApiPlayProgressController extends BaseController
         // 故事变量 {名字}(契约 §3.1):B 的替换点是章节全文与节点 story,它们都来自这条回包,
         // 所以同一份 vars 必须挂在这里(只挂 /api/play/advanced 的会话视图,B 拿不到)。
         // 真源 = StoryVars 一个构造函数,两处共用;这里只捞状态,不各拼一份。
+        final String storyInstance = responseInstance;
+        final com.chengyinhub.business.service.ITopicRouteRuntimeService.TeamGameScope storyTeam = topicRouteRuntimeService==null?null
+                :topicRouteRuntimeService.resolveTeamGameScope(memberId,tId,progActId,null,null,false);
+        if(storyTeam!=null && !storyInstance.equals(storyTeam.getActorPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
+        final List<com.chengyinhub.business.domain.GameRuntimeSession> scopedGames=storyTeam==null?null
+                :gameRuntimeSessionMapper.selectSessionsForMemberAndTeam(progActId,tId,memberId,storyInstance,storyTeam.getTeamId(),storyTeam.getPlayInstanceId());
+        // Admission/config mismatch is not best-effort rendering: reject before any TEAM state is projected.
+        if(storyTeam!=null && scopedGames!=null)for(com.chengyinhub.business.domain.GameRuntimeSession game:scopedGames) {
+            if(game==null)throw new ServiceException("队伍玩法状态不可读取，请刷新",409);
+            if(!Integer.valueOf(com.chengyinhub.business.domain.GameRuntimeSession.OWNER_TEAM).equals(game.getOwnerType()))continue;
+            if(game.getNodeId()==null || !tId.equals(game.getTopicId()) || !progActId.equals(game.getActivityId())
+                    || !storyTeam.getTeamId().equals(game.getOwnerId()) || !storyTeam.getPlayInstanceId().equals(game.getPlayInstanceId()))
+                throw new ServiceException("队伍本局范围已更新，请刷新",409);
+            com.chengyinhub.business.service.ITopicRouteRuntimeService.TeamGameScope nodeScope=topicRouteRuntimeService
+                    .resolveTeamGameScope(memberId,tId,progActId,game.getNodeId(),storyTeam.getTeamId(),false);
+            if(nodeScope==null || !storyTeam.getPlayInstanceId().equals(nodeScope.getPlayInstanceId())
+                    || !storyInstance.equals(nodeScope.getActorPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
+            com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.requireFirstTeamConfig(nodeScope,game);
+        }
         try {
-            Map<String, Object> vars = com.chengyinhub.business.util.StoryVars.fromStateJsons(
-                    gameRuntimeSessionMapper.selectStateJsonsByTopic(memberId, tId, progActId));
+            List<String> states;
+            if(storyTeam!=null) { states=new ArrayList<>();if(scopedGames!=null)for(com.chengyinhub.business.domain.GameRuntimeSession game:scopedGames)states.add(game.getStateJson()); }
+            else states="default".equals(storyInstance)?gameRuntimeSessionMapper.selectStateJsonsByTopic(memberId,tId,progActId)
+                    :gameRuntimeSessionMapper.selectStateJsonsByTopicForInstance(memberId,tId,progActId,storyInstance);
+            Map<String, Object> vars = com.chengyinhub.business.util.StoryVars.fromStateJsons(states);
             if (!vars.isEmpty()) data.put("vars", vars);
         } catch (Exception e) {
             // 变量读不出来只是那几处 {xxx} 不替换,不该把整个节点列表拖成 500;warn 留痕,不静默
@@ -971,9 +1004,11 @@ public class ApiPlayProgressController extends BaseController
         try {
             Map<String, Object> voices = new LinkedHashMap<>();
             List<com.chengyinhub.business.domain.GameRuntimeSession> own =
-                    gameRuntimeSessionMapper.selectPlayerSessionsByTopic(progActId, tId, memberId);
+                    storyTeam!=null?scopedGames:("default".equals(storyInstance) ? gameRuntimeSessionMapper.selectPlayerSessionsByTopic(progActId, tId, memberId)
+                        : gameRuntimeSessionMapper.selectPlayerSessionsByTopicForInstance(progActId, tId, memberId, storyInstance));
             for (com.chengyinhub.business.domain.GameRuntimeSession s : own == null
                     ? java.util.Collections.<com.chengyinhub.business.domain.GameRuntimeSession>emptyList() : own) {
+                if(storyTeam!=null && !Integer.valueOf(com.chengyinhub.business.domain.GameRuntimeSession.OWNER_PLAYER).equals(s.getOwnerType()))continue;
                 if (s.getNodeId() == null || StringUtils.isBlank(s.getStateJson())) continue;
                 com.fasterxml.jackson.databind.JsonNode hits = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readTree(s.getStateJson()).path("profile").path("overrides");
@@ -997,6 +1032,27 @@ public class ApiPlayProgressController extends BaseController
                 }
             } catch (Exception e) {
                 logger.warn("俱乐部局角色分配失败 activity={} member={}", progActId, memberId, e);
+            }
+        }
+        if (topicRouteRuntimeService != null) {
+            // Read-side discovery only for this eligible owner's authoritative frozen theme run.
+            // The client still needs the default-off capability and every mutation rechecks authority.
+            if (registered) {
+                com.chengyinhub.business.domain.TopicRouteSession themeScope = new com.chengyinhub.business.domain.TopicRouteSession();
+                themeScope.setMemberId(memberId); themeScope.setTopicId(tId); themeScope.setActivityId(progActId);
+                themeScope.setPlayInstanceId(responseInstance);
+                ITopicRouteRuntimeService.CurrentSessionFact themeFact = topicRouteRuntimeService.currentSessionFacts(
+                        java.util.Collections.singletonList(themeScope)).get(ITopicRouteRuntimeService.sessionKey(memberId, tId, progActId));
+                if (themeFact != null && themeFact.isTheme()) {
+                    if (!responseInstance.equals(themeFact.getPlayInstanceId())) throw new ServiceException("本局已更新，请刷新", 409);
+                    data.put("themeRuntimeAvailable", true);
+                }
+            }
+            // Reject the whole mixed response if replay changed the instance while it was assembled.
+            topicRouteRuntimeService.assertCurrentPlayInstance(memberId, tId, progActId, responseInstance);
+            if(storyTeam!=null) {
+                com.chengyinhub.business.service.ITopicRouteRuntimeService.TeamGameScope current=topicRouteRuntimeService.resolveTeamGameScope(memberId,tId,progActId,null,storyTeam.getTeamId(),false);
+                if(current==null || !storyTeam.getPlayInstanceId().equals(current.getPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
             }
         }
         return AjaxResult.success(data);
@@ -1085,7 +1141,7 @@ public class ApiPlayProgressController extends BaseController
         PlayerNodeProgress progProbe = new PlayerNodeProgress();
         progProbe.setMemberId(memberId);
         progProbe.setActivityId(progActId);
-        if (selfPlay) progProbe.setTopicId(tId);
+        progProbe.setTopicId(tId);
         List<PlayerNodeProgress> doneList = playerNodeProgressService.selectPlayerNodeProgressList(progProbe);
         // 访问判断:只看本人事实。无参与事实(无事前通行证/报名、也无本人进度行)→ 空信,
         // 不泄露任何未获得碎片;有过通行证(哪怕已过期)或报名即历史参与者,不被公开资格挡。
@@ -1262,7 +1318,7 @@ public class ApiPlayProgressController extends BaseController
         doneProbe.setActivityId(progActId);
         // 自玩会话 activity_id 全部=0,多主题共享同一探针会互相污染 done 计数,须按 topicId 再收窄
         // (与上面 total 的 topic 口径保持一致);活动会话 activityId 天然一对一绑定主题,无需再加
-        if (selfPlay) doneProbe.setTopicId(tId);
+        doneProbe.setTopicId(tId);
         // R10-09 收尾:完成槽位只数 status==1 正式完成。到店/凭证 status=0 在 /nodes 有 arrived
         // 展示位,但不能推进「完成比例」槽位(否则只到店就播 middle/last 档台词)。
         int done = 0;
@@ -1569,15 +1625,16 @@ public class ApiPlayProgressController extends BaseController
         logAttempt(memberId, node, actId, 1, 1, null); // M9 答对
         Map<String, Object> data;
         if (playMode == PlayMode.LINEAR_ORIENTEERING) {
+            CompletionAttempt completion = prepareNodeCompletion(memberId, node, actId);
             int puzzleScore;
             try {
                 puzzleScore = puzzlePlayService.solvedScore(memberId, ctx.topicId, node.getId(), actId);
             } catch (IllegalStateException e) {
-                return error(e.getMessage());
+                throw e; // Preparation may hold/write the game; keep the outer transaction atomic.
             }
             data = advanceProgress(memberId, node, actId, null,
                     puzzleScore, PuzzleScorePolicy.COMPLETION_SOLVED, RewardPolicy.FULL,
-                    routeActionId, expectedRouteVersion, null);
+                    routeActionId, expectedRouteVersion, null, null, completion);
         } else {
             data = advanceProgress(memberId, node, actId, null, null, null, RewardPolicy.FULL,
                     routeActionId, expectedRouteVersion, null);
@@ -1632,14 +1689,15 @@ public class ApiPlayProgressController extends BaseController
         String reveal = puzzlePlayService.revealText(tpl);
         if (StringUtils.isBlank(reveal)) return error("该谜题未配置答案解析");
 
+        CompletionAttempt completion = prepareNodeCompletion(memberId, node, ctx.actId);
         try {
             puzzlePlayService.recordReveal(memberId, ctx.topicId, node.getId(), ctx.actId);
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            throw e;
         }
         Map<String, Object> data = advanceProgress(memberId, node, ctx.actId, null,
                 PuzzleScorePolicy.revealedScore(), PuzzleScorePolicy.COMPLETION_REVEALED,
-                RewardPolicy.FULL, routeActionId, expectedRouteVersion, null);
+                RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, completion);
         data.put("answerReveal", reveal);
         if (ctx.nightWarning) data.put("nightWarning", true);
         return AjaxResult.success("已查看答案,本题解谜分为 0", data);
@@ -1728,9 +1786,19 @@ public class ApiPlayProgressController extends BaseController
         try {
             Map<String, Object> data = preferencePlayService.submit(memberId, pctx.playCtx.topicId,
                     pctx.playCtx.actId, nodeId, pctx.template, request,
-                    outcomeCode -> advanceProgress(memberId, pctx.node, pctx.playCtx.actId,
-                            null, null, null, RewardPolicy.FULL, request.getRouteActionId(),
-                            request.getExpectedRouteVersion(), outcomeCode));
+                    new PreferencePlayService.CompletionFunction() {
+                        private CompletionAttempt prepared;
+                        @Override public ITopicRouteRuntimeService.NodeAwardPermit prepare() {
+                            prepared = prepareNodeCompletion(memberId, pctx.node, pctx.playCtx.actId);
+                            return prepared.permit;
+                        }
+                        @Override public Map<String, Object> apply(String outcomeCode) {
+                            if (prepared == null) throw new IllegalStateException("偏好完成尚未准备");
+                            return advanceProgress(memberId, pctx.node, pctx.playCtx.actId,
+                                    null, null, null, RewardPolicy.FULL, request.getRouteActionId(),
+                                    request.getExpectedRouteVersion(), outcomeCode, null, prepared);
+                        }
+                    });
             return AjaxResult.success(Boolean.TRUE.equals(data.get("needsTiebreak"))
                     ? "请选择一道取舍题" : "偏好结果已生成", data);
         } catch (IllegalArgumentException e) {
@@ -2118,9 +2186,7 @@ public class ApiPlayProgressController extends BaseController
         probe.setMemberId(memberId);
         probe.setActivityId(actId == null ? 0L : actId);
         probe.setNodeId(nodeId);
-        if (actId == null || actId == 0L) {
-            probe.setTopicId(topicId);
-        }
+        probe.setTopicId(topicId);
         List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);
         return rows == null || rows.isEmpty() ? null : rows.get(0);
     }
@@ -2378,6 +2444,7 @@ public class ApiPlayProgressController extends BaseController
         PlayerNodeProgress doneProbe = new PlayerNodeProgress();
         doneProbe.setMemberId(memberId);
         doneProbe.setActivityId(actId);
+        doneProbe.setTopicId(node.getTopicId());
         List<PlayerNodeProgress> done = playerNodeProgressService.selectPlayerNodeProgressList(doneProbe);
         java.util.Set<Long> doneIds = new java.util.HashSet<>();
         // 完成事实只认 status==1:拍照待审(photo_review=1 的 status=0 行)不得据此放行下一站。
@@ -2423,6 +2490,7 @@ public class ApiPlayProgressController extends BaseController
         probe.setMemberId(memberId);
         probe.setActivityId(actId);
         probe.setNodeId(node.getUnlockAfterNodeId());
+        probe.setTopicId(node.getTopicId());
         List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);
         for (PlayerNodeProgress p : rows) {
             if (p.getStatus() != null && p.getStatus() == 1) return null;
@@ -2564,6 +2632,14 @@ public class ApiPlayProgressController extends BaseController
      * 分支图/会话在线一律看 TopicRouteSession.COMPLETED,线性回落 {@link #isTopicCompletedFor}
      * (③ 看核销,其余看主题 complete_rule_json)。别再各写一份分流,加口径时只改这一处。
      */
+    private boolean isCompletedCurrentFact(com.chengyinhub.business.domain.CmsTopic topic,
+            ITopicRouteRuntimeService.CurrentSessionFact fact, CmsRegistration explore, Long topicId, int total, int done) {
+        if (fact != null && fact.isTheme()) {
+            return Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(fact.getStatus());
+        }
+        return isCompletedCompletionFact(topic,fact == null ? null : fact.getStatus(),explore,topicId,total,done);
+    }
+
     private boolean isCompletedCompletionFact(com.chengyinhub.business.domain.CmsTopic topic,
             Integer routeStatus, CmsRegistration explore, Long topicId, int total, int done)
     {
@@ -2944,18 +3020,59 @@ public class ApiPlayProgressController extends BaseController
             String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode,
             Long approvedProgressId)
     {
+        return advanceProgress(memberId,node,actId,picUrl,puzzleScore,completionMode,rewardPolicy,
+                routeActionId,expectedRouteVersion,trustedOutcomeCode,approvedProgressId,null);
+    }
+
+    private static final class CompletionAttempt {
+        private final String outcome;
+        private final ITopicRouteRuntimeService.NodeAwardPermit permit;
+        private CompletionAttempt(String outcome, ITopicRouteRuntimeService.NodeAwardPermit permit) {
+            this.outcome=outcome; this.permit=permit;
+        }
+    }
+
+    private CompletionAttempt prepareNodeCompletion(Long memberId, CmsTopicNode node, Long actId) {
         // 高级玩法是节点原验证方式的前置闸。只有这里通过后才进入既有幂等、发奖和通关链，
         // 避免六类玩法各自复制一份积分/券/勋章逻辑。
+<<<<<<< public
         // Spring 运行态该依赖是 required；null 仅兼容直接 new Controller 的存量纯单测。
         if(topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,node.getTopicId(),actId))throw new ServiceException("通用个人任务请使用任务结算，不能领取旧节点奖励",409);
         String advancedOutcomeCode = advancedGameRuntimeService == null ? null
+=======
+        String outcome = advancedGameRuntimeService == null ? null
+>>>>>>> private-github/featu
                 : advancedGameRuntimeService.completeGate(memberId, actId, node.getTopicId(), node.getId());
+        // Both runtime dependencies are required in Spring. The null seam retains old directly-new
+        // controller fixtures, never an alternative production FIRST/replay admission path.
+        String instance = topicRouteRuntimeService == null ? "default"
+                : topicRouteRuntimeService.playInstance(memberId,node.getTopicId(),actId);
+        if (instance == null || instance.trim().isEmpty()) throw new ServiceException("本局不可读取",409);
+        ITopicRouteRuntimeService.NodeAwardPermit permit = topicRouteRuntimeService == null
+                ? new ITopicRouteRuntimeService.NodeAwardPermit(memberId,node.getTopicId(),actId,node.getId(),instance,true)
+                : topicRouteRuntimeService.beginOriginalNodeAward(memberId,node.getTopicId(),actId,node.getId(),instance);
+        if (permit == null || !permit.matches(memberId,node.getTopicId(),actId,node.getId(),instance))
+            throw new ServiceException("原始奖励范围不可读取",409);
+        return new CompletionAttempt(outcome,permit);
+    }
+
+    private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,
+            Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy,
+            String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode,
+            Long approvedProgressId, CompletionAttempt prepared)
+    {
+        CompletionAttempt attempt = prepared == null ? prepareNodeCompletion(memberId,node,actId) : prepared;
+        String instance = attempt.permit.getPlayInstanceId();
+        if (!attempt.permit.matches(memberId,node.getTopicId(),actId,node.getId(),instance))
+            throw new ServiceException("原始奖励范围不可读取",409);
+        String advancedOutcomeCode = attempt.outcome;
         Map<String, Object> conditionalReward = null;
         // ③ 与 ①② 在本方法里有两处分歧(首完判据 + 发奖范围),求一次共用,免得两处各判各的再漂开。
         boolean shopDay = resolveMode(actId, node.getTopicId()) == PlayMode.FREE_COLLECT;
         // 幂等：原子 insert + DuplicateKeyException 精确捕获并发冲突；
         // 捕获后按 uk_progress 四列回查确认确为重复，非重复异常必须 rethrow。
         PlayerNodeProgress p = new PlayerNodeProgress();
+        p.setPlayInstanceId(instance);
         p.setMemberId(memberId);
         p.setActivityId(actId);
         p.setTopicId(node.getTopicId());
@@ -3007,6 +3124,8 @@ public class ApiPlayProgressController extends BaseController
             }
         }
         boolean firstTime = (rows > 0);
+        if (!attempt.permit.matches(memberId,node.getTopicId(),actId,node.getId(),p.getPlayInstanceId()))
+            throw new ServiceException("本局已更新，请刷新",409);
 
         List<PlayerBadge> newBadges = new ArrayList<>();
         Map<String, Object> dropResult = null;
@@ -3014,7 +3133,8 @@ public class ApiPlayProgressController extends BaseController
         // 名次奖牌本次夺得的名次(1/2/3);没抢到(三档满 / 表未就绪 / 非首次)恒 null。
         // 前端原来只看节点配了 medalName 就弹「专属徽章」,第 4 名起弹的是假奖 —— 必须回传事实。
         Integer medalRank = null;
-        if (firstTime && (p.getPlayInstanceId()==null || "default".equals(p.getPlayInstanceId()))) {
+        boolean originalPersonalRun=attempt.permit.isEligible();
+        if (firstTime && originalPersonalRun) {
             // 重玩生成本局进度与主题内容，但不再次派发平台积分、券、成长值或排名奖牌。
             // ★ ③ 只发探索值与图鉴收集。B5(2026-08-15 修订)原文授权的是「玩完发**探索值**,纯体验」——
             //   抵扣积分 / 模板券 / 承接商家券 / 随机掉落券 / 经典节点徽章都不在授权里,不得靠
@@ -3083,9 +3203,7 @@ public class ApiPlayProgressController extends BaseController
         // (与上面 total 的 topic 口径保持一致);活动会话 activityId 天然一对一绑定主题,无需再加。
         // ⚠️ 这与 nodes() 里 :400 的收窄是同一件事 —— 那处已修并写了注释,这处(通关判定)漏了:
         // done 被别的自玩主题的进度撑大 ⇒ 提前判 completed ⇒ 提前发通关积分/XP/通关勋章。
-        if (actId == null || actId == 0L) {
-            doneProbe.setTopicId(node.getTopicId());
-        }
+        doneProbe.setTopicId(node.getTopicId());
         int done = 0;
         for (PlayerNodeProgress doneRow : playerNodeProgressService.selectPlayerNodeProgressList(doneProbe)) {
             // F1:完成事实只认 status==1。mode2 自由收集的到店/凭证行 status=0(由 markGameDone 0→1),
@@ -3188,9 +3306,16 @@ public class ApiPlayProgressController extends BaseController
 
         // 按 activityId 聚合已打卡节点数;自玩(activity_id=0)按 topicId 聚合并按节点去重
         Map<Long, Integer> doneByActivity = new LinkedHashMap<>();
+        Map<String, java.util.LinkedHashSet<Long>> completedByScope = new LinkedHashMap<>();
+        Map<String, String> instanceByScope = new LinkedHashMap<>();
         Map<Long, java.util.LinkedHashSet<Long>> selfPlayNodesByTopic = new LinkedHashMap<>();
         for (PlayerNodeProgress p : all) {
-            if (p.getActivityId() == null) continue;
+            if (p.getActivityId() == null || p.getTopicId() == null || p.getNodeId() == null) continue;
+            if (!memberId.equals(p.getMemberId())) throw new ServiceException("无权访问进度",403);
+            String scopeKey = ITopicRouteRuntimeService.sessionKey(memberId,p.getTopicId(),p.getActivityId());
+            String token = p.getPlayInstanceId() == null ? "default" : p.getPlayInstanceId();
+            String previousToken = instanceByScope.putIfAbsent(scopeKey,token);
+            if (previousToken != null && !previousToken.equals(token)) throw new ServiceException("本局已更新，请刷新",409);
             // F1:完成事实只认 status==1。mode2 自由收集的到店/凭证行 status=0(markGameDone 0→1),
             // 按全部行数聚合会让「只到店没玩」的主题被列成已完成(与 advanceProgress/nodes/route 同口径)。
             if (p.getStatus() == null || p.getStatus() != 1) continue;
@@ -3203,7 +3328,8 @@ public class ApiPlayProgressController extends BaseController
                 }
                 continue;
             }
-            doneByActivity.merge(p.getActivityId(), 1, Integer::sum);
+            completedByScope.computeIfAbsent(scopeKey,k -> new java.util.LinkedHashSet<>()).add(p.getNodeId());
+            doneByActivity.putIfAbsent(p.getActivityId(),0);
         }
 
         // [P0-17] ③ 的报名单,一次批量捞(**新增查询恒 1 次,与活动数无关**)。
@@ -3223,23 +3349,27 @@ public class ApiPlayProgressController extends BaseController
             CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
             if (activity == null || activity.getTopicId() == null) continue;
             candidateActivities.put(activityId, activity);
+            String key = ITopicRouteRuntimeService.sessionKey(memberId,activity.getTopicId(),activityId);
+            doneByActivity.put(activityId,completedByScope.getOrDefault(key,new java.util.LinkedHashSet<>()).size());
             TopicRouteSession scope = new TopicRouteSession();
             scope.setMemberId(memberId);
             scope.setTopicId(activity.getTopicId());
             scope.setActivityId(activityId);
+            scope.setPlayInstanceId(instanceByScope.get(key));
             routeScopes.add(scope);
         }
-        // 自玩(activity_id=0)路线状态与活动共用同一次 sessionStatuses 批量读回(不新增 N+1)
+        // 自玩(activity_id=0)路线状态与活动共用同一次 currentSessionFacts 批量读回(不新增 N+1)
         for (Long topicId : selfPlayNodesByTopic.keySet()) {
             TopicRouteSession scope = new TopicRouteSession();
             scope.setMemberId(memberId);
             scope.setTopicId(topicId);
             scope.setActivityId(0L);
+            scope.setPlayInstanceId(instanceByScope.get(ITopicRouteRuntimeService.sessionKey(memberId,topicId,0L)));
             routeScopes.add(scope);
         }
-        Map<String, Integer> routeStatuses = topicRouteRuntimeService == null
-                ? java.util.Collections.<String, Integer>emptyMap()
-                : topicRouteRuntimeService.sessionStatuses(routeScopes);
+        Map<String, ITopicRouteRuntimeService.CurrentSessionFact> routeFacts = topicRouteRuntimeService == null
+                ? java.util.Collections.<String, ITopicRouteRuntimeService.CurrentSessionFact>emptyMap()
+                : topicRouteRuntimeService.currentSessionFacts(routeScopes);
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Long activityId : candidates) {
@@ -3257,9 +3387,9 @@ public class ApiPlayProgressController extends BaseController
 
             com.chengyinhub.business.domain.CmsTopic completionTopic =
                     cmsTopicService.selectCmsTopicById(activity.getTopicId());
-            Integer routeStatus = routeStatuses.get(ITopicRouteRuntimeService.sessionKey(
+            ITopicRouteRuntimeService.CurrentSessionFact routeFact = routeFacts.get(ITopicRouteRuntimeService.sessionKey(
                     memberId, activity.getTopicId(), activityId));
-            boolean routeCompleted = isCompletedCompletionFact(completionTopic, routeStatus,
+            boolean routeCompleted = isCompletedCurrentFact(completionTopic, routeFact,
                     exploreByActivity.get(activityId), activity.getTopicId(), total, done);
             if (!routeCompleted) {
                 continue; // 仅已通关
@@ -3293,9 +3423,9 @@ public class ApiPlayProgressController extends BaseController
             selfNodeProbe.setStatus(1L);
             int total = cmsTopicNodeService.selectCmsTopicNodeList(selfNodeProbe).size();
 
-            Integer selfRouteStatus = routeStatuses.get(ITopicRouteRuntimeService.sessionKey(
+            ITopicRouteRuntimeService.CurrentSessionFact selfRouteFact = routeFacts.get(ITopicRouteRuntimeService.sessionKey(
                     memberId, topicId, 0L));
-            boolean selfCompleted = isCompletedCompletionFact(selfTopic, selfRouteStatus, null,
+            boolean selfCompleted = isCompletedCurrentFact(selfTopic, selfRouteFact, null,
                     topicId, total, done);
             if (!selfCompleted) {
                 continue; // 仅已通关
@@ -3334,6 +3464,7 @@ public class ApiPlayProgressController extends BaseController
             CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
             if (activity == null || activity.getTopicId() == null) return error("活动不存在");
             if (tId > 0 && !activity.getTopicId().equals(tId)) return error("活动与主题不匹配");
+            tId = activity.getTopicId();
             if (!isRegistered(memberId, actId)) return error("请先报名并完成支付");
             if (gameSessionRuntimeService != null && gameSessionRuntimeService.isRouteLeaderboardHidden(actId)) {
                 return error("主理人暂未开放本场排行榜");
@@ -3342,7 +3473,7 @@ public class ApiPlayProgressController extends BaseController
             return new AjaxResult(402, "请先购买自玩通行证");
         }
         List<LeaderboardItemVO> list = playerNodeProgressService.selectActivityLeaderboard(
-                actId > 0 ? actId : null, actId > 0 ? null : tId, 50);
+                actId > 0 ? actId : null, tId, 50);
         if (list == null) list = new ArrayList<>();
         LeaderboardItemVO me = null;
         for (int i = 0; i < list.size(); i++) {
@@ -3353,6 +3484,7 @@ public class ApiPlayProgressController extends BaseController
             // 榜外:补我的完成数,rank 留空(不猜名次)
             PlayerNodeProgress probe = new PlayerNodeProgress();
             probe.setMemberId(memberId);
+            probe.setTopicId(tId);
             if (actId > 0) {
                 probe.setActivityId(actId);
             } else {

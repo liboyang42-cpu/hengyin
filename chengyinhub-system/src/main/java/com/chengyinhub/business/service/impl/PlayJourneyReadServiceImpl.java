@@ -74,6 +74,10 @@ import java.util.Set;
  */
 @Service
 public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy themeRuntimePolicy =
+            new com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy();
+
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -152,6 +156,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
         requireScope(memberId, topicId);
         CmsTopic topic = requireTopic(topicId);
         TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        themeRuntimePolicy.requireSessionEnabled(session);
         if (session == null) throw new ServiceException("这一局还没开始");
         // 查询和本地校验都限定归属，禁止读取别人的局。
         if (!memberId.equals(session.getMemberId())) throw new ServiceException("无权访问这一局");
@@ -417,6 +422,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
         requireScope(memberId, topicId);
         CmsTopic topic = requireTopic(topicId);
         TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        themeRuntimePolicy.requireSessionEnabled(session);
         requireReadableBackpack(topic, memberId, session);
 
         CompletionFacts progress = progress(memberId, topicId, session == null ? activityId : session.getActivityId());
@@ -539,7 +545,10 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
         probe.setTopicId(topicId);
         if (activityId == null) return facts;
         probe.setActivityId(activityId);
-        List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);
+        String instance = themeRuntime == null ? "default" : themeRuntime.playInstance(memberId, topicId, activityId);
+        probe.setPlayInstanceId(instance);
+        List<PlayerNodeProgress> rows = "default".equals(instance) ? progressMapper.selectPlayerNodeProgressList(probe)
+                : progressMapper.selectPlayerNodeProgressListForInstance(probe, instance);
         if (rows == null) return facts;
         for (PlayerNodeProgress row : rows) {
             if (row == null || row.getNodeId() == null) continue;

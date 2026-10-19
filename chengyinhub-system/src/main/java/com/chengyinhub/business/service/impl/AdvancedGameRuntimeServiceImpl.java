@@ -24,11 +24,15 @@ import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.ai.PhotoCheckVisionResult;
 import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
 import com.chengyinhub.business.service.support.WeRunDecryptor;
+import com.chengyinhub.business.service.support.TimeWindowSchedule;
+import com.chengyinhub.business.service.support.NativeStepProtocol;
 import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
+import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.IPlayBingoService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
+import com.chengyinhub.business.service.support.ThemeFirstIdentity;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.chengyinhub.business.util.StoryVars;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -53,8 +57,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+<<<<<<< public
 import java.util.Arrays;
 import java.util.Calendar;
+=======
+>>>>>>> private-github/featu
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -88,6 +95,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     /** 拍照审核·取景轮廓不透明度:缺省 40，兜住 0–100(与 AdvancedGameConfigValidator 同一口径) */
     private static final int DEFAULT_FRAME_OPACITY = 40;
     private static final int MAX_FRAME_OPACITY = 100;
+    public static final String FIRST_TEAM_CONFIG_FINGERPRINT = "_serverFirstTeamConfigFingerprint";
 
     @Autowired(required = false)
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
@@ -167,14 +175,18 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Autowired(required = false)
     private AlarmService cardMintAlarmService;
 
+    @Autowired(required = false)
+    private NativeStepProtocol nativeStepProtocol = new NativeStepProtocol();
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AdvancedGameConfigValidator configValidator = new AdvancedGameConfigValidator();
     private AdvancedGameClock clock = Date::new;
     private AdvancedGameRandom random = new SecureRandom()::nextInt;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId) {
+<<<<<<< public
         return start(memberId, activityId, topicId, nodeId, teamId, null);
     }
 
@@ -195,6 +207,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             if (teamId != null && !actualTeam.equals(teamId)) throw new ServiceException("队伍与本场归属不匹配", 403);
             teamId = actualTeam;
         }
+=======
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId, true, teamId);
+        requireRouteNodeAccess(memberId, activityId, topicId, nodeId);
+        JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
+        boolean multiplayer = enabled(config.get("multiplayer"));
+        if(multiplayer && ThemeFirstIdentity.usesNamespace(input.playInstanceId) && input.teamScope==null)
+            throw new ServiceException("首次主题队伍范围不可用，请确认当前队伍",409);
+        if(input.teamScope!=null)teamId=input.teamScope.getTeamId();
+>>>>>>> private-github/featu
         if (input.existing == null && multiplayer && (teamId == null || teamId <= 0)) {
             teamId = inferTeamId(memberId, input.activityId);
         }
@@ -209,6 +230,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (ownerType == GameRuntimeSession.OWNER_TEAM) {
             if (activityId == null || activityId <= 0) throw new IllegalArgumentException("队伍玩法仅支持活动场次");
             team = requireTeam(ownerId, memberId, activityId);
+<<<<<<< public
             teamMembers = teamMapper.selectActiveMembers(ownerId);
             if (enabled(config.get("multiplayer"))) validateTeamSize(config.get("multiplayer"), teamMembers);
         }
@@ -221,6 +243,22 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             if (shared != null) {
                 if (runtimeEpoch(existing)==null) throw new ServiceException("共享玩法权威版本缺失，请重新建立玩法实例",409);
                 gameSessionRuntimeService.assertSharedRouteWritable(memberId,topicId,activityId,nodeId,runtimeEpoch(existing));
+=======
+            if(input.teamScope!=null)team=teamMapper.selectPlayTeamByIdForUpdate(ownerId);
+            teamMembers = input.teamScope==null?teamMapper.selectActiveMembers(ownerId):teamMapper.selectActiveMembersForUpdate(ownerId);
+            validateTeamSize(config.get("multiplayer"), teamMembers);
+        }
+
+        GameRuntimeSession existing = input.existing != null ? input.existing
+                : selectByOwner(input.activityId, topicId, nodeId, ownerType, ownerId,
+                        ownerType == GameRuntimeSession.OWNER_TEAM ? (input.teamScope==null?"default":input.teamScope.getPlayInstanceId()) : input.playInstanceId);
+        if (existing != null) {
+            assertCurrentPlayInstance(memberId, existing);
+            existing = expireIfNeeded(existing);
+            if (Integer.valueOf(GameRuntimeSession.STATUS_FAILED).equals(existing.getStatus())
+                    || Integer.valueOf(GameRuntimeSession.STATUS_EXPIRED).equals(existing.getStatus())) {
+                return restart(existing, team, teamMembers, memberId);
+>>>>>>> private-github/featu
             }
             if (objectState(existing.getStateJson()).has("zeroChallengeInstance")
                     && !Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(existing.getStatus())) return toView(existing, memberId);
@@ -260,7 +298,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (zeroChallenge != null) {state.put("zeroChallengeInstance", zeroChallenge.path("instanceId").asText()); state.set("challenge", zeroChallenge.deepCopy());}
         GameRuntimeSession session = new GameRuntimeSession();
         session.setActivityId(input.activityId);
+<<<<<<< public
         session.setPlayInstanceId(shared != null ? sharedInstance(shared) : topicRouteRuntimeService == null ? "default" : topicRouteRuntimeService.genericPlayer(memberId,topicId,input.activityId) ? topicRouteRuntimeService.gameplayInstance(memberId,topicId,input.activityId,nodeId) : topicRouteRuntimeService.playInstance(memberId,topicId,input.activityId));
+=======
+        session.setPlayInstanceId(ownerType == GameRuntimeSession.OWNER_TEAM ? (input.teamScope==null?"default":input.teamScope.getPlayInstanceId()) : input.playInstanceId);
+>>>>>>> private-github/featu
         session.setTopicId(topicId);
         session.setNodeId(nodeId);
         session.setTemplateId(input.templateId);
@@ -276,18 +318,28 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         session.setDeadlineAt(deadline(config, now));
         session.setCreateTime(now);
         session.setUpdateTime(now);
+        assertCurrentPlayInstance(memberId, session);
         try {
             if (sessionMapper.insert(session) != 1) throw new IllegalStateException("高级玩法启动失败");
         } catch (DuplicateKeyException e) {
+<<<<<<< public
             GameRuntimeSession raced = sessionMapper.selectOwnerByInstance(input.activityId, topicId, nodeId, ownerType, ownerId, session.getPlayInstanceId());
             if (raced == null) throw e;
             return toView(expireIfNeeded(raced,memberId), memberId);
+=======
+            GameRuntimeSession raced = selectByOwner(input.activityId, topicId, nodeId,
+                    ownerType, ownerId, session.getPlayInstanceId());
+            if (raced == null) throw e;
+            assertCurrentPlayInstance(memberId, raced);
+            return toView(expireIfNeeded(raced), memberId);
+>>>>>>> private-github/featu
         }
         return toView(session, memberId);
     }
 
     private Map<String, Object> restart(GameRuntimeSession session,
             PlayTeam team, List<PlayTeamMember> teamMembers, Long memberId) {
+        assertCurrentPlayInstance(memberId, session);
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         if(config.has("outcomeRules") && enabled(config.path("predict")) && objectState(session.getStateJson()).path("predict").has("betId")) {
             ObjectNode previous=objectState(session.getStateJson());java.sql.Date day=java.sql.Date.valueOf(previous.path("predict").path("playDay").asText());
@@ -320,10 +372,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         session.setCompletedAt(null);
         session.setUpdateTime(now);
         if (sessionMapper.restartTerminalCas(session) != 1) {
-            GameRuntimeSession raced = sessionMapper.selectByOwner(session.getActivityId(), session.getTopicId(),
-                    session.getNodeId(), session.getOwnerType(), session.getOwnerId());
+            GameRuntimeSession raced = selectByOwner(session.getActivityId(), session.getTopicId(),
+                    session.getNodeId(), session.getOwnerType(), session.getOwnerId(), session.getPlayInstanceId());
             if (raced == null) throw new IllegalStateException("高级玩法重开失败");
+<<<<<<< public
             throw versionConflict(raced, memberId);
+=======
+            assertCurrentPlayInstance(memberId, raced);
+            return toView(expireIfNeeded(raced), memberId);
+>>>>>>> private-github/featu
         }
         session.setVersion(oldVersion + 1);
         return toView(session, memberId);
@@ -339,13 +396,43 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (StringUtils.isBlank(idempotencyKey) || idempotencyKey.length() > 64) {
             throw new IllegalArgumentException("幂等键不能为空且最多 64 位");
         }
+        final String rawClientKey = idempotencyKey;
+        final String normalizedAction = StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT);
+        final Map<String, Object> safePayload = payload == null ? Collections.emptyMap() : payload;
+        final boolean nativeAction = NativeStepProtocol.isNative(normalizedAction);
+        final String nativeDigest = nativeAction
+                ? NativeStepProtocol.requestDigest(normalizedAction, safePayload, expectedVersion, rawClientKey) : null;
         GameRuntimeSession session = requireAccessible(sessionId, memberId);
+<<<<<<< public
         boolean zeroChallengeSession = objectState(session.getStateJson()).has("zeroChallengeInstance");
         if (zeroChallengeSession) idempotencyKey = themeActionKey(sessionId, memberId + ":" + idempotencyKey);
         else if (themeScoped(memberId, session)) idempotencyKey = themeActionKey(sessionId, idempotencyKey);
         PlayAttemptLog replay = attemptMapper.selectByIdempotencyKey(idempotencyKey);
         if (replay != null) return replay(replay, memberId, sessionId);
 
+=======
+        if (nativeAction && (!Integer.valueOf(GameRuntimeSession.OWNER_PLAYER).equals(session.getOwnerType())
+                || !memberId.equals(session.getOwnerId()))) {
+            NativeStepProtocol.fail("NATIVE_STEPS_UNSUPPORTED_OWNER");
+        }
+        session=lockTeamGame(memberId,session);
+        // Only the accessible server-side route session can select a theme receipt namespace.
+        // The raw client key remains part of the App Attest signed bytes and must never be rewritten.
+        final boolean scopedTheme = assertCurrentPlayInstance(memberId, session);
+        final boolean themeTeam=scopedTheme && Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(session.getOwnerType());
+        final String scopedReceiptKey = scopedTheme ? themeActionKey(sessionId, themeTeam?memberId+":"+rawClientKey:rawClientKey) : rawClientKey;
+        final String teamDigest=themeTeam?teamRequestDigest(normalizedAction,safePayload,expectedVersion,rawClientKey):null;
+        PlayAttemptLog replay = attemptMapper.selectByIdempotencyKey(scopedReceiptKey);
+        if (replay != null) {
+            Map<String, Object> receipt = replay(replay, memberId, sessionId);
+            if ((nativeAction || receipt.containsKey("nativeRequestDigest"))
+                    && (nativeDigest == null || !nativeDigest.equals(receipt.get("nativeRequestDigest")))) {
+                NativeStepProtocol.fail("NATIVE_STEPS_IDEMPOTENCY_MISMATCH");
+            }
+            if(themeTeam && !teamDigest.equals(receipt.get("teamRequestDigest")))throw new ServiceException("动作标识已用于其他内容",409);
+            return receipt;
+        }
+>>>>>>> private-github/featu
 
         if("CHOOSE".equalsIgnoreCase(action) && readJson(session.getConfigSnapshotJson(),"玩法配置不可用").has("outcomeRules")) {
             if(expectedVersion==null || !expectedVersion.equals(session.getVersion()))throw versionConflict(session,memberId);
@@ -400,6 +487,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 session.getTopicId(), session.getActivityId(), session.getNodeId());
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         ObjectNode state = objectState(session.getStateJson());
+<<<<<<< public
         Map<String, Object> safePayload = payload == null ? Collections.emptyMap() : payload;
         String normalizedAction = StringUtils.defaultString(action).trim().toUpperCase();
         String selectedChallenge=zeroChallengeSession && state.path("challenge").path("nodeId").asLong()==session.getNodeId()?state.path("challenge").path("gameplayKey").asText():"";
@@ -407,6 +495,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(!selectedChallenge.isEmpty() && (normalizedAction.startsWith("SUBMIT_") || Arrays.asList("FLIP_COIN","ROLL_DICE","DRAW").contains(normalizedAction)) && !normalizedAction.equals(selectedAction))throw new IllegalArgumentException("恢复挑战只能提交选定玩法");
         if(!selectedChallenge.isEmpty() && "START_CHALLENGE".equals(normalizedAction) && !selectedChallenge.equals(safePayload.get("game")))throw new IllegalArgumentException("恢复挑战只能开始选定玩法");
         if(zeroChallengeSession && "REROLL_CHECK".equals(normalizedAction))throw new IllegalArgumentException("恢复挑战不消费幸运重掷");
+=======
+>>>>>>> private-github/featu
         // R14:本次提交判定出的「选择」——分支步骤/选项、问答选项、玩法通过;判完当场写旅程本局状态。
         List<ChoiceRef> choices = new ArrayList<>();
         // 拍物成卡:这一趟真判过且节点是卡片玩法时非空。铸卡推迟到事务提交之后 ——
@@ -451,6 +541,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 break;
             case "SUBMIT_STEPS":
                 submitSteps(config, state, safePayload, session, memberId);
+                break;
+            case NativeStepProtocol.ISSUE:
+            case NativeStepProtocol.SUBMIT:
+                if (!enabled(config.path("steps"))) throw new IllegalArgumentException("该玩法未开启计步挑战");
+                nativeStepProtocol.act(normalizedAction, safePayload, state, session, memberId,
+                        rawClientKey, clock.now().toInstant());
                 break;
             case "CLAIM_DAILY_SIGN":
                 claimDailySign(config, state, session);
@@ -595,6 +691,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         session.setVersion(oldVersion + 1);
         // 玩法判错在本事务内落进旅程本局:扣血/计数与本次玩法状态更新同生共死;
         // 非旅程主题在旅程运行时里 no-op,行为零变化。
+<<<<<<< public
         boolean scopedTheme=topicRouteRuntimeService!=null && topicRouteRuntimeService.nodeRuntimeConfig(memberId,session.getTopicId(),session.getNodeId(),session.getActivityId())!=null;
         if (zeroChallengeSession) {
             // 挑战只写恢复回执，不产生普通任务完成事实。
@@ -650,13 +747,51 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 if (choice != null) {
                     topicRouteRuntimeService.recordChoice(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(),
                             choice.stepOrKit, choice.optionId);
+=======
+        // Native steps are audit-only, including in theme sessions: do not signal facts, choices,
+        // node rewards, mistakes or outcomes to the journey runtime for either native action.
+        if (!nativeAction) {
+            if (scopedTheme) {
+                Boolean judged = judgedOutcome(normalizedAction, state);
+                Boolean fact = judged != null ? judged : passedFact(normalizedAction, state);
+                List<String[]> refs = new ArrayList<>();
+                for (ChoiceRef choice : choices) {
+                    if (choice != null) refs.add(new String[] {choice.stepOrKit, choice.optionId});
+                }
+                topicRouteRuntimeService.recordNodeResult(memberId, session.getTopicId(), session.getActivityId(),
+                        session.getNodeId(), themeTeam?currentPlayInstance(memberId,session.getTopicId(),session.getActivityId()):session.getPlayInstanceId(), scopedReceiptKey, fact,
+                        Boolean.FALSE.equals(judged), randomOutcome(normalizedAction, config, state), refs);
+            } else {
+                Boolean passed = judgedOutcome(normalizedAction, state);
+                if (passed != null && !passed && topicRouteRuntimeService != null) {
+                    topicRouteRuntimeService.recordMistake(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId());
+                }
+                Boolean fact = passed != null ? passed : passedFact(normalizedAction, state);
+                if (fact != null && topicRouteRuntimeService != null) {
+                    topicRouteRuntimeService.recordPassed(memberId, session.getTopicId(), session.getActivityId(),
+                            session.getNodeId(), scopedReceiptKey, fact);
+                }
+                int outcome = randomOutcome(normalizedAction, config, state);
+                if (outcome > 0 && topicRouteRuntimeService != null) {
+                    topicRouteRuntimeService.recordOutcome(memberId, session.getTopicId(), session.getActivityId(),
+                            session.getNodeId(), scopedReceiptKey, outcome);
+                }
+                if (topicRouteRuntimeService != null) {
+                    for (ChoiceRef choice : choices) {
+                        if (choice != null) {
+                            topicRouteRuntimeService.recordChoice(memberId, session.getTopicId(), session.getActivityId(),
+                                    session.getNodeId(), choice.stepOrKit, choice.optionId);
+                        }
+                    }
+>>>>>>> private-github/featu
                 }
             }
         }
-        }
         Map<String, Object> view = toView(session, memberId);
         appendJourneyWorld(view, memberId, session);
-        logAction(session, memberId, idempotencyKey, view);
+        if (nativeDigest != null) view.put("nativeRequestDigest", nativeDigest);
+        if (teamDigest != null) view.put("teamRequestDigest",teamDigest);
+        logAction(session, memberId, scopedReceiptKey, view, scopedTheme);
         // 待铸卡挂在 logAction 之后:幂等回放存的是上面那一刻的回包,不带这个内部标记,
         // 同一个 idempotencyKey 重放不会再铸一次。
         if (pendingCardMint != null) {
@@ -787,14 +922,25 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> state(Long memberId, Long sessionId) {
+<<<<<<< public
         GameRuntimeSession session=requireAccessible(sessionId,memberId);
         session=runtimeEpoch(session)==null || readJson(session.getConfigSnapshotJson(),"玩法配置不可用").has("outcomeRules")?expireIfNeeded(session,memberId):session;
         return toView(synchronizePredictSession(session,memberId),memberId);
+=======
+        GameRuntimeSession session = lockTeamGame(memberId,requireAccessible(sessionId, memberId));
+        assertCurrentPlayInstance(memberId, session);
+        return toView(expireIfNeeded(session), memberId);
+>>>>>>> private-github/featu
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> leaderboard(Long memberId, Long activityId, Long topicId, Long nodeId) {
+<<<<<<< public
         GameInput input = requireInput(memberId, activityId, topicId, nodeId,false);
+=======
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId, false);
+>>>>>>> private-github/featu
         JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
         JsonNode board = config.get("leaderboard");
         if (!enabled(board)) throw new IllegalStateException("该玩法未开启排行榜");
@@ -812,6 +958,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        ITopicRouteRuntimeService.TeamGameScope teamScope=resolveTeamScope(memberId,activityId,topicId,nodeId,null,true);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
         long actId = activityId == null ? 0L : activityId;
@@ -826,22 +973,40 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         requireActivityWindow(actId, topicId);
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(actId, nodeId);
         requireRouteNodeAccess(memberId, actId, topicId, nodeId);
+<<<<<<< public
         if (gameSessionRuntimeService != null && gameSessionRuntimeService.sharedRouteSnapshot(memberId, topicId, actId, null) != null) {
             throw new ServiceException("队伍共享任务请使用本场任务结算，不能重复领取个人节点奖励", 409);
         }
         if (topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,topicId,actId)) throw new ServiceException("通用个人任务请使用任务结算，不能领取旧节点奖励",409);
         GameRuntimeSession session = existingSession(memberId, actId, topicId, nodeId);
+=======
+        GameRuntimeSession session = teamScope==null?existingSession(memberId, actId, topicId, nodeId,
+                currentPlayInstance(memberId, topicId, actId)):sessionMapper.selectTeamByMemberForInstance(actId,topicId,nodeId,memberId,teamScope.getTeamId(),teamScope.getPlayInstanceId());
+>>>>>>> private-github/featu
         if (session == null) {
-            // 尚未开局才读取当前模板。已开局时，移除模板不能绕过本局的完成条件。
-            if (node.getTemplateId() == null) return null;
-            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
-            JsonNode frozen=topicRouteRuntimeService==null?null:topicRouteRuntimeService.nodeRuntimeConfig(memberId,topicId,nodeId,activityId);
-            if (frozen==null && (template == null || StringUtils.isBlank(template.getAdvancedConfigJson()))) return null;
-            String configJson = configValidator.validateAndNormalize(frozen==null?template.getAdvancedConfigJson():frozen.toString());
+            // A frozen theme mechanic remains authoritative after the live node/template is removed.
+            JsonNode frozen = teamScope!=null?teamScope.getConfig():topicRouteRuntimeService == null ? null
+                    : topicRouteRuntimeService.nodeRuntimeConfig(memberId, topicId, nodeId, actId);
+            String rawConfig;
+            if (frozen != null) {
+                if (frozen.isObject() && frozen.size() == 0) return null;
+                rawConfig = frozen.toString();
+            } else {
+                if (node.getTemplateId() == null) return null;
+                CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+                if (template == null || StringUtils.isBlank(template.getAdvancedConfigJson())) return null;
+                rawConfig = template.getAdvancedConfigJson();
+            }
+            String configJson = configValidator.validateAndNormalize(rawConfig);
             if (!configValidator.hasEnabledMechanic(configJson)) return null;
             throw new ServiceException("请先完成高级玩法");
         }
+<<<<<<< public
         session = expireIfNeeded(session,memberId);
+=======
+        assertCurrentPlayInstance(memberId, session);
+        session = expireIfNeeded(session);
+>>>>>>> private-github/featu
         if (Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())) {
             return terminalOutcome(readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用"),
                     objectState(session.getStateJson()));
@@ -957,11 +1122,23 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId) {
+<<<<<<< public
         return requireInput(memberId,activityId,topicId,nodeId,true);
     }
     private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId,boolean newUse) {
+=======
+        return requireInput(memberId, activityId, topicId, nodeId, true);
+    }
+
+    private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId, boolean initializeOpening) {
+        return requireInput(memberId,activityId,topicId,nodeId,initializeOpening,null);
+    }
+
+    private GameInput requireInput(Long memberId, Long activityId, Long topicId, Long nodeId, boolean initializeOpening,Long teamId) {
+>>>>>>> private-github/featu
         if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0
                 || nodeId == null || nodeId <= 0) throw new IllegalArgumentException("参数有误");
+        ITopicRouteRuntimeService.TeamGameScope teamScope=resolveTeamScope(memberId,activityId,topicId,nodeId,teamId,initializeOpening);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
         long actId = activityId == null ? 0L : activityId;
@@ -979,6 +1156,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
             else if(!started && !hasValidSelfPlayPass(memberId,topicId)) throw new IllegalStateException("请先购买自玩通行证");
         }
+<<<<<<< public
         GameRuntimeSession existing = existingSession(memberId, actId, topicId, nodeId);
         // 已结算 R5 只恢复权威视图；当前任务闸仅约束启动和重试。
         if (!settledReadOnly(existing) && topicRouteRuntimeService != null) topicRouteRuntimeService.requireOpeningAccess(memberId, topicId, actId, nodeId);
@@ -992,13 +1170,107 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         JsonNode publishedR5=topicRouteRuntimeService==null?null:topicRouteRuntimeService.publishedR5NodeConfig(memberId,topicId,nodeId,activityId);
         String configJson = publishedR5!=null?publishedR5.toString():configValidator.validateAndNormalize(frozenConfig==null?template.getAdvancedConfigJson():frozenConfig.toString());
         if (publishedR5==null ? !configValidator.hasEnabledMechanic(configJson) : !com.chengyinhub.business.service.support.GameplaySupportMatrix.r5CompletionProof(publishedR5)) throw new IllegalStateException("该模板未配置高级玩法");
+=======
+        if (topicRouteRuntimeService != null) {
+            if (initializeOpening) topicRouteRuntimeService.requireOpeningAccess(memberId, topicId, actId, nodeId);
+            else topicRouteRuntimeService.requireOpeningAccessReadOnly(memberId, topicId, actId, nodeId);
+        }
+        String instance = currentPlayInstance(memberId, topicId, actId);
+        // Opening can have just persisted FIRST. Do not retain a pre-opening null/default scope.
+        if(initializeOpening && teamScope==null && ThemeFirstIdentity.usesNamespace(instance))
+            teamScope=resolveTeamScope(memberId,actId,topicId,nodeId,teamId,true);
+        GameRuntimeSession existing = teamScope==null?existingSession(memberId, actId, topicId, nodeId, instance)
+                :(initializeOpening?sessionMapper.selectTeamByMemberForInstance(actId,topicId,nodeId,memberId,teamScope.getTeamId(),teamScope.getPlayInstanceId())
+                :sessionMapper.selectByOwnerForInstance(actId,topicId,nodeId,GameRuntimeSession.OWNER_TEAM,teamScope.getTeamId(),teamScope.getPlayInstanceId()));
+        if (existing != null) {
+            if(Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(existing.getOwnerType()))requireFirstTeamConfig(teamScope,existing);
+            return new GameInput(actId, existing.getTemplateId(), existing.getConfigSnapshotJson(), existing, instance,teamScope);
+        }
+        JsonNode frozenConfig = teamScope!=null?teamScope.getConfig():topicRouteRuntimeService == null ? null
+                : topicRouteRuntimeService.nodeRuntimeConfig(memberId, topicId, nodeId, actId);
+        String configJson;
+        Long templateId;
+        if (frozenConfig != null) {
+            if (frozenConfig.isObject() && frozenConfig.size() == 0) throw new IllegalStateException("该模板未配置高级玩法");
+            configJson = configValidator.validateAndNormalize(frozenConfig.toString());
+            if (!configValidator.hasEnabledMechanic(configJson)) throw new IllegalStateException("该模板未配置高级玩法");
+            templateId = teamScope!=null?teamScope.getTemplateId():topicRouteRuntimeService.nodeRuntimeTemplateId(memberId, topicId, nodeId, actId);
+            if (templateId == null || templateId <= 0) throw new IllegalStateException("节点玩法模板快照不可用");
+        } else {
+            if (node.getTemplateId() == null) throw new IllegalStateException("该节点没有玩法模板");
+            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if (template == null) throw new IllegalStateException("玩法模板不存在");
+            configJson = configValidator.validateAndNormalize(template.getAdvancedConfigJson());
+            templateId = template.getId();
+            if (!configValidator.hasEnabledMechanic(configJson)) throw new IllegalStateException("该模板未配置高级玩法");
+        }
+>>>>>>> private-github/featu
         // 阶段 4 自适应难度:**开局求值一次**,放宽后的配置写进本局快照。
         // 只在新建局时求值(已有局走上面的快照分支)—— 局内不可变,重放 / CAS / 幂等一行都不用改;
         // 在 AdvancedGamePublicProjection 之前,下发白名单仍是唯一出口,放宽绕不过它。
         configJson = applyRelax(configJson, memberId, topicId, actId);
-        return new GameInput(actId, template.getId(), configJson, null);
+        if(teamScope!=null && teamScope.getFirstConfigFingerprint()!=null) {
+            ObjectNode snapshot=(ObjectNode)readJson(configJson,"高级玩法配置不可用");
+            snapshot.put(FIRST_TEAM_CONFIG_FINGERPRINT,teamScope.getFirstConfigFingerprint());
+            configJson=writeJson(snapshot);
+        }
+        return new GameInput(actId, templateId, configJson, null, instance,teamScope);
     }
 
+    private String currentPlayInstance(Long memberId, Long topicId, Long activityId) {
+        if(topicRouteRuntimeService==null)return "default";
+        String instance=topicRouteRuntimeService.playInstance(memberId,topicId,activityId);
+        if(StringUtils.isBlank(instance))throw new ServiceException("本局范围不可读取，请刷新",409);
+        return instance;
+    }
+
+    /** Canonical raw frozen config, before per-actor relaxation. Author metadata is never trusted. */
+    public static String firstConfigFingerprint(Long templateId,JsonNode frozenConfig) {
+        if(frozenConfig==null || !frozenConfig.isObject())throw new ServiceException("队伍玩法快照不可读取",409);
+        ObjectMapper json=new ObjectMapper();ObjectNode config=((ObjectNode)frozenConfig).deepCopy();config.remove(FIRST_TEAM_CONFIG_FINGERPRINT);
+        ObjectNode source=json.createObjectNode();if(templateId==null)source.putNull("templateId");else source.put("templateId",templateId);
+        source.set("config",config);
+        return TimeWindowSchedule.sha256(canonicalFirstConfig(source,json).toString());
+    }
+
+    private static JsonNode canonicalFirstConfig(JsonNode value,ObjectMapper json) {
+        if(value.isObject()) {
+            ObjectNode result=json.createObjectNode();List<String> names=new ArrayList<>();value.fieldNames().forEachRemaining(names::add);Collections.sort(names);
+            for(String name:names)result.set(name,canonicalFirstConfig(value.get(name),json));return result;
+        }
+        if(value.isArray()) { ArrayNode result=json.createArrayNode();for(JsonNode item:value)result.add(canonicalFirstConfig(item,json));return result; }
+        return value.deepCopy();
+    }
+
+    /** Reused by direct story readers; scope must come from the server's persisted actor resolver. */
+    public static void requireFirstTeamConfig(ITopicRouteRuntimeService.TeamGameScope scope,GameRuntimeSession game) {
+        boolean first=game!=null && ThemeFirstIdentity.usesNamespace(game.getPlayInstanceId());
+        String expected=scope==null?null:scope.getFirstConfigFingerprint();
+        if(!first && expected==null)return;
+        if(!first || expected==null || !expected.matches("[0-9a-f]{64}")
+                || !Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(game.getOwnerType())
+                || !scope.getTeamId().equals(game.getOwnerId()) || !scope.getPlayInstanceId().equals(game.getPlayInstanceId())
+                || !scope.getPlayInstanceId().equals(scope.getActorPlayInstanceId()) || scope.getTeamRunId()!=null
+                || scope.getTemplateId()==null || !scope.getTemplateId().equals(game.getTemplateId())
+                || !ThemeFirstIdentity.token(game.getTopicId(),game.getActivityId()).equals(game.getPlayInstanceId()))
+            throw new ServiceException("首次主题队伍范围已更新，请刷新",409);
+        try {
+            JsonNode snapshot=new ObjectMapper().enable(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                    .enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(game.getConfigSnapshotJson());
+            JsonNode actual=snapshot==null?null:snapshot.get(FIRST_TEAM_CONFIG_FINGERPRINT);
+            if(actual==null || !actual.isTextual() || !expected.equals(actual.textValue()))throw new ServiceException("队员冻结玩法版本不一致，请统一本局后重试",409);
+        } catch(ServiceException invalid) { throw invalid;
+        } catch(Exception invalid) { throw new ServiceException("队伍玩法快照不可读取",409); }
+    }
+
+    private GameRuntimeSession selectByOwner(Long activityId, Long topicId, Long nodeId,
+            Integer ownerType, Long ownerId, String instance) {
+        return "default".equals(instance)
+                ? sessionMapper.selectByOwner(activityId, topicId, nodeId, ownerType, ownerId)
+                : sessionMapper.selectByOwnerForInstance(activityId, topicId, nodeId, ownerType, ownerId, instance);
+    }
+
+<<<<<<< public
     /** 选中选项的“选中后的反馈”图片(每个选项最多 3 张,多选按选择顺序),写进本局状态供重入回读。 */
     private static void putFeedbackImages(ObjectNode node, List<JsonNode> picked) {
         ArrayNode images = node.putArray("lastFeedbackImages");
@@ -1059,10 +1331,17 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             return sessionMapper.selectOwnerByInstance(activityId, topicId, nodeId, GameRuntimeSession.OWNER_PLAYER, memberId,
                     topicRouteRuntimeService.gameplayInstance(memberId, topicId, activityId, nodeId));
         }
+=======
+    private GameRuntimeSession existingSession(Long memberId, Long activityId, Long topicId, Long nodeId, String instance) {
+>>>>>>> private-github/featu
         // 恢复与完成必须选同一局。历史个人/团局并存时延续个人局，否则延续可访问的最新团局。
         // start 的 teamId 只用于首次建局，已有局的归属不会因新传参数或模板改版而切换。
-        GameRuntimeSession session = sessionMapper.selectPlayerByOwner(activityId, topicId, nodeId, memberId);
-        if (session == null && activityId > 0) {
+        GameRuntimeSession session = "default".equals(instance)
+                ? sessionMapper.selectPlayerByOwner(activityId, topicId, nodeId, memberId)
+                : sessionMapper.selectPlayerByOwnerForInstance(activityId, topicId, nodeId, memberId, instance);
+        // Team games retain the legacy default-instance contract. A personal replay must not
+        // inherit a historical team's game before its own frozen mechanic can be started.
+        if (session == null && activityId > 0 && "default".equals(instance)) {
             session = sessionMapper.selectTeamByMember(activityId, topicId, nodeId, memberId);
         }
         return session;
@@ -1236,11 +1515,17 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (!"LEADER".equals(multiConfig.path("assignment").asText())) {
             throw new IllegalStateException("该玩法由系统自动分配角色");
         }
-        PlayTeam team = teamMapper.selectPlayTeamById(session.getOwnerId());
+        // The outer action already verified FIRST origin, live membership and the frozen fingerprint.
+        boolean group=session.getPlayInstanceId()!=null && (session.getPlayInstanceId().startsWith("team-replay:")
+                || ThemeFirstIdentity.usesNamespace(session.getPlayInstanceId()));
+        PlayTeam team = group?teamMapper.selectPlayTeamByIdForUpdate(session.getOwnerId()):teamMapper.selectPlayTeamById(session.getOwnerId());
         if (team == null || !actorId.equals(team.getLeaderMemberId())) throw new IllegalStateException("只有队长能分配角色");
         long targetId = longValue(payload.get("memberId"));
         String roleId = String.valueOf(payload.getOrDefault("roleId", ""));
-        if (teamMapper.selectActiveMember(session.getOwnerId(), targetId) == null) throw new IllegalStateException("目标玩家不在队伍中");
+        if(group) {
+            boolean active=false;for(PlayTeamMember member:teamMapper.selectActiveMembersForUpdate(session.getOwnerId()))if(Long.valueOf(targetId).equals(member.getMemberId()))active=true;
+            if(!active)throw new IllegalStateException("目标玩家不在队伍中");
+        } else if (teamMapper.selectActiveMember(session.getOwnerId(), targetId) == null) throw new IllegalStateException("目标玩家不在队伍中");
         JsonNode role = findById(multiConfig.path("roles"), roleId);
         if (role == null) throw new IllegalArgumentException("角色不存在");
         ObjectNode roles = state.with("multiplayer").with("roles");
@@ -1483,10 +1768,58 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return session;
     }
 
-    private boolean themeScoped(Long memberId, GameRuntimeSession session) {
-        return topicRouteRuntimeService != null && session.getOwnerType() == GameRuntimeSession.OWNER_PLAYER
-                && ((session.getPlayInstanceId() != null && !"default".equals(session.getPlayInstanceId()))
-                || topicRouteRuntimeService.nodeRuntimeConfig(memberId, session.getTopicId(), session.getNodeId(), session.getActivityId()) != null);
+    private ITopicRouteRuntimeService.TeamGameScope resolveTeamScope(Long member,Long activity,Long topic,Long node,Long team,boolean write) {
+        if(topicRouteRuntimeService==null || activity==null || activity<=0)return null;
+        ITopicRouteRuntimeService.TeamGameScope scope=topicRouteRuntimeService.resolveTeamGameScope(member,topic,activity,node,team,write);
+        return scope!=null && enabled(scope.getConfig().path("multiplayer"))?scope:null;
+    }
+
+    private GameRuntimeSession lockTeamGame(Long member,GameRuntimeSession session) {
+        if(!Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(session.getOwnerType()))return session;
+        ITopicRouteRuntimeService.TeamGameScope scope=resolveTeamScope(member,session.getActivityId(),session.getTopicId(),session.getNodeId(),session.getOwnerId(),true);
+        requireFirstTeamConfig(scope,session);
+        if(scope==null) {
+            if(topicRouteRuntimeService==null || !topicRouteRuntimeService.assertCurrentPlayInstance(member,session.getTopicId(),session.getActivityId(),session.getPlayInstanceId()))return session;
+            GameRuntimeSession current=sessionMapper.selectAccessibleByIdForUpdate(session.getId(),member);
+            if(current==null || !java.util.Objects.equals(session.getPlayInstanceId(),current.getPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
+            return current;
+        }
+        if(!scope.getPlayInstanceId().equals(session.getPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
+        GameRuntimeSession current=sessionMapper.selectAccessibleByIdForUpdate(session.getId(),member);
+        if(current==null || !scope.getTeamId().equals(current.getOwnerId()) || !scope.getPlayInstanceId().equals(current.getPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
+        requireFirstTeamConfig(scope,current);
+        return current;
+    }
+
+    private String teamRequestDigest(String action,Map<String,Object> payload,Integer version,String rawKey) {
+        try {
+            String json=objectMapper.writer().with(com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS).writeValueAsString(payload);
+            return TimeWindowSchedule.sha256(action+"\n"+version+"\n"+rawKey+"\n"+json);
+        } catch(java.io.IOException invalid) { throw new IllegalArgumentException("动作内容不正确",invalid); }
+    }
+
+    /** Reject historical mutations before expiry/CAS/receipt access, and return the frozen theme scope. */
+    private boolean assertCurrentPlayInstance(Long memberId, GameRuntimeSession session) {
+        if (topicRouteRuntimeService == null) {
+            if (session.getPlayInstanceId() != null && !"default".equals(session.getPlayInstanceId())) {
+                throw new IllegalStateException("主题玩法运行时不可用");
+            }
+            return false;
+        }
+        if(Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(session.getOwnerType())) {
+            ITopicRouteRuntimeService.TeamGameScope scope=resolveTeamScope(memberId,session.getActivityId(),session.getTopicId(),session.getNodeId(),session.getOwnerId(),true);
+            requireFirstTeamConfig(scope,session);
+            if(scope!=null) {
+                if(!scope.getPlayInstanceId().equals(session.getPlayInstanceId()))throw new ServiceException("队伍本局已更新，请刷新",409);
+                topicRouteRuntimeService.assertCurrentPlayInstance(memberId,session.getTopicId(),session.getActivityId(),scope.getActorPlayInstanceId());
+                return true;
+            }
+        }
+        boolean theme = topicRouteRuntimeService.assertCurrentPlayInstance(memberId, session.getTopicId(),
+                session.getActivityId(), session.getPlayInstanceId());
+        // Native TEAM was rejected before this method. A validated first/default theme team
+        // also needs a receipt namespace; ordinary non-theme teams still return false.
+        return theme;
     }
 
     private String themeActionKey(Long sessionId, String clientKey) {
@@ -1657,7 +1990,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private void logAction(GameRuntimeSession session, Long memberId, String idempotencyKey,
-            Map<String, Object> view) {
+            Map<String, Object> view, boolean scopedTheme) {
         PlayAttemptLog log = new PlayAttemptLog();
         log.setMemberId(memberId);
         log.setTopicId(session.getTopicId());
@@ -1673,9 +2006,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             int inserted = attemptMapper.insertPlayAttemptLog(log);
             if (view.containsKey("retrySourceSessionId") && inserted != 1) throw new IllegalStateException("恢复挑战重试回执未保存");
         } catch (DuplicateKeyException e) {
+            // A late native receipt collision must roll back state AND verifier counter regardless of
+            // DB isolation. A subsequent retry can read the winner and compare the exact request digest.
+            if (view.containsKey("nativeRequestDigest")) NativeStepProtocol.fail("NATIVE_STEPS_IDEMPOTENCY_CONFLICT");
             PlayAttemptLog existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
             if (existing == null) throw e;
             replay(existing, memberId, session.getId());
+            // A theme receipt winner cannot authorize committing this losing theme transaction.
+            // Preserve the pre-existing non-theme/non-native matching-receipt behavior.
+            if (scopedTheme) throw e;
         }
     }
 
@@ -1686,36 +2025,23 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      */
     private void requireWithinTimeWindow(JsonNode timeWindow) {
         if (!enabled(timeWindow)) return;
-        int from = minuteOfDay(timeWindow.path("openFrom").asText(""));
-        int to = minuteOfDay(timeWindow.path("openTo").asText(""));
-        if (from < 0 || to < 0 || from == to) {
-            // fail-closed(#860 口径):种子 SQL 直写库可绕过 Java 校验器,「配置层已拦过」不成立。
-            // 格式非法时放行 = 时段限定静默失效,商家配了等于没配。
-            throw new IllegalStateException("时段限定配置无效，请商家修正开放时段后再试");
-        }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(clock.now());
-        int nowMinute = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
-        boolean open = from < to
-                ? (nowMinute >= from && nowMinute < to)
-                : (nowMinute >= from || nowMinute < to);   // 跨夜
-        if (!open) {
-            throw new IllegalStateException("这一站还没到开放时间(" 
+        if (!TimeWindowSchedule.isOpen(timeWindow, clock.now().toInstant())) {
+            throw new IllegalStateException("这一站还没到开放时间("
                     + timeWindow.path("openFrom").asText("") + "–" + timeWindow.path("openTo").asText("") + ")");
         }
     }
 
-    /** "HH:mm" → 当天第几分钟;格式不对返回 -1(由配置校验负责拦,这里只是不炸) */
-    private int minuteOfDay(String clockText) {
-        if (clockText == null || clockText.length() != 5 || clockText.charAt(2) != ':') return -1;
-        try {
-            int hour = Integer.parseInt(clockText.substring(0, 2));
-            int minute = Integer.parseInt(clockText.substring(3));
-            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return -1;
-            return hour * 60 + minute;
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> timeWindow(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId, false);
+        JsonNode cfg = readJson(input.configJson, "高级玩法配置不可用").path("timeWindow");
+        Map<String, Object> view = TimeWindowSchedule.view(cfg, clock.now().toInstant());
+        view.put("activityId", input.activityId);
+        view.put("topicId", topicId);
+        view.put("nodeId", nodeId);
+        view.put("stateVersion", input.existing == null ? null : input.existing.getVersion());
+        return view;
     }
 
     /**
@@ -3255,6 +3581,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "subscribeTmplId", cfg);
             // 订过没有要回带:没这一句,玩家每次重进这一屏都要被"开启提醒"再问一遍
             value.put("subscribed", state.path("timeWindow").path("subscribed").asBoolean(false));
+            value.putAll(TimeWindowSchedule.view(cfg, clock.now().toInstant()));
+            value.put("stateVersion", session.getVersion());
+            value.put("activityId", session.getActivityId());
+            value.put("topicId", session.getTopicId());
+            value.put("nodeId", session.getNodeId());
             kit.put("timeWindow", value);
         }
         if (enabled(config.path("blindTaste"))) {
@@ -3315,6 +3646,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("todaySteps", state.path("steps").path("todaySteps").asInt(0));
             value.put("reached", state.path("steps").path("reached").asBoolean(false));
+            value.put("nativeSteps", nativeStepProtocol.view(state.path("nativeSteps"), session, actorMemberId));
             kit.put("steps", value);
         }
         if (enabled(config.path("slowTask"))) {
@@ -4011,6 +4343,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 state.path("multiplayer"), actorMemberId);
         if (multiplayer != null) view.put("multiplayer", multiplayer);
         view.put("sessionId", session.getId());
+        if(session.getPlayInstanceId()!=null && (session.getPlayInstanceId().startsWith("team-replay:")
+                || ThemeFirstIdentity.usesNamespace(session.getPlayInstanceId())))view.put("playInstanceId",session.getPlayInstanceId());
         view.put("activityId", session.getActivityId());
         view.put("topicId", session.getTopicId());
         view.put("nodeId", session.getNodeId());
@@ -4343,12 +4677,16 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         private final Long templateId;
         private final String configJson;
         private final GameRuntimeSession existing;
+        private final String playInstanceId;
+        private final ITopicRouteRuntimeService.TeamGameScope teamScope;
 
-        private GameInput(long activityId, Long templateId, String configJson, GameRuntimeSession existing) {
+        private GameInput(long activityId, Long templateId, String configJson, GameRuntimeSession existing, String playInstanceId,ITopicRouteRuntimeService.TeamGameScope teamScope) {
+            this.teamScope=teamScope;
             this.activityId = activityId;
             this.templateId = templateId;
             this.configJson = configJson;
             this.existing = existing;
+            this.playInstanceId = playInstanceId;
         }
     }
 }

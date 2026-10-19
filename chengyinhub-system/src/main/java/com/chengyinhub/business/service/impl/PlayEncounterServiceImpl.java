@@ -52,6 +52,10 @@ import java.util.Set;
  */
 @Service
 public class PlayEncounterServiceImpl implements IPlayEncounterService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy themeRuntimePolicy =
+            new com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy();
+
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -101,6 +105,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
                 : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
 
         TopicRouteSession run = TopicRouteSessionScope.find(topicRouteSessionMapper, memberId, topicId, activityId);
+        themeRuntimePolicy.requireSessionEnabled(run);
         if (run == null) {
             throw new ServiceException("这一局还没开始");
         }
@@ -112,6 +117,9 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         JsonNode liveConfig = parseConfigOrNull(template == null ? null : template.getAdvancedConfigJson());
         JsonNode runSnapshot=parseConfigOrNull(run.getConfigSnapshotJson());
         JsonNode themeNodeConfig=runSnapshot==null || !runSnapshot.has("themeConfig")?null:runSnapshot.path("nodeConfigs").get(String.valueOf(nodeId));
+        if (runSnapshot != null && runSnapshot.has("themeConfig") && (themeNodeConfig == null || !themeNodeConfig.isObject())) {
+            throw new IllegalStateException("节点玩法快照不可用");
+        }
         if(themeNodeConfig!=null && template!=null){CmsMemberTemplate frozenTemplate=new CmsMemberTemplate();org.springframework.beans.BeanUtils.copyProperties(template,frozenTemplate);frozenTemplate.setAdvancedConfigJson(themeNodeConfig.toString());template=frozenTemplate;liveConfig=themeNodeConfig;}
 
         if (frozen == null && liveConfig == null) {
@@ -537,7 +545,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
             if (node == null || node.getId() == null) continue;
             putProfiles(profiles, npcProfileService.resolveEnabledList(NpcProfileService.SCOPE_NODE, node.getId()));
             if (node.getMerchantMemberId() != null) {
-                putProfiles(profiles, npcProfileService.resolveEnabledList(SCOPE_MERCHANT, node.getMerchantMemberId()));
+                putProfiles(profiles, npcProfileService.resolveEnabledForMerchantMember(node.getMerchantMemberId()));
             }
         }
         return profiles;

@@ -43,6 +43,7 @@
         <baomidou.version>3.5.17</baomidou.version>
         <hutool.version>5.8.47</hutool.version>
         <wechatpay.version>0.2.15</wechatpay.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
         <zxing.version>3.5.2</zxing.version>
         <!-- Same-minor security floors: see docs/upgrade/java21-boot41-candidate.md. -->
         <jackson2.version>2.21.7</jackson2.version>
@@ -53,7 +54,29 @@
     <!-- 依赖声明 -->
     <dependencyManagement>
         <dependencies>
+<<<<<<< public
             <!-- Direct BOM overrides precede Boot; properties alone cannot override an imported BOM. -->
+=======
+
+            <!-- 原生设备验证与短信 SDK 共用同一受支持的 BC 版本，避免旧坐标重复类。 -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+
+            <!-- 覆盖SpringFramework的依赖配置-->
+>>>>>>> private-github/featu
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>

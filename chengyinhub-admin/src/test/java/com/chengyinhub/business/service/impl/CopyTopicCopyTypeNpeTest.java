@@ -1,5 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
+
+import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -60,17 +65,33 @@ class CopyTopicCopyTypeNpeTest {
         }).when(cmsTopicMapper).insertCmsTopic(any());
 
         svc = new CmsTopicServiceImpl();
+<<<<<<< public
 
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+=======
+        // These existing fixtures exercise legacy copying; provenance denial has dedicated tests.
+        LegacyCmsProvenanceMapper provenanceMapper = mock(LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(provenanceMapper.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(0);
+        ReflectionTestUtils.setField(svc, "legacyCmsProvenanceGuard", new LegacyCmsProvenanceGuard(provenanceMapper));
+>>>>>>> private-github/featu
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
-        // [W4闭环] copyNodes 会查节点模板决定是否深拷贝;本测试聚焦 copyType 语义,
-        // 模板查不到 = 原样保留 templateId(与断言「模板 id 带过去」一致)。
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
-                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
+        // 本测试聚焦 copyType 语义；提供真实形状的同 owner 来源 fixture，允许合法复用 ID。
+        // 缺失来源必须拒绝，不能再依赖旧的 missing-source fallback 满足节点断言。
+        CmsMemberTemplateMapper memberTemplates = mock(CmsMemberTemplateMapper.class);
+        CmsMemberTemplate source = new CmsMemberTemplate();
+        source.setId(77L);
+        source.setMemberId(MEMBER);
+        source.setOriginalTemplateId(0L);
+        source.setDelFlag(0);
+        source.setStatus(1L);
+        source.setDraftStatus(1);
+        when(memberTemplates.selectCmsMemberTemplateById(77L)).thenReturn(source);
+        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper", memberTemplates);
     }
 
     /**

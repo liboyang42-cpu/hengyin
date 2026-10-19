@@ -301,7 +301,8 @@ public class TopicRouteConfigValidator {
                 if (!condition.path("value").isNumber()) throw fail(edgeId, "condition.value 必须是数值");
             } else if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
                 if (!condition.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !condition.path("quantity").isIntegralNumber()
-                    || condition.path("quantity").asLong() < 1 || condition.path("quantity").asLong() > 999) throw fail(edgeId,"物资条件不合法");
+                    || !condition.path("quantity").canConvertToLong() || condition.path("quantity").asLong() < 1
+                    || condition.path("quantity").asLong() > 999) throw fail(edgeId,"物资条件不合法");
             } else if ("NODE_COMPLETED".equals(op)) {
                 long nodeId = positive(condition, "nodeId");
                 requireNode(topicNodeIds, nodeId, edgeId + ".condition.nodeId");
