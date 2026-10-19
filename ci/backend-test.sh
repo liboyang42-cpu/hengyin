@@ -10,29 +10,7 @@ GATE_SELFTEST=1 GATE="$PWD/ci/assert_it_ran.py" python3 -m unittest ci/test_asse
 
 # 全量编译 + 跑测试。首次接入若命中历史遗留失败用例,
 # 先在此收敛或用 -pl 缩到改动模块,再逐步扩全。
-backend_unit_log="$(mktemp)"
-if mvn -B clean test >"$backend_unit_log" 2>&1; then
-  # 完整 Maven 输出仍由原命令生成；只在控制台保留结果摘要，避免日志读取通道溢出。
-  tail -n 30 "$backend_unit_log"
-  rm -f "$backend_unit_log"
-else
-  backend_unit_exit=$?
-  # 保留所有 Maven 错误和失败套件，再附末尾上下文；退出码原样传递，不能静默变绿。
-  python3 - "$backend_unit_log" <<'PY'
-import re
-import sys
-from pathlib import Path
-
-lines = Path(sys.argv[1]).read_text(errors="replace").splitlines()
-for line in lines:
-    if "[ERROR]" in line or re.search(r"Failures: [1-9]|Errors: [1-9]", line):
-        print(line)
-print("--- Maven failure context ---")
-print("\n".join(lines[-160:]))
-PY
-  rm -f "$backend_unit_log"
-  exit "$backend_unit_exit"
-fi
+mvn -B clean test
 
 # ---- 真库集成测试(*IT):必须点名跑 ----
 # ★ 为什么要单独一段:类名以 IT 结尾,而本仓**没有任何 pom 配 surefire/failsafe**,
