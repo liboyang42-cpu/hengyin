@@ -17,7 +17,7 @@ function aiDraftStorageKey() {
   return memberId === null || memberId === undefined || memberId === ''
     ? '' : 'ai_topic_draft:m' + memberId;
 }
-const mockData = require('../../../utils/mockData.js');
+const mockData = require('../utils/mockData.js');
 const { aiPlanToDraft } = require('../utils/aiPlanToDraft.js');
 const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
