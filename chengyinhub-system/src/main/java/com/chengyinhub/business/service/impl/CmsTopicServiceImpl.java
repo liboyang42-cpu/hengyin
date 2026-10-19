@@ -5190,7 +5190,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             chapter.setTopicId(topicId);
             chapter.setCreateBy(username);
             chapter.setCreateTime(new Date());
-            cmsTopicChapterMapper.insertCmsTopicChapter(chapter);
+            if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
+                    || chapter.getId() == null || chapter.getId() <= 0L) {
+                throw new IllegalStateException("章节保存失败，未生成有效章节身份");
+            }
             Long chapterId = chapter.getId();
             routeNodeMaps.recordChapter(chapterDTO.getId(), chapterId);
 
@@ -5278,7 +5281,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 chapter.setBlocksJson(null);
                 chapter.setCreateBy(username);
                 chapter.setCreateTime(new Date());
-                cmsTopicChapterMapper.insertCmsTopicChapter(chapter);
+                if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
+                        || chapter.getId() == null || chapter.getId() <= 0L) {
+                    throw new IllegalStateException("章节保存失败，未生成有效章节身份");
+                }
                 routeNodeMaps.recordChapter(source.getId(), chapter.getId());
                 if (Boolean.TRUE.equals(source.getOpening())) routeNodeMaps.openingChapterId = chapter.getId();
                 if (source.getEnding() != null && !source.getEnding().isNull()) {
@@ -5301,7 +5307,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", ""));
                     node.setCreateBy(username);
                     node.setCreateTime(new Date());
-                    cmsTopicNodeMapper.insertCmsTopicNode(node);
+                    if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
+                            || node.getId() == null || node.getId() <= 0L) {
+                        throw new IllegalStateException("节点保存失败，未生成有效节点身份");
+                    }
                     nodeIds.add(node.getId());
                     routeNodeMaps.record(nodeDTO, node.getId());
                 }
@@ -5416,7 +5425,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             node.setCreateBy(username);
             node.setCreateTime(new Date());
 
-            cmsTopicNodeMapper.insertCmsTopicNode(node);
+            if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
+                    || node.getId() == null || node.getId() <= 0L) {
+                throw new IllegalStateException("节点保存失败，未生成有效节点身份");
+            }
             routeNodeMaps.record(nodeDTO, node.getId());
         }
     }
