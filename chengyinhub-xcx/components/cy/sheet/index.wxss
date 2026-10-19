@@ -398,4 +398,6 @@
   border-radius: var(--cy-comp-sheet-radius);
 }
 
+/* Nested editor: preserve the parent and prevent closing it through the child. */
 .sh--stacked .sh__panel{transform:translateY(-22rpx) scale(.96);transform-origin:bottom center;filter:brightness(.76);pointer-events:none}
+.sh--stacked .sh__mask{pointer-events:none}

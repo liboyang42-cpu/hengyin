@@ -97,14 +97,18 @@ const user = {
     },
 
     // 退出系统
-    LogOut({ commit, state }) {
+    LogOut({ commit, state }, options) {
+      const auditContext = options && options.auditContext
       return new Promise((resolve, reject) => {
-        logout(state.token).then(() => {
+        if (auditContext && !auditContext.isCurrent()) { resolve({ applied: false }); return }
+        const token = state.token
+        logout(token, auditContext).then(() => {
+          if (auditContext && !auditContext.isCurrent()) { resolve({ applied: false }); return }
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_PERMISSIONS', [])
           removeToken()
-          resolve()
+          resolve(auditContext ? { applied: true, auditContext: auditContext.captureCurrent() } : undefined)
         }).catch(error => {
           reject(error)
         })

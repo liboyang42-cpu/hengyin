@@ -37,3 +37,6 @@ printf '{"commit":"%s","builtAt":"%s"}\n' \
 
 echo "== 产物自报 =="
 cat dist/version.json
+
+# Bind this successful ordinary production build to its inputs and exact output bytes.
+node tests/e2e/server/audit-bundle-provenance.js "$commit"

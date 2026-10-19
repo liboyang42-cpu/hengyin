@@ -61,6 +61,11 @@ test('新增商家节点类型仍复用审核快照与通过驳回动作', () =>
   assert.match(source, /snapshotJson/)
   assert.match(source, /openReview\(detailTask, 1\)/)
   assert.match(source, /openReview\(detailTask, 2\)/)
+<<<<<<< public
   assert.match(source, /const review = this\.reviewBizType === 'MEDIA_ASSET' \? reviewMediaAsset : reviewAuditTask/)
   assert.match(source, /return review\(this\.reviewForm\)/)
+=======
+  // 请求使用锁定副本，失败后的精确重试不会被可编辑表单悄悄改写。
+  assert.match(source, /reviewAuditTask\(\{ \.\.\.payload \}, this\.captureAuditContext\(\)\)/)
+>>>>>>> private-github/featu
 })

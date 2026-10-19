@@ -33,7 +33,7 @@
             </view>
           </block>
           <block wx:else>
-          <view class="cdd__item {{index === value ? 'cdd__item--on' : ''}}"
+          <view class="cdd__item {{index === value && index !== uncheckedValue ? 'cdd__item--on' : ''}}"
                 wx:for="{{labels}}" wx:key="index"
                 data-index="{{index}}" bindtap="onPick"
                 hover-class="cdd__item--press" hover-stay-time="60"

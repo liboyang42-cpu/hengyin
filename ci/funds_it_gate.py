@@ -19,6 +19,41 @@ import sys
 import xml.etree.ElementTree as ET
 
 REQUIRED_TRIGGER_PATHS = (
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoring*MySql*.java",
+    'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CouponCommandServiceMySqlIT.java',
+    'chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql',
+    'chengyinhub-admin/sql/migration_coupon_command_receipt.sql',
+    'chengyinhub-admin/sql/migration_coupon_dedup.sql',
+    'ci/coupon_command_mysql_gate.py',
+    'ci/test_coupon_command_mysql_gate.py',
+    'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/npc/**',
+    'chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql',
+    'chengyinhub-admin/sql/migration_20261004_merchant_npc_knowledge_drafts.sql',
+    'ci/npc_draft_mysql_gate.py',
+    'ci/test_npc_draft_mysql_gate.py',
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/reward/**",
+    "chengyinhub-admin/sql/migration_w17_noncash_inventory_candidate.sql",
+    "ci/w17_mysql_gate.py",
+    "ci/test_w17_mysql_gate.py",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/rendezvous/**",
+    "chengyinhub-admin/sql/migration_w16_consent_persistence_candidate.sql",
+    "ci/w16_mysql_gate.py",
+    "ci/test_w16_mysql_gate.py",
+    "chengyinhub-admin/sql/migration_20261003_city_board_draft_candidate.sql",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/navigation/**",
+    "chengyinhub-admin/sql/migration_20261003_walking_target_provenance.sql",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/editor/**",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/**",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/**",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/city/**",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CartSettlementTransactionalH2Test.java",
+    "chengyinhub-admin/sql/migration_w18_module_install_reservation_20261002.sql",
+    "chengyinhub-admin/sql/migration_w18_owned_text_draft_install_20261002.sql",
+    "chengyinhub-admin/sql/migration_w18_free_claim_registry_20261003.sql",
+    "chengyinhub-admin/sql/migration_20261002_city_visit_persistence.sql",
+
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/*MySqlIT.java",
+    "chengyinhub-admin/sql/migration_20261002_content_capture_snapshot.sql",
     "chengyinhub-admin/src/main/**",
     "chengyinhub-system/src/main/**",
     "chengyinhub-admin/sql/migration_*funds*.sql",
@@ -89,7 +124,35 @@ def enforce_trigger_contract(workflow_text):
 # ⚠️ 这个数字曾经手滑数错(把 @TestInstance 当成 @Test 算了一遍,50/9/30 错写成 51/10/31)——
 # 见 count_test_methods() 和 ci/test_funds_it_gate.py 里的自测,直接从源码正则数,不再手记。
 EXPECTED = {
+<<<<<<< public
     "CommunityPostCommentIdempotencyMySqlIT": 2,
+=======
+    "MerchantAuthoringCurrentRowsMySqlIT": 7,
+    "MerchantAuthoringRevocationRaceMySqlIT": 1,
+
+    "FixedCouponAtomicMySqlIT": 17,
+    "FixedCouponSchemaMySqlIT": 13,
+    "CouponCommandServiceMySqlIT": 20,
+    "MerchantNpcKnowledgeDraftMySqlIT": 28,
+    "NonCashRewardMySqlIT": 31,
+    "RendezvousConsentMySqlIT": 12,
+    "CityBoardDraftMySqlIT": 16,
+    "WalkingTargetMySqlIT": 16,
+    "InstalledDraftReceiptMySqlIT": 42,
+    "InstalledDraftReceiptIndexMySqlIT": 10,
+    "FreeClaimInstallationMySqlIT": 43,
+    "FreeInstallScopeSchemaMySqlIT": 7,
+    "FreeModuleSchemaMySqlIT": 13,
+    "FreeModuleClaimMySqlIT": 21,
+    "ModuleReservationMySqlIT": 35,
+    "ModuleTextInstallationMySqlIT": 38,
+    "CityRuntimeMySqlIT": 31,
+    "CityLegacyPointsMySqlIT": 4,
+    "ContentCaptureSnapshotMySqlIT": 9,
+    "ContentCaptureReviewMySqlIT": 27,
+    "ContentCapturePreviewMySqlIT": 18,
+    "ContentCaptureReviewSchemaMySqlIT": 31,
+>>>>>>> private-github/featu
     "CoopListReadOnlyMybatisIntegrationTest": 5,
     # 2026-08-17 R9-P1:59 → 60,+1 = forgedClubMarkerFromPublicCreateCannotSurviveIntoPaymentFreeze
     # (自报 sourceClubId 经真实 create 落库后,真实冻结 SQL 仍必须归平台)。
@@ -259,7 +322,10 @@ EXPECTED = {
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
+# The module/city/navigation subclasses inherit every @Test from the listed assertion source.
+# Inheritance and absence of shadowed tests are separately pinned by discovery/negative controls.
 SOURCE_FILES = {
+<<<<<<< public
     "CommunityPostCommentIdempotencyMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CommunityPostCommentIdempotencyMySqlIT.java",
     "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
     "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
@@ -270,6 +336,33 @@ SOURCE_FILES = {
     "LegacyCategoryForwardGuardMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/LegacyCategoryForwardGuardMySqlIT.java",
     "RoamPresenceRevokeDurabilityMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPresenceRevokeDurabilityMySqlIT.java",
     "RoamPresenceRevokeJobMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RoamPresenceRevokeJobMySqlIT.java",
+=======
+    "MerchantAuthoringCurrentRowsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoringCurrentRowsMySqlIT.java",
+    "MerchantAuthoringRevocationRaceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoringRevocationRaceMySqlIT.java",
+
+    "FixedCouponAtomicMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FixedCouponAtomicMySqlIT.java",
+    "FixedCouponSchemaMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FixedCouponSchemaMySqlIT.java",
+    "CouponCommandServiceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CouponCommandServiceMySqlIT.java",
+    "MerchantNpcKnowledgeDraftMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/npc/MerchantNpcKnowledgeDraftMySqlIT.java",
+    "NonCashRewardMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/reward/NonCashRewardMySqlIT.java",
+    "RendezvousConsentMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/rendezvous/RendezvousConsentMySqlIT.java",
+    "CityBoardDraftMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/city/draft/CityBoardDraftMySqlIT.java",
+    "WalkingTargetMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/navigation/WalkingTargetMapperTest.java",
+    "InstalledDraftReceiptIndexMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/editor/InstalledDraftReceiptIndexMySqlIT.java",
+    "InstalledDraftReceiptMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/editor/InstalledDraftReceiptReaderTest.java",
+    "FreeClaimInstallationMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/FreeClaimInstallationTransactionTest.java",
+    "FreeInstallScopeSchemaMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/FreeInstallScopeSchemaMySqlIT.java",
+    "ContentCapturePreviewMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/ContentCapturePreviewMySqlIT.java",
+    "FreeModuleSchemaMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/FreeModuleSchemaMySqlIT.java",
+    "FreeModuleClaimMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/FreeModuleClaimTransactionTest.java",
+    "ModuleReservationMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/ModuleInstallReservationTransactionTest.java",
+    "ModuleTextInstallationMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/ModuleTextDraftInstallationTransactionTest.java",
+    "CityRuntimeMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/city/CityRuntimePersistenceH2Test.java",
+    "CityLegacyPointsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CityLegacyPointsMySqlIT.java",
+    "ContentCaptureReviewSchemaMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/ContentCaptureReviewSchemaMySqlIT.java",
+    "ContentCaptureReviewMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/ContentCaptureReviewMySqlIT.java",
+    "ContentCaptureSnapshotMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/ContentCaptureSnapshotMySqlIT.java",
+>>>>>>> private-github/featu
     "CoopListReadOnlyMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CoopListReadOnlyMybatisIntegrationTest.java",
@@ -433,6 +526,48 @@ def count_test_methods(java_source_text):
     return len(_TEST_ANNOTATION.findall(java_source_text))
 
 
+# Exact identities for the new fixed-coupon suites; prior minimum-count suites stay unchanged.
+FIXED_COUPON_METHODS = {
+    'FixedCouponAtomicMySqlIT': (
+        'originalGrantAtomicallyPersistsSourceHistoryStockReceiptAndMarker',
+        'historyInsertFailureRollsBackSourceAndStock',
+        'receiptInsertFailureRollsBackOriginalHistoryAndStock',
+        'finalMarkerFailureRollsBackAllEarlierWrites',
+        'sourceInsertFailureCannotIncrementStockOrIssueHistory',
+        'parentTransactionFailureRollsBackCompleteGrant',
+        'originalFiniteStockRefusalDoesNotLeaveCompletionSlot',
+        'stoppedDefinitionUsesOriginalNoGrantBehavior',
+        'exactClawbackNeverVoidsNearbySameCouponHistories',
+        'usedExactCouponRefusesRecoveryAndRegrant',
+        'deletingOldGenerationNeverRebindsItsReceipt',
+        'conflictedMarkerCannotFallBackToHeuristic',
+        'missingReceiptCannotVoidOrDeleteCurrentSource',
+        'sourceDeletionFailureRollsBackEarlierCouponVoid',
+        'concurrentIdenticalCompletionCreatesOneEconomicGrant',
+        'concurrentDifferentSourcesShareStockButKeepExactHistories',
+        'simultaneousRedemptionAndClawbackHaveOneWinningStatusTransition',
+    ),
+    'FixedCouponSchemaMySqlIT': (
+        'databaseIdentityAndMetadataAreObservedFromActualConnection',
+        'completeSchemaAllowsExactReceiptAndMarker',
+        'absentBothOptionalObjectsKeepsVerifiedLegacyGrant',
+        'receiptWithoutMarkerFailsClosed',
+        'markerWithoutReceiptFailsClosedEvenWithoutWriter',
+        'exactNameViewIsNeverReceiptStorage',
+        'wildcardLookalikeDoesNotSatisfyExactReceiptName',
+        'missingLogFailsClosed',
+        'installedProtocolWithoutIssuanceWriterCannotFallBack',
+        'mandatoryResolverCannotBeOmittedEvenWithWriter',
+        'resolverRemainsAvailableAndRevokesExactHistoryWhenIssuanceProfileAbsent',
+        'noTransactionAndDifferentDatasourceCannotInspectOrGrant',
+        'receiptReadAndImmutableSnapshotRemainDistinctRealStorageContracts',
+    ),
+}
+
+
+# Exact identities for the two W05 current-row suites.
+MERCHANT_AUTHORING_METHODS = {'MerchantAuthoringCurrentRowsMySqlIT': ('unchangedManagerCanRecordAndConfirmRealDraftAndSource', 'disabledShopCommittedDuringLockWaitCannotRecord', 'changedProductCommittedDuringLockWaitCannotRecord', 'changedSKUCommittedDuringLockWaitCannotRecord', 'changedShopNameCommittedDuringLockWaitCannotRecord', 'revokedManagerCommittedDuringLockWaitCannotConfirmDraftOrSource', 'changedProductCommittedDuringLockWaitCannotConfirmDraftOrSource'), 'MerchantAuthoringRevocationRaceMySqlIT': ('permissionRevokedWhileWaitingForMerchantLockMustNotPersistCandidate',)}
+
 def load_reports(reports_dir):
     found = {}
     for path in glob.glob(os.path.join(reports_dir, "TEST-*.xml")):
@@ -469,6 +604,80 @@ def enforce(reports_dir, expected=EXPECTED):
         ran = report["tests"] - report["skipped"]
         if ran < min_tests:
             problems.append("%s: 实跑用例 %d < 期望 %d" % (short, ran, min_tests))
+    problems.extend(enforce_fixed_coupon_cases(reports_dir, expected))
+    problems.extend(enforce_merchant_authoring_cases(reports_dir, expected))
+    return problems
+
+
+def enforce_fixed_coupon_cases(reports_dir, expected):
+    """Require every registered fixed-coupon method exactly once, with no hidden skips."""
+    problems = []
+    for short, names in FIXED_COUPON_METHODS.items():
+        if short not in expected:
+            continue
+        full = "com.chengyinhub.business.it." + short
+        matches = []
+        for path in glob.glob(os.path.join(reports_dir, "TEST-*.xml")):
+            root = ET.parse(path).getroot()
+            if root.get("name", "").rsplit(".", 1)[-1] == short:
+                matches.append(root)
+        if len(matches) != 1:
+            problems.append(short + ": requires one exact suite report")
+            continue
+        root = matches[0]
+        cases = root.findall("testcase")
+        actual = [case.get("name", "") for case in cases]
+        if (root.tag != "testsuite" or root.get("name") != full
+                or int(root.get("tests", "0")) != len(names)
+                or len(actual) != len(names) or len(set(actual)) != len(actual)
+                or set(actual) != set(names)):
+            problems.append(short + ": exact method inventory mismatch")
+        # Actual hosted Surefire 3.0.2 uses a no-argument method display name
+        # in classname; local 3.0 reports use FQCN. Require a single exact form.
+        fqcn_format = all(case.get("classname") == full for case in cases)
+        hosted_method_format = root.get("version") == "3.0.2" and all(
+            case.get("classname") == case.get("name", "") + "()" for case in cases)
+        if not (fqcn_format or hosted_method_format):
+            problems.append(short + ": exact uniform testcase identity required")
+        if any(node.tag in {"skipped", "failure", "error", "flakyFailure", "flakyError", "rerunFailure", "rerunError"}
+               for node in root.iter()):
+            problems.append(short + ": skipped, failed or retried execution is not accepted")
+    return problems
+
+
+def enforce_merchant_authoring_cases(reports_dir, expected):
+    """Require every registered merchant-authoring method exactly once, with no hidden skips."""
+    problems = []
+    for short, names in MERCHANT_AUTHORING_METHODS.items():
+        if short not in expected:
+            continue
+        full = "com.chengyinhub.business.service.ai." + short
+        matches = []
+        for path in glob.glob(os.path.join(reports_dir, "TEST-*.xml")):
+            root = ET.parse(path).getroot()
+            if root.get("name", "").rsplit(".", 1)[-1] == short:
+                matches.append(root)
+        if len(matches) != 1:
+            problems.append(short + ": requires one exact suite report")
+            continue
+        root = matches[0]
+        cases = root.findall("testcase")
+        actual = [case.get("name", "") for case in cases]
+        if (root.tag != "testsuite" or root.get("name") != full
+                or int(root.get("tests", "0")) != len(names)
+                or len(actual) != len(names) or len(set(actual)) != len(actual)
+                or set(actual) != set(names)):
+            problems.append(short + ": exact method inventory mismatch")
+        # Actual hosted Surefire 3.0.2 uses a no-argument method display name
+        # in classname; local 3.0 reports use FQCN. Require a single exact form.
+        fqcn_format = all(case.get("classname") == full for case in cases)
+        hosted_method_format = root.get("version") == "3.0.2" and all(
+            case.get("classname") == case.get("name", "") + "()" for case in cases)
+        if not (fqcn_format or hosted_method_format):
+            problems.append(short + ": exact uniform testcase identity required")
+        if any(node.tag in {"skipped", "failure", "error", "flakyFailure", "flakyError", "rerunFailure", "rerunError"}
+               for node in root.iter()):
+            problems.append(short + ": skipped, failed or retried execution is not accepted")
     return problems
 
 
@@ -511,6 +720,9 @@ def enforce_workflow(workflow_text, gate_text):
         problems.append("Funds MySQL 主 job 必须回读并传播前置自测结果")
     # required check 仍要对每个 PR 出终态(所以 on.pull_request 不得设 paths),
     # 但真库 IT 不得在改 UI/小程序的 PR 上烧额度。
+    authoring_filter = re.search(r"^            funds:\s*$([\s\S]*?)(?=^      - |\Z)", workflow_text, re.MULTILINE)
+    if not authoring_filter or "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoring*MySql*.java" not in authoring_filter.group(1):
+        problems.append("W05 test-only changes must be included in the funds changed-path filter")
     if "dorny/paths-filter" not in workflow_text:
         problems.append("必须用路径过滤决定要不要跑真库 IT")
     if "FUNDS: ${{ needs.funds_it_gate_selftest.outputs.funds }}" not in main_job_text:

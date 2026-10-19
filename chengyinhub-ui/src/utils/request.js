@@ -20,8 +20,20 @@ const service = axios.create({
   timeout: 10000
 })
 
+// Audit-only, local callbacks. No credentials are put in this context or serialized onto the wire.
+function retiredAuditContext(config) {
+  if (!config || !config.auditContext) return false
+  try { return config.auditContext.isCurrent() !== true } catch (error) { return true }
+}
+function retiredAuditError() {
+  const error = new Error('Audit request context retired')
+  error.errorCode = 'AUDIT_CONTEXT_RETIRED'
+  return error
+}
+
 // request拦截器
 service.interceptors.request.use(config => {
+  if (retiredAuditContext(config)) return Promise.reject(retiredAuditError())
   // 是否需要设置 token
   const isToken = (config.headers || {}).isToken === false
   // 是否需要防止数据重复提交
@@ -73,10 +85,19 @@ service.interceptors.request.use(config => {
 
 // 响应拦截器
 service.interceptors.response.use(res => {
+    if (retiredAuditContext(res.config)) return Promise.reject(retiredAuditError())
     // 未设置状态码则默认成功状态
     const code = res.data.code || 200
     // 获取错误信息
     const msg = errorCode[code] || res.data.msg || errorCode['default']
+    // 按调用方显式选择保留错误分类；既有页面仍收到原来的 rejection 类型。
+    const rejectResponse = fallback => {
+      if (!(res.config || {}).preserveBusinessError) return Promise.reject(fallback)
+      const error = new Error(msg)
+      error.code = code
+      error.errorCode = res.data.errorCode
+      return Promise.reject(error)
+    }
     // 二进制数据则直接返回
     if (res.request.responseType ===  'blob' || res.request.responseType ===  'arraybuffer') {
       return res.data
@@ -86,28 +107,38 @@ service.interceptors.response.use(res => {
         isRelogin.show = true
         MessageBox.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', '系统提示', { confirmButtonText: '重新登录', cancelButtonText: '取消', type: 'warning' }).then(() => {
           isRelogin.show = false
-          store.dispatch('LogOut').then(() => {
+          if (retiredAuditContext(res.config)) return
+          const auditContext = (res.config || {}).auditContext
+          return store.dispatch('LogOut', auditContext ? { auditContext } : undefined).then(result => {
+            // The logout action re-fences after its own state clears; later ABA changes still cancel redirect.
+            if (auditContext && (!result || !result.applied
+                || retiredAuditContext({ auditContext: result.auditContext }) || getToken())) return
             location.href = '/index'
           })
       }).catch(() => {
         isRelogin.show = false
       })
     }
-      return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
+      return rejectResponse('无效的会话，或者会话已过期，请重新登录。')
     } else if (code === 500) {
       Message({ message: msg, type: 'error' })
-      return Promise.reject(new Error(msg))
+      return rejectResponse(new Error(msg))
     } else if (code === 601) {
       Message({ message: msg, type: 'warning' })
-      return Promise.reject('error')
+      return rejectResponse('error')
     } else if (code !== 200) {
       Notification.error({ title: msg })
-      return Promise.reject('error')
+      return rejectResponse('error')
     } else {
       return res.data
     }
   },
   error => {
+    if (error.errorCode === 'AUDIT_CONTEXT_RETIRED' || retiredAuditContext(error.config)) return Promise.reject(retiredAuditError())
+    if ((error.config || {}).preserveBusinessError && error.response) {
+      error.code = error.response.status
+      error.errorCode = (error.response.data || {}).errorCode
+    }
     console.log('err' + error)
     let { message } = error
     if (message == "Network Error") {

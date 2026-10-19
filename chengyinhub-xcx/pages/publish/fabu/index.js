@@ -191,6 +191,7 @@ const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
 const RESULT_SHEET_MS = 2000;
 
 const runtimeEditor = require('./theme-runtime.js');
+<<<<<<< public
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
@@ -201,6 +202,12 @@ Page({
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, // R5 HP 归零
   ...ownership.methods,
+=======
+const savedTopicCheck = require('./topic-saved-check.js');
+Page({
+  ...runtimeEditor.methods,
+  ...savedTopicCheck.methods(app),
+>>>>>>> private-github/featu
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -210,9 +217,13 @@ Page({
   data: {
     creatorLoginRequired: false,
     ...runtimeEditor.data,
+<<<<<<< public
     ...structure.data, // structure
     ...survivalEditor.data, // survival
     ...ownership.data,
+=======
+    ...savedTopicCheck.data,
+>>>>>>> private-github/featu
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -423,7 +434,6 @@ Page({
       completeRewardCouponId: 0,
       completeRuleJson: '',
       journeyRules: '',
-      themeRuntimeConfig: '',
       journeyStory: '',
       // 主题级路线真源。旧数据/空值保持 LINEAR；BRANCH_GRAPH 才序列化 routeGraphJson。
       routeMode: 'LINEAR',
@@ -436,6 +446,7 @@ Page({
     imgArrList: [],
     imgArrMax: IMG_ARR_MAX, // 给 WXML 用,别在模板里再写一遍 9
     completionRewardCouponName: '',
+    completeRewardOn: false,
 
     completionRuleMode: 'ALL',
     completionRequiredCount: 1,
@@ -479,6 +490,7 @@ Page({
 
     // 九格按 S 形依次呈现:第一行左→右,第二行右→左,第三行左→右。
     // rows 是给 wxml 用的视图序,pos 指回真正的格位。
+    bingoEnabled: false,
     bingoRows: advancedGameConfig.BINGO_S_ORDER.map((pos, i) => ({
       pos, seq: i + 1, hint: advancedGameConfig.BINGO_DEFAULT_LABELS[pos],
       label: '', couponId: 0, couponName: '', feedbackText: ''
@@ -980,10 +992,18 @@ Page({
 
   // 物理返回守卫(见 wxml 尾部 page-container):按层级关最上层浮层,而不是退出编辑器
   onNativeBackGuard() {
+<<<<<<< public
     if (this.data.structureEditor && this.data.structureEditor.show) { this.closeStructure(); } // structure
     else if (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) this.closeZeroHpEditor();
     else if (this.data.survivalEditor && this.data.survivalEditor.show) this.closeSurvivalEditor(); // survival
     else if (this.data.chapterPreview && this.data.chapterPreview.show) {
+=======
+    if (this.data.savedTopicCheck && this.data.savedTopicCheck.show) {
+      this.closeSavedTopicCheck();
+    } else if (this.data.runtimeEditor && this.data.runtimeEditor.show) {
+      this.backRuntimeLayer();
+    } else if (this.data.chapterPreview && this.data.chapterPreview.show) {
+>>>>>>> private-github/featu
       this.closeChapterPreview();
     } else if (this.data.valueEditor && this.data.valueEditor.show) {
       this.closeValueEditor();
@@ -1010,7 +1030,11 @@ Page({
       this.closeStoryEditor();
     }
     // 关掉一层后若还有受护浮层(浮层叠浮层),翻转一次让 page-container 重新挂上
+<<<<<<< public
     const stillGuarded = (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) || (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || (this.data.valueEditor && this.data.valueEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
+=======
+    const stillGuarded = (this.data.runtimeEditor && this.data.runtimeEditor.show) || (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
+>>>>>>> private-github/featu
       || (this.data.publishCheck && this.data.publishCheck.show)
       || (this.data.storyEditor && this.data.storyEditor.show)
       || this.data.modePickerShow || this.data.topicDetailShow;
@@ -2225,6 +2249,7 @@ Page({
   },
 
   onLoad(options) {
+<<<<<<< public
     this._creatorEntryOptions = options || {};
     if (!memberId(app)) {
       this.setData({ creatorLoginRequired: true });
@@ -2233,6 +2258,9 @@ Page({
     }
     this._creatorOwner = memberId(app);
     this.setData({ creatorLoginRequired: false });
+=======
+    this._runtimeDisposed = false;
+>>>>>>> private-github/featu
     options = options || {};
     this._loadSupportMatrix();
     this._routeGraph = topicRouteGraph.emptyGraph();
@@ -2426,6 +2454,7 @@ Page({
       editIsDraft: detail.isDraft === true,
       editLoaded: true,
 
+      bingoEnabled: bingo.enabled,
       bingoRows: advancedGameConfig.BINGO_S_ORDER.map((pos, i) => Object.assign(
         { pos, seq: i + 1, hint: advancedGameConfig.BINGO_DEFAULT_LABELS[pos], couponName: '' },
         bingo.cells[pos])),
@@ -2458,9 +2487,10 @@ Page({
       'formData.finishMedalName': topic.finishMedalName || '',
       'formData.finishMedalImg': topic.finishMedalImg || '',
       'formData.completeRewardCouponId': topic.completeRewardCouponId || 0,
+      completeRewardOn: !!topic.completeRewardCouponId,
 
       'formData.completeRuleJson': topic.completeRuleJson || '',
-      'formData.themeRuntimeConfig': detail.themeRuntimeConfig || topic.themeRuntimeConfigJson || '',
+      'formData.themeRuntimeConfig': Object.prototype.hasOwnProperty.call(detail, 'themeRuntimeConfig') ? (detail.themeRuntimeConfig == null ? null : detail.themeRuntimeConfig) : (topic.themeRuntimeConfigJson == null ? null : topic.themeRuntimeConfigJson),
       'formData.journeyRules': detail.journeyRules || topic.journeyRulesJson || '',
       'formData.journeyStory': detail.journeyStory || topic.journeyStoryJson || '',
       // 思维阁入口卡的副标题要跟着回填 —— 不然编辑已有主题时明明配过念头,卡上却写「还没配」
@@ -2739,10 +2769,19 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
+<<<<<<< public
   onHide() { this._hidden = true; },
 
   onUnload() {
     this._unloaded = true;
+=======
+  onHide() { this._savedCheckOnHide(false); this.closeInitialState(); },
+
+  onUnload() {
+    this._savedCheckOnHide(true);
+    this.closeInitialState();
+    this._disposeRuntimeEditor();
+>>>>>>> private-github/featu
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
@@ -3220,11 +3259,15 @@ Page({
       'formData.finishMedalName': sourceData.finishMedalName || '',
       'formData.finishMedalImg': sourceData.finishMedalImg || '',
       'formData.completeRewardCouponId': sourceData.completeRewardCouponId || 0,
+<<<<<<< public
       // 模式切换复制(_buildCopiedDraft)整份带着这些主题规则;漏回填 = 初始状态、背包、结局、完成规则静默清空(复核 A09)
       'formData.journeyRules': sourceData.journeyRules || '',
       'formData.themeRuntimeConfig': sourceData.themeRuntimeConfig || '',
       'formData.journeyStory': sourceData.journeyStory || '',
       'formData.completeRuleJson': sourceData.completeRuleJson || '',
+=======
+      completeRewardOn: !!sourceData.completeRewardCouponId,
+>>>>>>> private-github/featu
 
       'formData.tickets': sourceData.tickets || [{
         name: '体验票', price: 0, totalStock: 100, mode: 2,
@@ -3333,6 +3376,7 @@ Page({
     let chapterIndex = dataset.index;
     // 计算下一个章节的编号
     const currentChapterCount = this.data.formData.chapters.length;
+    this._beginRuntimeChapter(currentChapterCount);
     const nextChapterNumber = currentChapterCount + 1;
     const defaultChapterName = `第${nextChapterNumber}章`;
     this._openChapterRules(currentChapterCount);
@@ -3342,7 +3386,7 @@ Page({
       popChapter: true,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
-      chapterForm: emptyChapterForm(defaultChapterName), runtimeChapterCosts: this._runtimeCosts(currentChapterCount)
+      chapterForm: emptyChapterForm(defaultChapterName)
     });
     if (Number(this.data.formData.productType) === 2) this.loadMerchantCategories();
   },
@@ -3401,6 +3445,7 @@ Page({
     let chapterIndex = e.currentTarget.dataset.index;
     this._openChapterRules(Number(chapterIndex));
     let newChapters = that.data.formData.chapters[chapterIndex];
+    this._beginRuntimeChapter(Number(chapterIndex));
     let chapterForm = Object.assign({}, newChapters, {
       categoryId: newChapters.categoryId || null,
       recruitEnabled: Number(newChapters.recruitEnabled) === 1 ? 1 : 0,
@@ -3413,7 +3458,6 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      runtimeChapterCosts: this._runtimeCosts(Number(chapterIndex)),
       popChapter: true,
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
@@ -3751,6 +3795,8 @@ Page({
     if (!this.normalizeChapterMerchantConfig(newChapter)) {
       return false;
     }
+    const endingIssue = storyEnding.chapterEndingIssue(newChapter);
+    if (endingIssue) { cyToast(endingIssue); return false; }
     const cityStoryFlow = Number(this.data.formData.productType) === 1 || newChapter.opening === true;
 
     if (chapterAction == 0) {
@@ -3841,6 +3887,7 @@ Page({
       }
     }
 
+    this._finishRuntimeChapter(true);
     this.updateAllStatistics();
   },
 
@@ -3856,6 +3903,7 @@ Page({
 
   // 关闭章节弹框
   cancelChapter(e) {
+    this._finishRuntimeChapter(false);
     // R9-36:弹层里预听的是本章旁白,取消后弹层与播放入口一起消失,
     // 不停就会留一段在后台响。与 closeStoryEditor/openStoryEditor 同口径。
     this.destroyPreviewAudio();
@@ -4545,12 +4593,32 @@ Page({
 
 
   previewDraft() {
-    let data;
-    try { data = buildTopicPreview(this.data.formData); }
+    const sequence = this._draftPreviewSequence = (this._draftPreviewSequence || 0) + 1;
+    const owner = String(app.getUserID() || '');
+    const scope = () => JSON.stringify([this.data.editingTopicId, this.data.draftUuid,
+      this.data.draftMemberId, this.data.baseRevision, this.data.operationScope, this.data.editScope]);
+    const source = () => JSON.stringify(this.data.formData);
+    let data, snapshot, draftScope;
+    try { data = buildTopicPreview(this.data.formData); snapshot = source(); draftScope = scope(); }
     catch (error) { app.tips(error.message); return; }
+    const overview = data.themeOverview; delete data.themeOverview;
+    const sameDraft = () => {
+      try { return !this._runtimeDisposed && sequence === this._draftPreviewSequence
+        && owner === String(app.getUserID() || '') && draftScope === scope() && snapshot === source(); }
+      catch (_) { return false; }
+    };
+    const eligible = () => sameDraft() && /^[1-9]\d{0,18}$/.test(owner)
+      && (!this.data.draftMemberId || String(this.data.draftMemberId) === owner)
+      && typeof this._runtimeMayEdit === 'function' && this._runtimeMayEdit();
+    // This closure and owner fence stay only in the local EventChannel. No raw config/IDs in the view.
+    const canOverview = snapshot.length <= 1000000 && eligible();
     wx.navigateTo({ url: '/pages/play/index?preview=1',
-      success: result => result.eventChannel.emit('previewData', data),
-      fail: () => app.tips('预览未打开，请重试'),
+      success: result => {
+        if (!sameDraft()) return;
+        if (overview && canOverview && eligible()) data.themeOverview = { owner, value: overview, isCurrent: eligible };
+        result.eventChannel.emit('previewData', data);
+      },
+      fail: () => { if (sameDraft()) app.tips('预览未打开，请重试'); },
     });
   },
 
@@ -4561,7 +4629,7 @@ Page({
   // 本地数据源分支),不要再把按钮接回 ?id= —— 那条路读的永远是服务端那一版。
 
   openTopicDetail() { this._syncRuntimeStats(); this.setData({ topicDetailShow: true }); },
-  closeTopicDetail() { this.setData({ topicDetailShow: false }); },
+  closeTopicDetail() { this.closeSavedTopicCheck(); this.setData({ topicDetailShow: false }); },
 
   // 列表 ↔ 地图 视图切换(左下角药丸)。
   // 地图挂在 wx:if 上,切走会连 markers/polyline 一起销毁,所以切回来必须重画一次,
@@ -5405,13 +5473,23 @@ Page({
     this.setData({ 'formData.finishMedalImg': '' });
   },
 
+  onCompleteRewardToggle(e) {
+    const on = !!(e.detail && e.detail.value);
+    if (on) { this.setData({ completeRewardOn: true }); return; }
+    this.setData({
+      completeRewardOn: false,
+      'formData.completeRewardCouponId': 0,
+      completionRewardCouponName: ''
+    });
+  },
+
   onCompletionRewardChange(e) {
     const detail = e.detail || {};
     const couponId = Number(detail.couponId || 0);
     this.setData({
       'formData.completeRewardCouponId': couponId,
       completionRewardCouponName: detail.couponName || '',
-
+      completeRewardOn: !!couponId || this.data.completeRewardOn
     });
   },
   onCompletionRuleToggle(e) {
@@ -5887,7 +5965,7 @@ Page({
     // 九宫格开着但没排满就拦下来。不拦的话服务端会拒(TopicCompletionRulePolicy),
     // 商家看到的是一句从接口透出来的报错,而不是"第 3 格还没选站点"。
     const bingoError = advancedGameConfig.validateTopicBingo({
-      enabled: that.data.bingoRows.some(row => !!(row.label.trim() || row.feedbackText || row.couponId)), cells: that._bingoCellsByPosition()
+      enabled: that.data.bingoEnabled, cells: that._bingoCellsByPosition()
     });
     if (bingoError) {
       that.setData({ bingoError });
@@ -6546,7 +6624,10 @@ Page({
       chapterEndingKindIndex: Math.max(0, kinds.findIndex((k) => k.key === kind)), chapterEndingPickIndex: pick,
     });
   },
+<<<<<<< public
 
+=======
+>>>>>>> private-github/featu
   onChapterEndingToggle(e) {
     const on = !!e.detail.value;
     const form = this.data.chapterForm || {};
@@ -6590,18 +6671,70 @@ Page({
     this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index });
   },
 
-  openInitialState() {
+<<<<<<< public
+=======
+  _initialStateSignature() {
     try {
+      const d = this.data, owner = String(app.getUserID && app.getUserID() || '');
+      if (!/^[1-9]\d{0,18}$/.test(owner) || this._runtimeDisposed || this._savedCheckHidden
+          || (d.draftMemberId && String(d.draftMemberId) !== owner)
+          || (d.editingTopicId && (d.editLoaded !== true || d.editLoading || d.editLoadError))) return null;
+      const source = JSON.stringify(d.formData);
+      if (!source || source.length > 1000000) return null;
+      return JSON.stringify([owner, d.editingTopicId, d.draftUuid, d.draftMemberId, d.baseRevision,
+        d.operationScope, d.editScope, this._editLoadToken, source]);
+    } catch (_) { return null; }
+  },
+  _initialStateLive(context) {
+    if (!context || context !== this._initialStateContext) return false;
+    if (!this.data.initialStateEditor.show || !context.signature || this._initialStateSignature() !== context.signature) {
+      this.closeInitialState(); return false;
+    }
+    return true;
+  },
+  _initialAttributeRows() {
+    const context = this._initialStateContext, rules = this.data.initialStateEditor.rules;
+    const rows = context.ids.map((id, i) => Object.assign({ id, existing: context.existing.has(id) },
+      storyInitialState.attributeView(rules.attributes[i])));
+    this.setData({ 'initialStateEditor.attributes': rows, 'initialStateEditor.error': '' });
+  },
+>>>>>>> private-github/featu
+  openInitialState() {
+    this.closeInitialState();
+    try {
+<<<<<<< public
       this._syncRuntimeStats();
       const rules = storyInitialState.parse(this.data.formData.journeyRules);
       const values = customInitialValues(rules.attributes);
       this.setData({ initialStateEditor: { show: true, rules, values, error: '' } });
+=======
+      const signature = this._initialStateSignature();
+      if (!signature) throw new Error('编辑身份或草稿已变化，请重新进入编辑器');
+      const raw = this.data.formData.journeyRules, rules = storyInitialState.parse(raw);
+      const context = { signature, raw, initial: JSON.stringify(rules), version: 0, ids: [], existing: new Set(),
+        hpChanged: false, attributesChanged: false, enabledChanged: false };
+      let attributeError = '';
+      try { storyInitialState.normalizeAttributes(rules.attributes); }
+      catch (error) { attributeError = error.message + '；原始声明已保留，请先修正导入配置'; }
+      if (!attributeError) (rules.attributes || []).forEach(() => {
+        const id = 'attribute_' + (this._initialAttributeSequence = (this._initialAttributeSequence || 0) + 1);
+        context.ids.push(id); context.existing.add(id);
+      });
+      this._initialStateContext = context;
+      this.setData({ initialStateEditor: { show: true, rules, attributes: [], attributeError, error: '' } });
+      if (!attributeError) this._initialAttributeRows();
+>>>>>>> private-github/featu
     } catch (error) { cyToast(error.message); }
   },
-  closeInitialState() { this.setData({ 'initialStateEditor.show': false }); },
+  closeInitialState() {
+    this._initialStateContext = null;
+    this.setData({ initialStateEditor: { show: false, rules: null, attributes: [], error: '', attributeError: '' } });
+  },
   onInitialStateField(e) {
-    if (this.data.editScope === 'WHITELIST') return;
+    const context = this._initialStateContext;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST') return;
     const field = e.currentTarget.dataset.field;
+<<<<<<< public
     if (field === 'attribute.initial') {
       const index = Number(e.currentTarget.dataset.index);
       const rules = this.data.initialStateEditor.rules;
@@ -6615,6 +6748,10 @@ Page({
     }
     // 上限归主题数值域设置；首章初始状态只改开局值
     if (!['hp.enabled', 'hp.init', 'luck.enabled', 'luck.init'].includes(field)) return;
+=======
+    if (!['hp.enabled', 'hp.init', 'hp.max', 'luck.enabled', 'luck.init', 'luck.max'].includes(field)) return;
+    context.version++; context.hpChanged = true;
+>>>>>>> private-github/featu
     const type = field.split('.')[0];
     if (field.endsWith('.enabled') && !e.detail.value) {
       const saved = storyInitialState.parse(this.data.formData.journeyRules);
@@ -6624,18 +6761,79 @@ Page({
     this.setData({ ['initialStateEditor.rules.' + field]: e.detail.value, 'initialStateEditor.error': '' });
   },
   addInitialState(e) {
-    if (this.data.editScope === 'WHITELIST') return;
+    const context = this._initialStateContext;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST') return;
     const type = e.currentTarget.dataset.type;
     if (type !== 'hp' && type !== 'luck') return;
+    context.version++; context.hpChanged = true;
     this.setData({ ['initialStateEditor.rules.' + type + '.enabled']: true,
       'initialStateEditor.rules.stateEnabled': true, 'initialStateEditor.error': '' });
   },
+  onInitialAttributesEnabled(e) {
+    const context = this._initialStateContext;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST' || typeof e.detail.value !== 'boolean') return;
+    context.version++; context.enabledChanged = true;
+    this.setData({ 'initialStateEditor.rules.stateEnabled': e.detail.value, 'initialStateEditor.error': '' });
+  },
+  addInitialAttribute() {
+    const context = this._initialStateContext, editor = this.data.initialStateEditor;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST' || editor.attributeError || context.ids.length >= 32) return;
+    const rows = (editor.rules.attributes || []).slice();
+    rows.push({ key: '', label: '', initial: 0, min: -10000, max: 10000, visible: true });
+    context.ids.push('attribute_' + (this._initialAttributeSequence = (this._initialAttributeSequence || 0) + 1));
+    context.version++; context.attributesChanged = true;
+    this.setData({ 'initialStateEditor.rules.attributes': rows }); this._initialAttributeRows();
+  },
+  onInitialAttributeField(e) {
+    const context = this._initialStateContext, editor = this.data.initialStateEditor;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST' || editor.attributeError) return;
+    const { id, field } = e.currentTarget.dataset, index = context.ids.indexOf(id);
+    if (index < 0 || !['key', 'label', 'initial', 'min', 'max', 'visible'].includes(field) || (field === 'key' && context.existing.has(id))) return;
+    const rows = editor.rules.attributes.slice(), row = Object.assign({}, rows[index]);
+    if (['min', 'max'].includes(field) && /^(clue|tag)\./.test(row.key)) return;
+    let value = e.detail.value;
+    if (field === 'visible' ? typeof value !== 'boolean' : !['number', 'string'].includes(typeof value)) return;
+    if (['key', 'label'].includes(field) && (typeof value !== 'string' || value.length > (field === 'key' ? 64 : 256))) return;
+    if (['initial', 'min', 'max'].includes(field)) value = storyInitialState.attributeNumber(value);
+    row[field] = value;
+    if (field === 'key' && /^(clue|tag)\./.test(value)) { row.min = 0; row.max = 1; }
+    rows[index] = row; context.version++; context.attributesChanged = true;
+    this.setData({ 'initialStateEditor.rules.attributes': rows }); this._initialAttributeRows();
+  },
+  removeInitialAttribute(e) {
+    const context = this._initialStateContext, editor = this.data.initialStateEditor;
+    if (!this._initialStateLive(context) || this.data.editScope === 'WHITELIST' || editor.attributeError) return;
+    const id = e.currentTarget.dataset.id, index = context.ids.indexOf(id), version = context.version;
+    if (index < 0) return;
+    modal.show({ title: '移除初始属性声明？', content: '只从当前草稿移除开局值和展示声明，不删除已登记的状态键，也不修改玩法条件或效果引用。已有局保留原快照。',
+      confirmText: '移除声明', success: result => {
+        if (!result.confirm || !this._initialStateLive(context) || this.data.editScope === 'WHITELIST'
+            || context.version !== version || context.ids[index] !== id) return;
+        const rows = this.data.initialStateEditor.rules.attributes.slice(); rows.splice(index, 1); context.ids.splice(index, 1);
+        context.version++; context.attributesChanged = true;
+        this.setData({ 'initialStateEditor.rules.attributes': rows }); this._initialAttributeRows();
+      } });
+  },
   saveInitialState() {
+    const context = this._initialStateContext;
+    if (!this._initialStateLive(context)) return;
     if (this.data.editScope === 'WHITELIST') { this.closeInitialState(); return; }
     try {
       const rules = this.data.initialStateEditor.rules;
+<<<<<<< public
       const raw = storyInitialState.serializeChanges(this.data.formData.journeyRules, Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || (Array.isArray(rules.attributes) && rules.attributes.length > 0) }), this._runtimeConfig());
       this.setData({ 'formData.journeyRules': raw, 'initialStateEditor.show': false });
+=======
+      if (JSON.stringify(rules) === context.initial) { this.closeInitialState(); return; }
+      let raw;
+      if (!context.hpChanged) {
+        raw = storyInitialState.serializeAttributes(context.raw, rules.attributes, context.enabledChanged ? rules.stateEnabled : undefined);
+      } else {
+        raw = storyInitialState.serialize(Object.assign({}, rules, { stateEnabled: context.enabledChanged || context.attributesChanged
+          ? rules.stateEnabled : rules.hp.enabled || rules.luck.enabled || (rules.stateEnabled && Array.isArray(rules.attributes) && rules.attributes.length > 0) }));
+      }
+      this.setData({ 'formData.journeyRules': raw }); this.closeInitialState();
+>>>>>>> private-github/featu
     } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
   },
 
@@ -6796,9 +6994,8 @@ Page({
           this.data.formData.completeRuleJson,
           productType === 1 ? this.data.completionRuleMode : 'ALL',
           this.data.completionRequiredCount),
-        { enabled: this.data.bingoRows.some(row => !!(row.label.trim() || row.feedbackText || row.couponId)), cells: this._bingoCellsByPosition() }),
+        { enabled: this.data.bingoEnabled, cells: this._bingoCellsByPosition() }),
       journeyRules: this.data.formData.journeyRules || null,
-      themeRuntimeConfig: this._runtimePayload(),
       // 结局都在章节上(结局章):剧情里的结局清单交给服务端按章重建
       journeyStory: storyEnding.withoutEndingList(this.data.formData.journeyStory) || null,
       publishMode: this.data.aiSimple ? 'ai_simple' : 'pro',
@@ -6811,6 +7008,9 @@ Page({
       configVersion: this.data.formData.configVersion || '',
       scope: this.data.operationScope
     };
+
+    const runtimePayload = this._runtimePayload();
+    if (runtimePayload !== undefined) apiData.themeRuntimeConfig = runtimePayload;
 
     // 已过审开卖的主题只许改文案与图:日期 / 章节站点结构 / 票价后端一律拒收(方案 §6 口径)。
     // 这里主动剔掉,而不是指望后端忽略 —— 整包上送会当场被拒,用户看到的是「保存失败」而不是「保存成功但没变」。
@@ -7158,9 +7358,15 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+<<<<<<< public
     this._hidden = false;
     if (this._readSessionChanged && this.data.editingTopicId) { this._readSessionChanged = false; this.loadEditingTopic(this.data.editingTopicId); return; }
     if (this._creatorOwnerChanged() || this.data.creatorLoginRequired) return;
+=======
+    this._savedCheckOnShow();
+    if (this._initialStateContext) this._initialStateLive(this._initialStateContext);
+    this._loadRuntimeCapability();
+>>>>>>> private-github/featu
     //this.updateStatistics();
     this.syncNodeGameSwitchWithTemplate();
     if (this._editingBoundTemplateId && this.data.popChapterNodes) {
@@ -7201,6 +7407,7 @@ Page({
     });
   },
   /** 视图是 S 形序,存回去要按格位序 —— 存错序等于九格的奖全对错了格子 */
+  onBingoToggle(e) { this.setData({ bingoEnabled: !!e.detail.value, bingoError: '' }); },
   _bingoCellsByPosition() {
     const cells = advancedGameConfig.BINGO_S_ORDER.map(() => ({ label: '', couponId: 0, feedbackText: '' }));
     (this.data.bingoRows || []).forEach((row) => {

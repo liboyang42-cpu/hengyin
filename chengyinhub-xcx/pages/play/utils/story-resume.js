@@ -1,7 +1,10 @@
 /**
  * pages/play/utils/story-resume.js —— 故事流「中途退出能回到原处」(2026-09-24 用户:前 6 条都修)
  *
- * 本地存三样,按账号 + 场次/主题隔离(与暂停计时同一把 key,预览/缺身份时 key 为空 = 不存不读):
+ * 本地存三样,按账号 + 场次/主题隔离；主题局再加服务端当前 playInstanceId。
+ * instanceResolved=false 时不读取、不写入、不恢复旧草稿；新局换引用，不删除旧局缓存。
+ * 旧无主题调用继续用原 key。
+ * 基础作用域(与暂停计时同一把 key,预览/缺身份时 key 为空 = 不存不读):
  *   pos        读到哪一段 {chapterId, i, nodeId}
  *   gates      看过开场门的章节 id
  *   openNodeId 退出时正开着的那个玩法

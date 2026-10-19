@@ -125,14 +125,14 @@
       </template>
     </cy-data-table>
 
-    <el-dialog title="编辑模板" :visible.sync="editOpen" width="680px" append-to-body :close-on-click-modal="false">
+    <el-dialog title="编辑模板" :visible.sync="editOpen" width="680px" append-to-body :close-on-click-modal="false" :close-on-press-escape="!editSaving" :show-close="!editSaving" @close="invalidateEdit">
       <el-alert
         class="template-center__edit-tip"
         type="info"
         :closable="false"
         title="保存会回到用户模板真源，并将关联的模板库投影与审核任务同步为待处理状态。"
       />
-      <el-form ref="editForm" :model="editForm" :rules="rules" label-width="104px" size="small">
+      <el-form ref="editForm" :model="editForm" :rules="rules" :disabled="editSaving" label-width="104px" size="small">
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="发布用户" prop="memberId"><el-input v-model="editForm.memberId" placeholder="用户 ID" :disabled="Boolean(editForm.id)" /></el-form-item>
@@ -194,11 +194,23 @@
         <el-form-item label="模板介绍" prop="description"><el-input v-model="editForm.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="规则说明" prop="ruleInstructions"><el-input v-model="editForm.ruleInstructions" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="验证问题" prop="questionName"><el-input v-model="editForm.questionName" /></el-form-item>
-        <el-form-item label="验证答案" prop="questionAnswer"><el-input v-model="editForm.questionAnswer" /></el-form-item>
+        <el-form-item v-if="Number(editForm.validationMethod) !== 3" label="验证答案" prop="questionAnswer"><el-input v-model="editForm.questionAnswer" /></el-form-item>
+        <template v-if="Number(editForm.validationMethod) === 3">
+          <el-alert class="template-center__edit-tip" type="info" :closable="false" title="至少填写两个选项，并选择一个已填写的正确选项。答案仅供审核，请勿写进公开规则说明。" />
+          <el-form-item v-for="letter in ['A', 'B', 'C', 'D']" :key="letter" :label="`选项 ${letter}`" :prop="`question${letter}`">
+            <el-input v-model="editForm[`question${letter}`]" placeholder="至少填写两个选项，不使用时留空" />
+          </el-form-item>
+          <el-form-item label="正确选项" prop="correctAnswer">
+            <el-select v-model="editForm.correctAnswer" placeholder="选择正确选项" class="template-center__full-width">
+              <el-option v-for="letter in ['A', 'B', 'C', 'D']" :key="letter" :label="`选项 ${letter}`" :value="letter" :disabled="!String(editForm[`question${letter}`] || '').trim()" />
+            </el-select>
+          </el-form-item>
+        </template>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitEdit">保 存</el-button>
-        <el-button @click="editOpen = false">取 消</el-button>
+        <el-button type="primary" :loading="editSaving" @click="submitEdit(false)">保 存</el-button>
+        <el-button :disabled="editSaving" @click="submitEdit(true)" v-hasPermi="['business:audit:list']">保存并查看审核</el-button>
+        <el-button :disabled="editSaving" @click="editOpen = false">取 消</el-button>
       </div>
     </el-dialog>
   </div>
@@ -248,6 +260,11 @@ const createTemplateForm = () => ({
   ruleInstructions: '',
   questionName: '',
   questionAnswer: '',
+  questionA: '',
+  questionB: '',
+  questionC: '',
+  questionD: '',
+  correctAnswer: '',
   rating: '',
   useNum: null
 })
@@ -278,6 +295,8 @@ export default {
       queryForm: createFilters(),
       queryParams: createQueryParams(),
       editOpen: false,
+      editRequestId: 0,
+      editSaving: false,
       editForm: createTemplateForm(),
       editCategoryIds: [],
       categoryOptions: [],
@@ -316,11 +335,29 @@ export default {
     this.getList()
   },
   beforeRouteUpdate(to, from, next) {
+    this.invalidateEdit()
+    this.editOpen = false
     this.hydrateFromRoute(to.query)
     this.getList()
     next()
   },
+  beforeRouteLeave(to, from, next) {
+    this.invalidateEdit()
+    this.editOpen = false
+    next()
+  },
+  deactivated() {
+    this.invalidateEdit()
+    this.editOpen = false
+  },
+  beforeDestroy() {
+    this.invalidateEdit()
+  },
   methods: {
+    invalidateEdit() {
+      this.editRequestId += 1
+      this.editSaving = false
+    },
     hydrateFromRoute(query = {}) {
       const status = optionalStatus(query.status, [0, 1, 2])
       const isSync = optionalStatus(query.isSync, [0, 1])
@@ -425,9 +462,15 @@ export default {
         })
     },
     handleEdit(row) {
+      if (this.editSaving) return Promise.resolve()
+      const requestId = ++this.editRequestId
       return getMembertemplate(row.id)
         .then(response => {
-          this.editForm = Object.assign(createTemplateForm(), response.data || {})
+          if (requestId !== this.editRequestId) return
+          if (!response.data || String(response.data.id) !== String(row.id)) {
+            throw new Error('Template unavailable')
+          }
+          this.editForm = Object.assign(createTemplateForm(), response.data)
           this.editCategoryIds = String(this.editForm.activityCategoryids || '')
             .split(',')
             .filter(id => id.trim())
@@ -436,20 +479,58 @@ export default {
           return this.loadCategoryOptions()
         })
         .catch(() => {
+          if (requestId !== this.editRequestId) return
           this.$modal.msgError('模板详情读取失败，请稍后重试。')
         })
     },
-    submitEdit() {
-      this.$refs.editForm.validate(valid => {
-        if (!valid) return
-        const payload = Object.assign({}, this.editForm, {
-          activityCategoryids: this.editCategoryIds.join(',')
+    choiceValidationMessage() {
+      if (Number(this.editForm.validationMethod) !== 3) return ''
+      if (!String(this.editForm.questionName || '').trim()) return '请填写验证问题。'
+      if (['A', 'B', 'C', 'D'].filter(letter => String(this.editForm[`question${letter}`] || '').trim()).length < 2) {
+        return '选项验证至少需要填写两个选项。'
+      }
+      const answer = this.editForm.correctAnswer
+      if (!['A', 'B', 'C', 'D'].includes(answer) || !String(this.editForm[`question${answer}`] || '').trim()) {
+        return '请选择一个已填写的正确选项。'
+      }
+      return ''
+    },
+    submitEdit(openReview = false) {
+      if (!this.editOpen || this.editSaving) return Promise.resolve()
+      const validationMessage = this.choiceValidationMessage()
+      if (validationMessage) {
+        this.$modal.msgError(validationMessage)
+        return Promise.resolve()
+      }
+      const requestId = this.editRequestId
+      this.editSaving = true
+      return new Promise(resolve => {
+        this.$refs.editForm.validate(valid => {
+          if (requestId !== this.editRequestId) return resolve()
+          if (!valid) {
+            this.editSaving = false
+            return resolve()
+          }
+          const payload = Object.assign({}, this.editForm, {
+            activityCategoryids: this.editCategoryIds.join(',')
+          })
+          // The existing update endpoint already queues the canonical template for review.
+          updateMembertemplate(payload).then(() => {
+            if (requestId !== this.editRequestId) return
+            this.$modal.msgSuccess('模板已更新并重新进入审核')
+            this.editOpen = false
+            if (openReview) {
+              this.$router.push({ name: 'Audit', query: { bizType: 'TEMPLATE', bizId: payload.id } })
+            } else {
+              this.getList()
+            }
+          }).catch(() => {
+            if (requestId === this.editRequestId) this.$modal.msgError('保存未确认，请保留当前编辑，核对模板状态后再试。')
+          }).finally(() => {
+            if (requestId === this.editRequestId) this.editSaving = false
+            resolve()
+          })
         })
-        updateMembertemplate(payload).then(() => {
-          this.$modal.msgSuccess('模板已更新并重新进入审核')
-          this.editOpen = false
-          this.getList()
-        }).catch(() => {})
       })
     },
     submitReview(row) {

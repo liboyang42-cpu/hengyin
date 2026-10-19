@@ -220,6 +220,34 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertEqual((), self.new_columns())
 
+    def test_existing_ordinary_migrations_replay_without_duplicate_columns(self):
+        # Reuse the feature's real existing migrations, including plain TINYINT.
+        # The stronger migration must validate and preserve this already-correct shape.
+        ordinary = (
+            "migration_ordinary_chapter_offer_withdraw_20261003.sql",
+            "migration_ordinary_chapter_application_replacement_20261003.sql",
+        )
+        with self.connect() as connection, connection.cursor() as cursor:
+            for filename in ordinary:
+                for statement in split_statements((SQL_DIR / filename).read_text()):
+                    cursor.execute(statement)
+            cursor.execute("SELECT data_type FROM information_schema.columns "
+                           "WHERE table_schema=DATABASE() AND table_name='merchant_chapter_offer' "
+                           "AND column_name='withdraw_required'")
+            self.assertEqual(("tinyint",), cursor.fetchone())
+            cursor.execute("UPDATE merchant_chapter_offer SET status=0,withdraw_reason='ordinary-history',"
+                           "withdraw_required=0 WHERE id=1")
+            cursor.execute("UPDATE merchant_chapter_offer SET withdraw_required=1,"
+                           "replacement_of_offer_id=1 WHERE id=2")
+            cursor.execute("UPDATE merchant_chapter_application SET replacement_of_offer_id=1 WHERE id=2")
+        expected = self.snapshot()
+        columns = self.new_columns()
+        self.assertEqual(4, len(columns))
+        for _ in range(2):
+            self.migrate()
+            self.assertEqual(expected, self.snapshot())
+            self.assertEqual(columns, self.new_columns())
+
     def test_dependency_registration_matches_real_ddl_sources(self):
         dependencies = json.loads((REPO / "ci/migration-dependencies.json").read_text())["dependencies"]
         self.assertEqual(["perk_ledger_20260716", "terms_mode_20260716", "chapter_merchant_node",

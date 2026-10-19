@@ -281,3 +281,35 @@ test('关闭挡板豁免不能被滥用：登记在册的 handler 必须只做�
   }
 })
 
+
+test('本局与配置新增动作复用按压反馈，处理中的请求入口不伪装可点击', () => {
+  const files = ['pages/play/index.wxml', 'pages/play/theme-backpack.wxml', 'pages/publish/fabu/runtime-editor.wxml'];
+  for (const file of files) {
+    assert.deepEqual(bareTapHandlers(read(file)).filter(handler => handler !== 'noop'), [], file);
+  }
+  const busyControls = {
+    generateThemePoster: ['themePosterBusy', 'themePosterNativeBusy'],
+    generateThemeTextPoster: ['themePosterBusy', 'themePosterNativeBusy'],
+    saveThemePoster: ['themePosterBusy', 'themePosterNativeBusy'],
+    shareThemePoster: ['themePosterBusy', 'themePosterNativeBusy'],
+    requestThemeRescue: ['themeBagBusy', 'themeControlBusy', 'themeReplayBusy'],
+    requestThemeEnd: ['themeBagBusy', 'themeControlBusy', 'themeReplayBusy'],
+    requestThemeReplay: ['themeReplayBusy', 'themeBagBusy'],
+  };
+  const tags = [...read('pages/play/theme-backpack.wxml').matchAll(TAG)].map(match => match[0]);
+  for (const [handler, fields] of Object.entries(busyControls)) {
+    const tag = tags.find(value => value.includes(`bindtap="${handler}"`));
+    const hover = /hover-class="\{\{([^}]+)\}\}"/.exec(tag || '');
+    const disabled = /aria-disabled="\{\{([^}]+)\}\}"/.exec(tag || '');
+    assert.ok(hover && disabled, `${handler} 必须按真实 busy 状态表达禁用`);
+    const feedback = new Function(...fields, `return ${hover[1]}`);
+    const isDisabled = new Function(...fields, `return ${disabled[1]}`);
+    assert.equal(feedback(...fields.map(() => false)), 'cy-pressed', handler);
+    assert.equal(isDisabled(...fields.map(() => false)), false, handler);
+    fields.forEach((_, index) => {
+      const values = fields.map((_, i) => i === index);
+      assert.equal(feedback(...values), 'none', `${handler}: ${fields[index]}`);
+      assert.equal(isDisabled(...values), true, `${handler}: ${fields[index]}`);
+    });
+  }
+});

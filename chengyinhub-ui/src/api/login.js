@@ -40,10 +40,12 @@ export function getInfo() {
 }
 
 // 退出方法
-export function logout() {
+export function logout(token, auditContext) {
   return request({
     url: '/logout',
-    method: 'post'
+    method: 'post',
+    // Audit-expiry cleanup must never pick up a different session at dispatch time.
+    ...(auditContext ? { auditContext, headers: { isToken: false, Authorization: 'Bearer ' + token } } : {})
   })
 }
 

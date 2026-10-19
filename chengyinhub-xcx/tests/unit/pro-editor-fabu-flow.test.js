@@ -14,10 +14,12 @@ let modals
 let chooseLocationCalls
 let chooseLocationOptions
 let requests
+let currentOwner
+let deferModal
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
-  getUserID: () => 42,
+  getUserID: () => currentOwner,
   getNickname: () => '测试创作者',
   getAvatar: () => '',
   sendRequest: options => { requests.push(options) },
@@ -34,7 +36,7 @@ global.wx = {
   hideLoading: () => {},
   showModal: options => {
     modals.push(options)
-    if (options && options.success) options.success({ confirm: true })
+    if (!deferModal && options && options.success) options.success({ confirm: true })
   },
   chooseLocation: options => {
     chooseLocationCalls += 1
@@ -94,6 +96,8 @@ test('主题日期同步票跟随档期，独立票保留原日期，旧草稿�
 
 beforeEach(() => {
   storage = {}
+  currentOwner = 42
+  deferModal = false
   toasts = []
   modals = []
   chooseLocationCalls = 0
@@ -958,6 +962,7 @@ test('打开结局章的设置:只有键的老结局按清单回显名字,不写
   assert.equal(page.data.chapterForm.ending.thoughtName, '那扇窗')
 })
 
+<<<<<<< public
 
 test('legacy multiple thoughts can be reduced without silently removing story or ending references', () => {
   const page = makePage();
@@ -982,4 +987,175 @@ test('legacy multiple thoughts can be reduced without silently removing story or
   const saved = JSON.parse(page.data.formData.journeyRules).thoughts;
   assert.deepEqual(saved.map(row => row.key), ['old_a']);
   assert.equal(saved[0].desc, '保留文字');
+=======
+test('运行时关闭时已有配置不被清空，也不发送新字段', () => {
+  const page = makePage(); page.data.formData.themeRuntimeConfig = '{not parsed while disabled';
+  let submitted; page.sendData = payload => { submitted = payload }; page._doSubmit();
+  assert.ok(submitted); assert.equal(Object.prototype.hasOwnProperty.call(submitted, 'themeRuntimeConfig'), false);
+  assert.equal(page.data.formData.themeRuntimeConfig, '{not parsed while disabled');
+});
+
+test('运行时能力打开后保存配置与显式清空，普通旧表单继续省略', () => {
+  const page = makePage(); page.data.runtimeEnabled = true;
+  let submitted; page.sendData = payload => { submitted = payload }; page._doSubmit();
+  assert.equal(Object.prototype.hasOwnProperty.call(submitted, 'themeRuntimeConfig'), false);
+  page.data.formData.themeRuntimeConfig = JSON.stringify({schemaVersion:1,capacity:3,items:[],chapters:[],grants:[],events:[]});
+  page._doSubmit(); assert.equal(JSON.parse(submitted.themeRuntimeConfig).capacity, 3);
+  page.data.formData.themeRuntimeConfig = ''; page._doSubmit(); assert.equal(submitted.themeRuntimeConfig, '');
+});
+
+test('编辑回读保留明确空字符串，不用旧topic字段覆盖清空', () => {
+  const page = makePage(); page.data.editingTopicId = 1; const old = JSON.stringify({schemaVersion:1,capacity:3,items:[],chapters:[],grants:[],events:[]});
+  page.applyEditingTopic({topic:{id:1,name:'主题',productType:1,themeRuntimeConfigJson:old},themeRuntimeConfig:'',chapters:[],tickets:[]});
+  assert.equal(page.data.formData.themeRuntimeConfig, '');
+  page.applyEditingTopic({topic:{id:1,name:'主题',productType:1,themeRuntimeConfigJson:old},chapters:[],tickets:[]});
+  assert.equal(page.data.formData.themeRuntimeConfig, old);
+});
+
+test('本地草稿恢复保留运行时配置且不自行启用能力', () => {
+  const page = makePage(); const raw = JSON.stringify({schemaVersion:1,capacity:8,items:[],chapters:[],grants:[],events:[]});
+  page._applyDraftEnvelope({formData:Object.assign({},page.data.formData,{themeRuntimeConfig:raw}),pendingMaterials:[],editorMeta:{}});
+  assert.equal(page.data.formData.themeRuntimeConfig, raw); assert.equal(page.data.runtimeEnabled, false); assert.equal(page._runtimePayload(), undefined);
+});
+
+test('章节取消丢弃新增库存，章节完成提交而不移除旧结局入口', () => {
+  const page = makePage(); page.data.runtimeEnabled = true;
+  page.data.formData.chapters = [{name:'第一章',nodes:[],blocks:[]}];
+  page.showEditChapter({currentTarget:{dataset:{index:0}}});page.openChapterBackpack();page.addRuntimeContent({currentTarget:{dataset:{kind:'ITEM'}}});
+  page.closeRuntimeEditor();page.cancelChapter();assert.equal(page.data.formData.themeRuntimeConfig, undefined);
+  page.showEditChapter({currentTarget:{dataset:{index:0}}});page.openChapterBackpack();page.addRuntimeContent({currentTarget:{dataset:{kind:'ITEM'}}});
+  page.closeRuntimeEditor();page.confrimChapter();assert.equal(JSON.parse(page.data.formData.themeRuntimeConfig).items.length,1);
+  assert.equal(typeof page.onChapterEndingToggle,'function');assert.equal(typeof page.onBingoToggle,'function');
+});
+
+// Staged initial attributes: no network or registration call until original save flow.
+const initialEvent = (id, field, value) => ({ currentTarget: { dataset: { id, field } }, detail: { value } });
+function initialPage(raw = '') { const page = makePage(); page.data.formData.journeyRules = raw; page.openInitialState(); return page; }
+function fillAttribute(page, key = 'counter.focus') {
+  page.addInitialAttribute(); const id = page.data.initialStateEditor.attributes.at(-1).id;
+  page.onInitialAttributeField(initialEvent(id, 'key', key));
+  page.onInitialAttributeField(initialEvent(id, 'label', '专注'));
+  return id;
+}
+test('初始属性打开/完成/取消均保留原始缺省、null、空数组、未知字段和空白', () => {
+  for (const raw of ['', null, '{ }', ' { "attributes" : [] , "extra" : {"a":1} } ', '{"attributes":null}', '{"stateEnabled":false,"attributes":[{"key":"counter.a","label":" A ","future":1}]}']) {
+    const page = initialPage(raw); page.saveInitialState(); assert.equal(page.data.formData.journeyRules, raw);
+    page.openInitialState(); if (!page.data.initialStateEditor.attributeError) fillAttribute(page);
+    page.closeInitialState(); assert.equal(page.data.formData.journeyRules, raw);
+  }
+  assert.equal(requests.length, 0);
+});
+test('属性从空草稿新增、完成、重开回填，只有显式总开关启用且仍零请求', () => {
+  const page = initialPage(''); const id = fillAttribute(page);
+  page.onInitialAttributeField(initialEvent(id, 'initial', '5'));
+  page.onInitialAttributeField(initialEvent(id, 'visible', false));
+  assert.equal(page.data.formData.journeyRules, '');
+  assert.equal(page.data.initialStateEditor.rules.stateEnabled, false);
+  page.saveInitialState(); const saved = JSON.parse(page.data.formData.journeyRules);
+  assert.equal(saved.stateEnabled, undefined); assert.equal(saved.hp, undefined);
+  assert.deepEqual(saved.attributes[0], { key: 'counter.focus', label: '专注', initial: 5, min: -10000, max: 10000, visible: false });
+  page.openInitialState(); assert.equal(page.data.initialStateEditor.attributes[0].existing, true);
+  page.onInitialAttributesEnabled({ detail: { value: true } }); page.saveInitialState();
+  assert.equal(JSON.parse(page.data.formData.journeyRules).stateEnabled, true); assert.equal(requests.length, 0);
+});
+test('既有标识不可修改，属性改名保留高级行数据及无关 HP/念头原值', () => {
+  const root = { stateEnabled: false, hp: { enabled: true, strange: 1 }, thoughts: null, attributes: [{ key: 'relation.a', label: '旧名', future: { grants: [1] } }] };
+  const page = initialPage(JSON.stringify(root)), id = page.data.initialStateEditor.attributes[0].id;
+  page.onInitialAttributeField(initialEvent(id, 'key', 'relation.b'));
+  page.onInitialAttributeField(initialEvent(id, 'label', '新名')); page.saveInitialState();
+  assert.deepEqual(JSON.parse(page.data.formData.journeyRules), { ...root, attributes: [{ ...root.attributes[0], label: '新名' }] });
+});
+test('flag 属性限定上下限，坏数值/重键阻止暂存并保持原草稿', () => {
+  const page = initialPage('{}'), id = fillAttribute(page, 'tag.a');
+  page.onInitialAttributeField(initialEvent(id, 'min', '-5'));
+  assert.equal(page.data.initialStateEditor.rules.attributes[0].min, 0);
+  page.onInitialAttributeField(initialEvent(id, 'initial', '2')); page.saveInitialState();
+  assert.equal(page.data.formData.journeyRules, '{}'); assert.match(page.data.initialStateEditor.error, /上下限/);
+  page.onInitialAttributeField(initialEvent(id, 'initial', '1')); fillAttribute(page, 'tag.a'); page.saveInitialState();
+  assert.match(page.data.initialStateEditor.error, /重复/); assert.equal(page.data.formData.journeyRules, '{}');
+});
+test('最多 32 个属性，坏导入声明只显示错误并保留原始数据', () => {
+  const raw = JSON.stringify({ attributes: Array.from({ length: 32 }, (_, i) => ({ key: 'counter.a' + i, label: 'A' })) });
+  const page = initialPage(raw); page.addInitialAttribute(); assert.equal(page.data.initialStateEditor.attributes.length, 32);
+  page.closeInitialState(); page.data.formData.journeyRules = '{"attributes":null}'; page.openInitialState(); page.addInitialAttribute();
+  assert.equal(page.data.initialStateEditor.attributes.length, 0); assert.ok(page.data.initialStateEditor.attributeError);
+  page.onInitialAttributesEnabled({ detail: { value: true } }); page.saveInitialState(); assert.ok(page.data.initialStateEditor.error);
+  assert.equal(page.data.formData.journeyRules, '{"attributes":null}');
+});
+test('移除仅暂存声明，不删除注册表/引用；取消确认不改任何行', () => {
+  deferModal = true;
+  const root = { stateEnabled: true, ref: { var: 'counter.a' }, attributes: [{ key: 'counter.a', label: 'A' }] };
+  const page = initialPage(JSON.stringify(root)), id = page.data.initialStateEditor.attributes[0].id;
+  page.removeInitialAttribute({ currentTarget: { dataset: { id } } });
+  assert.match(modals.at(-1).content, /不删除已登记的状态键/); modals.at(-1).success({ confirm: false });
+  assert.equal(page.data.initialStateEditor.attributes.length, 1);
+  page.removeInitialAttribute({ currentTarget: { dataset: { id } } }); modals.at(-1).success({ confirm: true });
+  assert.equal(page.data.formData.journeyRules, JSON.stringify(root)); page.saveInitialState();
+  assert.deepEqual(JSON.parse(page.data.formData.journeyRules), { ...root, attributes: [] }); assert.equal(requests.length, 0);
+});
+test('延迟移除确认在编辑后/关闭重开后不能作用，新旧行 id 永不复用', () => {
+  deferModal = true; const page = initialPage('{}'), id = fillAttribute(page);
+  page.removeInitialAttribute({ currentTarget: { dataset: { id } } }); const delayed = modals.at(-1);
+  page.onInitialAttributeField(initialEvent(id, 'label', '修改')); delayed.success({ confirm: true });
+  assert.equal(page.data.initialStateEditor.attributes.length, 1);
+  page.removeInitialAttribute({ currentTarget: { dataset: { id } } }); const retired = modals.at(-1);
+  page.closeInitialState(); page.openInitialState(); const newId = fillAttribute(page); retired.success({ confirm: true });
+  assert.notEqual(newId, id); assert.equal(page.data.initialStateEditor.attributes.length, 1);
+  page.removeInitialAttribute({ currentTarget: { dataset: { id: newId } } }); const done = modals.at(-1); done.success({ confirm: true });
+  const third = fillAttribute(page); done.success({ confirm: true }); assert.notEqual(third, newId); assert.equal(page.data.initialStateEditor.attributes.length, 1);
+});
+test('身份/主题/源内容/版本/权限改变使属性暂存和延迟回调失效', () => {
+  const changes = [p => { currentOwner = 43 }, p => { p.data.editingTopicId = 99 }, p => { p.data.formData.name = '另一草稿' }, p => { p.data.baseRevision = 2 }, p => { p.data.draftUuid = 'another' }, p => { p.data.editScope = 'WHITELIST' }, p => { p._editLoadToken = 3 }];
+  for (const change of changes) {
+    currentOwner = 42; deferModal = true; const page = initialPage('{}'), id = fillAttribute(page);
+    page.removeInitialAttribute({ currentTarget: { dataset: { id } } }); const pending = modals.at(-1); change(page); pending.success({ confirm: true }); page.saveInitialState();
+    assert.equal(page.data.formData.journeyRules, '{}'); assert.equal(page.data.initialStateEditor.show, false);
+  }
+});
+test('hide/unload 后属性声明和确认回调退休，保留 saved-check 生命周期', () => {
+  for (const method of ['onHide', 'onUnload']) {
+    deferModal = true; const page = initialPage('{}'), id = fillAttribute(page);
+    page.removeInitialAttribute({ currentTarget: { dataset: { id } } }); const pending = modals.at(-1);
+    page.destroyPreviewAudio = () => {}; page[method](); pending.success({ confirm: true });
+    assert.equal(page.data.initialStateEditor.rules, null); assert.equal(page.data.formData.journeyRules, '{}'); assert.equal(page._savedCheckHidden, true);
+  }
+});
+test('WHITELIST 可读取配置但属性/总开关/资源不能编辑，原始 bytes 保留', () => {
+  const page = makePage(); page.data.editScope = 'WHITELIST'; const raw = '{ "attributes": [] }'; page.data.formData.journeyRules = raw; page.openInitialState();
+  page.addInitialAttribute(); page.onInitialAttributesEnabled({ detail: { value: true } }); page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } }); page.saveInitialState();
+  assert.equal(page.data.formData.journeyRules, raw); assert.equal(requests.length, 0);
+});
+test('现有 HP/LUCK 独立增减行为保留，显式总开关在混合修改时优先', () => {
+  const page = initialPage(''); page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } }); page.saveInitialState();
+  assert.equal(JSON.parse(page.data.formData.journeyRules).stateEnabled, true);
+  page.openInitialState(); fillAttribute(page); page.onInitialStateField(initialEvent(null, 'hp.init', 8)); page.onInitialAttributesEnabled({ detail: { value: false } }); page.saveInitialState();
+  const saved = JSON.parse(page.data.formData.journeyRules); assert.equal(saved.stateEnabled, false); assert.equal(saved.hp.init, 8);
+});
+test('初始属性视图绑定五个必要字段、稳定行键、总开关及原关闭/完成入口', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8');
+  for (const marker of ['wx:key="id"', 'bind:change="onInitialAttributesEnabled"', 'bindtap="addInitialAttribute"', 'bindtap="removeInitialAttribute"', 'data-field="initial"', 'data-field="visible"', 'bindtap="saveInitialState"', 'bind:close="closeInitialState"', 'initialStateEditor.show || routeMappingShow']) assert.ok(wxml.includes(marker), marker);
+});
+
+test('移除初始属性使用页面统一确认宿主，取消保留声明且不触发原生弹窗', () => {
+  const page = makePage();
+  page.data.formData.journeyRules = JSON.stringify({ attributes: [{ key: 'counter.focus', label: '专注', initial: 1, min: 0, max: 10, visible: true }] });
+  page.openInitialState();
+  const id = page.data.initialStateEditor.attributes[0].id;
+  const previous = global.getCurrentPages;
+  let shown;
+  page.selectComponent = selector => selector === '#cy-modal-host' ? { open: options => { shown = options; } } : null;
+  global.getCurrentPages = () => [page];
+  try {
+    page.removeInitialAttribute({ currentTarget: { dataset: { id } } });
+    assert.ok(shown, '确认必须交给页面现有 cy-modal-host');
+    assert.equal(modals.length, 0, '宿主存在时不得直接打开原生弹窗');
+    assert.equal(page.data.initialStateEditor.attributes.length, 1);
+    shown.success({ confirm: false });
+    assert.equal(page.data.initialStateEditor.attributes.length, 1);
+    assert.equal(requests.length, 0);
+  } finally {
+    if (previous === undefined) delete global.getCurrentPages;
+    else global.getCurrentPages = previous;
+  }
+>>>>>>> private-github/featu
 });

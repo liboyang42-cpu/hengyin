@@ -331,6 +331,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 Page({
+<<<<<<< public
   ...r5PlayerRuntime.methods(),
   ...themeBackpack.methods(req),
   ...themeRecords.methods(req, true),
@@ -338,6 +339,9 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
+=======
+  ...themeBackpack.methods(req, app, cyModal),
+>>>>>>> private-github/featu
   _routeState: normalizeRouteState(null),
 
   data: {
@@ -559,7 +563,8 @@ Page({
         statusBarHeight: getApp().globalData.statusBarHeight || 44
       });
       const ec = this.getOpenerEventChannel && this.getOpenerEventChannel();
-      ec && ec.on && ec.on('previewData', (data) => { that.applyPreviewData(data || {}); });
+      const overviewContext = this._newThemeOverviewContext();
+      ec && ec.on && ec.on('previewData', (data) => { that.applyPreviewData(data || {}, overviewContext); });
       return;
     }
     this._pendingInviteCode = String((options.inviteCode) || '').trim();
@@ -609,6 +614,7 @@ Page({
     return !this._playUnloaded && this._playOwner === this._playMember();
   },
   onShow() {
+<<<<<<< public
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
     if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
       this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
@@ -618,6 +624,9 @@ Page({
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
     this._startZeroHpTimer();
+=======
+    this._themeOnShow();
+>>>>>>> private-github/featu
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
     if (this.data.chapterFull) audioSession.keepAwake('chapterFull', true);
@@ -634,8 +643,10 @@ Page({
   },
   _withThoughtSync(write) {
     if (this.data.isPreview || this.data.isMock
-        || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
+        || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !((this.data.themeBag || {}).stepEggs && this._themeAllowed()))) return write();
+    const themeGuard = this.data.themeRuntimeReady && this._themeAllowed() ? this._themeSyncGuard() : null;
     const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
+<<<<<<< public
     const synced = pendingClaim.then(ok => ok && this._syncThoughts([])).catch(() => false);
     // F-R2S-01:微信运动授权/登录/读数回调可能迟迟不回,步数同步最多等这么久,之后照常提交玩家动作。
     let timer = null;
@@ -647,6 +658,13 @@ Page({
       clearTimeout(timer);
       if (!ok) cyToast('步数暂未同步，仍可继续游玩');
       return write();
+=======
+    return pendingClaim.then(ok => ok && this._syncThoughts([], themeGuard)).then(ok => {
+      if (ok && (!themeGuard || (this._themeAllowed() && this._themeLive(themeGuard.epoch, themeGuard.context)
+          && String(this.data.themeBag.sessionId) === String(themeGuard.sessionId)))) return write();
+      cyToast('步数未同步，请重试');
+      return { code: 'fail', netFail: true, msg: '步数未同步，请重试' };
+>>>>>>> private-github/featu
     });
   },
   _resolveRouteAction(kind, nodeId) {
@@ -784,6 +802,7 @@ Page({
   },
 
   onUnload() {
+<<<<<<< public
     this._playDisposed = true;
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
@@ -792,6 +811,9 @@ Page({
     this._themeHidden = true; this._stopThemePoll();
     this._stopZeroHpTimer();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
+=======
+    this._themeOnHide(true);
+>>>>>>> private-github/featu
     if (this._gateTimer) clearTimeout(this._gateTimer);
     (this._fxTimers || []).forEach(clearTimeout);
     if (this._sound) { this._sound.dispose(); this._sound = null; }
@@ -829,12 +851,16 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+<<<<<<< public
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._playReloadOnShow = true;
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
     this._stopZeroHpTimer();
+=======
+    this._themeOnHide(false);
+>>>>>>> private-github/featu
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
@@ -863,6 +889,26 @@ Page({
   },
   _destroySessionClock() {
     this._sessionClock = null;
+  },
+  // A server-confirmed new theme run must not leave an old node/ending panel over the new route.
+  _resetThemeRunUi(sessionId) {
+    if (sessionId && String(this._themeUiSession) === String(sessionId)) return;
+    this._themeUiSession = sessionId;
+    clearTimeout(this._gateTimer); this._gateTimer = null;
+    (this._fxTimers || []).forEach(clearTimeout); this._fxTimers = [];
+    this._seenChapterGates = new Set(); this._pendingChapterGateKey = ''; this._booted = false;
+    this._profileStoryVarsRefreshed = false; this._storyVars = {}; this._storyVoices = {};
+    this._autoInlined = {}; this._playKitNodeId = null; this._afterEndingChapter = null;
+    this._startStateShown = false; this._thoughtClaimed = {};
+    if (this._routeActions) this._routeActions.clear();
+    this._stopPlayKitAudio(); this._hideFinish();
+    this.setData({ screen: '', showJournal: false, sessionToolsOpen: false,
+      playKit: { show: false, kit: null }, advancedPlay: { show: false, node: null }, 'storyIntro.show': false });
+  },
+  _storyResumeScope() { return this._themeStoryScope(this._runSessionScope()); },
+  _retireThemeDraftReference() {
+    const kit = this.data.playKit && this.data.playKit.kit;
+    if (kit && kit.draftKey) this.setData({ 'playKit.kit': Object.assign({}, kit, { draftKey: '' }) });
   },
   // ===== R9-21 暂停会话恢复 =====
   /** 快照作用域:先按账号隔离，再按 activityId/topicId 隔离；身份未确定时不碰个人快照。 */
@@ -1647,7 +1693,7 @@ Page({
     const mark = chapterId + ':' + line.i;
     if (!chapterId || this._lastReadingMark === mark) return;
     this._lastReadingMark = mark;
-    storyResume.patch(this._runSessionScope(), { pos: { chapterId, i: line.i, nodeId: line.nodeId ? String(line.nodeId) : '' } });
+    storyResume.patch(this._storyResumeScope(), { pos: { chapterId, i: line.i, nodeId: line.nodeId ? String(line.nodeId) : '' } });
   },
   /**
    * 中途退出重进(每次进页面只做一次):退出时开着玩法 → 直接重开它;否则滚回上次读到的那一段。
@@ -1656,7 +1702,7 @@ Page({
   _resumeStory() {
     if (this._resumeTried || this.data.isPreview || this.data.isMock) return;
     this._resumeTried = true;
-    const saved = storyResume.read(this._runSessionScope());
+    const saved = storyResume.read(this._storyResumeScope());
     const paras = this.data.chapterParas || [];
     const openId = String(saved.openNodeId || '');
     const open = openId && (this.data.nodes || []).find((n) => String(n.nodeId) === openId && !n.done);
@@ -3069,26 +3115,34 @@ Page({
     fresh.forEach((k) => { this._thoughtClaimed[k] = true; });
     this._syncThoughts(fresh);
   },
-  _syncThoughts(claim) {
+  _syncThoughts(claim, themeGuard) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const releaseClaims = () => claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
-    const sync = () => this._weRunCipher().then((cipher) => {
-      if (cipher === false) { releaseClaims(); return false; }
-      if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
-      return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
-        this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
-        if ((res.code == 200 || res.code == '200') && res.data) {
-          this._applyRouteState(res.data, () => {
-            if (this.data.chapterFull) this.openChapterFull();
-            if (this.data.chapStory.show) this._refreshChapStoryThoughts();
-          });
-          return true;
-        }
-        // 失败:放开这几个的认领标记,下次读到再认领;不弹错 —— 伏笔晚一点出现不影响游玩
-        releaseClaims();
-        return false;
-      });
-    }).catch(() => { releaseClaims(); return false; });
+    const themeCurrent = () => !themeGuard || (this._themeAllowed() && this._themeLive(themeGuard.epoch, themeGuard.context)
+      && String(this.data.themeBag.sessionId) === String(themeGuard.sessionId));
+    const claimed = this._thoughtClaimed;
+    const releaseClaims = () => claim.forEach((k) => { if (claimed) delete claimed[k]; });
+    const sync = () => {
+      if (!themeCurrent()) { releaseClaims(); return false; }
+      return this._weRunCipher().then((cipher) => {
+        if (!themeCurrent()) { releaseClaims(); return false; }
+        if (cipher === false) { releaseClaims(); return false; }
+        if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
+        return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
+          this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+          if (!themeCurrent()) { releaseClaims(); return false; }
+          if ((res.code == 200 || res.code == '200') && res.data) {
+            this._applyRouteState(res.data, () => {
+              if (this.data.chapterFull) this.openChapterFull();
+              if (this.data.chapStory.show) this._refreshChapStoryThoughts();
+            });
+            return true;
+          }
+          // 失败:放开这几个的认领标记,下次读到再认领;不弹错 —— 伏笔晚一点出现不影响游玩
+          releaseClaims();
+          return false;
+        });
+      }).catch(() => { releaseClaims(); return false; });
+    };
     // 认领与到站同步串行:先拿到伏笔,再同步步数,最后才提交可能结束本局的动作。
     const pending = (this._thoughtSyncPending || Promise.resolve()).then(sync);
     this._thoughtSyncPending = pending;
@@ -3298,13 +3352,13 @@ Page({
    *  这一局看过就不再出现(试玩每次都看)。不是故事主题直接进故事流。 */
   _openStory() {
     const chapter = this.data.chapter || {};
-    const seen = !this.data.isPreview && !!storyResume.read(this._runSessionScope()).intro;
+    const seen = !this.data.isPreview && !!storyResume.read(this._storyResumeScope()).intro;
     if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
   },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
-    storyResume.patch(this._runSessionScope(), { intro: true });
+    storyResume.patch(this._storyResumeScope(), { intro: true });
     const s = this._storySound();
     if (s) s.sfx('page');
     const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
@@ -3315,7 +3369,7 @@ Page({
   /** 初始状态页:这一局只看一次;没有可列的数值就不出 */
   _showStartState(rows) {
     if (!rows || !rows.length || this.data.startState.show) return;
-    const scope = this._runSessionScope();
+    const scope = this._storyResumeScope();
     if (this.data.isPreview ? this._startStateShown : storyResume.read(scope).stats) return;
     this._startStateShown = true;
     storyResume.patch(scope, { stats: true });
@@ -3461,7 +3515,7 @@ Page({
     if (this._seenChapterGates && this._seenChapterGates.has(key)) return;
     this._seenChapterGates = this._seenChapterGates || new Set();
     // 存档:看过的开场门记在本地,中途退出重进不再重播
-    const savedGates = storyResume.read(this._runSessionScope()).gates || [];
+    const savedGates = storyResume.read(this._storyResumeScope()).gates || [];
     if (savedGates.indexOf(String(chapter.id)) >= 0) { this._seenChapterGates.add(key); return; }
     // 这一局的第一道门先「开机」(原型 flashl + warm):只在真正开局时放一次
     const boot = !this.data.reducedMotion && !this._seenChapterGates.size && !savedGates.length && !this._booted;
@@ -3500,7 +3554,7 @@ Page({
     clearTimeout(this._gateTimer);
     if (this._pendingChapterGateKey) {
       this._seenChapterGates.add(this._pendingChapterGateKey);
-      const scope = this._runSessionScope();
+      const scope = this._storyResumeScope();
       const gates = storyResume.read(scope).gates || [];
       const chapterId = String((this.data.chapter || {}).id || '');
       if (chapterId && gates.indexOf(chapterId) < 0) storyResume.patch(scope, { gates: gates.concat(chapterId).slice(-40) });
@@ -3568,8 +3622,13 @@ Page({
     // 缺场次参数 ≠ 加载失败:reloadPlay 会再次命中这一行 return,给「重新加载」等于给一个
     // 物理上永远回到同一状态的假按钮。单独落 missing,只留真的走得通的出口(回活动详情)。
     if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'missing' }); return; }
+    const themeRequest = this._themeNodesRequest();
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {
+<<<<<<< public
       if (!isCurrent()) return;
+=======
+      if (res.code != 200) that._themeNodesFailed(res, themeRequest);
+>>>>>>> private-github/featu
       if (res.code == 402 || res.code == '402') {
         // C-26:未购/过期自玩通行证 → needPass 空态 + 「获取通行证」按钮(goGetPass 跳主题详情)。
         // 不再落 registered=false 的「你还没有报名这个场次」——自玩没有报名这个动作,那句指引是错的。
@@ -3602,6 +3661,10 @@ Page({
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
+      if (d.themeRuntimeAvailable === true && d.routeState && d.routeState.sessionId
+          && that.data.themeBag.sessionId && String(d.routeState.sessionId) !== String(that.data.themeBag.sessionId)) {
+        that._resetThemeRunUi(d.routeState.sessionId);
+      }
       that._applyStoryVars(d);
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
@@ -3652,11 +3715,16 @@ Page({
         // 2026-09-22 删起始页后首屏直接落卡包,first 不再切屏,保持当前 screen。
         screen: that.data.screen
       }, () => {
+<<<<<<< public
         if (!isCurrent()) return;
+=======
+        const themeLoad = that._acceptThemeNodes(d, themeRequest);
+>>>>>>> private-github/featu
         that.rebuild();
         that._ensureSessionClock();
         that._syncIdleStats(d.chapters, nodes);
         that._syncRunState();
+        const openCurrentStory = () => {
         if (routeState.opening && !routeState.opening.complete) {
           that.setData({ screen: '' });
           that._openStory();
@@ -3665,6 +3733,10 @@ Page({
           // 地图没有删 —— 左上角罗盘随时切回去,只是它不再是第一屏。
           that._openStory();
         } else if (!first && that.data.chapterFull) that.openChapterFull();
+        };
+        if (d.themeRuntimeAvailable === true) {
+          themeLoad.then(ok => { if (ok && that._themeAllowed()) openCurrentStory(); });
+        } else openCurrentStory();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
@@ -3684,7 +3756,10 @@ Page({
   },
 
   // 预览态:把 fabu 产出的 previewData 经现有渲染链归一并落到 data(契约字段已对齐 normNode)
-  applyPreviewData(data) {
+  applyPreviewData(data, overviewContext) {
+    if (overviewContext && !this._themePreviewContextLive(overviewContext)) return;
+    if (overviewContext) this._acceptThemeOverview(data && data.themeOverview, overviewContext);
+    else this._retireThemeOverview();
     const that = this;
     const d = data || {};
     const raw = d.nodes || [];
@@ -4469,7 +4544,7 @@ Page({
     const entry = (this.data.chapterParas || []).find((p) => p.kind === 'game' && String(p.nodeId) === String(id));
     if (!entry || !this._isStoryGame(node) || node.done) return;
     // 存档:记下正开着的玩法,中途退出重进时直接回到它;首个会话视图若显示早已做完(退出前没点继续),直接接着走
-    storyResume.patch(this._runSessionScope(), { openNodeId: String(node.nodeId) });
+    storyResume.patch(this._storyResumeScope(), { openNodeId: String(node.nodeId) });
     this._freshStoryGame = String(node.nodeId);
     this._storyOpenNode = true;
     this.startGame(node);
@@ -5744,8 +5819,13 @@ Page({
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase;
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
+<<<<<<< public
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
     this.setData({ playKit: { show: !inline, kit, readyForBase: ready } });
+=======
+    if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._storyResumeScope(), active.node.nodeId);
+    this.setData({ playKit: { show: !inline, kit, readyForBase: view.readyForBase === true } });
+>>>>>>> private-github/featu
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {
@@ -5823,7 +5903,10 @@ Page({
   _refreshStoryVarsFromNodes() {
     if (this.data.isPreview || this.data.isMock) return;
     if (!this.data.activityId && !this.data.topicId) return;
+    const themeGuard = this._themeCacheMode === 'theme' ? this._themeSyncGuard() : null;
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => { // 补拉
+      if (themeGuard && (!this._themeLive(themeGuard.epoch, themeGuard.context)
+          || String(themeGuard.sessionId) !== String(this.data.themeBag.sessionId))) return;
       if (!(res.code == 200 || res.code == '200') || !res.data) return;
       if (!this._applyStoryVars(res.data)) return;
       // 章节屏正开着就地重铺一次,让刚填的名字立刻显形(measureChapter 会重新量几何)
@@ -5839,7 +5922,7 @@ Page({
     this._stopPlayKitAudio();
     if (this._storyOpenNode) {   // 玩家主动退出故事里的玩法:重进不再自动打开
       this._storyOpenNode = false;
-      storyResume.patch(this._runSessionScope(), { openNodeId: '' });
+      storyResume.patch(this._storyResumeScope(), { openNodeId: '' });
     }
     this.setData({ 'playKit.show': false });
     if (this.data.chapterFull && this.data.advancedPlay.node) {

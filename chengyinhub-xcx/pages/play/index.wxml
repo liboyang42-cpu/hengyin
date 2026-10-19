@@ -81,7 +81,7 @@
          试玩结局 / 整屏玩法任一在场都卸掉,这时退回画出来的罗盘。 -->
     <view class="fx-story__compass fx-story__radar" bindtap="openStoryMap" aria-role="button" aria-label="打开地图{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="radar__disc">
-        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !(advancedPlay.show && !playKit.kit) && screen !== 'gamePlay'}}"
+        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !themeBackpackOpen && !themeOverviewShow && !previewEnding.show && !album.show && !playKit.show && !(advancedPlay.show && !playKit.kit) && screen !== 'gamePlay'}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16"
                   subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
@@ -91,8 +91,13 @@
       </view>
       <text class="compass__dist" wx:if="{{storyDistText}}">{{storyDistText}}</text>
     </view>
+<<<<<<< public
     <view class="fx-story__t theme-chapter-nav {{isPreview ? 'theme-chapter-nav--preview' : ''}}" style="top:{{chrome.actionTop}}px">{{chapter.name}}</view>
     <view class="theme-story-hud"><view class="theme-hp" wx:if="{{themeBag.hpEnabled}}"><view class="theme-heart"><cy-icon name="heart-filled" size="36" /></view><text>{{themeBag.names.hp}} {{themeBag.hp}}<text class="theme-max">/{{themeBag.hpMax}}</text></text></view><view class="theme-challenge-entry" wx:if="{{themeBag.awaitingChallenge || zeroHpView}}" bindtap="openThemeGameplay" aria-role="button" aria-label="{{themeBag.names.hp}}已归零，打开恢复状态" hover-class="cy-pressed" hover-stay-time="80">{{zeroHpView.title || '归零挑战'}}</view><view class="theme-bag-entry" wx:if="{{themeBag.inventoryEnabled}}" bindtap="openThemeBackpack" aria-role="button" aria-label="打开背包" hover-class="cy-pressed" hover-stay-time="80"><view class="theme-bag-icon"></view><text>{{themeBag.used}}/{{themeBag.capacity}}</text></view></view>
+=======
+    <view class="fx-story__t {{themeRuntimeReady ? 'theme-chapter-nav' : isPreview ? 'theme-chapter-nav theme-chapter-nav--preview' : ''}}" style="{{(themeRuntimeReady || isPreview) ? 'top:' + chrome.actionTop + 'px' : ''}}">{{chapter.name}}</view>
+    <view class="theme-story-hud" wx:if="{{themeRuntimeReady}}"><view class="theme-hp" wx:if="{{themeBag.hpEnabled}}"><view class="theme-heart"><cy-icon name="heart-filled" size="36" /></view><text>{{themeBag.hpName}} {{themeBag.hp}}<text class="theme-max">/{{themeBag.hpMax}}</text></text></view><view class="theme-bag-entry" bindtap="openThemeBackpack" aria-role="button" aria-label="打开本局背包和重玩" hover-class="cy-pressed" hover-stay-time="80"><view class="theme-bag-icon" wx:if="{{themeBag.inventoryEnabled}}"></view><text>背包 {{themeBag.used}}/{{themeBag.capacity}}</text></view></view>
+>>>>>>> private-github/featu
     <!-- 右上角两颗:声音(只有作者配了整章旁白才出现)+ 游玩工具菜单 -->
     <view class="fx-story__acts">
       <view class="fx-story__act" wx:if="{{chapter.audioUrl}}" bindtap="toggleStoryAudio" aria-role="button" aria-label="{{audioNodeId === 'chapter' && audioPlaying ? '关掉旁白' : '播放旁白'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="30" /></view>
@@ -102,7 +107,7 @@
   <!-- 罗盘小地图(2026-09-23):按需挂载的一层,不是常驻舞台。这一站 / 下一站 / 我 + 走过的线;
        下一站给「导航过去」(微信地图),站内不接管导航。 -->
   <view class="story-map" wx:if="{{storyMap}}">
-    <free-map class="story-map__map" wx:if="{{storyMap}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
+    <free-map class="story-map__map" wx:if="{{storyMap && !themeBackpackOpen}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
               center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
               reduced-motion="{{reducedMotion}}" />
@@ -120,9 +125,14 @@
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
   <view class="tools-mask" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
     <scroll-view class="tools tools--corner" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
+<<<<<<< public
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
+=======
+        <view class="drow" wx:if="{{isPreview && themeOverviewAvailable}}" bindtap="openThemeOverview" aria-role="button" aria-label="主题配置清单" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">主题配置清单</text><text class="ds">只读草稿 · 未运行规则</text></view><view class="darr"></view></view>
+        <view class="drow" wx:if="{{themeRuntimeReady}}" bindtap="openThemeBackpack" aria-role="button" aria-label="背包与本局" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与本局</text><text class="ds">物品、线索与重玩</text></view><view class="darr"></view></view>
+>>>>>>> private-github/featu
         <!-- 伏笔(2026-09-22 用户裁决「玩家侧收进右上角菜单」):只列已经埋下的那些。
              没埋下的服务端根本不下发 —— 提前露出名字就是剧透。进度靠到站同步步数推进。
              ⚠️ 面上叫「伏笔」,内部键名仍是 thought.*(用户明确「键名不动,只换面上的词」)。 -->
@@ -501,6 +511,7 @@
           <text class="fx-meta__l fx-meta__role" wx:if="{{myRole}}">今晚身份 · {{myRole.roleName}}</text>
           <!-- 2026-09-22 地图模式整个删掉,这里只剩卡包一种看法 —— 原来那枚「在地图上看这些商户」
                会把卡包换成一块已经不存在的地图(空白屏且没有返回),随地图层一并摘除。 -->
+          <view class="theme-bag-entry" wx:if="{{themeRuntimeReady}}" bindtap="openThemeBackpack" aria-role="button" aria-label="背包与本局" hover-class="cy-pressed" hover-stay-time="80">背包 {{themeBag.used}}/{{themeBag.capacity}} · 本局</view>
           <view class="fx-meta__row">
             <text class="fx-meta__l">{{chapterCards.length}} 章 · {{merchantCount}} 家商户</text>
           </view>
@@ -1211,9 +1222,10 @@
       </view>
     </view>
   </view>
+  <view class="theme-bag-entry" wx:if="{{themeRuntimeReady}}" bindtap="openThemeBackpack" aria-role="button" aria-label="打开背包与重玩" hover-class="cy-pressed" hover-stay-time="80">背包与重玩</view>
   <view class="finsheet__map">
     <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
-    <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
+    <free-map class="finsheet__map-native" wx:if="{{!themeBackpackOpen}}" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
               center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
               show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />

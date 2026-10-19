@@ -1,5 +1,6 @@
 @import "./runtime-editor.wxss";
 @charset "UTF-8";
+@import "./runtime-editor.wxss";
 @import "../styles/photo-grid.wxss";
 page{background: var(--cy-bg-card);}
 .fabu .fabu1 {
@@ -4790,4 +4791,8 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-type-caption); font-weight: 600; color: var(--cy-color-text-secondary); background: var(--cy-color-bg-surface-subtle); }
 .chapter-setting-row { margin-top: var(--cy-space-3); }
 
+<<<<<<< public
 @import "./game-rules.wxss"; /* 玩法规则编辑层（协调者设计） */
+=======
+.runtime-parent--stacked{transform:translateY(-16rpx) scale(.97);transform-origin:bottom center;filter:brightness(.8);pointer-events:none}
+>>>>>>> private-github/featu

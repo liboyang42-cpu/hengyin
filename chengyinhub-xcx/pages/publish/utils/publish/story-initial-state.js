@@ -124,6 +124,7 @@ function integer(value, label, min, max) {
 
 function serialize(input, names) {
   const rules = parse(input);
+<<<<<<< public
   const hpName = names && String(names.hpName || '').trim() || '精力';
   const luckName = names && String(names.luckName || '').trim() || '幸运';
   rules.hp.max = integer(rules.hp.max, hpName + '上限', 1, 20);
@@ -141,6 +142,13 @@ function serialize(input, names) {
     if (rules.attributes.length > 32) throw new Error('初始属性最多配置 32 项');
   }
   if (rules.statLinks) rules.statLinks = values.links(rules.statLinks, rules.attributes, rules.hp.enabled);
+=======
+  if (Object.prototype.hasOwnProperty.call(rules, 'attributes')) normalizeAttributes(rules.attributes);
+  rules.hp.max = integer(rules.hp.max, '精力上限', 1, 20);
+  rules.hp.init = integer(rules.hp.init, '初始精力', 1, rules.hp.max);
+  rules.luck.max = integer(rules.luck.max, '幸运上限', 0, 5);
+  rules.luck.init = integer(rules.luck.init, '初始幸运', 0, rules.luck.max);
+>>>>>>> private-github/featu
   // 降低资源上限时同步收口已有恢复值，避免默认恢复量大于新上限而无法保存。
   const recovery = Object.assign({ stationEndIfHurt: 2, stageRestHpFloor: 6, stageRestLuckFloor: 1, exhaustRestHp: 5 }, rules.recovery);
   ['stationEndIfHurt', 'stageRestHpFloor', 'exhaustRestHp'].forEach(key => { recovery[key] = Math.min(recovery[key], rules.hp.max); });
@@ -148,9 +156,10 @@ function serialize(input, names) {
   rules.recovery = recovery;
   const list = thoughts(rules.thoughts);
   if (list) rules.thoughts = list; else delete rules.thoughts;
-  return JSON.stringify(rules);
+  return boundedRules(rules);
 }
 
+<<<<<<< public
 function serializeChanges(raw, changed, names) {
   const serialized = serialize(changed, names);
   return raw ? require('./preserve-json-edit.js')(raw, parse(raw), changed, serialized) : serialized;
@@ -161,3 +170,66 @@ function preserveChanges(raw, changed) {
 }
 
 module.exports = { optionTagsOf, parse, serialize, serializeChanges, preserveChanges, OPTIONS };
+=======
+// Mirrors JourneyInitialState.normalize; Java String.trim removes only U+0000..U+0020.
+const ATTRIBUTE_KEY = /^(clue|relation|tag|counter)\.[a-z][a-z0-9_]{0,47}(?![\s\S])/;
+function javaTrim(value) { return value.replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, ''); }
+function normalizeAttributes(source) {
+  if (source === undefined) return [];
+  if (!Array.isArray(source) || source.length > 32) throw new Error('初始属性最多配置 32 项，且必须是数组');
+  const seen = new Set();
+  return Array.from(source, row => {
+    const key = row && row.key;
+    if (typeof key !== 'string' || !ATTRIBUTE_KEY.test(key) || seen.has(key)) throw new Error('初始属性标识无效或重复');
+    seen.add(key);
+    if (typeof row.label !== 'string' || !javaTrim(row.label) || javaTrim(row.label).length > 24) throw new Error('属性名称须为 1 至 24 个 UTF-16 字符');
+    const flag = /^(clue|tag)\./.test(key);
+    const number = (field, fallback) => {
+      if (!Object.prototype.hasOwnProperty.call(row, field)) return fallback;
+      const value = row[field];
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < -2147483648 || value > 2147483647) throw new Error('属性 ' + field + ' 必须是整数');
+      return value;
+    };
+    const min = number('min', flag ? 0 : -10000), max = number('max', flag ? 1 : 10000), initial = number('initial', 0);
+    if (min < -10000 || max > 10000 || min > max || initial < min || initial > max || (flag && (min !== 0 || max !== 1))) throw new Error('属性初始值或上下限无效');
+    if (Object.prototype.hasOwnProperty.call(row, 'visible') && typeof row.visible !== 'boolean') throw new Error('属性可见性必须是开关值');
+    return { key, label: javaTrim(row.label), initial, min, max, visible: row.visible !== false };
+  });
+}
+function attributeNumber(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string' || !/^-?\d+$/.test(javaTrim(value))) return value;
+  return Number(javaTrim(value));
+}
+function attributeView(row) {
+  const flag = /^(clue|tag)\./.test(row.key || '');
+  const own = (key, fallback) => Object.prototype.hasOwnProperty.call(row, key) ? row[key] : fallback;
+  return { key: row.key, label: row.label, flag, initial: own('initial', 0), min: own('min', flag ? 0 : -10000),
+    max: own('max', flag ? 1 : 10000), visible: own('visible', true) };
+}
+// Attribute-only staging must not normalize unrelated HP, thoughts or advanced fields.
+function serializeAttributes(raw, attributes, enabled) {
+  let root = raw;
+  if (typeof raw === 'string') root = raw.trim() ? JSON.parse(raw) : {};
+  if (root == null) root = {};
+  if (typeof root !== 'object' || Array.isArray(root)) throw new Error('初始状态配置无法读取');
+  root = JSON.parse(JSON.stringify(root));
+  if (!Object.keys(root).length) root.schemaVersion = 1;
+  if (Object.prototype.hasOwnProperty.call(root, 'stateEnabled') && typeof root.stateEnabled !== 'boolean') throw new Error('初始状态启用值必须是开关值');
+  normalizeAttributes(attributes);
+  if (attributes !== undefined) root.attributes = attributes;
+  if (enabled !== undefined) {
+    if (typeof enabled !== 'boolean') throw new Error('初始状态启用值必须是开关值');
+    root.stateEnabled = enabled;
+  }
+  return boundedRules(root);
+}
+function boundedRules(root) {
+  const output = JSON.stringify(root);
+  // Same 16 KiB UTF-8 limit as JourneyRulesValidator; no new storage or endpoint.
+  if (unescape(encodeURIComponent(output)).length > 16 * 1024) throw new Error('初始状态配置超过 16 KiB');
+  return output;
+}
+
+module.exports = { optionTagsOf, parse, serialize, OPTIONS, normalizeAttributes, attributeNumber, attributeView, serializeAttributes };
+>>>>>>> private-github/featu

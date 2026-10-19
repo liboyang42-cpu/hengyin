@@ -1,0 +1,377 @@
+diff --git a/chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js b/chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js
+index 8eceba4c18..5133095392 100644
+--- a/chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js
++++ b/chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js
+@@ -22,7 +22,11 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
+   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
+ );
+ 
++<<<<<<< /tmp/claude-501/tmpnyuflyle/o
+ // 当前源码75个GET调用点的显式权限清单（直接42 + req包装28 + 作者媒体包装5）。
++=======
++// 当前源码56个GET调用点的显式权限清单（直接31 + req包装25）。
++>>>>>>> /tmp/claude-501/tmpnyuflyle/t
+ // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
+ // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
+ const MATRIX = [
+@@ -67,7 +71,7 @@ const MATRIX = [
+   /* 2026-09-11 本分支新增:承接页的「本站」入口自己也要按 topicId 过滤一遍本商家的场次
+      —— 与上面 game-session-client 那处同一个端点、同一套权限(required/merchant),
+      区别只是调用方。后端按当前登录商家派生 activityId,前端不传也不能传别人的。 */
+-  ['pages/topic/merchantinfo/merchantinfo.js', "url: '/api/game/session/merchant/entries'", 'required', 'merchant', 'self-merchant-game-entry'],
++  ['pages/topic/merchantinfo/merchantinfo.js', "url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true,\n", 'required', 'merchant', 'self-merchant-game-entry'],
+   /* 2026-09-24 CU-C-68:开「更多」抽屉时用**同一端点**预探一次「本人是否承接了本站」,
+      没入口就把那四行置灰(原来主办方账号点下去只会得到「当前商家不负责本场站点」)。
+      权限档与上面那条逐字相同(required/merchant,后端按登录商家派生),只是第二个调用点;
+@@ -75,8 +79,12 @@ const MATRIX = [
+   ['pages/topic/merchantinfo/merchantinfo.js', "url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true, silentError: true", 'required', 'merchant', 'self-merchant-game-entry'],
+   ['utils/game-session-client.js', "url: '/api/game/session/recap/export'", 'required', 'club', 'club-owned-activity'],
+   ['utils/game-session-client.js', "url: '/api/game/session/receipt'", 'required', 'player/merchant/club', 'activity-perspective-access'],
++<<<<<<< /tmp/claude-501/tmpnyuflyle/o
+   ['utils/game-session-client.js', "url: exported ? '/api/game/session/shared/export'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
+   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
++=======
++  ['pages/play/index.js', "req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {\n", 'required', 'member', 'current-session'],
++>>>>>>> /tmp/claude-501/tmpnyuflyle/t
+   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
+      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
+   ['pages/play/index.js', "req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => { // 补拉", 'required', 'member', 'current-session'],
+@@ -92,7 +100,7 @@ const MATRIX = [
+   ['pages/play/index.js', "req('/api/play/route-state'", 'required', 'member', 'current-session'],
+   ['pages/play/index.js', "req('/api/club/lead/team-progress'", 'required', 'leader/paid-member', 'activity-lead-access'],
+   ['pages/play/index.js', "req('/api/play/companionLine'", 'required', 'member', 'current-session'],
+-  ['pages/play/index.js', "req('/api/play/preference/' + nodeId", 'required', 'member', 'current-session'],
++  ['pages/play/index.js', "req('/api/play/preference/' + nodeId, 'GET'", 'required', 'member', 'current-session'],
+   ['pages/play/index.js', "req('/api/play/ending'", 'required', 'member', 'current-session'],
+   ['pages/play/index.js', "req('/api/play/leaderboard'", 'required', 'member', 'current-session'],
+   ['pages/play/index.js', "req('/api/play/os/' + this.data.topicId", 'required', 'member', 'self-member-history'],
+@@ -128,13 +136,25 @@ const MATRIX = [
+   ['pages/roam/index.js', "req('/api/roam/entry/nearby'", 'required', 'member', 'global-authenticated-read'],
+   ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
+-  ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
+-  ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
++  ['pages/merchant/customer/index.js', "url: '/api/merchant/crm/segments',\n      method: 'GET'", 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
++  ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents',\n        method: 'GET'", 'required', 'member', 'self-marketing-consent'],
+   // 2026-09-17 商家营销同意入口(拍板第 40 条 A):与设置页同一端点、同一权限档 ——
+   //   GET 只读本人可管理的商家行,失败即不出现(fail-closed),账号身份由后端 principal 定。
+-  ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
++  ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents',\n    method: 'GET'", 'required', 'member', 'self-marketing-consent'],
+ ];
+ 
++// 五个新增调用逐条对齐真实后端；编辑器调用方不等于后端角色门槛。
++// capabilities 只要求登录，返回全局开关，不是作者权限、本人 session 或创建 run 的授权。
++// publish-check 读服务器保存的主题；MERCHANT 显式路径需要 PROJECT_MANAGE，派生 owner 后再核主题归属。
++const NEW_GET_ROWS = [
++  ['pages/publish/fabu/theme-runtime.js', "url: '/api/play/theme/capabilities'", 'required', 'member', 'global-authenticated-capability-read'],
++  ['pages/publish/fabu/topic-saved-check.js', "url: '/api/topic/publish-check'", 'required', 'topic-owner/merchant:project:manage', 'owned-topic-saved-content'],
++  ['pages/play/utils/theme-backpack.js', "req('/api/play/theme/capabilities'", 'required', 'member', 'global-authenticated-capability-read'],
++  ['pages/play/utils/theme-backpack.js', "req('/api/play/theme/history'", 'required', 'member', 'self-member-history'],
++  ['pages/play/utils/theme-backpack.js', "req('/api/play/theme/card'", 'required', 'member', 'self-member-session-result'],
++];
++MATRIX.push(...NEW_GET_ROWS);
++
+ const VALID_SCOPES = new Set([
+   'self-account', 'public-list+viewer-personalization', 'self-registration',
+   'self-party', 'self-merchant', 'self-capability', 'self-publisher',
+@@ -143,7 +163,12 @@ const VALID_SCOPES = new Set([
+   'self-member-history', 'activity-perspective-access',
+   'self-merchant-game-entry', 'club-owned-activity',
+   'owned-merchant-resource', 'self-marketing-consent',
++<<<<<<< /tmp/claude-501/tmpnyuflyle/o
+   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
++=======
++  'share-token-snapshot', 'owned-merchant-or-club-receivable',
++  'global-authenticated-capability-read', 'owned-topic-saved-content', 'self-member-session-result',
++>>>>>>> /tmp/claude-501/tmpnyuflyle/t
+ ]);
+ 
+ function productionJsFiles(dir) {
+@@ -158,8 +183,17 @@ function productionJsFiles(dir) {
+   return out;
+ }
+ 
+-function registeredCallSource(source, marker, markerAt) {
+-  const masked = maskJsNonCode(source);
++// 多个矩阵行/负控复用同一源码；缓存词法结果，避免每个行都重扫整个play文件。
++const maskedSourceCache = new Map();
++function maskedSource(source) {
++  if (!maskedSourceCache.has(source)) maskedSourceCache.set(source, maskJsNonCode(source));
++  return maskedSourceCache.get(source);
++}
++
++function registeredCallRange(source, marker, markerAt) {
++  const masked = maskedSource(source);
++  assert.ok(masked.slice(markerAt).startsWith(marker.match(/^\w+/)[0]),
++    `${marker} 必须位于真实代码，不能由注释或字符串冒充`);
+   let callAt;
+   let scanEnd = masked.length;
+   if (/\([^)]*\) \{$/.test(marker)) {
+@@ -193,12 +227,16 @@ function registeredCallSource(source, marker, markerAt) {
+     if (masked[i] === '(') depth += 1;
+     else if (masked[i] === ')') {
+       depth -= 1;
+-      if (depth === 0) return source.slice(callAt, i + 1);
++      if (depth === 0) return { start: callAt, end: i + 1, source: source.slice(callAt, i + 1) };
+     }
+   }
+   assert.fail(`${marker} 所属请求调用没有闭合`);
+ }
+ 
++function registeredCallSource(source, marker, markerAt) {
++  return registeredCallRange(source, marker, markerAt).source;
++}
++
+ test('GET 矩阵窗口覆盖完整当前调用且不跨到下一请求', () => {
+   const afterSuccess = `loadItems() {
+     app.sendRequest({ method: 'GET', success() {}, auth: false });
+@@ -235,6 +273,7 @@ test('GET 矩阵窗口覆盖完整当前调用且不跨到下一请求', () => {
+   );
+ });
+ 
++<<<<<<< /tmp/claude-501/tmpnyuflyle/o
+ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵', () => {
+   let directCount = 0;
+   let wrapperCount = 0;
+@@ -268,15 +307,238 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新
+ 
+   MATRIX.forEach(([file, marker, mode, role, scope]) => {
+     const source = fs.readFileSync(path.join(XCX_ROOT, file), 'utf8');
++=======
++const callSitesCache = new Map();
++function getCallSites(source) {
++  if (callSitesCache.has(source)) return callSitesCache.get(source);
++  const masked = maskedSource(source);
++  const direct = [...source.matchAll(/\bmethod\s*:\s*['"]GET['"]/g)]
++    .filter((m) => masked.slice(m.index).startsWith('method'));
++  const wrappers = [...source.matchAll(/\breq\(\s*(['"])[^'"]+\1(?:\s*\+\s*[\w.]+)?\s*,\s*(['"])GET\2\s*,/g)]
++    .filter((m) => masked.slice(m.index).startsWith('req('));
++  const sites = [...direct.map((m) => ({ at: m.index, kind: 'direct' })),
++    ...wrappers.map((m) => ({ at: m.index, kind: 'wrapper' }))];
++  callSitesCache.set(source, sites);
++  return sites;
++}
++
++function readGetSources() {
++  return new Map(productionJsFiles(XCX_ROOT).map((file) =>
++    [path.relative(XCX_ROOT, file).split(path.sep).join('/'), fs.readFileSync(file, 'utf8')]));
++}
++
++function assertGetMatrix(sources, matrix = MATRIX) {
++  const sites = new Map([...sources].map(([file, source]) => [file, getCallSites(source)]));
++  const all = [...sites.values()].flat();
++  // 2026-10-10:direct 新增能力/保存检查2处；req 新增背包能力/本人历史/本人结果3处。
++  assert.equal(all.filter((site) => site.kind === 'direct').length, 31, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
++  assert.equal(all.filter((site) => site.kind === 'wrapper').length, 25, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
++  assert.equal(matrix.length, all.length, '不能以更新 count 代替登记新增 GET');
++
++  const play = sources.get('pages/play/index.js');
++  const wrapper = javaMethod(play, 'function req(url, method, data, header, silentError)');
++  assert.match(wrapper, /app\.sendRequest\(\{\s*url, method, data, header,/);
++  assert.doesNotMatch(wrapper, /auth\s*:\s*false/, '背包 req 包装必须保持默认认证');
++  const registered = new Set();
++  matrix.forEach(([file, marker, mode, role, scope]) => {
++    const source = sources.get(file);
++    assert.equal(typeof source, 'string', `${file} 缺少已登记源码`);
++>>>>>>> /tmp/claude-501/tmpnyuflyle/t
+     const at = source.indexOf(marker);
+     assert.notEqual(at, -1, `${file} 缺少已登记 GET: ${marker}`);
+-    const call = registeredCallSource(source, marker, at);
+-    assert.match(call, /['"]GET['"]/, `${file} 的 ${marker} method 已漂移`);
+-    assert.doesNotMatch(call, /auth\s*:\s*false/, `${file} 的 ${marker} 不能降为匿名请求`);
++    assert.equal(source.indexOf(marker, at + marker.length), -1, `${file} 的 marker 必须唯一: ${marker}`);
++    const call = registeredCallRange(source, marker, at);
++    const covered = sites.get(file).filter((site) => site.at >= call.start && site.at < call.end);
++    assert.equal(covered.length, 1, `${file} 的 ${marker} 必须准确命中一个真实 GET method`);
++    const key = `${file}:${covered[0].at}`;
++    assert.ok(!registered.has(key), `${file} 的同一 GET 不得重复登记并掩盖另一个调用`);
++    registered.add(key);
++    assert.doesNotMatch(call.source, /auth\s*:\s*false/, `${file} 的 ${marker} 不能降为匿名请求`);
+     assert.ok(mode === 'required' || mode === 'optional');
+     assert.ok(role.length > 0, `${file} 的 ${marker} 缺角色分类`);
+     assert.ok(VALID_SCOPES.has(scope), `${file} 的 ${marker} scope 未进入受控枚举: ${scope}`);
+   });
++  for (const [file, calls] of sites) {
++    for (const call of calls) assert.ok(registered.has(`${file}:${call.at}`), `${file}:${call.at} GET 漏登记`);
++  }
++}
++
++test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，且56处调用与矩阵一对一', () => {
++  assertGetMatrix(readGetSources());
++});
++
++test('GET 矩阵负控：仅改总数、重复旧调用、匿名化、URL/method 漂移都不能假绿', () => {
++  const sources = readGetSources();
++  for (const row of NEW_GET_ROWS) {
++    assert.throws(() => assertGetMatrix(sources, MATRIX.filter((item) => item !== row)), assert.AssertionError);
++    for (const [name, mutate] of [
++      ['URL 漂移', (s) => s.replace(row[1], row[1].replace('/api/', '/api/wrong/'))],
++      ['注释伪造URL', (s) => s.replace(row[1], '/* ' + row[1] + ' */ ' + row[1].replace('/api/', '/api/wrong/'))],
++      ['method 漂移', (s) => s.replace(row[1] + (row[1].startsWith('req(') ? ", 'GET'" : ", method: 'GET'"), row[1] + (row[1].startsWith('req(') ? ", 'POST'" : ", method: 'POST'"))],
++      ['匿名化', (s) => s.replace(row[1], 'auth: false, ' + row[1])],
++    ]) {
++      if (name === '匿名化' && row[1].startsWith('req(')) continue;
++      const changed = mutate(sources.get(row[0]));
++      assert.notEqual(changed, sources.get(row[0]), name + '变异必须生效');
++      assert.throws(() => assertGetMatrix(new Map(sources).set(row[0], changed)), assert.AssertionError, name);
++    }
++    if (row[1].startsWith('req(')) {
++      const changed = sources.get(row[0]).replace(row[1] + ", 'GET',", row[1] + ", 'POST', { decoy: 'GET', extra: true },");
++      assert.notEqual(changed, sources.get(row[0]));
++      assert.throws(() => assertGetMatrix(new Map(sources).set(row[0], changed)), assert.AssertionError,
++        'req第二参数为POST时不能借data里的GET假绿');
++    }
++  }
++  const play = sources.get('pages/play/index.js');
++  const anonymousWrapper = play.replace('url, method, data, header, hideLoading:', 'url, method, data, header, auth: false, hideLoading:');
++  assert.notEqual(anonymousWrapper, play);
++  assert.throws(() => assertGetMatrix(new Map(sources).set('pages/play/index.js', anonymousWrapper)), /背包 req 包装必须保持默认认证/);
++  const duplicate = MATRIX.map((row) => row.slice());
++  const merchantRows = duplicate.filter((row) => row[0] === 'pages/topic/merchantinfo/merchantinfo.js');
++  merchantRows[0][1] = merchantRows[1][1];
++  assert.throws(() => assertGetMatrix(sources, duplicate), /同一 GET 不得重复登记/);
++  // 加一处、删一处保持31也必须红，不能用总数相等冒充调用覆盖。
++  const swapped = new Map(sources);
++  const row = NEW_GET_ROWS[0];
++  swapped.set(row[0], sources.get(row[0]).replace(row[1], "url: '/api/unregistered'"));
++  assert.throws(() => assertGetMatrix(swapped), assert.AssertionError);
++});
++
++const API_ROOT = path.resolve(XCX_ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api');
++function stripJavaComments(source) {
++  return source.replace(/"(?:\\.|[^"\\])*"|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
++    (token) => token.startsWith('"') ? token : '');
++}
++function javaMethod(source, signature) {
++  const code = stripJavaComments(source);
++  const at = code.indexOf(signature);
++  assert.notEqual(at, -1, `后端缺少方法 ${signature}`);
++  const masked = maskedSource(code);
++  const start = masked.indexOf('{', at);
++  let depth = 0;
++  for (let i = start; i < masked.length; i += 1) {
++    if (masked[i] === '{') depth += 1;
++    else if (masked[i] === '}' && --depth === 0) return code.slice(start + 1, i).trim();
++  }
++  assert.fail(`后端方法未闭合: ${signature}`);
++}
++function assertNewGetBackend(capability, topic, matrix = MATRIX) {
++  for (const row of NEW_GET_ROWS) assert.deepEqual(matrix.find((item) => item[0] === row[0] && item[1] === row[1]), row,
++    `${row[0]} 的权限/角色/scope 必须与后端真源一致`);
++  const caps = stripJavaComments(capability);
++  assert.match(caps, /@RequestMapping\("\/api\/play\/theme"\)/);
++  assert.match(caps, /@GetMapping\("\/capabilities"\)\s*public AjaxResult capabilities\(\)/);
++  // 完整方法体只允许登录检查 + 全局开关读取；不能换成 themeView 创建/推进 session 的探针。
++  assert.match(javaMethod(caps, 'public AjaxResult capabilities()'),
++    /^member\(\);\s*return success\(java\.util\.Collections\.singletonMap\("enabled", featurePolicy\.isEnabled\(\)\)\);$/);
++  assert.match(javaMethod(caps, 'private Long member()'),
++    /^Long id\s*=\s*getAppUserId\(\);\s*if\s*\(id\s*==\s*null\s*\|\|\s*id\s*<=\s*0\)\s*throw new com\.chengyinhub\.common\.exception\.ServiceException\("请先登录",\s*403\);\s*return id;$/);
++
++  const saved = stripJavaComments(topic);
++  assert.match(saved, /@RequestMapping\("\/api\/topic"\)/);
++  assert.match(saved, /@GetMapping\("\/publish-check"\)\s*public AjaxResult publishCheck\(Long topicId, String scope\)/);
++  assert.match(javaMethod(saved, 'public AjaxResult publishCheck(Long topicId, String scope)'),
++    /^if\s*\(invalidTopicId\(topicId\)\)\s*\{\s*return error\("参数不合规"\);\s*\}\s*CmsTopic topic = cmsTopicService\.selectCmsTopicById\(topicId\);\s*String denial = editableDenial\(topic, scope\);\s*if\s*\(denial != null\)\s*\{\s*return error\(denial\);\s*\}\s*return success\(topicPublishCheckService\.check\(topic\)\);$/);
++  assert.match(javaMethod(saved, 'private static boolean invalidTopicId(Long topicId)'),
++    /^return topicId == null \|\| topicId <= 0L;$/);
++  assert.match(javaMethod(saved, 'private String editableDenial(CmsTopic topic, String scope)'),
++    /^Long memberId;\s*try\s*\{\s*memberId = getAppUserId\(\);\s*\}\s*catch\s*\(Exception e\)\s*\{\s*return "请先登录";\s*\}\s*if\s*\(memberId == null \|\| memberId <= 0L\)\s*\{\s*return "请先登录";\s*\}\s*if\s*\(MerchantOperationScope\.isMerchant\(scope\)\)\s*\{\s*try\s*\{\s*memberId = merchantAccessService\.require\(memberId, MerchantPermission\.PROJECT_MANAGE\)\s*\.getOwnerMemberId\(\);\s*\}\s*catch\s*\(ServiceException e\)\s*\{\s*return e\.getMessage\(\);\s*\}\s*\}\s*if\s*\(topic == null \|\| \(topic\.getDelFlag\(\) != null && topic\.getDelFlag\(\) == 2\)\)\s*\{\s*return "主题不存在";\s*\}\s*return OwnershipUtils\.notOwner\(topic\.getMemberId\(\), memberId\) \? "无权操作该主题" : null;$/);
++}
++
++test('新增 GET 的真实后端：登录能力读取 / 保存主题本人或授权商家 owner 归属检查', () => {
++  assertNewGetBackend(fs.readFileSync(path.join(API_ROOT, 'ApiThemeRuntimeController.java'), 'utf8'),
++    fs.readFileSync(path.join(API_ROOT, 'ApiTopicStateKeyController.java'), 'utf8'));
++});
++
++test('新增 GET 后端负控：登录、只读、scope、岗位、owner、主题归属和声明分类退化逐项判红', () => {
++  const capability = fs.readFileSync(path.join(API_ROOT, 'ApiThemeRuntimeController.java'), 'utf8');
++  const topic = fs.readFileSync(path.join(API_ROOT, 'ApiTopicStateKeyController.java'), 'utf8');
++  const changes = [
++    ['capability 登录', capability, (s) => s.replace('        member();', '        // member();')],
++    ['capability 身份', capability, (s) => s.replace('Long id=getAppUserId();', 'Long id=1L;')],
++    ['capability 拒绝', capability, (s) => s.replace('id==null || id<=0', 'false')],
++    ['capability 只读', capability, (s) => s.replace('featurePolicy.isEnabled()', 'runtime.themeView(member(),null,null,null)')],
++    ['capability HTTP', capability, (s) => s.replace('@GetMapping("/capabilities")', '@PostMapping("/capabilities")')],
++    ['topic 身份', topic, (s) => s.replaceAll('memberId = getAppUserId();', 'memberId = 1L;')],
++    ['topic 登录拒绝', topic, (s) => s.replace('memberId == null || memberId <= 0L', 'false')],
++    ['topic 归属调用', topic, (s) => s.replaceAll('String denial = editableDenial(topic, scope);', 'String denial = null;')],
++    ['topic scope', topic, (s) => s.replace('MerchantOperationScope.isMerchant(scope)', 'true')],
++    ['topic 岗位', topic, (s) => s.replace('MerchantPermission.PROJECT_MANAGE', 'MerchantPermission.BASIC_READ')],
++    ['topic owner', topic, (s) => s.replace('.getOwnerMemberId()', '.getMemberId()')],
++    ['topic 归属判断', topic, (s) => s.replace('OwnershipUtils.notOwner(topic.getMemberId(), memberId)', 'false')],
++    ['topic HTTP', topic, (s) => s.replace('@GetMapping("/publish-check")', '@PostMapping("/publish-check")')],
++    ['topic 非法ID', topic, (s) => s.replace('return topicId == null || topicId <= 0L;', 'return false;')],
++  ];
++  for (const [name, original, mutate] of changes) {
++    const changed = mutate(original);
++    assert.notEqual(changed, original, name + '变异必须生效');
++    assert.throws(() => assertNewGetBackend(original === capability ? changed : capability,
++      original === topic ? changed : topic), assert.AssertionError, name);
++  }
++  for (const row of NEW_GET_ROWS) {
++    for (const [column, wrong] of [[2, 'optional'], [3, 'visitor/member'], [4, 'current-session']]) {
++      const mutated = MATRIX.map((item) => item === row ? item.map((value, i) => i === column ? wrong : value) : item);
++      assert.throws(() => assertNewGetBackend(capability, topic, mutated), assert.AssertionError);
++    }
++  }
++});
++
++const SYSTEM_ROOT = path.resolve(XCX_ROOT, '../chengyinhub-system/src/main');
++function readThemeBackend() {
++  return [fs.readFileSync(path.join(API_ROOT, 'ApiThemeRuntimeController.java'), 'utf8'),
++    fs.readFileSync(path.join(SYSTEM_ROOT, 'java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java'), 'utf8'),
++    fs.readFileSync(path.join(SYSTEM_ROOT, 'resources/mapper/business/TopicRouteSessionMapper.xml'), 'utf8')];
++}
++function assertThemeReadOwnership(controller, service, mapper) {
++  const api = stripJavaComments(controller);
++  assert.match(api, /@GetMapping\("\/card"\)\s*public AjaxResult card\(Long sessionId\)/);
++  assert.equal(javaMethod(api, 'public AjaxResult card(Long sessionId)'), 'return success(runtime.themeCard(member(),sessionId));');
++  assert.match(api, /@GetMapping\("\/history"\)\s*public AjaxResult historyPage\(Long topicId,Long beforeSessionId,Integer limit\)/);
++  assert.equal(javaMethod(api, 'public AjaxResult historyPage(Long topicId,Long beforeSessionId,Integer limit)'),
++    'return success(runtime.themeHistory(member(),topicId,beforeSessionId,limit));');
++  const card = javaMethod(service, 'public Map<String,Object> themeCard(Long memberId,Long sessionId)');
++  assert.match(card, /^themeRuntimePolicy\.requireEnabled\(\);\s*if\(memberId==null \|\| memberId<=0 \|\| sessionId==null\)throw new IllegalArgumentException\("参数不正确"\);\s*TopicRouteSession session=routeMapper\.selectAccessibleById\(sessionId,memberId\);\s*if\(session==null\)throw new ServiceException\("本局不存在或无权查看",403\);/);
++  assert.match(card, /if\(result==null\)throw new ServiceException\("本局尚未结束"\);\s*ObjectNode card=themeEngine\.card\(result\);/);
++  assert.match(card, /routeMapper\.selectEndingResults\(memberId,session\.getTopicId\(\)\)/);
++  const history = javaMethod(service, 'public List<Map<String,Object>> themeHistory(Long memberId,Long topicId,Long beforeSessionId,Integer limit)');
++  assert.match(history, /^themeRuntimePolicy\.requireEnabled\(\);\s*if\(memberId==null \|\| memberId<=0\)throw new ServiceException\("请先登录",403\);/);
++  assert.match(history, /routeMapper\.selectHistoryPage\(memberId,topicId,cursor,scanSize\)/);
++  assert.match(history, /if\(session==null \|\| !memberId\.equals\(session\.getMemberId\(\)\) \|\| !topicId\.equals\(session\.getTopicId\(\)\)\)\s*throw new ServiceException\("无权访问历史场次",403\);/);
++  const sql = mapper.replace(/<!--[\s\S]*?-->/g, '');
++  const select = (id) => {
++    const match = sql.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>'));
++    assert.ok(match, '后端必须保留 SQL ' + id);
++    return match[1].replace(/\s+/g, ' ').trim();
++  };
++  assert.equal(select('selectAccessibleById'), 'select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1');
++  assert.equal(select('selectHistoryPage'), 'select <include refid="sessionColumns"/> from topic_route_session where member_id=#{memberId} and topic_id=#{topicId} <if test="beforeSessionId != null">and id &lt; #{beforeSessionId}</if> order by id desc limit #{limit}');
++  assert.match(select('selectEndingResults'), /where member_id=#\{memberId\} and topic_id=#\{topicId\}/);
++}
++
++test('背包历史与结果 GET：controller 从登录身份派生，service 和 SQL 双层约束本人/主题', () => {
++  assertThemeReadOwnership(...readThemeBackend());
++});
++
++test('背包历史/结果负控：伪造身份、移除本人/主题过滤、跳过403或终局限制都判红', () => {
++  const sources = readThemeBackend();
++  const mutations = [
++    [0, 'card 伪造身份', (s) => s.replace('themeCard(member(),sessionId)', 'themeCard(1L,sessionId)')],
++    [0, 'history 伪造身份', (s) => s.replace('themeHistory(member(),topicId,beforeSessionId,limit)', 'themeHistory(1L,topicId,beforeSessionId,limit)')],
++    [1, 'card 跨会员', (s) => s.replace('selectAccessibleById(sessionId,memberId)', 'selectAccessibleById(sessionId,1L)')],
++    [1, 'card 无权未拒绝', (s) => s.replace('if(session==null)throw new ServiceException("本局不存在或无权查看",403);', '')],
++    [1, 'card 未结束放行', (s) => s.replace('if(result==null)throw new ServiceException("本局尚未结束");', '')],
++    [1, 'history 跨会员', (s) => s.replace('selectHistoryPage(memberId,topicId,cursor,scanSize)', 'selectHistoryPage(1L,topicId,cursor,scanSize)')],
++    [1, 'history 漏本人复核', (s) => s.replace('session==null || !memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())', 'session==null || !topicId.equals(session.getTopicId())')],
++    [1, 'history 漏主题复核', (s) => s.replace('session==null || !memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())', 'session==null || !memberId.equals(session.getMemberId())')],
++    [2, 'SQL card 漏本人', (s) => s.replace('where id=#{id} and member_id=#{memberId} limit 1\n', 'where id=#{id} limit 1\n')],
++    [2, 'SQL history 漏本人', (s) => s.replace('where member_id=#{memberId} and topic_id=#{topicId}\n', 'where topic_id=#{topicId}\n')],
++    [2, 'SQL history 漏主题', (s) => s.replace('where member_id=#{memberId} and topic_id=#{topicId}\n', 'where member_id=#{memberId}\n')],
++  ];
++  for (const [index, name, mutate] of mutations) {
++    const changed = sources.slice(); changed[index] = mutate(changed[index]);
++    assert.notEqual(changed[index], sources[index], name + '变异必须生效');
++    assert.throws(() => assertThemeReadOwnership(...changed), assert.AssertionError, name);
++  }
+ });
+ 
+ // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。

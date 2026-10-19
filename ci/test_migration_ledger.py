@@ -44,6 +44,7 @@ class RepoFixture(unittest.TestCase):
 
 
 class ManifestContract(RepoFixture):
+<<<<<<< public
     def test_generic_route_runtime_schema_is_explicit_test_fixture(self):
         path = "chengyinhub-admin/src/test/resources/it-schema/generic-route-runtime-it-schema.sql"
         self.write(path, "CREATE TABLE topic_route_session(id BIGINT);\n")
@@ -117,6 +118,58 @@ class ManifestContract(RepoFixture):
         seed_path.unlink()
         with self.assertRaises(LedgerError):
             build_manifest(self.tmp, TARGET, dependencies=dependencies)
+=======
+    def test_coupon_command_fixture_is_exactly_classified_and_never_released(self):
+        fixture = "chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql"
+        self.write(fixture, "CREATE TABLE coupon_fixture (id BIGINT);\n")
+        manifest = build_manifest(self.tmp, TARGET)
+        self.assertEqual([], manifest["migrations"])
+        item = next(x for x in manifest["inventory"]["auxiliarySql"] if x["path"] == fixture)
+        self.assertEqual("TEST_FIXTURE", item["classification"])
+        self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
+        unknown = "chengyinhub-admin/src/test/resources/fixtures/coupon-command-unreviewed.sql"
+        self.write(unknown, "CREATE TABLE unreviewed (id BIGINT);\n")
+        report = audit_inventory(self.tmp)
+        self.assertIn(("UNMANAGED_SQL_LOCATION", unknown), {(p["code"], p["path"]) for p in report["problems"]})
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET)
+
+    def test_private_home_diagnostic_sql_is_exact_fixture_not_directory_exemption(self):
+        from migration_ledger import _auxiliary_classification
+        self.assertEqual("TEST_FIXTURE", _auxiliary_classification(
+            "ci/fixtures/private_home_review_candidate_20261003.sql"))
+        self.assertIsNone(_auxiliary_classification("ci/fixtures/unreviewed.sql"))
+
+    def test_npc_draft_existing_schema_fixture_is_exactly_classified_and_never_released(self):
+        fixture = "chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql"
+        self.write(fixture, "CREATE TABLE npc_fixture (id BIGINT);\n")
+        manifest = build_manifest(self.tmp, TARGET)
+        self.assertEqual([], manifest["migrations"])
+        item = next(x for x in manifest["inventory"]["auxiliarySql"] if x["path"] == fixture)
+        self.assertEqual("TEST_FIXTURE", item["classification"])
+        self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
+        unknown = "chengyinhub-admin/src/test/resources/fixtures/unreviewed.sql"
+        self.write(unknown, "CREATE TABLE unreviewed (id BIGINT);\n")
+        report = audit_inventory(self.tmp)
+        self.assertIn(("UNMANAGED_SQL_LOCATION", unknown), {(p["code"], p["path"]) for p in report["problems"]})
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET)
+
+    def test_noncash_reward_fixture_is_exactly_classified_and_never_released(self):
+        fixture = "chengyinhub-admin/src/test/resources/reward/noncash-fixture.sql"
+        self.write(fixture, "CREATE TABLE w17_noncash_pledge (id BIGINT);\n")
+        manifest = build_manifest(self.tmp, TARGET)
+        self.assertEqual([], manifest["migrations"])
+        item = next(x for x in manifest["inventory"]["auxiliarySql"] if x["path"] == fixture)
+        self.assertEqual("TEST_FIXTURE", item["classification"])
+        self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
+        unknown = "chengyinhub-admin/src/test/resources/reward/unreviewed.sql"
+        self.write(unknown, "CREATE TABLE unreviewed (id BIGINT);\n")
+        report = audit_inventory(self.tmp)
+        self.assertIn(("UNMANAGED_SQL_LOCATION", unknown), {(p["code"], p["path"]) for p in report["problems"]})
+        with self.assertRaises(LedgerError):
+            build_manifest(self.tmp, TARGET)
+>>>>>>> private-github/featu
 
     def test_manifest_is_deterministic_and_carries_order_dependencies_and_target(self):
         self.write("chengyinhub-admin/sql/migration_beta.sql")

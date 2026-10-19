@@ -88,6 +88,14 @@ Component({
       this.triggerEvent('openchange', { open: false });
     },
 
+    // A containing editor delegates native Back to the topmost nested step.
+    backSelector() {
+      if (this.data.isSubmitting) return;
+      if (this.data.rangePickerShow) { this.onRangeCancel(); return; }
+      if (this.data.creating) { this.onCreateRequestClose(); return; }
+      this.closeSelector();
+    },
+
     loadCoupons() {
       if (this.data.loading) return;
       this.setData({ loading: true });

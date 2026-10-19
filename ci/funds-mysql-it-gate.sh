@@ -111,8 +111,8 @@ if [ "$MODE" = "atomic-migration" ]; then
     exit 1
   fi
   atomic_ran="$(sed -nE 's/^Ran ([0-9]+) tests? in .*/\1/p' "$atomic_it_log")"
-  if [ "$atomic_ran" -lt 41 ]; then
-    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(应至少 41 条，fail-closed)" >&2
+  if [ "$atomic_ran" -lt 42 ]; then
+    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(应至少 42 条，fail-closed)" >&2
     exit 1
   fi
   if [ "$atomic_ran" -lt 68 ]; then
@@ -166,8 +166,34 @@ echo "使用唯一临时 schema 后缀: ${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}"
 #   顺带把原先的 `install -DskipTests` 去掉:有了 -am,上游模块在同一个 reactor 里构建,
 #   本闸不再需要 ~/.m2 里有什么;而且它自己也不再往那份共用仓库里写 jar ——
 #   否则这台 runner 上跑一次资金闸,就会把别的分支/worktree 的构建结果覆盖掉一次(方向相反的同一个坑)。
+<<<<<<< public
 mvn -B -pl chengyinhub-admin -am clean test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
   -Dtest=CommunityPostCommentIdempotencyMySqlIT,CoopListReadOnlyMybatisIntegrationTest,RegistrationFundsMybatisIntegrationTest,RegistrationEquityMybatisIntegrationTest,RefundPayoutMybatisIntegrationTest,ExploreAllianceMvpRealDbIT,ExploreAllianceRedeemRealDbIT,TandianriBatch0FundsMybatisIntegrationTest,ShopDayOneTicketMySqlIT,TandianriBatch3FundsMybatisIntegrationTest,ClubCorporatePayeeMybatisIntegrationTest,ClubEditionCompensationMybatisIntegrationTest,PlayerWithdrawalCooldownMybatisIntegrationTest,ClubPayableMybatisIntegrationTest,CouponLifecycleMybatisIntegrationTest,MysqlItSchemaIsolationTest,ActivityCancelFreeOrderMybatisIT,PlayTeamMybatisIntegrationTest,PlayTeamNearbyMybatisIntegrationTest,WxPaymentCallbackFencingMySqlIT,WxContentCallbackFencingMySqlIT,CoopDepositRefundMybatisIntegrationTest,GrowthMissionProofMybatisIntegrationTest,MerchantIdentityMybatisIntegrationTest,MerchantProfilePersistenceMybatisIntegrationTest,StoreVerifyGrowthDeliveryTransactionTest,RefundNotificationMybatisIntegrationTest,SessionRefundClockMybatisIntegrationTest,SettlementGenerateBatchMybatisIntegrationTest,FirstReviewPointsClawbackMybatisIntegrationTest,ClubSettlementSummaryMybatisIntegrationTest,CoopComplaintCloseMybatisIntegrationTest,RegistrationReadContractMybatisIntegrationTest,ClubWaitlistTokenMybatisIntegrationTest,CmsMemberTemplateAudioPatchMybatisIntegrationTest,CmsTemplateLibraryAudioPatchMybatisIntegrationTest,ContentInteractionMybatisIntegrationTest,CreativeSquarePublishIdempotencyMybatisIntegrationTest,FollowConcurrencyMybatisIntegrationTest,FollowEditRaceMybatisIntegrationTest,NearbyRunnerShopsMybatisIntegrationTest,PhotoReviewProgressMybatisIntegrationTest,SpoilerAccessMybatisIntegrationTest,SquareEditFollowMybatisIntegrationTest,RoamSessionWriteMybatisIntegrationTest,RoamLocationRetentionMySqlIT,ComplaintPeriodWithdrawalGateMybatisIntegrationTest,ShareSnapshotRunSessionMybatisIntegrationTest,PlayerRunSessionOrderingMybatisIntegrationTest,RoamShareSnapshotConcurrencyMySqlIT,ClubEventTransferCancellationMySqlIT,RefundRetryAndRemainderMySqlIT,SignupNoticeAfterCommitPersistenceMySqlIT,TopicLikeDesiredStateMySqlIT,MonitorMissingJobsMySqlIT,MemberPasswordWidthMySqlIT,LegacyCategoryForwardGuardMySqlIT,MissingBusinessSeedsMySqlIT,RoamPresenceRevokeDurabilityMySqlIT,RoamPresenceRevokeJobMySqlIT
+=======
+w16_commit="$(git rev-parse HEAD)"
+w16_run_id="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+w17_commit="$(git rev-parse HEAD)"
+w17_run_id="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+npc_commit="$(git rev-parse HEAD)"
+npc_run_id="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+coupon_commit="$(git rev-parse HEAD)"
+coupon_run_id="$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+coupon_source_sha="$(python3 ci/coupon_command_mysql_gate.py --fingerprint-source .)"
+mvn -B -pl chengyinhub-admin -am clean test -Dcoupon.command.test.commit="$coupon_commit" -Dcoupon.command.test.run="$coupon_run_id" -Dcoupon.command.test.sourceSha256="$coupon_source_sha" -Dnpc.draft.test.commit="$npc_commit" -Dnpc.draft.test.run="$npc_run_id" -Dw17.test.commit="$w17_commit" -Dw17.test.run="$w17_run_id" -Dw16.test.commit="$w16_commit" -Dw16.test.run="$w16_run_id" -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
+  -Dtest=CoopListReadOnlyMybatisIntegrationTest,MerchantAuthoringCurrentRowsMySqlIT,MerchantAuthoringRevocationRaceMySqlIT,FixedCouponAtomicMySqlIT,FixedCouponSchemaMySqlIT,RendezvousConsentMySqlIT,NonCashRewardMySqlIT,CityBoardDraftMySqlIT,ContentCapturePreviewMySqlIT,InstalledDraftReceiptMySqlIT,InstalledDraftReceiptIndexMySqlIT,FreeClaimInstallationMySqlIT,FreeInstallScopeSchemaMySqlIT,WalkingTargetMySqlIT,FreeModuleSchemaMySqlIT,FreeModuleClaimMySqlIT,ModuleReservationMySqlIT,ModuleTextInstallationMySqlIT,CityRuntimeMySqlIT,CityLegacyPointsMySqlIT,ContentCaptureSnapshotMySqlIT,ContentCaptureReviewMySqlIT,ContentCaptureReviewSchemaMySqlIT,RegistrationFundsMybatisIntegrationTest,RegistrationEquityMybatisIntegrationTest,RefundPayoutMybatisIntegrationTest,ExploreAllianceMvpRealDbIT,ExploreAllianceRedeemRealDbIT,TandianriBatch0FundsMybatisIntegrationTest,ShopDayOneTicketMySqlIT,TandianriBatch3FundsMybatisIntegrationTest,ClubCorporatePayeeMybatisIntegrationTest,ClubEditionCompensationMybatisIntegrationTest,PlayerWithdrawalCooldownMybatisIntegrationTest,ClubPayableMybatisIntegrationTest,CouponLifecycleMybatisIntegrationTest,MysqlItSchemaIsolationTest,ActivityCancelFreeOrderMybatisIT,PlayTeamMybatisIntegrationTest,PlayTeamNearbyMybatisIntegrationTest,WxPaymentCallbackFencingMySqlIT,WxContentCallbackFencingMySqlIT,CoopDepositRefundMybatisIntegrationTest,GrowthMissionProofMybatisIntegrationTest,MerchantIdentityMybatisIntegrationTest,MerchantProfilePersistenceMybatisIntegrationTest,StoreVerifyGrowthDeliveryTransactionTest,RefundNotificationMybatisIntegrationTest,SessionRefundClockMybatisIntegrationTest,SettlementGenerateBatchMybatisIntegrationTest,FirstReviewPointsClawbackMybatisIntegrationTest,ClubSettlementSummaryMybatisIntegrationTest,CoopComplaintCloseMybatisIntegrationTest,RegistrationReadContractMybatisIntegrationTest,ClubWaitlistTokenMybatisIntegrationTest,CmsMemberTemplateAudioPatchMybatisIntegrationTest,CmsTemplateLibraryAudioPatchMybatisIntegrationTest,ContentInteractionMybatisIntegrationTest,CreativeSquarePublishIdempotencyMybatisIntegrationTest,FollowConcurrencyMybatisIntegrationTest,FollowEditRaceMybatisIntegrationTest,NearbyRunnerShopsMybatisIntegrationTest,PhotoReviewProgressMybatisIntegrationTest,SpoilerAccessMybatisIntegrationTest,SquareEditFollowMybatisIntegrationTest,RoamSessionWriteMybatisIntegrationTest,ComplaintPeriodWithdrawalGateMybatisIntegrationTest,ShareSnapshotRunSessionMybatisIntegrationTest,RoamShareSnapshotConcurrencyMySqlIT,ClubEventTransferCancellationMySqlIT,MerchantNpcKnowledgeDraftMySqlIT,CouponCommandServiceMySqlIT
+>>>>>>> private-github/featu
 
 # 回读观测:surefire 绿不够,必须逐套确认真跑、skipped=0、无错无失败、用例数达标。
 python3 ci/funds_it_gate.py chengyinhub-admin/target/surefire-reports
+
+# W16 adds exact identities and current-invocation MySQL/DDL/cleanup proof; Funds905 stays mandatory.
+python3 ci/w16_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$w16_commit" --run-id "$w16_run_id" --output chengyinhub-admin/target/w16-mysql-evidence.json
+
+# W17 strict identity/database/DDL/invocation/cleanup proof; prior Funds917 and W16 remain mandatory.
+python3 ci/w17_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$w17_commit" --run-id "$w17_run_id" --output chengyinhub-admin/target/w17-mysql-evidence.json
+
+# NPC draft proof binds every case to this checkout, nonce and dropped scratch schema.
+python3 ci/npc_draft_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$npc_commit" --run-id "$npc_run_id" --output artifacts/npc-draft-mysql-proof.json
+
+# Coupon command proof binds all 20 cases to this checkout, source fingerprint and dropped scratch.
+python3 ci/coupon_command_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$coupon_commit" --run-id "$coupon_run_id" --source-sha256 "$coupon_source_sha" --output artifacts/coupon-command-mysql-proof.json

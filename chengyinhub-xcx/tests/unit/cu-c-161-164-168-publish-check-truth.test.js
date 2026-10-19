@@ -68,7 +68,8 @@ function loadFabu(src) {
   }, { filename: file });
 
   const page = Object.assign({}, definition, {
-    data: {},
+    // 保留真实 Page.data：onShow 会读取混入的运行配置与已保存内容检查状态。
+    data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, callback) {
       Object.keys(patch).forEach((key) => {
         if (key.indexOf('.') < 0) { page.data[key] = patch[key]; return; }

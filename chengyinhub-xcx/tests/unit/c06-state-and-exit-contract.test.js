@@ -623,19 +623,50 @@ test('negative control: 快门退回透明热区、或提示丢掉缩放倍率,�
 //          view 盖不住 <map>);② 首屏成功态的 screen='intro' 原来只在 setData 回调末尾落地,
 //          回调里任一处理(rebuild / 会话时钟 / 角色卡)抛错都会把页面永久留在「无 screen、无提示」
 //          的纯黑地图态。两条都按「任何失败都有明确提示与出路」修掉。
+const MAP_CLASSES = ['finsheet__map-native', 'story-map__map', 'fx-story__radar-map']
+function mapTags(wxml) {
+  // 注释里的旧图不能算实存；属性值中的 > 不能截断 opening tag。
+  const code = wxml.replace(/<!--[\s\S]*?-->/g, '')
+  return code.match(/<free-map\b(?:[^>"']|"[^"]*"|'[^']*')*>/g) || []
+}
+function mapCondition(tag) {
+  const condition = tag.match(/\bwx:if="\{\{([\s\S]*?)\}\}"/)
+  assert.ok(condition, '三张原生图必须各自按条件卸载，不能只用 hidden 盖住: ' + tag)
+  // 运行当前源码的实际 WXML 布尔表达式，不以属性顺序或条件子串代替条件语义。
+  return new Function('storyMap', 'chapterGate', 'sessionToolsOpen', 'themeBackpackOpen',
+    'themeOverviewShow', 'previewEnding', 'album', 'playKit', 'advancedPlay', 'screen',
+    'return !!(' + condition[1] + ')')
+}
 function assertNoMainMapLayer(wxml) {
-  // 2026-09-22 用户裁决「不要了」:主地图整层删除,根因①(原生层压住提示)不复存在。
-  // 这条改成钉死「主地图不许回潮」——回潮就等于把那块会压住提示与出路的原生层又请回来。
-  assert.doesNotMatch(wxml, /<view class="stage"/, '地图舞台已删,不得回潮')
-  const maps = wxml.match(/<free-map\b[^>]*/g) || []
-  // 2026-09-23 用户裁决(优化顺序第 1 项):故事流左上角罗盘点开 = 真实小地图,再点收回。
-  // 它是按需挂载的一层(wx:if="{{storyMap}}"),不是常驻舞台 —— 除它和完成页回放之外仍不许有地图。
-  const allowed = maps.filter((m) => /class="finsheet__map-native"/.test(m)
-    || (/class="story-map__map"/.test(m) && /wx:if="\{\{storyMap\}\}"/.test(m))
-    // 2026-09-23 用户:左上角常驻雷达小地图 —— 只在上面没有任何遮盖层时挂载(大地图 / 章节门 / 菜单 / 结局 / 相册 / 整屏玩法都卸掉)
-    || (/class="fx-story__radar-map"/.test(m) && /wx:if="\{\{!storyMap && !chapterGate\.show && !sessionToolsOpen && !previewEnding\.show && !themeBackpackOpen && !album\.show && !playKit\.show/.test(m)))
-  assert.equal(allowed.length, maps.length, '页面只允许完成页回放、罗盘大地图与左上角雷达三张地图:' + maps.join(' | '))
-  assert.ok(maps.some((m) => /class="finsheet__map-native"/.test(m)), '完成页路径回放那张不能丢')
+  const code = wxml.replace(/<!--[\s\S]*?-->/g, '')
+  // 已删除的全屏主地图不可回潮；现存三图也不能被删除或复制来凑总数。
+  assert.doesNotMatch(code, /<view\b[^>]*\bclass="[^"]*\bstage\b/, '地图舞台已删,不得回潮')
+  assert.doesNotMatch(code, /<map\b/, '不得绕过 free-map 把原生主地图挂回页面')
+  const maps = mapTags(wxml)
+  assert.equal(maps.length, 3, '必须保留且仅保留完成页回放、罗盘大地图、雷达三张地图')
+  const conditions = MAP_CLASSES.map((name) => {
+    const matches = maps.filter((tag) => {
+      const classes = tag.match(/\bclass="([^"]*)"/)
+      return classes && classes[1].split(/\s+/).includes(name)
+    })
+    assert.equal(matches.length, 1, name + ' 必须存在且只能一张')
+    return mapCondition(matches[0])
+  })
+  // 全量枚举10个开关×3种screen。大图/回放在背包关闭时仍能挂载；雷达必须避让每一种覆盖层。
+  // 这里只验证这三张图自己的挂载条件，父容器的页面/章节可见性仍由既有页面契约负责。
+  for (let mask = 0; mask < 1024; mask += 1) {
+    const [storyMap, gate, tools, backpack, overview, ending, album, kitOpen, hasKit, advanced] =
+      Array.from({ length: 10 }, (_, bit) => !!(mask & (1 << bit)))
+    for (const screen of ['', 'gamePlay', 'intro']) {
+      const args = [storyMap, { show: gate }, tools, backpack, overview, { show: ending },
+        { show: album }, { show: kitOpen, kit: hasKit ? 'kit' : null }, { show: advanced }, screen]
+      const expected = [!backpack, storyMap && !backpack,
+        !storyMap && !gate && !tools && !backpack && !overview && !ending && !album && !kitOpen
+          && !(advanced && !hasKit) && screen !== 'gamePlay']
+      conditions.forEach((condition, index) => assert.equal(condition(...args), expected[index],
+        `${MAP_CLASSES[index]} 挂载条件漂移: mask=${mask}, screen=${screen}`))
+    }
+  }
 }
 
 test('C06-7 游玩页:主地图整层已删,提示与出路是屏幕上唯一的东西', () => {
@@ -649,6 +680,41 @@ test('negative control: 把主地图挂回页面 ⇒ 上面这条必须判红', 
     '<view class="stage"><free-map wx:if="{{!showJournal}}" id="fmMap"></free-map></view>\n' + anchor)
   assert.notEqual(broken, source, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertNoMainMapLayer(broken), assert.AssertionError)
+})
+
+test('C06-7 三图条件正例：等价条件重排仍通过，背包关闭可恢复原图', () => {
+  const source = read(PLAY_WXML)
+  const reordered = source.replace('storyMap && !themeBackpackOpen', '!themeBackpackOpen && storyMap')
+  assert.notEqual(reordered, source)
+  assertNoMainMapLayer(reordered)
+})
+
+test('C06-7 三图负控：少图、重复、第四张、注释冒充、背包穿透、常驻大图逐项判红', () => {
+  const source = read(PLAY_WXML)
+  const tags = mapTags(source)
+  const mutations = [
+    ['第四张无名图', source + '<free-map wx:if="{{true}}" />'],
+    ['裸原生主图', source + '<map wx:if="{{true}}" />'],
+    ['常驻大图', source.replace('storyMap && !themeBackpackOpen', '!themeBackpackOpen')],
+    ['大图与背包 OR 放宽', source.replace('storyMap && !themeBackpackOpen', 'storyMap || !themeBackpackOpen')],
+  ]
+  for (const tag of tags) {
+    mutations.push(['删除原图', source.replace(tag, '')])
+    mutations.push(['注释冒充原图', source.replace(tag, '<!--' + tag + '-->')])
+    mutations.push(['重复地图替代', source.replace(tag, tags.find((other) => other !== tag))])
+    mutations.push(['背包穿透', source.replace(tag, tag.replace('!themeBackpackOpen', 'true'))])
+    mutations.push(['全部关死假绿', source.replace(tag, tag.replace(/wx:if="\{\{[\s\S]*?\}\}"/, 'wx:if="{{false}}"'))])
+    mutations.push(['hidden 冒充卸载', source.replace(tag, tag.replace('wx:if=', 'hidden='))])
+  }
+  const radar = tags.find((tag) => tag.includes('class="fx-story__radar-map"'))
+  for (const guard of ['!storyMap', '!chapterGate.show', '!sessionToolsOpen', '!themeOverviewShow',
+    '!previewEnding.show', '!album.show', '!playKit.show', '!(advancedPlay.show && !playKit.kit)', "screen !== 'gamePlay'"]) {
+    mutations.push(['雷达覆盖层漏挡: ' + guard, source.replace(radar, radar.replace(guard, 'true'))])
+  }
+  for (const [name, changed] of mutations) {
+    assert.notEqual(changed, source, name + '变异必须生效')
+    assert.throws(() => assertNoMainMapLayer(changed), assert.AssertionError, name)
+  }
 })
 
 /** 真跑一次首屏成功:载荷是最小可用路线数据(一个已发布节点)。 */

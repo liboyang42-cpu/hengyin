@@ -730,10 +730,14 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "MerchantOfferWithdrawalColumnsMysqlIntegrationTest",
             gate,
         )
+<<<<<<< public
         self.assertIn("ci.test_community_legacy_owner_mysql_integration.CommunityLegacyOwnerMysqlIntegrationTest", gate)
         self.assertIn("ci.test_community_legacy_comment_like_counts_mysql_integration.CommunityLegacyCommentLikesMysqlIntegrationTest", gate)
         self.assertIn('"$atomic_ran" -lt 68', gate)
         self.assertIn('"$atomic_ran" -lt 41', gate)
+=======
+        self.assertIn('"$atomic_ran" -lt 42', gate)
+>>>>>>> private-github/featu
         self.assertIn("bash ci/funds-mysql-it-gate.sh atomic-migration", workflow)
         self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", workflow)
 
@@ -827,6 +831,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(test_methods), 7)
 
+<<<<<<< public
     def test_atomic_gate_accepts_sixty_eight_unskipped_tests_and_rejects_skips(self):
         result = self.run_atomic_gate_with_unittest_result(
             "Ran 68 tests in 0.001s\n\nOK\n", 0)
@@ -842,12 +847,28 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
 
     def test_atomic_gate_rejects_old_thirty_five_and_incomplete_forty_tests(self):
         for count in (35, 40, 41, 48, 49, 56, 63, 64, 67):
+=======
+    def test_atomic_gate_accepts_forty_two_unskipped_tests_and_rejects_skips(self):
+        result = self.run_atomic_gate_with_unittest_result(
+            "Ran 42 tests in 0.001s\n\nOK\n", 0)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("实际执行 42 条", result.stdout + result.stderr)
+        skipped = self.run_atomic_gate_with_unittest_result(
+            "Ran 42 tests in 0.001s\n\nOK (skipped=42)\n", 0)
+        self.assertNotEqual(0, skipped.returncode)
+        self.assertIn("skipped=0", skipped.stdout + skipped.stderr)
+
+    def test_atomic_gate_rejects_old_or_incomplete_test_counts(self):
+        for count in (35, 40, 41):
+>>>>>>> private-github/featu
             with self.subTest(count=count):
                 result = self.run_atomic_gate_with_unittest_result(
                     "Ran %d tests in 0.001s\n\nOK\n" % count, 0)
                 self.assertNotEqual(0, result.returncode)
                 self.assertIn("实际只跑了 %d 条" % count, result.stdout + result.stderr)
 
+<<<<<<< public
     def test_community_owner_mysql_it_is_fail_closed_and_keeps_eight_tests(self):
         source = (REPO / "ci/test_community_legacy_owner_mysql_integration.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -874,6 +895,9 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         self.assertIn("cy_community_legacy_it_", source)
 
     def test_offer_withdrawal_mysql_it_keeps_six_discoverable_tests(self):
+=======
+    def test_offer_withdrawal_mysql_it_keeps_seven_discoverable_tests(self):
+>>>>>>> private-github/featu
         source = (REPO / "ci" / "test_merchant_offer_withdrawal_columns_mysql_integration.py").read_text(
             encoding="utf-8")
         tree = ast.parse(source)
@@ -881,9 +905,26 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
                             and node.name == "MerchantOfferWithdrawalColumnsMysqlIntegrationTest")
         test_methods = [node.name for node in repair_class.body
                         if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
-        self.assertGreaterEqual(len(test_methods), 6)
+        self.assertGreaterEqual(len(test_methods), 7)
+        self.assertIn("test_existing_ordinary_migrations_replay_without_duplicate_columns", test_methods)
         self.assertNotIn("SkipTest", source)
         self.assertNotIn("skipUnless", source)
+
+    def test_offer_withdrawal_guard_preserves_ordinary_migration_compatibility(self):
+        sql = (REPO / "chengyinhub-admin/sql"
+               / "migration_20261003_merchant_offer_withdrawal_columns.sql").read_text(encoding="utf-8")
+        self.assertEqual(2, self.squeeze(sql).count(
+            "column_name = 'withdraw_required' AND data_type = 'tinyint'"))
+        ordinary = (REPO / "chengyinhub-admin/sql"
+                    / "migration_ordinary_chapter_offer_withdraw_20261003.sql").read_text(encoding="utf-8")
+        self.assertIn("ADD COLUMN withdraw_required TINYINT NULL", self.squeeze(ordinary))
+        source = (REPO / "ci"
+                  / "test_merchant_offer_withdrawal_columns_mysql_integration.py").read_text(encoding="utf-8")
+        for filename in (
+            "migration_ordinary_chapter_offer_withdraw_20261003.sql",
+            "migration_ordinary_chapter_application_replacement_20261003.sql",
+        ):
+            self.assertIn(filename, source)
 
     def test_atomic_gate_rejects_only_thirty_four_tests(self):
         result = self.run_atomic_gate_with_unittest_result(
