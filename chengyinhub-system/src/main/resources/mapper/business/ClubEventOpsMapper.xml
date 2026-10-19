@@ -436,6 +436,45 @@
         where registration_id = #{registrationId} and state = 'CLAIMED'
     </update>
 
+    <select id="selectWaitlistMaintenanceMaxId" resultType="long">
+        select max(id) from club_event_waitlist
+    </select>
+    <select id="selectWaitlistMaintenancePage" resultType="java.util.LinkedHashMap">
+        <choose>
+            <when test="kind == 3">
+                select min(w.id) as scanId, w.activity_id as activityId, w.ticket_id as ticketId
+                from club_event_waitlist w
+                inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
+                inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
+                  and s.status = 'ACTIVE' and s.waitlist_enabled = 1
+                inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
+                  and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
+                inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
+                  and t.owner_id = w.activity_id and t.del_flag = 0 and t.remaining_inventory &gt; 0
+                where w.state = 'WAITING' and w.id &lt;= #{maxId}
+                  and (coalesce(t.signup_deadline, t.start_time) is null
+                    or coalesce(t.signup_deadline, t.start_time) &gt; #{now})
+                group by w.activity_id, w.ticket_id
+                having min(w.id) &gt; #{afterId}
+                order by scanId asc limit #{limit}
+            </when>
+            <otherwise>
+                select w.id as scanId,
+                <choose><when test="kind == 0">w.id</when><otherwise>w.registration_id</otherwise></choose> as targetId
+                from club_event_waitlist w
+                <if test="kind != 0">inner join cms_registration r on r.id = w.registration_id</if>
+                where w.id &gt; #{afterId} and w.id &lt;= #{maxId}
+                <choose>
+                    <when test="kind == 0">and w.state = 'OFFERED' and w.offer_expires_at &lt;= #{now}</when>
+                    <when test="kind == 1">and w.state = 'CLAIMED' and r.payment_status = 2 and r.registration_status = 2</when>
+                    <when test="kind == 2">and w.state = 'CLAIMED' and (r.registration_status in (3, 4) or r.payment_status in (3, 4))</when>
+                    <otherwise>and 1 = 0</otherwise>
+                </choose>
+                order by w.id asc limit #{limit}
+            </otherwise>
+        </choose>
+    </select>
+
     <select id="selectExpiredOfferedIds" resultType="long">
         select id from club_event_waitlist
         where state = 'OFFERED' and offer_expires_at &lt;= #{now}

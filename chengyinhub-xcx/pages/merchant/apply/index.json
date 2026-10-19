@@ -6,6 +6,7 @@
   "backgroundColor": "#F3F4F4",
   "usingComponents": {
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
+    "cy-merchant-claim-sheet": "/pages/merchant/components/merchant-claim-sheet/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-card": "/components/cy/card/index",
     "cy-badge": "/components/cy/badge/index",

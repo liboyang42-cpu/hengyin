@@ -35,6 +35,7 @@ function createHarness() {
       }
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -76,7 +77,7 @@ function createDetailHarness(storage = {}) {
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': require('../../utils/datetime'),
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': require('../../utils/group-code-session.js'),
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -97,6 +98,7 @@ function createDetailHarness(storage = {}) {
       if (Object.prototype.hasOwnProperty.call(modules, request)) return modules[request]
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,

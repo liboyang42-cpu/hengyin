@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const sheet = require('../../utils/community-report-sheet');
+const sheet = require('../../pages/square/utils/community-report-sheet');
 const { createClient } = require('../../utils/community-post-api');
 const items = Array.from({ length: 13 }, (_, i) => '原因' + (i + 1));
 function page() { return { data: {}, setData(patch) { Object.assign(this.data, patch); } }; }

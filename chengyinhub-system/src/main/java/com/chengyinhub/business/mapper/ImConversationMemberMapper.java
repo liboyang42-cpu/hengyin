@@ -14,6 +14,12 @@ public interface ImConversationMemberMapper
     public ImConversationMember selectByConvAndMember(@Param("conversationId") Long conversationId,
                                                       @Param("memberId") Long memberId);
 
+    ImConversationMember selectByConvAndMemberForUpdate(@Param("conversationId") Long conversationId,
+                                                       @Param("memberId") Long memberId);
+
+    int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
+                                 @Param("memberId") Long memberId, @Param("delta") int delta);
+
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 

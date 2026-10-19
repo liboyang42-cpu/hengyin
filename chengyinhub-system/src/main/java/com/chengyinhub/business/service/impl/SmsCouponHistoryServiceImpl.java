@@ -36,6 +36,11 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.CouponSourceGrantMapper couponSourceGrantMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.RewardDropLogMapper rewardDropLogMapper;
+
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SmsCouponHistoryServiceImpl.class);
 
     @Override
@@ -284,7 +289,39 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (smsCouponHistoryMapper.insertSmsCouponHistory(h) != 1) {
             throw new IllegalStateException("优惠券领取记录写入失败");
         }
+        if (h.getId() == null) throw new IllegalStateException("优惠券领取记录缺少原ID");
         return h.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long grantCouponBySource(Long memberId, Long couponId, String sourceType, Long sourceId) {
+        if (memberId == null || memberId <= 0 || couponId == null || couponId <= 0
+                || !"reward_drop".equals(sourceType) || sourceId == null || sourceId <= 0) {
+            throw new IllegalArgumentException("奖励券原来源不合法");
+        }
+        com.chengyinhub.business.domain.RewardDropLog source = rewardDropLogMapper.selectById(sourceId);
+        if (source == null || !memberId.equals(source.getMemberId()) || !Integer.valueOf(3).equals(source.getDropType())) {
+            throw new IllegalArgumentException("奖励券来源归属或类型不匹配");
+        }
+        Long originalCoupon = com.alibaba.fastjson2.JSON.parseObject(source.getParamJson()).getLong("couponTemplateId");
+        if (!couponId.equals(originalCoupon)) throw new IllegalArgumentException("奖励券原模板不匹配");
+        // 原历史log没有交付关联，不能猜它没发过；只有与新log同事务固化的意图可自动交付。
+        com.chengyinhub.business.domain.CouponSourceGrant receipt = couponSourceGrantMapper.selectForUpdate(sourceType, sourceId);
+        if (receipt == null) {
+            logger.warn("奖励券原来源缺交付意图,需核查历史回执 sourceId={}", sourceId);
+            return null;
+        }
+        if (!memberId.equals(receipt.getMemberId()) || !couponId.equals(receipt.getCouponId())) {
+            throw new IllegalStateException("奖励券同来源内容冲突");
+        }
+        if (receipt.getHistoryId() != null) return receipt.getHistoryId();
+        Long historyId = grantCouponWithReceipt(memberId, couponSourceGrantMapper.selectCouponForUpdate(couponId));
+        if (historyId == null) return null;
+        if (couponSourceGrantMapper.markDelivered(sourceType, sourceId, historyId) != 1) {
+            throw new IllegalStateException("奖励券原来源回执写入失败");
+        }
+        return historyId;
     }
 
     @Override

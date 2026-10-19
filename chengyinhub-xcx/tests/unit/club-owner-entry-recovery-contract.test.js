@@ -39,7 +39,7 @@ function loadDetail() {
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': { toTimestamp: (value) => Date.parse(String(value).replace(' ', 'T')) || 0 },
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -58,6 +58,7 @@ function loadDetail() {
       if (modules[request]) return modules[request]
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error('unexpected require: ' + request)
     },
     setTimeout(fn) { scheduled.push(fn); return 1 },

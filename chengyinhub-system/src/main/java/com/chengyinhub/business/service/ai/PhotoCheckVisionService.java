@@ -93,7 +93,8 @@ public class PhotoCheckVisionService
             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
             return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
         }
-        if (!chargeQuota(memberId))
+        String reservation = chargeQuota(memberId);
+        if (reservation == null)
         {
             return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
         }
@@ -105,18 +106,20 @@ public class PhotoCheckVisionService
             {
                 throw new IllegalStateException("视觉审核通道未装配");
             }
+            if(aiGatewayService!=null) aiGatewayService.stageQuota(memberId,BIZ_TYPE,reservation,"MODEL_STARTED");
             answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), buildUserPrompt(requirement));
         }
         catch (Exception e)
         {
             // 没走到模型(未配置 key / 未启用)或调用失败(超时 / 限流 / HTTP 错):
             // 用户没拿到结论,按网关口径退还这一次,再按降级处理。
-            refundQuota(memberId);
+            refundQuota(memberId, reservation);
             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             alarm("拍照视觉审核调用失败", "memberId=" + memberId + " reason=" + truncate(reason, 200));
             return PhotoCheckVisionResult.degraded("照片暂时无法审核(" + truncate(reason, MAX_REASON_LENGTH) + ")");
         }
 
+        if(aiGatewayService!=null) aiGatewayService.retainQuota(memberId,BIZ_TYPE,reservation,"PHOTO_RESULT");
         PhotoCheckVisionResult parsed = parse(answer);
         if (parsed == null)
         {
@@ -136,42 +139,41 @@ public class PhotoCheckVisionService
     /**
      * 抢一次每日额度。超限不是错误,是降级原因之一 —— 玩家侧绝不因为额度耗尽被硬拦。
      *
-     * @return true=可以继续调模型;false=超限(已按降级口径返回)
+     * @return 凭证=已计费；空串=原基础服务故障降级；null=真实超限
      */
-    private boolean chargeQuota(Long memberId)
+    private String chargeQuota(Long memberId)
     {
         if (aiGatewayService == null || memberId == null)
         {
-            return true;
+            return "";
         }
         try
         {
-            aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
-            return true;
+            return aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
         }
         catch (AiServiceException overLimit)
         {
             log.info("[PhotoCheckVision] quota-exhausted memberId={}", memberId);
-            return false;
+            return null;
         }
         catch (RuntimeException quotaBroken)
         {
             // 额度层自身故障(Redis 抖动等)不该把玩家拦死:放行去调模型,
             // 与 remainingQuota 读不到时报满额的 fail-open 口径一致。
             log.warn("[PhotoCheckVision] quota-charge-failed memberId={}", memberId, quotaBroken);
-            return true;
+            return "";
         }
     }
 
-    private void refundQuota(Long memberId)
+    private void refundQuota(Long memberId, String reservation)
     {
-        if (aiGatewayService == null || memberId == null)
+        if (aiGatewayService == null || memberId == null || reservation == null || reservation.isEmpty())
         {
             return;
         }
         try
         {
-            aiGatewayService.refundQuota(memberId, BIZ_TYPE);
+            aiGatewayService.refundQuota(memberId, BIZ_TYPE, reservation);
         }
         catch (Exception e)
         {

@@ -115,6 +115,7 @@ class AdvancedGameFactsHookTest {
         when(playNoteMapper.insert(any(PlayNote.class))).thenReturn(1);
         vision = mock(PhotoCheckVisionService.class);
         ReflectionTestUtils.setField(service, "photoCheckVisionService", vision);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     // ==================== 成败事实:只写 sys.passed,不扣血 ====================

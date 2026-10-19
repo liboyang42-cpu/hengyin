@@ -76,6 +76,8 @@ class ReferralBountyHookWiringTest {
         activity.setDelFlag(0);
         activity.setId(800L);
         activity.setTopicId(TOPIC);
+        // 探店日票缺结束时间按已定规则暂禁新使用；本类验赏金钩子，给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activities.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", scanMapper);

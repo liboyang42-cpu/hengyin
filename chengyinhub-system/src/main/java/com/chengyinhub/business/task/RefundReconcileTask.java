@@ -47,7 +47,9 @@ public class RefundReconcileTask {
     @Autowired
     private com.chengyinhub.business.service.ICoopInviteService coopInviteService;
 
-    public void reconcile() {
+    private long scanCursor;
+
+    public synchronized void reconcile() {
         // 保证金与报名退款队列隔离；双方仍复用同一已注册调度入口。
         IllegalStateException depositFailure = null;
         try { coopInviteService.reconcileDepositRefunds(); }
@@ -76,36 +78,55 @@ public class RefundReconcileTask {
                 log.error("退款派发卡滞计数异常告警发送失败", alarmException);
             }
         }
-        List<RefundApplication> stale = refundApplicationMapper.selectStalePayoutProcessing(STALE_MINUTES);
+        Long upperBound = refundApplicationMapper.selectStalePayoutScanUpperBound(STALE_MINUTES);
+        long afterId = scanCursor;
+        if (upperBound == null || afterId >= upperBound) {
+            scanCursor = 0L;
+            afterId = 0L;
+        }
+        int scanned = 0;
         int done = 0;
-        for (RefundApplication r : stale) {
-            try {
-                if (Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(r.getPayoutStatus())
-                        || Integer.valueOf(RefundApplication.PAYOUT_DISPATCHING).equals(r.getPayoutStatus())) {
-                    // afterCommit 前宕机时这里会补派；微信以 RF+registrationId 幂等，重复调用不会二次退款。
-                    refundPayoutService.payoutAfterReview(r.getId());
-                } else {
-                    String refundNo = r.getRefundNo();
-                    if ((refundNo == null || refundNo.trim().isEmpty())
-                            && "registration".equals(r.getSourceType()) && r.getSourceId() != null) {
-                        refundNo = "RF" + r.getSourceId();
-                        if (refundApplicationMapper.ensureRefundNo(r.getId(), refundNo) != 1) {
+        while (upperBound != null && afterId < upperBound && scanned < 1000) {
+            List<RefundApplication> stale = refundApplicationMapper.selectStalePayoutProcessingAfter(
+                    STALE_MINUTES, afterId, upperBound, 200);
+            if (stale == null || stale.isEmpty()) { scanCursor = 0L; break; }
+            for (RefundApplication r : stale) {
+                if (r == null || r.getId() == null || r.getId() <= afterId || r.getId() > upperBound) {
+                    throw new IllegalStateException("退款维护游标未前进");
+                }
+                // 业务失败或无渠道号仍推进游标，不能让永久失败的前缀饿死后页。
+                afterId = r.getId();
+                scanCursor = afterId;
+                scanned++;
+                try {
+                    if (Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(r.getPayoutStatus())
+                            || Integer.valueOf(RefundApplication.PAYOUT_DISPATCHING).equals(r.getPayoutStatus())) {
+                        // afterCommit 前宕机时这里会补派；微信以 RF+registrationId 幂等，重复调用不会二次退款。
+                        refundPayoutService.payoutAfterReview(r.getId());
+                    } else {
+                        String refundNo = r.getRefundNo();
+                        if ((refundNo == null || refundNo.trim().isEmpty())
+                                && "registration".equals(r.getSourceType()) && r.getSourceId() != null) {
+                            refundNo = "RF" + r.getSourceId();
+                            if (refundApplicationMapper.ensureRefundNo(r.getId(), refundNo) != 1) {
+                                continue;
+                            }
+                        }
+                        if (refundNo == null || refundNo.trim().isEmpty()) {
                             continue;
                         }
+                        // 查微信真实态并经 handleRefundNotify 回写:SUCCESS→1 / ABNORMAL|CLOSED→2 / PROCESSING 保持
+                        wechatPayService.refreshPayoutFromWx(refundNo);
                     }
-                    if (refundNo == null || refundNo.trim().isEmpty()) {
-                        continue;
-                    }
-                    // 查微信真实态并经 handleRefundNotify 回写:SUCCESS→1 / ABNORMAL|CLOSED→2 / PROCESSING 保持
-                    wechatPayService.refreshPayoutFromWx(refundNo);
+                    done++;
+                } catch (Exception e) {
+                    log.error("退款对账处理失败 refundId={} refundNo={}", r.getId(), r.getRefundNo(), e);
                 }
-                done++;
-            } catch (Exception e) {
-                log.error("退款对账处理失败 refundId={} refundNo={}", r.getId(), r.getRefundNo(), e);
             }
         }
-        if (!stale.isEmpty()) {
-            log.info("退款对账:扫描 {} 单,刷新 {} 单", stale.size(), done);
+        if (upperBound != null && afterId >= upperBound) scanCursor = 0L;
+        if (scanned > 0) {
+            log.info("退款对账:扫描 {} 单,刷新 {} 单", scanned, done);
         }
         // 待人工/待复核积压巡检告警(即使无新失败,也提醒财务清理堆积)
         try {

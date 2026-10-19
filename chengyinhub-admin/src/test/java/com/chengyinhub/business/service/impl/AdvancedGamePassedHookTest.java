@@ -107,6 +107,7 @@ class AdvancedGamePassedHookTest {
         when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
         when(playNoteMapper.insert(any(PlayNote.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

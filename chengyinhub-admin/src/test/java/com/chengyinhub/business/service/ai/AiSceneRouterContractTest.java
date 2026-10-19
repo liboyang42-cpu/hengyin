@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.ai;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -78,11 +80,15 @@ public class AiSceneRouterContractTest
     }
 
     @Test
-    public void unknownBizTypeStillFallsBackToMock()
+    public void unknownOrMissingBizTypeFailsUnavailable()
     {
-        // 兜底行为本身要保留(未知场景不该抛异常炸掉调用方),这里钉住它,
-        // 免得上一条测试被人「修」成让 resolve 直接抛错。
         AiSceneRouter router = new AiSceneRouter();
-        assertNotEquals(null, router.resolve("definitely_not_a_registered_biz_type"));
+        for (String bizType : new String[] { null, "", "definitely_not_a_registered_biz_type" })
+        {
+            AiServiceException error = assertThrows(AiServiceException.class, () -> router.resolve(bizType));
+            assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        }
+        assertEquals("cache", router.resolve("npc_event"));
+        assertTrue(router.isCacheOnly("npc_event"));
     }
 }

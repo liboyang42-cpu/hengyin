@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
 class CouponNotIssuableSkipContractTest {
 
     private static final Long MEMBER = 501L;
+    private static final Long DROP_LOG = 9_701L;
     private static final Long COUPON = 77L;
     private static final Long NODE = 29L;
     private static final Long TEMPLATE = 39L;
@@ -153,9 +154,27 @@ class CouponNotIssuableSkipContractTest {
 
     // ── 漫游掉落 ──
 
+    /** C包：漫游掉落券经 RoamRewardDeliveryService 按 A 的原来源合同交付；这里接真实交付服务，仅 mapper/券服务为夹具。 */
     private ApiRoamController roamWith(ISmsCouponHistoryService couponService) {
         ApiRoamController controller = new ApiRoamController();
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", couponService);
+        // A包 grantCouponBySource 合同：未发出返回 null(Mockito 对 Long 默认 0L 会被当成无效收据)；用例内显式 stub 优先。
+        if (org.mockito.Mockito.mockingDetails(couponService).getStubbings().stream()
+                .noneMatch(st -> st.getInvocation().getMethod().getName().equals("grantCouponBySource"))) {
+            when(couponService.grantCouponBySource(anyLong(), anyLong(), anyString(), anyLong())).thenReturn(null);
+        }
+        com.chengyinhub.business.mapper.RoamRewardDeliveryMapper deliveries =
+                mock(com.chengyinhub.business.mapper.RoamRewardDeliveryMapper.class);
+        Map<String, Object> original = new java.util.HashMap<>();
+        original.put("dropType", 3); original.put("paramJson", "{\"couponTemplateId\":" + COUPON + "}");
+        when(deliveries.selectOriginalRewardDrop(DROP_LOG, MEMBER)).thenReturn(original);
+        Map<String, Object> intent = new java.util.HashMap<>();
+        intent.put("memberId", MEMBER); intent.put("couponId", COUPON); intent.put("state", "DUE"); intent.put("rewardKind", "COUPON");
+        when(deliveries.selectIntent(DROP_LOG)).thenReturn(intent);
+        org.springframework.transaction.PlatformTransactionManager tx = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(controller, "roamRewardDeliveryService", new RoamRewardDeliveryService(deliveries, couponService, tx,
+                mock(com.chengyinhub.business.service.IRewardDropService.class), mock(IGrowthService.class)));
         return controller;
     }
 
@@ -163,6 +182,7 @@ class CouponNotIssuableSkipContractTest {
         Map<String, Object> drop = new java.util.LinkedHashMap<>();
         drop.put("dropType", 3);
         drop.put("couponTemplateId", couponId);
+        drop.put("dropLogId", DROP_LOG); // A包 rollDrop 真实回包带原掉落ID
         ReflectionTestUtils.invokeMethod(controller, "applyRoamDrop", MEMBER, drop);
     }
 
@@ -174,6 +194,7 @@ class CouponNotIssuableSkipContractTest {
         applyDrop(roamWith(couponService), COUPON);
 
         verify(couponService, never()).grantCouponById(anyLong(), anyLong());
+        verify(couponService).grantCouponBySource(MEMBER, COUPON, "reward_drop", DROP_LOG); // 原来源无收据 → 停发即跳过
     }
 
     /** 负控:券不存在/库存耗尽时仍必须尝试发放并原样暴露失败。 */
@@ -181,10 +202,11 @@ class CouponNotIssuableSkipContractTest {
     void roamDropStillAttemptsGrantWhenCouponIssuableButEmpty() {
         ISmsCouponHistoryService couponService = mock(ISmsCouponHistoryService.class);
         when(couponService.isCouponNotIssuable(COUPON)).thenReturn(false);
-        when(couponService.grantCouponById(MEMBER, COUPON)).thenReturn(false);
+        when(couponService.grantCouponBySource(MEMBER, COUPON, "reward_drop", DROP_LOG)).thenReturn(null);
 
         applyDrop(roamWith(couponService), COUPON);
 
-        verify(couponService).grantCouponById(MEMBER, COUPON);
+        // C包改经原来源交付：可发但库存空时仍必须真正尝试发放(原来源合同)，失败保持待交付。
+        verify(couponService).grantCouponBySource(MEMBER, COUPON, "reward_drop", DROP_LOG);
     }
 }

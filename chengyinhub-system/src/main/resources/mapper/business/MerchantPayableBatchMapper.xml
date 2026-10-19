@@ -99,6 +99,7 @@
         update merchant_payable_batch
            set status = 'CONFIRMED', confirmed_at = now(), confirmed_by = #{confirmedBy}
          where id = #{id} and status = 'PENDING' and (frozen is null or frozen = 0)
+           and amount_total &gt; 0
     </update>
 
     <!-- 带 status='CONFIRMED' 条件:这是「先对账再打款」的唯一强制点。
@@ -107,12 +108,14 @@
         update merchant_payable_batch
            set status = 'PAID', paid_at = now(), paid_by = #{paidBy}, pay_voucher_no = #{payVoucherNo}
          where id = #{id} and status = 'CONFIRMED' and (frozen is null or frozen = 0)
+           and amount_total &gt; 0
     </update>
 
     <update id="markInvoiceIssued">
         update merchant_payable_batch
            set invoice_status = 'ISSUED', invoice_no = #{invoiceNo}
          where id = #{id} and invoice_status = 'NONE'
+           and (frozen is null or frozen = 0) and amount_total &gt; 0
     </update>
 
     <update id="markInvoiceRed">
