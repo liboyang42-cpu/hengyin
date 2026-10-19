@@ -66,6 +66,10 @@ MYBATIS_ITS=(
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT
   GameSessionIndependentRevisionMySqlIT
+  # 2026-10-19 SC-SCAN-LEGAL / SC-CITY-END:商家核验只完成本站且玩家投影/订单/接待记录一致;
+  #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
+  GameSessionScanLegalMySqlIT
+  GameSessionCityEndMySqlIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
   PredictLateBetRaceMySqlIT
