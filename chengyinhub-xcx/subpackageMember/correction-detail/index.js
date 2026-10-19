@@ -84,6 +84,7 @@ Page({
       this._requestText = checked.description
     }
     this._submitting = true
+    this._seq = (this._seq || 0) + 1 // BL-223 作废提交前已发出的刷新,免得旧快照(旧版本号)在补证成功后覆盖页面
     this._beforeVersion = item.version
     this.setData({ sheet: 'busy', failText: '' })
     app.sendRequest({
