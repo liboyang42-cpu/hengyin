@@ -71,4 +71,5 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 - BL-219（#275，纠错半屏同一缺陷）已合入；台账重建；全量单测 8792 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
 - BL-220（#276，安全感受评价提交中不能关闭半屏）已合入；已核对 `submitting` 在成功/业务失败/网络失败/异常状态码各路径都会清掉，不会锁死关闭；全量单测 8794 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
 - BL-221（#277，昵称推荐旧一轮作废时不再清掉新一轮的「推荐中」）已合入；`pages/gerenziliao/gerenziliao.js` 归 Claude CL3，但 Codex #69 也改此文件，同步 master 时一并解冲突；全量单测 8796 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-222（#278，申诉提交时作废在途刷新，旧回包不再把「提交申诉」放出来）已合入；已核对 `_settle` 在比对序号前先收下拉转圈、申诉只能在 ready 态发起，作废刷新不会留下转圈或 loading；台账重建；全量单测 8798 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
 - 合 master 前注意：Codex #69（`feature/prelaunch-code-tail-20261015` → master，209 个文件，2026-10-18 仍在更新）也改小程序 `app.json`、`pages/index`、`pages/member/index`、`pages/activity/list`、若干 `components/cy/scene-*`；它若先进 master，同步 master 进本分支时这些文件要一并解冲突，并按 4.5 口径重测主包体积。
