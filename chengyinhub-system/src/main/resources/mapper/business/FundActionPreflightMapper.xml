@@ -51,6 +51,12 @@
     <select id="selectById" resultMap="FundActionPreflightResult">
         select <include refid="columns"/> from fund_action_preflight where id=#{id}
     </select>
+    <!-- CAS loser must see committed consumption even with an older RR snapshot. -->
+    <select id="selectOwnedByIdForUpdate" resultMap="FundActionPreflightResult">
+        select <include refid="columns"/> from fund_action_preflight
+        where id=#{id} and member_id=#{memberId}
+        for update
+    </select>
     <select id="selectByIntent" resultMap="FundActionPreflightResult">
         select <include refid="columns"/> from fund_action_preflight
         where member_id=#{memberId} and action_type=#{actionType} and request_id=#{requestId}
