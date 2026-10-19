@@ -993,8 +993,16 @@ public class ApiCoopController extends BaseController {
         if (inv.getStatus() == null || inv.getStatus() != 1) return error("仅已合作可联系");
         Long toOwner = resolveToOwner(inv);
         Long fromOwner = resolveFromOwner(inv);
-        boolean isFrom = fromOwner != null && memberId.equals(fromOwner);
-        boolean isTo = toOwner != null && memberId.equals(toOwner);
+        // SC-FREE-TERMS:与 /list 同一口径 —— 商家员工(COOP_MANAGE)按商家 ownerMemberId 认合同主体,
+        // 否则 /list 能看到合作方、/contact 却报无权联系。第三方仍拒。
+        Long contractMemberId;
+        try {
+            contractMemberId = resolveActionContractMemberId(memberId, inv, fromOwner, toOwner, true, true);
+        } catch (ServiceException e) {
+            return error("无权联系");
+        }
+        boolean isFrom = fromOwner != null && contractMemberId.equals(fromOwner);
+        boolean isTo = toOwner != null && contractMemberId.equals(toOwner);
         if (!isFrom && !isTo) return error("无权联系");
         Long other = isFrom ? toOwner : fromOwner;
         if (other == null) return error("对方暂不可联系");

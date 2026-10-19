@@ -396,6 +396,10 @@ class FreeExploreSupplyNodeTermsAcceptanceTest {
         private static final Long HOST = 300L;
         private static final Long OWNER = 500L;
         private static final Long STRANGER = 777L;
+        /** 合作商家 OWNER 名下有 COOP_MANAGE 的员工。 */
+        private static final Long OWNER_OPERATOR = 501L;
+        /** 另一家商家(主体 600)的员工:对这条邀约是第三方。 */
+        private static final Long FOREIGN_OPERATOR = 601L;
         private static final Long INVITE = 61L;
         private static final Long TOPIC = 200L;
         private final Date deadline = new Date(1_900_000_000_000L);
@@ -427,6 +431,12 @@ class FreeExploreSupplyNodeTermsAcceptanceTest {
                     new MerchantAccessContext(OWNER, 9001L, OWNER, MerchantRoleCode.MERCHANT_OWNER));
             when(access.require(HOST, MerchantPermission.COOP_MANAGE))
                     .thenThrow(new ServiceException("非商家", 403));
+            when(access.require(STRANGER, MerchantPermission.COOP_MANAGE))
+                    .thenThrow(new ServiceException("非商家", 403));
+            when(access.require(OWNER_OPERATOR, MerchantPermission.COOP_MANAGE)).thenReturn(
+                    new MerchantAccessContext(OWNER_OPERATOR, 9001L, OWNER, MerchantRoleCode.MERCHANT_MANAGER));
+            when(access.require(FOREIGN_OPERATOR, MerchantPermission.COOP_MANAGE)).thenReturn(
+                    new MerchantAccessContext(FOREIGN_OPERATOR, 9002L, 600L, MerchantRoleCode.MERCHANT_MANAGER));
             CmsTopic topic = new CmsTopic();
             topic.setId(TOPIC);
             topic.setMemberId(HOST);
@@ -500,6 +510,25 @@ class FreeExploreSupplyNodeTermsAcceptanceTest {
             assertEquals(200, owner.get(AjaxResult.CODE_TAG));
             verify(imService).startSingle(HOST, OWNER);
             verify(imService).startSingle(OWNER, HOST);
+        }
+
+        /** 与 /list 同一口径:商家员工按商家主体认合同方,能联系对方;会话由员工本人发起。 */
+        @Test
+        void contact_authorisedOperatorOfMerchantParty_reachesTheOtherParty() {
+            AjaxResult r = contactAs(OWNER_OPERATOR, 1);
+
+            assertEquals(200, r.get(AjaxResult.CODE_TAG), String.valueOf(r.get(AjaxResult.MSG_TAG)));
+            verify(imService).startSingle(OWNER_OPERATOR, HOST);
+        }
+
+        @Test
+        void contact_operatorOfAnotherMerchant_refusedWithoutConversation() {
+            AjaxResult r = contactAs(FOREIGN_OPERATOR, 1);
+
+            assertEquals(500, r.get(AjaxResult.CODE_TAG));
+            assertEquals("无权联系", r.get(AjaxResult.MSG_TAG));
+            assertNull(r.get(AjaxResult.DATA_TAG));
+            verify(imService, never()).startSingle(any(), any());
         }
 
         @Test
