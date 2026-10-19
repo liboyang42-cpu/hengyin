@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.TopicChapterVO;
@@ -690,6 +691,8 @@ public class ApiTopicController extends BaseController {
             } else {
                 topicId = cmsTopicService.updateTopicByOwner(dto, memberId, getAppUserName());
             }
+        } catch (ChapterFlowClientUpgradeRequiredException e) {
+            return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, e.getMessage());
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
