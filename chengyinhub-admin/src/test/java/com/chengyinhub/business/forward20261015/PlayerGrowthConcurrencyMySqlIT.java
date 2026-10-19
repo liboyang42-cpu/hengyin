@@ -254,6 +254,9 @@ class PlayerGrowthConcurrencyMySqlIT {
     /** 首请求持成长锁时让第二请求撞上未提交的 TOPIC_FINISH_11；返回第二请求，首请求已断言为首次通关。 */
     private Future<TopicCompletionAwardVO> sameTopicDuplicate(boolean retryBoundary, AtomicInteger markerInserts)
             throws Exception {
+        // delete 留下的未 purge 删除标记行（前面用例的 TOPIC_CLEAR/MILE_*）会落在插入点与 TOPIC_FINISH_11 之间，
+        // 首请求的插入就不再撞第二请求等待中的间隙锁，成环与否随 purge 进度漂移；重建表让索引里只有本用例的行。
+        db.execute("truncate table player_badge");
         seed(4, "8.50", 2);
         CountDownLatch firstLocked = new CountDownLatch(1);
         CountDownLatch releaseFirst = new CountDownLatch(1);
@@ -284,6 +287,7 @@ class PlayerGrowthConcurrencyMySqlIT {
             assertTrue(firstLocked.await(5, TimeUnit.SECONDS));
             two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
             assertTrue(secondMarkerAttempted.await(5, TimeUnit.SECONDS));
+            awaitBadgeLockWait();
             assertFalse(two.isDone(), "首个通关事实尚未提交时，第二请求不能确认通关");
             releaseFirst.countDown();
             assertTrue(one.get(5, TimeUnit.SECONDS).isFirstCompletion());
@@ -483,6 +487,19 @@ class PlayerGrowthConcurrencyMySqlIT {
         assertTrue(start >= 0, "基线表定义缺失: " + table);
         int end = ddl.indexOf(';', start);
         db.execute(ddl.substring(start, end + 1));
+    }
+
+    /** 第二请求的判重插入真正在 InnoDB 里排上 player_badge 的锁等待后才放行首请求，否则放行过早时不成环。 */
+    private void awaitBadgeLockWait() throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            Integer waits = db.queryForObject("select count(*) from performance_schema.data_lock_waits w"
+                    + " join performance_schema.data_locks l on l.engine_lock_id = w.requesting_engine_lock_id"
+                    + " where l.object_schema = database() and l.object_name = 'player_badge'", Integer.class);
+            if (waits != null && waits > 0) return;
+            Thread.sleep(10);
+        }
+        fail("第二请求未在 player_badge 上排队等锁");
     }
 
     private static void await(CountDownLatch latch) {
