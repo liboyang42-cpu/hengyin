@@ -95,7 +95,7 @@ class OWN_C03_22Test {
             CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
             doAnswer(call -> {
                 CmsTopicChapter row = call.getArgument(0);
-                row.setId(mode == 0 ? 210L : mode == 1 ? null : mode == 2 ? 0L : -1L);
+                row.setId(mode == 1 ? null : Long.valueOf(mode == 0 ? 210L : mode == 2 ? 0L : -1L));
                 return mode == 0 ? 0 : 1;
             }).when(chapters).insertCmsTopicChapter(any(CmsTopicChapter.class));
             assertThrows(IllegalStateException.class, () -> copy());
@@ -107,7 +107,7 @@ class OWN_C03_22Test {
             setup(); final int mode = failure;
             doAnswer(call -> {
                 CmsTopicNode row = call.getArgument(0);
-                row.setId(mode == 0 ? 310L : mode == 1 ? null : mode == 2 ? 0L : -1L);
+                row.setId(mode == 1 ? null : Long.valueOf(mode == 0 ? 310L : mode == 2 ? 0L : -1L));
                 return mode == 0 ? 0 : 1;
             }).when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
             assertThrows(IllegalStateException.class, () -> copy());
