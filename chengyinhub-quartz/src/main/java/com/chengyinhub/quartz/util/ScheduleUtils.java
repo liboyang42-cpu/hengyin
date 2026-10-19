@@ -1,5 +1,7 @@
 package com.chengyinhub.quartz.util;
 
+import java.util.Map;
+import org.springframework.aop.support.AopUtils;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
@@ -28,6 +30,28 @@ import com.chengyinhub.quartz.domain.SysJob;
  */
 public class ScheduleUtils
 {
+    private static final Map<String, String> EXISTING_BUSINESS_TASK_TARGETS = Map.ofEntries(
+            Map.entry("auditBacklogMonitorTask.run()", "com.chengyinhub.business.task.AuditBacklogMonitorTask"),
+            Map.entry("beforeStartNotifyTask.run()", "com.chengyinhub.business.task.BeforeStartNotifyTask"),
+            Map.entry("clubEventOpsTask.run()", "com.chengyinhub.business.task.ClubEventOpsTask"),
+            Map.entry("clubPostMediaReviewTask.run()", "com.chengyinhub.business.task.ClubPostMediaReviewTask"),
+            Map.entry("clubSessionReconciliationTask.run()", "com.chengyinhub.business.task.ClubSessionReconciliationTask"),
+            Map.entry("dataRetentionCleanupTask.run()", "com.chengyinhub.business.task.DataRetentionCleanupTask"),
+            Map.entry("merchantAftercareTimeoutTask.run()", "com.chengyinhub.business.task.MerchantAftercareTimeoutTask"),
+            Map.entry("merchantCommerceReconcileTask.reconcile()", "com.chengyinhub.business.task.MerchantCommerceReconcileTask"),
+            Map.entry("merchantCrmDeliveryRecoveryTask.run()", "com.chengyinhub.business.task.MerchantCrmDeliveryRecoveryTask"),
+            Map.entry("orderCloseTask.closeExpired()", "com.chengyinhub.business.task.OrderCloseTask"),
+            Map.entry("orderCloseTask.reconcileExpiredPaying()", "com.chengyinhub.business.task.OrderCloseTask"),
+            Map.entry("piiBackfillTask.run()", "com.chengyinhub.business.task.PiiBackfillTask"),
+            Map.entry("refundReconcileTask.reconcile()", "com.chengyinhub.business.task.RefundReconcileTask"),
+            Map.entry("registrationAutoVerifyTask.run()", "com.chengyinhub.business.task.RegistrationAutoVerifyTask"),
+            Map.entry("roamPresenceRevokeAuditTask.run()", "com.chengyinhub.business.task.RoamPresenceRevokeAuditTask"),
+            Map.entry("settlementReconciliationTask.run()", "com.chengyinhub.business.task.SettlementReconciliationTask"),
+            Map.entry("storeVerifyGrowthTask.run()", "com.chengyinhub.business.task.StoreVerifyGrowthTask"),
+            Map.entry("verificationQrcodeRepairTask.repairMissing()", "com.chengyinhub.business.task.VerificationQrcodeRepairTask"),
+            Map.entry("withdrawReconciliationTask.run()", "com.chengyinhub.business.task.WithdrawReconciliationTask"),
+            Map.entry("withdrawTransferQueryTask.run()", "com.chengyinhub.business.task.WithdrawTransferQueryTask"),
+            Map.entry("wxTradeBillDownloadTask.download()", "com.chengyinhub.business.task.WxTradeBillDownloadTask"));
     private static final Logger log = LoggerFactory.getLogger(ScheduleUtils.class);
 
     /**
@@ -141,6 +165,13 @@ public class ScheduleUtils
      */
     public static boolean whiteList(String invokeTarget)
     {
+        String expectedBusinessClass = invokeTarget == null ? null
+                : EXISTING_BUSINESS_TASK_TARGETS.get(invokeTarget.trim());
+        if (expectedBusinessClass != null)
+        {
+            Object bean = SpringUtils.getBean(JobInvokeUtil.getBeanName(invokeTarget.trim()));
+            return expectedBusinessClass.equals(AopUtils.getTargetClass(bean).getName());
+        }
         String packageName = StringUtils.substringBefore(invokeTarget, "(");
         int count = StringUtils.countMatches(packageName, ".");
         if (count > 1)
