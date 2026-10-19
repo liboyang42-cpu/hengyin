@@ -132,10 +132,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
-        String openid = resolveOpenid(memberId);
-        stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
+        String openid;
         String secIn;
         try {
+            openid = resolveOpenid(memberId);
+            stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
             // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
                     + (userPrompt == null ? "" : userPrompt);
