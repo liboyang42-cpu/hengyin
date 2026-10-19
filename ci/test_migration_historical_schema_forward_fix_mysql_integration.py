@@ -274,6 +274,131 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
 
 
 
+    JOB_DICT_FORWARD = REPO / "chengyinhub-admin/sql/migration_20261017_job_dictionary_missing_seed.sql"
+
+    def apply_job_dict_forward(self, path=None):
+        connection = self.connect()
+        try:
+            results = []
+            ok = run_file(connection.cursor(), path or self.JOB_DICT_FORWARD,
+                          "job-dictionary-forward", results, False, schema_only=True)
+            return ok, results
+        finally:
+            connection.close()
+
+    def job_dict_rows(self):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT * FROM sys_dict_type ORDER BY dict_id")
+                types = cur.fetchall()
+                cur.execute("SELECT * FROM sys_dict_data ORDER BY dict_code")
+                return types, cur.fetchall()
+        finally:
+            connection.close()
+
+    def test_job_dictionary_empty_seed_exact_defaults_then_replay(self):
+        self.assertEqual(((), ()), self.job_dict_rows())
+        self.assertEqual((True, []), self.apply_job_dict_forward())
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT dict_name,dict_type,status,remark FROM sys_dict_type ORDER BY dict_type")
+                self.assertEqual((("任务分组","sys_job_group","0","任务分组列表"),
+                                  ("任务状态","sys_job_status","0","任务状态列表")), cur.fetchall())
+                cur.execute("SELECT dict_sort,dict_label,dict_value,dict_type,css_class,list_class,is_default,status,remark "
+                            "FROM sys_dict_data ORDER BY dict_type,dict_sort")
+                self.assertEqual(((1,"默认","DEFAULT","sys_job_group","","","Y","0","默认分组"),
+                                  (2,"系统","SYSTEM","sys_job_group","","","N","0","系统分组"),
+                                  (1,"正常","0","sys_job_status","","primary","Y","0","正常状态"),
+                                  (2,"暂停","1","sys_job_status","","danger","N","0","停用状态")), cur.fetchall())
+        finally:
+            connection.close()
+        before = self.job_dict_rows()
+        self.assertEqual((True, []), self.apply_job_dict_forward())
+        self.assertEqual(before, self.job_dict_rows())
+
+    def test_job_dictionary_preserves_custom_disabled_and_unrelated_rows(self):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("INSERT INTO sys_dict_type(dict_name,dict_type,status,remark) VALUES"
+                            "('custom-status','SYS_JOB_STATUS','1','leave intact'),('unrelated','owned_other','0','unchanged')")
+                cur.execute("INSERT INTO sys_dict_data(dict_sort,dict_label,dict_value,dict_type,status,is_default,remark) VALUES"
+                            "(9,'disabled-custom','0','SYS_JOB_STATUS','1','N','unchanged'),"
+                            "(8,'orphan-custom','DEFAULT','sys_job_group','1','N','unchanged'),"
+                            "(7,'extra-custom','CUSTOM','sys_job_group','0','Y','unchanged'),"
+                            "(6,'unrelated','X','owned_other','0','N','unchanged')")
+        finally:
+            connection.close()
+        before = self.job_dict_rows()
+        self.assertEqual((True, []), self.apply_job_dict_forward())
+        after = self.job_dict_rows()
+        self.assertTrue(set(before[0]) <= set(after[0]))
+        self.assertTrue(set(before[1]) <= set(after[1]))
+        self.assertEqual((3,6), tuple(map(len, after)))
+        self.assertEqual((True, []), self.apply_job_dict_forward())
+        self.assertEqual(after, self.job_dict_rows())
+
+    def test_job_dictionary_duplicate_standard_key_rejects_without_partial_insert(self):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("INSERT INTO sys_dict_data(dict_label,dict_value,dict_type) VALUES"
+                            "('first','0','sys_job_status'),('second','0','sys_job_status')")
+        finally:
+            connection.close()
+        before = self.job_dict_rows()
+        ok, results = self.apply_job_dict_forward()
+        self.assertFalse(ok)
+        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual(before, self.job_dict_rows())
+        # A legacy schema without its unique index can contain two type keys
+        # that the real case-insensitive API treats as the same dictionary.
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("DELETE FROM sys_dict_data")
+                cur.execute("ALTER TABLE sys_dict_type DROP INDEX dict_type")
+                cur.execute("INSERT INTO sys_dict_type(dict_name,dict_type,status) VALUES"
+                            "('first','sys_job_status','0'),('second','SYS_JOB_STATUS','1')")
+        finally:
+            connection.close()
+        before = self.job_dict_rows()
+        ok, results = self.apply_job_dict_forward()
+        self.assertFalse(ok)
+        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual(before, self.job_dict_rows())
+
+    def test_job_dictionary_late_actual_error_rolls_back_both_tables(self):
+        import tempfile
+        before = self.job_dict_rows()
+        text = self.JOB_DICT_FORWARD.read_text(encoding="utf-8")
+        needle = "DROP TEMPORARY TABLE tmp_cy_job_dict_guard;"
+        self.assertEqual(1, text.count(needle))
+        text = text.replace(needle, "INSERT INTO tmp_cy_job_dict_guard(id) VALUES(1);\n" + needle)
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "owned-late-error.sql"
+            path.write_text(text, encoding="utf-8")
+            ok, results = self.apply_job_dict_forward(path)
+        self.assertFalse(ok)
+        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual(before, self.job_dict_rows())
+
+    def test_job_dictionary_nontransactional_table_rejects_before_seed_write(self):
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("ALTER TABLE sys_dict_data ENGINE=MyISAM")
+        finally:
+            connection.close()
+        before = self.job_dict_rows()
+        ok, results = self.apply_job_dict_forward()
+        self.assertFalse(ok)
+        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual(before, self.job_dict_rows())
+
+
 class RetentionJobRegistrationMysqlIntegrationTest(unittest.TestCase):
     """Exercise the real forward through the fresh-schema runner on a tiny owned table."""
 
