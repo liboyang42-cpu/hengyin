@@ -62,7 +62,7 @@ function loadDetail() {
     Date,
     JSON,
     wx: {
-      navigateTo(options) { navigations.push(options.url) },
+      navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       pageScrollTo(options) { scrolls.push(options) },
       showToast() {},
       showModal() {},

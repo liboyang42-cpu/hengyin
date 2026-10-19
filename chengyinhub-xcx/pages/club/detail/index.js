@@ -860,26 +860,26 @@ Page({
     });
     this.setData({ merchants: hit });
   },
-  goCoopList() { wx.navigateTo({ url: '/pages/coop/list/index' }); },
-  goCooperation() { wx.navigateTo({ url: '/pages/coop/list/index?tab=sent' }); },
+  goCoopList() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index', complete: () => { this._navigating = false; } }); },
+  goCooperation() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=sent', complete: () => { this._navigating = false; } }); },
 
   // 客户按人聚合(来过几次、标签备注),与按团聚合的报名名册各走各的入口。
   goCustomers() {
     const cid = (this.data.club || {}).id || this.data.clubId;
-    if (cid) wx.navigateTo({ url: '/pages/club/customers/index?clubId=' + cid });
+    if (!cid || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/customers/index?clubId=' + cid, complete: () => { this._navigating = false; } });
   },
 
   // 俱乐部管理 tab 保留报名名册入口；收益统一归「我的资产」。
   goEnroll() {
     const c = this.data.club || {};
     const cid = c.id || this.data.clubId;
-    if (cid) wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + cid + '&clubName=' + encodeURIComponent(c.name || '') });
+    if (!cid || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + cid + '&clubName=' + encodeURIComponent(c.name || ''), complete: () => { this._navigating = false; } });
   },
 
   goEventOps() {
     const club = this.data.club;
     if (!club || !(this.canGovern(club) || this.data.canManageActivities) || !this.data.clubId) return;
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this.data.clubId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
   },
 
   /**
@@ -960,7 +960,7 @@ Page({
     if (!club || !club.isOwner) return;
     const clubId = club.id || this.data.clubId;
     if (!clubId) return;
-    wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + encodeURIComponent(clubId) });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + encodeURIComponent(clubId), complete: () => { this._navigating = false; } });
   },
 
   // 快捷动作「出示二维码」:复用现成的团核销码链路(showGroupCode 同一套)。
@@ -995,7 +995,7 @@ Page({
     const club = this.data.club;
     // 守卫与显示条件必须同源,否则「看不见但点得到」或反过来
     if (!club || !(club.isOwner || this.data.canSendNotify) || !this.data.clubId) return;
-    wx.navigateTo({ url: '/pages/club/notify/index?clubId=' + this.data.clubId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/notify/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
   },
 
   openActivityTools(e) {
@@ -1511,7 +1511,7 @@ Page({
   // 不必再拿 merchantId 多绕一次解析。
   goMerchantProfile(e) {
     const url = merchantHomeUrl(e.currentTarget.dataset.memberid);
-    if (url) wx.navigateTo({ url: url });
+    if (url) { if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } }); } }
     else cyToast('该商家暂不可查看');
   },
 
@@ -2283,7 +2283,7 @@ Page({
     const memberId = e.currentTarget.dataset.memberId;
     if (!memberId) return;
     const that = this;
-    const goPublic = () => wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId });
+    const goPublic = () => { if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { that._navigating = false; } }); };
     if (!this.canReadCustomerProfile()) { goPublic(); return; }
     this.openChoiceSheet('查看该成员', '', [
       { key: 'public', label: '公开资料' },
@@ -2292,7 +2292,7 @@ Page({
       if (picked && picked.key === 'customer') {
         const clubId = that.data.clubId;
         if (clubId) {
-          wx.navigateTo({ url: '/pages/club/customer-detail/index?clubId=' + clubId + '&memberId=' + memberId });
+          if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/club/customer-detail/index?clubId=' + clubId + '&memberId=' + memberId, complete: () => { that._navigating = false; } });
           return;
         }
       }
@@ -2359,8 +2359,8 @@ Page({
   goJoinRequests() {
     if (!this.data.club || !(this.canGovern() || this.data.canApproveMembers)) return;
     const that = this;
-    wx.navigateTo({
-      url: '/pages/club/join-requests/index?clubId=' + this.data.clubId,
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/club/join-requests/index?clubId=' + this.data.clubId, complete() { that._navigating = false; },
       success(navigation) {
         if (navigation.eventChannel) navigation.eventChannel.on('joinRequestsChanged', function () {
           that.loadDetail();
@@ -2381,7 +2381,7 @@ Page({
   goClubRoles() {
     if (!this.data.club || !(this.data.club.isOwner || this.data.canManageRoles)
         || !this.data.clubId) return;
-    wx.navigateTo({ url: '/pages/club/roles/index?clubId=' + this.data.clubId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/roles/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
   },
 
   goMemberRoles(e) {
@@ -2390,14 +2390,14 @@ Page({
     const club = this.data.club;
     if (!club || !(club.isOwner || this.data.canManageRoles) || !clubId || !memberId
         || String(memberId) === String(club.memberId)) return;
-    wx.navigateTo({ url: '/pages/club/roles/index?clubId=' + clubId + '&memberId=' + memberId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/roles/index?clubId=' + clubId + '&memberId=' + memberId, complete: () => { this._navigating = false; } });
   },
 
   goClubGovernance() {
     if (!this.data.club || !(this.canGovern() || this.data.canManageMembers)
         || !this.data.clubId) return;
     this.closeSettings();
-    wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + this.data.clubId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
   },
 
   goMemberGovernance(e) {
@@ -2406,7 +2406,7 @@ Page({
     const club = this.data.club;
     if (!club || !(this.canGovern(club) || this.data.canManageMembers) || !clubId || !memberId
         || String(memberId) === String(club.memberId)) return;
-    wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId + '&memberId=' + memberId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId + '&memberId=' + memberId, complete: () => { this._navigating = false; } });
   },
 
   reportClubMember(e) {
@@ -2417,22 +2417,22 @@ Page({
         || String(memberId) === String(this.data.myMemberId)) return;
     // CU-C-82:举报页要写得清「举报的是谁」。目标名从行上带过去(此处不重查名单)。
     const nickname = reportTargetName(dataset.nickname);
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/club/governance/index?clubId=' + clubId
         + '&mode=report&targetMemberId=' + memberId
         + (nickname ? '&targetName=' + encodeURIComponent(nickname) : ''),
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   reportClub() {
     const clubId = positiveId(this.data.clubId);
     if (!this.data.canSeeMembers || !clubId) return;
     const clubName = reportTargetName(this.data.club && this.data.club.name);
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/club/governance/index?clubId=' + clubId
         + '&mode=report&targetType=CLUB&targetId=' + clubId
         + (clubName ? '&targetName=' + encodeURIComponent(clubName) : ''),
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   reportTopicActivity(e) {
@@ -2491,7 +2491,7 @@ Page({
   goClubAppeal() {
     const clubId = positiveId(this.data.clubId);
     if (!clubId) return;
-    wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId + '&mode=appeal' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId + '&mode=appeal', complete: () => { this._navigating = false; } });
   },
 
   // 主理人发起新团 → 锁定本俱乐部归属(直达 fabu),后端再校验俱乐部身份
@@ -2505,9 +2505,9 @@ Page({
         { key: '1', label: '城市定向 · 顺序探索' },
         { key: '2', label: '自由探索 · 全点开放' },
       ],
-      function (item) {
+      (item) => {
         const mode = item.key;
-        wx.navigateTo({ url: '/pages/publish/fabu/index?clubId=' + cid + '&mode=' + mode });
+        if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?clubId=' + cid + '&mode=' + mode, complete: () => { this._navigating = false; } });
       }
     );
   },
@@ -2517,7 +2517,7 @@ Page({
     const club = this.data.club;
     const clubId = positiveId((club && club.id) || this.data.clubId);
     if (!club || !club.isOwner || !clubId) return;
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + clubId + '&recurrence=ONCE' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + clubId + '&recurrence=ONCE', complete: () => { this._navigating = false; } });
   },
 
   // 退出俱乐部(成员;群主不可退,后端拦)。退出同步移出团群。
@@ -2631,7 +2631,7 @@ Page({
     const url = canManage
       ? '/pages/club/topic-detail/index?topicId=' + id + this.clubIdQuery()
       : '/pages/topic/index/index?id=' + id;
-    wx.navigateTo({ url: url });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
   },
 
   // P0(2026-09-05 审核):活动详情页的管理入口(管理场次/团码/导演台)都要 clubId,
@@ -2646,7 +2646,7 @@ Page({
     const id = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
     if (!id || !this.data.club) return;
     if (this.canGovern() || this.data.canManageActivities || this.data.canOperateEvents) {
-      wx.navigateTo({ url: '/pages/club/topic-detail/index?topicId=' + id + this.clubIdQuery() });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/topic-detail/index?topicId=' + id + this.clubIdQuery(), complete: () => { this._navigating = false; } });
       return;
     }
     if (this.data.hasEventScope && (this._eventTopicIds || {})[String(id)]) {
@@ -3296,5 +3296,5 @@ Page({
       fail() { done('操作确认没有打开，请重试'); },
     });
   },
-  goCoopSent() { wx.navigateTo({ url: '/pages/coop/list/index?tab=sent' }); },
+  goCoopSent() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=sent', complete: () => { this._navigating = false; } }); },
 });
