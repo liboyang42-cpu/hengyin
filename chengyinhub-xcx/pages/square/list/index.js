@@ -1,4 +1,4 @@
-const reportSheet = require('../../../utils/community-report-sheet.js');
+const reportSheet = require('../utils/community-report-sheet.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');

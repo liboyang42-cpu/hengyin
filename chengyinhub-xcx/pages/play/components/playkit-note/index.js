@@ -5,7 +5,7 @@
 // ★ 存哪儿是服务端的事(优先复用 dailySign 那套跨玩家存储),客户端不挑存储。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
-const kitDraft = require('../../../../utils/kit-draft.js');
+const kitDraft = require('../../utils/kit-draft.js');
 
 Component({
   behaviors: [reducedMotionBehavior],

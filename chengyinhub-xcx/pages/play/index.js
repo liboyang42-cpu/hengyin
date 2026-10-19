@@ -127,8 +127,8 @@ const PLAY_STORY_CARD = Object.freeze({
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
 const storyAudio = require('../../utils/story-audio.js');
-const storyScene = require('../../utils/story-scene.js');
-const lifeArchive = require('../../utils/life-archive.js');
+const storyScene = require('./utils/story-scene.js');
+const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 const STORY_SOUND_KEY = 'cy_story_sound_off';
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
