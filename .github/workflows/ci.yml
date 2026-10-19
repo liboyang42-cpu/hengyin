@@ -207,6 +207,12 @@ jobs:
         run: |
           node chengyinhub-xcx/scripts/roam-redline-gate.js --selftest
           node chengyinhub-xcx/scripts/roam-redline-gate.js
+      - name: Forbidden production host gate (self-test first)
+        # 公开仓:生产库主机 / 生产应用机的 IPv4 不许进当前树(按 SHA-256 比对,门禁本身不含明文)。
+        # 挂在无条件 job 上:地址可能落在任何栈的文档、SQL 注释或测试里。
+        run: |
+          python3 ci/test_forbidden_hosts_gate.py
+          python3 ci/forbidden_hosts_gate.py
 
   fast_gates:
     name: Fast gates (CWD / API existence / silentError)

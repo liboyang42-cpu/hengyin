@@ -1,10 +1,12 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.it.ForbiddenDbHosts;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 /** Dedicated VPS only: explicit credentials, exclusive schema, never delete an existing schema. */
@@ -15,6 +17,10 @@ public final class CloudTenMySqlFixture implements AutoCloseable {
     private boolean created;
 
     static MysqlIntegrationTestConfig configuration(Map<String, String> env, String suite) {
+        return configuration(env, suite, ForbiddenDbHosts.BUILT_IN_SHA256);
+    }
+
+    static MysqlIntegrationTestConfig configuration(Map<String, String> env, String suite, Set<String> forbiddenSha256) {
         if (!"1".equals(env.get(GATE))) throw new IllegalArgumentException("Dedicated MySQL test gate is required");
         if (!"1".equals(env.get("CHENGYIN_TEN_FEATURES_VPS")))
             throw new IllegalArgumentException("Dedicated VPS test gate is required");
@@ -25,7 +31,7 @@ public final class CloudTenMySqlFixture implements AutoCloseable {
         if (!env.containsKey("CHENGYIN_TEST_MYSQL_PASSWORD"))
             throw new IllegalArgumentException("Explicit MySQL test PASSWORD setting is required");
         String host = env.get("CHENGYIN_TEST_MYSQL_HOST");
-        if ("47.103.124.64".equals(host) || "47.100.84.122".equals(host))
+        if (ForbiddenDbHosts.isForbidden(host, env.get(ForbiddenDbHosts.ENV), forbiddenSha256))
             throw new IllegalArgumentException("Production destinations are forbidden for tests");
         if (!"cy_cloudten_it".equals(env.get("CHENGYIN_TEST_MYSQL_DATABASE_BASE")))
             throw new IllegalArgumentException("This suite requires the cy_cloudten_it database prefix");

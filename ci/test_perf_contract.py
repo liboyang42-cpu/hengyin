@@ -7,6 +7,7 @@ validation modes and never open a network connection.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -14,6 +15,7 @@ import subprocess
 import tempfile
 import sys
 import unittest
+import unittest.mock
 from pathlib import Path
 
 
@@ -47,7 +49,6 @@ class PerfHarnessContractTest(unittest.TestCase):
     def test_rejects_production_targets_by_gate_name(self) -> None:
         blocked_targets = (
             "https://www.chengyinhub.com",
-            "http://47.103.124.64:8080",
             "https://api.chengyinhub.com",
         )
 
@@ -56,6 +57,33 @@ class PerfHarnessContractTest(unittest.TestCase):
                 result = self.run_harness("read", env={"PERF_BASE_URL": target})
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("PRODUCTION_TARGET_BLOCKED", result.stderr)
+
+        # Production IPs are not written in plaintext: the env denylist and the
+        # SHA-256 path are exercised with a TEST-NET fixture host instead.
+        fixture_host = "203.0.113.7"
+        result = self.run_harness("read", env={
+            "PERF_BASE_URL": f"http://{fixture_host}:8080",
+            "CHENGYIN_FORBIDDEN_DB_HOSTS": f"198.51.100.1, {fixture_host}",
+        })
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PRODUCTION_TARGET_BLOCKED", result.stderr)
+
+        sys.path.insert(0, str(PERF_DIR))
+        self.addCleanup(sys.path.remove, str(PERF_DIR))
+        import perf_harness
+
+        denylist = frozenset({hashlib.sha256(fixture_host.encode("utf-8")).hexdigest()})
+        self.assertTrue(perf_harness.is_blocked_host(fixture_host, denylist))
+        self.assertFalse(perf_harness.is_blocked_host(fixture_host, frozenset()))
+        self.assertEqual(frozenset({
+            "d8c695fe7dd5f6ffc048b72c96621f7e7d13d3ec23b76aab523514183e7474d9",
+            "ce1a8527392b68bab1ab6a91238a5e6909cbbb937b9eb077d1025499a59f03fe",
+        }), perf_harness.BLOCKED_HOST_SHA256)
+        with unittest.mock.patch.object(perf_harness, "BLOCKED_HOST_SHA256", denylist), \
+                unittest.mock.patch.dict(os.environ, {"PERF_BASE_URL": f"http://{fixture_host}:8080"}):
+            with self.assertRaises(perf_harness.GateFailure) as raised:
+                perf_harness.base_url_from_env()
+        self.assertEqual("PRODUCTION_TARGET_BLOCKED", raised.exception.gate)
 
     def test_no_dry_run_is_locked_and_missing_tools_fail_closed(self) -> None:
         empty_path = tempfile.mkdtemp(prefix="perf-empty-path-")
