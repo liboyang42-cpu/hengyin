@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -202,6 +203,17 @@ class ApiCartControllerSettlementTest {
         m.setPoint(point);
         when(memberSvc.selectUmsMemberById(MEMBER)).thenReturn(m);
         when(memberSvc.deductPoints(anyLong(), anyInt())).thenReturn(true);
+        doAnswer(invocation -> {
+            com.chengyinhub.business.domain.OmsOrder order = invocation.getArgument(0);
+            order.setId(777L);
+            return 1;
+        }).when(orderSvc).insertOmsOrder(any());
+        doAnswer(invocation -> {
+            com.chengyinhub.business.domain.OmsOrderItem item = invocation.getArgument(0);
+            item.setId(888L);
+            return 1;
+        }).when(itemSvc).insertOmsOrderItem(any());
+        when(cartMapper.deleteUmsMemberCartByIdAndMemberId(eq(MEMBER), eq(5L))).thenReturn(1);
         when(addressMapper.lockActiveUmsMemberAddressByIdAndMemberId(eq(1L), eq(MEMBER))).thenReturn(address);
     }
 
@@ -243,11 +255,20 @@ class ApiCartControllerSettlementTest {
     }
 
     @Test
+    void failedOrderInsertCannotContinueToStockOrCartConsumption() {
+        commonStubs(1L, 100000L);
+        doReturn(0).when(orderSvc).insertOmsOrder(any());
+        org.junit.jupiter.api.Assertions.assertFalse(controller().orderSettlement("5", "", "1").isSuccess());
+        verify(skuSvc, never()).deductStockForProduct(anyLong(), anyLong(), anyLong());
+        verify(cartMapper, never()).deleteUmsMemberCartByIdAndMemberId(anyLong(), anyLong());
+    }
+
+    @Test
     void sufficientPointsChargesAndCreatesOrder() {
         commonStubs(1L, 100000L);           // 积分充足
         when(skuSvc.deductStockForProduct(SKU, 1L, 1L)).thenReturn(1); // 有货
 
-        controller().orderSettlement("5", "", "1");
+        org.junit.jupiter.api.Assertions.assertTrue(controller().orderSettlement("5", "", "1").isSuccess());
 
         // 真实扣积分(price 100 × qty 1 = 100)+ 原子扣库存 + 建单
         verify(memberSvc).deductPoints(MEMBER, 100);

@@ -11,6 +11,7 @@ import java.util.Collections;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.anyLong;
 
@@ -25,14 +26,19 @@ class VerificationQrcodeRepairTaskTest {
     @BeforeEach
     void setUp() {
         cmsRegistrationService = mock(ICmsRegistrationService.class);
+        when(cmsRegistrationService.registrationScanUpperBound()).thenReturn(Long.MAX_VALUE);
         task = new VerificationQrcodeRepairTask();
         ReflectionTestUtils.setField(task, "cmsRegistrationService", cmsRegistrationService);
     }
 
     @Test
     void repairsEachMissingOne() {
+<<<<<<< public
         when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
         when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Arrays.asList(1L, 2L));
+=======
+        when(cmsRegistrationService.listPaidMissingQrcodeIds(0L)).thenReturn(Arrays.asList(1L, 2L));
+>>>>>>> private-codex/batch1
 
         task.repairMissing();
 
@@ -42,8 +48,12 @@ class VerificationQrcodeRepairTaskTest {
 
     @Test
     void singleFailureDoesNotStopOthers() {
+<<<<<<< public
         when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
         when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Arrays.asList(1L, 2L, 3L));
+=======
+        when(cmsRegistrationService.listPaidMissingQrcodeIds(0L)).thenReturn(Arrays.asList(1L, 2L, 3L));
+>>>>>>> private-codex/batch1
         when(cmsRegistrationService.generateVerificationQrcode(2L)).thenThrow(new RuntimeException("boom"));
 
         task.repairMissing(); // 不应向外抛
@@ -53,9 +63,31 @@ class VerificationQrcodeRepairTaskTest {
     }
 
     @Test
+    void failedPrefixDoesNotStarveLaterRepairAndNewArrivalsDoNotDelayRetryForever() {
+        when(cmsRegistrationService.registrationScanUpperBound()).thenReturn(101L, 201L);
+        when(cmsRegistrationService.listPaidMissingQrcodeIds(anyLong())).thenAnswer(call -> {
+            long after = call.getArgument(0);
+            return java.util.stream.LongStream.rangeClosed(after + 1, after + 100)
+                    .boxed().collect(java.util.stream.Collectors.toList());
+        });
+        when(cmsRegistrationService.generateVerificationQrcode(anyLong())).thenThrow(new IllegalStateException("provider unavailable"));
+        task.repairMissing();
+        task.repairMissing();
+        verify(cmsRegistrationService).generateVerificationQrcode(101L);
+        verify(cmsRegistrationService, never()).generateVerificationQrcode(102L);
+        task.repairMissing();
+        verify(cmsRegistrationService, times(2)).generateVerificationQrcode(1L);
+        verify(cmsRegistrationService, times(2)).registrationScanUpperBound();
+    }
+
+    @Test
     void emptyListNoop() {
+<<<<<<< public
         when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
         when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Collections.emptyList());
+=======
+        when(cmsRegistrationService.listPaidMissingQrcodeIds(0L)).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
 
         task.repairMissing();
 

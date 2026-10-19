@@ -60,6 +60,10 @@ public interface NpcProfileMapper
     /** 后台只审核待审记录。 */
     int auditMerchantNpc(NpcProfile profile);
 
+    /** 仅当门店分身仍使用送检头像时清图并停用，避免迟到回调误伤新头像。 */
+    int hideMerchantNpcAvatarIfCurrent(@Param("id") Long id,
+                                       @Param("expectedAvatar") String expectedAvatar);
+
     // ===== 主题节点 NPC(scope_type=4,挂 cms_topic_node.id,一节点一条)=====
     // 五条语句都写死 scope_type = 4,碰不到剧本角色(1)/门店分身(2)/全局(3)。
     // ⚠️ 写入恒带 active_slot = 1,吃 uk_active_scope(scope_type,scope_id,active_slot)

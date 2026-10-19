@@ -9,6 +9,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.regex.Pattern;
+import com.chengyinhub.business.domain.CartSettlementReceipt;
+import com.chengyinhub.business.mapper.CartSettlementReceiptMapper;
 import com.chengyinhub.business.domain.OmsOrder;
 import com.chengyinhub.business.domain.OmsOrderItem;
 import com.chengyinhub.business.domain.PmsProduct;
@@ -45,9 +51,13 @@ import com.chengyinhub.common.utils.StringUtils;
 public class UmsMemberCartServiceImpl implements IUmsMemberCartService 
 {
     private static final long MAX_CART_QUANTITY = Integer.MAX_VALUE;
+    private static final Pattern REQUEST_ID_PATTERN = Pattern.compile("[A-Za-z0-9._:-]{8,64}");
 
     @Autowired
     private UmsMemberCartMapper umsMemberCartMapper;
+
+    @Autowired
+    private CartSettlementReceiptMapper cartSettlementReceiptMapper;
 
     @Autowired
     private IViewMemberCartService viewMemberCartService;
@@ -262,6 +272,53 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
     @Transactional(rollbackFor = Exception.class)
     public Long settleCart(Long memberId, String username, String rawCartIds, String remark, String rawAddressId)
     {
+        return settleCartInternal(memberId, username, rawCartIds, remark, rawAddressId, null).getFirstOrderId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CartSettlementReceipt settleCart(Long memberId, String username, String requestId, String rawCartIds,
+                                            String remark, String rawAddressId)
+    {
+        requireRequestId(requestId);
+        Long[] cartIds = parseCartIds(rawCartIds);
+        String requestHash = requestHash(cartIds, remark, rawAddressId);
+        CartSettlementReceipt seed = new CartSettlementReceipt();
+        seed.setMemberId(memberId);
+        seed.setRequestId(requestId);
+        seed.setRequestHash(requestHash);
+        cartSettlementReceiptMapper.insertRequest(seed);
+        CartSettlementReceipt receipt = cartSettlementReceiptMapper.selectForUpdate(memberId, requestId);
+        if (receipt == null) {
+            throw new ServiceException("兑换请求创建失败，请重试");
+        }
+        if (!requestHash.equals(receipt.getRequestHash())) {
+            throw new ServiceException("请求标识已用于不同的兑换内容");
+        }
+        if ("SUCCEEDED".equals(receipt.getStatus())) {
+            return populateOrders(receipt);
+        }
+        if (!"PROCESSING".equals(receipt.getStatus())) {
+            throw new ServiceException("兑换请求状态异常");
+        }
+        return settleCartInternal(memberId, username, rawCartIds, remark, rawAddressId, receipt);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CartSettlementReceipt getSettlementReceipt(Long memberId, String requestId)
+    {
+        requireRequestId(requestId);
+        CartSettlementReceipt receipt = cartSettlementReceiptMapper.selectOwned(memberId, requestId);
+        if (receipt == null) {
+            throw new ServiceException("兑换记录不存在");
+        }
+        return populateOrders(receipt);
+    }
+
+    private CartSettlementReceipt settleCartInternal(Long memberId, String username, String rawCartIds, String remark,
+                                                     String rawAddressId, CartSettlementReceipt receipt)
+    {
         Long[] cartIds = parseCartIds(rawCartIds);
         lockCartsForSettlement(memberId, cartIds);
         List<ViewMemberCart> carts = loadValidatedCarts(memberId, cartIds);
@@ -298,6 +355,7 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
             byMerchant.computeIfAbsent(cart.getMerchantId(), key -> new ArrayList<>()).add(cart);
         }
         Long firstOrderId = null;
+        List<Long> orderIds = new ArrayList<>();
         for (Map.Entry<Long, List<ViewMemberCart>> entry : byMerchant.entrySet()) {
             List<ViewMemberCart> group = entry.getValue();
             BigDecimal groupAmount = BigDecimal.ZERO;
@@ -325,7 +383,10 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
             order.setOrderNote(remark);
             order.setDelFlag(0);
             order.setPaymentTime(new java.util.Date());
-            omsOrderService.insertOmsOrder(order);
+            if (omsOrderService.insertOmsOrder(order) != 1 || order.getId() == null) {
+                throw new ServiceException("订单创建失败，请重试");
+            }
+            orderIds.add(order.getId());
             if (firstOrderId == null) {
                 firstOrderId = order.getId();
             }
@@ -341,7 +402,9 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
                 item.setQuantity(cart.getQuantity());
                 item.setCreateBy(username);
                 item.setSpData(cart.getSkuName());
-                omsOrderItemService.insertOmsOrderItem(item);
+                if (omsOrderItemService.insertOmsOrderItem(item) != 1 || item.getId() == null) {
+                    throw new ServiceException("订单明细创建失败，请重试");
+                }
                 if (pmsSkuService.deductStockForProduct(cart.getSkuId(), cart.getProductId(), cart.getQuantity()) == 0) {
                     throw new ServiceException("[" + cart.getProductName() + "]商品库存不足,请重试");
                 }
@@ -350,7 +413,73 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
                 }
             }
         }
-        return firstOrderId;
+        CartSettlementReceipt result = receipt == null ? new CartSettlementReceipt() : receipt;
+        result.setFirstOrderId(firstOrderId);
+        result.setOrderIds(orderIds);
+        result.setTotalPoints((long) pointsCost);
+        result.setStatus("SUCCEEDED");
+        if (receipt != null) {
+            String intentHash = intentHash(receipt.getRequestHash(), carts);
+            for (int i = 0; i < orderIds.size(); i++) {
+                if (cartSettlementReceiptMapper.insertOrder(receipt.getId(), orderIds.get(i), i) != 1) {
+                    throw new ServiceException("兑换子单映射创建失败");
+                }
+            }
+            if (cartSettlementReceiptMapper.markSucceeded(receipt.getId(), intentHash, firstOrderId,
+                    (long) pointsCost) != 1) {
+                throw new ServiceException("兑换结果保存失败");
+            }
+            result.setIntentHash(intentHash);
+        }
+        return result;
+    }
+
+    private CartSettlementReceipt populateOrders(CartSettlementReceipt receipt)
+    {
+        receipt.setOrderIds(cartSettlementReceiptMapper.selectOrderIds(receipt.getId()));
+        return receipt;
+    }
+
+    private void requireRequestId(String requestId)
+    {
+        if (requestId == null || !REQUEST_ID_PATTERN.matcher(requestId).matches()) {
+            throw new ServiceException("requestId格式不正确");
+        }
+    }
+
+    private String requestHash(Long[] cartIds, String remark, String rawAddressId)
+    {
+        Long addressId = parsePositiveId(rawAddressId);
+        List<Long> ordered = new ArrayList<>();
+        Collections.addAll(ordered, cartIds);
+        Collections.sort(ordered);
+        return sha256(ordered.toString() + "\n" + addressId + "\n"
+                + (remark == null ? "N" : "S" + remark.length() + ":" + remark));
+    }
+
+    private String intentHash(String requestHash, List<ViewMemberCart> carts)
+    {
+        List<String> lines = new ArrayList<>();
+        for (ViewMemberCart cart : carts) {
+            lines.add(cart.getId() + ":" + cart.getMerchantId() + ":" + cart.getProductId() + ":"
+                    + cart.getSkuId() + ":" + cart.getQuantity() + ":" + cart.getPrice().toPlainString());
+        }
+        Collections.sort(lines);
+        return sha256(requestHash + "\n" + lines.toString());
+    }
+
+    private String sha256(String value)
+    {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder result = new StringBuilder(64);
+            for (byte item : digest) {
+                result.append(String.format("%02x", item & 0xff));
+            }
+            return result.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 unavailable", exception);
+        }
     }
 
     private List<ViewMemberCart> loadValidatedCarts(Long memberId, Long[] cartIds)

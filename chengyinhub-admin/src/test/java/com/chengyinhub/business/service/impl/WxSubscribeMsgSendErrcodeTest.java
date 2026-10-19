@@ -220,6 +220,47 @@ class WxSubscribeMsgSendErrcodeTest {
     }
 
     @Test
+    void missingOrNonIntegerErrcodeRemainsUnknownAfterExternalCall() {
+        for (String response : new String[]{"", "null", "{}", "{\"errcode\":\"bad\"}",
+                "{\"errcode\":0.5}", "{\"errcode\":true}", "{\"errcode\":2147483648}"}) {
+            WxSubscribeMsgServiceImpl service = businessServiceReturning(response,
+                    "tplOfficialEvent", "fixture-template");
+            com.chengyinhub.business.notify.NotifyResult result = service.notifyOfficialBroadcastResult(
+                    RECIPIENT_MEMBER_ID, "活动", "开始");
+            assertEquals(com.chengyinhub.business.notify.NotifyResult.Status.UNKNOWN, result.getStatus(), response);
+            assertFalse(result.isConfirmed(), response);
+        }
+    }
+
+    @Test
+    void explicitAcceptanceAndRejectionKeepProviderCodes() {
+        for (String response : new String[]{"{\"errcode\":0}", "{\"errcode\":\"0\"}"}) {
+            com.chengyinhub.business.notify.NotifyResult result = businessServiceReturning(response,
+                    "tplOfficialEvent", "fixture-template").notifyOfficialBroadcastResult(
+                    RECIPIENT_MEMBER_ID, "活动", "开始");
+            assertEquals(com.chengyinhub.business.notify.NotifyResult.Status.CHANNEL_ACCEPTED, result.getStatus());
+            assertEquals("0", result.getProviderCode());
+        }
+        com.chengyinhub.business.notify.NotifyResult rejected = businessServiceReturning("{\"errcode\":-1}",
+                "tplOfficialEvent", "fixture-template").notifyOfficialBroadcastResult(
+                RECIPIENT_MEMBER_ID, "活动", "开始");
+        assertEquals(com.chengyinhub.business.notify.NotifyResult.Status.FAILED, rejected.getStatus());
+        assertEquals("-1", rejected.getProviderCode());
+    }
+
+    @Test
+    void tokenFailureBeforeMessageSendIsKnownFailed() {
+        WxSubscribeMsgServiceImpl service = businessServiceReturning("{\"errcode\":0}",
+                "tplOfficialEvent", "fixture-template");
+        when(wxSec.getAccessToken()).thenThrow(new IllegalStateException("fixture token failure"));
+        com.chengyinhub.business.notify.NotifyResult result = service.notifyOfficialBroadcastResult(
+                RECIPIENT_MEMBER_ID, "活动", "开始");
+        assertEquals(com.chengyinhub.business.notify.NotifyResult.Status.FAILED, result.getStatus());
+        assertEquals("TOKEN_UNAVAILABLE", result.getProviderCode());
+        assertFalse(result.isConfirmed());
+    }
+
+    @Test
     void coopInviteFailureCarriesBusinessContext() {
         assertBusinessFailureContext("tplCoopInvited", "tplCoopInvited", "coop_invited",
                 service -> service.notifyCoopInvited(RECIPIENT_MEMBER_ID, "主题", "发起方"));

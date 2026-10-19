@@ -85,6 +85,7 @@
             <when test="bizType == 10">select id from ums_comment where id = #{bizId} for update</when>
             <when test="bizType == 11">select id from roam_stamp where id = #{bizId} for update</when>
             <when test="bizType == 12">select id from im_message where id = #{bizId} for update</when>
+            <when test="bizType == 16 or bizType == 17">select id from npc_profile where id = #{bizId} for update</when>
             <otherwise>select cast(null as signed)</otherwise>
         </choose>
     </select>

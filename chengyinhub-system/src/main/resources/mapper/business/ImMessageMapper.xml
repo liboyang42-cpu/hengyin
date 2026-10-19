@@ -40,9 +40,22 @@
         for update
     </select>
 
+    <select id="selectByClientMessageId" resultMap="ImMessageResult">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and sender_id = #{senderId}
+            and client_message_id = #{clientMessageId} and status != 2
+        limit 1
+    </select>
+
     <select id="selectImMessageById" parameterType="Long" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
         where id = #{id}
+    </select>
+
+    <select id="selectByConversationAndIdForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and id = #{id}
+        for update
     </select>
 
     <select id="selectByTraceId" parameterType="String" resultMap="ImMessageResult">
@@ -51,6 +64,14 @@
         order by id desc limit 1
     </select>
 
+<<<<<<< public
+=======
+    <select id="selectLatestMessage" resultMap="ImMessageResult">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId}
+        order by id desc limit 1
+    </select>
+>>>>>>> private-codex/batch1
 
     <select id="selectPage" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
@@ -62,6 +83,7 @@
         limit #{size}
     </select>
 
+<<<<<<< public
     <sql id="viewerVisible">
         status != 2 and (msg_type != 2 or check_status = 1 or sender_id = #{viewerMemberId})
     </sql>
@@ -108,6 +130,25 @@
                  or ((<include refid="afterVisibleAt"/>) is null and id &gt; #{afterId}))
         </if>
         order by coalesce(visible_at, create_time) asc, id asc limit #{size}
+=======
+    <select id="selectAfterPage" resultMap="ImMessageResult">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and status != 2
+          and id &gt; #{afterId} and id &lt;= #{watermarkId}
+        order by id asc
+        limit #{size}
+    </select>
+
+    <select id="selectLatestVisibleIdForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from im_message
+        where conversation_id = #{conversationId} and status != 2
+        order by id desc limit 1 for update
+    </select>
+
+    <select id="selectMaxVisibleId" resultType="java.lang.Long">
+        select coalesce(max(id), 0) from im_message
+        where conversation_id = #{conversationId} and status != 2
+>>>>>>> private-codex/batch1
     </select>
 
     <update id="updateStatus">

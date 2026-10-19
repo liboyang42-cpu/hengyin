@@ -284,8 +284,11 @@ class RefundNotificationMybatisIntegrationTest {
                 assertEquals(1, attempted.get());
                 assertTrue(service.handleRefundNotify("RF11", "SUCCESS"));
                 assertEquals(1, attempted.get(), "当前best-effort没有重试合同，不能把重复回调当重发");
+                String expectedStatus = throwsFailure ? "UNKNOWN" : "FAILED";
+                assertTrue(logs.list.stream().anyMatch(event -> event.getLevel() == ch.qos.logback.classic.Level.WARN
+                        && event.getFormattedMessage().contains("全部通道均未确认接受或落库")
+                        && event.getFormattedMessage().contains("status=" + expectedStatus)));
             }
-            assertTrue(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("全部通道未送达")));
             assertTrue(logs.list.stream().anyMatch(event -> event.getFormattedMessage().contains("通道违约抛出异常")));
         } finally {
             logger.detachAppender(logs); logs.stop();

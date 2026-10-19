@@ -135,4 +135,46 @@ class ApiImReadAuthorizationTest {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(messageMapper).selectVisiblePage(100L, 1L, 0L, 21);
     }
+
+    @Test
+    void knownMachineTerminalsSurviveAllMessageReadModesSendAndReadEndpoints() {
+        for (String code : new String[] { "HANGOUT_CLOSED", "IM_CONVERSATION_CLOSED" }) {
+            com.chengyinhub.business.service.IImService service = mock(com.chengyinhub.business.service.IImService.class);
+            com.chengyinhub.common.exception.ServiceException error =
+                    new com.chengyinhub.common.exception.ServiceException("terminal", 409).setDetailMessage(code);
+            when(service.listMessages(1L, 100L, 0L, 20)).thenThrow(error);
+            when(service.listMessagesAfter(1L, 100L, 3L, null, 20)).thenThrow(error);
+            when(service.findOwnMessage(1L, 100L, "send_0123456789012345")).thenThrow(error);
+            when(service.send(1L, 100L, null, 1, "hello", null)).thenThrow(error);
+            org.mockito.Mockito.doThrow(error).when(service).markRead(1L, 100L, 61L);
+            org.mockito.Mockito.doThrow(error).when(service).markRead(1L, 100L);
+            ApiImController controller = spy(new ApiImController());
+            doReturn(1L).when(controller).getAppUserId();
+            ReflectionTestUtils.setField(controller, "imService", service);
+            for (AjaxResult result : new AjaxResult[] {
+                    controller.messages("100", null, null, null, "20", null),
+                    controller.messages("100", null, "3", null, "20", null),
+                    controller.messages("100", null, null, null, "20", "send_0123456789012345"),
+                    controller.send("100", null, "1", "hello", null),
+                    controller.read("100", "61"), controller.read("100") }) {
+                assertEquals(409, result.get(AjaxResult.CODE_TAG));
+                assertEquals(code, result.get("errorCode"));
+                assertEquals("/subpackageB/pages/im/list/index", result.get("returnPath"));
+            }
+        }
+    }
+
+    @Test
+    void unknownDetailCannotForgeAChatTerminalAndUnexpectedReadFailuresStayGeneric() {
+        com.chengyinhub.business.service.IImService service = mock(com.chengyinhub.business.service.IImService.class);
+        when(service.listMessages(1L, 100L, 0L, 20)).thenThrow(
+                new com.chengyinhub.common.exception.ServiceException("business", 409).setDetailMessage("UNTRUSTED"));
+        ApiImController controller = spy(new ApiImController());
+        doReturn(1L).when(controller).getAppUserId();
+        ReflectionTestUtils.setField(controller, "imService", service);
+        AjaxResult result = controller.messages("100", null, null, null, "20", null);
+        assertEquals(null, result.get("errorCode"));
+        org.mockito.Mockito.doThrow(new IllegalStateException("internal-only")).when(service).markRead(1L, 100L, 61L);
+        assertEquals("操作失败，请稍后重试", controller.read("100", "61").get(AjaxResult.MSG_TAG));
+    }
 }

@@ -18,13 +18,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
+<<<<<<< public
 import java.util.Locale;
+=======
+import java.util.regex.Pattern;
+>>>>>>> private-codex/batch1
 
 @Service
 public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryService {
     private static final int DEFAULT_LIMIT = 50;
     private static final int MAX_LIMIT = 100;
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Pattern PHONE = Pattern.compile("(?<!\\d)1[3-9]\\d{9}(?!\\d)");
+    private static final Pattern ID_CARD = Pattern.compile("(?i)(?<![0-9A-Z])\\d{17}[0-9X](?![0-9A-Z])");
+    private static final Pattern BANK_CARD = Pattern.compile("(?<!\\d)\\d{15,19}(?!\\d)");
+    private static final Pattern SECRET_ASSIGNMENT = Pattern.compile(
+            "(?i)(bearer\\s+|(?:token|password|secret|authorization)\\s*[:=]\\s*)[^\\s,;]+" );
 
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
@@ -73,6 +82,14 @@ public class BusinessAuditLogQueryServiceImpl implements IBusinessAuditLogQueryS
         safe.setRequestId(source.getRequestId());
         safe.setCreateTime(source.getCreateTime());
         return safe;
+    }
+
+    private String redactText(String value) {
+        if (value == null) return null;
+        String safe = SECRET_ASSIGNMENT.matcher(value).replaceAll("$1***");
+        safe = PHONE.matcher(safe).replaceAll("***");
+        safe = ID_CARD.matcher(safe).replaceAll("***");
+        return BANK_CARD.matcher(safe).replaceAll("***");
     }
 
     private String redactJson(String value) {

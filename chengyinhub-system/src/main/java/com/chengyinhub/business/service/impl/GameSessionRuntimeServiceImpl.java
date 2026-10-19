@@ -412,6 +412,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             case "RUN_CANCEL":
                 runPayload(command, "reason");
                 if (Arrays.asList("CANCELLED", "INTERRUPTED").contains(run.path("operationStatus").asText())) throw error("GAME_RUN_TERMINAL", "本局已运营中止");
+                // 旧端可能在人工账接管后仍保留「暂停」按钮。中止/取消是安全闸，仍允许随时执行；
+                // 但重复暂停会绕过人工权威的界线并改写原因，必须只接受当前 ONLINE/RUNNING epoch。
+                if ("RUN_PAUSE".equals(action)) requireOnlineRun(run);
                 run.put("operationReason", runReason(command));
                 run.put("operationStatus", "RUN_PAUSE".equals(action) ? "PAUSED" : "RUN_CANCEL".equals(action) ? "CANCELLED" : "INTERRUPTED");
                 if (!"RUN_PAUSE".equals(action)) releaseUnexecutedRouteReservations(session, run);

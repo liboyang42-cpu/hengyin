@@ -23,6 +23,7 @@ let toasts
 let gameActions
 let lastOperation
 let mediaSuccess
+let currentUserId
 
 function setByPath(target, rawPath, value) {
   const parts = rawPath.split('.')
@@ -55,6 +56,7 @@ function makeAppStub() {
     },
     getBaseUrl: () => 'https://base',
     getAuthorization: () => 'token',
+    getUserID: () => currentUserId,
   })
   return {
     globalData: { user_id: 9, features: {} },
@@ -92,6 +94,7 @@ beforeEach(() => {
   gameActions = []
   lastOperation = null
   mediaSuccess = null
+  currentUserId = 9
   global.getApp = makeAppStub
 })
 
@@ -151,7 +154,7 @@ function dispatchShoot(page, detail, type = 'qa') {
   page.onPlayKitAction({ detail: { type, action: 'shoot', detail } })
 }
 
-const okBody = (url) => ({ data: JSON.stringify({ code: 200, url }) })
+const okBody = (url) => ({ statusCode: 200, data: JSON.stringify({ code: 200, url }) })
 
 test('合法 5MiB:真实链上传一次并提交 SUBMIT_QA', () => {
   const { page, game } = loadPage()
@@ -296,6 +299,33 @@ test('未知 size(旧组件):照常上传;失败不提交,换图可重试', () =
     name: 'SUBMIT_QA', payload: { imageUrl: 'https://cdn/ok2.jpg' },
     sessionId: 'session-A', version: 4,
   }])
+})
+
+test('服务端回包误带本地临时地址:不得提交照片证据，换图可重试', () => {
+  const { page } = loadPage()
+  const comp = loadComponent()
+  dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/q.jpg', size: 1 * MIB }))
+  wxUploads[0].success(okBody('wxfile://tmp_q.jpg'))
+  assert.equal(gameActions.length, 0)
+  assert.ok(toasts.some(text => /临时文件/.test(text)))
+  dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/retry.jpg', size: 1 * MIB }))
+  wxUploads[1].success(okBody('https://cdn/retry.jpg'))
+  assert.equal(gameActions.length, 1)
+  assert.equal(gameActions[0].payload.imageUrl, 'https://cdn/retry.jpg')
+})
+
+test('同页面同session/version切账号:旧照片不提交，锁释放后新账号可重拍', () => {
+  const { page } = loadPage()
+  const comp = loadComponent()
+  dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/old.jpg', size: 1 * MIB }))
+  currentUserId = 10
+  wxUploads[0].success(okBody('https://cdn/old.jpg'))
+  assert.equal(gameActions.length, 0)
+  assert.ok(toasts.some(text => /账号已变化/.test(text)))
+  dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/new.jpg', size: 1 * MIB }))
+  wxUploads[1].success(okBody('https://cdn/new.jpg'))
+  assert.equal(gameActions.length, 1)
+  assert.equal(gameActions[0].payload.imageUrl, 'https://cdn/new.jpg')
 })
 
 test('上传中离页 abort:迟到的成功不得提交', () => {

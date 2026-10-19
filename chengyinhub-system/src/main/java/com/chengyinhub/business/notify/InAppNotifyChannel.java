@@ -20,6 +20,16 @@ public class InAppNotifyChannel implements NotifyChannel {
     private com.chengyinhub.business.service.impl.AlarmService alarmService;
 
     @Override
+    public String channelId() { return "IN_APP"; }
+
+    @Override
+    public NotifyResult sendResult(NotifyMessage message) {
+        return send(message)
+                ? NotifyResult.of(channelId(), NotifyResult.Status.IN_APP_STORED, null)
+                : NotifyResult.failed(channelId(), null);
+    }
+
+    @Override
     public boolean send(NotifyMessage message) {
         if (message.event() == NotifyEvent.OFFICIAL_BROADCAST) {
             try {

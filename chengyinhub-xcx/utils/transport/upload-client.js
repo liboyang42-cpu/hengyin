@@ -28,8 +28,12 @@ function createUploadClient(deps) {
   var wxUploadFile = deps.wxUploadFile;
   var getBaseUrl = deps.getBaseUrl;
   var getAuthorization = deps.getAuthorization;
+<<<<<<< public
   var getClientVersion = deps.getClientVersion || function () { return ''; };
   var getUserID = deps.getUserID || function () { return ''; };
+=======
+  var getUserID = deps.getUserID;
+>>>>>>> private-codex/batch1
   var uploadPath = deps.uploadPath || '/api/common/uploadOSS';
   var pendingMedia = {}; // Scope by real member and local file; retry checks the original asset, never reuploads it.
   var setTimer = deps.setTimer || setTimeout;
@@ -55,6 +59,19 @@ function createUploadClient(deps) {
     return handle;
   }
 
+  // member ID 稳定于正常 token 刷新；兼容未装配身份源的独立适配器。
+  // shortcut: A→B→A 若在下次核对前完成无法识别；需要此保障时接入会话代次。
+  function identityGuard() {
+    if (!getUserID) return function () { return true; };
+    var owner;
+    try { owner = String(getUserID() || ''); }
+    catch (e) { return function () { return false; }; }
+    return function () {
+      try { return owner === String(getUserID() || ''); }
+      catch (e) { return false; }
+    };
+  }
+
   function uploadAll(filePaths, opts) {
     opts = opts || {};
     var member = String(getUserID() || '');
@@ -77,6 +94,7 @@ function createUploadClient(deps) {
     var active = {};
     var settled = {};
     var deadlineTimer = null;
+    var identityIsCurrent = identityGuard();
 
     function abortRecord(record) {
       if (!record) return;
@@ -106,8 +124,24 @@ function createUploadClient(deps) {
       return false;
     }
 
+    function ensureIdentity() {
+      if (finished) return false;
+      if (identityIsCurrent()) return true;
+      results = [];
+      failures = filePaths.map(function (filePath, index) {
+        return { index: index, filePath: filePath, status: 'failed',
+          reason: 'identity_changed', msg: '登录账号已变化，请重新上传' };
+      });
+      finish(false);
+      return false;
+    }
+
     function settle(index, failure) {
+<<<<<<< public
       if (!isCurrentOwner() || settled[index]) return;
+=======
+      if (finished || settled[index] || !ensureIdentity()) return;
+>>>>>>> private-codex/batch1
       settled[index] = true;
       var record = active[index];
       if (record && record.watchdog !== null) clearTimer(record.watchdog);
@@ -119,6 +153,7 @@ function createUploadClient(deps) {
     }
 
     function start(index) {
+      if (!ensureIdentity()) return;
       var filePath = filePaths[index];
       // 已知超限:在共享入口直接拒绝,给出压缩/换文件路径,不发起注定被容器截断的连接。
       // size 未知(如裁剪后/录音临时文件)不在此列,仍走上传,由服务端拦截。
@@ -126,9 +161,12 @@ function createUploadClient(deps) {
         settle(index, { status: 'failed', reason: 'oversize', size: fileSizes[index], msg: oversizeMessage(maxFileSize) });
         return;
       }
+<<<<<<< public
       var formData = (opts.formData && opts.formData(index)) || {};
       if (opts.bizType) formData.bizType = typeof opts.bizType === 'function' ? opts.bizType(index) : opts.bizType;
       if (!isCurrentOwner()) return;
+=======
+>>>>>>> private-codex/batch1
       var record = { task: null, watchdog: null };
       active[index] = record;
       record.watchdog = schedule(function () {
@@ -138,6 +176,7 @@ function createUploadClient(deps) {
         try { if (task && typeof task.abort === 'function') task.abort(); } catch (e) {}
       }, perFileTimeoutMs);
 
+<<<<<<< public
       function accept(data) {
         if (!isCurrentOwner()) return;
           if (!data || data.code != 200) {
@@ -202,11 +241,65 @@ function createUploadClient(deps) {
           settle(index, { status: 'failed', msg: safeUserMessage(res, '上传失败') });
         }
       });
+=======
+      var task;
+      try {
+        var formData = (opts.formData && opts.formData(index)) || {};
+        if (opts.bizType) formData.bizType = typeof opts.bizType === 'function' ? opts.bizType(index) : opts.bizType;
+        task = wxUploadFile({
+          url: getBaseUrl() + uploadPath,
+          filePath: filePath,
+          name: 'file',
+          header: authHeader(),
+          formData: Object.keys(formData).length ? formData : undefined,
+          success: function (res) {
+            if (finished || settled[index] || active[index] !== record || !ensureIdentity()) return;
+            if (!res || res.statusCode !== 200) {
+              settle(index, { status: res && res.statusCode >= 400 && res.statusCode < 500 ? 'failed' : 'unknown', msg: '上传失败' });
+              return;
+            }
+            var data;
+            try { data = JSON.parse(res.data); }
+            catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
+            if (!data || data.code != 200) {
+              settle(index, { status: 'failed', msg: safeUserMessage(data, '上传失败') });
+              return;
+            }
+            var mapped;
+            try { mapped = mapResult(data, index, filePath); }
+            catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
+            var resultUrl = typeof mapped === 'string' ? mapped : mapped && mapped.url;
+            if (typeof resultUrl !== 'string' || !resultUrl.trim()) {
+              settle(index, { status: 'failed', msg: '上传结果缺少文件地址' });
+              return;
+            }
+            // 自定义敏感上传 mapper 可用本地预览；默认服务端 URL 不得把临时文件当成上传证据。
+            if (resultUrl === data.url && /^(?:(?:wxfile|file):|https?:\/\/tmp(?:[:\/?#]|$)|(?:\/private)?\/tmp(?:\/|$)|\.{1,2}\/tmp(?:\/|$))/i.test(resultUrl.trim())) {
+              settle(index, { status: 'failed', msg: '上传结果仍是临时文件，请重试' });
+              return;
+            }
+            // OSS 上传回包可能用 http；媒体表单要求 https。只换 OSS 协议，完整保留签名。
+            var secureUrl = resultUrl.replace(/^http:\/\/([a-z0-9-]+\.oss-[a-z0-9-]+\.aliyuncs\.com)(\/)/i, 'https://$1$2');
+            results[index] = typeof mapped === 'string' ? secureUrl : Object.assign({}, mapped, { url: secureUrl });
+            settle(index);
+          },
+          fail: function (res) {
+            settle(index, { status: 'failed', msg: safeUserMessage(res, '上传失败') });
+          }
+        });
+      } catch (e) {
+        settle(index, { status: 'unknown', msg: '上传失败' });
+      }
+>>>>>>> private-codex/batch1
       if (active[index] === record) record.task = task || null;
     }
 
     function launch() {
+<<<<<<< public
       if (!isCurrentOwner()) return;
+=======
+      if (finished) return;
+>>>>>>> private-codex/batch1
       while (!finished && Object.keys(active).length < concurrency && nextIndex < total) start(nextIndex++);
     }
 
@@ -219,7 +312,11 @@ function createUploadClient(deps) {
       return control;
     }
     deadlineTimer = schedule(function () {
+<<<<<<< public
       if (!isCurrentOwner()) return;
+=======
+      if (!ensureIdentity()) return;
+>>>>>>> private-codex/batch1
       for (var i = 0; i < total; i++) {
         if (!settled[i]) {
           settled[i] = true;
@@ -256,13 +353,30 @@ function createUploadClient(deps) {
     var done = false;
     var task = null;
     var watchdog = null;
+    var identityIsCurrent = identityGuard();
 
     function settle(payload) {
       if (done) return;
+      var staleTask = null;
+      if (payload && !identityIsCurrent()) {
+        payload = { ok: false, reason: 'identity_changed', msg: '登录账号已变化，请重新上传' };
+        staleTask = task;
+        task = null;
+      }
       done = true;
       if (watchdog !== null) clearTimer(watchdog);
       watchdog = null;
+<<<<<<< public
       if (payload && String(getUserID() || '') === member) onDone(payload);
+=======
+      try { if (staleTask && typeof staleTask.abort === 'function') staleTask.abort(); } catch (e) {}
+      if (payload) onDone(payload);
+>>>>>>> private-codex/batch1
+    }
+
+    if (!identityIsCurrent()) {
+      settle({ ok: false, reason: 'identity_changed', msg: '登录账号已变化，请重新上传' });
+      return { abort: function () {} };
     }
 
     // 已知超限:同 uploadAll,在共享入口拒绝,不发起注定被容器截断的连接。
@@ -278,6 +392,7 @@ function createUploadClient(deps) {
       try { if (pending && typeof pending.abort === 'function') pending.abort(); } catch (e) {}
     }, timeoutMs);
 
+<<<<<<< public
     task = wxUploadFile({
       url: getBaseUrl() + path,
       filePath: filePath,
@@ -295,6 +410,29 @@ function createUploadClient(deps) {
       },
       fail: function (res) { settle({ ok: false, msg: safeUserMessage(res, '上传失败') }); }
     });
+=======
+    try {
+      task = wxUploadFile({
+        url: getBaseUrl() + path,
+        filePath: filePath,
+        name: opts.name || 'file',
+        header: authHeader(),
+        formData: opts.formData,
+        success: function (res) {
+          if (done) return;
+          if (!res || res.statusCode !== 200) { settle({ ok: false, msg: '上传失败' }); return; }
+          var data;
+          try { data = JSON.parse(res.data); }
+          catch (e) { settle({ ok: false, msg: '上传结果解析失败' }); return; }
+          if (!data || data.code != 200) { settle({ ok: false, msg: safeUserMessage(data, '上传失败') }); return; }
+          settle({ ok: true, data: data });
+        },
+        fail: function (res) { settle({ ok: false, msg: safeUserMessage(res, '上传失败') }); }
+      });
+    } catch (e) {
+      settle({ ok: false, msg: '上传失败' });
+    }
+>>>>>>> private-codex/batch1
 
     return {
       abort: function () {

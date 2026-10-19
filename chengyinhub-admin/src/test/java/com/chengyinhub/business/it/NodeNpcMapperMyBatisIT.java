@@ -241,6 +241,40 @@ class NodeNpcMapperMyBatisIT {
         }
     }
 
+    /** 门店 NPC 回调必须同时受 scope=2 与当前 avatar CAS 约束。 */
+    @Test
+    void merchantNpcAvatarHideIsCompareAndSetAndScopeIsolated() throws Exception {
+        try (SqlSession s = open()) {
+            java.sql.Connection c = s.getConnection();
+            c.createStatement().execute(
+                    "INSERT INTO npc_profile (id,scope_type,scope_id,name,avatar,persona,greeting,sort,"
+                  + "audit_status,enabled,del_flag,voice_status) VALUES "
+                  + "(21,2,777,'门店分身','https://oss.example.com/new.png','','您好',0,1,1,'0',0),"
+                  + "(22,4,778,'节点分身','https://oss.example.com/old.png','','您好',0,1,1,'0',0)");
+            NpcProfileMapper m = s.getMapper(NpcProfileMapper.class);
+
+            assertEquals(0, m.hideMerchantNpcAvatarIfCurrent(21L, "https://oss.example.com/old.png"),
+                    "换图后的旧回调不得清新图");
+            assertEquals(0, m.hideMerchantNpcAvatarIfCurrent(22L, "https://oss.example.com/old.png"),
+                    "商家 NPC 写语句不得碰 scope=4");
+            assertEquals(1, m.hideMerchantNpcAvatarIfCurrent(21L, "https://oss.example.com/new.png"));
+            assertEquals(0, m.hideMerchantNpcAvatarIfCurrent(21L, "https://oss.example.com/new.png"),
+                    "重复执行 CAS 不得再次命中");
+
+            try (ResultSet rs = c.createStatement().executeQuery(
+                    "SELECT id,avatar,enabled FROM npc_profile WHERE id IN (21,22) ORDER BY id")) {
+                assertTrue(rs.next());
+                assertEquals(21L, rs.getLong("id"));
+                assertNull(rs.getString("avatar"));
+                assertEquals(0, rs.getInt("enabled"));
+                assertTrue(rs.next());
+                assertEquals(22L, rs.getLong("id"));
+                assertEquals("https://oss.example.com/old.png", rs.getString("avatar"));
+                assertEquals(1, rs.getInt("enabled"));
+            }
+        }
+    }
+
     /**
      * R14-VOICE:READY 音色随 insert 一条落库(复制链路把已就绪的声音带进副本);
      * 不传三列时(复刻中/失败不复制、商家保存)必须落默认 NONE(0)而不是报 NULL ——

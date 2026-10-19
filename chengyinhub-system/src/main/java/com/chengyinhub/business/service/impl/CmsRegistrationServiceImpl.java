@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -2010,6 +2011,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional(rollbackFor = Exception.class)
     public String generateVerificationQrcode(Long registrationId) {
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+<<<<<<< public
         if (registration == null) {
             throw new RuntimeException("报名记录不存在");
         }
@@ -2046,6 +2048,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("报名核销码保存失败");
         }
         return qrcodeUrl;
+=======
+        if (registration == null) throw new IllegalStateException("报名记录不存在");
+        if (!Integer.valueOf(2).equals(registration.getPaymentStatus())) throw new IllegalStateException("报名尚未完成支付，不能补核销码");
+        String existingCode = registration.getVerificationCode(), existingUrl = registration.getQrcodeUrl();
+        if (StringUtils.isNotEmpty(existingCode) && StringUtils.isNotEmpty(existingUrl)) return existingUrl;
+        String verificationCode = StringUtils.isNotEmpty(existingCode) ? existingCode
+                : "VER" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String type = Long.valueOf(1).equals(registration.getOwnerType()) ? "topic" : "activity";
+        String qrcodeContent = "{\"type\":\"" + type + "\",\"code\":\"" + verificationCode + "\"}";
+        String qrcodeUrl = qrcodeService.generateQrcode(qrcodeContent, 300, 300);
+        if (StringUtils.isBlank(qrcodeUrl)) throw new IllegalStateException("核销二维码生成结果为空");
+        if (cmsRegistrationMapper.installVerificationQrcode(registrationId, registration.getMemberId(),
+                existingCode, existingUrl, verificationCode, qrcodeUrl) == 1) return qrcodeUrl;
+        // CAS 败者需当前读，避免外层事务的一致性快照仍看见补码前状态。
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        if (current != null && Objects.equals(registration.getMemberId(), current.getMemberId())
+                && Integer.valueOf(2).equals(current.getPaymentStatus())
+                && StringUtils.isNotEmpty(current.getVerificationCode()) && StringUtils.isNotEmpty(current.getQrcodeUrl())) return current.getQrcodeUrl();
+        throw new IllegalStateException("报名状态已变化，核销二维码未保存");
+>>>>>>> private-codex/batch1
     }
 
     /**
@@ -2583,8 +2605,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public long registrationScanUpperBound() {
+        return cmsRegistrationMapper.selectRegistrationScanUpperBound();
+    }
+
+    @Override
     public List<Long> listExpiredUnpaidIds() {
-        return cmsRegistrationMapper.selectExpiredUnpaidIds(new Date());
+        return listExpiredUnpaidIds(0L);
+    }
+
+    @Override
+    public List<Long> listExpiredUnpaidIds(long afterId) {
+        return cmsRegistrationMapper.selectExpiredUnpaidIds(new Date(), afterId);
     }
 
     @Override
@@ -2605,7 +2637,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Override
     public List<Long> listPaidMissingQrcodeIds() {
-        return cmsRegistrationMapper.selectPaidMissingQrcodeIds();
+        return listPaidMissingQrcodeIds(0L);
+    }
+
+    @Override
+    public List<Long> listPaidMissingQrcodeIds(long afterId) {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeIds(afterId);
     }
 
     @Override
@@ -2630,7 +2667,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Override
     public List<Long> listExpiredUnverifiedIds() {
-        return cmsRegistrationMapper.selectExpiredUnverifiedIds(new Date(), AUTO_VERIFY_END_BUFFER_DAYS);
+        return listExpiredUnverifiedIds(0L);
+    }
+
+    @Override
+    public List<Long> listExpiredUnverifiedIds(long afterId) {
+        return cmsRegistrationMapper.selectExpiredUnverifiedIds(new Date(), AUTO_VERIFY_END_BUFFER_DAYS, afterId);
     }
 
     /**
@@ -2877,6 +2919,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
                 throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
             }
+<<<<<<< public
             CmsRegistration current =
                     cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
             if (current == null) {
@@ -2890,6 +2933,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 return false;
             }
             throw new IllegalStateException("订单数据异常,无法核销");
+=======
+            CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+            if (current == null || !Integer.valueOf(2).equals(current.getPaymentStatus())) {
+                throw new IllegalStateException("订单未完成支付或已退款,无法核销");
+            }
+            if (!Integer.valueOf(2).equals(current.getRegistrationStatus())
+                    || !Integer.valueOf(1).equals(current.getVerificationStatus())) {
+                throw new IllegalStateException("订单当前状态不可核销");
+            }
+            return false;
+>>>>>>> private-codex/batch1
         }
         settlementEntryService.recordPaidRegistration(registration, payeeId);
         writeScanLedger(registration.getId(), verifierId, validationMethod, station);

@@ -13,6 +13,7 @@ function validRecovery(record) {
     && (!record.sessionId || exactSessionId(record.sessionId))
     && Array.isArray(record.pendingTiles) && record.pendingTiles.every(t => typeof t === 'string')
     && typeof record.finishRequested === 'boolean'
+    && ['allTiles', 'track', 'photos', 'pois'].every(key => record[key] == null || Array.isArray(record[key]))
 }
 
 function newSessionKey(platform) {

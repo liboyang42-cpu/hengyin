@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.notify.NotifyChannel;
 import com.chengyinhub.business.notify.NotifyEvent;
 import com.chengyinhub.business.notify.NotifyMessage;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.notify.WxSubscribeChannel;
 import com.chengyinhub.business.service.INotifyService;
 import org.slf4j.Logger;
@@ -32,14 +33,37 @@ public class NotifyServiceImpl implements INotifyService {
     private WxSubscribeChannel wxChannel;
 
     /**
-     * 投递给所有通道,返回「至少一条成功」。
+     * 投递给所有通道,返回「至少一条站内落库或渠道接受」。
      * 不短路:即使第一条成功,其余通道也要发 —— push 成功不代表站内信可以不写。
      */
     private boolean fanout(NotifyMessage m) {
-        boolean anyDelivered = false;
+        return fanoutResult(m).isConfirmed();
+    }
+
+    private NotifyResult wechatResult(NotifyMessage message) {
+        for (NotifyChannel channel : channels) {
+            if (!"WECHAT_SUBSCRIBE".equals(channel.channelId())) continue;
+            try {
+                NotifyResult result = channel.sendResult(message);
+                return result != null && "WECHAT_SUBSCRIBE".equals(result.getChannel())
+                        ? result : NotifyResult.unknown("WECHAT_SUBSCRIBE");
+            } catch (Throwable error) {
+                log.warn("[通知] 微信发送失败，结果未知 event={} memberId={} reason={}",
+                        message.event(), message.memberId(), error.getClass().getSimpleName());
+                return NotifyResult.unknown("WECHAT_SUBSCRIBE");
+            }
+        }
+        return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_CHANNEL");
+    }
+
+    private NotifyResult fanoutResult(NotifyMessage m) {
+        NotifyResult best = NotifyResult.failed("NONE", null);
         for (NotifyChannel c : channels) {
             try {
-                if (c.send(m)) anyDelivered = true;
+                NotifyResult result = c.sendResult(m);
+                if (result != null && result.isConfirmed()) best = result;
+                else if (!best.isConfirmed() && result != null
+                        && result.getStatus() == NotifyResult.Status.UNKNOWN) best = result;
             } catch (Throwable t) {
                 // ⚠️ 这里必须是 Throwable,不能只接 RuntimeException/Exception。
                 // 通道是**旁路**,上游是带 @Transactional(rollbackFor=Exception.class) 的资金路径。
@@ -51,13 +75,14 @@ public class NotifyServiceImpl implements INotifyService {
                 log.error("[通知] 通道违约抛出异常 channel={} event={} memberId={} reason={}",
                         c.getClass().getSimpleName(), m.event(), m.memberId(),
                         t.getClass().getSimpleName(), t);
+                if (!best.isConfirmed()) best = NotifyResult.unknown(c.channelId());
             }
         }
-        if (!anyDelivered) {
-            log.warn("[通知] 全部通道未送达 event={} memberId={} channelCount={}",
-                    m.event(), m.memberId(), channels.size());
+        if (!best.isConfirmed()) {
+            log.warn("[通知] 全部通道均未确认接受或落库 event={} memberId={} channelCount={} status={}",
+                    m.event(), m.memberId(), channels.size(), best.getStatus());
         }
-        return anyDelivered;
+        return best;
     }
 
     @Override
@@ -74,7 +99,13 @@ public class NotifyServiceImpl implements INotifyService {
 
     @Override
     public boolean notifyBeforeStart(Long memberId, String topicName, String whenText) {
-        return fanout(NotifyMessage.of(NotifyEvent.BEFORE_START, memberId)
+        return fanoutResult(NotifyMessage.of(NotifyEvent.BEFORE_START, memberId)
+                .with("topicName", topicName).with("whenText", whenText)).isConfirmed();
+    }
+
+    @Override
+    public NotifyResult notifyBeforeStartResult(Long memberId, String topicName, String whenText) {
+        return wechatResult(NotifyMessage.of(NotifyEvent.BEFORE_START, memberId)
                 .with("topicName", topicName).with("whenText", whenText));
     }
 
@@ -114,7 +145,13 @@ public class NotifyServiceImpl implements INotifyService {
 
     @Override
     public boolean notifyOfficialBroadcast(Long memberId, String title, String sub) {
-        return fanout(NotifyMessage.of(NotifyEvent.OFFICIAL_BROADCAST, memberId)
+        return fanoutResult(NotifyMessage.of(NotifyEvent.OFFICIAL_BROADCAST, memberId)
+                .with("title", title).with("sub", sub)).isConfirmed();
+    }
+
+    @Override
+    public NotifyResult notifyOfficialBroadcastResult(Long memberId, String title, String sub) {
+        return wechatResult(NotifyMessage.of(NotifyEvent.OFFICIAL_BROADCAST, memberId)
                 .with("title", title).with("sub", sub));
     }
 

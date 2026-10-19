@@ -832,6 +832,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->
     <!-- P1-PT-7:多票从单(payable=0 停 0 态)的父单里还有 PAYING 主单时不关 —— 钱付没付只有主单查单说了算,
          先关从单会让主单查到 SUCCESS 时从单补记冲突、整单回滚。这类父单由 settlePayingOne 整单关。 -->
+<<<<<<< public
     <sql id="expiredUnpaidPredicate">
         r.payment_status = 0 and r.registration_status = 1
         and r.pay_expire_time is not null and r.pay_expire_time &lt;= #{now}
@@ -852,6 +853,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select r.id from cms_registration r where <include refid="expiredUnpaidPredicate"/>
         and r.id &gt; #{afterId} and r.id &lt;= #{maxId}
         order by r.id asc limit #{limit}
+=======
+    <select id="selectRegistrationScanUpperBound" resultType="java.lang.Long">
+        select coalesce(max(id), 0) from cms_registration
+    </select>
+
+    <select id="selectExpiredUnpaidIds" resultType="java.lang.Long">
+        select r.id from cms_registration r
+        where r.payment_status = 0 and r.registration_status = 1
+          and r.pay_expire_time is not null and r.pay_expire_time &lt;= #{now}
+          and not exists (
+              select 1 from cms_registration p
+              where r.parent_order_no is not null and r.parent_order_no != ''
+                and p.parent_order_no = r.parent_order_no
+                and p.payment_status = 1 and p.registration_status = 1)
+          and r.id &gt; #{afterId}
+        order by r.id asc
+        limit 200
+>>>>>>> private-codex/batch1
     </select>
 
     <!-- §5-3 PAYING 超时对账:预下单已发起(payment_status=1)且过了支付窗口仍未落终态的单 id。
@@ -881,6 +900,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and a.end_date is not null and a.end_date &gt; now()))
     </sql>
     <select id="selectPaidMissingQrcodeIds" resultType="java.lang.Long">
+<<<<<<< public
         select r.id from cms_registration r where <include refid="paidMissingQrcodePredicate"/>
         order by r.id asc limit 100
     </select>
@@ -891,7 +911,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select r.id from cms_registration r where <include refid="paidMissingQrcodePredicate"/>
         and r.id &gt; #{afterId} and r.id &lt;= #{maxId}
         order by r.id asc limit #{limit}
+=======
+        select id from cms_registration
+        where payment_status = 2
+          and ((qrcode_url is null or qrcode_url = '') or (verification_code is null or verification_code = ''))
+          and id &gt; #{afterId}
+          and create_time &gt;= date_sub(now(), interval 7 day)
+          and (payment_time is null or payment_time &lt;= date_sub(now(), interval 10 minute))
+        order by id asc
+        limit 100
+>>>>>>> private-codex/batch1
     </select>
+
+    <update id="installVerificationQrcode">
+        update cms_registration
+        set verification_code = #{verificationCode}, qrcode_url = #{qrcodeUrl}, update_time = now()
+        where id = #{id} and payment_status = 2
+          and member_id &lt;=&gt; #{memberId}
+          and verification_code &lt;=&gt; #{expectedVerificationCode}
+          and qrcode_url &lt;=&gt; #{expectedQrcodeUrl}
+          and ((qrcode_url is null or qrcode_url = '') or (verification_code is null or verification_code = ''))
+    </update>
 
     <!-- P0-10 弃单关单:条件关单,仍处待支付才关(支付回调竞态下 0 行=已支付/已取消)。
          finalStatus 由调用方按真实原因传入(3=已取消/主办取消,4=已过期/真超时)。 -->
@@ -923,7 +963,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectExpiredUnverifiedIds" resultType="java.lang.Long">
         select r.id from cms_registration r
         where r.owner_type = 2
+<<<<<<< public
           and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3)
+=======
+          and r.id &gt; #{afterId}
+>>>>>>> private-codex/batch1
           and r.payment_status = 2 and r.registration_status = 2
           and (r.verification_status is null or r.verification_status &lt;&gt; 1)
           and exists (

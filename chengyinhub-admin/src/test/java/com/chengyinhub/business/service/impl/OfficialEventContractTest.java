@@ -13,6 +13,8 @@ import com.chengyinhub.business.mapper.OfficialAudienceMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
 import com.chengyinhub.business.mapper.OfficialEventMapper;
+import com.chengyinhub.business.mapper.NotificationDeliveryReceiptMapper;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
@@ -55,8 +57,18 @@ class OfficialEventContractTest {
         ReflectionTestUtils.setField(s, "broadcastMapper", mock(OfficialBroadcastMapper.class));
         ReflectionTestUtils.setField(s, "logMapper", logMapper);
         ReflectionTestUtils.setField(s, "audienceMapper", aud);
-        ReflectionTestUtils.setField(s, "imService", im);
+        when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(1L);
         ReflectionTestUtils.setField(s, "notifyService", wx);
+        NotificationDeliveryReceiptMapper receipts = mock(NotificationDeliveryReceiptMapper.class);
+        when(receipts.claimPending(anyString(), anyLong(), anyLong(), anyString())).thenReturn(1);
+        when(receipts.complete(anyString(), anyLong(), anyLong(), anyString(), anyString(), any()))
+                .thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager manager =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(manager.getTransaction(any())).thenAnswer(inv ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(s, "receiptService",
+                new NotificationDeliveryReceiptService(receipts, im, manager));
         return s;
     }
 
@@ -85,6 +97,8 @@ class OfficialEventContractTest {
 
         IImService im = mock(IImService.class);
         INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyOfficialBroadcastResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
 
@@ -92,7 +106,7 @@ class OfficialEventContractTest {
         assertEquals(4, reached);
         verify(im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
         // 订阅渠道也 4 次
-        verify(wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, times(4)).notifyOfficialBroadcastResult(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -107,12 +121,17 @@ class OfficialEventContractTest {
 
         IImService im = mock(IImService.class);
         INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyOfficialBroadcastResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
+        OfficialBroadcastServiceImpl service = broadcastService(aud, logMapper, im, wx);
+        NotificationDeliveryReceiptService receiptService = mock(NotificationDeliveryReceiptService.class);
+        ReflectionTestUtils.setField(service, "receiptService", receiptService);
+        int reached = service.dispatch(bc(1, null));
 
         assertEquals(0, reached);
         verify(im, never()).sendSystem(anyLong(), anyInt(), anyString(), anyString());
-        verify(wx, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, never()).notifyOfficialBroadcastResult(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -126,6 +145,8 @@ class OfficialEventContractTest {
         when(logMapper.insertIgnore(any())).thenReturn(1);
         IImService im = mock(IImService.class);
         INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyOfficialBroadcastResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         String content = "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}";
         broadcastService(aud, logMapper, im, wx).dispatch(bc(2, content));
@@ -150,6 +171,8 @@ class OfficialEventContractTest {
 
         IImService im = mock(IImService.class);
         INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyOfficialBroadcastResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
 
@@ -172,6 +195,8 @@ class OfficialEventContractTest {
 
         IImService im = mock(IImService.class);
         INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyOfficialBroadcastResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
 

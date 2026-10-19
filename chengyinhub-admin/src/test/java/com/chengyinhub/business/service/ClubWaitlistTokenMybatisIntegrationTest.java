@@ -92,6 +92,11 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         // The ticket projection joins both real tables to check self-hosted publisher ownership.
         jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_topic` ("));
         jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_activity` ("));
+        jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_registration` ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_series ("));
+        jdbc.execute(tableDdl("sql/migration_club_role_event_ops_20260823.sql",
+                "CREATE TABLE IF NOT EXISTS club_event_occurrence ("));
         jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `oms_ticket` ("));
         // Existing production migration_20260817_tandianri_r6_product_contracts.sql:93, needed by current ticket mapper.
         jdbc.execute("ALTER TABLE oms_ticket ADD COLUMN source_ticket_id BIGINT NULL AFTER owner_id");
@@ -301,6 +306,83 @@ class ClubWaitlistTokenMybatisIntegrationTest {
                         + "VALUES(7,9,'ACTIVE','PLATFORM','eligibility-test',999,NOW(),'waitlist-expiry-test',NOW())");
         assertEquals(0, realMapper.isEligibleNotificationRecipient(
                 expiryCampaignId, 7L, 20L, "ALL_MEMBERS", 9L));
+    }
+
+    @Test
+    void actualMapperMaintenancePassesHundredPersistentPoisonRowsWithoutDoubleRestore() {
+        jdbc.update("DELETE FROM club_event_waitlist");
+        jdbc.update("UPDATE oms_ticket SET remaining_inventory=0 WHERE id=97");
+        java.sql.Timestamp due = new java.sql.Timestamp(epoch);
+        for (long id = 1; id <= 101; id++) {
+            jdbc.update("INSERT INTO club_event_waitlist(id,club_id,activity_id,ticket_id,member_id,state,"
+                    + "joined_at,offered_at,offer_expires_at,offer_token_hash,version)"
+                    + " VALUES(?,7,20,?,?,'OFFERED',?,?,?,REPEAT('a',64),0)",
+                    id, id == 101 ? 97L : 98L, 1000L + id, due, due, due);
+        }
+        assertEquals(100, realMapper.selectExpiredOfferedPage(new Date(epoch), 101L, null, null, 100).size());
+        assertEquals(1, service.maintain(new Date(epoch)));
+        assertEquals(100, jdbc.queryForObject("SELECT COUNT(*) FROM club_event_waitlist WHERE state='OFFERED'", Integer.class));
+        assertEquals("EXPIRED", jdbc.queryForObject("SELECT state FROM club_event_waitlist WHERE id=101", String.class));
+        assertEquals(1L, stock());
+        assertEquals(0, service.maintain(new Date(epoch)));
+        assertEquals(1L, stock());
+    }
+
+    @Test
+    void actualPaidAndTerminalPageQueriesKeepUpperBoundAndAdvanceAfterStateChanges() {
+        jdbc.update("DELETE FROM club_event_waitlist");
+        java.sql.Timestamp due = new java.sql.Timestamp(epoch);
+        for (long id = 1; id <= 102; id++) {
+            jdbc.update("INSERT INTO cms_registration(id,registration_no,owner_id,ticket_id,ticket_price,"
+                    + "member_id,order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,pay_expire_time)"
+                    + " VALUES(?,?,20,97,0,?,1,0,0,0,2,2,?)", id, "scan-" + id, 1000L + id, due);
+            jdbc.update("INSERT INTO club_event_waitlist(id,club_id,activity_id,ticket_id,member_id,state,"
+                    + "joined_at,offered_at,offer_expires_at,offer_token_hash,registration_id,version)"
+                    + " VALUES(?,7,20,97,?,'CLAIMED',?,?,?,REPEAT('a',64),?,0)",
+                    id, 1000L + id, due, due, due, id);
+        }
+        assertEquals(102L, realMapper.selectWaitlistScanUpperId());
+        assertEquals(100, realMapper.selectClaimedPaidPage(101L, null, 100).size());
+        jdbc.update("UPDATE club_event_waitlist SET state='CONVERTED' WHERE id<=100");
+        java.util.List<ClubWaitlistEntry> next = realMapper.selectClaimedPaidPage(101L, 100L, 100);
+        assertEquals(1, next.size());
+        assertEquals(101L, next.get(0).getId());
+        assertEquals(101L, next.get(0).getRegistrationId());
+        jdbc.update("UPDATE club_event_waitlist SET state='CLAIMED'");
+        jdbc.update("UPDATE cms_registration SET payment_status=4,registration_status=4");
+        assertEquals(100, realMapper.selectClaimedTerminalPage(101L, null, 100).size());
+        assertEquals(101L, realMapper.selectClaimedTerminalPage(101L, 100L, 100).get(0).getId());
+        assertTrue(realMapper.selectClaimedTerminalPage(101L, 101L, 100).isEmpty());
+    }
+
+    @Test
+    void actualPromotionScopePagesAdvanceByFifoTupleAndExcludeLaterIds() {
+        jdbc.update("DELETE FROM club_event_waitlist");
+        java.sql.Timestamp joined = new java.sql.Timestamp(epoch);
+        java.sql.Timestamp future = new java.sql.Timestamp(epoch + 86400000L);
+        jdbc.update("INSERT INTO club_event_series(id,club_id,topic_id,recurrence_type,default_lead_member_id,"
+                + "waitlist_enabled,status,created_by_member_id,request_id,request_fingerprint,create_time)"
+                + " VALUES(11,7,1,'ONCE',9,1,'ACTIVE',9,'scan',REPEAT('a',64),?)", joined);
+        for (long id = 1; id <= 102; id++) {
+            long activity = 1000L + id;
+            long ticket = 2000L + id;
+            jdbc.update("INSERT INTO cms_activity(id,club_id,status,publish_status,del_flag,end_date) VALUES(?,7,1,1,0,?)", activity, future);
+            jdbc.update("INSERT INTO club_event_occurrence(id,series_id,activity_id,occurrence_at,default_lead_member_id,status,create_time)"
+                    + " VALUES(?,11,?,?,9,'ACTIVE',?)", id, activity, new java.sql.Timestamp(epoch + id * 1000L), joined);
+            jdbc.update("INSERT INTO oms_ticket(id,owner_type,owner_id,total_inventory,remaining_inventory,del_flag)"
+                    + " VALUES(?,2,?,1,1,0)", ticket, activity);
+            jdbc.update("INSERT INTO club_event_waitlist(id,club_id,activity_id,ticket_id,member_id,state,joined_at,version)"
+                    + " VALUES(?,7,?,?,9,'WAITING',?,0)", id, activity, ticket, joined);
+        }
+        java.util.List<ClubWaitlistEntry> first = realMapper.selectPromotableWaitlistScopePage(new Date(epoch), 101L, null, null, 100);
+        assertEquals(100, first.size());
+        assertEquals(100L, first.get(99).getId());
+        jdbc.update("DELETE FROM club_event_waitlist WHERE id<=100");
+        java.util.List<ClubWaitlistEntry> next = realMapper.selectPromotableWaitlistScopePage(new Date(epoch), 101L, first.get(99).getJoinedAt(), 100L, 100);
+        assertEquals(1, next.size());
+        assertEquals(101L, next.get(0).getId());
+        assertEquals(1101L, next.get(0).getActivityId());
+        assertTrue(realMapper.selectPromotableWaitlistScopePage(new Date(epoch), 101L, joined, 101L, 100).isEmpty());
     }
 
     private int race(java.util.concurrent.Callable<Boolean> operation) throws Exception {

@@ -247,26 +247,40 @@ public interface CmsRegistrationMapper
                                                           @Param("memberId") Long memberId);
 
     /** P0-10 弃单关单:pay_expire_time 已过且仍待支付的报名单 id(限批 200/轮) */
+<<<<<<< public
     public List<Long> selectExpiredUnpaidIds(@Param("now") java.util.Date now);
     public Long selectExpiredUnpaidMaxId(@Param("now") java.util.Date now);
     public List<Long> selectExpiredUnpaidIdsAfter(@Param("now") java.util.Date now,
             @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
+=======
+    long selectRegistrationScanUpperBound();
+
+    public List<Long> selectExpiredUnpaidIds(@Param("now") java.util.Date now, @Param("afterId") long afterId);
+>>>>>>> private-codex/batch1
 
     /** §5-3 PAYING 超时对账:预下单已发起(payment_status=1)且过了付款窗口的单 id(限批 200/轮) */
     public List<Long> selectExpiredPayingIds(@Param("now") java.util.Date now, @Param("afterId") long afterId);
 
     /** 核销码补偿:已支付但核销码为空的报名单 id(近7天,限批 100/轮) */
+<<<<<<< public
     public List<Long> selectPaidMissingQrcodeIds();
     public Long selectPaidMissingQrcodeMaxId();
     public List<Long> selectPaidMissingQrcodeIdsAfter(@Param("afterId") long afterId,
             @Param("maxId") long maxId, @Param("limit") int limit);
+=======
+    public List<Long> selectPaidMissingQrcodeIds(@Param("afterId") long afterId);
+
+    public int installVerificationQrcode(@Param("id") Long id, @Param("memberId") Long memberId,
+            @Param("expectedVerificationCode") String expectedVerificationCode, @Param("expectedQrcodeUrl") String expectedQrcodeUrl,
+            @Param("verificationCode") String verificationCode, @Param("qrcodeUrl") String qrcodeUrl);
+>>>>>>> private-codex/batch1
 
     /**
      * RUN-01 到期自动核销:已支付未核销、所属活动结束满 bufferDays 的场次票(owner_type=2)id,限批 200/轮。
      * 退款在途(status 0/1)与缺 end_date 锚点的单不扫(fail-closed 转人工),口径详见 XML 注释。
      */
     public List<Long> selectExpiredUnverifiedIds(@Param("now") java.util.Date now,
-                                                 @Param("bufferDays") int bufferDays);
+                                                 @Param("bufferDays") int bufferDays, @Param("afterId") long afterId);
 
     /**
      * RUN-01 到期自动核销:条件置位(0 行 = 竞态下已被商家真核销/进入退款流/活动被改期,调用方跳过)。

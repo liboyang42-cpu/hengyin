@@ -73,6 +73,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -202,6 +204,9 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @BeforeEach
     void resetSchema() throws Exception {
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl qrcode = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(qrcode.generateQrcode(anyString(), anyInt(), anyInt())).thenReturn("https://fixture.invalid/registration.png");
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", qrcode);
         execute("DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS club_edition_compensation_terms",
@@ -838,6 +843,235 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=11"));
         assertEquals(4, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
+    void failedUnpaidPrefixDoesNotStarveLaterExpiredOrderOrDoubleRelease() throws Exception {
+        execute("DELETE FROM cms_registration", "UPDATE ums_member SET point=80 WHERE id=7",
+                "UPDATE oms_ticket SET remaining_inventory=5 WHERE id=9");
+        StringBuilder bad = new StringBuilder("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,member_id,"
+                + "point_used,payment_status,registration_status,pay_expire_time,points_returned) VALUES");
+        for (int id = 1; id <= 200; id++) {
+            if (id > 1) bad.append(',');
+            bad.append('(').append(id).append(",'BAD-UNPAID-").append(id)
+                    .append("',1,80,999999,20,0,1,DATE_SUB(NOW(),INTERVAL 3 DAY),0)");
+        }
+        execute(bad.toString(),
+                "INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,member_id,ticket_id,order_num,"
+                        + "point_used,payment_status,registration_status,pay_expire_time,points_returned)"
+                        + " VALUES(201,'GOOD-UNPAID-201',1,80,7,9,1,20,0,1,DATE_SUB(NOW(),INTERVAL 3 DAY),0)");
+        OrderCloseTask task = orderCloseTask(mock(IWechatPayService.class), mock(AlarmService.class));
+        task.closeExpired();
+        assertEquals(200, number("SELECT COUNT(*) FROM cms_registration WHERE id<=200 AND payment_status=0 AND registration_status=1 AND points_returned=0"));
+        assertEquals(4, number("SELECT registration_status FROM cms_registration WHERE id=201"));
+        assertEquals(3, number("SELECT payment_status FROM cms_registration WHERE id=201"));
+        assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=201"));
+        assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertFalse(registrationService.closeExpiredOne(201L));
+        assertEquals(6, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+    }
+
+    @Test
+    void paymentAfterCommitQrcodeIsVisibleThroughIndependentConnection() throws Exception {
+        execute("UPDATE cms_registration SET verification_code=NULL,qrcode_url=NULL WHERE id=11");
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"),
+                    "二维码外部副作用必须晚于另一连接可见的付款提交");
+            return "https://fixture.invalid/after-commit.png";
+        });
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        verify(provider).generateQrcode(anyString(), anyInt(), anyInt());
+        assertEquals("https://fixture.invalid/after-commit.png",
+                text("SELECT qrcode_url FROM cms_registration WHERE id=11"),
+                "不能把 afterCommit 中返回 URL 当成二维码已持久化");
+        assertEquals(1, number("SELECT verification_code IS NOT NULL AND verification_code<>'' FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
+    void qrcodeRepairPreservesExistingCodeAndInstallsOnlyMissingFields() throws Exception {
+        execute("UPDATE cms_registration SET payment_status=2, verification_code='KEPT-CODE', qrcode_url=NULL, point_used=17 WHERE id=11");
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            assertEquals("{\"type\":\"topic\",\"code\":\"KEPT-CODE\"}", call.getArgument(0));
+            return "https://fixture.invalid/kept.png";
+        });
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        assertEquals("https://fixture.invalid/kept.png", registrationService.generateVerificationQrcode(11L));
+        assertEquals("KEPT-CODE", text("SELECT verification_code FROM cms_registration WHERE id=11"));
+        assertEquals(17, number("SELECT point_used FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals("https://fixture.invalid/kept.png", registrationService.generateVerificationQrcode(11L));
+        verify(provider).generateQrcode(anyString(), anyInt(), anyInt());
+    }
+
+    @Test
+    void concurrentQrcodeRepairReturnsTheSingleInstalledWinner() throws Exception {
+        execute("UPDATE cms_registration SET payment_status=2, verification_code=NULL, qrcode_url=NULL WHERE id=11");
+        CountDownLatch generated = new CountDownLatch(2);
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            String payload = call.getArgument(0);
+            generated.countDown();
+            assertTrue(generated.await(10, java.util.concurrent.TimeUnit.SECONDS));
+            return "https://fixture.invalid/" + Integer.toHexString(payload.hashCode()) + ".png";
+        });
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+            transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+            Future<String> a = pool.submit(() -> transaction.execute(status -> registrationService.generateVerificationQrcode(11L)));
+            Future<String> b = pool.submit(() -> transaction.execute(status -> registrationService.generateVerificationQrcode(11L)));
+            String installed = a.get(15, java.util.concurrent.TimeUnit.SECONDS);
+            assertEquals(installed, b.get(15, java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(installed, text("SELECT qrcode_url FROM cms_registration WHERE id=11"));
+            String code = text("SELECT verification_code FROM cms_registration WHERE id=11");
+            String payload = "{\"type\":\"topic\",\"code\":\"" + code + "\"}";
+            assertEquals("https://fixture.invalid/" + Integer.toHexString(payload.hashCode()) + ".png", installed);
+            assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        } finally { pool.shutdownNow(); }
+    }
+
+    @Test
+    void refundDuringQrcodeGenerationCannotBeOverwrittenOrReportedAsRepaired() throws Exception {
+        execute("UPDATE cms_registration SET payment_status=2, verification_code='KEPT-CODE', qrcode_url=NULL WHERE id=11");
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id=11");
+            return "https://fixture.invalid/late.png";
+        });
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        assertThrows(IllegalStateException.class, () -> registrationService.generateVerificationQrcode(11L));
+        assertEquals(4, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT qrcode_url IS NULL FROM cms_registration WHERE id=11"));
+        assertEquals("KEPT-CODE", text("SELECT verification_code FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
+    void emptyQrcodeAndOwnerRaceNeverReportRepairSuccess() throws Exception {
+        execute("UPDATE cms_registration SET payment_status=2, verification_code=NULL, qrcode_url=NULL WHERE id=11");
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenReturn(" ");
+        assertThrows(IllegalStateException.class, () -> registrationService.generateVerificationQrcode(11L));
+        assertEquals(1, number("SELECT verification_code IS NULL AND qrcode_url IS NULL FROM cms_registration WHERE id=11"));
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            execute("UPDATE cms_registration SET member_id=8, verification_code='OTHER', qrcode_url='https://fixture.invalid/other.png' WHERE id=11");
+            return "https://fixture.invalid/late.png";
+        });
+        assertThrows(IllegalStateException.class, () -> registrationService.generateVerificationQrcode(11L));
+        assertEquals("OTHER", text("SELECT verification_code FROM cms_registration WHERE id=11"));
+        assertEquals("https://fixture.invalid/other.png", text("SELECT qrcode_url FROM cms_registration WHERE id=11"));
+    }
+
+    @Test
+    void qrcodeCandidateScanKeepsWindowAndFindsCodeMissingBesideExistingUrl() throws Exception {
+        execute("DELETE FROM cms_registration",
+                "INSERT INTO cms_registration(id,registration_no,member_id,payment_status,create_time,payment_time,verification_code,qrcode_url) VALUES"
+                + "(1,'QR-ELIGIBLE',7,2,NOW(),DATE_SUB(NOW(),INTERVAL 11 MINUTE),NULL,'old-url'),"
+                + "(2,'QR-RECENT',7,2,NOW(),NOW(),NULL,NULL),"
+                + "(3,'QR-OLD',7,2,DATE_SUB(NOW(),INTERVAL 8 DAY),NULL,NULL,NULL),"
+                + "(4,'QR-UNPAID',7,0,NOW(),NULL,NULL,NULL),"
+                + "(5,'QR-COMPLETE',7,2,NOW(),NULL,'CODE','URL'),"
+                + "(6,'QR-MISSING-URL',7,2,NOW(),NULL,'KEPT',NULL)");
+        assertEquals(java.util.Arrays.asList(1L, 6L), registrationService.listPaidMissingQrcodeIds());
+        assertEquals(java.util.Collections.singletonList(6L), registrationService.listPaidMissingQrcodeIds(1L));
+        assertEquals(6L, registrationService.registrationScanUpperBound());
+        assertTrue(registrationService.generateVerificationQrcode(1L).startsWith("https://fixture.invalid/"));
+        assertEquals(java.util.Collections.singletonList(6L), registrationService.listPaidMissingQrcodeIds());
+    }
+
+    @Test
+    void qrcodeFailedPrefixDoesNotStarveHealthyTicketBeyondFirstHundred() throws Exception {
+        execute("DELETE FROM cms_registration");
+        StringBuilder rows = new StringBuilder("INSERT INTO cms_registration(id,registration_no,member_id,owner_type,payment_status,create_time,payment_time,verification_code) VALUES");
+        for (int id = 1; id <= 101; id++) {
+            if (id > 1) rows.append(',');
+            rows.append('(').append(id).append(",'QR-PREFIX-").append(id)
+                    .append("',7,1,2,NOW(),NULL,'").append(id == 101 ? "GOOD" : "BAD").append("')");
+        }
+        execute(rows.toString());
+        com.chengyinhub.business.service.impl.QrcodeServiceImpl provider = mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class);
+        when(provider.generateQrcode(anyString(), anyInt(), anyInt())).thenAnswer(call -> {
+            if (((String) call.getArgument(0)).contains("BAD")) throw new IllegalStateException("provider rejected this payload");
+            return "https://fixture.invalid/good.png";
+        });
+        ReflectionTestUtils.setField(registrationTarget, "qrcodeService", provider);
+        com.chengyinhub.business.task.VerificationQrcodeRepairTask task = new com.chengyinhub.business.task.VerificationQrcodeRepairTask();
+        ReflectionTestUtils.setField(task, "cmsRegistrationService", registrationService);
+        task.repairMissing();
+        assertEquals(101, number("SELECT COUNT(*) FROM cms_registration WHERE qrcode_url IS NULL"));
+        task.repairMissing();
+        assertEquals("https://fixture.invalid/good.png", text("SELECT qrcode_url FROM cms_registration WHERE id=101"));
+        assertEquals("GOOD", text("SELECT verification_code FROM cms_registration WHERE id=101"));
+        assertEquals(100, number("SELECT COUNT(*) FROM cms_registration WHERE qrcode_url IS NULL"));
+        assertEquals(101, number("SELECT COUNT(*) FROM cms_registration WHERE payment_status=2"));
+    }
+
+    @Test
+    void failedVerificationCasUsesCurrentRefundOrCancelledState() throws Exception {
+        for (String change : new String[]{
+                "payment_status=4,verification_status=1",
+                "registration_status=3", "registration_status=4"}) {
+            execute("UPDATE cms_registration SET payment_status=2,registration_status=2,verification_status=0 WHERE id=11");
+            TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+            transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+            transaction.execute(status -> {
+                CmsRegistration stale = registrationMapper.selectCmsRegistrationById(11L);
+                try { execute("UPDATE cms_registration SET " + change + " WHERE id=11"); }
+                catch (Exception e) { throw new IllegalStateException(e); }
+                IllegalStateException error = assertThrows(IllegalStateException.class,
+                        () -> registrationTarget.verifyAndSettle(stale, 9001L, null, 1));
+                assertEquals(change.startsWith("payment_status")
+                        ? "订单未完成支付或已退款,无法核销" : "订单当前状态不可核销", error.getMessage());
+                return null;
+            });
+            assertEquals(0, number("SELECT COUNT(*) FROM cms_registration_scan"));
+            assertEquals(0, number("SELECT COUNT(*) FROM ums_member_balance_detail"));
+        }
+    }
+
+    @Test
+    void duplicateVerificationReturnsFalseOnlyForPaidActiveConsumedTicket() throws Exception {
+        execute("UPDATE cms_registration SET payment_status=2,registration_status=2,verification_status=1,verifier_id=8001 WHERE id=11");
+        CmsRegistration paid = registrationMapper.selectCmsRegistrationById(11L);
+        assertFalse(registrationService.verifyAndSettle(paid, 9001L, null, 1));
+        assertEquals(8001, number("SELECT verifier_id FROM cms_registration WHERE id=11"));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration_scan"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_balance_detail"));
+    }
+
+    @Test
+    void automaticClosurePagesPastTwoHundredFailedRowsWithoutRewardsOrForgedVerifier() throws Exception {
+        execute("DELETE FROM cms_registration",
+                "UPDATE cms_activity SET end_date=DATE_SUB(NOW(),INTERVAL 90 DAY) WHERE id=55");
+        StringBuilder rows = new StringBuilder("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,member_id,payment_status,registration_status,verification_status) VALUES");
+        for (int id = 1; id <= 201; id++) {
+            if (id > 1) rows.append(',');
+            rows.append('(').append(id).append(",'AUTO-PAGE-").append(id).append("',2,55,7,2,2,0)");
+        }
+        execute(rows.toString(),
+                "CREATE TRIGGER reject_auto_prefix BEFORE UPDATE ON cms_registration FOR EACH ROW BEGIN "
+                + "IF OLD.id<=200 AND NEW.verification_status=1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test auto closure failure'; END IF; END");
+        assertEquals(200, registrationService.listExpiredUnverifiedIds().size());
+        assertEquals(java.util.Collections.singletonList(201L), registrationService.listExpiredUnverifiedIds(200L));
+        com.chengyinhub.business.task.RegistrationAutoVerifyTask task = new com.chengyinhub.business.task.RegistrationAutoVerifyTask();
+        ReflectionTestUtils.setField(task, "cmsRegistrationService", registrationService);
+        task.run();
+        assertEquals(201, number("SELECT COUNT(*) FROM cms_registration WHERE verification_status=0"));
+        task.run();
+        assertEquals(1, number("SELECT verification_status FROM cms_registration WHERE id=201"));
+        assertEquals(1, number("SELECT verifier_id IS NULL FROM cms_registration WHERE id=201"));
+        assertEquals(200, number("SELECT COUNT(*) FROM cms_registration WHERE verification_status=0"));
+        assertFalse(registrationService.autoVerifyExpiredOne(201L));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration_scan"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_balance_detail"));
     }
 
     @Test

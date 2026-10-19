@@ -4,6 +4,7 @@ import java.util.List;
 import com.chengyinhub.business.domain.UmsMemberCart;
 import com.chengyinhub.business.domain.ViewMemberCart;
 import com.chengyinhub.business.domain.vo.MemberCartVO;
+import com.chengyinhub.business.domain.CartSettlementReceipt;
 
 /**
  * 购物车Service接口
@@ -74,4 +75,9 @@ public interface IUmsMemberCartService
     MemberCartVO previewSettlement(Long memberId, String rawCartIds);
 
     Long settleCart(Long memberId, String username, String rawCartIds, String remark, String rawAddressId);
+
+    CartSettlementReceipt settleCart(Long memberId, String username, String requestId, String rawCartIds,
+                                     String remark, String rawAddressId);
+
+    CartSettlementReceipt getSettlementReceipt(Long memberId, String requestId);
 }

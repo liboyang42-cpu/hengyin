@@ -248,6 +248,14 @@ function createGameSessionClient(options) {
   if (typeof sendRequest !== 'function') {
     throw new Error('game-session-client: 缺少 sendRequest 依赖');
   }
+  var transport = sendRequest;
+  sendRequest = function (requestOptions) {
+    try { return transport(requestOptions); }
+    catch (error) {
+      requestOptions.fail(error);
+      return null;
+    }
+  };
 
   function perspectiveOf(role) {
     return ROLE_PERSPECTIVES[String(role || '').toLowerCase()] || '';
@@ -387,6 +395,10 @@ function createGameSessionClient(options) {
       payload: input.payload || {}
     };
     if (input.authorityEpoch != null) body.authorityEpoch = input.authorityEpoch;
+    try { body = JSON.parse(JSON.stringify(body)); }
+    catch (error) {
+      return Promise.resolve({ status: 'business-error', requestId: requestId, message: '操作参数无效' });
+    }
     var task = null;
     var promise = new Promise(function (resolve) {
       task = sendRequest({
@@ -401,7 +413,7 @@ function createGameSessionClient(options) {
             return;
           }
           var receipt = res && res.data;
-          if (!isObject(receipt) || !sameId(receipt.activityId, input.activityId)
+          if (!isObject(receipt) || !sameId(receipt.activityId, body.activityId)
             || receipt.requestId !== requestId || receipt.action !== action) {
             resolve({
               status: 'unknown',

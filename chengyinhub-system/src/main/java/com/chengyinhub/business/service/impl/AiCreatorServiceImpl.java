@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.JSON;
@@ -48,6 +49,7 @@ import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.ai.AiGatewayResult;
 import com.chengyinhub.business.service.ai.AiGatewayService;
 import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.common.utils.uuid.IdUtils;
 
 /**
  * AI 创作服务实现:四大能力编排(候选查询→拼 prompt→调网关→解析 JSON→校验)。
@@ -67,6 +69,27 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             new java.util.HashSet<>(java.util.Arrays.asList("topic_coop", "decor", "content"));
     private static final String PLAYER_THEME_DRAFT_RATE_PREFIX = "ai:theme:draft:player:";
     private static final DateTimeFormatter RATE_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    // 取消标记先落库可阻止丢响应的预占随后执行；两天覆盖当前日计数及正常请求延迟。
+    // shortcut: Redis 持续不可用或进程退出后仍缺持久补偿，需完整故障恢复保证时接入现有补偿任务。
+    private static final DefaultRedisScript<Long> PLAYER_THEME_DRAFT_RESERVE_SCRIPT = new DefaultRedisScript<>(
+        "local reserved = redis.call('GET', KEYS[2]); "
+        + "if reserved then if tonumber(reserved) and tonumber(reserved) > 0 then return tonumber(reserved) end; return -1 end; "
+        + "local used = redis.call('GET', KEYS[1]); "
+        + "if used and not string.match(used, '^%d+$') then return -1 end; "
+        + "if used and tonumber(used) >= tonumber(ARGV[2]) then return 0 end; "
+        + "if not string.match(ARGV[1], '^%d+$') or tonumber(ARGV[1]) < 1 or tonumber(ARGV[1]) > 86400 then return -1 end; "
+        + "local next = redis.call('INCR', KEYS[1]); "
+        + "if redis.call('TTL', KEYS[1]) < 0 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end; "
+        + "redis.call('SET', KEYS[2], next, 'EX', 172800); return next", Long.class);
+    private static final DefaultRedisScript<Long> PLAYER_THEME_DRAFT_REFUND_SCRIPT = new DefaultRedisScript<>(
+        "local reserved = redis.call('GET', KEYS[2]); "
+        + "if not reserved then redis.call('SET', KEYS[2], '0', 'EX', 172800); return 0 end; "
+        + "if reserved == '0' then return 0 end; "
+        + "local used = redis.call('GET', KEYS[1]); "
+        + "if not tonumber(reserved) or tonumber(reserved) <= 0 or (used and not string.match(used, '^%d+$')) then return -1 end; "
+        + "redis.call('SET', KEYS[2], '0', 'EX', 172800); "
+        + "if used and tonumber(used) > 0 then redis.call('DECR', KEYS[1]); return 1 end; "
+        + "return 0", Long.class);
 
     @Autowired
     private IAiTopicPlanService aiTopicPlanService;
@@ -100,8 +123,12 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     {
         String role = resolveRole(memberId);
         PlayerThemeDraftQuotaReservation reservation = null;
+<<<<<<< public
         boolean accepted = false;
         boolean inputBlocked = false;
+=======
+        boolean refundReservation = true;
+>>>>>>> private-codex/batch1
         JSONObject user = new JSONObject();
         user.put("idea", req.getIdea());
         user.put("productType", req.getProductType());
@@ -136,13 +163,20 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             if (!isValidThemeDraft(draft)) throw new AiServiceException(PARSE_ERROR_MSG);
             resp.setDraft(draft);
             if (reservation != null) resp.setRemainingQuota(reservation.remaining);
-            accepted = true;
+            refundReservation = false;
             return resp;
         }
+<<<<<<< public
         catch (AiServiceException failure)
         {
             inputBlocked = failure.getReason() == AiServiceException.Reason.INPUT_BLOCKED;
             throw failure;
+=======
+        catch (AiServiceException e)
+        {
+            if (e.getReason() == AiServiceException.Reason.INPUT_BLOCKED) refundReservation = false;
+            throw e;
+>>>>>>> private-codex/batch1
         }
         catch (com.alibaba.fastjson2.JSONException je)
         {
@@ -151,9 +185,15 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         finally
         {
+<<<<<<< public
             if (reservation != null) {
                 if (!accepted && !inputBlocked) releasePlayerThemeDraftQuota(reservation);
                 else if(quotaRecovery!=null) quotaRecovery.retain(reservation.receipt,inputBlocked ? "INPUT_BLOCKED" : "VALID_PLAYER_DRAFT");
+=======
+            if (reservation != null && refundReservation)
+            {
+                releasePlayerThemeDraftQuota(reservation);
+>>>>>>> private-codex/batch1
             }
         }
     }
@@ -562,6 +602,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         return value == null || value.trim().isEmpty();
     }
 
+<<<<<<< public
     private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
             new org.springframework.data.redis.core.script.DefaultRedisScript<>(
                     "local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);\n" +
@@ -590,10 +631,14 @@ public class AiCreatorServiceImpl implements IAiCreatorService
                     "if used>0 then redis.call('DECR',KEYS[1]); refunded=1 end; end;\n" +
                     "redis.call('SET',KEYS[3],'0','EX',172800); return refunded;", Long.class);
     /** 原日、nonce 与代际绑定；未知响应只补偿自己的预占。 */
+=======
+    /** 先绑定本次预占；回复丢失也只能撤销自己的额度，不能扣减其他请求。 */
+>>>>>>> private-codex/batch1
     private PlayerThemeDraftQuotaReservation reservePlayerThemeDraftQuota(Long memberId)
     {
         LocalDateTime now = LocalDateTime.now();
         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
+<<<<<<< public
         String receipt = "ai:player:theme:draft:reservation:" + key + ":"
                 + com.chengyinhub.common.utils.uuid.IdUtils.simpleUUID();
         if(quotaRecovery!=null) quotaRecovery.prepare(memberId,"theme_draft","player-draft",key,receipt);
@@ -614,6 +659,34 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         if (used == null || used < 1) {
             releasePlayerThemeDraftQuota(reservation);
+=======
+        PlayerThemeDraftQuotaReservation reservation = new PlayerThemeDraftQuotaReservation(key, 0);
+        try
+        {
+            Long used = redisTemplate.execute(PLAYER_THEME_DRAFT_RESERVE_SCRIPT,
+                    java.util.Arrays.asList(reservation.key, reservation.refundKey),
+                    Math.toIntExact(secondsUntilNextLocalMidnight(now)), PLAYER_THEME_DRAFT_DAILY_LIMIT);
+            if (used == null || used < 0)
+            {
+                releasePlayerThemeDraftQuota(reservation);
+                throw new AiServiceException("AI 服务繁忙,请稍后重试");
+            }
+            if (used == 0)
+            {
+                throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
+            }
+            reservation.remaining = PLAYER_THEME_DRAFT_DAILY_LIMIT - used.intValue();
+            return reservation;
+        }
+        catch (AiServiceException e)
+        {
+            throw e;
+        }
+        catch (RuntimeException e)
+        {
+            releasePlayerThemeDraftQuota(reservation);
+            log.warn("[AiCreator] player-theme-draft quota unavailable memberId={}", memberId, e);
+>>>>>>> private-codex/batch1
             throw new AiServiceException("AI 服务繁忙,请稍后重试");
         }
         if(quotaRecovery!=null) {
@@ -626,12 +699,24 @@ public class AiCreatorServiceImpl implements IAiCreatorService
 
     private void releasePlayerThemeDraftQuota(PlayerThemeDraftQuotaReservation reservation)
     {
+<<<<<<< public
         try {
             if(quotaRecovery!=null) { quotaRecovery.requireRefund(reservation.receipt,"PLAYER_DRAFT_FAILED"); return; }
             redisTemplate.execute(REFUND_QUOTA_SCRIPT, java.util.Arrays.<Object>asList(
                     reservation.key, reservation.key + ":generation", reservation.receipt));
         } catch (RuntimeException unavailable) {
             log.warn("[AiCreator] player-theme-draft quota compensation unavailable", unavailable);
+=======
+        try
+        {
+            Long result = redisTemplate.execute(PLAYER_THEME_DRAFT_REFUND_SCRIPT,
+                    java.util.Arrays.asList(reservation.key, reservation.refundKey));
+            if (result == null || result < 0) log.warn("[AiCreator] player-theme-draft quota release unconfirmed");
+        }
+        catch (RuntimeException e)
+        {
+            log.warn("[AiCreator] player-theme-draft quota release failed", e);
+>>>>>>> private-codex/batch1
         }
     }
 
@@ -656,8 +741,13 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     private static final class PlayerThemeDraftQuotaReservation
     {
         private final String key;
+<<<<<<< public
         private final String receipt;
         private final int remaining;
+=======
+        private int remaining;
+        private final String refundKey = PLAYER_THEME_DRAFT_RATE_PREFIX + "refund:" + IdUtils.simpleUUID();
+>>>>>>> private-codex/batch1
 
         private PlayerThemeDraftQuotaReservation(String key, String receipt, int remaining)
         {

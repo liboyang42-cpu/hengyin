@@ -104,7 +104,10 @@ class RegistrationVerifyAndSettleTest {
         r.setOwnerId(300L);
         r.setPaymentStatus(2);
         r.setRegistrationStatus(2);
+<<<<<<< public
         r.setVerificationStatus(0);
+=======
+>>>>>>> private-codex/batch1
         return r;
     }
 
@@ -189,8 +192,14 @@ class RegistrationVerifyAndSettleTest {
     /** CAS 返 0 后锁内读回真实已核销态 ⇒ 返 false,且**入账/台账一步都不能走**。 */
     @Test
     void alreadyVerified_noSideEffects() {
+<<<<<<< public
         CmsRegistration verified = reg();
         verified.setVerificationStatus(1);
+=======
+        CmsRegistration current = reg();
+        current.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+>>>>>>> private-codex/batch1
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
         when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(verified);
 
@@ -248,6 +257,31 @@ class RegistrationVerifyAndSettleTest {
 
         verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
         verify(scanMapper, never()).insertCmsRegistrationScan(any());
+    }
+
+    @Test
+    void failedCasOnlyReportsDuplicateForCurrentlyPaidActiveVerifiedTicket() {
+        when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
+        CmsRegistration current = reg();
+        current.setPaymentStatus(4);
+        current.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(current);
+        assertEquals("订单未完成支付或已退款,无法核销",
+                assertThrows(IllegalStateException.class, this::verifyAndSettle).getMessage());
+        current.setPaymentStatus(2);
+        for (int status : new int[]{3, 4}) {
+            current.setRegistrationStatus(status);
+            assertEquals("订单当前状态不可核销",
+                    assertThrows(IllegalStateException.class, this::verifyAndSettle).getMessage());
+        }
+        current.setRegistrationStatus(2);
+        current.setVerificationStatus(0);
+        assertThrows(IllegalStateException.class, this::verifyAndSettle);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(null);
+        assertThrows(IllegalStateException.class, this::verifyAndSettle);
+        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+        verify(scanMapper, never()).insertCmsRegistrationScan(any());
+        verify(auditMapper, never()).insertBusinessAuditEvent(any());
     }
 
     /** 入账抛异常 ⇒ 异常必须往外传(让事务回滚),不能被吞成 false。 */

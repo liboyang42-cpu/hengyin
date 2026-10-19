@@ -113,15 +113,23 @@ function getQueue(accountId) {
   try {
     discardLegacyQueue();
     const queue = wx.getStorageSync(queueKey(accountId));
+<<<<<<< public
     if (queue && !Array.isArray(queue)) return null;
     return copyQueue(queue || []);
   } catch (e) {
     return null; // 读取失败不等于空队列，不能覆盖原记录。
+=======
+    if (queue == null || queue === '') return [];
+    return Array.isArray(queue) ? queue : null;
+  } catch (e) {
+    return null;
+>>>>>>> private-codex/batch1
   }
 }
 
 function setQueue(queue, accountId) {
   try {
+<<<<<<< public
     wx.setStorageSync(queueKey(accountId), copyQueue(queue));
     delete pendingQueues[accountId];
     return true;
@@ -129,6 +137,14 @@ function setQueue(queue, accountId) {
     pendingQueues[accountId] = copyQueue(queue);
     return false;
   }
+=======
+    discardLegacyQueue();
+    const key = queueKey(accountId);
+    const serialized = JSON.stringify(queue.slice(-MAX_QUEUE));
+    wx.setStorageSync(key, JSON.parse(serialized));
+    return JSON.stringify(wx.getStorageSync(key)) === serialized;
+  } catch (e) { return false; }
+>>>>>>> private-codex/batch1
 }
 
 function ensureAccountContext() {
@@ -214,9 +230,13 @@ function postBatch(events, onDone) {
     typeof onDone === 'function' && onDone(false);
     return;
   }
+<<<<<<< public
   // 走统一请求通道(Phase 1.3):认证由 request-client 自动注入,不再手拼 Authorization。
   // 埋点全程静默:silentError 关业务错误 toast、successStatusAbnormal 吞 HTTP 异常,均归一为投递失败。
   const batchSize = events.length;
+=======
+  // 沿用统一认证请求通道；埋点失败保持静默并保留原队列。
+>>>>>>> private-codex/batch1
   try {
     app.sendRequest({
       url: '/api/analytics/events/batch',
@@ -226,8 +246,14 @@ function postBatch(events, onDone) {
       silentError: true,
       success: function (body) {
         const accepted = body && body.data && body.data.accepted;
+<<<<<<< public
         typeof onDone === 'function' && onDone(!!(body && body.code === 200
           && Number.isInteger(accepted) && accepted === batchSize));
+=======
+        const ok = !!(body && body.code === 200 && Number.isInteger(accepted)
+          && accepted >= 0 && accepted <= events.length);
+        typeof onDone === 'function' && onDone(ok);
+>>>>>>> private-codex/batch1
       },
       successStatusAbnormal: function () {
         typeof onDone === 'function' && onDone(false);
@@ -261,6 +287,7 @@ function flush() {
   if (flushing) return;
   const accountId = ensureAccountContext();
   const queue = getQueue(accountId);
+<<<<<<< public
   if (!queue || !queue.length || accountId === 'anonymous') return;
   if (pendingQueues[accountId] && !setQueue(queue, accountId)) return;
   const generation = accountGeneration;
@@ -318,12 +345,34 @@ function flush() {
     });
   }
   drain();
+=======
+  if (!queue || !queue.length) return;
+  let batch;
+  try { batch = JSON.parse(JSON.stringify(queue.slice(0, MAX_BATCH))); }
+  catch (e) { return; }
+  const delivered = new Set(batch.map(event => JSON.stringify(event)));
+  const delivery = {};
+  flushing = delivery;
+  postBatch(batch, function (ok) {
+    if (flushing !== delivery) return;
+    flushing = false;
+    if (!ok) return;
+    const latest = getQueue(accountId);
+    if (!latest) return;
+    // 在途期间上限可能截掉旧队头，只确认这批原ID和原内容，不能按旧数量删新事件。
+    const remaining = latest.filter(event => !delivered.has(JSON.stringify(event)));
+    if (!setQueue(remaining, accountId)) return;
+    const current = getQueue();
+    if (current && current.length) flush();
+  });
+>>>>>>> private-codex/batch1
 }
 
 function track(eventName, payload) {
   if (!ALLOWED_EVENTS[eventName]) return false;
   const accountId = ensureAccountContext();
   const queue = getQueue(accountId);
+<<<<<<< public
   if (!queue || queue.length >= MAX_QUEUE) return false;
   const event = normalizePayload(eventName, payload);
   // 同键重试沿用原内容与时间；异内容不替换已经排队的请求。
@@ -335,6 +384,13 @@ function track(eventName, payload) {
   const persisted = setQueue(queue, accountId);
   if (persisted) flush();
   return persisted;
+=======
+  if (!queue) return false;
+  queue.push(normalizePayload(eventName, payload));
+  if (!setQueue(queue, accountId)) return false;
+  flush();
+  return true;
+>>>>>>> private-codex/batch1
 }
 
 module.exports = {

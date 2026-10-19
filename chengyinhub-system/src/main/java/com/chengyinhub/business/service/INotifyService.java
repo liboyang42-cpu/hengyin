@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.notify.NotifyResult;
+
 /**
  * 业务通知的统一入口(2026-08-20 新增)。
  *
@@ -15,7 +17,8 @@ package com.chengyinhub.business.service;
  * 调用链上游多处带 @Transactional(rollbackFor=Exception.class),抛出会把已生效的业务
  * (典型如已被微信网关受理的退款)连带回滚 = 资损。想判成败的看返回值,不关心的忽略即可。
  *
- * <p>返回值语义:<b>至少一条通道真的交付成功</b>。全部通道失败/未配置 ⇒ false。
+ * <p>兼容 boolean 返回值语义：至少一条站内信已落库或外部渠道明确接受。它不证明设备送达或用户已读；
+ * 需要区分 UNKNOWN/FAILED 的新宿主应使用 typed 结果方法。
  */
 public interface INotifyService {
 
@@ -27,6 +30,10 @@ public interface INotifyService {
 
     /** 出发前提醒。调用方据返回值决定要不要重试(见 TeamGroupServiceImpl 的去重键逻辑)。 */
     boolean notifyBeforeStart(Long memberId, String topicName, String whenText);
+
+    /** typed 结果；UNKNOWN 不得被宿主当作明确失败盲重发。 */
+    /** 仅微信渠道；持久宿主分别管理站内和微信收据。 */
+    NotifyResult notifyBeforeStartResult(Long memberId, String topicName, String whenText);
 
     /** 合作被邀约 → 通知受邀方 */
     boolean notifyCoopInvited(Long toMemberId, String topicName, String fromName);
@@ -45,6 +52,10 @@ public interface INotifyService {
 
     /** 官方活动/公告 */
     boolean notifyOfficialBroadcast(Long memberId, String title, String sub);
+
+    /** 微信接受不等于设备送达，详见 {@link NotifyResult}. */
+    /** 仅微信渠道；站内落库不得替代微信接受。 */
+    NotifyResult notifyOfficialBroadcastResult(Long memberId, String title, String sub);
 
     /** 漫游完成 24–72h 召回 */
     boolean notifyRoamRecall(Long memberId, int distanceM, int poisFound);

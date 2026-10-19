@@ -4,6 +4,8 @@ import com.chengyinhub.business.domain.PmsProduct;
 import com.chengyinhub.business.domain.PmsSku;
 import com.chengyinhub.business.mapper.OmsOrderItemMapper;
 import com.chengyinhub.business.mapper.OmsOrderMapper;
+import com.chengyinhub.business.mapper.CartSettlementReceiptMapper;
+import com.chengyinhub.business.domain.CartSettlementReceipt;
 import com.chengyinhub.business.mapper.PmsProductMapper;
 import com.chengyinhub.business.mapper.PmsSkuMapper;
 import com.chengyinhub.business.mapper.UmsMemberAddressMapper;
@@ -99,7 +101,7 @@ class CartSettlementTransactionalH2Test {
         CartDeleteRaceTrigger.reset();
         memberService.reset();
         skuService.reset();
-        String[] tables = {"cart_delete_guard", "oms_order_item", "oms_order", "view_member_cart", "ums_member_cart",
+        String[] tables = {"cart_delete_guard", "oms_cart_settlement_order", "oms_cart_settlement_receipt", "oms_order_item", "oms_order", "view_member_cart", "ums_member_cart",
                 "ums_member_address", "ums_member", "pms_sku", "pms_product"};
         for (String table : tables) {
             jdbcTemplate.update("delete from " + table);
@@ -158,6 +160,83 @@ class CartSettlementTransactionalH2Test {
         cartService.settleCart(MEMBER_ID, "tester", String.valueOf(CART_ID), "", "51");
 
         assertEquals(7L, jdbcTemplate.queryForObject("select mms_merchant_id from oms_order", Long.class));
+    }
+
+    @Test
+    void recoverableSettlementReplaysAllOriginalResultsWithoutReadingDeletedCart() {
+        CartSettlementReceipt first = cartService.settleCart(MEMBER_ID, "tester", "request-replay-001",
+                String.valueOf(CART_ID), "note", "51");
+        CartSettlementReceipt replay = cartService.settleCart(MEMBER_ID, "tester", "request-replay-001",
+                String.valueOf(CART_ID), "note", "51");
+
+        assertEquals(first.getOrderIds(), replay.getOrderIds());
+        assertEquals(1, replay.getOrderIds().size());
+        assertEquals(80L, replay.getTotalPoints());
+        assertEquals("SUCCEEDED", replay.getStatus());
+        assertEquals(1L, jdbcTemplate.queryForObject("select count(*) from oms_order", Long.class));
+        assertEquals(20L, jdbcTemplate.queryForObject("select point from ums_member where id=?", Long.class, MEMBER_ID));
+        assertEquals(3L, stock());
+    }
+
+    @Test
+    void recoverableSettlementRejectsSameKeyWithChangedIntentAndScopesReceiptToOwner() {
+        cartService.settleCart(MEMBER_ID, "tester", "request-scope-001", String.valueOf(CART_ID), "note", "51");
+
+        assertThrows(ServiceException.class, () -> cartService.settleCart(MEMBER_ID, "tester",
+                "request-scope-001", String.valueOf(CART_ID), "changed", "51"));
+        assertThrows(ServiceException.class, () -> cartService.getSettlementReceipt(MEMBER_ID + 1, "request-scope-001"));
+        assertEquals(1, cartService.getSettlementReceipt(MEMBER_ID, "request-scope-001").getOrderIds().size());
+    }
+
+    @Test
+    void nullRemarkCannotReplayLiteralNullMarker() {
+        cartService.settleCart(MEMBER_ID, "tester", "request-null-001", String.valueOf(CART_ID), null, "51");
+        assertThrows(ServiceException.class, () -> cartService.settleCart(MEMBER_ID, "tester",
+                "request-null-001", String.valueOf(CART_ID), "<null>", "51"));
+    }
+
+    @Test
+    void recoverableSettlementReturnsEveryMerchantOrder() {
+        jdbcTemplate.update("update ums_member set point=1000 where id=?", MEMBER_ID);
+        jdbcTemplate.update("insert into pms_product(id,merchant_id,product_name,publish_status,price,original_price,stock,del_flag) values(?,?,?,?,?,?,?,?)",
+                22L, 8L, "second", 1L, new BigDecimal("10.00"), new BigDecimal("10.00"), 2L, "0");
+        jdbcTemplate.update("insert into pms_sku(id,product_id,sku_name,price,original_price,stock) values(?,?,?,?,?,?)",
+                32L, 22L, "default", new BigDecimal("10.00"), new BigDecimal("10.00"), 2L);
+        jdbcTemplate.update("insert into ums_member_cart(id,member_id,merchant_id,cart_type,product_id,sku_id,quantity,status,is_buy) values(?,?,?,?,?,?,?,?,?)",
+                OTHER_CART_ID, MEMBER_ID, 8L, 1L, 22L, 32L, 1L, 0L, 1L);
+        jdbcTemplate.update("insert into view_member_cart(id,member_id,merchant_id,cart_type,product_id,sku_id,quantity,status,is_buy,product_name,price,original_price,sku_name) values(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                OTHER_CART_ID, MEMBER_ID, 8L, 1L, 22L, 32L, 1L, 0L, 1L, "second", BigDecimal.ONE, BigDecimal.ONE, "old");
+
+        CartSettlementReceipt receipt = cartService.settleCart(MEMBER_ID, "tester", "request-split-001",
+                OTHER_CART_ID + "," + CART_ID, "", "51");
+        assertEquals(2, receipt.getOrderIds().size());
+        assertEquals(receipt.getOrderIds(), cartService.getSettlementReceipt(MEMBER_ID, "request-split-001").getOrderIds());
+        assertEquals(90L, receipt.getTotalPoints());
+    }
+
+    @Test
+    void concurrentSameRequestReturnsOneReceiptAndMutatesResourcesOnce() throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            List<Future<CartSettlementReceipt>> futures = new ArrayList<>();
+            for (int i = 0; i < 2; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await(10, TimeUnit.SECONDS);
+                    return cartService.settleCart(MEMBER_ID, "tester", "request-race-001",
+                            String.valueOf(CART_ID), "", "51");
+                }));
+            }
+            start.countDown();
+            CartSettlementReceipt first = futures.get(0).get(10, TimeUnit.SECONDS);
+            CartSettlementReceipt second = futures.get(1).get(10, TimeUnit.SECONDS);
+            assertEquals(first.getOrderIds(), second.getOrderIds());
+            assertEquals(1L, jdbcTemplate.queryForObject("select count(*) from oms_order", Long.class));
+            assertEquals(20L, jdbcTemplate.queryForObject("select point from ums_member where id=?", Long.class, MEMBER_ID));
+            assertEquals(3L, stock());
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Test
@@ -409,7 +488,8 @@ class CartSettlementTransactionalH2Test {
                     new ClassPathResource("mapper/business/UmsMemberCartMapper.xml"),
                     new ClassPathResource("mapper/business/ViewMemberCartMapper.xml"),
                     new ClassPathResource("mapper/business/OmsOrderMapper.xml"),
-                    new ClassPathResource("mapper/business/OmsOrderItemMapper.xml"));
+                    new ClassPathResource("mapper/business/OmsOrderItemMapper.xml"),
+                    new ClassPathResource("mapper/business/CartSettlementReceiptMapper.xml"));
             return factory.getObject();
         }
 
@@ -507,7 +587,8 @@ class CartSettlementTransactionalH2Test {
                                                        UmsMemberAddressMapper addressMapper,
                                                        ControlledMemberService memberService,
                                                        OmsOrderServiceImpl orderService,
-                                                       OmsOrderItemServiceImpl itemService) {
+                                                       OmsOrderItemServiceImpl itemService,
+                                                       CartSettlementReceiptMapper receiptMapper) {
             UmsMemberCartServiceImpl service = new UmsMemberCartServiceImpl();
             ReflectionTestUtils.setField(service, "umsMemberCartMapper", cartMapper);
             ReflectionTestUtils.setField(service, "viewMemberCartService", viewService);
@@ -518,6 +599,7 @@ class CartSettlementTransactionalH2Test {
             ReflectionTestUtils.setField(service, "umsMemberService", memberService);
             ReflectionTestUtils.setField(service, "omsOrderService", orderService);
             ReflectionTestUtils.setField(service, "omsOrderItemService", itemService);
+            ReflectionTestUtils.setField(service, "cartSettlementReceiptMapper", receiptMapper);
             return service;
         }
 
@@ -530,6 +612,8 @@ class CartSettlementTransactionalH2Test {
                 "create table if not exists view_member_cart (id bigint primary key, member_id bigint, merchant_id bigint, cart_type bigint, product_id bigint, sku_id bigint, sp_data varchar(255), quantity bigint, status bigint, is_buy bigint, create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp, product_name varchar(255), product_pic varchar(255), price decimal(19,2), original_price decimal(19,2), sku_name varchar(255), sku_name_ar varchar(255), sku_pic varchar(255), weight double);" +
                 "create table if not exists oms_order (id bigint generated by default as identity primary key, order_type bigint, order_sn varchar(255), pay_id bigint, member_id bigint, mms_merchant_id bigint, product_quantity bigint, product_total_amount decimal(19,2), delivery_fee decimal(19,2), pay_amount decimal(19,2), tax_fee decimal(19,2), order_total_amount decimal(19,2), points_amount decimal(19,2), pay_type bigint, status bigint, aftersale_status bigint, delivery_company varchar(255), delivery_sn varchar(255), auto_confirm_day bigint, receiver_name varchar(255), receiver_phone varchar(255), receiver_phone_hash varchar(255), receiver_phone_code varchar(64), receiver_province varchar(255), receiver_detail_address varchar(255), order_note varchar(255), merchant_note varchar(255), confirm_status bigint, payment_time timestamp, delivery_time timestamp, receive_time timestamp, member_coupon_id bigint, coupon_amount decimal(19,2), del_flag varchar(2), create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp);" +
                 "create table if not exists oms_order_item (id bigint generated by default as identity primary key, order_id bigint, product_id bigint, out_product_id varchar(255), sku_id bigint, out_sku_id varchar(255), pic varchar(255), product_name varchar(255), price decimal(19,2), original_price decimal(19,2), quantity bigint, sp_data varchar(255), is_evaluate bigint, aftersale_order_id bigint, aftersale_status bigint, create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp);" +
+                "create table if not exists oms_cart_settlement_receipt (id bigint generated by default as identity primary key, member_id bigint not null, request_id varchar(64) not null, request_hash varchar(64) not null, intent_hash varchar(64), first_order_id bigint, total_points bigint, status varchar(16) not null, create_time timestamp, update_time timestamp, unique(member_id,request_id));" +
+                "create table if not exists oms_cart_settlement_order (receipt_id bigint not null, order_id bigint not null, sort_order int not null, primary key(receipt_id,order_id), unique(receipt_id,sort_order));" +
                 "create table if not exists cart_delete_guard (cart_id bigint primary key, constraint cart_delete_guard_fk foreign key (cart_id) references ums_member_cart(id));";
     }
 

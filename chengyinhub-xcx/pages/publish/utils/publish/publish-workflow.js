@@ -19,31 +19,41 @@ function createPublishWorkflow(deps) {
 
   var state = 'idle'; // idle | submitting | done
   var destroyed = false;
+  var active = null;
 
   function call(fn, arg) { if (typeof fn === 'function') fn(arg); }
 
   function submit(payload, handlers) {
     handlers = handlers || {};
     // 防重:仅 idle 可发起(submitting 在途、done 已完成均忽略)。
-    if (state !== 'idle') return false;
+    if (destroyed || state !== 'idle') return false;
     state = 'submitting';
+    var operation = {};
+    active = operation;
 
-    request(payload, function (res) {
-      if (destroyed) return; // 销毁后不再回调,避免 setData / redirect after unload
+    function receive(res) {
+      if (destroyed || active !== operation) return;
+      active = null;
       if (res && res.ok) {
-        state = 'done'; // 发布成功只可能进 done 一次
+        state = 'done';
         call(handlers.onSuccess, res.data);
       } else {
-        state = 'idle'; // 业务/网络失败均可重试
+        state = 'idle';
         call(handlers.onFail, res);
       }
-    });
+    }
+    try {
+      request(payload, receive);
+    } catch (error) {
+      if (active !== operation) throw error;
+      receive({ ok: false, networkError: true });
+    }
     return true;
   }
 
   return {
     submit: submit,
-    destroy: function () { destroyed = true; },
+    destroy: function () { destroyed = true; active = null; },
     getState: function () { return state; },
     isBusy: function () { return state === 'submitting'; },
   };

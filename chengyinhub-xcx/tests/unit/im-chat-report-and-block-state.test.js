@@ -17,7 +17,8 @@ function loadChat() {
   require(mod)
   const page = Object.assign({}, def)
   page.data = JSON.parse(JSON.stringify(def.data))
-  page.setData = function (patch) { Object.assign(this.data, patch) }
+  page.data.myId = 1
+  page.setData = function (patch, rendered) { Object.assign(this.data, patch); if (rendered) rendered() }
   page.scrollBottom = () => {}
   page.markRead = () => {}
   return { page, requests, tips }

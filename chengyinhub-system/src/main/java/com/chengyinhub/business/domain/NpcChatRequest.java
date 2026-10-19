@@ -18,6 +18,12 @@ public class NpcChatRequest {
     private Long userId;
     private String requestId;
     private Long sessionId;
+    private String intentHash;
+    private Integer scopeType;
+    private Long scopeId;
+    private String scene;
+    private String profileVersion;
+    private String providerState;
     private String status;
     private String safetyDecision;
     private String errorCode;
@@ -41,6 +47,18 @@ public class NpcChatRequest {
     public void setRequestId(String requestId) { this.requestId = requestId; }
     public Long getSessionId() { return sessionId; }
     public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
+    public String getIntentHash() { return intentHash; }
+    public void setIntentHash(String intentHash) { this.intentHash = intentHash; }
+    public Integer getScopeType() { return scopeType; }
+    public void setScopeType(Integer scopeType) { this.scopeType = scopeType; }
+    public Long getScopeId() { return scopeId; }
+    public void setScopeId(Long scopeId) { this.scopeId = scopeId; }
+    public String getScene() { return scene; }
+    public void setScene(String scene) { this.scene = scene; }
+    public String getProfileVersion() { return profileVersion; }
+    public void setProfileVersion(String profileVersion) { this.profileVersion = profileVersion; }
+    public String getProviderState() { return providerState; }
+    public void setProviderState(String providerState) { this.providerState = providerState; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getSafetyDecision() { return safetyDecision; }

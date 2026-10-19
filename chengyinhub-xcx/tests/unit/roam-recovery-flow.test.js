@@ -18,6 +18,371 @@ function mount() {
   page.onLoad({})
   return page
 }
+
+test('已有会话断网或HTTP故障仍保原格子，下次必须先查询原会话', async () => {
+  for (const fault of ['network', 500, 502]) {
+    calls = []; sessions = {}; values = {}; loseBootstrap = false;
+    const page = mount();
+    page._pendingTiles = ['wtw3sjq']; await page._flushReveal();
+    page._pendingTiles = ['wtw3sjr'];
+    const key = page._clientSessionKey, original = app.sendRequest;
+    let unknown = true;
+    app.sendRequest = o => {
+      if (o.url === '/api/roam/reveal' && unknown) {
+        calls.push({ url: o.url, data: o.data });
+        if (fault === 'network') o.fail({});
+        else o.successStatusAbnormal({ statusCode: fault });
+        return;
+      }
+      original(o);
+    };
+    try {
+      assert.equal(await page._flushReveal(), false);
+      assert.equal(page._roamSid, SID);
+      assert.deepEqual(page._pendingTiles, ['wtw3sjr']);
+      assert.equal(page._recoveryNeedsLookup, true);
+      assert.equal(page.data.revealWriteUnknown, true);
+      assert.deepEqual(values['roam_memory_v1:9:recovery'].pendingTiles, ['wtw3sjr']);
+      unknown = false;
+      const before = calls.length;
+      assert.equal(await page._flushReveal(), true);
+      assert.equal(calls[before].url, '/api/roam/session');
+      assert.equal(calls[before].data.clientSessionKey, key);
+      assert.equal(calls[before + 1].data.sessionId, SID);
+      assert.deepEqual(page._pendingTiles, []);
+    } finally { app.sendRequest = original; }
+  }
+});
+
+test('已有漫游reveal的缺失/错误SID不消费待确认格子，先查原会话再确认', async () => {
+  for (const data of [undefined, null, {}, { sessionId: 'bad' }, { sessionId: '9007199254740994' }]) {
+    calls = []; sessions = {}; values = {}; loseBootstrap = false;
+    const page = mount();
+    page._pendingTiles = ['wtw3sjq'];
+    assert.equal(await page._flushReveal(), true);
+    const key = page._clientSessionKey;
+    page._pendingTiles = ['wtw3sjr'];
+    const original = app.sendRequest;
+    let wrong = true;
+    app.sendRequest = o => {
+      if (o.url === '/api/roam/reveal' && wrong) {
+        calls.push({ url: o.url, data: o.data });
+        o.success({ code: 200, data }); return;
+      }
+      original(o);
+    };
+    try {
+      assert.equal(await page._flushReveal(), false);
+      assert.equal(page._roamSid, SID);
+      assert.deepEqual(page._pendingTiles, ['wtw3sjr']);
+      assert.deepEqual(values['roam_memory_v1:9:recovery'].pendingTiles, ['wtw3sjr']);
+      assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID);
+      assert.equal(page._recoveryNeedsLookup, true);
+      assert.equal(page.data.roamSessionReady, false);
+      wrong = false;
+      const before = calls.length;
+      assert.equal(await page._flushReveal(), true);
+      assert.equal(calls[before].url, '/api/roam/session');
+      assert.equal(calls[before].data.clientSessionKey, key);
+      assert.equal(calls[before + 1].data.sessionId, SID);
+      assert.deepEqual(page._pendingTiles, []);
+      assert.equal(page._roamSid, SID);
+    } finally { app.sendRequest = original; }
+  }
+});
+
+test('原会话恢复查询错配SID不能换会话或接受另一局的结束结果', async () => {
+  for (const state of ['ACTIVE', 'FINISHED']) {
+    calls = []; sessions = {}; values = {}; loseBootstrap = false;
+    const page = mount();
+    page._pendingTiles = ['wtw3sjq'];
+    await page._flushReveal();
+    const key = page._clientSessionKey, original = app.sendRequest;
+    app.sendRequest = o => {
+      calls.push({ url: o.url, data: o.data });
+      o.success({ code: 200, data: {
+        state, sessionId: '9007199254740994', clientSessionKey: key,
+        result: { totalXp: 999 }, resultComplete: true,
+      } });
+    };
+    try {
+      const before = JSON.stringify(values['roam_memory_v1:9:recovery']);
+      assert.equal(await page.recoverRoam(), false);
+      assert.equal(page._roamSid, SID);
+      assert.equal(JSON.stringify(values['roam_memory_v1:9:recovery']), before);
+      assert.notEqual(page.data.finish.totalXp, 999);
+      assert.match(page.data.recoveryError, /关联|核对/);
+    } finally { app.sendRequest = original; }
+  }
+});
+
+test('损坏的恢复数组留在原会员桶，页面不崩溃、不建新会话也不误清', async () => {
+  const key = 'roam_memory_v1:9:recovery'
+  const record = { sessionId: SID, pendingTiles: ['wtw3sjq'], finishRequested: true, allTiles: {} }
+  values[key] = record
+  let page
+  assert.doesNotThrow(() => { page = mount() })
+  assert.equal(page._recoveryReadFailed, true)
+  assert.deepEqual(values[key], record)
+  assert.equal(await page.recoverRoam(), false)
+  assert.deepEqual(values[key], record)
+  assert.equal(calls.filter(call => ['/api/roam/reveal', '/api/roam/finish', '/api/roam/session'].includes(call.url)).length, 0)
+  assert.match(page.data.recoveryError, /读取|核对/)
+})
+
+test('FINISHED原会话仍有待确认格子时保留SID和恢复记录，不清档不重复结算', async () => {
+  const page = mount()
+  page._pendingTiles = ['wtw3sjq']
+  await page._flushReveal()
+  const saved = JSON.stringify(values['roam_memory_v1:9:recovery'])
+  const session = sessions[Object.keys(sessions)[0]]
+  Object.assign(session, { state: 'FINISHED', resultComplete: true, result: { totalXp: 7 } })
+  assert.equal(await page.recoverRoam(), false)
+  assert.equal(page._roamSid, SID)
+  assert.deepEqual(page._pendingTiles, ['wtw3sjq'])
+  assert.equal(JSON.stringify(values['roam_memory_v1:9:recovery']), saved)
+  assert.equal(calls.filter(call => call.url === '/api/roam/finish').length, 0)
+  assert.match(page.data.recoveryError, /仍有待确认/)
+})
+
+test('结算未知后重试先查原SID，不发送另一轮结算；重复结束回包不清新会话', async () => {
+  loseBootstrap = false
+  const page = mount()
+  page._pendingTiles = ['wtw3sjq']
+  await page._flushReveal()
+  const original = app.sendRequest
+  let finishRequest
+  app.sendRequest = request => {
+    if (request.url !== '/api/roam/finish') return original(request)
+    calls.push({ url: request.url, data: request.data })
+    finishRequest = request
+    request.fail({ errMsg: 'timeout' })
+  }
+  assert.equal(await page._postRoamFinish(10), false)
+  assert.equal(page.data.finish.settleErr, 'unknown')
+  Object.assign(sessions[Object.keys(sessions)[0]], { state: 'FINISHED', resultComplete: true, result: { totalXp: 7 } })
+  const before = calls.length
+  assert.equal(await page.retrySettle(), true)
+  assert.equal(calls[before].url, '/api/roam/session')
+  assert.equal(page._roamSid, SID)
+  assert.equal(page.data.finish.xpAwarded, 7)
+  assert.equal(calls.filter(call => call.url === '/api/roam/finish').length, 1)
+  page._resetRoamRecoverySession()
+  page._clientSessionKey = 'b'.repeat(32)
+  page._pendingTiles = ['wtw3sjr']
+  page._saveRoamRecovery()
+  const nextRecord = JSON.stringify(values['roam_memory_v1:9:recovery'])
+  finishRequest.success({ code: 200, data: { totalXp: 999 } })
+  await settle()
+  assert.equal(JSON.stringify(values['roam_memory_v1:9:recovery']), nextRecord)
+  assert.notEqual(page.data.finish.xpAwarded, 999)
+})
+
+for (const route of ['/api/roam/session', '/api/roam/reveal']) {
+  for (const boundary of ['account', 'newSession']) test('旧' + route + '迟到回包遇到' + boundary + '变化不得消费新会话记录', async () => {
+    loseBootstrap = false
+    const page = mount()
+    page._pendingTiles = ['wtw3sjq']
+    await page._flushReveal()
+    const original = app.sendRequest
+    let oldRequest
+    app.sendRequest = request => {
+      if (request.url === route) { oldRequest = request; return }
+      return original(request)
+    }
+    let oldPromise
+    if (route.endsWith('/session')) oldPromise = page.recoverRoam()
+    else { page._pendingTiles = ['wtw3sjr']; oldPromise = page._flushReveal() }
+    await settle()
+    assert.ok(oldRequest)
+    if (boundary === 'account') { app.getUserID = () => '10'; page.onShow() }
+    else page._resetRoamRecoverySession()
+    page._clientSessionKey = 'b'.repeat(32)
+    page._pendingTiles = ['wtw3sjs']
+    page._saveRoamRecovery()
+    const key = 'roam_memory_v1:' + app.getUserID() + ':recovery'
+    const saved = JSON.stringify(values[key])
+    oldRequest.success({ code: 200, data: route.endsWith('/session')
+      ? { sessionId: SID, clientSessionKey: oldRequest.data.clientSessionKey, state: 'FINISHED',
+        resultComplete: true, result: { totalXp: 999 } }
+      : { sessionId: SID } })
+    assert.equal(await oldPromise, false)
+    oldRequest.success({ code: 200, data: { sessionId: SID } })
+    await settle()
+    assert.equal(JSON.stringify(values[key]), saved)
+    assert.deepEqual(page._pendingTiles, ['wtw3sjs'])
+    assert.equal(page._roamSid, 0)
+    assert.notEqual(page.data.finish.xpAwarded, 999)
+  })
+}
+
+test('旧恢复记录只有SID时也不得接受另一会话的恢复回包', async () => {
+  const page = mount();
+  page._clientSessionKey = '';
+  page._roamSid = SID;
+  page._pendingTiles = ['wtw3sjq'];
+  assert.equal(page._saveRoamRecovery(), true);
+  app.sendRequest = o => {
+    calls.push({ url: o.url, data: o.data });
+    o.success({ code: 200, data: { state: 'ACTIVE', sessionId: '9007199254740994' } });
+  };
+  assert.equal(await page.recoverRoam(), false);
+  assert.equal(page._roamSid, SID);
+  const lookups = calls.filter(call => call.url === '/api/roam/session');
+  assert.equal(lookups.length, 1);
+  assert.equal(lookups[0].data.sessionId, SID);
+  assert.equal(calls.filter(call => ['/api/roam/reveal', '/api/roam/finish'].includes(call.url)).length, 0);
+  assert.deepEqual(page._pendingTiles, ['wtw3sjq']);
+  assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID);
+});
+
+test('隐藏时写失败不留后台重试，回前台保存原迷雾增量', () => {
+  const page = mount()
+  const write = wx.setStorageSync
+  page._syncRoamPermission = () => {}
+  page._localTiles = { wtw3sjq: 1 }
+  page._tilesDirty = 1
+  page._hidden = true
+  wx.setStorageSync = () => { throw new Error('quota') }
+  try {
+    assert.equal(page._persistTiles(), false)
+    assert.equal(page._tilesDirty, 1)
+    assert.equal(page._tilePersistTimer || null, null)
+    wx.setStorageSync = write
+    page.onShow()
+    assert.equal(page._tilesDirty, 0)
+    assert.deepEqual(values['roam_memory_v1:9:tiles'].tiles, { wtw3sjq: 1 })
+  } finally {
+    if (page._tilePersistTimer) clearTimeout(page._tilePersistTimer)
+    wx.setStorageSync = write
+  }
+})
+
+test('初始化桶读取故障后实时保存必须合并旧local-only格子，不能把空占位写回', () => {
+  const key = 'roam_memory_v1:9:tiles'
+  values[key] = { tiles: { wtw3sjq: 1 }, serverCursor: 7 }
+  const read = wx.getStorageSync
+  wx.getStorageSync = storageKey => { if (storageKey === key) throw new Error('read unavailable'); return read(storageKey) }
+  const page = mount()
+  wx.getStorageSync = read
+  page._localTiles = { wtw3sjr: 1 }
+  page._tilesDirty = 1
+  try {
+    assert.equal(page._persistTiles(), true)
+    assert.deepEqual(values[key], { tiles: { wtw3sjq: 1, wtw3sjr: 1 }, serverCursor: 7 })
+  } finally {
+    if (page._tilePersistTimer) clearTimeout(page._tilePersistTimer)
+  }
+})
+
+test('实时写前读取仍故障或读取时会员/generation改变，保dirty不写旧桶或新桶', () => {
+  for (const fault of ['read', 'account', 'generation']) {
+    const key = 'roam_memory_v1:9:tiles'
+    values = { [key]: { tiles: { wtw3sjq: 1 }, serverCursor: 7 } }
+    const page = mount()
+    page._localTiles = { wtw3sjr: 1 }
+    page._tilesDirty = 1
+    page._hidden = true
+    const read = wx.getStorageSync, write = wx.setStorageSync
+    let writes = 0
+    wx.getStorageSync = storageKey => {
+      if (storageKey === key) {
+        if (fault === 'read') throw new Error('read unavailable')
+        if (fault === 'account') app.getUserID = () => '10'
+        if (fault === 'generation') page._roamWriteGeneration++
+      }
+      return read(storageKey)
+    }
+    wx.setStorageSync = (storageKey, value) => { writes++; write(storageKey, value) }
+    try {
+      assert.equal(page._persistTiles(), false, fault)
+      assert.equal(page._tilesDirty, 1)
+      assert.equal(writes, 0)
+      assert.deepEqual(values[key], { tiles: { wtw3sjq: 1 }, serverCursor: 7 })
+      assert.equal(values['roam_memory_v1:10:tiles'], undefined)
+    } finally { wx.getStorageSync = read; wx.setStorageSync = write; app.getUserID = () => '9' }
+  }
+})
+
+test('实时迷雾写失败保留dirty，修复存储后保存同一批格子', () => {
+  const page = mount()
+  const write = wx.setStorageSync
+  page._localTiles = { wtw3sjq: 1 }
+  page._tileServerCursor = 3
+  page._tilesDirty = 2
+  wx.setStorageSync = () => { throw new Error('quota') }
+  try {
+    const failed = page._persistTiles()
+    assert.equal(page._tilesDirty, 2, '不能在写盘前清dirty')
+    assert.equal(failed, false)
+    wx.setStorageSync = write
+    assert.equal(page._persistTiles(), true)
+    assert.equal(page._tilesDirty, 0)
+    assert.deepEqual(values['roam_memory_v1:9:tiles'], { tiles: { wtw3sjq: 1 }, serverCursor: 3 })
+  } finally {
+    if (page._tilePersistTimer) clearTimeout(page._tilePersistTimer)
+    wx.setStorageSync = write
+  }
+})
+
+test('实时保存失败退回15秒重试，不在每个新格子立即重试或重复提示', () => {
+  const page = mount()
+  const originalSet = global.setTimeout
+  const originalClear = global.clearTimeout
+  const write = wx.setStorageSync
+  const timers = new Map()
+  const notices = []
+  let sequence = 0
+  let writes = 0
+  global.setTimeout = (callback, delay) => {
+    assert.equal(delay, 15000)
+    const id = ++sequence
+    timers.set(id, callback)
+    return id
+  }
+  global.clearTimeout = id => timers.delete(id)
+  wx.showToast = notice => notices.push(notice)
+  wx.setStorageSync = () => { writes++; throw new Error('quota') }
+  page._localTiles = { wtw3sjq: 1 }
+  page._tilesDirty = 20
+  try {
+    page._persistTiles()
+    const first = page._tilePersistTimer
+    assert.ok(first, '失败须留下有限重试')
+    page._tilesDirty++
+    page._scheduleTilePersist()
+    assert.equal(writes, 1)
+    assert.equal(page._tilePersistTimer, first)
+    const retry = timers.get(first)
+    timers.delete(first)
+    retry()
+    assert.equal(writes, 2)
+    assert.equal(notices.length, 1)
+    wx.setStorageSync = write
+    const next = page._tilePersistTimer
+    const recover = timers.get(next)
+    timers.delete(next)
+    recover()
+    assert.equal(page._tilesDirty, 0)
+    assert.equal(page._tilePersistTimer, null)
+    assert.equal(timers.size, 0)
+  } finally {
+    global.setTimeout = originalSet
+    global.clearTimeout = originalClear
+    wx.setStorageSync = write
+  }
+})
+
+test('卸载时保存失败仍保dirty，但不创建离页后的重试定时器', () => {
+  const page = mount()
+  page._localTiles = { wtw3sjq: 1 }
+  page._tilesDirty = 1
+  wx.setStorageSync = () => { throw new Error('quota') }
+  page.onUnload()
+  assert.equal(page._tilesDirty, 1)
+  assert.equal(page._tilePersistTimer || null, null)
+  assert.equal(page._tilePersistStopped, true)
+})
 beforeEach(() => {
   calls = []; sessions = {}; values = {}; loseBootstrap = true
   global.Page = x => { config = x }

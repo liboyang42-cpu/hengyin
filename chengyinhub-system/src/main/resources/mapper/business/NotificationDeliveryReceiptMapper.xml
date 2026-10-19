@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NotificationDeliveryReceiptMapper">
+    <resultMap id="Receipt" type="NotificationDeliveryReceipt">
+        <id property="id" column="id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="eventId" column="event_id"/>
+        <result property="recipientId" column="recipient_id"/>
+        <result property="channel" column="channel"/>
+        <result property="status" column="status"/>
+        <result property="providerCode" column="provider_code"/>
+    </resultMap>
+
+    <insert id="insertIntent" parameterType="NotificationDeliveryReceipt">
+        insert ignore into notification_delivery_receipt
+            (event_type, event_id, recipient_id, channel, status, create_time, update_time)
+        values (#{eventType}, #{eventId}, #{recipientId}, #{channel}, 'PENDING', now(), now())
+    </insert>
+
+    <select id="selectByIntent" resultMap="Receipt">
+        select id, event_type, event_id, recipient_id, channel, status, provider_code
+        from notification_delivery_receipt
+        where event_type=#{eventType} and event_id=#{eventId}
+          and recipient_id=#{recipientId} and channel=#{channel}
+    </select>
+
+    <update id="claim">
+        update notification_delivery_receipt set status='PROCESSING', provider_code=null, update_time=now()
+        where event_type=#{eventType} and event_id=#{eventId}
+          and recipient_id=#{recipientId} and channel=#{channel}
+          and status in ('PENDING', 'FAILED')
+    </update>
+
+    <update id="claimPending">
+        update notification_delivery_receipt set status='PROCESSING', provider_code=null, update_time=now()
+        where event_type=#{eventType} and event_id=#{eventId}
+          and recipient_id=#{recipientId} and channel=#{channel} and status='PENDING'
+    </update>
+
+    <update id="complete">
+        update notification_delivery_receipt
+        set status=#{status}, provider_code=#{providerCode}, update_time=now()
+        where event_type=#{eventType} and event_id=#{eventId}
+          and recipient_id=#{recipientId} and channel=#{channel} and status='PROCESSING'
+    </update>
+</mapper>

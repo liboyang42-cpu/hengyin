@@ -151,6 +151,11 @@ class ReferralBountyHookWiringTest {
      */
     @Test
     void wholeOrderVerify_casLost_doesNotNotifyBounty() {
+        CmsRegistration consumed = guidedTicket();
+        consumed.setPaymentStatus(2);
+        consumed.setRegistrationStatus(2);
+        consumed.setVerificationStatus(1);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(consumed);
         when(regMapper.verifyIfNotVerified(REG, MERCHANT)).thenReturn(0);
         CmsRegistration verified = guidedTicket();
         verified.setPaymentStatus(2);

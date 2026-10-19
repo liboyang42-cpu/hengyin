@@ -31,6 +31,63 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class RefundReconcileTaskTest {
+    @Test
+    void persistentPrefixCannotStarveLaterRefundAndNewArrivalsStayOutsideFrozenWindow() {
+        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
+        IRefundPayoutService payouts = mock(IRefundPayoutService.class);
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        java.util.List<RefundApplication> poison = new java.util.ArrayList<>();
+        for (long id = 1; id <= 200; id++) {
+            RefundApplication item = new RefundApplication();
+            item.setId(id); item.setPayoutStatus(RefundApplication.PAYOUT_PROCESSING);
+            item.setRefundNo("RF" + id);
+            poison.add(item);
+        }
+        RefundApplication healthy = new RefundApplication();
+        healthy.setId(201L); healthy.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
+        when(mapper.selectStalePayoutProcessing(30)).thenReturn(poison);
+        when(mapper.selectPayoutScanUpperId()).thenReturn(201L, 202L);
+        when(mapper.selectStalePayoutProcessingPage(30, 0L, 201L)).thenReturn(poison);
+        when(mapper.selectStalePayoutProcessingPage(30, 200L, 201L))
+                .thenReturn(Collections.singletonList(healthy));
+        when(mapper.selectStalePayoutProcessingPage(30, 0L, 202L)).thenReturn(poison);
+        doThrow(new IllegalStateException("provider unavailable")).when(wechat).refreshPayoutFromWx(anyString());
+        RefundReconcileTask task = new RefundReconcileTask();
+        ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
+        ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(task, "refundPayoutService", payouts);
+        ReflectionTestUtils.setField(task, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
+        task.reconcile();
+        verify(payouts, never()).payoutAfterReview(anyLong());
+        task.reconcile();
+        verify(payouts).payoutAfterReview(201L);
+        verify(mapper, org.mockito.Mockito.times(1)).selectPayoutScanUpperId();
+        task.reconcile();
+        verify(mapper).selectStalePayoutProcessingPage(30, 0L, 202L);
+        verify(wechat, org.mockito.Mockito.times(400)).refreshPayoutFromWx(anyString());
+    }
+
+    @Test
+    void deletedRemainingPageResetsWindowWithoutInventingPayout() {
+        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
+        IRefundPayoutService payouts = mock(IRefundPayoutService.class);
+        RefundReconcileTask task = new RefundReconcileTask();
+        ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
+        ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(task, "refundPayoutService", payouts);
+        ReflectionTestUtils.setField(task, "wechatPayService", mock(IWechatPayService.class));
+        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
+        ReflectionTestUtils.setField(task, "payoutScanAfterId", 200L);
+        ReflectionTestUtils.setField(task, "payoutScanUpperId", 201L);
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+        when(mapper.selectPayoutScanUpperId()).thenReturn(0L);
+        task.reconcile();
+        task.reconcile();
+        verify(mapper).selectStalePayoutProcessingPage(30, 200L, 201L);
+        verify(mapper).selectStalePayoutProcessingPage(30, 0L, 0L);
+        verify(payouts, never()).payoutAfterReview(anyLong());
+    }
 
     @Test
     void reconcileRetriesCommittedButUndispatchedRefundAndPollsAcceptedRefund() {
@@ -50,8 +107,12 @@ class RefundReconcileTaskTest {
         processing.setPayoutStatus(RefundApplication.PAYOUT_PROCESSING);
         processing.setRefundNo("RF8");
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Arrays.asList(dispatchPending, processing));
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Arrays.asList(dispatchPending, processing));
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
 
         RefundReconcileTask task = new RefundReconcileTask();
@@ -73,8 +134,12 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(3);
 
@@ -105,8 +170,12 @@ class RefundReconcileTaskTest {
         stuck.setStatus(1);
         stuck.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.singletonList(stuck));
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.singletonList(stuck));
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         AtomicBoolean retried = new AtomicBoolean(false);
         doAnswer(invocation -> {
@@ -134,8 +203,12 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
 
@@ -158,8 +231,12 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(4);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
         doThrow(new IllegalStateException("backlog alarm failed"))
@@ -193,8 +270,12 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
 
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(2);
         doThrow(new IllegalStateException("stuck alarm failed"))
@@ -229,8 +310,12 @@ class RefundReconcileTaskTest {
         IRefundPayoutService payout = mock(IRefundPayoutService.class);
         RefundApplication pending = new RefundApplication();
         pending.setId(7L); pending.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.singletonList(pending));
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.singletonList(pending));
+>>>>>>> private-codex/batch1
         doThrow(new IllegalStateException("deposit queue unavailable")).when(deposits).reconcileDepositRefunds();
         RefundReconcileTask task = new RefundReconcileTask();
         ReflectionTestUtils.setField(task,"coopInviteService",deposits);
@@ -290,8 +375,12 @@ class RefundReconcileTaskTest {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         AlarmService alarmService = mock(AlarmService.class);
         when(mapper.countStuckPayoutDispatch(anyInt())).thenThrow(new IllegalStateException("count failed"));
+<<<<<<< public
         when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenReturn(100L);
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.emptyList());
+=======
+        when(mapper.selectStalePayoutProcessingPage(anyInt(), anyLong(), anyLong())).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
         doThrow(new IllegalStateException("alarm failed"))
                 .when(alarmService).alarmThrottled(eq("monitor.refund.dispatch_count_failed"), eq("退款派发卡滞计数失败"), anyString());

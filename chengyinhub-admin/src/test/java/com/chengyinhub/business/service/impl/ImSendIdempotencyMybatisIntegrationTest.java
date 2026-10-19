@@ -34,6 +34,7 @@ class ImSendIdempotencyMybatisIntegrationTest {
     private JdbcTemplate db;
     private String schema;
     private IImService service;
+    private ImServiceImpl target;
     private IWxContentSecurityService safety;
     private IWxContentCallbackInboxService inbox;
     private ImMessageMapper messages;
@@ -68,7 +69,7 @@ class ImSendIdempotencyMybatisIntegrationTest {
         messages = session.getMapper(ImMessageMapper.class);
         safety = mock(IWxContentSecurityService.class);
         inbox = mock(IWxContentCallbackInboxService.class);
-        ImServiceImpl target = new ImServiceImpl();
+        target = new ImServiceImpl();
         ReflectionTestUtils.setField(target, "conversationMapper", session.getMapper(ImConversationMapper.class));
         ReflectionTestUtils.setField(target, "memberMapper", session.getMapper(ImConversationMemberMapper.class));
         ReflectionTestUtils.setField(target, "messageMapper", messages);
@@ -332,6 +333,7 @@ class ImSendIdempotencyMybatisIntegrationTest {
     }
 
     @Test
+<<<<<<< public
     void blockedLatestPreviewIsRedactedForBothMembersWithoutDestroyingAuditEvidence() {
         ImMessage message = service.send(1L, 100L, null, 1, "blocked original", null);
         messages.updateStatus(message.getId(), ImMessage.STATUS_BLOCKED);
@@ -366,5 +368,334 @@ class ImSendIdempotencyMybatisIntegrationTest {
         assertEquals(1, messages.applyMediaCheckResult(image.getId(), "preview-media-trace", true));
         assertEquals("", service.listConversations(2L).get(0).get("lastMsgText"));
         assertEquals("https://cdn/image.jpg", messages.selectImMessageById(image.getId()).getContent());
+=======
+    void closedGroupAfterEarlierSnapshotCannotReviveReadState() throws Exception {
+        for (boolean legacyRead : new boolean[] { false, true }) {
+            seed();
+            ImMessage message = service.send(1L, 100L, null, 1, "before close", null, "send_closed_read_0001");
+            db.update("update im_conversation set type=4,biz_key='club_5' where id=100");
+            ClubMapper clubs = mock(ClubMapper.class);
+            com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+            club.setId(5L);
+            club.setMemberId(2L);
+            club.setStatus(1L);
+            club.setDelFlag(0);
+            when(clubs.selectClubById(5L)).thenReturn(club);
+            ReflectionTestUtils.setField(target, "clubMapper", clubs);
+            assertLateReadRejectedAfterSnapshot(message.getId(), legacyRead, () -> service.closeClubGroup(5L));
+            assertEquals(Integer.valueOf(1), db.queryForObject(
+                    "select status from im_conversation where id=100", Integer.class));
+            assertEquals(Integer.valueOf(1), db.queryForObject(
+                    "select deleted from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+            assertEquals(Long.valueOf(0), db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+            assertEquals(0, unread(2));
+        }
+    }
+
+    @Test
+    void deletedMemberAfterEarlierSnapshotCannotClearUnreadOrAdvanceRead() throws Exception {
+        for (boolean legacyRead : new boolean[] { false, true }) {
+            seed();
+            ImMessage message = service.send(1L, 100L, null, 1, "before delete", null, "send_deleted_read_001");
+            assertLateReadRejectedAfterSnapshot(message.getId(), legacyRead, () -> service.deleteConversation(2L, 100L));
+            assertEquals(Integer.valueOf(1), db.queryForObject(
+                    "select deleted from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+            assertEquals(Long.valueOf(0), db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+            assertEquals(1, unread(2), "deleted membership must not let a late read clear unread");
+        }
+    }
+
+    @Test
+    void eachGroupLeavePathRejectsLateReadsAfterEarlierSnapshot() throws Exception {
+        for (String kind : new String[] { "club", "hangout", "team" }) {
+            for (boolean legacyRead : new boolean[] { false, true }) {
+                seed();
+                ImMessage message = service.send(1L, 100L, null, 1, "before leave", null, "send_leave_read_001");
+                db.update("update im_conversation set type=4,biz_key=? where id=100", kind + "_5");
+                assertLateReadRejectedAfterSnapshot(message.getId(), legacyRead, () -> {
+                    if ("club".equals(kind)) service.leaveClubGroup(5L, 2L);
+                    else if ("hangout".equals(kind)) service.leaveHangoutGroup(5L, 2L);
+                    else service.leaveTeamGroup(5L, 2L);
+                });
+                assertEquals(Long.valueOf(0), db.queryForObject(
+                        "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+                assertEquals(1, unread(2));
+            }
+        }
+    }
+
+    @Test
+    void readAfterEarlierSnapshotUsesLatestCommittedMessageAndPreservesNewerUnread() throws Exception {
+        for (boolean legacyRead : new boolean[] { false, true }) {
+            seed();
+            ImMessage first = service.send(1L, 100L, null, 1, "first", null, "send_read_snapshot_001");
+            ExecutorService worker = Executors.newSingleThreadExecutor();
+            org.springframework.transaction.support.TransactionTemplate read =
+                    new org.springframework.transaction.support.TransactionTemplate(
+                            new DataSourceTransactionManager(db.getDataSource()));
+            read.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+            try {
+                Long latestId = read.execute(status -> {
+                    assertEquals(Long.valueOf(first.getId()), db.queryForObject(
+                            "select max(id) from im_message where conversation_id=100", Long.class));
+                    assertEquals(Integer.valueOf(1), db.queryForObject(
+                            "select unread_count from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+                    ImMessage latest;
+                    try {
+                        latest = worker.submit(() -> service.send(1L, 100L, null, 1,
+                                "later", null, "send_read_snapshot_002")).get(10, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (legacyRead) service.markRead(2L, 100L);
+                    else service.markRead(2L, 100L, first.getId());
+                    return latest.getId();
+                });
+                assertEquals(legacyRead ? latestId : first.getId(), db.queryForObject(
+                        "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+                assertEquals(legacyRead ? 0 : 1, unread(2));
+            } finally {
+                worker.shutdownNow();
+            }
+        }
+    }
+
+    @Test
+    void explicitReadToSeesMessageCommittedAfterEarlierSnapshot() throws Exception {
+        ImMessage first = service.send(1L, 100L, null, 1, "first", null, "read_current_new_001");
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        org.springframework.transaction.support.TransactionTemplate read =
+                new org.springframework.transaction.support.TransactionTemplate(
+                        new DataSourceTransactionManager(db.getDataSource()));
+        read.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        try {
+            Long consumedId = read.execute(status -> {
+                assertEquals(Long.valueOf(first.getId()), db.queryForObject(
+                        "select max(id) from im_message where conversation_id=100", Long.class));
+                ImMessage latest;
+                try {
+                    latest = worker.submit(() -> service.send(1L, 100L, null, 1,
+                            "committed later", null, "read_current_new_002")).get(10, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                service.markRead(2L, 100L, latest.getId());
+                return latest.getId();
+            });
+            assertEquals(consumedId, db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+            assertEquals(0, unread(2));
+        } finally {
+            worker.shutdownNow();
+        }
+    }
+
+    @Test
+    void explicitReadToRejectsBlockedMessageCommittedAfterEarlierSnapshot() throws Exception {
+        ImMessage first = service.send(1L, 100L, null, 1, "first", null, "read_current_block_001");
+        Long beforeRead = db.queryForObject(
+                "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class);
+        int beforeUnread = unread(2);
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        org.springframework.transaction.support.TransactionTemplate read =
+                new org.springframework.transaction.support.TransactionTemplate(
+                        new DataSourceTransactionManager(db.getDataSource()));
+        read.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        try {
+            ServiceException rejected = assertThrows(ServiceException.class, () -> read.execute(status -> {
+                assertEquals(Integer.valueOf(ImMessage.STATUS_NORMAL), db.queryForObject(
+                        "select status from im_message where id=?", Integer.class, first.getId()));
+                try {
+                    assertEquals(Integer.valueOf(1), worker.submit(
+                            () -> messages.updateStatus(first.getId(), ImMessage.STATUS_BLOCKED))
+                            .get(10, TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                service.markRead(2L, 100L, first.getId());
+                return null;
+            }));
+            assertEquals("已读位置不属于当前会话", rejected.getMessage());
+            assertEquals(Integer.valueOf(ImMessage.STATUS_BLOCKED), db.queryForObject(
+                    "select status from im_message where id=?", Integer.class, first.getId()));
+            assertEquals(beforeRead, db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=2", Long.class));
+            assertEquals(beforeUnread, unread(2));
+        } finally {
+            worker.shutdownNow();
+        }
+    }
+
+    @Test
+    void groupFanoutDoesNotReactivateDepartedMembersButExplicitRejoinStillWorks() {
+        db.update("update im_conversation set type=4,biz_key='club_5' where id=100");
+        ClubMapper clubs = mock(ClubMapper.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setId(5L); club.setMemberId(1L); club.setStatus(1L); club.setDelFlag(0);
+        when(clubs.selectClubById(5L)).thenReturn(club);
+        when(clubs.selectClubByIdForUpdate(5L)).thenReturn(club);
+        ClubMemberMapper clubMembers = mock(ClubMemberMapper.class);
+        com.chengyinhub.business.domain.ClubMember active = new com.chengyinhub.business.domain.ClubMember();
+        active.setMemberId(2L);
+        when(clubMembers.selectByClubAndMember(5L, 2L)).thenReturn(active);
+        when(clubMembers.selectClubMemberList(any())).thenReturn(java.util.Collections.singletonList(active));
+        ReflectionTestUtils.setField(target, "clubMapper", clubs);
+        ReflectionTestUtils.setField(target, "clubMemberMapper", clubMembers);
+        ReflectionTestUtils.setField(target, "clubParticipationGuard", mock(IClubParticipationGuard.class));
+        service.leaveClubGroup(5L, 2L);
+        ImMessage sent = service.send(1L, 100L, null, 1, "after leave", null, "send_after_leave_001");
+        assertEquals(Integer.valueOf(1), db.queryForObject(
+                "select deleted from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+        assertEquals(0, unread(2));
+        assertThrows(ServiceException.class, () -> service.markRead(2L, 100L, sent.getId()));
+        assertEquals(Long.valueOf(100L), service.getOrCreateClubGroup(5L, 2L));
+        assertEquals(Integer.valueOf(0), db.queryForObject(
+                "select deleted from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+        ImMessage afterRejoin = service.send(1L, 100L, null, 1, "after rejoin", null, "send_after_rejoin_001");
+        assertEquals(1, unread(2));
+        service.markRead(2L, 100L, afterRejoin.getId());
+        assertEquals(0, unread(2));
+    }
+
+    @Test
+    void systemAndAdminSendWaitForReadLockBeforeInsertingOrRestoringMembership() throws Exception {
+        for (boolean adminSend : new boolean[] { false, true }) {
+            seed();
+            if (adminSend) service.sendFromAdmin(2L, 1, "before", null);
+            else service.sendSystem(2L, 1, "before", null);
+            Long convId = db.queryForObject("select id from im_conversation where biz_key=?",
+                    Long.class, (adminSend ? "cs_" : "sys_") + "2");
+            ImMessageMapper observed = mock(ImMessageMapper.class, org.mockito.AdditionalAnswers.delegatesTo(messages));
+            CountDownLatch inserting = new CountDownLatch(1);
+            doAnswer(call -> {
+                inserting.countDown();
+                return messages.insertImMessage(call.getArgument(0));
+            }).when(observed).insertImMessage(any());
+            ReflectionTestUtils.setField(target, "messageMapper", observed);
+            ExecutorService worker = Executors.newSingleThreadExecutor();
+            java.util.concurrent.atomic.AtomicReference<Future<Long>> sent = new java.util.concurrent.atomic.AtomicReference<>();
+            org.springframework.transaction.support.TransactionTemplate read =
+                    new org.springframework.transaction.support.TransactionTemplate(
+                            new DataSourceTransactionManager(db.getDataSource()));
+            try {
+                read.execute(status -> {
+                    db.queryForObject("select id from im_conversation where id=? for update", Long.class, convId);
+                    CountDownLatch started = new CountDownLatch(1);
+                    sent.set(worker.submit(() -> {
+                        started.countDown();
+                        return adminSend ? service.sendFromAdmin(2L, 1, "later", null)
+                                : service.sendSystem(2L, 1, "later", null);
+                    }));
+                    try {
+                        assertTrue(started.await(2, TimeUnit.SECONDS));
+                        assertFalse(inserting.await(250, TimeUnit.MILLISECONDS), "writer must wait at conversation before message insert");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                    service.markRead(2L, convId);
+                    return null;
+                });
+                Long latest = sent.get().get(10, TimeUnit.SECONDS);
+                assertNotNull(latest);
+                assertEquals(Integer.valueOf(1), db.queryForObject(
+                        "select unread_count from im_conversation_member where conversation_id=? and member_id=2", Integer.class, convId));
+                assertTrue(latest > db.queryForObject(
+                        "select last_read_msg_id from im_conversation_member where conversation_id=? and member_id=2", Long.class, convId));
+            } finally {
+                if (sent.get() != null) sent.get().get(10, TimeUnit.SECONDS);
+                worker.shutdownNow();
+                ReflectionTestUtils.setField(target, "messageMapper", messages);
+            }
+        }
+    }
+
+    @Test
+    void senderDepartureWinsAgainstOldSnapshotButCompletedSendBeforeDepartureRemainsValid() throws Exception {
+        db.update("update im_conversation set type=4,biz_key='hangout_5' where id=100");
+        RoamHangoutMapper hangouts = mock(RoamHangoutMapper.class);
+        com.chengyinhub.business.domain.RoamHangout hangout = new com.chengyinhub.business.domain.RoamHangout();
+        hangout.setStatus(com.chengyinhub.business.domain.RoamHangout.STATUS_OPEN);
+        when(hangouts.selectByIdForUpdate(5L)).thenReturn(hangout);
+        ReflectionTestUtils.setField(target, "roamHangoutMapper", hangouts);
+        // The real mapper is kept by the target; a delegate only opens a deterministic race window.
+        final ImConversationMemberMapper delegate =
+                (ImConversationMemberMapper) ReflectionTestUtils.getField(target, "memberMapper");
+        ImConversationMemberMapper observed = mock(ImConversationMemberMapper.class,
+                org.mockito.AdditionalAnswers.delegatesTo(delegate));
+        CountDownLatch snapshotRead = new CountDownLatch(1);
+        CountDownLatch departureDone = new CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicBoolean once = new java.util.concurrent.atomic.AtomicBoolean();
+        doAnswer(call -> {
+            com.chengyinhub.business.domain.ImConversationMember old =
+                    delegate.selectByConvAndMember(call.getArgument(0), call.getArgument(1));
+            if (once.compareAndSet(false, true)) {
+                snapshotRead.countDown();
+                assertTrue(departureDone.await(10, TimeUnit.SECONDS));
+            }
+            return old;
+        }).when(observed).selectByConvAndMember(100L, 1L);
+        ReflectionTestUtils.setField(target, "memberMapper", observed);
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        try {
+            Future<?> late = worker.submit(() -> service.send(1L, 100L, null, 1, "late", null, "send_depart_race_001"));
+            assertTrue(snapshotRead.await(10, TimeUnit.SECONDS));
+            service.leaveHangoutGroup(5L, 1L);
+            departureDone.countDown();
+            ExecutionException rejected = assertThrows(ExecutionException.class, () -> late.get(10, TimeUnit.SECONDS));
+            assertTrue(rejected.getCause() instanceof ServiceException);
+            assertEquals(Integer.valueOf(403), ((ServiceException) rejected.getCause()).getCode());
+            assertEquals(Integer.valueOf(0), db.queryForObject(
+                    "select count(*) from im_message where conversation_id=100", Integer.class));
+            assertEquals(Long.valueOf(0), db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=1", Long.class));
+            ReflectionTestUtils.setField(target, "memberMapper", delegate);
+            seed();
+            ImMessage beforeLeave = service.send(1L, 100L, null, 1, "committed first", null, "send_depart_first_001");
+            service.deleteConversation(1L, 100L);
+            assertNotNull(messages.selectImMessageById(beforeLeave.getId()));
+            assertEquals(Integer.valueOf(1), db.queryForObject(
+                    "select deleted from im_conversation_member where conversation_id=100 and member_id=1", Integer.class));
+            assertEquals(beforeLeave.getId(), db.queryForObject(
+                    "select last_read_msg_id from im_conversation_member where conversation_id=100 and member_id=1", Long.class));
+        } finally {
+            departureDone.countDown();
+            worker.shutdownNow();
+            ReflectionTestUtils.setField(target, "memberMapper", delegate);
+        }
+    }
+
+    private void assertLateReadRejectedAfterSnapshot(Long messageId, boolean legacyRead, Runnable revoke) throws Exception {
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        org.springframework.transaction.support.TransactionTemplate read =
+                new org.springframework.transaction.support.TransactionTemplate(
+                        new DataSourceTransactionManager(db.getDataSource()));
+        read.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        try {
+            read.execute(status -> {
+                assertEquals(Integer.valueOf(0), db.queryForObject(
+                        "select deleted from im_conversation_member where conversation_id=100 and member_id=2", Integer.class));
+                assertEquals(Integer.valueOf(0), db.queryForObject(
+                        "select status from im_conversation where id=100", Integer.class));
+                try {
+                    worker.submit(revoke).get(10, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                ServiceException error = assertThrows(ServiceException.class, () -> {
+                    if (legacyRead) service.markRead(2L, 100L);
+                    else service.markRead(2L, 100L, messageId);
+                });
+                assertEquals(Integer.valueOf(403), error.getCode());
+                assertEquals(null, error.getDetailMessage(), "deleted historical member gets no new terminal metadata");
+                status.setRollbackOnly();
+                return null;
+            });
+        } finally {
+            worker.shutdownNow();
+        }
+>>>>>>> private-codex/batch1
     }
 }

@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
@@ -55,6 +56,23 @@ import static org.mockito.Mockito.when;
  * 每条都断言具体守卫并校验副作用被拦截 → 守卫被删则测试失败。
  */
 class ImServiceImplTest {
+
+    @Test
+    void recoveryLookupIsScopedToCurrentMemberAndConversation() {
+        ImServiceImpl service = service();
+        String key = "send_0123456789012345";
+        ImMessage original = new ImMessage();
+        original.setId(61L);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(messageMapper.selectByClientMessageId(100L, 1L, key)).thenReturn(original);
+
+        assertEquals(original, service.findOwnMessage(1L, 100L, key));
+        verify(messageMapper).selectByClientMessageId(100L, 1L, key);
+
+        ImServiceImpl denied = service();
+        assertThrows(RuntimeException.class, () -> denied.findOwnMessage(9L, 100L, key));
+        verify(messageMapper, never()).selectByClientMessageId(anyLong(), anyLong(), any());
+    }
 
     @Test
     void responseLossRetryReturnsOriginalButIntentionalSameTextRemainsNew() {
@@ -164,8 +182,13 @@ class ImServiceImplTest {
     private ImServiceImpl service() {
         conversationMapper = mock(ImConversationMapper.class);
         memberMapper = mock(ImConversationMemberMapper.class);
+<<<<<<< public
         org.mockito.Mockito.doAnswer(call -> memberMapper.selectByConvAndMember(call.getArgument(0), call.getArgument(1)))
                 .when(memberMapper).selectByConvAndMemberForUpdate(anyLong(), anyLong());
+=======
+        when(memberMapper.selectByConvAndMemberForUpdate(anyLong(), anyLong()))
+                .thenAnswer(call -> memberMapper.selectByConvAndMember(call.getArgument(0), call.getArgument(1)));
+>>>>>>> private-codex/batch1
         messageMapper = mock(ImMessageMapper.class);
         blockMapper = mock(ImBlockMapper.class);
         umsMemberService = mock(IUmsMemberService.class);
@@ -710,8 +733,13 @@ class ImServiceImplTest {
         topic.setName("外滩夜行");
         topic.setStatus(1);
         topic.setUserStatus(1);
+        topic.setDelFlag(0);
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+<<<<<<< public
         when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), anyLong())).thenReturn(topic);
+=======
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, 1L)).thenReturn(topic);
+>>>>>>> private-codex/batch1
 
         ArgumentCaptor<ImMessage> cap = forClass(ImMessage.class);
         service.send(1L, 100L, null, ImMessage.MSG_CARD, "伪造摘要",
@@ -732,6 +760,7 @@ class ImServiceImplTest {
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
         topic.setUserStatus(0); // 未上架
+        topic.setDelFlag(0);
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -739,6 +768,235 @@ class ImServiceImplTest {
                         "{\"cardType\":\"route\",\"topicId\":7}"));
 
         assertEquals("该路线未上架", ex.getMessage());
+        verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+    }
+
+    @Test
+    void routeCardRejectsDeletedTopicEvenWhenStillMarkedListed() {
+        ImServiceImpl service = service();
+        stubSendableConversation();
+        CmsTopic topic = new CmsTopic();
+        topic.setId(7L);
+        topic.setUserStatus(1);
+        topic.setDelFlag(2);
+        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
+                        "{\"cardType\":\"route\",\"topicId\":7}"));
+
+        assertEquals("路线不存在", ex.getMessage());
+        verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+    }
+
+    private ImMessage historicalRouteCard() {
+        ImMessage original = message(61L, 100L, 1L);
+        original.setMsgType(ImMessage.MSG_CARD);
+        original.setCreateTime(new java.util.Date(123456789L));
+        original.setContent("[路线] 旧私密名称");
+        original.setExtraJson("{\"cardType\":\"route\",\"topicId\":7,\"name\":\"旧私密名称\",\"action\":\"/forged\"}");
+        original.setClientMessageId("send_0123456789012345");
+        original.setRequestHash(com.chengyinhub.business.service.support.CanonicalDigest.sha256Hex(
+                com.alibaba.fastjson2.JSON.toJSONString(Arrays.asList(ImMessage.MSG_CARD, "original", "{\"cardType\":\"route\",\"topicId\":7}"))));
+        return original;
+    }
+
+    private CmsTopic readableRoute() {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(7L);
+        topic.setName("当前公开名称");
+        topic.setDelFlag(0);
+        topic.setStatus(1);
+        topic.setUserStatus(1);
+        return topic;
+    }
+
+    private void assertUnavailableRoute(ImMessage projected, ImMessage original) {
+        assertEquals("路线已不可用", projected.getContent());
+        assertEquals(original.getId(), projected.getId());
+        assertEquals(original.getClientMessageId(), projected.getClientMessageId());
+        assertEquals(original.getRequestHash(), projected.getRequestHash());
+        assertEquals(original.getCreateTime(), projected.getCreateTime());
+        com.alibaba.fastjson2.JSONObject extra = com.alibaba.fastjson2.JSON.parseObject(projected.getExtraJson());
+        assertEquals("route", extra.getString("cardType"));
+        assertEquals(Long.valueOf(7), extra.getLong("topicId"));
+        assertEquals(2, extra.size());
+        assertEquals("[路线] 旧私密名称", original.getContent(), "只投影响应，不能覆盖历史消息");
+        assertTrue(original.getExtraJson().contains("旧私密名称"));
+    }
+
+    @Test
+    void unavailableRouteIsHiddenAcrossHistoryIncrementalRecoveryAndRetry() {
+        for (int state = 0; state < 5; state++) {
+            ImServiceImpl service = service();
+            stubSendableConversation();
+            ImMessage original = historicalRouteCard();
+            CmsTopic topic = readableRoute();
+            if (state == 1) topic.setDelFlag(2);
+            if (state == 2) topic.setUserStatus(0);
+            if (state == 3) topic.setStatus(2);
+            // 不存在、私密且当前查看者无权限都由现有 viewer-aware 读取返回 null。
+            when(cmsTopicMapper.selectCmsTopicDetailById(7L, 1L)).thenReturn(
+                    state == 0 || state == 4 ? null : topic);
+            when(messageMapper.selectPage(100L, null, 20)).thenReturn(Collections.singletonList(original));
+            when(messageMapper.selectMaxVisibleId(100L)).thenReturn(61L);
+            when(messageMapper.selectAfterPage(100L, 0L, 61L, 20)).thenReturn(Collections.singletonList(original));
+            when(messageMapper.selectByClientMessageId(100L, 1L, original.getClientMessageId())).thenReturn(original);
+            when(messageMapper.selectByClientMessageIdForUpdate(100L, 1L, original.getClientMessageId())).thenReturn(original);
+
+            List<?> history = (List<?>) service.listMessages(1L, 100L, null, 20).get("list");
+            assertUnavailableRoute((ImMessage) history.get(0), original);
+            List<?> after = (List<?>) service.listMessagesAfter(1L, 100L, 0L, null, 20).get("list");
+            assertUnavailableRoute((ImMessage) after.get(0), original);
+            assertUnavailableRoute(service.findOwnMessage(1L, 100L, original.getClientMessageId()), original);
+            assertUnavailableRoute(service.send(1L, 100L, null, ImMessage.MSG_CARD, "original",
+                    "{\"cardType\":\"route\",\"topicId\":7}", original.getClientMessageId()), original);
+            verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+            verify(conversationMapper, never()).updateLastMessage(anyLong(), anyInt(), any(), any());
+        }
+    }
+
+    @Test
+    void routeProjectionUsesCurrentViewerAndCanBecomeReadableAgainWithoutRewritingHistory() {
+        ImServiceImpl service = service();
+        ImMessage original = historicalRouteCard();
+        String key = original.getClientMessageId();
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConvAndMember(100L, 2L)).thenReturn(member(2L));
+        when(messageMapper.selectByClientMessageId(100L, 1L, key)).thenReturn(original);
+        when(messageMapper.selectPage(100L, null, 20)).thenReturn(Collections.singletonList(original));
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, 1L)).thenReturn(null, readableRoute());
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, 2L)).thenReturn(readableRoute());
+        assertUnavailableRoute(service.findOwnMessage(1L, 100L, key), original);
+        List<?> otherHistory = (List<?>) service.listMessages(2L, 100L, null, 20).get("list");
+        assertEquals("[路线] 当前公开名称", ((ImMessage) otherHistory.get(0)).getContent());
+        assertEquals("[路线] 当前公开名称", service.findOwnMessage(1L, 100L, key).getContent());
+        assertEquals("[路线] 旧私密名称", original.getContent());
+    }
+
+    @Test
+    void conversationRoutePreviewUsesCurrentVisibilityRatherThanPersistedName() {
+        ImServiceImpl service = service();
+        ImConversation c = new ImConversation();
+        c.setId(100L);
+        c.setType(ImConversation.TYPE_SINGLE);
+        c.setLastMsgType(ImMessage.MSG_CARD);
+        c.setLastMsgText("[路线] 旧私密名称");
+        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(c);
+        when(messageMapper.selectLatestMessage(100L)).thenReturn(historicalRouteCard());
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, 1L)).thenReturn(null, readableRoute());
+        assertEquals("路线已不可用", service.listConversations(1L).get(0).get("lastMsgText"));
+        assertEquals("[路线] 当前公开名称", service.listConversations(1L).get(0).get("lastMsgText"));
+        assertEquals("[路线] 旧私密名称", c.getLastMsgText());
+    }
+
+    @Test
+    void routePreviewWithoutRecoverableMessageCannotLeakOldPersistedName() {
+        ImServiceImpl service = service();
+        ImConversation c = new ImConversation();
+        c.setId(100L);
+        c.setType(ImConversation.TYPE_SINGLE);
+        c.setLastMsgType(ImMessage.MSG_CARD);
+        c.setLastMsgText("[路线] 旧私密名称");
+        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(c);
+        when(messageMapper.selectLatestMessage(100L)).thenReturn(null);
+        assertEquals("路线已不可用", service.listConversations(1L).get(0).get("lastMsgText"));
+    }
+
+    @Test
+    void blockedLastRouteCannotBeReplacedByAnEarlierVisibleCard() {
+        ImServiceImpl service = service();
+        ImConversation c = new ImConversation();
+        c.setId(100L);
+        c.setType(ImConversation.TYPE_SINGLE);
+        c.setLastMsgType(ImMessage.MSG_CARD);
+        c.setLastMsgText("[路线] 旧私密名称");
+        ImMessage blocked = historicalRouteCard();
+        blocked.setStatus(ImMessage.STATUS_BLOCKED);
+        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(c);
+        when(messageMapper.selectLatestMessage(100L)).thenReturn(blocked);
+        assertEquals("路线已不可用", service.listConversations(1L).get(0).get("lastMsgText"));
+        verify(cmsTopicMapper, never()).selectCmsTopicDetailById(anyLong(), any());
+        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+    }
+
+    @Test
+    void nonRouteCardsAndTextKeepTheirExistingRecoveryResponse() {
+        ImServiceImpl service = service();
+        String key = "send_0123456789012345";
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        ImMessage location = message(61L, 100L, 1L);
+        location.setMsgType(ImMessage.MSG_CARD);
+        location.setContent("[路线] 用户填写的位置名称");
+        location.setExtraJson("{\"cardType\":\"location\",\"name\":\"外滩\",\"lat\":31,\"lng\":121}");
+        when(messageMapper.selectByClientMessageId(100L, 1L, key)).thenReturn(location);
+        assertEquals(location, service.findOwnMessage(1L, 100L, key));
+        ImMessage text = message(62L, 100L, 1L);
+        text.setMsgType(ImMessage.MSG_TEXT);
+        text.setContent("普通文本");
+        when(messageMapper.selectByClientMessageId(100L, 1L, key)).thenReturn(text);
+        assertEquals(text, service.findOwnMessage(1L, 100L, key));
+        verify(cmsTopicMapper, never()).selectCmsTopicDetailById(anyLong(), any());
+    }
+
+    @Test
+    void malformedLegacyRouteCannotLeakNameOrForgeNavigation() {
+        for (String extra : Arrays.asList("{broken", "{}", "{\"name\":\"旧私密名称\"}",
+                "{\"cardType\":\"route\",\"topicId\":\"bad\",\"name\":\"旧私密名称\"}")) {
+            ImServiceImpl service = service();
+            ImMessage original = historicalRouteCard();
+            original.setExtraJson(extra);
+            when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+            when(messageMapper.selectByClientMessageId(100L, 1L, original.getClientMessageId())).thenReturn(original);
+            ImMessage projected = service.findOwnMessage(1L, 100L, original.getClientMessageId());
+            assertEquals("路线已不可用", projected.getContent());
+            assertFalse(projected.getExtraJson().contains("旧私密名称"));
+            assertEquals(original.getId(), projected.getId());
+            assertEquals(extra, original.getExtraJson());
+            verify(cmsTopicMapper, never()).selectCmsTopicDetailById(anyLong(), any());
+        }
+    }
+
+    @Test
+    void legacyRouteWithoutCardTypeIsHiddenInHistoryIncrementalAndRecovery() {
+        for (String extra : Arrays.asList("{}", "{\"topicId\":7,\"name\":\"旧私密名称\"}")) {
+            ImServiceImpl service = service();
+            stubSendableConversation();
+            ImMessage original = historicalRouteCard();
+            original.setExtraJson(extra);
+            when(messageMapper.selectPage(100L, null, 20)).thenReturn(Collections.singletonList(original));
+            when(messageMapper.selectMaxVisibleId(100L)).thenReturn(61L);
+            when(messageMapper.selectAfterPage(100L, 0L, 61L, 20)).thenReturn(Collections.singletonList(original));
+            when(messageMapper.selectByClientMessageId(100L, 1L, original.getClientMessageId())).thenReturn(original);
+            List<?> history = (List<?>) service.listMessages(1L, 100L, null, 20).get("list");
+            List<?> incremental = (List<?>) service.listMessagesAfter(1L, 100L, 0L, null, 20).get("list");
+            for (ImMessage projected : Arrays.asList((ImMessage) history.get(0), (ImMessage) incremental.get(0),
+                    service.findOwnMessage(1L, 100L, original.getClientMessageId()))) {
+                assertEquals("路线已不可用", projected.getContent());
+                assertFalse(projected.getExtraJson().contains("旧私密名称"));
+                assertEquals(original.getId(), projected.getId());
+                if (extra.contains("topicId")) {
+                    assertEquals(Long.valueOf(7), com.alibaba.fastjson2.JSON.parseObject(
+                            projected.getExtraJson()).getLong("topicId"));
+                }
+            }
+            assertEquals("[路线] 旧私密名称", original.getContent());
+            assertEquals(extra, original.getExtraJson());
+        }
+    }
+
+    @Test
+    void sendingRouteRequiresCurrentViewerVisibilityBeforeInsert() {
+        ImServiceImpl service = service();
+        stubSendableConversation();
+        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(readableRoute());
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, 1L)).thenReturn(null);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.send(1L, 100L, null,
+                ImMessage.MSG_CARD, "x", "{\"cardType\":\"route\",\"topicId\":7}"));
+        assertEquals("路线已不可用", ex.getMessage());
         verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
     }
 
@@ -762,14 +1020,20 @@ class ImServiceImplTest {
     void locationCardRejectsOutOfRangeCoordinates() {
         ImServiceImpl service = service();
         stubSendableConversation();
-        when(wxContentSecurityService.checkText(any(), any())).thenReturn(null);
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
-                        "{\"cardType\":\"location\",\"name\":\"某处\",\"lat\":999,\"lng\":121.4}"));
-
-        assertEquals("位置坐标不合法", ex.getMessage());
+        String[][] coordinates = {
+                {"999", "121.4"}, {"31.2", "999"},
+                {"\"NaN\"", "121.4"}, {"31.2", "\"NaN\""},
+                {"\"Infinity\"", "121.4"}, {"31.2", "\"-Infinity\""}
+        };
+        for (String[] coordinate : coordinates) {
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
+                            "{\"cardType\":\"location\",\"name\":\"某处\",\"lat\":"
+                                    + coordinate[0] + ",\"lng\":" + coordinate[1] + "}"));
+            assertEquals("位置坐标不合法", ex.getMessage());
+        }
         verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+        verify(wxContentSecurityService, never()).checkText(any(), any());
     }
 
     @Test
@@ -957,6 +1221,7 @@ class ImServiceImplTest {
         when(blockMapper.existsBetween(1L, 2L)).thenReturn(0);
         assertEquals(Boolean.FALSE, service.listMessages(1L, 100L, null, 20).get("blocked"));
     }
+<<<<<<< public
     private ImServiceImpl messagePaginationService() {
         ImServiceImpl service = service();
         ImConversation conversation = new ImConversation();
@@ -1046,6 +1311,195 @@ class ImServiceImplTest {
         assertEquals(Boolean.FALSE, result.get("hasMore"));
         assertEquals(71L, result.get("nextCursor"));
         assertEquals(29, ((List<?>) result.get("list")).size());
+=======
+
+    @Test
+    void incrementalSyncUsesAscendingBoundedPageAndFixedWatermark() {
+        ImServiceImpl service = service();
+        ImConversation single = new ImConversation();
+        single.setId(100L);
+        single.setType(ImConversation.TYPE_SINGLE);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(single);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(messageMapper.selectMaxVisibleId(100L)).thenReturn(90L);
+        when(messageMapper.selectAfterPage(100L, 40L, 80L, 50))
+                .thenReturn(Arrays.asList(message(41L, 100L, 2L), message(80L, 100L, 2L)));
+
+        Map<String, Object> result = service.listMessagesAfter(1L, 100L, 40L, 80L, 999);
+
+        assertEquals(80L, result.get("watermark"));
+        assertEquals(80L, result.get("nextAfter"));
+        assertEquals(Boolean.FALSE, result.get("hasMore"));
+        verify(messageMapper).selectAfterPage(100L, 40L, 80L, 50);
+    }
+
+    @Test
+    void readToRejectsAnotherConversationAndOtherwiseUsesMonotonicMapperUpdate() {
+        ImServiceImpl service = service();
+        ImConversation single = new ImConversation();
+        single.setId(100L);
+        single.setType(ImConversation.TYPE_SINGLE);
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(single);
+        when(memberMapper.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(member(1L));
+        when(messageMapper.selectByConversationAndIdForUpdate(100L, 70L)).thenReturn(message(70L, 999L, 2L));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.markRead(1L, 100L, 70L));
+        verify(memberMapper, never()).advanceReadTo(anyLong(), anyLong(), anyLong());
+
+        when(messageMapper.selectByConversationAndIdForUpdate(100L, 70L)).thenReturn(message(70L, 100L, 2L));
+        service.markRead(1L, 100L, 70L);
+        verify(memberMapper).advanceReadTo(100L, 1L, 70L);
+    }
+
+    @Test
+    void closedCurrentGroupsReturnMachineTerminalAtExistingRejectionPoints() {
+        ImServiceImpl service = service();
+        ImConversation closed = groupConv(100L, "club_5");
+        closed.setStatus(1);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(closed);
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(closed);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        Club club = new Club();
+        club.setId(5L);
+        club.setMemberId(1L);
+        club.setStatus(1L);
+        club.setDelFlag(0);
+        when(clubMapper.selectClubById(5L)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(5L)).thenReturn(club);
+        for (org.junit.jupiter.api.function.Executable read : Arrays.<org.junit.jupiter.api.function.Executable>asList(
+                () -> service.listMessages(1L, 100L, null, 20),
+                () -> service.listMessagesAfter(1L, 100L, 0L, null, 20),
+                () -> service.findOwnMessage(1L, 100L, "send_0123456789012345"),
+                () -> service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hello", null))) {
+            com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                    com.chengyinhub.common.exception.ServiceException.class, read);
+            assertEquals(Integer.valueOf(409), error.getCode());
+            assertEquals("IM_CONVERSATION_CLOSED", error.getDetailMessage());
+        }
+        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+        verify(messageMapper, never()).selectAfterPage(anyLong(), anyLong(), anyLong(), anyInt());
+        verify(messageMapper, never()).selectByClientMessageId(anyLong(), anyLong(), any());
+        verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+    }
+
+    @Test
+    void closedGroupWithoutHistoricalMembershipDoesNotDiscloseTerminalMetadata() {
+        ImServiceImpl service = service();
+        ImConversation closed = groupConv(100L, "club_5");
+        closed.setStatus(1);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(closed);
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.listMessages(1L, 100L, null, 20));
+        assertEquals(Integer.valueOf(403), error.getCode());
+        assertEquals(null, error.getDetailMessage());
+        verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+    }
+
+    @Test
+    void closedOrDeletedReadEntriesRejectBeforeMessagesAndPreserveMembershipPrivacy() {
+        for (boolean deleted : new boolean[] { false, true }) {
+            for (boolean legacy : new boolean[] { false, true }) {
+                ImServiceImpl service = service();
+                ImConversation group = groupConv(100L, "club_5");
+                group.setStatus(deleted ? 0 : 1);
+                when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(group);
+                ImConversationMember mine = member(1L);
+                mine.setDeleted(deleted ? 1 : 0);
+                when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(mine);
+                when(memberMapper.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(mine);
+                Club club = new Club();
+                club.setId(5L);
+                club.setMemberId(1L);
+                club.setStatus(1L);
+                club.setDelFlag(0);
+                when(clubMapper.selectClubById(5L)).thenReturn(club);
+                com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                        com.chengyinhub.common.exception.ServiceException.class, () -> {
+                            if (legacy) service.markRead(1L, 100L);
+                            else service.markRead(1L, 100L, 61L);
+                        });
+                assertEquals(Integer.valueOf(deleted ? 403 : 409), error.getCode());
+                assertEquals(deleted ? null : "IM_CONVERSATION_CLOSED", error.getDetailMessage());
+                org.mockito.InOrder order = org.mockito.Mockito.inOrder(conversationMapper, memberMapper);
+                order.verify(conversationMapper).selectImConversationByIdForUpdate(100L);
+                order.verify(memberMapper).selectByConvAndMemberForUpdate(100L, 1L);
+                verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+                verify(messageMapper, never()).selectImMessageById(anyLong());
+                verify(messageMapper, never()).selectByConversationAndIdForUpdate(anyLong(), anyLong());
+                verify(memberMapper, never()).markRead(anyLong(), anyLong(), anyLong());
+                verify(memberMapper, never()).advanceReadTo(anyLong(), anyLong(), anyLong());
+            }
+        }
+    }
+
+    @Test
+    void sendRechecksCurrentSenderUnderConversationLockAfterEarlierMembershipSnapshot() {
+        ImServiceImpl service = service();
+        ImConversation single = new ImConversation();
+        single.setId(100L); single.setType(ImConversation.TYPE_SINGLE); single.setStatus(0);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(single);
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(single);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        ImConversationMember departed = member(1L);
+        departed.setDeleted(1);
+        // 当前读默认 Answer 会委托普通读；doReturn 避免录制 stub 时覆盖旧快照夹具。
+        org.mockito.Mockito.doReturn(departed).when(memberMapper).selectByConvAndMemberForUpdate(100L, 1L);
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.send(1L, 100L, null, 1, "late", null));
+        assertEquals(Integer.valueOf(403), error.getCode());
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(conversationMapper, memberMapper);
+        order.verify(conversationMapper).selectImConversationByIdForUpdate(100L);
+        order.verify(memberMapper).selectByConvAndMemberForUpdate(100L, 1L);
+        verify(messageMapper, never()).insertImMessage(any());
+        verify(memberMapper, never()).markRead(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void systemAndAdminSendLockConversationBeforeMembershipAndMessageWrites() {
+        for (boolean adminSend : new boolean[] { false, true }) {
+            ImServiceImpl service = service();
+            ImConversation c = new ImConversation();
+            c.setId(100L);
+            when(conversationMapper.selectByTypeAndBizKey(anyInt(), anyString())).thenReturn(c);
+            when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+            if (adminSend) service.sendFromAdmin(1L, 1, "notice", null);
+            else service.sendSystem(1L, 1, "notice", null);
+            org.mockito.InOrder order = org.mockito.Mockito.inOrder(conversationMapper, memberMapper, messageMapper);
+            order.verify(conversationMapper).selectImConversationByIdForUpdate(100L);
+            order.verify(memberMapper).selectByConvAndMember(100L, 1L);
+            order.verify(messageMapper).insertImMessage(any());
+        }
+    }
+
+    @Test
+    void legacyReadUsesLatestCurrentVisibleMessageAndNeverMovesBackward() {
+        for (Long latest : new Long[] { null, 60L, 90L }) {
+            ImServiceImpl service = service();
+            ImConversation single = new ImConversation();
+            single.setId(100L);
+            single.setType(ImConversation.TYPE_SINGLE);
+            when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(single);
+            ImConversationMember mine = member(1L);
+            mine.setLastReadMsgId(80L);
+            when(memberMapper.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(mine);
+            when(messageMapper.selectLatestVisibleIdForUpdate(100L)).thenReturn(latest);
+            service.markRead(1L, 100L);
+            verify(memberMapper).markRead(100L, 1L, latest != null && latest > 80L ? latest : 80L);
+            verify(messageMapper, never()).selectPage(anyLong(), any(), anyInt());
+        }
+    }
+
+    @Test
+    void legacyReadLockLivesInsideATransactionAndMissingMembershipKeepsItsNoop() throws Exception {
+        Transactional transaction = ImServiceImpl.class.getMethod("markRead", Long.class, Long.class)
+                .getAnnotation(Transactional.class);
+        assertTrue(transaction != null, "旧主动read锁和写必须在同一事务");
+        ImServiceImpl service = service();
+        service.markRead(1L, 100L);
+        verify(memberMapper, never()).markRead(anyLong(), anyLong(), anyLong());
+>>>>>>> private-codex/batch1
     }
 
 }

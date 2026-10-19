@@ -15,7 +15,11 @@
 
 function topicIdOf(data) {
   const id = data && typeof data === 'object' ? data.topicId : data;
-  return Number(id) > 0 ? Number(id) : 0;
+  if (typeof id === 'number') return Number.isSafeInteger(id) && id > 0 ? id : 0;
+  if (typeof id !== 'string' || !/^[1-9][0-9]{0,18}$/.test(id)
+      || (id.length === 19 && id > '9223372036854775807')) return 0;
+  const number = Number(id);
+  return Number.isSafeInteger(number) ? number : id;
 }
 
 function nodeNames(chapters, listKey) {
@@ -27,17 +31,34 @@ function nodeNames(chapters, listKey) {
 }
 
 /** 回读与刚保存的内容是否对得上;对不上返回一句原因,对得上返回 ''。 */
-function readbackIssue(sent, detail, expectDraft) {
+function readbackIssue(sent, detail, expectDraft, expectedTopicId) {
   if (!detail || !detail.topic) return '回读不到已保存的主题';
+  const id = topicIdOf(detail.topic.id);
+  if (!id || (expectedTopicId && String(id) !== String(expectedTopicId))) return '回读到的主题编号与保存结果不一致';
   if (expectDraft && detail.isDraft !== true) return '回读到的主题不是草稿';
   if (String(detail.topic.name || '') !== String((sent && sent.name) || '')) return '回读到的主题名与本机不一致';
-  const got = detail.chapters || [];
-  if (got.some(chapter => (chapter.cmsTopicNodeList || []).some(node => !(Number(node && node.id) > 0)))) {
-    return '回读到的站点缺少编号';
+  const got = detail.chapters;
+  if (!Array.isArray(got) || got.some(chapter => !chapter || !topicIdOf(chapter.id) || !Array.isArray(chapter.cmsTopicNodeList)
+      || chapter.cmsTopicNodeList.some(node => !node || !topicIdOf(node.id)))) return '回读到的章节或站点编号不完整';
+  if (got.length !== ((sent && sent.chapters) || []).length) return '回读到的章节与本机不一致';
+  const chapterIds = new Set(), nodeIds = new Set();
+  for (const chapter of got) {
+    const chapterId = String(topicIdOf(chapter.id));
+    if (chapterIds.has(chapterId)) return '回读到的章节编号重复';
+    chapterIds.add(chapterId);
+    for (const node of chapter.cmsTopicNodeList) {
+      const nodeId = String(topicIdOf(node.id));
+      if (nodeIds.has(nodeId)) return '回读到的站点编号重复';
+      nodeIds.add(nodeId);
+    }
   }
-  const want = nodeNames(sent && sent.chapters, 'nodes');
-  const have = nodeNames(got, 'cmsTopicNodeList');
-  if (want.length !== have.length || want.some((name, i) => name !== have[i])) return '回读到的站点与本机不一致';
+  // 章节/站点可能由服务端重新排序，但不能把站点移到另一章后清掉本机恢复稿。
+  const chapterContent = (chapters, listKey) => (chapters || []).map(chapter => JSON.stringify([
+    String((chapter && chapter.name) || '').trim(), nodeNames([chapter], listKey)
+  ])).sort();
+  const want = chapterContent(sent && sent.chapters, 'nodes');
+  const have = chapterContent(got, 'cmsTopicNodeList');
+  if (want.some((content, i) => content !== have[i])) return '回读到的章节或站点归属与本机不一致';
   return '';
 }
 
@@ -46,21 +67,49 @@ function createServerDraftSaver(deps) {
   ['save', 'readback', 'publish'].forEach(key => {
     if (typeof deps[key] !== 'function') throw new Error('server-draft: 缺少 ' + key + ' 依赖');
   });
-  let busy = false;
+  let active = null;
   let published = false;
   let destroyed = false;
 
   function run(payload, publish, handlers) {
     handlers = handlers || {};
-    // 防重:在途或已发布都不再发起(连点只会有一次请求)
-    if (busy || published || destroyed) return false;
-    busy = true;
+    if (active || published || destroyed) return false;
+    let snapshot;
+    try { snapshot = JSON.parse(JSON.stringify(payload)); }
+    catch (error) {
+      if (typeof handlers.onFail === 'function') handlers.onFail({ stage: 'save', msg: '草稿内容暂时无法保存，请保留本机记录' });
+      return false;
+    }
+    const operation = { phase: '' };
+    active = operation;
+    const current = () => !destroyed && active === operation
+      && (typeof handlers.isCurrent !== 'function' || handlers.isCurrent());
+    const changed = () => typeof handlers.hasChanges === 'function' && handlers.hasChanges();
     const finish = (fn, arg) => {
-      busy = false;
-      if (!destroyed && typeof fn === 'function') fn(arg);
+      if (active !== operation) return;
+      const notify = current();
+      active = null;
+      if (notify && typeof fn === 'function') fn(arg);
     };
-    deps.save(Object.assign({}, payload, { saveDraft: 1 }), (res) => {
-      if (destroyed) return;
+    const invoke = (fn, value, stage, receive) => {
+      if (!current()) { finish(); return; }
+      operation.phase = stage;
+      try {
+        fn(value, res => {
+          if (destroyed || active !== operation || operation.phase !== stage) return;
+          operation.phase = '';
+          if (!current()) {
+            if (stage === 'publish' && res && res.ok) published = true;
+            finish(); return;
+          }
+          receive(res);
+        });
+      } catch (error) {
+        if (active === operation && (operation.phase === stage || operation.phase === ''))
+          finish(handlers.onFail, { stage, networkError: true });
+      }
+    };
+    invoke(deps.save, Object.assign({}, snapshot, { saveDraft: 1 }), 'save', res => {
       const topicId = res && res.ok ? topicIdOf(res.data) : 0;
       if (!topicId) {
         finish(handlers.onFail, Object.assign({ stage: 'save' }, res || {},
@@ -68,25 +117,28 @@ function createServerDraftSaver(deps) {
         return;
       }
       if (typeof handlers.onSaved === 'function') handlers.onSaved(topicId);
-      deps.readback(topicId, (back) => {
-        if (destroyed) return;
-        const issue = back && back.ok ? readbackIssue(payload, back.data, true) : '';
+      invoke(deps.readback, topicId, 'readback', back => {
+        const issue = back && back.ok ? readbackIssue(snapshot, back.data, true, topicId) : '';
         if (!back || !back.ok || issue) {
           finish(handlers.onFail, Object.assign({ stage: 'readback', topicId }, back || {}, issue ? { ok: false, msg: issue } : {}));
+          return;
+        }
+        if (changed()) {
+          finish(handlers.onFail, { stage: 'readback', topicId, ok: false, localChanged: true,
+            msg: '本机已有后续修改，请再次保存；已保存版本不会覆盖本机内容' });
           return;
         }
         if (!publish) {
           finish(handlers.onSuccess, { topicId, detail: back.data });
           return;
         }
-        deps.publish(topicId, (pub) => {
-          if (destroyed) return;
+        invoke(deps.publish, topicId, 'publish', pub => {
           if (!pub || !pub.ok) {
-            finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}));
+            finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}, { localChanged: changed() }));
             return;
           }
           published = true;
-          finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+          finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {}, localChanged: changed() });
         });
       });
     });
@@ -96,8 +148,8 @@ function createServerDraftSaver(deps) {
   return {
     save: (payload, handlers) => run(payload, false, handlers),
     saveAndPublish: (payload, handlers) => run(payload, true, handlers),
-    isBusy: () => busy,
-    destroy: () => { destroyed = true; },
+    isBusy: () => !!active,
+    destroy: () => { destroyed = true; active = null; },
   };
 }
 

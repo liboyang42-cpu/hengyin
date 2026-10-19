@@ -38,6 +38,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -86,6 +87,7 @@ class NpcChatServiceTest {
         when(memoryBuilder.buildRoam(any(RoamSession.class))).thenReturn("[漫游进度] 本次已探索 25 个唯一格子。");
         when(roamMapper.selectSessionById(SESSION_ID)).thenReturn(activeSession(USER_ONE));
         when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(1);
+        when(npcChatRequestMapper.markProviderStarted(anyLong(), anyString(), anyString())).thenReturn(1);
         when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class))).thenReturn(1);
         doReturn(leaseHeartbeat).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class),
                 eq(5000L), eq(5000L), eq(TimeUnit.MILLISECONDS));
@@ -130,16 +132,58 @@ class NpcChatServiceTest {
     }
 
     @Test
-    void terminalReplayReturnsSameResultWithoutCallingGatewayAgain() {
+    void legacyTerminalWithoutIntentFingerprintFailsClosed() {
         NpcChatRequest terminal = terminal("req-replay", USER_ONE, "SUCCEEDED", "PASS", null, false, "已完成。");
         when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("req-replay"))).thenReturn(terminal);
 
-        NpcChatResp resp = service.chat(req("req-replay", "无论这次带什么消息"), USER_ONE);
+        NpcChatResp resp = service.chat(req("req-replay", "原问题"), USER_ONE);
 
-        assertEquals("SUCCEEDED", resp.getOutcomeStatus());
-        assertEquals("已完成。", resp.getSafeText());
+        assertEquals("FAILED", resp.getOutcomeStatus());
+        assertEquals("REQUEST_INTENT_UNVERIFIABLE", resp.getErrorCode());
         verify(aiGatewayService, never()).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
         verify(npcChatRequestMapper, never()).insertNpcChatRequest(any(NpcChatRequest.class));
+    }
+
+    @Test
+    void changedProfileFactsWithoutTimestampCannotReplayAnOldAnswer() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new AiGatewayResult("trace", "old answer", "fake", 0));
+        service.chat(req("profile-change", "same question"), USER_ONE);
+        ArgumentCaptor<NpcChatRequest> inserted = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).insertNpcChatRequest(inserted.capture());
+        NpcChatRequest stored = inserted.getValue();
+        stored.setStatus(NpcChatRequest.STATUS_SUCCEEDED);
+        stored.setSafeText("old answer");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("profile-change")))
+                .thenReturn(stored);
+        NpcProfile changed = new NpcProfile();
+        changed.setId(1L);
+        changed.setPersona("changed facts with no update timestamp");
+        when(npcProfileMapper.selectGlobalNpc()).thenReturn(changed);
+        reset(aiGatewayService);
+        assertEquals("REQUEST_INTENT_CONFLICT",
+                service.chat(req("profile-change", "same question"), USER_ONE).getErrorCode());
+        verifyNoInteractions(aiGatewayService);
+    }
+
+    @Test
+    void sameRequestIdWithDifferentIntentIsRejectedWithoutSecondProviderCall() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new AiGatewayResult("trace", "已回答", "fake", 0));
+        service.chat(req("intent-conflict", "问题甲"), USER_ONE);
+        ArgumentCaptor<NpcChatRequest> inserted = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).insertNpcChatRequest(inserted.capture());
+        NpcChatRequest stored = inserted.getValue();
+        stored.setStatus(NpcChatRequest.STATUS_SUCCEEDED);
+        stored.setSafeText("已回答");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("intent-conflict")))
+                .thenReturn(stored);
+        reset(aiGatewayService);
+
+        NpcChatResp replay = service.chat(req("intent-conflict", "问题乙"), USER_ONE);
+
+        assertEquals("REQUEST_INTENT_CONFLICT", replay.getErrorCode());
+        verifyNoInteractions(aiGatewayService);
     }
 
     /** 负控：同一个 requestId 不能跨 userId 重放终态。 */
@@ -343,6 +387,70 @@ class NpcChatServiceTest {
         verify(npcChatRequestMapper, times(2)).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
                 any(Date.class));
         verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void heartbeatFailureDuringMemoryPreparationCannotStartProvider() {
+        when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class)))
+                .thenThrow(new IllegalStateException("temporary lease store failure"));
+        when(memoryBuilder.buildRoam(any(RoamSession.class))).thenAnswer(invocation -> {
+            ArgumentCaptor<Runnable> heartbeat = ArgumentCaptor.forClass(Runnable.class);
+            verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L),
+                    eq(5000L), eq(TimeUnit.MILLISECONDS));
+            heartbeat.getValue().run();
+            return "prepared memory";
+        });
+
+        NpcChatResp resp = service.chat(req("lost-before-claim", "hi"), USER_ONE);
+
+        assertEquals(requestId("lost-before-claim"), resp.getRequestId());
+        assertEquals("PROVIDER_RESULT_UNKNOWN", resp.getErrorCode());
+        verify(npcChatRequestMapper, never()).markProviderStarted(anyLong(), anyString(), anyString());
+        verifyNoInteractions(aiGatewayService);
+        verify(npcChatRequestMapper, never()).finishIfLeaseOwned(any(NpcChatRequest.class));
+        verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void heartbeatLossDuringProviderClaimCannotStartProvider() {
+        when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class)))
+                .thenReturn(0);
+        when(npcChatRequestMapper.markProviderStarted(anyLong(), anyString(), anyString()))
+                .thenAnswer(invocation -> {
+                    ArgumentCaptor<Runnable> heartbeat = ArgumentCaptor.forClass(Runnable.class);
+                    verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L),
+                            eq(5000L), eq(TimeUnit.MILLISECONDS));
+                    heartbeat.getValue().run();
+                    return 1;
+                });
+
+        NpcChatResp resp = service.chat(req("lost-after-claim", "hi"), USER_ONE);
+
+        assertEquals(requestId("lost-after-claim"), resp.getRequestId());
+        assertEquals("PROVIDER_RESULT_UNKNOWN", resp.getErrorCode());
+        verifyNoInteractions(aiGatewayService);
+        verify(npcChatRequestMapper, never()).finishIfLeaseOwned(any(NpcChatRequest.class));
+        verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void lostHeartbeatNeverPublishesLateProviderResult() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenAnswer(invocation -> {
+                    ArgumentCaptor<Runnable> heartbeat = ArgumentCaptor.forClass(Runnable.class);
+                    verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L),
+                            eq(5000L), eq(TimeUnit.MILLISECONDS));
+                    when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class)))
+                            .thenReturn(0);
+                    heartbeat.getValue().run();
+                    return new AiGatewayResult("trace", "不得发布的迟到答案", "fake", 0);
+                });
+
+        NpcChatResp resp = service.chat(req("lost-lease", "hi"), USER_ONE);
+
+        assertEquals("PROVIDER_RESULT_UNKNOWN", resp.getErrorCode());
+        assertNull(resp.getSafeText() == null ? null : resp.getSafeText().contains("迟到答案") ? resp.getSafeText() : null);
+        verify(npcChatRequestMapper, never()).finishIfLeaseOwned(any(NpcChatRequest.class));
     }
 
     /** 负控：续租调度器不可用时，不能带着会在 20 秒后失效的 lease 调模型。 */

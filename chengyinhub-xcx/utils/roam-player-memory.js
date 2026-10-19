@@ -54,13 +54,20 @@ function createPlayerRoamMemory(playerId, storage) {
     playerId: owner,
     cacheEpoch() { return roamCacheEpoch(owner) },
     readTiles() {
-      const state = read('tiles', null)
+      const state = this.readTileState()
+      return { tiles: state.tiles, serverCursor: state.serverCursor }
+    },
+    readTileState() {
+      const result = readResult('tiles')
+      if (!result.ok) return { ok: false, tiles: {}, serverCursor: 0 }
+      const state = result.value
       if (!state || typeof state !== 'object' || Array.isArray(state)) {
-        return { tiles: {}, serverCursor: 0 }
+        return { ok: true, tiles: {}, serverCursor: 0 }
       }
       const tiles = state.tiles && typeof state.tiles === 'object' && !Array.isArray(state.tiles)
         ? state.tiles : {}
       const cursor = Number(state.serverCursor)
+<<<<<<< public
       const recovery = read('recovery', null)
       const active = recovery && !recovery.finishedAt && Array.isArray(recovery.allTiles) ? recovery.allTiles : []
       const retained = {}
@@ -73,10 +80,14 @@ function createPlayerRoamMemory(playerId, storage) {
       if (Object.keys(retained).length !== Object.keys(tiles).length && !write('tiles', { ...state, tiles: retained, retentionAt: keptAt }))
         throw new Error('过期迷雾位置清理未能保存')
       return { tiles: retained, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 }
+=======
+      return { ok: true, tiles, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 }
+>>>>>>> private-codex/batch1
     },
     writeTiles(tiles, serverCursor, serverRetentionAt) {
       const values = tiles && typeof tiles === 'object' && !Array.isArray(tiles) ? tiles : {}
       const cursor = Number(serverCursor)
+<<<<<<< public
       const previous = read('tiles', {})
       const retentionAt = {}
       Object.keys(values).forEach(tile => { if (previous.retentionAt && tile in previous.retentionAt) retentionAt[tile] = previous.retentionAt[tile] })
@@ -90,6 +101,16 @@ function createPlayerRoamMemory(playerId, storage) {
         const result = readResult('tiles')
         return result.ok && JSON.stringify(result.value) === serialized
       } catch (_) { return false }
+=======
+      const state = {
+        tiles: values,
+        serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0,
+      }
+      if (!write('tiles', state)) return false
+      const result = readResult('tiles')
+      try { return result.ok && JSON.stringify(result.value) === JSON.stringify(state) }
+      catch (_) { return false }
+>>>>>>> private-codex/batch1
     },
     readReveals() {
       const value = read('reveals', [])

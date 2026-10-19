@@ -104,7 +104,7 @@ function choose(album) {
   assert.equal(media.count, 1);
   media.success({ tempFiles: [{ tempFilePath: '/tmp/player-evidence.jpg', size: 1024 }] });
 }
-function uploadSuccess() { uploads[0].success({ data: JSON.stringify({ code: 200, url: PLAYER_PHOTO }) }); }
+function uploadSuccess() { uploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 200, url: PLAYER_PHOTO }) }); }
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 test('相册：真实组件→分发器→认证上传→SUBMIT_ALBUM，只提交玩家证据', async () => {
@@ -186,7 +186,7 @@ test('相册：上传拒绝、离页及异步切换版本都不得提交', () =>
     const { game, album } = setup(albumView()); choose(album);
     if (mode === 'abort') lastOperation.abort();
     if (mode === 'version') game.data.state.version++;
-    if (mode === 'failure') uploads[0].success({ data: JSON.stringify({ code: 403, msg: '上传被拒绝' }) });
+    if (mode === 'failure') uploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 403, msg: '上传被拒绝' }) });
     else uploadSuccess();
     assert.equal(requests.length, 0, mode);
   }

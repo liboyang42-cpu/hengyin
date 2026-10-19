@@ -179,7 +179,7 @@ test('录音不足 10 秒时明确拒绝', async () => {
 
 test('合法录音上传一次并携带声音授权发起复刻', async () => {
   const h = loadPage({
-    onWxUpload(opts) { opts.success({ data: JSON.stringify({ code: 200, url: 'https://cdn/voice.mp3' }) }) },
+    onWxUpload(opts) { opts.success({ statusCode: 200, data: JSON.stringify({ code: 200, url: 'https://cdn/voice.mp3' }) }) },
   })
   h.page.onVoiceConsentChange({ detail: { checked: true } })
   h.page.onVoiceHoldStart()

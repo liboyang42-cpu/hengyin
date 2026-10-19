@@ -292,6 +292,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id asc limit 200
     </select>
 
+<<<<<<< public
     <select id="selectStalePayoutScanUpperBound" resultType="java.lang.Long">
         select max(id) from refund_application
         where del_flag = 0
@@ -300,12 +301,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectStalePayoutProcessingAfter" resultMap="RefundApplicationResult">
+=======
+    <select id="selectPayoutScanUpperId" resultType="java.lang.Long">
+        select coalesce(max(id), 0) from refund_application where del_flag = 0
+    </select>
+
+    <select id="selectStalePayoutProcessingPage" resultMap="RefundApplicationResult">
+>>>>>>> private-codex/batch1
         <include refid="selectRefundApplicationVo"/>
         where del_flag = 0
           and (payout_status = 0 or (payout_status in (5, 6) and status = 1))
           and COALESCE(update_time, create_time) &lt; DATE_SUB(now(), INTERVAL #{minutes} MINUTE)
+<<<<<<< public
           and id &gt; #{afterId} and id &lt;= #{maxId}
         order by id asc limit #{limit}
+=======
+          and id &gt; #{afterId} and id &lt;= #{upperId}
+        order by id asc limit 200
+>>>>>>> private-codex/batch1
     </select>
 
     <!-- 期级 FINAL 的退款事实门：该期还有没落定的退款单就不许终结。

@@ -798,6 +798,8 @@ Page({
   _stats: { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' },
 
   onLoad(q) {
+    this._tilePersistStopped = false;
+    this._tilePersistFailed = false;
     roamMemory(this); // 固定本页玩家归属；切号后的旧异步回包不得写进新玩家桶
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
@@ -870,10 +872,14 @@ Page({
   },
 
   onUnload() {
+<<<<<<< public
     this._unloaded = true;
     this._roamStartGen = (this._roamStartGen || 0) + 1;
     this._roamStartPending = false;
     this._shootAfterStart = false;
+=======
+    this._tilePersistStopped = true;
+>>>>>>> private-codex/batch1
     if (this._sessionClock) this._saveRoamRecovery();
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
@@ -950,6 +956,7 @@ Page({
       this._loadLocalHistory();
       this._restoreRoamRecovery();
     }
+    if (this._tilesDirty) this._persistTiles();
     // tabBar 页实例常驻(切 tab 不 onUnload,小程序热启动也保留实例):goStart 的在途标记若没被清,
     // 会让之后每次点 GO/相机都静默 return,且冷启动前无法自愈。回到本页时作废在途流程并解锁:
     // 世代号 +1 让旧 chain 的回调全部弃权,门闩与「开完就拍」的意图一并归零(后者不清会在下一次
@@ -1124,13 +1131,18 @@ Page({
     };
     try {
       const memory = roamMemory(this);
-      const tileState = memory.readTiles();
+      const generation = this._roamWriteGeneration;
+      const tileState = memory.readTileState();
+      if (!tileState.ok) throw new Error('迷雾记忆本地读取失败');
       const tiles = tileState.tiles;
+      const sessions = memory.readSessions();
+      const reveals = memory.readReveals().slice(-800);
+      if (generation !== this._roamWriteGeneration || memory.playerId !== String(getApp().getUserID() || '')) return;
       this._tileServerCursor = tileState.serverCursor;
-      this._footprintSessions = memory.readSessions();
+      this._footprintSessions = sessions;
       this._localTiles = tiles; // 当前玩家本设备已探格子缓存,后续增量写回(重开保持无雾)
       Object.keys(tiles).forEach((h) => { const p = geohashDecode7(h); if (p) push({ lat: p.lat, lng: p.lng, r: TILE_REVEAL_M }); });
-      memory.readReveals().slice(-800).forEach((p) => push(p));
+      reveals.forEach((p) => push(p));
     } catch (e) { /* noop */ }
     this._historyReveals = pts;
   },
@@ -1416,12 +1428,14 @@ Page({
   },
   /** 已探格子落 storage:20 格即刻 / 否则 15s 节流;失败不阻塞游玩 */
   _scheduleTilePersist() {
-    if (this._tilesDirty >= 20) { this._persistTiles(); return; }
+    if (!this._tilesDirty || this._tilePersistStopped || this._hidden) return;
+    if (this._tilesDirty >= 20 && !this._tilePersistFailed) { this._persistTiles(); return; }
     if (this._tilePersistTimer) return;
     this._tilePersistTimer = setTimeout(() => { this._tilePersistTimer = null; this._persistTiles(); }, 15000);
   },
   _persistTiles() {
     if (this._tilePersistTimer) { clearTimeout(this._tilePersistTimer); this._tilePersistTimer = null; }
+<<<<<<< public
     if (!this._tilesDirty) return;
     const revision = this._tilesRevision || 0;
     const generation = this._roamWriteGeneration;
@@ -1450,6 +1464,33 @@ Page({
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
     this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
+=======
+    const dirty = this._tilesDirty || 0;
+    if (!dirty) return true;
+    let saved = false;
+    try {
+      const generation = this._roamWriteGeneration;
+      const memory = roamMemory(this);
+      const state = memory.readTileState();
+      if (state.ok && generation === this._roamWriteGeneration && this._recoveryOwnerCurrent()) {
+        const tiles = { ...state.tiles, ...(this._localTiles || {}) };
+        const cursor = Math.max(state.serverCursor, this._tileServerCursor || 0);
+        saved = memory.writeTiles(tiles, cursor);
+        if (saved) { this._localTiles = tiles; this._tileServerCursor = cursor; }
+      }
+    } catch (e) {}
+    if (saved) {
+      this._tilesDirty = Math.max(0, (this._tilesDirty || 0) - dirty);
+      this._tilePersistFailed = false;
+      return true;
+    }
+    if (!this._tilePersistFailed) cyToast('探索记录暂未保存，请释放存储空间后重试');
+    this._tilePersistFailed = true;
+    if (!this._tilePersistStopped && !this._hidden) {
+      this._tilePersistTimer = setTimeout(() => { this._tilePersistTimer = null; this._persistTiles(); }, 15000);
+    }
+    return false;
+>>>>>>> private-codex/batch1
   },
 
   _resetRoamRecoverySession() {
@@ -1593,7 +1634,12 @@ Page({
         return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；待确认记录仍保留');
       if (fact.state !== 'NOT_FOUND') {
         const sid = exactSessionId(fact.sessionId);
+<<<<<<< public
         if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid)) || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
+=======
+        if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid))
+            || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
+>>>>>>> private-codex/batch1
           return this._recoveryFailure('漫游关联响应不完整，请重新核对');
         this._roamSid = sid;
       } else if (!this._clientSessionKey || exactSessionId(this._roamSid)) {
@@ -1652,13 +1698,15 @@ Page({
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent() || String(this._roamSid || 0) !== String(requestSessionId)) return false;
       this._revealInFlight = false;
       this._revealPromise = null;
-      // 首批已确认写入却没有会话身份时，也不能再用 sid=0 重放或结算。
-      if (!requestSessionId && apiOk(res) && !(res.data && exactSessionId(res.data.sessionId))) {
-        this._revealBootstrapUnknown = true;
-        this.setData({ revealWriteUnknown: true });
-        return false;
-      }
-      if ((res.code == '200' || res.code == 200) && res.data) {
+      // 回包必须属于原会话；关联未知时保留原格子，先查原结果。
+      if (apiOk(res)) {
+        const responseSessionId = exactSessionId(res.data && res.data.sessionId);
+        if (!responseSessionId || (requestSessionId && responseSessionId !== String(requestSessionId))) {
+          this._recoveryNeedsLookup = true;
+          if (!requestSessionId) this._revealBootstrapUnknown = true;
+          this.setData({ revealWriteUnknown: true, roamSessionReady: false });
+          return this._recoveryFailure('漫游关联响应不完整，请先核对原会话');
+        }
         if (res.data.sessionId) {
           this._roamSid = exactSessionId(res.data.sessionId);
           this.setData({ roamSessionReady: true });
@@ -1669,11 +1717,10 @@ Page({
         if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; return false; } // 成功才出队,失败下轮重试
         if (this._pendingTiles.length >= 50 && !this._finishPromise) this._flushReveal();
         return true;
-      } else if ((httpFail(res) || netFail(res)) && !requestSessionId) {
-        // 首次 reveal 会懒建 session。HTTP 异常时服务端可能已建会话但客户端没拿到 sid；
-        // 此时重放 sessionId=0 会再建一条会话，并把首批格子留在旧会话。本页生命周期内必须停止自动重放。
-        this._revealBootstrapUnknown = true;
-        this.setData({ revealWriteUnknown: true });
+      } else if (httpFail(res) || netFail(res)) {
+        this._recoveryNeedsLookup = true;
+        if (!requestSessionId) this._revealBootstrapUnknown = true;
+        this.setData({ revealWriteUnknown: true, roamSessionReady: false });
       }
       return false;
     });
@@ -2566,6 +2613,7 @@ Page({
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
     if (this._roamStartPending) return;
+    const intentEpoch = bgTracker.epoch('roam');
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。
     // 先补一次登录(单航班,与首登共享在途锁);仍没会话就把门闩放掉,给一句人话让人再点。
@@ -2577,6 +2625,7 @@ Page({
       this._roamStartPending = true;
       Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null).then(() => {
         this._roamStartPending = false;
+        if (intentEpoch !== bgTracker.epoch('roam')) return;
         if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
         this.setData({ introError: '登录没有成功，请检查网络后重试。', locErr: false });
       });
@@ -2593,6 +2642,7 @@ Page({
     }
     this._roamStartPending = true;
     const gen = (this._roamStartGen = this._roamStartGen || 0);
+<<<<<<< public
     const locationRevision = bgTracker.revision('roam');
     const identity = () => {
       try {
@@ -2644,6 +2694,47 @@ Page({
           if (stale()) { abandon(); return; }
           return loginApp.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' });
         }).then(locate).catch(() => abandon('同意记录失败，请检查网络后重试'));
+=======
+    const locationEpoch = bgTracker.epoch('roam');
+    const stale = () => gen !== this._roamStartGen || locationEpoch !== bgTracker.epoch('roam');
+    const that = this;
+    // ⚠️ 必须裹 try:它一旦抛,门闩已经是 true 而下面的 getLocation 永远不会被调用
+    //    ⇒ 之后每次点 GO 都在第一行静默 return,页面没有任何反应,冷启动前不自愈。
+    try { this.markRoamIntroSeen(); } catch (e) { /* 只是「看过引导」的本地标记,丢了不该挡住出发 */ }
+    // ★ 不再自弹「开启定位并出发」确认框:wx.getLocation 首次调用本就会触发微信自己的系统授权
+    //   弹窗,那才是有效的明示同意;业务层再弹一层是重复问、且多一条能把门闩焊死的路径。
+    // ★ recordConsent 也从启动链上摘掉:它原本挂在 .then 里,后端慢/超时(注释自称最长 10s)
+    //   就会把「点 GO 到进图」整个拖住甚至走不到。改为拿到定位后再留痕,失败不影响玩。
+    wx.getLocation({
+      type: 'gcj02',
+      // 门闩兜底。★ 这里**不能**再带 `screen === 'intro'` 条件:success 里先清门闩、才
+      //   _openRoamMap 把 screen 改成 'map',等 complete 跑到时条件已永假 —— 那样它一件事也兜不住,
+      //   只是看着像有保险。真正要兜的是「success/fail 都没走成」(回调抛异常被微信吞)那种,
+      //   而那时 screen 仍是什么都可能。只留 stale 判断:作废的 chain 不该回头动新一轮的门闩。
+      complete() { if (gen === that._roamStartGen) { that._roamStartPending = false; } },
+      success(r) {
+        if (stale()) return;
+        that._roamStartPending = false;
+        that.setData({ introError: '', locErr: false });
+        that._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
+        // 系统授权通过 = 用户明示同意,留痕但不阻塞已经开起来的漫游。
+        // ⚠️ 但绝不能裸吞:位置已经采了、地图已经开了,留痕却可能一条都没写进库。
+        //    真裸吞 = 后端零记录而前端零信号,正是本仓反复栽的静默失败型
+        //    (consent-client 的 10s 超时按 reject 走,所以失败是会到这里的,不是理论值)。
+        const reportConsentFailure = (reason) => {
+          console.warn('[roam] recordConsent 失败,本次漫游的同意留痕可能缺失');
+        };
+        try {
+          const consent = getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' });
+          if (consent && typeof consent.catch === 'function') consent.catch(reportConsentFailure);
+        } catch (e) { reportConsentFailure(e && e.message); }
+      },
+      fail() {
+        if (stale()) return;
+        that._roamStartPending = false;
+        that._shootAfterStart = false;   // 没开起来就别把「开完就拍」的意图留到下一次
+        that.setData({ introError: '未取得当前位置，请开启定位后重试。', locErr: true });
+>>>>>>> private-codex/batch1
       },
       fail: () => abandon('定位同意未完成，请重试'),
     }); } catch (e) { abandon('定位同意未完成，请重试'); }
@@ -2653,10 +2744,14 @@ Page({
     const p = startCenter || FALLBACK;
     this._disposeFogRenderer();
     const fogGeneration = this._fogLifecycleGen;
+<<<<<<< public
     const locationRevision = bgTracker.revision('roam');
     const trackingCurrent = () => !startTracking || locationRevision === bgTracker.revision('roam');
     this._fogStartPending = { p, startTracking: !!startTracking, generation: fogGeneration, locationRevision };
     if (startTracking) this._observeLocationRevocation();
+=======
+    this._fogStartPending = { p, startTracking: !!startTracking, generation: fogGeneration, locationEpoch: bgTracker.epoch('roam') };
+>>>>>>> private-codex/batch1
     this._initWorld(p);
     this._hold = 0;
     this._centerTimer = 0;
@@ -2718,7 +2813,7 @@ Page({
 
   _activateRoamAfterFog(p, startTracking, generation) {
     if (generation !== this._fogLifecycleGen || this._fogMode !== 'screen') return;
-    const pending = this._fogStartPending || { p, startTracking: !!startTracking, generation };
+    const pending = this._fogStartPending || { p, startTracking: !!startTracking, generation, locationEpoch: bgTracker.epoch('roam') };
     this._fogStartPending = pending;
     if (pending.revealAdded) { this._renderScreenFog(); return; }
     pending.revealAdded = true;
@@ -2736,7 +2831,11 @@ Page({
     this._syncSparkCircles();
     this._syncMarkers();
     this._startClock();
+<<<<<<< public
     if (pending.startTracking && pending.locationRevision === bgTracker.revision('roam')) this._startReal(true);
+=======
+    if (pending.startTracking && pending.locationEpoch === bgTracker.epoch('roam')) this._startReal(true);
+>>>>>>> private-codex/batch1
   },
 
   /** 底图首帧看门狗:5s 内没等到 map updated → 显示重试提示,黑屏不再无解释。
@@ -3642,6 +3741,7 @@ Page({
   _startReal(consentAlreadyRecorded) {
     if (this._realOn || this._realStarting) return;
     const that = this;
+<<<<<<< public
     const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     const locationRevision = bgTracker.revision('roam');
     const owner = String(getApp().getUserID() || '');
@@ -3658,6 +3758,14 @@ Page({
       that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
+=======
+    const locationEpoch = bgTracker.epoch('roam');
+    const current = () => locationEpoch === bgTracker.epoch('roam');
+    const onOk = () => {
+      if (!current()) return;
+      that._realOn = true;
+      wx.onLocationChange(that._onRealLoc = (loc) => { if (current() && that._realOn) that._realTick(loc); });
+>>>>>>> private-codex/batch1
       that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
@@ -3667,6 +3775,7 @@ Page({
     // 后台定位:漫游是边走边点亮,玩家锁屏塞兜是常态;前台版一锁屏就断,轨迹丢段。
     // 拿不到后台权限自动降级前台(功能仍可用,只是锁屏会断)。停的时机只有 _stopReal。
     const startLocation = () => {
+<<<<<<< public
       if (!live()) return;
       bgTracker.acquire('roam', {
       success: onOk,
@@ -3682,6 +3791,25 @@ Page({
     const recordAndStart = () => getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
       .then(startLocation)
       .catch(() => { if (live()) { abandon(); cyToast('同意记录失败，请检查网络后重试'); } });
+=======
+      if (!current()) return;
+      bgTracker.acquire('roam', {
+        success: onOk,
+        onRevoke() { that._stopReal(); },
+        fail() {
+          that.setData({ locErr: true });
+          that._syncGoal();
+          cyToast('未授权定位，无法开启实时漫游');
+        },
+      });
+    };
+    const recordAndStart = () => {
+      if (!current()) return;
+      return getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
+        .then(startLocation)
+        .catch(() => { if (current()) cyToast('同意记录失败，请检查网络后重试'); });
+    };
+>>>>>>> private-codex/batch1
     if (consentAlreadyRecorded) { startLocation(); return; }
     cyModal.show({
       title: '开启实时定位',

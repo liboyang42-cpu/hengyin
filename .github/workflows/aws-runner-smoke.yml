@@ -1,0 +1,50 @@
+name: AWS runner smoke
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [collect, verify]
+        default: collect
+        required: true
+permissions:
+  contents: read
+jobs:
+  collect-task-evidence:
+    runs-on: [self-hosted, Linux, X64, chengyin-aws-light]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        if: inputs.operation == 'verify'
+        with:
+          persist-credentials: false
+      - name: Verify reviewed code on the existing dedicated VPS task
+        if: inputs.operation == 'verify'
+        shell: bash
+        run: bash ci/batch1-vps-verify.sh
+      - name: Verify the dedicated task and collect existing evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${RUNNER_NAME}" = aws-chengyin-light
+          task_container=cy-b1-cloud-20261012-runner
+          task_label="$(docker --host unix:///var/run/docker.sock inspect "$task_container" --format '{{index .Config.Labels "codex.task"}}')"
+          test "$task_label" = chengyin-batch1-cloud-20261012
+          task_id="$(docker --host unix:///var/run/docker.sock inspect "$task_container" --format '{{.Id}}')"
+          test "$task_id" = 3c6d9c068ffeefc9dcef8e2c06846669269ed78c1fa1f2627e965eec906813c4
+          evidence_dir="$RUNNER_TEMP/chengyin-b1-evidence-$GITHUB_RUN_ID"
+          mkdir -p "$evidence_dir"
+          docker --host unix:///var/run/docker.sock inspect "$task_container" --format '{{.Name}} {{.State.Status}} OOM={{.State.OOMKilled}}' > "$evidence_dir/container-state.txt"
+          docker --host unix:///var/run/docker.sock info --format 'MemoryBytes={{.MemTotal}} CPUs={{.NCPU}}' > "$evidence_dir/vps-capacity.txt"
+          docker --host unix:///var/run/docker.sock inspect "$task_container" cy-b1-cloud-20261012-mysql --format '{{.Name}} status={{.State.Status}} exit={{.State.ExitCode}} OOM={{.State.OOMKilled}} started={{.State.StartedAt}} finished={{.State.FinishedAt}} memoryLimit={{.HostConfig.Memory}} task={{index .Config.Labels "codex.task"}}' > "$evidence_dir/task-resource-state.txt"
+          docker --host unix:///var/run/docker.sock stats --no-stream --format '{{.MemUsage}}' > "$evidence_dir/container-memory-usage.txt"
+          docker --host unix:///var/run/docker.sock cp "$task_container:/work/evidence/." "$evidence_dir/"
+          docker --host unix:///var/run/docker.sock cp "$task_container:/work/chengyin/chengyinhub-admin/target/surefire-reports/." "$evidence_dir/latest-surefire/"
+          echo "Collected existing task evidence; no test process or database was started."
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chengyin-b1-vps-evidence
+          path: ${{ runner.temp }}/chengyin-b1-evidence-${{ github.run_id }}/
+          retention-days: 7

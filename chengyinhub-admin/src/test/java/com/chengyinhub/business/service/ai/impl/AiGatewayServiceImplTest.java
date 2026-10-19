@@ -3,12 +3,14 @@ package com.chengyinhub.business.service.ai.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.chengyinhub.business.domain.AiGenerationLog;
@@ -16,6 +18,7 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.AiGenerationLogMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.WxTextCheckResult;
 import com.chengyinhub.business.service.ai.AiGatewayResult;
 import com.chengyinhub.business.service.ai.AiSceneRouter;
 import com.chengyinhub.business.service.ai.AiServiceException;
@@ -28,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -105,24 +109,32 @@ class AiGatewayServiceImplTest {
         when(mockLlm.chat(anyString(), anyString())).thenReturn("{\"result\":\"ok\"}");
 
         // 默认: 内容安全放行
-        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(null);
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenReturn(pass());
 
         // 默认: member 存在,有 openid
         UmsMember member = new UmsMember();
         member.setId(MEMBER_ID);
+        member.setWxOpenId("real-openid-1001");
         when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
 
         // 默认: 日志写入成功
         when(aiGenerationLogMapper.insertAiGenerationLog(any())).thenReturn(1);
 
+<<<<<<< public
         installReservationStub();
         // 默认预占回执：这里只验证调用合同，Lua由真实Redis IT覆盖。
         reserveResult = 1L;
+=======
+        // 默认: 频控未超(used=1, 首次)
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(1L);
+        when(redisTemplate.execute(any(RedisScript.class), anyList())).thenReturn(1L);
+>>>>>>> private-codex/batch1
 
         List<LlmClient> clients = Collections.singletonList(mockLlm);
 
         service = new AiGatewayServiceImpl();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        ReflectionTestUtils.setField(service, "photoDailyLimit", 30);
         ReflectionTestUtils.setField(service, "wxContentSecurityService", wxContentSecurityService);
         ReflectionTestUtils.setField(service, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(service, "aiGenerationLogMapper", aiGenerationLogMapper);
@@ -133,8 +145,22 @@ class AiGatewayServiceImplTest {
     // ---- normal flow ----
 
     @Test
+    void unconfirmedQuotaCannotCallProviderOrReturnReservation() {
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(null);
+        assertThrows(IllegalStateException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+        assertThrows(IllegalStateException.class, () -> service.consumeQuota(MEMBER_ID, "photo_check"));
+        verify(mockLlm, never()).chat(anyString(), anyString());
+        verify(redisTemplate, times(2)).execute(any(RedisScript.class), anyList());
+    }
+
+    @Test
     void generateNormalFlowReturnsResult() {
+<<<<<<< public
         reserveResult = 1L;
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(1L);
+>>>>>>> private-codex/batch1
 
         AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
@@ -148,7 +174,7 @@ class AiGatewayServiceImplTest {
 
         // verify all steps ran
         verify(mockLlm).chat(anyString(), anyString());
-        verify(wxContentSecurityService, times(2)).checkText(anyString(), anyString()); // input + output safety
+        verify(wxContentSecurityService, times(3)).checkTextTyped(anyString(), anyString()); // system + user + output
         verify(aiGenerationLogMapper).insertAiGenerationLog(any());
     }
 
@@ -158,14 +184,18 @@ class AiGatewayServiceImplTest {
                 "[BIZ:theme_draft]\n", "{\"idea\":\"night walk\"}");
 
         assertNotNull(result);
+<<<<<<< public
         assertEquals(0, reserved.size());
+=======
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt());
+>>>>>>> private-codex/batch1
     }
 
     // ---- input safety block ----
 
     @Test
     void generateInputSafetyBlockThrowsException() {
-        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("包含违规内容");
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenReturn(reject("包含违规内容"));
 
         AiServiceException ex = assertThrows(AiServiceException.class, () -> {
             service.generate(MEMBER_ID, "club", "merchant_plan",
@@ -173,6 +203,7 @@ class AiGatewayServiceImplTest {
         });
 
         assertEquals("包含违规内容", ex.getMessage());
+        assertEquals(AiServiceException.Reason.INPUT_BLOCKED, ex.getReason());
 
         // audit log is written even on failure
         verify(aiGenerationLogMapper).insertAiGenerationLog(any());
@@ -180,14 +211,100 @@ class AiGatewayServiceImplTest {
         verify(mockLlm, never()).chat(anyString(), anyString());
     }
 
+    @Test
+    void blockedContentAfterFirstChunkAndInSystemPromptNeverReachesProvider() {
+        String system = String.join("", Collections.nCopies(2100, "x")) + "blocked";
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString()))
+                .thenReturn(pass())
+                .thenReturn(reject("资料段违规"));
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "player", "npc_chat", system, "safe"));
+
+        verify(wxContentSecurityService, times(2)).checkTextTyped(anyString(), anyString());
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void serviceFailureInLaterInputChunkRefundsOnceAndDoesNotMarkContentViolation() {
+        String system = String.join("", Collections.nCopies(2100, "x"));
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString()))
+                .thenReturn(pass())
+                .thenReturn(unavailable(WxTextCheckResult.Reason.TIMEOUT_OR_NETWORK));
+
+        AiServiceException failure = assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", system, "not-reached"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, failure.getReason());
+
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class), anyList());
+        verify(mockLlm, never()).chat(anyString(), anyString());
+        ArgumentCaptor<AiGenerationLog> log = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(log.capture());
+        assertEquals(0, log.getValue().getSafetyFlag().intValue());
+    }
+
+    @Test
+    void missingOpenidFailsClosedRefundsAndNeverCallsProvider() {
+        UmsMember member = new UmsMember();
+        member.setId(MEMBER_ID);
+        when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
+        when(wxContentSecurityService.checkTextTyped(anyString(), eq("")))
+                .thenReturn(unavailable(WxTextCheckResult.Reason.MISSING_CONTEXT));
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class), anyList());
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void outputRiskAfter2000CharactersIsCheckedWithRealOpenid() {
+        String output = String.join("", Collections.nCopies(2100, "x")) + "blocked";
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(output);
+        when(wxContentSecurityService.checkTextTyped(anyString(), eq("real-openid-1001")))
+                .thenAnswer(invocation -> ((String) invocation.getArgument(0)).contains("blocked")
+                        ? reject("生成内容违规") : pass());
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "safe-system", "safe-user"));
+
+        verify(mockLlm).chat("safe-system", "safe-user");
+        verify(wxContentSecurityService, times(4)).checkTextTyped(anyString(), eq("real-openid-1001"));
+    }
+
+    @Test
+    void overlappingChunksDetectRiskAcrossBoundaryAndNeverSplitSurrogate() {
+        String boundaryRisk = String.join("", Collections.nCopies(1998, "x")) + "BAD" + "tail";
+        String emoji = new String(Character.toChars(0x1F642));
+        String unicodeOutput = String.join("", Collections.nCopies(1999, "x")) + emoji + "tail";
+        AtomicBoolean sawBrokenSurrogate = new AtomicBoolean(false);
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenAnswer(invocation -> {
+            String chunk = invocation.getArgument(0);
+            if ((!chunk.isEmpty() && Character.isLowSurrogate(chunk.charAt(0)))
+                    || (!chunk.isEmpty() && Character.isHighSurrogate(chunk.charAt(chunk.length() - 1)))) {
+                sawBrokenSurrogate.set(true);
+            }
+            return chunk.contains("BAD") ? reject("跨片违规") : pass();
+        });
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(boundaryRisk);
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "safe", "safe"));
+
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(unicodeOutput);
+        service.generate(MEMBER_ID, "club", "merchant_plan", "safe", "safe");
+        assertTrue(!sawBrokenSurrogate.get(), "安全分片不能拆开 Unicode surrogate pair");
+    }
+
     // ---- output safety block ----
 
     @Test
     void generateOutputSafetyBlockThrowsException() {
         // input safety passes
-        when(wxContentSecurityService.checkText(anyString(), anyString()))
-                .thenReturn(null)   // first call: input
-                .thenReturn("生成内容违规");  // second call: output
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString()))
+                .thenReturn(pass())   // system input
+                .thenReturn(pass())   // user input
+                .thenReturn(reject("生成内容违规"));  // output
 
         AiServiceException ex = assertThrows(AiServiceException.class, () -> {
             service.generate(MEMBER_ID, "club", "merchant_plan",
@@ -202,11 +319,38 @@ class AiGatewayServiceImplTest {
         verify(aiGenerationLogMapper).insertAiGenerationLog(any());
     }
 
+    @Test
+    void nullModelOutputFailsExplicitlyWithoutRetryOrRefund() {
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(null);
+
+        AiServiceException error = assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+
+        assertTrue(error.getMessage().contains("空结果"));
+        verify(mockLlm, times(1)).chat(anyString(), anyString());
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList());
+    }
+
+    @Test
+    void blankModelOutputFailsExplicitlyWithoutRetryOrRefund() {
+        when(mockLlm.chat(anyString(), anyString())).thenReturn("  \n ");
+
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+
+        verify(mockLlm, times(1)).chat(anyString(), anyString());
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList());
+    }
+
     // ---- rate limit ----
 
     @Test
     void generateRateLimitExceededThrowsException() {
+<<<<<<< public
         reserveResult = 25L; // dailyLimit is 20
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(25L); // dailyLimit is 20
+>>>>>>> private-codex/batch1
 
         AiServiceException ex = assertThrows(AiServiceException.class, () -> {
             service.generate(MEMBER_ID, "club", "merchant_plan",
@@ -260,8 +404,13 @@ class AiGatewayServiceImplTest {
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
+<<<<<<< public
         assertEquals(1, reserved.size());
         assertEquals(0, refunded.size(), "provider may already have executed the request");
+=======
+        // 模型炸了是我们的锅,用户没拿到任何东西 → 必须把刚才 increment 的那一次退回来
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class), anyList());
+>>>>>>> private-codex/batch1
     }
 
     @Test
@@ -273,33 +422,56 @@ class AiGatewayServiceImplTest {
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
+<<<<<<< public
         assertEquals(1, refunded.size());
     }
 
     @Test
     void unknownInputRejectionKeepsExistingNonRefundPolicy() {
         when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("含违规内容");
+=======
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class), anyList());
+    }
+
+    /** 明确内容违规仍扣次数；只有 typed SERVICE_UNAVAILABLE 才退款。 */
+    @Test
+    void inputBlocked_doesNotRefund() {
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenReturn(reject("含违规内容"));
+>>>>>>> private-codex/batch1
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
+<<<<<<< public
         assertEquals(0, refunded.size());
+=======
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList());
+>>>>>>> private-codex/batch1
     }
 
     @Test
     void normalFlow_doesNotRefund() {
         service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}");
+<<<<<<< public
         assertEquals(0, refunded.size());
+=======
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList());
+>>>>>>> private-codex/batch1
     }
 
     @Test
     void rateLimitExceeded_doesNotRefund_alreadyOverAnyway() {
+<<<<<<< public
         reserveResult = 25L; // dailyLimit=20
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(25L); // dailyLimit=20
+>>>>>>> private-codex/batch1
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
         // 已经超了,退不退都拦;退反而会让「攻击者狂刷」看起来像没刷过。不退。
+<<<<<<< public
         assertEquals(0, refunded.size());
     }
 
@@ -316,13 +488,30 @@ class AiGatewayServiceImplTest {
         verify(redisTemplate, never()).delete(anyString());
         verify(valueOperations, never()).decrement(anyString());
         verify(unavailable, never()).chat(anyString(), anyString());
+=======
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList());
+    }
+
+    @Test
+    void unknownRefundResultKeepsDeduplicationMarker() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        when(redisTemplate.execute(any(RedisScript.class), anyList())).thenThrow(new RuntimeException("reply lost"));
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+        verify(redisTemplate, never()).delete(anyString());
+        verify(valueOperations, never()).decrement(anyString());
+>>>>>>> private-codex/batch1
     }
 
     /** 正常退款(余额 >= 0)不该删 key —— 删了会把当天已用次数清零 = 白送整池额度。 */
     @Test
     void refund_normal_doesNotDeleteKey() {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+<<<<<<< public
 
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList())).thenReturn(1L);
+>>>>>>> private-codex/batch1
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
@@ -330,8 +519,9 @@ class AiGatewayServiceImplTest {
         verify(redisTemplate, never()).delete(anyString());
     }
 
-    /** 退款要退到和扣的同一个 key —— 退错池子等于没退,还会把别人的额度还错。 */
+    @SuppressWarnings("unchecked")
     @Test
+<<<<<<< public
     void refundUsesSameOriginalDayGenerationAndNonceKeys() {
         // Missing key is rejected locally before any provider request starts.
         LlmClient unavailable = org.mockito.Mockito.spy(
@@ -342,6 +532,31 @@ class AiGatewayServiceImplTest {
         assertEquals(1, reserved.size());
         assertEquals(reserved, refunded);
         verify(unavailable, never()).chat(anyString(), anyString());
+=======
+    void refund_usesSameKeyAsIncrement() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
+        ArgumentCaptor<List> inc = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List> keys = ArgumentCaptor.forClass(List.class);
+        assertThrows(AiServiceException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+        verify(redisTemplate).execute(any(RedisScript.class), inc.capture(), eq(86400));
+        verify(redisTemplate).execute(any(RedisScript.class), keys.capture());
+        assertEquals(inc.getValue(), keys.getValue());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void nonTextRefundUsesOriginalReservationKeyAndStableRefundKey() {
+        ArgumentCaptor<List> incremented = ArgumentCaptor.forClass(List.class);
+        String reservation = service.consumeQuota(MEMBER_ID, "photo_check");
+        verify(redisTemplate).execute(any(RedisScript.class), incremented.capture(), eq(86400));
+        service.refundQuota(MEMBER_ID, "photo_check", reservation);
+        service.refundQuota(MEMBER_ID, "photo_check", reservation);
+        ArgumentCaptor<List> keys = ArgumentCaptor.forClass(List.class);
+        verify(redisTemplate, times(2)).execute(any(RedisScript.class), keys.capture());
+        assertEquals(incremented.getValue(), keys.getAllValues().get(0));
+        assertEquals(keys.getAllValues().get(0), keys.getAllValues().get(1));
+>>>>>>> private-codex/batch1
     }
 
     // ---- trace ID ----
@@ -388,7 +603,7 @@ class AiGatewayServiceImplTest {
     @Test
     void inputBlockedLogsTraceIdGeneratedBeforeRateLimit() {
         // input-blocked 分支在 traceId 原先的生成点**之前**执行 → 提到方法开头才有值
-        when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn("包含违规内容");
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenReturn(reject("包含违规内容"));
 
         assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "bad content"));
@@ -404,9 +619,10 @@ class AiGatewayServiceImplTest {
 
     @Test
     void outputBlockedLogsNonNullTraceIdAndTokens() {
-        when(wxContentSecurityService.checkText(anyString(), anyString()))
-                .thenReturn(null)              // input
-                .thenReturn("生成内容违规");     // output
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString()))
+                .thenReturn(pass())              // system input
+                .thenReturn(pass())              // user input
+                .thenReturn(reject("生成内容违规"));     // output
 
         assertThrows(AiServiceException.class, () -> service.generate(MEMBER_ID, "club", "merchant_plan",
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}"));
@@ -448,9 +664,26 @@ class AiGatewayServiceImplTest {
         verify(mockLlm, never()).chat(anyString(), anyString());
     }
 
+<<<<<<< public
     // 按 key 维护 mock 计数，仅验证调用分池；不是 Redis 脚本或并发验收。
     private java.util.Map<String, Long> installPerKeyCounterStub() {
         countByKey = true;
+=======
+    // ---- 频控分池: npc_chat 独立额度, 创作类共用原池 ----
+    // ⚠️ 用真计数器(HashMap<key,count>)而不是 thenReturn 固定值:
+    //    固定值的 stub 无论 key 是什么都返回同一个数 ⇒ 分池断掉时照样绿(假绿)。
+    //    只有「按 key 各自计数」才能真的证明两个池互不相干。
+
+    /** 让 increment(key) 按 key 真计数,返回该 key 的当前值。 */
+    private java.util.Map<String, Long> installRealCounter() {
+        java.util.Map<String, Long> counters = new java.util.HashMap<>();
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenAnswer(inv -> {
+            String key = (String) ((List<?>) inv.getArgument(1)).get(0);
+            long v = counters.getOrDefault(key, 0L) + 1;
+            counters.put(key, v);
+            return v;
+        });
+>>>>>>> private-codex/batch1
         return counters;
     }
 
@@ -528,7 +761,11 @@ class AiGatewayServiceImplTest {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
         // 第 101 次 NPC 调用 → 超 npcDailyLimit(100)
+<<<<<<< public
         reserveResult = 101L;
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(101L);
+>>>>>>> private-codex/batch1
 
         AiServiceException ex = assertThrows(AiServiceException.class,
                 () -> service.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
@@ -543,7 +780,11 @@ class AiGatewayServiceImplTest {
     void npcUnderLimitPasses() {
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
         // 第 21 次 NPC 调用:超了创作类的 20,但没超 NPC 的 100 → 必须放行
+<<<<<<< public
         reserveResult = 21L;
+=======
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(21L);
+>>>>>>> private-codex/batch1
 
         AiGatewayResult r = service.generate(MEMBER_ID, "player", "npc_chat", "s", "u");
         assertNotNull(r);
@@ -551,6 +792,7 @@ class AiGatewayServiceImplTest {
     }
 
     @Test
+<<<<<<< public
     void generatePassesOriginalTtlAsIntegerToAtomicReservation() {
         reserveResult = 1L;
 
@@ -558,19 +800,49 @@ class AiGatewayServiceImplTest {
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
 
         assertEquals(Integer.valueOf(86400), reserveTtls.get(0));
+=======
+    void generatePassesOriginalExpiryToAtomicReservation() {
+        service.generate(MEMBER_ID, "club", "merchant_plan",
+                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+        verify(redisTemplate).execute(any(RedisScript.class), anyList(), eq(86400));
+>>>>>>> private-codex/batch1
         verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
+<<<<<<< public
     void generateDoesNotRenewTtlOutsideAtomicReservation() {
         reserveResult = 5L;
+=======
+    void generateRejectsCancelledReservationBeforeProvider() {
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(-1L);
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> service.generate(
+                MEMBER_ID, "club", "merchant_plan", "system", "user"));
+        assertTrue(failure.getMessage().contains("次数记录未确认"));
+        verify(mockLlm, never()).chat(anyString(), anyString());
+        verify(wxContentSecurityService, never()).checkTextTyped(anyString(), anyString());
+        ArgumentCaptor<List> reservedKeys = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List> refundedKeys = ArgumentCaptor.forClass(List.class);
+        verify(redisTemplate).execute(any(RedisScript.class), reservedKeys.capture(), eq(86400));
+        verify(redisTemplate).execute(any(RedisScript.class), refundedKeys.capture());
+        assertEquals(reservedKeys.getValue(), refundedKeys.getValue(),
+                "取消回执只能补偿同一原日计数键和本次预占身份");
+    }
+>>>>>>> private-codex/batch1
 
-        service.generate(MEMBER_ID, "club", "merchant_plan",
-                "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
-
-        verify(redisTemplate, never()).expire(anyString(), anyLong(), any(TimeUnit.class));
+    private static WxTextCheckResult pass() {
+        return WxTextCheckResult.pass(WxTextCheckResult.Reason.PASS);
     }
 
+    private static WxTextCheckResult reject(String message) {
+        return WxTextCheckResult.reject(WxTextCheckResult.Reason.RISKY, message);
+    }
+
+    private static WxTextCheckResult unavailable(WxTextCheckResult.Reason reason) {
+        return WxTextCheckResult.unavailable(reason, IWxContentSecurityService.MSG_BUSY);
+    }
+
+<<<<<<< public
     @Test
     void detectionServiceFailureRefundsWithoutCallingProvider() {
         when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
@@ -845,4 +1117,6 @@ class AiGatewayServiceImplTest {
         verify(mockLlm).chat("s", user);
     }
 
+=======
+>>>>>>> private-codex/batch1
 }

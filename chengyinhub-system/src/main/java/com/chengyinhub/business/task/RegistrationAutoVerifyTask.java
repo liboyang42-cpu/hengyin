@@ -27,24 +27,35 @@ public class RegistrationAutoVerifyTask {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationAutoVerifyTask.class);
 
+    // shortcut: 进程重启会从头重扫；高频重启影响尾部时再采用持久调度游标。
+    private long scanCursor = 0L;
+    private long scanUpperBound = 0L;
+
     @Autowired
     private ICmsRegistrationService cmsRegistrationService;
 
     /** 扫描活动已结束满安全缓冲仍未核销的场次票:逐单自动核销收口(不退款、不发奖励、不写台账)。 */
-    public void run() {
-        List<Long> ids = cmsRegistrationService.listExpiredUnverifiedIds();
-        int verified = 0;
+    public synchronized void run() {
+        if (scanCursor == 0L) scanUpperBound = cmsRegistrationService.registrationScanUpperBound();
+        long afterId = scanCursor;
+        List<Long> ids = cmsRegistrationService.listExpiredUnverifiedIds(afterId);
+        int scanned = 0, verified = 0;
+        boolean reachedEnd = false;
         for (Long id : ids) {
+            if (scanned >= 200) break;
+            if (id == null || id <= afterId) throw new IllegalStateException("自动收口扫描游标未推进");
+            if (id > scanUpperBound) { reachedEnd = true; break; }
+            afterId = id;
+            scanned++;
             try {
-                if (cmsRegistrationService.autoVerifyExpiredOne(id)) {
-                    verified++;
-                }
+                if (cmsRegistrationService.autoVerifyExpiredOne(id)) verified++;
             } catch (Exception e) {
                 log.error("到期未核销自动收口失败 registrationId={}", id, e);
             }
         }
-        if (!ids.isEmpty()) {
-            log.info("到期未核销自动收口完成:扫描 {} 单,收口 {} 单", ids.size(), verified);
+        scanCursor = reachedEnd || ids.size() < 200 || afterId >= scanUpperBound ? 0L : afterId;
+        if (scanned > 0) {
+            log.info("到期未核销自动收口完成:扫描 {} 单,收口 {} 单", scanned, verified);
         }
     }
 }

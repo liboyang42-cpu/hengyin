@@ -26,6 +26,27 @@ public class WxSubscribeChannel implements NotifyChannel {
     private IWxSubscribeMsgService wx;
 
     @Override
+    public String channelId() { return "WECHAT_SUBSCRIBE"; }
+
+    @Override
+    public NotifyResult sendResult(NotifyMessage m) {
+        try {
+            if (m.event() == NotifyEvent.BEFORE_START) {
+                return wx.notifyBeforeStartResult(m.memberId(), m.get("topicName"), m.get("whenText"));
+            }
+            if (m.event() == NotifyEvent.OFFICIAL_BROADCAST) {
+                return wx.notifyOfficialBroadcastResult(m.memberId(), m.get("title"), m.get("sub"));
+            }
+            return send(m) ? NotifyResult.accepted(channelId())
+                    : NotifyResult.failed(channelId(), null);
+        } catch (Throwable t) {
+            log.error("[通知] 微信通道结果未知 event={} memberId={} reason={}",
+                    m.event(), m.memberId(), t.getClass().getSimpleName(), t);
+            return NotifyResult.unknown(channelId());
+        }
+    }
+
+    @Override
     public boolean send(NotifyMessage m) {
         try {
             switch (m.event()) {
