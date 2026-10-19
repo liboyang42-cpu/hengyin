@@ -523,8 +523,68 @@ class CommunityPostMapperMyBatisTest {
         }
     }
 
+    @Test
+    void authorDeleteEvidenceRequiresMatchingReceiptAndJobAndRejectsRestrictedErasure() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "DELETED", "PUBLIC", "SH", 1, 1, "deleted");
+        post(jdbc, 2, 12, "DELETED", "PUBLIC", "SH", 1, 1, "other");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+            jdbc.update("insert into community_erasure_job values (1,1,'POST_DELETE','delete-1',0)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "job alone is insufficient");
+            jdbc.update("insert into community_post_command_receipt values (11,'different','POST_DELETE',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "request must match both records");
+            jdbc.update("update community_post_command_receipt set request_id='delete-1',member_id=12");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "other actor cannot prove author deletion");
+            jdbc.update("update community_post_command_receipt set member_id=11,aggregate_id=2");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "aggregate must match");
+            jdbc.update("update community_post_command_receipt set aggregate_id=1");
+            session.clearCache();
+            assertEquals(1, mapper.countAuthorDeleteEvidence(11L, 1L));
+            assertEquals(0, mapper.countAuthorDeleteEvidence(12L, 1L));
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 2L));
+            jdbc.update("delete from community_erasure_job");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "receipt alone is insufficient");
+            jdbc.update("insert into community_erasure_job values (1,1,'POST_DELETE','delete-1',0)");
+            for (String restriction : List.of("COPYRIGHT_REMOVE", "ACCOUNT_DEREGISTER")) {
+                jdbc.update("insert into community_erasure_job values (2,1,?,'restriction',0)", restriction);
+                session.clearCache();
+                assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), restriction + " wins over old author deletion");
+                jdbc.update("delete from community_erasure_job where id=2");
+            }
+            jdbc.update("update community_erasure_job set legal_hold=1");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+            jdbc.update("update community_erasure_job set legal_hold=0");
+            jdbc.update("insert into community_erasure_job values (2,1,'LOCATION_WITHDRAW','held',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "any legal hold takes precedence");
+            jdbc.update("delete from community_erasure_job where id=2");
+            jdbc.update("insert into community_post_command_receipt values (11,'copyright','COPYRIGHT_REMOVE',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "copyright operator ID may equal author ID");
+            jdbc.update("delete from community_post_command_receipt where command_type='COPYRIGHT_REMOVE'");
+            jdbc.update("insert into community_erasure_job values (2,2,'COPYRIGHT_REMOVE','other-post',0)");
+            session.clearCache();
+            assertEquals(1, mapper.countAuthorDeleteEvidence(11L, 1L), "another post does not affect this one");
+            jdbc.update("update community_post set lifecycle='REMOVED' where id=1");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+        }
+    }
+
     private void schema(JdbcTemplate jdbc) {
         jdbc.execute("create table community_post(id bigint primary key,author_id bigint,community_id bigint,client_request_id varchar(96),body varchar(100),title varchar(100),post_type varchar(32),audience varchar(16),comment_policy varchar(16),reply_approval_enabled int,slow_mode_seconds int,lifecycle varchar(16),location_precision varchar(16),city_code varchar(32),poi_name varchar(100),approximate_geohash varchar(16),recommendation_eligible int,search_eligible int,interaction_enabled int,disclosure_type varchar(24),safety_labels_json varchar(100),guideline_version_id bigint,like_count int,comment_count int,bookmark_count int,share_count int,published_at timestamp,edited_at timestamp,deleted_at timestamp,version int,create_time timestamp,update_time timestamp)");
+        jdbc.execute("create table community_post_command_receipt(member_id bigint,request_id varchar(96),command_type varchar(32),aggregate_id bigint)");
+        jdbc.execute("create table community_erasure_job(id bigint primary key,post_id bigint,trigger_type varchar(32),request_id varchar(96),legal_hold int)");
         jdbc.execute("create table ums_member(id bigint primary key,nickname varchar(100),avatar varchar(100))");
         jdbc.execute("create table ums_member_follow(member_id bigint,follow_member_id bigint)");
         jdbc.execute("create table im_block(member_id bigint,blocked_member_id bigint)");
