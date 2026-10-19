@@ -2879,6 +2879,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         String qid = questionId == null ? "" : questionId.trim();
         if (!NARRATIVE_ID.matcher(qid).matches()) throw new IllegalArgumentException("questionId 无效");
         TopicRouteSession session = requireCheckSession(memberId, topicId, activityId);
+        String actionId = "ask:" + nodeId + ":" + qid;
+        if (actionId.length() > 96) throw new IllegalArgumentException("questionId 过长");
+        Map<String, Object> replayed = replayJourneyAction(session, memberId, actionId);
+        if (replayed != null) return replayed;
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalStateException("节点不存在");
         if (shopDayProofService == null
@@ -2887,10 +2891,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         JsonNode question = findQuestion(nodeBlockConfig(session, node), qid);
         if (question == null) throw new IllegalStateException("这一站没有这个问题");
-        String actionId = "ask:" + nodeId + ":" + qid;
-        if (actionId.length() > 96) throw new IllegalArgumentException("questionId 过长");
-        Map<String, Object> replayed = replayJourneyAction(session, memberId, actionId);
-        if (replayed != null) return replayed;
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
         state.getVariables().put(SYS_ASKED_PREFIX + nodeId + "." + qid, 1);
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
