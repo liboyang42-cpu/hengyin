@@ -82,7 +82,7 @@ class TopicSignupCountMatchesRosterV2Test {
                         + " (" + DELETED_SESSION + ", " + TOPIC + ", " + CLUB + ", 2, 'deleted'),"
                         + " (" + FOREIGN_SESSION + ", " + TOPIC + ", 701, 0, 'foreign')");
                 st.execute("INSERT INTO ums_member (id, nickname, del_flag) VALUES"
-                        + " (101,'a',0),(102,'b',0),(103,'c',0),(104,'d',0),(105,'e',0),(106,'f',0),(107,'g',0),(108,'h',0)");
+                        + " (101,'a',0),(102,'b',0),(103,'c',0),(104,'d',0),(105,'e',0),(106,'f',0),(107,'g',0),(108,'h',0),(109,'i',2)");
                 String cols = "(id, member_id, owner_id, owner_type, payment_status, registration_status,"
                         + " verification_status, payable_amount, point_used, create_time)";
                 st.execute("INSERT INTO cms_registration " + cols + " VALUES"
@@ -93,7 +93,8 @@ class TopicSignupCountMatchesRosterV2Test {
                         + " (5, 105, " + SESSION + ", 2, 4, 3, 0, 0.00, 0, now()),"  // 免费报名取消
                         + " (6, 106, " + SESSION + ", 2, 1, 1, 0, 10.00, 0, now())," // 拉起支付未付
                         + " (7, 107, " + DELETED_SESSION + ", 2, 2, 2, 0, 10.00, 0, now())," // 已删场次
-                        + " (8, 108, " + FOREIGN_SESSION + ", 2, 2, 2, 0, 10.00, 0, now())"); // 别家俱乐部场次
+                        + " (8, 108, " + FOREIGN_SESSION + ", 2, 2, 2, 0, 10.00, 0, now())," // 别家俱乐部场次
+                        + " (9, 109, " + SESSION + ", 2, 2, 2, 0, 10.00, 0, now())"); // CL-08:已注销成员的有效报名
             }
 
             CmsActivityServiceImpl activities = new CmsActivityServiceImpl();
@@ -118,7 +119,7 @@ class TopicSignupCountMatchesRosterV2Test {
 
             assertEquals(3, roster.getSoldCount().intValue(), "名单已售:主题直售 1 + 本俱乐部场次 2(已核 + 免费)");
             assertEquals(roster.getSoldCount(), card.getOrDefault(TOPIC, 0),
-                    "主题卡报名数必须与名单已售一致:退款/免费取消/未付/已删场次/别家场次两边都不计");
+                    "主题卡报名数必须与名单已售一致:退款/免费取消/未付/已删场次/别家场次/已注销成员两边都不计");
         }
     }
 }
