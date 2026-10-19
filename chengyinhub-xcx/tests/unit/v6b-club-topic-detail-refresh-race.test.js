@@ -1,7 +1,7 @@
 // V6b 验收（CL-48 / CX-12 详情部分，F-R2S-16）：pages/club/topic-detail 的 fetchDetail 要有请求序号，
 // onShow 与重试并发时旧回包丢弃；已加载内容后刷新失败不能整页变错误态，并给非阻塞的重试提示。
 // 前两条是当前 master 已成立的保证（负控：删掉 fetchDetail 里 seq === this._detailSeq 的比较，第一条必红）。
-// 标 todo 的两条是 master 上复现出的缺陷，跑得到但不让套件变红，修复后去掉 todo 即成回归用例。
+// 后两条原为 todo 的缺陷复现（刷新失败无提示 / 统计刷新失败整页错误），已随修复转为回归用例。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
@@ -79,7 +79,7 @@ test('V6b CX-12：已加载后 onShow 的详情刷新失败，保留旧内容不
   }
 })
 
-test('V6b CX-12 缺陷复现：详情刷新失败后没有任何「内容可能不是最新」的非阻塞提示', { todo: 'DEFECT pages/club/topic-detail/index.js:331-334 刷新失败且已有 _lastRaw 时直接 return，不提示' }, () => {
+test('V6b CX-12 缺陷复现：详情刷新失败后没有任何「内容可能不是最新」的非阻塞提示', () => {
   const h = loaded()
   h.vm.onShow()
   details(h.requests).at(-1).fail({ errMsg: 'network' })
@@ -87,7 +87,7 @@ test('V6b CX-12 缺陷复现：详情刷新失败后没有任何「内容可能�
   assert.ok(h.toasts.length > 0 || flagged, '旧内容被当成最新展示，用户看不到刷新失败')
 })
 
-test('V6b CX-12 缺陷复现：已加载后 onShow 的管理统计刷新失败，把已展示内容整页换成「活动暂时打不开」', { todo: 'DEFECT pages/club/topic-detail/index.js:298 / 303-306 failManageStats 无条件 loadError:true' }, () => {
+test('V6b CX-12 缺陷复现：已加载后 onShow 的管理统计刷新失败，把已展示内容整页换成「活动暂时打不开」', () => {
   const h = loaded()
   h.vm.onShow()
   stats(h.requests).at(-1).fail({ errMsg: 'network' })

@@ -3,7 +3,7 @@
 // 取消什么都不删；确认只删被点的那一条一次并扣 total；有内容时刷新失败保留旧列表并给非阻塞提示。
 // 单飞、按真实移除条数减 total、失败不摘卡已由 mytemplate-list-recovery-contract.test.js 覆盖，这里补
 // deleteItem → 弹窗取消/确认的真实入口。负控：把 deleteItem 里的 if (res.confirm) 去掉，第一条必红。
-// 标 todo 的是 master 上复现出的缺陷（刷新失败静默吞掉），修复后去掉 todo 即成回归用例。
+// 原为 todo 的缺陷复现（刷新失败静默吞掉）已随修复转为回归用例。
 const assert = require('node:assert/strict')
 const path = require('node:path')
 const test = require('node:test')
@@ -65,7 +65,7 @@ test('V6b CX-12：确认后只删被点的那一条一次，扣 total 并回读'
   assert.ok(h.requests.some(r => r.url === '/api/template/my-list'), '删除成功要回读列表')
 })
 
-test('V6b CX-12 缺陷复现：有内容时刷新失败被静默吞掉，旧列表被当成最新展示', { todo: 'DEFECT subpackageMember/mytemplate/mytemplate.js:284-287 handleListError 列表非空时只写 errorMsg:"" 不提示' }, () => {
+test('V6b CX-12 缺陷复现：有内容时刷新失败被静默吞掉，旧列表被当成最新展示', () => {
   const h = loadPage()
   h.page.data.list = [{ id: 7, title: '已显示的玩法' }]
   h.page.refreshList()

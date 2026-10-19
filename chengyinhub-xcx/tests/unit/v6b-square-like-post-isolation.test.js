@@ -1,7 +1,7 @@
 // V6b 验收（CX-15 社区帖子）：点赞的回包只能改它所属的那条帖子，不能串到别的帖子。
 // 广场列表 lickClick 按点击时的下标写回 list[index]；赞在途时列表因返回刷新（markListDirty → onShow 重拉）换了序，
 // 晚到的回包会把 A 的赞数写到此刻排在那个下标的 B 上。对照组证明列表不变时回包照常落到 A。
-// 标 todo 的是 master 上复现出的缺陷，修复后去掉 todo 即成回归用例。
+// 原为 todo 的缺陷复现（按旧下标写回）已随修复转为回归用例。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
@@ -52,7 +52,7 @@ test('V6b CX-15：列表不变时，点 A 的赞只发 A 的 id，回包只改 A
   assert.deepEqual(page.data.list.map(p => [p.id, p.isLiked, p.likeCount]), [[101, 1, 4], [202, 0, 10]])
 })
 
-test('V6b CX-15 缺陷复现：赞在途时列表刷新换序，A 的晚到回包写到了 B 上', { todo: 'DEFECT pages/square/list/index.js:187-194 lickClick 按旧下标 list[index] 写回，不核对 id' }, () => {
+test('V6b CX-15 缺陷复现：赞在途时列表刷新换序，A 的晚到回包写到了 B 上', () => {
   const { page, calls } = loadList()
   page.data.list = [A(), B()]
   page.lickClick(tapLike(0))
