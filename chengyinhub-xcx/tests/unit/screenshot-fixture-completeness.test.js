@@ -207,14 +207,14 @@ const CONTRACTS = {
   },
   B28: {
     sources: ['pages/activity/list/index.js', 'pages/activity/list/index.wxml'],
-    paths: ['loading', 'tab', 'events', 'loadError', 'mineError', 'curError', 'errorMsg', 'emptyTitle', 'emptySub'],
+    paths: ['loading', 'tab', 'events', 'curError', 'errorMsg', 'emptyTitle', 'emptySub'],
     arrays: ['events'],
-    equals: { loading: false, tab: 3, loadError: false, mineError: false, curError: false, errorMsg: '' },
+    equals: { loading: false, tab: 3, curError: false, errorMsg: '' },
   },
   B29: {
     sources: ['pages/activity/list/index.js', 'pages/activity/list/index.wxml'],
-    paths: ['loading', 'tab', 'events[].id', 'events[].title', 'events[]._statusText', 'events[]._timeText', 'events[]._pct', 'loadError', 'mineError', 'curError', 'errorMsg'],
-    equals: { loading: false, tab: 1, loadError: false, mineError: false, curError: false, errorMsg: '' },
+    paths: ['loading', 'tab', 'events[].id', 'events[].title', 'events[]._statusText', 'events[]._timeText', 'events[]._pct', 'curError', 'errorMsg'],
+    equals: { loading: false, tab: 1, curError: false, errorMsg: '' },
   },
   B43: {
     sources: ['subpackageA/pages/myproject/index.js', 'subpackageA/pages/myproject/index.wxml'],

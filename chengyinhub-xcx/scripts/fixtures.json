@@ -4897,18 +4897,14 @@
      "_live": true
     }
    ],
-   "loadError": false,
    "curError": false,
    "summary": "进行中 · 共 1 个活动",
-   "mineError": false,
    "errorMsg": ""
   },
   "dropped": [],
   "switchKeys": [
    "events",
    "loading",
-   "loadError",
-   "mineError",
    "curError",
    "errorMsg"
   ]
@@ -4918,8 +4914,6 @@
    "loading": false,
    "tab": 3,
    "events": [],
-   "loadError": false,
-   "mineError": false,
    "curError": false,
    "errorMsg": "",
    "emptyTitle": "还没有参与的官方活动",
@@ -4933,8 +4927,6 @@
    "_all",
    "_mine",
    "loading",
-   "loadError",
-   "mineError",
    "curError",
    "errorMsg"
   ]
@@ -4958,8 +4950,6 @@
      "_pct": -1
     }
    ],
-   "loadError": false,
-   "mineError": false,
    "curError": false,
    "errorMsg": "",
    "summary": "1 场活动即将开始"
@@ -4968,8 +4958,6 @@
   "switchKeys": [
    "events",
    "loading",
-   "loadError",
-   "mineError",
    "curError",
    "errorMsg"
   ]

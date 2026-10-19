@@ -110,7 +110,7 @@ test('logout clears mine and publish permission while public rows remain availab
   const h = mount('7', 'token'); h.start(); publicRows(h); myRows(h.last('/api/official/my-events'));
   h.last('/api/official/can-publish').success({ code: 200, data: { canPublish: true } }); h.tab(3);
   h.session('', ''); h.page.onShow();
-  assert.equal(h.page.data.events.length, 0); assert.equal(h.page.data._mine.length, 0); assert.equal(h.page.data.canPublish, false);
+  assert.equal(h.page.data.events.length, 0); assert.equal(h.page._mine.length, 0); assert.equal(h.page.data.canPublish, false);
   assert.equal(h.page.data.mineAuthRequired, true); h.tab(0); assert.equal(h.page.data.events[0].id, 1);
 });
 
@@ -191,9 +191,44 @@ test('public retry replacement ignores the earlier public failure and success', 
 test('public refresh interrupted after an earlier success restarts on show and settles only new request', () => {
   const h = mount(); h.start(); publicRows(h); h.page.fetchAll(); const old = h.last('/api/official/events');
   h.page.onHide(); h.page.onShow(); const current = h.last('/api/official/events');
-  assert.notEqual(current, old); assert.equal(h.page.data.publicLoading, true);
-  old.fail({ msg: 'stale refresh failure' }); assert.equal(h.page.data.publicLoading, true);
+  assert.notEqual(current, old); assert.equal(h.page._publicLoading, true);
+  old.fail({ msg: 'stale refresh failure' }); assert.equal(h.page._publicLoading, true);
   current.success({ code: 200, data: [row(92)] });
-  assert.equal(h.page.data.publicLoading, false); assert.equal(h.page.data.loading, false);
+  assert.equal(h.page._publicLoading, false); assert.equal(h.page.data.loading, false);
   assert.equal(h.page.data.events[0].id, 92); assert.equal(h.page.data.curError, false);
+});
+
+
+test('private read bookkeeping stays off the render bridge while current public and mine states remain visible', () => {
+  const internal = ['_all', '_mine', 'mineLoading', 'mineError', 'mineErrorMsg', 'publicLoading', 'loadError', 'loadErrorMsg'];
+  const h = mount('7', 'token'), writes = [];
+  const render = h.page.setData;
+  h.page.setData = patch => { writes.push(Object.keys(patch)); render(patch); };
+  h.start();
+  assert.equal(h.page.data.loading, true);
+  h.last('/api/official/events').fail({ msg: 'public offline' });
+  assert.equal(h.page.data.curError, true); assert.equal(h.page.data.errorMsg, 'public offline');
+  assert.equal(h.page.data.loading, false);
+  h.tab(3); assert.equal(h.page.data.loading, true);
+  h.last('/api/official/my-events').fail({ code: 500, msg: 'mine offline' }, 500);
+  assert.equal(h.page.data.curError, true); assert.equal(h.page.data.errorMsg, 'mine offline');
+  assert.equal(h.page.data.loading, false);
+  h.page.onRetry(); myRows(h.last('/api/official/my-events'));
+  assert.equal(h.page.data.curError, false); assert.equal(h.page.data.events[0].id, 11);
+  h.tab(0); assert.equal(h.page.data.errorMsg, 'public offline');
+  assert.deepEqual(writes.flat().filter(key => internal.includes(key)), []);
+  for (const key of internal) assert.equal(Object.hasOwn(h.page.data, key), false, key);
+});
+
+
+test('same-session public refresh 500 keeps lawful public rows and settles visible loading', () => {
+  const h = mount('7', 'token'); h.start(); publicRows(h);
+  assert.equal(h.page.data.events[0].id, 1);
+  h.page.fetchAll(); assert.equal(h.page.data.loading, true);
+  h.last('/api/official/events').fail({ code: 500, msg: 'refresh offline' }, 500);
+  assert.equal(h.page.data.events[0].id, 1); assert.equal(h.page.data.loading, false);
+  assert.equal(h.page.data.curError, true); assert.equal(h.page.data.errorMsg, 'refresh offline');
+  h.tab(1); assert.equal(h.page.data.events[0].id, 2);
+  h.page.fetchAll(); publicRows(h);
+  assert.equal(h.page.data.events[0].id, 2); assert.equal(h.page.data.curError, false);
 });
