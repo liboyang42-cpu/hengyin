@@ -36,8 +36,9 @@ import static org.mockito.Mockito.when;
  * <p>站数口径(主题卡 locationCount、topic-manage-stats.nodeCount、/api/play/nodes)都只认
  * status=1;info-to-user 按章节查节点时原来不带 status,主题页章节行就把隐藏节点也数进「N 个节点」。
  *
- * <p>edit-detail 不收窄:作者保存是整体替换,回填少一个节点 = 保存时把它删掉。这里把现状钉住,
- * 改它要 owner 先定「隐藏节点在作者重存时该删掉还是保留隐藏」。
+ * <p>edit-detail 不收窄:作者保存是整体替换,回填少一个节点 = 保存时把它删掉。隐藏节点随回填带回,
+ * 保存时按旧 id 保留隐藏态(TopicUpdateByOwnerTest#fullRebuild_keepsBackOfficeHiddenNodeHidden...),
+ * 向导站数只数 status=1。
  */
 class ApiTopicInfoHiddenNodeTest {
 

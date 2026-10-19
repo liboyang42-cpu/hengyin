@@ -4642,6 +4642,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));
+        // 重建会删掉全部节点再插回(插回一律 status=1);先记下后台隐藏的,插回后按旧 id 还原,作者重存不得取消隐藏
+        Set<Long> hiddenNodeIds = selectHiddenNodeIds(topicId);
         RouteNodeMaps routeNodeMaps;
         if (shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
             deleteTopicEditableNonFlowChildren(topicId);
@@ -4652,6 +4654,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                     productType, chapterFlowV2, allowBundledDraft);
         }
+        restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
         remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
         persistJourneyStoryAfterChapterRebuild(topicId,
                 patch.getJourneyStoryJson() == null ? exist.getJourneyStoryJson() : patch.getJourneyStoryJson(),
@@ -4764,6 +4767,31 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!missing.isEmpty()) {
             throw new IllegalStateException("保存主题是整体替换:本次请求没有携带 " + String.join("、", missing)
                     + ",直接提交会把它们清空。请回传完整内容;确实要清空请显式传空数组 []");
+        }
+    }
+
+    /** 本主题后台「隐藏」(status=0)的节点 id。走不带商家可见性闸的行锁查询,待审商家节点也算在内。 */
+    private Set<Long> selectHiddenNodeIds(Long topicId) {
+        Set<Long> hidden = new HashSet<Long>();
+        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectByTopicForUpdate(topicId))) {
+            if (node != null && node.getId() != null && Long.valueOf(0L).equals(node.getStatus())) {
+                hidden.add(node.getId());
+            }
+        }
+        return hidden;
+    }
+
+    /** 重建后按旧 id → 新 id 把隐藏态写回;只会隐藏、不会取消隐藏,新节点(无旧 id)不受影响。 */
+    private void restoreHiddenNodes(Set<Long> hiddenNodeIds, Map<Long, Long> oldToNew) {
+        for (Long oldId : hiddenNodeIds) {
+            Long newId = oldToNew.get(oldId);
+            if (newId == null) continue;
+            CmsTopicNode patch = new CmsTopicNode();
+            patch.setId(newId);
+            patch.setStatus(0L);
+            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
+                throw new IllegalStateException("隐藏节点状态保留失败");
+            }
         }
     }
 
