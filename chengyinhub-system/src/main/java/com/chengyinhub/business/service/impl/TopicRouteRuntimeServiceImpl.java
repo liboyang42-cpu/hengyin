@@ -1811,11 +1811,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         } catch (IllegalArgumentException unusableRules) {
             throw new IllegalStateException("旅程数值规则不可用", unusableRules);
         }
-        String story = topic == null ? null : topic.getJourneyStoryJson();
+        ObjectNode themeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(
+                topic.getPublishedThemeRuntimeConfigJson());
+        ObjectNode selectedTheme = themeConfig == null ? null
+                : com.chengyinhub.business.service.support.ThemeRuntimeConfig.freeze(themeConfig, sceneIndex, clock.millis());
+        String story = selectedTheme != null && selectedTheme.has("journeyStory")
+                ? selectedTheme.get("journeyStory").toString() : topic.getJourneyStoryJson();
         root.put(NodeJourneySnapshot.JOURNEY_STORY_KEY, story == null ? "" : story.trim());
         root.put("topicCompleteRule", topic == null ? null : topic.getCompleteRuleJson());
         Long openingId = JourneyStory.openingChapterId(story);
-        freezeThoughtChapters(root, topic, liveNodes, openingId);
+        freezeThoughtChapters(root, topic, liveNodes, openingId, story);
         if (openingId != null) {
             CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
             List<CmsTopicChapter> chapters = cmsTopicChapterMapper == null ? null
@@ -1833,9 +1838,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             frozen.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(opening, liveNodes)));
         }
         freezeNodeAnswers(root.putObject(NodeJourneySnapshot.NODE_ANSWERS_KEY), liveNodes, templatesById);
-        com.fasterxml.jackson.databind.node.ObjectNode themeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(topic.getPublishedThemeRuntimeConfigJson());
-        if (themeConfig != null) {
-            ObjectNode frozen = com.chengyinhub.business.service.support.ThemeRuntimeConfig.freeze(themeConfig, sceneIndex, clock.millis());
+        if (selectedTheme != null) {
+            ObjectNode frozen = selectedTheme;
             for(JsonNode ch:frozen.path("chapters")) {
                 int index=ch.path("index").asInt();JsonNode binding=JSON.createObjectNode().path("missing");
                 for(JsonNode candidate:root.path("thoughtChapters"))if(candidate.path("authorIndex").asInt(-1)==index)binding=candidate;
@@ -1845,7 +1849,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             ArrayNode legacy=frozen.putArray("legacyMedals");
             if(topic.getFinishMedalImg()!=null && !topic.getFinishMedalImg().trim().isEmpty()){ObjectNode medal=legacy.addObject();medal.put("id","legacy_finish");medal.put("kind","MEDAL");medal.put("name",topic.getFinishMedalName()==null?"通关勋章":topic.getFinishMedalName());medal.put("image",topic.getFinishMedalImg());medal.put("legacySource","FINISH");}
             for(CmsTopicNode node:liveNodes){CmsMemberTemplate tpl=templatesById.get(node.getTemplateId());if(tpl==null || tpl.getMedalImg()==null || tpl.getMedalImg().trim().isEmpty())continue;ObjectNode medal=legacy.addObject();medal.put("id","legacy_node_"+node.getId());medal.put("kind","MEDAL");medal.put("name",tpl.getMedalName()==null?"节点奖牌":tpl.getMedalName());medal.put("image",tpl.getMedalImg());medal.put("legacySource","NODE_RANK");medal.put("nodeId",node.getId());}
-            if (frozen.has("journeyStory")) root.put(NodeJourneySnapshot.JOURNEY_STORY_KEY, frozen.get("journeyStory").toString());
             root.set("themeConfig", frozen);applySceneNodes(root,frozen);
             root.set("themeConfig",mergeFrozenTemplateRules(root,frozen,templateIds,finalChapter(topic,runtimeChapters(topic.getId()))));
             freezeClueContent(root,liveNodes,templatesById);
@@ -1903,7 +1906,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 : GameplayTemplateRules.merge(definition,declarations,acts,templateIds,story,finalChapter);
     }
 
-    private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId) {
+    private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId,
+                                      String effectiveStory) {
         com.fasterxml.jackson.databind.node.ArrayNode frozen = root.putArray("thoughtChapters");
         // 独立保留结局正文；不加入玩家推进章节列表，读侧仅投影已选结局。
         ObjectNode endingChapters = root.putObject("endingChapters");
@@ -1914,7 +1918,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(rows);
         chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId, Comparator.nullsLast(Long::compareTo))
                 .thenComparing(CmsTopicChapter::getId, Comparator.nullsLast(Long::compareTo)));
-        Set<Long> endingIds = JourneyStory.endingChapterIds(topic.getJourneyStoryJson());
+        Set<Long> endingIds = new LinkedHashSet<Long>(JourneyStory.endingChapterIds(topic.getJourneyStoryJson()));
+        endingIds.addAll(JourneyStory.endingChapterIds(effectiveStory));
         Set<Long> requiredBefore = new LinkedHashSet<Long>();
         int authorIndex=-1;
         for (CmsTopicChapter chapter : chapters) {
