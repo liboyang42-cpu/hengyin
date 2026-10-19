@@ -145,7 +145,9 @@ class ApiCommonUploadSecurityTest
         long storedSize = controller.uploadedBytes.length;
         assertEquals(storedSize, response.getBody().get("byteSize"));
         assertEquals("test-upload-receipt", response.getBody().get("uploadReceipt"));
-        org.mockito.Mockito.verify(receipts).issue(91L, "https://example.test/upload/test.gif", storedSize);
+        assertEquals("upload/0123456789abcdef0123456789abcdef.gif", response.getBody().get("objectKey"));
+        assertEquals(response.getBody().get("fileName"), response.getBody().get("objectKey"));
+        org.mockito.Mockito.verify(receipts).issue(91L, "upload/0123456789abcdef0123456789abcdef.gif", storedSize);
     }
 
     @Test
@@ -770,7 +772,7 @@ class ApiCommonUploadSecurityTest
             String filename = file.getOriginalFilename();
             String audioExtension = filename != null && filename.matches(".*\\.(mp3|m4a|aac|wav)")
                     ? filename.substring(filename.lastIndexOf('.') + 1) : null;
-            return store(file, audioExtension == null ? "upload/test.gif"
+            return store(file, audioExtension == null ? "upload/0123456789abcdef0123456789abcdef.gif"
                     : "upload/0123456789abcdef0123456789abcdef." + audioExtension);
         }
 
