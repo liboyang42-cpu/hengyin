@@ -30,15 +30,17 @@ function cancelNotifications(key, force) {
 }
 
 function notify(batch, callback, value) {
+  var errs = []; // 一个消费者抛错不能挡住其余持有者，收尾后抛出首个
   notifying.push(batch);
   try {
     batch.forEach(function (item) {
       if (item.cancelled || (callback === 'success' && owners[item.key] !== item)) return;
-      if (item.opts[callback]) item.opts[callback](value);
+      try { if (item.opts[callback]) item.opts[callback](value); } catch (e) { errs.push(e); }
     });
   } finally {
     notifying.splice(notifying.indexOf(batch), 1);
   }
+  if (errs.length) throw errs[0];
 }
 
 function count() { return Object.keys(owners).length; }
