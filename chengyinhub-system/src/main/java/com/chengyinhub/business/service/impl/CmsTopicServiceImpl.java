@@ -5854,8 +5854,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         query.setOwnerId(topicId);
         query.setDelFlag(0);
         List<OmsTicket> existing = nullToEmpty(omsTicketMapper.selectOmsTicketList(query));
+        Map<Long, OmsTicket> existingById = new HashMap<>();
         Map<String, Deque<OmsTicket>> reusableByKey = new HashMap<>();
         for (OmsTicket old : existing) {
+            existingById.put(old.getId(), old);
             String key = topicTicketPairingKey(old.getName(), old.getPrice(), old.getStartTime(), old.getEndTime());
             Deque<OmsTicket> bucket = reusableByKey.get(key);
             if (bucket == null) {
@@ -5865,6 +5867,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             bucket.add(old);
         }
         Set<Long> reusedIds = new HashSet<>();
+        Set<Long> explicitIds = new HashSet<>();
+        for (ActivityTicketRequest requested : nullToEmpty(tickets)) {
+            if (requested.getId() != null && existingById.containsKey(requested.getId())
+                    && !explicitIds.add(requested.getId())) {
+                throw new IllegalArgumentException("票种 id 重复:" + requested.getId());
+            }
+        }
 
         for (ActivityTicketRequest ticketDTO : nullToEmpty(tickets)) {
             OmsTicket ticket = new OmsTicket();
@@ -5900,8 +5909,20 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
             Deque<OmsTicket> reusable = reusableByKey.get(topicTicketPairingKey(
                     ticket.getName(), ticket.getPrice(), ticket.getStartTime(), ticket.getEndTime()));
-            OmsTicket reuse = reusable == null ? null : reusable.poll();
+            OmsTicket reuse = ticketDTO.getId() == null ? null : existingById.get(ticketDTO.getId());
+            if (ticketDTO.getId() == null && reusable != null) {
+                // 旧调用仍按业务键配对，但不能占用本次其他条目显式指定的既有票。
+                while (!reusable.isEmpty()) {
+                    OmsTicket candidate = reusable.poll();
+                    if (!reusedIds.contains(candidate.getId()) && !explicitIds.contains(candidate.getId())) {
+                        reuse = candidate;
+                        break;
+                    }
+                }
+            }
             if (reuse == null) {
+                // 显式旧 id 已删除/不属于本主题时沿原 DTO 合同新建，不借同键的另一行身份。
+                ticket.setId(null);
                 omsTicketMapper.insertOmsTicket(ticket);
                 continue;
             }
