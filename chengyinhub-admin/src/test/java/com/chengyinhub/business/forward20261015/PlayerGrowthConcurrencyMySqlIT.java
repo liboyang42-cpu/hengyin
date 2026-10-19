@@ -22,6 +22,7 @@ import com.chengyinhub.business.service.IXpBudgetService;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import com.chengyinhub.business.service.impl.PlayerProgressionServiceImpl;
 import com.chengyinhub.business.service.impl.TopicCompletionAwardServiceImpl;
+import com.chengyinhub.framework.aspectj.DeadlockRetryInterceptor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -54,6 +56,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -225,11 +228,36 @@ class PlayerGrowthConcurrencyMySqlIT {
 
     @Test
     void sameTopicOuterUniqueMarkerCallsGrowthOnlyOnce() throws Exception {
+        // 重复请求在 TOPIC_FINISH 判重上排队，与首请求随后插 TOPIC_CLEAR/MILE_* 的间隙锁成环，InnoDB 选它为牺牲者。
+        // 生产边界的 @DeadlockRetry 在事务外层整笔重来一次：首请求已提交，重试读到既有事实 ⇒ firstCompletion=false。
+        AtomicInteger markerInserts = new AtomicInteger();
+        Future<TopicCompletionAwardVO> two = sameTopicDuplicate(true, markerInserts);
+        assertFalse(two.get(5, TimeUnit.SECONDS).isFirstCompletion(), "重复通关经重试后只确认既有事实");
+        assertEquals(3, markerInserts.get(), "第二请求的通关事实插入被死锁回滚后由重试边界再走一次");
+        assertGrowth(4, "10.75", 2);
+        assertEquals(1, badges.countByMemberAndCode(1L, "TOPIC_CLEAR"));
+        assertNotNull(badges.selectOne(1L, "TOPIC_FINISH_11", 11L));
+    }
+
+    @Test
+    void sameTopicDuplicateWithoutRetryBoundaryIsDeadlockVictim() throws Exception {
+        // 负控：去掉重试边界（只有事务拦截器）时，同一时序下重复请求以死锁回滚报错，不是 firstCompletion=false。
+        AtomicInteger markerInserts = new AtomicInteger();
+        Future<TopicCompletionAwardVO> two = sameTopicDuplicate(false, markerInserts);
+        ExecutionException failure = assertThrows(ExecutionException.class, () -> two.get(5, TimeUnit.SECONDS));
+        assertTrue(failure.getCause() instanceof DeadlockLoserDataAccessException, String.valueOf(failure.getCause()));
+        assertEquals(2, markerInserts.get(), "无重试边界时不会再插第二次");
+        assertGrowth(4, "10.75", 2);
+        assertEquals(1, badges.countByMemberAndCode(1L, "TOPIC_CLEAR"));
+    }
+
+    /** 首请求持成长锁时让第二请求撞上未提交的 TOPIC_FINISH_11；返回第二请求，首请求已断言为首次通关。 */
+    private Future<TopicCompletionAwardVO> sameTopicDuplicate(boolean retryBoundary, AtomicInteger markerInserts)
+            throws Exception {
         seed(4, "8.50", 2);
         CountDownLatch firstLocked = new CountDownLatch(1);
         CountDownLatch releaseFirst = new CountDownLatch(1);
         CountDownLatch secondMarkerAttempted = new CountDownLatch(1);
-        AtomicInteger markerInserts = new AtomicInteger();
         AtomicInteger growthReads = new AtomicInteger();
         PlayerGrowthMapper observedGrowth = (PlayerGrowthMapper) Proxy.newProxyInstance(getClass().getClassLoader(),
                 new Class<?>[] {PlayerGrowthMapper.class}, (proxy, method, args) -> {
@@ -248,24 +276,28 @@ class PlayerGrowthConcurrencyMySqlIT {
                             && markerInserts.incrementAndGet() == 2) secondMarkerAttempted.countDown();
                     return invoke(badges, method, args);
                 });
-        ITopicCompletionAwardService completion = completion(service(observedGrowth), observedBadges);
+        ITopicCompletionAwardService completion = completion(service(observedGrowth), observedBadges, retryBoundary);
         ExecutorService workers = Executors.newFixedThreadPool(2);
         Future<TopicCompletionAwardVO> one = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
+        Future<TopicCompletionAwardVO> two;
         try {
             assertTrue(firstLocked.await(5, TimeUnit.SECONDS));
-            Future<TopicCompletionAwardVO> two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
+            two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
             assertTrue(secondMarkerAttempted.await(5, TimeUnit.SECONDS));
             assertFalse(two.isDone(), "首个通关事实尚未提交时，第二请求不能确认通关");
             releaseFirst.countDown();
             assertTrue(one.get(5, TimeUnit.SECONDS).isFirstCompletion());
-            assertFalse(two.get(5, TimeUnit.SECONDS).isFirstCompletion());
+            try {
+                two.get(5, TimeUnit.SECONDS);
+            } catch (ExecutionException expectedInNegativeControl) {
+                // 结果由调用方断言
+            }
         } finally {
             releaseFirst.countDown();
             stopWorkers(workers);
         }
         assertEquals(1, growthReads.get(), "唯一实际 caller 只在首次TOPIC_FINISH事实成立时调用成长");
-        assertGrowth(4, "10.75", 2);
-        assertEquals(1, badges.countByMemberAndCode(1L, "TOPIC_CLEAR"));
+        return two;
     }
 
     @Test
@@ -394,6 +426,12 @@ class PlayerGrowthConcurrencyMySqlIT {
     }
 
     private ITopicCompletionAwardService completion(IPlayerProgressionService progression, PlayerBadgeMapper markers) {
+        return completion(progression, markers, false);
+    }
+
+    /** retryBoundary=true 时按生产顺序在事务拦截器外层挂死锁重试（DeadlockRetryConfig.ORDER 高于事务通知器）。 */
+    private ITopicCompletionAwardService completion(IPlayerProgressionService progression, PlayerBadgeMapper markers,
+            boolean retryBoundary) {
         TopicCompletionAwardServiceImpl target = new TopicCompletionAwardServiceImpl();
         ICmsTopicService topics = mock(ICmsTopicService.class);
         when(topics.selectCmsTopicById(anyLong())).thenAnswer(call -> {
@@ -413,6 +451,7 @@ class PlayerGrowthConcurrencyMySqlIT {
         ReflectionTestUtils.setField(target, "xpBudgetService", budget);
         ReflectionTestUtils.setField(target, "xpAwardMapper", mock(TopicCompletionXpAwardMapper.class));
         ProxyFactory proxy = new ProxyFactory(target);
+        if (retryBoundary) proxy.addAdvice(new DeadlockRetryInterceptor());
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         return (ITopicCompletionAwardService) proxy.getProxy();
     }

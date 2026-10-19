@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
 
@@ -1315,6 +1316,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "扫码打卡")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/checkin")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId)
@@ -1467,6 +1469,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "答题完成(文字/选项)")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/answer")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion)
@@ -1586,6 +1589,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "城市定向谜题查看答案并辅助完成")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/puzzle/reveal")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(String activityId, String nodeId, String topicId,
             String routeActionId, Integer expectedRouteVersion)
@@ -1886,6 +1890,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "App 传感器挑战完成上报")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/sensor-result")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult sensorResult(@RequestBody SensorResultRequest request)
     {
@@ -1941,6 +1946,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "GPS到达/到点即完成")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/arrive")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion)
@@ -2109,6 +2115,7 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "拍照打卡(提交即完成,审核后置)")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/photo")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion)
