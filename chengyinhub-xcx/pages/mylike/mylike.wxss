@@ -99,3 +99,5 @@
 }
 .favorite-card__actions image { width: var(--cy-space-4); height: var(--cy-space-4); }
 .favorite-card__action-heart { color: var(--cy-color-text-primary); }
+
+.favorite-preference-note { margin: 0 var(--cy-page-x) var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }

@@ -8,6 +8,23 @@
     <view class="g-kicker sh__k">{{kicker}}</view>
     <view class="sh__n g-figure">{{left}}</view>
     <view class="sh__s">{{running ? (loud ? '过线了，别停' : '喊出来，让这儿听见') : '按住一口气，喊满 ' + seconds + ' 秒'}}</view>
+    <!-- C1/F0338:相对音量是一句读数不是音量条 —— 相对本机过线阈值,100% 即过线,不是分贝 -->
+    <view class="sh__s sh__note" wx:if="{{running}}" aria-live="polite">相对音量 {{levelPct}}%（100% 即过线）</view>
+    <block wx:elif="{{micDenied}}">
+      <view class="sh__s sh__note" aria-live="polite">没开麦克风，这一项听不了。可以去设置打开，或跳过这一项（不记成绩）</view>
+      <view class="sh__alt">
+        <view class="sh__alt-b" bindtap="onOpenMicSetting" aria-role="button" aria-label="去设置打开麦克风"
+              hover-class="sh__b--press" hover-stay-time="80">去设置打开</view>
+        <view class="sh__alt-b" bindtap="onSkipMic" aria-role="button" aria-label="跳过这一项，不记成绩"
+              hover-class="sh__b--press" hover-stay-time="80">跳过这一项</view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="sh__s sh__note">{{comfort}}</view>
+      <view class="sh__s sh__note" wx:if="{{calibrationNote}}">校准：{{calibrationNote}}</view>
+      <view class="sh__s sh__note" wx:if="{{bgRule}}">{{bgRule}}</view>
+      <view class="sh__s sh__note" wx:if="{{evidenceNote}}">{{evidenceNote}}</view>
+    </block>
 
     <view class="sh__b {{running ? 'sh__b--busy' : ''}}" bindtap="onStart"
           aria-role="button" aria-label="开始喊一嗓子" hover-class="sh__b--press" hover-stay-time="80">

@@ -137,12 +137,12 @@ Component({
 
       // 商家页均非原生 tabBar 且路径带 query,须用 reLaunch;C 端保持 switchTab
       if (this.data.mode === 'merchant') {
-        wx.reLaunch({
+        navigateRegistered({
           url: url,
           fail: (err) => {
             console.error('切换商家tab失败');
           }
-        });
+        }, 'reLaunch');
         return;
       }
 
@@ -188,3 +188,5 @@ Component({
     }
   }
 })
+
+const { navigateRegistered } = require('../../utils/registered-navigation.js');

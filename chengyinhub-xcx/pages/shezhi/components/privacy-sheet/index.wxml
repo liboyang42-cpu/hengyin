@@ -4,11 +4,25 @@
     <text class="pv-sheet__body">城瘾在你主动开启漫游、或在游玩中确认开启定位后使用定位，用于到点打卡和记录足迹；锁屏或切到后台后仍记录，结束漫游、暂停或结束游玩即停止。首页在你授权定位后读取当前位置，仅用于推荐附近活动。向附近用户分享位置默认关闭，需另行单独同意；开启后展示街区模糊位置、昵称、头像及本次漫游信息，可随时关闭，关闭不影响自己的轨迹。拍照判定、识物成卡、NPC 对话和 AI 创作助手会把你提交的照片或文字发送给第三方模型服务商（DeepSeek）处理，声音复刻会把录音发送给阿里云语音模型（通义 CosyVoice）生成音色；照片与声音处理均需另行单独同意，结果仅用于本次功能。</text>
     <view class="pv-sheet__link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《用户隐私保护指引》</view>
 
+<<<<<<< public
     <text class="pv-sheet__title">我的待审媒体</text>
     <cy-btn variant="secondary" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="pv-sheet__action" bindtap="openOwnMedia">查看本人媒体与审核状态</cy-btn>
     <text class="pv-sheet__title">附近的人位置分享</text>
     <text class="pv-sheet__sub">关闭后立即停止向其他用户展示位置，不影响自己的定位和轨迹。</text>
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>
+=======
+    <!-- N015 敏感地点遮挡:手动选点,只存本机;分享时这些地点附近的轨迹点/打卡地点会被去掉 -->
+    <text class="pv-sheet__title">分享时遮挡敏感地点</text>
+    <view class="pv-sheet__row" wx:for="{{maskZones}}" wx:key="id">
+      <text class="pv-sheet__row-label">{{item.name}} · {{item.r}} 米内</text>
+      <text class="pv-sheet__zone-remove" data-id="{{item.id}}" bindtap="removeMaskZone" aria-role="button" aria-label="移除敏感地点 {{item.name}}" hover-class="cy-pressed">移除</text>
+    </view>
+    <cy-btn wx:if="{{maskZones.length < maskZoneMax}}" variant="secondary" class="pv-sheet__action" bindtap="addMaskZone">添加敏感地点</cy-btn>
+    <text class="pv-sheet__sub">{{maskZones.length ? '分享足迹时会去掉这些地点附近的轨迹点和打卡地点；只对之后的分享生效，已发出的图片不会改变。' : '还没有设置。可以添加家、公司等不想出现在分享图上的地点（最多 ' + maskZoneMax + ' 处）。'}}坐标仍会量化，但无法保证绝对推断不出住址。</text>
+    <cy-inline-error class="pv-sheet__warn" wx:if="{{saveError}}" kind="data"
+      title="隐私设置未保存" sub="{{saveError}}" />
+
+>>>>>>> private-feature/w2-r
     <text class="pv-sheet__title">漫游定位</text>
     <text class="pv-sheet__sub">撤回后，漫游不会继续读取实时位置或记录新的轨迹。</text>
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="withdrawRoamLocationConsent">撤回漫游定位同意</cy-btn>

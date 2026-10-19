@@ -103,4 +103,32 @@ function planIssue(runtime) {
   return plan ? '方案 ' + plan.endingKey + ' 须有对应结局和唯一默认收尾' : '';
 }
 
-module.exports = { fromMessage, templateField, costIssue, planIssue, parse };
+// N011：作者运行检查报告合同。结构问题带可跳回的定位；规则样例按服务端同一公式（骰点+静态加值≥DC，无大成功/大失败）
+// 枚举有限边界；未覆盖范围永远列出 —— 结构全过也不宣称全路径可玩。
+const UNCOVERED = ['数值、消耗与互斥组合的全部路径未模拟', '任意复杂脚本与多人并发未穷举', '本地样例不代表正式运行时同一发布版本的结果'];
+function d20Sample(row, dice) {
+  const dc = Number(dice.dc) || 0, modifier = Number(dice.modifier) || 0, need = dc - modifier;
+  const text = need > 20 ? '任何骰点都失败' : need <= 1 ? '任何骰点都成功' : '骰出 ' + need + ' 及以上成功';
+  return { nodeKey: row.key, kind: 'D20', field: 'templateTool:' + row.key + ':advanced', tab: '0',
+    text: 'DC ' + dc + '，静态加值 ' + modifier + '：' + text, warning: need > 20 || need <= 1 };
+}
+function checkReport(input) {
+  const { messages, chapters, details, version } = input || {};
+  const issues = (messages || []).filter(Boolean).map(message => {
+    const target = fromMessage(message, chapters, details);
+    return { message: String(message), target, located: !!target };
+  });
+  const samples = [];
+  for (const row of nodes(chapters)) {
+    const config = configOf(row, details);
+    const cost = costIssue(config);
+    if (cost) issues.push({ message: '节点 ' + row.key + '：' + cost, target: { label: cost, field: 'templateTool:' + row.key + ':cost', tab: '0' }, located: true });
+    const dice = config.diceRoll;
+    if (dice && dice.enabled === true && dice.mode === 'd20') samples.push(d20Sample(row, dice));
+  }
+  return { version: version == null ? null : version, structurePassed: issues.length === 0, issues, samples,
+    uncovered: UNCOVERED.slice(), fullPathGuarantee: false,
+    summary: issues.length ? issues.length + ' 处待修，点按可跳回对应位置' : '结构检查通过；下列未覆盖范围仍需实跑，不代表全路径可玩' };
+}
+
+module.exports = { fromMessage, templateField, costIssue, planIssue, parse, checkReport };

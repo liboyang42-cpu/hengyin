@@ -277,6 +277,18 @@
           <cy-dropdown portal="{{false}}" custom-panel below gap="4" panel-height="260">
             <cy-cell arrow-icon="chevron-right" bubble-tap title="升级权益" value="查看可开通的权益" required="{{false}}" />
             <view slot="panel" class="dc-menu">
+              <text class="dc-muted" wx:if="{{commerceState === 'loading'}}">正在查询开通方式…</text>
+              <text class="dc-muted" wx:elif="{{commerceState === 'error'}}">开通方式暂未确认，请刷新后查看或联系运营。</text>
+              <text class="dc-muted" wx:else>{{iosCommerce ? 'iOS 请联系运营了解开通方式' : (chargeEnabled ? '可自助开通；品牌主页由运营办理' : '当前由运营人工办理开通')}}</text>
+              <cy-cell title="刷新开通方式与授予记录" bind:tap="loadSubs" arrow="{{false}}" required="{{false}}" />
+              <text class="dc-muted" wx:if="{{subscriptionState === 'loading'}}">正在读取授予记录…</text>
+              <text class="dc-muted" wx:elif="{{subscriptionState === 'error'}}">授予记录暂未取回，不能据此确认权益到账。</text>
+              <text class="dc-muted" wx:elif="{{!subscriptions.length}}">暂无可展示的授予记录。已支付但未显示时，请联系运营核对。</text>
+              <view wx:for="{{subscriptions}}" wx:key="id" class="dc-muted">
+                <text>{{item.name}} · 授予记录 #{{item.id}}</text>
+                <view>开始：{{item.startText}} · 到期：{{item.endText}}</view>
+                <view>授权来源暂未提供；可用额度以使用时核对为准。</view>
+              </view>
               <text wx:if="{{checkoutState === 'verifying'}}" class="dc-muted">正在确认支付结果…</text>
               <text wx:if="{{checkoutState === 'unknown'}}" class="dc-muted">
                 支付结果待确认，请勿重复支付。

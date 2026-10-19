@@ -923,6 +923,7 @@ Page({
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
       storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+      storyNodeRoles: this._storyNodeRoles(),
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       pendingInsertAt: null,
       // ⚠️ 这里**不**探时长。探时长要 wx.createInnerAudioContext,而动作台账是按调用图
@@ -1090,11 +1091,16 @@ Page({
   // ⚠️ 先上传、拿到 url 再落块 —— 反过来先插一个空壳块再回填,上传失败时会留下一个
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
+    const chapterIndex = this.data.storyEditor.chapterIndex;
+    const chapterKey = (this.data.formData.chapters[chapterIndex] || {})._localId;
     const index = Number(e.currentTarget.dataset.index);
     this.setData({ 'storyEditor.insertMenuAt': -1 });
-    app.chooseImage((res) => {
+    this._storyMediaUploadOperation = app.chooseImage((res) => {
       const url = res && res[0];
       if (!url) return;
+      const current = this.data.storyEditor.chapterIndex;
+      if (current !== chapterIndex || (this.data.formData.chapters[current] || {})._localId !== chapterKey) { cyToast('章节已切换，请重新添加图片'); return; }
       this._insertStoryMedia('image', index, { url });
     }, 1);
   },
@@ -1117,9 +1123,18 @@ Page({
 
   // 点空音频块 → 选文件 → 回填到这个块上。文件名当场就有;
   // 时长要等播放器能播才知道,所以先回填 url、再异步补(见 _fillStoryAudioMeta)。
+  onStoryMediaAltText(e) {
+    try {
+      this._storyCommand({ type: 'setMediaAltText', blockKey: e.currentTarget.dataset.blockkey, altText: e.detail.value });
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '文字替代保存失败'));
+    }
+  },
+
   uploadStoryAudio(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
     const blockKey = e.currentTarget.dataset.blockkey;
-    app.chooseDocument((res) => {
+    this._storyMediaUploadOperation = app.chooseDocument((res) => {
       const file = res && res[0];
       if (!file || !file.url) return;
       try {
@@ -2547,10 +2562,11 @@ Page({
     if (this._lockedSnapshot === this._lockedFingerprint()) return true;
     modal.show({
       title: '这些改动存不下来',
-      content: '主题已过审开卖，开始/结束日期、章节站点结构、票种与价格都不能再改了。'
-        + '要改这些只能先下架 → 退款 → 重发。其余文案与图片的修改可以正常保存。',
-      showCancel: false,
-      confirmText: '知道了'
+      content: '主题已过审开卖，日期、章节站点与票务规则不能直接修改。可复制为新的本机草稿继续编辑；原主题和订单保留不变，新草稿仍需单独保存与发布。',
+      showCancel: true,
+      confirmText: '复制新草稿',
+      cancelText: '继续编辑',
+      success: (res) => { if (res.confirm) this._openCopiedDraft(this.data.formData.productType, false, false); }
     });
     return false;
   },
@@ -2657,7 +2673,9 @@ Page({
 
   _openCopiedDraft(mode, aiSimple, replaceCurrent) {
     const nextMode = Number(mode) === 2 ? 2 : 1;
-    writeAiDraft(this._buildCopiedDraft(nextMode, aiSimple));
+    if (!aiDraftStorageKey()) { cyToast('请先登录再复制草稿'); return; }
+    try { writeAiDraft(this._buildCopiedDraft(nextMode, aiSimple)); }
+    catch (error) { cyToast('草稿未能保存，请勿退出并重试'); return; }
     const navigate = replaceCurrent ? wx.redirectTo : wx.navigateTo;
     navigate({ url: '/pages/publish/fabu/index?mode=' + nextMode });
   },
@@ -3342,7 +3360,7 @@ Page({
       popChapter: true,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
-      chapterForm: emptyChapterForm(defaultChapterName), runtimeChapterCosts: this._runtimeCosts(currentChapterCount)
+      chapterForm: emptyChapterForm(defaultChapterName)
     });
     if (Number(this.data.formData.productType) === 2) this.loadMerchantCategories();
   },
@@ -3413,7 +3431,6 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      runtimeChapterCosts: this._runtimeCosts(Number(chapterIndex)),
       popChapter: true,
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
@@ -6277,6 +6294,11 @@ Page({
     }, () => this.syncIdentityReady());
   },
 
+  // X036:已登记的人从这里进改绑申请页(人工审核),本页不承接改绑字段。
+  goIdentityChange() {
+    wx.navigateTo({ url: '/subpackageMember/identity-change/index' });
+  },
+
   // 发布弹层「去完善」:仅关闭
   closePublishCheck() {
     this._identityRequestEpoch = (this._identityRequestEpoch || 0) + 1;
@@ -6723,7 +6745,10 @@ Page({
   },
 
   // 组装主题 payload:发布与「保存草稿」共用这一份(两条路存进去的必须是同一个东西);组装不出来返回 null
-  _buildSubmitPayload() {
+  // options.draft:存草稿不过「章节与到达关系」闸 —— 删改站点后那道闸本身就要求先存草稿拿到新编号再重设,
+  // 拦住存草稿会成死结;发布仍过这道闸,后端校验照旧。
+  _buildSubmitPayload(options) {
+    const draft = !!(options && options.draft);
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
     let chapters;
     try {
@@ -6747,7 +6772,7 @@ Page({
     }));
 
     // 准备API数据
-    const runtimeIssue = (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
+    const runtimeIssue = draft ? '' : (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
     if (runtimeIssue) { cyToast(runtimeIssue); return null; }
     let apiData = {
       name: this.data.formData.name,
@@ -7033,7 +7058,7 @@ Page({
       cyToast('先给主题起个名字，再保存草稿');
       return;
     }
-    const apiData = this._buildSubmitPayload();
+    const apiData = this._buildSubmitPayload({ draft: true });
     if (!apiData) return;
     this._runServerDraft(apiData, false);
   },
@@ -7148,7 +7173,7 @@ Page({
     const next = this._resultSheetNext;
     this._resultSheetNext = '';
     this.setData({ 'resultSheet.show': false });
-    if (next) wx.redirectTo({ url: next });
+    if (next) navigateRegistered({ url: next }, 'redirectTo');
   },
 
   // 稿 S15/S16 的「为什么会这样」:出错时除了那一句结果,还得能展开看到人能照做的下一步。
@@ -7660,9 +7685,9 @@ Page({
     const on = !!(e && e.detail && e.detail.value);
     if (on) {
       this.setData({ 'nodesForm.showTemplate': true });
-      // 2026-08-20 用户拍板:开「配置模板」不再停在 sheet 内的玩法选择视图,
-      // 没绑过模板就直接进模板编辑器(标题在编辑器里填);已绑过的走药丸改配置。
-      if (!Number(this.data.nodesForm.templateId)) this.onCreateGame();
+      // 2026-10-12 用户定(推翻 2026-08-20 那条「直接进模板编辑器」):开「配置模板」打开本弹层里的
+      // 玩法库视图 —— 底部横滑卡片选已保存的模板(公共库 / 我的草稿 / 我的模板),要新建再从那里进编辑器。
+      if (!Number(this.data.nodesForm.templateId)) this.showTemp();
       return;
     }
     this._nodeBindingSlots = [];
@@ -7695,7 +7720,9 @@ Page({
   cancelTemp: function () {
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null
@@ -7705,7 +7732,9 @@ Page({
   backToNodeDetail: function () {
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null
@@ -7952,3 +7981,5 @@ Page({
   },
 
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

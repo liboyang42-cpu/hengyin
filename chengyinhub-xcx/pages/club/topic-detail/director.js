@@ -14,7 +14,7 @@ const toast = require('../../../utils/toast.js');
 const { chinaParts } = require('../../../utils/datetime.js');
 'use strict'
 
-const { createClubGameDirectorAdapter, genericOpsActions, genericOpsFields, genericOpsPayload } = require('../utils/club-game-director-adapter.js')
+const { createClubGameDirectorAdapter, genericOpsActions, genericOpsFields, genericOpsPayload, genericOpsStatusText, genericOpsConsequence } = require('../utils/club-game-director-adapter.js')
 let requestSequence = 0
 
 function genericOpsForm(action, draft, control) {
@@ -698,7 +698,7 @@ const DIRECTOR_METHODS = {
       authorityEpoch: projection.authorityEpoch == null ? null : projection.authorityEpoch,
       genericOpsKnown: !!this._genericControl,
       genericOpsActions: this._genericControl ? genericOpsActions(this._genericControl) : [],
-      genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
+      genericOpsStatus: this._genericControl ? genericOpsStatusText(this._genericControl.run) : '',
       genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
       chapterOptionLabels: chapterOptions.map(function (item) { return item.title }),
@@ -863,7 +863,8 @@ const DIRECTOR_METHODS = {
     catch (error) { this.setData({ genericOpsError: error.message }); return false }
     const revision = this.data.revision, epoch = this.data.authorityEpoch
     modal.show({ title: '确认' + option.title,
-      content: (option.irreversible ? '此操作会写入不可撤销的现场事实。' : '将按本局规则核验并应用本次操作。') + (payload.reason ? '原因：' + payload.reason : '请确认现场凭证与输入准确。'),
+      content: (genericOpsConsequence(action) || (option.irreversible ? '此操作会写入不可撤销的现场事实。' : '将按本局规则核验并应用本次操作。'))
+        + (payload.reason ? '原因：' + payload.reason : '请确认现场凭证与输入准确。'),
       confirmText: '确认提交',
       success: result => {
         if (!result.confirm || this.data.writeLocked) return

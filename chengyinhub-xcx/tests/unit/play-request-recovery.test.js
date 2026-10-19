@@ -17,15 +17,20 @@ const F13_KEY = 'abcdef01'.repeat(4)
 let pageConfig
 let requests
 let storage
+<<<<<<< public
 let communityWrite = false
+=======
+let voiceUploads
+>>>>>>> private-feature/w2-r
 
 global.getApp = () => ({
-  globalData: { user_id: 9, features: {} },
+  globalData: { user_id: 9, features: { shopNpcChat: true } },
   isDevEnv: () => false,
   canUseCommunity: () => communityWrite,
   // F13 恢复链的所有权归属判据(_recoveryOwnerCurrent)依赖真实 getApp().getUserID(app.js 恒提供)。
   getUserID: () => '9',
   sendRequest: (request) => { requests.push(request) },
+  getUploadClient: () => ({ uploadOne: (_path, opts) => voiceUploads.push(opts) }),
 })
 
 global.wx = {
@@ -44,7 +49,11 @@ beforeEach(() => {
   pageConfig = null
   requests = []
   storage = {}
+<<<<<<< public
   communityWrite = false
+=======
+  voiceUploads = []
+>>>>>>> private-feature/w2-r
   global.wx.showModal = ({ success }) => success && success({ confirm: true, content: '分享内容' })
 })
 
@@ -702,6 +711,7 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
   assert.equal(posted, 1, '确定的失败才允许重新结算')
 })
 
+<<<<<<< public
 test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒轮询,且轮询读取静默', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.activityId = 88
@@ -726,4 +736,69 @@ test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒
     global.setInterval = realSetInterval
     global.clearInterval = realClearInterval
   }
+=======
+
+test('NPC 未知回答恢复同一 ID 与原文，终态后不再提供恢复', async () => {
+  const page = loadPage(PLAY_PAGE)
+  page._playable = true
+  page.data.shopNpc = { show: true, nodeId: 11, msgs: [], input: '问路' }
+  page.sendShopNpc()
+  requests[0].fail()
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(page.data.shopNpc.recovering, true)
+  const original = requests[0].data
+  page.data.shopNpc.input = '新问题'
+  page.sendShopNpc()
+  assert.equal(requests.length, 1)
+  page.retryNpcMsg({ currentTarget: { dataset: { idx: 1 } } })
+  assert.deepEqual(requests[1].data, original)
+  requests[1].success({ code: 200, data: { requestId: original.requestId, outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS', safeText: '往前走' } })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(page.data.shopNpc.msgs.length, 2)
+  assert.equal(page.data.shopNpc.msgs[1].text, '往前走')
+  assert.equal(page.data.shopNpc.recovering, false)
+  page.retryNpcMsg({ currentTarget: { dataset: { idx: 1 } } })
+  assert.equal(requests.length, 2)
+})
+
+
+test('玩家资格未确认时不发送 NPC 文本', () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.shopNpc = { show: true, nodeId: 11, msgs: [], input: '问路' }
+  page._playable = false
+  page.sendShopNpc()
+  assert.equal(requests.length, 0)
+});
+
+
+test('语音没有 ASR 文字时不补造玩家发言，也不重复上传', () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
+  page._sendVoice('/tmp/voice.mp3', 4000)
+  voiceUploads[0].onDone({ ok: true, data: { data: { safeText: '不可用回复' } } })
+  assert.equal(page.data.shopNpc.msgs.some(m => m.role === 'me'), false)
+  assert.equal(page.data.shopNpc.recovering, true)
+  assert.equal(page.data.shopNpc.thinking, false)
+})
+
+test('语音文字完成但无音频时保留文字并单列音频状态', () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
+  page._sendVoice('/tmp/voice.mp3', 4000)
+  const requestId = voiceUploads[0].formData.requestId
+  voiceUploads[0].onDone({ ok: true, data: { asr: '你好', data: { requestId, safeText: '欢迎', outcomeStatus: 'SUCCEEDED', safetyDecision: 'PASS' } } })
+  assert.deepEqual(page.data.shopNpc.msgs.map(m => m.text), ['你好', '欢迎'])
+  assert.match(page.data.shopNpc.audioStatus, /暂无语音/)
+})
+
+test('语音上传失败保留未知，关闭后迟到响应不进入新对话', () => {
+  const page = loadPage(PLAY_PAGE)
+  page.data.shopNpc = { show: true, nodeId: 11, msgs: [] }
+  page._sendVoice('/tmp/voice.mp3', 4000)
+  voiceUploads[0].onDone({ ok: false })
+  assert.equal(page.data.shopNpc.recovering, true)
+  page.data.shopNpc = { show: true, nodeId: 12, msgs: [] }
+  voiceUploads[0].onDone({ ok: true, data: { asr: '旧问题', data: {} } })
+  assert.equal(page.data.shopNpc.msgs.length, 0)
+>>>>>>> private-feature/w2-r
 })

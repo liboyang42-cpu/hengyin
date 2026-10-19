@@ -15,3 +15,7 @@
 .direct-amount { font-size: var(--cy-font-body); font-weight: 600; font-variant-numeric: tabular-nums; }
 .direct-amount--void { color: var(--cy-text-secondary); }
 .direct-empty { display: block; margin-top: var(--cy-space-3); }
+.direct-dispute { display: inline-block; margin: var(--cy-space-2) 0 0; padding: 0; background: transparent; border: 0; line-height: 1.4; text-align: left; color: var(--cy-color-brand); font-size: var(--cy-font-caption); }
+.direct-dispute::after { border: 0; }
+/* isolated 组件取不到全局 .cy-pressed，本地定义一份（只减淡不位移）。 */
+.cy-pressed { opacity: .88; }

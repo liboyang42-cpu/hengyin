@@ -152,6 +152,29 @@ function createPlayerRoamMemory(playerId, storage) {
         this.writeRecovery(null)]
       return done.every(Boolean)
     },
+    /* F0386:清理前先列出会丢什么。recovery = 一次还没核对完结算的漫游(含待上报格子);
+       recoveryUnknown = 本机恢复记录读不出来 —— 两者都不能直接清,要先回服务器核对原会话。
+       sessions 里的轨迹只在本机,删了不可恢复(不承诺云同步)。 */
+    inspectLocal() {
+      const recovery = this.readRecoveryState()
+      const sessions = this.readSessionState()
+      const record = recovery.record && typeof recovery.record === 'object' ? recovery.record : null
+      const pending = record && Array.isArray(record.pendingTiles) ? record.pendingTiles.length : 0
+      return {
+        recovery: !!record,
+        recoveryUnknown: !recovery.ok,
+        pendingTiles: pending,
+        sessions: sessions.ok ? sessions.sessions.length : 0,
+        sessionsUnknown: !sessions.ok,
+        reveals: this.readReveals().length,
+        tiles: Object.keys(this.readTiles().tiles).length,
+      }
+    },
+    /* F0386:只清展示缓存(迷雾格子,可按游标从服务器重新同步)。
+       恢复记录、待上报足迹点、本机足迹记录一律保留 —— 显示清理不是删除,也不是分享撤回。 */
+    clearDisplayCache() {
+      return this.writeTiles({}, 0)
+    },
   }
 }
 

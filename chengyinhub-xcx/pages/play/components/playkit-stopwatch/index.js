@@ -49,6 +49,9 @@ Component({
     targetSeconds: { type: Number, value: 10 },
     toleranceMs: { type: Number, value: 300 },
     tries: { type: Number, value: 0 },      // 0 = 不限
+    // C1:证据说明(本机停表数只是娱乐成绩)与前后台规则,分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
   },
   data: {
     phase: 'intro',                          // intro | run | paused | over

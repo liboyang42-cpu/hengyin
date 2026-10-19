@@ -154,6 +154,13 @@
 
       <!-- 经营解读(稿 4:3;AI 可降级,数据区不连坐) -->
       <view class="sec-head"><text class="sec-title">经营解读</text></view>
+      <view wx:if="{{evidence}}" class="ai-card">
+        <text class="ai-down-txt">事实窗口：{{evidence.window}} · 样本：{{evidence.sample}}</text>
+        <text class="ai-down-txt">生成时间：{{generatedAt || '待确认'}}</text>
+        <text class="ai-down-txt">{{evidence.profile}} · {{evidence.version}}</text>
+        <text class="ai-lowsample" wx:if="{{evidence.stale}}">以下为旧版建议，尚未结合你修改后的资料。</text>
+        <text class="ai-down-txt">AI 建议仅供经营参考，收入、结算与付款请以实际账单为准。</text>
+      </view>
       <cy-card wx:if="{{ai}}" class="ai-card">
         <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
         <text class="ai-summary">{{ai.summary}}</text>

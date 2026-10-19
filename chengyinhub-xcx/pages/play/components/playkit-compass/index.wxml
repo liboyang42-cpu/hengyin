@@ -30,13 +30,16 @@
     <!-- 读数是这一屏的大数字。没开跑前它还是 0 —— 那就别看表,看那句要人站定的话 -->
     <view wx:if="{{phase === 'run' && !noData}}" class="g-figure cp__n">{{heading}}°</view>
     <view wx:if="{{phase === 'run' && aligned}}" class="cp__hold">对准了，再保持 {{holdLeft}} 秒</view>
-    <view wx:elif="{{noData}}" class="g-sub cp__s">这台设备还没报出方向，先转一转手机</view>
+    <view wx:elif="{{noData}}" class="g-sub cp__s">这台设备还没报出方向：来源不足，暂时判不了（不记成绩）。先转一转手机</view>
+    <view wx:elif="{{unavailable}}" class="g-sub cp__s" aria-live="polite">这台设备的罗盘没起来：来源不足，无法判定方向，不会记成绩</view>
     <view wx:elif="{{done}}" class="g-sub cp__s">你已经对准过这个方向了</view>
     <block wx:else>
       <view class="cp__how">{{phase === 'run' && turnHint ? turnHint : '点开始后转动手机，把红色箭头转到顶上的白线'}}</view>
       <view wx:if="{{hint}}" class="cp__hint"><text class="cp__hint-k">提示</text>{{hint}}</view>
     </block>
     <view wx:if="{{phase === 'run' && lowAccuracy && !noData}}" class="cp__acc">读数不稳：离开金属物，手机画「8」字校准</view>
+    <!-- C1/F0339:来源与精度明示 —— 只有设备真给了精度才说,iOS 不给就不编 -->
+    <view wx:elif="{{phase === 'run' && accText && !noData}}" class="cp__safe">来源：本机罗盘 · {{accText}}</view>
 
     <view wx:if="{{phase === 'idle' && !done}}" class="cp__b" bindtap="onStart"
           aria-role="button" aria-label="开始罗盘指向"
@@ -47,5 +50,10 @@
 
     <!-- 安全提示钉在首屏:这玩法要人举着手机原地转,别让人边走边玩 -->
     <view wx:if="{{phase === 'idle' && !done}}" class="cp__safe">找个能站稳的地方再开始</view>
+    <block wx:if="{{phase === 'idle' && !done}}">
+      <view wx:if="{{calibrationNote}}" class="cp__safe">校准：{{calibrationNote}}</view>
+      <view wx:if="{{bgRule}}" class="cp__safe">{{bgRule}}</view>
+      <view wx:if="{{evidenceNote}}" class="cp__safe">{{evidenceNote}}</view>
+    </block>
   </view>
 </cy-play-stage>

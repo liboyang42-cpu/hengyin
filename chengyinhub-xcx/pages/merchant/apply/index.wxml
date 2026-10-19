@@ -237,7 +237,11 @@
                           bind:change="onIdentityConsent" />
         <view class="foot">执照核验到主体,这一项核验到人 —— 能收款就得可追溯,二者不互相替代。</view>
       </block>
-      <view class="foot" wx:else>{{identityDoneHint}}</view>
+      <block wx:else>
+        <view class="foot">{{identityDoneHint}}</view>
+        <!-- X036:改绑自助申请入口(人工审核),只回进度不回显 -->
+        <view class="identity-change-link" bindtap="goIdentityChange" aria-role="button" aria-label="申请变更实名" hover-class="cy-pressed" hover-stay-time="80">申请变更实名</view>
+      </block>
       <cy-inline-error class="submit-error" wx:if="{{submitError && step===4}}"
                        kind="{{submitErrorKind || 'data'}}"
                        title="申请暂未提交" sub="{{submitError}}"

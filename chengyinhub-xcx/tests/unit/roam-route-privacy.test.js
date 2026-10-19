@@ -129,6 +129,7 @@ test('默认值:没设置过 = 裁剪开着、10%、公开', () => {
     clipEnabled: true,
     clipPercent: CLIP_DEFAULT,
     visibility: VISIBILITY.PUBLIC,
+    maskZones: [],
   })
   assert.equal(CLIP_MIN, 1)
   assert.equal(CLIP_MAX, 40)
@@ -165,6 +166,7 @@ test('设置落盘并读回;写失败要如实返回 ok:false 而不是假装存
     clipEnabled: true,
     clipPercent: 25,
     visibility: VISIBILITY.PRIVATE,
+    maskZones: [],
   })
 
   const failing = {
@@ -207,10 +209,100 @@ test('契约:两条分享链路都必须过裁剪，缺一条就有一张图仍�
   const roam = fs.readFileSync(path.join(ROOT, 'pages/roam/index.js'), 'utf8')
   const session = fs.readFileSync(path.join(ROOT, 'subpackageRoam/session/index.js'), 'utf8')
 
-  assert.match(roam, /clipTrackForSharing\(this\._track, readSharePrivacy\(wx\)\)/,
+  assert.match(roam, /const privacy = readSharePrivacy\(wx\);\s*const track = simplifyTrack\(clipTrackForSharing\(this\._track, privacy\)\)/,
     'pages/roam 的分享卡(archSegs)没过裁剪')
-  assert.match(session, /clipSavedTrackForSharing\(s\.track \|\| \[\], readSharePrivacy\(wx\)\)/,
+  assert.match(session, /const privacy = readSharePrivacy\(wx\);\s*const track = limitTrack\(clipSavedTrackForSharing\(s\.track \|\| \[\], privacy\)\)/,
     'subpackageRoam/session 的足迹卡没过裁剪')
+  // M0112:分享卡上的地点也要过敏感区域遮挡(三条链路:实时结束页/历史足迹卡/深链足迹卡)
+  assert.match(roam, /maskPoisForSharing\(this\._pois\.filter/)
+  assert.match(roam, /maskPoisForSharing\(session\.pois, sharePrivacy\)/)
+  assert.match(session, /maskPoisForSharing\(s\.pois \|\| \[\], privacy\)/)
   assert.match(roam, /isChannelAllowed\(ch, this\.data\.share\.visibility\)/,
     '可见性没有在 shareTo 里真拦渠道,只置灰 = 假闸')
+})
+
+// ── M0112/N015 敏感地点遮挡 ─────────────────────────────────────────────
+const privacyMod = require('../../utils/roam-route-privacy.js')
+const HOME = { id: 'home', name: '家', lat: 31.2000, lng: 121.4000, r: 300 }
+const OFFICE = { id: 'office', name: '公司', lat: 31.2300, lng: 121.4300, r: 200 }
+function line(from, to, n) {
+  const out = []
+  for (let i = 0; i < n; i++) {
+    out.push({ lat: from.lat + (to.lat - from.lat) * i / (n - 1), lng: from.lng + (to.lng - from.lng) * i / (n - 1) })
+  }
+  return out
+}
+const { distM: distOf } = require('../../utils/roam-geo.js')
+function insideAny(points, zones) {
+  return points.filter((p) => zones.some((z) => distOf(p, z) <= z.r))
+}
+
+test('M0112 住宅/办公两处遮挡:输出里没有任何落在区域内的轨迹点,关掉首尾裁剪也照样遮', () => {
+  // 从家出发 → 公司 → 回家(重复路线),起终点都在家
+  const track = line(HOME, OFFICE, 60).concat(line(OFFICE, HOME, 60))
+  const zones = [HOME, OFFICE]
+  for (const clipEnabled of [true, false]) {
+    const setting = { clipEnabled, clipPercent: 1, maskZones: zones }
+    const live = privacyMod.clipTrackForSharing(track, setting)
+    const saved = privacyMod.clipSavedTrackForSharing(track, setting)
+    assert.equal(insideAny(live, zones).length, 0, 'live clipEnabled=' + clipEnabled)
+    assert.equal(insideAny(saved, zones).length, 0, 'saved clipEnabled=' + clipEnabled)
+    assert.ok(live.length > 0 && saved.length > 0, '区域外的路线仍保留')
+  }
+})
+
+test('M0112 边界点:恰在半径上的点按区域内处理;区域外 1 米的点保留', () => {
+  const zone = { id: 'z', lat: 31.2, lng: 121.4, r: 100 }
+  const onEdgeLat = 31.2 + 100 / 111320 * 0.999
+  const outside = 31.2 + 101 / 111320
+  const kept = privacyMod.maskTrackForSharing([{ lat: onEdgeLat, lng: 121.4 }, { lat: outside, lng: 121.4 }], { maskZones: [zone] })
+  assert.equal(kept.length, 1)
+  assert.equal(kept[0].lat, outside)
+})
+
+test('M0112 地点同样遮挡;无区域时原样返回', () => {
+  const pois = [{ name: '楼下便利店', lat: 31.2001, lng: 121.4001 }, { name: '外滩', lat: 31.24, lng: 121.49 }, { name: '无坐标' }]
+  assert.deepEqual(privacyMod.maskPoisForSharing(pois, { maskZones: [HOME] }).map((p) => p.name), ['外滩', '无坐标'])
+  assert.equal(privacyMod.maskPoisForSharing(pois, {}).length, 3)
+})
+
+test('N015 区域归一:非法坐标丢弃、最多 5 处、半径夹在 100–1000 米、去重', () => {
+  const zones = privacyMod.normalizeMaskZones([
+    { lat: 'x', lng: 1 }, { lat: 0, lng: 0 }, { lat: 91, lng: 1 },
+    { id: 'a', lat: 31.123456, lng: 121.654321, r: 5 }, { id: 'a', lat: 1, lng: 1 },
+    { id: 'b', lat: 1, lng: 1, r: 99999 }, { id: 'c', lat: 2, lng: 2 }, { id: 'd', lat: 3, lng: 3 },
+    { id: 'e', lat: 4, lng: 4 }, { id: 'f', lat: 5, lng: 5 },
+  ])
+  assert.equal(zones.length, privacyMod.MASK_ZONE_MAX)
+  assert.deepEqual(zones[0], { id: 'a', name: '敏感地点', lat: 31.1235, lng: 121.6543, r: 100 })
+  assert.equal(zones[1].r, 1000)
+  assert.equal(zones[2].r, privacyMod.MASK_RADIUS_DEFAULT)
+})
+
+test('N015 去敏声明只带版本/比例/个数,不带区域坐标', () => {
+  const declaration = privacyMod.redactionDeclaration({ clipEnabled: true, clipPercent: 15, maskZones: [HOME, OFFICE] })
+  assert.deepEqual(declaration, { v: privacyMod.REDACTION_VERSION, clip: true, pct: 15, zones: 2 })
+  assert.equal(JSON.stringify(declaration).indexOf('31.2'), -1)
+  assert.deepEqual(privacyMod.redactionDeclaration({ clipEnabled: false }), { v: 1, clip: false, pct: 0, zones: 0 })
+})
+
+test('N015 存储读不出区域时退「无区域」但裁剪仍开着;取消编辑(未落盘)不改变已有设置', () => {
+  const storage = fakeStorage({ clipEnabled: true, clipPercent: 10, maskZones: [HOME] })
+  const before = readSharePrivacy(storage)
+  // 编辑器里选了第二处但没提交:不写存储 ⇒ 下次分享仍按已保存的一处
+  assert.deepEqual(readSharePrivacy(storage), before)
+  assert.equal(before.maskZones.length, 1)
+})
+
+
+test('集成线隐私面板保留精简裁剪设置，仅加入敏感地点编辑及错误组件', () => {
+  const root = 'pages/shezhi/components/privacy-sheet/index'
+  const js = fs.readFileSync(path.join(ROOT, root + '.js'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, root + '.wxml'), 'utf8')
+  const config = JSON.parse(fs.readFileSync(path.join(ROOT, root + '.json'), 'utf8'))
+  assert.doesNotMatch(js, /onClipToggle|onClipPercentChange/)
+  assert.doesNotMatch(wxml, /<slider|<cy-switch/)
+  assert.match(wxml, /bindtap="addMaskZone"/)
+  assert.match(wxml, /bindtap="removeMaskZone"/)
+  assert.equal(config.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
 })

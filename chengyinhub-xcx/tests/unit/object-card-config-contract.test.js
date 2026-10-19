@@ -95,6 +95,7 @@ const NOT_CARRIED = {
   minConfidence: '分数线是服务端判定的事,展示出来只会引来讨价还价',
   xp: '经验由通关结算那条链发,这一屏不显示',
   lastConfidence: '模型给的置信度不对玩家说话',
+  verdict: 'C1/F0308:判定码只用来推出 photoVerified(是否真判 PASS),屏上不直接显示码',
 }
 
 /* 客户端 kit 里**不是**从 playKit.photoCheck 投影搬来的键。它们另有来源,所以不参与上面
@@ -104,6 +105,7 @@ const OUT_OF_PROJECTION = {
   place: '不是配置投影,是游玩页给的「主题名 · 节点名」(会话视图里只有 nodeId),信息卡的「地点」一行',
   photoFailSeq: '不是配置投影,是页面的提交失败信号:上传没成时通知拍物成卡那一屏回取景,kit 恒给 0',
   preview: '不是配置投影,是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
+  photoVerified: 'C1/F0308:服务端按 verdict==PASS 算出的布尔;旧服务端没有时由 passed/flagged/degraded 推断,兜底与降级永远不算',
 }
 
 test('★objectCard 的三个字段:配置段有默认、后端 Validator 认、两边枚举逐字相同', () => {

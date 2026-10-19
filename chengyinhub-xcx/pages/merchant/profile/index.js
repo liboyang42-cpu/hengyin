@@ -113,11 +113,11 @@ Page({
     this._pendingRedirect = url;
     this.setData({ state: 'redirecting' });
     const that = this;
-    wx.redirectTo({
+    navigateRegistered({
       url: url,
       // 落不了地就别停在空壳上装作成功
       fail() { that.setData({ state: 'network-error', message: '页面打开失败，请重试' }); },
-    });
+    }, 'redirectTo');
   },
 
   goHome() { wx.switchTab({ url: '/pages/index/index' }); },
@@ -135,3 +135,5 @@ Page({
     return { title: '城瘾 · 商家主页', path: url || '/pages/index/index' };
   },
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

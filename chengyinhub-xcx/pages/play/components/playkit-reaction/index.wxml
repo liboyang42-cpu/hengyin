@@ -5,7 +5,13 @@
         hover-class="rx--press" hover-stay-time="60"
         aria-role="button" aria-label="{{phase === 'wait' ? '等待变色，变色后立刻点' : '现在点'}}">
     <view class="rx__k g-kicker">{{kicker}}</view>
-    <view class="rx__big g-figure">{{big}}</view>
+    <view class="rx__big g-figure">{{big}}<text class="rx__unit" wx:if="{{unit}}">{{unit}}</text></view>
     <view class="rx__sub g-sub" wx:if="{{sub}}">{{sub}}</view>
+    <!-- C1:测量单位、前后台规则与证据口径只在没开跑时出,开跑后这一屏只剩颜色 -->
+    <view class="rx__rule" wx:if="{{phase === 'idle' || phase === 'done'}}">
+      <view>测的是屏幕变绿到你点下的毫秒数</view>
+      <view wx:if="{{bgRule}}">{{bgRule}}</view>
+      <view wx:if="{{evidenceNote}}">{{evidenceNote}}</view>
+    </view>
   </view>
 </cy-play-stage>

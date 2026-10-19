@@ -513,7 +513,7 @@ Page({
     const context = this._captureContext();
     if (!this._isCurrent(context)) return;
     const inv = this.data.invite;
-    if (!inv || inv.legacyReadonly || this._reviewing) return;
+    if (!inv || inv.legacyReadonly || Number(inv.status) !== 1 || this._reviewing || this.data.myReviewStars) return;
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
     if (!toId || !inv.topicId) { toast('该合作暂不可评价'); return; }
     this._reviewing = true;
@@ -545,9 +545,19 @@ Page({
           success(res) {
             if (!that._isCurrent(ctx.context)) return;
             if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating) });
-            else toast((res && res.msg) || '评价失败');
+            else {
+              that.loadMyReview(that.data.invite);
+              toast((res && res.msg) || '评价结果未确认，请查看原评价');
+            }
           },
+          fail() {
+            that.loadMyReview(that.data.invite);
+            toast('评价结果未确认，正在核对原评价');
+          },
+<<<<<<< public
           fail() { if (that._isCurrent(ctx.context)) toast('网络开小差了，评价没提交'); },
+=======
+>>>>>>> private-feature/w2-r
         });
       },
       fail() { if (!that._isCurrent(ctx.context)) return; that._reviewing = false; toast('评价确认没有打开，请重试'); },

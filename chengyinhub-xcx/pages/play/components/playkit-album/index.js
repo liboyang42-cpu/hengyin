@@ -8,6 +8,8 @@ Component({
     completionEnabled: { type: Boolean, value: false },
     done: { type: Boolean, value: false },
     uploaded: { type: Boolean, value: false },
+    uploadError: { type: String, value: '' },
+    uploadRetryable: { type: Boolean, value: false },
   },
   data: { cur: 0 },
   methods: {
@@ -15,7 +17,8 @@ Component({
     close() { this.triggerEvent('close'); },
     onCta() {
       if (!this.data.completionEnabled || this.data.done) { this.close(); return; }
-      if (this.data.uploaded) { this.triggerEvent('submit'); return; }
+      // 已上传则提交；网络/5xx 失败则用同一张图重新提交上传（页面按可重试判定），4xx 只能重选
+      if (this.data.uploaded || this.data.uploadRetryable) { this.triggerEvent('submit'); return; }
       this.choosePhoto();
     },
     choosePhoto() {

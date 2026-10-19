@@ -94,7 +94,7 @@ test('coop/list 顶部两个 action 已按用户备注移除,但两条路径都�
 
   // 资金域定稿后，合作分润降级为结算来源筛选；旧 mybiz 评分/提现中心不再保留。
   const ledger = readPage('pages/merchant/ledger/index.wxml');
-  assert.match(ledger, /结算到账提醒/, '结算到账提醒仍应在资金域提供授权入口');
+  assert.match(ledger, /结算通知授权/, '结算通知授权仍应在资金域提供授权入口');
   assert.match(
     readPage('pages/merchant/ledger/index.js'),
     /\/api\/merchant\/finance\/settlement-entries/,

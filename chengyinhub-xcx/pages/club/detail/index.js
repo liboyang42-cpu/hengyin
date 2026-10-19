@@ -427,6 +427,8 @@ function normalizeClubPost(p, clubOwnerId) {
     version: Number(p.version || 0),
     isCompletionShare: isCompletedShare(ref),
     hasPlayCover: hasFeedPlayCover(ref),
+    // F0098:被引对象当前已删/下架/转私密时,后端只给这个标记、不给标题封面;卡片降级成图文帖并说明原因。
+    refUnavailable: p.refUnavailable === true,
   });
 }
 
@@ -481,10 +483,12 @@ Page({
     eventView: 'list',
     eventCalendarMonth: localDateText(new Date()).slice(0, 7),
     eventCalendarTitle: '',
+    eventCalendarUpdatedAt: '',
     eventCalendarCells: [],
     eventCalendarHasEvents: false,
     shareEditions: [],
     shareEditionState: 'idle',
+    shareEditionEmptyReason: '',
     members: [],
     membersExpanded: false,
     membersState: 'idle', // idle | loading | ready | business-error | network-error
@@ -514,6 +518,7 @@ Page({
     postEditDiscardConfirm: false,
     postHistoryShow: false,
     postHistoryState: 'idle',
+    postHistoryErrorText: '',
     postHistoryRows: [],
     openCommentPost: null,
     comments: [],
@@ -769,12 +774,23 @@ Page({
   },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
+<<<<<<< public
   onUnload() {
     this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
     this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
     this._memberRequestSeq = (this._memberRequestSeq || 0) + 1;
     this.clearGroupCodeTimer();
+=======
+  onUnload() { this._topicsLoadEpoch = (this._topicsLoadEpoch || 0) + 1; this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1; this._clubAiToken = (this._clubAiToken || 0) + 1; this.clearGroupCodeTimer(); },
+
+  onRetry() {
+    this.setData({ detailLoaded: false, notFound: false, club: null });
+    // owner 入口还没解析出 clubId 时,loadAll 会直接 return —— 只重发详情请求等于永久骨架
+    // (E-05:点「重新加载」永远转圈)。这种情况必须重走 /api/club/my 解析。
+    if (!this.data.clubId) { this.resolveOwnerEntry(); return; }
+    this.loadAll();
+>>>>>>> private-feature/w2-r
   },
 
   // 隐私授权闸:app.js 优先调这里(页内真弹窗),没有这个方法的页面才回退到 /pages/privacy 路由页 ——
@@ -890,7 +906,7 @@ Page({
               content: scan.message,
               confirmText: scan.confirmText || '我知道了',
               cancelText: '留在这里',
-              success(r) { if (r && r.confirm) wx.navigateTo({ url: scan.path }); },
+              success(r) { if (r && r.confirm) navigateRegistered({ url: scan.path }); },
             });
           } else {
             cyToast(scan.message);
@@ -924,9 +940,9 @@ Page({
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
         success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
+        fail() { done({ status: 'unknown' }); },
         successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          done({ status: 'unknown' });
         },
       }));
     }, function (result) {
@@ -1068,14 +1084,14 @@ Page({
     }
     if (!tools.length) return;
     if (tools.length === 1) {
-      wx.navigateTo({ url: tools[0].route });
+      navigateRegistered({ url: tools[0].route });
       return;
     }
     this.openChoiceSheet(
       '本场工具',
       '',
       tools.map(function (item) { return { key: item.route, label: item.label }; }),
-      function (item) { wx.navigateTo({ url: item.key }); }
+      function (item) { navigateRegistered({ url: item.key }); }
     );
   },
 
@@ -1145,7 +1161,7 @@ Page({
     if (!this.data.club || !this.data.club.isOwner || !this.data.clubId) return;
     const that = this;
     const clubId = this.data.clubId;
-    this.setData({ shareEditionState: 'loading', shareEditions: [] });
+    this.setData({ shareEditionState: 'loading', shareEditions: [], shareEditionEmptyReason: '' });
     app.sendRequest({
       hideLoading: true,
       url: '/api/club-compensation/editions',
@@ -1166,11 +1182,33 @@ Page({
           return Object.assign({}, item, { dateText: dateOf(item.startDate) });
         });
         that.setData({ shareEditionState: 'ready', shareEditions: rows });
+        if (!rows.length) that.loadShareEditionEmptyReason(clubId);
       },
       fail() {
         if (String(clubId) !== String(that.data.clubId)) return;
         that.setData({ shareEditionState: 'error', shareEditions: [] });
       },
+    });
+  },
+
+  // X039:期次为空时区分「还没承接」与「已承接、条款未开售」。只拿原因与计数;读不到就保持通用空态,不猜。
+  loadShareEditionEmptyReason(clubId) {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/club-compensation/editions/empty-reason',
+      method: 'POST',
+      data: jsonBody({ clubId: clubId }),
+      header: jsonHeader(),
+      success(res) {
+        if (String(clubId) !== String(that.data.clubId)) return;
+        const reason = isSuccess(res) && res.data ? String(res.data.reason || '') : '';
+        if (reason === 'AWAITING_SALE' || reason === 'NOT_UNDERTAKEN') {
+          that.setData({ shareEditionEmptyReason: reason });
+        }
+      },
+      fail() {},
     });
   },
 
@@ -1612,6 +1650,10 @@ Page({
           that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子没能加载出来') });
           return;
         }
+        res.data.forEach(function (post) {
+          if (that._postLikeRequests && that._postLikeRequests[String(post.id)] === 'unknown'
+              && typeof post.isLiked === 'boolean') delete that._postLikeRequests[String(post.id)];
+        });
         const posts = res.data.map(function (p) {
           return normalizeClubPost(p, that.data.club && that.data.club.memberId);
         });
@@ -1875,7 +1917,7 @@ Page({
   onViewPostHistory(e) {
     const postId = e.currentTarget.dataset.id;
     if (!postId) return;
-    this.setData({ postHistoryShow: true, postHistoryState: 'loading', postHistoryRows: [] });
+    this.setData({ postHistoryShow: true, postHistoryState: 'loading', postHistoryRows: [], postHistoryErrorText: '' });
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -1883,7 +1925,9 @@ Page({
       data: jsonBody({ id: postId }), header: jsonHeader(),
       success(res) {
         if (res.code != '200' || !Array.isArray(res.data)) {
-          that.setData({ postHistoryState: 'error' });
+          // F0119:历史按帖子「当前」可见性投影;转仅成员可见/帖子已删时如实说原因,不显示旧内容。
+          that.setData({ postHistoryState: 'error', postHistoryRows: [],
+            postHistoryErrorText: (res && res.msg) || '历史读取失败，请关闭后重试' });
           return;
         }
         const rows = res.data.map(function (row) {
@@ -1894,12 +1938,12 @@ Page({
         });
         that.setData({ postHistoryState: 'ready', postHistoryRows: rows });
       },
-      fail() { that.setData({ postHistoryState: 'error' }); },
+      fail() { that.setData({ postHistoryState: 'error', postHistoryErrorText: '网络异常，请关闭后重试' }); },
     });
   },
 
   closePostHistory() {
-    this.setData({ postHistoryShow: false, postHistoryState: 'idle', postHistoryRows: [] });
+    this.setData({ postHistoryShow: false, postHistoryState: 'idle', postHistoryRows: [], postHistoryErrorText: '' });
   },
 
   // CU-C-108:帖子列表与俱乐部详情是**并发**拉的,首屏 loadPosts 经常在 club 到达之前就结算 ——
@@ -1997,6 +2041,10 @@ Page({
 
   loadTopics(cb) {
     const that = this;
+    const epoch = (this._topicsLoadEpoch || 0) + 1;
+    this._topicsLoadEpoch = epoch;
+    const clubId = this.data.clubId;
+    const current = () => epoch === this._topicsLoadEpoch && clubId === this.data.clubId;
     this.setData({ topicsLoaded: false, topicState: 'loading' });
     if (isDemoClubId(this.data.clubId)) {
       const list = mockData.getDemoClubTopics().map(function (t) {
@@ -2014,6 +2062,7 @@ Page({
         manageTopics: that.scopedManageTopics(list),
         topicsLoaded: true,
         topicState: 'ready',
+        eventCalendarUpdatedAt: '',
         upcomingTopics: split.upcomingTopics,
         endedTopics: split.endedTopics,
       });
@@ -2025,6 +2074,7 @@ Page({
     app.sendRequest({
       hideLoading: true, url: '/api/club/topics', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         if (!isSuccess(res) || !Array.isArray(res.data)) {
           that._topics = [];
       that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
@@ -2050,6 +2100,7 @@ Page({
           manageTopics: that.scopedManageTopics(list),
           topicsLoaded: true,
           topicState: 'ready',
+          eventCalendarUpdatedAt: new Date().toLocaleString(),
           upcomingTopics: split.upcomingTopics,
           endedTopics: split.endedTopics,
         });
@@ -2057,12 +2108,13 @@ Page({
         that.applySentInviteFilter();
       },
       fail() {
+        if (!current()) return;
         that._topics = [];
       that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
         that.applySentInviteFilter();
         that.updateOwnerStage();
       },
-      complete() { cb && cb(); },
+      complete() { if (current() && typeof cb === 'function') cb(); },
     });
   },
 
@@ -2087,7 +2139,10 @@ Page({
     const view = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.view);
     if (view !== 'list' && view !== 'calendar') return;
     this.setData({ eventView: view });
-    if (view === 'calendar') this.refreshEventCalendar();
+    if (view === 'calendar') {
+      this.refreshEventCalendar();
+      this.loadTopics();
+    }
   },
 
   onShiftEventMonth(e) {
@@ -2095,6 +2150,7 @@ Page({
     if (!Number.isInteger(delta) || !delta) return;
     this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
     this.refreshEventCalendar();
+    this.loadTopics();
   },
 
   refreshEventCalendar() {
@@ -2865,14 +2921,31 @@ Page({
     this.setData({ groupCodeVisible: false });
   },
 
-  // 动态点赞/取消
+  // toggle 结果未知时只回读；显式目标写入需等待统一关系合同。
   onLikePost(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    const that = this;
+    if (!id) return;
+    const key = String(id);
+    this._postLikeRequests = this._postLikeRequests || Object.create(null);
+    if (this._postLikeRequests[key] === 'unknown') {
+      cyToast('结果待确认，正在刷新动态');
+      this.loadPosts();
+      return;
+    }
+    if (this._postLikeRequests[key]) return;
+    this._postLikeRequests[key] = true;
+    const readback = () => {
+      this._postLikeRequests[key] = 'unknown';
+      this.loadPosts();
+    };
     app.sendRequest({
       url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
-      success(res) { if (res.code == '200') that.loadPosts(); },
-      fail() { cyToast('操作失败'); },
+      success: (res) => {
+        if (!res || res.code != '200') cyToast('点赞结果待确认');
+        readback();
+      },
+      fail: () => { cyToast('结果待确认，正在刷新动态'); readback(); },
+      successStatusAbnormal: () => { cyToast('结果待确认，正在刷新动态'); readback(); },
     });
   },
 
@@ -3260,3 +3333,5 @@ Page({
   },
   goCoopSent() { wx.navigateTo({ url: '/pages/coop/list/index?tab=sent' }); },
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

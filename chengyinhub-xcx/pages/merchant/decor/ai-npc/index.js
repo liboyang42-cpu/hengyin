@@ -551,13 +551,21 @@ Page({
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
     return this._request('/api/merchant/npc/save', payload)
+<<<<<<< public
       .then(() => {
         if (!current()) return;
+=======
+      .then((res) => {
+        if (this._destroyed) return;
+        // F0225:保存成功 ≠ 已审核可见。以服务端回执为准(新形象一律回到待审),不在端上猜。
+        const receipt = (res && res.data) || {};
+        const savedAudit = receipt.auditStatus == null ? 0 : Number(receipt.auditStatus);
+>>>>>>> private-feature/w2-r
         this._saved = Object.assign({}, payload);
         this._portrait = null;
-        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: savedAudit, auditReason: ''}));
         if (onSuccess) onSuccess();
-        toast.success('角色已更新');
+        toast.success('已保存，审核后上线');
       })
       .catch((e) => {
         if (current()) this.setData({ saving: false, saveError: e.message });
@@ -611,7 +619,7 @@ Page({
       toast('请先保存角色形象');
       return;
     }
-    this.setData({ voiceVisible: true, voiceError: '' });
+    this.setData({ voiceVisible: true, voiceUnknown: true, voiceError: '' });
     this.refreshVoice();
   },
   closeVoice() {
@@ -632,24 +640,36 @@ Page({
         if (!current()) return;
         const value = res.data || res,
           status = Number(value.voiceStatus);
-        if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
+        if (value.voiceStatus == null || ![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
         const confirmed =
           (status === 1 || status === 2) &&
           this.data.voiceFile &&
           value.voiceSample === this.data.voiceFile.url;
+        const matched = !this._voicePendingSample || (value.voiceSample === this._voicePendingSample && [1, 2, 3].includes(status));
+        if (matched) this._voicePendingSample = '';
         this.setData({
           voiceStatus: status,
+<<<<<<< public
           voiceSample: value.voiceSample || '',
           voiceUnknown: false,
+=======
+          voiceSample: value.voiceSample || this.data.voiceSample,
+          voiceUnknown: !matched,
+          voiceError: matched ? '' : '尚未查到这段录音的生成结果，请稍后继续查询，勿重复生成。',
+>>>>>>> private-feature/w2-r
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
         if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
       })
       .catch((e) => {
+<<<<<<< public
         if (!current()) return;
         this.setData({ voiceError: e.message });
         if (this.data.voiceStatus === 1)
           this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+=======
+        if (!this._destroyed) this.setData({ voiceUnknown: true, voiceError: '声音状态暂时无法确认，请稍后查询。' });
+>>>>>>> private-feature/w2-r
       });
   },
   onVoiceConsentChange(e) {
@@ -888,6 +908,7 @@ Page({
         if (!current()) return;
         this.setData({ 'voiceFile.url': url });
         this._voiceSubmitted = true;
+        this._voicePendingSample = url;
         return this._request('/api/merchant/npc/voice/enroll', {
           voiceSample: url,
           voiceConsent: this.data.voiceConsent,
@@ -896,6 +917,8 @@ Page({
       .then((res) => {
         if (!current()) return;
         const d = res.data || res;
+        if (d.voiceStatus == null || ![1, 2, 3].includes(Number(d.voiceStatus))) throw Error('声音结果待确认，请查询状态');
+        this._voicePendingSample = '';
         this.setData({
           voiceBusy: false,
           voiceStatus: Number(d.voiceStatus),

@@ -129,3 +129,20 @@ test('本地发布检查覆盖章节完成、归零挑战、方案结局和费�
   });
   assert.ok(p.buildPublishCheck().blocking.some(item => item.field === 'templateTool:77:vote:1'), '旧无方案键时按首个方案序号定位结局选择');
 });
+
+test('N011 运行检查报告：问题带跳回定位，D20 规则样例按服务端公式，未覆盖范围永远列出且不宣称全路径', () => {
+  const d20 = (dc, modifier) => ({ templateInfo: { advancedConfigJson: JSON.stringify({ diceRoll: { enabled: true, mode: 'd20', dc, modifier } }) } });
+  const rows = [{ nodes: [{ id: 5, ...d20(15, 2) }, { id: 6, ...d20(25, 2) }, { id: 7, templateInfo: { advancedConfigJson: JSON.stringify({ interactionRules: { costOptions: [{ hpCost: 1 }] } }) } }] }];
+  const broken = target.checkReport({ messages: ['节点 77：costOptions 须为 2 至 4 组', '未知问题'], chapters: rows, version: 3 });
+  assert.equal(broken.version, 3); assert.equal(broken.structurePassed, false); assert.equal(broken.fullPathGuarantee, false);
+  assert.deepEqual(broken.issues.map(row => row.located), [true, false, true], '无法定位的问题照样列出，不吞掉'); assert.equal(broken.issues[0].target.field, 'templateTool:7:cost');
+  assert.equal(broken.issues[2].target.field, 'templateTool:7:cost');
+  assert.deepEqual(broken.samples.map(row => [row.nodeKey, row.text, row.warning]), [
+    ['5', 'DC 15，静态加值 2：骰出 13 及以上成功', false], ['6', 'DC 25，静态加值 2：任何骰点都失败', true]]);
+  assert.equal(broken.samples[0].field, 'templateTool:5:advanced');
+  // 修好资源断点后同版本重查：结构通过，但未覆盖项仍在、不宣称全路径
+  rows[0].nodes[2].templateInfo.advancedConfigJson = JSON.stringify({ interactionRules: { costOptions: [{ hpCost: 1 }, { hpCost: 2 }] } });
+  const fixed = target.checkReport({ messages: [], chapters: rows, version: 3 });
+  assert.equal(fixed.structurePassed, true); assert.equal(fixed.fullPathGuarantee, false);
+  assert.ok(fixed.uncovered.length >= 3); assert.match(fixed.summary, /不代表全路径可玩/);
+});

@@ -7,7 +7,19 @@ const definitions = [
 ];
 const actionNames = { QUEST_START: '开始任务', QUEST_RESOLVE: '结算任务', QUEST_CANCEL: '取消任务', OPERATION_START: '开始操作任务', OPERATION_CANCEL: '取消操作任务', RECOVER: '使用恢复方式', VOTE_CAST: '签署首选票', ACCEPT_SET: '签署接受清单', CONSENSUS_CAST: '签署共识票' };
 function rows(view) { return view.scope === 'TEAM' ? definitions.filter(row => (view.availableActions || []).includes(row.action)) : []; }
+const runNotices = { PAUSED: '本局已暂停：所有提交暂不可用，HP、资源、配给与计时已冻结，等待主持恢复', INTERRUPTED: '本局已由主持安全中止：不再结算，也不计结局', CANCELLED: '本局已由主持取消：不再结算' };
+// X028 玩家端统一暂停/中止提示：只读服务端 run.operationStatus，人工账接管单列。
+function runNotice(view) { const run = view && view.run; if (!run) return ''; if (run.authorityMode === 'MANUAL') return '本局由现场人工账接管：线上提交暂停，请按工作人员指引签署'; return runNotices[run.operationStatus] || ''; }
 function exitText(view) { return view.run && view.run.exitedTeams && Object.prototype.hasOwnProperty.call(view.run.exitedTeams, String(view.teamId)) ? '本队已退出本局' : ''; }
+// F0351：「离开页面」与「退出本局」分名，按模式写明进度/资源/计时/费用后果；退出游玩不等于退款
+const LEAVE_PAGE = { title: '离开页面', lines: ['进度与已持有物品保留，再进读回同一局', '计时与开放时间不因离开而暂停', '不产生扣费或退款'] };
+const EXIT_GUIDES = {
+  TEAM: { title: '本队退出本局（队长）', lines: ['不可撤销，本队不再参加后续任务、交换与共同方案', '本队的预留与锁定释放，已持有物品保留', '其他队伍继续，本局计时不停', '退出游玩不等于退款，报名订单状态不变，退款按原订单规则办理'] },
+  PERSONAL: { title: '个人局没有单独的退出动作', lines: ['只能离开页面，再进继续原局', '报名订单不因离开而退款'] },
+  LEGACY: { title: '本玩法没有单独的退出动作', lines: ['只能离开页面，再进从上次进度继续', '报名订单不因离开而退款'] },
+};
+function exitMode(view) { return !view || !view.sessionId ? 'LEGACY' : view.scope === 'TEAM' ? 'TEAM' : 'PERSONAL'; }
+function exitGuide(view) { const mode = exitMode(view); return { mode, leave: LEAVE_PAGE, exit: EXIT_GUIDES[mode] }; }
 function manualRows(manual) { return (manual && manual.signatures || []).map(row => ({ ...row, title: actionNames[row.action] || '现场操作', statusText: { PENDING: '待核验', VERIFIED: '已核验', REJECTED: '未通过' }[row.status] || '状态尚未更新' })); }
 function arrivalTargets(view, nodes) {
   const label = id => ((nodes || []).find(row => String(row.nodeId) === String(id)) || {}).name || '站点资料尚未加载';
@@ -42,7 +54,7 @@ function methods(req) {
   const client = () => sessionClient.createGameSessionClient({ sendRequest(options) { req(options.url, options.method, options.data, options.header, true).then(res => res.netFail ? options.fail() : options.success(res), options.fail); } });
   const handlers = {
     _applyPlayerOpsView(view) {
-      this.setData({ playerOperationRows: rows(view), playerManualRows: manualRows(view.run && view.run.manual), playerExitText: exitText(view), playerOperationAvailable: !!this.data.playerOperationForm && rows(view).some(row => row.action === this.data.playerOperationForm.action) });
+      this.setData({ playerExitGuide: exitGuide(view), playerOperationRows: rows(view), playerManualRows: manualRows(view.run && view.run.manual), playerExitText: exitText(view), playerRunNotice: runNotice(view), playerOperationAvailable: !!this.data.playerOperationForm && rows(view).some(row => row.action === this.data.playerOperationForm.action) });
       if (this.data.playerArrivalProof && this.data.playerArrivalProof.sessionId !== view.sessionId) this.setData({ playerArrivalProof: null });
       if (this._playerOpsPending && this._playerOpsPendingSessionId !== view.sessionId) this.setData({ playerOperationForm: null, playerOperationUnknown: true, playerOperationError: '上一局操作尚未确认，请先核对原操作结果' });
     },
@@ -139,5 +151,5 @@ function methods(req) {
   };
   return handlers;
 }
-module.exports = { rows, exitText, manualRows, arrivalTargets, manualCommands, occurredAt, methods,
-  data: { playerOperationsOpen: false, playerOperationAvailable: false, playerOperationRows: [], playerManualRows: [], playerExitText: '', playerOperationForm: null, playerExitConfirm: false, playerOperationError: '', playerOperationUnknown: false, playerArrivalProof: null } };
+module.exports = { rows, exitText, exitGuide, runNotice, manualRows, arrivalTargets, manualCommands, occurredAt, methods,
+  data: { playerExitGuide: exitGuide(null), playerOperationsOpen: false, playerOperationAvailable: false, playerOperationRows: [], playerManualRows: [], playerExitText: '', playerRunNotice: '', playerOperationForm: null, playerExitConfirm: false, playerOperationError: '', playerOperationUnknown: false, playerArrivalProof: null } };

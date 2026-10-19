@@ -114,7 +114,7 @@ function loadPage(relativePath, mutate, harnessOptions = {}) {
       }
       if (id.includes('payment-verifier')) return { createPaymentVerifier: () => () => {} }
       if (id.includes('merchant-home-link')) {
-        return { merchantHomeUrl: (id) => id ? `/pages/merchant/home/index?id=${id}` : '' }
+        return { merchantHomeUrl: (id) => id ? `/pages/userinfo/userinfo?userId=${id}&tab=about` : '' }
       }
       return require(path.resolve(path.dirname(pageFile), id))
     },
@@ -676,12 +676,12 @@ test('有补位候选仍可选择原商家主页，普通候选不新增邀请�
   replacement.page.openMerchant(merchantTap())
   assert.equal(replacement.navigations.length, 0)
   replacement.page.onReplacementSheetSelect({ detail: { index: 0 } })
-  assert.deepEqual(replacement.navigations, ['/pages/merchant/home/index?id=88'])
+  assert.deepEqual(replacement.navigations, ['/pages/userinfo/userinfo?userId=88&tab=about'])
   assert.equal(replacement.modals.length, 0)
   assert.equal(replacement.requests.length, 0)
   const normal = replacementNearby([{ memberId: '88', name: '咖啡商家', chapterId: 11, chapterName: '第一章' }])
   normal.page.openMerchant(merchantTap())
-  assert.deepEqual(normal.navigations, ['/pages/merchant/home/index?id=88'])
+  assert.deepEqual(normal.navigations, ['/pages/userinfo/userinfo?userId=88&tab=about'])
   assert.equal(normal.actionSheets.length, 0)
   assert.equal(normal.requests.length, 0)
 })

@@ -129,9 +129,9 @@ test('③ 纯告知单钮:可自动消失的改 toast,必须读到的保留', ()
     // 确认弹窗仍走 cyModal('确认发送'),属于「必须读到」那一档,由
     // merchant-customer-broadcast-flow.test.js 锁住。
     ['pages/play/index.js', /title: '答案已揭示'/],
-    ['pages/merchant/citynode/index.js', /title: '核销失败'/],
+    ['pages/merchant/citynode/index.js', /title: '核销未完成'/],
     // C-30:券被平台停用时后端回 couponGranted=false,成功 toast 不得再说「已发放」
-    ['pages/merchant/citynode/index.js', /toast\(res\.data && res\.data\.couponGranted === false \? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家'\);/],
+    ['pages/merchant/citynode/index.js', /toast\(res\.data\.couponGranted === false \? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家'\);/],
     // 2026-09-15 审查C B1 反转:「活动已取消」原本判在 gone(改 toast),这条判错了 ——
     // 后端成功文案含已核销票时 66 字,过 utils/toast.js 的 safeUserMessage 会被兜底成
     // 「操作失败」,成功显示成失败,且「平台人工跟进退款」这句越要紧越会被吞。

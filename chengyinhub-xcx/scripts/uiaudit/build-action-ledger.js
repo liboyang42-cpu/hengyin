@@ -81,7 +81,9 @@ const EXPLICIT_WRITE_APIS = new Set([
   '/api/club/lead/edit-ops',
   '/api/club/lead/arrive',
 ])
-const isWriteApi = (api) => API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api)
+// ApiPublishController.home 聚合能力/额度/项目摘要；POST 查询不可因 /publish/ 前缀变成写入。
+const EXPLICIT_READ_APIS = new Set(['/api/publish/home'])
+const isWriteApi = (api) => !EXPLICIT_READ_APIS.has(api) && (API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api))
 const TAP_EVENTS = new Set(['bindtap', 'catchtap', 'bind:tap', 'catch:tap'])
 const AUXILIARY_APIS = new Set(['/api/login/code', '/api/role/info', '/api/analytics/events/batch'])
 const SELF_ONLY_WRITE_APIS = new Set([
@@ -2137,7 +2139,24 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         })
         return
       }
-      const dependencyTargets = extractTargets(fs.readFileSync(path.join(ROOT, dependency), 'utf8'))
+      let dependencySource = fs.readFileSync(path.join(ROOT, dependency), 'utf8')
+      // 实名纯校验不执行同模块撤回/登记；只递归扫描本次实际调用成员，未知成员保守扫全文件。
+      if (dependency === 'utils/publisher-identity.js') {
+        const called = new Set()
+        if (namedImports) {
+          namedImports.forEach((parts) => {
+            if (new RegExp(`\\b${parts.at(-1).replace(/[$]/g, '\\$&')}\\s*\\(`).test(expandedSource)) called.add(parts[0])
+          })
+        } else {
+          names.forEach((alias) => {
+            const pattern = new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}\\.([A-Za-z_$][\\w$]*)\\s*\\(`, 'g')
+            for (const call of expandedSource.matchAll(pattern)) called.add(call[1])
+          })
+        }
+        const bodies = [...called].map((name) => expandModuleFunction(path.join(ROOT, dependency), name))
+        if (bodies.length && bodies.every(Boolean)) dependencySource = bodies.join('\n')
+      }
+      const dependencyTargets = extractTargets(dependencySource)
       targets.routes.push(...dependencyTargets.routes)
       targets.apis.push(...dependencyTargets.apis)
       targets.apiContracts.push(...dependencyTargets.apiContracts)
@@ -3224,8 +3243,12 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+<<<<<<< public
   eventHandlerNames,
   loadFailureEventVisibility,
+=======
+  extractHandlerTargets,
+>>>>>>> private-feature/w2-r
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,

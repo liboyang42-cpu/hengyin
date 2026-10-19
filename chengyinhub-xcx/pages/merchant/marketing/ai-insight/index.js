@@ -41,6 +41,7 @@ Page({
     ai: null,             // AI 解读(可为 null 的降级层)
     aiError: '',
     generatedAt: '',
+    evidence: null,
     profile: null,        // 店铺承接档案(configured=false 时置顶配置引导);后端永远实时读
     profileText: '',      // 已配置时的摘要一行文案
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
@@ -151,6 +152,7 @@ Page({
             ai: d.ai || null,
             aiError: d.ai ? '' : (d.aiError || '智能解读暂不可用'),
             generatedAt: d.generatedAt || '',
+            evidence: that._buildEvidence(d),
             profile: d.profile || null,
             profileText: that._buildProfileText(d.profile),
             factState,
@@ -190,6 +192,7 @@ Page({
       ai: null,
       aiError: '',
       generatedAt: '',
+      evidence: null,
       profile: null,
       profileText: '',
       factState: 'unknown',
@@ -288,6 +291,23 @@ Page({
       returningVisitors: r,
       newPct: Math.round(n / (n + r) * 100),
       scope: '口径：' + window + '内有到店的玩家，窗口前（全历史）也到过店的算回头客',
+    };
+  },
+
+  _buildEvidence(value) {
+    const facts = value.facts || {};
+    const snapshot = facts.profile;
+    const current = value.profile;
+    const comparable = snapshot && current;
+    const stale = !!comparable && ['capacity', 'suitActivityTypes', 'demand'].some((key) =>
+      String(snapshot[key] == null ? '' : snapshot[key]) !== String(current[key] == null ? '' : current[key]));
+    const sample = numberOrNull(facts.sampleMembers);
+    return {
+      window: facts.window || '统计范围待确认',
+      sample: sample === null ? '样本量待确认' : sample + ' 位核销顾客',
+      profile: !comparable ? '档案快照待确认' : stale ? '旧版档案，当前资料已变更' : '生成时档案与当前一致',
+      version: '未提供档案版本号',
+      stale,
     };
   },
 

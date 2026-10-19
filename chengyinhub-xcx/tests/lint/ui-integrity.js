@@ -15,6 +15,7 @@
  *   node tests/lint/ui-integrity.js --selftest
  */
 const fs = require('fs');
+const { scanSharedA11y } = require('./shared-a11y');
 const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
@@ -30,7 +31,11 @@ const {
 } = require('../../scripts/lib/xcx-scan');
 const { lintRepo: lintWxmlHandlers } = require('../../scripts/wxml-handler-lint');
 const BASELINE = require('./ui-integrity-baseline');
+<<<<<<< public
 const { namespaceDeclarationOffsets, collectBackendMappings } = require('../../../ci/api-existence-gate');
+=======
+const { finiteRoutes } = require('./finite-routes');
+>>>>>>> private-feature/w2-r
 
 const XCX_ROOT = path.resolve(__dirname, '..', '..');
 const REPO_ROOT = path.resolve(XCX_ROOT, '..');
@@ -177,13 +182,20 @@ function stripJsComments(source) {
 
 function mappingPaths(annotationArgs) {
   if (annotationArgs == null || !annotationArgs.trim()) return [''];
-  const quoted = [];
-  const re = /(['"])(.*?)\1/g;
-  let match;
-  while ((match = re.exec(annotationArgs))) {
-    if (match[2].startsWith('/')) quoted.push(match[2]);
+  const masked = maskNonCode(annotationArgs);
+  let routeValue = annotationArgs;
+  if (/\b\w+\s*=/.test(masked)) {
+    const routeArg = splitTopLevel(masked, 0, masked.length).map(([start, end]) => annotationArgs.slice(start, end))
+      .find(argument => /^\s*(?:value|path)\s*=/.test(argument));
+    if (!routeArg) return [''];
+    routeValue = routeArg.slice(routeArg.indexOf('=') + 1);
   }
-  return quoted.length ? quoted : [''];
+  if (maskNonCode(routeValue).replace(/[\s{},]/g, '')) return [];
+  const quoted = [];
+  const re = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
+  let match;
+  while ((match = re.exec(routeValue))) quoted.push(match[1]);
+  return quoted;
 }
 
 function joinRoute(base, child) {
@@ -205,12 +217,16 @@ function collectBackendRoutes(repoRoot = REPO_ROOT) {
     if (classIndex < 0) continue;
     const prefix = source.slice(0, classIndex);
     const classBases = [];
+    let hasClassMapping = false;
     let match;
     annotationRe.lastIndex = 0;
     while ((match = annotationRe.exec(prefix))) {
-      if (match[1] === 'Request') classBases.push(...mappingPaths(match[2]));
+      if (match[1] === 'Request') {
+        hasClassMapping = true;
+        classBases.push(...mappingPaths(match[2]));
+      }
     }
-    const bases = classBases.length ? classBases : [''];
+    const bases = hasClassMapping ? classBases : [''];
     annotationRe.lastIndex = classIndex;
     while ((match = annotationRe.exec(source))) {
       const children = mappingPaths(match[2]);
@@ -408,11 +424,42 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
   const dynamicReports = [];
   const variableReports = [];
   let staticCount = 0;
+  const finite = finiteRoutes(jsFiles);
   for (const file of jsFiles) {
     const source = fs.readFileSync(file, 'utf8');
+<<<<<<< public
     const namespaceOffsets = namespaceDeclarationOffsets(source, namespacePrefixes);
     for (const parsed of collectApiLiterals(source)) {
       if (namespaceOffsets.has(parsed.offset)) continue;
+=======
+    const resolved = finite.get(file);
+    for (const request of resolved.requests) {
+      if (!request.navigation && request.escapedFunction) violations.push({ code: 'U1', key: `${repoRel(file)}:${lineNumber(source, request.call.start)}`,
+        message: '请求函数经对象逃逸，已知调用方不能证明所有实参' });
+      if (!request.navigation && request.ambiguous) violations.push({ code: 'U1', key: `${repoRel(file)}:${lineNumber(source, request.call.start)}`,
+        message: '请求 url 被重复属性、未知展开或计算属性覆盖，无法证明最终路径' });
+      if (!request.navigation && request.url && !request.routes && !request.ambiguous
+        && collectApiLiterals(source.slice(request.url.start, request.url.end)).length > 0
+        && !U1_VARIABLE_ALLOWLIST.has(`${repoRel(file)}:${lineNumber(source, request.call.start)}`)) {
+        violations.push({ code: 'U1', key: `${repoRel(file)}:${lineNumber(source, request.call.start)}`,
+          message: '完整请求 url 未被证明，字面量片段不能替代最终路径核对' });
+      }
+    }
+    for (const item of resolved.expressions.values()) {
+      if (item.navigation) continue;
+      const key = `${repoRel(file)}:${lineNumber(source, item.call.start)}`;
+      for (const route of item.routes) {
+        const parsed = route.replace(/[?#].*$/, '');
+        if (parsed.includes(':dynamic')) dynamicReports.push({ key, route: parsed });
+        else staticCount += 1;
+        const matches = [...backendRoutes].some(backend => routeMatches(parsed, backend)
+          && parsed.split('/').every((part, index) => part !== ':dynamic' || /^\{[^}]+\}$/.test(backend.split('/')[index])));
+        if (!matches) violations.push({ code: 'U1', key, message: `有限路径 ${parsed} 无后端 Mapping` });
+      }
+    }
+    for (const parsed of collectApiLiterals(source)) {
+      if (resolved.fragments.has(parsed.offset) || resolved.comparisons.has(parsed.offset)) continue;
+>>>>>>> private-feature/w2-r
       const key = `${repoRel(file)}:${lineNumber(source, parsed.offset)}`;
       if (parsed.dynamic) dynamicReports.push({ key, route: parsed.route });
       else staticCount += 1;
@@ -430,6 +477,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
       while (/\s/.test(masked[argStart])) argStart += 1;
       const enclosing = enclosingNamedFunctions(masked, request.index);
       let expression = '';
+      let proven = false;
       if (masked[argStart] === '{') {
         const closeBrace = matchBrace(masked, argStart);
         if (closeBrace < 0) continue;
@@ -438,6 +486,9 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         if (urlProp) {
           const colon = urlProp.raw.indexOf(':');
           expression = colon >= 0 ? urlProp.raw.slice(colon + 1).trim() : urlProp.name;
+          proven = !U1_VARIABLE_ALLOWLIST.has(`${repoRel(file)}:${lineNumber(source, request.index)}`)
+            && [...resolved.expressions.values()].some(item => !item.navigation && item.call.start <= request.index
+            && item.call.end > request.index && source.slice(item.call.start, request.index).indexOf(';') < 0);
           if (expressionToApiRoute(expression)) continue;
           if (collectApiLiterals(expression).length > 0) continue;
         }
@@ -454,10 +505,11 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         if (matches) urlParamIndex = index;
         return matches;
       }));
-      if (wrapper) {
-        wrappers.set(wrapper.name, { ...wrapper, urlParamIndex });
+      if (wrapper && !new RegExp(`\\b${wrapper.name}\\s*=(?!=)`).test(masked)) {
+        wrappers.set(wrapper.name, { ...wrapper, urlParamIndex, proven });
         continue;
       }
+      if (proven) continue;
       const key = `${repoRel(file)}:${lineNumber(source, request.index)}`;
       const allowed = U1_VARIABLE_ALLOWLIST.get(key);
       variableReports.push({ key, detail: expression.slice(0, 100) || 'sendRequest 参数无静态 url', allowed });
@@ -477,6 +529,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         if (collectApiLiterals(argument).length > 0) continue;
         const key = `${repoRel(file)}:${lineNumber(source, nameOffset)}`;
         const allowed = U1_VARIABLE_ALLOWLIST.get(key);
+        if (wrapper.proven && !allowed) continue;
         variableReports.push({ key, detail: `${wrapper.name}(${argument.slice(0, 80)})`, allowed });
         if (!allowed) {
           violations.push({ code: 'U1', key,
@@ -521,6 +574,19 @@ function jsReferencesMethod(source, name) {
 }
 
 function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
+  const definitions = new Map();
+  const sharedBindings = new Set();
+  const definitionKey = entry => `${entry.file}:${entry.start}:${entry.end}`;
+  for (const file of jsFiles) {
+    const wxmlFile = file.replace(/\.js$/, '.wxml');
+    if (!fs.existsSync(wxmlFile)) continue;
+    const entries = extractOwnHandlerEntries(file);
+    definitions.set(file, new Map(entries.map(entry => [entry.name, entry])));
+    const bindings = new Set(findEventBindings(collectWxmlSource(wxmlFile)).flatMap(binding => binding.value.match(/[A-Za-z_$][\w$]*/g) || []));
+    for (const entry of entries) {
+      if (entry.file !== file && bindings.has(entry.name)) sharedBindings.add(definitionKey(entry));
+    }
+  }
   const violations = [];
   const candidates = [];
   // 2026-10-14(取自 cloud22 归档已审逻辑):Page 工厂(subpackageTools/lib/runtime 等)里的共享方法,
@@ -556,6 +622,9 @@ function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
       names.forEach((name) => bound.add(name));
     }
     for (const name of new Set(extractHandlerNames(file))) {
+      const definition = definitions.get(file) && definitions.get(file).get(name);
+      // A shared definition is used when an actually mounted consumer binds that exact function.
+      if (definition && definition.file !== file && sharedBindings.has(definitionKey(definition))) continue;
       if (!HANDLER_LIKE_RE.test(name) || PAGE_LIFECYCLES.has(name) || bound.has(name)
           || jsReferencesMethod(jsScope, name)) continue;
       const def = ownDefs.get(file) && ownDefs.get(file).get(name);
@@ -869,11 +938,34 @@ function scanLegacy(jsFiles, wxmlFiles) {
     for (const page of subpackage.pages || []) registered.add(`/${root}/${page}`);
   }
   const normalize = (raw) => raw.trim().replace(/[?#].*$/, '').replace(/\/$/, '');
+  const finite = finiteRoutes(jsFiles);
   for (const file of jsFiles) {
     const source = fs.readFileSync(file, 'utf8');
+    for (const request of finite.get(file).requests.filter(item => item.navigation)) {
+      const key = `${repoRel(file)}:${lineNumber(source, request.call.start)}`;
+      if ((!request.routes && !request.guarded) || request.ambiguous || request.checkedBoundary && !request.guarded) {
+        errors.push({ code: 'LEGACY', key, message: '导航 url 无法证明为已注册有限路径' });
+        continue;
+      }
+      for (const route of request.routes || []) {
+        const target = normalize(route);
+        if (!registered.has(target)) errors.push({ code: 'LEGACY', key, message: `导航目标 ${target} 未在 app.json 注册` });
+      }
+    }
     let match;
     const navRe = /(?:navigateTo|redirectTo|reLaunch)\s*\(\s*\{[^}]*?url:\s*[`'"]([^`'"]+)[`'"]/g;
     while ((match = navRe.exec(source))) {
+      if (finite.get(file).requests.some(item => item.navigation && item.call.callee.property?.start === match.index)) continue;
+      const resolved = [...finite.get(file).expressions.values()].find(item => item.navigation
+        && item.call.callee.property?.start === match.index);
+      if (resolved) {
+        for (const route of resolved.routes) {
+          const target = normalize(route);
+          if (!registered.has(target)) errors.push({ code: 'LEGACY', key: `${repoRel(file)}:${lineNumber(source, match.index)}`,
+            message: `导航目标 ${target} 未在 app.json 注册` });
+        }
+        continue;
+      }
       const target = normalize(match[1]);
       if (target.startsWith('/') && !target.includes('${') && !registered.has(target)) {
         errors.push({ code: 'LEGACY', key: `${repoRel(file)}:${lineNumber(source, match.index)}`, message: `导航目标 ${target} 未在 app.json 注册` });
@@ -1131,6 +1223,7 @@ function runRepoScan() {
   const u4 = scanU4(jsFiles);
   const u5 = scanU5(jsFiles);
   const legacy = scanLegacy(jsFiles, wxmlFiles);
+  const a11y = scanSharedA11y();
   const ratchet = BASELINE.ratchet || {};
   const baselineViolations = [
     ...baselineContract('U1-VARIABLE', U1_VARIABLE_ALLOWLIST,
@@ -1147,7 +1240,7 @@ function runRepoScan() {
   ];
   const violations = [
     ...u1.violations, ...u2Violations, ...u3.violations, ...u4.violations,
-    ...u5.violations, ...enforcedLegacyViolations(legacy), ...baselineViolations,
+    ...u5.violations, ...enforcedLegacyViolations(legacy), ...baselineViolations, ...a11y,
   ];
 
   console.log(`UI-GATE-0 扫描:${jsFiles.length} JS / ${wxmlFiles.length} WXML / ${backendRoutes.size} backend Mapping`);
@@ -1158,6 +1251,7 @@ function runRepoScan() {
   console.log(`U3 ${u3.violations.length ? 'FAIL' : 'PASS'}:零绑定债务 ${u3.candidates.length}/${u3.candidates.filter((item) => item.allowed).length} 已登记,生命周期规则 ${PAGE_LIFECYCLES.size}`);
   console.log(`U4 ${u4.violations.length ? 'FAIL' : 'PASS'}:零消费债务 ${u4.candidates.length}/${u4.candidates.filter((item) => item.allowed).length} 已登记,动态 setData ${u4.dynamicReports.length}/${u4.dynamicReports.filter((item) => item.allowed).length} 已登记`);
   console.log(`U5 ${u5.violations.length ? 'FAIL' : 'PASS'}:需逐项理由 ${u5.callsites.length},同请求内静态证明显式处理 ${u5.autoSafe.length},逐项理由 ${u5.callsites.filter((item) => item.allowed).length}`);
+  console.log(`A11Y ${a11y.length ? 'FAIL' : 'PASS'}:共享组件语义、触达与静态替代契约`);
   console.log(`Legacy ${legacy.errors.length ? 'FAIL' : 'PASS'}:error ${legacy.errors.length},warn ${legacy.warnings.length}`);
   legacy.warnings.forEach((item) => console.log(`  [WARN] ${item.key} ${item.message}`));
 

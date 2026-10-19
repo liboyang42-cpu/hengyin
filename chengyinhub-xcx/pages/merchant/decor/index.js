@@ -103,6 +103,10 @@ Page({
     perkTypes: ['礼品', '优惠券', '折扣'],
     // E4 升级权益(先做能力,收费开关默认关)
     chargeEnabled: false,
+    commerceState: 'loading',
+    subscriptionState: 'loading',
+    subscriptions: [],
+    iosCommerce: false,
 
     checkoutBusy: false,
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
@@ -467,16 +471,43 @@ Page({
   },
   // ===== E4 升级权益 =====
   loadSubs() {
-    const that = this;
+    const seq = this._subscriptionSeq = (this._subscriptionSeq || 0) + 1;
+    const system = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync();
+    const iosCommerce = system.platform === 'ios';
+    this.setData({ chargeEnabled: false, commerceState: 'loading', subscriptionState: 'loading', subscriptions: [], iosCommerce });
+    const capabilityFail = () => {
+      if (seq === this._subscriptionSeq) this.setData({ chargeEnabled: false, commerceState: 'error' });
+    };
     app.sendRequest({
-      hideLoading: true, url: '/api/merchant/commerce/capabilities', method: 'POST',
-      success(res) {
-        if ((res.code == '200' || res.code == 200) && res.data) {
-          (Object.assign(that.data, {chargeEnabled: !!res.data.selfCheckoutEnabled}), that.setData({}));
-        }
-      }
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/commerce/capabilities', method: 'POST',
+      success: (res) => {
+        if (seq !== this._subscriptionSeq) return;
+        if (!res || ![200, '200'].includes(res.code) || !res.data || typeof res.data.selfCheckoutEnabled !== 'boolean') return capabilityFail();
+        this.setData({ chargeEnabled: res.data.selfCheckoutEnabled && !iosCommerce, commerceState: 'ready' });
+      },
+      fail: () => capabilityFail(), successStatusAbnormal: capabilityFail
     });
-
+    const subscriptionFail = () => {
+      if (seq === this._subscriptionSeq) this.setData({ subscriptionState: 'error', subscriptions: [] });
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/subscription', method: 'POST',
+      success: (res) => {
+        if (seq !== this._subscriptionSeq) return;
+        if (!res || ![200, '200'].includes(res.code) || !Array.isArray(res.data)
+            || res.data.some(row => !row || !row.id || typeof row.subscriptionType !== 'string')) return subscriptionFail();
+        const subscriptions = res.data.map(row => {
+          const tier = this.data.tiers.find(item => item.key === row.subscriptionType);
+          return { id: row.id, name: tier ? tier.name : '已授予权益',
+            startText: row.startDate == null ? '未提供' : String(row.startDate),
+            endText: row.endDate == null ? '未设到期时间' : String(row.endDate) };
+        });
+        this.setData({ subscriptions, subscriptionState: 'ready' });
+      },
+      fail: () => subscriptionFail(), successStatusAbnormal: subscriptionFail
+    });
   },
   _initCommerceWorkflow() {
     if (this._commerceWorkflow) return this._commerceWorkflow;
@@ -585,7 +616,7 @@ Page({
         that._commerceRequestId = null;
         that._commerceRequestBizType = null;
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('权益已到账');
+        toast('订单已确认，正在读取授予记录');
         that.loadSubs();
       },
       onPayVerifying() { that.setData({ checkoutState: 'verifying' }); },
@@ -593,7 +624,7 @@ Page({
         that._commerceRequestId = null;
         that._commerceRequestBizType = null;
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('支付成功，权益已到账');
+        toast('支付已确认，正在读取授予记录');
         that.loadSubs();
       },
       onPayCancel() {

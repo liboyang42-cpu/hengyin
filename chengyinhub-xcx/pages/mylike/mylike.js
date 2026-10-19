@@ -19,6 +19,7 @@ Page({
     isMerchantView: false,
     favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }],
     activeFavoriteTab: 'posts',
+    preferenceVisible: false,
     postList: [],
     ztList1: [], // 路线列表
     loading: false,
@@ -70,6 +71,9 @@ Page({
     // 返回页面后刷新数据；首展交给 onLoad，避免同一页并发两次 page=1。
     this.refreshData();
   },
+
+  openPreference() { this.setData({ preferenceVisible: true }); },
+  closePreference() { this.setData({ preferenceVisible: false }); },
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { this._favoritesDisposed = true; this._favoriteGeneration = (this._favoriteGeneration || 0) + 1; merchantTheme.merchantPageRestore(); },
@@ -222,6 +226,10 @@ Page({
         if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
           let list = res.data.rows;
+          list.forEach((item) => {
+            if (that._unlikeRequests && that._unlikeRequests[String(item.id)] === 'unknown'
+                && Number(item.isLike) === 1) delete that._unlikeRequests[String(item.id)];
+          });
           
           // 处理日期格式
           list = that.processListData(list);
@@ -296,7 +304,20 @@ Page({
     // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
     // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
     that._unlikeRequests = that._unlikeRequests || Object.create(null);
+    if (that._unlikeRequests[requestKey] === 'unknown') {
+      toast('结果待确认，正在刷新收藏记录');
+      that.setData({ pageConfig: Object.assign({}, that.data.pageConfig, { pageNum: 1 }) });
+      that.getTopicLikeList();
+      return;
+    }
     if (that._unlikeRequests[requestKey]) return;
+
+    function recoverUnknown() {
+      that._unlikeRequests[requestKey] = 'unknown';
+      toast('结果待确认，正在刷新收藏记录');
+      that.setData({ pageConfig: Object.assign({}, that.data.pageConfig, { pageNum: 1 }) });
+      that.getTopicLikeList();
+    }
 
     modal.show({
       title: '提示',
@@ -318,13 +339,19 @@ Page({
               if (res.code == "200") {
                 toast.success('取消点赞成功');
                 
+<<<<<<< public
                 // 回包顺序可能与点击顺序不同，按 ID 删除避免旧 index 误删其他收藏。
                 const ztList1 = that.data.ztList1.filter(topic => String(topic.id) !== requestKey);
+=======
+                // 从列表中移除
+                const ztList1 = that.data.ztList1.filter((item) => String(item.id) !== requestKey);
+>>>>>>> private-feature/w2-r
                 that.setData({ ztList1 });
               } else {
                 toast(res.msg || '操作失败');
               }
             },
+<<<<<<< public
             fail: function (res) {
               if (!that._isFavoriteResponseCurrent(owner, generation)) return;
               toast('网络错误，请重试');
@@ -332,6 +359,12 @@ Page({
             complete: function () {
               if (!that._isFavoriteResponseCurrent(owner, generation)) return;
               delete that._unlikeRequests[requestKey];
+=======
+            fail: function () { recoverUnknown(); },
+            successStatusAbnormal: function () { recoverUnknown(); },
+            complete: function () {
+              if (that._unlikeRequests[requestKey] !== 'unknown') delete that._unlikeRequests[requestKey];
+>>>>>>> private-feature/w2-r
             }
           });
         }

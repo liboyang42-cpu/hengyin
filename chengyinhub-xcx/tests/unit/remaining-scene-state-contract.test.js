@@ -420,7 +420,7 @@ test('据点商家未知收费和营业状态如实显示，缺图时不再注�
   assert.doesNotMatch(wxml, /businessStatus == 0 \? '已打烊' : '营业中'/)
 })
 
-test('据点打卡业务拒绝给回输入机会，只有传输失败才按原答案续跑', () => {
+test('据点打卡业务拒绝给回输入机会，传输失败只查询原结果', () => {
   const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
   /* CU-M-52:业务拒绝后重试要重开输入框(走 modal),这里替掉外层 wx 的 showModal。 */
   const modalCalls = []
@@ -448,7 +448,7 @@ test('据点打卡业务拒绝给回输入机会，只有传输失败才按原�
     assert.equal(harness.requests.length, 1, '业务拒绝不得重放旧答案')
     assert.equal(modalCalls.length, 1, '业务拒绝的重试必须重新打开输入框')
 
-    // 传输失败才是「原输入已保留」那句话说的那一档:仍按原答案续跑
+    // 传输失败可能已经写入，只允许查询原结果。
     const offline = mount(relativePath, {}, {
       getLocation(options) { options.success({ latitude: 31.2, longitude: 121.5 }) },
     })
@@ -456,11 +456,13 @@ test('据点打卡业务拒绝给回输入机会，只有传输失败才按原�
     offline.instance.data.node = { poiId: 21, status: 1, name: '测试据点', validationMethod: 1 }
     offline.instance.completeNode('保留的暗号')
     offline.requests[0].fail({ errMsg: 'request:fail timeout' })
-    assert.match(offline.instance.data.interactionText, /原输入已保留/)
-    assert.equal(offline.instance.data.interactionActionText, '重试')
+    assert.match(offline.instance.data.interactionText, /暂不要重新提交/)
+    assert.equal(offline.instance.data.interactionActionText, '查询原结果')
     offline.instance.recoverInteraction()
     assert.equal(offline.requests.length, 2)
-    assert.equal(offline.requests[1].data.answer, '保留的暗号')
+    assert.equal(offline.requests[1].method, 'GET')
+    offline.instance.completeNode('重复')
+    assert.equal(offline.requests.length, 2)
   } finally {
     if (previousWx === undefined) delete global.wx
     else global.wx = previousWx

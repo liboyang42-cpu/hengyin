@@ -20,6 +20,7 @@
       </view>
 
       <text class="cgcs__name">{{name}}</text>
+      <text wx:if="{{state === 'ready' && countdownText}}" class="cgcs__countdown" aria-role="timer">{{countdownText}}</text>
 
       <!-- 稿 335:1347:24×24 download。只在真有码时才给,否则存下来是张空白图。 -->
       <view wx:if="{{state === 'ready' && qr}}" class="cgcs__save" bindtap="onSave"

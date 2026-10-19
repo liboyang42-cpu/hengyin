@@ -25,14 +25,18 @@
       <view wx:if="{{!messages.length && !isThinking}}" class="npc-chat__empty">{{scope === 'merchant' ? (greeting || '想吃点什么？问问我。') : '想知道下一步怎么走？问问我。'}}</view>
     </scroll-view>
 
+<<<<<<< public
     <view wx:if="{{retryAvailable}}" class="npc-chat__send" bindtap="onRetrySend" aria-role="button" aria-label="重试这条消息" hover-class="cy-pressed" hover-stay-time="80">{{state === 'CHECKING' ? '查询处理结果' : '重试这条消息'}}</view>
+=======
+    <view wx:if="{{canRecover}}" class="npc-chat__send" bindtap="onRecover" aria-role="button" aria-label="恢复原问题" aria-disabled="{{isThinking}}" hover-class="cy-pressed" hover-stay-time="80">{{isThinking ? '正在确认回答…' : '恢复原问题'}}</view>
+>>>>>>> private-feature/w2-r
     <view class="npc-chat__composer">
       <textarea class="npc-chat__input" value="{{input}}" maxlength="300" auto-height fixed="true"
         placeholder="{{scope === 'merchant' ? '问问这家店，比如「有什么推荐」' : '问问这段漫游…'}}" placeholder-class="npc-chat__placeholder"
-        bindinput="onInput" bindconfirm="onSend" confirm-type="send" />
+        aria-label="向 NPC 提问" bindinput="onInput" bindconfirm="onSend" confirm-type="send" />
       <view class="npc-chat__composer-foot">
         <text class="npc-chat__count">{{inputCount}}/300</text>
-        <view class="npc-chat__send {{canSend ? '' : 'npc-chat__send--disabled'}}" bindtap="onSend" aria-role="button" aria-label="发送消息" hover-class="cy-pressed" hover-stay-time="80">发送</view>
+        <view class="npc-chat__send {{canSend && !isThinking && !canRecover ? '' : 'npc-chat__send--disabled'}}" bindtap="onSend" aria-role="button" aria-label="发送消息" aria-disabled="{{!canSend || isThinking || canRecover}}" hover-class="cy-pressed" hover-stay-time="80">发送</view>
       </view>
     </view>
   </view>

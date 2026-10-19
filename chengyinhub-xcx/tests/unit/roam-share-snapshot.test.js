@@ -59,7 +59,7 @@ test('拍板17 上传分享卡已裁剪的真实轨迹,由服务端统一量化'
 
 test('拍板17 发布:成功拿令牌;可见范围仅自己不发布;接口失败给出原因', async () => {
   const ok = fakeApp(() => ({ code: 200, data: { token: TOKEN } }))
-  assert.deepEqual(await snapshot.publishShareSnapshot(ok, memoryStorage(), SESSION), { token: TOKEN, reason: '' })
+  assert.deepEqual(await snapshot.publishShareSnapshot(ok, memoryStorage(), SESSION), { token: TOKEN, version: 0, reason: '' })
   assert.equal(ok.sent[0].url, '/api/roam/share/snapshot')
   assert.equal(ok.sent[0].data.clientTs, SESSION.ts)
   assert.equal(ok.sent[0].data.sessionId, '12')
@@ -74,7 +74,7 @@ test('拍板17 发布:成功拿令牌;可见范围仅自己不发布;接口失�
   assert.equal(privateApp.sent.length, 0)
 
   const broken = fakeApp(() => ({ code: 500, msg: 'x' }))
-  assert.deepEqual(await snapshot.publishShareSnapshot(broken, memoryStorage(), SESSION), { token: '', reason: 'failed' })
+  assert.deepEqual(await snapshot.publishShareSnapshot(broken, memoryStorage(), SESSION), { token: '', version: 0, reason: 'failed' })
   const badToken = fakeApp(() => ({ code: 200, data: { token: '../../x' } }))
   assert.equal((await snapshot.publishShareSnapshot(badToken, memoryStorage(), SESSION)).token, '')
 })
@@ -219,4 +219,38 @@ test('拍板17 足迹正文组件收到快照就直接渲染(不读本机),并�
   assert.ok(instance.data.routeSegs.length > 0, '朋友能看到路线轨迹')
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../components/cy/scene-roam-session/index.wxml'), 'utf8')
   assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
+})
+
+test('F0384 逐条撤回:只带本条令牌;服务端拒绝=not-owned,断网=failed 可重试', async () => {
+  const ok = fakeApp(() => ({ code: 200, data: { revoked: 1, scope: 'one' } }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(ok, TOKEN), { ok: true, reason: '' })
+  assert.equal(ok.sent[0].url, '/api/roam/share/revoke')
+  assert.deepEqual(ok.sent[0].data, { token: TOKEN })
+
+  const denied = fakeApp(() => ({ code: 500, msg: '这条分享不存在或不属于你' }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(denied, TOKEN), { ok: false, reason: 'not-owned' })
+  const offline = fakeApp(() => 'fail')
+  assert.deepEqual(await snapshot.revokeShareSnapshot(offline, TOKEN), { ok: false, reason: 'failed' })
+  const bad = fakeApp(() => ({ code: 200 }))
+  assert.deepEqual(await snapshot.revokeShareSnapshot(bad, '../x'), { ok: false, reason: 'not-owned' })
+  assert.equal(bad.sent.length, 0)
+})
+
+test('M0117 版本:带 expectedVersion 发布;服务端冲突返回 conflict 不当成功', async () => {
+  const app = fakeApp(() => ({ code: 200, data: { token: TOKEN, version: 3 } }))
+  assert.deepEqual(await snapshot.publishShareSnapshot(app, memoryStorage(), SESSION, { expectedVersion: 2 }), { token: TOKEN, version: 3, reason: '' })
+  assert.equal(app.sent[0].data.expectedVersion, 2)
+  const conflict = fakeApp(() => ({ code: 500, msg: '冲突', data: { conflict: true, version: 5 } }))
+  assert.deepEqual(await snapshot.publishShareSnapshot(conflict, memoryStorage(), SESSION, { expectedVersion: 4 }), { token: '', version: 5, reason: 'conflict' })
+  const legacy = fakeApp(() => ({ code: 200, data: { token: TOKEN, version: 1 } }))
+  await snapshot.publishShareSnapshot(legacy, memoryStorage(), SESSION)
+  assert.equal('expectedVersion' in legacy.sent[0].data, false)
+})
+
+test('N015 上传快照带去敏声明且遮挡区域内的点/地点不出现', () => {
+  const zone = { id: 'home', lat: SESSION.track[0].lat, lng: SESSION.track[0].lng, r: 100 }
+  const payload = snapshot.buildSharePayload(SESSION, { clipEnabled: false, maskZones: [zone] })
+  assert.deepEqual(payload.redaction, { v: 1, clip: false, pct: 0, zones: 1 })
+  assert.ok(payload.track.every((p) => !(p.lat === zone.lat && p.lng === zone.lng)))
+  assert.equal(JSON.stringify(payload).indexOf('"maskZones"'), -1)
 })

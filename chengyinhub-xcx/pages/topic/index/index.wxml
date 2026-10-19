@@ -312,7 +312,7 @@
                 <view class="star flex-ac" wx:else>
                   <cy-icon wx:for="{{ratingStars}}" wx:key="star" name="star-filled" size="24" />
                 </view>
-                <view class="row2" wx:if="{{info.commentCount}}">基于{{ info.commentCount || 0 }}条评论</view>
+                <view class="row2" wx:if="{{info.commentCount}}">基于{{ info.commentCount || 0 }}条普通意见</view>
                 <!-- 稿 219:389/219:416(空态)把这一块写全了:两行文案 + 一个入口。
                      0 条时原来这行整个不出,一屏上只剩「0 ★★★★★ [投票]」,不说人话。
                      整块不渲染也不行 ——「投票」是这里唯一的打分入口,藏了就没地方打分。 -->
@@ -327,7 +327,7 @@
           <!-- 稿 219:389/416 的评价空态:第二行说清「写了有什么好处」,再给一个入口。
                入口走的就是「投票」那颗同一个 voteClick —— 不另开一条打分路径。 -->
           <view class="wp det6-empty" wx:if="{{!info.commentCount}}">
-            <text class="det6-empty-s">玩过之后回来写一条，可以获得平台积分。</text>
+            <text class="det6-empty-s">欢迎分享普通意见；体验完成情况尚未核验，奖励以实际积分记录为准。</text>
             <cy-btn variant="secondary" size="sm" bindtap="voteClick">成为第一个评价的人</cy-btn>
           </view>
           <view class="scroll-list" style="margin-bottom: 0;" wx:else>
@@ -336,7 +336,7 @@
                 <view class="item-top flex-cb">
                   <view class="col1">
                     <view class="tit">{{item.memberNickname}}</view>
-                    <view class="time">{{item.createTime}}</view>
+                    <view class="time">{{item.createTime}} · 普通意见 · 体验未核验</view>
                   </view>
                   <view class="col2">
                     <cy-icon wx:for="{{ item.rating }}" wx:key="*this" name="star-filled" size="24" />
@@ -356,7 +356,7 @@
                 <image lazy-load="true" src="/pages/topic/images/icon_lp.png" mode="widthFix" />
               </view>
               <view class="info flex-a">
-                <view class="tit">设计路线、报名、分享、评论都可以获得平台积分</view>
+                <view class="tit">查看积分规则与实际积分记录</view>
                 <view class="desc">和好友一起报名更划算，路线票可抵扣减免</view>
               </view>
             </view>
@@ -416,7 +416,7 @@
               show-location
               bindmarkertap="onNodeTap">
             </map>
-            <view class="route-map-tip" wx:if="{{!routeIsRoad}}">直连预览 · 道路路线待生成</view>
+            <view class="route-map-tip">{{routeSourceText}} · 开放时段与实际可达性待确认</view>
           </view>
 
           <cy-empty wx:if="{{activeTab == '1' && !info.chaptersList.length}}" kind="empty"
@@ -518,12 +518,7 @@
             </view>
           </view>
           <view class="list">
-            <!-- 稿 214:689:「N min 步行」画在**两站之间**,说的是从上一站走到这一站。
-                 所以它属于本站这一格的开头,不是上一站的结尾。
-                 ⚠️ 原来这里注释掉的那版用的是 node.nodeTime —— 那一列的注释写着
-                    「建议停留时长(分钟)」,当成步行时间是语义错配,没有恢复它;
-                    现在用站点经纬度直线估算(与 club/topic-story 同一份 walkText),
-                    拿不到坐标就整行不出。 -->
+            <!-- 站间距离为坐标直线距离，不代表步行路线或用时。 -->
             <view class="li" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node" wx:for-index="nodeIndex">
               <view class="item-walk" wx:if="{{node.walkText}}">{{node.walkText}}</view>
               <view class="xh flex-cc">{{ nodeIndex+1 }}</view>
@@ -570,7 +565,7 @@
 
 
   <!-- 投票弹窗标题与关闭出口由共用 sheet 提供。 -->
-  <cy-sheet show="{{ voteShow }}" title="评价路线" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="voteClose">
+  <cy-sheet show="{{ voteShow }}" title="分享路线意见" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="voteClose">
     <view class="pop pop-vote">
       <view class="pop-cont">
         <view class="pingfen flex-cc">

@@ -125,3 +125,26 @@ test('拍板22 继续游戏卡:自玩按 topicId 直达游玩页,作用域非法
   assert.equal(buildContinueGame([]), null);
   assert.equal(buildContinueGame(null), null);
 });
+
+test('日期缺失的候选保留并标明未知，已加载范围不冒充全量', () => {
+  const cards = search.decorateRows('activity', [{ id: 1 }, { id: 2, startDate: '2026-10-13' }], { startDate: '2026-10-12', endDate: '2026-10-12' });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].dateText, '日期待确认');
+  const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/search2/result/index.wxml'), 'utf8');
+  assert.match(wxml, /仅展示已加载结果/);
+  assert.match(wxml, /已加载结果中没有匹配内容/);
+});
+
+test('空价、非法价不当零元筛掉或展示，零元必须来自明确数字', () => {
+  for (const price of [null, '', ' ', 'bad', false, -1]) {
+    const cards = search.decorateRows('topic', [{ id: 1, minAmout: price }], { minPrice: 10, maxPrice: 100 });
+    assert.equal(cards.length, 1);
+    assert.equal(cards[0].priceText, '价格待确认');
+  }
+  assert.match(search.decorateItem('activity', { id: 2, minAmout: 0 }).priceText, /展示价 ¥0/);
+  assert.deepEqual(search.filterRows('activity', [{ id: 2, minAmout: 0 }], { minPrice: 10, maxPrice: 100 }), []);
+});
+
+test('没有选价格的 null 条件不变成最高零元', () => {
+  assert.equal(search.filterRows('activity', [{ id: 1, minAmout: 199 }], { minPrice: null, maxPrice: null }).length, 1);
+});

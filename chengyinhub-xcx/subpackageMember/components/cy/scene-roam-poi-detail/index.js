@@ -130,6 +130,10 @@ Component({
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
           this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
+          if (this._uncertainPoi === poiId) {
+            if (rawNode.completed === true || rawNode.needRedeem === true) this._uncertainPoi = null
+            else this._showCompletionUnknown()
+          }
           if (node.merchantId) this._loadMerchant(node.merchantId, token)
         },
         fail: () => { if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络异常，这次没有读到据点信息。' }) },
@@ -290,6 +294,7 @@ Component({
     },
     recoverInteraction() {
       if (this._closed) return
+      if (this._uncertainPoi === this.data.poiId) { this._load(); return }
       const token = this._interactionToken
       const state = this.data.interactionState
       const retry = this._interactionRetry
@@ -310,6 +315,7 @@ Component({
     },
     startInteract() {
       const node = this.data.node
+      if (this._uncertainPoi === this.data.poiId) { this._showCompletionUnknown(); return }
       if (this._closed || !node || node.completed || this.data.completing) return
       const token = (this._interactionToken || 0) + 1
       this._interactionToken = token
@@ -368,7 +374,11 @@ Component({
       }
       this.completeNode('')
     },
+    _showCompletionUnknown() {
+      this._setInteractionRecovery('unknown', '打卡结果待确认', '请先查询本次打卡结果，暂不要重新提交或领取奖励。', 'read', '查询原结果')
+    },
     completeNode(answer, photoUrl, code) {
+      if (this._uncertainPoi === this.data.poiId) { this._showCompletionUnknown(); return }
       if (this._closed || this.data.completing || !this.data.poiId || !this.data.node) return
       if (this.data.node.status !== 1) return this.startInteract()
       const token = (this._completionToken || 0) + 1
@@ -395,12 +405,17 @@ Component({
                  原来两者共用 retry='complete' ⇒ 「重试」直接重放 _pendingCompletion 里的旧答案,
                  用户没有重新输入的入口,再点必得同一句「答案不正确」。
                  业务拒绝给回输入:清掉旧答案,重试接 startInteract(重开输入框/选项面板);
-                 只有 :fail(网络)与定位失败仍按原答案续跑 —— 「原输入已保留」说的是那两个。 */
+                 传输失败先回读原结果；未发起提交的定位失败才允许续跑原输入。 */
               this._pendingCompletion = null
               this._setInteractionRecovery('retry', '打卡没有完成', (res && res.msg) || '服务暂时无法核验，请重试。', 'start', '重新作答')
               return
             }
-            const result = res.data || {}
+            if (!isRecord(res.data) || typeof res.data.needRedeem !== 'boolean') {
+              this._uncertainPoi = poiId
+              this._showCompletionUnknown()
+              return
+            }
+            const result = res.data
             this._pendingCompletion = null
             this._clearInteractionRecovery()
             this.setData({ 'node.completed': result.needRedeem !== true, 'node.needRedeem': result.needRedeem === true })
@@ -413,12 +428,14 @@ Component({
           fail: () => {
             if (token !== this._completionToken || poiId !== this.data.poiId) return
             this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '网络异常，原输入已保留，请重试。', 'complete')
+            this._uncertainPoi = poiId
+            this._showCompletionUnknown()
           },
           successStatusAbnormal: () => {
             if (token !== this._completionToken || poiId !== this.data.poiId) return
             this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '服务暂时无法核验，请重试。', 'complete')
+            this._uncertainPoi = poiId
+            this._showCompletionUnknown()
           },
         })
         },

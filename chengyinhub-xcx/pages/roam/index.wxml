@@ -604,9 +604,9 @@
     <view class="dcopy"><text class="dt">附近正在走的人</text><text class="ds">{{more.runnerText}}</text></view>
     <view class="darr"></view>
   </view>
-  <view class="drow" bindtap="openRoamTasks" aria-role="button" aria-label="任务" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="drow" bindtap="openRoamTasks" aria-role="button" aria-label="官方活动任务" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--flagtask"></view>
-    <view class="dcopy"><text class="dt">任务</text><text class="ds">附近挑战</text></view>
+    <view class="dcopy"><text class="dt">官方活动任务</text><text class="ds">报名后参与 · 以活动核验为准</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamPassport" aria-role="button" aria-label="勋章" hover-class="cy-pressed" hover-stay-time="80">
@@ -655,11 +655,28 @@
 <view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab"></view>
   <text class="ph1">清空本机缓存</text>
-  <text class="roam-rules__lede">会清掉这台手机上的迷雾格子、足迹与本次记录，分享出去的足迹链接也会失效。已经上传的记录不受影响。</text>
-  <view class="btnrow">
-    <view class="btn2 btn2--w" bindtap="cancelClearRoamLocal" aria-role="button" aria-label="不清空" hover-class="cy-pressed" hover-stay-time="80">先不清</view>
-    <view class="btn2 btn2--d" bindtap="confirmClearRoamLocal" aria-role="button" aria-label="确认清空本机缓存" hover-class="cy-pressed" hover-stay-time="80">清空</view>
-  </view>
+  <!-- F0386:先列会丢的东西;有未结算/结算未知的漫游时先核对,不直接清 -->
+  <block wx:if="{{clearInv.blocked}}">
+    <text class="roam-rules__lede">{{clearInv.unknown ? '本机漫游记录暂时读不出来' : '有一次漫游还没结算'}}{{clearInv.pending ? '，另有 ' + clearInv.pending + ' 个格子未上报' : ''}}。现在清空会丢掉找回它的线索，请先核对原漫游。</text>
+    <view class="btnrow">
+      <view class="btn2 btn2--w" bindtap="cancelClearRoamLocal" aria-role="button" aria-label="不清空" hover-class="cy-pressed" hover-stay-time="80">先不清</view>
+      <view class="btn2 btn2--d" bindtap="recoverBeforeClearRoamLocal" aria-role="button" aria-label="先核对未结算的漫游" hover-class="cy-pressed" hover-stay-time="80">先去核对</view>
+    </view>
+    <view class="btnrow">
+      <view class="btn2 btn2--w" bindtap="confirmClearRoamDisplay" aria-role="button" aria-label="只清展示缓存" hover-class="cy-pressed" hover-stay-time="80">只清展示缓存</view>
+    </view>
+  </block>
+  <block wx:else>
+    <text class="roam-rules__lede">{{clearInv.sessions ? '会删掉 ' + clearInv.sessions + ' 条只存在本机的足迹记录（轨迹没有云端备份，删除后不可恢复），' : ''}}会清掉这台手机上的迷雾格子、足迹与本次记录，分享出去的足迹链接也会失效。已经上传的记录不受影响；已保存或发出的图片无法召回。</text>
+    <text class="roam-rules__lede">只清展示缓存：仅清这台手机上的迷雾显示，之后会重新加载；足迹记录与分享链接都保留。</text>
+    <view class="btnrow">
+      <view class="btn2 btn2--w" bindtap="confirmClearRoamDisplay" aria-role="button" aria-label="只清展示缓存" hover-class="cy-pressed" hover-stay-time="80">只清展示缓存</view>
+      <view class="btn2 btn2--d" bindtap="confirmClearRoamLocal" aria-role="button" aria-label="确认清空本机缓存" hover-class="cy-pressed" hover-stay-time="80">全部清空</view>
+    </view>
+    <view class="btnrow">
+      <view class="btn2 btn2--w" bindtap="cancelClearRoamLocal" aria-role="button" aria-label="不清空" hover-class="cy-pressed" hover-stay-time="80">先不清</view>
+    </view>
+  </block>
 </view>
 </block>
 

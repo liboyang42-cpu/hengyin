@@ -116,7 +116,7 @@ test('AI 重试失败时保留已经生成的草稿与点位', () => {
 
   assert.deepEqual(page.data.aiPlan, previousPlan);
   assert.deepEqual(page.data.aiPlanNodes, previousNodes);
-  assert.match(page.data.aiError, /网络暂时不可用/);
+  assert.match(page.data.aiError, /生成结果待确认/);
   assert.equal(page.data.aiGenerating, false);
 });
 
@@ -197,4 +197,18 @@ test('简易版不带发布链路:零绑定的孤儿方法不得复活', () => {
     '本页不发发布请求,成功面板没有生产者');
   const js = fs.readFileSync(path.join(__dirname, '../../pages/publish/simple/index.js'), 'utf8');
   assert.doesNotMatch(js, /\/api\/topic\/create/, '发布只在 fabu,简易页不得重新直提');
+});
+
+
+test('生成结果未知只能查询次数，不能再次触发模型或丢掉已有草稿', () => {
+  const page = makePage();
+  page.data.aiIdea = '老城';
+  page.generateAiPlan();
+  sent[0].successStatusAbnormal({ code: 500 });
+  sent[0].complete();
+  assert.equal(page.data.aiUnknown, true);
+  assert.equal(sent[1].url, '/api/ai/theme/draft/quota');
+  sent[1].success({ code: 200, data: { limited: true, remaining: 2 } });
+  page.generateAiPlan();
+  assert.equal(sent.length, 2, '次数读回不等于生成结果终态');
 });

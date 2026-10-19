@@ -53,3 +53,17 @@
   transition: color var(--cy-dur-fast) linear;
 }
 .sh--on .sh__n { color: #3ecf8e; }                                  /* ds-ok 过线绿 */
+
+/* C1:相对音量读数 + 规则小字 + 授权替代(与 quietHold 同一套) */
+.sh__note { font-size: var(--cy-type-caption); opacity: .62; }
+.sh__alt { width: 100%; display: flex; gap: 20rpx; }
+.sh__alt-b {
+  flex: 1;
+  height: 88rpx;                                                    /* ds-ok */
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 44rpx;                                             /* ds-ok */
+  border: 2rpx solid rgba(232, 240, 234, .4);                       /* ds-ok */
+  color: #e8f0ea;                                                   /* ds-ok */
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+}

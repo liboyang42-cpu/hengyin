@@ -231,6 +231,8 @@ function synchronizeChapter(chapter) {
     block._nodeAddress = node._storyGame ? '故事玩法 · 无需到达地点' : (node.address || '地点待补');
     if (node._storyGame) block.locationRequired = false;
     else delete block.locationRequired;
+    // 已保存站点的编号:故事流块上的「计入完成 / 额外站点 / 机动」标记按它写进章节规则
+    block._nodeId = Number(node.id) > 0 ? Number(node.id) : 0;
     block._nodeGameplayReady = Number(node.templateId) > 0
       || !!(node.templateInfo && node.templateInfo.title);
     // 节点块要显示节点实拍缩略图(用户 2026-08-10 定)。imgUrl 是逗号分隔的多图串,
@@ -297,6 +299,7 @@ function materializeChapter(source, makeKey) {
       // 空判用 .trim() 与 insertMediaAt / fillMedia / toPayloadChapter 三处对齐(纯空白 url 也算空)。
       if (!url.trim() && block.type !== 'audio') throw new Error('媒体块缺少地址');
       var media = { key: block.key || keyFactory(), type: block.type, url: url };
+      if (block.altText != null) media.altText = String(block.altText);
       // 重开章节时 payload 里只剩 {type,url} —— 文件名从地址末段派生,至少不显示成"音频片段"。
       // 时长派生不出来,由页面拿播放器异步补(见 index.js#_fillStoryAudioMeta)。空占位块无 url,不派生。
       if (block.type === 'audio' && url.trim()) {
@@ -355,7 +358,8 @@ function toPayloadChapter(source) {
       return Object.assign({ type: block.type, key: block.key }, PLAIN_BLOCKS[block.type](block));
     }
     if (isMediaType(block.type)) {
-      return { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url) };
+      return { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url),
+        ...(block.altText != null ? { altText: String(block.altText) } : {}) };
     }
     throw new Error('节点块引用已失效');
   });
@@ -578,6 +582,17 @@ function applyStoryCommand(input, command) {
     if (!dropImages[command.index]) throw new Error('这一张已经不在相册里了');
     dropImages.splice(command.index, 1);
     synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  if (command.type === 'setMediaAltText') {
+    var media = draft.chapter.blocks.find(function (item) {
+      return item && item.key === command.blockKey && isMediaType(item.type);
+    });
+    if (!media) throw new Error('未找到这段媒体');
+    var altText = String(command.altText == null ? '' : command.altText);
+    if (altText.length > 2000) throw new Error('文字替代最多 2000 字');
+    media.altText = altText;
     return { draft: draft };
   }
 

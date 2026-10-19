@@ -21,7 +21,7 @@ function openScene(id, params = {}) {
     toast('场景暂时打不开')
     return
   }
-  wx.navigateTo({
+  navigateRegistered({
     url: pageUrl(scene),
     fail() {
       toast('场景暂时打不开')
@@ -30,3 +30,5 @@ function openScene(id, params = {}) {
 }
 
 module.exports = { openScene }
+
+const { navigateRegistered } = require('./registered-navigation.js');

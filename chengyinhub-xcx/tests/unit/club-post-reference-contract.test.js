@@ -75,10 +75,15 @@ test('★判定必须复用广场那一份,不许在俱乐部页里再写一套'
 })
 
 test('★refType 的编号必须和广场的 dataType 对齐', () => {
-  const guard = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
-  assert.match(guard, /if \(refType != 1 && refType != 2\) return error\("暂不支持这种引用"\)/,
+  // F0098 起引用资格收进 ClubPostReferenceGuard(写入与读取共用),控制器只转调。
+  const controller = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
+  assert.match(controller, /clubPostReferenceGuard\.requireCitable\(memberId, refType, refId\)/)
+  const guard = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ClubPostReferenceGuard.java')
+  assert.match(guard, /REF_ACTIVITY = 1;/)
+  assert.match(guard, /REF_TOPIC = 2;/)
+  assert.match(guard, /if \(refType != REF_ACTIVITY && refType != REF_TOPIC\)\s*\{\s*throw new ServiceException\("暂不支持这种引用", 400\)/,
     '只放行 1/2:3(自由漫游成绩)全仓还没有生产者,放行等于开一个没人写得进去的入口')
-  assert.match(guard, /if \(refType == null \|\| refId == null \|\| refId <= 0\) return error\("引用信息不完整"\)/,
+  assert.match(guard, /if \(refType == null \|\| refId == null \|\| refId <= 0\)\s*\{\s*throw new ServiceException\("引用信息不完整", 400\)/,
     '半个引用(只有类型没有 ID)必须挡住,否则投影出来是一张空卡')
 })
 
@@ -102,4 +107,22 @@ test('★点那张卡要跳被引主题,拿不到 topicId 才退回展开评论(
     '跳的是主题详情页;sportTopicId 是 cms_topic 的真实 id')
   assert.match(src, /if \(!post \|\| !post\.sportTopicId\) return this\.onToggleComments\(e\)/,
     '投影不出主题时退回展开评论,不是静默什么都不做')
+})
+
+// F0098:被引对象当前已删/下架/转私密 —— 后端只给 refUnavailable,不给标题封面;卡片降级并说明原因。
+test('引用当前不可见:降级成图文帖、带不可见标记,不渲染残缺成绩卡', () => {
+  const post = normalize(Object.assign({}, base, { refType: 1, refId: 88, refUnavailable: true }), 9)
+  assert.equal(post.isCompletionShare, false)
+  assert.equal(post.hasPlayCover, false)
+  assert.equal(post.refUnavailable, true)
+  const normal = normalize(Object.assign({}, base, { refType: 1, refId: 88, sportName: '外滩夜巡' }), 9)
+  assert.equal(normal.refUnavailable, false)
+})
+
+test('帖子列表为不可见引用写明原因;编辑历史失败如实展示服务端原因', () => {
+  const wxml = read('pages/club/detail/index.wxml')
+  assert.match(wxml, /class="post-ref-unavailable" wx:if="\{\{item\.refUnavailable\}\}"/)
+  assert.match(wxml, /postHistoryState === 'error'\}\}">\{\{postHistoryErrorText \|\| '历史读取失败/)
+  const js = read(PAGE)
+  assert.match(js, /postHistoryErrorText: \(res && res\.msg\) \|\| '历史读取失败/)
 })

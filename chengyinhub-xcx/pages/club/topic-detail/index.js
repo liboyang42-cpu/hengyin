@@ -456,12 +456,15 @@ Page({
       success(res) {
         // 后端拒绝文案(已售锁定 / 只有承接方领队可改)是写给主理人看的,原样进失败半屏
         if (!isSuccess(res)) { failSheet((res && res.msg) || '稍后再试一次'); return; }
+        // F0122:通知状态以服务端回执为准;NOT_SENT 时不说「已通知/已报备」，提示另行告知参与者
+        const notified = !!(res && res.data && res.data.notification && res.data.notification !== 'NOT_SENT');
         that.setData({
           opsTimeSubmitting: false,
           opsTimeSheetVisible: false,
           resultSheet: {
             show: true, kind: 'success', title: '集合时间已更新',
-            sub: '已报备发起人；退款截止按新的集合时间前 24 小时计算。', why: '', duration: OPS_RESULT_SHEET_MS,
+            sub: (notified ? '已通知参与者；' : '变更已留痕，尚未推送通知，请另行告知参与者；') + '退款截止按新的集合时间前 24 小时计算。',
+            why: '', duration: OPS_RESULT_SHEET_MS,
           },
         });
         that.fetchDetail(); // 回读真源:新时间从 activityList 重新取,不在本地先改

@@ -23,6 +23,8 @@ Page({
     fallbackSrc: DEFAULT_BADGE_ASSET,
     unsupported: false,
     renderState: 'loading',
+    // F0399:读屏一句话说全「是哪枚、讲什么」—— 3D 失败/低动态时静态图也靠它被读出来
+    a11yLabel: '徽章',
     reducedMotion: readReducedMotion(),
     rarity: 0,
     style: 'enamel',   // glow=二维发光大卡 / enamel=3D珐琅转台(发布者选择,双样式统一路由)
@@ -56,6 +58,7 @@ Page({
       unsupported: false,
       renderState: 'loading',
     });
+    this.setData({ a11yLabel: this.data.name + (this.data.sub ? '，' + this.data.sub : '') });
     if (this.data.style === 'glow') this._glowTimer = setTimeout(() => this._initGlow(), 200);
   },
   // 组件 ready 回执。⚠️ 不能叫 onReady:会撞 Page 生命周期钩子(页面渲染完必触发),
@@ -74,6 +77,10 @@ Page({
       renderState: 'fallback',
       fallbackSrc: reason === 'asset' ? DEFAULT_BADGE_ASSET : this.data.src,
     });
+  },
+  /** F0399:静态图自己也加载失败(坏链接/超时)时退到正式 demo 素材,名称与描述照常 */
+  onFallbackError() {
+    if (this.data.fallbackSrc !== DEFAULT_BADGE_ASSET) this.setData({ fallbackSrc: DEFAULT_BADGE_ASSET });
   },
   /** glow:复用勋章墙引擎,单枚居中 + 直接进 detail 特写(波点粒子全效果) */
   _initGlow() {
@@ -125,10 +132,13 @@ Page({
         this._glowEng.start();
       }
     }
-    if (this.data.style !== 'enamel' || this.data.renderState !== 'loading') return;
+    // F0399:资源超时两种样式都要兜 —— glow 的画布/引擎迟迟不就绪同样退静态图,不留黑屏
+    if (this.data.renderState !== 'loading') return;
     if (this._xrTimer) clearTimeout(this._xrTimer);
     this._xrTimer = setTimeout(() => {
-      if (!this._xrLoaded && !this.data.unsupported) this.onUnsupported({ detail: { reason: this._xrOk ? 'asset' : 'renderer' } });
+      if (this.data.renderState !== 'loading' || this.data.unsupported) return;
+      if (this.data.style === 'glow') { this.onUnsupported({ detail: { reason: 'renderer' } }); return; }
+      if (!this._xrLoaded) this.onUnsupported({ detail: { reason: this._xrOk ? 'asset' : 'renderer' } });
     }, 3000);
   },
   onHide() {

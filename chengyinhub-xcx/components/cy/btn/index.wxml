@@ -1,4 +1,5 @@
-<view class="btn btn--{{_v}} {{size ? 'btn--' + size : ''}} {{loading ? 'btn--loading' : ''}}" hover-class="{{(_v === 'disabled' || loading) ? '' : 'btn--press'}}" hover-stay-time="80" aria-role="button" aria-label="{{accessibilityLabel}}" aria-disabled="{{_v === 'disabled' || loading}}" catchtap="__onTap">
-  <view wx:if="{{loading}}" class="btn__spinner"></view>
+<view class="btn {{reducedMotion ? 'btn--reduced-motion' : ''}} btn--{{_v}} {{size ? 'btn--' + size : ''}} {{loading ? 'btn--loading' : ''}}" hover-class="{{(_v === 'disabled' || loading) ? '' : 'btn--press'}}" hover-stay-time="80" aria-role="button" aria-label="{{accessibilityLabel}}" aria-busy="{{loading}}" aria-disabled="{{_v === 'disabled' || loading}}" catchtap="__onTap">
+  <view wx:if="{{loading}}" class="btn__spinner" aria-hidden="true"></view>
+  <text wx:if="{{loading}}" aria-role="status" aria-live="polite">{{loadingLabel || '处理中'}}</text>
   <slot></slot>
 </view>

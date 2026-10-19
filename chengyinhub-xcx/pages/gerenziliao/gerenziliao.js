@@ -53,6 +53,10 @@ Page({
     tempCasePics: [], // 临时个人项目图片数组（编辑时使用）
     tempCaseIntroducton: '', // 临时个人项目描述
     tempWechat: '', // 临时微信二维码
+    // 服务端最后确认的作品图/联系二维码:保存时据此判断「这次有没有换新图」→ 回执说明新图在审核中
+    savedWechat: '',
+    savedCasePics: '',
+    mediaReviewPending: false,
     tempIntroduction: '', // 城市签名草稿；完成前不写回 userInfo
     tempName: '', // 昵称草稿；完成前不写回 userInfo
 
@@ -355,11 +359,18 @@ Page({
             casePicsList = res.data.casePics.split(';').filter(url => url.trim() !== '');
           }
 
+          // 联系二维码/作品图以本次回读为准:服务端已撤回或审核清除的图,不能靠上一份内存值继续冒充当前资料
+          const confirmedWechat = typeof res.data.wechat === 'string' ? res.data.wechat : '';
+          const confirmedCasePics = typeof res.data.casePics === 'string' ? res.data.casePics : '';
           that.setData({
             userInfo: {
               ...that.data.userInfo,
-              ...res.data
+              ...res.data,
+              wechat: confirmedWechat,
+              casePics: confirmedCasePics
             },
+            savedWechat: confirmedWechat,
+            savedCasePics: confirmedCasePics,
             phoneMasked: maskPhone(res.data.phone),
             casePicsList: casePicsList,
             loading: false,
@@ -430,7 +441,9 @@ Page({
       tagIds: this.data.selectedCategoryIds.join(',')
     };
 
-    this.setData({ saving: true, saveError: '', saveSucceeded: false });
+    const mediaChanged = String(userInfo.wechat || '') !== String(this.data.savedWechat || '')
+      || String(userInfo.casePics || '') !== String(this.data.savedCasePics || '');
+    this.setData({ saving: true, saveError: '', saveSucceeded: false, mediaReviewPending: false });
 
     app.sendRequest({
       url: '/api/user/update',
@@ -442,11 +455,16 @@ Page({
       success: function (res) {
         if (that._unloaded) return;
         if (res.code == "200") {
+<<<<<<< public
           // 只回写本次真正提交的字段:昵称未改时 data.name 是 undefined,写进会话会把现有昵称清空。
           if (typeof data.name === 'string' && data.name.trim()) app.setNickname(data.name);
           if (typeof data.avatar === 'string' && data.avatar) app.setAvatar(data.avatar);
           that.setData({ saving: false, saveError: '', saveSucceeded: true });
           toast.success('资料已保存', { duration: 2000 });
+=======
+          that.setData({ saving: false, saveError: '', saveSucceeded: true, mediaReviewPending: mediaChanged });
+          toast.success(mediaChanged ? '已保存，图片审核中' : '资料已保存', { duration: 2000 });
+>>>>>>> private-feature/w2-r
           that._profileReturnTimer = setTimeout(() => {
             that._profileReturnTimer = null;
             if (that._unloaded) return;

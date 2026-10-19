@@ -46,7 +46,11 @@ function present(view, nodes) {
   const ballot = [];
   if (world.ownVote) ballot.push('本队首选：' + planName(world.ownVote.planKey) + (world.ownVote.ownSignatureCurrent ? '（当前队长已签署）' : '（队长已变更，须重新签署）'));
   if (world.ownAcceptance) ballot.push('本队接受：' + (world.ownAcceptance.planKeys.map(planName).join('、') || '不接受任何方案') + (world.ownAcceptance.ownSignatureCurrent ? '（当前队长已签署）' : '（队长已变更，须重新签署）'));
-  return { planBallotText: ballot.join('；'), planReadback: readback, planRows: rows, planPolicyText: policyText(world.votePolicy), planPhaseText: phaseText(world.votePhase),
+  const lockedRows = (world.ownMaterials || []).filter(row => Number(row.locked) > 0);
+  // 锁定物资仍在本队背包里占负重；表决与托管期间不能交易、使用或丢弃，改案即全部释放
+  const planLockedText = lockedRows.length ? '本队已锁定：' + lockedRows.map(row => ((trade.catalogue(view).find(item => item.id === row.itemId) || {}).name || '物资 ' + row.itemId) + ' ×' + row.locked).join('、') + '（仍占背包负重，表决或托管期间不能交易、使用或丢弃）' : '';
+  const planChangeText = allowed('PLAN_CHANGE') ? '改案会释放各队已锁定物资，旧票与旧确认作废，须重新表决并重新确认出资' : '';
+  return { planBallotText: ballot.join('；'), planReadback: readback, planRows: rows, planLockedText, planChangeText, planPolicyText: policyText(world.votePolicy), planPhaseText: phaseText(world.votePhase),
     planMaterials: (world.ownMaterials || []).map(row => ({ ...row, name: (trade.catalogue(view).find(item => item.id === row.itemId) || {}).name || '物资 ' + row.itemId })),
     planGlobalActions: [['VOTE_OPEN', '开启首选表决'], ['VOTE_NEXT', '开启下一轮'], ['PLAN_CHANGE', '改案并重新签署'], ['PLAN_REJECT_ALL', world.ownRejectedAll ? '重新签署拒绝全部' : '拒绝全部剩余方案']].filter(([action]) => allowed(action)).map(([action, label]) => ({ action, label })),
     planCanAccept: allowed('ACCEPT_SET'), planCanRejectVote: allowed('VOTE_CAST'), planResult: world.result || world.lastOperationResult || null };
@@ -128,7 +132,7 @@ function methods(req) {
       const send = () => this._sendThemePlan(action, payload);
       if (['PLAN_CHANGE', 'PLAN_WITHDRAW', 'PLAN_EXECUTE', 'PLAN_REJECT_ALL'].includes(action)) {
         modal.show({ title: { PLAN_CHANGE: '改案并重新签署', PLAN_WITHDRAW: '撤回本队提案', PLAN_EXECUTE: '执行已选方案', PLAN_REJECT_ALL: '拒绝全部剩余方案' }[action],
-          content: action === 'PLAN_EXECUTE' ? '操作通过后才会消耗已确认物资，结果以确认的操作记录为准。' : '这次操作会影响当前票轮与签名，请核对后确认。', confirmText: '确认', success: result => {
+          content: action === 'PLAN_EXECUTE' ? '操作通过后才会消耗已确认物资，结果以确认的操作记录为准。' : action === 'PLAN_CHANGE' ? '改案会释放各队已锁定物资，当前票与出资确认全部作废，之后须重新表决并重新确认。' : '这次操作会影响当前票轮与签名，请核对后确认。', confirmText: '确认', success: result => {
             if (!result.confirm) return;
             if (revision !== this.data.themeBag.revision || epoch !== this.data.themeBag.authorityEpoch) { this.setData({ themePlanError: '状态已变化，请重新核对后确认' }); return; }
             if (this._canThemePlan(action, this._currentThemePlan())) send();

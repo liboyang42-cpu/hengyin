@@ -210,4 +210,9 @@ page { background: var(--cy-color-bg-page); }
  * 减动效由 style/motion-entry.wxss 里的 `.cy-motion-reduced .cy-rise-in { animation: none }`
  * 兜住 —— 生效前提是根节点真的挂得上 cy-motion-reduced(见 wxml 与 onShow)。 */
 
+<<<<<<< public
 .intro__claim { margin-top: var(--cy-space-3); text-decoration: underline; }
+=======
+/* X036 改绑申请入口:独立一行,热区按按钮高度。 */
+.identity-change-link { display: inline-flex; align-items: center; min-height: var(--cy-btn-h); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-title); }
+>>>>>>> private-feature/w2-r

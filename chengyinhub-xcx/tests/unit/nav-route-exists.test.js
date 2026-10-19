@@ -2,6 +2,8 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const os = require('node:os')
+const { finiteRoutes } = require('../lint/finite-routes')
 
 /**
  * 导航目标页面必须真实存在于 app.json。
@@ -47,15 +49,31 @@ function sourceFiles() {
 }
 
 /** @returns {{hits: Array, dynamic: Array}} hits=可静态判定的;dynamic=拼接的,必须进显式盘点 */
-function collect(sources) {
+let currentProofs
+function collect(sources, proofs) {
   const hits = [], dynamic = []
   const entries = sources || sourceFiles().map((file) => ({
     rel: path.relative(ROOT, file),
     source: fs.readFileSync(file, 'utf8'),
   }))
+  proofs = proofs || (sources ? new Map() : (currentProofs ||= finiteRoutes(entries
+    .filter(({ rel }) => rel.endsWith('.js') && !rel.startsWith('tests/'))
+    .map(({ rel }) => path.join(ROOT, rel)))))
   for (const { rel, source } of entries) {
     if (rel.startsWith('tests/')) continue
+    const proof = proofs.get(path.join(ROOT, rel))
+    for (const request of proof?.requests || []) {
+      if (!request.navigation || !request.routes || request.ambiguous) continue
+      for (const url of request.routes) {
+        if (!/^\/(?:pages|subpackage[A-Za-z0-9]*)\//.test(url)) continue
+        hits.push({ rel, line: source.slice(0, request.call.start).split('\n').length,
+          field: 'url', route: url.split('?')[0], runtime: true })
+      }
+    }
+    let offset = 0
     source.split('\n').forEach((line, i) => {
+      const lineOffset = offset
+      offset += line.length + 1
       if (/^\s*(\/\/|\*|<!--)/.test(line)) return   // 注释里的旧路径不算(搬迁说明会提到)
       for (const m of line.matchAll(PAGE_TARGET)) {
         const field = m[1]
@@ -66,11 +84,21 @@ function collect(sources) {
         // 仅认“字面查询串或空串”，未知后缀及继续拼接仍按动态路径处理。
         const optionalQuery = /^\s*\+\s*\([^?]+\?\s*(['"])\?[^'"]*\1\s*:\s*(['"])\2\s*\)\s*[,}]/.test(afterLiteral)
         // 查询参数可以动态,但路由 path 必须能静态回读；只把 path 本身拼接的列入盘点。
+<<<<<<< public
         if (route.includes('${') || (!raw.includes('?') && concatenated && !optionalQuery)) {
+=======
+        if (route.includes('${') || (!raw.includes('?') && concatenated && !queryOnly)) {
+          const resolved = proof?.expressions.get(lineOffset + m.index + m[0].length - raw.length - 1)
+          if (resolved?.navigation && resolved.routes.every(url => !url.split('?')[0].includes(':dynamic'))) continue
+>>>>>>> private-feature/w2-r
           dynamic.push({ rel, line: i + 1, field, raw })
           continue
         }
-        hits.push({ rel, line: i + 1, field, route })
+        // The coop wrapper forwards target.url to the checked navigation boundary.
+        const runtime = rel === 'pages/coop/list/index.js'
+          && /_navigateTo\(target\)\s*\{[\s\S]*?navigateRegistered\(\{ url: url,/.test(source)
+          && /\b(?:this|that)\._navigateTo\(\{\s*$/.test(line.slice(0, m.index))
+        hits.push({ rel, line: i + 1, field, route, runtime })
       }
     })
   }
@@ -91,6 +119,14 @@ function dynamicKey(item) {
 function assertDynamicInventory(dynamic, expected = EXPECTED_DYNAMIC_NAV) {
   assert.deepEqual(dynamic.map(dynamicKey).sort(), expected.slice().sort(),
     '动态导航清单发生漂移 —— 新增/改动须人工核对目标并更新显式盘点')
+}
+
+function finiteFixture(t, rel, source) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'nav-route-proof-'))
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }))
+  const file = path.join(directory, 'index.js')
+  fs.writeFileSync(file, source)
+  return collect([{ rel, source }], new Map([[path.join(ROOT, rel), finiteRoutes([file]).get(file)]]))
 }
 
 test('所有静态导航目标都在 app.json 里真实存在', () => {
@@ -195,17 +231,22 @@ const ORPHAN_EXEMPT = new Map([
   // 2026-09-17 B-06 曾把 pricing/partner 整页退役(全仓零入口);2026-09-19 批复1-a=2 裁决复活并
   // 接进定价页「合作阵容」(pricing/index.js goPartner)——页有真实入口,不再需要豁免条目。
   ['/pages/play/circle/index', '退役兼容壳:圈层 2026-08-29 退役,旧分享兜底,2026-12-31 到期删(见 circle/index.js 顶部排期)'],
+<<<<<<< public
   ['/pages/publish/simple/index', '待拍板:AI 简易发布页,2026-09-06 本契约首次抓出全仓零跳转(创建入口只到 fabu/temp)'],
   // 2026-10-19 移植共享基线 366b846f:基线把「官方线路」入口放在旧漫游入口地图上,master 漫游改版后该屏已删,
   // 入口位置待产品拍板(候选:漫游护照玩法卡);接上后从这里删掉。详情页由列表页跳转,不在豁免内。
   ['/subpackageRoam/official-routes/index', '待拍板:官方线路列表页入口随 master 漫游改版消失,接线位置待产品决定'],
+=======
+>>>>>>> private-feature/w2-r
   // 2026-09-22 Phase 0 立体藏品卡闸口页:走查用的实验室页,站内不给入口(卡好不好看还没拍板),
   // 真机录屏与截图矩阵 F89 都靠编译模式直达。Phase 1/2 把 objectCard 接进玩法后从这里删掉。
 ])
 
 // 门禁本体:注册页 − 被跳到的页(排除页面自身目录的自引用与 scene-registry 宿主) − 豁免表
 function orphansOf(routes, hits, exempt) {
-  const reached = new Set(hits.filter((h) => !('/' + h.rel).startsWith(h.route.replace(/\/[^/]+$/, '/'))).map((h) => h.route))
+  const reached = new Set(hits.filter((h) => h.runtime && !('/' + h.rel).startsWith(h.route.replace(/\/[^/]+$/, '/'))).map((h) => h.route))
+  const app = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'))
+  for (const tab of app.tabBar.list) reached.add('/' + tab.pagePath)
   const registry = fs.readFileSync(path.join(ROOT, 'utils/scene-registry.js'), 'utf8')
   for (const m of registry.matchAll(/route:\s*'(\/[^']+)'/g)) reached.add(m[1])
   return {
@@ -228,4 +269,38 @@ test('负控:把一页的唯一跳转拿掉,孤儿页负控必须变红', () => 
   assert.deepEqual(orphansOf(routes, hits, ORPHAN_EXEMPT).orphans, [], '基线本身必须是绿的,负控才有意义')
   const mutated = orphansOf(routes, hits.filter((h) => h.route !== target), ORPHAN_EXEMPT)
   assert.deepEqual(mutated.orphans, [target], '拿掉跳转后必须被判成孤儿')
+})
+
+test('有限字典必须回读到真实导航目标', t => {
+  const { hits, dynamic } = finiteFixture(t, 'fixtures/finite.js',
+    "const items = [{route:'/pages/topic/index/index'}, {route:'/pages/club/detail/index'}]; const item=items.find(x=>x.id===1); wx.navigateTo({url:item.route});")
+  assert.equal(dynamic.length, 0)
+  assert.deepEqual([...new Set(hits.filter(hit => hit.runtime).map(hit => hit.route))].sort(),
+    ['/pages/club/detail/index', '/pages/topic/index/index'])
+  assertRoutesExist(knownRoutes(), hits)
+})
+
+test('负控:删掉客户详情全部入口后，闲置字面量和注册白名单不能掩盖孤儿', t => {
+  const rel = 'pages/club/customers/index.js'
+  const source = fs.readFileSync(path.join(ROOT, rel), 'utf8')
+  const target = '/pages/club/customer-detail/index'
+  const removed = source.replace(target, '/pages/club/detail/index')
+  assert.notEqual(removed, source, '客户详情负控锚点失效')
+  const otherHits = collect().hits.filter(hit => hit.rel !== rel && hit.route !== target)
+  const allowlist = fs.readFileSync(path.join(ROOT, 'utils/registered-navigation.js'), 'utf8')
+  for (const suffix of ['', `\nconst unused = { url: '${target}' };`, '\n' + allowlist]) {
+    const { hits } = finiteFixture(t, rel, removed + suffix)
+    assert.deepEqual(orphansOf(knownRoutes(), otherHits.concat(hits), ORPHAN_EXEMPT).orphans, [target])
+  }
+})
+
+test('负控:有限字典中的未注册目标及未知拼接仍必须判红', t => {
+  const bad = finiteFixture(t, 'fixtures/bad.js',
+    "const items = [{route:'/subpackageTools/missing/index'}]; const item=items.find(x=>x.id===1); wx.navigateTo({url:item.route});")
+  assert.ok(bad.hits.some(hit => hit.runtime))
+  assert.throws(() => assertRoutesExist(knownRoutes(), bad.hits), /导航指向了/)
+  const unknown = finiteFixture(t, 'fixtures/unknown.js',
+    "const feature=getRuntimeFeature(); wx.navigateTo({url:'/subpackageTools/'+feature+'/index'});")
+  assert.equal(unknown.dynamic.length, 1)
+  assert.throws(() => assertDynamicInventory(unknown.dynamic, []), /动态导航清单发生漂移/)
 })

@@ -134,14 +134,28 @@ function createUploadClient(deps) {
       record.watchdog = schedule(function () {
         var task = record.task;
         record.task = null;
-        settle(index, { status: 'unknown', msg: '上传超时，请重试此文件' });
+        settle(index, { status: 'unknown', retryable: true, msg: '上传超时，请重试此文件' });
         try { if (task && typeof task.abort === 'function') task.abort(); } catch (e) {}
       }, perFileTimeoutMs);
 
+<<<<<<< public
       function accept(data) {
         if (!isCurrentOwner()) return;
+=======
+      var task = wxUploadFile({
+        url: getBaseUrl() + uploadPath,
+        filePath: filePath,
+        name: 'file',
+        header: authHeader(),
+        formData: Object.keys(formData).length ? formData : undefined,
+        success: function (res) {
+          var data;
+          try { data = JSON.parse(res.data); }
+          catch (e) { settle(index, { status: 'failed', retryable: res && res.statusCode >= 500, msg: '上传结果解析失败' }); return; }
+>>>>>>> private-feature/w2-r
           if (!data || data.code != 200) {
-            settle(index, { status: 'failed', msg: safeUserMessage(data, '上传失败') });
+            // 只有网络中断、超时与服务端 5xx 可原样重试；4xx/业务拒绝须换图或按提示处理
+            settle(index, { status: 'failed', retryable: res && res.statusCode >= 500 || data && Number(data.code) >= 500, msg: safeUserMessage(data, '上传失败') });
             return;
           }
           var assetId = String(data.assetId || '');
@@ -199,7 +213,7 @@ function createUploadClient(deps) {
           accept(data);
         },
         fail: function (res) {
-          settle(index, { status: 'failed', msg: safeUserMessage(res, '上传失败') });
+          settle(index, { status: 'failed', retryable: true, msg: safeUserMessage(res, '上传失败') });
         }
       });
       if (active[index] === record) record.task = task || null;
@@ -223,7 +237,7 @@ function createUploadClient(deps) {
       for (var i = 0; i < total; i++) {
         if (!settled[i]) {
           settled[i] = true;
-          failures.push({ index: i, filePath: filePaths[i], status: 'unknown', msg: '上传结果未知，请重试此文件' });
+          failures.push({ index: i, filePath: filePaths[i], status: 'unknown', retryable: true, msg: '上传结果未知，请重试此文件' });
         }
       }
       settledCount = total;

@@ -32,6 +32,7 @@ const {
   clipTrackForSharing,
   clipSavedTrackForSharing,
   isChannelAllowed,
+  maskPoisForSharing,
   readSharePrivacy,
 } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
@@ -78,6 +79,7 @@ const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-s
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
 const bgTracker = require('../../utils/location/bg-tracker.js');
+const roamConsent = require('../../utils/location/roam-consent.js');
 
 const FALLBACK = { lat: 31.230416, lng: 121.473701 };
 const REVEAL_M = 55;
@@ -347,6 +349,7 @@ Page({
     /* 清空本机缓存的确认(不可逆,必须问一次)。用原型自己那层半屏问,
        不用 wx.showModal —— 仓库禁原生弹窗,而且系统弹窗里的字文案闸也看不见。 */
     clearAsk: false,
+    clearInv: { blocked: false, sessions: 0, sessionsUnknown: false, pending: 0, unsettled: false, unknown: false, tiles: 0 },
     /* 设置页三行权限态。以前 wxml 读 gpsOk 而 js 从没写过这个字段 ⇒ 三行恒显示「关」,
        已授权的用户被告知自己没授权。真值在 onShow / 打开设置时问 wx.getSetting(见 _syncRoamPermission)。 */
     gpsOk: false,
@@ -740,12 +743,50 @@ Page({
    *  码图需后端小程序码接口(getWXACodeUnlimit),接上前弹窗如实显示待生成,不摆假码。 */
   // 主题码已移到自由探索(play intro):漫游不需要码(用户裁决)
 
+<<<<<<< public
   // 漫游记录里的那年今日 / 月度回顾 / 导出(2026-10-14 随漫游上线):弹窗组件只发事件,跳转在宿主页
   openRoamTool(e) {
     const key = e && e.detail && e.detail.key;
     if (key === 'anniversary') wx.navigateTo({ url: '/subpackageTools/anniversary/index' });
     else if (key === 'recap') wx.navigateTo({ url: '/subpackageTools/monthly-recap/index' });
     else if (key === 'export') wx.navigateTo({ url: '/subpackageTools/exploration-export/index' });
+=======
+  onIntroCardTap(e) {
+    const idx = e.currentTarget.dataset.idx;
+    const card = this.data.introCards[idx] || {};
+    // 附近的局写成字面量跳转:孤儿页门禁只认静态可读的 url,card.nav 那条它看不见
+    if (card.key === 'hangout') { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); return; }
+    if (card.nav) { navigateRegistered({ url: card.nav }); return; }   // 真章节卡 → 进对应游玩
+    if (card.key === 'history') this.openRoamHistory();
+    else this.openRoamRules();
+  },
+  /** 拉我已报名的主题章节,填进「开始主题」横滑卡(与 member/signup 同一数据源同一跳转口径)。
+   *  失败/为空静默保留默认两张 —— 起始页不该因为这一条接口挂掉而报错。 */
+  _loadIntroTopics() {
+    const that = this;
+    getApp().sendRequest({
+      url: '/api/registration/list', method: 'POST', hideLoading: true, silentError: true,
+      data: { owner_type: 1, pageNum: 1, pageSize: 10 },
+      success(res) {
+        const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows)
+          ? res.data.rows : [];
+        const cards = rows.map((r) => {
+          const topic = r.cmsTopic || {};
+          const isFree = Number(topic.mode) === 2;
+          const nav = r.activityId
+            ? ('/pages/play/index?activityId=' + r.activityId + '&registrationId=' + r.id)
+            : ('/pages/play/index?topicId=' + (r.topicId || topic.id) + '&registrationId=' + r.id);
+          return {
+            key: 'reg-' + r.id, nav,
+            icon: isFree ? 'discover-shop' : 'route',
+            title: topic.name || (isFree ? '自由探索' : '城市定向'),
+            sub: (topic.description || '').slice(0, 24) || (isFree ? '任选一处开始探索' : '按顺序走完整条路线'),
+          };
+        });
+        if (cards.length) that.setData({ introCards: cards.concat([HANGOUT_INTRO_CARD]) });
+      },
+    });
+>>>>>>> private-feature/w2-r
   },
   openNearbyMap() { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); },
   openMyTeams() { wx.navigateTo({ url: '/subpackageRoam/my-teams/index' }); },
@@ -771,6 +812,10 @@ Page({
   },
   toggleReducedMotion() {
     const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    if (reducedMotion === null) {
+      cyToast('设置未保存，请重试');
+      return;
+    }
     if (reducedMotion && this._zoomAnim) {
       clearInterval(this._zoomAnim);
       this._zoomAnim = null;
@@ -867,6 +912,18 @@ Page({
     // ?scene=xxx:来自组局页「设置」的定向跳转(它是 tabBar 页,navigateTo 进不来,只能 reLaunch 带参)。
     // 只认白名单内的 scene,别的值一律忽略,不给外部输入开弹层的口子。
     if (q && q.scene === 'roam-settings') this.openScene('roam-settings');
+    this._bindRoamConsent();
+  },
+
+  // F0385:任何入口撤回同意时,本页立即摘掉位置监听并回到「未开启定位」态。
+  _bindRoamConsent() {
+    if (this._unsubRoamConsent) this._unsubRoamConsent();
+    this._unsubRoamConsent = roamConsent.subscribe(() => {
+      if (!this._realOn && !this._onRealLoc) return;
+      this._stopReal();
+      this.setData({ currentAddress: '尚未开启定位' });
+      this._syncGoal();
+    });
   },
 
   onUnload() {
@@ -875,6 +932,7 @@ Page({
     this._roamStartPending = false;
     this._shootAfterStart = false;
     if (this._sessionClock) this._saveRoamRecovery();
+    if (this._unsubRoamConsent) { this._unsubRoamConsent(); this._unsubRoamConsent = null; }
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
     this._clearRollTimers();   // 读数滚动的计时器,离页必须掐掉
@@ -2565,6 +2623,14 @@ Page({
 
   goStart() {
     if (this.data.entrySheet) this.closeEntrySheet();
+<<<<<<< public
+=======
+    const { introCards, introCardIdx } = this.data;
+    const card = introCards[introCardIdx] || {};
+    // 附近的局写成字面量跳转:孤儿页门禁只认静态可读的 url,card.nav 那条它看不见
+    if (card.key === 'hangout') { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); return; }
+    if (card.nav) { navigateRegistered({ url: card.nav }); return; }
+>>>>>>> private-feature/w2-r
     if (this._roamStartPending) return;
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。
@@ -2587,10 +2653,15 @@ Page({
       this.recoverRoam();
       return;
     }
+<<<<<<< public
     if (!loginApp || typeof loginApp.recordConsent !== 'function') {
       this.setData({ introError: '登录没有成功，请检查网络后重试。', locErr: false });
       return;
     }
+=======
+    // F0385:本机已撤回同意时,系统授权缓存不能放行;先重新征求同意,再读位置。
+    if (roamConsent.isRevoked()) { this._reconsentThenStart(); return; }
+>>>>>>> private-feature/w2-r
     this._roamStartPending = true;
     const gen = (this._roamStartGen = this._roamStartGen || 0);
     const locationRevision = bgTracker.revision('roam');
@@ -2647,6 +2718,32 @@ Page({
       },
       fail: () => abandon('定位同意未完成，请重试'),
     }); } catch (e) { abandon('定位同意未完成，请重试'); }
+  },
+
+  _reconsentThenStart() {
+    if (this._roamStartPending) return;
+    this._roamStartPending = true;
+    const that = this;
+    cyModal.show({
+      title: '重新开启漫游定位',
+      content: '你此前撤回了漫游定位同意。开启后仅在你主动漫游时用于实时位置展示、到点打卡和轨迹记录，可随时再次撤回。',
+      confirmText: '同意并出发',
+      cancelText: '暂不开启',
+      success(result) {
+        if (!result || !result.confirm) { that._roamStartPending = false; return; }
+        getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
+          .then(() => {
+            roamConsent.clearRevoked();
+            that._roamStartPending = false;
+            that.goStart();
+          })
+          .catch(() => {
+            that._roamStartPending = false;
+            that.setData({ introError: '同意记录失败，请检查网络后重试。', locErr: false });
+          });
+      },
+      fail() { that._roamStartPending = false; },
+    });
   },
 
   _openRoamMap(startCenter, startTracking) {
@@ -3654,8 +3751,13 @@ Page({
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
     const onOk = () => {
+<<<<<<< public
       if (!live()) return;
       that._realStarting = false; that._realAnchor = null;
+=======
+      // 启动在途时被撤回:迟到的成功不能再挂监听。
+      if (roamConsent.isRevoked()) { bgTracker.release('roam'); return; }
+>>>>>>> private-feature/w2-r
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
       that.setData({ locErr: false });
@@ -3680,9 +3782,16 @@ Page({
       });
     };
     const recordAndStart = () => getApp().recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' })
+<<<<<<< public
       .then(startLocation)
       .catch(() => { if (live()) { abandon(); cyToast('同意记录失败，请检查网络后重试'); } });
     if (consentAlreadyRecorded) { startLocation(); return; }
+=======
+      .then(() => { roamConsent.clearRevoked(); startLocation(); })
+      .catch(() => cyToast('同意记录失败，请检查网络后重试'));
+    // F0385:撤回后旧授权缓存不放行——即便调用方声称已同意,也必须重新征求。
+    if (consentAlreadyRecorded && !roamConsent.isRevoked()) { startLocation(); return; }
+>>>>>>> private-feature/w2-r
     cyModal.show({
       title: '开启实时定位',
       content: '主动开启后用于实时定位、到点打卡和轨迹记录。锁屏或切到后台后仍会记录，结束漫游即停止。附近的人位置分享默认关闭，需要另行单独同意；你可随时在设置中撤回。',
@@ -4598,8 +4707,10 @@ Page({
   // 进 _calcArch 的就是**要被别人看到**的那条轨迹,首尾各裁掉设置里的百分比。
   // 放在更下游(画 canvas 时)会漏掉 sheet 里那张预览卡 —— 预览=导出,两处必须同源。
   _calcArch() {
-    const track = simplifyTrack(clipTrackForSharing(this._track, readSharePrivacy(wx)));
-    return this._buildArchFrom(track, this._pois.filter((p) => p.state === 'done'), this._c);
+    const privacy = readSharePrivacy(wx);
+    const track = simplifyTrack(clipTrackForSharing(this._track, privacy));
+    // M0112:敏感地点内的打卡点同样不进分享产物。
+    return this._buildArchFrom(track, maskPoisForSharing(this._pois.filter((p) => p.state === 'done'), privacy), this._c);
   },
 
   // 轨迹 + POI 共用的 bbox 归一化:实时结束页(_calcArch)与历史足迹卡(R9-44)同源,
@@ -4718,7 +4829,8 @@ Page({
     const distance = readNonNegative(session.distance);
     const shops = readNonNegative(session.shops);
     const explorePct = readNonNegative(session.explorePct);
-    const clipped = clipSavedTrackForSharing(session.track, readSharePrivacy(wx));
+    const sharePrivacy = readSharePrivacy(wx);
+    const clipped = clipSavedTrackForSharing(session.track, sharePrivacy);
     return {
       ownerId: String(getApp().getUserID() || ''),
       sessionId: exactSessionId(session.sessionId),
@@ -4729,7 +4841,7 @@ Page({
         distance: distance === null ? null : distance,
         explorePct: explorePct === null ? null : explorePct,
       },
-      arch: this._buildArchFrom(clipped, session.pois, clipped[0]),
+      arch: this._buildArchFrom(clipped, maskPoisForSharing(session.pois, sharePrivacy), clipped[0]),
     };
   },
 
@@ -5412,9 +5524,55 @@ Page({
   },
   /* 清空本机缓存(原型 setScreen 最后一行)。只清这台机器上的三样,服务端那份不动 ——
      所以「不影响已上传的记录」是真话。不可逆,先确认。 */
-  clearRoamLocal() { this.setData({ clearAsk: true }); },
+  clearRoamLocal() {
+    this.setData({ clearAsk: true, clearInv: this._roamLocalInventory() });
+  },
   cancelClearRoamLocal() { this.setData({ clearAsk: false }); },
+
+  /* F0386:清理前列出会丢的恢复项。blocked = 有未结算/结算未知/待上报的漫游,
+     必须先回服务器核对原会话,不能连同恢复线索一起清掉。 */
+  _roamLocalInventory() {
+    const inv = roamMemory(this).inspectLocal();
+    const activeUnsettled = !!(this._clientSessionKey || exactSessionId(this._roamSid)) && !this._roamCompleted;
+    const pending = Math.max(inv.pendingTiles, (this._pendingTiles || []).length);
+    const blocked = inv.recovery || inv.recoveryUnknown || activeUnsettled || pending > 0
+      || !!this._recoveryNeedsLookup || !!this._recoveryReadFailed || !!this.data.recoveryError;
+    return {
+      blocked,
+      sessions: inv.sessions,
+      sessionsUnknown: inv.sessionsUnknown,
+      pending,
+      unsettled: inv.recovery || activeUnsettled,
+      unknown: inv.recoveryUnknown || !!this._recoveryReadFailed,
+      tiles: inv.tiles,
+    };
+  },
+
+  /* 有未结算记录时的出口:先按原会话回服务器核对(recoverRoam),核对完再来清。 */
+  recoverBeforeClearRoamLocal() {
+    this.setData({ clearAsk: false });
+    return Promise.resolve(this.recoverRoam()).then((ok) => {
+      cyToast(ok ? '已核对，可以再清理' : '还没核对完，记录已保留');
+      return ok;
+    });
+  },
+
+  /* 只清展示缓存:迷雾格子可从服务器重新同步;足迹/恢复记录保留,分享链接不受影响。 */
+  confirmClearRoamDisplay() {
+    const ok = roamMemory(this).clearDisplayCache();
+    this.setData({ clearAsk: false });
+    cyToast(ok ? '已清理展示缓存' : '清理失败，存储被拒');
+    return Promise.resolve(ok);
+  },
+
   confirmClearRoamLocal() {
+    const inv = this._roamLocalInventory();
+    if (inv.blocked) {
+      // 结算未知/未同步时不清:恢复线索一旦删掉,原会话就再也对不上了。
+      this.setData({ clearInv: inv });
+      cyToast('先核对未结算的漫游');
+      return Promise.resolve(false);
+    }
     const ok = roamMemory(this).clearLocal();
     this.setData({ clearAsk: false });
     if (!ok) { cyToast('清不干净，存储读写被拒了'); return Promise.resolve(false); }
@@ -5611,3 +5769,5 @@ Page({
   },
 
 });
+
+const { navigateRegistered } = require('../../utils/registered-navigation.js');

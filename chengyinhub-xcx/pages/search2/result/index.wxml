@@ -12,6 +12,7 @@
 
   <view class="main">
     <view class="wp">
+      <view class="result-scope" aria-role="status">仅展示已加载结果，日期和价格只筛选其中的主题与活动；未提供日期或价格的内容仍保留，需进入详情确认。</view>
       <cy-tabs class="result-tabs" tabs="{{resultTabs}}" active="{{activeResultType}}"
         variant="chip" bind:change="onResultTab" />
 
@@ -21,8 +22,13 @@
       <view wx:if="{{showSearchSkeleton && !visibleResults.length}}">
         <cy-skeleton type="feed-card" count="3" />
       </view>
+<<<<<<< public
       <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
       <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到匹配内容" sub="换个关键词，或看看地图附近有什么" />
+=======
+      <cy-error class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
+      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="已加载结果中没有匹配内容" sub="这不代表没有相关内容，可换关键词或放宽筛选" />
+>>>>>>> private-feature/w2-r
       <view class="result-list" wx:if="{{visibleResults.length}}">
         <block wx:for="{{visibleResults}}" wx:key="key">
           <view wx:if="{{item.type === 'topic'}}" class="topic-result-card" data-id="{{item.id}}" data-scene-id="{{item.sceneId}}" data-path="{{item.path}}" bindtap="goResult" aria-role="button" aria-label="查看主题：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -35,6 +41,8 @@
             <view class="topic-result-card__body">
               <view class="topic-result-card__title">{{item.title}}</view>
               <view class="topic-result-card__detail ep1">{{item.detail}}</view>
+              <view class="result-card__detail">{{item.dateText}}</view>
+              <view class="result-card__detail">{{item.priceText}}</view>
               <view class="result-card__tags" wx:if="{{item.tags.length}}">
                 <text wx:for="{{item.tags}}" wx:key="*this" class="result-card__tag">{{item}}</text>
               </view>
@@ -56,6 +64,8 @@
               <view class="result-card__type">{{item.typeLabel}}</view>
               <view class="result-card__title ep1">{{item.title}}</view>
               <view class="result-card__detail ep1">{{item.detail}}</view>
+              <view class="result-card__detail">{{item.dateText}}</view>
+              <view class="result-card__detail">{{item.priceText}}</view>
               <view class="result-card__tags" wx:if="{{item.tags.length}}">
                 <text wx:for="{{item.tags}}" wx:key="*this" class="result-card__tag">{{item}}</text>
               </view>

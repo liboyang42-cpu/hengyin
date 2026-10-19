@@ -96,7 +96,7 @@ test('商家分身回复带 audioUrl 时播放语音，关闭时销毁', () => {
   global.wx = previousWx;
 });
 
-test('新消息 abort 旧请求，迟到旧响应不会覆盖当前状态', async () => {
+test('等待原回答时禁止发送新问题', async () => {
   const requests = [];
   let aborts = 0;
   const chat = createChat({
@@ -109,15 +109,18 @@ test('新消息 abort 旧请求，迟到旧响应不会覆盖当前状态', asyn
   inputAndSend(chat, '第一条');
   const first = requests[0];
   inputAndSend(chat, '第二条');
-  const second = requests[1];
-  assert.equal(aborts, 1, '新消息必须取消旧 RequestTask');
-
+  assert.equal(requests.length, 1);
+  assert.equal(aborts, 0);
+  first.fail();
+  inputAndSend(chat, '第三条');
+  assert.equal(requests.length, 1, '未知结果不能生成新请求');
+  chat.onRecover();
+  assert.deepEqual(requests[1].data, first.data, '恢复必须保留原 ID、问题、对象');
   first.success(response(first.data.requestId, '旧响应不应出现'));
-  second.success(response(second.data.requestId, '新响应'));
+  requests[1].success(response(first.data.requestId, '已恢复'));
   await sleep(80);
-  const texts = chat.data.messages.map((item) => item.text);
-  assert.ok(texts.includes('新响应'));
-  assert.ok(!texts.includes('旧响应不应出现'), 'generation/requestId 隔离必须丢弃迟到旧响应');
+  assert.equal(chat.data.messages.at(-1).text, '已恢复');
+  assert.equal(chat.data.canRecover, false);
 });
 
 test('cancelPending 终止挂起请求并隔离关闭后的迟到回调', () => {
@@ -151,9 +154,21 @@ test('HTTP 非 2xx 会收敛为失败，不会永远停在生成中', () => {
   inputAndSend(chat, '服务器异常时怎么办？');
   requests[0].successStatusAbnormal({ code: 500 });
 
-  assert.equal(chat.data.state, 'FAILED');
+  assert.equal(chat.data.state, 'UNKNOWN');
   assert.equal(chat.data.isThinking, false);
-  assert.match(chat.data.messages.at(-1).text, /网络不太稳定/);
+  assert.match(chat.data.messages.at(-1).text, /回答结果待确认/);
+});
+
+
+test('关闭再打开对话仍保留原问题恢复，不重建 ID', () => {
+  const requests = [];
+  const chat = createChat({ sendRequest(opts) { requests.push(opts); return { abort() {} }; } });
+  inputAndSend(chat, '问题');
+  chat.cancelPending();
+  chat._resetForClose();
+  assert.equal(chat.data.canRecover, true);
+  chat.onRecover();
+  assert.deepEqual(requests[1].data, requests[0].data);
 });
 
 

@@ -43,6 +43,8 @@ function mountCityNodePage() {
             normalizeMerchantAccess: raw => raw,
           };
         }
+        if (request.includes('write-action-workflow')) return require('../../utils/write-action-workflow.js');
+        if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
         if (request.includes('motion-preference')) return { readReducedMotion: () => true };
         if (request.includes('motion.js')) return { haptic() {} };
         if (request.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };

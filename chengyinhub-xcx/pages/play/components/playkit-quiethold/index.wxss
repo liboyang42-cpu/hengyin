@@ -57,3 +57,17 @@
 }
 .qt--mid .qt__n { color: #d9a327; }                                 /* ds-ok 黄档 */
 .qt--hot .qt__n { color: #e0464c; }                                 /* ds-ok 红档 */
+
+/* C1:校准/阈值/规则这几行比正文小一号;授权替代两颗并排,描边不抢主按钮 */
+.qt__note { font-size: var(--cy-type-caption); opacity: .62; }
+.qt__alt { width: 100%; display: flex; gap: 20rpx; }
+.qt__alt-b {
+  flex: 1;
+  height: 88rpx;                                                    /* ds-ok 比主按钮矮一档 */
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 44rpx;                                             /* ds-ok */
+  border: 2rpx solid rgba(232, 240, 234, .4);                       /* ds-ok */
+  color: #e8f0ea;                                                   /* ds-ok */
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+}

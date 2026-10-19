@@ -157,6 +157,7 @@
               <view class="post-moderation__action" wx:if="{{item.authorMemberId != myMemberId}}" catchtap="onReportPost" data-id="{{item.id}}" aria-role="button" aria-label="举报动态" hover-class="cy-pressed" hover-stay-time="80">举报</view>
             </view>
           </cy-post-card>
+          <view class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用的游玩记录已下架或不公开，暂时无法查看</view>
           <view class="comments" wx:if="{{openCommentPost === item.id}}">
             <view class="comment" wx:for="{{comments}}" wx:for-item="cm" wx:key="id">
               <text class="comment-name">{{cm.nickname || '城瘾玩家'}}：</text>
@@ -252,10 +253,13 @@
           <view class="event-calendar-title">{{eventCalendarTitle}}</view>
           <view class="event-calendar-shift" data-delta="1" catchtap="onShiftEventMonth" aria-role="button" aria-label="下一个月" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="28" /></view>
         </view>
+        <view class="overview-empty">仅按已加载主题的日期展示，完整月份场次尚未确认；日期沿用活动公布时间。</view>
+        <view class="overview-empty" wx:if="{{eventCalendarUpdatedAt}}">最近读取：{{eventCalendarUpdatedAt}}</view>
+        <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="{{2}}" />
         <view class="event-calendar-week">
           <text wx:for="{{eventWeekdays}}" wx:key="*this">{{item}}</text>
         </view>
-        <view class="event-calendar-grid">
+        <view class="event-calendar-grid" wx:if="{{topicState === 'ready'}}">
           <view class="event-calendar-day {{day.inMonth ? '' : 'is-outside'}} {{day.events.length ? 'has-event' : ''}}"
             wx:for="{{eventCalendarCells}}" wx:for-item="day" wx:key="key">
             <text class="event-calendar-number">{{day.day}}</text>
@@ -265,8 +269,13 @@
             </view>
           </view>
         </view>
+<<<<<<< public
         <cy-error wx:if="{{topicState === 'error'}}" load-failure="{{true}}" />
         <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="本月暂无活动" sub="左右切换查看其他月份" />
+=======
+        <view wx:if="{{topicState === 'error'}}" class="overview-empty">活动日期加载失败，请切回列表重试</view>
+        <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="已加载主题中无本月记录" sub="不能据此确认本月没有活动场次" />
+>>>>>>> private-feature/w2-r
       </view>
     </view>
 
@@ -540,6 +549,8 @@
               catchtap="stopShareBubble">带票分享</button>
           </view>
         </view>
+        <cy-empty wx:elif="{{shareEditionEmptyReason === 'AWAITING_SALE'}}" title="已承接的期次还没开售" sub="条款开售并绑定本俱乐部后，会出现在这里供带票分享" />
+        <cy-empty wx:elif="{{shareEditionEmptyReason === 'NOT_UNDERTAKEN'}}" title="还没有承接自由探索期次" sub="在项目里承接平台期次，开售后即可带票分享" />
         <cy-empty wx:else title="还没有可分享的自由探索期次" sub="期次开售并绑定本俱乐部后会出现在这里" />
         </view>
       </view>
@@ -913,7 +924,11 @@
   <cy-sheet variant="full" show="{{postHistoryShow}}" title="编辑历史" bind:close="closePostHistory">
     <view class="post-history-sheet">
       <view class="post-history-state" wx:if="{{postHistoryState === 'loading'}}">正在读取…</view>
+<<<<<<< public
       <!-- F-R2U-01:编辑历史读取失败按加载失败留白(不显示错误文案) -->
+=======
+      <view class="post-history-state" wx:elif="{{postHistoryState === 'error'}}">{{postHistoryErrorText || '历史读取失败，请关闭后重试'}}</view>
+>>>>>>> private-feature/w2-r
       <view class="post-history-row" wx:for="{{postHistoryRows}}" wx:key="id">
         <view class="post-history-meta">{{item.versionText}} · {{item.timeText}}</view>
         <view class="post-history-content">{{item.content || '（仅图片动态）'}}</view>

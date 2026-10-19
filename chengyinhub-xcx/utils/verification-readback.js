@@ -11,7 +11,7 @@ function offerVerificationReadback(key, workflow, adapters) {
   var navigateTo = adapters.navigateTo || wx.navigateTo;
   showModal({
     title: '核销结果待确认',
-    content: '请打开核销记录核对结果；若没有本次记录，请退出当前页面重新进入后再试。',
+    content: '本次核销结果尚未确认，请勿重新扫码或重复核销。请联网后查看原核销记录；仍无法确认时联系平台核对。',
     confirmText: '查看记录',
     cancelText: '稍后处理',
     success: function (result) {

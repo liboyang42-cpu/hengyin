@@ -82,11 +82,11 @@ test('商家官方活动保留现有结构并使用商家浅色主题', () => {
   assert.doesNotMatch(wxml, /theme-dark/)
 })
 
-test('协作对象列表是裸行头像样式，确认页回显锁定对象与条款', () => {
+test('协作对象列表是裸行头像样式，确认页回显选定对象与拟议条款', () => {
   const invite = read('pages/coop/invite/index.wxml')
   assert.match(invite, /class="target-list"/)
   assert.match(invite, /邀请对象 · 已锁定/)
-  assert.match(invite, /合作条款 · 已锁定/)
+  assert.match(invite, /本次拟议条款/)
 })
 
 test('日期范围使用商家主题日历弹窗并保留范围选择状态', () => {

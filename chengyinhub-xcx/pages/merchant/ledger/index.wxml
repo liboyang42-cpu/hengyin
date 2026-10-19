@@ -114,9 +114,9 @@
 
     <cy-btn class="fin-assets-cta" bindtap="goAssets">去我的资产</cy-btn>
     <view class="fin-alert-row" role="switch" aria-checked="{{settleAlertsEnabled}}">
-      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub">入账后通过服务通知告诉你</text></view>
+      <view class="fin-alert-copy"><text class="fin-alert-title">结算通知授权</text><text class="fin-alert-sub">{{settleAlertsState === 'unknown' ? '授权状态未确认' : (settleAlertsEnabled ? '已允许通知' : '尚未允许通知')}} · 授权不代表已发送</text></view>
       <cy-switch checked="{{settleAlertsEnabled}}" disabled="{{settleAlertsLoading}}"
-        accessibility-label="结算到账提醒" bind:change="enableCoopSettleAlerts" />
+        accessibility-label="结算通知授权" bind:change="enableCoopSettleAlerts" />
     </view>
 
     <view class="fin-group">
@@ -130,6 +130,7 @@
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.sourceText}}</text>
+            <text class="fin-row__t2">通知结果未确认</text>
             <view class="fin-row__t2"><text>{{item.timeText}}</text><cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" /></view>
           </view>
           <text class="fin-row__v fin-row__v--{{item.amountTone}}">{{item.amountDisplay}}</text>

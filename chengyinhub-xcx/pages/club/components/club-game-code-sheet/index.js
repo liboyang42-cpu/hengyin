@@ -19,6 +19,7 @@ Component({
     qr: { type: String, value: '' },            // 服务端出的码图 URL
     state: { type: String, value: 'loading' },  // loading | ready | error
     errorText: { type: String, value: '' },
+    countdownText: { type: String, value: '' }, // X034:码刷新倒计时,仅出码态由宿主传入
   },
   // 防重复点击的锁,wxml 不渲染 —— 放 data 里每次点保存都白做一次
   // 逻辑层→视图层传输(U4 判的正是这个)。

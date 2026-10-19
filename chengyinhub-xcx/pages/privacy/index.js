@@ -1,4 +1,6 @@
 const toast = require('../../utils/toast.js');
+const bgTracker = require('../../utils/location/bg-tracker.js');
+const roamConsent = require('../../utils/location/roam-consent.js');
 const app = getApp();
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -22,6 +24,7 @@ Page({
     submitError: '',
     failedAction: '',
     pendingAuthorization: false,
+    roamLocationStatus: '',
     scrollInto: '',
     toc: [
       { id: 'sec-collect', title: '我们如何收集与使用信息' },
@@ -33,6 +36,17 @@ Page({
 
   onLoad() {
     this.setData({ pendingAuthorization: app.hasPendingPrivacyAuthorization() });
+    this._refreshRoamLocationStatus();
+  },
+
+  onShow() {
+    this._refreshRoamLocationStatus();
+  },
+
+  // F0385:撤回入口旁展示当前采集状态(同意/撤回 + 是否仍在采集/是否含后台)。
+  _refreshRoamLocationStatus() {
+    const status = roamConsent.describeStatus(bgTracker);
+    this.setData({ roamLocationStatus: status.text });
   },
 
   onShow() {
@@ -311,6 +325,7 @@ Page({
     if (this.data.submitting) return;
     this.data.failedAction = '';
     this.setData({ submitting: true, submitError: '' });
+<<<<<<< public
     app.recordConsent({
       docType: 'privacy_policy',
       scene: 'roam_location',
@@ -320,12 +335,26 @@ Page({
       toast('已撤回漫游定位同意');
       this.data.failedAction = '';
       this.setData({ submitting: false, submitError: '' });
+=======
+    // F0385:先本机停所有定位持有者并落撤回标记,再写服务端留痕;留痕失败不让定位继续跑。
+    roamConsent.revoke({
+      tracker: bgTracker,
+      stopLocation: (options) => wx.stopLocationUpdate(options),
+      recordConsent: (payload) => app.recordConsent(payload),
+    }).then((result) => {
+      const stopOk = !result || !result.stop || result.stop.ok;
+      toast(stopOk ? '已撤回漫游定位同意' : '已撤回同意，但定位停止失败，请重试');
+      this.data.failedAction = stopOk ? '' : 'revoke';
+      this.setData({ submitting: false, submitError: stopOk ? '' : '定位停止失败，请重试或在系统设置中关闭位置权限' });
+      this._refreshRoamLocationStatus();
+>>>>>>> private-feature/w2-r
     }).catch(() => {
       Object.assign(this.data, { failedAction: 'revoke' });
       this.setData({
         submitting: false,
-        submitError: '撤回记录失败，请检查网络后重试',
+        submitError: '撤回记录失败，请检查网络后重试（本机已停止定位）',
       });
+      this._refreshRoamLocationStatus();
     });
   },
 

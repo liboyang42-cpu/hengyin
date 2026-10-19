@@ -258,11 +258,12 @@ test('type2 的 tab、节点 UI、请求与 payload 分支全部撤销，预置�
   assert.doesNotMatch(wxml, /<cy-tabs\b/)
 })
 
-test('发送确认半屏同时回显已锁定邀请对象与合作条款', () => {
+test('发送确认半屏回显选定对象与拟议条款，不冒充冻结合同', () => {
   const wxml = WXML()
   const js = JS()
   assert.match(wxml, /邀请对象 · 已锁定/)
-  assert.match(wxml, /合作条款 · 已锁定/)
+  assert.match(wxml, /本次拟议条款/)
+  assert.doesNotMatch(wxml, /合作条款 · 已锁定/)
   assert.match(wxml, /inviteModal\.targetLogo/)
   assert.match(wxml, /inviteModal\.termsText/)
   assert.match(js, /termsText\s*=\s*this\.data\.shareMode === 2/)

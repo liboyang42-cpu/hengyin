@@ -44,6 +44,12 @@ Component({
           return
         }
         this._hasLoaded = true
+        // F0403:本列表只承接「官方活动任务」。可参与资格来自本人报名事实(my-events),
+        // 未报名的活动只展示、不标可参与;路线节点任务不在这里,不能用同一个「任务」名掩盖范围。
+        const joined = {}
+        mine.forEach((item) => { if (item && item.id != null) joined[String(item.id)] = true })
+        all = all.map((item) => this._withSource(item, !!joined[String(item.id)]))
+        mine = mine.map((item) => this._withSource(item, true))
         this.setData({ all, mine, state: 'ready', refreshing: false, staleError: '' }, () => this._filter())
       }
       app.sendRequest({
@@ -72,13 +78,16 @@ Component({
       decorated._timeText = timeText(decorated)
       return decorated
     },
+    _withSource(item, joined) {
+      return { ...item, _joined: joined, _sourceText: joined ? '官方活动 · 已报名 · 完成以活动核验记录为准' : '官方活动 · 未报名 · 报名后才可参与' }
+    },
     _filter() {
       const source = this.data.tab === 3 ? this.data.mine : this.data.all
       let events = this.data.tab === 0 ? source.filter((item) => item._live || !item._statusKnown) : this.data.tab === 1 ? source.filter((item) => item.status === 1) : this.data.tab === 2 ? source.filter((item) => item.status === 5 || item.status === 6 || item.status === 9) : source
       const keyword = String(this.data.keyword || '').trim().toLowerCase()
       if (keyword) events = events.filter((item) => [item.title, item.subtitle, item.city].some((value) => String(value || '').toLowerCase().includes(keyword)))
       const copy = keyword ? [`「${keyword}」${events.length} 个结果`, '换个关键词，或看看其他分类'] : [[ '暂无进行中的活动', '官方策展活动会第一时间出现在这里' ], [ '暂无即将开始的活动', '官方策展活动会第一时间出现在这里' ], [ '暂无已结束的活动', '往期活动归档后会出现在这里' ], [ '还没有参与的活动', '报名活动后会出现在这里' ]][this.data.tab]
-      this.setData({ events, summary: keyword ? copy[0] : `${this.data.tabs[this.data.tab]} · 共 ${events.length} 个活动`, emptyTitle: keyword ? '没有找到相关活动' : copy[0], emptySub: copy[1] })
+      this.setData({ events, summary: keyword ? copy[0] : `官方活动任务 · ${this.data.tabs[this.data.tab]} · 共 ${events.length} 个`, emptyTitle: keyword ? '没有找到相关活动' : copy[0], emptySub: copy[1] })
     },
     selectTab(event) { this.setData({ tab: Number(event.currentTarget.dataset.tab) }, () => this._filter()) },
     onKeyword(event) { this.setData({ keyword: event.detail.value }, () => this._filter()) },

@@ -199,12 +199,12 @@
       <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="修改集合时间" hover-class="cy-pressed" hover-stay-time="80">修改</view>
     </view>
 
-    <view class="ctd-generic-ops" wx:if="{{directorActive && loadState === 'ready' && genericOpsKnown && genericOpsActions.length}}">
+    <view class="ctd-generic-ops" wx:if="{{directorActive && loadState === 'ready' && genericOpsKnown}}">
       <text class="ctd-plan-fallback__title">通用玩法现场运营</text>
-      <text class="ctd-director-note">{{genericOpsStatus}}</text>
+      <text class="ctd-director-note" aria-live="polite">{{genericOpsStatus}}</text>
       <text class="ctd-director-note" wx:if="{{genericOpsTeams}}">{{genericOpsTeams}}</text>
-      <text class="ctd-director-note">仅显示本场授权动作；结果待确认时锁定写入。</text>
-      <view class="ctd-generic-ops__actions">
+      <text class="ctd-director-note">{{genericOpsActions.length ? '仅显示本场授权动作；结果待确认时锁定写入。' : '本局当前没有可执行的运营动作。'}}</text>
+      <view class="ctd-generic-ops__actions" wx:if="{{genericOpsActions.length}}">
         <view wx:for="{{genericOpsActions}}" wx:key="id" data-action="{{item.id}}"
           class="ctd-director-field__act {{writeLocked ? 'is-disabled' : ''}}" bindtap="openGenericOps"
           aria-role="button" aria-label="{{item.title}}" aria-disabled="{{writeLocked}}" hover-class="cy-pressed" hover-stay-time="80">

@@ -30,7 +30,10 @@ function ledgerView(response, scope) {
       totals[row.status] += amount;
       if (!Number.isSafeInteger(totals[row.status])) return null;
     }
-    rows.push({ id: row.id, redemptionId: row.redemptionId, amountText: amountText(amount),
+    // 平台结算单号(settlement_claim.id)：俱乐部与商家两侧同一事实的对账锚点，缺失时不臆造。
+    const claimNo = positiveId(row.claimId) ? String(row.claimId) : '';
+    rows.push({ id: row.id, redemptionId: row.redemptionId, amountText: amountText(amount), claimNo,
+      disputeTitle: '直付计酬对账 核销#' + row.redemptionId + (claimNo ? ' 结算单#' + claimNo : ''),
       statusText: STATUS[row.status], status: row.status,
       timeText: typeof row.createTime === 'string' ? row.createTime.slice(0, 16).replace('T', ' ') : '',
       voucher: row.status === 'SETTLED' || row.status === 'REFUND_DUE'

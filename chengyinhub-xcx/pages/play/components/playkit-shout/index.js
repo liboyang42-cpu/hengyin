@@ -18,23 +18,38 @@ const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { baseline, thresholds, bandOf, peakOf } = require('../../utils/play-audio-level.js');
 
 const TICK_MS = 100;
+const COMFORT = '不用喊到嗓子疼：比环境音明显大就过线，留意身边的人';
+
+/** 相对音量:此刻峰值 / 本机过线阈值,夹到 0–100。100 = 正好过线 */
+function relativePct(peak, hot) {
+  if (!(hot > 0)) return 0;
+  return Math.max(0, Math.min(100, Math.round((peak / hot) * 100)));
+}
 
 Component({
   properties: {
     show: { type: Boolean, value: false },
     kicker: { type: String, value: '喊出来' },
     seconds: { type: Number, value: 5 },
+    // C1:证据说明 / 前后台规则 / 校准说明,分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
+    calibrationNote: { type: String, value: '' },
   },
   data: {
     left: '5.0',
     loud: false,        // 此刻过没过线(数字变色的依据)
     running: false,
+    // F0338:相对音量(此刻峰值 / 本机过线阈值,夹到 0–100)。不是分贝,也不和别的手机比
+    levelPct: 0,
+    comfort: COMFORT,
+    micDenied: false,
   },
   observers: {
     'show, seconds': function (show, seconds) {
       this._stop();
       if (!show) { this._stopMic(); return; }
-      this.setData({ left: (seconds > 0 ? seconds : 0).toFixed(1), loud: false, running: false });
+      this.setData({ left: (seconds > 0 ? seconds : 0).toFixed(1), loud: false, running: false, levelPct: 0, micDenied: false });
     },
   },
   lifetimes: {
@@ -45,6 +60,7 @@ Component({
   // 还在计时 —— 与 quietHold 同一条,方向反过来也一样成立
   pageLifetimes: { hide() { this._abort(); } },
   methods: {
+    _relativePct: relativePct,   // 纯算法出口,供单测
     _stop() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
     _stopMic() {
       if (!this._rec) return;
@@ -54,11 +70,12 @@ Component({
     _abort() {
       if (!this.data.running) return;
       this._stop(); this._stopMic();
-      this.setData({ running: false, loud: false });
+      this.setData({ running: false, loud: false, levelPct: 0 });
     },
 
     onStart() {
       if (this.data.running) return;
+      this.setData({ micDenied: false });
       this._samples = [];
       this._peak = 0;
       this._startMic();
@@ -74,7 +91,10 @@ Component({
       // 拿不到麦克风就明说,不假装在听 —— 与 quietHold 同一条(契约 §4.2)
       rec.onError(() => {
         this._stop(); this._stopMic();
-        this.setData({ running: false, loud: false });
+        const stage = this.selectComponent('#cy-play-stage');
+        if (stage && stage._stopAll) stage._stopAll();
+        // 拒绝麦克风:给授权替代(去设置打开 / 跳过这一项不记成绩),不假装在听
+        this.setData({ running: false, loud: false, levelPct: 0, micDenied: true });
         this.triggerEvent('micdenied');
       });
       rec.start({ duration: 600000, sampleRate: 16000, numberOfChannels: 1,
@@ -89,6 +109,13 @@ Component({
       this._mid = t.mid;
       this._hot = t.hot;
     },
+
+    /** 授权替代①:去系统设置打开麦克风,回来再点开始 */
+    onOpenMicSetting() {
+      if (wx.openSetting) wx.openSetting({ fail() {} });
+    },
+    /** 授权替代②:跳过这一项 —— 不记成绩、不发奖,只是不卡在这一屏 */
+    onSkipMic() { this.onClose(); },
 
     /** stage 校准完之后真正开跑 */
     onRun() {
@@ -110,6 +137,8 @@ Component({
 
         const loud = bandOf(this._peak || 0, this._mid, this._hot) === 'hot';
         if (loud !== this.data.loud) this.setData({ loud });
+        const levelPct = relativePct(this._peak || 0, this._hot);
+        if (levelPct !== this.data.levelPct) this.setData({ levelPct });
 
         if (loud) this._held += dt;
         else this._held = 0;   // ★ 掉线清零:「持续 N 秒」不许攒着喊

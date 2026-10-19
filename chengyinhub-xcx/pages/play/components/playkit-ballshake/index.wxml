@@ -22,6 +22,13 @@
       <view class="g-sub bl__sub" wx:if="{{sharedChallenge}}">本次撞击 {{hits}} · 提交后计入全队进度</view>
       <view class="g-sub bl__sub" wx:if="{{challenge.disabledReason}}">{{challenge.disabledReason === 'CHALLENGE_LIMIT' ? '挑战次数已用完' : challenge.disabledReason}}</view>
       <view class="g-sub bl__sub">{{timed ? (seconds + ' 秒内撞满') : '不限时，撞满为止'}}</view>
+      <!-- C1:传感器不可用 / 中断时那句人话优先;没开跑时说清校准、前后台规则与证据口径 -->
+      <view class="g-sub bl__sub bl__notice" wx:if="{{notice}}" aria-live="polite">{{notice}}</view>
+      <block wx:elif="{{!running}}">
+        <view class="g-sub bl__sub" wx:if="{{calibrationNote}}">校准：{{calibrationNote}}</view>
+        <view class="g-sub bl__sub" wx:if="{{bgRule}}">{{bgRule}}</view>
+        <view class="g-sub bl__sub" wx:if="{{evidenceNote}}">{{evidenceNote}}</view>
+      </block>
     </view>
   </view>
 

@@ -8,6 +8,23 @@
     <view class="g-kicker qt__k">{{kicker}}</view>
     <view class="qt__n g-figure">{{left}}</view>
     <view class="qt__s" wx:if="{{sub}}">{{sub}}</view>
+    <!-- C1/F0337:本机相对阈值与校准状态;本机记到的时长 ≠ 可信完成 -->
+    <view class="qt__s qt__note" wx:if="{{running}}">{{calibrated ? thresholdText : '还没校准'}}</view>
+    <view class="qt__s qt__note" wx:elif="{{heldText}}">{{heldText}}</view>
+    <block wx:elif="{{micDenied}}">
+      <view class="qt__s qt__note" aria-live="polite">没开麦克风，这一项听不了。可以去设置打开，或跳过这一项（不记成绩）</view>
+      <view class="qt__alt">
+        <view class="qt__alt-b" bindtap="onOpenMicSetting" aria-role="button" aria-label="去设置打开麦克风"
+              hover-class="qt__b--press" hover-stay-time="80">去设置打开</view>
+        <view class="qt__alt-b" bindtap="onSkipMic" aria-role="button" aria-label="跳过这一项，不记成绩"
+              hover-class="qt__b--press" hover-stay-time="80">跳过这一项</view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="qt__s qt__note" wx:if="{{calibrationNote}}">校准：{{calibrationNote}}</view>
+      <view class="qt__s qt__note" wx:if="{{bgRule}}">{{bgRule}}</view>
+      <view class="qt__s qt__note" wx:if="{{evidenceNote}}">{{evidenceNote}}</view>
+    </block>
 
     <!-- 按钮在这一屏是**跟着内容流**的,不绝对定位:整屏只有三行东西,
          把按钮钉到底边会让中间空出一大块,读起来像还没加载完。

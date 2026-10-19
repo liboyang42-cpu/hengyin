@@ -410,6 +410,8 @@ Page({
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
+    shopNpcChatEnabled: false,
+    shopNpcVoiceEnabled: false,
     shopNpc: { show: false, open: false, name: '', greeting: '', started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: 0, ry: 0, recording: false },
     // 章节剧情全屏故事流(自由探索卡片详情 → 点大卡片)。lines 逐行显形,不是整段一次淡入。
     chapStory: { show: false, open: false, title: '', lines: [], audio: '', audioDur: '', playing: false, barAway: false, frames: 0 },
@@ -493,6 +495,7 @@ Page({
     finishMedals: 0, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
+    finishRecommendationState: '',
     voucher: { show: false },
     ticket: { show: false, url: '', code: '', loading: false, expiresAt: 0 },
     // B 通关轨迹回顾层(2D):只连已完成节点、按真实走法排序,渐进描线 + 成就气泡。
@@ -505,6 +508,7 @@ Page({
     ending: { show: false, opener: '', fragments: [] }, endingError: false,
     // 音频播放
     audioPlaying: false, audioLoading: false, audioError: '', audioNodeId: null,
+    thoughtSyncNotice: '',
     // FE-19 入场码(玩家出动态码,商家/俱乐部扫核销);regId 由票夹带入,无则不显 fab
     regId: ''
   },
@@ -609,6 +613,7 @@ Page({
     return !this._playUnloaded && this._playOwner === this._playMember();
   },
   onShow() {
+<<<<<<< public
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
     if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
       this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
@@ -616,6 +621,10 @@ Page({
       return;
     }
     this._syncCommunityEntry();
+=======
+    const npcFlags = app.globalData.features || {};
+    this.setData({ shopNpcChatEnabled: npcFlags.shopNpcChat === true, shopNpcVoiceEnabled: npcFlags.shopNpcVoice === true });
+>>>>>>> private-feature/w2-r
     this._themeHidden = false; this._startThemePoll();
     this._startZeroHpTimer();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
@@ -634,6 +643,7 @@ Page({
   },
   _withThoughtSync(write) {
     if (this.data.isPreview || this.data.isMock
+<<<<<<< public
         || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
     const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
     const synced = pendingClaim.then(ok => ok && this._syncThoughts([])).catch(() => false);
@@ -647,6 +657,14 @@ Page({
       clearTimeout(timer);
       if (!ok) cyToast('步数暂未同步，仍可继续游玩');
       return write();
+=======
+        || (!this._pendingThoughtKeys().length && !this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
+    const pendingClaim = this._thoughtSyncPending || this.retryThoughtSync();
+    return pendingClaim.then(ok => ok && this._syncThoughts([])).then(ok => {
+      if (ok) return write();
+      cyToast('步数未同步，请重试');
+      return { code: 'fail', netFail: true, msg: '步数未同步，请重试' };
+>>>>>>> private-feature/w2-r
     });
   },
   _resolveRouteAction(kind, nodeId) {
@@ -784,8 +802,12 @@ Page({
   },
 
   onUnload() {
+<<<<<<< public
     this._playDisposed = true;
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
+=======
+    this._cancelNpcRecording();
+>>>>>>> private-feature/w2-r
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
@@ -829,10 +851,14 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+<<<<<<< public
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._playReloadOnShow = true;
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
+=======
+    this._cancelNpcRecording();
+>>>>>>> private-feature/w2-r
     this._themeHidden = true; this._stopThemePoll();
     this._stopZeroHpTimer();
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
@@ -1711,9 +1737,17 @@ Page({
   /** 店铺卡 → 店铺分身对话。开场是一句居中大字问候,商家自己写了 greeting 就用他的,
    *  没写才回落到按时段拼的那句 —— 不要用模板顶掉作者写过的话。 */
   openShopNpc() {
+    if (!this._canShopNpcChat()) return;
     const v = this.data.hero.node || {};
     if (!v.nodeId) { cyToast('这家店还没有可对话的分身'); return; }
     if (!v.npcName) { cyToast('这家还没有店铺分身'); return; }
+    const pending = this._shopNpcPending;
+    if ((pending && pending.owner === String(app.getUserID()) && String(pending.nodeId) === String(v.nodeId))
+        || (this.data.shopNpc.recovering && this._shopNpcOwner === String(app.getUserID()) && String(this.data.shopNpc.nodeId) === String(v.nodeId))) {
+      this.setData({ 'shopNpc.show': true, 'shopNpc.open': true });
+      this._startNpcFigure();
+      return;
+    }
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(v.nodeId)) || {};
     const h = new Date().getHours();
     const hi = (h < 6 ? '凌晨好' : h < 11 ? '早上好' : h < 13 ? '中午好' : h < 18 ? '下午好' : '晚上好');
@@ -1798,8 +1832,19 @@ Page({
   onNpcTouchEnd() { this._npcX = null; },
 
   closeShopNpc() {
+    this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    this._cancelNpcRecording();
     if (!this.data.shopNpc.show) return;
     if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
+    if (this.data.shopNpc.thinking && this._shopNpcPending) {
+      const previous = this.data.shopNpc.msgs.findIndex((m) => m.pending && m.pending.requestId === this._shopNpcPending.requestId);
+      this._pushShopNpcReply('回答结果待确认，请恢复原问题。', previous < 0 ? undefined : previous);
+      const idx = previous < 0 ? this.data.shopNpc.msgs.length - 1 : previous;
+      this.setData({ ['shopNpc.msgs.' + idx + '.pending']: this._shopNpcPending, 'shopNpc.recovering': true });
+    }
+    if (this.data.shopNpc.thinking) {
+      this.setData({ 'shopNpc.thinking': false, 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，当前无法恢复' });
+    }
     this._stopThinkBeat();
     this._stopShopNpcVoice();
     this._stopNpcFigure();
@@ -1817,53 +1862,96 @@ Page({
    *  文件 URL(它是给要落 OSS 的资产用的),而语音片段是临时的、刻意不持久化。 */
   onVoiceStart() {
     const s = this.data.shopNpc;
-    if (!s.show || s.thinking) return;
-    const that = this;
+    if (!s.show || s.thinking || s.recovering || s.recording || !this._canShopNpcChat()) return;
+    if ((app.globalData.features || {}).shopNpcVoice !== true) { cyToast('语音暂不可用，请先打字'); return; }
+    this._npcVoiceReleased = false;
+    if (this._npcVoiceAuthorizing) return;
+    this._npcVoiceAuthorizing = true;
     wx.authorize({ scope: 'scope.record' })
-      .then(() => that._beginRecord())
-      .catch(() => cyToast('没有录音权限，先在设置里打开'));
+      .then(() => {
+        if (!this._npcVoiceReleased && this.data.shopNpc === s && s.show) this._beginRecord();
+      })
+      .catch(() => cyToast('没有录音权限，先在设置里打开'))
+      .finally(() => { this._npcVoiceAuthorizing = false; });
   },
 
   _beginRecord() {
-    const rec = wx.getRecorderManager();
-    this._rec = rec;
-    rec.onStop((res) => {
-      this.setData({ 'shopNpc.recording': false });
-      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;   // 误触:不到半秒不算一句话
-      this._sendVoice(res.tempFilePath);
-    });
-    rec.onError(() => { this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了'); });
-    rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
+    if (!this._rec) {
+      const rec = wx.getRecorderManager();
+      this._rec = rec;
+      this._npcRecordStop = (res) => {
+        this.setData({ 'shopNpc.recording': false });
+        if (this._npcDiscardRecording || !this.data.shopNpc.show) return;
+        if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;
+        if (!(res.fileSize > 0) || res.fileSize > 2 * 1024 * 1024) { cyToast('录音为空或过长，请重新录制'); return; }
+        this._sendVoice(res.tempFilePath, res.fileSize);
+      };
+      this._npcRecordError = () => {
+        this.setData({ 'shopNpc.recording': false });
+        cyToast('录音出错了');
+      };
+      rec.onStop(this._npcRecordStop);
+      rec.onError(this._npcRecordError);
+    }
+    this._npcDiscardRecording = false;
+    this._rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
     this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
   },
 
   onVoiceEnd() {
+    this._npcVoiceReleased = true;
     if (!this.data.shopNpc.recording) return;
     try { this._rec && this._rec.stop(); } catch (e) { this.setData({ 'shopNpc.recording': false }); }
   },
 
-  /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
-   *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
-   *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
-   *  返回的是分身的回答。 */
-  _sendVoice(filePath) {
+  _cancelNpcRecording() {
+    this._npcVoiceReleased = true;
+    this._npcDiscardRecording = true;
+    if (this._rec) {
+      if (this._rec.offStop) this._rec.offStop(this._npcRecordStop);
+      if (this._rec.offError) this._rec.offError(this._npcRecordError);
+      if (this.data.shopNpc.recording) this._rec.stop();
+      this._rec = null;
+    }
+    this.setData({ 'shopNpc.recording': false });
+  },
+
+  _sendVoice(filePath, fileSize) {
     const s = this.data.shopNpc;
-    const that = this;
-    this.setData({ 'shopNpc.thinking': true });
+    const owner = this._shopNpcOwner = String(app.getUserID());
+    const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    const requestId = uuid4();
+    this.setData({ 'shopNpc.thinking': true, 'shopNpc.statusText': '正在识别语音并准备回答' });
     this._startThinkBeat();
     app.getUploadClient().uploadOne(filePath, {
       path: '/api/ai/npc/voice-chat',
-      formData: { nodeId: s.nodeId, requestId: uuid4() },
-      onDone(r) {
-        if (!r.ok) { that._pushShopNpcReply(r.msg || '没听清，再说一次'); return; }
-        const d = r.data;
-        // 先把识别出的原话作为我方消息补上 —— 玩家要能看见自己被听成了什么
-        const asr = d.asr || '（语音）';
-        const msgs = that.data.shopNpc.msgs.concat([{ id: that.data.shopNpc.msgs.length + 1, role: 'me', text: asr }]);
-        that.setData({ 'shopNpc.msgs': msgs });
-        const reply = (d.data && (d.data.safeText || d.data.text)) || '';
-        that._pushShopNpcReply(reply || '这个我说不好，你到店里当面问我一次。', undefined,
-          d.data && d.data.audioUrl);
+      fileSize, maxFileSize: 2 * 1024 * 1024,
+      formData: { nodeId: s.nodeId, requestId },
+      onDone: (r) => {
+        if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== s || owner !== String(app.getUserID())) return;
+        if (!r.ok) {
+          this._pushShopNpcReply('语音处理结果待确认，暂不能重复发送。');
+          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '语音结果待确认，当前无法恢复' });
+          return;
+        }
+        const d = r.data || {};
+        const asr = typeof d.asr === 'string' ? d.asr.trim() : '';
+        if (!asr) {
+          this._pushShopNpcReply('未收到识别文字，不能确认这段语音的结果。');
+          this.setData({ 'shopNpc.recovering': true, 'shopNpc.statusText': '识别结果待确认' });
+          return;
+        }
+        const result = d.data || {};
+        const pending = { requestId, nodeId: s.nodeId, message: asr, owner };
+        const recovering = result.requestId !== requestId || result.outcomeStatus === 'PROCESSING' || result.errorCode === 'REQUEST_IN_PROGRESS' || result.errorCode === 'REQUEST_STATE_UNAVAILABLE';
+        const succeeded = !recovering && result.outcomeStatus === 'SUCCEEDED' && result.safetyDecision === 'PASS';
+        const msgs = this.data.shopNpc.msgs.concat([{ id: this.data.shopNpc.msgs.length + 1, role: 'me', text: asr }]);
+        this.setData({ 'shopNpc.msgs': msgs });
+        this._pushShopNpcReply(recovering ? '回答结果待确认，请恢复原问题。' : (result.safeText || '暂时无法回答。'), undefined, succeeded ? result.audioUrl : undefined);
+        const idx = this.data.shopNpc.msgs.length - 1;
+        this.setData({ ['shopNpc.msgs.' + idx + '.pending']: recovering ? pending : null,
+          'shopNpc.recovering': recovering,
+          'shopNpc.statusText': recovering ? '文字回复待确认' : succeeded ? '文字回复已完成' : result.safetyDecision === 'BLOCKED' ? '内容未通过安全检查' : result.errorCode === 'RATE_LIMITED' ? '对话次数已用完' : '对话暂不可用' });
       },
     });
   },
@@ -1873,38 +1961,52 @@ Page({
 
   /** 问一句。requestId 由本端生成,后端按 (user, requestId) 幂等 ——
    *  网络抖动重发不会二次调用模型、不会二次计费。 */
+  _canShopNpcChat() {
+    const flags = app.globalData.features || {};
+    if (flags.shopNpcChat !== true) { cyToast('当前场景无法使用店铺对话'); return false; }
+    if (!this._playable || this.data.isPreview || this.data.isMock) { cyToast('请先确认当前游玩资格'); return false; }
+    return true;
+  },
+
   sendShopNpc() {
+    if (!this._canShopNpcChat()) return;
     const s = this.data.shopNpc;
     const text = String(s.input || '').trim();
-    if (!text || s.thinking) return;
+    if (!text || s.thinking || s.recovering) return;
     const msgs = s.msgs.concat([{ id: s.msgs.length + 1, role: 'me', text }]);
     this.setData({ 'shopNpc.msgs': msgs, 'shopNpc.input': '', 'shopNpc.thinking': true, 'shopNpc.started': true });
     this._startThinkBeat();
     this._askShopNpc(text);
   },
 
-  /** 真正发问那一段。打字与「重答」共用 —— 兜底文案的口径只能有一份。
-   *  @param replaceIdx 传了就改写这一条(重答),不传则追加一条(正常问答)。 */
+  /** 恢复只重放原对象与原问题，不把新生成当作重试。 */
   _askShopNpc(text, replaceIdx) {
-    const that = this;
-    const requestId = uuid4();
-    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: this.data.shopNpc.nodeId, message: text }, { 'content-type': 'application/json' }).then((r) => {
+    const prior = replaceIdx == null ? null : this.data.shopNpc.msgs[replaceIdx];
+    const pending = prior && prior.pending ? prior.pending : {
+      requestId: uuid4(), nodeId: this.data.shopNpc.nodeId, message: text,
+      owner: String(app.getUserID()),
+    };
+    if (pending.owner !== String(app.getUserID()) || String(pending.nodeId) !== String(this.data.shopNpc.nodeId)) return;
+    this._shopNpcPending = pending;
+    const conversation = this.data.shopNpc;
+    const epoch = this._npcReplyEpoch = (this._npcReplyEpoch || 0) + 1;
+    req('/api/ai/npc/shop-chat', 'POST', { requestId: pending.requestId, nodeId: pending.nodeId, message: pending.message }, { 'content-type': 'application/json' }, true).then((r) => {
+      if (epoch !== this._npcReplyEpoch || !this.data.shopNpc.show || this.data.shopNpc !== conversation || pending.owner !== String(app.getUserID())) return;
       const d = (r && r.data) || {};
-      // safeText 是后端在拒绝/失败时给的安全兜底文案;正常回答也走同一个字段。
-      const reply = d.safeText || d.text || '';
-      // ⚠️ 重答失败时**不能覆盖**原来那条:玩家点「重答」是想要个更好的答案,
-      //    结果把已经拿到的好答案换成一句「网络异常」,等于为了再问一次把答案弄丢了。
-      //    失败就保住原文,错误走轻提示。(2026-09-08 实拍抓到)
-      if (!reply && replaceIdx != null) {
-        that._stopThinkBeat();
-        that.setData({ 'shopNpc.thinking': false, 'shopNpc.thinkPhase': 0 });
-        cyToast(r && r.msg ? String(r.msg) : '没问成，原来那条还在');
-        return;
-      }
-      // ⚠️ 接口被闸掉(店铺分身对话默认关)或没配人设时,不要编一句「我有点忙」——
-      //    那是假话,玩家会一直重试。把服务端说的原话端出来。
-      that._pushShopNpcReply(reply || (r && r.msg ? String(r.msg) : '这个我说不好，你到店里当面问我一次。'),
-        replaceIdx, d.audioUrl);
+      const denied = String(r.code) === '403' || String(r.code) === '401';
+      const unknown = !denied && (r.netFail || r.httpFail || d.requestId !== pending.requestId);
+      const recovering = unknown || d.outcomeStatus === 'PROCESSING' || d.errorCode === 'REQUEST_IN_PROGRESS' || d.errorCode === 'REQUEST_STATE_UNAVAILABLE';
+      const succeeded = !unknown && String(r.code) === '200' && d.outcomeStatus === 'SUCCEEDED' && d.safetyDecision === 'PASS';
+      if (!recovering) this._shopNpcPending = null;
+      const stateText = recovering ? '回答结果待确认' : succeeded ? '文字回复已完成'
+        : d.errorCode === 'RATE_LIMITED' ? '对话次数已用完'
+        : d.safetyDecision === 'BLOCKED' ? '内容未通过安全检查'
+        : denied ? '当前不能对话' : '对话暂不可用';
+      const reply = unknown ? '回答结果待确认，请恢复原问题，不要重复发送。'
+        : (d.safeText || (denied ? '当前无法对话，请确认通行证和店铺开放状态。' : '暂时无法回答，请稍后再来。'));
+      this._pushShopNpcReply(reply, replaceIdx, succeeded ? d.audioUrl : undefined);
+      const idx = replaceIdx == null ? this.data.shopNpc.msgs.length - 1 : replaceIdx;
+      this.setData({ ['shopNpc.msgs.' + idx + '.pending']: recovering ? pending : null, 'shopNpc.recovering': recovering, 'shopNpc.statusText': stateText });
     });
   },
 
@@ -1923,13 +2025,18 @@ Page({
   },
 
   _playShopNpcVoice(audioUrl) {
-    if (!audioUrl) return;
     this._stopShopNpcVoice();
+<<<<<<< public
     const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
+=======
+    this.setData({ 'shopNpc.audioStatus': audioUrl ? '正在播放语音' : '暂无语音，可阅读文字回复' });
+    if (!audioUrl) return;
+    const audio = wx.createInnerAudioContext();
+>>>>>>> private-feature/w2-r
     this._shopNpcVoiceAudio = audio;
     audio.src = audioUrl;
-    audio.onEnded(() => this._stopShopNpcVoice());
-    audio.onError(() => this._stopShopNpcVoice());
+    audio.onEnded(() => { this._stopShopNpcVoice(); this.setData({ 'shopNpc.audioStatus': '语音播放完毕' }); });
+    audio.onError(() => { this._stopShopNpcVoice(); this.setData({ 'shopNpc.audioStatus': '音频暂不可播放或已失效，文字回复仍可阅读' }); });
     audio.play();
   },
 
@@ -1961,21 +2068,17 @@ Page({
     wx.setClipboardData({ data: text });
   },
 
-  /** 重答:把这条回答**之前**最近的那句我方提问原样再问一次,新答案**改写原来那一条**。
-   *  两条都不做:不写回输入框(会覆盖玩家正在打的字)、不追加一条新回答
-   *  (同一个问题挂两个答案,读起来像分身自言自语说了两遍)。 */
+  /** 只允许恢复未确认的原问题；新生成的收费合同尚未确定。 */
   retryNpcMsg(e) {
+    if (!this._canShopNpcChat()) return;
     const s = this.data.shopNpc;
-    if (s.thinking) return;
     const idx = Number(e.currentTarget.dataset.idx);
-    let ask = '';
-    for (let i = idx - 1; i >= 0; i--) {
-      if (s.msgs[i] && s.msgs[i].role === 'me') { ask = s.msgs[i].text; break; }
-    }
-    if (!ask) return;
+    const item = s.msgs[idx];
+    if (s.thinking || !item || !item.pending) return;
+    if (item.pending.owner !== String(app.getUserID()) || String(item.pending.nodeId) !== String(s.nodeId)) return;
     this.setData({ 'shopNpc.thinking': true });
     this._startThinkBeat();
-    this._askShopNpc(ask, idx);
+    this._askShopNpc(item.pending.message, idx);
   },
 
   /** 卡片飞到位之后自转一整圈:一圈之内正面、右脊、背面、左脊各露一次,
@@ -3061,8 +3164,36 @@ Page({
       });
     });
   },
+  _pendingThoughtKeys() {
+    if (this.data.isPreview || this.data.isMock) return [];
+    const scope = JSON.stringify(this._runSessionScope());
+    if (this._thoughtScope !== scope) {
+      this._thoughtScope = scope;
+      this._thoughtClaimed = {};
+      this._thoughtOutbox = [];
+    }
+    const saved = storyResume.read(this._runSessionScope()).pendingThoughts;
+    return Array.from(new Set((this._thoughtOutbox || []).concat(Array.isArray(saved) ? saved : [])
+      .filter(key => typeof key === 'string' && key.length > 0)));
+  },
+  _persistThoughtKeys(keys) {
+    if (this.data.isPreview || this.data.isMock) return;
+    this._pendingThoughtKeys();
+    this._thoughtOutbox = keys;
+    const saved = storyResume.patch(this._runSessionScope(), { pendingThoughts: keys });
+    this.setData({ thoughtSyncNotice: keys.length
+      ? (saved ? '心声待同步，联网后重进会继续同步。' : '心声待同步，暂未保留到本机，请勿退出并重试。') : '' });
+  },
+  retryThoughtSync() {
+    if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
+    const keys = this._pendingThoughtKeys();
+    if (!keys.length) return Promise.resolve(true);
+    if (this._thoughtSyncPending) return this._thoughtSyncPending;
+    return this._syncThoughts(keys);
+  },
   _claimThoughts(keys) {
     if (this.data.isPreview || this.data.isMock) return;
+    this._pendingThoughtKeys();
     this._thoughtClaimed = this._thoughtClaimed || {};
     const fresh = keys.filter((k) => !this._thoughtClaimed[k]);
     if (!fresh.length) return;
@@ -3071,13 +3202,22 @@ Page({
   },
   _syncThoughts(claim) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const releaseClaims = () => claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
+    const scope = JSON.stringify(this._runSessionScope());
+    claim = Array.from(new Set(this._pendingThoughtKeys().concat(claim)));
+    if (claim.length) this._persistThoughtKeys(claim);
+    const releaseClaims = () => {
+      if (scope !== JSON.stringify(this._runSessionScope())) return;
+      claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
+    };
     const sync = () => this._weRunCipher().then((cipher) => {
+      if (scope !== JSON.stringify(this._runSessionScope()) || this.data.isPreview || this.data.isMock) return false;
       if (cipher === false) { releaseClaims(); return false; }
       if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
       return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
         this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+        if (scope !== JSON.stringify(this._runSessionScope()) || this.data.isPreview || this.data.isMock) return false;
         if ((res.code == 200 || res.code == '200') && res.data) {
+          this._persistThoughtKeys(this._pendingThoughtKeys().filter(key => claim.indexOf(key) < 0));
           this._applyRouteState(res.data, () => {
             if (this.data.chapterFull) this.openChapterFull();
             if (this.data.chapStory.show) this._refreshChapStoryThoughts();
@@ -3223,8 +3363,8 @@ Page({
           push(b.who ? String(b.who) + '：' + String(b.content || '') : b.content, condOf(b));
           curOdd = previousOdd;
         }
-        else if ((b.type === 'image' || b.type === 'audio') && b.url) {
-          items.push({ kind: b.type, text: '', url: String(b.url), mood: curMood, odd: curOdd });
+        else if (b.type === 'image' || b.type === 'audio') {
+          items.push({ kind: b.type, text: '', url: String(b.url || ''), altText: String(b.altText || ''), mediaFailed: !b.url, mood: curMood, odd: curOdd });
         } else if (b.type === 'dream') {
           /* 梦块(契约 §3.2):一组图 + 每张一句,一张张「穿过去」。
              ⚠️ 整块仍是**一个** .chfull__para —— measureChapter 用 selectAll('.chfull__para')
@@ -3425,6 +3565,18 @@ Page({
    *  三者共用同一个 InnerAudioContext —— 章节旁白 / 音频块 / 节点语音导览同时出声是灾难,
    *  共用播放器天然保证「后播的把前面那段顶掉」。
    *  key 分三套且互不相等:整章旁白 = 'chapter',块 = 'ch<i>',节点侧 = 数字 nodeId。 */
+  onStoryImageError(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const item = (this.data.chapterParas || [])[i];
+    if (!item || item.kind !== 'image') return;
+    this.setData({ ['chapterParas[' + i + '].mediaFailed']: true });
+  },
+  retryStoryImage(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const item = (this.data.chapterParas || [])[i];
+    if (!item || item.kind !== 'image' || !item.url) return;
+    this.setData({ ['chapterParas[' + i + '].mediaFailed']: false });
+  },
   toggleChapterAudio(e) {
     const i = Number(e.currentTarget.dataset.i);
     const item = (this.data.chapterParas || [])[i];
@@ -3437,8 +3589,8 @@ Page({
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
     audio.src = item.url;
+    this.setData({ audioNodeId: key, audioError: '', audioLoading: true });
     audio.play();
-    this.setData({ audioNodeId: key });
   },
   /** 正文布局落定后量真实段落;滚动仍共用故事流的去抖与显形路径。 */
   measureChapter() {
@@ -3667,6 +3819,7 @@ Page({
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
+        that.retryThoughtSync();
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
       });
@@ -5424,6 +5577,8 @@ Page({
       this._triggerCelebration('task-complete');
       // M2 夜间提示(自玩 22:00–06:00 后端下发 nightWarning):结果时刻一句,非阻断、自动收
       if (data && data.nightWarning === true) this._flashNightHint();
+      // C1/M0104:服务端判定这一站只由本机成绩/兜底/任务码撑着 —— 照实说,不自行补发也不换旧路径领奖
+      if (data && data.rewardCeiling === 'XP_BADGE_ONLY' && data.firstTime !== false) cyToast('本机成绩：只记探索值与徽章');
       // mode2 碎片翻卡:完成即翻出该节点碎片(空则不弹)
       if (this.data.mode === 2) {
         const done = nodes.filter((n) => n.done);
@@ -5612,6 +5767,10 @@ Page({
 
   toggleReducedMotion() {
     const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    if (reducedMotion === null) {
+      cyToast('设置未保存，请重试');
+      return;
+    }
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },
@@ -5996,6 +6155,8 @@ Page({
     /* payload 要过一次翻译:组件按玩家看到的东西命名,服务端按判定要用的东西命名。
        直接把 detail 发过去,服务端读不到字段会按 0 判 —— 不报错,只是永远不通过。 */
     const payload = serverPayload(kit.type, action, detail);
+    // C1:提交带上服务端这次开表发的挑战身份 —— 中断重开后旧 attempt 的成绩服务端拒收
+    if (action === 'submit' && kit.attemptId > 0) payload.attemptId = kit.attemptId;
     if (kit.type === 'typein' && action === 'start') {
       this.setData({ 'playKit.kit.startConfirmed': false });
       this._typeInStart = { sessionId: kit.sessionId, promise: Promise.resolve(game.action(name, payload)) };
@@ -6118,7 +6279,7 @@ Page({
         if (!cardMode) cyLoading.hide();
         const url = r && r.ok && r.results && r.results[0];
         if (!url) {
-          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
+          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去'); if (option.onFailed) option.onFailed((r && r.failures && r.failures[0]) || {});
           return;
         }
         const currentGame = this.selectComponent('#advancedGame');
@@ -6744,11 +6905,15 @@ Page({
   loadFinishRouteRecommendation() {
     const requestEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._finishRecommendationEpoch = requestEpoch;
-    this.setData({ finishRouteRecommendation: null });
+    this.setData({ finishRouteRecommendation: null, finishRecommendationState: '' });
     if (!finishRouteRecommendation.isEnabled(app.globalData && app.globalData.features)
         || this.data.isPreview || this.data.isMock) return Promise.resolve(null);
     const origin = finishRouteRecommendation.resolveOrigin(this._loc, this.data.nodes);
-    if (!origin) return Promise.resolve(null);
+    if (!origin) {
+      this.setData({ finishRecommendationState: 'locationUnknown' });
+      return Promise.resolve(null);
+    }
+    this.setData({ finishRecommendationState: 'loading' });
     return req('/api/activity/list', 'POST', {
       is_my: 0,
       sort_type: 1,
@@ -6759,10 +6924,14 @@ Page({
     }).then((response) => {
       if (requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return null;
       const rows = response && response.code == 200 && response.data && response.data.rows;
+      if (!Array.isArray(rows)) {
+        this.setData({ finishRecommendationState: 'error' });
+        return null;
+      }
       const card = finishRouteRecommendation.pickCandidate(
         Array.isArray(rows) ? rows : [], this.data.activityId, this.data.topicId
       );
-      this.setData({ finishRouteRecommendation: card }, () => {
+      this.setData({ finishRouteRecommendation: card, finishRecommendationState: card ? 'ready' : 'empty' }, () => {
         if (!card || requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return;
         analytics.track('finish_route_recommendation_shown', {
           bizType: 'activity', bizId: card.id,
@@ -6975,8 +7144,12 @@ Page({
       that.setData({ audioPlaying: true, audioLoading: false, audioError: '' });
     });
     audio.onPause(() => {
+<<<<<<< public
       audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false });
+=======
+      that.setData({ audioPlaying: false, audioLoading: false });
+>>>>>>> private-feature/w2-r
     });
     audio.onStop(() => {
       audioSession.keepAwake('guideAudio', false);
@@ -6987,8 +7160,12 @@ Page({
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
+<<<<<<< public
       const msg = (err && err.errMsg) ? err.errMsg : '音频加载失败';
       audioSession.keepAwake('guideAudio', false);
+=======
+      const msg = '这段音频暂时无法播放，可重试或阅读文字';
+>>>>>>> private-feature/w2-r
       that.setData({ audioPlaying: false, audioLoading: false, audioError: msg });
       cyToast(msg);
     });

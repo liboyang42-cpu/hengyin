@@ -20,6 +20,8 @@ test('服务端回读的线索：范围单列，正文与图片按来源原样�
   assert.deepEqual(ev04.blocks[0].images, ['https://cdn.example/ev04-1.jpg', 'https://cdn.example/ev04-2.jpg']);
   assert.equal(ev04.blocks.length, 2);
   assert.deepEqual(ev05.blocks, [], '未配内容时只显示名称与范围，不臆造正文');
+  assert.equal(ev05.lockedText, '已获得 · 来源未确认或未配正文，仅显示名称');
+  assert.equal(ev07.lockedText, '', '有授权正文时不显示锁定说明');
   assert.ok(withClues.clues.every(c => !('content' in c) || c.content === undefined), '范围不再冒充正文');
   // 同名线索本队私有与全场公开各自成行，不互相覆盖
   const both = backpack.present(Object.assign({}, base, { clues: [{ id: 'clue.h_d', name: 'EV03 人口原表', scope: 'TEAM', sources: [] }, { id: 'clue.h_d', name: 'EV03 人口原表', scope: 'PUBLIC', sources: [] }] }), []);
@@ -31,6 +33,7 @@ test('线索页签渲染正文、范围与可预览图片', () => {
   const fs = require('node:fs'), path = require('node:path');
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/theme-backpack.wxml'), 'utf8');
   assert.match(wxml, /item\.scopeText/);
+  assert.match(wxml, /item\.lockedText/);
   assert.match(wxml, /wx:for="\{\{item\.blocks\}\}"/);
   assert.match(wxml, /block\.text/);
   assert.match(wxml, /bindtap="previewThemeClueImage"/);

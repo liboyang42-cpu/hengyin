@@ -691,7 +691,7 @@ Page({
     if (!url) return;
     if (this._navigating) return;
     this._navigating = true;
-    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+    navigateRegistered({ url: url, complete: () => { this._navigating = false; } });
   },
 
   // 我发出的:撤回待处理的申请带队(申请入口在俱乐部详情「可对接的活动」)
@@ -1132,3 +1132,5 @@ Page({
     });
   }
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

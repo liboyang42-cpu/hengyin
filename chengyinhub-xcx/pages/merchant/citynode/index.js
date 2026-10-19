@@ -3,6 +3,8 @@ const toast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const app = getApp();
+const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
+const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const codeTextUtil = require('../utils/code-text.js');
@@ -113,7 +115,10 @@ Page({
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() {
+    if (this._cityRedeemWorkflow) this._cityRedeemWorkflow.destroy();
+    merchantTheme.merchantPageRestore();
+  },
 
   // D-4 统一返回栏:与 cy-nav-bar 同语义;直接进来(无上一页)时退回工作台,避免箭头点了没反应
   onNavBack() {
@@ -473,17 +478,36 @@ Page({
       success(sc) {
         const code = sc.result;
         if (!code) return toast('未识别到核销码');
-        app.sendRequest({
-          url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code },
+        if (!that._cityRedeemWorkflow) that._cityRedeemWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+        const key = 'citynode-redeem:' + code;
+        if (that._cityRedeemWorkflow.isBusy(key)) {
+          toast('核销结果待确认，请勿重复核销');
+          offerVerificationReadback(key, that._cityRedeemWorkflow);
+          return;
+        }
+        that._cityRedeemWorkflow.run(key, done => app.sendRequest({
+          url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code }, silentError: true,
           success(res) {
-            if (res.code === '200' || res.code === 200) {
-              motion.haptic({ type: 'medium', reducedMotion: readReducedMotion() });
-              toast(res.data && res.data.couponGranted === false ? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家');
-            } else {
-              modal.show({ title: '核销失败', content: (res && res.msg) || '请重试', showCancel: false });
+            if (!res || ([200, '200'].includes(res.code) && (!res.data || typeof res.data.couponGranted !== 'boolean'))) {
+              done({ status: 'unknown' });
+              return;
             }
+            done({ status: 'success', response: res });
           },
-          fail() { toast('网络异常，请重试'); },
+          fail() { done({ status: 'unknown' }); },
+          successStatusAbnormal() { done({ status: 'unknown' }); },
+        }), result => {
+          if (result.status === 'unknown') {
+            offerVerificationReadback(key, that._cityRedeemWorkflow);
+            return;
+          }
+          const res = result.response;
+          if ([200, '200'].includes(res.code)) {
+            motion.haptic({ type: 'medium', reducedMotion: readReducedMotion() });
+            toast(res.data.couponGranted === false ? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家');
+          } else {
+            modal.show({ title: '核销未完成', content: res.msg || '请查询原核销记录后再处理', showCancel: false });
+          }
         });
       },
       fail(err) {

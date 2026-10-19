@@ -106,26 +106,34 @@ function assertRecoverySource(source, preflightSource) {
   assert.doesNotMatch(submit, /wx\.showLoading|wx\.hideLoading|app\.tips\(|wx\.showToast\(\{\s*title:\s*'网络错误/)
 }
 
-// 2026-09-16 截图冒烟:账户收益页在 /api/user/info 回 balance=null 时整页报「收益没加载出来,
-// 网络可能不稳定」。库列可空 ⇒ null/空是「新用户还没收益」的正常数据,按 0.00 展示,不算网络错。
-test('可提现余额为 null/空是正常数据,按 0.00 展示;坏值与非 200 才落失败态', () => {
-  const missing = loadPage()
-  missing.page.loadTxBalance()
-  const missingReq = missing.requests.find((request) => request.url === '/api/user/info')
-  assert.ok(missingReq, 'loadTxBalance 必须请求 /api/user/info')
-  missingReq.success({ code: '200', data: { balance: null } })
-  assert.equal(missing.page.data.txBalanceErr, false, '余额为空不是网络错')
-  assert.equal(missing.page.data.txBalanceText, '0.00', '空余额按 0.00 展示')
-  assert.equal(missing.page.data.txBalanceLoaded, true)
+// F0423(2026-10-12):表单「可提现余额」/「全部提现」只认 /api/withdrawal/summary 的 available
+// (余额 − 冻结额,与建单扣减同口径),不再读 /api/user/info 的总余额。缺失/坏值/非 200 都落失败态,
+// 不渲染确定的 ¥0.00,也不让「全部」填未知金额。
+const SUMMARY_URL = '/api/withdrawal/summary'
+test('F0423 可提现余额只读服务端 available;缺失、坏值与非 200 落失败态', () => {
+  const ok = loadPage()
+  ok.page.loadTxBalance()
+  assert.equal(ok.requests.filter((request) => request.url === '/api/user/info').length, 0,
+    '不得再用总余额当可提现额')
+  const okReq = ok.requests.find((request) => request.url === SUMMARY_URL)
+  assert.ok(okReq, 'loadTxBalance 必须请求 /api/withdrawal/summary')
+  okReq.success({ code: '200', data: { balance: 100, frozen: 50.5, available: 49.5 } })
+  assert.equal(ok.page.data.txBalanceErr, false)
+  assert.equal(ok.page.data.txBalanceText, '49.50', '展示可提现额而不是总余额 100')
+  ok.page.onTxAllWithdrawal()
+  assert.equal(ok.page.data.txWithdrawalAmount, '49.5', '「全部提现」只填可提现额')
 
-  const bad = loadPage()
-  bad.page.loadTxBalance()
-  bad.requests.find((request) => request.url === '/api/user/info').success({ code: '200', data: { balance: 'abc' } })
-  assert.equal(bad.page.data.txBalanceErr, true, '坏值不能被当成 0')
+  for (const data of [{ balance: 100 }, { available: null }, { available: 'abc' }, { available: -1 },
+    { available: '1.001' }, null]) {
+    const bad = loadPage()
+    bad.page.loadTxBalance()
+    bad.requests.find((request) => request.url === SUMMARY_URL).success({ code: '200', data })
+    assert.equal(bad.page.data.txBalanceErr, true, '缺失/坏值不能被当成 0: ' + JSON.stringify(data))
+  }
 
   const failed = loadPage()
   failed.page.loadTxBalance()
-  failed.requests.find((request) => request.url === '/api/user/info').success({ code: '500', msg: '服务异常' })
+  failed.requests.find((request) => request.url === SUMMARY_URL).success({ code: '500', msg: '服务异常' })
   assert.equal(failed.page.data.txBalanceErr, true, '真失败才落失败态')
 })
 

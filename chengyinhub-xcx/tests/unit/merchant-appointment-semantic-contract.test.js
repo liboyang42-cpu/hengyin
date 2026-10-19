@@ -24,7 +24,8 @@ test('商家更多菜单不再用预约文案跳转核销台账', () => {
   assert.ok(onMoreMatch, '必须能定位到更多菜单分发逻辑');
   const onMore = onMoreMatch[0];
 
-  assert.deepEqual(menuActions, ['messages', 'aftercare', 'coupon', 'brand']);
+  // X034:「已接待团」= 团码接待回读与撤销,与扫码同权限,不是预约入口。
+  assert.deepEqual(menuActions, ['messages', 'group-reception', 'aftercare', 'coupon', 'brand']);
   assert.doesNotMatch(menu, /预约|预订|booking|appointment/i);
   assert.doesNotMatch(onMore, /预约|预订|booking|appointment/i);
   // 2026-09-22 M-07:「我的消息」核销流水点开去核销记录是正当入口,但只许挂在 goEvent 上、不许带预约口吻。

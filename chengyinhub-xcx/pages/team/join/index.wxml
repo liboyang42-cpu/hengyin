@@ -16,7 +16,7 @@
     <view class="team-head">
       <view class="team-eyebrow">TEAM INVITATION</view>
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
-      <view class="team-sub">你收到一份组队邀请。组队与否不影响活动举行，入队不会代替报名或购票。</view>
+      <view class="team-sub">你收到一份玩家组队邀请，邀请码不能用于活动签到或商家核销。组队与否不影响活动举行，入队不会代替报名或购票。</view>
     </view>
     <view class="team-card">
       <view class="team-meta">

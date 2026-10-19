@@ -20,6 +20,10 @@
         <view class="sw__tip">
           <view>开跑 1 秒后数字会消失</view>
           <view>点屏幕任意处停</view>
+          <!-- C1/F0336:误差口径明示;本机停表数不是独立证据,服务器按每次开始的时间复核 -->
+          <view>停表与目标相差不超过 ±{{tolText}} 秒算命中，按你点开始那一刻复核</view>
+          <view wx:if="{{bgRule}}">{{bgRule}}</view>
+          <view wx:if="{{evidenceNote}}">{{evidenceNote}}</view>
         </view>
       </view>
       <view class="sw__foot">

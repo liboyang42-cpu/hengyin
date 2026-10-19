@@ -24,6 +24,7 @@ Page({
     showAgreementSheet: false,
     showPrivacySheet: false,
     showMarketingConsent: false,
+    showPostGovernance: false,
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null }
@@ -183,6 +184,9 @@ Page({
   closePrivacySheet() {
     this.setData({ showPrivacySheet: false });
   },
+
+  openPostGovernance() { this.setData({ showPostGovernance: true }); },
+  closePostGovernance() { this.setData({ showPostGovernance: false }); },
 
   openMarketingConsent() {
     this.setData({ showMarketingConsent: true });

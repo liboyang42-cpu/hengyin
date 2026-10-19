@@ -1,0 +1,54 @@
+diff --git a/chengyinhub-xcx/scripts/uiaudit/route-matrix.json b/chengyinhub-xcx/scripts/uiaudit/route-matrix.json
+index 4f982e51e9..7c3825ce4e 100644
+--- a/chengyinhub-xcx/scripts/uiaudit/route-matrix.json
++++ b/chengyinhub-xcx/scripts/uiaudit/route-matrix.json
+@@ -3,8 +3,13 @@
+   "generatedFrom": "app.json + scene-* 组件扫描",
+   "previousBatch": null,
+   "counts": {
++<<<<<<< /tmp/claude-501/tmpap7gimu0/o
+     "routes": 138,
+     "scenes": 27,
++=======
++    "routes": 132,
++    "scenes": 26,
++>>>>>>> /tmp/claude-501/tmpap7gimu0/t
+     "added": 0,
+     "removed": 0
+   },
+@@ -1119,6 +1124,17 @@
+       "hasJs": true,
+       "hasWxml": true
+     },
++    {
++      "pagePath": "pages/merchant/group-reception/index",
++      "pkg": "pages/merchant",
++      "tabBar": false,
++      "role": "merchant",
++      "needsLogin": true,
++      "needsData": false,
++      "dataKeys": [],
++      "hasJs": true,
++      "hasWxml": true
++    },
+     {
+       "pagePath": "pages/coop/list/index",
+       "pkg": "pages/coop",
+@@ -1554,6 +1570,17 @@
+       "hasJs": true,
+       "hasWxml": true
+     },
++    {
++      "pagePath": "subpackageMember/identity-change/index",
++      "pkg": "subpackageMember",
++      "tabBar": false,
++      "role": "player",
++      "needsLogin": false,
++      "needsData": false,
++      "dataKeys": [],
++      "hasJs": true,
++      "hasWxml": true
++    },
+     {
+       "pagePath": "subpackageRoam/citynode-code/index",
+       "pkg": "subpackageRoam",

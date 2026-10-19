@@ -1167,4 +1167,9 @@ page { background: var(--cy-bg-page); }
 /* 黑色编辑弹窗不描边；只覆盖本页的非游戏编辑宿主。 */
 .club-scene-host { --cy-comp-sheet-border-width: 0px; }
 
+<<<<<<< public
 .join-review-reason { display: block; white-space: pre-wrap; color: var(--cy-text-secondary); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); }
+=======
+/* F0098:被引游玩记录当前不可公开时的说明(不展示原标题/封面) */
+.post-ref-unavailable { margin: 0 var(--cy-page-x) var(--cy-space-2-5); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+>>>>>>> private-feature/w2-r

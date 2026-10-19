@@ -18,18 +18,13 @@ const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const { haversine } = require('../../../utils/geo.js');
+const { haversine, distanceText } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
 
-/* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
-   接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
-   直线估算(80m/min ≈ 4.8km/h),拿不到坐标就整行不画,不编一个数字充数。
-   ⚠️ 不要拿 node.nodeTime 顶替:那一列的注释写着「建议停留时长(分钟)」,
-      是「在这站待多久」,不是「走多久到下一站」。 */
-const WALK_METERS_PER_MIN = 80;
+// 坐标只支持直线距离，不能据此承诺步行用时。
 function walkText(prev, node) {
   if (!prev || !node) return '';
   const la1 = Number(prev.latitude); const lo1 = Number(prev.longitude);
@@ -38,7 +33,7 @@ function walkText(prev, node) {
   if (!la1 || !lo1 || !la2 || !lo2) return '';
   const meters = haversine(la1, lo1, la2, lo2);
   if (!Number.isFinite(meters) || meters <= 0) return '';
-  return Math.max(1, Math.round(meters / WALK_METERS_PER_MIN)) + 'min 步行';
+  return '直线约 ' + distanceText(meters) + ' · 步行用时待确认';
 }
 
 /* CU-C-65:站点级字段裸插值会把 null 印成字面「null」(WXML 文本插值对 null 就是这么做的,
@@ -1601,46 +1596,41 @@ Page({
       };
     });
 
-    // 4) 路线：贴路线优先（拼接各章节 routeGeometry），否则节点直连
-    let linePoints = [];
-    let hasRoad = false;
-    chapters.forEach(function (c) {
-      if (c.routeGeometry) {
-        try {
-          const seg = JSON.parse(c.routeGeometry);
-          if (Array.isArray(seg) && seg.length) {
-            seg.forEach(function (p) {
-              const lat = Number(p.latitude !== undefined ? p.latitude : p.lat);
-              const lng = Number(p.longitude !== undefined ? p.longitude : p.lng);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                linePoints.push({ latitude: lat, longitude: lng });
-              }
-            });
-            hasRoad = true;
-          }
-        } catch (e) {
-          // routeGeometry 解析失败则忽略，走兜底
-        }
-      }
-    });
-    if (!hasRoad) {
-      linePoints = valid.map(function (n) {
-        return { latitude: Number(n.latitude), longitude: Number(n.longitude) };
+    // 分章画线，不把缺失道路段或章间连接伪装成已规划道路。
+    const polyline = [];
+    let roadSegments = 0;
+    chapters.forEach(function (chapter) {
+      let points = [];
+      try {
+        const geometry = JSON.parse(chapter.routeGeometry || 'null');
+        if (Array.isArray(geometry)) points = geometry.filter(function (p) {
+          if (!p) return false;
+          const lat = p.latitude !== undefined ? p.latitude : p.lat;
+          const lng = p.longitude !== undefined ? p.longitude : p.lng;
+          return lat != null && lng != null && lat !== '' && lng !== ''
+            && Number.isFinite(Number(lat)) && Math.abs(Number(lat)) <= 90
+            && Number.isFinite(Number(lng)) && Math.abs(Number(lng)) <= 180;
+        }).map(function (p) {
+          return { latitude: Number(p.latitude !== undefined ? p.latitude : p.lat), longitude: Number(p.longitude !== undefined ? p.longitude : p.lng) };
+        });
+        // 缺坏点时整段降级，避免跨越断点画出虚假的道路。
+        if (Array.isArray(geometry) && points.length !== geometry.length) points = [];
+      } catch (e) { points = []; }
+      const road = points.length >= 2;
+      if (road) roadSegments += 1;
+      else points = (chapter.nodes || []).filter(function (node) { return valid.indexOf(node) !== -1; })
+        .map(function (node) { return { latitude: Number(node.latitude), longitude: Number(node.longitude) }; });
+      if (points.length >= 2) polyline.push({
+        points: points, color: '#1A1A1A', width: 5, borderColor: '#FFFFFF', borderWidth: 1, /* ds-ok: 原生地图不支持 CSS token，沿用原路线描边 */
+        arrowLine: road, dottedLine: !road
       });
-    }
-
-    const polyline = linePoints.length >= 2 ? [{
-      points: linePoints,
-      color: '#1A1A1A',        // 去紫:原生 map polyline,与 callout 同色系
-      width: 5,
-      borderColor: '#FFFFFF',
-      borderWidth: 1,
-      arrowLine: true
-    }] : [];
+    });
+    const hasRoad = roadSegments > 0;
+    const linePoints = polyline.reduce(function (all, line) { return all.concat(line.points); }, []);
 
     that.setData({
       routeReady: true,
-      routeIsRoad: hasRoad,
+      routeSourceText: hasRoad ? '道路段参考 · 虚线为节点连线，章间未规划' : '节点直线预览 · 尚未规划步行路线',
       mapLatitude: Number(valid[0].latitude),
       mapLongitude: Number(valid[0].longitude),
       routeMarkers: markers,
@@ -1856,7 +1846,7 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
-      // 稿 214:689:站与站之间写「N min 步行」。第一站没有上一站,自然不画。
+      // 站间只展示直线距离，第一站没有上一站。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {
         // CU-C-65:站点这一层的裸字段全部归一,别把 null 渲染给玩家

@@ -6,7 +6,7 @@ const {
 } = require('../../../utils/game-session-client.js')
 
 const CLUB_ROLE = 'club'
-const { genericOpsActions, genericOpsFields, genericOpsPayload } = require('./generic-director-ops.js')
+const { genericOpsActions, genericOpsFields, genericOpsPayload, genericOpsStatusText, genericOpsConsequence } = require('./generic-director-ops.js')
 
 function directorError(code, message, cause) {
   const error = new Error(message || code)
@@ -365,4 +365,6 @@ module.exports = {
   genericOpsActions,
   genericOpsFields,
   genericOpsPayload,
+  genericOpsStatusText,
+  genericOpsConsequence,
 }

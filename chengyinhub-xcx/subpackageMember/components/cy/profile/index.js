@@ -559,9 +559,9 @@ Component({
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
           success: function (res) { done({ status: 'success', response: res }); },
-          fail: function () { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
+          fail: function () { done({ status: 'unknown' }); },
           successStatusAbnormal: function (res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+            done({ status: 'unknown' });
           }
         }));
       }, function (result) {
@@ -1877,7 +1877,7 @@ Component({
   // 当前权益里可点的行(收益提现→提现页;承接原 role/center 对赚钱角色 role!==player 的提现入口,按 withdrawable 权限门控)
   onBenefitTap: function (e) {
     var ds = e.currentTarget.dataset;
-    if (ds.route && ds.unlocked) wx.navigateTo({ url: ds.route });
+    if (ds.route && ds.unlocked) navigateRegistered({ url: ds.route });
   },
   goInvite: function () { this.openScene('share-invite'); },
   goComplaint: function () { wx.navigateTo({ url: '/subpackageMember/complaint/index' }); },
@@ -1998,3 +1998,5 @@ Component({
   }
   }
 });
+
+const { navigateRegistered } = require('../../../../utils/registered-navigation.js');
