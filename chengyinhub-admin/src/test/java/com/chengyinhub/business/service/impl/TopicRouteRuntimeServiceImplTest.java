@@ -368,6 +368,42 @@ class TopicRouteRuntimeServiceImplTest {
     }
 
     @Test
+    void a01EndingBodyIsFrozenSeparatelyFromPlayableChapters() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"ending\":{\"endings\":["
+                + "{\"code\":\"done\",\"title\":\"结束\",\"fallback\":true,\"chapterId\":90}]}}");
+        CmsTopicChapter ending = new CmsTopicChapter();
+        ending.setId(90L); ending.setTopicId(10L); ending.setName("原结局");
+        ending.setAudioUrl("/fixture-ending.mp3"); ending.setAtmospherePreset("night");
+        ending.setBlocksJson("[{\"type\":\"text\",\"content\":\"原正文\"}]");
+        CmsTopicChapter foreign = new CmsTopicChapter();
+        foreign.setId(90L); foreign.setTopicId(11L); foreign.setName("异主题");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Arrays.asList(ending, foreign));
+
+        runtime.state(7L, 10L, 0L);
+        JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
+        assertEquals("原结局", frozen.path("endingChapters").path("90").path("name").asText());
+        assertEquals("/fixture-ending.mp3", frozen.path("endingChapters").path("90").path("audioUrl").asText());
+        assertTrue(frozen.path("endingChapters").path("90").path("blocks").toString().contains("原正文"));
+        assertEquals(0, frozen.path("thoughtChapters").size(), "结局不进入可推进章节");
+        ending.setName("改后结局"); ending.setBlocksJson("[]");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.emptyList());
+        runtime.state(7L, 10L, 0L);
+        JsonNode restored = json.readTree(stored[0].getConfigSnapshotJson());
+        assertEquals(frozen.path("endingChapters"), restored.path("endingChapters"), "续局不重冻正文");
+    }
+
+    @Test
+    void a01NewSnapshotMarksEvenEmptyEndingBodiesAsFrozen() throws Exception {
+        runtime.state(7L, 10L, 0L);
+        JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
+        assertTrue(frozen.path("endingChapters").isObject());
+        assertEquals(0, frozen.path("endingChapters").size());
+    }
+
+    @Test
     void branchRouteDoesNotAcquireLinearReceptionOrder() {
         com.chengyinhub.business.service.IGameSessionRuntimeService sessions =
                 mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
