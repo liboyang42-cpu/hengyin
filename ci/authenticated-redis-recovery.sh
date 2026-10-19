@@ -40,22 +40,15 @@ REDIS_IMAGE=redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9
 for image in "$JDK_IMAGE" "$MYSQL_IMAGE" "$REDIS_IMAGE"; do docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; done
 docker network create --internal --label "chengyin.auth-recovery=$RUN_NAME" "$RUN_NAME" >/dev/null
 test "$(docker network inspect "$RUN_NAME" --format '{{.Internal}}')" = true
-docker run -d --name "$RUN_NAME-mysql" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" -p 127.0.0.1::3306 \
+docker run -d --name "$RUN_NAME-mysql" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" \
   --memory=1g --memory-swap=1g --cpus=1 --tmpfs /var/lib/mysql:rw,size=768m \
   -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% "$MYSQL_IMAGE" --skip-log-bin --performance-schema=OFF --event-scheduler=OFF >/dev/null
 MYSQL_CID=$(docker inspect "$RUN_NAME-mysql" --format '{{.Id}}')
 docker run -d --name "$RUN_NAME-redis" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" --memory=64m --memory-swap=64m \
   --tmpfs /data:rw,size=32m "$REDIS_IMAGE" redis-server --save '' --appendonly no >/dev/null
 REDIS_CID=$(docker inspect "$RUN_NAME-redis" --format '{{.Id}}')
-PORT=$(docker inspect "$MYSQL_CID" --format '{{(index (index .NetworkSettings.Ports "3306/tcp") 0).HostPort}}')
-ready=false
-for attempt in $(seq 1 90); do
-  if docker exec "$MYSQL_CID" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot -N -e "SELECT VERSION()"' > "$PRIVATE/mysql-version" 2>/dev/null; then ready=true; break; fi
-  sleep 1
-done
-test "$ready" = true
-grep -qx '8.0.45' "$PRIVATE/mysql-version"
-rm "$PRIVATE/mysql-version"
+python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" mysql-ready "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" 0
+PORT=0 # Each Python phase holds its own 127.0.0.1 ephemeral relay socket.
 python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" prepare "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
 mkdir "$OUT/trace-libs"
 STRACE=$(command -v strace)
