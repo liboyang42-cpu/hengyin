@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxTradeBillDetailMapper">
+  <insert id="insertDetail" useGeneratedKeys="true" keyProperty="id">
+    insert into wx_trade_bill_detail
+      (bill_date, merchant_id, record_key, trade_time, transaction_id, out_trade_no, trade_state, refund_id, out_refund_no, refund_status, order_amount, settlement_amount, coupon_amount, requested_refund_amount, settlement_refund_amount, coupon_refund_amount, fee)
+    values
+      (#{billDate,jdbcType=DATE}, #{merchantId,jdbcType=VARCHAR}, #{recordKey,jdbcType=VARCHAR}, #{tradeTime,jdbcType=TIMESTAMP}, #{transactionId,jdbcType=VARCHAR}, #{outTradeNo,jdbcType=VARCHAR}, #{tradeState,jdbcType=VARCHAR}, #{refundId,jdbcType=VARCHAR}, #{outRefundNo,jdbcType=VARCHAR}, #{refundStatus,jdbcType=VARCHAR}, #{orderAmount,jdbcType=DECIMAL}, #{settlementAmount,jdbcType=DECIMAL}, #{couponAmount,jdbcType=DECIMAL}, #{requestedRefundAmount,jdbcType=DECIMAL}, #{settlementRefundAmount,jdbcType=DECIMAL}, #{couponRefundAmount,jdbcType=DECIMAL}, #{fee,jdbcType=DECIMAL})
+  </insert>
+  <select id="countMatchingDetail" resultType="int">
+    select count(*) from wx_trade_bill_detail
+    where (bill_date = #{billDate,jdbcType=DATE} or (bill_date is null and #{billDate,jdbcType=DATE} is null))
+      and (merchant_id = #{merchantId,jdbcType=VARCHAR} or (merchant_id is null and #{merchantId,jdbcType=VARCHAR} is null))
+      and (record_key = #{recordKey,jdbcType=VARCHAR} or (record_key is null and #{recordKey,jdbcType=VARCHAR} is null))
+      and (trade_time = #{tradeTime,jdbcType=TIMESTAMP} or (trade_time is null and #{tradeTime,jdbcType=TIMESTAMP} is null))
+      and (transaction_id = #{transactionId,jdbcType=VARCHAR} or (transaction_id is null and #{transactionId,jdbcType=VARCHAR} is null))
+      and (out_trade_no = #{outTradeNo,jdbcType=VARCHAR} or (out_trade_no is null and #{outTradeNo,jdbcType=VARCHAR} is null))
+      and (trade_state = #{tradeState,jdbcType=VARCHAR} or (trade_state is null and #{tradeState,jdbcType=VARCHAR} is null))
+      and (refund_id = #{refundId,jdbcType=VARCHAR} or (refund_id is null and #{refundId,jdbcType=VARCHAR} is null))
+      and (out_refund_no = #{outRefundNo,jdbcType=VARCHAR} or (out_refund_no is null and #{outRefundNo,jdbcType=VARCHAR} is null))
+      and (refund_status = #{refundStatus,jdbcType=VARCHAR} or (refund_status is null and #{refundStatus,jdbcType=VARCHAR} is null))
+      and (order_amount = #{orderAmount,jdbcType=DECIMAL} or (order_amount is null and #{orderAmount,jdbcType=DECIMAL} is null))
+      and (settlement_amount = #{settlementAmount,jdbcType=DECIMAL} or (settlement_amount is null and #{settlementAmount,jdbcType=DECIMAL} is null))
+      and (coupon_amount = #{couponAmount,jdbcType=DECIMAL} or (coupon_amount is null and #{couponAmount,jdbcType=DECIMAL} is null))
+      and (requested_refund_amount = #{requestedRefundAmount,jdbcType=DECIMAL} or (requested_refund_amount is null and #{requestedRefundAmount,jdbcType=DECIMAL} is null))
+      and (settlement_refund_amount = #{settlementRefundAmount,jdbcType=DECIMAL} or (settlement_refund_amount is null and #{settlementRefundAmount,jdbcType=DECIMAL} is null))
+      and (coupon_refund_amount = #{couponRefundAmount,jdbcType=DECIMAL} or (coupon_refund_amount is null and #{couponRefundAmount,jdbcType=DECIMAL} is null))
+      and (fee = #{fee,jdbcType=DECIMAL} or (fee is null and #{fee,jdbcType=DECIMAL} is null))
+  </select>
+</mapper>

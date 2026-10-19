@@ -62,6 +62,23 @@ class AlarmThrottleTest {
         verify(redis, times(3)).setIfAbsent("alarm:attempt:monitor.audit.backlog", "1", 600, TimeUnit.SECONDS);
     }
 
+    @Test void repeatedHttpFailuresDoNotRetryAnUnavailableRedisLeaseWithinTheLocalWindow() {
+        RedisCache redis = mock(RedisCache.class);
+        when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS)))
+                .thenThrow(new IllegalStateException("private-cache-failure"));
+        AtomicInteger calls = new AtomicInteger();
+        AlarmService alarm = service(redis, calls, 200, "https://alerts.example.test/stub");
+        for (int i = 0; i < 3; i++) alarm.alarmThrottled("runtime.http.5xx", "server", "status=503");
+        verify(redis).setIfAbsent("alarm:attempt:runtime.http.5xx", "1", 600, TimeUnit.SECONDS);
+        assertEquals(1, calls.get());
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Long> local = (java.util.Map<String, Long>) ReflectionTestUtils.getField(alarm, "localAttempts");
+        local.put("runtime.http.5xx", System.currentTimeMillis() - 601_000L);
+        alarm.alarmThrottled("runtime.http.5xx", "server", "status=503");
+        verify(redis, times(2)).setIfAbsent("alarm:attempt:runtime.http.5xx", "1", 600, TimeUnit.SECONDS);
+        assertEquals(2, calls.get());
+    }
+
     @Test void differentFixedEventKeysRemainIndependent() {
         RedisCache redis = mock(RedisCache.class);
         when(redis.setIfAbsent(anyString(), any(), eq(600), eq(TimeUnit.SECONDS))).thenReturn(true);
@@ -87,10 +104,11 @@ class AlarmThrottleTest {
         try {
             alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
             alarm.alarmThrottled("monitor.metrics.sample", "sample", "source=app");
+            assertEquals(1, calls.get(), "首次未知租约仍投递,同窗口内重复尝试由本地限频挡下");
+            verify(redis).setIfAbsent("alarm:attempt:monitor.metrics.sample", "1", 600, TimeUnit.SECONDS);
+            alarm.alarmThrottled("monitor.metrics.other", "other", "source=app");
+            assertEquals(2, calls.get(), "不同事件互不抑制");
         } finally { logger.detachAppender(logs); logs.stop(); }
-        assertEquals(1, calls.get(), "首次未知租约仍投递,同窗口内重复尝试由本地限频挡下");
-        alarm.alarmThrottled("monitor.metrics.other", "other", "source=app");
-        assertEquals(2, calls.get(), "不同事件互不抑制");
         @SuppressWarnings("unchecked")
         java.util.Map<String, Long> local = (java.util.Map<String, Long>) ReflectionTestUtils.getField(alarm, "localAttempts");
         local.put("monitor.metrics.sample", System.currentTimeMillis() - 601_000L);

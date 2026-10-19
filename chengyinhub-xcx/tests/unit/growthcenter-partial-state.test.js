@@ -409,3 +409,78 @@ test('总积分排名单位保留真实名次并对缺失或0提供兜底', () =
   for(const rank of [undefined,null,0]) assert.equal(render({rank}),'—')
   assert.match(wxml,/wx:elif="{{rankLoaded}}"[^>]*>暂无排名/)
 })
+
+
+test('资料页改昵称返回成长中心时立即同步，并拒绝在途旧排名覆盖', () => {
+  const originalGetApp = global.getApp
+  let nickname = '旧昵称', avatar = 'old.png'
+  requests = []
+  global.getApp = () => ({ getUserID: () => 7, getNickname: () => nickname, getAvatar: () => avatar,
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: nickname, avatarUrl: avatar } })
+    page.onShow()
+    page.loadMyRank()
+    const oldRequest = requests[0]
+    nickname = '已保存的新昵称'; avatar = 'new.png'
+    page.onShow()
+    assert.equal(page.data.profile.name, nickname)
+    assert.equal(page.data.profile.avatarUrl, avatar)
+    assert.equal(requests.length, 2, '资料变化只补一条本人排名读取')
+    oldRequest.success(okRank({ rank: 2, score: 1, nickname: '旧昵称', avatar: 'old.png' }))
+    assert.equal(page.data.profile.name, nickname, '旧回包不得恢复旧昵称')
+    assert.equal(page.data.profile.avatarUrl, avatar)
+    requests[1].success(okRank({ rank: 2, score: 1, nickname, avatar }))
+    assert.equal(page.data.rankState, 'ready')
+    page.onShow()
+    assert.equal(requests.length, 2, '普通返回且资料没变不重复拉取')
+  } finally { global.getApp = originalGetApp }
+})
+
+
+test('会话未变时保留API新昵称，普通返回不被旧会话回写或重复拉取', () => {
+  const originalGetApp = global.getApp
+  requests = []
+  global.getApp = () => ({ getUserID: () => 7, getNickname: () => '会话旧名', getAvatar: () => 'session.png',
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: '会话旧名', avatarUrl: 'session.png' } })
+    page.onShow()
+    page.buildMyRank({ me: { rank: 1, score: 1, nickname: '服务端新名', avatar: 'server.png' } })
+    page.onShow()
+    assert.equal(page.data.profile.name, '服务端新名')
+    assert.equal(page.data.profile.avatarUrl, 'server.png')
+    assert.equal(requests.length, 0)
+  } finally { global.getApp = originalGetApp }
+})
+
+test('会话明确保存新昵称后，新排名请求的缓存旧昵称也不能覆盖且不改未保存头像', () => {
+  const originalGetApp = global.getApp
+  let nickname = '旧昵称', owner = 7
+  requests = []
+  global.getApp = () => ({ getUserID: () => owner, getNickname: () => nickname, getAvatar: () => 'session.png',
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: nickname, avatarUrl: 'server.png' } })
+    page.onShow()
+    nickname = '刚保存的昵称'
+    page.onShow()
+    assert.equal(page.data.profile.avatarUrl, 'server.png', '没保存头像不把API头像退回旧会话头像')
+    assert.equal(requests.length, 1)
+    requests[0].success(okRank({ rank: 1, score: 2, nickname: '缓存旧昵称', avatar: 'server.png' }))
+    assert.equal(page.data.profile.name, nickname)
+    assert.equal(page.data.me.name, nickname)
+    assert.equal(page.data.profile.avatarUrl, 'server.png')
+    page.onShow()
+    assert.equal(requests.length, 1)
+    owner = 8
+    page._syncGrowthOwner()
+    assert.equal(page._growthProfileOverride, null, '换号后不复用旧账号的本地资料优先值')
+  } finally { global.getApp = originalGetApp }
+})

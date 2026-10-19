@@ -767,6 +767,9 @@
       "c3_beforestart_job",
       "sys_job_enable_paused_20260915",
       "20261012_monitor_missing_jobs"
+    ],
+    "20261015_wx_bill_ingestion": [
+      "wx_trade_bill_snapshot_20260725"
     ]
   }
 }

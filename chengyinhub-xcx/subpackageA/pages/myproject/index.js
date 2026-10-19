@@ -748,8 +748,10 @@ function decorate(p) {
   /* 稿 260:277 承办卡底行写「待核销 2」。后端只对承办活动下发这个数(主办卡不需要,
      算了就是给每张卡白打一次库)。⚠️ 没下发和下发 0 是两件事:没下发就不写这一行,
      不能把「没算」印成「0 个待核销」。 */
-  const pendingVerify = Number(p.pendingVerifyCount);
-  const showPendingVerify = Number.isFinite(pendingVerify);
+  const rawPendingVerify = p.pendingVerifyCount;
+  const pendingVerify = typeof rawPendingVerify === 'number'
+    || typeof rawPendingVerify === 'string' && rawPendingVerify.trim() !== '' ? Number(rawPendingVerify) : NaN;
+  const showPendingVerify = Number.isInteger(pendingVerify) && pendingVerify >= 0;
   // 未承接=去看申请;已承接=去看合作现状(候选池同页展示已接受邀约),满足「每卡有下一步 CTA」
   const canViewApplies = p.bizType === 'topic' && (p.acceptStatus === 'clubOpen' || p.acceptStatus === 'merchantOpen' || acceptAccented);
   return Object.assign({}, p, {
