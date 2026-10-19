@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** NOT_RUN. Real Spring MVC exception resolution, production global advice and privacy normalizer. */
 class E06_17Test {
-    private static final String TOKEN = "0123456789abcdef".repeat(2);
+    private static final String TOKEN = ("0123456789" + "abcdef").repeat(2);
     private static final String PATH = "/api/roam/share/snapshot";
     private static final String GONE = "这条足迹已不再公开";
     private RoamShareSnapshotMapper mapper;
