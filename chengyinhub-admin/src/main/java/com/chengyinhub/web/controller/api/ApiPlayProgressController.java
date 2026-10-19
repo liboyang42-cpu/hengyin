@@ -1478,7 +1478,7 @@ public class ApiPlayProgressController extends BaseController
     @PostMapping("/answer")
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
-            String routeActionId, Integer expectedRouteVersion)
+            String routeActionId, Integer expectedRouteVersion, String accuracy)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
@@ -2048,6 +2048,15 @@ public class ApiPlayProgressController extends BaseController
             if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return error("定位无效");
             double dist = haversine(playerLat, playerLng, nodeLat, nodeLng);
             if (!Double.isFinite(dist)) return error("定位无效");
+            // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
+            // 空白=旧版小程序未上报,放行并留痕;非有限/负数=定位无效;>80m 要求去开阔处或扫码,先于距离判断。
+            if (StringUtils.isBlank(accuracy)) {
+                logger.info("arrive 未上报定位精度 memberId={} nodeId={}", memberId, nId);
+            } else {
+                Double acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+                if (acc == null) return error("定位无效");
+                if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
+            }
             if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
         }
 
@@ -2063,8 +2072,13 @@ public class ApiPlayProgressController extends BaseController
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
     }
 
+    public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion) {
+        return arrive(activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, null);
+    }
+
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId) {
-        return arrive(activityId, nodeId, longitude, latitude, topicId, null, null);
+        return arrive(activityId, nodeId, longitude, latitude, topicId, null, null, null);
     }
 
     /**
@@ -2349,6 +2363,8 @@ public class ApiPlayProgressController extends BaseController
 
     /** GPS 到达围栏半径（米） */
     private static final double GEOFENCE_METERS = 50d;
+    /** B1:水平定位精度上限(米),超出则坐标判定不可信。 */
+    private static final double GEOFENCE_ACCURACY_METERS = 80d;
 
     /** mode=1 线性：该节点之前(sortId 更小)的同主题节点是否都已完成（防扫后面的码跳关） */
     private boolean isPrevDone(Long memberId, Long actId, CmsTopicNode node)
