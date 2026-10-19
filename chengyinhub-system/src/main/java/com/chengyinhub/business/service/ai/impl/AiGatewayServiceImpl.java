@@ -347,7 +347,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
         if (used > dailyLimitOf(group)) {
             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
-            throw new AiServiceException("今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
+            throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
+                    "今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
         }
         return key + "|" + nonce;
     }
