@@ -272,7 +272,7 @@ class NpcChatServiceTest {
         assertNull(response.getAudioUrl());
         verify(generatedAudio).stageGeneratedAudio(99L,"https://cdn.example/reply.mp3");
         NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setRequestId(request.getRequestId());
-        stored.setStatus("SUCCEEDED");stored.setSafetyDecision("PASS");stored.setSafeText("推荐手冲。");stored.setAudioAssetId(12L);
+        stored.setStatus("SUCCEEDED");stored.setSafetyDecision("PASS");stored.setSafeText("推荐手冲。");stored.setAudioAssetId(12L);stored.setSessionId(-(Long.MAX_VALUE / 2 + 42L)); // A包：原 requestId 只在原商家会话(-合成节点)内回放
         when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,request.getRequestId())).thenReturn(stored);
         doReturn("https://owned.example/approved.mp3").when(audioAssets).approvedUrl(12L);
         assertEquals("https://owned.example/approved.mp3",service.chatWithMerchant(request,USER_ONE,42L).getAudioUrl());
@@ -340,7 +340,7 @@ class NpcChatServiceTest {
         verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L), eq(5000L),
                 eq(TimeUnit.MILLISECONDS));
         heartbeat.getValue().run();
-        verify(npcChatRequestMapper).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
+        verify(npcChatRequestMapper, times(2)).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
                 any(Date.class));
         verify(leaseHeartbeat).cancel(false);
     }
@@ -392,4 +392,72 @@ class NpcChatServiceTest {
     private String requestId(String label) {
         return String.format("00000000-0000-4000-8000-%012d", Math.abs((long) label.hashCode()));
     }
+
+    @Test
+    void typedInputBlockIsNonRetryableAndNeverSynthesizesAudio() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, "blocked"));
+        NpcChatResp response = service.chat(req("blocked-1", "hi"), USER_ONE);
+        assertEquals("REJECTED", response.getOutcomeStatus());
+        assertEquals("INPUT_BLOCK", response.getErrorCode());
+        assertEquals(false, response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("BLOCKED", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void unknownReviewDecisionKeepsOriginalRetryableFailure() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "review"));
+        NpcChatResp response = service.chat(req("review-1", "hi"), USER_ONE);
+        assertEquals("FAILED", response.getOutcomeStatus());
+        assertEquals("AI_UNAVAILABLE", response.getErrorCode());
+        assertTrue(response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("NOT_RUN", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+    @Test
+    void leaseLostBeforeProviderDoesNotStartGateway() {
+        when(npcChatRequestMapper.renewLease(anyLong(),anyString(),anyString(),any(Date.class))).thenReturn(0);
+        NpcChatResp result=service.chat(req("lost-before-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        verify(aiGatewayService,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
+        verify(npcChatRequestMapper,never()).finishIfLeaseOwned(any(NpcChatRequest.class));
+        verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void oldWorkerCannotReturnOrSynthesizeItsUnsavedResult() {
+        when(aiGatewayService.generate(anyLong(),anyString(),anyString(),anyString(),anyString()))
+                .thenReturn(new AiGatewayResult("trace","旧答案","real",0));
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(0);
+        NpcChatResp result=service.chat(req("lost-after-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        assertTrue(!"旧答案".equals(result.getSafeText()));
+        verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test void storedShopAnswerKeepsOriginalNodeAndDoesNotCallProvider() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("stored-shop"));stored.setStatus(NpcChatRequest.STATUS_SUCCEEDED);
+        stored.setSafeText("原答案");stored.setSafetyDecision("PASS");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        assertEquals("原答案",service.storedShopRequest(stored.getRequestId(),USER_ONE,21L).getSafeText());
+        assertEquals("INVALID_REQUEST",service.storedShopRequest(stored.getRequestId(),USER_ONE,22L).getErrorCode());
+        verifyNoInteractions(aiGatewayService,voiceCloneClient);
+    }
+    @Test void expiredLeaseReplayIsUnknownRatherThanClaimingNoProviderRan() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("expired-shop"));stored.setStatus(NpcChatRequest.STATUS_PROCESSING);
+        stored.setLeaseUntil(new Date(0L));
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        NpcChatResp result=service.storedShopRequest(stored.getRequestId(),USER_ONE,21L);
+        assertEquals("UNKNOWN",result.getSafetyDecision());assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertTrue(!result.isRetryable());verifyNoInteractions(aiGatewayService);
+    }
+
 }

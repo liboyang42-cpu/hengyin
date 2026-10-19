@@ -84,6 +84,7 @@ class PlayKitNoteRuntimeTest {
         ReflectionTestUtils.setField(service, "playNoteMapper", playNoteMapper);
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> now);
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

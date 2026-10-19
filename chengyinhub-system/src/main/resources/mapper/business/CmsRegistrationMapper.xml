@@ -832,16 +832,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->
     <!-- P1-PT-7:多票从单(payable=0 停 0 态)的父单里还有 PAYING 主单时不关 —— 钱付没付只有主单查单说了算,
          先关从单会让主单查到 SUCCESS 时从单补记冲突、整单回滚。这类父单由 settlePayingOne 整单关。 -->
+    <sql id="expiredUnpaidPredicate">
+        r.payment_status = 0 and r.registration_status = 1
+        and r.pay_expire_time is not null and r.pay_expire_time &lt;= #{now}
+        and not exists (
+            select 1 from cms_registration p
+            where r.parent_order_no is not null and r.parent_order_no != ''
+              and p.parent_order_no = r.parent_order_no
+              and p.payment_status = 1 and p.registration_status = 1)
+    </sql>
     <select id="selectExpiredUnpaidIds" resultType="java.lang.Long">
-        select r.id from cms_registration r
-        where r.payment_status = 0 and r.registration_status = 1
-          and r.pay_expire_time is not null and r.pay_expire_time &lt;= #{now}
-          and not exists (
-              select 1 from cms_registration p
-              where r.parent_order_no is not null and r.parent_order_no != ''
-                and p.parent_order_no = r.parent_order_no
-                and p.payment_status = 1 and p.registration_status = 1)
-        limit 200
+        select r.id from cms_registration r where <include refid="expiredUnpaidPredicate"/>
+        order by r.id asc limit 200
+    </select>
+    <select id="selectExpiredUnpaidMaxId" resultType="java.lang.Long">
+        select max(r.id) from cms_registration r where <include refid="expiredUnpaidPredicate"/>
+    </select>
+    <select id="selectExpiredUnpaidIdsAfter" resultType="java.lang.Long">
+        select r.id from cms_registration r where <include refid="expiredUnpaidPredicate"/>
+        and r.id &gt; #{afterId} and r.id &lt;= #{maxId}
+        order by r.id asc limit #{limit}
     </select>
 
     <!-- §5-3 PAYING 超时对账:预下单已发起(payment_status=1)且过了支付窗口仍未落终态的单 id。
@@ -860,14 +870,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 核销码补偿:已支付但回调期核销码生成失败的单(钱已扣、码为空)。
          只扫近7天不回填历史旧单;payment_time 10分钟宽限=避开在途回调(否则任务与回调并发双生成,
          用户已展示的码被后写覆盖→到店核销失败);order by id 最老先补防饿死;限批防单轮过大 -->
+    <sql id="paidMissingQrcodePredicate">
+        r.payment_status = 2 and r.registration_status = 2
+        and (r.qrcode_url is null or r.qrcode_url = '')
+        and r.create_time &gt;= date_sub(now(), interval 7 day)
+        and (r.payment_time is null or r.payment_time &lt;= date_sub(now(), interval 10 minute))
+        and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3 or exists (
+            select 1 from cms_activity a where r.owner_type = 2 and a.id = r.owner_id
+            and a.cancel_time is null and (a.del_flag is null or a.del_flag &lt;&gt; 2)
+            and a.end_date is not null and a.end_date &gt; now()))
+    </sql>
     <select id="selectPaidMissingQrcodeIds" resultType="java.lang.Long">
-        select id from cms_registration
-        where payment_status = 2
-          and (qrcode_url is null or qrcode_url = '')
-          and create_time &gt;= date_sub(now(), interval 7 day)
-          and (payment_time is null or payment_time &lt;= date_sub(now(), interval 10 minute))
-        order by id asc
-        limit 100
+        select r.id from cms_registration r where <include refid="paidMissingQrcodePredicate"/>
+        order by r.id asc limit 100
+    </select>
+    <select id="selectPaidMissingQrcodeMaxId" resultType="java.lang.Long">
+        select max(r.id) from cms_registration r where <include refid="paidMissingQrcodePredicate"/>
+    </select>
+    <select id="selectPaidMissingQrcodeIdsAfter" resultType="java.lang.Long">
+        select r.id from cms_registration r where <include refid="paidMissingQrcodePredicate"/>
+        and r.id &gt; #{afterId} and r.id &lt;= #{maxId}
+        order by r.id asc limit #{limit}
     </select>
 
     <!-- P0-10 弃单关单:条件关单,仍处待支付才关(支付回调竞态下 0 行=已支付/已取消)。
@@ -900,6 +923,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectExpiredUnverifiedIds" resultType="java.lang.Long">
         select r.id from cms_registration r
         where r.owner_type = 2
+          and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3)
           and r.payment_status = 2 and r.registration_status = 2
           and (r.verification_status is null or r.verification_status &lt;&gt; 1)
           and exists (
@@ -930,6 +954,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             update_by = #{updateBy}, update_time = now()
         where id = #{id}
           and owner_type = 2
+          and (purchase_kind is null or purchase_kind &lt;&gt; 3)
           and payment_status = 2 and registration_status = 2
           and (verification_status is null or verification_status &lt;&gt; 1)
           and exists (

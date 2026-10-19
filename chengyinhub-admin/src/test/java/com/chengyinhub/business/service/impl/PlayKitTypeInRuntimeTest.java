@@ -71,6 +71,7 @@ class PlayKitTypeInRuntimeTest {
         ReflectionTestUtils.setField(service, "attemptMapper", attemptMapper);
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> now);
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @Test

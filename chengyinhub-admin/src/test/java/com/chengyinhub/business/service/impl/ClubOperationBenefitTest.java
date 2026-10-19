@@ -83,7 +83,7 @@ class ClubOperationBenefitTest {
         ReflectionTestUtils.setField(fixture.service, "platformMemberId", MEMBER_ID);
         when(fixture.ticketMapper.deductInventoryKeepingReserved(TICKET_ID, 1L, 2)).thenReturn(1);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         CmsRegistration registration = fixture.service.createRegistration(
                 MEMBER_ID, 2, ACTIVITY_ID, TICKET_ID, 0,
@@ -141,7 +141,7 @@ class ClubOperationBenefitTest {
         when(fixture.productRoleService.isPlatformOwned(500L)).thenReturn(true);
         when(fixture.registrationMapper.countActiveSelfPlayPasses(500L)).thenReturn(0);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         CmsRegistration pass = fixture.service.createSelfPlayPass(MEMBER_ID, 500L, "张三", "18800000000");
 
@@ -183,7 +183,7 @@ class ClubOperationBenefitTest {
         when(fixture.registrationMapper.countActiveSelfPlayPasses(502L)).thenReturn(0);
         when(fixture.productRoleService.isPlatformOwned(502L)).thenReturn(true);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         fixture.service.createSelfPlayPass(MEMBER_ID, 502L, "张三", "18800000000");
 

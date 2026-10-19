@@ -156,6 +156,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private com.chengyinhub.business.service.ICapabilityService capabilityService;
     @Autowired
     private PlayTeamMapper playTeamMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper currentPlayRegistrationMapper;
     @Autowired
     private IPlayerNodeProgressService playerNodeProgressService;
     @Autowired
@@ -4031,6 +4034,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (!"PLAYER".equals(actor.getPerspective()) || session == null) {
                 throw error("GAME_FORBIDDEN_SCOPE", "仅本场玩家可执行该操作");
             }
+            com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,
+                    currentPlayRegistrationMapper,actor.getMemberId(),2L,activity.getId(),null,clock.now(),true);
             requirePlayer(actor, activity);
             if (!"CONFIRM_ROLE".equals(action)) requireConfirmedRoleForUpdate(session, actor.getMemberId());
             if (!"CONFIRM_ROLE".equals(action) && command.getNodeId() != null) {

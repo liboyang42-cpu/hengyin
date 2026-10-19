@@ -13,6 +13,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,12 +38,14 @@ import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import com.chengyinhub.business.mapper.ImMessageMapper;
+import com.chengyinhub.business.mapper.ImNotificationIntentMapper;
 import com.chengyinhub.business.mapper.ImPollMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.mapper.RoamHangoutMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.ISystemNotificationIntentService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IWxContentCallbackInboxService;
@@ -53,7 +56,7 @@ import com.chengyinhub.business.service.support.CanonicalDigest;
  * 站内消息(IM) Service 实现。
  */
 @Service
-public class ImServiceImpl implements IImService
+public class ImServiceImpl implements IImService, ISystemNotificationIntentService
 {
     @Autowired
     private ImConversationMapper conversationMapper;
@@ -61,6 +64,9 @@ public class ImServiceImpl implements IImService
     private ImConversationMemberMapper memberMapper;
     @Autowired
     private ImMessageMapper messageMapper;
+
+    @Autowired
+    private ImNotificationIntentMapper notificationIntentMapper;
     @Autowired
     private ImPollMapper pollMapper;
     @Autowired
@@ -137,8 +143,9 @@ public class ImServiceImpl implements IImService
                 latestVisible.put(c.getId(), latest);
             }
             row.put("lastMsgType", latest == null ? null : latest.getMsgType());
+            // 摘要取当前读者可见的最新消息，路线卡按读者当前权限投影，不回显会话行里的旧名称。
             row.put("lastMsgText", latest == null ? "" : Integer.valueOf(ImMessage.MSG_IMAGE).equals(latest.getMsgType())
-                    ? "[图片]" : latest.getContent());
+                    ? "[图片]" : projectRouteMessage(latest, memberId).getContent());
             row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
@@ -160,6 +167,41 @@ public class ImServiceImpl implements IImService
             return Long.compare(bId, aId);
         });
         return out;
+    }
+
+    /** 只投影当前读者所见卡片；历史原文、请求摘要与数据库行保持原值。 */
+    private ImMessage projectRouteMessage(ImMessage source, Long viewerId)
+    {
+        if (source == null) return null;
+        ImMessage projected = new ImMessage();
+        BeanUtils.copyProperties(source, projected);
+        if (!Integer.valueOf(ImMessage.MSG_CARD).equals(source.getMsgType())) return projected;
+        JSONObject extra = null;
+        try { extra = JSON.parseObject(source.getExtraJson()); }
+        catch (RuntimeException ignored) { /* 历史坏 JSON 仍按已有路线摘要识别，不回显旧名称。 */ }
+        boolean route = extra != null && "route".equals(extra.getString("cardType"));
+        if (!route && (source.getContent() == null || !source.getContent().startsWith("[路线]"))) return projected;
+        Long topicId = null;
+        try { if (extra != null) topicId = extra.getLong("topicId"); }
+        catch (RuntimeException ignored) { /* 无合法引用时只显示不可用。 */ }
+        CmsTopic topic = topicId == null || topicId <= 0 ? null
+                : cmsTopicMapper.selectCmsTopicDetailById(topicId, viewerId);
+        boolean visible = topic != null && Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus())
+                && (topic.getDelFlag() == null || Integer.valueOf(0).equals(topic.getDelFlag()))
+                && !Integer.valueOf(1).equals(topic.getClubMemberOnly())
+                && Integer.valueOf(ImMessage.STATUS_NORMAL).equals(source.getStatus());
+        JSONObject safe = new JSONObject();
+        safe.put("cardType", "route");
+        if (topicId != null) safe.put("topicId", topicId);
+        if (visible) {
+            safe.put("imgUrl", topic.getImgUrl());
+            safe.put("totalMileage", topic.getTotalMileage());
+            safe.put("locationCount", topic.getLocationCount());
+        }
+        projected.setExtraJson(safe.toJSONString());
+        projected.setContent(visible ? "[路线] " + topic.getName() : "路线已不可用");
+        return projected;
     }
 
     private Map<String, Object> counterpartyOf(ImConversation c, Long memberId)
@@ -273,6 +315,13 @@ public class ImServiceImpl implements IImService
     @Override
     public Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size)
     {
+        return listMessages(memberId, conversationId, cursorId, size, null);
+    }
+
+    @Override
+    public Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size, Long afterId)
+    {
+        if (afterId != null && afterId < 0) throw new ServiceException("消息增量位置无效", 400);
         ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
         if (isClosedHangoutForHistoricalMember(conversation, memberId))
         {
@@ -291,13 +340,17 @@ public class ImServiceImpl implements IImService
             throw new RuntimeException("群聊已结束");
         }
         int s = size <= 0 ? 20 : Math.min(size, 50);
-        List<ImMessage> desc = messageMapper.selectVisiblePage(conversationId, memberId, cursorId, s + 1);
+        boolean incremental = afterId != null && afterId >= 0;
+        // 增量按可见序正序补拉；历史分页沿用可见序倒序窗口。两者都只返回当前读者可见的消息。
+        List<ImMessage> desc = incremental ? messageMapper.selectVisibleAfter(conversationId, memberId, afterId, s + 1)
+                : messageMapper.selectVisiblePage(conversationId, memberId, cursorId, s + 1);
         boolean hasMore = desc.size() > s;
         if (hasMore) {
             desc = new ArrayList<>(desc.subList(0, s));
         }
-        List<ImMessage> asc = new ArrayList<>(desc);
-        Collections.reverse(asc);
+        List<ImMessage> asc = new ArrayList<>();
+        for (ImMessage message : desc) asc.add(projectRouteMessage(message, memberId));
+        if (!incremental) Collections.reverse(asc);
         // 群聊渲染:按 senderId 回填发送者昵称+头像(瞬态字段,带缓存避免重复查;系统消息 sender=0 不回填)
         Map<Long, UmsMember> senderCache = new HashMap<>();
         for (ImMessage m : asc) {
@@ -316,6 +369,7 @@ public class ImServiceImpl implements IImService
         Map<String, Object> res = new HashMap<>();
         res.put("list", asc);
         res.put("nextCursor", nextCursor);
+        if (incremental) res.put("nextAfter", desc.isEmpty() ? afterId : desc.get(desc.size() - 1).getId());
         res.put("hasMore", hasMore);
         // 3-22:1:1 会话回读拉黑态,重进会话也能禁用输入框(拉黑只存服务端,前端内存态重进即丢)
         Long otherId = null;
@@ -333,6 +387,18 @@ public class ImServiceImpl implements IImService
         res.put("blocked", otherId != null && blockMapper.existsBetween(memberId, otherId) > 0);
         res.put("blockedByMe", otherId != null && blockMapper.selectOne(memberId, otherId) != null);
         return res;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ImMessage readSentMessage(Long memberId, Long conversationId, String clientMessageId)
+    {
+        if (clientMessageId == null || clientMessageId.trim().isEmpty() || clientMessageId.length() > 100)
+            throw new ServiceException("原消息请求无效", 400);
+        if (lockReadAccess(memberId, conversationId) == null)
+            throw new ServiceException("无权查看该会话", 403);
+        return projectRouteMessage(messageMapper.selectByClientMessageIdForUpdate(
+                conversationId, memberId, clientMessageId), memberId);
     }
 
     @Override
@@ -788,7 +854,7 @@ public class ImServiceImpl implements IImService
                 {
                     throw new ServiceException("该消息未通过审核", 409);
                 }
-                return previous;
+                return projectRouteMessage(previous, memberId);
             }
         }
 
@@ -900,7 +966,7 @@ public class ImServiceImpl implements IImService
             memberMapper.addUnread(convId, receiverId, 1);
         }
         memberMapper.markRead(convId, memberId, msg.getId());
-        return msg;
+        return projectRouteMessage(msg, memberId);
     }
 
     private Long clubIdOf(ImConversation conversation)
@@ -1066,6 +1132,40 @@ public class ImServiceImpl implements IImService
         }
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markRead(Long memberId, Long conversationId, Long readTo)
+    {
+        if (readTo == null) { markRead(memberId, conversationId); return; }
+        if (readTo < 0) throw new ServiceException("已读位置无效", 400);
+        ImConversationMember mine = lockReadAccess(memberId, conversationId);
+        if (mine == null) return;
+        // 已读位沿用可见序游标：截止点取 min(readTo, 当前最新可见)，且不回退到已存已读位之前；
+        // readTo 对当前读者不可见(待审图片/已屏蔽/伪造)时不前进。
+        ImMessage latest = messageMapper.selectLatestViewerVisibleForUpdate(conversationId, memberId);
+        ImMessage target = readTo == 0 ? null
+                : messageMapper.selectViewerVisibleByIdForUpdate(conversationId, memberId, readTo);
+        ImMessage previous = mine.getLastReadMsgId() == null || mine.getLastReadMsgId() <= 0 ? null
+                : messageMapper.selectViewerVisibleByIdForUpdate(conversationId, memberId, mine.getLastReadMsgId());
+        ImMessage cutoff = target != null && latest != null && compareVisibleOrder(target, latest) > 0 ? latest : target;
+        if (cutoff == null || (previous != null && compareVisibleOrder(previous, cutoff) > 0)) {
+            cutoff = previous;
+        }
+        Long lastId = cutoff == null ? 0L : cutoff.getId();
+        String order = cutoff == null ? "1970-01-01 00:00:00.000000" : cutoff.getVisibleOrderAt();
+        if (memberMapper.markReadVisible(conversationId, memberId, lastId, order) <= 0) {
+            throw new ServiceException("消息可见状态已变化，请刷新后重试");
+        }
+    }
+
+    private static int compareVisibleOrder(ImMessage a, ImMessage b)
+    {
+        String aOrder = a.getVisibleOrderAt() == null ? "" : a.getVisibleOrderAt();
+        String bOrder = b.getVisibleOrderAt() == null ? "" : b.getVisibleOrderAt();
+        int order = aOrder.compareTo(bOrder);
+        return order != 0 ? order : Long.compare(a.getId() == null ? 0L : a.getId(), b.getId() == null ? 0L : b.getId());
+    }
+
     private ImConversationMember lockReadAccess(Long memberId, Long conversationId)
     {
         ImConversation conversation = conversationMapper.selectImConversationByIdForUpdate(conversationId);
@@ -1142,6 +1242,11 @@ public class ImServiceImpl implements IImService
     @Transactional(rollbackFor = Exception.class)
     public Long sendSystem(Long toMemberId, Integer msgType, String content, String extraJson)
     {
+        return systemMessage(toMemberId, msgType, content, extraJson, null);
+    }
+
+    private Long systemMessage(Long toMemberId, Integer msgType, String content, String extraJson, String clientMessageId)
+    {
         if (toMemberId == null || toMemberId <= 0)
         {
             throw new RuntimeException("接收人不存在");
@@ -1158,6 +1263,10 @@ public class ImServiceImpl implements IImService
         }
         conversationMapper.selectImConversationByIdForUpdate(c.getId());
         ensureMember(c.getId(), toMemberId, 0);
+        if (clientMessageId != null) {
+            ImMessage existing = messageMapper.selectByClientMessageIdForUpdate(c.getId(), 0L, clientMessageId);
+            if (existing != null) return existing.getId();
+        }
 
         int type = msgType == null ? ImMessage.MSG_CARD : msgType;
         ImMessage msg = new ImMessage();
@@ -1167,6 +1276,7 @@ public class ImServiceImpl implements IImService
         msg.setMsgType(type);
         msg.setContent(content);
         msg.setExtraJson(extraJson);
+        msg.setClientMessageId(clientMessageId);
         msg.setStatus(ImMessage.STATUS_NORMAL);
         msg.setCheckStatus(1);
         messageMapper.insertImMessage(msg);
@@ -1182,6 +1292,56 @@ public class ImServiceImpl implements IImService
     public Long sendSystemInNestedTransaction(Long toMemberId, Integer msgType, String content, String extraJson)
     {
         return sendSystem(toMemberId, msgType, content, extraJson);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long findIntentId(String eventKey) {
+        if (eventKey == null || !eventKey.matches("[A-Za-z0-9:_-]{1,96}"))
+            throw new ServiceException("通知原事件身份无效", 400);
+        Map<String, Object> intent = notificationIntentMapper.selectByKeyForUpdate(eventKey);
+        return intent == null ? null : ((Number) intent.get("id")).longValue();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long enqueue(Long recipient, Integer msgType, String content, String extraJson, String eventKey) {
+        return enqueueSystemNotification(recipient, msgType, content, extraJson, eventKey);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey)
+    {
+        if (toMemberId == null || toMemberId <= 0 || eventKey == null
+                || !eventKey.matches("[A-Za-z0-9:_-]{1,96}"))
+            throw new ServiceException("通知原事件身份无效", 400);
+        int type = msgType == null ? ImMessage.MSG_CARD : msgType;
+        // JSON数组编码避免null/分隔符拼接歧义；原payload首次固定，重试不读live业务对象。
+        String hash = CanonicalDigest.sha256Hex(JSON.toJSONString(
+                Arrays.asList(toMemberId, type, content, extraJson)));
+        notificationIntentMapper.insert(eventKey, toMemberId, type, content, extraJson, hash);
+        Map<String, Object> intent = notificationIntentMapper.selectByKeyForUpdate(eventKey);
+        if (intent == null || !hash.equals(intent.get("requestHash")))
+            throw new ServiceException("通知原事件内容冲突", 409);
+        return ((Number) intent.get("id")).longValue();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long deliverSystemNotification(Long intentId)
+    {
+        Map<String, Object> intent = notificationIntentMapper.selectByIdForUpdate(intentId);
+        if (intent == null) throw new ServiceException("原通知不存在", 404);
+        if ("DELIVERED".equals(intent.get("status")))
+            return ((Number) intent.get("messageId")).longValue();
+        if (!"PENDING".equals(intent.get("status"))) throw new ServiceException("原通知状态待核", 409);
+        Long messageId = systemMessage(((Number) intent.get("recipient")).longValue(),
+                ((Number) intent.get("msgType")).intValue(), (String) intent.get("content"),
+                (String) intent.get("extraJson"), "notification_" + intentId);
+        if (notificationIntentMapper.delivered(intentId, messageId) != 1)
+            throw new IllegalStateException("原通知收据写入失败");
+        return messageId;
     }
 
     @Override

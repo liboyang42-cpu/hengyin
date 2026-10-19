@@ -16,6 +16,10 @@ public interface ImMessageMapper
     ImMessage selectLatestViewerVisibleForUpdate(@Param("conversationId") Long conversationId,
             @Param("viewerMemberId") Long viewerMemberId);
 
+    /** 显式已读位：只接受当前读者在该会话可见的消息作为截止点。 */
+    ImMessage selectViewerVisibleByIdForUpdate(@Param("conversationId") Long conversationId,
+            @Param("viewerMemberId") Long viewerMemberId, @Param("id") Long id);
+
     ImMessage selectByClientMessageIdForUpdate(@Param("conversationId") Long conversationId,
             @Param("senderId") Long senderId, @Param("clientMessageId") String clientMessageId);
 
@@ -33,6 +37,11 @@ public interface ImMessageMapper
     List<ImMessage> selectVisiblePage(@Param("conversationId") Long conversationId,
                                     @Param("viewerMemberId") Long viewerMemberId,
                                     @Param("cursorId") Long cursorId, @Param("size") Integer size);
+
+    /** 增量补拉：按可见序(visible_at,id)正序取 afterId 之后当前读者可见的消息。 */
+    List<ImMessage> selectVisibleAfter(@Param("conversationId") Long conversationId,
+                                       @Param("viewerMemberId") Long viewerMemberId,
+                                       @Param("afterId") Long afterId, @Param("size") Integer size);
 
     public int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 }

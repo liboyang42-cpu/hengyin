@@ -708,8 +708,10 @@ class ImServiceImplTest {
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
         topic.setName("外滩夜行");
+        topic.setStatus(1);
         topic.setUserStatus(1);
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), anyLong())).thenReturn(topic);
 
         ArgumentCaptor<ImMessage> cap = forClass(ImMessage.class);
         service.send(1L, 100L, null, ImMessage.MSG_CARD, "伪造摘要",

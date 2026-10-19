@@ -49,6 +49,7 @@ class RoamAiContentApiGateTest {
         contentService = mock(RoamAiContentService.class);
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
+        ReflectionTestUtils.setField(controller, "roamBadgeDeliveryService", mock(com.chengyinhub.business.service.impl.RoamBadgeDeliveryService.class));
         com.chengyinhub.business.service.impl.RoamSessionWriteService writer = new com.chengyinhub.business.service.impl.RoamSessionWriteService();
         ReflectionTestUtils.setField(writer, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(writer,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
@@ -136,10 +137,22 @@ class RoamAiContentApiGateTest {
         Map<String, Object> drop = new LinkedHashMap<>();
         drop.put("dropType", 1);
         drop.put("extraXp", 20L);
+        drop.put("dropLogId", 7L);
         drop.put("sceneKey", IRewardDropService.SCENE_ROAM_MERCHANT_POI);
         when(dropService.rollDrop(eq(MEMBER), eq(0L), eq(5L), eq(9L),
                 eq(IRewardDropService.SCENE_ROAM_MERCHANT_POI), eq(20L))).thenReturn(drop);
 
+        com.chengyinhub.business.mapper.RoamRewardDeliveryMapper deliveryMapper = mock(com.chengyinhub.business.mapper.RoamRewardDeliveryMapper.class);
+        Map<String, Object> original = new LinkedHashMap<>(); original.put("dropType", 1);
+        when(deliveryMapper.selectOriginalRewardDrop(7L, MEMBER)).thenReturn(original);
+        Map<String, Object> intent = new LinkedHashMap<>(); intent.put("memberId", MEMBER); intent.put("rewardKind", "XP");
+        intent.put("extraXp", 20); intent.put("state", "DUE");
+        when(deliveryMapper.selectIntentForUpdate(7L)).thenReturn(intent);
+        when(deliveryMapper.completeIfDue(7L, MEMBER, null, "DELIVERED", null)).thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager tx = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(controller, "roamRewardDeliveryService",
+                new com.chengyinhub.business.service.impl.RoamRewardDeliveryService(deliveryMapper, couponHistoryService, tx, dropService, growthService));
         AjaxResult result = controller.discoverPoi("9", 5L, 31.2300, 121.4700);
         Map<String, Object> data = (Map<String, Object>) result.get(AjaxResult.DATA_TAG);
 
