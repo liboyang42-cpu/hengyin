@@ -27,6 +27,11 @@ class OWN_C06_05Test {
         activity.setStartDate(new Date(1000)); activity.setEndDate(new Date(2000));
         CmsTopic topic = new CmsTopic(); topic.setId(20L);
         topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        // master 建局冻结已发布旅程（freezePublishedJourney），夹具补同口径的已发布版本与路线运行时桩。
+        topic.setPublishedConfigVersion(1L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":50,\"terminalNodeIds\":[50],\"journeyRules\":{\"schemaVersion\":1}}");
         when(topics.selectCmsTopicByIdForUpdate(20L)).thenReturn(topic);
         when(runtime.insertSession(any())).thenAnswer(call -> {
             ((GameSession) call.getArgument(0)).setId(30L); return 1;

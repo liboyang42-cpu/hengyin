@@ -23,6 +23,11 @@ class OWN_C06_09Test {
         ReflectionTestUtils.setField(service, "clock",
                 (com.chengyinhub.business.service.support.AdvancedGameClock) () -> new Date());
         CmsTopic topic = new CmsTopic(); topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        // master 建局冻结已发布旅程（freezePublishedJourney），夹具补同口径的已发布版本与路线运行时桩。
+        topic.setPublishedConfigVersion(1L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":50,\"terminalNodeIds\":[50],\"journeyRules\":{\"schemaVersion\":1}}");
         when(topics.selectCmsTopicByIdForUpdate(20L)).thenReturn(topic);
         CmsActivity activity = new CmsActivity(); activity.setId(10L); activity.setTopicId(20L);
         GameSession winner = new GameSession(); winner.setId(30L); winner.setActivityId(10L); winner.setRevision(2);
@@ -44,6 +49,11 @@ class OWN_C06_09Test {
         ReflectionTestUtils.setField(service, "clock",
                 (com.chengyinhub.business.service.support.AdvancedGameClock) () -> new Date());
         CmsTopic topic = new CmsTopic(); topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        // master 建局冻结已发布旅程（freezePublishedJourney），夹具补同口径的已发布版本与路线运行时桩。
+        topic.setPublishedConfigVersion(1L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":50,\"terminalNodeIds\":[50],\"journeyRules\":{\"schemaVersion\":1}}");
         when(topics.selectCmsTopicByIdForUpdate(20L)).thenReturn(topic);
         CmsActivity activity = new CmsActivity(); activity.setId(10L); activity.setTopicId(20L);
         GameSessionException error = assertThrows(GameSessionException.class, () -> ReflectionTestUtils.invokeMethod(

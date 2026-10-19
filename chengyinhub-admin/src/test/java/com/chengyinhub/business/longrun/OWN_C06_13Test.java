@@ -45,6 +45,7 @@ class OWN_C06_13Test {
         when(routes.selectAccessibleById(31L,7L)).thenReturn(replay);
         TopicRouteSession old = new TopicRouteSession(); old.setId(30L); old.setTopicId(20L);
         old.setActivityId(0L); old.setMemberId(7L); old.setStatus(2); old.setPlayInstanceId("default");
+        old.setConfigSnapshotJson("{}"); // master 判定通用局需读会话快照
         when(routes.selectByOwner(0L,20L,7L,"default")).thenReturn(old);
         CmsTopic topic = new CmsTopic(); topic.setId(20L);
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":true}");

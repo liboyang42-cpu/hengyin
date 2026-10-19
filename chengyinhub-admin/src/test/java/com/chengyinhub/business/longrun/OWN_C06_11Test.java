@@ -37,6 +37,7 @@ class OWN_C06_11Test {
         CmsTopic topic = new CmsTopic(); topic.setId(20L); topic.setPublishedConfigVersion(1L);
         when(topics.selectCmsTopicById(20L)).thenReturn(topic);
         TopicRouteSession session = new TopicRouteSession(); session.setId(30L); session.setMemberId(7L);
+        session.setConfigSnapshotJson("{}"); // master 判定通用局需读会话快照
         session.setTopicId(20L); session.setActivityId(0L); session.setStatus(TopicRouteSession.STATUS_RUNNING);
         when(routes.selectByOwner(0L,20L,7L,"default")).thenReturn(session);
         TopicRouteAction receipt = new TopicRouteAction(); receipt.setResponseJson("{\"nodeId\":40,\"questionId\":\"why\",\"a\":\"original\"}");
@@ -70,6 +71,7 @@ class OWN_C06_11Test {
         CmsTopic topic = new CmsTopic(); topic.setId(20L); topic.setPublishedConfigVersion(1L);
         when(topics.selectCmsTopicById(20L)).thenReturn(topic);
         TopicRouteSession session = new TopicRouteSession(); session.setId(30L); session.setMemberId(7L);
+        session.setConfigSnapshotJson("{}"); // master 判定通用局需读会话快照
         session.setTopicId(20L); session.setActivityId(0L); session.setStatus(TopicRouteSession.STATUS_RUNNING);
         when(routes.selectByOwner(0L,20L,7L,"default")).thenReturn(session);
         assertThrows(IllegalStateException.class, () -> service.ask(7L,20L,0L,40L,"why"));

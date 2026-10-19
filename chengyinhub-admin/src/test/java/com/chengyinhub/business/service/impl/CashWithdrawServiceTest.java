@@ -72,11 +72,15 @@ class CashWithdrawServiceTest {
         // insert 时给对象分配 id(用于 out_batch_no=CW+id)
         when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
         when(mapper.updateReceiptIfProcessing(any())).thenReturn(1);
+        // 准入与返回都沿真实插入的原提现单（CORE OWN-C04-22），用引用承接，避免在 answer 内嵌套 when。
+        java.util.concurrent.atomic.AtomicReference<MemberCashWithdraw> created = new java.util.concurrent.atomic.AtomicReference<>();
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
-            ((MemberCashWithdraw) inv.getArgument(0)).setId(500L);
+            MemberCashWithdraw row = inv.getArgument(0);
+            row.setId(500L);
+            created.set(row);
             return 1;
         });
-        when(mapper.selectById(500L)).thenReturn(new MemberCashWithdraw());
+        when(mapper.selectById(500L)).thenAnswer(inv -> created.get() == null ? new MemberCashWithdraw() : created.get());
     }
 
     private UmsMember member(String openid, String balance) {

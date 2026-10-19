@@ -17,7 +17,6 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
@@ -54,11 +53,14 @@ class OWN_C04_20MySqlIT {
         jdbc = new JdbcTemplate(source);
         Path base = Paths.get("sql/base_schema_20260818.sql");
         if (!Files.isRegularFile(base)) base = Paths.get("../sql/base_schema_20260818.sql");
-        List<String> statements = new ArrayList<>();
-        ScriptUtils.splitSqlScript(new String(Files.readAllBytes(base), StandardCharsets.UTF_8), ";", statements);
+        // Spring 7 不再公开 ScriptUtils.splitSqlScript；与 B03 夹具同口径按「行尾分号」截取，COMMENT 内的分号不会截断。
+        String script = new String(Files.readAllBytes(base), StandardCharsets.UTF_8);
         List<String> ddl = new ArrayList<>();
-        for (String statement : statements) {
-            if (statement.trim().matches("(?is)^CREATE\\s+TABLE\\s+`merchant_payable_batch`\\s*\\(.*")) ddl.add(statement);
+        java.util.regex.Matcher start = java.util.regex.Pattern
+                .compile("(?i)CREATE\\s+TABLE\\s+`merchant_payable_batch`\\s*\\(").matcher(script);
+        java.util.regex.Matcher end = java.util.regex.Pattern.compile(";\\s*(\\n|$)").matcher(script);
+        while (start.find()) {
+            if (end.find(start.start())) ddl.add(script.substring(start.start(), end.start()));
         }
         assertEquals(1, ddl.size(), "Require the one complete real batch DDL, never split at a quoted semicolon");
         jdbc.execute(ddl.get(0));

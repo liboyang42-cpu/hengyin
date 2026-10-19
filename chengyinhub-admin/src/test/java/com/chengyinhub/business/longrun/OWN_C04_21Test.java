@@ -118,9 +118,8 @@ public class OWN_C04_21Test {
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
         when(cooldown.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
-        com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService original =
-                mock(com.chengyinhub.business.service.impl.CashWithdrawFailureRecoveryService.class);
-        doAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return null; }).when(original).prepare(any());
+        // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入并随后写入 CW/CD 业务号（无独立 FailureRecoveryService）。
+        when(cash.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
         WithdrawalBalanceAdmissionService admission = mock(WithdrawalBalanceAdmissionService.class);
         when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(
                 new WithdrawalBalanceAdmissionService.Admission(null, null, null, false, false));
@@ -128,12 +127,12 @@ public class OWN_C04_21Test {
         ReflectionTestUtils.setField(caller, "umsMemberService", members);
         ReflectionTestUtils.setField(caller, "wechatPayService", provider);
         ReflectionTestUtils.setField(caller, "wxPayConfig", config);
-        ReflectionTestUtils.setField(caller, "failureRecoveryService", original);
         ReflectionTestUtils.setField(caller, "frozenAmountResolver", new WithdrawalFrozenAmountResolver(bounty, cooldown));
         ReflectionTestUtils.setField(caller, "balanceAdmissionService", admission);
         assertThrows(IllegalStateException.class, () -> caller.withdraw(7L, new BigDecimal("100")));
         verifyNoInteractions(provider);
-        verify(cash, never()).updateMemberCashWithdraw(any());
+        // 只允许写 CW/CD 原业务号；不得改写原回执状态。
+        verify(cash, never()).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(w -> w.getStatus() != null));
         verify(cash, never()).updateStatusIfProcessing(any());
         verify(members, never()).deductWithdrawableBalance(anyLong(), any(), any());
         verify(members, never()).addBalance(anyLong(), any());

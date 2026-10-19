@@ -38,7 +38,8 @@ class OWN_C04_22Test {
                 ArgumentCaptor<MemberCashWithdraw> observation = ArgumentCaptor.forClass(MemberCashWithdraw.class);
                 verify(f.mapper).updateReceiptIfProcessing(observation.capture());
                 assertNull(observation.getValue().getStatus(), "An observation must never reset the lifecycle");
-                verify(f.mapper, never()).updateMemberCashWithdraw(any());
+                // master 在插入后以 updateMemberCashWithdraw 写入 CW/CD 原业务号；只断言不改写生命周期状态。
+                verify(f.mapper, never()).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(w -> w.getStatus() != null));
                 verify(f.mapper, never()).updateStatusIfProcessing(any());
                 verify(f.members, never()).addBalance(anyLong(), any());
                 verify(f.admission).debitCash(1L, 7L, new BigDecimal("20.00"));
@@ -54,7 +55,8 @@ class OWN_C04_22Test {
         when(f.provider.transferToBalance(any(), any(), any(), any(), any(), any())).thenReturn(accepted());
         when(f.mapper.updateReceiptIfProcessing(any())).thenReturn(0);
         assertSame(original, f.service.withdraw(7L, new BigDecimal("20")));
-        verify(f.mapper, never()).updateMemberCashWithdraw(any());
+        // master 在插入后以 updateMemberCashWithdraw 写入 CW/CD 原业务号；只断言不改写生命周期状态。
+                verify(f.mapper, never()).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(w -> w.getStatus() != null));
         verify(f.members, never()).addBalance(anyLong(), any());
     }
 
@@ -112,8 +114,8 @@ class OWN_C04_22Test {
             WithdrawalBalanceAdmissionService.Admission admitted = new WithdrawalBalanceAdmissionService.Admission(
                     new BigDecimal("100"), new BigDecimal("80"), frozen, true);
             when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(admitted);
-            CashWithdrawFailureRecoveryService original = mock(CashWithdrawFailureRecoveryService.class);
-            doAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return null; }).when(original).prepare(any());
+            // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入（无独立 FailureRecoveryService）。
+            when(mapper.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
             when(mapper.selectByIdForUpdate(1L)).thenAnswer(i -> stored.get());
             com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
             when(config.getAppid()).thenReturn("appid");
@@ -121,7 +123,6 @@ class OWN_C04_22Test {
             ReflectionTestUtils.setField(service, "umsMemberService", members);
             ReflectionTestUtils.setField(service, "wechatPayService", provider);
             ReflectionTestUtils.setField(service, "wxPayConfig", config);
-            ReflectionTestUtils.setField(service, "failureRecoveryService", original);
             ReflectionTestUtils.setField(service, "balanceAdmissionService", admission);
             ReflectionTestUtils.setField(service, "frozenAmountResolver", resolver);
         }

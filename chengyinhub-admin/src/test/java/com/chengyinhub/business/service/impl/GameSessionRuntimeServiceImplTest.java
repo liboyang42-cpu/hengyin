@@ -1802,8 +1802,8 @@ class GameSessionRuntimeServiceImplTest {
         GameSession current = runningSession(3);
         current.setStatus(GameSession.PREPARING);
         current.setModuleConfigSnapshotJson(runtimeConfigJson());
-        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(initial);
-        when(runtimeMapper.selectSessionByActivityForUpdate(ACTIVITY)).thenReturn(current);
+        // master 的 command() 先加锁读会话（rev 2）；角色插入撞键后再按当前读取到并发胜者的 rev 3。
+        when(runtimeMapper.selectSessionByActivityForUpdate(ACTIVITY)).thenReturn(initial, current);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.isActiveTeamMember(ACTIVITY, TEAM, PLAYER)).thenReturn(1);
         GameTeamRoleAssignment winner = role("DETECTIVE", "侦探");

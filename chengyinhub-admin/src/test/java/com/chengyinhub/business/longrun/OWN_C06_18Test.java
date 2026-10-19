@@ -42,7 +42,7 @@ class OWN_C06_18Test {
         when(routes.selectActionByAction(31L,7L,"ask:40:why")).thenReturn(receipt);
     }
     private TopicRouteSession session(long id,int status) {
-        TopicRouteSession row=new TopicRouteSession();row.setId(id);row.setMemberId(7L);row.setTopicId(20L);
+        TopicRouteSession row=new TopicRouteSession();row.setId(id);row.setConfigSnapshotJson("{}");row.setMemberId(7L);row.setTopicId(20L);
         row.setActivityId(0L);row.setStatus(status);return row;
     }
     @Test void endedDefaultCannotBlockOriginalReceiptInRunningReplay() {
