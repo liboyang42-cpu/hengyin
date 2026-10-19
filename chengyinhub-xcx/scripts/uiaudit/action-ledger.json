@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4653,
+  "controlCount": 4654,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -122599,6 +122599,15 @@
             {
               "selector": "cy-empty",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/gallery/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 2
             }
           ]
         },
@@ -281523,7 +281532,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-asset-income-detail/index.js:139"
+        "staticSource": "components/cy/scene-asset-income-detail/index.js:138"
       }
     },
     {
@@ -292898,7 +292907,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-merchant-profit/index.js:257"
+        "staticSource": "components/cy/scene-merchant-profit/index.js:258"
       }
     },
     {
@@ -293054,7 +293063,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-merchant-profit/index.js:249"
+        "staticSource": "components/cy/scene-merchant-profit/index.js:250"
       }
     },
     {
@@ -293249,7 +293258,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-merchant-profit/index.js:244"
+        "staticSource": "components/cy/scene-merchant-profit/index.js:245"
       }
     },
     {
@@ -709702,7 +709711,116 @@
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:12:bind:cta:onNavBack:1",
+      "id": "pages/merchant/decor/gallery/index.wxml:10:bind:cta:onLogin:1",
+      "route": "pages/merchant/decor/gallery/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/gallery/index.wxml",
+        "js": "pages/merchant/decor/gallery/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onLogin",
+        "line": 10,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{loadState === 'login'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/coop-profile",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/coop-profile"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coop-profile",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/gallery/index.js:120"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/gallery/index.wxml:13:bind:cta:onNavBack:2",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709725,7 +709843,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onNavBack",
-        "line": 12,
+        "line": 13,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{loadState === 'permission'}}",
         "disabledCondition": null,
@@ -709769,11 +709887,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:61"
+        "staticSource": "pages/merchant/decor/gallery/index.js:127"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:16:bind:cta:goApply:3",
+      "id": "pages/merchant/decor/gallery/index.wxml:17:bind:cta:goApply:4",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709796,7 +709914,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goApply",
-        "line": 16,
+        "line": 17,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{loadState === 'empty'}}",
         "disabledCondition": null,
@@ -709839,11 +709957,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:130"
+        "staticSource": "pages/merchant/decor/gallery/index.js:204"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:24:catchtap:removeGallery:4",
+      "id": "pages/merchant/decor/gallery/index.wxml:25:catchtap:removeGallery:5",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709866,7 +709984,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "removeGallery",
-        "line": 24,
+        "line": 25,
         "selectorHint": ".dg-delete",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -709881,36 +709999,79 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/coop-profile",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/coop-profile"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coop-profile",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:143"
+        "staticSource": "pages/merchant/decor/gallery/index.js:220"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:26:bindtap:addGallery:5",
+      "id": "pages/merchant/decor/gallery/index.wxml:27:bindtap:addGallery:6",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -709936,7 +710097,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addGallery",
-        "line": 26,
+        "line": 27,
         "selectorHint": ".dg-add",
         "visibleCondition": "{{gallery.length < 9}}",
         "disabledCondition": null,
@@ -709967,25 +710128,44 @@
       ],
       "targets": {
         "routes": [
-          "pages/crop/index"
+          "pages/crop/index",
+          "pages/privacy/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
+          "/api/config/features",
+          "/api/login/code",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
+          "/api/merchant/coop-profile",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
+          "/api/config/features",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/merchant/coop-profile"
         ],
         "auxiliaryApis": [
+          "/api/login/code",
           "/api/role/info"
         ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -709997,6 +710177,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coop-profile",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -710027,11 +710213,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:132"
+        "staticSource": "pages/merchant/decor/gallery/index.js:206"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:35:bind:action:save:6",
+      "id": "pages/merchant/decor/gallery/index.wxml:36:bind:action:save:7",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -710054,7 +710240,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "save",
-        "line": 35,
+        "line": 36,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{saveError}}",
         "disabledCondition": null,
@@ -710088,11 +710274,13 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/coop-profile",
           "/api/merchant/decor/save",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/config/features",
+          "/api/merchant/coop-profile",
           "/api/merchant/decor/save"
         ],
         "auxiliaryApis": [
@@ -710108,6 +710296,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coop-profile",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -710141,11 +710335,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:159"
+        "staticSource": "pages/merchant/decor/gallery/index.js:236"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:38:bindtap:save:7",
+      "id": "pages/merchant/decor/gallery/index.wxml:39:bindtap:save:8",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -710168,7 +710362,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 38,
+        "line": 39,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!dirty || saving || refreshing}}",
@@ -710202,11 +710396,13 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/coop-profile",
           "/api/merchant/decor/save",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/config/features",
+          "/api/merchant/coop-profile",
           "/api/merchant/decor/save"
         ],
         "auxiliaryApis": [
@@ -710222,6 +710418,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/coop-profile",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -710255,11 +710457,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:159"
+        "staticSource": "pages/merchant/decor/gallery/index.js:236"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:40:bind:close:keepEditing:8",
+      "id": "pages/merchant/decor/gallery/index.wxml:41:bind:close:keepEditing:9",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -710282,7 +710484,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "keepEditing",
-        "line": 40,
+        "line": 41,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -710322,11 +710524,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:59"
+        "staticSource": "pages/merchant/decor/gallery/index.js:125"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:40:bindtap:discardChanges:9",
+      "id": "pages/merchant/decor/gallery/index.wxml:41:bindtap:discardChanges:10",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -710349,7 +710551,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "discardChanges",
-        "line": 40,
+        "line": 41,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -710393,11 +710595,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:60"
+        "staticSource": "pages/merchant/decor/gallery/index.js:126"
       }
     },
     {
-      "id": "pages/merchant/decor/gallery/index.wxml:40:bindtap:keepEditing:10",
+      "id": "pages/merchant/decor/gallery/index.wxml:41:bindtap:keepEditing:11",
       "route": "pages/merchant/decor/gallery/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -710420,7 +710622,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "keepEditing",
-        "line": 40,
+        "line": 41,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -710460,7 +710662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:59"
+        "staticSource": "pages/merchant/decor/gallery/index.js:125"
       }
     },
     {
@@ -710531,7 +710733,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/gallery/index.js:61"
+        "staticSource": "pages/merchant/decor/gallery/index.js:127"
       }
     },
     {

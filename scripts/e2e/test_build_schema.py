@@ -19,8 +19,11 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             {"migrationId": "job", "path": "job.sql", "executionPhase": "POST_DEPLOY"},
         ]
         cursor = mock.Mock()
-        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (1,), (1,)]
+        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), ("REPEATABLE-READ",),
+                                       (1,), ("REPEATABLE-READ",), (1,)]
         connection = mock.Mock()
+        connection.get_autocommit.return_value = True
+        connection.server_status = 2
         connection.cursor.return_value = cursor
         with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_phase"]), \
                 mock.patch.object(build_schema, "build_manifest", return_value={"migrations": candidate}), \
@@ -338,7 +341,8 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
                     raise RuntimeError("owned write failure")
             cursor.execute.side_effect = execute
             cursor.fetchone.side_effect = lambda: ("8.0.45", "isolated-test") if "VERSION()" in last_sql[0] else (
-                ("cy_e2e_atomic",) if "DATABASE()" in last_sql[0] else (0,))
+                ("REPEATABLE-READ",) if "@@SESSION.transaction_isolation" in last_sql[0] else (
+                    ("cy_e2e_atomic",) if "DATABASE()" in last_sql[0] else (0,)))
             migrations = [{"migrationId": "atomic", "path": str(atomic)},
                           {"migrationId": "later", "path": str(later)}]
             with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_atomic", "--keep-going"]), \
@@ -510,8 +514,9 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
 class BuildSchemaExecutionFailureTest(unittest.TestCase):
     def run_failed_migration(self, keep_going):
         cursor = mock.Mock()
-        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (1,), (1,)]
         executed = []
+        cursor.fetchone.side_effect = lambda: ("8.0.45", "isolated-test") if "VERSION()" in executed[-1] else (
+            ("REPEATABLE-READ",) if "@@SESSION.transaction_isolation" in executed[-1] else (1,))
         def execute(sql, *args):
             executed.append(sql)
             if "first_failure" in sql:
@@ -519,6 +524,8 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
         cursor.execute.side_effect = execute
         admin = mock.Mock()
         connection = mock.Mock()
+        connection.get_autocommit.return_value = True
+        connection.server_status = 2
         admin.cursor.return_value = connection.cursor.return_value = cursor
         original_run = build_schema.run_file
         with tempfile.TemporaryDirectory() as tmp:
@@ -563,7 +570,7 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
 
     def test_migration_read_exception_closes_connection(self):
         connection = mock.Mock()
-        connection.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test")]
+        connection.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test"), ("REPEATABLE-READ",)]
         with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_failure"]), \
                 mock.patch.object(build_schema, "build_manifest", return_value={"migrations": []}), \
                 mock.patch.object(build_schema, "migrations_after_baseline", return_value=[]), \
@@ -573,6 +580,132 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "unreadable SQL"):
                 build_schema.main()
         self.assertEqual(2, connection.close.call_count)
+
+
+class BuildSchemaSessionIsolationTest(unittest.TestCase):
+    class Connection:
+        def __init__(self, isolation="REPEATABLE-READ", restore="ok"):
+            self.isolation, self.restore = isolation, restore
+            self.server_status, self.closed = 2, False
+            self.last_sql, self.executed, self.observed = "", [], []
+            self.restore_attempts = 0
+
+        def cursor(self):
+            return self
+
+        def get_autocommit(self):
+            return True
+
+        def execute(self, sql, *args):
+            self.last_sql = sql
+            self.executed.append(sql)
+            if sql.startswith("SET SESSION TRANSACTION ISOLATION LEVEL"):
+                level = sql.split("ISOLATION LEVEL ", 1)[1].replace(" ", "-")
+                if level != "READ-COMMITTED":
+                    self.restore_attempts += 1
+                    if self.restore == "raise":
+                        raise RuntimeError("controlled SET failure")
+                    if self.restore == "ignore":
+                        return
+                self.isolation = level
+            elif "observe_inside_file" in sql or "observe_next_file" in sql:
+                self.observed.append((sql, self.isolation))
+            elif sql == "START TRANSACTION":
+                self.server_status = 3
+            elif "controlled_file_failure" in sql:
+                raise RuntimeError("controlled SQL failure")
+
+        def fetchone(self):
+            if "@@SESSION.transaction_isolation" in self.last_sql:
+                return (self.isolation,)
+            if "VERSION()" in self.last_sql:
+                return ("8.0.45", "isolated-test")
+            return (0,)
+
+        def close(self):
+            self.closed = True
+
+    def run_main(self, connection, first, *, keep_going=False):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            baseline = root / "baseline.sql"
+            baseline.write_text("", encoding="utf-8")
+            one, two = root / "one.sql", root / "two.sql"
+            one.write_text(first, encoding="utf-8")
+            two.write_text("SELECT 'observe_next_file';", encoding="utf-8")
+            migrations = [{"migrationId": "one", "path": str(one)},
+                          {"migrationId": "two", "path": str(two)}]
+            argv = ["build_schema.py", "--schema", "cy_e2e_isolation"]
+            if keep_going:
+                argv.append("--keep-going")
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(build_schema, "build_manifest", return_value={"migrations": migrations}), \
+                    mock.patch.object(build_schema, "migrations_after_baseline", return_value=migrations), \
+                    mock.patch.object(build_schema, "connect", side_effect=[self.Connection(), connection]), \
+                    mock.patch.object(build_schema, "BASELINE", baseline), \
+                    mock.patch.object(build_schema, "BASELINE_SEED", baseline), \
+                    mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
+                    mock.patch("builtins.print"):
+                return build_schema.main()
+
+    def test_file_uses_own_isolation_then_next_file_gets_initial_session_contract(self):
+        for initial in ["REPEATABLE-READ", "SERIALIZABLE", "READ-UNCOMMITTED"]:
+            with self.subTest(initial=initial):
+                c = self.Connection(initial)
+                self.assertEqual(0, self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;\n"
+                                                "SELECT 'observe_inside_file';"))
+                self.assertEqual(["READ-COMMITTED", initial], [level for _, level in c.observed])
+                self.assertEqual(initial, c.isolation)
+                self.assertTrue(c.closed)
+
+    def test_failed_file_restores_even_when_keep_going_and_default_stops(self):
+        for keep_going in [False, True]:
+            with self.subTest(keep_going=keep_going):
+                c = self.Connection()
+                self.assertEqual(1, self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;\n"
+                                                "SELECT 'controlled_file_failure';", keep_going=keep_going))
+                self.assertEqual("REPEATABLE-READ", c.isolation)
+                self.assertEqual(["REPEATABLE-READ"] if keep_going else [], [level for _, level in c.observed])
+                self.assertTrue(c.closed)
+
+    def test_restore_failure_and_ineffective_restore_are_fatal_with_keep_going(self):
+        for restore in ["raise", "ignore"]:
+            with self.subTest(restore=restore):
+                c = self.Connection(restore=restore)
+                with self.assertRaisesRegex(RuntimeError, "isolation"):
+                    self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;", keep_going=True)
+                self.assertEqual([], c.observed)
+                self.assertTrue(c.closed)
+
+    def test_unknown_transaction_state_stops_before_set_or_next_file(self):
+        c = self.Connection()
+        with self.assertRaisesRegex(RuntimeError, "idle"):
+            self.run_main(c, "START TRANSACTION; SELECT 'controlled_file_failure';", keep_going=True)
+        self.assertEqual(0, c.restore_attempts)
+        self.assertEqual([], c.observed)
+        self.assertTrue(c.closed)
+
+    def test_initial_isolation_must_be_a_known_mysql_level_before_file_execution(self):
+        c = self.Connection("REPEATABLE-READ; SELECT 'injected'")
+        with self.assertRaisesRegex(RuntimeError, "isolation"):
+            self.run_main(c, "SELECT 'observe_inside_file';", keep_going=True)
+        self.assertEqual([], c.observed)
+        self.assertEqual(0, c.restore_attempts)
+        self.assertTrue(c.closed)
+
+    def test_uncertain_file_exception_closes_without_attempting_set_or_masking_cause(self):
+        c = self.Connection()
+        original = build_schema.run_file
+        def fail(cur, path, label, results, *args, **kwargs):
+            if label == "one":
+                raise RuntimeError("rollback could not be confirmed")
+            return original(cur, path, label, results, *args, **kwargs)
+        with mock.patch.object(build_schema, "run_file", side_effect=fail):
+            with self.assertRaisesRegex(RuntimeError, "rollback could not be confirmed"):
+                self.run_main(c, "SELECT 1;", keep_going=True)
+        self.assertEqual(0, c.restore_attempts)
+        self.assertEqual([], c.observed)
+        self.assertTrue(c.closed)
 
 
 if __name__ == "__main__":
