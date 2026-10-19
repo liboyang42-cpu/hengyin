@@ -267,7 +267,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId,
                                           Integer expectedVersion) {
         Scope scope = requireScope(memberId, topicId, activityId,true);
-        TopicRouteSession session = routeMapper.selectByOwner(scope.activityId, topicId, memberId, DEFAULT_INSTANCE);
+        TopicRouteSession session = currentSession(memberId, topicId, scope.activityId);
         JsonNode opening = openingSnapshot(session);
         if (opening == null || chapterId == null || chapterId != opening.path("chapterId").asLong()) {
             throw new IllegalArgumentException("开局流程不匹配");
