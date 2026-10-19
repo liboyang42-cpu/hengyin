@@ -11,7 +11,8 @@
  * 夹具里的四个节点:两个带玩法的普通站、一个不需要打卡的剧情站(templateId=0,非必需)、一个已下架站(status=0)。
  * 按口径应数 3 站。status=0 = 后台「是否显示=隐藏」(作者保存一律写 1)。
  * /api/topic/info-to-user 按章节查节点带 status=1(ApiTopicInfoHiddenNodeTest 钉住),回包里没有隐藏节点;
- * /api/topic/edit-detail 仍原样带着(作者保存是整体替换,少回一个 = 重存时删掉它),所以向导那份回包里有 104。 */
+ * /api/topic/edit-detail 仍原样带着(作者保存是整体替换,少回一个 = 重存时删掉它;保存按旧 id 保留隐藏态),
+ * 所以向导那份回包里有 104,向导自己只数 status=1。 */
 'use strict'
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
@@ -205,12 +206,10 @@ test('SC-UI-DATE-COUNT 主题页章节行「N 个节点」只数上架节点,合
   }
 })
 
-/* 待 owner 定性(仍是 todo):创建/发布向导 pages/publish/fabu 读 edit-detail,回包带隐藏节点 104,
- *   发布确认页「站点」格、「共 N 个站点」摘要、「已放置 N 个站点」= 4,其它页 = 3。
- * 没在本 PR 改:作者 FULL 档保存整体重建节点并一律写 status=1(CmsTopicServiceImpl saveTopicChapters /
- *   compileChapterFlow),所以「4」正是这次保存后会上架的站数;把向导改成数 3 反而与保存结果不符。
- *   要么 edit-detail 也收窄(重存时隐藏节点被删掉),要么保存保留隐藏态 —— 二选一需 owner 拍板。 */
-test('SC-UI-DATE-COUNT 向导站数与服务端站数口径一致(含后台隐藏节点时)', { todo: '待 owner 定性:作者重存会把隐藏节点重新写成 status=1,向导的 4 = 保存后的站数' }, () => {
+/* 创建/发布向导 pages/publish/fabu 读 edit-detail,回包带隐藏节点 104。作者保存按旧 id 保留隐藏态
+ *   (TopicUpdateByOwnerTest#fullRebuild_keepsBackOfficeHiddenNodeHidden...),所以发布确认页「站点」格、
+ *   「共 N 个站点」摘要、「已放置 N 个站点」只数 status=1,与其它页同为 3,也就是保存后上架的站数。 */
+test('SC-UI-DATE-COUNT 向导站数与服务端站数口径一致(含后台隐藏节点时)', () => {
   for (const { zone, out } of allZones()) {
     assert.deepEqual({
       wizardPreview: out.wizard.previewStationValue,
@@ -221,14 +220,5 @@ test('SC-UI-DATE-COUNT 向导站数与服务端站数口径一致(含后台隐�
       wizardSummary: String(STATION_COUNT),
       wizardPassed: '已放置 ' + STATION_COUNT + ' 个站点',
     }, zone)
-  }
-})
-
-// 向导现值:edit-detail 回包带隐藏节点时数出 4,与时区无关。owner 定性并改动后这条会红,届时与上面的 todo 一起改。
-test('SC-UI-DATE-COUNT 向导现值:edit-detail 带隐藏节点时三个时区都数出含隐藏节点的数', () => {
-  for (const { zone, out } of allZones()) {
-    assert.equal(out.wizard.previewStationValue, String(NODES.length), zone)
-    assert.match(out.wizard.summaryLine, new RegExp('共 ' + CHAPTERS.length + ' 个章节、' + NODES.length + ' 个站点'), zone)
-    assert.equal(out.wizard.passedStationLabel, '已放置 ' + NODES.length + ' 个站点', zone)
   }
 })
