@@ -5,7 +5,8 @@
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-cell": "/components/cy/cell/index",
-    "cy-funds-stages": "/components/cy/funds-stages/index"
+    "cy-funds-stages": "/components/cy/funds-stages/index",
+    "cy-withdraw-channel": "/components/cy/withdraw-channel/index"
   },
   "styleIsolation": "isolated"
 }

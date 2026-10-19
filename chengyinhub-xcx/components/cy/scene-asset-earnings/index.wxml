@@ -16,6 +16,8 @@
         <view class="ae-action" bindtap="openWithdraw" aria-role="button" aria-label="联系平台客服处理提现" hover-class="cy-pressed" hover-stay-time="80">提现</view>
         <view class="ae-action" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80">提现记录</view>
       </view>
+      <!-- F0422-F0425：标明当前提现渠道(平台客服人工处理)、服务端可提现额、授权版本与原申请状态 -->
+      <cy-withdraw-channel id="withdrawChannel" />
     </view>
     <view class="ae-section">
       <cy-cell title="邀请记录" description="查看被邀请人、状态与奖励" bind:tap="openInvite" />

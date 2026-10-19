@@ -15,6 +15,11 @@ const motion = require('../../../../utils/motion.js');
 const audioLevel = require('../../utils/play-audio-level.js');
 const { baseline, thresholds, bandOf, peakOf } = audioLevel;
 
+/** 相对阈值 → 一句人话:相对满幅的百分比,明说不是分贝 */
+function levelText(level) {
+  return '本机阈值 ' + Math.round((level || 0) * 100) + '%（相对满幅，不是分贝）';
+}
+
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
@@ -22,17 +27,28 @@ Component({
     kicker: { type: String, value: '别出声' },
     sub: { type: String, value: '' },
     seconds: { type: Number, value: 15 },
+    // C1:证据说明 / 前后台规则 / 校准说明,分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
+    calibrationNote: { type: String, value: '' },
   },
   data: {
     left: '15.0',
     band: 'ok',
     running: false,
+    // F0337:本机相对阈值与校准状态。阈值是相对满幅的振幅比例,不是分贝
+    calibrated: false,
+    thresholdText: '',
+    // 本机记到的安静时长(heldMs)≠ 可信完成:那要服务器复核,奖励上限也由服务器定
+    heldText: '',
+    micDenied: false,
   },
   observers: {
     'show, seconds': function (show, seconds) {
       this._stop();
       if (!show) { this._stopMic(); return; }
-      this.setData({ left: (seconds > 0 ? seconds : 0).toFixed(1), band: 'ok', running: false });
+      this.setData({ left: (seconds > 0 ? seconds : 0).toFixed(1), band: 'ok', running: false,
+        calibrated: false, thresholdText: '', heldText: '', micDenied: false });
     },
   },
   lifetimes: { detached() { this._stop(); this._stopMic(); } },
@@ -54,11 +70,13 @@ Component({
     _abort() {
       if (!this.data.running) return;
       this._stop(); this._stopMic();
-      this.setData({ running: false, band: 'ok' });
+      // 切走那几秒没在听:本机记的时长作废,校准也作废(回来可能换了地方)
+      this.setData({ running: false, band: 'ok', calibrated: false, thresholdText: '', heldText: '' });
     },
 
     onStart() {
       if (this.data.running) return;
+      this.setData({ micDenied: false, heldText: '' });
       this._samples = [];
       this._peak = 0;
       this._startMic();
@@ -74,7 +92,10 @@ Component({
       // 拿不到麦克风就明说,不假装在听 —— 让人以为在真听是更糟的事
       rec.onError(() => {
         this._stop(); this._stopMic();
-        this.setData({ running: false, band: 'ok' });
+        const stage = this.selectComponent('#cy-play-stage');
+        if (stage && stage._stopAll) stage._stopAll();
+        // 拒绝麦克风:给授权替代(去设置打开 / 跳过这一项不记成绩),不假装在听
+        this.setData({ running: false, band: 'ok', micDenied: true, calibrated: false, thresholdText: '' });
         this.triggerEvent('micdenied');
       });
       rec.start({ duration: 600000, sampleRate: 16000, numberOfChannels: 1,
@@ -88,7 +109,15 @@ Component({
       const t = thresholds(baseline(this._samples));
       this._mid = t.mid;
       this._hot = t.hot;
+      this.setData({ calibrated: true, thresholdText: levelText(t.hot) });
     },
+
+    /** 授权替代①:去系统设置打开麦克风,回来再点开始 */
+    onOpenMicSetting() {
+      if (wx.openSetting) wx.openSetting({ fail() {} });
+    },
+    /** 授权替代②:跳过这一项 —— 不记成绩、不发奖,只是不卡在这一屏 */
+    onSkipMic() { this.onClose(); },
 
     /** stage 校准完(这玩法没有限时开关,所以不数 3-2-1)之后真正开跑 */
     onRun() {
@@ -119,7 +148,7 @@ Component({
 
     _finish(won) {
       this._stop(); this._stopMic();
-      this.setData({ running: false });
+      this.setData({ running: false, heldText: '本机记到 ' + (this._held || 0).toFixed(1) + ' 秒，以最终复核为准' });
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) {

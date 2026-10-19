@@ -127,6 +127,7 @@
         <text class="op-name">申报供给</text>
         <cy-icon name="arrow-right" size="24" />
       </view>
+      <view class="op-hint">合作已接受 · 履约未核验 · 评价身份：{{box === 'sent' ? '发起方' : '受邀方'}}</view>
       <!-- CU-C-27:互评一次性(后端「已评价过该合作」),评过就回读成「已评价 ★N」,不再给空白评分面板 -->
       <view class="op" wx:if="{{(box === 'received' || invite.toType === 'merchant') && myReviewStars}}" aria-label="已评价本次合作，{{myReviewStars}}">
         <text class="op-name">已评价</text>
@@ -193,6 +194,6 @@
   </scroll-view>
     <view class="pk-save {{perkSaving ? 'dis' : ''}}" wx:if="{{perkState === 'ready'}}" catchtap="submitPerks" aria-role="button" aria-label="确认申报本次供给" aria-disabled="{{perkSaving}}" hover-class="{{perkSaving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{perkSaving ? '申报中…' : '确认申报'}}</view>
   </cy-sheet>
-  <cy-option-sheet show="{{reviewSheetShow}}" title="这次合作打几分" items="{{reviewSheetItems}}" confirm-text="下一步"
+  <cy-option-sheet show="{{reviewSheetShow}}" title="合作意见（履约未核验）" items="{{reviewSheetItems}}" confirm-text="下一步"
                    bind:select="onReviewSheetSelect" bind:cancel="onReviewSheetCancel" />
 </view>

@@ -42,6 +42,7 @@
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
       <view class="shzlbox_li_left_name">城市签名</view>
+      <view class="profile-media-scope">只改签名文字，不会改动你的所在城市（城市在首页切换）</view>
       <view class="shzlbox_li_left_txt {{userInfo.introduction ? '' : 'is-empty'}}">{{userInfo.introduction || '未填写'}}</view>
     </view>
     <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑城市签名" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" /></view>
@@ -49,6 +50,7 @@
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
       <view class="shzlbox_li_left_name">探索作品</view>
+      <view class="profile-media-scope">公开展示在你的主页</view>
       <view class="shzlbox_li_left_ntu" wx:if="{{casePicsList.length > 0}}">
         <view class="shzlbox_li_left_ntu_li" wx:for="{{casePicsList}}" wx:key="*this">
           <image lazy-load="true" src="{{item}}" mode="aspectFill" />
@@ -62,6 +64,7 @@
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
       <view class="shzlbox_li_left_name">联系二维码</view>
+      <view class="profile-media-scope">仅自己可见，不在公开主页展示</view>
       <view class="shzlbox_li_left_ntu" wx:if="{{userInfo.wechat}}">
         <view class="shzlbox_li_left_ntu_li">
           <image lazy-load="true" src="{{userInfo.wechat }}" mode="aspectFill" />
@@ -93,7 +96,7 @@
   <cy-progress-status wx:if="{{saving || saveSucceeded}}" density="compact"
                       steps="{{saveSteps}}" current="{{saveSucceeded ? 1 : 0}}"
                       title="{{saveSucceeded ? '资料已保存' : '正在保存资料'}}"
-                      sub="{{saveSucceeded ? '即将返回上一页' : '请保持当前页面'}}" />
+                      sub="{{saveSucceeded ? (mediaReviewPending ? '新图片已提交审核，未通过的会被单独移除' : '即将返回上一页') : '请保持当前页面'}}" />
   <cy-inline-error wx:if="{{saveError}}" title="资料没有保存" sub="{{saveError}}"
                    action="重试保存" bind:action="saveInfo" />
 </view>
@@ -125,6 +128,7 @@
 <cy-sheet class="profile-edit-sheet" show="{{ popDavid2 }}" title="探索作品" footer bind:close="cancel2">
   <view class="pop-model pop-temp">
     <view class="david_tk">
+      <view class="profile-media-note">作品图会公开展示在你的主页。保存后逐张送审，未通过的只移除那一张，不影响其他作品和联系二维码。</view>
       <view class="david_tk_con">
         <view class="david_tk_con_sc" wx:for="{{tempCasePics}}" wx:key="*this" wx:for-item="pic" wx:for-index="index">
           <image lazy-load="true" src="{{pic}}" mode="aspectFill" />
@@ -144,10 +148,11 @@
 <cy-sheet class="profile-edit-sheet" show="{{ popDavid3 }}" title="联系二维码" footer bind:close="cancel3">
   <view class="pop-model pop-temp">
     <view class="david_tk">
+      <view class="profile-media-note">二维码只保存在你的资料里，不会出现在公开主页。保存后送内容安全审核，未通过会被自动移除；别人一旦保存过二维码图片就无法召回。</view>
       <view class="david_tk_con profile-contact-media">
         <view class="david_tk_con_sc" wx:if="{{tempWechat}}">
           <image lazy-load="true" src="{{tempWechat}}" mode="aspectFit" />
-          <view class="david_del-hit" bindtap="deleteWechat" aria-role="button" aria-label="清除微信号" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/images/del.png" mode="aspectFill" /></view>
+          <view class="david_del-hit" bindtap="deleteWechat" aria-role="button" aria-label="移除联系二维码" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/images/del.png" mode="aspectFill" /></view>
         </view>
         <button class="david_tk_con_tgb" bindtap="uploadWechat" wx:if="{{!tempWechat}}">
           <view class="david_tk_con_tgb_tu"><image lazy-load="true" src="/pages/gerenziliao/images/d_sctb.png" mode="widthFix" /></view>

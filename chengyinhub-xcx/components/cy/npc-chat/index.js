@@ -33,6 +33,10 @@ Component({
       value: false,
       observer: function (visible) {
         if (!visible) this._resetForClose();
+        else if (this._pending && (this._pending.owner !== this._owner() || this._pending.bizId !== this.properties.sessionId || this._pending.scope !== this.properties.scope)) {
+          this._pending = null;
+          this._resetForClose();
+        }
       },
     },
     sessionId: { type: Number, value: 0 },
@@ -52,6 +56,7 @@ Component({
     canSend: false,
     retryAvailable: false,
     scrollIntoView: '',
+    canRecover: false,
   },
 
   lifetimes: {
@@ -68,7 +73,7 @@ Component({
 
     onSend: function () {
       const message = (this.data.input || '').trim();
-      if (!message) return;
+      if (!message || this.data.isThinking || this.data.canRecover) return;
       if (!this.properties.sessionId) {
         this._appendAssistant(
           this.properties.scope === 'merchant'
@@ -102,6 +107,27 @@ Component({
       });
       this._track('npc_chat_submit');
 
+      this._pending = { requestId: requestId, bizId: this.properties.sessionId, message: message, scope: this.properties.scope, owner: this._owner() };
+      this._sendPending(generation);
+    },
+
+    _owner: function () {
+      const app = getApp();
+      return String(app.getUserID ? app.getUserID() : '');
+    },
+
+    onRecover: function () {
+      const pending = this._pending;
+      if (!pending || !this.data.canRecover || this.data.isThinking) return;
+      if (pending.owner !== this._owner() || pending.bizId !== this.properties.sessionId || pending.scope !== this.properties.scope) return;
+      this._invalidate(false);
+      this.setData({ isThinking: true, state: 'CHECKING' });
+      this._sendPending(++this._generation);
+    },
+
+    _sendPending: function (generation) {
+      const pending = this._pending;
+      const requestId = pending.requestId;
       const app = getApp();
       const control = app.sendRequest({
         // ★ 两个字面量直接写在这里,不抽 helper:UI-GATE 的 U1 要求请求路径可枚举,
@@ -110,7 +136,7 @@ Component({
           ? '/api/ai/npc/merchant-chat'
           : '/api/ai/npc/chat',
         method: 'POST',
-        data: { requestId: requestId, bizId: this.properties.sessionId, message: message },
+        data: { requestId: requestId, bizId: pending.bizId, message: pending.message },
         header: { 'content-type': 'application/json' },
         timeout: 30000,
         silentError: true,
@@ -138,18 +164,26 @@ Component({
 
     /** 页面 onHide/onUnload/切场景时调用的公开生命周期方法。 */
     cancelPending: function () {
+      const unknown = !!this._pending && (this.data.isThinking || this.data.canRecover);
       this._invalidate(true);
+      if (unknown) this.setData({ canRecover: true });
     },
 
     _onResponse: function (generation, requestId, res) {
-      if (!this._isCurrent(generation)) return;
+      if (!this._isCurrent(generation) || !this._pending || this._pending.owner !== this._owner()) return;
       this._requestControl = null;
       const payload = res && res.data;
+      if (res && String(res.code) === '403') {
+        this.setData({ canRecover: false });
+        this._appendAssistant(res.msg || '当前暂不能对话。', 'BLOCKED');
+        return;
+      }
       // requestId 不匹配按迟到/串线处理，绝不把另一条请求的文本写进当前对话。
       if (!payload || payload.requestId !== requestId) {
         this._onNetworkFailure(generation);
         return;
       }
+      this.setData({ canRecover: payload.outcomeStatus === 'PROCESSING' || payload.errorCode === 'REQUEST_IN_PROGRESS' || payload.errorCode === 'REQUEST_STATE_UNAVAILABLE' });
       if (res.code != 200 && res.code != '200') {
         this._trackComplete(payload);
         this._appendAssistant(payload.safeText || '这次没有收到有效回答，请稍后再试。', 'FAILED');
@@ -173,7 +207,8 @@ Component({
     _onNetworkFailure: function (generation) {
       if (!this._isCurrent(generation)) return;
       this._requestControl = null;
-      this._appendAssistant('网络不太稳定，这条问题还没有送达，可以再试一次。', 'FAILED');
+      this.setData({ canRecover: true });
+      this._appendAssistant('回答结果待确认，请恢复原问题，不要重复发送。', 'UNKNOWN');
     },
 
     _startTypewriter: function (generation, text, audioUrl) {
@@ -238,12 +273,24 @@ Component({
     },
 
     _resetForClose: function () {
+      const unknown = !!this._pending && (this.data.isThinking || this.data.canRecover);
       this._invalidate(false);
+<<<<<<< public
       this._retryMessage = null;
       this._retryCount = 0;
       this.setData({
         messages: [], input: '', inputCount: 0, state: 'IDLE', isThinking: false,
         canSend: false, retryAvailable: false, scrollIntoView: '',
+=======
+      if (unknown) {
+        this.setData({ canRecover: true, state: 'UNKNOWN', isThinking: false });
+        return;
+      }
+      this._pending = null;
+      this.setData({
+        canRecover: false, messages: [], input: '', inputCount: 0, state: 'IDLE', isThinking: false,
+        canSend: false, scrollIntoView: '',
+>>>>>>> private-feature/w2-r
       });
     },
 
@@ -265,7 +312,8 @@ Component({
     },
 
     _isCurrent: function (generation) {
-      return this.properties.show && generation === this._generation;
+      return this.properties.show && generation === this._generation
+        && (!this._pending || (this._pending.owner === this._owner() && this._pending.bizId === this.properties.sessionId && this._pending.scope === this.properties.scope));
     },
 
     _message: function (role, text) {

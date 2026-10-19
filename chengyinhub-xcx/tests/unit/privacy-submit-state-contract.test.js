@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '../..')
 const MODULE = path.join(ROOT, 'pages/privacy/index.js')
 
 function loadPage(recordConsent) {
-  const sandbox = { records: [], resolutions: [], toasts: [], backs: 0 }
+  const sandbox = { records: [], resolutions: [], toasts: [], backs: 0, storage: {} }
   global.getApp = () => ({
     hasPendingPrivacyAuthorization: () => true,
     declineUsageConsent() {},
@@ -23,7 +23,10 @@ function loadPage(recordConsent) {
   global.wx = {
     showToast: (options) => sandbox.toasts.push(options.title),
     navigateBack: () => { sandbox.backs += 1 },
-    stopLocationUpdate() {},
+    stopLocationUpdate(options) { if (options && options.success) options.success() },
+    getStorageSync: (key) => sandbox.storage[key] || '',
+    setStorageSync: (key, value) => { sandbox.storage[key] = value },
+    removeStorageSync: (key) => { delete sandbox.storage[key] },
   }
   global.Page = (config) => { sandbox.def = config }
   delete require.cache[require.resolve(MODULE)]

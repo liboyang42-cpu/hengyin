@@ -21,8 +21,13 @@ function completionReceiptMessage(response, fallback) {
 function resolveVerificationResult(response, action) {
   const label = action || '核销';
   const message = (response && response.msg) || (label + '失败，请重试');
+<<<<<<< public
   if (isReplayed(response)) {
     return { state: 'duplicate', title: '已核销', message: completionReceiptMessage(response, message), show: true };
+=======
+  if (response && (response.code === 202 || response.code === '202')) {
+    return { state: 'unknown', title: label + '结果待确认', message, show: true };
+>>>>>>> private-feature/w2-r
   }
   if (isDuplicate(response)) {
     return {

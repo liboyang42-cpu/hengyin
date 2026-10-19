@@ -12,7 +12,7 @@ const pagePath = require.resolve('../../pages/play/index.js');
 function load(view = fixtures.personal) {
   const requests = [], wxCalls = [];
   let definition, responder;
-  global.getApp = () => ({ sendRequest(options) {
+  global.getApp = () => ({ globalData: { features: {} }, sendRequest(options) {
     requests.push(options);
     Promise.resolve().then(() => responder(options)).then(result => options.success(result), () => options.fail());
   } });

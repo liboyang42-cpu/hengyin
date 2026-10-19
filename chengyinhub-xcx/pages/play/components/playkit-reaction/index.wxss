@@ -52,3 +52,18 @@
 /* ⚠️ 原型这一屏**没有轮次点**:整屏只有眉标、大字、一行小字三样东西。
    这一下要测的是反应,屏上多一个会动的东西,眼睛就会分给它。
    还剩几轮由那行小字说(「毫秒 · 点一下进入下一轮」)。 */
+
+/* C1:单位跟在大数字后面,小一号;规则三行只在没开跑时出 */
+.rx__unit {
+  margin-left: 12rpx;
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.rx__rule {
+  font-size: var(--cy-type-caption);
+  line-height: 1.6;
+  max-width: 24em;                        /* ds-ok 与 .rx__sub 同一条读宽 */
+  color: #FFF;                            /* ds-ok 四档底色都是深的 */
+  opacity: .66;
+}

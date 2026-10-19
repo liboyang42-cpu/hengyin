@@ -152,3 +152,18 @@ test('认领提交成功回读 roam_poi 审核态，不直接把目标塞进我�
     env.restore()
   }
 })
+
+
+test('据点核销断网或畸形成功回包保留原请求，不重放、不声称发券', () => {
+  for (const response of [null, { code: 200, data: {} }]) {
+    const env = loadPage();
+    try {
+      env.page.scanRedeem(); env.scans[0].success({ result: 'original-code' });
+      if (response) env.requests[0].success(response); else env.requests[0].fail({});
+      env.page.scanRedeem(); env.scans[1].success({ result: 'original-code' });
+      assert.equal(env.requests.length, 1);
+      assert.equal(env.toasts.some(t => /已发放/.test(t.title)), false);
+      env.page.onUnload();
+    } finally { env.restore(); }
+  }
+});

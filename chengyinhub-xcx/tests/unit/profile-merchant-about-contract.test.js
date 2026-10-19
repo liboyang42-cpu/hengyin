@@ -75,6 +75,7 @@ function mountProfile(opts) {
     canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => options.loginId,
+    getAuthorization: () => options.loginId ? 'profile-fixture-session' : '',
     getUserRole: () => options.role,
     getUserType: () => (options.role === 'merchant' ? 2 : 1),
     isDevEnv: () => false,

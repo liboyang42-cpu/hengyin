@@ -67,7 +67,8 @@ test('微信支付 success 后必须查询服务端订单终态才显示到账',
   assert.equal(sandbox.toasts.includes('支付成功，权益已到账'), false);
 
   sandbox.requests[1].success({ code: 200, data: { paymentStatus: 'success' } });
-  assert.ok(sandbox.toasts.includes('支付成功，权益已到账'));
+  assert.equal(sandbox.toasts.includes('支付成功，权益已到账'), false);
+  assert.ok(sandbox.requests.some(r => r.url === '/api/merchant/subscription'));
   assert.equal(vm.data.checkoutBusy, false);
 });
 
@@ -120,4 +121,31 @@ test('用户取消支付后，同一权益重试必须复用 requestId 防止重
   vm.tapTier(event);
   const secondId = JSON.parse(sandbox.requests[1].data).requestId;
   assert.equal(secondId, firstId);
+});
+
+
+test('权益开通方式未知与 iOS 均不提供付款，授权列表失败不冒充空结果', () => {
+  const vm = page();
+  global.wx.getDeviceInfo = () => ({ platform: 'ios' });
+  vm.loadSubs();
+  sandbox.requests[0].success({ code: 200, data: { selfCheckoutEnabled: true } });
+  assert.equal(vm.data.chargeEnabled, false);
+  sandbox.requests[1].fail({});
+  assert.equal(vm.data.subscriptionState, 'error');
+  vm.loadSubs();
+  sandbox.requests[2].success({ code: 200, data: { selfCheckoutEnabled: 'true' } });
+  assert.equal(vm.data.commerceState, 'error');
+  sandbox.requests[3].success({ code: 200, data: [] });
+  assert.equal(vm.data.subscriptionState, 'ready');
+});
+
+test('刷新后不接纳旧权益回包，授予记录不推断支付或当前资格', () => {
+  const vm = page();
+  vm.loadSubs();
+  vm.loadSubs();
+  sandbox.requests[1].success({ code: 200, data: [{ id: 1, subscriptionType: 'premium_template' }] });
+  assert.equal(vm.data.subscriptionState, 'loading');
+  sandbox.requests[3].success({ code: 200, data: [{ id: 2, subscriptionType: 'premium_template', startDate: '2099-01-01', endDate: null }] });
+  assert.equal(vm.data.subscriptions[0].startText, '2099-01-01');
+  assert.equal(vm.data.checkoutState, 'idle');
 });

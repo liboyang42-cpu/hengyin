@@ -36,8 +36,7 @@ Page({
       endDate: options.endDate ? decodeURIComponent(options.endDate) : '',
       minPrice: options.minPrice != null && options.minPrice !== '' ? Number(options.minPrice) : null,
       maxPrice: options.maxPrice != null && options.maxPrice !== '' ? Number(options.maxPrice) : null,
-      // CU-M-66:入口页的排序选择必须活到请求里。四类里只有 /api/activity/list 有 sort_type,
-      // 其余三类后端没有排序参数(buildRequests 只把它给 activity)。
+      // 最近发布沿用各列表默认顺序；附近排序是另一个合同。
       sortType: options.sortType ? String(options.sortType) : '',
     };
     this.setData({ keyword, categoryId });
@@ -221,7 +220,9 @@ Page({
     }
     const path = e.currentTarget.dataset.path;
     // 商家结果没绑会员主体时拼不出主页地址 —— 点了没反应会被当成卡死,给一句话
-    if (path) wx.navigateTo({ url: path });
+    if (path) navigateRegistered({ url: path });
     else toast('这条结果暂不可打开');
   }
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

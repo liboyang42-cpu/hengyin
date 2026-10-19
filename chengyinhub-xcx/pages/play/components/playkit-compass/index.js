@@ -52,6 +52,15 @@ function isLowAccuracy(accuracy) {
   return typeof accuracy === 'string' && LOW_ACCURACY.indexOf(accuracy) !== -1;
 }
 
+/** F0339:精度状态一句话。iOS 给的是数字(偏角)不表精度 —— 不编,给空串 */
+const ACCURACY_TEXT = {
+  high: '精度高', medium: '精度中', low: '精度低：可能有磁干扰',
+  unreliable: '读数不可靠：可能有磁干扰', 'no-contact': '罗盘未接触到磁场',
+};
+function accuracyText(accuracy) {
+  return typeof accuracy === 'string' ? (ACCURACY_TEXT[accuracy] || '') : '';
+}
+
 // 刻度尺:每 5° 一格、30° 一道长刻度并标度数,四个正方位换成方位字
 /** 容差区:顶上 ±tolerance 那一段,每 2.5° 一根短棒(固定在屏上,不随刻度盘转) */
 function zoneBars(tol) {
@@ -77,6 +86,10 @@ Component({
     holdSeconds: { type: Number, value: 3 },
     hint: { type: String, value: '' },
     done: { type: Boolean, value: false },     // 进来就对准过:只读状态,不再收
+    // C1:证据说明 / 前后台规则 / 校准说明,分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
+    calibrationNote: { type: String, value: '' },
   },
   data: {
     phase: 'idle',       // idle = 还没开始 / run = 表在走
@@ -94,9 +107,11 @@ Component({
     holdPct: 0,
     turnHint: '',
     lowAccuracy: false,
+    accText: '',         // 精度状态(Android 才有);空 = 设备没给,不编
+    unavailable: false,  // 罗盘起不来:来源不足,明说不判
   },
   observers: {
-    show(v) { if (!v) { this._stop(); this._stopCompass(); this.setData({ phase: 'idle', aligned: false, noData: false, lowAccuracy: false }); } },
+    show(v) { if (!v) { this._stop(); this._stopCompass(); this.setData({ phase: 'idle', aligned: false, noData: false, lowAccuracy: false, accText: '', unavailable: false }); } },
     tolerance(v) { this.setData({ zoneBars: zoneBars(v > 0 ? v : 15) }); },
   },
   lifetimes: {
@@ -113,6 +128,7 @@ Component({
     _signedDelta: signedDelta,
     _turnText: turnText,
     _isLowAccuracy: isLowAccuracy,
+    _accuracyText: accuracyText,
     _zoneBars: zoneBars,
 
     _stop() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
@@ -149,18 +165,26 @@ Component({
       this.setData({
         phase: 'run', aligned: false, noData: false, holdLeft: (this._holdTotal()).toFixed(1),
         hasHeading: false, roseDeg: 0, holdPct: 0, turnHint: '', lowAccuracy: false,
+        accText: '', unavailable: false,
       });
 
       this._cb = (res) => {
         const d = res && Number(res.direction);
         if (Number.isFinite(d)) { this._heading = d; this._ticks = 0; }
-        if (res) this._lowAccuracy = isLowAccuracy(res.accuracy);
+        if (res) { this._lowAccuracy = isLowAccuracy(res.accuracy); this._accText = accuracyText(res.accuracy); }
       };
       this._listening = true;
+      // F0339:显式起罗盘。起不来 = 来源不足,明说并停表,不判、不提交
+      if (wx.startCompass) wx.startCompass({ fail: () => this._unavailable() });
       wx.onCompassChange(this._cb);
 
       this._stop();
       this._timer = setInterval(() => this._tick(), TICK_MS);
+    },
+
+    _unavailable() {
+      this._stop(); this._stopCompass();
+      this.setData({ phase: 'idle', aligned: false, noData: false, lowAccuracy: false, unavailable: true });
     },
 
     _holdTotal() {
@@ -207,6 +231,7 @@ Component({
         holdPct: Math.round(Math.min(1, this._held / this._holdTotal()) * 100),
         turnHint: turnText(signedDelta(target, this._heading)),
         lowAccuracy: this._lowAccuracy,
+        accText: this._accText || '',
         holdLeft: Math.max(0, this._holdTotal() - this._held).toFixed(1),
       });
     },

@@ -18,6 +18,8 @@ test('无法按目标事实关联时只打开核销记录，不得用页面加�
   });
 
   assert.equal(offered, true);
+  assert.match(modal.content, /请勿重新扫码或重复核销/);
+  assert.doesNotMatch(modal.content, /退出当前页面重新进入后再试/);
   assert.equal(resetKeys.length, 0, '只弹提示时不得解锁');
   modal.success({ confirm: true });
   assert.equal(navigation.url, '/pages/merchant/ledger/index?view=redemptions');
@@ -38,4 +40,26 @@ test('三个核销入口都提供记录查看，台账不得用任意成功列�
   });
   const ledger = fs.readFileSync(path.join(ROOT, 'pages/merchant/ledger/index.js'), 'utf8');
   assert.doesNotMatch(ledger, /emitVerificationReadback|verificationReadbackComplete|readback=1/);
+});
+
+
+test('核验传输失败与异常响应保留原业务键，不会误报确定失败或成功', () => {
+  const { resolveVerificationResult } = require('../../utils/merchant-verification.js');
+  assert.equal(resolveVerificationResult({ code: 202, msg: '待确认' }).state, 'unknown');
+  const { createWriteActionWorkflow } = require('../../utils/write-action-workflow.js');
+  const workflow = createWriteActionWorkflow();
+  let result;
+  workflow.run('original-verification', done => done({ status: 'unknown' }), value => { result = value; });
+  assert.equal(result.status, 'unknown');
+  assert.equal(workflow.isBusy('original-verification'), true);
+  assert.equal(workflow.run('original-verification', () => assert.fail('不得重放')), false);
+  workflow.destroy();
+  ['pages/merchant/index/index.js', 'subpackageMember/components/cy/profile/index.js',
+    'subpackageMember/components/scene-member-participation-detail/index.js'].forEach(rel => {
+    const source = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const start = source.indexOf('_submitVerification');
+    const section = source.slice(start, source.indexOf('offerVerificationReadback(key', start));
+    assert.doesNotMatch(section, /status: 'failed'/, rel);
+    assert.match(section, /fail[^\n]*done\(\{ status: 'unknown' \}\)/, rel);
+  });
 });

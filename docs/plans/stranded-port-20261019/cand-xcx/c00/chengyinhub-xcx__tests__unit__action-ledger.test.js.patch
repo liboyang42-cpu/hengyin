@@ -1,0 +1,191 @@
+diff --git a/chengyinhub-xcx/tests/unit/action-ledger.test.js b/chengyinhub-xcx/tests/unit/action-ledger.test.js
+index 4ef4414a8e..18d749a6c1 100644
+--- a/chengyinhub-xcx/tests/unit/action-ledger.test.js
++++ b/chengyinhub-xcx/tests/unit/action-ledger.test.js
+@@ -18,7 +18,11 @@ const freshAt = (offsetMs = 0) => new Date(Date.now() - 60 * 60 * 1000 + offsetM
+ const ledger = require('../../scripts/uiaudit/action-ledger.json')
+ const overlay = require('../../scripts/uiaudit/action-evidence.json')
+ const {
++<<<<<<< /tmp/claude-501/tmpr934magz/o
+   eventHandlerNames,
++=======
++  extractHandlerTargets,
++>>>>>>> /tmp/claude-501/tmpr934magz/t
+   inferActionClass,
+   inferEffectClasses,
+   buildExpectedReadback,
+@@ -290,6 +294,7 @@ test('确认框深度判定先屏蔽字符串/注释/正则，不得记下假事
+ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击', () => {
+   assert.equal(interactionModeFor('bindtap'), 'tap')
+   assert.equal(interactionModeFor('bind:close'), 'event-contract')
++  // W2 合并后按最终源码重建：local tap 1972 / event 2484，总控件 4817；运行证据单独验收。
+   const local = ledger.controls.filter((item) => item.actionClass !== 'external')
+   // 2026-09-13逐项映射：漫游恢复/继续+2 tap，copyRecap真实剪贴板归external，local tap净+1。
+   // 邀约恢复+2、漫游retry+1、订单orderchanged+1，local事件净+4；草稿据点拒绝独立variant再+1 tap，总3971。
+@@ -563,11 +568,36 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
+   // 2026-09-25 CU-M-92 受邀商家承接视图:project-join 底栏主按钮拆成「扫码核销 / 原主按钮」两个互斥分支,各 1 tap ⇒ 1746 → 1747(重建实测)。
+   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
+   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
++<<<<<<< /tmp/claude-501/tmpr934magz/o
+   // B93 saveDraft added two real variants (+2 tap); approved growth bindings have zero net tap change.
+   // 2026-10-13 注销阻断卡「我已处理，重新检查」+1 tap,1968 → 1969(重建实测)。
+   // 2026-10-17 合并漫游上线(我的队伍、地图列表、漫游记录工具行、5 个工具页;删拍照开局与入口地图重试)按重建实测 1969 → 2022。
+   // 2026-10-19 移植共享基线(认领半屏、置顶公告、文本码、举报队伍、状态键、官方线路、继续漫游条等)按 audit:actions:update 重建实测 2022 → 2034。
+   assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2034)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
++=======
++  // 2026-10-09 通用玩法 W4:新增 tap 2 颗(第一章 openInitialState 入口、归零挑战 toggleZeroHpAlternative（R5 已迁移） 备选勾选)→ 1783。
++  // 2026-10-09 通用玩法 W3:模板编辑页互动工具 +15 tap(打开/关闭/保存工具、费用行与任选组、投票方案与材料的增删、移除范围/工具)→ 1798。
++  // 2026-10-09 通用玩法 W4 值域:+10 tap(editRuntimeStat×3、openValueEditor×2、add/removeValueLink、removeValue、save/closeValueEditor)→ 1808。
++  // 2026-10-09 通用玩法 W4 章节规则:+8 tap(完成要求两档、互斥组增删/选点、额外节点增删/复用槽)→ 1816。
++  // 2026-10-09 通用玩法 W4 玩家侧(费用选择/挑战/玩法动作)、W3 站点模板复制/编辑、W4 超量任务槽:按重建实测 tap 1816 → 1821。
++  // 2026-10-09 通用玩法 W3 玩家交易:+7 tap(选目标、预览、发起、确认/取消、核对回执、关闭)→ 1828。
++  // 2026-10-09 投票和工作人员收尾在 T06 主线 1839 基础上增加 15 个 tap。
++  // 2026-10-09 合入 W4 团队归零挑战提交部分撞击入口：+1 tap，1854 → 1855。
++  // 2026-10-09 合入 W4 参与队伍选择 +1 tap：1872 → 1873。
++  // 2026-10-09 合入 W2 U04 重玩/历史/结果卡：+12 tap，1873 → 1885。
++  // 2026-10-09 合入 W3 玩家站点操作：+8 tap，1885 → 1893。
++  // 2026-10-09 R2 作者端玩法规则界面（协调者设计，合入 W3 结构/W4 生存逻辑）按重建实测：tap 1893 → 1923。
++  // 2026-10-09 合入 W1 离线记录起点：+1 tap，1923 → 1924。
++  // 2026-10-09 R3 归属纠正界面（协调者）：移除主题设置恢复/设施/运行结局三入口，模板效果行“需要的数值”选择/新建，站点方案→结局、值域无效果消耗开关、旧版配置提示，按重建实测 1924 → 1927。
++  // 2026-10-10 主人：编辑页头「左退出/右完成」，玩法模板选择视图的返回与关闭合并为左侧「返回」一颗，按重建实测 1927 → 1926。
++  // 2026-10-10 主人裁定独立模板撤掉玩家人数/玩法时长两颗选择器，按重建实测 1926 → 1924。
++  // 2026-10-10 cy-dropdown 新增两列卡片档的卡片点击（一颗组件内 tap），按重建实测 1924 → 1925。
++  // 2026-10-10 R5 UI 替换内联入口为草稿弹层：本地 tap +14，1925 → 1939；按最终 WXML 重建。
++  // R5-FE-FIX 复用原分段操作移入玩法面板，tap 数量保持 1939；未新增重复入口。
++  // R5 玩家归零面板新增刷新/结果卡两颗本地 tap，其余同步/权限入口归 external。
++  // 2026-10-10 合并作者端与玩家归零分支：1939 + 2 = 1941，按合并树 audit:actions:update 实测。
++  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1972)  /* 2026-10-12 章节弹窗规则按 Figma J3 重排:完成要求两段式与额外节点/任务槽 6 颗点击撤掉,故事流站点块「计入方式」+1 → -5。 */  /* 2026-10-12 主题编辑页「保存草稿」按 create/update 两个 variant 入账 +2。 */  /* 2026-10-11 奖励/线索/需要的线索三组增删按钮 +8，按最终树重建实测。 */  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
++>>>>>>> /tmp/claude-501/tmpr934magz/t
+      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
+      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
+      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
+@@ -774,6 +804,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
+   // 2026-09-30 项目近期动态首次失败/保留数据重试各新增1个事件合同；本地事件合同 2298 → 2300，tap分母不变。
+   // 2026-10-06 合并最新主线后按最终源码重建，数值待生成台账后校准。
+   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
++<<<<<<< /tmp/claude-501/tmpr934magz/o
+   // Approved growth removed retryRank/loadOverview bind:action and changed goExplore bind:cta to bindtap: -3 event contracts.
+   // 2026-10-10 举报理由面板两宿主各新增 select/cancel，事件合同 +4，tap 分母不变。
+   const dangerDone = local.find((item) => item.route === 'subpackageB/pages/im/chat/index'
+@@ -787,6 +818,36 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
+   // 2026-10-17 合并漫游上线:日期选择、输入框、组件事件(cy-date-field / privacy-gate / 弹窗工具行)按重建实测 2315 → 2323。
+   // 2026-10-19 移植共享基线同批组件事件合同按重建实测 2323 → 2346。
+   assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2346)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
++=======
++  // 2026-10-09 通用玩法 W4:+7 事件合同(onRuntimeName×3、pickZeroHpPolicy（R5 已迁移）、pickZeroHpChallengeNode（R5 已迁移）、inputZeroHpField（R5 已迁移）×2)→ 2328。
++  // 2026-10-09 通用玩法 W3:+16 事件合同(模板互动工具字段、费用行、投票方案、影响范围)→ 2344。
++  // 2026-10-09 通用玩法 W3 资源槽:+3 事件合同(updateSlotLabel、updateCostRow、updateVotePlan 的资源槽选择)→ 2347。
++  // 2026-10-09 通用玩法 W4 值域:+15 事件合同(见上)→ 2362。
++  // 2026-10-09 通用玩法 W4 章节规则:+3 事件合同(见上)→ 2365。
++  // 2026-10-09 通用玩法 W3 节点资源绑定:+1 事件合同(onNodeBindingPick)→ 2366。
++  // 2026-10-09 同上合并后按重建实测事件合同 2366 → 2368。
++  // 2026-10-09 通用玩法 W3 玩家交易:+2 事件合同(双方数量输入)→ 2370。
++  // 2026-10-09 投票、投入与收尾弹层在 T06 主线 2376 基础上增加 5 个事件合同。
++  // 2026-10-09 合入 W2 U04：+16 事件合同，2386 → 2402。
++  // 2026-10-09 合入 W3 玩家站点操作：+4 事件合同，2402 → 2406。
++  // 支持信息新增两处重试事件：2406 → 2408。
++  // 2026-10-09 R2 作者端玩法规则界面按重建实测：事件合同 2408 → 2439。
++  // 2026-10-09 R3 归属纠正界面按重建实测：事件合同 2439 → 2451。
++  // 2026-10-10 R4 接回章节「设为结局」开关与三个条件下拉（R02 结局归章节），按重建实测：事件合同 2451 → 2456。
++  // 2026-10-10 撤掉人数/时长两条字典重试事件：2456 → 2454。
++  // 2026-10-10 R5 旧内联事件退役、新草稿选择器接线（含反馈 next）：本地事件净 -7，2454 → 2447。
++  // R5-FE-FIX 用 pickBranchNextStep 下拉替换原 nextStepId 输入，一进一出，event 保持 2447。
++  // 归零回读可达恢复同步后，一条既有事件合同转为 external；不减少台账控件。
++  // 合并作者端与玩家归零分支：2447 - 1 = 2446，按合并树实测。
++  // 合并 R5 相册/反馈分支：相册证据两个组件事件 +2，2446 → 2448，按合并树实测。
++  // 合并 R5 检定/输入计时分支：typeIn 截止与刷新两个组件事件 +2，2448 → 2450，按合并树实测。
++  // 2026-10-11 选项问答反馈图文与玩法设置内联：选择玩法改纵向列表、反馈图片增删看图，按最终树重建实测（tap 1941 → 1938）。
++  // 合并选项问答玩家端（反馈图片看大图 +1）：总数 4742 → 4743，按合并树重建实测。
++  // R5 输入挑战次数字段拆为旧版两列栅格与 R5 整行两个互斥变体，tries 输入事件 +1，2450 → 2451。
++  // 2026-10-10 R5 typeIn deadline 与 refresh 新增两条事件合同：2454 → 2456。
++  // 2026-10-11 章末配给（开关/物品/数量/不足扣值）与表决「没有方案执行时」两项输入：event 2453 → 2459，总数 4743 → 4749，按最终树重建实测。
++  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2484)  /* 2026-10-12 章节规则重排:撤章节数值消耗 2 格、额外节点站点/任务槽、超量任务槽 5 条事件合同,加「全部完成」「机动补做」开关 2 条 → -3。 */  /* 2026-10-11 多段题目加段下拉、主题交换/表决方式与额外节点等事件合同 +5，按最终树重建实测。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
++>>>>>>> /tmp/claude-501/tmpr934magz/t
+   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
+   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
+   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
+@@ -1147,6 +1208,7 @@ test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败
+   assert.equal(pending.requiredCapabilityByBranch['payment-cancelled'], 'requestPayment')
+ })
+ 
++<<<<<<< /tmp/claude-501/tmpr934magz/o
+ test('章节危险确认按实际互斥分支登记单次写入', () => {
+   const rows = readCurrentLedger().controls.filter(row => row.entry.js === 'pages/topic/merchantinfo/merchantinfo.js'
+     && row.control.handler === 'onDangerConfirm');
+@@ -1163,6 +1225,27 @@ test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击
+   const rebuilt = readCurrentLedger()
+   assert.equal(rebuilt.controls.filter((item) => (item.targets.writeApis || []).length > 1
+     && !(item.requiredRequests || item.requiredRequestsByBranch)).length, 0)
++=======
++test('实名纯校验只扫描实际成员，真实撤回仍保留写口且发布首页保持POST读', () => {
++  const file = path.resolve(__dirname, '../../pages/publish/fabu/index.js')
++  const pure = extractHandlerTargets('publisherIdentity.topicRequiresIdentity({}); publisherIdentity.identitySatisfied({});', file, 'confirmTemp', {}, new Map())
++  assert.deepEqual(pure.primaryApis, [])
++  const cancel = extractHandlerTargets('publisherIdentity.cancelIdentityChange(id, onDone);', file, 'cancelIdentityChange', {}, new Map())
++  assert.deepEqual(cancel.primaryApis, ['/api/publisher/identity/change/cancel'])
++  assert.equal(cancel.apiContracts[0].method, 'POST')
++  assert.ok(inferEffectClasses('cancelIdentityChange', 'publisherIdentity.cancelIdentityChange(id, onDone);', new Map(), cancel).includes('write'))
++  const unknown = extractHandlerTargets('publisherIdentity.unknownMember();', file, 'unknownMember', {}, new Map())
++  assert.ok(unknown.primaryApis.includes('/api/publisher/identity/change/cancel'), '未知成员不得因选择性扫描漏掉真实写风险')
++  const home = { primaryApis: ['/api/publish/home'], apiContracts: [{ url: '/api/publish/home', method: 'POST' }] }
++  assert.ok(inferEffectClasses('retryAccessCheck', "app.sendRequest({ url: '/api/publish/home', method: 'POST' });", new Map(), home).includes('read'))
++  assert.ok(!inferEffectClasses('retryAccessCheck', "app.sendRequest({ url: '/api/publish/home', method: 'POST' });", new Map(), home).includes('write'))
++})
++
++test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入', () => {
++  const rebuilt = buildLedger()
++  assert.deepEqual(rebuilt.controls.filter((item) => (item.targets.writeApis || []).length > 1
++    && !(item.requiredRequests || item.requiredRequestsByBranch)).map((item) => ({ handler: item.control.handler, file: item.entry.js, writes: item.targets.writeApis })), [])
++>>>>>>> /tmp/claude-501/tmpr934magz/t
+   const play = (handler) => rebuilt.controls.find((item) => item.entry.js === 'pages/play/index.js' && item.control.handler === handler)
+   const photo = play('photoGame')
+   assert.deepEqual(photo.requiredRequests.map((item) => item.urlTemplate), ['/api/play/photo'])
+@@ -1511,6 +1594,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定
+   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
+   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
+   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
++<<<<<<< /tmp/claude-501/tmpr934magz/o
+   // B93 draft variants +2; approved growth bindings 6 -> 3 (-3), hence 4437 + 2 - 3.
+   // 2026-10-10 既有 cy-option-sheet 两宿主 select/cancel 新增四项；原4436项保留。
+   assert.equal(ledger.controls.filter((item) => item.route === 'subpackageB/pages/im/chat/index'
+@@ -1531,6 +1615,40 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定
+   // 2026-10-17 合并漫游上线同批控件(含组件事件合同)按重建实测 4641 → 4706。
+   // 2026-10-19 移植共享基线同批控件按重建实测 4706 → 4746。
+   assert.equal(ledger.controlCount, 4746) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
++=======
++  // 2026-10-09 通用玩法 W4:+9(tap 2 同上;输入 7:onRuntimeName×3 内置数值改名、pickZeroHpPolicy（R5 已迁移）、pickZeroHpChallengeNode（R5 已迁移）、inputZeroHpField（R5 已迁移）×2)→ 4442。
++  // 2026-10-09 通用玩法 W3:+31(tap 15 同上;事件合同 16:updateToolField×6、updateCostRow×4、updateVotePlan×5、changeTargetScope)→ 4473。
++  // 2026-10-09 通用玩法 W3 资源槽:+3 事件合同(updateSlotLabel、费用行/投票方案改选资源槽)→ 4476。
++  // 2026-10-09 通用玩法 W4 值域:+25(tap 10 同上;事件合同 15:onValueField×4、onValueLink×6、onValueEnabled、行动上限开关/数值、关闭值域编辑、首章自定义开局值)→ 4501。
++  // 2026-10-09 通用玩法 W4 章节规则:+11(tap 8 同上;事件合同 3:onChapterQuantity、onChapterExtraNode、onChapterExtraSlot)→ 4512。
++  // 2026-10-09 通用玩法 W3 节点资源绑定:+1 事件合同(onNodeBindingPick)→ 4513。
++  // 2026-10-09 通用玩法玩家侧、模板副本、超量任务槽合并后按重建实测 4513 → 4525。
++  // 2026-10-09 通用玩法 W3 玩家交易:+9 → 4534。
++  // 2026-10-09 投票和工作人员收尾在 T06 主线 4554 基础上增加 20 个控件；生成 JSON 不提交。
++  // 2026-10-09 待审核任务新增打开原任务一个 tap 控件。
++  // 2026-10-09 合入 W1 导演台通用运营面板：+22 控件，4576 → 4598；生成 JSON 由协调者统一重建提交。
++  // 2026-10-09 合入 W4 恢复入口与参与队伍选择：+1 控件，4598 → 4599。
++  // 2026-10-09 合入 W2 U04 主题历史/结果卡组件及两入口：+28 控件，4599 → 4627。
++  // 2026-10-09 合入 W3 玩家站点操作（到场/本人签署/退出）：+13 控件，4627 → 4640。
++  // 支持信息重试新增 2 控件：4640 → 4642；本地生成 JSON 不提交。
++  // 2026-10-09 R2 作者端玩法规则界面（主题详情玩法规则卡、结构/生存编辑层、章节开幕行内开关、站点到达与引导）按重建实测：4642 → 4704。
++  // 2026-10-09 合入 W1 离线记录起点：+1 控件，4704 → 4705。
++  // 2026-10-09 R3 归属纠正（C1/C2/C3 合并 + 协调者界面）按重建实测：4705 → 4720。
++  // 2026-10-10 R4 接回章节「设为结局」开关与三个条件下拉，按重建实测：4720 → 4725。
++  // 2026-10-10 页头统一后玩法模板选择视图少一颗关闭：4725 → 4724。
++  // 2026-10-10 撤掉人数/时长两颗选择器及两条字典重试，4724 → 4720。
++  // 2026-10-10 cy-dropdown 两列卡片档：4720 → 4721。
++  // 2026-10-10 R5 UI 替换后的合计 4721 +14 tap -7 event = 4728；仅源码合同，实机证据仍为 0。
++  // R5-FE-FIX 分段原位操作迁入弹层并更换目标选择器，重建后总数仍为 4728。
++  // 2026-10-10 R5 玩家归零面板新增六个真实入口，按 audit:actions:update 重建实测。
++  // 合并作者端与玩家归零分支：4728 + 6 = 4734，按合并树重建实测。
++  // 合并 R5 相册/反馈分支：4734 + 4 = 4738，按合并树重建实测。
++  // 合并 R5 检定/输入计时分支：4738 + 2 = 4740，按合并树重建实测。
++  // R5 输入挑战次数字段拆为两个互斥变体：4740 + 1 = 4741，按最终树重建实测。
++  // 2026-10-10 R5 typeIn 截止时刻回读新增两条组件事件合同：4721 → 4723。
++  // QA 所选反馈图片复用 previewImage，新增 1 个 external 控件。
++  assert.equal(ledger.controlCount, 4817)  /* 2026-10-12 章节规则重排:点击 -5;事件合同撤章节数值消耗 2 格、额外节点站点/任务槽、超量任务槽输入共 5 条,加「全部完成」「机动补做」两个开关 → 共 -8。 */  /* 2026-10-12 主题编辑页「保存草稿」create/update 两个 variant +2。 */  /* 2026-10-11 线索卡图片可点预览 +1。 */  /* 2026-10-07 缺封面补齐后增加一个真实更换封面控件，按最终源码重建。 */
++>>>>>>> /tmp/claude-501/tmpr934magz/t
+   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
+   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
+   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

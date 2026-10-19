@@ -11,7 +11,9 @@
  * 下次发布前先补做;补不成就不发布新快照 —— 否则补做的 revoke 会把刚发出去的新链接一起删掉,
  * 而旧的、按旧设置裁剪的链接反倒一直能看。
  */
-const { clipSavedTrackForSharing, readSharePrivacy, VISIBILITY } = require('./roam-route-privacy.js')
+const {
+  clipSavedTrackForSharing, maskPoisForSharing, redactionDeclaration, readSharePrivacy, VISIBILITY,
+} = require('./roam-route-privacy.js')
 const { limitTrack } = require('./roam-track-simplify.js')
 
 const REVOKE_PENDING_PREFIX = 'roam_share_revoke_pending:'
@@ -38,7 +40,7 @@ function numberOrNull(value) {
 function buildSharePayload(session, privacy) {
   const clipped = limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy))
   const track = clipped.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }))
-  const pois = ((session && session.pois) || [])
+  const pois = maskPoisForSharing((session && session.pois) || [], privacy)
     .filter((poi) => poi && typeof poi === 'object')
     .slice(0, 50)
     .map((poi) => {
@@ -60,6 +62,7 @@ function buildSharePayload(session, privacy) {
     shopMedalName: String((session && session.shopMedalName) || ''),
     track,
     pois,
+    redaction: redactionDeclaration(privacy),
   }
 }
 
@@ -89,8 +92,24 @@ function revokeShareSnapshots(app, storage) {
   })
 }
 
-/** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
-function publishShareSnapshot(app, storage, session) {
+/**
+ * F0384:逐条撤回本人这一枚令牌。Promise<{ ok, reason }>:reason = '' | 'not-owned' | 'failed'。
+ * not-owned = 服务端明确拒绝(他人令牌/已撤回);failed = 网络未知,可重试。
+ * 只让云端链接失效;已存相册/已发出的图片无法召回。
+ */
+function revokeShareSnapshot(app, token) {
+  if (!TOKEN_RE.test(String(token || ''))) return Promise.resolve({ ok: false, reason: 'not-owned' })
+  return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: { token } }).then((res) => {
+    if (isOk(res)) return { ok: true, reason: '' }
+    return { ok: false, reason: res && res.unknown ? 'failed' : 'not-owned' }
+  })
+}
+
+/**
+ * Promise<{ token, version, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed' | 'conflict'。
+ * options.expectedVersion:同页再次发布时带上一版版本号,服务端版本不一致返回 conflict,不覆盖。
+ */
+function publishShareSnapshot(app, storage, session, options) {
   const privacy = readSharePrivacy(storage)
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
   const { exactSessionId } = require('./roam-recovery.js')
@@ -101,13 +120,24 @@ function publishShareSnapshot(app, storage, session) {
   const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
   return ready.then((revoked) => {
     if (!revoked) return { token: '', reason: 'revoke-pending' }
+<<<<<<< public
     return send(app, {
       url: '/api/roam/share/snapshot',
       method: 'POST',
       data: { clientTs, sessionId, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
     }).then((res) => {
+=======
+    const expectedVersion = Number(options && options.expectedVersion)
+    const data = { clientTs, snapshot: JSON.stringify(buildSharePayload(session, privacy)) }
+    if (Number.isSafeInteger(expectedVersion) && expectedVersion > 0) data.expectedVersion = expectedVersion
+    return send(app, { url: '/api/roam/share/snapshot', method: 'POST', data }).then((res) => {
+      if (!isOk(res) && res && res.data && res.data.conflict === true) {
+        return { token: '', version: Number(res.data.version) || 0, reason: 'conflict' }
+      }
+>>>>>>> private-feature/w2-r
       const token = isOk(res) && res.data && res.data.token
-      return TOKEN_RE.test(token || '') ? { token, reason: '' } : { token: '', reason: 'failed' }
+      const version = isOk(res) && res.data ? Number(res.data.version) || 0 : 0
+      return TOKEN_RE.test(token || '') ? { token, version, reason: '' } : { token: '', version: 0, reason: 'failed' }
     })
   })
 }
@@ -132,6 +162,7 @@ module.exports = {
   revokePendingKey,
   buildSharePayload,
   publishShareSnapshot,
+  revokeShareSnapshot,
   revokeShareSnapshots,
   readShareSnapshot,
 }

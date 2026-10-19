@@ -101,7 +101,7 @@
         </view>
         <text class="rv-action-label">财务</text>
       </view>
-      <view class="rv-action" wx:if="{{merchantAccess.canReadVerifyRecords || merchantAccess.canReadOrders || merchantAccess.canReadFinance || merchantAccess.canManageCoupons || merchantAccess.canWriteProfile}}" bindtap="openMoreMenu" aria-role="button" aria-label="更多" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="rv-action" wx:if="{{merchantAccess.canVerify || merchantAccess.canReadVerifyRecords || merchantAccess.canReadOrders || merchantAccess.canReadFinance || merchantAccess.canManageCoupons || merchantAccess.canWriteProfile}}" bindtap="openMoreMenu" aria-role="button" aria-label="更多" hover-class="cy-pressed" hover-stay-time="80">
         <view class="rv-action-circle">
           <cy-icon name="more" size="44" />
         </view>
@@ -254,6 +254,12 @@
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoop}}" bindtap="onMoreItem" data-action="messages" aria-role="button" aria-label="打开协作邀请" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/images/nav_msg.svg" mode="aspectFit" />
           <text class="rv-more-label">协作邀请</text>
+        </view>
+        <!-- X034:团码接待回读与撤销,与扫码同权限(merchant:verify)。 -->
+        <view class="rv-more-item" wx:if="{{merchantAccess.canVerify}}" bindtap="onMoreItem" data-action="group-reception" aria-role="button" aria-label="打开已接待团" hover-class="cy-pressed" hover-stay-time="80">
+          <image class="rv-more-ico" src="/pages/merchant/images/icon_calendar.svg" mode="aspectFit" />
+          <text class="rv-more-label">已接待团</text>
+          <cy-icon class="rv-more-chev" name="arrow-right" size="28" />
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadAftercare}}" bindtap="onMoreItem" data-action="aftercare" aria-role="button" aria-label="打开退款售后" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />

@@ -648,7 +648,12 @@ Page({
 
   onHome() { wx.switchTab({ url: '/pages/index/index' }); },
 
-  onExit() { this.exitPage(); }
+  onExit() { this.exitPage(); },
+
+  // X036:已登记的人从这里进改绑申请页(人工审核),本页不承接改绑字段。
+  goIdentityChange() {
+    wx.navigateTo({ url: '/subpackageMember/identity-change/index' });
+  },
 });
 
 function currentIdentityKey() {

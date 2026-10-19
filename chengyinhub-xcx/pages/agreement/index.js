@@ -31,6 +31,8 @@ Page({
   // 两个兜底目标自身都还有下一层出口(设置页有 member tab 兜底;注销页是设置的子页)。
   onBack() {
     const url = ORIGIN_BY_TYPE[this.data.docType] || ORIGIN_BY_TYPE[DEFAULT_TYPE];
-    wx.navigateBack({ fail() { wx.redirectTo({ url }); } });
+    wx.navigateBack({ fail() { navigateRegistered({ url }, 'redirectTo'); } });
   },
 });
+
+const { navigateRegistered } = require('../../utils/registered-navigation.js');

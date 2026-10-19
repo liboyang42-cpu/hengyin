@@ -415,7 +415,7 @@ Page({
   openMerchantHome(url) {
     if (this._navigating) return;
     this._navigating = true;
-    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+    navigateRegistered({ url: url, complete: () => { this._navigating = false; } });
   },
 
   chooseChapterReplacement(merchant, homeUrl, offset) {
@@ -526,3 +526,5 @@ Page({
     this.setData({ actionPendingKey: '', actionReceipt: receipt || '', actionError: failure || '' });
   },
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

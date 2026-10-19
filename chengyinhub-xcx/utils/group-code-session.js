@@ -41,4 +41,14 @@ function listGroupCodeActivities(activities) {
   }).filter(Boolean);
 }
 
-module.exports = { buildGroupCodeIssuePayload, listGroupCodeActivities };
+// 领队端「码刷新倒计时」文案(X034):码 5 分钟有效、到点自动重出,
+// 现场要让商家看到「这张码还能扫多久」,避免扫到刚过期的码。非正数/非法值不出文案。
+function formatGroupCodeCountdown(seconds) {
+  const total = Math.floor(Number(seconds));
+  if (!Number.isFinite(total) || total <= 0) return '';
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  return minutes + ':' + String(rest).padStart(2, '0') + ' 后自动刷新';
+}
+
+module.exports = { buildGroupCodeIssuePayload, listGroupCodeActivities, formatGroupCodeCountdown };

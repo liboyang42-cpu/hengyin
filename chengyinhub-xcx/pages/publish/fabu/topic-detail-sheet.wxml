@@ -5,7 +5,7 @@
      .node-card / .node-pill,不再造第二套。
      ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
      不传 title 时那段整段不渲染,头完全在这里画。 -->
-<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail">
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
   <view class="pd-topic-detail node-sheet">
     <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
          原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。
@@ -87,7 +87,13 @@
     </view>
 
     <view id="fieldRuntimeState" class="node-card">
+<<<<<<< public
       <cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+=======
+      <text class="node-card__title">玩法支持情况</text>
+      <text class="node-card__value">{{supportMatrix ? '按当前玩法配置检查支持情况。' : '支持情况暂未确认。'}} 用户反馈处理暂未开放，此处不展示反馈工单。</text>
+      <cy-inline-error wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+>>>>>>> private-feature/w2-r
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">值域</text><text class="node-card__value">开局值在第一章「初始状态」配置</text></view></view>
       <view class="node-card__hr"></view>
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">{{runtimeHpLabel}}</text><text class="node-card__value">{{runtimeHpEnabled ? '已启用 · 玩家可见 · 0 至 ' + runtimeHpMax : '未启用'}}</text></view><cy-switch checked="{{runtimeHpEnabled}}" data-stat="hp" bindchange="onRuntimeStatToggle" /><view class="node-pill" data-stat="hp" bindtap="editRuntimeStat" aria-role="button" aria-label="编辑{{runtimeHpLabel}}" hover-class="cy-pressed">编辑<cy-icon name="chevron-right" size="24" /></view></view>

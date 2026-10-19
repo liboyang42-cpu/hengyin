@@ -26,7 +26,7 @@ test('发布成功后直接落项目主页,不是玩家买票页', () => {
   const js = read('pages/publish/fabu/index.js');
   assert.match(js, PROJECT_HOME, '发布成功后必须能落到项目主页');
   assert.match(js, /_resultSheetNext = projectUrl/, '落点就是它,不能换成别的页');
-  assert.match(js, /if \(next\) wx\.redirectTo/, '面板收掉必须真的跳过去,不能只是关掉面板');
+  assert.match(js, /if \(next\) navigateRegistered\(\{ url: next \}, 'redirectTo'\)/, '面板收掉必须真的跳过去,不能只是关掉面板');
 });
 
 test('「我的项目」列表点主题卡进项目主页', () => {

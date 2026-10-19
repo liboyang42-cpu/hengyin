@@ -50,6 +50,8 @@
       <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="privacy-action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>
       <text class="privacy-setting-title">漫游定位</text>
       <text class="privacy-setting-body">撤回后，漫游不会继续读取实时位置或记录新的轨迹。</text>
+      <text class="privacy-setting-body" wx:if="{{roamLocationStatus}}">当前状态：{{roamLocationStatus}}</text>
+      <text class="privacy-setting-body">锁屏后台采集是否生效受系统与微信权限限制。</text>
       <!-- ghost(玻璃底)在这张卡上几乎与卡面同色,看着像禁用态;撤回是可点的真动作 ⇒ 收到 secondary(描边) -->
       <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="privacy-action" bindtap="withdrawRoamLocationConsent">撤回漫游定位同意</cy-btn>
     </block>

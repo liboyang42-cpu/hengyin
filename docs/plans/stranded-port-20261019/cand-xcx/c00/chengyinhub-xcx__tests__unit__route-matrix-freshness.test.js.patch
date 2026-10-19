@@ -1,0 +1,22 @@
+diff --git a/chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js b/chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js
+index 2bbff5ac7b..d2d3475aeb 100644
+--- a/chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js
++++ b/chengyinhub-xcx/tests/unit/route-matrix-freshness.test.js
+@@ -30,10 +30,17 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一
+   /* 2026-09-22 +1:Phase 0 物品卡实验室页 subpackageP3/pages/object-card-lab(立体藏品卡闸口页)。 */
+   /* 2026-09-22 +1:Phase 3 藏品册页 subpackageP3/pages/object-cards/index(玩家侧卡片墙,个人页入口)。 */
+   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131(按脚本重建实测)。 */
++<<<<<<< /tmp/claude-501/tmpb0qaaogc/o
+   /* 2026-10-14 +6:漫游上线(我的队伍、subpackageTools 5 个工具页)⇒ 130+6 = 136(按脚本重建实测)。 */
+   /* 2026-10-19 +2:移植共享基线 366b846f 官方线路列表/详情两页 ⇒ 136+2 = 138(按脚本重建实测)。 */
+   assert.equal(current.routes.length, 138)
+   assert.equal(matrix.counts.routes, 138)
++=======
++  /* 2026-10-12 +1:X034 商家「已接待团」pages/merchant/group-reception ⇒ 130+1 = 131。
++     2026-10-12 +1:X036 发布者实名改绑 subpackageMember/identity-change ⇒ 131+1 = 132(按脚本重建实测)。 */
++  assert.equal(current.routes.length, 132)
++  assert.equal(matrix.counts.routes, 132)
++>>>>>>> /tmp/claude-501/tmpb0qaaogc/t
+   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
+   assert.equal(inventoryMatchesCurrent(matrix), true)
+   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

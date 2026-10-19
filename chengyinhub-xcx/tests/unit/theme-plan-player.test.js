@@ -181,3 +181,14 @@ test('读取本队已签接受清单，轮询保留未提交选择，换场/换�
   host.data.themePlanAcceptKeys=[]; host._themePlanAcceptanceDirty=true;
   host._applyThemeView({...view,sessionId:8,world:{...world,round:3}}); assert.deepEqual(host.data.themePlanAcceptKeys,['p1']);
 });
+test('X009 锁定物资占用与改案释放提示只按服务端回读显示', () => {
+  const world = { votePolicy: 'MAJORITY', votePhase: 'SELECTED', plans: [], itemCatalog: [{ id: 'tool', name: '工具包' }],
+    ownMaterials: [{ itemId: 'tool', available: 1, locked: 1 }, { itemId: 'fuel', available: 2, locked: 0 }] };
+  const locked = plans.present({ teamId: 1, availableActions: ['PLAN_CHANGE'], world }, []);
+  assert.equal(locked.planLockedText, '本队已锁定：工具包 ×1（仍占背包负重，表决或托管期间不能交易、使用或丢弃）');
+  assert.equal(locked.planChangeText, '改案会释放各队已锁定物资，旧票与旧确认作废，须重新表决并重新确认出资');
+  const released = plans.present({ teamId: 1, availableActions: [], world: { ...world, votePhase: 'FUNDING', ownMaterials: [{ itemId: 'tool', available: 2, locked: 0 }] } }, []);
+  assert.equal(released.planLockedText, ''); assert.equal(released.planChangeText, '', '无改案权限时不显示改案说明');
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/play/theme-plan-list.wxml'), 'utf8');
+  assert.match(wxml, /themeBag\.planLockedText/); assert.match(wxml, /themeBag\.planChangeText/);
+});

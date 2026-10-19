@@ -345,10 +345,10 @@ Page({
           const path = pathForScanEntry(res && res.data);
           if ((res.code == 200 || res.code == '200') && path) {
             that._doorSceneInFlight = false;
-            wx.redirectTo({
+            navigateRegistered({
               url: path,
-              fail() { wx.reLaunch({ url: path }); },
-            });
+              fail() { navigateRegistered({ url: path }, 'reLaunch'); },
+            }, 'redirectTo');
             return;
           }
           cyToast((res && res.msg) || '这张码暂时打不开');
@@ -749,7 +749,7 @@ Page({
     this.setData({ heroBannerList: buildHomeActionBanners() });
   },
 
-  // Figma 3579:11316 — 为你专属推荐主题 Hero
+  // is_recommend 返回编辑精选，不代表个人兴趣或当前参加资格。
   _buildRecoHero() {
     const items = (this.data.recommendedTopicList || []).slice(0, 5);
     if (!items.length) {
@@ -762,7 +762,6 @@ Page({
       const metaParts = [];
       if (enroll) metaParts.push('🔥 ' + enroll + ' 人已报名');
       if (item.formattedDateTime) metaParts.push(item.formattedDateTime);
-      const started = item.startDate && fmtRemain(item.startDate).started;
       return {
         id: item.id,
         name: item.name,
@@ -770,7 +769,7 @@ Page({
         tags: tags,
         clubLabel: item.clubName || item.merchantName || tags[0] || '',
         clubAvatar: item.clubAvatar || item.merchantAvatar || item.cover,
-        statusLabel: started ? '进行中' : '',
+        statusLabel: '',
         betaFlag: item.betaFlag == 1 ? 1 : 0,
         metaLine: metaParts.join(' · ') || item.addressName || '',
       };
@@ -781,6 +780,18 @@ Page({
       recoCards: cards,
       recoCurrent: current,
       recoCardStyles: buildRecoCardStyles(cards.length, current, -1, 0),
+    });
+  },
+
+  showRecommendationSource() {
+    modal.show({
+      title: '为什么看到这些主题',
+      content: '这里展示编辑精选，不是根据个人兴趣生成的推荐。参加条件请查看主题详情；目前无法查询或修改推荐偏好。',
+      confirmText: '查看偏好',
+      cancelText: '知道了',
+      success: (result) => {
+        if (result.confirm) wx.navigateTo({ url: '/pages/mylike/mylike' });
+      }
     });
   },
 
@@ -1068,7 +1079,7 @@ Page({
 
   goContinueExplore: function () {
     const card = this.data.continueExplore;
-    if (card && card.focusPath) wx.navigateTo({ url: card.focusPath });
+    if (card && card.focusPath) navigateRegistered({ url: card.focusPath });
   },
 
   getListData: function (listName, url, params, dataProcessor = null) {
@@ -1627,3 +1638,5 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     });
   },
 })
+
+const { navigateRegistered } = require('../../utils/registered-navigation.js');

@@ -80,6 +80,9 @@ Page({
           });
         }
       },
+      successStatusAbnormal() {
+        that.setData({ error: true, errorMsg: '玩法说明暂时无法加载，请重试', loading: false });
+      },
       fail: function(res) {
         that.setData({
           error: true,

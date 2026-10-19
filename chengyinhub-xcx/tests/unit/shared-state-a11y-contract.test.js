@@ -10,6 +10,7 @@ const read = relativePath => fs.readFileSync(path.join(ROOT, relativePath), 'utf
 function loadComponentFromSource(source, filename) {
   let definition
   vm.runInNewContext(source, {
+    require(name) { assert.match(name, /behaviors\/reduced-motion\.js$/); return {} },
     Component(value) { definition = value },
   }, { filename })
   assert.ok(definition, `${filename} 必须注册 Component`)

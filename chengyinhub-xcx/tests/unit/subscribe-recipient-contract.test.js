@@ -37,7 +37,7 @@ const SUBSCRIPTION_RECIPIENT_CONTRACTS = [
     recipientRole: 'merchant',
     entryFile: 'pages/merchant/ledger/index.js',
     entryWxml: 'pages/merchant/ledger/index.wxml',
-    wxmlScopeMarker: '结算到账提醒',
+    wxmlScopeMarker: '结算通知授权',
     gestureHandler: 'enableCoopSettleAlerts',
     controlTag: 'cy-switch',
     backendConfigKey: 'tplCoopSettle',

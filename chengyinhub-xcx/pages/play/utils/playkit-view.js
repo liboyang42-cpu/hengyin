@@ -15,6 +15,17 @@
 const { stepsA11yLabel } = require('./playkit-steps.js');
 const { toCard } = require('../../../utils/object-card.js');
 const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
+const sensorContract = require('./sensor-contract.js');
+
+/** C1 传感器段的共同三件:证据说明(奖励上限由服务端 rewardCeiling 决定)、前后台规则、
+ *  服务端挑战身份(提交时页面带回去,旧 attempt 服务端拒收)。三个键恒产出。 */
+function sensorFields(name, seg) {
+  return {
+    evidenceNote: sensorContract.evidenceNote(name, seg),
+    bgRule: sensorContract.backgroundNote(name),
+    attemptId: Number(seg && seg.attemptId) > 0 ? Number(seg.attemptId) : 0,
+  };
+}
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -274,6 +285,10 @@ function buildPhotoCheck(seg, receipt, placeName) {
     degraded: !!seg.degraded,
     lastReason: seg.lastReason || '',
     lastUrl: seg.lastUrl || '',
+    /* F0308:只有视觉模型真判 PASS 才算「照片验收通过」。旧服务端没这个键时按
+       「过了且没兜底、没降级」推断 —— 兜底放行与降级永远不算。 */
+    photoVerified: seg.photoVerified != null ? !!seg.photoVerified
+      : (!!seg.passed && !seg.flagged && !seg.degraded),
     /* 取景轮廓(S1):这两个键**恒产出** —— 分发器绑了 kit.frameUrl，playkit-view-contract
        那条「绑了必须有人产出」的门禁不容忍条件产出；没配时给空串，组件据此走原来的 chooseMedia。
        ⚠️ 「商家没配 = 玩家行为逐字相同」钉在组件的取景分支入口上，不是钉在键的存在与否上。 */
@@ -522,6 +537,8 @@ function pickPlayKit(view, now) {
         markerUrl: seg.markerUrl || '',
         modelUrl: seg.modelUrl || '',
         scanned: !!seg.scanned,
+        // F0309:静态节点码只证明「任务码匹配」,不是现场资格凭证(服务端缺省也按这一档)
+        evidence: seg.evidence || 'TASK_CODE_MATCH',
       });
     }
     if (name === 'pricePair') {
@@ -712,6 +729,7 @@ function pickPlayKit(view, now) {
       mode: seg.mode || 'd6', dc: seg.dc, modifier: seg.modifier, rollMode: seg.rollMode, preview: false,
       result: seg.mode === 'd20' && seg.rolled ? {
         values: seg.pips || [], kept: seg.kept, total: seg.total, success: seg.success, text: seg.action || '',
+        modifierSource: seg.modifierSource === 'STATIC' ? 'STATIC' : '',
       } : null,
       kicker: seg.kicker || '',
       faces: seg.faces || [],
@@ -724,7 +742,7 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       rounds: seg.rounds || 0,
       goalMs: seg.goalMs || 0,
-    });
+    }, sensorFields(name, seg));
   }
   if (name === 'ballShake') {
     return Object.assign(base, {
@@ -734,14 +752,16 @@ function pickPlayKit(view, now) {
       goal: seg.goal || 0,
       timed: !!seg.timed,
       seconds: seg.seconds || 0,
-    });
+      calibrationNote: sensorContract.calibrationNote(name),
+    }, sensorFields(name, seg));
   }
   if (name === 'quietHold') {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       sub: seg.sub || '',
       seconds: seg.seconds || 0,
-    });
+      calibrationNote: sensorContract.calibrationNote(name),
+    }, sensorFields(name, seg));
   }
   /* 罗盘指向:bearing/tolerance/holdSeconds 全是题面(服务端开局就下发),
      对准与保持由组件现场判,提交只报「对准时的方位角」给服务端复核容差。 */
@@ -753,14 +773,16 @@ function pickPlayKit(view, now) {
       holdSeconds: seg.holdSeconds || 3,
       hint: seg.hint || '',
       done: !!seg.done,
-    });
+      calibrationNote: sensorContract.calibrationNote(name),
+    }, sensorFields(name, seg));
   }
   /* 喊一嗓子:下发要喊满的秒数与标题。阈值不下发,由组件开局现场校准(与 quietHold 同一把尺)。 */
   if (name === 'shout') {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       seconds: seg.seconds || 0,
-    });
+      calibrationNote: sensorContract.calibrationNote(name),
+    }, sensorFields(name, seg));
   }
   if (name === 'countdown') {
     return Object.assign(base, {
@@ -775,7 +797,7 @@ function pickPlayKit(view, now) {
       targetSeconds: seg.targetSeconds || 0,
       toleranceMs: seg.toleranceMs || 0,
       tries: seg.tries || 0,
-    });
+    }, sensorFields(name, seg));
   }
   /* 推理类三玩法:答案字段(answerOrder/pairs/answer)服务端不投影,这里也没有。
      排序的 items 与连线的 right 到这一步已被服务端打乱 —— 原样搬运,不重排。 */

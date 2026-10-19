@@ -4,10 +4,10 @@ const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const { ROUTE_COLORS, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { currentPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
-const { clipSavedTrackForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
+const { clipSavedTrackForSharing, maskPoisForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
-const { publishShareSnapshot, readShareSnapshot } = require('../../utils/roam-share-snapshot.js');
+const { publishShareSnapshot, readShareSnapshot, revokeShareSnapshot } = require('../../utils/roam-share-snapshot.js');
 const app = typeof getApp === 'function' ? getApp() : { globalData: {} };
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
 // 路线图画布(ss-map:750-80=670rpx 宽,520rpx 高)
@@ -47,6 +47,7 @@ Page({
     share: { show: false, drawing: false, imagePath: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
     // 第二轮拍板 17:朋友分享进来(带 shareToken)时只读快照 —— sharedState: '' 非分享 | loading | ready | gone | error
     sharedState: '',
+    sharedVersion: 0,
     snapshot: null,
   },
 
@@ -91,6 +92,8 @@ Page({
       this.setData({
         sharedState: 'ready',
         snapshot: result.session,
+        // M0117:分享内容是分享者本机自报的回忆,不是官方完成凭证;版本号随快照下发。
+        sharedVersion: Number(result.session.version) || 0,
         s: {
           pois: [],
           routeName: result.session.routeName || '城市漫游足迹',
@@ -236,13 +239,14 @@ Page({
   //    cy-scene-roam-session 自己算的,不走这里。所以位置隐私裁剪放在这一层:
   //    进这里的就是要给别人看的轨迹,首尾各裁掉设置里的比例。
   _route(s) {
-    const track = limitTrack(clipSavedTrackForSharing(s.track || [], readSharePrivacy(wx)));
+    const privacy = readSharePrivacy(wx);
+    const track = limitTrack(clipSavedTrackForSharing(s.track || [], privacy));
     if (track.length < 2) return { segs: [], poiDots: [] };
     const lat0 = track[0].lat;
     const kx = Math.cos(lat0 * Math.PI / 180);
     const M = p => ({ x: p.lng * kx, y: -p.lat });
     const tp = track.map(M);
-    const pp = (s.pois || []).filter(p => p.lat).map(M);
+    const pp = maskPoisForSharing(s.pois || [], privacy).filter(p => p.lat).map(M);
     const all = tp.concat(pp);
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     all.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
@@ -284,7 +288,7 @@ Page({
     this.setData({
       segs: route.segs,
       poiDots: route.poiDots,
-      share: { show: true, drawing: true, imagePath: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
+      share: { show: true, drawing: true, imagePath: '', error: '', retrySave: false, saving: false, token: '', version: 0, linkReason: '', revoking: false },
     });
     // 每次打开都重新发布:快照按**当前**裁剪设置重算(服务端按足迹 ts 更新同一令牌)。
     this._sharePublish = null;
@@ -298,10 +302,13 @@ Page({
     if (this._sharePublish) return this._sharePublish;
     const owner = this._sessionOwner;
     const ts = this.data.s.ts;
-    const pending = publishShareSnapshot(getApp(), wx, this.data.s).then(({ token, reason }) => {
+    // M0117:同一页面里再次发布同一条足迹时带上一版版本号;别处已改过 ⇒ conflict,不覆盖。
+    const expectedVersion = this._shareVersionTs === ts ? this._shareVersion : 0;
+    const pending = publishShareSnapshot(getApp(), wx, this.data.s, { expectedVersion }).then(({ token, version, reason }) => {
       if (this._shareDestroyed || owner !== String(getApp().getUserID() || '') || !this.data.s || this.data.s.ts !== ts) return '';
       if (!token && this._sharePublish === pending) this._sharePublish = null;
-      this.setData({ 'share.token': token, 'share.linkReason': reason });
+      if (token) { this._shareVersionTs = ts; this._shareVersion = version || 0; }
+      this.setData({ 'share.token': token, 'share.version': version || 0, 'share.linkReason': reason });
       return token;
     });
     this._sharePublish = pending;
@@ -310,7 +317,34 @@ Page({
 
   retryShareLink() {
     this._sharePublish = null;
+    // 冲突后的重试 = 用户明确要以本机当前设置重新发布,不再带旧版本条件。
+    if (this.data.share && this.data.share.linkReason === 'conflict') this._shareVersionTs = null;
     return this._ensureShareToken();
+  },
+
+  /**
+   * F0384:只撤回这一条足迹链接(本人令牌);其他分享链接不受影响。
+   * 已存相册/已发出的图片不在服务端,无法召回 —— 文案里如实说。
+   */
+  revokeShareLink() {
+    const share = this.data.share || {};
+    const token = share.token;
+    if (!token || share.revoking) return Promise.resolve(false);
+    const owner = this._sessionOwner;
+    this.setData({ 'share.revoking': true });
+    return revokeShareSnapshot(getApp(), token).then(({ ok, reason }) => {
+      if (this._shareDestroyed || owner !== String(getApp().getUserID() || '')) return false;
+      if (!ok) {
+        this.setData({ 'share.revoking': false });
+        toast(reason === 'failed' ? '撤回没成功，请检查网络后重试' : '这条链接已失效或不属于你');
+        return false;
+      }
+      this._sharePublish = null;
+      this._shareVersionTs = null;
+      this.setData({ 'share.revoking': false, 'share.token': '', 'share.version': 0, 'share.linkReason': 'revoked' });
+      toast('这条足迹链接已撤回');
+      return true;
+    });
   },
 
   closeShare() {

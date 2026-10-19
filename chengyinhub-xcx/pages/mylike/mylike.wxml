@@ -8,6 +8,8 @@
   <!-- 返回-标题间距是本批 A46 基准：fixed nav 后只留同高占位，不额外加空档。 -->
   <view class="title-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title class="c1-page-title" title="我的收藏" safe-top="{{false}}" />
+  <view class="favorite-preference-note">取消收藏只改变收藏关系，不代表已撤回推荐兴趣；订单和游玩记录不受影响。</view>
+  <view class="favorite-preference-note"><cy-btn variant="ghost" bindtap="openPreference">查看推荐偏好</cy-btn></view>
   <cy-tabs class="favorite-tabs" variant="fill" wide="{{true}}" tabs="{{favoriteTabs}}" active="{{activeFavoriteTab}}" bind:change="onFavoriteTabChange" />
 
   <view class="tablist favorite-list">
@@ -63,4 +65,13 @@
     </block>
   </view>
 </view>
+  <cy-sheet show="{{preferenceVisible}}" title="推荐偏好" bind:close="closePreference">
+    <view class="favorite-preference-note">
+      <view>当前状态：暂时无法查询兴趣排除记录或确认生效状态。</view>
+      <view>收藏、订单和游玩记录是各自独立的记录，取消收藏不等于排除推荐影响。</view>
+      <view>排除和恢复暂未开放，本页不会修改任何记录。</view>
+      <cy-btn variant="ghost" disabled="{{true}}">排除兴趣影响（暂不可用）</cy-btn>
+      <cy-btn variant="ghost" disabled="{{true}}">恢复兴趣影响（暂不可用）</cy-btn>
+    </view>
+  </cy-sheet>
 </view>

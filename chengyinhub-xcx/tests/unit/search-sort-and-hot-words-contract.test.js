@@ -83,7 +83,7 @@ test('CU-M-66 排序选择必须进结果页 URL,「最热」从 UI 撤掉', () 
 
   const wxml = strip(read('pages/search2/index.wxml'))
   assert.doesNotMatch(wxml, /最热/, '四类后端都没有热度排序,这个选项不能留在 UI 上')
-  assert.match(wxml, /最近/)
+  assert.match(wxml, /最近发布/)
 })
 
 test('CU-M-66 结果页收下 sortType 但不把它映射成 sort_type(「最近」即默认序)', () => {

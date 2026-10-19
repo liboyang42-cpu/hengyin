@@ -28,6 +28,7 @@ Page({
     aiIdea: '',
     aiGenerating: false,
     aiError: '',
+    aiUnknown: false,
     aiPlan: null,
     aiPlanNodes: [],
     canEnterAiEditor: false,
@@ -93,13 +94,13 @@ Page({
       }
     });
   },
-  onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
-  useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  onAiIdeaInput(e) { if (this.data.aiUnknown) return; this.setData({ aiIdea: e.detail.value, aiError: '' }); },
+  useAiPrompt(e) { if (this.data.aiUnknown) return; this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
   generateAiPlan() {
     if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
     const idea = (this.data.aiIdea || '').trim();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
-    if (this.data.aiGenerating) return;
+    if (this.data.aiGenerating || this.data.aiUnknown) return;
     // 配额已用完就不要再发一趟注定被后端拒掉的请求 —— 页面顶部明明写着「还可生成 0 次」,
     // 输入框和发送钮却照常可用(2026-08-19 B51 实拍)。后端那道闸保留,这里只是不让用户白跑。
     if (this.data.aiQuotaLoaded && Number(this.data.aiRemaining) <= 0) {
@@ -138,9 +139,14 @@ Page({
           aiRemaining: res.data.remainingQuota != null ? Number(res.data.remainingQuota) : this.data.aiRemaining
         }, () => this.refreshEnterEditorState());
       },
-      fail: () => this.setData({ aiError: '网络暂时不可用，请稍后重试。' }),
+      fail: () => this.markAiUnknown(),
+      successStatusAbnormal: () => this.markAiUnknown(),
       complete: () => this.setData({ aiGenerating: false })
     });
+  },
+  markAiUnknown() {
+    this.setData({ aiUnknown: true, aiError: '生成结果待确认，暂不能再次生成；已有草稿仍可编辑。次数查询不能确认草稿是否生成。' });
+    this.loadAiQuota();
   },
   refreshEnterEditorState() {
     const plan = this.data.aiPlan || {};

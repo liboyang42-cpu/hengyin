@@ -270,7 +270,7 @@ Page({
 
   returnToMessageList() {
     const path = this._closedReturnPath || '/subpackageB/pages/im/list/index';
-    wx.redirectTo({ url: path });
+    navigateRegistered({ url: path }, 'redirectTo');
   },
 
   loadMore() {
@@ -820,13 +820,18 @@ Page({
     const id = e.currentTarget.dataset.topicid;
     if (!id) return;
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
-    if (this.data.topicCache[id] === null) { app.tips && app.tips('该路线已下架'); return; }
+    if (this.data.topicCache[id] === null) { app.tips && app.tips('该路线已下架或暂不公开'); return; }
     wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
   },
 
   onCardTap(e) {
     const ds = e.currentTarget.dataset;
     const message = this.data.msgs.find(item => String(item.id) === String(ds.msg));
+    if (ds.current && message && Number(message.senderId) === 0 && message.card
+        && typeof message.card.action === 'string' && message.card.action.startsWith('/')) {
+      navigateRegistered({ url: message.card.action });
+      return;
+    }
     if (message && Number(message.senderId) === 0 && Number(message.msgType) === 3
         && message.card && message.card.result) {
       const result = message.card.result;
@@ -841,7 +846,7 @@ Page({
         hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}
       });
     }
-    if (ds.url) wx.navigateTo({ url: ds.url });
+    if (ds.url) navigateRegistered({ url: ds.url });
   },
 
   closeReviewResult() {
@@ -852,7 +857,7 @@ Page({
   onCardBtn(e) {
     const ds = e.currentTarget.dataset;
     if (ds.action && String(ds.action).indexOf('/') === 0) {
-      wx.navigateTo({ url: ds.action });
+      navigateRegistered({ url: ds.action });
     } else {
       app.tips && app.tips('已处理');
     }
@@ -1000,3 +1005,5 @@ function fmtAbs(t) {
   if (key === chinaDateKey(nowTs - 86400000)) return '昨天 ' + hm;
   return parts.month + '月' + parts.day + '日 ' + hm;
 }
+
+const { navigateRegistered } = require('../../../../utils/registered-navigation.js');

@@ -101,3 +101,6 @@
 }
 .bl__b--press { opacity: .88; }
 .bl__b--busy { opacity: .55; }
+
+/* C1:传感器不可用 / 中断那句要读得清,不压到五成 */
+.bl__notice { opacity: .9; }

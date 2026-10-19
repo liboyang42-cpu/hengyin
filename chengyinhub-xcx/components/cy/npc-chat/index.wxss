@@ -17,7 +17,7 @@
 .npc-chat__placeholder { color: var(--cy-color-text-disabled); }
 .npc-chat__composer-foot { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-2); }
 .npc-chat__count { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-micro); }
-.npc-chat__send { min-width: 112rpx; min-height: var(--cy-btn-h-sm); padding: 0 var(--cy-space-4); box-sizing: border-box; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); font-size: var(--cy-type-label); font-weight: 700; }
+.npc-chat__send { min-width: 112rpx; min-height: var(--cy-btn-h); padding: 0 var(--cy-space-4); box-sizing: border-box; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); font-size: var(--cy-type-label); font-weight: 700; }
 .npc-chat__send--disabled { color: var(--cy-color-text-disabled); background: var(--cy-color-action-secondary-bg); }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。

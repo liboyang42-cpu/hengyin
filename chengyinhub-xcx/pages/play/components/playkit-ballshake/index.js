@@ -18,6 +18,8 @@ const R = 26;                  // 球半径,rpx。换算见下面 _r(按 750rpx 
 const GRAVITY = 0.05;          // 倾斜 → 加速度。普通重力的三分之一
 const DAMP = 0.999;            // 阻尼几乎不给:球要一直有劲
 const EDGES = ['top', 'bottom', 'left', 'right'];
+const NODATA_MS = 3000;        // 3 秒没等到一帧重力读数 = 这台设备没在报
+const SENSOR_MISSING = '这台设备读不到重力感应，本局无法进行，不会记成绩';
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
@@ -48,8 +50,14 @@ Component({
     seconds: { type: Number, value: 12 },
     challenge: { type: Object, value: null },
     sharedChallenge: { type: Boolean, value: false },
+    // C1:证据说明 / 前后台规则 / 校准说明,分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
+    calibrationNote: { type: String, value: '' },
   },
   data: {
+    // 没传感器 / 读数断了 / 切后台中断时那一句人话;有它就不出成绩、不提交
+    notice: '',
     hits: 0,
     running: false,
     awaitingResult: false,
@@ -71,18 +79,33 @@ Component({
     show: function (show) {
       this._stop();
       if (!show) { this._offTilt(); return; }
-      this.setData({ hits: 0, running: false, flash: '', trail: [] });
+      this.setData({ hits: 0, running: false, flash: '', trail: [], notice: '' });
       this._measure();
     },
   },
   lifetimes: { detached() { this._stop(); this._offTilt(); } },
-  // 切后台就停:回来时球还在原地,但这段时间没人在玩,继续跑等于白送时间
-  pageLifetimes: { hide() { this._stop(); this._offTilt(); } },
+  // 切后台本局中断(M0106 · abort-attempt):回来时球还在原地,但这段时间没人在玩 ——
+  // 不提交、不计成绩;重新开始会重新校准并重新向服务器开表
+  pageLifetimes: { hide() { this._interrupt('切到后台，本局中断，不计成绩。点开始重新校准'); } },
   methods: {
     _bounce: bounce,            // 纯算法出口,供单测
     _tiltAccel: tiltAccel,
 
-    _stop() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
+    _stop() {
+      if (this._timer) { clearInterval(this._timer); this._timer = null; }
+      if (this._watchdog) { clearTimeout(this._watchdog); this._watchdog = null; }
+    },
+
+    /** 中断这一局:停表停传感器、收台面计时,不提交。没在跑时只停传感器。 */
+    _interrupt(notice) {
+      const wasRunning = this.data.running;
+      this._stop(); this._offTilt();
+      if (!wasRunning) return;
+      this._submitted = true;            // 这一局不再交任何成绩
+      const stage = this.selectComponent('#cy-play-stage');
+      if (stage && stage._stopAll) stage._stopAll();
+      this.setData({ running: false, notice: notice });
+    },
     _offTilt() {
       if (!this._tiltOn) return;
       this._tiltOn = false;
@@ -117,21 +140,30 @@ Component({
       this._gx = 0; this._gy = 0;
       this._hits = 0;
       this._submitted = false;
-      this.setData({ hits: 0, running: true });
+      this._tiltSeen = false;
+      this.setData({ hits: 0, running: true, notice: '' });
       /* 开表要报给服务端:成绩按服务器时间复核,不先开表提交会被判成「还没开始」。
          设备时钟玩家改得动,所以这一条不能省。 */
       this.triggerEvent('start');
 
       this._onTilt = (res) => {
+        this._tiltSeen = true;
         if (!this._zero) { this._zero = { x: res.x || 0, y: res.y || 0 }; return; }
         const a = tiltAccel(res, this._zero);
         this._gx = a.gx; this._gy = a.gy;
       };
-      wx.startAccelerometer({ interval: 'game', fail() {} });
+      this._stop();
+      /* F0335:传感器起不来 / 3 秒没一帧读数 = 这台设备没在报。明说并中断,
+         不让球「自己动」凑出一个模拟分数,也不提交。 */
+      wx.startAccelerometer({ interval: 'game', fail: () => this._interrupt(SENSOR_MISSING) });
       wx.onAccelerometerChange(this._onTilt);
       this._tiltOn = true;
+      if (!this.data.running) return;    // fail 同步回来时已经中断,别再起表
+      this._watchdog = setTimeout(() => {
+        this._watchdog = null;
+        if (!this._tiltSeen) this._interrupt(SENSOR_MISSING);
+      }, NODATA_MS);
 
-      this._stop();
       this._timer = setInterval(() => this._step(), STEP_MS);
     },
 

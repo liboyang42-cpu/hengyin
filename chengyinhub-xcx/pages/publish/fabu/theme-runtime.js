@@ -8,6 +8,9 @@ const PURPOSES = ['展示', '生命值', '幸运值'];
 const EFFECTS = ['使用时', '获得时一次', '持有期间', '持有期间减耗'];
 const TIMINGS = ['不自动发放', '章节开始', '章节结束'];
 const copy = value => JSON.parse(JSON.stringify(value));
+// 机动额度:全主题唯一一次的额外行动(寒冬 D05「七次基准行动＋一次机动行动」)。
+// 章节「用机动额度补做一站」与故事流里标为「机动」的站点共用这一个任务槽。
+const MOBILE_SLOT = 'mobile';
 function config(raw) {
   const c = raw ? (typeof raw === 'string' ? JSON.parse(raw) : copy(raw)) : {};
   return Object.assign({ schemaVersion: 1, capacity: 6, allowDiscard: true, items: [], chapters: [], grants: [], events: [] }, c);
@@ -78,7 +81,8 @@ const data = {
   runtimeZeroHpPolicies: [], runtimeZeroHpPolicyKeys: [], runtimeZeroHpPolicyIndex: -1,
   runtimeChallengeError: '', runtimeChallengeHint: '',
   runtimeChallengeNodes: [], runtimeChallengeNodeIndex: -1, runtimeAlternativeNodes: [], runtimeZeroChallenge: { restoreTo: 1, limit: 3 },
-  runtimeRewardOpen: false, subtitleEditing: false, runtimeBingoIndex: 0, runtimeCompletionIndex: -1, runtimeChapterCosts: { hpCost: 0, luckCost: 0 },
+  runtimeRewardOpen: false, subtitleEditing: false, runtimeBingoIndex: 0, runtimeCompletionIndex: -1,
+  storyNodeRoles: {},
   runtimeChapterRules: { index: 0, completionType: 'ALL', quantity: '', overflowSlot: '', groups: [], extraNodes: [], nodes: [], slots: [] },
   runtimeChapterRation: { enabled: false, actKey: '', rationKey: '', itemIndex: -1, itemLabel: '请选择', quantity: '1', fallback: '0', values: [], valueIndex: 0, items: [], reason: '' },
 };
@@ -105,7 +109,6 @@ const methods = {
     if (Array.isArray(c.items)) c.items.forEach(i => { if (i.stat || i.statKey) i.delta = Number(i.delta); });
     return JSON.stringify(c);
   },
-  _runtimeCosts(index) { return chapter(this._runtimeConfig(), index); },
   _prependRuntimeChapter() { const c = this._runtimeConfig(); const added = c.chapters.find(ch => ch.index === this.data.formData.chapters.length); c.chapters.forEach(ch => { ch.index = ch === added ? 0 : ch.index + 1; }); this._saveRuntime(c); if (this._syncStructureChapters) this._syncStructureChapters(); /* structure */ },
   _removeRuntimeChapter(index) { const c = this._runtimeConfig(); c.chapters = c.chapters.filter(ch => ch.index !== index).map(ch => Object.assign(ch, { index: ch.index > index ? ch.index - 1 : ch.index })); this._saveRuntime(c); if (this._syncStructureChapters) this._syncStructureChapters(this.data.formData.chapters.filter((_, i) => i !== index)); /* structure */ },
   _runtimeChapterIndex() { return this.data.popChapterAction == 0 ? this.data.formData.chapters.length : this.data.popChapterIndex; },
@@ -225,10 +228,16 @@ const methods = {
     if (JSON.stringify(survival.rations || []) !== before) this._saveRuntime(c);
     return true;
   },
-  onChapterCompletion(e) { this.setData({ 'runtimeChapterRules.completionType': e.currentTarget.dataset.type }); },
+  // 「全部完成」开关:开 = 全部完成(默认);关 = 至少完成填写的站数
+  onChapterCompleteAll(e) {
+    const all = !!e.detail.value;
+    this.setData({ 'runtimeChapterRules.completionType': all ? 'ALL' : 'ANY_N', 'runtimeChapterRules.overflowSlot': all ? '' : this.data.runtimeChapterRules.overflowSlot });
+  },
   onChapterQuantity(e) { this.setData({ 'runtimeChapterRules.quantity': e.detail.value }); },
-  onChapterOverflowSlot(e) { this.setData({ 'runtimeChapterRules.overflowSlot': e.detail.value }); },
-  reuseChapterOverflowSlot(e) { this.setData({ 'runtimeChapterRules.overflowSlot': e.currentTarget.dataset.slot }); },
+  onChapterOverflowMobile(e) {
+    const on = !!e.detail.value, current = this.data.runtimeChapterRules.overflowSlot;
+    this.setData({ 'runtimeChapterRules.overflowSlot': on ? (current || MOBILE_SLOT) : '' });
+  },
   addChapterExclusiveGroup() {
     if (this.data.runtimeChapterRules.nodes.length < 2) { toast('请先保存本章至少 2 个站点'); return; }
     const groups = this.data.runtimeChapterRules.groups.slice();
@@ -248,34 +257,35 @@ const methods = {
     const groups = this.data.runtimeChapterRules.groups.slice(); groups.splice(Number(e.currentTarget.dataset.index), 1);
     this.setData({ 'runtimeChapterRules.groups': groups });
   },
-  addChapterExtraNode() {
-    const nodes = this.data.runtimeChapterRules.nodes;
-    if (!nodes.length) { toast('请先保存本章站点，再配置额外节点'); return; }
-    const extraNodes = this.data.runtimeChapterRules.extraNodes.concat({ nodeId: nodes[0].id, nodeIndex: 0, nodeName: nodes[0].name, slot: '' });
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  // 故事流站点块上的「计入完成 / 额外站点 / 机动」(2026-10-12 用户定:额外站点在故事流里标)
+  _storyNodeRoles(c) {
+    const roles = {};
+    for (const row of (c || this._runtimeConfig()).chapters || []) for (const item of row.extraNodes || []) roles[item.nodeId] = item.slot === MOBILE_SLOT ? 'mobile' : 'extra';
+    return roles;
   },
-  onChapterExtraNode(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    const nodeIndex = Number(e.detail.value), node = this.data.runtimeChapterRules.nodes[nodeIndex];
-    if (!extraNodes[index] || !node) return;
-    extraNodes[index].nodeId = node.id; extraNodes[index].nodeIndex = nodeIndex; extraNodes[index].nodeName = node.name;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
-  },
-  onChapterExtraSlot(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    if (!extraNodes[index]) return;
-    extraNodes[index].slot = e.detail.value;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
-  },
-  reuseChapterExtraSlot(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    if (!extraNodes[index]) return;
-    extraNodes[index].slot = e.currentTarget.dataset.slot;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
-  },
-  removeChapterExtraNode(e) {
-    const extraNodes = this.data.runtimeChapterRules.extraNodes.slice(); extraNodes.splice(Number(e.currentTarget.dataset.index), 1);
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  cycleStoryNodeRole(e) {
+    const nodeId = Number(e.currentTarget.dataset.nodeid);
+    const index = (this.data.formData.chapters || []).findIndex(ch => (ch.nodes || []).some(node => Number(node.id) === nodeId));
+    if (!(nodeId > 0) || index < 0) { toast('先保存草稿，再设置额外站点'); return; }
+    const c = this._runtimeConfig(), hadExtra = !!(c.chapters.find(ch => ch.index === index) || {}).extraNodes, row = chapter(c, index);
+    const current = (row.extraNodes || []).find(item => item.nodeId === nodeId);
+    const next = (row.extraNodes || []).filter(item => item.nodeId !== nodeId);
+    // 依次切换:计入完成 → 额外站点(本站自己的一次)→ 机动(全主题共用一次)→ 计入完成
+    if (!current) next.push({ nodeId, slot: 'extra_' + nodeId });
+    else if (current.slot !== MOBILE_SLOT) next.push({ nodeId, slot: MOBILE_SLOT });
+    const completion = row.completion && row.completion.type === 'ANY_N' ? row.completion : null;
+    const issue = this._chapterRuleIssue(index, { completion, exclusiveGroups: row.exclusiveGroups || [], extraNodes: next });
+    if (issue) { toast(issue); return; }
+    if (next.length) row.extraNodes = next;
+    else {
+      delete row.extraNodes;
+      // 已编译过额外标记的章节恢复默认:写显式 ALL 才能清掉(与 _saveChapterRules 同口径)
+      if (hadExtra && !row.completion) row.completion = { type: 'ALL' };
+    }
+    this._saveRuntime(c);
+    const role = this._storyNodeRoles(c)[nodeId];
+    this.setData({ storyNodeRoles: this._storyNodeRoles(c) });
+    toast(role === 'mobile' ? '已设为机动：占用全主题唯一一次机动额度' : role === 'extra' ? '已设为额外站点：不计入本章完成要求' : '已恢复计入本章完成');
   },
   _saveChapterRules() {
     if (!this._saveChapterRation()) return false;
@@ -573,7 +583,6 @@ const methods = {
     this._saveRuntime(c); this._refreshRuntimeEditor(c);
   },
   removeRuntimeEggReward(e) { const c = this._runtimeConfig(), d = e.currentTarget.dataset; chapter(c, this.data.runtimeEditor.index).eggs[Number(d.index)].rewards.splice(Number(d.reward), 1); this._saveRuntime(c); this._refreshRuntimeEditor(c); },
-  onRuntimeChapterCost(e) { const c = this._runtimeConfig(); chapter(c, this._runtimeChapterIndex())[e.currentTarget.dataset.field] = Number(e.detail.value); this._saveRuntime(c); this.setData({ runtimeChapterCosts: chapter(c, this._runtimeChapterIndex()) }); },
   onRuntimeCompletionItem(e) {
     const c = this._runtimeConfig(), id = c.items[Number(e.detail.value)].id;
     c.grants = c.grants.filter(g => g.id !== 'completion_material');

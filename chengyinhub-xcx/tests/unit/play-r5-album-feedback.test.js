@@ -192,6 +192,35 @@ test('相册：上传拒绝、离页及异步切换版本都不得提交', () =>
   }
 });
 
+test('X019 相册：网络中断/5xx 可重试同一张图且只提交一次，4xx 不给重试只能重选', async () => {
+  const { albumRetryable } = require('../../pages/play/utils/playkit-r5-segments.js');
+  assert.equal(albumRetryable({ status: 'unknown', retryable: true }), true);
+  assert.equal(albumRetryable({ status: 'failed' }), false);
+  // 网络中断：显示可重试，重试复用同一张临时图，成功后只发一次 SUBMIT_ALBUM
+  const net = setup(albumView()); choose(net.album);
+  uploads[0].fail({ errMsg: 'uploadFile:fail' });
+  assert.equal(net.page._kit().uploadRetryable, true); assert.match(net.page._kit().uploadError, /可重试上传/);
+  assert.equal(requests.length, 0);
+  net.page.onPlayKitAction({ detail: { type: 'album', action: 'submit' } });
+  assert.equal(uploads.length, 2); assert.equal(uploads[1].filePath, '/tmp/player-evidence.jpg');
+  uploads[1].success({ data: JSON.stringify({ code: 200, url: PLAYER_PHOTO }) });
+  assert.equal(requests.length, 1); assert.equal(net.page._kit().uploadError, '');
+  // 服务端 5xx 同样可重试
+  uploads = []; requests = [];
+  const busy = setup(albumView()); choose(busy.album);
+  uploads[0].success({ statusCode: 503, data: JSON.stringify({ code: 503, msg: '服务繁忙' }) });
+  assert.equal(busy.page._kit().uploadRetryable, true);
+  // 4xx：不重试，提示重选，retry 动作不再上传
+  uploads = []; requests = [];
+  const bad = setup(albumView()); choose(bad.album);
+  uploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 403, msg: '文件类型不允许' }) });
+  assert.equal(bad.page._kit().uploadRetryable, false); assert.match(bad.page._kit().uploadError, /请重新选择照片/);
+  bad.page.onPlayKitAction({ detail: { type: 'album', action: 'submit' } });
+  assert.equal(uploads.length, 1); assert.equal(requests.length, 0);
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  assert.match(wxml, /重试上传/); assert.match(wxml, /相册已提交/);
+});
+
 test('反馈：空分支/未结算不得遮住主玩法，只有服务器当前步才进入反馈', () => {
   const unsettled = feedbackView({ step: false });
   unsettled.readyForBase = false; unsettled.status = 'RUNNING'; unsettled.playKit.qa.finished = false;

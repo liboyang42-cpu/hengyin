@@ -60,6 +60,8 @@ Component({
     arMode: { type: String, value: 'NONE' },
     markerUrl: { type: String, value: '' },
     modelUrl: { type: String, value: '' },   // 3D 模型:有就放模型,没有就把显形图做成立牌
+    // F0309:证据口径。静态节点码只证明「任务码匹配」,不是有时效、一次消费的现场核验凭证
+    evidence: { type: String, value: 'TASK_CODE_MATCH' },
   },
   data: {
     // 同上:写回被监听的 kind 会自触发死循环

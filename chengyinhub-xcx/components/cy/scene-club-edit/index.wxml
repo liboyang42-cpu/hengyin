@@ -9,6 +9,13 @@
   <!-- ===== 表单 ===== -->
   <view class="body" wx:elif="{{loadState === 'ready'}}">
 
+    <view wx:if="{{draftNotice}}" class="foot" aria-role="text">{{draftNotice}}</view>
+    <view wx:if="{{draftComparison}}" class="foot draft-comparison">{{draftComparison}}</view>
+    <view wx:if="{{draftAvailable || draftBlocked}}" class="draft-actions">
+      <cy-btn wx:if="{{draftAvailable}}" variant="secondary" bindtap="restoreDraft" aria-label="恢复本账号的俱乐部草稿">恢复草稿</cy-btn>
+      <cy-btn variant="secondary" bindtap="discardDraft" aria-label="放弃旧草稿并读取当前俱乐部资料">放弃草稿，重读资料</cy-btn>
+    </view>
+
     <!-- 管理员副标题(Figma 29:145):管理员进来先知道自己能改什么,不用点到锁那一步才发现。 -->
     <view class="admin-note" wx:if="{{!isOwner}}">你是管理员 · 只能改展示信息</view>
 
@@ -158,7 +165,7 @@
     <cy-error wx:if="{{saveErrorText}}" title="保存失败" sub="{{saveErrorText}}" retry="重新保存" bind:retry="save"
               secondary="继续编辑" bind:secondary="dismissSaveError" />
     <!-- loading 接的是 js 里早就有的 saving —— 在途状态本来就在,只是没告诉用户 -->
-    <cy-btn wx:else variant="{{canSave ? 'primary' : 'disabled'}}" loading="{{saving}}" bindtap="save">保存修改</cy-btn>
+    <cy-btn wx:else variant="{{canSave && !draftAvailable && !draftBlocked ? 'primary' : 'disabled'}}" disabled="{{!canSave || saving || draftAvailable || draftBlocked}}" loading="{{saving}}" bindtap="save">保存修改</cy-btn>
     <!-- 解散钮已挪进表单末尾的「危险操作」区块 —— 后果说明要和按钮同屏,底栏放不下。 -->
   </view>
 </view>

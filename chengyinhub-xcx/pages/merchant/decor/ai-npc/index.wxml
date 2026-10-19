@@ -28,6 +28,7 @@
               variant="{{auditStatus === 1 ? 'success' : (auditStatus === 2 ? 'warning' : 'neutral')}}"
               label="{{auditStatus === 1 ? '已上线' : (auditStatus === 2 ? '已驳回' : '审核中')}}" />
             <text class="dc-muted" wx:if="{{auditStatus === 2 && auditReason}}">驳回理由：{{auditReason}}</text>
+            <text class="dc-muted" wx:elif="{{auditStatus !== 1}}">审核通过前，玩家暂时看不到这个角色</text>
           </view>
         </block>
         <block wx:else>
@@ -165,20 +166,24 @@
   </cy-sheet>
   <cy-sheet
     handle show="{{voiceVisible}}"
-    title="{{voiceFile ? '确认录音' : voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : '录制角色声音'}}"
+    title="{{voiceUnknown ? '声音状态待确认' : voiceFile ? '确认录音' : voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : '录制角色声音'}}"
     bind:close="closeVoice"
     closable="{{!voiceBusy && !voiceSessionActive && !voiceFinalizing}}"
     mask-closable="{{!voiceBusy && !voiceSessionActive && !voiceFinalizing}}"
   >
     <view class="dc-sheet-content npc-voice">
       <text class="dc-heading">让店铺角色用你的声音说话</text>
+      <text class="dc-muted">录音确认是使用声明，不代表声音权属已核验；生成完成前不会成为可用音色。</text>
       <cy-consent-check
         wx:if="{{voiceStatus !== 1}}"
         checked="{{voiceConsent}}"
         text="我确认这是本人声音，或已获得声音权利人的明确授权；同意将本段录音提供给阿里云百炼生成店铺角色音色。"
         bind:change="onVoiceConsentChange"
       />
-      <block wx:if="{{voiceStatus === 1}}">
+      <block wx:if="{{voiceUnknown}}">
+        <text class="dc-muted">声音生成结果尚未确认，请查询原状态，不要重复生成。</text>
+      </block>
+      <block wx:elif="{{voiceStatus === 1}}">
         <cy-skeleton type="text" />
         <text class="dc-muted">声音正在生成，可以先返回继续装修店铺。</text>
         <cy-btn variant="secondary" bindtap="refreshVoice">刷新状态</cy-btn>

@@ -37,7 +37,9 @@
   </view>
 
   <view class="card">
-    <view class="card-tit">② 合作条款<text class="card-tit-n">发送确认时锁定</text></view>
+    <view class="card-tit">② 合作条款<text class="card-tit-n">本次邀约拟定条款</text></view>
+    <view class="card-hint">当前身份的可选方式尚未确认；以下为拟议条款，发送时再次核对资格。</view>
+    <view class="card-hint">本页只创建新邀约，不变更已成立合作、已开售或已结算部分。</view>
     <view class="terms-options">
       <view class="terms-option {{shareMode === 0 ? 'on' : ''}}" bindtap="switchShareMode" data-mode="0" aria-role="radio" aria-checked="{{shareMode === 0}}" aria-label="引流合作，不产生现金结算" hover-class="cy-pressed" hover-stay-time="80">
         <text>引流合作（不产生现金结算）</text>
@@ -115,9 +117,9 @@
         <view class="iv-locked-main"><text class="iv-target ep1">{{inviteModal.targetText}}</text><text class="iv-locked-meta ep1">{{inviteModal.targetMeta}}</text></view>
         <view class="target-action target-action--locked">已锁定</view>
       </view>
-      <view class="iv-terms"><view><text class="iv-terms-label">合作条款 · 已锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
+      <view class="iv-terms"><view><text class="iv-terms-label">本次拟议条款</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
       <view class="iv-hero"><text class="iv-type">协作邀请</text><text class="iv-topic">{{topicName ? ('关联主题 · ' + topicName) : '整主题合作邀请'}}</text></view>
-      <view class="iv-copy">对方会在「收到的」中确认本次协作。</view>
+      <view class="iv-copy">资源来源：所选主题与合作方申报供给。对方接受后，以合作详情中的冻结条款为准。</view>
       <view class="iv-message"><text class="iv-message-title">邀请语</text><textarea class="iv-message-input" value="{{message}}" bindinput="onMessageInput" placeholder="写下想对对方说的话" placeholder-class="iv-message-placeholder" maxlength="100" /></view>
       <view class="iv-result" wx:if="{{sendResult}}" aria-role="alert">{{sendResult}}</view>
       <!-- 发送被驳(条款/主题没配好)时给出路:去专业编辑器改主题票价与内容,保存后回工作台重发 -->

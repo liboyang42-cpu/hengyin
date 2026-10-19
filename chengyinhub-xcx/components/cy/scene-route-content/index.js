@@ -273,6 +273,11 @@ Component({
             this.setData({ state: 'error', errorText: (res && res.msg) || '收藏内容暂时没有响应' })
             return
           }
+          const rows = rowsOf(payloadOf(res)) || []
+          rows.forEach((item) => {
+            if (this._unlikeRequests && this._unlikeRequests[String(item.id)] === 'unknown'
+                && Number(item.isLike) === 1) delete this._unlikeRequests[String(item.id)]
+          })
           this.applyPayload('settings-likes', payloadOf(res), '', {})
         },
         fail: () => {
@@ -347,11 +352,25 @@ Component({
       const index = Number(event.currentTarget.dataset.index)
       const item = this.data.items[index]
       if (!item || !item.id) return
+      const key = String(item.id)
+      this._unlikeRequests = this._unlikeRequests || Object.create(null)
+      if (this._unlikeRequests[key] === 'unknown') {
+        toast('结果待确认，正在刷新收藏记录')
+        this.loadLikes(this._loadToken)
+        return
+      }
+      if (this._unlikeRequests[key]) return
+      const recoverUnknown = () => {
+        this._unlikeRequests[key] = 'unknown'
+        toast('结果待确认，正在刷新收藏记录')
+        this.loadLikes(this._loadToken)
+      }
       modal.show({
         title: '提示',
         content: '确定要取消点赞吗？',
         success: (modalRes) => {
-          if (!modalRes.confirm) return
+          if (!modalRes.confirm || this._unlikeRequests[key]) return
+          this._unlikeRequests[key] = true
           app.sendRequest({
             url: '/api/topic/like',
             method: 'POST',
@@ -362,12 +381,15 @@ Component({
                 toast((res && res.msg) || '操作失败')
                 return
               }
-              const items = this.data.items.slice()
-              items.splice(index, 1)
+              const items = this.data.items.filter((row) => String(row.id) !== key)
               this.setData({ items, state: items.length ? 'ready' : 'empty' })
               toast.success('取消点赞成功')
             },
-            fail: () => toast('网络错误，请重试'),
+            fail: recoverUnknown,
+            successStatusAbnormal: recoverUnknown,
+            complete: () => {
+              if (this._unlikeRequests[key] !== 'unknown') delete this._unlikeRequests[key]
+            },
           })
         },
       })

@@ -42,10 +42,14 @@ Component({
     kicker: { type: String, value: '变绿就点' },
     rounds: { type: Number, value: 3 },
     goalMs: { type: Number, value: 320 },
+    // C1:证据说明(奖励上限由服务端 rewardCeiling 定)与前后台规则,都由分发器从 kit 喂
+    evidenceNote: { type: String, value: '' },
+    bgRule: { type: String, value: '' },
   },
   data: {
     phase: 'idle',        // idle | wait | go | early | done
     big: '—',
+    unit: '',             // 大数字的单位:有成绩时是「毫秒」,没成绩时不出
     sub: '点一下开始',
   },
   observers: {
@@ -55,7 +59,7 @@ Component({
       this._armed = false;
       this._times = [];
       this.setData({
-        phase: 'idle', big: '—', sub: '点一下开始',
+        phase: 'idle', big: '—', unit: '', sub: '点一下开始',
       });
       // 变色就点没有限时开关,stage 因此天然不数 3-2-1 —— 那正是要的:这玩法测的就是突然性
       const stage = this.selectComponent('#cy-play-stage');
@@ -63,7 +67,8 @@ Component({
     },
   },
   lifetimes: { detached() { this._stop(); } },
-  // 切后台就把这一轮作废:回来时屏幕可能已经绿了很久,那个「成绩」是假的
+  // 切后台整次作废(M0106 · abort-attempt):回来时屏幕可能已经绿了很久,那个「成绩」是假的;
+  // 已经测完的几轮也一起作废 —— 下次开始会重新向服务器开表,拿新的挑战身份
   pageLifetimes: { hide() { this._abortRound(); } },
   methods: {
     _pickWait: pickWait,        // 纯算法出口,供单测
@@ -74,21 +79,24 @@ Component({
     _stop() { if (this._timer) { clearTimeout(this._timer); this._timer = null; } },
 
     _abortRound() {
-      if (this.data.phase !== 'wait' && this.data.phase !== 'go') return;
+      const midAttempt = (this._times || []).length > 0 && this.data.phase !== 'done';
+      if (this.data.phase !== 'wait' && this.data.phase !== 'go' && !midAttempt) return;
       this._stop();
-      this.setData({ phase: 'idle', big: '—', sub: '刚才切走了,这一轮不算。点一下重来' });
+      this._times = [];
+      this._armed = false;
+      this.setData({ phase: 'idle', big: '—', unit: '', sub: '刚才切走了,本次作废。点一下重新开始' });
     },
 
     /** 进入等待:红屏,随机若干毫秒后转绿。 */
     _arm() {
-      this.setData({ phase: 'wait', big: '等', sub: '变绿再点 —— 早点了算抢跑' });
+      this.setData({ phase: 'wait', big: '等', unit: '', sub: '变绿再点 —— 早点了算抢跑' });
       /* 开表要报给服务端:成绩按服务器时间复核,不先开表提交会被判成「还没开始」。
          第一轮报一次就够,服务端记的是这一局的起点。 */
       if (!this._armed) { this._armed = true; this.triggerEvent('start'); }
       this._stop();
       this._timer = setTimeout(() => {
         this._goAt = Date.now();
-        this.setData({ phase: 'go', big: '点!', sub: '' });
+        this.setData({ phase: 'go', big: '点!', unit: '', sub: '' });
       }, pickWait());
     },
 
@@ -101,7 +109,7 @@ Component({
         // 抢跑:这一轮作废,但不判整局输 —— 抢跑是操作失误,不是答错
         this._stop();
         motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-        this.setData({ phase: 'early', big: '抢跑', sub: '绿了才能点。点一下重来' });
+        this.setData({ phase: 'early', big: '抢跑', unit: '', sub: '绿了才能点。点一下重来' });
         return;
       }
 
@@ -110,7 +118,7 @@ Component({
       const ms = Date.now() - this._goAt;
       // 低于人类反应下限的不收:那是提前按住不放蹭出来的,后端也会判抢跑
       if (ms < MIN_HUMAN_MS) {
-        this.setData({ phase: 'early', big: '抢跑', sub: '这个快得不像人手。点一下重来' });
+        this.setData({ phase: 'early', big: '抢跑', unit: '', sub: '这个快得不像人手。点一下重来' });
         return;
       }
 
@@ -120,13 +128,13 @@ Component({
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
 
       if (doneCount < (this.data.rounds || 3)) {
-        this.setData({ phase: 'idle', big: ms + '', sub: '毫秒 · 点一下进入下一轮' });
+        this.setData({ phase: 'idle', big: ms + '', unit: '毫秒', sub: '第 ' + doneCount + ' 轮 · 点一下进入下一轮' });
         return;
       }
 
       const best = bestOf(this._times);
       const ok = passed(this._times, this.data.goalMs);
-      this.setData({ phase: 'done', big: best + '', sub: '三轮里最快的一次' });
+      this.setData({ phase: 'done', big: best + '', unit: '毫秒', sub: '最快的一次 · 本机测量，以最终复核为准' });
       // 判定屏由 stage 统一出:凡是「猜中了」都走同一张,答错不算通关
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) { if (ok) stage.win('最快 ' + best + ' 毫秒'); else stage.fail(false); }

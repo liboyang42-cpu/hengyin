@@ -20,6 +20,8 @@ function presentZeroHp(view) {
     usedText, thenText,
     metaText: [zero.restoreTo > 0 && zero.phase !== 'BLOCKED' ? '恢复到 ' + zero.restoreTo : '', usedText, thenText ? (zero.phase === 'BLOCKED' ? '当前处理：' : '用尽后：') + thenText : ''].filter(Boolean).join(' · '),
     memberText: zero.recoveryMemberName || (zero.recoveryMemberId ? '队员 ' + zero.recoveryMemberId : ''),
+    // 团队共享归零：恢复由服务端判定，任一队员完成后全队同时恢复，多人同时提交也只结算一次
+    sharedText: view.scope === 'TEAM' ? '全队共用这次归零：任一队员完成恢复，全队同时恢复，只结算一次' : '',
   };
 }
 function present(view, nodes) {
@@ -40,7 +42,9 @@ function present(view, nodes) {
       (Array.isArray(c.sources) ? c.sources : []).forEach(source => (Array.isArray(source.blocks) ? source.blocks : []).forEach(block => blocks.push({
         source: source.title || '', text: block.text || '', images: (Array.isArray(block.images) ? block.images : []).filter(Boolean),
       })));
-      return { id: c.id + ':' + (c.scope || ''), name: c.name || '线索', scopeText: c.scope === 'PUBLIC' ? '全场公开' : '本队线索', blocks };
+      // 来源未能按本队/全场归属确认时只显示名称与范围，不显示正文和图片
+      return { id: c.id + ':' + (c.scope || ''), name: c.name || '线索', scopeText: c.scope === 'PUBLIC' ? '全场公开' : '本队线索', blocks,
+        lockedText: blocks.length ? '' : '已获得 · 来源未确认或未配正文，仅显示名称' };
     }));
   const valueRows = [];
   if (view.hpEnabled) valueRows.push({ key: 'hp', name: names.hp, value: view.hp, max: view.hpMax, zero: view.awaitingChallenge || view.zeroHp && view.zeroHp.phase !== 'HEALTHY' });
@@ -433,6 +437,7 @@ function methods(req) {
         const applied = matched && result.status === 'matched';
         const failed = matched && result.status === 'business-error' && receipt.outcome === 'FAILED';
         if (applied || failed || failureMessage) this._gameplayPending = null;
+        if (applied) this.setData({ themeReservationReceipt: gameplay.reservationReceipt(this.data.themeBag.actionRows, pending.input) });
         if (failureMessage) this._themeCommandError = failureMessage;
         if (applied && pending.input.previewVersion) this.closeThemeRewardPreview();
         await this.refreshThemeBackpack(); await this.refreshRouteState();
@@ -485,7 +490,7 @@ function methods(req) {
         if (res.code == 200 && (team ? sameReceipt && receipt.outcome === 'APPLIED'
           : res.data && String(receipt.sessionId) === String(command.sessionId) && Number.isSafeInteger(receipt.version))) {
           this._gameplayPending = null;
-          this.setData({ themeBagUnknown: false });
+          this.setData({ themeBagUnknown: false, themeReservationReceipt: input.operation.startsWith('QUEST_') ? gameplay.reservationReceipt(view.actionRows, input) : this.data.themeReservationReceipt });
           const result = team ? receipt.result && (receipt.result.result || receipt.result) || {} : receipt.settlement || {};
           const text = trade.recoveryText(result, gameplay.labels(view).hp);
           if (text) { toast(text); this.setData({ themeRecoveryText: text }); }
@@ -540,4 +545,4 @@ function methods(req) {
   };
   return bagMethods;
 }
-module.exports = { present, methods, data: Object.assign({}, trade.data, plans.data, { zeroHpView: null, zeroHpCountdown: '', zeroHpBusy: false, zeroHpError: '', zeroHpPermissionDenied: false, themeBag: { contents: [], items: [], clues: [], slots: [], pendingRows: [], actionRows: [], challengeNodes: [], planRows: [], tradeTargets: [], tradeRows: [], used: 0, capacity: 6, hpEnabled: false }, themeBackpackOpen: false, themeBackpackTab: 'items', themeBagTabs: [{ key: 'items', label: '物品' }, { key: 'clues', label: '线索' }, { key: 'game', label: '任务' }], themeCostChoice: null, themeRewardPreview: null, themePendingClaim: null, themeItemDetail: null, themeQuestChoice: null, themeBagBusy: false, themeBagUnknown: false, themeBagError: '' }) };
+module.exports = { present, methods, data: Object.assign({}, trade.data, plans.data, { zeroHpView: null, zeroHpCountdown: '', zeroHpBusy: false, zeroHpError: '', zeroHpPermissionDenied: false, themeBag: { contents: [], items: [], clues: [], slots: [], pendingRows: [], actionRows: [], challengeNodes: [], planRows: [], tradeTargets: [], tradeRows: [], used: 0, capacity: 6, hpEnabled: false }, themeBackpackOpen: false, themeBackpackTab: 'items', themeBagTabs: [{ key: 'items', label: '物品' }, { key: 'clues', label: '线索' }, { key: 'game', label: '任务' }], themeCostChoice: null, themeReservationReceipt: null, themeRewardPreview: null, themePendingClaim: null, themeItemDetail: null, themeQuestChoice: null, themeBagBusy: false, themeBagUnknown: false, themeBagError: '' }) };

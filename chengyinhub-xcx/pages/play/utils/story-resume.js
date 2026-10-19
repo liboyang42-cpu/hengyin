@@ -27,8 +27,14 @@ function read(scope) {
 
 function patch(scope, fields) {
   const key = keyOf(scope);
-  if (!key) return;
-  try { wx.setStorageSync(key, Object.assign(read(scope), fields)); } catch (e) { /* 存不上就算了 */ }
+  if (!key) return false;
+  try {
+    const current = wx.getStorageSync(key);
+    // 读取失败或坏档不能当空白写回，否则会抹掉原进度和待同步心声。
+    if (current && (typeof current !== 'object' || Array.isArray(current))) return false;
+    wx.setStorageSync(key, Object.assign({}, current || {}, fields));
+    return true;
+  } catch (e) { return false; }
 }
 
 /** 玩法草稿的 key:同一局同一站一份。没有身份时返回空串,组件据此不存。 */

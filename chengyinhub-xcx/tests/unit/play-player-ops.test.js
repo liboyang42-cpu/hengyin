@@ -107,3 +107,29 @@ test('unknown → 匹配 APPLIED receipt 只读确认凭证，解锁一次且不
   let command;const {host,calls}=page((url,body)=>{if(url.endsWith('/command')){command=body;return{netFail:true};}return receipt(command,{nonce:'a'.repeat(43),expiresAt:1791586800000,teamId:8,locationKey:'gather',version:2});});
   host.openPlayerOperation(event({action:'ARRIVAL_ISSUE'}));assert.equal(await host.submitPlayerOperation(),true);assert.equal(host._playerOpsPending,null);assert.equal(host._themeSending,false);assert.equal(host.data.playerOperationUnknown,false);assert.equal(host.data.playerArrivalProof.stationName,'集合站');assert.equal(calls.filter(row=>row.method==='POST').length,1);
 });
+test('X028 暂停/中止/取消/人工账只按服务端 run 状态统一提示，运行中不提示',()=>{
+  assert.equal(ops.runNotice({...fixture,run:{operationStatus:'RUNNING',authorityMode:'ONLINE'}}),'');
+  assert.equal(ops.runNotice({...fixture,run:undefined}),'');
+  assert.match(ops.runNotice({...fixture,run:{operationStatus:'PAUSED',authorityMode:'ONLINE'}}),/暂停.*冻结/);
+  assert.match(ops.runNotice({...fixture,run:{operationStatus:'INTERRUPTED',authorityMode:'ONLINE'}}),/中止.*不计结局/);
+  assert.match(ops.runNotice({...fixture,run:{operationStatus:'CANCELLED',authorityMode:'ONLINE'}}),/取消/);
+  assert.match(ops.runNotice({...fixture,run:{operationStatus:'PAUSED',authorityMode:'MANUAL'}}),/人工账/);
+  const {host}=page();host._applyPlayerOpsView({...clone(fixture),availableActions:[],run:{operationStatus:'PAUSED',authorityMode:'ONLINE'}});
+  assert.match(host.data.playerRunNotice,/暂停/);assert.deepEqual(host.data.playerOperationRows,[]);
+  host._applyPlayerOpsView({...clone(fixture),run:{operationStatus:'RUNNING',authorityMode:'ONLINE'}});assert.equal(host.data.playerRunNotice,'');
+  const fs=require('node:fs'),path=require('node:path');
+  const entry=fs.readFileSync(path.join(__dirname,'../../pages/play/theme-player-ops-entry.wxml'),'utf8');
+  assert.match(entry,/wx:if="\{\{playerRunNotice \|\|/);assert.match(entry,/\{\{playerRunNotice \|\| playerExitText/);
+});
+test('F0351 离开页面与退出本局分名：团队/个人/旧玩法分别写明进度、资源、计时与费用后果，退出不等于退款',()=>{
+  const team=ops.exitGuide(fixture),personal=ops.exitGuide({...fixture,scope:'PLAYER'}),legacy=ops.exitGuide(null);
+  assert.equal(team.mode,'TEAM');assert.equal(personal.mode,'PERSONAL');assert.equal(legacy.mode,'LEGACY');
+  for(const guide of [team,personal,legacy]){assert.equal(guide.leave.title,'离开页面');assert.match(guide.leave.lines.join(),/保留.*同一局/);assert.match(guide.leave.lines.join(),/不产生扣费或退款/);assert.match(guide.exit.lines.join(),/退款/);}
+  assert.match(team.exit.lines.join(),/不可撤销/);assert.match(team.exit.lines.join(),/预留与锁定释放/);assert.match(team.exit.lines.join(),/计时不停/);assert.match(team.exit.lines.join(),/不等于退款/);
+  assert.match(personal.exit.title,/没有单独的退出动作/);assert.match(legacy.exit.title,/没有单独的退出动作/);
+  assert.equal(ops.data.playerExitGuide.mode,'LEGACY');
+  const {host}=page();host._applyPlayerOpsView(clone(fixture));assert.equal(host.data.playerExitGuide.mode,'TEAM');
+  const fs=require('node:fs'),path=require('node:path');
+  const entry=fs.readFileSync(path.resolve(__dirname,'../../pages/play/theme-player-ops-entry.wxml'),'utf8'),sheet=fs.readFileSync(path.resolve(__dirname,'../../pages/play/theme-player-ops.wxml'),'utf8');
+  assert.match(entry,/离开与退出/);assert.match(sheet,/只是离开页面不会退出本局/);assert.match(sheet,/退出游玩不等于退款/);
+});

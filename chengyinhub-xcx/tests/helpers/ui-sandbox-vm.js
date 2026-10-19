@@ -13,9 +13,13 @@ const path = require('node:path');
 const nodeVm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '../..');
+<<<<<<< public
 // PR10 F-W1-12:session/login-reload 是纯函数(只读 app 入参,不碰 wx),页面靠它区分「未登录」与加载失败。
 // PR10 末轮:display-text 是纯函数(只解码用户文字里的 &lt; 等实体,不碰 wx),页面在映射时用它。
 const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard|session\/login-reload|display-text)\.js$/;
+=======
+const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard|club-edit-draft|registered-navigation)\.js$/;
+>>>>>>> private-feature/w2-r
 const INSTALLED = Symbol('ui-sandbox-vm');
 
 function isUiModule(request) {
@@ -28,7 +32,10 @@ function loadUiModule(request, context) {
   const source = '(function (module, exports, require) {' + fs.readFileSync(file, 'utf8') + '\n})';
   const wrapper = nodeVm.runInContext(source, context, { filename: file });
   const mod = { exports: {} };
-  wrapper(mod, mod.exports, (id) => require(path.resolve(path.dirname(file), id)));
+  wrapper(mod, mod.exports, (id) => {
+    const target = path.resolve(path.dirname(file), id);
+    return isUiModule(target) ? loadUiModule(target, context) : require(target);
+  });
   return mod.exports;
 }
 
@@ -58,4 +65,16 @@ module.exports = Object.assign({}, nodeVm, {
   runInContext(code, context, options) {
     return nodeVm.runInContext(code, install(context), options);
   },
+  // Navigation fixtures keep their existing modal/toast stubs and load this boundary in the same wx context.
+  navigationVm: Object.assign({}, nodeVm, {
+    runInNewContext(code, sandbox, options) {
+      const inner = sandbox.require;
+      const context = nodeVm.createContext(sandbox);
+      sandbox.require = function(request) {
+        if (/utils\/registered-navigation\.js$/.test(String(request))) return loadUiModule(request, context);
+        return inner.apply(this, arguments);
+      };
+      return nodeVm.runInContext(code, context, options);
+    },
+  }),
 });

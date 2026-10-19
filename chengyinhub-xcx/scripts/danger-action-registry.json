@@ -23,6 +23,13 @@
       "reason": "俱乐部整体消失,成员关系与内容都拿不回来"
     },
     {
+      "endpoint": "/api/verify/groupcode/revoke",
+      "file": "pages/merchant/group-reception/index.js",
+      "irreversible": true,
+      "confirmKey": "merchant.group-reception.revoke",
+      "reason": "后端删除原接待行并留不可变审计，重新出码再扫只会产生新记录，无法恢复原记录；仅结算开始前可撤销"
+    },
+    {
       "endpoint": "/api/club/quit",
       "file": "pages/club/detail/index.js",
       "irreversible": true,

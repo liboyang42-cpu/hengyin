@@ -17,7 +17,9 @@
       <view class="direct-row-main">
         <text class="direct-row-title">核销 #{{item.redemptionId}}</text>
         <text class="direct-meta">{{item.timeText}} · {{item.statusText}}</text>
+        <text class="direct-meta" wx:if="{{item.claimNo}}">平台结算单 #{{item.claimNo}}</text>
         <text class="direct-meta" wx:if="{{item.voucher}}">凭证 {{item.voucher}}</text>
+        <button class="direct-dispute" open-type="contact" show-message-card="{{true}}" send-message-title="{{item.disputeTitle}}" aria-label="对这笔计酬有异议，联系平台客服核对" hover-class="cy-pressed" hover-stay-time="80">金额或状态有误？联系平台核对</button>
       </view>
       <text class="direct-amount {{item.status === 'VOID' ? 'direct-amount--void' : ''}}">{{item.amountText}}</text>
     </view>

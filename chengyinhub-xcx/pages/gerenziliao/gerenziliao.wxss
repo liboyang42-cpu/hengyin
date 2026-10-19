@@ -143,3 +143,7 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
 .david_tk { height: auto; overflow: visible; }
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
+
+/* F0435/F0436:作品图与联系二维码的公开范围、审核与撤回说明 */
+.profile-media-scope { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); margin-bottom: var(--cy-space-1-5); }
+.profile-media-note { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); line-height: var(--cy-leading-normal); margin-top: var(--cy-space-2-5); }

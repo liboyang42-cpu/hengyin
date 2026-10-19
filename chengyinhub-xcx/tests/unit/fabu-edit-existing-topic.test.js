@@ -259,7 +259,10 @@ test('WHITELIST 档改了票价:必须当场说清楚,不许静默剔掉后报�
 
   assert.equal(sent.length, 0, '改了锁定字段就不该发请求 —— 发了就等于「保存成功但没生效」');
   assert.equal(modals.length, 1, '必须给一条可识别的拒绝信息,而不是默默吞掉');
-  assert.ok(/票种与价格|不能再改/.test(modals[0].content), modals[0].content);
+  assert.ok(/票务规则不能直接修改/.test(modals[0].content), modals[0].content);
+  assert.equal(modals[0].confirmText, '复制新草稿');
+  assert.equal(typeof modals[0].success, 'function');
+  assert.match(modals[0].content, /原主题和订单保留不变/);
 });
 
 test('WHITELIST 档只改文案:照常保存', () => {

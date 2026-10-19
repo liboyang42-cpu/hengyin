@@ -51,6 +51,12 @@
   color: var(--cy-color-text-primary);
   text-align: center;
 }
+.cgcs__countdown {
+  font-size: var(--cy-type-label);
+  color: var(--cy-color-text-tertiary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 
 .cgcs__save {
   width: var(--cy-comp-sheet-close-hit-size);   /* 88rpx 热区,与弹层关闭键同档 */

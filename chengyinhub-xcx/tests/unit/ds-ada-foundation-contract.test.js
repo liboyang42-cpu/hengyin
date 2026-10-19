@@ -307,6 +307,8 @@ test('负控:footer-bar 承托底改半透明(内容透出)必须判红', () => 
 // 不比对源码字符串,也不复制一份状态表到测试里 —— 复制的那份只会证明它自己。
 function loadComponent(rel) {
   const abs = path.join(ROOT, rel)
+  const prevBehavior = global.Behavior
+  global.Behavior = (options) => options
   const prevComponent = global.Component
   let captured = null
   global.Component = (options) => { captured = options }
@@ -315,6 +317,7 @@ function loadComponent(rel) {
     require(abs)
   } finally {
     global.Component = prevComponent
+    global.Behavior = prevBehavior
   }
   assert.ok(captured, `${rel} 必须调用 Component() 注册`)
   return captured
@@ -897,6 +900,8 @@ function assertSpinnerCycleToken(tokens, wxssByRel) {
     let declaredCount = 0
     for (const rule of targeting) {
       for (const [, prop, value] of rule.body.matchAll(DURATION_DECLS)) {
+        // 减少动效的静态替代没有转速，不允许借此给普通态放行。
+        if (prop === 'animation' && value.trim() === 'none' && /--reduced-motion\b/.test(rule.selector)) continue
         declaredCount += 1
         assert.doesNotMatch(value, LITERAL_DURATION,
           `${rule.selector} 的 ${prop} 写了字面时长,会层叠覆盖 spinner 转速(${rel}):${value.trim()}`)
@@ -1039,4 +1044,13 @@ test('负控:文档漏写「地图退出例外」必须判红', () => {
   assert.throws(() => assertDocsMatchDecision([
     { rel: '<mutated>', text: '普通二级页返回 = 裸 chevron,全站统一。\n' },
   ]), assert.AssertionError)
+})
+
+test('减少动效可停转，普通态或减少动效的字面转速仍判红', () => {
+  const tokens = read('style/tokens.wxss')
+  const rel = 'components/cy/btn/index.wxss'
+  assert.doesNotThrow(() => assertSpinnerCycleToken(tokens, readSpinnerWxss()))
+  for (const rule of ['.btn__spinner { animation: none; }', '.btn--reduced-motion .btn__spinner { animation: cy-btn-spin 1s infinite; }']) {
+    assert.throws(() => assertSpinnerCycleToken(tokens, readSpinnerWxss({ [rel]: read(rel) + rule })))
+  }
 })

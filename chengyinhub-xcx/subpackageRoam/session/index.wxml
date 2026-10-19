@@ -8,6 +8,7 @@
   <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + ' · ' + s.time : ''}}" safe-top="{{false}}" />
   <view class="session-shell__body">
     <block wx:if="{{sharedState}}">
+      <view class="ss-shared-note" wx:if="{{sharedState === 'ready'}}" aria-role="note">分享者自报的漫游回忆{{sharedVersion ? ' · 第 ' + sharedVersion + ' 版' : ''}} · 不作为官方完成凭证</view>
       <view class="session-status" wx:if="{{sharedState === 'loading'}}" aria-role="status">正在打开朋友分享的足迹</view>
       <cy-error load-failure wx:elif="{{sharedState === 'error'}}" fill title="这条足迹暂时打不开" sub="网络不太稳定，重试一次" retry="重试" bind:retry="retryShared" />
       <cy-empty wx:elif="{{sharedState === 'gone'}}" fill size="lg" kind="missing-param" title="这条足迹已不再公开" sub="分享者可能已关闭分享或清理了记录" cta="去漫游看看" bind:cta="goRoam" />
@@ -51,9 +52,15 @@
         <cy-error title="{{share.error}}" sub="足迹卡仍在本页，可重试或返回" retry="重试保存" bind:retry="retryShare" />
       </view>
       <view class="ss-share-link" wx:if="{{share.linkReason}}">
-        <text>{{share.linkReason === 'private' ? '当前可见范围为仅自己，朋友点开只能看到漫游首页' : '足迹链接没生成，朋友点开只能看到漫游首页'}}</text>
-        <text class="ss-share-link__retry" wx:if="{{share.linkReason !== 'private'}}" bindtap="retryShareLink" aria-role="button" aria-label="重新生成足迹链接" hover-class="cy-pressed">重试</text>
+        <text>{{share.linkReason === 'private' ? '当前可见范围为仅自己，朋友点开只能看到漫游首页' : (share.linkReason === 'revoked' ? '这条足迹链接已撤回，旧链接打开只会显示「已不再公开」' : (share.linkReason === 'conflict' ? '这条足迹已在别处更新，点重试按当前设置重新发布' : '足迹链接没生成，朋友点开只能看到漫游首页'))}}</text>
+        <text class="ss-share-link__retry" wx:if="{{share.linkReason !== 'private' && share.linkReason !== 'revoked'}}" bindtap="retryShareLink" aria-role="button" aria-label="重新生成足迹链接" hover-class="cy-pressed">重试</text>
       </view>
+      <!-- F0384/M0117:单条链接的版本与撤回;导出的图片无法召回要说清楚 -->
+      <view class="ss-share-link" wx:if="{{share.token}}">
+        <text>足迹链接 · 第 {{share.version || 1}} 版 · 自报回忆，不作为官方完成凭证</text>
+        <text class="ss-share-link__retry" bindtap="revokeShareLink" aria-role="button" aria-label="撤回这条足迹链接" aria-disabled="{{share.revoking}}" hover-class="cy-pressed">{{share.revoking ? '撤回中' : '撤回这条链接'}}</text>
+      </view>
+      <text class="ss-share-note">撤回只让链接失效；已保存到相册或已发出的图片无法召回。</text>
       <view class="ss-share-actions">
         <cy-btn class="ss-share-action" variant="primary" loading="{{share.saving}}" disabled="{{share.saving}}" bindtap="saveShareCard">
           <cy-icon name="image" size="34" /><text class="ss-share-action__label">保存到相册</text>

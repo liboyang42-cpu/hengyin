@@ -23,6 +23,37 @@ const schemas = {
   STAFF_MANUAL_SIGN: ['sequence', 'occurredAt', 'signedAction'], MANUAL_REVIEW: ['reviewKind'],
 }
 
+// X028–X031 主持台：当前状态与每个动作的实际后果，只描述服务端已实现的行为。
+const runStatusLabels = { RUNNING: '运行中', PAUSED: '已暂停', INTERRUPTED: '已中止', CANCELLED: '已取消' }
+const runStatusNotes = {
+  PAUSED: '玩家端只读，HP、资源、配给与倒计时冻结；恢复后倒计时顺延',
+  INTERRUPTED: '已停止全部扣减与结算，不计结局；不可恢复',
+  CANCELLED: '已停止计时与结算；不可恢复，原单退款不会自动发起',
+}
+const consequences = {
+  RUN_PAUSE: '暂停后玩家端统一显示暂停，所有玩家提交被拒；HP、资源、配给与倒计时冻结，恢复后倒计时按暂停时长顺延。',
+  RUN_RESUME: '恢复后玩家可继续提交，归零倒计时按暂停时长顺延。',
+  RUN_INTERRUPT: '中止不可撤销、不可恢复：立即停止全部 HP、资源、配给扣减并释放未执行的占用；本局只记为运营中止，不计入任何剧情结局（含 END05）。',
+  RUN_CANCEL: '取消不可撤销、不可恢复：停止计时与结算并释放未执行的占用。本操作不会自动发起原单退款，退款须按退款规则另行处理。',
+  STAFF_TEAM_EXIT: '确认退出不可撤销：释放该队未执行的任务与协作占用，已持有物资保留、不被征用；该队之后不能再提交。',
+  QUEST_GUIDE: '指导完成与正常完成同奖励，记为“工作人员指导”，并记录核验人与原因。',
+  LOCATION_REBIND: '迁点后任务标识与领取槽不变，不扣 HP；该地点已有的到达核验作废，需重新核验。',
+  ARRIVAL_REVOKE: '撤销后该队须重新核验到达；撤销原因与操作人留审计。',
+  ARRIVAL_CONFIRM: '到达凭证一次有效，已核验或过期的凭证会被拒绝。',
+}
+
+function genericOpsStatusText(run) {
+  if (!run || !Number.isSafeInteger(run.authorityEpoch)) return ''
+  const parts = [(runStatusLabels[run.operationStatus] || '状态待确认') + (run.authorityMode === 'MANUAL' ? ' · 人工账接管' : '') + ' · 权威 ' + run.authorityEpoch]
+  if (run.authorityMode !== 'MANUAL' && runStatusNotes[run.operationStatus]) parts.push(runStatusNotes[run.operationStatus])
+  if (typeof run.operationReason === 'string' && run.operationReason.trim()) parts.push('原因：' + run.operationReason.trim())
+  return parts.join('｜')
+}
+
+function genericOpsConsequence(action) {
+  return consequences[action] || ''
+}
+
 function genericOpsActions(control) {
   if (!control || !control.run || !Number.isSafeInteger(control.run.authorityEpoch) || control.run.authorityEpoch < 1
     || !Number.isSafeInteger(control.revision) || !Array.isArray(control.availableActions)) return []
@@ -202,4 +233,4 @@ function genericOpsPayload(action, draft, control) {
   return payload
 }
 
-module.exports = { genericOpsActions, genericOpsFields, genericOpsPayload }
+module.exports = { genericOpsActions, genericOpsFields, genericOpsPayload, genericOpsStatusText, genericOpsConsequence }

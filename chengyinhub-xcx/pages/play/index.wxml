@@ -156,7 +156,11 @@
               aria-role="button" aria-label="{{runState === 'running' ? '暂停这一局' : '开始这一局'}}{{runState === 'idle' ? '' : '，长按结束本次'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="drow__hold" wx:if="{{runHoldPct > 0}}" style="width:{{runHoldPct}}%"></view>
           <view class="dic pic pic--route"></view>
+<<<<<<< public
           <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? (runHoldLeft > 0 ? '还有 ' + runHoldLeft + ' 站未完成 · 松开取消' : '松开取消') : '长按结束这一局'}}</text></view>
+=======
+          <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? '松开取消' : (runState === 'running' ? '暂停只停本机用时，已开始的限时任务照常计时 · 长按结束' : '长按结束这一局')}}</text></view>
+>>>>>>> private-feature/w2-r
           <view class="darr"></view>
         </view>
         <!-- 自由探索在地图模式下的切章节:原来挂在底栏左键上,底栏没了就收到这里。 -->
@@ -272,12 +276,17 @@
     <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
                  bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
       <view class="chfull__pad"></view>
+      <cy-inline-error wx:if="{{thoughtSyncNotice}}" title="{{thoughtSyncNotice}}" action="重试同步" bind:action="retryThoughtSync" />
       <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
            selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
       <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : ''}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
             style="--d:{{item.d}}s">
         <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
-        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true" />
+        <view wx:elif="{{item.kind === 'image'}}">
+          <image wx:if="{{!item.mediaFailed}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true" aria-label="{{item.altText || '故事图片，未提供文字替代'}}" data-i="{{item.i}}" binderror="onStoryImageError" />
+          <text class="chfull__media-text">{{item.altText || '这张图片尚未提供文字替代'}}</text>
+          <cy-inline-error wx:if="{{item.mediaFailed}}" title="图片暂时无法显示" sub="{{item.url ? '文字仍可阅读，可重试加载图片' : '图片暂不可用，请继续阅读文字'}}" action="{{item.url ? '重试' : ''}}" data-i="{{item.i}}" bind:action="retryStoryImage" />
+        </view>
         <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
              连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
              ⚠️ 整块必须仍是一个 .chfull__para —— measureChapter 用 selectAll('.chfull__para') 按下标对齐 chapterParas。 -->
@@ -296,9 +305,13 @@
           </swiper>
           <text class="chfull__album-k">{{item.title || '相册'}} · {{item.images.length}} 张 · 点开看</text>
         </view>
-        <view wx:elif="{{item.kind === 'audio'}}" class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
-              aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
+        <view wx:elif="{{item.kind === 'audio'}}">
+          <view wx:if="{{item.url}}" class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
+                aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放或重试本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="chfull__audio-label">{{audioNodeId === item.audioKey ? (audioError ? '播放失败，点此重播' : (audioLoading ? '正在加载…' : (audioPlaying ? '暂停' : '继续播放'))) : '播放这段音频'}}</text>
+          </view>
+          <text class="chfull__media-text">{{item.altText || '这段音频尚未提供文字替代'}}</text>
+          <text class="chfull__media-text">{{item.url ? '切到后台会暂停，返回后点此继续；重新进入从本段开头播放。' : '音频暂不可用，请继续阅读文字。'}}</text>
         </view>
         <!-- 内嵌玩法(契约 §1.5):一块一个 .chfull__para(整块玩法都在这一层里,
              ⚠️ 里面再多元素也不进 measureChapter 的 selectAll 选择器,但外层少一个就整屏错位)。
@@ -672,7 +685,7 @@
       <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:3" wx:if="{{hero.node.isMerchant}}">店铺</view>
       <view class="fx-shop fx-hero__in" style="--i:3" wx:if="{{hero.node.isMerchant}}">
         <view class="fx-shop__top" bindtap="openShopNpc" aria-role="button"
-              aria-label="和 {{hero.node.npcName || hero.node.name}} 对话" hover-class="cy-pressed" hover-stay-time="80">
+              aria-disabled="{{!shopNpcChatEnabled}}" aria-label="{{shopNpcChatEnabled ? '和店铺分身对话' : '店铺对话尚未开放'}}" hover-class="cy-pressed" hover-stay-time="80">
           <image class="fx-shop__th" wx:if="{{hero.node.imgUrl}}" src="{{img.first(hero.node.imgUrl)}}" mode="aspectFill" />
           <view class="fx-shop__c">
             <view class="fx-shop__n">{{hero.node.name}}</view>
@@ -761,6 +774,7 @@
     </view>
     <scroll-view class="st-scroll" scroll-y enhanced show-scrollbar="{{false}}" bindscroll="onStoryScroll">
       <view class="fx-story__pad"></view>
+      <cy-inline-error wx:if="{{thoughtSyncNotice}}" title="{{thoughtSyncNotice}}" action="重试同步" bind:action="retryThoughtSync" />
       <block wx:for="{{chapStory.lines}}" wx:key="id">
         <image wx:if="{{item.img}}" class="st-line st-line--img {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}}"
                style="--d:{{item.d}}s" src="{{img.first(item.img)}}" mode="aspectFill" />
@@ -817,21 +831,23 @@
         <view class="fx-msg__ops" wx:if="{{item.role=='ai'}}">
           <view class="fx-msg__op" bindtap="copyNpcMsg" data-text="{{item.text}}"
                 aria-role="button" aria-label="复制这条回答" hover-class="cy-pressed" hover-stay-time="80">复制</view>
-          <view class="fx-msg__op" bindtap="retryNpcMsg" data-idx="{{index}}"
-                aria-role="button" aria-label="让他再答一次" hover-class="cy-pressed" hover-stay-time="80">重答</view>
+          <view wx:if="{{item.pending}}" class="fx-msg__op" bindtap="retryNpcMsg" data-idx="{{index}}"
+                aria-role="button" aria-label="恢复原问题" aria-disabled="{{shopNpc.thinking}}" hover-class="cy-pressed" hover-stay-time="80">恢复原问题</view>
         </view>
       </view>
       <view class="fx-msg fx-msg--ai" wx:if="{{shopNpc.thinking}}">
         <view class="fx-msg__who">{{shopNpc.name}} {{shopNpc.thinkPhase ? '正在回答' : '正在输入…'}}</view>
       </view>
     </scroll-view>
+    <view wx:if="{{shopNpc.statusText}}" class="fx-msg__who" aria-live="polite">{{shopNpc.statusText}}</view>
+    <view wx:if="{{shopNpc.audioStatus}}" class="fx-msg__who" aria-live="polite">{{shopNpc.audioStatus}}</view>
     <view class="fx-npc__bar">
       <view class="fx-npc__inp">
         <input class="fx-npc__input" value="{{shopNpc.input}}" maxlength="200" confirm-type="send"
                placeholder="{{shopNpc.recording ? '正在听…松开发送' : ('问问' + shopNpc.name + '…')}}" placeholder-class="fx-npc__ph-t"
                bindinput="onShopNpcInput" bindfocus="onShopNpcFocus" bindconfirm="sendShopNpc" />
         <!-- 按住说话:和打字并列在同一条输入框里,所以「点了语音回不了打字」结构上不成立 -->
-        <view class="fx-npc__mic {{shopNpc.recording ? 'is-rec' : ''}}"
+        <view wx:if="{{shopNpcVoiceEnabled}}" class="fx-npc__mic {{shopNpc.recording ? 'is-rec' : ''}}"
               bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceEnd"
               aria-role="button" aria-label="按住说话">
           <!-- 图标集(生成物)里没有麦克风,不手改图标集:phone 是现成里最接近「说话」的隐喻,
@@ -840,7 +856,7 @@
         </view>
       </view>
       <view class="fx-npc__send {{shopNpc.input ? '' : 'is-off'}}" bindtap="sendShopNpc"
-            aria-role="button" aria-label="发送" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="30" /></view>
+            aria-role="button" aria-label="发送" aria-disabled="{{shopNpc.thinking || shopNpc.recovering || !shopNpcChatEnabled}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="30" /></view>
     </view>
     <page-container show="{{shopNpc.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onShopNpcNativeBack" />
   </view>
@@ -1292,16 +1308,24 @@
     <cy-icon name="arrow-right" size="28" />
   </view>
   <view class="finsheet__retry" wx:if="{{endingError}}">城市故事暂未加载，不影响本次足迹。<text class="finsheet__retry-act" bindtap="retryEnding" hover-class="cy-pressed" hover-stay-time="80">重新加载</text></view>
-  <view class="finish-route-recommendation" wx:if="{{finishRouteRecommendation}}" bindtap="goFinishRouteRecommendation" aria-role="button" aria-label="查看附近路线{{finishRouteRecommendation.title}}并购票" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="finish-route-recommendation__meta" wx:if="{{finishRecommendationState === 'loading'}}" aria-role="status">正在查找附近路线…</view>
+  <view wx:if="{{finishRecommendationState === 'error'}}">
+    <text>附近路线暂未加载，不影响本次足迹</text>
+    <cy-btn variant="ghost" bindtap="loadFinishRouteRecommendation">重新查找</cy-btn>
+  </view>
+  <view class="finish-route-recommendation__meta" wx:if="{{finishRecommendationState === 'empty'}}">已加载的附近路线中暂无其他候选</view>
+  <view class="finish-route-recommendation__meta" wx:if="{{finishRecommendationState === 'locationUnknown'}}">位置尚未确认，暂无法查找附近路线</view>
+  <view class="finish-route-recommendation" wx:if="{{finishRouteRecommendation}}" bindtap="goFinishRouteRecommendation" aria-role="button" aria-label="查看附近路线{{finishRouteRecommendation.title}}，确认参加条件" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{finishRouteRecommendation.cover}}" class="finish-route-recommendation__cover" src="{{finishRouteRecommendation.cover}}" mode="aspectFill" />
     <view class="finish-route-recommendation__body">
       <view class="finish-route-recommendation__eyebrow">附近下一程</view>
+      <view class="finish-route-recommendation__meta">开放、余票和交通用时待确认</view>
       <view class="finish-route-recommendation__title">{{finishRouteRecommendation.title}}</view>
       <view class="finish-route-recommendation__meta" wx:if="{{finishRouteRecommendation.meta}}">{{finishRouteRecommendation.meta}}</view>
     </view>
     <view class="finish-route-recommendation__action">
       <text wx:if="{{finishRouteRecommendation.priceText}}">{{finishRouteRecommendation.priceText}}</text>
-      <view><text>查看票价并购票</text><cy-icon name="arrow-right" size="24" /></view>
+      <view><text>查看参加条件</text><cy-icon name="arrow-right" size="24" /></view>
     </view>
   </view>
   <view class="finsheet__cta" bindtap="closeFinish" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>

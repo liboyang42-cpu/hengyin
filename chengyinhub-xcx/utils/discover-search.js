@@ -71,6 +71,8 @@ function decorateItem(type, item) {
     type: type,
     typeLabel: meta.label,
     title: item.name || meta.label,
+    priceText: type === 'topic' || type === 'activity' ? (rowPrice(item) == null ? '价格待确认' : '展示价 ¥' + rowPrice(item) + ' 起，当前票价以详情为准') : '',
+    dateText: type === 'topic' || type === 'activity' ? (ymdOf(item.startDate || item.start_date) || '日期待确认') : '',
     detail: detail,
     cover: image,
     icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : 'map'),
@@ -102,8 +104,9 @@ function ymdOf(value) {
 
 function rowPrice(item) {
   const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+  if (raw == null || String(raw).trim() === '' || typeof raw === 'boolean') return null;
   const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 function matchesFilters(type, item, filters) {
@@ -115,8 +118,8 @@ function matchesFilters(type, item, filters) {
     if (startBound && rowDay < startBound) return false;
     if (endBound && rowDay > endBound) return false;
   }
-  const minP = Number(filters.minPrice);
-  const maxP = Number(filters.maxPrice);
+  const minP = filters.minPrice == null || filters.minPrice === '' ? NaN : Number(filters.minPrice);
+  const maxP = filters.maxPrice == null || filters.maxPrice === '' ? NaN : Number(filters.maxPrice);
   const applyPrice = (Number.isFinite(minP) && minP > 0) || (Number.isFinite(maxP) && maxP < 1000);
   if (applyPrice) {
     const price = rowPrice(item);

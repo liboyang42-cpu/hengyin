@@ -18,12 +18,18 @@ function readReducedMotion(storage) {
   }
 }
 
+// null 表示主键未保存；false 是已保存的“恢复动态效果”。
 function writeReducedMotion(storage, value) {
   const enabled = value === true
   const target = resolveStorage(storage)
-  if (!target || typeof target.setStorageSync !== 'function') return enabled
+  if (!target || typeof target.setStorageSync !== 'function') return null
   try {
     target.setStorageSync(REDUCED_MOTION_KEY, enabled)
+  } catch (e) {
+    return null
+  }
+  // 读取优先主键；兼容键写失败不能把已保存的主键伪报为失败。
+  try {
     target.setStorageSync(LEGACY_REDUCED_MOTION_KEY, enabled)
   } catch (e) {}
   return enabled

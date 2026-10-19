@@ -19,6 +19,13 @@ const CLIP_MIN = 1
 const CLIP_MAX = 40
 const CLIP_DEFAULT = 10
 const STORAGE_KEY = 'roam_share_privacy'
+// M0112/N015 敏感地点遮挡。区域坐标只存本机(与本机轨迹同级),从不上传;
+// 上传的只有「去敏声明」(规则版本/裁剪比例/遮挡个数),服务端按同一版本号校验。
+const REDACTION_VERSION = 1
+const MASK_ZONE_MAX = 5
+const MASK_RADIUS_MIN = 100
+const MASK_RADIUS_MAX = 1000
+const MASK_RADIUS_DEFAULT = 300
 const { distM } = require('./roam-geo.js')
 const { normalizeTrack } = require('./roam-track-simplify.js')
 
@@ -55,6 +62,35 @@ function normalizeVisibility(value) {
   return VISIBILITY_VALUES.indexOf(value) >= 0 ? value : VISIBILITY_DEFAULT
 }
 
+function normalizeMaskZone(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const lat = Number(raw.lat)
+  const lng = Number(raw.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null
+  if (lat === 0 && lng === 0) return null
+  const r = Math.round(Number(raw.r))
+  return {
+    id: String(raw.id || (lat.toFixed(4) + ',' + lng.toFixed(4))).slice(0, 32),
+    name: String(raw.name || '敏感地点').slice(0, 20),
+    lat: Math.round(lat * 1e4) / 1e4,
+    lng: Math.round(lng * 1e4) / 1e4,
+    r: Number.isFinite(r) ? Math.min(MASK_RADIUS_MAX, Math.max(MASK_RADIUS_MIN, r)) : MASK_RADIUS_DEFAULT,
+  }
+}
+
+function normalizeMaskZones(raw) {
+  const list = Array.isArray(raw) ? raw : []
+  const out = []
+  const seen = {}
+  list.forEach((item) => {
+    const zone = normalizeMaskZone(item)
+    if (!zone || seen[zone.id] || out.length >= MASK_ZONE_MAX) return
+    seen[zone.id] = true
+    out.push(zone)
+  })
+  return out
+}
+
 /** 未设置过 = 用默认值(裁剪**开着**)。读不出来也一样 —— 隐私闸不因存储故障而失效。 */
 function normalizeSharePrivacy(raw) {
   const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
@@ -62,6 +98,46 @@ function normalizeSharePrivacy(raw) {
     clipEnabled: source.clipEnabled == null ? true : !!source.clipEnabled,
     clipPercent: normalizeClipPercent(source.clipPercent),
     visibility: normalizeVisibility(source.visibility),
+    maskZones: normalizeMaskZones(source.maskZones),
+  }
+}
+
+function isPointMasked(point, setting) {
+  const zones = setting && Array.isArray(setting.maskZones) ? setting.maskZones : []
+  if (!zones.length || !point) return false
+  const lat = Number(point.lat)
+  const lng = Number(point.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+  return zones.some((zone) => distM({ lat, lng }, zone) <= zone.r)
+}
+
+/**
+ * 去掉落在任一敏感区域内的点。与首尾裁剪相互独立:关掉裁剪也照样遮挡。
+ * 只删点不补点:输出里不会出现区域内的坐标(区域两侧的点可能直线相连,那是图上的跨越,不是区域内的位置)。
+ */
+function maskTrackForSharing(track, setting) {
+  const points = Array.isArray(track) ? track : []
+  const privacy = normalizeSharePrivacy(setting)
+  if (!privacy.maskZones.length) return points.slice()
+  return points.filter((point) => !isPointMasked(point, privacy))
+}
+
+/** 分享产物里的地点同样过遮挡:家附近的店名+坐标一样能反推住址。 */
+function maskPoisForSharing(pois, setting) {
+  const list = Array.isArray(pois) ? pois : []
+  const privacy = normalizeSharePrivacy(setting)
+  if (!privacy.maskZones.length) return list.slice()
+  return list.filter((poi) => !(poi && poi.lat != null && poi.lng != null && isPointMasked(poi, privacy)))
+}
+
+/** 随快照上传的去敏声明:不含区域坐标。服务端按 v 校验同一版本。 */
+function redactionDeclaration(setting) {
+  const privacy = normalizeSharePrivacy(setting)
+  return {
+    v: REDACTION_VERSION,
+    clip: privacy.clipEnabled,
+    pct: privacy.clipEnabled ? privacy.clipPercent : 0,
+    zones: privacy.maskZones.length,
   }
 }
 
@@ -96,20 +172,21 @@ function writeSharePrivacy(patch, storage) {
  */
 function clipTrackForSharing(track, setting) {
   const points = Array.isArray(track) ? track : []
-  const { clipEnabled, clipPercent } = normalizeSharePrivacy(setting)
-  if (!clipEnabled) return points.slice()
-  if (points.length < 2) return points.slice()
+  const privacy = normalizeSharePrivacy(setting)
+  const { clipEnabled, clipPercent } = privacy
+  if (!clipEnabled) return maskTrackForSharing(points, privacy)
+  if (points.length < 2) return maskTrackForSharing(points, privacy)
   const drop = Math.floor(points.length * clipPercent / 100)
-  if (drop <= 0) return points.slice()
+  if (drop <= 0) return maskTrackForSharing(points, privacy)
   if (points.length - drop * 2 < 2) return []
-  return points.slice(drop, points.length - drop)
+  return maskTrackForSharing(points.slice(drop, points.length - drop), privacy)
 }
 
 /** 历史点已按几何抽稀，点数不再代表采样时间；按折线长度裁剪，短直线也不能泄露原首尾。 */
 function clipSavedTrackForSharing(track, setting) {
   const points = normalizeTrack(track)
   const privacy = normalizeSharePrivacy(setting)
-  if (!privacy.clipEnabled) return points
+  if (!privacy.clipEnabled) return maskTrackForSharing(points, privacy)
   if (points.length < 2) return []
   const lengths = points.map((point, i) => i ? distM(points[i - 1], point) : 0)
   const total = lengths.reduce((sum, length) => sum + length, 0)
@@ -131,7 +208,7 @@ function clipSavedTrackForSharing(track, setting) {
     travelled = next
     if (travelled >= end) break
   }
-  return result
+  return maskTrackForSharing(result, privacy)
 }
 
 function channelsForVisibility(visibility) {
@@ -163,6 +240,13 @@ module.exports = {
   CLIP_MAX,
   CLIP_DEFAULT,
   STORAGE_KEY,
+  REDACTION_VERSION,
+  MASK_ZONE_MAX,
+  MASK_RADIUS_DEFAULT,
+  normalizeMaskZones,
+  maskTrackForSharing,
+  maskPoisForSharing,
+  redactionDeclaration,
   VISIBILITY,
   VISIBILITY_VALUES,
   VISIBILITY_DEFAULT,

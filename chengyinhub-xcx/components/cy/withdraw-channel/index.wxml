@@ -1,0 +1,25 @@
+<view class="wc">
+  <view class="wc-head">
+    <text class="wc-title">提现渠道</text>
+    <text class="wc-tag" wx:if="{{state === 'ready'}}">{{view.channelText}}</text>
+  </view>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
+  <cy-inline-error wx:elif="{{state === 'error'}}" title="提现信息暂未取回" action="重试" bind:action="load" />
+  <block wx:else>
+    <text class="wc-sub">{{view.channelSub}}</text>
+    <view class="wc-row">
+      <text class="wc-label">可提现</text>
+      <text class="wc-value">{{view.availableText}}</text>
+    </view>
+    <text class="wc-meta" wx:if="{{view.frozenText}}">{{view.frozenText}}{{view.frozenNote ? '：' + view.frozenNote : ''}}</text>
+    <text class="wc-meta" wx:if="{{view.consentText}}">{{view.consentText}}</text>
+    <view class="wc-latest" wx:if="{{view.latest}}">
+      <view class="wc-row">
+        <text class="wc-label">最近申请 {{view.latest.amountText}}</text>
+        <text class="wc-status wc-status--{{view.latest.statusVariant}}">{{view.latest.statusText}}</text>
+      </view>
+      <text class="wc-meta">{{view.latest.timeText}}{{view.latest.accountText ? ' · 收款账户 ' + view.latest.accountText : ''}}</text>
+      <text class="wc-meta">{{view.latest.consentText}}</text>
+    </view>
+  </block>
+</view>

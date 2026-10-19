@@ -91,3 +91,19 @@ test('ORDER-01:我的参与已完成筛选按首次合法扫码读回，不等�
   assert.equal(page.data.list[0].stateText, '已完成');
   assert.equal(page.data.list[0].verificationStatus, 0);
 });
+
+
+test('凭证入口保留本人原报名 ID，浏览不写签到或把完成当核销', () => {
+  const page = loadPage();
+  const navigations = [];
+  global.wx.navigateTo = options => navigations.push(options.url);
+  page.allList = [{ id: 21, ownerType: 2, verificationStatus: 0, firstSuccessfulScanAt: '2026-01-01' }];
+  const row = page.normalize(page.allList[0]);
+  assert.equal(row.verificationText, '尚未核销');
+  assert.equal(page.normalize({ id: 2 }).verificationText, '核销状态待确认');
+  page.viewVoucher({ currentTarget: { dataset: { id: 21 } } });
+  assert.deepEqual(navigations, ['/subpackageMember/signup/index?focusId=21&stype=2']);
+  assert.equal(sandbox.requests.length, 0);
+  page.viewVoucher({ currentTarget: { dataset: { id: 99 } } });
+  assert.equal(navigations.length, 1);
+});

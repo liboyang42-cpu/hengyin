@@ -39,7 +39,7 @@
   <!-- ============ 顶部导航 ============ -->
   <!-- 试玩玩法屏时整条导航让位:玩法屏自己带「退出」,再画一个返回箭头会和它叠在一起,
        而且那条白底会把深色的玩法屏框成一张卡。 -->
-  <cy-nav-bar wx:if="{{ !(previewVisible && pvKit && pvStepKey === 'challenge') }}" title="{{ previewVisible ? '玩家视角预览' : '编辑玩法模板' }}" title-align="left" custom-back bind:back="goBack" />
+  <cy-nav-bar wx:if="{{ !(previewVisible && pvKit && pvStepKey === 'challenge') }}" title="{{ previewVisible ? '玩家视角预览 · 本地沙盒' : '编辑玩法模板' }}" title-align="left" custom-back bind:back="goBack" />
   <view class="cg-nav-spacer" style="height: {{ statusBarHeight + navBarHeight }}px;"></view>
 
   <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后编辑玩法模板" cta="去登录" bind:cta="onCreatorLogin" />

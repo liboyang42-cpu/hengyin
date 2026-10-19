@@ -95,6 +95,8 @@ function actionRows(view, nodes) {
       choices: personal ? [...new Set(available.filter(action => action.contentId === key && ['QUEST_RESOLVE', 'GAMEPLAY_PREVIEW'].includes(action.operation) && action.choiceKey).map(action => action.choiceKey))].map((choiceKey, index) => ({ choiceKey, label: '方案 ' + (index + 1) })) : (quest.choices || []).map((choice, index) => ({ choiceKey: choice.choiceKey, label: choice.label || choice.title || '方案 ' + (index + 1) })),
       disabledText: proofPending ? '待审核 / 凭证未通过，请打开原任务核对' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
       frozenText: active && costOptions[frozenQuest] ? costOptions[frozenQuest].label + ' · ' + costOptions[frozenQuest].amountText : '',
+      // 预留中：开始任务只锁定付法，结算成功才扣，取消即释放（三态的第一态，后两态见 reservationReceipt）
+      reservationText: !ended && active ? reservedText(costOptions[frozenQuest] ? costOptions[frozenQuest].amountText : amounts(source.costs, view).join(' · ')) : '',
       cancelable: !ended && active && !!allowed('QUEST_CANCEL', key) });
   }
   const tools = personal ? view.tools || [] : (view.interactionTools || []).filter(tool => tool.kind === 'FACILITY');
@@ -110,7 +112,7 @@ function actionRows(view, nodes) {
     const costOptions = options(source.costOptions || tool.costOptions, view, source.costs);
     const blocked = !serverState && !active && view.awaitingChallenge && (costOptions.length > 0 || hasFees(source.costs));
     rows.push({ ...status, kind: 'FACILITY', key, nodeId: active && activeOperation.nodeId || tool.operationNodeId || tool.nodeId, title: tool.title || '本站工具', operation,
-      targetScope: (tool.actionSummary || tool).targetScope, participantCatalog: (tool.actionSummary || tool).participantCatalog, payerRequired: (tool.actionSummary || tool).payerRequired,
+      targetScope: (tool.actionSummary || tool).targetScope, targetScopeText: targetScopeText((tool.actionSummary || tool).targetScope, view), participantCatalog: (tool.actionSummary || tool).participantCatalog, payerRequired: (tool.actionSummary || tool).payerRequired,
       actionText: operation === 'OPERATION_START' ? '开始工具任务' : operation === 'OPEN_OPERATION' ? '打开工具任务' : '使用工具',
       enabled: serverState ? source.enabled : !ended && (operation === 'OPEN_OPERATION' || !!allowed(operation, key) || previewAllowed(operation, key)) && !blocked, openable: !ended && serverState && active && source.disabledReason === 'PROOF_PENDING' && source.trustedPass === false && operation === 'OPEN_OPERATION', blocked, costOptions,
       disabledText: status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
@@ -131,6 +133,19 @@ function actionRows(view, nodes) {
   return rows;
 }
 
+function reservedText(amountText) { return amountText ? '预留中：' + amountText + '（成功才扣，取消即释放）' : ''; }
+
+// 任务结算/取消回执：成功结算为「已扣」，取消为「已释放」；只用操作前的预留行，不臆造服务端未回读的数额
+function reservationReceipt(rows, input) {
+  if (!input || !['QUEST_RESOLVE', 'QUEST_CANCEL'].includes(input.operation)) return null;
+  const row = (rows || []).find(item => item.kind === 'QUEST' && item.key === input.contentId);
+  if (!row || !row.reservationText) return null;
+  const amount = row.reservationText.replace(/^预留中：/, '').replace(/（成功才扣，取消即释放）$/, '');
+  return input.operation === 'QUEST_RESOLVE'
+    ? { key: row.key, state: 'CHARGED', text: row.title + ' · 已扣：' + amount }
+    : { key: row.key, state: 'RELEASED', text: row.title + ' · 已释放：' + amount + '，未扣除' };
+}
+
 function participantChoice(view, input) {
   const row = (view.actionRows || []).find(row => row.kind === 'FACILITY' && row.key === input.contentId);
   if (view.scope !== 'TEAM' || input.operation !== 'FACILITY_USE' || !row || row.targetScope !== 'PARTICIPANTS') return {};
@@ -145,4 +160,11 @@ function participantChoice(view, input) {
   return { rows, participants: ids, payerRequired: row.payerRequired, error };
 }
 
-module.exports = { labels, valueName, amounts, options, toolStatus, actionRows, participantChoice };
+// X005：效果作用于谁由服务端决定；玩家端只说明范围，未到达者不受益，受益者不被扣资源
+function targetScopeText(scope, view) {
+  if (scope === 'PARTICIPANTS') return '效果作用于已到达本站的参与者，未到达者不受益；受益者不扣资源';
+  if (scope === 'WORLD') return '效果作用于全场已到达成员，各自按上限封顶，未到达者不受益';
+  if (scope === 'OWNER') return view && view.scope === 'TEAM' ? '效果只作用于本队' : '效果只作用于本人';
+  return '';
+}
+module.exports = { targetScopeText, labels, valueName, amounts, options, toolStatus, actionRows, participantChoice, reservationReceipt };

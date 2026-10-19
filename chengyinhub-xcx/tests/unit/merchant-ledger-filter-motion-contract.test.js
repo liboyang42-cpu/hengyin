@@ -275,7 +275,7 @@ test('负控：动效降级、epoch 或错误空态互斥任一回退都必须�
   assert.notEqual(missingTablist, tabsWxml, 'tablist 负控锚点失效')
   assert.throws(() => assertSharedSlabContract(tabsJs, missingTablist, tabsWxss), /tablist/)
 
-  const missingSelected = tabsWxml.replace('    aria-selected="{{item.key === active}}"\n', '')
+  const missingSelected = tabsWxml.replace(/\s+aria-selected="[^"]*"/g, '')
   assert.notEqual(missingSelected, tabsWxml, 'aria-selected 负控锚点失效')
   assert.throws(() => assertSharedSlabContract(tabsJs, missingSelected, tabsWxss), /选中态/)
 

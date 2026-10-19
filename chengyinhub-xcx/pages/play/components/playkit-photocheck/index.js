@@ -37,6 +37,8 @@ Component({
     frameOpacity: { type: Number, value: 40 },
     // 拍物成卡:判过时服务端随本次回包带回来的那张卡(契约 §10.2)。null = 这一屏没有卡。
     card: { type: Object, value: null },
+    // F0308:只有视觉模型真判 PASS 才为 true。兜底放行 / 降级放行 passed 也是 true,但这里是 false
+    photoVerified: { type: Boolean, value: false },
   },
   data: {
     busy: false,
@@ -59,10 +61,18 @@ Component({
       let verdict = '';
       let verdictKind = '';
       let reason = '';
+      // photoVerified 与 passed 同一次 setData 下来,observer 触发时 this.data 里已是新值
+      const photoVerified = !!this.data.photoVerified;
       if (degraded) {
         // 降级:这次没有结论。不许说「通过 / 不通过」,也不把玩家卡在这一屏
         verdict = '这次没能审，先往下走';
         verdictKind = '';
+        if (passed) reason = '没经过照片审核，不算照片验收通过';
+      } else if (passed && !photoVerified) {
+        // F0308:旧兜底(次数用尽按 pass 放行)只是让路线不卡死,不是真照片判定 —— 不许标成「过了」
+        verdict = '机会用完了，这张按兜底放行';
+        verdictKind = '';
+        reason = '没通过照片审核，不算照片验收通过';
       } else if (passed) {
         verdict = '这张过了';
         verdictKind = 'ok';

@@ -1,16 +1,18 @@
 // 作者本地试玩：模板和主题预览共用，不上传资料、不创建玩家会话。
+// F0457：本地预览一律标为沙盒，结果与正式服务端判定显著分开；加值只按作者静态配置计算。
+const SANDBOX_LABEL = '本地沙盒预览：不联网判定、不扣资源、不发奖励，结果不代表正式判定';
 function previewD20Result(kit) {
   const values = kit.rollMode === 'normal' ? [12] : [12, 7];
   const kept = kit.rollMode === 'disadvantage' ? Math.min(...values) : Math.max(...values);
   const total = kept + kit.modifier;
   const success = total >= kit.dc;
-  return { values, kept, total, success, text: success ? kit.successText : kit.failText };
+  return { values, kept, total, success, text: success ? kit.successText : kit.failText, sandbox: true, modifierSource: 'STATIC' };
 }
 
 function applyPreviewAction(source, event, startedAt, now = Date.now()) {
   const kit = Object.assign({}, source);
   const { action, detail = {} } = event || {};
-  const result = { kit, startedAt: startedAt || 0, ready: false, message: '' };
+  const result = { kit, startedAt: startedAt || 0, ready: false, message: '', sandbox: true, sandboxLabel: SANDBOX_LABEL };
   if (kit.mode === 'd20' && action === 'roll') {
     kit.result = previewD20Result(kit);
     result.ready = true;
@@ -62,4 +64,4 @@ function applyPreviewAction(source, event, startedAt, now = Date.now()) {
   return result;
 }
 
-module.exports = { applyPreviewAction, previewD20Result };
+module.exports = { applyPreviewAction, previewD20Result, SANDBOX_LABEL };

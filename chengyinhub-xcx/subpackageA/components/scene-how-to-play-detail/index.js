@@ -74,6 +74,9 @@ Component({
             });
           }
         },
+        successStatusAbnormal() {
+          that.setData({ error: true, errorMsg: '玩法说明暂时无法加载，请重试', loading: false });
+        },
         fail: function() {
           that.setData({
             error: true,

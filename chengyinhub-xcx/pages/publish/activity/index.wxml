@@ -134,7 +134,8 @@
       <view wx:if="{{step === 2}}">
       <cy-inline-error load-failure wx:if="{{ownerLoadError}}" title="发起人信息未加载" sub="{{ownerLoadError}}" action="重试" bind:action="getUserData" />
       <view class="li">
-        <view class="item-tit">合作者<text>*</text></view>
+        <view class="item-tit">合作者署名<text>*</text></view>
+        <view class="item-tit">署名仅用于展示，不授予编辑权限。</view>
         <view class="item-cont2 hezuo">
           <view class="dl" wx:for="{{formData.collaboratorList}}" wx:key="id">
             <view class="dd flex-cb" style="padding: 16rpx 26rpx;">

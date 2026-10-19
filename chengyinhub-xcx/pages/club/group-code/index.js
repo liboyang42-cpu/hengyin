@@ -1,6 +1,6 @@
 // 团核销码:主理人/管理员出示给合作商家扫码。码过期后自动换新，权限与团归属只由服务端判定。
 const app = getApp();
-const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js');
+const { buildGroupCodeIssuePayload, listGroupCodeActivities, formatGroupCodeCountdown } = require('../../../utils/group-code-session.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 
 // E-12(2026-09-16):无权限是终态。原来 403/「没有权限」落进通用「出码失败」,只有重试,
@@ -23,6 +23,7 @@ Page({
     title: '本团',
     activityOptions: [],
     qrcodeUrl: '',
+    countdownText: '',
     state: 'loading', // loading | ready | error | selecting | empty | invalid | no-permission
     errMsg: '',
   },
@@ -95,7 +96,7 @@ Page({
     }
     this.clearTimer();
     this._countdown = 0;
-    this.setData({ state: 'loading', errMsg: '', qrcodeUrl: '' });
+    this.setData({ state: 'loading', errMsg: '', qrcodeUrl: '', countdownText: '' });
     app.sendRequest({
       url: '/api/verify/groupcode/issue',
       method: 'POST',
@@ -195,16 +196,19 @@ Page({
     this.setData({ activityId, title: name }, () => this.issue());
   },
 
-  // 倒计时只用来「到期自动重出码」,不上屏 —— 稿 335:1275 没画剩余时间。
-  // 所以它是纯内部态:留在 data 里每秒 setData 一次,传过去没有任何东西渲染。
+  // X034:倒计时上屏(「m:ss 后自动刷新」),让领队和商家都知道这张码还能扫多久;
+  // 到点仍自动重出码。秒数本身留在实例上,只把渲染用的文案放进 data。
   startCountdown(seconds) {
     const that = this;
     this._countdown = seconds;
+    this.setData({ countdownText: formatGroupCodeCountdown(seconds) });
     this._timer = setInterval(function () {
       that._countdown -= 1;
       if (that._countdown <= 0) {
         that.issue();
+        return;
       }
+      that.setData({ countdownText: formatGroupCodeCountdown(that._countdown) });
     }, 1000);
   },
 

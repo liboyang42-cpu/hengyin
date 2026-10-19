@@ -143,6 +143,8 @@ test('保存:POST /api/club/lead/edit-ops,只带 activityId + 秒级 startDate;�
   assert.equal(vm.data.resultSheet.show, true);
   assert.equal(vm.data.resultSheet.kind, 'success');
   assert.equal(vm.data.resultSheet.title, '集合时间已更新');
+  assert.match(vm.data.resultSheet.sub, /尚未推送通知/, 'F0122:回包没有通知送达状态时不得写「已通知」');
+  assert.doesNotMatch(vm.data.resultSheet.sub, /已通知|已报备/);
 
   // 成功刷新 = 重新 fetchDetail + 用回读值更新显示,不是本地先改成新时间
   assert.equal(requests.length, before + 2, '成功后必须回读真源');
@@ -253,4 +255,14 @@ test('负控:旧闸/错误路径/去掉领队闸时,上面的断言必须判红'
   const unlocked = java.replace(SOLD_LOCK, 'if (false) {');
   assert.notEqual(unlocked, java, '变异没生效:已售锁形状已漂移,这个负控在空转');
   assert.throws(() => assert.match(unlocked, SOLD_LOCK), assert.AssertionError);
+});
+
+test('F0122:服务端回执 notification=NOT_SENT 时成功半屏如实写「尚未推送」，不把留痕称为送达', () => {
+  const { vm, requests } = openDirector();
+  const before = requests.length;
+  vm.openOpsTimeSheet();
+  vm.confirmOpsTime();
+  requests[before].success({ code: 200, msg: '已更新并留痕；尚未推送通知参与者', data: { activityId: 702, notification: 'NOT_SENT' } });
+  assert.equal(vm.data.resultSheet.kind, 'success');
+  assert.match(vm.data.resultSheet.sub, /尚未推送通知，请另行告知参与者/);
 });

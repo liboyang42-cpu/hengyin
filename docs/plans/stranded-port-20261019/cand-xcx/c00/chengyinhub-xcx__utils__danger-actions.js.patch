@@ -1,0 +1,22 @@
+diff --git a/chengyinhub-xcx/utils/danger-actions.js b/chengyinhub-xcx/utils/danger-actions.js
+index 8e1d5b4fdf..7ff7e87f5f 100644
+--- a/chengyinhub-xcx/utils/danger-actions.js
++++ b/chengyinhub-xcx/utils/danger-actions.js
+@@ -90,6 +90,17 @@ const DANGER_ACTIONS = {
+     done: { title: '成员已移出', text: '对方已收到站内通知。' },
+   },
+   // ===== 商家售后 =====
++  'merchant.group-reception.revoke': {
++    irreversible: true,
++    title: '撤销这条接待记录？',
++    consequences: [
++      { icon: 'info', text: '该团不再计入本店分账；此操作不会直接转账或退款' },
++      { icon: 'warning', text: '此操作不可撤销，原接待记录无法恢复；如确实接待过，需领队重新出码再扫' },
++    ],
++    confirmText: '撤销接待',
++    alt: null,
++    done: { title: '已撤销接待记录', text: '' },
++  },
+   'merchant.aftercare.reject': {
+     // 可逆:平台审核结束前商家仍可再提交「同意」,最新一条意见为准;不动款项。
+     irreversible: false,

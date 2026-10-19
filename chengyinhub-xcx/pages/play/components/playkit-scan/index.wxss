@@ -284,3 +284,10 @@
   bottom: calc(env(safe-area-inset-bottom) + 48rpx);  /* ds-ok 接替说明条的位置 */
   transform: translateX(-50%);
 }
+
+/* C1:证据口径小字,跟在标题下,不抢取景框 */
+.sc__ev {
+  margin-top: 8rpx;
+  font-size: var(--cy-type-caption);
+  opacity: .6;
+}

@@ -81,3 +81,26 @@ test('权限异常与畸形成功都显示取回失败，不以零元掩盖', ()
   vm.load(); requests[2].successStatusAbnormal({ code: 401 });
   assert.equal(vm.data.state, 'error');
 });
+
+test('X040 台账行带平台结算单号，双方看同一行；缺号不臆造', () => {
+  const view = ledgerView({ code: 200, data: [{ ...base, claimId: 7788 }, { ...base, id: 5, redemptionId: 33 }] }, scope);
+  assert.equal(view.rows[0].claimNo, '7788');
+  assert.equal(view.rows[0].disputeTitle, '直付计酬对账 核销#32 结算单#7788');
+  assert.equal(view.rows[1].claimNo, '');
+  assert.equal(view.rows[1].disputeTitle, '直付计酬对账 核销#33');
+  const merchantView = ledgerView({ code: 200, data: [{ ...base, claimId: 7788 }] },
+    { kind: 'merchant', clubId: 0, topicId: 0 });
+  assert.deepEqual(merchantView.rows[0], view.rows[0]);
+});
+
+test('X040 争议入口只走平台客服会话，不新增账目写请求', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '../../components/cy/club-direct-ledger');
+  const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
+  assert.match(wxml, /平台结算单 #\{\{item\.claimNo\}\}/);
+  assert.match(wxml, /<button class="direct-dispute" open-type="contact"[^>]*send-message-title="\{\{item\.disputeTitle\}\}"/);
+  assert.doesNotMatch(wxml, /bindtap=/);
+  const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
+  assert.doesNotMatch(js, /POST/);
+});

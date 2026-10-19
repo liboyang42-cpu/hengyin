@@ -11,7 +11,8 @@
 // 三条口径写在这里,页面不得各表一套:
 //   · 只回显状态:接口只回答 registered 真/假,姓名与身份证号填过之后页面上不再出现其值;
 //   · 用词不许说「认证」:平台没有三要素通道,号码自洽不等于确有其人,统一说「已登记」;
-//   · 改绑走人工:已登记的人不再给他填字段的入口,要变更只能联系客服。
+//   · 改绑走人工:已登记的人不再给他填字段的入口;要变更走「改绑申请」页(X036),
+//     由平台客服人工审核,通过后旧登记失效。申请页同样只回进度,不回显任何填写值。
 const { isValidIdCard, normalizeIdCard } = require('./form-state.js');
 
 // 两个接口路径写成调用点字面量,不提常量:UI-GATE-0 的 U1 只认可枚举字面量,
@@ -22,7 +23,15 @@ const SOURCE_TOPIC_PUBLISH = 'topic_publish';
 
 // 必须写清「哪些信息、给谁、干什么用」(个保法 §29 单独同意),不能只写"我已阅读并同意"。
 const CONSENT_TEXT = '同意向城瘾提供真实姓名与身份证号，仅用于发布人身份核验，不对外展示';
-const ALREADY_REGISTERED_HINT = '已登记。如需变更实名信息，请联系平台客服。';
+const ALREADY_REGISTERED_HINT = '已登记。如需变更实名信息，可提交改绑申请，由平台客服人工审核。';
+const CHANGE_PAGE_URL = '/subpackageMember/identity-change/index';
+const CHANGE_REASON_MAX = 200;
+const CHANGE_STATUS_TEXT = Object.freeze({
+  PENDING: '审核中',
+  APPROVED: '已通过，新实名已生效',
+  REJECTED: '未通过',
+  CANCELLED: '已撤回',
+});
 
 function text(value) {
   return String(value == null ? '' : value).trim();
@@ -123,13 +132,101 @@ function registerIdentity(form, onDone) {
   });
 }
 
+/** 改绑申请表单校验:姓名/证件/同意与登记同一份规则,再加变更原因(必填、≤200、不许写长串数字)。 */
+function checkChangeForm(form) {
+  const f = form || {};
+  const base = checkIdentityForm(f);
+  if (!base.ok) return base;
+  const reason = text(f.reason);
+  if (!reason) return { ok: false, message: '请填写变更原因' };
+  if (reason.length > CHANGE_REASON_MAX) return { ok: false, message: '变更原因不超过 200 字' };
+  if (/\d{6,}/.test(reason)) return { ok: false, message: '变更原因里不要填写证件号或长串数字' };
+  return { ok: true, message: '' };
+}
+
+/** 进度归一:后端只回 id/status/时间/驳回意见。未知状态按「没有申请」处理,不猜。 */
+function describeChangeProgress(data) {
+  if (!data || !CHANGE_STATUS_TEXT[data.status]) return null;
+  return {
+    id: data.id,
+    status: data.status,
+    statusText: CHANGE_STATUS_TEXT[data.status],
+    pending: data.status === 'PENDING',
+    reviewNote: data.status === 'REJECTED' ? text(data.reviewNote) : '',
+  };
+}
+
+/** 读最近一张改绑申请进度。onDone({ ok, progress }),失败 ok=false 交给页面走错误态。 */
+function loadChangeProgress(onDone) {
+  const app = getApp();
+  app.sendRequest({
+    url: '/api/publisher/identity/change/latest',
+    method: 'POST',
+    data: JSON.stringify({}),
+    header: { 'Content-Type': 'application/json' },
+    hideLoading: true,
+    success(res) {
+      if (!(res && res.code == 200)) { onDone({ ok: false, progress: null }); return; }
+      onDone({ ok: true, progress: describeChangeProgress(res.data) });
+    },
+    fail() { onDone({ ok: false, progress: null }); },
+  });
+}
+
+/** 提交改绑申请。onDone({ ok, message, network }),message 用接口原文。 */
+function submitIdentityChange(form, onDone) {
+  const app = getApp();
+  const check = checkChangeForm(form);
+  if (!check.ok) { onDone({ ok: false, message: check.message, network: false }); return; }
+  app.sendRequest({
+    url: '/api/publisher/identity/change',
+    method: 'POST',
+    data: JSON.stringify({
+      realName: text(form.realName),
+      idCard: normalizeIdCard(form.idCard),
+      reason: text(form.reason),
+      consent: true,
+    }),
+    header: { 'Content-Type': 'application/json' },
+    success(res) {
+      onDone({
+        ok: !!(res && res.code == 200),
+        message: (res && res.msg) || '改绑申请没有提交成功，请稍后重试',
+        network: false,
+      });
+    },
+    fail() { onDone({ ok: false, message: '网络异常，改绑申请没有提交成功', network: true }); },
+  });
+}
+
+/** 撤回自己的待审申请。onDone({ ok, message })。 */
+function cancelIdentityChange(id, onDone) {
+  const app = getApp();
+  app.sendRequest({
+    url: '/api/publisher/identity/change/cancel',
+    method: 'POST',
+    data: { id },
+    success(res) {
+      onDone({ ok: !!(res && res.code == 200), message: (res && res.msg) || '撤回没有成功，请稍后重试' });
+    },
+    fail() { onDone({ ok: false, message: '网络异常，请刷新后确认' }); },
+  });
+}
+
 module.exports = {
   SOURCE_CLUB_APPLY,
   SOURCE_MERCHANT_APPLY,
   SOURCE_TOPIC_PUBLISH,
   CONSENT_TEXT,
   ALREADY_REGISTERED_HINT,
+  CHANGE_PAGE_URL,
+  CHANGE_STATUS_TEXT,
   checkIdentityForm,
+  checkChangeForm,
+  describeChangeProgress,
+  loadChangeProgress,
+  submitIdentityChange,
+  cancelIdentityChange,
   identitySatisfied,
   topicRequiresIdentity,
   loadIdentityStatus,

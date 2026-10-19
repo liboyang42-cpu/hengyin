@@ -51,3 +51,19 @@ test('资料预览全题必答，非法选项/超长输入/配置必填头像均
   kit.avatarUrl = 'wxfile://avatar';
   assert.equal(submit({ name: '小林', job: 'clerk' }).kit.done, true);
 });
+
+test('F0457/F0301 本地预览一律标为沙盒，D20 样例标静态加值来源，玩家端只显示服务端回执来源', () => {
+  const { SANDBOX_LABEL, previewD20Result } = require('../../utils/game-preview-action.js');
+  const fs = require('node:fs'), path = require('node:path');
+  assert.match(SANDBOX_LABEL, /本地沙盒/); assert.match(SANDBOX_LABEL, /不代表正式判定/);
+  const roll = applyPreviewAction({ type: 'diceroll', mode: 'd20', dc: 10, modifier: 1, rollMode: 'normal' }, { action: 'roll' });
+  assert.equal(roll.sandbox, true); assert.equal(roll.sandboxLabel, SANDBOX_LABEL);
+  assert.equal(roll.kit.result.sandbox, true); assert.equal(roll.kit.result.modifierSource, 'STATIC');
+  assert.equal(previewD20Result({ rollMode: 'normal', modifier: 0, dc: 1 }).sandbox, true);
+  const { pickPlayKit } = require('../../pages/play/utils/playkit-view.js');
+  const live = pickPlayKit({ playKit: { diceRoll: { enabled: true, mode: 'd20', dc: 15, modifier: 2, rollMode: 'normal', rolled: true, pips: [12], kept: 12, total: 14, success: false, action: '回执', modifierSource: 'STATIC', sandbox: true } } });
+  assert.equal(live.result.modifierSource, 'STATIC'); assert.equal(live.result.sandbox, undefined, '服务端结果不得显示为沙盒');
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/components/playkit-diceroll/index.wxml'), 'utf8');
+  assert.match(wxml, /本地沙盒样例，不代表正式判定/); assert.match(wxml, /作者固定加值，不取玩家能力/);
+  assert.match(fs.readFileSync(path.resolve(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8'), /玩家视角预览 · 本地沙盒/);
+});

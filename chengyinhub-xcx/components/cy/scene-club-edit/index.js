@@ -1,6 +1,7 @@
 const toast = require('../../../utils/toast.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
 const app = getApp();
+const drafts = require('../../../utils/club-edit-draft.js');
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
 // 活动倾向选中态:WXML 只能做成员访问,不能调 indexOf。
@@ -50,6 +51,10 @@ Component({
       loadState: 'loading',
       loadErrorText: '',
       saveErrorText: '',
+      draftNotice: '',
+      draftAvailable: false,
+      draftBlocked: false,
+      draftComparison: '',
       canSave: false,
       saving: false,
       dissolving: false,
@@ -90,10 +95,13 @@ Component({
 
     fetchDetail() {
       var that = this;
+      const scope = drafts.key(app.getUserID(), this.data.clubId);
+      this._draftKey = scope;
       this.setData({ loadState: 'loading', loadErrorText: '' });
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
         success: function (res) {
+          if (scope !== drafts.key(app.getUserID(), that.data.clubId)) return;
           if (res.code == '200' && res.data) {
             var c = res.data;
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
@@ -106,6 +114,7 @@ Component({
               });
               return;
             }
+            that._draftBase = drafts.base(c);
             that._nonOwnerMemberCount = Number(c.nonOwnerMemberCount) || 0;
             // 回填的是纯文本输入框:服务端过滤存下的 &lt; 等先解码,保存时提交的就是用户原文。
             that.setData({
@@ -126,7 +135,7 @@ Component({
               loadState: 'ready',
               loadErrorText: '',
               saveErrorText: ''
-            }, function () { that.validate(); that.syncDerived(); });
+            }, function () { that.validate(); that.syncDerived(); that.offerDraft(c); });
           } else {
             that.setData({ loadState: 'business-error', loadErrorText: res.msg || '俱乐部不存在' });
           }
@@ -135,6 +144,41 @@ Component({
           that.setData({ loadState: 'network-error', loadErrorText: '网络异常，请重试' });
         }
       });
+    },
+
+    offerDraft(latest) {
+      const found = drafts.read(wx, this._draftKey);
+      this._savedDraft = found.record || null;
+      const conflict = found.record && found.record.base !== this._draftBase;
+      this.setData({
+        draftAvailable: !!found.record && !conflict,
+        draftBlocked: !!conflict || ['corrupt', 'error'].includes(found.state),
+        draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会覆盖当前资料。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的草稿，可恢复或放弃。')
+          : (found.state === 'corrupt' ? '草稿无法读取，原记录已保留；可放弃后重新编辑。' : (found.state === 'error' ? '暂时无法读取草稿，请重新打开后重试。' : '')),
+        draftComparison: conflict ? drafts.compare(found.record.form, latest) : '',
+      });
+    },
+    restoreDraft() {
+      if (!this.data.draftAvailable || !this._savedDraft || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      const saved = drafts.form(this._savedDraft.form);
+      this.setData({
+        name: saved.name, clubType: saved.clubType, activityPrefs: saved.activityPrefs,
+        city: saved.city, keywords: saved.keywords, style: saved.style,
+        description: saved.description, logo: saved.logo, cover: saved.cover,
+        prioritySignupEnabled: saved.prioritySignupEnabled,
+        memberReservedQuota: saved.memberReservedQuota, joinPolicy: saved.joinPolicy,
+        draftAvailable: false, draftNotice: '已恢复到表单，尚未提交。',
+      }, () => {
+        this.validate(); this.syncDerived(); this.markDirty();
+      });
+    },
+    discardDraft() {
+      if (this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) return;
+      if (!drafts.remove(wx, this._draftKey)) { this.setData({ draftNotice: '草稿未能清除，请重试。' }); return; }
+      this._savedDraft = null;
+      this.setData({ draftAvailable: false, draftBlocked: false, draftNotice: '', draftComparison: '' });
+      this.triggerEvent('dirtychange', { dirty: false });
+      this.fetchDetail();
     },
 
     validate() {
@@ -154,11 +198,17 @@ Component({
 
     // ===== 输入 =====
     markDirty() {
+      if (this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) { this.setData({ draftNotice: '账号已变化，请重新打开编辑页。' }); return; }
+      if (!this.data.draftAvailable && !this.data.draftBlocked) {
+        const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data);
+        this.setData({ draftNotice: saved ? '草稿已保留在本机，尚未提交。' : '草稿未能保留，请勿退出；可重试修改或提交。' });
+      }
       if (this.data.saveErrorText) this.setData({ saveErrorText: '' });
       this.triggerEvent('dirtychange', { dirty: true });
     },
 
     onInput(e) {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var f = e.currentTarget.dataset.field;
       this.setData({ [f]: e.detail.value }, () => {
         this.validate();
@@ -167,20 +217,24 @@ Component({
     },
 
     onPrioritySignupChange(e) {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       this.setData({ prioritySignupEnabled: !!e.detail.value }, () => { this.markDirty(); this.syncDerived(); });
     },
 
     onJoinPolicyChange(e) {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       this.setData({ joinPolicy: e.detail.value ? 1 : 0 }, () => { this.markDirty(); this.syncDerived(); });
     },
 
     // ===== 定位:T1 半屏选择器 =====
     // 打开时把当前值拷成 draft;改 draft 不影响表单,点「应用」才写回,直接关掉 = 放弃。
     openTypePicker() {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       this.setData({ pickerKind: 'type', draftType: this.data.clubType });
     },
 
     openPrefsPicker() {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var arr = (this.data.activityPrefs || []).slice();
       this.setData({ pickerKind: 'prefs', draftPrefs: arr, draftPrefsOn: prefsMap(arr) });
     },
@@ -214,12 +268,14 @@ Component({
 
     // ===== logo / 封面 =====
     pickLogo() {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var that = this;
       app.chooseImage(function (urls) {
         if (urls && urls.length) that.setData({ logo: urls[0] }, () => that.markDirty());
       }, 1, { crop: true, cropScale: '1:1' });
     },
     pickCover() {
+      if (this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
       var that = this;
       app.chooseImage(function (urls) {
         if (urls && urls.length) that.setData({ cover: urls[0] }, () => that.markDirty());
@@ -231,8 +287,10 @@ Component({
 
     save() {
       // loadState==='ready' 本身就是权限证明(permission 态根本渲染不出表单),不另立 canEdit
-      if (this.data.loadState !== 'ready' || !this.data.canSave || this.data.saving) return;
+      if (this.data.loadState !== 'ready' || !this.data.canSave || this.data.saving || this.data.draftAvailable || this.data.draftBlocked) return;
+      if (!this._draftKey || this._draftKey !== drafts.key(app.getUserID(), this.data.clubId)) { this.setData({ saveErrorText: '账号已变化，请重新打开编辑页。' }); return; }
       var d = this.data, that = this;
+      const submittedForm = JSON.stringify(drafts.form(d));
       this.setData({ saving: true, saveErrorText: '' });
       var payload = {
         id: d.clubId,                 // 多俱乐部:必须带 id,改指定团(后端校验归属)
@@ -253,7 +311,7 @@ Component({
         memberReservedQuota: d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota)
       };
       if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
-      app.sendRequest({
+      const submit = () => app.sendRequest({
         url: '/api/club/update-mine', method: 'POST',
         data: JSON.stringify(payload),
         header: {
@@ -262,7 +320,12 @@ Component({
         },
         success: function (res) {
           if (res.code == '200') {
-            that.setData({ saving: false, saveErrorText: '' });
+            if (that._draftKey !== drafts.key(app.getUserID(), that.data.clubId)) return;
+            if (JSON.stringify(drafts.form(that.data)) !== submittedForm) {
+              that.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新打开核对。' }); return;
+            }
+            const cleared = drafts.remove(wx, that._draftKey);
+            that.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，重进时请核对。' });
             toast.success('已保存');
             that.triggerEvent('dirtychange', { dirty: false });
             // 保存成功 ⇒ 关掉编辑层回到管理页,并让宿主重拉(原来是 navigateBack 猜页面栈)
@@ -274,7 +337,23 @@ Component({
         },
         fail: function () {
           that.setData({ saving: false, saveErrorText: '网络异常，请重试' });
-        }
+        },
+        successStatusAbnormal() { that.setData({ saving: false, saveErrorText: '保存结果暂无法确认，请重新打开核对，草稿仍保留。' }); }
+      });
+      app.sendRequest({
+        url: '/api/club/detail', method: 'POST', data: jsonBody({ id: d.clubId }), header: jsonHeader(),
+        success(res) {
+          if (that._draftKey !== drafts.key(app.getUserID(), that.data.clubId)) { that.setData({ saving: false }); return; }
+          if (!res || res.code != '200' || !res.data) { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); return; }
+          // shortcut: 这里只能拦截读取前的更新，原写接口加入条件版本后才能消除并发窗口。
+          if (drafts.base(res.data) !== that._draftBase) {
+            that.setData({ saving: false, draftBlocked: true, draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。', draftComparison: drafts.compare(d, res.data) });
+            return;
+          }
+          submit();
+        },
+        fail() { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+        successStatusAbnormal() { that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
       });
     },
 
@@ -372,7 +451,7 @@ Component({
       const target = resolveDissolutionBlockerTarget(item.url);
       if (target.kind === 'deposit') { this.retryDissolutionDeposit(target.id, item); return; }
       this.setData({ showDissolutionBlockers: false });
-      wx.navigateTo({ url: target.url });
+      navigateRegistered({ url: target.url });
     },
 
     retryDissolutionDeposit(inviteId, item) {
@@ -422,3 +501,5 @@ function resolveDissolutionBlockerTarget(url) {
   if (q.type === 'deposit') return { kind: 'deposit', id: q.id || '' };
   return { kind: 'nav', url: '/pages/club/settlement/index?clubId=' + encodeURIComponent(q.clubId || '') };
 }
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

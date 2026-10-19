@@ -23,7 +23,7 @@
     </view>
   <block wx:if="{{card}}">
     <view class="hero">
-      <view class="eyebrow">玩家自助记录</view>
+      <view class="eyebrow">自助体验记录</view>
       <view class="title">{{theme.name}}</view>
       <view class="subtitle">{{theme.subtitle}}</view>
       <view class="combination">本地组合：{{combinationText || '已有记录中的商家组合'}}</view>
@@ -48,7 +48,7 @@
       <view class="facts">玩家动作：{{item.actionLabel}} · 各自向商家购买或预约</view>
       <button class="action-btn" data-id="{{item.offerId}}" bindtap="openOfferAction">{{item.actionButtonText}}</button>
       <textarea wx:if="{{!readOnly && !item.recorded}}" class="note" maxlength="500" placeholder="写一句只属于你的记录（选填）" data-id="{{item.offerId}}" bindinput="onNoteInput" />
-      <button wx:if="{{!readOnly && !item.recorded}}" class="record-btn" data-id="{{item.offerId}}" loading="{{submitting}}" bindtap="recordOffer">自助记录这家</button>
+      <button wx:if="{{!readOnly && !item.recorded}}" class="record-btn" data-id="{{item.offerId}}" loading="{{submitting}}" bindtap="recordOffer">自助记录这家体验</button>
     </view>
 
     <view class="section-title" wx:if="{{!readOnly}}">主题轻互动</view>
@@ -86,7 +86,7 @@
         <view class="history-note" wx:if="{{record.note}}">{{record.note}}</view>
       </view>
     </view>
-    <view class="disclaimer">本卡仅记录玩家自助选择，不代表商家确认到店、预约、核销或成交。</view>
+    <view class="disclaimer">本卡仅记录玩家自助体验，不扣报名票权益，不代表商家确认到店、预约、核销或成交。</view>
   </block>
   </block>
 </view>

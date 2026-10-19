@@ -248,26 +248,22 @@ Page({
     })
   },
 
+  // F0423：表单里的「可提现余额」与「全部提现」只认服务端 /api/withdrawal/summary 的 available
+  // (余额 − 拓展赏金冻结 − 投诉补偿冷静额，与建单扣减同一个解析点)，不再拿 /api/user/info 的总余额冒充。
+  // 取不到或坏值一律落 txBalanceErr，不渲染确定的 ¥0.00，也不让「全部」填一个未知金额；提交时后端仍会重校。
   loadTxBalance() {
     const that = this
     app.sendRequest({
       hideLoading: true,
-      url: '/api/user/info',
-      data: { member_id: app.getUserID() },
+      url: '/api/withdrawal/summary',
       method: 'POST',
       success(res) {
-        // balance 为 null/空是「新用户 / 商家还没有收益」的正常数据(库列可空),按 0 展示;
-        // 只有请求失败(非 200 / 无 data)或余额是坏值才落 txBalanceErr —— 别把正常空余额说成网络错,
-        // 也别把坏值渲染成确定的 ¥0.00(与 components/cy/scene-asset-earnings 同口径)。
-        const rawBalance = res && res.data && res.data.balance
-        const missing = rawBalance === null || rawBalance === undefined
-          || (typeof rawBalance === 'string' && rawBalance.trim() === '')
-        const parsed = Number(rawBalance)
-        const valid = !missing && Number.isFinite(parsed) && parsed >= 0
-        const balance = missing ? 0 : parsed
-        if (res && res.code == '200' && res.data && (missing || valid)) {
+        const raw = res && res.data && res.data.available
+        const valid = raw !== null && raw !== undefined && /^\d+(\.\d{1,2})?$/.test(String(raw))
+        if (res && res.code == '200' && valid) {
+          const balance = Number(raw)
           that.setData({
-            txUserInfo: Object.assign({}, res.data, { balance }),
+            txUserInfo: { balance },
             txBalanceText: balance.toFixed(2),
             txBalanceErr: false,
             txBalanceLoaded: true,

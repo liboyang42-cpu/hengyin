@@ -2,13 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 let page;
 const requests = [];
-global.getApp = () => ({ globalData: {}, sendRequest: options => {
+global.getApp = () => ({ globalData: {}, getUserID: () => 1, sendRequest: options => {
   requests.push(options); options.success({ code: 200, data: {} });
 } });
 global.wx = { getStorageSync: () => null,
   getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
   getMenuButtonBoundingClientRect: () => ({ top: 20, height: 32 }) };
-global.Page = value => { page = value; };
+global.Page = value => { page = Object.assign({}, value, { setData(patch) { Object.assign(this.data, patch); } }); };
 require('../../pages/play/index.js');
 test('剧情认领与开章完成使用 JSON，保留局信息及版本', async () => {
   const p = Object.assign({}, page, {

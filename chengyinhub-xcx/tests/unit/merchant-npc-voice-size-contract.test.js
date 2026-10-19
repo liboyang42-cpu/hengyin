@@ -279,6 +279,7 @@ test('录音回调拒绝缺失、空、负数与非有限文件大小', () => {
 })
 
 
+<<<<<<< public
 test('拒绝第三方声音克隆单独同意保留合法录音且不上传、不发起复刻', async () => {
   const h = loadPage({consentDenied:true});
   h.page.onVoiceConsentChange({detail:{checked:true}}); h.page.onVoiceHoldStart(); await tick();
@@ -288,3 +289,26 @@ test('拒绝第三方声音克隆单独同意保留合法录音且不上传、�
   assert.equal(h.wxUploads,0); assert.equal(h.requests.length,0); assert.ok(h.page.data.voiceFile);
   assert.equal(h.page.data.voiceBusy,false); assert.match(h.page.data.voiceError,/拒绝/);
 });
+=======
+test('原录音提交未知时读到旧样本不能解锁再次生成', async () => {
+  const { page } = loadPage()
+  page._voicePendingSample = 'https://sample/current.mp3'
+  page.data.voiceUnknown = true
+  page._request = () => Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'https://sample/old.mp3' } })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+  page._request = () => Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'https://sample/current.mp3' } })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, false)
+})
+
+test('缺声音状态或状态读取失败不伪装未录制', async () => {
+  const { page } = loadPage()
+  page._request = () => Promise.resolve({ data: {} })
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+  page._request = () => Promise.reject(Error('offline'))
+  await page.refreshVoice()
+  assert.equal(page.data.voiceUnknown, true)
+})
+>>>>>>> private-feature/w2-r

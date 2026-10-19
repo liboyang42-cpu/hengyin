@@ -122,3 +122,20 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
   assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名,扫描口径需同步');
   assert.match(regressed, /(['"])—+\1/);
 });
+
+
+test('经营建议档案变化标旧版，零样本与未知样本严格区分', () => {
+  delete require.cache[require.resolve('../../pages/merchant/marketing/ai-insight/index.js')];
+  const page = loadPageDefinition();
+  const changed = page._buildEvidence({ facts: { window: '近30天', sampleMembers: 0, profile: { capacity: 10 } }, profile: { capacity: 20 } });
+  assert.equal(changed.stale, true);
+  assert.equal(changed.sample, '0 位核销顾客');
+  assert.match(changed.profile, /旧版/);
+  assert.match(changed.version, /未提供/);
+  const unknown = page._buildEvidence({ facts: {}, profile: null });
+  assert.match(unknown.sample, /待确认/);
+  assert.match(unknown.profile, /待确认/);
+  const same = page._buildEvidence({ facts: { profile: { capacity: 10, demand: null } }, profile: { capacity: 10 } });
+  assert.equal(same.stale, false);
+  assert.match(same.profile, /与当前一致/);
+});

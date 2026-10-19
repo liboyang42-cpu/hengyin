@@ -24,6 +24,8 @@
       <view class="d20__outcome {{!result || d20Rolling ? 'd20__outcome--pending' : ''}}" aria-hidden="{{!result || d20Rolling}}" aria-label="{{'总分 ' + result.total + '，' + (result.success ? '检定成功' : '检定失败')}}">
         <view class="d20__total">{{result.total}}</view>
         <view class="d20__result">{{result.text}}</view>
+        <view class="d20__result" wx:if="{{result.sandbox}}">本地沙盒样例，不代表正式判定</view>
+        <view class="d20__result" wx:if="{{result.modifierSource === 'STATIC'}}">加值 {{modifier}} 为作者固定加值，不取玩家能力</view>
       </view>
     </view>
   </view>

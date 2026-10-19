@@ -60,7 +60,7 @@
 
             <!-- 路线卡 / 报名卡(同构:都是 {cardType,topicId},都现拉、永远最新) -->
             <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}">
-              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">报名成功</view>
+              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">发送时报名成功 · 当前状态请查看票夹</view>
               <block wx:if="{{topicCache[item.card.topicId]}}">
                 <!-- CU-C-121:imgUrl 为空时 <image> 仍按 270rpx 渲染,卡面一半是死黑块。
                      没图就不是"图在加载",给一个说得清的缺图占位。 -->
@@ -78,7 +78,7 @@
               <block wx:elif="{{topicCache[item.card.topicId] === null}}">
                 <view class="rcard-img rcard-img--ph"></view>
                 <view class="rcard-tt">
-                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '该活动已下架' : '该路线已下架'}}</view>
+                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '该活动已下架' : '该路线已下架或暂不公开'}}</view>
                 </view>
               </block>
               <!-- 加载中(undefined,尚未 fetch 回来):骨架占位,shimmer 本身即为「加载中」语义(DS §5:禁裸文字) -->
@@ -104,18 +104,22 @@
             <view class="card-sub">{{item.card.sub}}</view>
           </view>
         </view>
+        <view wx:if="{{item.senderId == 0}}" class="card-meta">生成时记录 · 不代表当前履约状态</view>
         <view class="card-meta" wx:if="{{item.card.meta}}">{{item.card.meta}}</view>
         <view class="card-btns" wx:if="{{item.card.result && item.senderId == 0}}">
-          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" aria-role="button" aria-label="查看处理结果">查看处理结果</view>
+          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" aria-role="button" aria-label="查看生成时处理记录">查看生成时处理记录</view>
         </view>
-        <view class="card-btns" wx:elif="{{item.card.buttons.length}}">
+        <view class="card-btns" wx:if="{{item.senderId == 0 && item.card.result && item.card.action}}">
+          <view class="card-btn full" catchtap="onCardTap" data-msg="{{item.id}}" data-current="{{true}}" aria-role="button" aria-label="查看当前原单" hover-class="cy-pressed">查看当前原单</view>
+        </view>
+        <view class="card-btns" wx:elif="{{!item.card.result && item.card.buttons.length}}">
           <view class="card-btn {{btn.type === 'reject' ? 'reject' : ''}}"
                 wx:for="{{item.card.buttons}}" wx:for-item="btn" wx:key="text"
                 hover-class="cy-pressed" hover-stay-time="80"
                 catchtap="onCardBtn" data-action="{{btn.action}}" data-key="{{btn.key}}" data-msg="{{item.id}}" hover-stop-propagation="true">{{btn.text}}</view>
         </view>
-        <view class="card-btns" wx:elif="{{item.card.action}}">
-          <view class="card-btn full" hover-class="cy-pressed" hover-stay-time="80" catchtap="onCardTap" data-url="{{item.card.action}}" hover-stop-propagation="true">查看详情</view>
+        <view class="card-btns" wx:elif="{{!item.card.result && item.card.action}}">
+          <view class="card-btn full" hover-class="cy-pressed" hover-stay-time="80" catchtap="onCardTap" data-url="{{item.card.action}}" hover-stop-propagation="true">{{item.senderId == 0 ? '查看当前原单' : '查看详情'}}</view>
         </view>
       </cy-card>
 
@@ -182,8 +186,9 @@
     <text wx:else class="input-notice">{{readOnlyTip}}</text>
   </view>
 
-  <cy-sheet show="{{!!reviewResult}}" title="处理结果" bind:close="closeReviewResult">
+  <cy-sheet show="{{!!reviewResult}}" title="生成时处理记录" bind:close="closeReviewResult">
     <view class="review-result" wx:if="{{reviewResult}}">
+      <view>这是发送时的记录，后续退款、撤销或恢复请以原案为准。</view>
       <view>审核任务 #{{reviewResult.taskId}} · 业务 #{{reviewResult.bizId}}</view>
       <view>{{reviewResult.outcome}}</view>
       <view>原因：{{reviewResult.reason}}</view>

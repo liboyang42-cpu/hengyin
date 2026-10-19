@@ -435,3 +435,35 @@ test('simulator fixture traverses the real adapter serializers and blocks all wr
   page.route = 'pages/play/index';
   assert.throws(() => exported.exports.installDirectorFixture(), /Only the director page/);
 });
+
+test('X028 主持台状态用中文显示暂停/中止/取消及原因，人工账单列', () => {
+  const { genericOpsStatusText } = require('../../pages/club/utils/club-game-director-adapter.js');
+  assert.equal(genericOpsStatusText(null), '');
+  assert.equal(genericOpsStatusText({ operationStatus: 'RUNNING', authorityMode: 'ONLINE', authorityEpoch: 2 }), '运行中 · 权威 2');
+  const paused = genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'ONLINE', authorityEpoch: 2, operationReason: '暴雨' });
+  assert.match(paused, /^已暂停/); assert.match(paused, /冻结/); assert.match(paused, /顺延/); assert.match(paused, /原因：暴雨/);
+  assert.doesNotMatch(paused, /PAUSED|ONLINE/);
+  assert.match(genericOpsStatusText({ operationStatus: 'INTERRUPTED', authorityMode: 'ONLINE', authorityEpoch: 2 }), /^已中止.*不计结局/);
+  assert.match(genericOpsStatusText({ operationStatus: 'CANCELLED', authorityMode: 'ONLINE', authorityEpoch: 2 }), /^已取消.*不会自动发起/);
+  const manual = genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 });
+  assert.match(manual, /人工账接管/); assert.doesNotMatch(manual, /冻结/);
+});
+
+test('X028–X031 确认弹窗写明实际后果：中止不计 END05、取消不自动退款、退出物资保留、指导同奖励', () => {
+  const { genericOpsConsequence } = require('../../pages/club/utils/club-game-director-adapter.js');
+  assert.match(genericOpsConsequence('RUN_PAUSE'), /提交被拒.*冻结.*顺延/);
+  assert.match(genericOpsConsequence('RUN_INTERRUPT'), /不可撤销.*END05/);
+  assert.match(genericOpsConsequence('RUN_CANCEL'), /不会自动发起原单退款/);
+  assert.match(genericOpsConsequence('STAFF_TEAM_EXIT'), /物资保留、不被征用/);
+  assert.match(genericOpsConsequence('QUEST_GUIDE'), /同奖励/);
+  assert.match(genericOpsConsequence('LOCATION_REBIND'), /任务标识与领取槽不变.*不扣 HP/);
+  assert.match(genericOpsConsequence('ARRIVAL_REVOKE'), /审计/);
+  assert.equal(genericOpsConsequence('UNKNOWN'), '');
+});
+
+test('X028 主持台终态仍显示状态，但不显示动作入口', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/club/topic-detail/index.wxml'), 'utf8');
+  assert.match(wxml, /class="ctd-generic-ops" wx:if="\{\{directorActive && loadState === 'ready' && genericOpsKnown\}\}"/);
+  assert.match(wxml, /class="ctd-generic-ops__actions" wx:if="\{\{genericOpsActions.length\}\}"/);
+  assert.deepEqual(genericOpsActions(control([])), []);
+});

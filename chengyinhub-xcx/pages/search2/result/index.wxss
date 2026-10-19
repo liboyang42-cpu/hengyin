@@ -44,3 +44,5 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 .topic-result-card__body { padding: var(--cy-space-3); }
 .topic-result-card__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); line-height: var(--cy-leading-tight); font-weight: 700; }
 .topic-result-card__detail { margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+
+.result-scope { margin-top: var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }

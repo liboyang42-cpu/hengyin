@@ -1,0 +1,14 @@
+diff --git a/chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js b/chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js
+index 2eb398e42f..9e5631e15b 100644
+--- a/chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js
++++ b/chengyinhub-xcx/tests/unit/all-page-back-stack-contract.test.js
+@@ -231,7 +231,8 @@ function findUnsafePageBacks(overrides = {}) {
+       const closure = reachableBodies(source, handler)
+       const executable = maskNonCode(closure)
+       if (!/wx\.navigateBack\s*\(/.test(executable)) continue
+-      if (/wx\.(switchTab|reLaunch|redirectTo)\s*\(/.test(executable)) continue
++      if (/wx\.(switchTab|reLaunch|redirectTo)\s*\(/.test(executable)
++        || /navigateRegistered\s*\(/.test(executable) && /['"](?:redirectTo|reLaunch)['"]/.test(closure)) continue
+       if (hasAlternativeRootExit(route, handler, wxml)) continue
+       violations.push(`${route}#${handler}`)
+     }

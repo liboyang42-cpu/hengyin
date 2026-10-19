@@ -272,6 +272,12 @@ Page({
     else if (action === 'coupon') this.goManageCoupon();
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
+    else if (action === 'group-reception') this.goGroupReception();
+  },
+
+  goGroupReception() {
+    if (!this.data.merchantAccess.canVerify) return;
+    wx.navigateTo({ url: '/pages/merchant/group-reception/index' });
   },
 
   goManageCoupon() {
@@ -1040,9 +1046,9 @@ Page({
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
         success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
+        fail() { done({ status: 'unknown' }); },
         successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          done({ status: 'unknown' });
         }
       }));
     }, function (result) {
@@ -1079,7 +1085,7 @@ Page({
               confirmText: scan.confirmText || '我知道了',
               cancelText: '留在这里',
               success(r) {
-                if (r && r.confirm) wx.navigateTo({ url: scan.path });
+                if (r && r.confirm) navigateRegistered({ url: scan.path });
               },
             });
           } else {
@@ -1331,3 +1337,5 @@ Page({
     merchantTheme.merchantPageRestore();
   },
 });
+
+const { navigateRegistered } = require('../../../utils/registered-navigation.js');

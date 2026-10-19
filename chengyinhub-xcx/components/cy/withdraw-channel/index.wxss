@@ -1,0 +1,14 @@
+:host { display: block; }
+.wc { padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-color-action-secondary-bg); color: var(--cy-text-title); }
+.wc-head, .wc-row { display: flex; justify-content: space-between; align-items: center; gap: var(--cy-space-2); }
+.wc-title { font-size: var(--cy-font-body); font-weight: 600; }
+.wc-tag, .wc-sub, .wc-meta, .wc-label { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.wc-sub, .wc-meta { display: block; margin-top: var(--cy-space-1); overflow-wrap: anywhere; }
+.wc-row { margin-top: var(--cy-space-3); }
+.wc-value { font-size: var(--cy-font-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.wc-latest { margin-top: var(--cy-space-3); padding-top: var(--cy-space-1); border-top: 1rpx solid var(--cy-color-border-subtle); }
+.wc-latest .wc-row { margin-top: var(--cy-space-2); }
+.wc-status { font-size: var(--cy-font-caption); font-weight: 600; color: var(--cy-text-secondary); }
+.wc-status--warn { color: var(--cy-accent); }
+.wc-status--danger { color: var(--cy-danger); }
+.wc-status--success { color: var(--cy-success); }

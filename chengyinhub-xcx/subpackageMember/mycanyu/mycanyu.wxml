@@ -37,6 +37,7 @@
         </view>
       </view>
     </view>
+    <cy-cell title="查看凭证" description="{{item.verificationText}} · 打开凭证不会完成签到" catch:tap="viewVoucher" data-id="{{item.id}}" />
   </view>
 </view>
 </view>

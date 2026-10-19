@@ -1,0 +1,63 @@
+<!-- X036 发布者实名改绑申请:用途说明 + 已登记状态 + 改绑入口与进度。只回状态,不回显姓名与号码。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="ic-page">
+  <cy-nav-bar custom-back bind:back="onBack" />
+  <cy-page-title title="发布者实名" subtitle="收费发布与入驻前登记，变更需人工审核" />
+
+  <view class="ic-content">
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="form-section" count="3" />
+    <cy-error wx:elif="{{state === 'error'}}" fill title="改绑进度没能读取" sub="网络可能不稳定，再试一次" retry="重试" bind:retry="load" />
+    <block wx:else>
+      <view class="ic-card">
+        <text class="ic-card__title">用途说明</text>
+        <text class="ic-card__text">姓名与身份证号只用于收费发布、俱乐部主理人和商家入驻的发布人身份核验，加密保存，不对外展示，页面不会回显已填写的信息。平台目前只校验号码格式与校验位，不做第三方身份核验。</text>
+      </view>
+
+      <view class="ic-card" wx:if="{{state === 'unregistered'}}">
+        <text class="ic-card__title">登记状态：未登记</text>
+        <text class="ic-card__text">首次收费发布、申请主理人或商家入驻时，会在最后一步请你登记，无需在此提前填写。</text>
+      </view>
+
+      <block wx:if="{{state === 'ready'}}">
+        <view class="ic-card">
+          <text class="ic-card__title">登记状态：已登记</text>
+          <text class="ic-card__text">如需更换姓名或身份证号，提交改绑申请后由平台客服人工审核；通过后新信息生效，原登记同时失效。</text>
+        </view>
+
+        <view class="ic-card" wx:if="{{progress}}" aria-role="status">
+          <text class="ic-card__title">最近一次改绑申请：{{progress.statusText}}</text>
+          <text class="ic-card__text" wx:if="{{progress.pending}}">审核期间不能重复提交，如填错可先撤回再重新提交。</text>
+          <text class="ic-card__text" wx:if="{{progress.reviewNote}}">审核意见：{{progress.reviewNote}}</text>
+          <view wx:if="{{progress.pending}}" class="ic-link {{cancelling ? 'is-busy' : ''}}" bindtap="onCancel"
+                aria-role="button" aria-label="撤回改绑申请" hover-class="cy-pressed" hover-stay-time="80">{{cancelling ? '撤回中…' : '撤回申请'}}</view>
+        </view>
+
+        <view class="ic-form" wx:if="{{!progress || !progress.pending}}">
+          <text class="ic-section">提交改绑申请</text>
+          <view class="ic-field {{realName ? 'ic-field--filled' : ''}}">
+            <text class="ic-label">新的真实姓名<text class="ic-req" aria-hidden="true">*</text></text>
+            <input class="ic-input" data-field="realName" value="{{realName}}" bindinput="onInput"
+                   placeholder="与身份证一致" placeholder-class="ic-ph" aria-required="true" aria-label="新的真实姓名，必填" />
+          </view>
+          <view class="ic-field {{idCard ? 'ic-field--filled' : ''}}">
+            <text class="ic-label">新的身份证号<text class="ic-req" aria-hidden="true">*</text></text>
+            <input class="ic-input" data-field="idCard" value="{{idCard}}" bindinput="onInput" type="idcard" maxlength="18"
+                   placeholder="18 位" placeholder-class="ic-ph" aria-required="true" aria-label="新的身份证号，必填" />
+          </view>
+          <view class="ic-field {{reason ? 'ic-field--filled' : ''}}">
+            <text class="ic-label">变更原因<text class="ic-req" aria-hidden="true">*</text></text>
+            <textarea class="ic-textarea" data-field="reason" value="{{reason}}" bindinput="onInput" maxlength="200"
+                      placeholder="如：登记时填错、证件已更换。请勿在此填写证件号" placeholder-class="ic-ph" aria-label="变更原因，必填" />
+          </view>
+          <cy-consent-check checked="{{consented}}" text="{{consentText}}" bind:change="onConsent" />
+          <cy-inline-error wx:if="{{formError}}" kind="data" title="申请没有提交" sub="{{formError}}" />
+          <cy-btn variant="primary" loading="{{submitting}}" disabled="{{submitting}}" accessibilityLabel="提交改绑申请" bindtap="onSubmit">{{submitting ? '提交中…' : '提交改绑申请'}}</cy-btn>
+        </view>
+      </block>
+    </block>
+  </view>
+</view>
+</view>

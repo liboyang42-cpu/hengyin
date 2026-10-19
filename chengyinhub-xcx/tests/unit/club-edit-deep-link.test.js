@@ -7,7 +7,8 @@ const root = path.resolve(__dirname, '../..')
 function mount(options) {
   let pageDefinition, componentDefinition, editor
   const requests = []
-  global.getApp = () => ({ globalData: {}, sendRequest(request) { requests.push(request) } })
+  global.wx = { getStorageSync: () => null };
+  global.getApp = () => ({ globalData: {}, getUserID: () => 42, sendRequest(request) { requests.push(request) } })
   global.Page = definition => { pageDefinition = definition }
   global.Component = definition => { componentDefinition = definition }
   for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {

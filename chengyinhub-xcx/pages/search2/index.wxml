@@ -98,7 +98,7 @@
     <view class="form-main">
       <!-- 日期筛选 -->
       <view class="dl">
-        <view class="dt">日期</view>
+        <view class="dt">日期（仅筛已加载主题与活动）</view>
         <view class="cont">
           <view class="dd {{activeDate === '1' ? 'active' : ''}}" bindtap="selectDate" data-value="1" hover-class="cy-pressed" hover-stay-time="80">
             <view class="tit">今天</view>
@@ -159,14 +159,12 @@
         </view>
       </view>
 
-      <!-- 排序:2026-09-24 裁决(CU-M-66)把「最热」撤掉——四类后端都没有热度排序,
-           留着只是一个点了不生效的选项。剩下「最近」去结果页真的会拼进查询
-           (/api/activity/list 的 sort_type),不再是死选项。 -->
+      <!-- 最近沿用各列表默认创建时间顺序，不传附近排序参数。 -->
       <view class="dl">
         <view class="dt">排序</view>
         <view class="cont">
           <view class="dd {{activeSort === '1' ? 'active' : ''}}" bindtap="selectSort" data-value="1" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="tit">最近</view>
+            <view class="tit">最近发布</view>
             <cy-icon wx:if="{{activeSort === '1'}}" class="ck" name="check" size="40" />
           </view>
         </view>

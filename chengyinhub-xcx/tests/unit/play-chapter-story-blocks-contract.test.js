@@ -618,19 +618,23 @@ test('没有块流的存量章节回退到 description,老数据不能变成空�
   assert.deepEqual(page.data.chapterParas.map(p => p.kind), ['text', 'text'])
 })
 
-test('缺 url 的媒体块整块丢掉,不铺一个点了没反应的空条', () => {
+test('缺 url 的媒体块保留文字替代和不可用状态，不出现空播放控件', () => {
   const page = makePage({
     description: '',
     blocks: [
-      { type: 'image', url: '' },
-      { type: 'audio' },
+      { type: 'image', url: '', altText: '图片里的文字' },
+      { type: 'audio', altText: '旁白转写' },
       { type: 'text', content: '正文还在' },
     ],
   })
 
   page.openChapterFull()
 
-  assert.deepEqual(page.data.chapterParas.map(p => p.kind), ['text'])
+  assert.deepEqual(page.data.chapterParas.map(p => p.kind), ['image', 'audio', 'text'])
+  assert.equal(page.data.chapterParas[0].altText, '图片里的文字')
+  assert.equal(page.data.chapterParas[1].altText, '旁白转写')
+  assert.equal(page.data.chapterParas[0].mediaFailed, true)
+  assert.equal(page.data.chapterParas[1].mediaFailed, true)
 })
 
 // 2026-09-04 拍板:进本章即播,不要玩家点。所以这里没有 tap 入口可测 ——
