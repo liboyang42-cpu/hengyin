@@ -31,7 +31,8 @@ class VerificationQrcodeRepairTaskTest {
 
     @Test
     void repairsEachMissingOne() {
-        when(cmsRegistrationService.listPaidMissingQrcodeIds()).thenReturn(Arrays.asList(1L, 2L));
+        when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
+        when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Arrays.asList(1L, 2L));
 
         task.repairMissing();
 
@@ -41,7 +42,8 @@ class VerificationQrcodeRepairTaskTest {
 
     @Test
     void singleFailureDoesNotStopOthers() {
-        when(cmsRegistrationService.listPaidMissingQrcodeIds()).thenReturn(Arrays.asList(1L, 2L, 3L));
+        when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
+        when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Arrays.asList(1L, 2L, 3L));
         when(cmsRegistrationService.generateVerificationQrcode(2L)).thenThrow(new RuntimeException("boom"));
 
         task.repairMissing(); // 不应向外抛
@@ -52,10 +54,29 @@ class VerificationQrcodeRepairTaskTest {
 
     @Test
     void emptyListNoop() {
-        when(cmsRegistrationService.listPaidMissingQrcodeIds()).thenReturn(Collections.emptyList());
+        when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(100L);
+        when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(0L, 100L, 100)).thenReturn(Collections.emptyList());
 
         task.repairMissing();
 
         verify(cmsRegistrationService, never()).generateVerificationQrcode(anyLong());
+    }
+    @Test
+    void failuresAdvanceAcrossPageAndResumeNextRound() {
+        when(cmsRegistrationService.getPaidMissingQrcodeScanUpperBound()).thenReturn(501L);
+        when(cmsRegistrationService.listPaidMissingQrcodeIdsAfter(anyLong(), org.mockito.ArgumentMatchers.eq(501L),
+                org.mockito.ArgumentMatchers.eq(100))).thenAnswer(invocation -> {
+            long after = (Long) invocation.getArgument(0);
+            java.util.List<Long> ids = new java.util.ArrayList<>();
+            for (long id = after + 1; id <= Math.min(after + 100, 501); id++) ids.add(id);
+            return ids;
+        });
+        when(cmsRegistrationService.generateVerificationQrcode(1L)).thenThrow(new IllegalStateException("permanent"));
+        task.repairMissing();
+        verify(cmsRegistrationService).generateVerificationQrcode(500L);
+        verify(cmsRegistrationService, never()).generateVerificationQrcode(501L);
+        task.repairMissing();
+        verify(cmsRegistrationService).generateVerificationQrcode(501L);
+        verify(cmsRegistrationService, org.mockito.Mockito.times(1)).generateVerificationQrcode(1L);
     }
 }

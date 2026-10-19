@@ -93,6 +93,12 @@ public interface RefundApplicationMapper {
      */
     List<RefundApplication> selectStalePayoutProcessing(@Param("minutes") int minutes);
 
+    /** 本轮固定上界，避免扫描中新增退款使本轮无限延长。 */
+    Long selectStalePayoutScanUpperBound(@Param("minutes") int minutes);
+
+    List<RefundApplication> selectStalePayoutProcessingAfter(@Param("minutes") int minutes,
+            @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
+
     /** 待人工/待复核(payout_status in 2,3)积压数,供巡检告警。 */
     int countManualPayoutBacklog();
 

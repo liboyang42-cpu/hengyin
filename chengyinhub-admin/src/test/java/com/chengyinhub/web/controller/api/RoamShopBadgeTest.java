@@ -42,12 +42,15 @@ class RoamShopBadgeTest {
     private ApiRoamController controller;
     private GrowthBadgeMapper growthBadgeMapper;
     private PlayerBadgeMapper playerBadgeMapper;
+    private com.chengyinhub.business.service.impl.RoamBadgeDeliveryService delivery;
 
     @BeforeEach
     void setUp() {
         controller = new ApiRoamController();
         growthBadgeMapper = mock(GrowthBadgeMapper.class);
         playerBadgeMapper = mock(PlayerBadgeMapper.class);
+        delivery = mock(com.chengyinhub.business.service.impl.RoamBadgeDeliveryService.class);
+        ReflectionTestUtils.setField(controller, "roamBadgeDeliveryService", delivery);
         ReflectionTestUtils.setField(controller, "growthBadgeMapper", growthBadgeMapper);
         ReflectionTestUtils.setField(controller, "playerBadgeMapper", playerBadgeMapper);
         ReflectionTestUtils.setField(controller, "ruleEvaluator", new RuleEvaluator());  // 纯函数,不 mock
@@ -66,7 +69,7 @@ class RoamShopBadgeTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> award(int shops) {
-        return (Map<String, Object>) ReflectionTestUtils.invokeMethod(controller, "awardShopStreak", MEMBER, shops);
+        return (Map<String, Object>) ReflectionTestUtils.invokeMethod(controller, "awardShopStreak", MEMBER, 9L, shops);
     }
 
     /* ============ ★ 配置化本身 ============ */
@@ -87,7 +90,7 @@ class RoamShopBadgeTest {
         when(playerBadgeMapper.selectOne(anyLong(), anyString(), anyLong())).thenReturn(null);
 
         assertNotNull(award(5), "def 阈值=5,探 5 家应发章");
-        verify(playerBadgeMapper).insertPlayerBadge(any());
+        verify(delivery).prepare(eq(9L), any());
     }
 
     @Test
@@ -114,7 +117,7 @@ class RoamShopBadgeTest {
 
         assertNotNull(award(3));
         ArgumentCaptor<PlayerBadge> cap = ArgumentCaptor.forClass(PlayerBadge.class);
-        verify(playerBadgeMapper).insertPlayerBadge(cap.capture());
+        verify(delivery).prepare(eq(9L), cap.capture());
         PlayerBadge b = cap.getValue();
         assertEquals(MEMBER, b.getMemberId());
         assertEquals(CODE, b.getBadgeCode());
@@ -155,13 +158,15 @@ class RoamShopBadgeTest {
     }
 
     @Test
-    void insertThrows_swallowedAndReportedAsNoMedal() {
-        // 并发/唯一键冲突:不能把整个 finish 事务带崩,也不能谎报"拿到了"
+    void eligibleBadgeQueuesFrozenRightInsteadOfDirectInsert() {
+        // Core settlement queues a durable right; delivery receipts control the client award display.
         when(growthBadgeMapper.selectByCode(CODE)).thenReturn(def("{\"threshold\":3}"));
         when(playerBadgeMapper.selectOne(anyLong(), anyString(), anyLong())).thenReturn(null);
         when(playerBadgeMapper.insertPlayerBadge(any())).thenThrow(new RuntimeException("dup"));
 
-        assertNull(award(3), "落库失败就不能返回勋章(否则前端弹「徽章到手」而账上没有)");
+        assertNotNull(award(3));
+        verify(delivery).prepare(eq(9L), any());
+        verify(playerBadgeMapper, never()).insertPlayerBadge(any());
     }
 
     @Test

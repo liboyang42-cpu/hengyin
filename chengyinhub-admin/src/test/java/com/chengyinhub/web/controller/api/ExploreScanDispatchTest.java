@@ -139,6 +139,7 @@ class ExploreScanDispatchTest {
         CmsActivity act = new CmsActivity();
         act.setId(ACTIVITY);
         act.setTopicId(TOPIC);
+        act.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         act.setMemberId(999L);   // ★ 主办方是别人,不是扫码的商家
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(act);
     }

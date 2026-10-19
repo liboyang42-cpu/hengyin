@@ -123,7 +123,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         return post(body);
     }
 
-    private void requireReady()
+    /** Local configuration check only; never sends a provider request. */
+    public void requireReady()
     {
         if (!enabled)
         {

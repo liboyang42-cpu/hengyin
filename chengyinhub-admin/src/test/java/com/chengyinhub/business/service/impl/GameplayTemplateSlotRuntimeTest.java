@@ -67,7 +67,7 @@ public class GameplayTemplateSlotRuntimeTest {
             return result;
         });
         when(nodeMapper.selectCmsTopicNodeById(anyLong())).thenAnswer(call -> nodes.get(call.getArgument(0)));
-        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(new CmsRegistration()));
+        CurrentRegistrationStubs.currentFromProbe(registrations);
         when(routes.selectByOwner(eq(0L), anyLong(), eq(7L), eq("default"))).thenAnswer(call -> sessions.get(call.getArgument(1)));
         when(routes.selectCurrentByOwner(eq(0L), anyLong(), eq(7L))).thenAnswer(call -> sessions.get(call.getArgument(1)));
         when(routes.selectAccessibleById(anyLong(), eq(7L))).thenAnswer(call -> sessions.values().stream().filter(s -> s.getId().equals(call.getArgument(0))).findFirst().orElse(null));

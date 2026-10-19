@@ -244,13 +244,14 @@ class OfficialEventContractTest {
         OfficialEventServiceImpl svc = eventService(em, sm, mock(MemberCollectibleMapper.class),
                 mock(ISmsCouponHistoryService.class), mock(IGrowthService.class));
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_DRAFT));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_DRAFT));
         assertNotNull(svc.signup(1L, 500L)); // 草稿 → 报错
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_ENDED));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_ENDED));
         assertNotNull(svc.signup(1L, 500L)); // 已结束 → 报错
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_SIGNUP));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_SIGNUP));
+        when(sm.insertIgnore(any(EventSignup.class))).thenReturn(1);
         assertNull(svc.signup(1L, 500L));    // 报名态 → 成功
         verify(sm, times(1)).insertIgnore(any(EventSignup.class));
     }

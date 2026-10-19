@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ImNotificationIntentMapper">
+    <sql id="columns">id, event_key as eventKey, recipient, msg_type as msgType, content,
+        extra_json as extraJson, request_hash as requestHash, status, message_id as messageId</sql>
+    <insert id="insert">
+        insert ignore into im_notification_intent
+        (event_key, recipient, msg_type, content, extra_json, request_hash, status, create_time)
+        values (#{eventKey}, #{recipient}, #{msgType}, #{content}, #{extraJson}, #{requestHash}, 'PENDING', now())
+    </insert>
+    <select id="selectByKeyForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select <include refid="columns"/> from im_notification_intent where event_key = #{eventKey} for update
+    </select>
+    <select id="selectByIdForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select <include refid="columns"/> from im_notification_intent where id = #{id} for update
+    </select>
+    <select id="maxPendingId" resultType="java.lang.Long">
+        select max(id) from im_notification_intent where status = 'PENDING'
+    </select>
+    <select id="selectPendingPage" resultType="java.lang.Long">
+        select id from im_notification_intent where status = 'PENDING' and id &gt; #{afterId} and id &lt;= #{maxId}
+        order by id limit 100
+    </select>
+    <update id="delivered">
+        update im_notification_intent set status = 'DELIVERED', message_id = #{messageId}, delivered_at = now()
+        where id = #{id} and status = 'PENDING'
+    </update>
+</mapper>

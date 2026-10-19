@@ -179,4 +179,14 @@ class WeRunDecryptorTest {
         WeRunDecryptor.VerifiedWeRunReading across=verified(nextDay,new String[]{"2026-10-10","2026-10-11"},new int[]{1040,60});engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,across,false,true,nextDay);assertEquals(Integer.valueOf(4),state.getVariables().get("sys.hp"));assertEquals(1,state.getThemeRuntime().path("zeroHp").path("used").asInt());engine.syncZeroHpSteps(snapshot,rules,state,episode,7L,across,false,true,nextDay);assertEquals(1,state.getThemeRuntime().path("zeroHp").path("used").asInt());
     }
 
+    @Test
+    void nonIntegralStepsAndTimestampAreRejected() throws Exception {
+        for(String record:new String[]{"{\"timestamp\":1756200000,\"step\":1.5}",
+                "{\"timestamp\":\"1756200000\",\"step\":1}",
+                "{\"timestamp\":0,\"step\":1}","{\"timestamp\":1756200000,\"step\":2147483648}"}) {
+            String ciphertext=encrypt(payload(APP_ID,"["+record+"]"));
+            assertThrows(IllegalArgumentException.class,()->WeRunDecryptor.decrypt(key(),ciphertext,iv(),APP_ID));
+        }
+    }
+
 }

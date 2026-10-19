@@ -102,6 +102,10 @@ class ClubSessionSettlementBasisMyBatisTest {
             CmsRegistration registration = new CmsRegistration();
             registration.setId(701L);
             registration.setOwnerId(31L);
+            // A包核销在原事务内按原ID锁读当前订单；可核销玩家票即已付且报名成功的同一原行。
+            registration.setPaymentStatus(2);
+            registration.setRegistrationStatus(2);
+            when(registrationMapper.selectCmsRegistrationByIdForUpdate(701L)).thenReturn(registration);
             assertTrue(registrationService.verifyAndSettleForGroupActivity(registration, 41L, 51L),
                     "领队扫玩家票必须写入场次成员核销事实");
 

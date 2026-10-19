@@ -91,6 +91,9 @@ class GameSessionRuntimeServiceImplTest {
         when(runtimeMapper.selectSessionByActivityForUpdate(anyLong()))
                 .thenAnswer(call -> runtimeMapper.selectSessionByActivity(call.getArgument(0)));
         activityMapper = mock(CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper registrations=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrations);
+        ReflectionTestUtils.setField(service,"currentPlayRegistrationMapper",registrations);
         topicMapper = mock(CmsTopicMapper.class);
         clubMemberService = mock(IClubMemberService.class);
         capabilityService = mock(com.chengyinhub.business.service.ICapabilityService.class);
