@@ -36,6 +36,8 @@ function loadPage(modulePath, app) {
 test('A1/A3 投诉活动读回完整候选，选中后仍须五字理由才可提交', () => {
   let request
   const page = loadPage('../../subpackageMember/complaint/index.js', {
+    getUserID: () => 7,
+    getAuthorization: () => 'Bearer unit-fixture',
     sendRequest(options) { request = options },
     getRequestErrorMessage: () => '加载失败，请重试',
   })
