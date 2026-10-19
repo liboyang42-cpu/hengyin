@@ -311,8 +311,9 @@ Page({
   },
 
   goVerifyRecords() {
-    if (!this.data.merchantAccess.canReadVerifyRecords) return;
-    wx.navigateTo({ url: '/pages/merchant/verify-records/index' });
+    if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/verify-records/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {
@@ -598,7 +599,7 @@ Page({
   },
 
   onShow(options) {
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     this.resetGameStationSummaries();
     this._businessActionEpoch = (this._businessActionEpoch || 0) + 1;
     // 页面重新进入时作废离开前的写操作；页内下拉刷新只重读经营数据，
@@ -789,8 +790,9 @@ Page({
   goPrerequisite(e) {
     const key = String((e.currentTarget.dataset || {}).key || '');
     const item = (this.data.prerequisites || []).find(row => row.key === key);
-    if (!item || !item.path) return;
-    wx.navigateTo({ url: item.path });
+    if (!item || !item.path || this._navigating) return; // 跳转中不响应连点,免得叠两层前置项页
+    this._navigating = true;
+    wx.navigateTo({ url: item.path, complete: () => { this._navigating = false; } });
   },
 
   loadMerchantInfo(dataEpoch = this._dataEpoch || 0) {

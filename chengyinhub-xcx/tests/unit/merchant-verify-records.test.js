@@ -60,5 +60,5 @@ test('工作台「更多」入口按 canReadVerifyRecords 显示并跳独立页'
   const js = fs.readFileSync(path.join(root, 'pages/merchant/index/index.js'), 'utf8');
   assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadVerifyRecords\}\}" bindtap="onMoreItem" data-action="verifyRecords"/);
   assert.match(js, /action === 'verifyRecords'\) this\.goVerifyRecords\(\)/);
-  assert.match(js, /goVerifyRecords\(\) \{\s*if \(!this\.data\.merchantAccess\.canReadVerifyRecords\) return;\s*wx\.navigateTo\(\{ url: '\/pages\/merchant\/verify-records\/index' \}\)/);
+  assert.match(js, /goVerifyRecords\(\) \{\s*if \(!this\.data\.merchantAccess\.canReadVerifyRecords \|\| this\._navigating\) return;[^\n]*\s*this\._navigating = true;\s*wx\.navigateTo\(\{ url: '\/pages\/merchant\/verify-records\/index', complete: \(\) => \{ this\._navigating = false; \} \}\)/);
 });
