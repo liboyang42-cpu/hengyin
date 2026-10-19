@@ -34,6 +34,7 @@ public interface PlayTeamMapper {
     int markActiveMembersExited(Long teamId);
     int hasPaidRegistration(@Param("memberId") Long memberId, @Param("ownerType") Integer ownerType,
                             @Param("ownerId") Long ownerId);
+    int hasCurrentNpcRegistration(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
     List<PlayTeam> selectMyTeams(Long memberId);
     List<Long> selectExpiredTeamIds(@Param("now") Date now, @Param("limit") int limit);
     int endExpiredTeam(@Param("teamId") Long teamId, @Param("now") Date now);
