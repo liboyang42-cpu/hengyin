@@ -7,7 +7,7 @@ import com.chengyinhub.business.home.PrivateHomeLogScope;
 import com.chengyinhub.business.home.PrivateHomeService;
 import com.chengyinhub.business.home.PrivateHomeContracts.HomeView;
 import java.util.concurrent.*;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.mock.web.*;

@@ -240,10 +240,8 @@ class JourneyPublishFreezeTest {
                 && NODE.equals(p.getNodeId())), eq("default"))).thenReturn(Collections.emptyList());
 
         wireController();
-<<<<<<< public
         CurrentPlayControllerFixtures.install(controller);
         com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
-=======
         unproxiedController = controller;
         transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(
                 new org.springframework.jdbc.datasource.DriverManagerDataSource(
@@ -253,7 +251,6 @@ class JourneyPublishFreezeTest {
         proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
                 new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
         controller = (ApiPlayProgressController) proxy.getProxy();
->>>>>>> private-github/featu
     }
 
     private void wireController() {

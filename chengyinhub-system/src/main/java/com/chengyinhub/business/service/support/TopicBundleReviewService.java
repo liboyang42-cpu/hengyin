@@ -39,7 +39,8 @@ public class TopicBundleReviewService {
     private final CmsTopicChapterMapper chapterMapper;
     private final CmsTopicNodeMapper nodeMapper;
     private final CmsMemberTemplateMapper templateMapper;
-<<<<<<< public
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    private LegacyCmsTemplateApprovalBoundary legacyTemplateApprovalBoundary;
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.mapper.MerchantChapterApplicationMapper applicationMapper;
     @org.springframework.beans.factory.annotation.Autowired
@@ -48,11 +49,6 @@ public class TopicBundleReviewService {
     private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
     private final ObjectMapper json = new ObjectMapper()
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
-=======
-    @org.springframework.beans.factory.annotation.Autowired(required=false)
-    private LegacyCmsTemplateApprovalBoundary legacyTemplateApprovalBoundary;
-    private final ObjectMapper json = new ObjectMapper();
->>>>>>> private-github/featu
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
 
     public TopicBundleReviewService(CmsTopicMapper topicMapper,

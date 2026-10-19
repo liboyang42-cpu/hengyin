@@ -143,9 +143,7 @@ class ApiPlayPuzzleHintTest
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-<<<<<<< public
         CurrentPlayControllerFixtures.install(controller);
-=======
         org.springframework.jdbc.datasource.DriverManagerDataSource ds = new org.springframework.jdbc.datasource.DriverManagerDataSource(
                 "jdbc:h2:mem:puzzle-http-" + java.util.UUID.randomUUID(), "sa", "");
         org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(controller);
@@ -154,7 +152,6 @@ class ApiPlayPuzzleHintTest
                 new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds),
                 new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
         controller = (ApiPlayProgressController) proxy.getProxy();
->>>>>>> private-github/featu
     }
 
     @SuppressWarnings("unchecked")

@@ -255,11 +255,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         view.put("found", found[0]);
         view.put("total", found[1]);
         if(session != null) view.put("archive", archive(memberId, topicId, session));
-<<<<<<< public
-        view.put("chapter", endingChapter(topicId, chosen, state, session));
-=======
-        view.put("chapter", frozen == null ? endingChapter(topicId, chosen, state) : frozenEndingChapter(frozen, chosen, state));
->>>>>>> private-github/featu
+        view.put("chapter", frozen == null ? endingChapter(topicId, chosen, state, session) : frozenEndingChapter(frozen, chosen, state));
         return view;
     }
 

@@ -298,18 +298,10 @@ public class ApiAiNpcController extends BaseController
         {
             return AjaxResult.error(HttpStatus.FORBIDDEN, "店铺分身对话还没开放");
         }
-<<<<<<< public
         Long userId = getAppUserId();
         com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
                 npcChatService.storedShopRequest(requestId,userId,nodeId);
         if(stored!=null) return success(stored);
-        if (!speechToTextService.available())
-        {
-            // 说清楚缺的是什么,不要含糊成「暂时不可用」——含糊会让人以为是抖动、反复重试
-            return AjaxResult.error("语音识别还没接入，先打字问我");
-        }
-=======
->>>>>>> private-github/featu
         if (file == null || file.isEmpty()) return AjaxResult.error("参数有误");
         if (file.getSize() > VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
         ShopGate gate = gateShopChat(userId, nodeId);

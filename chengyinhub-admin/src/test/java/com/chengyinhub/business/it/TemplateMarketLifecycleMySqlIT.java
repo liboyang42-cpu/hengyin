@@ -59,11 +59,7 @@ class TemplateMarketLifecycleMySqlIT {
                 MemberTemplateVO.class, TemplateLibraryVO.class, AuditTask.class, AuditRecord.class,
                 BusinessAuditEvent.class}) config.getTypeAliasRegistry().registerAlias(type.getSimpleName(), type);
         config.setEnvironment(new Environment("it", new SpringManagedTransactionFactory(), source));
-<<<<<<< public
-        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "AppMediaAsset"}) {
-=======
-        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "LegacyCmsTemplateRead", "LegacyCmsProvenance"}) {
->>>>>>> private-github/featu
+        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "AppMediaAsset", "LegacyCmsTemplateRead", "LegacyCmsProvenance"}) {
             String resource = "mapper/business/" + name + "Mapper.xml";
             try (InputStream input = Resources.getResourceAsStream(resource)) {
                 new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();

@@ -3035,13 +3035,9 @@ public class ApiPlayProgressController extends BaseController
     private CompletionAttempt prepareNodeCompletion(Long memberId, CmsTopicNode node, Long actId) {
         // 高级玩法是节点原验证方式的前置闸。只有这里通过后才进入既有幂等、发奖和通关链，
         // 避免六类玩法各自复制一份积分/券/勋章逻辑。
-<<<<<<< public
         // Spring 运行态该依赖是 required；null 仅兼容直接 new Controller 的存量纯单测。
         if(topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,node.getTopicId(),actId))throw new ServiceException("通用个人任务请使用任务结算，不能领取旧节点奖励",409);
-        String advancedOutcomeCode = advancedGameRuntimeService == null ? null
-=======
         String outcome = advancedGameRuntimeService == null ? null
->>>>>>> private-github/featu
                 : advancedGameRuntimeService.completeGate(memberId, actId, node.getTopicId(), node.getId());
         // Both runtime dependencies are required in Spring. The null seam retains old directly-new
         // controller fixtures, never an alternative production FIRST/replay admission path.

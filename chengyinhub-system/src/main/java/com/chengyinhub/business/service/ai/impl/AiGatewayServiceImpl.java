@@ -140,7 +140,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
-<<<<<<< public
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
         String openid = resolveOpenid(memberId);
         stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
@@ -149,7 +148,9 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
                     + (userPrompt == null ? "" : userPrompt);
+            requireScopedModeration(bizType);
             secIn = checkTextFully(assembledInput, openid);
+            requireScopedModeration(bizType);
         } catch (RuntimeException unavailable) {
             if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
@@ -162,41 +163,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
             }
             retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
-=======
-        String rateKey = null;
-        Long used = null;
-        if (!playerThemeDraft)
-        {
-            String today = LocalDate.now().format(DATE_FMT);
-            String rateGroup = rateGroupOf(bizType);
-            rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
-            used = redisTemplate.opsForValue().increment(rateKey);
-            if (isScopedNpc(bizType) && (used == null || used <= 0))
-                throw new AiServiceException("Scoped NPC quota unavailable");
-            // A prior INCR may have succeeded while EXPIRE failed: re-confirm scoped expiry.
-            if (isScopedNpc(bizType) || (used != null && used == 1))
-            {
-                Boolean expires = redisTemplate.expire(rateKey, 86400, TimeUnit.SECONDS);
-                if (isScopedNpc(bizType) && !Boolean.TRUE.equals(expires))
-                    throw new AiServiceException("Scoped NPC quota expiry unavailable");
-            }
-            int dailyLimit = dailyLimitOf(rateGroup);
-            if (used != null && used > dailyLimit)
-            {
-                log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
-                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
-            }
-        }
-
-        // 2. 入参内容安全
-        String openid = resolveOpenid(memberId);
-        requireScopedModeration(bizType);
-        String secIn = wxContentSecurityService.checkText(truncate(userPrompt, 2000), openid);
-        requireScopedModeration(bizType);
-        if (secIn != null)
-        {
-            log.info("[AiGateway] input-blocked memberId={} bizType={}", memberId, bizType);
->>>>>>> private-github/featu
             saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
             // 人工复核及未知拒绝仍沿用 UNKNOWN；只有现有微信明确违规文案改变分类。
@@ -252,7 +218,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 log.warn("[AiGateway] scoped-model-error traceId={} provider={}", traceId, modelName);
             else log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
-<<<<<<< public
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
                     0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
             // MODEL_STARTED preserves the original receipt for the existing recovery worker.
@@ -260,25 +225,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // Never refund or resend merely because no answer reached this service.
             throw new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
                 "AI 请求结果待确认，请保留原请求(traceId=" + traceId + ")", e);
-=======
-            try
-            {
-                saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
-                        0, (int) (System.currentTimeMillis() - t0), tokenIn, 0);
-            }
-            finally
-            {
-                // Scoped audit failures also fail closed, but must not strand a failed provider's quota.
-                if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);
-            }
-            if (isConfigurationFailure(e))
-            {
-                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
-                    "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
-            }
-            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
-                "AI 繁忙,请稍后重试(traceId=" + traceId + ")", e);
->>>>>>> private-github/featu
         }
 
         int latencyMs = (int) (System.currentTimeMillis() - t0);
@@ -286,19 +232,17 @@ public class AiGatewayServiceImpl implements AiGatewayService
         int tokenOut = estimateSingle(modelText);
 
         // 4. 出参内容安全
-<<<<<<< public
         String secOut;
-        try { secOut = checkTextFully(modelText, openid); }
+        try {
+            requireScopedModeration(bizType);
+            secOut = checkTextFully(modelText, openid);
+            requireScopedModeration(bizType);
+        }
         catch(RuntimeException unknownOutput) {
             retainQuota(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
-=======
-        requireScopedModeration(bizType);
-        String secOut = wxContentSecurityService.checkText(modelText, openid);
-        requireScopedModeration(bizType);
->>>>>>> private-github/featu
         if (secOut != null)
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
@@ -545,22 +489,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 }
             }
         }
-<<<<<<< public
         return requireAvailableClient(m.get(providerName), providerName);
-=======
-        LlmClient c = m.get(providerName);
-        if (c == null)
-        {
-            if (isScopedNpc(bizType)) throw new AiServiceException("Scoped NPC provider unavailable");
-            log.warn("[AiGateway] unknown provider={}, fallback to mock", providerName);
-            c = m.get("mock");
-        }
-        if (c == null)
-        {
-            throw new AiServiceException("无可用的 AI 模型");
-        }
-        return c;
->>>>>>> private-github/featu
     }
 
     /** 旧单 provider 选择(兼容单测/未注入 sceneRouter 场景)。 */

@@ -251,9 +251,7 @@ class ApiPlayDelistedCompletedRetryContractTest
                 .thenReturn(new TopicCompletionAwardVO());
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         mockProgressRows(true);
-<<<<<<< public
         CurrentPlayControllerFixtures.install(controller);
-=======
         unproxiedController = controller;
         transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(
                 new org.springframework.jdbc.datasource.DriverManagerDataSource(
@@ -263,7 +261,6 @@ class ApiPlayDelistedCompletedRetryContractTest
         proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
                 new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
         controller = (ApiPlayProgressController) proxy.getProxy();
->>>>>>> private-github/featu
     }
 
     /**

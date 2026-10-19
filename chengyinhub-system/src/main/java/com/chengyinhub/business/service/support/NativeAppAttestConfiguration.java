@@ -4,7 +4,7 @@ import com.chengyinhub.business.service.support.appattest.AppAttestPolicy;
 import com.chengyinhub.business.service.support.appattest.AppAttestVerifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.nio.file.*;
 import java.util.*;
 

@@ -46,11 +46,8 @@ class TemplatePublishQuestionMediaTest
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
-<<<<<<< public
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
-=======
         ReflectionTestUtils.setField(service, "legacyCmsMutationGuard", provenance.mutationGuard);
->>>>>>> private-github/featu
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
         ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));

@@ -132,12 +132,9 @@ class RegistrationFundsMybatisIntegrationTest {
 
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
-<<<<<<< public
         ReflectionTestUtils.setField(target, "platformMemberId", 1L);
-=======
         ReflectionTestUtils.setField(target, "businessAuditEventMapper",
                 RegistrationLifecycleMySqlFixture.mapper(dataSource));
->>>>>>> private-github/featu
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));

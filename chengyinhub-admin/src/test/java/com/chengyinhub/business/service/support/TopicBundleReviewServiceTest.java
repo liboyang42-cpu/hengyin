@@ -332,7 +332,6 @@ class TopicBundleReviewServiceTest {
         when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(100L)))
                 .thenReturn(Collections.singletonList(template));
     }
-<<<<<<< public
     @Test
     void acceptedMerchantSupplyAllowsOnlyItsApprovedTemplateAndDecisionRechecksSupply() {
         com.chengyinhub.business.mapper.MerchantChapterApplicationMapper applications = mock(com.chengyinhub.business.mapper.MerchantChapterApplicationMapper.class);
@@ -373,7 +372,6 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(100L, 88L);
     }
 
-=======
 
     @Test
     void missingApprovalGuardRejectsBeforeAnyBundledDraftWrite() {
@@ -394,5 +392,4 @@ class TopicBundleReviewServiceTest {
                 () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
         verify(templateMapper, never()).approveBundledDraft(100L, 7L);
     }
->>>>>>> private-github/featu
 }

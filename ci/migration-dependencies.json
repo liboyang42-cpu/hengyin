@@ -773,6 +773,61 @@
     "20261013_roam_badge_delivery": [],
     "20261013_roam_reward_delivery": [],
     "20261013_roam_session_record_archive": [],
-    "ai_quota_reservation_recovery_20261013": []
+    "ai_quota_reservation_recovery_20261013": [],
+    "20261002_city_visit_persistence": [
+      "p1_funds_core_uniqueness_20260724",
+      "hint_unlock_idempotency_20260722"
+    ],
+    "20261002_content_capture_snapshot": [],
+    "20261002_native_app_attest": [],
+    "20261002_private_player_home": [],
+    "20261003_city_board_draft_candidate": [],
+    "20261003_content_capture_review_binding": [
+      "20261002_content_capture_snapshot",
+      "p3_platform_foundation",
+      "audit_open_task_guard_20260721"
+    ],
+    "20261003_walking_target_provenance": [],
+    "20261004_egg_discovery_evaluation": [],
+    "20261004_merchant_npc_knowledge_drafts": [],
+    "coupon_command_receipt": [],
+    "coupon_terms_snapshot_draft_20261005": [],
+    "merchant_ai_authoring_source_v1": [],
+    "theme_team_replay_20261009": [
+      "theme_runtime_20261004",
+      "20260820_play_team_core",
+      "20260823_topic_route_graph"
+    ],
+    "topic_completion_coupon_receipt_draft_20261005": [],
+    "topic_completion_coupon_receipt_marker_draft_20261005": [
+      "topic_completion_coupon_receipt_draft_20261005"
+    ],
+    "w16_consent_persistence_candidate": [],
+    "w17_noncash_inventory_candidate": [],
+    "w18_cms_provenance_marker": [],
+    "w18_content_draft_install_scope_20261003": [
+      "content_draft_im_poll_20260828"
+    ],
+    "w18_free_claim_registry_20261003": [],
+    "w18_module_install_reservation_20261002": [],
+    "w18_owned_text_draft_install_20261002": [
+      "w18_module_install_reservation_20261002"
+    ],
+    "w18_owned_text_receipt_read_index_20261003": [
+      "w18_owned_text_draft_install_20261002"
+    ],
+    "w18_paid_install_command_20261005": [
+      "w18_paid_order_license_20261005",
+      "w18_content_draft_install_scope_20261003",
+      "w18_owned_text_draft_install_20261002"
+    ],
+    "w18_paid_materialized_cms_provenance_20261006": [
+      "w18_cms_provenance_marker",
+      "w18_paid_install_command_20261005"
+    ],
+    "w18_paid_order_license_20261005": [],
+    "w18_paid_professional_operation_20261006": [
+      "w18_paid_materialized_cms_provenance_20261006"
+    ]
   }
 }

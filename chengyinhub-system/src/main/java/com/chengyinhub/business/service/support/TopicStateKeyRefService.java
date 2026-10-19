@@ -144,9 +144,6 @@ public class TopicStateKeyRefService {
         return "主题剧情配置无法解析,主题发布失败:" + error.getMessage();
     }
 
-<<<<<<< public
-    private void collectNode(CmsTopicNode node, CmsTopic topic, RefCollection refs) {
-=======
     private static void collectThemeRuntime(CmsTopic topic, RefCollection refs) {
         try {
             // Author drafts may legitimately lack publication-only names/media. Shape/reference syntax remains checked.
@@ -157,8 +154,7 @@ public class TopicStateKeyRefService {
         }
     }
 
-    private void collectNode(CmsTopicNode node, RefCollection refs) {
->>>>>>> private-github/featu
+    private void collectNode(CmsTopicNode node, CmsTopic topic, RefCollection refs) {
         if (node == null) {
             return;
         }

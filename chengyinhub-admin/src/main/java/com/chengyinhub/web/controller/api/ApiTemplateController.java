@@ -647,7 +647,6 @@ public class ApiTemplateController extends BaseController {
             return error("参数不合规");
         }
 
-<<<<<<< public
         Long viewerId = getAppUserId();
         if (viewerId == null || viewerId <= 0) return error("请先登录");
         Long ownerId;
@@ -656,10 +655,7 @@ public class ApiTemplateController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
-        cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
-=======
         cmsMemberTemplate = legacyTemplateBodyReader.findLegacy(templateId);
->>>>>>> private-github/featu
         if (cmsMemberTemplate == null) {
             return error("模版不存在");
         } else {

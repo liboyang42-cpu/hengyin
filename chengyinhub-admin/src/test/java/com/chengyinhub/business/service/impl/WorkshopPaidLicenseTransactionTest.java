@@ -218,7 +218,7 @@ class WorkshopPaidLicenseTransactionTest {
     }
     @Test void purchasedHttpUnknownLengthOversizedAndAmbiguousBodyFailClosed(){
         com.chengyinhub.web.controller.api.ApiWorkshopPurchasedController controller=controller();
-        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){@Override public long getContentLengthLong(){return -1;}@Override public javax.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown body must be rejected before reading");}};
+        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){@Override public long getContentLengthLong(){return -1;}@Override public jakarta.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown body must be rejected before reading");}};
         unknown.setContentType("application/x-www-form-urlencoded");assertEquals(400,controller.list(unknown).getStatusCodeValue());assertEquals(400,controller.detail(unknown).getStatusCodeValue());
         for(String value:Arrays.asList("owner=7","license_id=w18-paid-11&owner=7","license_id=%77%31%38-paid-11","license_id=w18-paid-11&license_id=w18-paid-11",new String(new char[513]).replace('\0','x')))
             assertEquals(400,controller.detail(form(value)).getStatusCodeValue());
@@ -746,7 +746,7 @@ class WorkshopPaidLicenseTransactionTest {
     @Test void paidProtectedBodyHttpRejectsMissingServiceAnonymousAndMalformedInputBeforeBodyRead()throws Exception{
         long owned=committedPaidText();com.chengyinhub.web.controller.api.ApiWorkshopPaidInstalledTextController c=paidBodyController();String valid="{\"requestId\":\""+COMMAND_ID+"\",\"ownedDraftId\":"+owned+"}";
         for(String invalid:Arrays.asList("{}",valid.replace("\"ownedDraftId\":","\"ownerId\":7,\"ownedDraftId\":"),valid.replace("\"ownedDraftId\":1","\"ownedDraftId\":1.0"),valid+"{}",valid.replace("\"ownedDraftId\":1","\"ownedDraftId\":null"))){connectionProbe.onConnect=()->{throw new AssertionError("malformed body queried");};assertEquals(400,c.detail(json(invalid)).getStatusCodeValue());}connectionProbe.onConnect=()->{};
-        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public javax.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown length parsed");}};unknown.setContentType("application/json");assertEquals(400,c.detail(unknown).getStatusCodeValue());
+        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public jakarta.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown length parsed");}};unknown.setContentType("application/json");assertEquals(400,c.detail(unknown).getStatusCodeValue());
         org.springframework.test.util.ReflectionTestUtils.setField(c,"reader",null);assertEquals("PAID_INSTALLED_TEXT_NOT_ENABLED",c.detail(json(valid)).getBody().get("errorCode"));org.springframework.security.core.context.SecurityContextHolder.clearContext();assertEquals(401,c.detail(json(valid)).getStatusCodeValue());
     }
 
@@ -946,7 +946,7 @@ class WorkshopPaidLicenseTransactionTest {
     }
     @Test void materializerHttpBoundsDeclaredAndActualBodyBeforeParsing()throws Exception {
         materializationSetup();com.chengyinhub.web.controller.api.ApiWorkshopPaidMaterializationController c=materializationController();String body=materializationJson();
-        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public javax.servlet.ServletInputStream getInputStream(){throw new AssertionError("must reject before stream");}};unknown.setContentType("application/json");assertEquals(400,c.submit(unknown).getStatusCodeValue());
+        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public jakarta.servlet.ServletInputStream getInputStream(){throw new AssertionError("must reject before stream");}};unknown.setContentType("application/json");assertEquals(400,c.submit(unknown).getStatusCodeValue());
         org.springframework.mock.web.MockHttpServletRequest mismatch=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return 2;}};mismatch.setContentType("application/json");mismatch.setContent(new byte[4097]);assertEquals(400,c.submit(mismatch).getStatusCodeValue());
         org.springframework.mock.web.MockHttpServletRequest query=json(body);query.setQueryString("owner=7");assertEquals(400,c.submit(query).getStatusCodeValue());org.springframework.mock.web.MockHttpServletRequest chunked=json(body);chunked.addHeader("Transfer-Encoding","chunked");assertEquals(400,c.submit(chunked).getStatusCodeValue());noMaterializedRows();
     }
@@ -1020,7 +1020,7 @@ class WorkshopPaidLicenseTransactionTest {
     }
     @Test void operationHttpCancelDoesNotAcceptBareUuidOwnerOrUnknownBodyLength()throws Exception {
         materializationSetup();String body=materializationJson();com.chengyinhub.web.controller.api.ApiWorkshopPaidProfessionalOperationController c=operationController();assertEquals(400,c.cancel(json(materializationStatusJson())).getStatusCodeValue());assertEquals(400,c.cancel(json(body.replaceFirst("\\{","{\"owner\":7,"))).getStatusCodeValue());
-        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public javax.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown body must not be read");}};unknown.setContentType("application/json");assertEquals(400,c.cancel(unknown).getStatusCodeValue());
+        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public jakarta.servlet.ServletInputStream getInputStream(){throw new AssertionError("unknown body must not be read");}};unknown.setContentType("application/json");assertEquals(400,c.cancel(unknown).getStatusCodeValue());
         String deep=new String(new char[1000]).replace('\0','[')+"0"+new String(new char[1000]).replace('\0',']');assertEquals(400,c.submit(json(body.replace("\"confirmedMode\":\"CITY_ORIENTATION\"","\"confirmedMode\":"+deep))).getStatusCodeValue());assertEquals(0,jdbc.queryForObject("select count(*) from w18_paid_professional_operation",Integer.class));
     }
     @Test void operationHttpAbsentHandlerAndUnauthenticatedRequestsCannotPrepare()throws Exception {
@@ -1073,13 +1073,13 @@ class WorkshopPaidLicenseTransactionTest {
     }
     @Test void operationHistoryHttpRejectsExtraOwnerNullCursorAndUnknownLength()throws Exception {
         materializationSetup();com.chengyinhub.web.controller.api.ApiWorkshopPaidProfessionalOperationController c=operationController();for(String invalid:Arrays.asList("{}","{\"licenseId\":\"w18-paid-11\",\"owner\":7}","{\"licenseId\":\"w18-paid-11\",\"beforeOperationKey\":null}","{\"licenseId\":\"w18-paid-11\",\"licenseId\":\"w18-paid-22\"}"))assertEquals(400,c.history(json(invalid)).getStatusCodeValue());
-        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public javax.servlet.ServletInputStream getInputStream(){throw new AssertionError("no unbounded history body");}};unknown.setContentType("application/json");assertEquals(400,c.history(unknown).getStatusCodeValue());noMaterializedRows();
+        org.springframework.mock.web.MockHttpServletRequest unknown=new org.springframework.mock.web.MockHttpServletRequest(){public long getContentLengthLong(){return -1;}public jakarta.servlet.ServletInputStream getInputStream(){throw new AssertionError("no unbounded history body");}};unknown.setContentType("application/json");assertEquals(400,c.history(unknown).getStatusCodeValue());noMaterializedRows();
     }
 
     @Test void operationHistoryWritePortsRetainExistingMemberDraftRateAnnotation()throws Exception {
         for(Class<?> type:new Class<?>[]{com.chengyinhub.web.controller.api.ApiWorkshopPaidProfessionalOperationController.class,com.chengyinhub.web.controller.api.ApiWorkshopPaidMaterializationController.class}){
             for(String method:type.getSimpleName().contains("ProfessionalOperation")?Arrays.asList("submit","cancel"):Collections.singletonList("submit")){
-                com.chengyinhub.common.annotation.RateLimiter rate=type.getMethod(method,javax.servlet.http.HttpServletRequest.class).getAnnotation(com.chengyinhub.common.annotation.RateLimiter.class);
+                com.chengyinhub.common.annotation.RateLimiter rate=type.getMethod(method,jakarta.servlet.http.HttpServletRequest.class).getAnnotation(com.chengyinhub.common.annotation.RateLimiter.class);
                 assertNotNull(rate);assertEquals(60,rate.time());assertEquals(30,rate.count());assertEquals(com.chengyinhub.common.enums.LimitType.MEMBER,rate.limitType());
             }
         }

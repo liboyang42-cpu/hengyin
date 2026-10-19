@@ -92,12 +92,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long publishTemplateWithTransaction(CmsTemplatePublishRequest request, Long memberId, String username) {
-<<<<<<< public
+        if (request == null) throw new IllegalArgumentException("模板不能为空");
         Date now = new Date();
 
-=======
-        if (request == null) throw new IllegalArgumentException("模板不能为空");
->>>>>>> private-github/featu
         // 编辑既有模板:request 带 id 即为改写自己已发布的那一份。
         // 没有这条,商家承接玩法包之后只能"换掉"不能"改" —— 副本模板的归属已经是他的
         // (CmsTopicServiceImpl#copyTemplateForOwner 深拷贝过),却没有任何入口能改题面与答案。
@@ -116,18 +113,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             request.setOriginalTemplateId(existing.getOriginalTemplateId());
         }
 
-<<<<<<< public
         prepareClearFields(request, existing);
-=======
->>>>>>> private-github/featu
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         normalizeAdoptedReward(request);
         assertCapabilities(request, memberId);
-<<<<<<< public
-=======
-        Date now = new Date();
->>>>>>> private-github/featu
 
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
@@ -440,12 +430,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(request);
         CmsMemberTemplate saved = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, saved);
-<<<<<<< public
         mediaPublicationGuard.requireTemplate(memberId, saved, true);
-=======
         // 更新未传/传 null 时交给动态 SQL 保留原列；新建仍沿用既有的 0 默认值。
         if (existing != null && input.getDuration() == null) saved.setDuration(null);
->>>>>>> private-github/featu
         saved.setInteractionType(input.getInteractionType());
         saved.setId(existing == null ? null : existing.getId());
         saved.setMemberId(memberId); saved.setDelFlag(0); saved.setDraftStatus(1);
@@ -615,7 +602,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username) {
-<<<<<<< public
+        if (request == null) throw new IllegalArgumentException("模板不能为空");
         if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             if (request.getId() != null || request.getOriginalTemplateId() == null
                     || request.getOriginalTemplateId() <= 0) {
@@ -652,9 +639,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 }
             }
         }
-=======
-        if (request == null) throw new IllegalArgumentException("模板不能为空");
->>>>>>> private-github/featu
         CmsMemberTemplate existingDraft = null;
         if (request.getId() != null && request.getId() > 0) {
             existingDraft = lockTemplate(request.getId());
@@ -662,14 +646,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                     || !memberId.equals(existingDraft.getMemberId())) {
                 throw new RuntimeException("草稿不存在或无权修改");
             }
-<<<<<<< public
-        }
-        prepareClearFields(request, existingDraft);
-=======
             legacyCmsProvenanceGuard.requireLegacy(request.getId());
             request.setOriginalTemplateId(existingDraft.getOriginalTemplateId());
         }
->>>>>>> private-github/featu
+        prepareClearFields(request, existingDraft);
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         normalizeAdoptedReward(request);

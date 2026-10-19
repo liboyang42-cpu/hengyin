@@ -16,13 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import com.alibaba.druid.pool.DruidDataSource;
-<<<<<<< public
-import com.alibaba.druid.spring.boot4.autoconfigure.DruidDataSourceBuilder;
 import com.alibaba.druid.spring.boot4.autoconfigure.properties.DruidStatProperties;
-=======
 import com.chengyinhub.framework.privacy.PrivateHomeDruidDataSource;
-import com.alibaba.druid.spring.boot.autoconfigure.properties.DruidStatProperties;
->>>>>>> private-github/featu
 import com.alibaba.druid.util.Utils;
 import com.chengyinhub.common.enums.DataSourceType;
 import com.chengyinhub.common.utils.spring.SpringUtils;

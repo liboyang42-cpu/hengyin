@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 @ConditionalOnProperty(name="app.private-home.owner-api-enabled", havingValue="true")
 public class ApiPrivateHomeController {
     @Autowired private PrivateHomeService service;
-    @ModelAttribute public void privateResponse(javax.servlet.http.HttpServletResponse response) {
+    @ModelAttribute public void privateResponse(jakarta.servlet.http.HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("Pragma", "no-cache");
     }

@@ -3,7 +3,7 @@ package com.chengyinhub.framework.privacy;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.filter.stat.StatFilter;
 import com.alibaba.druid.stat.JdbcSqlStat;
-import com.alibaba.druid.spring.boot.autoconfigure.stat.DruidFilterConfiguration;
+import com.alibaba.druid.spring.boot4.autoconfigure.stat.DruidFilterConfiguration;
 import com.chengyinhub.business.home.PrivateHomeLogScope;
 import java.math.BigDecimal;
 import java.sql.*;

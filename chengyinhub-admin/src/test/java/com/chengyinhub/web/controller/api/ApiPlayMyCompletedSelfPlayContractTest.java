@@ -373,7 +373,6 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertNull(selfPlayItem.get("activityId"));
     }
     @Test
-<<<<<<< public
     void publicReferencePurposePreservesDefaultHistoryAndErrors()
     {
         com.chengyinhub.business.service.ICommunityPostService references =
@@ -396,7 +395,9 @@ class ApiPlayMyCompletedSelfPlayContractTest
         doReturn(failure).when(controller).myCompleted();
         org.junit.jupiter.api.Assertions.assertSame(failure, controller.myCompleted(true));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.times(1)).filterPublicCompletedReferences(anyLong(), any());
-=======
+    }
+
+    @Test
     void foreignCompletedFactsCannotCompleteTheRequestedSelfPlayScope() {
         seedNodes(SELF_TOPIC, 5);
         when(topicService.selectCmsTopicById(SELF_TOPIC)).thenReturn(topic(SELF_TOPIC, "分支自玩"));
@@ -423,7 +424,6 @@ class ApiPlayMyCompletedSelfPlayContractTest
             assertEquals("default", scopes.get(0).getPlayInstanceId());
             return facts;
         }).when(routeService).currentSessionFacts(any());
->>>>>>> private-github/featu
     }
 
 }

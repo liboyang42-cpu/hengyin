@@ -3,7 +3,7 @@ package com.chengyinhub.framework.privacy;
 import com.alibaba.druid.pool.DruidAbstractDataSource;
 import com.alibaba.druid.pool.DruidConnectionHolder;
 import com.alibaba.druid.pool.DruidPooledConnection;
-import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceWrapper;
+import com.alibaba.druid.spring.boot4.autoconfigure.DruidDataSourceWrapper;
 import com.chengyinhub.business.home.PrivateHomeLogScope;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;

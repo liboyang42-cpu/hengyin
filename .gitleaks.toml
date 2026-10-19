@@ -42,6 +42,10 @@ paths = [
   '''docs/evidence/popup-style-1003/complete/source-inventory\.json''',
   '''docs/evidence/popup-style-1003/after/source-inventory\.json''',
   '''docs/evidence/popup-style-1003/verification\.json''',
+  # ⑤ 原生计步 / App Attest 跨端协议夹具:clientDataHashHex 是对合成挑战/载荷算出的 SHA-256,
+  #    文件自身标注 "Synthetic cross-client fixture only",不是密钥。锚死到这两个测试资源。
+  '''chengyinhub-admin/src/test/resources/native-platform-v1\.json''',
+  '''chengyinhub-admin/src/test/resources/native-app-attest-enrollment-v1\.json''',
 ]
 
 # Only these nine historical inventory entries; path and exact line must both match.

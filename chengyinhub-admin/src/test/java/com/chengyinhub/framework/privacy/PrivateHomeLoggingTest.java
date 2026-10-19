@@ -9,7 +9,7 @@ import com.chengyinhub.business.home.PrivateHomeContracts.*;
 import com.chengyinhub.web.controller.api.ApiPrivateHomeController;
 import java.math.BigDecimal;
 import java.util.concurrent.*;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

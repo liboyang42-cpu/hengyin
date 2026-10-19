@@ -2837,7 +2837,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return publishDraftInternal(id, null, false);
     }
 
-<<<<<<< public
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publishDraft(Long id, Long expectedOwnerId) {
@@ -2883,6 +2882,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         CmsTopic topic = supplyReviewService.lockTopic(id);
         if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
             throw new ServiceException("主题归属已变化，无权提交", 403);
+        // 主题运行时配置在当前开关下不可用时，草稿不得借发布入口公开。
+        if (topic != null) themeRuntimePolicy.requireConfiguredEnabled(topic.getThemeRuntimeConfigJson());
         boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
         if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
         if (cmsTopicMapper.clearDraftIfDraft(id) <= 0 && !supplyResubmission) return null;
@@ -2908,19 +2909,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(id, taskId, "PENDING", submission.getBundledTemplateIds());
             result.setPublished(false);
             return result;
-=======
-    private TopicBundleSubmitResultVO publishDraftInternal(Long id) {
-        CmsTopic themeDraft = cmsTopicMapper.selectCmsTopicById(id);
-        if (themeDraft != null) themeRuntimePolicy.requireConfiguredEnabled(themeDraft.getThemeRuntimeConfigJson());
-        // 竞态安全门禁:仅当前确为草稿(is_draft=1)才清标记并继续,
-        // 防 rejected(审核未通过)/online 主题借道 publish-draft 绕过审核。
-        if (cmsTopicMapper.clearDraftIfDraft(id) <= 0) {
-            return null;
-        }
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(id);
-        if (topic == null) {
-            throw new IllegalStateException("草稿发布失败: 主题不存在或无法锁定");
->>>>>>> private-github/featu
         }
         // R19-DRAFT2:草稿保存放宽的那批完整度校验,在这里补回来 —— 半成品可以存,不能发。
         // 直接发布路径的同批校验在 createTopicInternal/rebuildTopicContent 的非草稿分支(它们从未放宽)。
@@ -3822,16 +3810,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R2-B10 主题数值规则:带才校验落库,不带保持 NULL(= 未启用)。非法配置在这里就抛,
         // 不静默落一份运行期读不懂的 JSON。
         topic.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
-<<<<<<< public
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig(), !saveDraft);
         topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(runtimeRaw));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()));
-=======
-        topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.normalize(dto.getThemeRuntimeConfig()));
         if (!saveDraft) themeRuntimePolicy.requireConfiguredEnabled(topic.getThemeRuntimeConfigJson());
->>>>>>> private-github/featu
         // R8-STORY 主题剧情:建题时章节/NPC 尚无 id,这里只校验形状与自身自洽,
         // 章节/NPC 引用由发布期带上下文重验(assertJourneyStoryReferences)。
         topic.setJourneyStoryJson(journeyStoryValidator.validate(dto.getJourneyStory(),

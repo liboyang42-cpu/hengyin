@@ -73,11 +73,7 @@
         order by id limit 2
     </select>
     <select id="selectAccessibleByIdForUpdate" resultMap="RouteSession">
-<<<<<<< public
         select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} for update
-=======
-        select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1 for update
->>>>>>> private-github/featu
     </select>
     <select id="selectAccessibleById" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1

@@ -23,7 +23,6 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
     @Autowired
     private CmsTopicLikeMapper cmsTopicLikeMapper;
 
-<<<<<<< public
     @Override
     public int setLiked(Long memberId, Long topicId, boolean liked) {
         if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) {
@@ -32,10 +31,8 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
         return liked ? cmsTopicLikeMapper.ensureOwnedLike(memberId, topicId)
                 : cmsTopicLikeMapper.deleteOwnedLike(memberId, topicId);
     }
-=======
     @Autowired
     private ICmsTopicService cmsTopicService;
->>>>>>> private-github/featu
 
 
     /**

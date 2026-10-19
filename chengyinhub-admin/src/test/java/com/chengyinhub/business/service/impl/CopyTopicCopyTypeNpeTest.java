@@ -65,19 +65,16 @@ class CopyTopicCopyTypeNpeTest {
         }).when(cmsTopicMapper).insertCmsTopic(any());
 
         svc = new CmsTopicServiceImpl();
-<<<<<<< public
 
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-=======
         // These existing fixtures exercise legacy copying; provenance denial has dedicated tests.
         LegacyCmsProvenanceMapper provenanceMapper = mock(LegacyCmsProvenanceMapper.class);
         org.mockito.Mockito.when(provenanceMapper.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(0);
         ReflectionTestUtils.setField(svc, "legacyCmsProvenanceGuard", new LegacyCmsProvenanceGuard(provenanceMapper));
->>>>>>> private-github/featu
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
         // 本测试聚焦 copyType 语义；提供真实形状的同 owner 来源 fixture，允许合法复用 ID。

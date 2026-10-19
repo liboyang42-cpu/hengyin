@@ -6,7 +6,7 @@ import com.chengyinhub.common.exception.ServiceException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.*;

@@ -888,16 +888,12 @@ class JourneyFullFlowMySqlIT {
      * 所有 SQL 照常打在真库上。
      */
     private static final class HandshakeSessionMapper implements TopicRouteSessionMapper {
-<<<<<<< public
         public String selectMemberNickname(Long memberId) {return real.selectMemberNickname(memberId);}
-=======
         @Override public List<TopicRouteSession> selectCurrentCandidatesByOwners(List<TopicRouteSession> scopes) {return real.selectCurrentCandidatesByOwners(scopes);}
 
         @Override public TopicRouteSession selectCurrentByOwnerForUpdate(Long activityId,Long topicId,Long memberId) {return real.selectCurrentByOwnerForUpdate(activityId,topicId,memberId);}
         @Override public TopicRouteSession selectByOwnerForUpdate(Long activityId,Long topicId,Long memberId,String instance) {return real.selectByOwnerForUpdate(activityId,topicId,memberId,instance);}
-        @Override public TopicRouteSession selectAccessibleByIdForUpdate(Long id,Long memberId) {return real.selectAccessibleByIdForUpdate(id,memberId);}
 
->>>>>>> private-github/featu
         private final TopicRouteSessionMapper real;
         private final String watchedActionId;
         private final CountDownLatch readEmpty;

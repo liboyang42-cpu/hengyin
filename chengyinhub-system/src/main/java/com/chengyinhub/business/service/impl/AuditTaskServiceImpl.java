@@ -518,7 +518,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
         }
-<<<<<<< public
+        requireGenericDecision(task);
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(task.getBizType())) {
+            if (contentCaptureReviewService == null || operatorId == null) throw new IllegalStateException("Candidate review unavailable");
+            task = contentCaptureReviewService.lockAndValidateReview(taskId, operatorId, request);
+        }
         if (AuditTask.BIZ_TOPIC.equals(task.getBizType()) || AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(task.getBizType())
                 || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())) {
             auditTaskMapper.selectTopicPublicationTasksForUpdate(task.getBizId());
@@ -542,12 +546,6 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 throw new ServiceException("推文审核任务已变化，请刷新后重试", HttpStatus.CONFLICT);
             }
             task = locked;
-=======
-        requireGenericDecision(task);
-        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(task.getBizType())) {
-            if (contentCaptureReviewService == null || operatorId == null) throw new IllegalStateException("Candidate review unavailable");
-            task = contentCaptureReviewService.lockAndValidateReview(taskId, operatorId, request);
->>>>>>> private-github/featu
         }
         TemplateReviewLock templateLock = isTemplateTask(task) ? lockTemplateReview(task) : null;
         if (templateLock != null) task = templateLock.task;

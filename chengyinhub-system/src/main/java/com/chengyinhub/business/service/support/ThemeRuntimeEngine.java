@@ -139,14 +139,9 @@ public final class ThemeRuntimeEngine {
         journal(state,"RECEIVE",id,qty);
     }
     public void use(JsonNode config, TopicRouteEngine.State state, JourneyRules rules, String id) {
-<<<<<<< public
+        requireUnfinished(state);
         JsonNode item = item(config,id); requireStatEnabled(config,item,rules);
         if (!"ITEM".equals(item.path("kind").asText()) || (!item.has("stat") && !item.has("statKey")) || item.path("wear").asBoolean()) throw new IllegalStateException("此内容不能点击使用");
-=======
-        requireUnfinished(state);
-        JsonNode item = item(config,id); requireStatEnabled(item,rules);
-        if (!"ITEM".equals(item.path("kind").asText()) || !item.has("stat") || item.path("wear").asBoolean()) throw new IllegalStateException("此内容不能点击使用");
->>>>>>> private-github/featu
         requireHeld(state,id); int previous = number(state,stat(item));
         change(state,rules,item,1);
         if (number(state,stat(item)) == previous && !config.path("gameplayRuntime").path("survival").path("consumeOnNoEffect").asBoolean())
