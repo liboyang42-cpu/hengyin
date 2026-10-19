@@ -301,6 +301,8 @@ Page({
 
   // 记下失败再出错误态:详情可能晚到,applyDetail 不能把这次失败盖成「加载成功的普通成员视图」。
   failManageStats() {
+    // 已展示过内容(onShow 后台刷新)时失败:保留旧统计与已加载内容,只给非阻塞提示;首屏失败照旧整页错误。
+    if (this._manageStats && this._lastRaw && this.data.loaded && !this.data.loadError) { toast('刷新失败，请重试'); return; }
     this._manageStatsFailed = true;
     this.setData({ loaded: true, loadError: true });
   },
@@ -328,10 +330,10 @@ Page({
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
         if (!current()) return;
-        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); return; }
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); return; }
         that.applyDetail(res.data);
       },
-      fail() { if (current() && !that._lastRaw) that.setData({ loaded: true, loadError: true }); },
+      fail() { if (!current()) return; if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); },
     });
   },
 
