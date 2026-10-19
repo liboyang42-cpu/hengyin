@@ -31,6 +31,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -133,12 +134,55 @@ class GameSessionStationIncidentScopeTest {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(5));
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(5101L, NODE, GameStationRun.ACTIVE));
 
-        GameCommandReceiptView receipt = service.command(GameActorContext.merchant(MERCHANT),
-                command("resume-terminal-b", 4, NODE, "STATION_RESUME", Collections.emptyMap()));
+        // SC-CITY-RESUME-RACE:后到的恢复什么都没改,不能记成一张 APPLIED 回执
+        GameSessionException noop = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.merchant(MERCHANT),
+                command("resume-terminal-b", 4, NODE, "STATION_RESUME", Collections.emptyMap())));
 
-        assertEquals("APPLIED", receipt.getOutcome());
+        assertEquals("GAME_STATION_ALREADY_ACTIVE", noop.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
         verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
         verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void secondMerchantTerminalPausingAnAlreadyPausedStationIsANoOpNotAnAppliedIncident() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(5));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(5101L, NODE, GameStationRun.PAUSED));
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("reasonCode", "EQUIPMENT");
+        payload.put("resumeEta", "2026-08-23 16:00:00");
+
+        GameSessionException noop = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.merchant(MERCHANT), command("pause-terminal-b", 4, NODE, "STATION_PAUSE", payload)));
+
+        // 复盘的 pauseEventCount / merchantPauseEvents 只数 outcome='APPLIED' 的暂停回执:
+        // 这里不落 APPLIED(由控制器记 FAILED + 本原因码),一次迁移就只算一次事故
+        assertEquals("GAME_STATION_ALREADY_PAUSED", noop.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
+        verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
+        verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void secondDirectorTerminalPausingOrResumingWithNoChangeIsANoOpNotAnAppliedIncident() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(5));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(5101L, NODE, GameStationRun.PAUSED));
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("reasonCode", "ONSITE");
+        payload.put("resumeEta", "2026-08-23 16:00:00");
+
+        GameSessionException pause = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR), command("club-pause-b", 4, NODE, "CLUB_STATION_PAUSE", payload)));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(5101L, NODE, GameStationRun.ACTIVE));
+        GameSessionException resume = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR),
+                command("club-resume-b", 4, NODE, "CLUB_STATION_RESUME", Collections.emptyMap())));
+
+        assertEquals("GAME_STATION_ALREADY_PAUSED", pause.getErrorCode());
+        assertEquals("GAME_STATION_ALREADY_ACTIVE", resume.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
+        verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
     }
 
     @Test
@@ -235,6 +279,109 @@ class GameSessionStationIncidentScopeTest {
         verify(imService, times(2)).sendSystemInNestedTransaction(any(), any(), any(), any());
         verify(runtimeMapper).updateBroadcastStatus(66L, "SENDING", "SENT",
                 DateUtils.parseDate("2026-08-23 12:00:00"));
+    }
+
+    @Test
+    void sameRequestRetryOfAPartlyFailedBroadcastResendsOnlyTheFailedDeliveriesAndReportsTheNewState() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        stubTeamBroadcast();
+        when(runtimeMapper.selectPendingDeliveries(66L))
+                .thenReturn(Arrays.asList(delivery(1L, 4001L), delivery(2L, 4002L)))
+                .thenReturn(Collections.singletonList(delivery(2L, 4002L)));
+        when(imService.sendSystemInNestedTransaction(eq(4001L), any(), any(), any())).thenReturn(11L);
+        when(imService.sendSystemInNestedTransaction(eq(4002L), any(), any(), any()))
+                .thenThrow(new RuntimeException("im down")).thenReturn(12L);
+        when(runtimeMapper.countBroadcastDeliveries(66L, "FAILED")).thenReturn(1, 1, 0);
+        when(runtimeMapper.countBroadcastDeliveries(66L, "REACHED")).thenReturn(2);
+        when(runtimeMapper.countBroadcastDeliveries(66L, "PENDING")).thenReturn(0);
+
+        GameCommandReceiptView first = service.command(GameActorContext.club(DIRECTOR),
+                command("broadcast-retry", 4, NODE, "BROADCAST", teamBroadcastPayload()));
+        assertEquals(1, ((Number) first.getResult().get("reachedCount")).intValue());
+        verify(runtimeMapper).updateBroadcastStatus(66L, "SENDING", "PARTIAL", DateUtils.parseDate("2026-08-23 12:00:00"));
+
+        GameCommandReceipt stored = completedReceipt();
+        when(runtimeMapper.selectReceipt(ACTIVITY, DIRECTOR, "broadcast-retry")).thenReturn(stored);
+        when(runtimeMapper.selectBroadcast(66L)).thenReturn(storedBroadcast("PARTIAL"));
+        when(runtimeMapper.resetFailedDeliveries(eq(66L), any())).thenReturn(1);
+        when(runtimeMapper.updateAppliedReceiptResult(any())).thenReturn(1);
+
+        GameCommandReceiptView retried = service.command(GameActorContext.club(DIRECTOR),
+                command("broadcast-retry", 4, NODE, "BROADCAST", teamBroadcastPayload()));
+
+        // 已送达的 4001 不再收到;只有失败的 4002 被补发一次
+        verify(imService, times(1)).sendSystemInNestedTransaction(eq(4001L), any(), any(), any());
+        verify(imService, times(2)).sendSystemInNestedTransaction(eq(4002L), any(), any(), any());
+        verify(runtimeMapper).resetFailedDeliveries(eq(66L), any());
+        verify(runtimeMapper).updateBroadcastStatus(66L, "PARTIAL", "SENT", DateUtils.parseDate("2026-08-23 12:00:00"));
+        verify(runtimeMapper, times(1)).insertBroadcast(any());
+        assertEquals("APPLIED", retried.getOutcome());
+        assertEquals(66L, ((Number) retried.getResult().get("broadcastId")).longValue());
+        assertEquals(2, ((Number) retried.getResult().get("reachedCount")).intValue());
+        assertEquals(0, ((Number) retried.getResult().get("failedCount")).intValue());
+        assertEquals("SENT", retried.getResult().get("broadcastStatus"));
+        verify(runtimeMapper).updateAppliedReceiptResult(stored);
+    }
+
+    @Test
+    void sameRequestRetryOfAFullyDeliveredBroadcastSendsNothingAgain() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        stubTeamBroadcast();
+        when(runtimeMapper.selectPendingDeliveries(66L))
+                .thenReturn(Arrays.asList(delivery(1L, 4001L), delivery(2L, 4002L)));
+        when(imService.sendSystemInNestedTransaction(any(), any(), any(), any())).thenReturn(11L);
+        service.command(GameActorContext.club(DIRECTOR),
+                command("broadcast-done", 4, NODE, "BROADCAST", teamBroadcastPayload()));
+        GameCommandReceipt stored = completedReceipt();
+        when(runtimeMapper.selectReceipt(ACTIVITY, DIRECTOR, "broadcast-done")).thenReturn(stored);
+        when(runtimeMapper.selectBroadcast(66L)).thenReturn(storedBroadcast("SENT"));
+
+        GameCommandReceiptView retried = service.command(GameActorContext.club(DIRECTOR),
+                command("broadcast-done", 4, NODE, "BROADCAST", teamBroadcastPayload()));
+
+        assertTrue(retried.isReplayed());
+        verify(imService, times(2)).sendSystemInNestedTransaction(any(), any(), any(), any());
+        verify(runtimeMapper, never()).resetFailedDeliveries(anyLong(), any());
+        verify(runtimeMapper, never()).updateAppliedReceiptResult(any());
+    }
+
+    private void stubTeamBroadcast() {
+        when(runtimeMapper.isActiveTeam(ACTIVITY, TEAM)).thenReturn(1);
+        when(runtimeMapper.insertBroadcast(any())).thenAnswer(call -> {
+            call.getArgument(0, GameBroadcast.class).setId(66L);
+            return 1;
+        });
+        when(runtimeMapper.insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any()))
+                .thenReturn(2);
+        when(runtimeMapper.markDelivery(anyLong(), anyString(), any(), any(), any())).thenReturn(1);
+        when(runtimeMapper.updateBroadcastStatus(anyLong(), anyString(), anyString(), any())).thenReturn(1);
+    }
+
+    private Map<String, Object> teamBroadcastPayload() {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("targetType", "TEAM");
+        payload.put("targetId", TEAM);
+        payload.put("content", "集合提醒");
+        return payload;
+    }
+
+    private GameCommandReceipt completedReceipt() {
+        org.mockito.ArgumentCaptor<GameCommandReceipt> captor = org.mockito.ArgumentCaptor.forClass(GameCommandReceipt.class);
+        verify(runtimeMapper).completeReceipt(captor.capture());
+        return captor.getValue();
+    }
+
+    private GameBroadcast storedBroadcast(String status) {
+        GameBroadcast broadcast = new GameBroadcast();
+        broadcast.setId(66L);
+        broadcast.setGameSessionId(SESSION);
+        broadcast.setActivityId(ACTIVITY);
+        broadcast.setSenderMemberId(DIRECTOR);
+        broadcast.setTargetType("TEAM");
+        broadcast.setTargetId(TEAM);
+        broadcast.setContent("集合提醒");
+        broadcast.setStatus(status);
+        return broadcast;
     }
 
     private CmsActivity activeActivity() {
