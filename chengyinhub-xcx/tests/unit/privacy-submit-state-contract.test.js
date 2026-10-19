@@ -89,6 +89,24 @@ test('WXML 提供持久 inline error 与真实重试，按钮暴露 busy/disable
   assert.equal(json.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
 })
 
+test('隐私页两种进入状态首屏只用一句用途说明，详细指引与独立选择仍可达', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/privacy/index.wxml'), 'utf8')
+  const bodies = Array.from(wxml.matchAll(/<text class="privacy-body"([^>]*)>([^<]*)<\/text>/g))
+  assert.equal(bodies.length, 2)
+  assert.match(bodies[0][1], /wx:if="\{\{pendingAuthorization\}\}"/)
+  assert.match(bodies[1][1], /wx:else/)
+  for (const [, , body] of bodies) {
+    assert.ok(body.length <= 60, '首屏用途说明不能重新堆成长篇告知')
+    assert.equal((body.match(/[。！？]/g) || []).length, 1)
+    assert.match(body, /授权.*位置信息/)
+  }
+  assert.equal(bodies[0][2], bodies[1][2], '待授权和设置入口应展示相同的简明用途')
+  assert.match(wxml, /bindtap="openPrivacyContract"[^>]*>查看《用户隐私保护指引》/)
+  for (const handler of ['enableHomeCityLocation', 'disableHomeCityLocation', 'disablePresenceSharing', 'withdrawRoamLocationConsent']) {
+    assert.ok(wxml.includes('bindtap="' + handler + '"'), handler + ' 独立选择入口不能因精简文案被删除')
+  }
+})
+
 test('negative control:失败分支必须写 submitError/failedAction，不能只 showToast', () => {
   const source = fs.readFileSync(MODULE, 'utf8')
   assert.match(source, /failedAction:\s*'agree'/)
