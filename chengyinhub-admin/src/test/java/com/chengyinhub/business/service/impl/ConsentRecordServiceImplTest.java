@@ -78,6 +78,22 @@ class ConsentRecordServiceImplTest {
         assertThrows(IllegalArgumentException.class,()->service.record(1001L,"privacy_policy","v1.1","roam_location","AGREE","stale-request",""));
     }
 
+    @Test void genericConsentCannotBypassEitherLocationRevisionGateOrAddAMerchantScope() {
+        ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);
+        when(mapper.insertConsentRecord(any())).thenReturn(1);
+        ConsentRecordServiceImpl service = new ConsentRecordServiceImpl();
+        ReflectionTestUtils.setField(service, "consentRecordMapper", mapper);
+        for (String scene : new String[]{"roam_location", "home_city_location"}) {
+            for (String event : new String[]{"AGREE", "REVOKE"}) {
+                assertThrows(IllegalArgumentException.class, () -> service.record(1001L, "privacy_policy", "v1.1",
+                        scene, event, "bypass", ""));
+                assertThrows(IllegalArgumentException.class, () -> service.record(1001L, "privacy_policy", "v1.1",
+                        scene, "MERCHANT", 2001L, event, "bypass-scoped", ""));
+            }
+        }
+        org.mockito.Mockito.verifyNoInteractions(mapper);
+    }
+
     @Test
     void merchantConsentPersistsExactlyOneMerchantScope() {
         ConsentRecordMapper mapper = mock(ConsentRecordMapper.class);

@@ -1,4 +1,6 @@
 const toast = require('../../utils/toast.js');
+const modal = require('../../utils/modal.js');
+const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 const app = getApp();
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -7,6 +9,8 @@ Page({
   _mediaBeforeId: '',
   data: {
     submitting: false,
+    homeCityBusy: false,
+    homeCityError: '',
     mediaRows: [],
     mediaLoading: false,
     mediaHasMore: false,
@@ -36,6 +40,8 @@ Page({
   },
 
   onShow() {
+    this._homeCityConsentEpoch = (this._homeCityConsentEpoch || 0) + 1;
+    this.setData({ homeCityBusy: false, homeCityError: '' });
     this._mediaHidden = false;
     if (!this.data.pendingAuthorization) this.loadOwnMedia();
   },
@@ -296,6 +302,60 @@ Page({
     wx.navigateBack({
       fail() { wx.switchTab({ url: '/pages/index/index' }); },
     });
+  },
+
+  enableHomeCityLocation() { this.setHomeCityLocation(true); },
+  disableHomeCityLocation() { this.setHomeCityLocation(false); },
+  setHomeCityLocation(enabled) {
+    if (this._mediaHidden || this.data.pendingAuthorization || this.data.homeCityBusy || this.data.submitting) return;
+    const scope = this.mediaScope();
+    if (!(Number(scope.owner) > 0) || !scope.token || scope.token === 'dev-token') {
+      toast('请先登录再设置首页定位'); return;
+    }
+    const epoch = this._homeCityConsentEpoch || 0;
+    const current = () => {
+      const now = this.mediaScope();
+      return !this._mediaHidden && !this.data.pendingAuthorization
+        && epoch === (this._homeCityConsentEpoch || 0)
+        && scope.owner === now.owner && scope.token === now.token;
+    };
+    const finish = () => {
+      if (!this._mediaHidden && epoch === (this._homeCityConsentEpoch || 0)) this.setData({ homeCityBusy: false });
+    };
+    const failed = () => {
+      if (current()) this.setData({ homeCityError: '首页城市定位设置未保存，请重试' });
+      finish();
+    };
+    const eventType = enabled ? 'AGREE' : 'REVOKE';
+    const save = () => {
+      Promise.resolve().then(() => {
+        if (!current()) return null;
+        return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType });
+      }).then(saved => {
+        if (!current()) return;
+        const row = saved && saved.response && saved.response.data;
+        if (!row || !saved.response || Number(saved.response.code) !== 200
+            || typeof saved.requestId !== 'string' || !saved.requestId.trim() || saved.requestId !== row.requestId
+            || row.scopeType != null || row.scopeId != null
+            || row.docType !== 'privacy_policy' || row.scene !== 'home_city_location'
+            || row.docVersion !== VERSIONS.privacy_policy || row.eventType !== eventType) {
+          throw new Error('首页定位同意记录未完成');
+        }
+        toast(enabled ? '已开启首页城市自动定位' : '已关闭首页城市自动定位');
+      }).catch(failed).finally(finish);
+    };
+    this.setData({ homeCityBusy: true, homeCityError: '' });
+    if (!enabled) { save(); return; }
+    try {
+      modal.show({
+        title: '首页城市定位',
+        content: '同意使用精确位置并发送至服务端转换为首页城市，后续自动定位且不用于附近排序吗？',
+        confirmText: '同意定位',
+        cancelText: '暂不定位',
+        success: result => { if (result.confirm && current()) save(); else finish(); },
+        fail: failed,
+      });
+    } catch (error) { failed(); }
   },
 
   disablePresenceSharing() {
