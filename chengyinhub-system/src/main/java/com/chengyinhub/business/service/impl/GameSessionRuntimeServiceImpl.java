@@ -3212,9 +3212,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             story.setStatus("VARIABLES_UPDATED");
         }
         if (runtimeMapper.updateStoryStateCas(story) != 1) {
-            GameStoryState concurrent = runtimeMapper.selectStoryState(session.getId(), "TEAM", player.teamId);
+            GameStoryState concurrent = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", player.teamId);
             if (concurrent != null && containsText(readArray(concurrent.getAppliedChoicesJson()), choiceId)) {
-                GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+                GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
                 return result(current == null ? session : current,
                         choiceResult(choiceId, true, findEnding(config, concurrent.getEndingCode())));
             }
@@ -4888,7 +4888,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         state.setCreateTime(clock.now());
         state.setUpdateTime(clock.now());
         if (runtimeMapper.insertStoryState(state) != 1) {
-            state = runtimeMapper.selectStoryState(session.getId(), "TEAM", teamId);
+            state = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", teamId);
             if (state == null) throw error("GAME_STATE_CONFLICT", "剧情状态创建失败");
         }
         return state;
