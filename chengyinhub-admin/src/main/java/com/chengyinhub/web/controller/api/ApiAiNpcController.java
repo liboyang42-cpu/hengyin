@@ -317,8 +317,14 @@ public class ApiAiNpcController extends BaseController
         catch (RuntimeException e)
         {
             log.warn("[npc/voice-chat] 转写失败 nodeId={}, format={}", nodeId, format, e);
+            // Another call using the original requestId may have completed while ASR was in flight.
+            stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
+            if (stored != null) return success(stored);
             return AjaxResult.error("语音识别没成功，稍后再试");
         }
+        // Recovery retains its existing priority over current eligibility and new transcript echo.
+        stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
+        if (stored != null) return success(stored);
         if (text == null || text.trim().isEmpty())
         {
             // 拿空问题去调模型 = 白花钱且必然答非所问
