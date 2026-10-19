@@ -103,7 +103,7 @@
     },
     "port-e04-07-coupon": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
-      "registered_source": "f5d2cff01e4a876a4ae220bbe9cd9c3c6c4c040b",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
       "note": "Master-side port of e04-07-coupon. RedemptionRewardClawbackMyBatisTest is master's own version (4 tests); EXTRA's clawback current-read change waits for the base port (selectPointsForUpdate).",
       "classes": [
         "com.chengyinhub.business.longrun.E04_07MySqlIT",
@@ -112,7 +112,7 @@
     },
     "port-community-e02": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
-      "registered_source": "f5d2cff01e4a876a4ae220bbe9cd9c3c6c4c040b",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
       "note": "Master-side port of community-e02. The fixtures add del_flag/topic_id and an empty cms_topic for master's selectReferences topic join.",
       "classes": [
         "com.chengyinhub.business.longrun.E02_22Test",
@@ -124,7 +124,7 @@
     },
     "port-b05-visibility": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
-      "registered_source": "f5d2cff01e4a876a4ae220bbe9cd9c3c6c4c040b",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
       "note": "Master-side port of b05-visibility: 2ac55d20 plus the same cms_topic fixture adaptation.",
       "classes": [
         "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT"
@@ -132,7 +132,7 @@
     },
     "port-extra-storage": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
-      "registered_source": "f5d2cff01e4a876a4ae220bbe9cd9c3c6c4c040b",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
       "note": "Master-side port of extra-storage, same 20 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions.",
       "classes": [
         "com.chengyinhub.business.longrun.E01_06Test",
