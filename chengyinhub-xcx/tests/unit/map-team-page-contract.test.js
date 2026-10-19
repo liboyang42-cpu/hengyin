@@ -65,7 +65,7 @@ global.wx = {
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
   getMenuButtonBoundingClientRect: () => ({ bottom: 88 }),
   getLocation: () => {},
-  navigateTo: (o) => { navigations.push(o.url) },
+  navigateTo: (o) => { navigations.push(o.url); if (o.complete) o.complete() },
   showToast: () => {},
   showModal: (o) => { o && typeof o.success === 'function' && o.success(Object.assign({}, modalAnswer)) },
   createSelectorQuery: () => ({ select: () => ({ fields: () => ({ exec: () => {} }) }) }),
