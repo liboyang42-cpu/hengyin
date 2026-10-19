@@ -282,23 +282,23 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.warn("[AiGateway] quota-read-failed memberId={} bizType={}", memberId, bizType, e);
             return limit;
         }
-        int used = 0;
+        long used = 0;
         if (raw instanceof Number)
         {
-            used = ((Number) raw).intValue();
+            used = ((Number) raw).longValue();
         }
         else if (raw != null)
         {
             try
             {
-                used = Integer.parseInt(String.valueOf(raw).trim());
+                used = Long.parseLong(String.valueOf(raw).trim());
             }
             catch (NumberFormatException ignored)
             {
                 used = 0;
             }
         }
-        return Math.max(0, limit - used);
+        return (int) Math.max(0L, (long) limit - Math.max(0L, used));
     }
 
     @Override
