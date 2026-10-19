@@ -34,5 +34,5 @@ test('A32：玩家我的页只保留一个横向票夹按钮，项目不再画�
   // 2026-09-18 UI-12:公开视角也要「···」更多(条件放宽,自绘入口不复制)。
   assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf \|\| isMerchantView\}\}"/)
   assert.doesNotMatch(wxml, /class="pc-xbox-bar"/)
-  assert.match(js, /goSignup:\s*function \(\)\s*\{\s*wx\.navigateTo\(\{\s*url:\s*'\/subpackageMember\/signup\/index'/)
+  assert.match(js, /goSignup:\s*function \(\)\s*\{\s*if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{\s*url:\s*'\/subpackageMember\/signup\/index'/) // BL-230 跳转中保护
 })
