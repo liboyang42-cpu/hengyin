@@ -74,12 +74,12 @@ class OWN_C06_25Test {
         assertFalse(result.containsKey("encounter"));assertEquals(result.get("attributes"),replay.get("attributes"));
     }
     @Test void checkReceiptWriteFailureStillThrows() {
-        when(routes.updateActionResponse(anyLong(),anyString())).thenReturn(0);
+        doReturn(0).when(routes).updateActionResponse(anyLong(),anyString());
         IllegalStateException error=assertThrows(IllegalStateException.class,()->ReflectionTestUtils.invokeMethod(service,"commitCheck",session,40L,"action-25","CHECK_SETTLE",check(),state));
         assertEquals("检定回执保存失败",error.getMessage());
     }
     @Test void journeyReceiptWriteFailureStillThrows() {
-        when(routes.updateActionResponse(anyLong(),anyString())).thenReturn(0);
+        doReturn(0).when(routes).updateActionResponse(anyLong(),anyString());
         IllegalStateException error=assertThrows(IllegalStateException.class,()->ReflectionTestUtils.invokeMethod(service,"commitJourneyAction",session,40L,"action-25","ASK",new LinkedHashMap<String,Object>(),state));
         assertEquals("旅程动作回执保存失败",error.getMessage());
     }

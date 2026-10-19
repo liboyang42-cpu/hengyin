@@ -54,8 +54,8 @@ class OWN_C06_29Test {
         }
         verifyNoInteractions(topics);
     }
-    @Test void emptyFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled() {
-        session.setConfigSnapshotJson("{\"journeyRules\":{}}");
+    @Test void versionedFrozenObjectPreservesDefaultRulesInsteadOfLiveCheckEnabled() {
+        session.setConfigSnapshotJson("{\"journeyRules\":{\"schemaVersion\":1}}");
         assertFalse(read("sessionRules").isCheckEnabled());assertFalse(read("journeyRules").isCheckEnabled());
         verifyNoInteractions(topics);
     }
