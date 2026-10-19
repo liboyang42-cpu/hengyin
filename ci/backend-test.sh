@@ -25,7 +25,7 @@ mvn -B clean test
 #   密码由 .github/workflows/ci.yml 的 backend 步注入(本机 root 空口令,service 是 root/root)。
 # 这几套连的是 CI 的 backend job 用 services 起的那个空 MySQL8,
 # 各自建表或加载 test/resources/it-schema 里【生产导出的真实 DDL】,跑完即弃。
-# ⚠️ 不在此清单里的两套 Explore*RealDbIT 连的是 chengyin_explore_it,
+# ⚠️ 不在此清单里的三套 Explore*RealDbIT 连的是 chengyin_explore_it,
 #   由自托管的 ci/funds-mysql-it-gate.sh 负责;CoopServiceRealDbIT 已烂透,见其类注释。
 MYBATIS_ITS=(
   WechatMemberRegistrationMySqlIT
