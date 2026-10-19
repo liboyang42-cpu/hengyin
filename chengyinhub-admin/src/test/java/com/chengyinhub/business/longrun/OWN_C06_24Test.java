@@ -18,7 +18,20 @@ class OWN_C06_24Test {
     private TopicRouteRuntimeServiceImpl service;
     private CmsTopic topic;
     @BeforeEach void setup() throws Exception {
-        service=new TopicRouteRuntimeServiceImpl();CmsTopicChapterMapper chapters=mock(CmsTopicChapterMapper.class);
+        service=new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN);CmsTopicChapterMapper chapters=mock(CmsTopicChapterMapper.class);
         ReflectionTestUtils.setField(service,"cmsTopicChapterMapper",chapters);
         topic=new CmsTopic();topic.setId(20L);topic.setJourneyStoryJson(story(50,90,"global").toString());
         List<CmsTopicChapter> rows=new ArrayList<>();

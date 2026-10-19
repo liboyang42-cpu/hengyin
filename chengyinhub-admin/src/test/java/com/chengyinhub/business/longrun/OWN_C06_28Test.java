@@ -16,7 +16,20 @@ class OWN_C06_28Test {
     private TopicRouteSession session;
     private CmsTopicNode node;
     @BeforeEach void setup() {
-        service=new TopicRouteRuntimeServiceImpl();templates=mock(CmsMemberTemplateMapper.class);
+        service=new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN);templates=mock(CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service,"templateMapper",templates);
         session=new TopicRouteSession();node=new CmsTopicNode();node.setId(40L);node.setTemplateId(50L);
         CmsMemberTemplate live=new CmsMemberTemplate();live.setAdvancedConfigJson("{\"marker\":\"author-new\"}");

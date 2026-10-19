@@ -13,7 +13,20 @@ import static org.mockito.Mockito.*;
 /** NOT_RUN. Persisted response must survive deletion of the live author node. */
 class OWN_C06_11Test {
     @Test void originalAskReceiptDoesNotReadDeletedLiveNode() {
-        TopicRouteRuntimeServiceImpl service = new TopicRouteRuntimeServiceImpl();
+        TopicRouteRuntimeServiceImpl service = new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN);
         TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
         CmsTopicMapper topics = mock(CmsTopicMapper.class);
         CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
@@ -33,7 +46,20 @@ class OWN_C06_11Test {
         verify(routes, never()).insertAction(any());
     }
     @Test void missingReceiptStillRequiresLiveNodeBeforeNewQuestion() {
-        TopicRouteRuntimeServiceImpl service = new TopicRouteRuntimeServiceImpl();
+        TopicRouteRuntimeServiceImpl service = new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN);
         TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
         CmsTopicMapper topics = mock(CmsTopicMapper.class);
         CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);

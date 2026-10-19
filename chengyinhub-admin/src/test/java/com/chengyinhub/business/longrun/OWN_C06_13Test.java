@@ -20,7 +20,20 @@ class OWN_C06_13Test {
     private TopicRouteSessionMapper routes;
     private TopicRouteSession replay;
     @BeforeEach void setup() throws Exception {
-        service = new TopicRouteRuntimeServiceImpl(); routes = mock(TopicRouteSessionMapper.class);
+        service = new TopicRouteRuntimeServiceImpl(
+                mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsActivityMapper.class),
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class),
+                mock(com.chengyinhub.business.mapper.PlayerActivityRoleMapper.class),
+                mock(com.chengyinhub.business.service.IShopDayProofService.class),
+                () -> 12345L,
+                () -> 10,
+                java.time.Clock.systemUTC(),
+                com.chengyinhub.business.service.support.RouteReachabilityProvider.UNKNOWN); routes = mock(TopicRouteSessionMapper.class);
         CmsTopicMapper topics = mock(CmsTopicMapper.class); CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
         ReflectionTestUtils.setField(service, "routeMapper", routes);
         ReflectionTestUtils.setField(service, "topicMapper", topics);
