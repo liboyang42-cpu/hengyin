@@ -29,6 +29,7 @@ function loadDetail() {
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': require('../../utils/datetime'),
         '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },  // #307 后 mockData 迁到 pages/club/utils/
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
