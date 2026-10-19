@@ -21,6 +21,7 @@ import com.chengyinhub.common.utils.file.FileOssUploadUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -217,6 +218,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         int expectedVersion = requiredVersion(request.getExpectedVersion());
         policy.decide(current, CommunityPostLifecyclePolicy.ACTION_PUBLISH, expectedVersion,
                 memberId.equals(current.getAuthorId()));
+        if (positive(current.getCommunityId()) && mapper.countCommunityMember(memberId, current.getCommunityId()) == 0) {
+            throw error("只能向自己加入的社群发布", 403);
+        }
         if (blank(current.getBody())) throw error("正文应为 1-5000 字", 400);
         requireGuidelineAck(memberId, current.getGuidelineVersionId());
 
@@ -323,6 +327,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> detail(Long viewerId, Long postId) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         CommunityPost post = mapper.selectById(postId, viewerId);
@@ -331,6 +336,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<Map<String, Object>> revisions(Long viewerId, Long postId) {
         requirePrincipal(viewerId);
         CommunityPost post = mapper.selectById(postId, viewerId);
@@ -370,6 +376,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> feed(Long viewerId, CommunityPostFeedQuery query) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         if (query == null) query = new CommunityPostFeedQuery();
@@ -510,7 +517,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Map<String, Object> replay = mapper.selectCommentByAuthorRequest(memberId, request.getClientRequestId());
         if (replay != null) {
             if (!postId.equals(number(value(replay, "post_id")))
-                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
+                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))
+                    || !sameCommentParent(number(value(replay, "parent_id")), request.getParentId())) {
                 throw error("同一请求号不能用于不同回复", 409);
             }
             return commentResult(memberId, postId, String.valueOf(value(replay, "author_approval_state")),
@@ -544,7 +552,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         } catch (DuplicateKeyException e) {
             replay = mapper.selectCommentByAuthorRequestForUpdate(memberId, request.getClientRequestId());
             if (replay == null || !postId.equals(number(value(replay, "post_id")))
-                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))) {
+                    || !request.getBody().trim().equals(String.valueOf(value(replay, "body")))
+                    || !sameCommentParent(number(value(replay, "parent_id")), request.getParentId())) {
                 throw error("回复请求号已被使用", 409);
             }
             return commentResult(memberId, postId, String.valueOf(value(replay, "author_approval_state")),
@@ -581,6 +590,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> comments(Long viewerId, Long postId, Long cursor, Integer limit) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         detail(viewerId, postId);
@@ -692,19 +702,27 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public void likeComment(Long memberId, Long commentId, String requestId) {
         requirePrincipal(memberId);
         requireRequestId(requestId);
-        Map<String, Object> replay = mapper.selectCommentActionByRequest(memberId, requestId);
-        if (replay != null) {
-            if (!commentId.equals(number(value(replay, "comment_id")))) throw error("请求号已被其他评论互动使用", 409);
+        // Keep the same action -> receipt lock order as UNLIKE, including legacy migration.
+        Map<String, Object> action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt != null) {
+            requireCommentLikeReceipt(receipt, commentId, false);
             return;
         }
         Date now = new Date();
+        if (action != null) {
+            if (!requestId.equals(value(action, "request_id"))) throw error("评论已点赞或请求号冲突", 409);
+            preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
+            return;
+        }
         try {
             if (mapper.insertCommentAction(commentId, memberId, requestId, now) != 1) throw error("评论不存在或不可互动", 404);
         } catch (DuplicateKeyException e) {
-            replay = mapper.selectCommentActionByRequest(memberId, requestId);
-            if (replay == null || !commentId.equals(number(value(replay, "comment_id")))) {
+            action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+            if (action == null || !requestId.equals(value(action, "request_id"))) {
                 throw error("评论已点赞或请求号冲突", 409);
             }
+            preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
             return;
         }
         Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
@@ -716,6 +734,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             notifyMember(commentAuthorId, postId, memberId, "INTERACTION", "COMMENT_LIKE", commentId, now);
         }
         outbox(postId, "COMMENT_LIKED", payload("commentId", commentId), now);
+        preserveCommentLikeReceipt(memberId, commentId, requestId, now, false);
     }
 
     @Override
@@ -723,11 +742,31 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public void unlikeComment(Long memberId, Long commentId, String requestId) {
         requirePrincipal(memberId);
         requireRequestId(requestId);
-        if (isCommandReplay(memberId, requestId, "COMMENT_UNLIKE", commentId)) return;
+        Map<String, Object> action = mapper.selectCommentLikeActionForUpdate(commentId, memberId);
+        String originalRequestId = action == null ? null : (String) value(action, "request_id");
+        // Two legacy actions may cross-use request IDs. Lock all receipt keys in a stable order.
+        if (originalRequestId != null && originalRequestId.compareTo(requestId) < 0) {
+            mapper.selectCommandReceiptForUpdate(memberId, originalRequestId);
+        }
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (originalRequestId != null && originalRequestId.compareTo(requestId) > 0) {
+            mapper.selectCommandReceiptForUpdate(memberId, originalRequestId);
+        }
+        if (receipt != null) {
+            if (!"COMMENT_UNLIKE".equals(String.valueOf(value(receipt, "command_type")))
+                    || !commentId.equals(number(value(receipt, "aggregate_id")))) {
+                throw error("同一请求号不能用于不同命令", 409);
+            }
+            return;
+        }
         Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
         Long postId = comment == null ? null : number(value(comment, "post_id"));
         if (!positive(postId)) throw error("评论不存在", 404);
         Date now = new Date();
+        if (action != null) {
+            if (blank(originalRequestId)) throw error("原评论点赞身份缺失", 500);
+            preserveCommentLikeReceipt(memberId, commentId, originalRequestId, now, true);
+        }
         int deleted = mapper.deleteCommentAction(commentId, memberId);
         mapper.recomputeCommentLikes(commentId);
         if (deleted > 0) outbox(postId, "COMMENT_UNLIKED", payload("commentId", commentId), now);
@@ -906,14 +945,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                                                               CommunityPostRequests.NotificationPreferences request) {
         requirePrincipal(memberId);
         if (request == null) throw error("缺少通知偏好", 400);
-        Map<String, Object> current = notificationPreferences(memberId);
-        boolean interaction = request.getInteractionEnabled() == null
-                ? Boolean.TRUE.equals(current.get("interactionEnabled")) : request.getInteractionEnabled();
-        boolean mention = request.getMentionEnabled() == null
-                ? Boolean.TRUE.equals(current.get("mentionEnabled")) : request.getMentionEnabled();
-        boolean social = request.getSocialEnabled() == null
-                ? Boolean.TRUE.equals(current.get("socialEnabled")) : request.getSocialEnabled();
-        if (mapper.upsertNotificationPreferences(memberId, interaction, mention, social, new Date()) <= 0) {
+        if (mapper.upsertNotificationPreferences(memberId, request.getInteractionEnabled(),
+                request.getMentionEnabled(), request.getSocialEnabled(), new Date()) < 0) {
             throw error("通知偏好保存失败", 500);
         }
         return notificationPreferences(memberId);
@@ -1131,7 +1164,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                     Object payloadJson = value(row, "payload_json");
                     if (!positive(aggregateId) || eventType == null || payloadJson == null
                             || mapper.upsertMemberGovernanceProjection(aggregateId, eventType.toString(),
-                            payloadJson.toString(), now) != 1) {
+                            payloadJson.toString(), now) <= 0) {
                         throw error("账号治理事件投影失败", 500);
                     }
                 } else {
@@ -1225,6 +1258,13 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 recommendation, search, interaction, now) != 1) stale();
         mapper.upsertSearchDocument(postId, search == 1 && CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) ? "VISIBLE" : "HIDDEN", now);
         outbox(postId, "POST_ENFORCEMENT_RECONCILED", payload("postId", postId), now);
+    }
+
+    private boolean sameCommentParent(Long storedParentId, Long requestedParentId) {
+        if (positive(storedParentId) || positive(requestedParentId)) {
+            return storedParentId != null && storedParentId.equals(requestedParentId);
+        }
+        return true;
     }
 
     private Map<String, Object> commentResult(Long memberId, Long postId, String approval, String lifecycle) {
@@ -1518,6 +1558,32 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 aggregateId, type, payload, now) != 1) {
             throw error("社区事件保存失败", 500);
         }
+    }
+
+    private void requireCommentLikeReceipt(Map<String, Object> receipt, Long commentId, boolean legacyUnlike) {
+        if (!"COMMENT_LIKE".equals(String.valueOf(value(receipt, "command_type")))
+                || !commentId.equals(number(value(receipt, "aggregate_id")))) {
+            // A legacy action must not overwrite an existing immutable command or prevent its owner's UNLIKE.
+            if (!legacyUnlike) throw error("同一请求号不能用于不同命令", 409);
+        }
+    }
+
+    private void preserveCommentLikeReceipt(Long memberId, Long commentId, String requestId,
+                                             Date now, boolean legacyUnlike) {
+        Map<String, Object> receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt != null) {
+            requireCommentLikeReceipt(receipt, commentId, legacyUnlike);
+            return;
+        }
+        try {
+            if (mapper.insertCommandReceipt(memberId, requestId, "COMMENT_LIKE", commentId,
+                    payload("aggregateId", commentId), now) == 1) return;
+        } catch (DuplicateKeyException duplicate) {
+            // Only a known duplicate is classified below. Deadlocks and unknown writes must roll back.
+        }
+        receipt = mapper.selectCommandReceiptForUpdate(memberId, requestId);
+        if (receipt == null) throw error("评论点赞回执保存失败", 500);
+        requireCommentLikeReceipt(receipt, commentId, legacyUnlike);
     }
 
     private boolean isCommandReplay(Long memberId, String requestId, String commandType, Long aggregateId) {
