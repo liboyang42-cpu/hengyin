@@ -44,7 +44,7 @@ chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读�
 
 chengyinhub-xcx/components/cy/npc-chat/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/components/cy/profile/index.js 0  # UNREVIEWED_BASELINE_20260818:4 存量未审查,禁止新增(2026-08-21:本轮整改已删除 3 处静默调用)；2026-09-30 迁至会员分包，原路径调用清零，保留冻结收据
-chengyinhub-xcx/components/cy/scene-game-coupon-wallet/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+chengyinhub-xcx/subpackageMember/components/cy/scene-game-coupon-wallet/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/components/cy/scene-member-invite-history/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/components/cy/scene-play-activity-detail/index.js 0  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增；2026-09-30 迁至会员分包，原路径调用清零，保留冻结收据
 chengyinhub-xcx/components/cy/scene-qr-citynode/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
