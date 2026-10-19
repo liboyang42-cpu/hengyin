@@ -3556,9 +3556,23 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private void persistJourneyStoryAfterChapterRebuild(Long topicId, String storedStory,
                                                        RouteNodeMaps routeNodeMaps, String username) {
+        String sourceStory = storedStory;
+        if (!routeNodeMaps.endingChapters.isEmpty() && StringUtils.isNotBlank(storedStory)) {
+            // 本次结局章将整体替换旧 endings；只剔除待废弃列表，保留段仍严格换期。
+            try {
+                JsonNode source = ROUTE_JSON.readTree(storedStory);
+                JsonNode ending = source == null ? null : source.get("ending");
+                if (ending instanceof com.fasterxml.jackson.databind.node.ObjectNode) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) ending).remove("endings");
+                    sourceStory = source.toString();
+                }
+            } catch (java.io.IOException invalidStory) {
+                throw new IllegalArgumentException("主题剧情配置无法解析", invalidStory);
+            }
+        }
         // 来源剧情先按旧节点身份换期；结局章随后独立映射，避免把新 ID 再作旧 ID。
         String content = JourneyStory.withOpeningChapterId(
-                JourneyStory.remapNodeIds(storedStory, routeNodeMaps.oldToNew), null);
+                JourneyStory.remapNodeIds(sourceStory, routeNodeMaps.oldToNew), null);
         String remapped = JourneyStory.withOpeningChapterId(
                 JourneyStory.remapChapterIds(content, routeNodeMaps.chapterOldToNew), routeNodeMaps.openingChapterId);
         if (!routeNodeMaps.endingChapters.isEmpty()) {
