@@ -11,10 +11,13 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.MerchantChapterApplicationMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
+import com.chengyinhub.business.mapper.RegistrationEntitlementMapper;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsTopicChapterService;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.service.INotifyService;
+import com.chengyinhub.business.service.support.CommittedBusinessNotice;
 import com.chengyinhub.business.service.support.TopicSupplyReviewService;
 import com.chengyinhub.common.constant.TermsMode;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,14 +35,18 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,6 +78,9 @@ class LockedSupplyReplacementAcceptanceTest {
     private CmsTopicChapterMapper chapterMapper;
     private CmsTopicMapper topicMapper;
     private TopicSupplyReviewService supplyReview;
+    private CommittedBusinessNotice businessNotice;
+    private INotifyService notifyService;
+    private RegistrationEntitlementMapper entitlementMapper;
     private ChapterMerchantNodeServiceImpl service;
 
     private CmsTopic topic;
@@ -94,6 +104,13 @@ class LockedSupplyReplacementAcceptanceTest {
         ReflectionTestUtils.setField(service, "supplyReviewService", supplyReview);
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
+        businessNotice = mock(CommittedBusinessNotice.class);
+        notifyService = mock(INotifyService.class);
+        entitlementMapper = mock(RegistrationEntitlementMapper.class);
+        ReflectionTestUtils.setField(service, "businessNotice", businessNotice);
+        ReflectionTestUtils.setField(service, "notifyService", notifyService);
+        ReflectionTestUtils.setField(service, "registrationEntitlementMapper", entitlementMapper);
+        when(notifyService.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(true);
         when(chapterMapper.lockChaptersForCapacity(Collections.singletonList(CHAPTER)))
                 .thenReturn(Collections.singletonList(CHAPTER));
 
@@ -207,6 +224,39 @@ class LockedSupplyReplacementAcceptanceTest {
         List<Invocation> offerWrites = writes(offerMapper);
         assertEquals(1, offerWrites.size());
         assertEquals(REPLACEMENT_OFFER, offerWrites.get(0).getArgument(0), "唯一的供给写必须落在补位供给上");
+    }
+
+    @Test
+    void approvingLockedReplacementNotifiesAffectedPlayersOnceAndReplayNotifiesNothing() {
+        topic.setName("星海夜行");
+        // 玩家 31 重复出现、主办自己也在名单里:每位受影响玩家只通知一次,主办不按玩家通知
+        when(entitlementMapper.selectAffectedPaidMembers(TOPIC, CHAPTER)).thenReturn(Arrays.asList(31L, 32L, 31L, PUBLISHER));
+
+        service.audit(PUBLISHER, NEW_NODE, true, "");
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Supplier<Boolean>> delivery = ArgumentCaptor.forClass(Supplier.class);
+        verify(businessNotice, times(1)).executeAfterCommit(eq("chapter-supply-replace-players"),
+                eq(REPLACEMENT_OFFER), delivery.capture());
+        assertTrue(delivery.getValue().get(), "提交后投递须全部成功");
+        String text = "主题「星海夜行」有待核销章节已由新商家补位，请在出发前查看最新点位，如有疑问请联系主办方。";
+        verify(notifyService).notifyOfficialBroadcast(31L, "已购章节供给有变化", text);
+        verify(notifyService).notifyOfficialBroadcast(32L, "已购章节供给有变化", text);
+        verify(notifyService, times(2)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+
+        // 重放同一审批:点位已过审、补位供给已生效 ⇒ 拒绝且不再发通知
+        replacement.setStatus(1);
+        assertThrows(IllegalStateException.class, () -> service.audit(PUBLISHER, NEW_NODE, true, ""));
+        verify(businessNotice, times(1)).executeAfterCommit(anyString(), any(), any());
+        verify(offerMapper, times(1)).approveReplacement(anyLong(), anyLong());
+    }
+
+    @Test
+    void rejectingReplacementNodeNotifiesNoPlayer() {
+        service.audit(PUBLISHER, NEW_NODE, false, "地址不对");
+
+        verify(businessNotice, never()).executeAfterCommit(anyString(), any(), any());
+        verify(notifyService, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
     }
 
     @Test
