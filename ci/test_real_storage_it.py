@@ -517,6 +517,15 @@ class RunFlowTest(unittest.TestCase):
         self.assertEqual(5, receipt["executed"]["tests"])
         self.assertEqual("UNKNOWN", receipt["cleanup"]["status"])
 
+    def test_surefire_version_reads_maven_39_lines_for_the_target_module(self):
+        log = ("[INFO] --- surefire:3.5.2:test (default-test) @ chengyinhub-common ---\n"
+               "[INFO] --- surefire:3.6.0:test (default-test) @ chengyinhub-system ---\n")
+        self.assertEqual("3.6.0", rs.surefire_version(log, "chengyinhub-system"))
+        self.assertEqual("3.5.2", rs.surefire_version(log, "chengyinhub-common"))
+        legacy = "[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ chengyinhub-system ---\n"
+        self.assertEqual("3.0.0-M5", rs.surefire_version(legacy, "chengyinhub-system"))
+        self.assertIsNone(rs.surefire_version("[INFO] --- compiler:3.8.1:testCompile (default) @ x ---\n", "x"))
+
     def test_refuses_to_run_after_failed_precheck(self):
         rs.fail_receipt(self.out, "precheck", ["count drift"])
         Patch(self, run_maven=lambda *args: self.fail("maven must not run"))

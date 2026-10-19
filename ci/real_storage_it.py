@@ -718,6 +718,19 @@ def first_line(command):
     return lines[0].strip() if lines else ""
 
 
+# Maven 3.9+ 打印 "--- surefire:3.6.0:test (default-test) @ 模块 ---"，旧版打印 "maven-surefire-plugin:x:test"。
+SUREFIRE_RE = re.compile(r"--- (?:maven-)?surefire(?:-plugin)?:([0-9][^:\s]*):test(?: \([^)]*\))?(?: @ (\S+))?")
+
+
+def surefire_version(log_text, module):
+    """-am 会先跑依赖模块的 surefire；优先取目标模块那一行的版本。"""
+    found = SUREFIRE_RE.findall(log_text)
+    for version, name in found:
+        if name == module:
+            return version
+    return found[-1][0] if found else None
+
+
 def run_maven(source_dir, module, selectors, env, log_path):
     command = ["mvn", "-B", "-ntp", "-f", str(Path(source_dir) / "pom.xml"), "-pl", module, "-am", "test",
                "-Dtest=" + ",".join(selectors), "-Dsurefire.failIfNoSpecifiedTests=false", "-DfailIfNoTests=false"]
@@ -845,7 +858,7 @@ def cmd_run(args, environ):
     started = time.time()
     exit_code = run_maven(args.source, module, selectors, child_env(environ, extra), out / "maven.log")
     log_text = (out / "maven.log").read_text(encoding="utf-8", errors="replace")
-    surefire = re.search(r"maven-surefire-plugin:([0-9][^:\s]*):test", log_text)
+    surefire = surefire_version(log_text, module)
     cases = collect_testcases(reports)
     executed, problems = verify_class_reports(cases, fqcn, entry["tests"], entry.get("nested", []))
     if reports.is_dir():
@@ -856,7 +869,7 @@ def cmd_run(args, environ):
     # 先落执行结果，再查清理：容器若已异常退出，清理查询失败也不能吞掉已读回的用例。
     merge_receipt(args.out, {
         "toolchain": {"java": first_line(["java", "-version"]), "maven": first_line(["mvn", "-v"]),
-                      "surefire": surefire.group(1) if surefire else None},
+                      "surefire": surefire},
         "env_profile": public_env(extra),
         "maven": {"exit_code": exit_code, "selectors": selectors, "log": "maven.log",
                   "seconds": round(time.time() - started, 1)},
