@@ -64,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
@@ -2505,7 +2506,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
-    @Transactional(rollbackFor=Exception.class)
+    @Transactional(rollbackFor=Exception.class, isolation = Isolation.REPEATABLE_READ)
     public GameSessionView view(GameActorContext actor, Long activityId) {
         requireActor(actor);
         CmsActivity activity = requireActivity(activityId, false);
@@ -2529,6 +2530,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> exportRecap(GameActorContext actor, Long activityId) {
         requireActor(actor);
         if (!"CLUB".equals(actor.getPerspective())) {
