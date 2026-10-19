@@ -434,6 +434,43 @@ jobs:
         run: python3 ci/dup_create_table_gate.py --selftest
       - name: Duplicate CREATE TABLE gate
         run: python3 ci/dup_create_table_gate.py
+      - name: Describe the tested Boot Jar
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash ci/verify-built-jar.sh "$GITHUB_SHA"
+          python3 scripts/verify-candidate-resources.py --root . \
+            --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --expected-commit "$GITHUB_SHA" --all-main-resources \
+            --output chengyinhub-admin/target/tested-jar-resources.json
+          python3 - <<'PYARTIFACT'
+          import json, os, pathlib, subprocess
+          jar = pathlib.Path('chengyinhub-admin/target/chengyinhub-admin.jar')
+          resources = json.loads(jar.with_name('tested-jar-resources.json').read_text())
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+          event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+          digest = resources['artifactSha256']
+          jar.with_suffix('.jar.sha256').write_text(digest + '  ' + jar.name + '\n')
+          metadata = {'checkoutCommit': commit, 'checkoutTree': tree,
+                      'parents': subprocess.check_output(['git', 'show', '-s', '--format=%P', 'HEAD'], text=True).strip().split(),
+                      'candidateHead': event.get('pull_request', {}).get('head', {}).get('sha', commit),
+                      'runId': os.environ['GITHUB_RUN_ID'], 'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                      'jarSha256': digest, 'jarBytes': jar.stat().st_size,
+                      'embeddedGitCommitVerifiedBy': 'ci/verify-built-jar.sh',
+                      'startupPassedInThisJob': True, 'mainResourceProof': resources}
+          jar.with_suffix('.build.json').write_text(json.dumps(metadata, indent=2) + '\n')
+          PYARTIFACT
+      - name: Preserve tested Boot Jar for test VPS UAT
+        uses: actions/upload-artifact@v4
+        with:
+          name: chengyin-tested-backend-${{ github.run_attempt }}
+          path: |
+            chengyinhub-admin/target/chengyinhub-admin.jar
+            chengyinhub-admin/target/chengyinhub-admin.jar.sha256
+            chengyinhub-admin/target/chengyinhub-admin.build.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
       # 自托管 runner 是长驻的:不清干净就会一直堆在机器上(容器名按 run 唯一之后不再
       # 互相顶,但堆积照旧)。-v 见 Start MySQL 步的说明:不带它只删容器不删数据卷。
       - name: Stop MySQL
