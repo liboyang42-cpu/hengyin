@@ -342,6 +342,20 @@ class RuntimeIsolationTest(unittest.TestCase):
         with self.assertRaises(ca.GateError):
             ca.container_names({"GITHUB_RUN_ID": "1;id"})
 
+    def test_app_logs_to_console_fixture_not_packaged_file_path(self):
+        with tempfile.TemporaryDirectory() as app:
+            Path(app, "META-INF").mkdir()
+            Path(app, "META-INF", "MANIFEST.MF").write_text("Main-Class: x.Launcher\n", encoding="utf-8")
+            command = ca.java_command(app, "")
+        logback = str(ca.FIXTURE_LOGBACK.resolve())
+        self.assertIn("-Dlogging.config=" + logback, command)
+        self.assertIn("-Dlogback.configurationFile=" + logback, command)
+        self.assertLess(command.index("-Dlogback.configurationFile=" + logback), command.index("-cp"))
+        fixture = ca.FIXTURE_LOGBACK.read_text(encoding="utf-8")
+        self.assertIn("ConsoleAppender", fixture)
+        for forbidden in ("FileAppender", "<file>", "/home/ruoyi"):
+            self.assertNotIn(forbidden, fixture.split("-->", 1)[1])
+
     def test_fixture_config_is_loopback_scratch_only(self):
         text = ca.FIXTURE_CONFIG.read_text(encoding="utf-8")
         props = dict(line.split("=", 1) for line in text.splitlines() if line and not line.startswith("#"))
