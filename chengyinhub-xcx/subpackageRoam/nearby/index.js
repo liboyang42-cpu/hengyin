@@ -113,7 +113,7 @@ Page({
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
   onShow() { this._hidden = false;
     if (this._nearbyReadOwner && this._nearbyReadOwner !== this._myIdentity()) this._resetNearbyRead(this._myIdentity());
-    if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true;
+    if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true; this._navigating = false;
     if (this._myReadOwner && this._myReadOwner !== this._myIdentity()) this.loadMyTeams(false);
     if (this._openMineOnShow) { this._openMineOnShow = false; this.openMyTeams(); }
   },
@@ -485,12 +485,12 @@ Page({
   },
 
   onCardPrimary() {
-    const cur = this.data.current;
+    if (this._navigating) return; const cur = this.data.current;
     const btn = cur && cur.card && cur.card.primary;
     if (!btn) return;
     if (btn.action === 'buy') this._goBuy(cur);
     else if (btn.action === 'apply') this.apply();
-    else if (btn.action === 'enter') wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(cur.teamId) });
+    else if (btn.action === 'enter') { this._navigating = true; wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(cur.teamId), complete: () => { this._navigating = false; } }); }
   },
 
   onCardSecondary() {
@@ -501,9 +501,9 @@ Page({
 
   /* 买票 = 这支队伍挂的那一场的详情页(购票在那儿),买完回来 onShow 重拉。 */
   _goBuy(cur) {
-    if (!cur) return;
-    if (cur.activityId) wx.navigateTo({ url: ACTIVITY_PAGE + '?id=' + encodeURIComponent(cur.activityId) });
-    else if (cur.topicId) wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(cur.topicId) });
+    if (!cur || this._navigating || !(cur.activityId || cur.topicId)) return; this._navigating = true;
+    if (cur.activityId) wx.navigateTo({ url: ACTIVITY_PAGE + '?id=' + encodeURIComponent(cur.activityId), complete: () => { this._navigating = false; } });
+    else wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(cur.topicId), complete: () => { this._navigating = false; } });
   },
 
   _post(url, body, op, onOk, onFail) {
@@ -681,10 +681,10 @@ Page({
   },
 
   onMyRowAction(e) {
-    const idx = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index);
+    if (this._navigating) return; const idx = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index);
     const row = this.data.myRows[idx];
     if (!row) return;
-    if (row.action.act === 'enter') { wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); return; }
+    if (row.action.act === 'enter') { this._navigating = true; wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId), complete: () => { this._navigating = false; } }); return; }
     if (row.action.act === 'nearby') { this.closeSheet(); return; }
     if (row.action.act === 'withdraw') this.withdraw(row.teamId, () => this.loadMyTeams(false));
   },
@@ -722,6 +722,6 @@ Page({
   },
   openTopicPage() {
     const t = this.data.topic;
-    if (t && t.id) wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(t.id) });
+    if (this._navigating || !(t && t.id)) return; this._navigating = true; wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(t.id), complete: () => { this._navigating = false; } });
   },
 });
