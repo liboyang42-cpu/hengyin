@@ -1,5 +1,5 @@
 // app.js
-const { installAppUpdate, promptUpdateIfAvailable } = require('./utils/app-update.js');
+const { installAppUpdate } = require('./utils/app-update.js');
 const modal = require('./utils/modal.js');
 const { createNetworkStatus } = require('./utils/network-status.js');
 const cyToast = require('./utils/toast.js');
@@ -755,15 +755,4 @@ App({
       }
     })
   },
-
-  // 旧分享卡/已下线页面回首页(app.json pages[0]);每次启动只兜一次,防循环。
-  HOME_PAGE: 'pages/index/index',
-  onPageNotFound: function (res) {
-    var missing = String((res && res.path) || '').replace(/^\//, '');
-    if (this._pageNotFoundHandled || missing === this.HOME_PAGE) return;
-    this._pageNotFoundHandled = true;
-    wx.reLaunch({ url: '/' + this.HOME_PAGE });
-  },
-  // 新版本已就绪时补弹重启提示;请求通道的 426 默认也走它(见 utils/app-update.js)。
-  promptUpdateIfAvailable: function () { return promptUpdateIfAvailable(); },
 })
