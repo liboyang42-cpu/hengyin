@@ -9,8 +9,9 @@
  *   ClubCrmMapper.xml topic-manage-stats.nodeCount:`n.status = 1`;
  *   CmsTopicMapper.xml selectPublicNodeCountsByTopicIds(/api/club/topics 的 locationCount):`status = 1` + 商家节点过审闸。
  * 夹具里的四个节点:两个带玩法的普通站、一个不需要打卡的剧情站(templateId=0,非必需)、一个已下架站(status=0)。
- * 按口径应数 3 站。/api/topic/edit-detail 与 /api/topic/info-to-user 按章节查节点时不带 status 条件
- * (ApiTopicController selectCmsTopicNodeList 只设 chapterId),所以这两份回包里那个 status=0 节点是原样带着的。 */
+ * 按口径应数 3 站。status=0 = 后台「是否显示=隐藏」(作者保存一律写 1)。
+ * /api/topic/info-to-user 按章节查节点带 status=1(ApiTopicInfoHiddenNodeTest 钉住),回包里没有隐藏节点;
+ * /api/topic/edit-detail 仍原样带着(作者保存是整体替换,少回一个 = 重存时删掉它),所以向导那份回包里有 104。 */
 'use strict'
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
@@ -43,6 +44,7 @@ const TOPIC = { id: 88, clubId: 9, name: '跨夜城瘾', start: '2026-10-19 20:0
 
 const nodeRow = (n) => Object.assign({ topicId: TOPIC.id, sortId: n.id }, n)
 const chapterNodes = (chapterId) => NODES.filter((n) => n.chapterId === chapterId).map(nodeRow)
+const listedChapterNodes = (chapterId) => LISTED.filter((n) => n.chapterId === chapterId).map(nodeRow)
 const isoChina = (s) => s.replace(' ', 'T') + '.000+08:00'
 const dateOnly = (s) => s.slice(0, 10)
 const activitySummary = (s) => ({ id: s.id, name: s.name, startDate: s.start, endDate: s.end, addressName: '愚园路' })
@@ -55,7 +57,7 @@ const WIRE = {
   topicInfo: { id: TOPIC.id, status: 1, isOwner: 1, name: TOPIC.name, productType: 1, startDate: TOPIC.start, endDate: TOPIC.end,
     totalChapterCount: CHAPTERS.length, locationCount: STATION_COUNT,
     templateCount: LISTED.filter((n) => n.templateId > 0).length,
-    chaptersList: CHAPTERS.map((c) => ({ id: c.id, name: c.name, nodes: chapterNodes(c.id) })),
+    chaptersList: CHAPTERS.map((c) => ({ id: c.id, name: c.name, nodes: listedChapterNodes(c.id) })),
     activityList: SESSIONS.map(activitySummary) },
   manageStats: { canDirect: false, canManageSessions: true, canViewVerify: false, nodeCount: STATION_COUNT },
   editDetail: { topic: { id: TOPIC.id, name: TOPIC.name, productType: 1, startDate: dateOnly(TOPIC.start), endDate: dateOnly(TOPIC.end) },
@@ -194,38 +196,39 @@ test('SC-UI-DATE-COUNT 非必需站(剧情站,无玩法)在每个计数页都算
   assert.equal(STATION_COUNT, 3)
 })
 
-/* DEFECT_FOUND(记录,不修产品代码):本地数数组的两页把 status=0 的下架站也数进去。
- * 输入:edit-detail / info-to-user 回包按章节带全部节点(含 status=0 的 104「已下架站」)。
- *   · 创建/发布向导 pages/publish/fabu:发布确认页「站点」格、「共 N 个站点」摘要、「已放置 N 个站点」= 4;
- *   · 主题页 pages/topic/index:第二章 metaPlace「2 个节点」(该章上架节点只有 1 个),两章合计 4;
- *   而主题卡 stationText / 主题页「包含」/ 统计视图结构行(服务端 status=1 口径)= 3。
- * 用 todo 标记:断言照常执行并在报告里给出两边的值,但不让 CI 变红 —— 修好之后把 todo 去掉即可转为正式门禁。 */
-test('SC-UI-DATE-COUNT DEFECT_FOUND 本地数节点的页面与服务端站数口径一致(含已下架节点时)', { todo: 'DEFECT_FOUND:向导与主题页章节行把 status=0 节点计入站数(4 vs 3)' }, () => {
+// SC-UI-DATE-COUNT 主题页章节行:info-to-user 只下发 status=1 节点之后,章节「N 个节点」与「包含」/主题卡同口径。
+test('SC-UI-DATE-COUNT 主题页章节行「N 个节点」只数上架节点,合计与服务端站数一致', () => {
   for (const { zone, out } of allZones()) {
     const chapterSum = out.topicPage.chapterMetaPlace.reduce((sum, t) => sum + (Number((/^(\d+)/.exec(t || '') || [])[1]) || 0), 0)
+    assert.equal(chapterSum, STATION_COUNT, zone)
+    assert.deepEqual(out.topicPage.chapterMetaPlace, CHAPTERS.map((c) => LISTED.filter((n) => n.chapterId === c.id).length + ' 个节点'), zone)
+  }
+})
+
+/* 待 owner 定性(仍是 todo):创建/发布向导 pages/publish/fabu 读 edit-detail,回包带隐藏节点 104,
+ *   发布确认页「站点」格、「共 N 个站点」摘要、「已放置 N 个站点」= 4,其它页 = 3。
+ * 没在本 PR 改:作者 FULL 档保存整体重建节点并一律写 status=1(CmsTopicServiceImpl saveTopicChapters /
+ *   compileChapterFlow),所以「4」正是这次保存后会上架的站数;把向导改成数 3 反而与保存结果不符。
+ *   要么 edit-detail 也收窄(重存时隐藏节点被删掉),要么保存保留隐藏态 —— 二选一需 owner 拍板。 */
+test('SC-UI-DATE-COUNT 向导站数与服务端站数口径一致(含后台隐藏节点时)', { todo: '待 owner 定性:作者重存会把隐藏节点重新写成 status=1,向导的 4 = 保存后的站数' }, () => {
+  for (const { zone, out } of allZones()) {
     assert.deepEqual({
       wizardPreview: out.wizard.previewStationValue,
       wizardSummary: (/(\d+) 个站点/.exec(out.wizard.summaryLine) || [])[1],
       wizardPassed: out.wizard.passedStationLabel,
-      topicPageChapterSum: chapterSum,
-      topicPageChapter2: out.topicPage.chapterMetaPlace[1],
     }, {
       wizardPreview: String(STATION_COUNT),
       wizardSummary: String(STATION_COUNT),
       wizardPassed: '已放置 ' + STATION_COUNT + ' 个站点',
-      topicPageChapterSum: STATION_COUNT,
-      topicPageChapter2: LISTED.filter((n) => n.chapterId === 12).length + ' 个节点',
     }, zone)
   }
 })
 
-// 把 DEFECT 的现值钉成可复现的事实:这几页现在给出的就是 4 / 「2 个节点」,与时区无关。
-// 产品修好后这条会红 —— 届时连同上面的 todo 一起改成正式断言。
-test('SC-UI-DATE-COUNT DEFECT_FOUND 现值复现:向导与主题页章节行在三个时区都数出含下架站的数', () => {
+// 向导现值:edit-detail 回包带隐藏节点时数出 4,与时区无关。owner 定性并改动后这条会红,届时与上面的 todo 一起改。
+test('SC-UI-DATE-COUNT 向导现值:edit-detail 带隐藏节点时三个时区都数出含隐藏节点的数', () => {
   for (const { zone, out } of allZones()) {
     assert.equal(out.wizard.previewStationValue, String(NODES.length), zone)
     assert.match(out.wizard.summaryLine, new RegExp('共 ' + CHAPTERS.length + ' 个章节、' + NODES.length + ' 个站点'), zone)
     assert.equal(out.wizard.passedStationLabel, '已放置 ' + NODES.length + ' 个站点', zone)
-    assert.deepEqual(out.topicPage.chapterMetaPlace, CHAPTERS.map((c) => NODES.filter((n) => n.chapterId === c.id).length + ' 个节点'), zone)
   }
 })
