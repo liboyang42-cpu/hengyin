@@ -17,6 +17,7 @@ import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.framework.aspectj.LogAspect;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -90,12 +93,12 @@ public class ApiGameSessionController extends BaseController {
         GameActorContext commandActor = null;
         try {
             commandActor = actor(perspectiveFor(command == null ? null : command.getAction()));
-            return success(runtimeService.command(commandActor, command));
+            return commandReceipt(runtimeService.command(commandActor, command));
         } catch (GameSessionException e) {
             try {
                 if (commandActor != null) {
                     GameCommandReceiptView receipt = runtimeService.recordFailure(commandActor, command, e);
-                    if (receipt != null) return success(receipt);
+                    if (receipt != null) return commandReceipt(receipt);
                 }
             } catch (RuntimeException auditError) {
                 log.warn("Game session failure receipt could not be recorded", auditError);
@@ -104,6 +107,21 @@ public class ApiGameSessionController extends BaseController {
         } catch (RuntimeException e) {
             return internalError("command", e);
         }
+    }
+
+    /**
+     * SC-CITY-RESUME-RACE:另一终端已完成同一暂停/恢复时,本次请求没有改变任何状态,
+     * 回执是 FAILED + 无变化原因码;这类请求不再写 sys_oper_log,一次迁移只留一条操作日志。
+     */
+    private AjaxResult commandReceipt(GameCommandReceiptView receipt) {
+        if (receipt != null && "FAILED".equals(receipt.getOutcome())
+                && GameSessionException.isNoChange(receipt.getReasonCode())) {
+            RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                attributes.setAttribute(LogAspect.SKIP_OPER_LOG_ATTRIBUTE, Boolean.TRUE, RequestAttributes.SCOPE_REQUEST);
+            }
+        }
+        return success(receipt);
     }
 
     @Operation(summary = "按活动和请求编号读取权威回执")

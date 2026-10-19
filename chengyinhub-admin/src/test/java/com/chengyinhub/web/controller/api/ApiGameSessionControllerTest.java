@@ -232,6 +232,36 @@ class ApiGameSessionControllerTest {
     }
 
     @Test
+    void noChangeStationPauseOrResumeWritesNoOperationLogButOtherFailuresStillDo() {
+        for (String code : java.util.Arrays.asList("GAME_STATION_ALREADY_PAUSED", "GAME_STATION_ALREADY_ACTIVE",
+                "GAME_STATE_CONFLICT")) {
+            org.springframework.mock.web.MockHttpServletRequest request =
+                    new org.springframework.mock.web.MockHttpServletRequest("POST", "/api/game-session/command");
+            org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                    new org.springframework.web.context.request.ServletRequestAttributes(request));
+            try {
+                GameSessionCommand command = new GameSessionCommand();
+                command.setActivityId(10L); command.setRequestId("pause-" + code); command.setAction("CLUB_STATION_PAUSE");
+                org.mockito.Mockito.doThrow(new GameSessionException(code, "站点状态没有变化"))
+                        .when(service).command(any(), any());
+                GameCommandReceiptView failed = receipt(10L, "pause-" + code);
+                failed.setOutcome("FAILED");
+                failed.setReasonCode(code);
+                org.mockito.Mockito.doReturn(failed).when(service).recordFailure(any(), any(), any());
+
+                AjaxResult result = controller.command(command);
+
+                assertEquals(200, result.get("code"));
+                assertEquals("FAILED", ((GameCommandReceiptView) result.get("data")).getOutcome());
+                assertEquals(!"GAME_STATE_CONFLICT".equals(code) ? Boolean.TRUE : null,
+                        request.getAttribute(com.chengyinhub.framework.aspectj.LogAspect.SKIP_OPER_LOG_ATTRIBUTE), code);
+            } finally {
+                org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+            }
+        }
+    }
+
+    @Test
     void failedReceiptPersistenceKeepsCommandResultUnknown() {
         GameSessionCommand command = new GameSessionCommand();
         command.setActivityId(10L); command.setRequestId("no-receipt"); command.setAction("PLAYER_CHOICE");
