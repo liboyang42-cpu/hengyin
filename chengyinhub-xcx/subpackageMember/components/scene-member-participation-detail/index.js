@@ -48,9 +48,7 @@ Component({
     },
   lifetimes: {
     attached() {
-      this._detailDisposed = false;
-      this._detailGeneration = (this._detailGeneration || 0) + 1;
-      this._skipInitialShow = true;
+      this._skipInitialShow = true; this._detailDisposed = false; this._detailGeneration = (this._detailGeneration || 0) + 1;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
       if (!id) {
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
@@ -64,9 +62,7 @@ Component({
       this._applyRecordId(id)
     },
     detached() {
-      this._detailDisposed = true;
-      this._detailGeneration = (this._detailGeneration || 0) + 1;
-      if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) this._verificationWorkflow.destroy();
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
