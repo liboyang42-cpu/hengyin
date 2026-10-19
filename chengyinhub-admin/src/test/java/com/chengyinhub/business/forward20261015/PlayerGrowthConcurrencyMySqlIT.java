@@ -284,6 +284,7 @@ class PlayerGrowthConcurrencyMySqlIT {
             assertTrue(firstLocked.await(5, TimeUnit.SECONDS));
             two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
             assertTrue(secondMarkerAttempted.await(5, TimeUnit.SECONDS));
+            awaitMarkerInsertLockWait();
             assertFalse(two.isDone(), "首个通关事实尚未提交时，第二请求不能确认通关");
             releaseFirst.countDown();
             assertTrue(one.get(5, TimeUnit.SECONDS).isFirstCompletion());
@@ -483,6 +484,18 @@ class PlayerGrowthConcurrencyMySqlIT {
         assertTrue(start >= 0, "基线表定义缺失: " + table);
         int end = ddl.indexOf(';', start);
         db.execute(ddl.substring(start, end + 1));
+    }
+
+    /** latch 只说明第二请求要插了；等它在 InnoDB 里真正排上锁再放行首请求，否则首请求可能先提交、死锁不出现。 */
+    private void awaitMarkerInsertLockWait() throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            Integer waiting = admin.queryForObject("select count(*) from information_schema.innodb_trx"
+                    + " where trx_state = 'LOCK WAIT' and trx_query like '%player_badge%'", Integer.class);
+            if (waiting != null && waiting > 0) return;
+            Thread.sleep(10);
+        }
+        fail("第二请求的通关事实插入没有进入锁等待，时序前提不成立");
     }
 
     private static void await(CountDownLatch latch) {
