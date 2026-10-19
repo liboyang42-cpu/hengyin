@@ -17,6 +17,7 @@ const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadS
 
 const { validationMethodLabel } = require('../../../utils/validation-method-labels.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -189,6 +190,8 @@ Page({
     //   所以承接视图只有三个,「商家」那格是主办方独有的(他要管自己招了谁、还缺哪几站)。
     role: 'join',                 // join | host,后端 /api/project/home 下发
     operationScope: '',
+    // BL-183:圈层供给角色抽屉(project-host 内勾选,这里只管开关、提交中和后端原文错误)
+    circleConfig: { show: false, submitting: false, errorText: '', errorTitle: '' },
     // 同一主题承接多站时的站点切换条。只有 >1 站才出,单站维持原样不多一条空行。
     myStations: [],
     activeStationId: 0,
@@ -926,7 +929,7 @@ Page({
 
   previewGuideImage(e) {
     const { url, urls } = e.currentTarget.dataset;
-    if (url) wx.previewImage({ current: url, urls: urls && urls.length ? urls : [url] });
+    if (url) mediaPreview.open(urls && urls.length ? urls : [url], url);
   },
 
 
@@ -2559,6 +2562,55 @@ Page({
     });
   },
 
+  openCircleConfig() {
+    if (!(this.data.hostTopic && this.data.hostTopic.circleThemeCode)) return;
+    this.setData({ circleConfig: { show: true, submitting: false, errorText: '', errorTitle: '' } });
+  },
+
+  closeCircleConfig() {
+    if (this._circleConfiguring) return;
+    this.setData({ 'circleConfig.show': false });
+  },
+
+  // POST /api/circle-theme/instance/configure:服务端校验归属、3—4个且覆盖三种角色、可发布;
+  // 选择变了会清掉旧复核。成功后重载项目首页,以「30天供给复核」那行的复核文案作回读。
+  submitCircleConfig(e) {
+    const topicId = Number(this.data.topicId);
+    const codes = ((e.currentTarget.dataset || {}).candidateCodes || []).map(String);
+    if (!topicId || !codes.length || this._circleConfiguring) return;
+    this._circleConfiguring = true;
+    this.setData({ 'circleConfig.submitting': true, 'circleConfig.errorText': '', 'circleConfig.errorTitle': '' });
+    const that = this;
+    app.sendRequest({
+      hideLoading: false,
+      url: '/api/circle-theme/instance/configure',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ topicId, candidateCodes: codes, scope: that.data.operationScope }),
+      success(res) {
+        if (!res || res.code != '200') {
+          that.setData({
+            'circleConfig.errorTitle': '供给角色没有保存',
+            'circleConfig.errorText': app.getRequestErrorMessage(res, '供给角色保存失败'),
+          });
+          return;
+        }
+        that.setData({ 'circleConfig.show': false });
+        app.tips('供给角色已保存，请重新复核');
+        that.loadProjectHome();
+      },
+      fail() {
+        // 断网时服务端可能已保存:不说失败也不说成功,重载一次让复核文案说话。
+        that.setData({ 'circleConfig.errorTitle': '保存结果未确认', 'circleConfig.errorText': '已重新加载项目，请看复核状态' });
+        that.loadProjectHome();
+      },
+      complete() {
+        that._circleConfiguring = false;
+        that.setData({ 'circleConfig.submitting': false });
+      },
+    });
+  },
+
   /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。 */
   goFinance() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
@@ -2985,6 +3037,7 @@ Page({
       // CU-M-181:无站点时抽屉主按钮换成「去加站点」,走的仍是这条白名单派发
       goAddStations: 1,
       reviewCircleSupplies: 1,
+      openCircleConfig: 1, closeCircleConfig: 1, submitCircleConfig: 1,
       auditChapterApplication: 1, revokeChapterInvitation: 1, auditMerchantNode: 1, retryChapterReviews: 1,
       switchStation: 1,
       openNodeNpcForm: 1, openChapterOfferForm: 1, openChapterNodeForm: 1,
@@ -3943,13 +3996,18 @@ Page({
     return parts.join(' ');
   },
 
+  /** BL-200:在途标记 _cancelingRegistration。成功后保持置真直到页面返回,
+      防止 1.5 秒窗口内再取消一次、排两个 navigateBack 把上一页也退掉。 */
   cancelRegistration() {
     const that = this;
+    if (that._cancelingRegistration) return;
     cyModal.show({
       title: '确认取消',
       content: '确定要取消参与吗？取消后不可恢复。',
       success(res) {
         if (res.confirm) {
+          if (that._cancelingRegistration) return;
+          that._cancelingRegistration = true;
           app.sendRequest({
             url: '/api/registration/merchant/cancel',
             data: { id: that.data.regId },
@@ -3959,8 +4017,13 @@ Page({
                 cyToast.success('已取消');
                 setTimeout(() => wx.navigateBack(), 1500);
               } else {
+                that._cancelingRegistration = false;
                 app.tips(res.msg || '取消失败');
               }
+            },
+            fail(res) {
+              that._cancelingRegistration = false;
+              app.tips(app.getRequestErrorMessage(res, '网络异常，请重试'));
             }
           });
         }

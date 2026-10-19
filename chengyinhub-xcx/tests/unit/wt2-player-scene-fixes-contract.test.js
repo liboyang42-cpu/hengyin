@@ -5,6 +5,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
@@ -30,6 +31,7 @@ function loadActivityComponent() {
       if (request.endsWith('response-shape.js')) return require('../../utils/response-shape.js')
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request.endsWith('media-preview.js')) return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected dependency: ${request}`)
     },
   }, { filename: path.join(ROOT, ACTIVITY_JS) })

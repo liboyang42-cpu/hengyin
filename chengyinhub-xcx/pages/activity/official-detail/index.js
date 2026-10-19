@@ -145,6 +145,7 @@ Page({
     loadErrSub: '',
     loadErrAction: '重试',
     loadErrActionType: 'retry',
+    organizerEntry: false,
   },
 
   onLoad(q) {
@@ -232,6 +233,7 @@ Page({
         const e = this._decorate(res.data);
         this.setData({ e, rewards: this._rewards(e), cta: this._cta(e), countdown: this._countdown(e), boundTopicError: '' });
         this._loadBoundTopicNames(e);
+        this._probeOrganizer(e);
       },
       fail: () => {
         if (seq !== this._fetchSeq) return;
@@ -247,6 +249,30 @@ Page({
         if (seq === this._fetchSeq) this.setData({ loading: false });
       }
     });
+  },
+
+  // 主办入口探针:publish-check 只对本场主办/协办(且在官方白名单内)返回 200,其余一律当作普通玩家,
+  // 不提示、不报错 —— 对绝大多数玩家这本来就是「不是主办」,不是故障。
+  _probeOrganizer(e) {
+    if (!e || !e._isV2) { this.setData({ organizerEntry: false }); return; }
+    const seq = this._fetchSeq;
+    app.sendRequest({
+      url: `/api/official/v2/events/${this.data.id}/publish-check`, method: 'GET',
+      hideLoading: true, autoErrorToast: false,
+      success: (res) => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: !!res && (res.code == 200 || res.code == '200') });
+      },
+      fail: () => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: false });
+      },
+    });
+  },
+
+  openOrganizer() {
+    if (!this.data.organizerEntry) return;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + this.data.id });
   },
 
   _rewards(e) {
@@ -440,6 +466,9 @@ Page({
   },
 
   doSignup() {
+    // BL-199:报名/完成任务共用在途标记,连点只发一次。
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     // 报名人只会收到活动开始提醒；招募状态发给主题发布者，不能在这里代授权。
     if (subscribe && subscribe.request) {
       subscribe.request(['activityStart']).then((result) => {
@@ -456,7 +485,8 @@ Page({
         } else {
           toast((res && res.msg) || '报名失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 
@@ -465,6 +495,8 @@ Page({
       toast('任务完成需现场验证');
       return;
     }
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     app.sendRequest({
       url: '/api/official/events/' + this.data.id + '/complete', method: 'POST',
       success: (res) => {
@@ -474,7 +506,8 @@ Page({
         } else {
           toast((res && res.msg) || '操作失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 

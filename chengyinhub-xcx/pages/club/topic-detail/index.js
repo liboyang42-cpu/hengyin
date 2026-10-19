@@ -17,6 +17,7 @@ const { listGroupCodeActivities } = require('../../../utils/group-code-session.j
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
 const { resolveTopicCover } = require('../../../utils/topic-share.js');
+const { presentTrendRows } = require('./registration-trend.js');
 
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
@@ -208,6 +209,10 @@ Page({
     customerChips: CUSTOMER_CHIPS,
     customerFilter: '',
     customerRows: [],
+    // BL-98 报名按日趋势:idle/loading/ready/error,与名单各自独立加载。
+    trendState: 'idle',
+    trendRows: [],
+    trendError: '',
     rulesSheetVisible: false,
     // CU-C-79(用户裁决 B):主键「去选一场」先弹这张选场半屏,选中后带 activityId 进活动运营。
     sessionPickVisible: false,
@@ -870,6 +875,7 @@ Page({
     if (!this._clubId || !this._topicId) { this.notReady('报名参与者'); return; }
     this.setData({ customerSheetVisible: true });
     this.loadCustomers();
+    this.loadRegistrationTrend();
   },
   closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
@@ -909,6 +915,29 @@ Page({
         });
       },
       fail() { if (current()) that.setData({ customerState: 'error' }); },
+    });
+  },
+
+  // BL-98:按参与日期列报名人数。权限由后端判(主题创建者/俱乐部主理人/承接商家),
+  // 403「无权查看该项目趋势」等原因原样回显,不自己猜。
+  loadRegistrationTrend() {
+    if (!this._topicId) return;
+    this.setData({ trendState: 'loading', trendError: '' });
+    const that = this; const seq = that._trendSeq = (that._trendSeq || 0) + 1;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/registration/count_by_date', method: 'POST',
+      data: { owner_type: 1, owner_id: this._topicId },
+      header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      success(res) { if (seq !== that._trendSeq) return; // 只认最后一次请求的回包
+        const rows = isSuccess(res) ? presentTrendRows(res.data) : null;
+        if (!rows) {
+          that.setData({ trendState: 'error', trendError: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' });
+          return;
+        }
+        that.setData({ trendState: 'ready', trendRows: rows });
+      },
+      fail() { if (seq === that._trendSeq) that.setData({ trendState: 'error', trendError: '' }); },
     });
   },
 

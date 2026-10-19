@@ -95,7 +95,7 @@ Page({
       dangerKey: 'template.delete', dangerParams: { name: item.title },   // 三段式文案在 utils/danger-actions.js
       success: (res) => {
         if (res.confirm) {
-          this.deleteTemplate(item.id, index);
+          this.deleteTemplate(item.id);
         }
       }
     });

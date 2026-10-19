@@ -165,7 +165,8 @@
                    点下去走完「举报 → 确认 → 已举报」,给自己开一张无意义审核单。删除入口保留。 -->
               <text wx:if="{{cm.memberId != myMemberId}}" catchtap="onReportComment" data-id="{{cm.id}}" class="comment-mod" aria-role="button" aria-label="举报评论" hover-class="cy-pressed" hover-stay-time="80">举报</text>
             </view>
-            <cy-empty wx:if="{{!comments.length}}" size="sm" title="还没有评论，来抢沙发" />
+            <cy-error wx:if="{{commentsError}}" size="sm" title="评论没能加载出来" sub="{{commentsError}}" retry="重试" bind:retry="retryLoadComments" />
+            <cy-empty wx:elif="{{commentsLoaded && !comments.length}}" size="sm" title="还没有评论，来抢沙发" />
             <view class="comment-bar" wx:if="{{canSeeMembers}}">
               <input class="comment-input" value="{{commentText}}" bindinput="onCommentInput" placeholder="写评论…" placeholder-class="post-ph" confirm-type="send" bindconfirm="onCommentSubmit" />
               <view class="comment-send {{commenting ? 'disabled' : ''}}" catchtap="onCommentSubmit" aria-role="button" aria-label="发送评论" aria-disabled="{{commenting}}" hover-class="{{commenting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">发送</view>
@@ -231,7 +232,7 @@
             data="{{item: item, canManage: club.isOwner || club.viewerIsAdmin || canCheckInEvents, canReport: canSeeMembers && item.memberId != myMemberId}}" />
         </block>
         <!-- 空态(282:478):卡容器内标题 + 说明 + 主按钮 + 归属提示 -->
-        <cy-empty wx:else class="ev-empty" title="还没有城市路线" sub="{{club.isOwner || canManageActivities ? '发布城市定向或自由探索，让成员开始报名。发布后会自动绑定「' + club.name + '」，成员在这里报名。' : '主理人还没发布城市路线，先加入等通知。'}}" cta="{{club.isOwner || canManageActivities ? '发布主题' : ''}}" bind:cta="onCreateTeam" />
+        <cy-empty wx:else class="ev-empty" title="还没有城市路线" sub="{{club.isOwner || canManageActivities ? '发布城市定向或自由探索，让成员开始报名。发布后会自动绑定「' + club.name + '」，成员在这里报名。' : '主理人还没发布城市路线，发布后会显示在这里。'}}" cta="{{club.isOwner || canManageActivities ? '发布主题' : ''}}" bind:cta="onCreateTeam" />
 
         <!-- 段头 · 已结束(282:660):没有已结束的场次就整段不出,不留空标题 -->
         <block wx:if="{{endedTopics.length}}">
@@ -291,6 +292,14 @@
           <text class="ov-fact-value">{{club.city || club.address || '—'}}</text>
           <text class="ov-fact-label">所在城市</text>
         </view>
+      </view>
+
+      <!-- N2 俱乐部勋章只读入口:/api/club/badge/list 需登录,所以只给已加入成员与主理人;游客不显示。 -->
+      <view class="ov-badge-entry" wx:if="{{club.isOwner || club.isJoined}}" catchtap="goClubBadges"
+            aria-role="button" aria-label="查看俱乐部勋章" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="star" size="32" />
+        <text class="ov-badge-entry-text">俱乐部勋章</text>
+        <cy-icon class="ov-badge-entry-arrow" name="arrow-right" size="24" />
       </view>
 
       <!-- MembersHead(23:14)。「邀请成员 ›」只给主理人/管理员:照 N3 无条件铺开,
@@ -831,6 +840,12 @@
         <view class="cset-main"><text class="cset-title">通知成员</text><text class="cset-sub">发送俱乐部与活动通知</text></view>
         <cy-icon class="cset-chevron" name="arrow-right" size="28" />
       </view>
+      <!-- N2 俱乐部勋章:列表登录即可读;创建/颁发只给主理人(服务端同样只认 club.member_id),
+           成员从「概览」进只读列表,页面里不渲染任何管理控件。 -->
+      <view class="cset-row" wx:if="{{club.isOwner}}" catchtap="goClubBadges" aria-role="button" aria-label="俱乐部勋章" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cset-main"><text class="cset-title">俱乐部勋章</text><text class="cset-sub">创建勋章并颁给成员</text></view>
+        <cy-icon class="cset-chevron" name="arrow-right" size="28" />
+      </view>
       <!-- 稿 M 268:223「开放设置」。稿上四个开关,这里三个 ——
            「加入需审批」写的是同一列 club.join_policy,编辑资料里已经有一个写入口,不摆第二个。
            三个开关的真闸都在后端:公开可见在 /api/club/list 与 /detail,发帖在 /post/create,
@@ -1040,6 +1055,12 @@
   <view class="safe-bottom"></view>
 </view>
 
+<!-- BL-18 物理返回/侧滑守卫:资料编辑弹窗里有未保存修改时,返回先走 dirty 闸,不直接退出详情页 -->
+<page-container
+    show="{{!sceneBackGuardOff && sceneCurrent && sceneCurrent.id === 'club-edit' && (sceneDirty || sceneConfirm)}}"
+    duration="{{0}}" overlay="{{false}}"
+    custom-style="width:0;height:0;background:transparent;pointer-events:none"
+    bind:afterleave="onSceneNativeBackGuard" />
 <!-- 俱乐部编辑 = 三级 ⇒ 页内弹窗,由管理页托管;可写表单 ⇒ 遮罩不可关,走 dirty 闸。 -->
 <view class="club-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'club-edit'}}" catchtouchmove="blockSceneTouch">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneDirty}}" mask-closable="{{false}}" bind:requestclose="requestSceneClose" bind:back="requestSceneClose">

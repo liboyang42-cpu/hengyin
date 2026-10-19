@@ -20,6 +20,9 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
+const { shapeMerchantSafety } = require('../../../../utils/merchant-safety-summary.js');
+const { shapeMerchantNode, readFavoriteToggle } = require('../../../../utils/merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -369,6 +372,12 @@ Component({
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
+    reportShow: false,
+    reportTargetType: '',
+    reportTargetId: '',
+    reportTitle: '举报',
+    correctionShow: false,
+    correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -383,6 +392,9 @@ Component({
     merchantTags: [],
     merchantCategories: [],
     merchantHasGeo: false,
+    merchantSafety: null,
+    merchantNode: null,
+    merchantNodeBusy: false,
     // 招牌主推卡:null = 未设置/已下架/已易主/坏数据,整块不渲染
     featured: null,
     activeTab: 'projects',
@@ -394,7 +406,7 @@ Component({
     benefits: buildBenefits({}),
     clubOwnedCount: 0,
     pointsStat: { weekPoints: 0, rankPercentage: 0 },
-    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [], spendRules: [] },
 
     growthLevel: 1,
     streakDays: 0,
@@ -419,7 +431,7 @@ Component({
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
-    exploreStat: { shops: 0, weekExp: 0 },
+    exploreStat: { shops: 0, weekExp: 0, km: '0.0' },
     themeProgress: [],
     medals: [],
     medalCount: 0,
@@ -649,6 +661,9 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
       memberTabs: memberTabs,
@@ -725,9 +740,14 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: null,
       isMerchantView: false
     });
+    this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
     applyTheme('dark');
   },
 
@@ -746,6 +766,9 @@ Component({
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
       merchantHasGeo: hasGeo,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: shapeFeaturedCard(m.featured),
       // 商家公开身份接管身份头:品牌名 / 头像 / 主页封面 / 城市角色 / 品牌口号
       heroImg: m.coverImage || this.data.heroImg,
@@ -753,6 +776,80 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    this.loadMerchantSafety(m.id);
+    this.loadMerchantNode(m.id);
+  },
+
+  // BL-66:安全感受摘要只读;样本不足/无数据/失败都不展示,不打扰主页
+  loadMerchantSafety: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    if (!Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: `/api/community-trust/safety/merchants/${id}`,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantSafetyEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantSafety: res && res.code == 200 ? shapeMerchantSafety(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:商家在架据点。无节点(data 为空)/读取失败都不展示收藏按钮,不打扰主页
+  loadMerchantNode: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
+    if (this.data.isSelf || !Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: '/api/city/nodes/merchant/' + id,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantNodeEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantNode: res && res.code == 200 ? shapeMerchantNode(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:收藏/取消收藏据点,以切换接口返回的 favorited 回读;失败如实提示,不改本地态
+  toggleMerchantNodeFavorite: function () {
+    var that = this;
+    var node = this.data.merchantNode;
+    if (this.data.merchantNodeBusy || !node || !node.poiId) return;
+    var epoch = this._merchantNodeEpoch;
+    var poiId = node.poiId;
+    var settle = function (favorited, msg) {
+      if (epoch !== that._merchantNodeEpoch || !that.data.merchantNode || that.data.merchantNode.poiId !== poiId) return;
+      if (favorited === null) {
+        that.setData({ merchantNodeBusy: false });
+        cyToast(msg);
+        return;
+      }
+      that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
+      cyToast(favorited ? '已收藏据点' : '已取消收藏');
+    };
+    this.setData({ merchantNodeBusy: true });
+    app.sendRequest({
+      url: '/api/city/nodes/' + poiId + '/favorite',
+      method: 'POST',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        var favorited = readFavoriteToggle(res);
+        settle(favorited, (res && res.msg) || '收藏状态没有更新，请重试');
+      },
+      fail: function () { settle(null, '网络异常，收藏状态没有更新'); },
+      successStatusAbnormal: function () { settle(null, '收藏状态没有更新，请重试'); }
+    });
   },
 
   retryMerchantProbe: function () { this.probeSubjectMerchant(); },
@@ -1017,7 +1114,7 @@ Component({
           medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount
           cities: 1
         },
-        'exploreStat.shops': shops
+        'exploreStat.shops': shops, 'exploreStat.km': km // BL-95: 累计里程补进现有「累计探索」块(同行写,不挪动基线行号)
       });
       // 是否开始过只看历史参与信号(totalCheckins / my-completed),绝不拿里程是否为 0 判断。
       // 这样已完成节点但真实里程为 0.0km 的老用户仍进入 ready,不会被错藏成首访。
@@ -1286,6 +1383,7 @@ Component({
     this.openScene('points-tasks');
     this.loadPointsTasks();
   },
+  goPointsHistory: function () { wx.navigateTo({ url: '/subpackageMember/points-history/index' }); },
   onPointsSheetClose: function () {
     this.closeScene();
   },
@@ -1296,26 +1394,26 @@ Component({
     if (sheet.loading) return;
     that.setData({ 'pointsSheet.loading': !sheet.loaded, 'pointsSheet.failed': false });
     req('/api/points/result_list', {}).then(function (res) {
-      if (res.code != '200' || !res.data) {
+      // G4:规则整理收进同目录 points-rules.js(纯函数,有单测)。
+      //   · 赚分任务与花分规则(eventType=14 解锁提示)都取自后台积分规则配置,客户端不写死分值;
+      //     原先这里把 14 直接过滤掉,用户看不到花分口径,现在单列为「积分消耗」。
+      //   · 回包不是数组 / 含非对象行 → 按失败处理,不伪装成「暂无积分任务」。
+      //   · 积分抵扣现金的汇率是服务端常量,没有只读接口,这里不展示也不编造。
+      //     (常量在 CmsRegistrationServiceImpl.POINT_DEDUCT_RATE;规则本身归 Codex B03,本处只读展示)
+      // ⚠️ require 写在这里而不是文件顶部:本文件的 UI-GATE 基线按行号登记,顶部加一行会让后面
+      //   所有登记项整体漂移;就地 require 由运行时缓存,不重复加载。
+      var rules = res.code == '200' ? require('./points-rules.js').splitPointsRules(res.data) : null;
+      if (!rules) {
         // 首次加载失败给显式失败态(可点重试);已有列表则保留旧数据不打扰
         that.setData({ 'pointsSheet.loading': false, 'pointsSheet.failed': !that.data.pointsSheet.loaded });
         return;
       }
-      var tasks = [];
-      for (var i = 0; i < res.data.length; i++) {
-        var r = res.data[i];
-        // 只列赚分任务:启用中;event_type=14(解锁提示)是花分规则,不属于任务
-        if (Number(r.status) !== 1 || Number(r.eventType) === 14) continue;
-        tasks.push({
-          id: r.id,
-          eventType: r.eventType,
-          title: r.title || '',
-          description: r.description || '',
-          points: Number(r.value) || 0,
-          doneCount: Number(r.pointsNum) || 0
-        });
-      }
-      that.setData({ 'pointsSheet.tasks': tasks, 'pointsSheet.loading': false, 'pointsSheet.loaded': true });
+      that.setData({
+        'pointsSheet.tasks': rules.earn,
+        'pointsSheet.spendRules': rules.spend,
+        'pointsSheet.loading': false,
+        'pointsSheet.loaded': true
+      });
     });
   },
 
@@ -1630,6 +1728,34 @@ Component({
   openMoreMenu: function () { this.openScene('member-more-menu'); },
   closeMoreMenu: function () { this.closeScene(); },
 
+  onReportMember: function () {
+    this.closeMoreMenu();
+    this.setData({ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String(this.data.userId || ''), reportTitle: '举报这位用户' });
+  },
+
+  onReportMerchant: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ reportShow: true, reportTargetType: 'MERCHANT', reportTargetId: String(merchantId), reportTitle: '举报这家商家' });
+  },
+
+  onReportClose: function () {
+    this.setData({ reportShow: false });
+  },
+
+  // BL-67:商家公开主页「信息纠错」(问题上报,纯文字),走纠错半屏
+  onMerchantCorrection: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ correctionShow: true, correctionMerchantId: String(merchantId) });
+  },
+
+  onCorrectionClose: function () {
+    this.setData({ correctionShow: false });
+  },
+
   onShareProfile: function () {
     this.closeMoreMenu();
     cyToast('点击右上角分享主页');
@@ -1791,9 +1917,10 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      var current = that.data.list[index];
-      current = Object.assign({}, current, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
-      that.setData({ ['list[' + index + ']']: current });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      var current = Object.assign({}, that.data.list[pos], { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
+      that.setData({ ['list[' + pos + ']']: current });
     });
   },
 
@@ -1817,7 +1944,9 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      that.setData({ ['list[' + index + '].isBookmarked']: res.data.isBookmarked });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      that.setData({ ['list[' + pos + ']']: Object.assign({}, that.data.list[pos], { isBookmarked: res.data.isBookmarked }) });
     });
   },
 
@@ -1911,12 +2040,12 @@ Component({
   previewImage: function (e) {
     var picList = e.currentTarget.dataset.piclist;
     var index = e.currentTarget.dataset.index;
-    wx.previewImage({ current: picList[index], urls: picList });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   previewMerchantGallery: function (e) {
     var src = e.currentTarget.dataset.src;
-    if (src) wx.previewImage({ current: src, urls: this.data.merchantGallery || [src] });
+    if (src) mediaPreview.open(this.data.merchantGallery || [src], src);
   },
 
   goMerchantLocation: function () {
@@ -1960,7 +2089,7 @@ Component({
 
   previewWork: function (e) {
     var url = e.currentTarget.dataset.url;
-    wx.previewImage({ current: url, urls: this.data.casePicsList });
+    mediaPreview.open(this.data.casePicsList, url);
   },
 
   formatTimeDifference: function (createTimeStr) {

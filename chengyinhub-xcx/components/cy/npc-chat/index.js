@@ -8,6 +8,7 @@
 //   ⚠️ 两轨的**开关是分开的**(roamNpcChat 硬编码 false / merchantNpcChat 读配置),
 //     由调用方各自判,组件不判 —— 组件判的话两轨就又绑一起了。
 const analytics = require('../../../utils/analytics.js');
+const chatExport = require('./chat-export.js');
 
 const MAX_MESSAGE_CODE_POINTS = 300;
 const MAX_VISIBLE_MESSAGES = 20;
@@ -52,6 +53,14 @@ Component({
     canSend: false,
     retryAvailable: false,
     scrollIntoView: '',
+    clearError: '',
+    // 「导出我的对话记录」:'' 关闭 | loading | ready | empty | error。导出只在内存里,不落本地存储。
+    exportState: '',
+    exportError: '',
+    exportCount: 0,
+    exportPolicy: '',
+    exportPreview: [],
+    exportCopied: '',
   },
 
   lifetimes: {
@@ -129,6 +138,96 @@ Component({
       this._retryRequested = true;
       this.onSend();
       if (draft) this.setData({ input: draft });
+    },
+
+    /** 「清除我的对话记录」:先弹危险确认(见 utils/danger-actions.js 'ai.npc.chatData.delete')。 */
+    onAskClearData: function () {
+      const dc = this.selectComponent && this.selectComponent('#npc-dc');
+      if (dc) dc.open('ai.npc.chatData.delete', {});
+    },
+
+    /** 「导出我的对话记录」:拉服务端全量记录,给预览 + 复制文本(用户决定:导出 = 复制文本);不写任何本地存储。 */
+    onExportData: function () {
+      if (this._clearing || this.data.exportState === 'loading') return;
+      // 不打断在途提问:导出是只读快照,只含已落库的记录;回答照常在后台逐字呈现,返回对话即可看到
+      const seq = (this._exportSeq || 0) + 1;
+      this._exportSeq = seq;
+      this._exportReadable = '';
+      this.setData({ exportState: 'loading', exportError: '', exportCopied: '', exportPreview: [], exportCount: 0, exportPolicy: '' });
+      const failMsg = '对话记录没导出来，请重试';
+      const current = () => this.properties.show && seq === this._exportSeq;
+      getApp().sendRequest({
+        url: '/api/ai/npc/chat/data/export',
+        method: 'GET',
+        hideLoading: true,
+        autoErrorToast: false,
+        success: (res) => {
+          if (!current()) return;
+          const vo = res && (res.code == 200 || res.code == '200') ? chatExport.normalizeExport(res.data) : null;
+          if (!vo) {
+            const msg = res && res.code != 200 && res.code != '200'
+              ? getApp().getRequestErrorMessage(res, failMsg) : failMsg;
+            this.setData({ exportState: 'error', exportError: msg });
+            return;
+          }
+          this._exportReadable = chatExport.formatReadable(vo);
+          this.setData({
+            exportState: vo.records.length ? 'ready' : 'empty',
+            exportCount: vo.records.length,
+            exportPolicy: vo.retentionPolicy,
+            exportPreview: chatExport.previewRows(vo),
+          });
+        },
+        fail: () => {
+          if (!current()) return;
+          this.setData({ exportState: 'error', exportError: '网络没连上，对话记录没导出来，请重试' });
+        },
+      });
+    },
+
+    onCopyExport: function () {
+      const data = this._exportReadable;
+      if (!data || this.data.exportState !== 'ready') return;
+      wx.setClipboardData({
+        data: data,
+        success: () => this.setData({ exportCopied: '已复制全部对话文本，可以粘贴到备忘录或发给自己' }),
+        fail: () => this.setData({ exportCopied: '', exportState: 'error', exportError: '复制没有成功，可以再试一次' }),
+      });
+    },
+
+    onCloseExport: function () {
+      this._exportSeq = (this._exportSeq || 0) + 1;
+      this._exportReadable = '';
+      this.setData({ exportState: '', exportError: '', exportCopied: '', exportPreview: [], exportCount: 0, exportPolicy: '' });
+    },
+
+    onConfirmClearData: function () {
+      const dc = this.selectComponent && this.selectComponent('#npc-dc');
+      if (!dc || this._clearing) return;
+      this._clearing = true;
+      // 删除期间不能再有在途提问:迟到的回答会在服务端重新写出一条刚删掉的记录
+      this._invalidate(false);
+      this.setData({ clearError: '' });
+      dc.busyOn();
+      const failMsg = '清除没有成功，对话记录还在，请重试';
+      getApp().sendRequest({
+        url: '/api/ai/npc/chat/data/delete',
+        method: 'POST',
+        data: {},
+        hideLoading: true,
+        silentError: true,
+        success: (res) => {
+          if (!res || (res.code != 200 && res.code != '200')) { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg); return; }
+          this._clearing = false;
+          // 本地列表只是服务端记录的镜像,服务端删成功后同步清空
+          this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
+          this.onCloseExport();
+          const deleted = res.data && Number(res.data.deleted);
+          dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条对话记录，当前对话也已清空。' : '');
+        },
+        fail: () => { this._clearing = false; this.setData({ clearError: '清除没有成功，对话记录还在，请重试' }); dc.failed(failMsg) },
+        successStatusAbnormal: () => { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg) },
+      });
     },
 
     onSheetClose: function () {
@@ -241,6 +340,7 @@ Component({
       this._invalidate(false);
       this._retryMessage = null;
       this._retryCount = 0;
+      this.onCloseExport();
       this.setData({
         messages: [], input: '', inputCount: 0, state: 'IDLE', isThinking: false,
         canSend: false, retryAvailable: false, scrollIntoView: '',

@@ -10,10 +10,37 @@
   <view class="npc-chat">
     <view class="npc-chat__notice">
       <cy-icon name="info" size="24" />
-      <text>{{scope === 'merchant' ? '由 AI 生成，仅基于这家店提供的信息回答' : '由 AI 生成，仅基于本次漫游进度回答'}}</text>
+      <text class="npc-chat__notice-text">{{scope === 'merchant' ? '由 AI 生成，仅基于这家店提供的信息回答' : '由 AI 生成，仅基于本次漫游进度回答'}}</text>
+      <!-- 导出(只读,不落本地存储)按现有「清除」链接的样式加在它前面;「清除」位置与样式保持原状(用户决定:不改现有 UI) -->
+      <text class="npc-chat__clear" bindtap="onExportData" aria-role="button" aria-label="导出我的对话记录" hover-class="cy-pressed" hover-stay-time="80">导出我的对话记录</text>
+      <text class="npc-chat__clear" bindtap="onAskClearData" aria-role="button" aria-label="清除我的对话记录" hover-class="cy-pressed" hover-stay-time="80">清除我的对话记录</text>
     </view>
 
-    <scroll-view class="npc-chat__messages" scroll-y scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
+    <cy-inline-error wx:if="{{clearError}}" title="{{clearError}}" />
+    <!-- 导出面板:打开时替换对话区;复制的始终是全部记录,预览最多前 50 条 -->
+    <scroll-view wx:if="{{exportState}}" class="npc-chat__messages npc-chat__export" scroll-y>
+      <view class="npc-chat__export-head">
+        <text class="npc-chat__export-title">我的对话记录</text>
+        <text class="npc-chat__clear" bindtap="onCloseExport" aria-role="button" aria-label="返回对话" hover-class="cy-pressed" hover-stay-time="80">返回对话</text>
+      </view>
+      <view wx:if="{{exportState === 'loading'}}" class="npc-chat__empty" aria-role="status" aria-live="polite">正在读取你账号下的全部 AI 对话…</view>
+      <cy-inline-error wx:elif="{{exportState === 'error'}}" title="导出没有完成" sub="{{exportError}}" action="重试" bind:action="onExportData" />
+      <view wx:elif="{{exportState === 'empty'}}" class="npc-chat__empty">你的账号下还没有 AI 对话记录。{{exportPolicy}}</view>
+      <block wx:else>
+        <text class="npc-chat__export-meta">共 {{exportCount || 0}} 条，范围是你账号下所有 AI 对话（漫游向导和店铺形象）。{{exportPolicy}}</text>
+        <view class="npc-chat__export-actions">
+          <view class="npc-chat__send" bindtap="onCopyExport" aria-role="button" aria-label="复制全部对话文本" hover-class="cy-pressed" hover-stay-time="80">复制全部文本</view>
+        </view>
+        <text wx:if="{{exportCopied}}" class="npc-chat__export-meta" aria-role="status" aria-live="polite">{{exportCopied}}</text>
+        <text wx:if="{{exportCount > exportPreview.length}}" class="npc-chat__export-meta">下面预览前 {{exportPreview.length || 0}} 条，复制包含全部 {{exportCount || 0}} 条。</text>
+        <view wx:for="{{exportPreview}}" wx:key="key" class="npc-chat__export-row">
+          <text class="npc-chat__export-time">{{item.time}}</text>
+          <text class="npc-chat__export-line">我：{{item.ask}}</text>
+          <text class="npc-chat__export-line">AI：{{item.reply}}</text>
+        </view>
+      </block>
+    </scroll-view>
+    <scroll-view wx:else class="npc-chat__messages" scroll-y scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
       <view wx:for="{{messages}}" wx:key="id" id="npc-msg-{{item.id}}" class="npc-chat__row npc-chat__row--{{item.role}}">
         <view class="npc-chat__bubble npc-chat__bubble--{{item.role}}">
           <text>{{item.text}}</text>
@@ -25,8 +52,8 @@
       <view wx:if="{{!messages.length && !isThinking}}" class="npc-chat__empty">{{scope === 'merchant' ? (greeting || '想吃点什么？问问我。') : '想知道下一步怎么走？问问我。'}}</view>
     </scroll-view>
 
-    <view wx:if="{{retryAvailable}}" class="npc-chat__send" bindtap="onRetrySend" aria-role="button" aria-label="重试这条消息" hover-class="cy-pressed" hover-stay-time="80">{{state === 'CHECKING' ? '查询处理结果' : '重试这条消息'}}</view>
-    <view class="npc-chat__composer">
+    <view wx:if="{{retryAvailable && !exportState}}" class="npc-chat__send" bindtap="onRetrySend" aria-role="button" aria-label="重试这条消息" hover-class="cy-pressed" hover-stay-time="80">{{state === 'CHECKING' ? '查询处理结果' : '重试这条消息'}}</view>
+    <view wx:if="{{!exportState}}" class="npc-chat__composer">
       <textarea class="npc-chat__input" value="{{input}}" maxlength="300" auto-height fixed="true"
         placeholder="{{scope === 'merchant' ? '问问这家店，比如「有什么推荐」' : '问问这段漫游…'}}" placeholder-class="npc-chat__placeholder"
         bindinput="onInput" bindconfirm="onSend" confirm-type="send" />
@@ -35,5 +62,6 @@
         <view class="npc-chat__send {{canSend ? '' : 'npc-chat__send--disabled'}}" bindtap="onSend" aria-role="button" aria-label="发送消息" hover-class="cy-pressed" hover-stay-time="80">发送</view>
       </view>
     </view>
+    <cy-danger-confirm id="npc-dc" bind:confirm="onConfirmClearData" />
   </view>
 </cy-sheet>

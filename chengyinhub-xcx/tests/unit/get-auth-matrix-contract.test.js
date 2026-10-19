@@ -59,6 +59,14 @@ const MATRIX = [
   ['pages/activity/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/activity/list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
   ['pages/activity/official-mine/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
+  // CL4 主办控制台:publish-check 由后端 canPublish(白名单)+ canReadControlledEvent(本场主办/协办)双重校验,
+  //   非主办一律拒绝;本页与详情页只拿它判断「是否显示主办控件」,不接受前端传身份。
+  ['pages/activity/official-organizer/index.js', "url: `/api/official/v2/events/${this._id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
+  ['pages/activity/official-organizer/index.js', "url: '/api/official/events/' + this._id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/activity/official-organizer/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
+  ['pages/activity/official-detail/index.js', "url: `/api/official/v2/events/${this.data.id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
+  // CL4 N5:NPC 对话导出,身份只取登录态(getAppUserId),端点不收任何用户 ID。
+  ['components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
@@ -127,6 +135,30 @@ const MATRIX = [
   // 2026-09-17 商家营销同意入口(拍板第 40 条 A):与设置页同一端点、同一权限档 ——
   //   GET 只读本人可管理的商家行,失败即不出现(fail-closed),账号身份由后端 principal 定。
   ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
+  // 2026-10-19 Claude 小程序线移植到 master:本线新增 21 处 GET 逐条归类。全部不在 SecurityConfig permitAll 清单 ⇒ required;
+  //   本人记录(举报/纠错/收藏/通知/审核回读)= self-account;原因表/安全感受摘要/据点公开信息 = global-authenticated-read;
+  //   商家触达 = owned-merchant-resource(MARKETING_READ);开通前置 = self-merchant;复盘统计 = self-publisher。
+  ['components/cy/report-sheet/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/activity/official-mine/index.js', "url: '/api/official/broadcast/' + encodeURIComponent(String(id)) + '/stats'", 'required', 'publisher', 'self-publisher'],
+  ['pages/merchant/crm-campaigns/index.js', "url: '/api/merchant/crm/campaigns'", 'required', 'merchant', 'owned-merchant-resource'],
+  ['pages/merchant/crm-campaigns/index.js', 'url: `/api/merchant/crm/campaigns/${id}`', 'required', 'merchant', 'owned-merchant-resource'],
+  ['pages/merchant/index/index.js', "url: '/api/merchant/ops/prerequisites'", 'required', 'merchant', 'self-merchant'],
+  ['pages/play/merchant/components/safety-rating-sheet/index.js', "url: '/api/community-trust/safety/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/roam/index.js', "req('/api/official/active-for-roam'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageB/pages/im/chat/index.js', 'url: `/api/audit/${auditTaskId}/detail`', 'required', 'member', 'self-account'],
+  ['subpackageB/pages/im/list/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
+  ['subpackageMember/components/cy/merchant-correction-sheet/index.js', "url: '/api/community-trust/contributions/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/correction-detail/index.js', 'url: `/api/community-trust/contributions/${id}`', 'required', 'member', 'self-account'],
+  ['subpackageMember/correction-detail/index.js', 'confirmByReadBack(accepted) {', 'required', 'member', 'self-account'],
+  ['subpackageMember/correction-mine/index.js', "url: '/api/community-trust/contributions/mine'", 'required', 'member', 'self-account'],
+  ['subpackageMember/report-detail/index.js', 'url: `/api/community-trust/reports/${id}`', 'required', 'member', 'self-account'],
+  ['subpackageMember/report-detail/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/report-detail/index.js', 'confirmByReadBack(accepted, receipt) {', 'required', 'member', 'self-account'],
+  ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/mine'", 'required', 'member', 'self-account'],
+  ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/node-favorites/index.js', "url: '/api/city/nodes/favorites'", 'required', 'member', 'self-account'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -138,6 +170,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
+  'controlled-event-operator',
 ]);
 
 function productionJsFiles(dir) {

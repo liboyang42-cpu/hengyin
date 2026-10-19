@@ -77,6 +77,8 @@
       <!-- 保证金单独给强调色:它是唯一一条要掏钱的 -->
       <view class="kv"><text class="k">保证金</text>
         <text class="v {{invite.depositDueText ? 'v--owed' : ''}}">{{invite.depositDueText || '无'}}</text></view>
+      <!-- BL-103:对方近 90 天履约信用(POST /api/coop/credit,只读);样本为 0 或读不到不展示 -->
+      <view wx:if="{{partnerCredit}}" class="kv"><text class="k">{{partnerCredit.label}}</text><text class="v">{{partnerCredit.text}}</text></view>
     </view>
 
     <view class="card">

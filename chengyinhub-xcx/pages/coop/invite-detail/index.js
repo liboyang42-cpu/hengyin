@@ -21,6 +21,7 @@ const modal = require('../../../utils/modal.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { decorate, STATUS_LABEL, parseInviteId, INVITE_ID_ERROR } = require('../../../utils/coop-invite-view.js');
+const { partnerMemberId, shapeCredit } = require('./credit-view.js');
 
 // 状态 → 顶部大字的语气。已接受是唯一的正向终态,其余终态一律中性,
 // 不用红色 —— 「已拒绝」是一个事实,不是错误。
@@ -65,6 +66,7 @@ Page({
     actionReceipt: '',
     actionError: '',
     depositActionVisible: false,
+    partnerCredit: null,           // BL-103 对方近 90 天履约摘要 {label,text},样本为 0 不展示
     projectActionVisible: false,
     // 供给申报勾选浮层(原在 pages/coop/list)。当前邀约 id 不进 data:wxml 不渲染它,提交时从 invite 取。
     showPerkPick: false,
@@ -214,8 +216,29 @@ Page({
       showPerkPick: false, perkTemplates: [], perkSaving: false, perkState: 'idle', perkErrorText: '',
       reviewSheetShow: false,
       myReviewStars: '',
+      partnerCredit: null,
     });
     if (status === 1 && !inv.legacyReadonly) this.loadMyReview(inv);
+    this.loadPartnerCredit(inv);
+  },
+
+  // BL-103:对方近 90 天履约信用摘要(只读)。读不到/样本为 0 就不展示,不影响详情页其余内容。
+  loadPartnerCredit(inv) {
+    const memberId = partnerMemberId(inv, this.data.box);
+    if (!memberId) return;
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/coop/credit', method: 'POST',
+      data: JSON.stringify({ memberId: memberId }), header: jsonHeader(),
+      success(res) {
+        const credit = res && String(res.code) === '200' ? shapeCredit(res.data) : null;
+        if (credit && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
+          that.setData({ partnerCredit: credit });
+        }
+      },
+      fail() {},
+    });
   },
 
   // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,

@@ -139,3 +139,14 @@ page { background: var(--cy-bg-page); }
   background: var(--cy-color-text-tertiary);
   box-shadow: none;
 }
+
+/* 系统 tab「举报进度」:与系统会话行同一视觉(铃铛圆头像 + 标题/时间 + 副行),左右走页边距。 */
+.report-notices { display: flex; flex-direction: column; padding: 0 0 0 var(--cy-page-x); }
+.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-4) 0; background: var(--cy-bg-card); }
+.report-notice .sys-avatar { flex-shrink: 0; }
+.report-notice__body { flex: 1; min-width: 0; overflow: hidden; }
+.report-notice__top { display: flex; align-items: baseline; min-width: 0; gap: var(--cy-space-2); }
+.report-notice__title { flex: 0 1 auto; min-width: 0; font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.report-notice__time { flex-shrink: 0; margin-left: auto; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.report-notice__sub { display: block; margin-top: 8rpx; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.report-notice__dot { flex-shrink: 0; width: 16rpx; height: 16rpx; border-radius: 50%; background: var(--cy-info); }

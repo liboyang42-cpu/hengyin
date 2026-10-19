@@ -10,6 +10,7 @@ const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-sha
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
+const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
 const PRODUCT_TYPE_TEXT = { 1: '城市定向', 2: '自由探索' };
@@ -87,6 +88,8 @@ Page({
     // 参与项目真实总数(卡片只铺前几条,空态文案不能拿截断列表报数)
     joinTotal: 0,
     notifications: [],
+    // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
+    prerequisites: [],
     todo: { biddingTopics: 0, pendingVerify: 0, verifiedCount: 0, pendingScanConfirm: 0, pendingOrders: 0, refundCount: 0 },
     todoLoading: true,
     todoError: false,
@@ -155,8 +158,8 @@ Page({
       success(res) {
         if (!isCurrentAction()) return;
         if (res.code == '200' || res.code === 200) {
-          that.setData({ businessStatus: next });
-          cyToast(next === 1 ? '已营业' : '已打烊');
+          // BL-141:写成功不等于状态已落库,以 /api/merchant/business-status 回读为准再刷新开关。
+          that.readBackBusinessStatus(next, isCurrentAction);
         } else {
           cyToast(app.getRequestErrorMessage(res, '切换失败'));
         }
@@ -164,6 +167,29 @@ Page({
       fail() {
         if (!isCurrentAction()) return;
         cyToast('网络异常，请重试');
+      }
+    });
+  },
+
+  readBackBusinessStatus(expected, isCurrentAction) {
+    const that = this;
+    app.sendRequest({
+      url: '/api/merchant/business-status', method: 'POST', silentError: true,
+      success(res) {
+        if (!isCurrentAction()) return;
+        const data = res && (res.code == '200' || res.code === 200) ? res.data : null;
+        const actual = data ? Number(data.businessStatus) : NaN;
+        if (actual !== 0 && actual !== 1) {
+          cyToast('状态未同步，请刷新后核对');
+          return;
+        }
+        that.setData({ businessStatus: actual });
+        cyToast(actual === expected ? (actual === 1 ? '已营业' : '已打烊')
+          : '状态未同步，当前' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')));
+      },
+      fail() {
+        if (!isCurrentAction()) return;
+        cyToast('状态未同步，请刷新后核对');
       }
     });
   },
@@ -272,6 +298,7 @@ Page({
     else if (action === 'coupon') this.goManageCoupon();
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
+    else if (action === 'verifyRecords') this.goVerifyRecords();
   },
 
   goManageCoupon() {
@@ -281,6 +308,11 @@ Page({
   goAftercare() {
     if (!this.data.merchantAccess.canReadAftercare) return;
     wx.navigateTo({ url: '/pages/merchant/aftercare/index' });
+  },
+
+  goVerifyRecords() {
+    if (!this.data.merchantAccess.canReadVerifyRecords) return;
+    wx.navigateTo({ url: '/pages/merchant/verify-records/index' });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {
@@ -412,6 +444,9 @@ Page({
     // access/me 已给出可安全展示的商家摘要；完整资料接口要求 PROFILE_WRITE，
     // 核销员/运营/财务不得为了加载工作台而先撞一次 403。
     if (currentAccess.canWriteProfile) this.loadMerchantInfo(dataEpoch);
+    // 前置检查按店主主体计算(permissionRequired=MERCHANT_OWNER),只给能改资料的岗位读。
+    if (currentAccess.canWriteProfile) this.loadPrerequisites(dataEpoch);
+    else this.setData({ prerequisites: [] });
     this.loadUserInfo(dataEpoch);
     // master #807 的商家游戏模组入口:自带 client 空守卫,与角色无关,所有员工都能看到入口。
     this.loadMerchantGameEntries();
@@ -519,6 +554,7 @@ Page({
       todoError: false,
       projectCards: [],
       notifications: [],
+      prerequisites: [],
       chapterSheet: { show: false, code: '', items: [] },
       stationSheet: { show: false, code: '', items: [] },
       verificationResult: { show: false, state: '', title: '', message: '' },
@@ -731,6 +767,30 @@ Page({
   goPredictInbox() {
     if (!this.data.merchantAccess.canManageProjects) return;
     wx.navigateTo({ url: '/pages/merchant/predict/index' });
+  },
+
+  loadPrerequisites(dataEpoch = this._dataEpoch || 0) {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/ops/prerequisites', method: 'GET',
+      success(res) {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        const ok = res && (res.code === '200' || res.code === 200);
+        that.setData({ prerequisites: ok ? pendingPrerequisites(res.data) : [] });
+      },
+      fail() {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.setData({ prerequisites: [] });
+      },
+    });
+  },
+
+  goPrerequisite(e) {
+    const key = String((e.currentTarget.dataset || {}).key || '');
+    const item = (this.data.prerequisites || []).find(row => row.key === key);
+    if (!item || !item.path) return;
+    wx.navigateTo({ url: item.path });
   },
 
   loadMerchantInfo(dataEpoch = this._dataEpoch || 0) {

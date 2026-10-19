@@ -21,6 +21,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 // 开场倒计时文案:天/小时/分三档取整,不到 1 分钟按「即将开始」收口。
 // 与 activity/list 的 fmtDur 同一套档位,避免两处对同一活动给出不同口径。
@@ -184,13 +185,14 @@ Page({
           toast(res.msg || '操作失败');
           return;
         }
-        let newlist = that.data.list
-        let currentItem = newlist[index]
+        const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(id); });
+        if (pos < 0) return;
+        let currentItem = Object.assign({}, that.data.list[pos])
         
         currentItem = Object.assign({}, currentItem, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
 
         // 更新列表数据
-        const key = `list[${index}]`;
+        const key = `list[${pos}]`;
         that.setData({
           [key]: currentItem
         });
@@ -272,9 +274,12 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           const nextFollowState = intendedFollow;
-          const nextList = topicList.slice();
-          nextList[index] = Object.assign({}, topicList[index], { isFollowTheUser: nextFollowState });
-          that.setData({ list: nextList });
+          const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+          if (pos >= 0) {
+            const nextList = that.data.list.slice();
+            nextList[pos] = Object.assign({}, nextList[pos], { isFollowTheUser: nextFollowState });
+            that.setData({ list: nextList });
+          }
 
           toast(nextFollowState ? '关注成功' : '已取消关注');
         } else {
@@ -371,8 +376,8 @@ Page({
         that._deletingPost = false;
         if (res && res.code == '200') {
           if (pa) pa.deleteDone();
-          const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-          that.setData({ list: list, nodata: list.length < 1 });
+          const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+          if (list.length !== that.data.list.length) that.setData({ list: list, nodata: list.length < 1 });
           that.closePostActions();
         } else if (pa) {
           pa.deleteFailed((res && res.msg) || '删除失败');
@@ -433,11 +438,13 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-              that.setData({
-                list: list,
-                nodata: list.length < 1
-              });
+              const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+              if (list.length !== that.data.list.length) {
+                that.setData({
+                  list: list,
+                  nodata: list.length < 1
+                });
+              }
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
@@ -628,10 +635,7 @@ Page({
     const detail = e && e.detail;
     const picList = detail && Array.isArray(detail.picList) ? detail.picList : e.currentTarget.dataset.piclist;
     const index = detail && detail.picIndex !== undefined ? detail.picIndex : e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index], // 当前显示图片的http链接
-      urls: picList // 需要预览的图片http链接列表
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   /**

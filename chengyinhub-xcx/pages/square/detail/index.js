@@ -18,6 +18,7 @@ const {
 } = require('../../../utils/feed-play-card.js');
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 Page({
   /**
    * 页面的初始数据
@@ -678,13 +679,17 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           // 后端是开关语义,以回包 data.isLiked 终态为准;旧后端没回就按开关取反(3-20)
-          let newlist = that.data.list
-          const row = newlist[index]
+          const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(id); });
+          if (pos < 0) return;
+          const newlist = that.data.list.slice()
+          const row = newlist[pos]
           const was = row.isLiked == 1 ? 1 : 0
           const serverLiked = res.data && res.data.isLiked
           const now = serverLiked === 0 || serverLiked === 1 ? serverLiked : 1 - was
-          row.isLiked = now
-          row.likeCount = Math.max(0, (Number(row.likeCount) || 0) + now - was)
+          newlist[pos] = Object.assign({}, row, {
+            isLiked: now,
+            likeCount: Math.max(0, (Number(row.likeCount) || 0) + now - was)
+          })
           that.setData({
             list: newlist
           });
@@ -874,8 +879,13 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-              that.setData({ list, nodata: list.length < 1 });
+              const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+              if (list.length !== that.data.list.length) {
+                that.setData({
+                  list: list,
+                  nodata: list.length < 1
+                });
+              }
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
@@ -967,10 +977,7 @@ Page({
   previewImage: function (e) {
     const picList = e.currentTarget.dataset.piclist;
     const index = e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index],
-      urls: picList
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   getData: function () {

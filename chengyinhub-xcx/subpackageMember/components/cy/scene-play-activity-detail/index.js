@@ -8,6 +8,7 @@ const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
 const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
+const mediaPreview = require('../../../../utils/media-preview.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -556,7 +557,7 @@ Component({
 
     previewCommentImage(event) {
       const current = event.currentTarget.dataset.src
-      if (current) wx.previewImage({ current, urls: this.data.uploadImages })
+      if (current) mediaPreview.open(this.data.uploadImages, current)
     },
 
     changeRating(event) {

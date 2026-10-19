@@ -23,6 +23,7 @@ const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -724,6 +725,9 @@ Page({
       toast('请输入评价内容');
       return;
     }
+    // BL-198:单飞,请求在途时忽略重复点击,避免同一条评价发两次。
+    if (that._commentSubmitting) return;
+    that._commentSubmitting = true;
     app.sendRequest({
       url: '/api/comment/add',
       data: {
@@ -744,6 +748,9 @@ Page({
         } else {
           app.tips(res.msg);
         }
+      },
+      complete: function () {
+        that._commentSubmitting = false;
       }
     });
   },
@@ -836,6 +843,9 @@ Page({
     const that = this;
     const topicId = that.data.id;
     if (!topicId) return;
+    // BL-201:移交每调一次服务端就复制一份新草稿;成功后入口仍在、页面不回读,本实例内不再放行。
+    if (that._transferredToClub) { app.tips('已移交，请到新主题继续配置'); return; }
+    if (that._transferringToClub) return;
     app.sendRequest({
       hideLoading: true, url: '/api/club/my', method: 'POST', data: {},
       success(res) {
@@ -869,6 +879,8 @@ Page({
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
+        if (that._transferredToClub || that._transferringToClub) return;
+        that._transferringToClub = true;
         app.sendRequest({
           url: '/api/topic/transfer-to-club',
           // 后端 transferToClub(String topicId, String clubId, …) 是 form 绑定(ApiTopicController:783):
@@ -877,6 +889,7 @@ Page({
           method: 'POST',
           success(r) {
             if (r.code == '200') {
+              that._transferredToClub = true; // 成功后保持在途标记,直到页面重新加载
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
@@ -889,10 +902,11 @@ Page({
                 }
               });
             } else {
+              that._transferringToClub = false;
               app.tips(r.msg || '移交失败');
             }
           },
-          fail() { app.tips('网络异常，请重试'); }
+          fail() { that._transferringToClub = false; app.tips('网络异常，请重试'); }
         });
       }
     });
@@ -1378,10 +1392,7 @@ Page({
   // 预览图片
   previewImage(e) {
     const src = e.currentTarget.dataset.src;
-    wx.previewImage({
-      current: src,
-      urls: this.data.uploadImages
-    });
+    mediaPreview.open(this.data.uploadImages, src);
   },
   
   

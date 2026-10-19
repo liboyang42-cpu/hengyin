@@ -22,6 +22,7 @@ function harness(mode = 'manage', initialOwner = '7') {
       if (name.includes('ensure-session')) return require('../../pages/merchant/utils/session/ensure-session.js');
       if (name.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
       if (name.includes('toast')) return {};
+      if (name.includes('media-preview')) return { open() {} };
       throw new Error(name);
     }, wx: {}, getCurrentPages: () => [],
   });

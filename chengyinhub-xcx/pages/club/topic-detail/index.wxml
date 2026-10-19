@@ -592,6 +592,17 @@
         </view>
       </view>
     </block>
+    <!-- BL-98 报名按日趋势(只读):按参与日期列有效报名人数(registration_status=2),沿用名单行样式,不画图表。 -->
+    <block wx:if="{{trendState !== 'idle'}}">
+      <text class="tset-label">按参与日期 · 报名人数</text>
+      <cy-skeleton wx:if="{{trendState === 'loading'}}" type="list" count="1" />
+      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势没能取到" sub="{{trendError || '稍后再试一次'}}" retry="重试" bind:retry="loadRegistrationTrend" />
+      <cy-empty wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" />
+      <view wx:for="{{trendRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
+        <view class="cli-main"><text class="cli-name">{{item.dateText}}</text></view>
+        <view class="cli-right"><text class="cli-state">{{item.countText}}</text></view>
+      </view>
+    </block>
   </view>
 </cy-scene-sheet>
 

@@ -56,7 +56,7 @@
 
           <block wx:if="{{chapter.recruiting}}">
             <view class="cto__tags">
-              <text class="cto__tag" wx:for="{{chapter.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+              <text class="cto__tag" wx:for="{{chapter.tags}}" wx:key="index" wx:for-item="tag">{{tag}}</text>
             </view>
             <text class="cto__approved">已通过 {{chapter.approvedCount}} / 上限 {{chapter.capLimit || 0}} 家</text>
             <text class="cto__meta">{{chapter.thresholdText}}</text>

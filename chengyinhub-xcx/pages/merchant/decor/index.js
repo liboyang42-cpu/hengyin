@@ -11,6 +11,7 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
+const { buildActiveSubscriptions } = require('../../../utils/merchant-subscription-view.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
@@ -58,6 +59,22 @@ function classifyFailure(error, fallback) {
   return { kind: 'data', text: requestText(error, fallback) };
 }
 
+// BL-141:营业状态写后回读。回读值与提交值不一致、或回读不到,都按失败处理(由 _startSave 回滚开关并给重试)。
+function readBackBusinessStatus(expected, success) {
+  app.sendRequest({
+    hideLoading: true, silentError: true, url: '/api/merchant/business-status', method: 'POST',
+    success: function (res) {
+      const data = res && (res.code === '200' || res.code === 200) ? res.data : null;
+      const actual = data ? Number(data.businessStatus) : NaN;
+      if (actual === expected) { success(res); return; }
+      success({ code: 'READBACK', msg: actual === 0 || actual === 1
+        ? '状态未同步：当前仍为' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')) + '，请重试'
+        : '状态未同步，请刷新后核对' });
+    },
+    fail: function () { success({ code: 'READBACK', msg: '状态未同步，请刷新后核对' }); },
+  });
+}
+
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
@@ -103,6 +120,8 @@ Page({
     perkTypes: ['礼品', '优惠券', '折扣'],
     // E4 升级权益(先做能力,收费开关默认关)
     chargeEnabled: false,
+    // BL-108 已生效权益(只读,/api/merchant/subscription);空列表不展示
+    activeSubs: [],
 
     checkoutBusy: false,
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
@@ -476,7 +495,21 @@ Page({
         }
       }
     });
+    this.loadActiveSubs();
 
+  },
+  loadActiveSubs() {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/merchant/subscription', method: 'POST',
+      success(res) {
+        if (!that._destroyed && res && (res.code == '200' || res.code == 200)) {
+          that.setData({ activeSubs: buildActiveSubscriptions(res.data, that.data.tiers) });
+        }
+      },
+      fail() {}
+    });
   },
   _initCommerceWorkflow() {
     if (this._commerceWorkflow) return this._commerceWorkflow;
@@ -754,10 +787,16 @@ Page({
         this.saveBusinessStatus(bs, previous);
       },
       onFailure: () => this.setData({ 'm.businessStatus': previous }),
+      // BL-141:写成功后先读 /api/merchant/business-status,回读值一致才算保存成功(才出回执)。
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/business-status/update', method: 'POST',
-          data: { business_status: bs }, success: success, fail: fail,
+          data: { business_status: bs },
+          success: function (res) {
+            if (!res || !(res.code === '200' || res.code === 200)) { success(res); return; }
+            readBackBusinessStatus(bs, success);
+          },
+          fail: fail,
         });
       },
     });

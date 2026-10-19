@@ -18,7 +18,8 @@ function loadRoamPage(sessions, options) {
   const config = options || {}
   const storage = config.storage || { 'roam_memory_v1:101:sessions': sessions }
   const wxMock = { getStorageSync: key => storage[key] }
-  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101' }
+  // 切到护照 tab 时页面还会读可参与的漫游官方活动(BL-41,失败静默);夹具只记录不回包
+  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101', sendRequest() {} }
   const previous = { Page: global.Page, getApp: global.getApp, getCurrentPages: global.getCurrentPages, wx: global.wx }
   try {
     global.Page = config => { definition = config }

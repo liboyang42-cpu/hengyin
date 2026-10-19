@@ -1,0 +1,14 @@
+page { background: var(--cy-color-bg-page); }
+.ph { min-height: 100vh; color: var(--cy-color-text-primary); }
+.ph__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); }
+.ph-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.ph-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.ph-row__reason { font-size: var(--cy-type-body); }
+.ph-row__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.ph-row__delta { flex: none; font-size: var(--cy-type-card-title); font-weight: 700; }
+.ph-row__delta.is-income { color: var(--cy-color-brand); }
+.ph-row__delta.is-expense { color: var(--cy-color-text-primary); }
+.ph__more { padding: var(--cy-space-4) 0; text-align: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+/* BL-04 月份分组 */
+.ph-group { margin-top: var(--cy-space-4); }
+.ph-group__title { display: block; padding-bottom: var(--cy-space-1); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-secondary); }

@@ -52,6 +52,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/activity/detail/index', 'pages/activity/baoming/baoming', 'pages/activity/list/index',
   'pages/activity/official-detail/index', 'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index',
+  // 2026-10-15 CL4:主办控制台,custom 导航 + cy-nav-bar + cy-page-title 标准二级页
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/myproject/index', 'subpackageA/pages/infomation/infomation',
   'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
@@ -65,6 +67,7 @@ const EXPECTED_NAV_ROUTES = [
   'pages/club/topic-detail/index',
   'pages/club/topic-story/index',
   'pages/club/group-code/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/index/index', 'pages/topic/merchantinfo/merchantinfo',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
@@ -79,6 +82,7 @@ const EXPECTED_NAV_ROUTES = [
   // 标题由 cy-page-title 持有(所以也进 page-title 盘点)。标题仍然只出现一次。
   'pages/merchant/coop-center/index', 'pages/merchant/customer/index', 'pages/merchant/game-node/index',
   'pages/merchant/aftercare/index', 'pages/merchant/aftercare/detail/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/customer/detail/index', 'pages/merchant/reviews/index', 'pages/merchant/team/index',
   'pages/merchant/predict/index',
   'pages/merchant/marketing/ai-insight/index',
@@ -120,6 +124,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageRoam/session/index',
   'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index', 'subpackageA/pages/myproject/index',
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
   'subpackageP3/pages/growthcenter/index/index',
@@ -127,6 +132,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/publish/activity/index',
   'pages/publish/templateadd/templateadd',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/pricing/index',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-08-30 用户裁决：这 5 个任务页使用「返回独立行 + L1 大标题」。
@@ -134,6 +140,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/merchant/citynode/index', 'pages/merchant/aftercare/detail/index', 'pages/merchant/team/index',
   // 2026-09-17 用户裁决:退款售后列表照 Revolut Business 316-318,改为返回 + 左对齐 L1 大标题。
   'pages/merchant/aftercare/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   // 其余商家页继续使用居中 nav 标题，仍只保留在 nav inventory。
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',

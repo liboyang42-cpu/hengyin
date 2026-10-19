@@ -1,0 +1,2 @@
+.srs { padding: 0 var(--cy-page-x) var(--cy-space-4); display: flex; flex-direction: column; gap: var(--cy-space-3); }
+.srs-intro, .srs-loading { display: block; font-size: var(--cy-font-label); line-height: 1.6; color: var(--cy-text-secondary); }

@@ -57,7 +57,7 @@
         </view>
       </view>
       <view class="pd-gallery" wx:if="{{imgArrList.length}}">
-        <view wx:for="{{imgArrList}}" wx:key="*this" class="pd-gitem">
+        <view wx:for="{{imgArrList}}" wx:key="index" class="pd-gitem">
           <image src="{{item}}" mode="aspectFill" class="pd-gimg" />
           <view class="pd-gdel" catchtap="removeImgArr" data-i="{{index}}" aria-role="button" aria-label="删除横版封面 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><view class="pd-gdel__surface"><cy-icon name="close-sm" size="24" /></view></view>
         </view>

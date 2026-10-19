@@ -82,7 +82,7 @@
         <swiper-item wx:if="{{!img.list(info.imgArr).length}}">
           <image lazy-load="true" src="{{info.imgUrl || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
         </swiper-item>
-        <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="*this">
+        <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="index">
           <image lazy-load="true" src="{{item}}" mode="aspectFill" class="bgt" />
         </swiper-item>
       </swiper>
@@ -241,7 +241,7 @@
                  却从来没在详情页露过面的字段。一条都没有整块不出。 -->
             <view class="topic-includes" wx:if="{{info.contentIncludes.length}}">
               <view class="topic-includes__t">活动内容</view>
-              <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="*this">{{item}}</view>
+              <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="index">{{item}}</view>
             </view>
             <!--<view class="cont2 flex-cb" bindtap="goPoint">
               <view class="fl flex-ac">
@@ -585,7 +585,7 @@
           <textarea bindinput="onCommentInput" auto-height placeholder="请输入您的评价内容..." value="{{ plnr }}" />
         </view>
         <view class="vote-pic flex-w">
-          <view class="li" wx:for="{{ uploadImages }}" wx:key="*this">
+          <view class="li" wx:for="{{ uploadImages }}" wx:key="index">
             <view class="item">
               <image lazy-load="true" src="{{ item }}" mode="aspectFill" bindtap="previewImage" aria-role="button" aria-label="查看大图" data-src="{{ item }}"  hover-class="cy-pressed" hover-stay-time="80"/>
               <view class="delete-btn" bindtap="deleteImage" data-index="{{ index }}" aria-role="button" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="cy-pressed" hover-stay-time="80">

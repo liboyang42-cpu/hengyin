@@ -1,6 +1,7 @@
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../utils/modal.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
 const { isPoolList, decoratePool } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
@@ -466,6 +467,7 @@ Page({
     sceneStack: [],
     sceneCurrent: null,
     sceneDirty: false,
+    sceneBackGuardOff: false,
     sceneConfirm: false,
     clubId: null,
     club: null,
@@ -515,6 +517,8 @@ Page({
     postHistoryRows: [],
     openCommentPost: null,
     comments: [],
+    commentsLoaded: false,
+    commentsError: '',
     commentText: '',
     commenting: false,
     leaderboard: [],
@@ -649,6 +653,15 @@ Page({
   cancelSceneDiscard() {
     this.setData({ sceneConfirm: false });
   },
+  // BL-18:同 pages/club/edit —— 确认框开着 ⇒ 继续编辑;有改动 ⇒ 弹放弃确认;仍需守卫则先撤再挂。
+  onSceneNativeBackGuard() {
+    if (this.data.sceneConfirm) this.cancelSceneDiscard();
+    else if (this.data.sceneDirty) this.requestSceneClose();
+    if (this.data.sceneDirty || this.data.sceneConfirm) {
+      this.setData({ sceneBackGuardOff: true });
+      setTimeout(() => { if (!this._sceneGuardDestroyed) this.setData({ sceneBackGuardOff: false }); }, 50);
+    }
+  },
   // 编辑保存成功 ⇒ 重拉俱乐部详情,别让页面停在旧数据上
   onClubEdited() {
     this.setData({ sceneDirty: false, sceneConfirm: false });
@@ -768,6 +781,7 @@ Page({
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
   onUnload() {
+    this._sceneGuardDestroyed = true;
     this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
     this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
@@ -1588,7 +1602,7 @@ Page({
       title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
-        app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); } });
+        app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
       }
     });
   },
@@ -2356,6 +2370,13 @@ Page({
     });
   },
 
+  goClubBadges() {
+    const club = this.data.club;
+    const clubId = positiveId(this.data.clubId);
+    if (!club || !(club.isOwner || club.isJoined) || !clubId) return;
+    wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId });
+  },
+
   goClubRoles() {
     if (!this.data.club || !(this.data.club.isOwner || this.data.canManageRoles)
         || !this.data.clubId) return;
@@ -2534,7 +2555,8 @@ Page({
     const detail = e.detail || {};
     const urls = detail.picList || e.currentTarget.dataset.urls;
     const cur = urls && urls[detail.picIndex || 0];
-    if (urls && urls.length) wx.previewImage({ current: cur, urls: urls });
+    // BL-20:统一走 media-preview(过滤空串、current 不在列表时回落首图)
+    mediaPreview.open(urls, cur);
   },
 
   onPostDetail(e) {
@@ -2593,7 +2615,7 @@ Page({
       title: '举报评论', content: '确认举报?平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
-        app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); } });
+        app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
       }
     });
   },
@@ -2854,33 +2876,60 @@ Page({
   },
 
   // 动态点赞/取消
+  // BL-197:接口是切换式,同一条在返回前的重复点击忽略(否则先赞后取消);失败如实提示,成功只回读不乐观改数
   onLikePost(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
+    if (!id) return;
+    const key = String(id);
+    const liking = this._likingPosts || (this._likingPosts = {});
+    if (liking[key]) return;
+    liking[key] = true;
     const that = this;
     app.sendRequest({
       url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
-      success(res) { if (res.code == '200') that.loadPosts(); },
-      fail() { cyToast('操作失败'); },
+      success(res) {
+        delete liking[key];
+        if (res && res.code == '200') that.loadPosts();
+        else cyToast(bizFailureMessage(res, '点赞没成功'));
+      },
+      fail() { delete liking[key]; cyToast('网络异常，请重试'); },
     });
   },
 
   // 展开/收起评论区
   onToggleComments(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [] }); return; }
-    this.setData({ openCommentPost: id, comments: [], commentText: '' });
+    if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [], commentsLoaded: false, commentsError: '' }); return; }
+    this.setData({ openCommentPost: id, comments: [], commentsLoaded: false, commentsError: '', commentText: '' });
     this.loadComments(id);
   },
 
+  // BL-196:失败不能渲染成「还没有评论」;回包时已切到别的动态就丢弃,免得 A 的评论写到 B 下面
   loadComments(postId) {
     const that = this;
     app.sendRequest({
       hideLoading: true, url: '/api/club/post/comment/list', method: 'POST', data: jsonBody({ postId: postId }), header: jsonHeader(),
       success(res) {
-        const rows = (res.code == '200' && res.data) || [];
-        that.setData({ comments: rows.map(function (c) { return Object.assign(decodeDisplayFields(c, ['content']), { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+        if (that.data.openCommentPost !== postId) return;
+        if (!res || res.code != '200') {
+          that.setData({ comments: [], commentsLoaded: false, commentsError: bizFailureMessage(res, '评论没能加载出来') });
+          return;
+        }
+        const rows = Array.isArray(res.data) ? res.data : [];
+        that.setData({ commentsLoaded: true, commentsError: '', comments: rows.map(function (c) { return Object.assign(decodeDisplayFields(c, ['content']), { timeText: c.createTime ? String(c.createTime).slice(0, 16).replace('T', ' ') : '' }); }) });
+      },
+      fail() {
+        if (that.data.openCommentPost !== postId) return;
+        that.setData({ comments: [], commentsLoaded: false, commentsError: '网络异常，请重试' });
       },
     });
+  },
+
+  retryLoadComments() {
+    const postId = this.data.openCommentPost;
+    if (!postId) return;
+    this.setData({ commentsError: '' });
+    this.loadComments(postId);
   },
 
   onCommentInput(e) { this.setData({ commentText: e.detail.value }); },

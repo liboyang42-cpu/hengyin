@@ -362,9 +362,9 @@ Component({
                 toast((res && res.msg) || '操作失败')
                 return
               }
-              const items = this.data.items.slice()
-              items.splice(index, 1)
-              this.setData({ items, state: items.length ? 'ready' : 'empty' })
+              // BL-190:按 id 移除，请求期间列表重载过也不会删错行
+              const items = this.data.items.filter((row) => !row || row.id !== item.id)
+              if (items.length !== this.data.items.length) this.setData({ items, state: items.length ? 'ready' : 'empty' })
               toast.success('取消点赞成功')
             },
             fail: () => toast('网络错误，请重试'),

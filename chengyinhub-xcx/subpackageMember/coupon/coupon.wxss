@@ -71,3 +71,6 @@ cy-error {
 .coupon-batch-label, .tkbox_stop_hint { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 .coupon-batch-code { color: var(--cy-text-title); font-size: var(--cy-font-subtitle); word-break: break-all; }
 .tkbox_stop_hint { margin-top: var(--cy-space-2); }
+
+/* BL-77 统计卡与券卡同间距 */
+.coupon-summary { display: block; margin-bottom: var(--cy-space-2-5); }

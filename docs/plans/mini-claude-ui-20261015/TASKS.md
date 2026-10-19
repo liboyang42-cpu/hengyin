@@ -1,0 +1,76 @@
+# Claude 任务卡
+
+公共规则（每张卡都适用）：
+- 基于 `claude/mini-ui-features-20261015`（= d551c6b + 本文档）切分支，草稿 PR 合回该分支，**不合 master、不合 Codex 分支**。
+- 不改 Codex 独占文件（PR #16 `tasks.json` 的 `owned_files`）：`pages/play/index.js`、`utils/subscribe.js`、`pages/mylike/mylike.js`、`subpackageMember` 订单/参与详情组件、`ApiTopicController`、`TopicCreateDTO`、积分/券/应付/冲正服务与 mapper、排期与 `ApiClubEventOpsController`、`CommunityPostServiceImpl` 及其 policy/mapper、会话/路线运行时服务、AI 网关、剧情编译与校验。需要碰时停下并在 PR 里写明，由协调者排序。
+- 只用已有组件（`components/cy/*`）与设计 token；新页面四态用 `cy-state-shell` / `cy-inline-error`；错误不得裸文案（U6）；命中区 ≥ 44px；数字后单位要有 `||` 兜底。
+- 不得编造接口字段、状态值或成功态；先读控制器/DTO/Service，字段语义不清时只做只读并在 PR 写清。
+- **协调者统筹文件（CY-COORD-20261015-v1）**：`app.json`、`scripts/uiaudit/action-ledger.json`、`tests/lint/ui-integrity-baseline.js`、`tests/unit/action-ledger.test.js` / `get-auth-matrix-contract.test.js` 的冻结计数、共享 fixture、请求封装、workflow/pom 不归 Claude。卡内可以在自己分支上生成这些文件的变更用于本地验证，但在 PR 正文里必须作为「交协调者整合的最小补丁」单列，不得声称已拥有。
+- 新文件与冲突文件先在 PR #21 的 `CY-HANDOFF: CLAUDE` 记录里申请；每次接 API 或联调前重读控制分支 `docs/plans/mini-codex-cloud-20261015/BACKEND_CHANGES.md`，只按 CONTRACT_FROZEN 及以上状态接线。本批 CL1–CL4 只消费已有接口（NO_API_CHANGE），`POST /api/points/list` 为一次全量（非分页）。
+- 跑：`node --test "tests/unit/**/*.test.js"`、`node tests/lint/ui-integrity.js --warn-as-error`、`node scripts/uiaudit/build-action-ledger.js --check`、`bash scripts/ds-hardcode-gate.sh --ci`（需先 commit）、`node scripts/ui-theme-unit-lint.js --units`、`node scripts/a11y-tap-target-lint.js`、`node scripts/ui-validity-gates.js`。**禁止运行 `ci/xcx-check.sh`**（自证会写夹具并提交）。推送后 `gh workflow run ci.yml --ref <分支>`。
+- PR 描述必须有：改了什么、实际验证了什么（命令+计数+CI run）、**本地验收清单**、未完成项。接口 200 不等于业务验收。
+
+| 卡 | 范围 | 独占文件 | 依赖 | 验收 |
+|---|---|---|---|---|
+| CL1 漫游·跟随官方路线 | G1 + G3 | `pages/roam/**`、`subpackageRoam/**`、`utils/roam-*.js`（不含 Codex 文件）；如需后端仅限漫游新功能专属代码（不加表、不改既有会话运行时服务） | 无 | 从路线详情点「按这条路线开始」进入漫游且地图标出路线站点；不支持时明确降级说明；单测覆盖入参/降级 |
+| CL2 举报透明化 | N1 | 新页面（建议 `subpackageMember/report-*`）+ 现有举报成功后的「查看进度」入口（只在 Claude 可改的页面加） | 无 | 我的举报列表/详情/被举报方视图/申诉四态；状态枚举取自后端 `stage` 真值 |
+| CL3 俱乐部勋章 + 昵称 | N2 + N4 | `pages/club/**`（勋章管理）、资料编辑页（`pages/gerenziliao` 或 `pages/userinfo`） | 无 | 主理人可创建/列表/授予，非主理人不可见；昵称输入有校验与推荐，失败可恢复 |
+| CL4 官方活动主办方 + 数据导出 | N3 + N5 + G4 | `pages/activity/official-*`、`components/cy/npc-chat`（只加导出）、积分规则展示所在的 `subpackageMember/components/cy/profile` 积分区 | 无 | 邀请/转交/排期/暂停/恢复各有二次确认与回读；导出可复制/保存；积分规则从既有接口读取，缺失时诚实空态 |
+| CL5 门店认领证明材料 | G2 | `pages/merchant/components/merchant-claim-sheet`、`utils/merchant-claim.js` | **Codex C00 给出合同后才启动** | 按合同上传对象存储标识；不再提交任意 URL |
+
+## 用户决定（2026-10-15，覆盖上方卡片中与之冲突的描述）
+| 卡 | 决定 |
+|---|---|
+| 全部 | 弹层一律用现有 `cy-sheet`（标题 + 关闭按钮），不自造弹层；商家/浅色页灰底（`--cy-color-bg-page`）、卡片与输入框**无描边**。 |
+| CL1 | 官方路线「按这条路线开始」**暂缓**，撤掉 G1 全部改动，只保留 G3（入口文案「官方路线」+ 拆分一行两语句）。漫游=自由探索不限顺序；城市定向（`pages/play` mode=1）本来就按顺序，不另做。 |
+| CL2 | 阶段名确认：已提交/已受理/调查中/已处理/已关闭/申诉中。申诉**只支持文字**（后端 `normalizeEvidence` 本批也拒绝附件）。**不做被举报方入口与视图。** 「我的举报」**不单独放入口**，从系统消息进入：后端举报进度通知 `notificationType=SYSTEM_GOVERNANCE`、payload 含 `reportId`/`publicStage`（`CommunityTrustServiceImpl.enqueueReportProgress`），在现有系统消息/通知渲染处让这类消息可点进举报详情（含申诉）。如需改 Codex 或协调者文件，只交补丁。 |
+| CL3 | 勋章图标**不改**，沿用现有勋章图标/样式渲染；昵称被占用时列出推荐供点选，不自动填。 |
+| CL4 | 对话导出 = 复制文本。暂停表单用「预设选项 + 补充文字」（四项后端字段仍为文本）。「提交排期」改用户能懂的名称：后端语义是草稿通过发布检查后进入 SCHEDULED（`OfficialEventV2ServiceImpl.schedule`），建议文案「发布活动」+ 副文案「通过发布检查后对报名可见」。**邀请候任主办/转交暂不做。** 重点改为**联合主办**：后端 `official_event_party.role` 已有 `CO_ORGANIZER`（另有 ORGANIZER/FULFILLMENT_*/SPONSOR/PROMOTION_PARTNER），协办方在 `official-inbox` 接受；本卡先在活动详情展示主办方+全部协办方（读接口已有字段才展示，不编造）。**新增协办方**目前只能经草稿 `/v2/drafts` 的 parties 全量覆盖，已排期活动无接口——若要在小程序里加协办方，需要 Claude 专属新接口，先在 PR #21 以 `CY-HANDOFF: CLAUDE` 提合同申请，获批前不写后端。 |
+
+## 用户决定（2026-10-15 晚，最高优先级）
+- **不改现有主标题与现有 UI。** 现有界面就是基准：不得把现有页面改成别的标题样式（保留 `cy-page-title` 大标题等现状）、不得替换现有弹层/描边/四态/token 的既有视觉。已关闭 BL-08/09/10/11/13/14/15/24/29 等改样式 PR。
+- **新功能、新页面按现有 UI 做**：照搬同类现有页面的结构、组件和样式（例如二级页沿用现有 `cy-nav-bar` + `cy-page-title` 的做法），不自创样式。
+- 先前「弹层带关闭、灰底无描边」是说现有 UI 本来就是这样，不是要改现有页面。
+## 监督规则修正（2026-10-16，覆盖以上与监督/开发线提示中的冲突内容）
+清单已出现空转（文档汇总、拆分单测、PR 修 PR 的依赖链），一律停止：
+1. **不再新增**纯文档 / 汇总 / 清单 / 复扫类任务（ACCEPTANCE*、ZERO-CALL*、MERGE-ORDER、REVIEW-OPEN、COORDINATOR-PATCHES* 等），也不再新增只含单测的任务。单测随功能 PR 一起写。
+2. 对未合并 PR 的修正**直接提交到原 PR 分支**（20 分钟规则不变），不得另开「依赖 #NN」的新 PR。
+3. 监督补充任务只允许：用户可见的新功能或真实缺陷修复，且有现成后端接口、不改现有 UI。找不到就不补，开发线转去处理 CHANGES NEEDED。
+4. 已有的上述空转 PR 不要再追加提交，等待用户决定是否关闭。
+
+## 集成说明（2026-10-16）
+- 85 个监督通过的 PR 已合并进本分支；新任务一律从本分支最新提交切出。
+- 本分支上已知的冻结计数 / U5 白名单 / ui-integrity 行号基线失败属协调者统筹文件，已在 #21 交接，开发线不要追改；只保证自己改动相关的测试通过。
+
+## 补卡前置检查（2026-10-17，主监督）
+BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在领取后才发现做不了，各开了一个空 PR。以后补卡前必须先完成下面三步：
+1. **文件归属**：确认要改的文件不在 Codex `tasks.json` 的 `files`/`owned_files` 里，也不在本文件公共规则列出的 Codex 独占文件里（如 `pages/play/index.js`、`pages/publish/fabu/index.js`）。只能改 Codex 文件的需求，写进 BACKLOG 末尾的「交 Codex」清单，不要建卡。
+2. **既有决定**：`git grep` 一下 `tests/unit` 里有没有断言把这个功能列为退役或禁止（如 D-001/RUN-001 已退役客户页广播）。有就不建卡。
+3. **接口真值**：用 `git grep` 确认小程序里没有调用，并读后端 Controller，确认参数和归属校验。
+开发线如果遇到阻塞：只在 BACKLOG 对应条目后面加一行说明，直接推到集成分支（docs-only，不开 PR），然后继续下一张卡。
+
+## 用户决定（2026-10-17）
+- 云端线精简为 L1 开发线 + 监督A。L2、L3、CLF 修复线、监督B 已停用。
+- 私信「更多」里原来的「举报」改为「举报这条消息」，与「举报对方」区分（已在 290bc44e 落地）。
+- 群投票、漫游约伴、剧透偏好、通用草稿、俱乐部群聊入口、客户页广播：暂不做。
+
+## 集成说明（2026-10-18，协调者）
+- #243–#256（BL-188–201）已合入（`cba50ab8`）。按钮台账按合并后实测重建为 4658 控件；单测 8711 通过，失败仍是原有的 8 条冻结计数，ui-integrity / a11y / validity 输出与合并前逐条一致。
+- **行号锚点规则（开发线必读）**：`tests/lint/ui-integrity-baseline.js` 的豁免项按「文件:行号」登记，key 集合有冻结 digest，协调者也不改。改动 `scene-route-content`、`cy/profile`、`square/*`、`merchantinfo`、`topic/index` 等已有豁免锚点的文件时，锚点**上方**的净增减行数必须为 0（可把多行写法收成同行数，或加一行注释抵消）。提交前在本地跑 `node tests/lint/ui-integrity.js`，与集成分支的输出逐条对比（去掉行号后 diff），多出 `[BASELINE] … 基线已未命中` 就是锚点漂移了，必须修好再开 PR。#245 曾因上方 +1 行导致锚点漂移，合并时已收成原来的 3 行。
+- 第二十七批 BL-202–205 是对本线新建 9 个页面逐页复查后的优化卡，见 BACKLOG 末尾。
+- **主包体积（2026-10-18 实测，同 `scripts/preflight-release.js` 4.5 口径）**：本分支主包未压缩 3,195,196 B，已超 3 MiB 棘轮 49,468 B（BL-208 合入后 3,183,633 B，仍超 37,905 B）。Codex PR #259（`codex/prelaunch-pack-budget-230` → master，精确排除 56 个未引用文件）套到本分支后为 3,046,543 B，余 99 KB；本线合入 master 以 #259 为前提（已在 #259 留复核意见）。**#259 已于 2026-10-18 03:13 UTC 合入 master（883064e3）**；本分支（848e6b0c）按 master 的 `project.config.json` 实测主包 3,034,980 B，余 110,748 B，体积门已过。剩余阻塞：master 与本分支分叉较大（合并基点之后 master 改了约 1,000 个后端文件），试合并在 `ci/test_funds_it_gate.py`、`ApiRoamController.java`、`ApiTopicController.java` 及多个资金/核销相关测试上冲突，属后端/资金范围，协调者不自行解冲突，待 Codex 或用户安排先把 master 同步进本分支（或由 Codex 出同步 PR）后再开合 master 的 PR。开发线新增的组件/图片一律放进使用它的分包（如 `subpackageMember/components/`），不要再放根目录 `components/` 或 `images/`；监督审查时把「新文件进了主包」判 CHANGES NEEDED。
+- BL-202（#257）、BL-203（#258）已合入。
+- BL-204（#260）、BL-205（#261）已合入。BL-203 合入后全量单测多出一条 `all-page-back-stack-contract`「可见返回入口均经过根栈安全审计」失败：`goMine` 有 `wx.navigateBack` 却没有根栈兜底。已在集成分支补 `navigateBack({ fail: () => wx.redirectTo(列表) })`。**开发线与监督：只要改动里出现 `wx.navigateBack`，提交前必须跑全量 `node --test "tests/unit/**/*.test.js"`，与集成分支对比失败名单，不能只跑相关测试**（协调者合并 #258 时也只跑了相关测试，所以漏了）。
+- BL-207（#263）、BL-208（#264）已合入。
+- BL-209（#265，勋章/官方主办页缺参下拉转圈不收）、BL-210（#266，收藏据点静默回读失败不再把空态换成错误页）已合入；全量单测 8744 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-211（#267，我的举报/我的纠错/收藏据点连点只开一层详情）、BL-212（#268，系统消息举报进度连点只开一层）已合入；全量单测 8757 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-213（#269，纠错成功态「查看我的纠错」连点只开一层列表）已合入；全量单测 8760 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-214（#270，纠错/举报进度「查看我的全部」连点不再连退两页或叠两层列表）已合入；已核对两页原先无 `onShow`，新加的不会覆盖既有生命周期；全量单测 8774 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-215（#271，申诉已受理但回读失败时收起「提交申诉」，关闭回执后回读）、BL-216（#272，补证成功后回读失败不再显示「补充说明」）、BL-217（#273，主办控制台状态两路断网不再当成已读到，有快照保留并轻提示、无快照进网络错误态）已合入；台账因 #273 行号变化重建；全量单测 8782 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-218（#274，举报半屏关掉重开后旧原因回包不再冲掉正在填的表单）已合入；台账因行号变化重建；全量单测 8787 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-219（#275，纠错半屏同一缺陷）已合入；台账重建；全量单测 8792 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-220（#276，安全感受评价提交中不能关闭半屏）已合入；已核对 `submitting` 在成功/业务失败/网络失败/异常状态码各路径都会清掉，不会锁死关闭；全量单测 8794 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-221（#277，昵称推荐旧一轮作废时不再清掉新一轮的「推荐中」）已合入；`pages/gerenziliao/gerenziliao.js` 归 Claude CL3，但 Codex #69 也改此文件，同步 master 时一并解冲突；全量单测 8796 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-222（#278，申诉提交时作废在途刷新，旧回包不再把「提交申诉」放出来）已合入；已核对 `_settle` 在比对序号前先收下拉转圈、申诉只能在 ready 态发起，作废刷新不会留下转圈或 loading；台账重建；全量单测 8798 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- BL-223（#279，纠错进度同一缺陷：补证提交时作废在途刷新）已合入；同样核对过 `_settle` 先收转圈、补证只能在 ready 态发起；台账重建；全量单测 8800 过 / 8 失败（与基线同名），ui-integrity 与合入前一致。
+- 合 master 前注意：Codex #69（`feature/prelaunch-code-tail-20261015` → master，209 个文件，2026-10-18 仍在更新）也改小程序 `app.json`、`pages/index`、`pages/member/index`、`pages/activity/list`、若干 `components/cy/scene-*`；它若先进 master，同步 master 进本分支时这些文件要一并解冲突，并按 4.5 口径重测主包体积。

@@ -36,7 +36,7 @@
               <view class="topic-result-card__title">{{item.title}}</view>
               <view class="topic-result-card__detail ep1">{{item.detail}}</view>
               <view class="result-card__tags" wx:if="{{item.tags.length}}">
-                <text wx:for="{{item.tags}}" wx:key="*this" class="result-card__tag">{{item}}</text>
+                <text wx:for="{{item.tags}}" wx:key="index" class="result-card__tag">{{item}}</text>
               </view>
             </view>
           </view>
@@ -57,7 +57,7 @@
               <view class="result-card__title ep1">{{item.title}}</view>
               <view class="result-card__detail ep1">{{item.detail}}</view>
               <view class="result-card__tags" wx:if="{{item.tags.length}}">
-                <text wx:for="{{item.tags}}" wx:key="*this" class="result-card__tag">{{item}}</text>
+                <text wx:for="{{item.tags}}" wx:key="index" class="result-card__tag">{{item}}</text>
               </view>
             </view>
             <cy-icon class="result-card__arrow" name="arrow-right" size="24" />
