@@ -11,7 +11,8 @@
     "test:unit": "node --test \"tests/unit/**/*.test.js\"",
     "test:e2e:contract": "node --test \"tests/e2e/contracts/*.test.js\"",
     "test:e2e": "npx playwright test --config=./tests/e2e/playwright.config.js",
-    "preview": "node build/index.js --preview"
+    "preview": "node build/index.js --preview",
+    "test:e2e:audit": "node tests/e2e/run-audit-browser.js"
   },
   "keywords": [
     "vue",

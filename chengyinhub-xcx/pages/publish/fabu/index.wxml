@@ -1136,6 +1136,7 @@
           </scroll-view>
         </view>
 
+<<<<<<< public
         <view class="node-card" wx:if="{{popChapterAction == 1 && chapterNumbers[popChapterIndex] == 1}}" bindtap="openInitialState" aria-role="button" aria-label="配置第一章初始状态" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__main"><text class="node-card__title">初始状态</text><text class="node-card__value">第一章开局数值</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
         <view class="node-card"><view class="node-card__row" bindtap="openChapterBackpack" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><view class="rt-bag-glyph"></view></view><view class="node-card__main"><text class="node-card__title">背包</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view><view class="node-card__hr"></view><view class="node-card__row" bindtap="openChapterEggs" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">途中彩蛋</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
         <!-- 由工作人员开幕：行内开关（协调者设计），不再另开弹层 -->
@@ -1193,6 +1194,28 @@
         </view>
         <!-- 结局章(2026-09-24 用户:「结局应该是添加章节,可以设定这个章节为结局,打开开关」)。
              R4 恢复：c092d03235 误删此入口后，R3 又撤掉主题级运行结局，导致无处写结局；按 R02「结局归最终章」原样接回。
+=======
+        <block wx:if="{{runtimeEnabled && editScope !== 'WHITELIST'}}">
+          <view class="node-card">
+            <view class="node-card__row" bindtap="openChapterBackpack" aria-role="button" aria-label="配置章节背包" hover-class="cy-pressed" hover-stay-time="80"><text class="node-card__title">背包与章节发放</text><cy-icon name="chevron-right" size="24" /></view>
+            <view class="node-card__hr"></view>
+            <view class="node-card__row" bindtap="openChapterEggs" aria-role="button" aria-label="配置章节彩蛋" hover-class="cy-pressed" hover-stay-time="80"><text class="node-card__title">途中彩蛋</text><cy-icon name="chevron-right" size="24" /></view>
+          </view>
+          <view class="node-card rt-two" wx:if="{{runtimeHpEnabled || runtimeLuckEnabled}}"><view class="rt-field" wx:if="{{runtimeHpEnabled}}"><text>生命值消耗</text><input type="number" value="{{runtimeChapterCosts.hpCost}}" data-field="hpCost" bindinput="onRuntimeChapterCost" /></view><view class="rt-field" wx:if="{{runtimeLuckEnabled}}"><text>幸运值消耗</text><input type="number" value="{{runtimeChapterCosts.luckCost}}" data-field="luckCost" bindinput="onRuntimeChapterCost" /></view></view>
+        </block>
+        <!-- 初始状态(2026-09-24 用户裁决:「第一个章节的独有的主题设定」)—— 只在编辑第一章时出现 -->
+        <view class="node-card chapter-setting-row" wx:if="{{formData.productType === 1 && popChapterAction == 1 && popChapterIndex == 0}}"
+              bindtap="openInitialState" aria-role="button" aria-label="配置主题初始状态" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="node-card__row">
+            <view class="node-card__main">
+              <text class="node-card__title">初始状态</text>
+            </view>
+            <cy-icon name="chevron-right" size="32" />
+          </view>
+        </view>
+
+        <!-- 结局章(2026-09-24 用户:「结局应该是添加章节,可以设定这个章节为结局,打开开关」)。
+>>>>>>> private-github/featu
              打开后这一章不在路线里:玩家通关时按条件挑一章播,都不中走兜底那章。 -->
         <view class="node-card chapter-setting-row" wx:if="{{formData.productType === 1 && !chapterForm.opening}}">
           <view class="node-card__row">
@@ -1241,6 +1264,10 @@
             </cy-dropdown>
           </block>
         </view>
+<<<<<<< public
+=======
+
+>>>>>>> private-github/featu
         <!-- 商家承接段(稿 P6/C6/M6 都画了,三身份一致)。
              ⚠️ 2026-08-10 曾把这块整块移出章节弹窗,理由是「招商要等商家看到主题才会来报名,
              发布前填不准、发布后 WHITELIST 又改不了」。**2026-09-05 用户裁决推翻那条:
@@ -1737,6 +1764,25 @@
         </view>
       </view>
     </view>
+    <view class="node-card">
+      <view class="story-initial__row"><text class="node-card__title">自定义初始属性</text><cy-switch checked="{{initialStateEditor.rules.stateEnabled}}" disabled="{{editScope === 'WHITELIST'}}" bind:change="onInitialAttributesEnabled" accessibility-label="启用初始状态总开关" /></view>
+      <text class="story-initial__example">总开关控制本主题初始状态。添加属性不会自动启用。完成只暂存到编辑器，仍须通过原保存入口保存；新局使用保存后的配置，已有局保留快照。</text>
+      <text class="story-initial__example">标识使用 counter. 或 relation. 加小写字母开头的字母、数字、下划线（后缀最多 48 位）；clue. 和 tag. 为 0/1 开关。已保存声明的标识不可改名。</text>
+      <cy-inline-error wx:if="{{initialStateEditor.attributeError}}" title="{{initialStateEditor.attributeError}}" />
+    </view>
+    <view class="node-card" wx:for="{{initialStateEditor.attributes}}" wx:key="id">
+      <cy-field label="状态标识" value="{{item.key}}" data-id="{{item.id}}" data-field="key" bind:input="onInitialAttributeField" readonly="{{editScope === 'WHITELIST' || item.existing}}" />
+      <cy-field label="属性名称（最多 24 个 UTF-16 字符）" value="{{item.label}}" data-id="{{item.id}}" data-field="label" bind:input="onInitialAttributeField" readonly="{{editScope === 'WHITELIST'}}" />
+      <view class="story-initial__numbers">
+        <cy-field label="初始值" value="{{item.initial}}" data-id="{{item.id}}" data-field="initial" bind:input="onInitialAttributeField" readonly="{{editScope === 'WHITELIST'}}" />
+        <cy-field label="下限" value="{{item.min}}" data-id="{{item.id}}" data-field="min" bind:input="onInitialAttributeField" readonly="{{editScope === 'WHITELIST' || item.flag}}" />
+        <cy-field label="上限" value="{{item.max}}" data-id="{{item.id}}" data-field="max" bind:input="onInitialAttributeField" readonly="{{editScope === 'WHITELIST' || item.flag}}" />
+      </view>
+      <text class="story-initial__example">{{item.flag ? '开关属性：初始值只能为 0 或 1' : '整数范围 −10000 至 10000，初始值须在上下限之间'}}</text>
+      <view class="story-initial__row"><text>向玩家展示此属性</text><cy-switch checked="{{item.visible}}" data-id="{{item.id}}" data-field="visible" bind:change="onInitialAttributeField" disabled="{{editScope === 'WHITELIST'}}" accessibility-label="向玩家展示属性" /></view>
+      <view class="story-thought__add" wx:if="{{editScope !== 'WHITELIST'}}" data-id="{{item.id}}" bindtap="removeInitialAttribute" aria-role="button" aria-label="移除初始属性声明" hover-class="cy-pressed"><cy-icon name="trash-2" size="28" /><text>移除初始属性声明</text></view>
+    </view>
+    <view class="story-thought__add" wx:if="{{editScope !== 'WHITELIST' && !initialStateEditor.attributeError && initialStateEditor.attributes.length < 32}}" bindtap="addInitialAttribute" aria-role="button" aria-label="添加自定义初始属性" hover-class="cy-pressed"><cy-icon name="plus" size="28" /><text>添加自定义初始属性</text></view>
     <cy-inline-error wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
   </view>
 </cy-sheet>
@@ -1746,7 +1792,11 @@
        浮层间切换时它保持为真,不会产生「误触发 afterleave 把底层关掉」的竞态;
        backGuardOff 用于容器被返回键消费后翻转重挂(page-container 每页只能有一个)。 -->
   <page-container
+<<<<<<< public
     show="{{!backGuardOff && (structureEditor.show || survivalEditor.show || runtimeZeroEditor.show || chapterPreview.show || initialStateEditor.show || valueEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}"
+=======
+    show="{{!backGuardOff && (runtimeEditor.show || chapterPreview.show || initialStateEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}"
+>>>>>>> private-github/featu
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

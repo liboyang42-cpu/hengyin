@@ -63,6 +63,7 @@ MYBATIS_ITS=(
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
   AdvancedGameRuntimeMySqlIT
+  NativeAppAttestMySqlIT
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT
   GameSessionIndependentRevisionMySqlIT

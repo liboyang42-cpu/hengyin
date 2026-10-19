@@ -1,0 +1,121 @@
+const { test, expect, buttonByText, openCenter, openEditor, editor, input, settle, ORIGIN, CENTER, AWAY } = require('./fixture')
+const titles = require('./manifest')
+
+test(titles[0], async ({ page, market }, testInfo) => {
+  await openCenter(page)
+  const dialog = await openEditor(page)
+  await expect(input(page, dialog, '选项 B')).toHaveValue('码头')
+  await input(page, dialog, '选项 B').fill('合成书店')
+  await testInfo.attach('compiled-choice-editor', { body: await page.screenshot({ fullPage: true, animations: 'disabled' }), contentType: 'image/png' })
+  const pending = market.holdNext('save')
+  await buttonByText(dialog, '保存并查看审核').click()
+  const call = await pending.seen
+  expect(call.method).toBe('PUT')
+  expect(call.endpoint).toBe('/business/membertemplate')
+  expect(call.body).toMatchObject({ id: 1801, questionB: '合成书店', correctAnswer: 'B', activityCategoryids: '8',
+    merchantGuide: 'SYNTHETIC_PRIVATE_GUIDE', questionOptionMediaJson: '{"B":{"img":"synthetic-media-reference"}}' })
+  pending.release({ json: { code: 200 } })
+  await expect(page).toHaveURL(/\/audit-center\/audit\?bizType=TEMPLATE&bizId=1801$/)
+  await expect(page.getByRole('heading', { name: '统一审核台', exact: true })).toBeVisible()
+  await expect.poll(() => market.callsOf('audit-list').length).toBe(1)
+  const query = new URLSearchParams(market.callsOf('audit-list')[0].query)
+  expect(query.get('bizType')).toBe('TEMPLATE'); expect(query.get('bizId')).toBe('1801')
+  expect(market.callsOf('save')).toHaveLength(1)
+  await testInfo.attach('compiled-unified-review-handoff', { body: await page.screenshot({ fullPage: true, animations: 'disabled' }), contentType: 'image/png' })
+})
+
+test(titles[1], async ({ page, market }) => {
+  await openCenter(page)
+  const dialog = await openEditor(page)
+  await input(page, dialog, '选项 B').fill('')
+  await buttonByText(dialog, '保 存').click()
+  await expect(page.getByText('选项验证至少需要填写两个选项。', { exact: true })).toBeVisible()
+  expect(market.callsOf('save')).toHaveLength(0)
+  await input(page, dialog, '选项 C').fill('合成广场')
+  await buttonByText(dialog, '保 存').click()
+  await expect(page.getByText('请选择一个已填写的正确选项。', { exact: true })).toBeVisible()
+  expect(market.callsOf('save')).toHaveLength(0)
+  await expect(dialog).toBeVisible()
+})
+
+test(titles[2], async ({ page, market }) => {
+  await openCenter(page)
+  const dialog = await openEditor(page), pending = market.holdNext('save')
+  await buttonByText(dialog, '保 存').click({ clickCount: 2 })
+  await pending.seen
+  await expect(input(page, dialog, '选项 B')).toBeDisabled()
+  await expect(buttonByText(dialog, '取 消')).toBeDisabled()
+  await expect(buttonByText(dialog, '保存并查看审核')).toBeDisabled()
+  await expect(dialog.locator('.el-dialog__headerbtn')).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeVisible()
+  expect(market.callsOf('save')).toHaveLength(1)
+  pending.release({ json: { code: 200 } })
+  await expect(dialog).toBeHidden()
+  await expect.poll(() => market.callsOf('list').length).toBe(2)
+  expect(market.callsOf('save')).toHaveLength(1)
+})
+
+async function expectCachedReturn(page, market, listCount) {
+  await page.goForward()
+  await expect(page).toHaveURL(`${ORIGIN}${CENTER}`)
+  await expect(page.getByPlaceholder('按标题检索', { exact: true })).toHaveValue('保留的筛选文本')
+  await expect(editor(page)).toBeHidden()
+  expect(market.callsOf('list')).toHaveLength(listCount)
+}
+
+test(titles[3], async ({ page, market }) => {
+  await openCenter(page)
+  await page.getByPlaceholder('按标题检索', { exact: true }).fill('保留的筛选文本')
+  const listCount = market.callsOf('list').length, pending = market.holdNext('detail')
+  await buttonByText(page.locator('.el-table__fixed-right'), '编辑').click()
+  await pending.seen
+  await page.goBack(); await expect(page).toHaveURL(`${ORIGIN}${AWAY}`)
+  await settle(page, pending, { code: 200, data: market.template })
+  await expect(editor(page)).toBeHidden()
+  await expectCachedReturn(page, market, listCount)
+  expect(market.callsOf('save')).toHaveLength(0)
+})
+
+test(titles[4], async ({ page, market }) => {
+  await openCenter(page)
+  await page.getByPlaceholder('按标题检索', { exact: true }).fill('保留的筛选文本')
+  const listCount = market.callsOf('list').length, dialog = await openEditor(page), pending = market.holdNext('save')
+  await buttonByText(dialog, '保存并查看审核').click(); await pending.seen
+  await page.goBack(); await expect(page).toHaveURL(`${ORIGIN}${AWAY}`)
+  await expect(dialog).toBeHidden()
+  await settle(page, pending)
+  await expect(page).toHaveURL(`${ORIGIN}${AWAY}`)
+  await expect(page.getByText('模板已更新并重新进入审核', { exact: true })).toHaveCount(0)
+  expect(market.callsOf('audit-list')).toHaveLength(0)
+  await expectCachedReturn(page, market, listCount)
+  expect(market.callsOf('save')).toHaveLength(1)
+})
+
+test(titles[5], async ({ page, market }) => {
+  await openCenter(page)
+  const dialog = await openEditor(page)
+  await input(page, dialog, '选项 B').fill('保留的未确认编辑')
+  const pending = market.holdNext('save')
+  await buttonByText(dialog, '保存并查看审核').click(); await pending.seen
+  pending.release({ status: 500, json: { code: 500, msg: 'Synthetic unknown write result' } })
+  await expect(page.getByText('保存未确认，请保留当前编辑，核对模板状态后再试。', { exact: true })).toBeVisible()
+  await expect(dialog).toBeVisible()
+  await expect(input(page, dialog, '选项 B')).toHaveValue('保留的未确认编辑')
+  await expect(input(page, dialog, '选项 B')).toBeEnabled()
+  await expect(page).toHaveURL(`${ORIGIN}${CENTER}`)
+  expect(market.callsOf('save')).toHaveLength(1)
+  expect(market.callsOf('audit-list')).toHaveLength(0)
+})
+
+test(titles[6], async ({ page, market }) => {
+  await openCenter(page)
+  const dialog = await openEditor(page)
+  await input(page, dialog, '选项 B').fill('应被取消的编辑')
+  await buttonByText(dialog, '取 消').click()
+  await expect(dialog).toBeHidden()
+  const reopened = await openEditor(page)
+  await expect(input(page, reopened, '选项 B')).toHaveValue('码头')
+  expect(market.callsOf('detail')).toHaveLength(2)
+  expect(market.callsOf('save')).toHaveLength(0)
+})

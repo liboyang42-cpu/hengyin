@@ -5,7 +5,11 @@
      .node-card / .node-pill,不再造第二套。
      ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
      不传 title 时那段整段不渲染,头完全在这里画。 -->
+<<<<<<< public
 <cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail">
+=======
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || savedTopicCheck.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail">
+>>>>>>> private-github/featu
   <view class="pd-topic-detail node-sheet">
     <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
          原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。
@@ -86,6 +90,7 @@
       </view>
     </view>
 
+<<<<<<< public
     <view id="fieldRuntimeState" class="node-card">
       <cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">值域</text><text class="node-card__value">开局值在第一章「初始状态」配置</text></view></view>
@@ -166,6 +171,77 @@
       </block>
     </view>
     <view class="node-card" id="fieldCompleteReward" bindtap="openThemeRewards" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题通关奖励</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+=======
+    <view class="node-card" bindtap="openSavedTopicCheck" aria-role="button" aria-label="检查线上已保存内容" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">检查线上已保存内容</text><cy-icon name="chevron-right" size="24" /></view><text class="rt-card-note">只读配置试检查；不包含本地未保存修改</text></view>
+    <block wx:if="{{runtimeEnabled && editScope !== 'WHITELIST'}}">
+      <view class="node-card"><view class="node-card__row"><text class="node-card__title">主题生命值</text><cy-switch checked="{{runtimeHpEnabled}}" data-stat="hp" bindchange="onRuntimeStatToggle" /></view><view class="node-card__row"><text class="node-card__title">主题幸运值</text><cy-switch checked="{{runtimeLuckEnabled}}" data-stat="luck" bindchange="onRuntimeStatToggle" /></view></view>
+      <view class="node-card" bindtap="openThemeRewards" aria-role="button" aria-label="配置主题收藏奖励" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">主题收藏与奖励</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeResultCard" aria-role="button" aria-label="配置玩家公开结果内容" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">公开结果设置</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeScenes" aria-role="button" aria-label="配置主题重玩与场景轮换" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">重玩与场景</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openJourneyCheckSettings" aria-role="button" aria-label="配置既有检定难度、扣血与恢复规则" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">检定难度与恢复</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeChoiceGrants" aria-role="button" aria-label="配置已保存分支选项对应的物资关联" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">分支选项物资</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeNodeGrants" aria-role="button" aria-label="配置已保存站点完成后的物资关联" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">站点完成物资</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeBroadcasts" aria-role="button" aria-label="配置主题事件广播的内容与条件" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">主题事件广播</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" bindtap="openThemeRuntimeRules" aria-role="button" aria-label="配置主题数值名称、行动计数与救援上限" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><text class="node-card__title">主题运行规则</text><cy-icon name="chevron-right" size="24" /></view></view>
+      <view class="node-card" wx:if="{{formData.themeRuntimeConfig}}" bindtap="clearThemeRuntime" aria-role="button" aria-label="清空主题运行时草稿" hover-class="cy-pressed" hover-stay-time="80"><text>清空主题运行时配置</text></view>
+    </block>
+    <!-- 通关勋章:图 + 名。图这条链路后端与玩家端本来就通,只是一直没有创作端入口。 -->
+    <view class="node-card">
+      <block wx:if="{{medalEditable}}">
+      <view class="node-card__row">
+        <view class="node-card__ico node-card__ico--media" bindtap="uploadFinishMedal" aria-role="button" aria-label="上传完成勋章图" hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{formData.finishMedalImg}}" class="pd-medal-img" src="{{formData.finishMedalImg}}" mode="aspectFill" />
+          <cy-icon wx:else name="star" size="32" />
+        </view>
+        <view class="node-card__main">
+          <text class="node-card__title">通关勋章</text>
+          <input class="pd-card-input" placeholder="默认：主题名 · 通关" placeholder-class="slopes-story-placeholder" value="{{formData.finishMedalName}}" bindinput="onFinishMedalNameInput" />
+        </view>
+        <view class="node-pill" wx:if="{{formData.finishMedalImg}}" catchtap="clearFinishMedal" hover-class="cy-pressed" hover-stay-time="80">清除</view>
+      </view>
+    </block>
+      <!-- 稿 E2:无资格时**只读不清空** —— 存量勋章可能是有资格时设的,清掉等于替用户删图 -->
+      <block wx:else>
+        <view class="node-card__row">
+          <view class="node-card__ico node-card__ico--media">
+            <image wx:if="{{formData.finishMedalImg}}" class="pd-medal-img" src="{{formData.finishMedalImg}}" mode="aspectFill" />
+            <cy-icon wx:else name="star" size="32" />
+          </view>
+          <view class="node-card__main">
+            <text class="node-card__title">通关勋章</text>
+            <text class="node-card__value">{{formData.finishMedalName || '默认：主题名 · 通关'}}（只读）</text>
+          </view>
+          <view class="node-pill node-pill--locked" aria-label="勋章设计是俱乐部主理人的权益，当前身份暂未解锁">未解锁</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 完成奖励(2026-09-08 用户裁决:改成开关,打开才选)。关着 = 只发通关勋章。
+         ⚠️ 开关不落库、也不是新字段:它就是「有没有选券」本身 —— 关掉即把 couponId 清 0。
+         多存一个 rewardOn 会立刻产生「开着但没选」这种存不住也说不清的中间态。 -->
+    <view class="node-card" id="fieldCompleteReward">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="gift" size="32" /></view>
+        <view class="node-card__main">
+          <text class="node-card__title">完成奖励</text>
+          <text class="node-card__value" wx:if="{{formData.completeRewardCouponId}}">{{completionRewardCouponName}}</text>
+        </view>
+        <cy-switch checked="{{!!formData.completeRewardCouponId}}" bindchange="onCompleteRewardToggle" />
+      </view>
+      <block wx:if="{{completeRewardOn}}">
+        <view class="node-card__hr"></view>
+        <cy-reward-selector
+          value="{{formData.completeRewardCouponId}}"
+          selected-name="{{completionRewardCouponName}}"
+          occasion="topic"
+          label="选择奖励"
+          placeholder="选一张优惠券或体验卡"
+          scope="{{operationScope}}"
+          bind:change="onCompletionRewardChange" />
+      </block>
+    </view>
+
+>>>>>>> private-github/featu
     <!-- 主题级 N/M：自由探索继续认商家权益核销，不能被节点数量覆盖。 -->
     <view class="node-card" id="fieldCompletionRule">
       <view class="node-card__row">
@@ -186,6 +262,7 @@
       </block>
     </view>
 
+    <view class="node-card"><view class="node-card__row"><text class="node-card__title">启用宾果九宫格</text><cy-switch checked="{{bingoEnabled}}" bindchange="onBingoToggle" /></view></view>
     <view class="node-card" id="fieldBingo" bindtap="openThemeBingo" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><view class="rt-grid-glyph"><view wx:for="{{[1,2,3,4,5,6,7,8,9]}}" wx:key="*this"></view></view></view><view class="node-card__main"><text class="node-card__title">宾果九宫格</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
     <!-- 举办方式。设计源码里这张卡是「需要商家参与 / 发布到创意广场」两个开关,
          但商家承接在本仓是【章节级】字段、且发布后才配得准(招商要等商家看得到主题),
@@ -224,4 +301,20 @@
          首屏第一眼的位置。 -->
     <view class="node-card node-card--danger" bindtap="clearLocalDraft" aria-role="button" aria-label="清空本地草稿" hover-class="cy-pressed" hover-stay-time="80">清空本地草稿</view>
   </view>
+</cy-sheet>
+
+<cy-sheet show="{{savedTopicCheck.show}}" bind:close="closeSavedTopicCheck" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px)">
+ <view class="rt-editor">
+  <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeSavedTopicCheck" aria-role="button" aria-label="关闭已保存内容检查" hover-class="cy-pressed" hover-stay-time="80"><view class="node-sheet__close-circle"><cy-icon name="close-sm" size="44" /></view></view></view>
+  <view class="rt-title"><text>线上已保存内容检查</text></view>
+  <view class="node-card"><text class="rt-card-note">仅查看线上已保存配置的试检查结果。不包含本地未保存修改，不是 AI 安全检查、开局预演或发布批准。正式发布仍会再次校验。</text></view>
+  <view class="node-card" wx:if="{{savedTopicCheck.busy}}"><text class="rt-card-note">正在检查线上已保存内容…</text></view>
+  <view class="node-card" wx:if="{{savedTopicCheck.error}}"><text class="rt-card-note">{{savedTopicCheck.error}}</text><view class="node-pill" bindtap="retrySavedTopicCheck" aria-role="button" aria-label="重试线上已保存内容检查" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <block wx:if="{{savedTopicCheck.loaded}}">
+   <view class="node-card"><text class="node-card__title" wx:if="{{savedTopicCheck.total}}">本次试检查：{{savedTopicCheck.errors}} 项配置问题 · {{savedTopicCheck.warnings}} 项说明</text><text class="node-card__title" wx:else>本次试检查未报告问题</text><text class="rt-card-note">本次检查未标明对应的保存版本；此结果不保证覆盖之后的保存，也不代表全部发布条件通过。</text></view>
+   <view class="node-card" wx:for="{{savedTopicCheck.rows}}" wx:key="index"><text class="node-card__title">{{item.label}}</text><text class="rt-card-note">{{item.message}}</text></view>
+   <text class="rt-card-note" wx:if="{{savedTopicCheck.clipped}}">部分过长说明已截短，请返回相应配置逐项核对。</text>
+   <view class="rt-scene-actions"><view class="node-pill" wx:if="{{savedTopicCheck.page > 1}}" bindtap="previousSavedCheckPage" aria-role="button" aria-label="上一页检查结果" hover-class="cy-pressed" hover-stay-time="80">上一页</view><text class="rt-card-note">{{savedTopicCheck.page}} / {{savedTopicCheck.pages}}</text><view class="node-pill" wx:if="{{savedTopicCheck.page < savedTopicCheck.pages}}" bindtap="nextSavedCheckPage" aria-role="button" aria-label="下一页检查结果" hover-class="cy-pressed" hover-stay-time="80">下一页</view></view>
+  </block>
+ </view>
 </cy-sheet>

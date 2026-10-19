@@ -37,3 +37,12 @@
 .rt-bag-glyph:after{content:"";position:absolute;left:4rpx;right:4rpx;bottom:4rpx;height:9rpx;border:2rpx solid currentColor;border-radius:3rpx} /* ds-ok: 图标轮廓的小圆角 */
 
 .rt-disabled{opacity:.4}
+
+.rt-card-note{display:block;margin:18rpx 0;font-size:var(--cy-type-label);line-height:1.7;color:var(--cy-comp-sheet-role-muted)}
+.rt-result-cover{display:block;width:100%;height:320rpx;margin-top:24rpx;border-radius:var(--cy-radius-md);background:var(--cy-comp-sheet-role-card)}
+.rt-card-actions{align-items:center;margin-top:24rpx}
+.rt-scene-actions{display:flex;gap:18rpx;flex-wrap:wrap;margin-top:20rpx}
+.rt-scene-actions .node-pill{min-height:72rpx}
+.rt-broadcast-actions{display:flex;align-items:center;gap:24rpx;flex-wrap:wrap}
+.rt-broadcast-actions .node-pill{min-height:88rpx}
+.rt-rule-limit{margin-top:24rpx}

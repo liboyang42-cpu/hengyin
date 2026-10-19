@@ -414,7 +414,11 @@ test('罗盘点开小地图;没有带坐标的地点时照旧回卡包;导航交
 
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="fx-story__compass fx-story__radar" bindtap="openStoryMap"/)
-  assert.match(wxml, /<free-map class="story-map__map" wx:if="\{\{storyMap\}\}"/)
+  const mapCondition = wxml.match(/<free-map class="story-map__map" wx:if="\{\{([^}]+)\}\}"/)[1]
+  assert.match(mapCondition, /^storyMap\s*&&/)
+  assert.ok(mapCondition.includes('!themeBackpackOpen'))
+  const radarCondition = wxml.match(/<free-map class="fx-story__radar-map" wx:if="\{\{([^}]+)\}\}"/)[1]
+  for (const guard of ['!chapterGate.show', '!themeBackpackOpen', '!themeOverviewShow', '!previewEnding.show', '!album.show', '!playKit.show']) assert.ok(radarCondition.includes(guard), guard)
 })
 
 // 2026-09-23 用户裁决(优化顺序第 2 项):环境音跟章节氛围走、梦块换梦的和弦,关键节点有音效;
@@ -1173,6 +1177,11 @@ test('拍照类玩法的入口卡是相机、动作词是「打开相机」(2026
 })
 
 // ==================== 存档:中途退出回到原处(2026-09-24) ====================
+// Real /nodes classification resolves legacy cache scope before resume reads/writes.
+function acceptLegacyNodes(page) {
+  page._acceptThemeNodes({ themeRuntimeAvailable: false }, page._themeNodesRequest())
+  assert.equal(page._themeCacheMode, 'legacy')
+}
 function withStore(fn) {
   const store = {}
   const saved = { get: global.wx.getStorageSync, set: global.wx.setStorageSync }
@@ -1188,23 +1197,27 @@ test('读到哪一段、开着哪个玩法记在本地;重进先重开那个玩�
   const nodes = [{ nodeId: 61, name: '入职登记', hasAdvanced: true, vm: 0, done: false }]
   const page = makePage(chapter, nodes)
   page.data.topicId = 5
+  acceptLegacyNodes(page)
   page.openChapterFull()
   page._saveReadingPos(page.data.chapterParas[2])
   // 重进(新页面实例):滚回第三段
   const again = makePage(chapter, nodes)
   again.data.topicId = 5
+  acceptLegacyNodes(again)
   again.openChapterFull()
   assert.equal(again.data.chapterGameAnchor, 'chapter-block-2')
   // 开着玩法退出:重进直接重开它
   let started = null
   const third = makePage(chapter, nodes)
   third.data.topicId = 5
+  acceptLegacyNodes(third)
   third.startGame = n => { started = n.nodeId }
   third.openChapterFull()
   third.startStoryGame({ currentTarget: { dataset: { nodeid: 61 } } })
   started = null
   const fourth = makePage(chapter, nodes)
   fourth.data.topicId = 5
+  acceptLegacyNodes(fourth)
   fourth.startGame = n => { started = n.nodeId }
   fourth.openChapterFull()
   assert.equal(started, 61, '退出时开着的玩法,重进直接回到它')
@@ -1213,6 +1226,7 @@ test('读到哪一段、开着哪个玩法记在本地;重进先重开那个玩�
   started = null
   const fifth = makePage(chapter, nodes)
   fifth.data.topicId = 5
+  acceptLegacyNodes(fifth)
   fifth.startGame = n => { started = n.nodeId }
   fifth.openChapterFull()
   assert.equal(started, null)
@@ -1222,12 +1236,14 @@ test('看过的章节开场门记在本地,重进不再重播;试玩不存', () 
   const chapter = { id: 9, name: '学习', blocks: [{ type: 'text', content: '正文' }] }
   const page = makePage(chapter, [])
   page.data.topicId = 5
+  acceptLegacyNodes(page)
   page.data.chapterCards = [{ id: 9 }]
   page.showChapterGate()
   assert.equal(page.data.chapterGate.show, true)
   page.continueChapterGate()
   const again = makePage(chapter, [])
   again.data.topicId = 5
+  acceptLegacyNodes(again)
   again.data.chapterCards = [{ id: 9 }]
   again.showChapterGate()
   assert.notEqual(again.data.chapterGate && again.data.chapterGate.show, true, '看过的门不重播')
@@ -1248,6 +1264,7 @@ test('开局第一道门先放「开机」,放完自己收掉;第二道门、重
   t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = makePage({ id: 1, name: '出生', blocks: [{ type: 'text', content: '正文' }] }, [])
   page.data.topicId = 5
+  acceptLegacyNodes(page)
   page.data.chapterCards = [{ id: 1 }, { id: 2 }]
   page.showChapterGate()
   assert.equal(page.data.bootStage, 'on')
@@ -1262,11 +1279,13 @@ test('开局第一道门先放「开机」,放完自己收掉;第二道门、重
   assert.equal(page.data.bootStage, '', '第二道门不再开机')
   const again = makePage({ id: 2, name: '学习', blocks: [] }, [])
   again.data.topicId = 5
+  acceptLegacyNodes(again)
   again.data.chapterCards = [{ id: 1 }, { id: 2 }]
   again.showChapterGate()
   assert.equal(again.data.bootStage, '', '重进(已看过门)不开机')
   const reduced = makePage({ id: 1, name: '出生', blocks: [] }, [])
   reduced.data.topicId = 6
+  acceptLegacyNodes(reduced)
   reduced.data.reducedMotion = true
   reduced.data.chapterCards = [{ id: 1 }]
   reduced.showChapterGate()
@@ -1306,6 +1325,7 @@ test('故事主题开局先看开场页:主题名 + 简介第一句;开始游戏
   const chapter = { id: 3, name: '出生', blocks: [{ type: 'text', content: '正文' }] }
   const page = makePage(chapter, [])
   page.data.topicId = 5
+  acceptLegacyNodes(page)
   page.data.topicName = '预制人生'
   page.data.topicDesc = '是你选择了命运，还是命运选择了你？后面还有很多话。'
   page._openStory()
@@ -1320,11 +1340,13 @@ test('故事主题开局先看开场页:主题名 + 简介第一句;开始游戏
   assert.equal(page.data.chapterFull, true)
   const again = makePage(chapter, [])
   again.data.topicId = 5
+  acceptLegacyNodes(again)
   again._openStory()
   assert.notEqual(again.data.storyIntro.show, true, '同一局重进不再看开场页')
   assert.equal(again.data.chapterFull, true)
   const classic = makePage({ id: 4, name: '第一站' }, [])
   classic.data.topicId = 6
+  acceptLegacyNodes(classic)
   classic._openStory()
   assert.notEqual(classic.data.storyIntro.show, true, '没有故事流的经典路线不出开场页')
 }))
@@ -1335,6 +1357,7 @@ test('建档交上去之后出初始状态页:只列作者开了的精力/幸运
     const node = { nodeId: 51, name: '建档', vm: 0, done: false }
     const page = makePage({ id: 2, blocks: [{ type: 'node', nodeId: 51, locationRequired: false }] }, [node])
     page.data.topicId = 5
+    acceptLegacyNodes(page)
     page.data.chapterFull = true
     page.data.mode = 1
     page._routeState = { routeMode: 'LINEAR', attributes: [] }
@@ -1359,6 +1382,7 @@ test('建档交上去之后出初始状态页:只列作者开了的精力/幸运
   assert.equal(again.data.startState.show, false, '这一局已经看过')
   const other = make()
   other.data.topicId = 6
+  acceptLegacyNodes(other)
   other._vitalsOn = null
   other.onComplete(51, { xp: 0, routeState: { routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [] } })
   assert.equal(other.data.startState.show, false, '没开初始状态、也没有属性:不出空页')
@@ -1482,6 +1506,7 @@ test('正文打开时切到下一章，标题与正文一起更新，同章重�
   } finally { wx.nextTick = previousNextTick }
 })
 
+<<<<<<< public
 test('归零挑战呈现题组/弹球组件，章节已打开也不推进普通故事', () => {
   const node = { nodeId: 51, name: '挑战', hasAdvanced: true };
   for (const playKit of [{ qa: { mode: 'PICK', title: '题目', options: [] } }, { ballShake: { goal: 10, timed: false, seconds: 0 } }]) {
@@ -1514,3 +1539,21 @@ test('挑战失败只显示服务端许可的明确重试；次数用完仍不�
     assert.equal(page.data.playKit.readyForBase,false);
   }
 });
+=======
+test('unresolved or changed theme context cannot read or write legacy story resume', () => withStore(store => {
+  const page = makePage({ id: 8, blocks: [{ type: 'text', content: '正文' }, { type: 'text', content: '下一段' }] }, [])
+  page.data.topicId = 5
+  assert.equal(page._storyResumeScope().instanceResolved, false)
+  page.openChapterFull()
+  page._saveReadingPos(page.data.chapterParas[0])
+  assert.deepEqual(store, {})
+  acceptLegacyNodes(page)
+  page._saveReadingPos(page.data.chapterParas[1])
+  const saved = JSON.stringify(store)
+  assert.notEqual(saved, '{}')
+  page.data.topicId = 6
+  assert.equal(page._storyResumeScope().instanceResolved, false)
+  page._saveReadingPos(page.data.chapterParas[0])
+  assert.equal(JSON.stringify(store), saved)
+}))
+>>>>>>> private-github/featu

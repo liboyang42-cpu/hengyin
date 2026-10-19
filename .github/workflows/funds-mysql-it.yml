@@ -14,7 +14,7 @@ name: Funds MySQL IT
 #     - Funds MySQL IT (50/9/30, skipped=0, fail-closed)
 #     - Funds IT gate self-test (skipped=0 negative controls)
 #
-# 命中资金路径时，GitHub-hosted runner 自行启动并回读 Oracle MySQL 8.0.45 scratch；
+# 命中资金路径时，GitHub-hosted Ubuntu 自行启动并回读 Oracle MySQL 8.0.45 scratch；
 # 不依赖机器 3306 上可能变化的 Homebrew 数据库，也不依赖仓库 MySQL secrets。
 
 on:
@@ -40,10 +40,48 @@ on:
       - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql'
       - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql'
       - 'chengyinhub-system/src/main/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/editor/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/city/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/navigation/**'
+      - 'chengyinhub-admin/sql/migration_20261003_walking_target_provenance.sql'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CartSettlementTransactionalH2Test.java'
+      - 'chengyinhub-admin/sql/migration_w18_module_install_reservation_20261002.sql'
+      - 'chengyinhub-admin/sql/migration_w18_owned_text_draft_install_20261002.sql'
+      - 'chengyinhub-admin/sql/migration_w18_owned_text_receipt_read_index_20261003.sql'
+      - 'chengyinhub-admin/sql/migration_w18_free_claim_registry_20261003.sql'
+      - 'chengyinhub-admin/sql/migration_w18_content_draft_install_scope_20261003.sql'
+      - 'chengyinhub-admin/sql/migration_20261002_city_visit_persistence.sql'
+      - 'chengyinhub-admin/sql/migration_20261003_city_board_draft_candidate.sql'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/*MySqlIT.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/**'
+      - 'chengyinhub-admin/sql/migration_20261002_content_capture_snapshot.sql'
+      - 'chengyinhub-admin/sql/migration_20261003_content_capture_review_binding.sql'
       - 'chengyinhub-admin/sql/migration_*funds*.sql'
       - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
       - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
       - 'ci/funds-mysql-it-gate.sh'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/rendezvous/**'
+      - 'chengyinhub-admin/sql/migration_w16_consent_persistence_candidate.sql'
+      - 'ci/w16_mysql_gate.py'
+      - 'ci/test_w16_mysql_gate.py'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/reward/**'
+      - 'chengyinhub-admin/sql/migration_w17_noncash_inventory_candidate.sql'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/npc/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoring*MySql*.java'
+      - 'chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql'
+      - 'chengyinhub-admin/sql/migration_20261004_merchant_npc_knowledge_drafts.sql'
+      - 'ci/npc_draft_mysql_gate.py'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CouponCommandServiceMySqlIT.java'
+      - 'chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql'
+      - 'chengyinhub-admin/sql/migration_coupon_command_receipt.sql'
+      - 'chengyinhub-admin/sql/migration_coupon_dedup.sql'
+      - 'ci/coupon_command_mysql_gate.py'
+      - 'ci/test_coupon_command_mysql_gate.py'
+      - 'ci/test_npc_draft_mysql_gate.py'
+      - 'ci/w17_mysql_gate.py'
+      - 'ci/test_w17_mysql_gate.py'
       - 'ci/funds_it_gate.py'
       - 'ci/test_funds_it_gate.py'
       - '.github/workflows/funds-mysql-it.yml'
@@ -97,10 +135,48 @@ jobs:
               - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
               - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
               - 'chengyinhub-system/src/main/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/free/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/editor/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/city/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/navigation/**'
+              - 'chengyinhub-admin/sql/migration_20261003_walking_target_provenance.sql'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CartSettlementTransactionalH2Test.java'
+              - 'chengyinhub-admin/sql/migration_w18_module_install_reservation_20261002.sql'
+              - 'chengyinhub-admin/sql/migration_w18_owned_text_draft_install_20261002.sql'
+              - 'chengyinhub-admin/sql/migration_w18_owned_text_receipt_read_index_20261003.sql'
+              - 'chengyinhub-admin/sql/migration_w18_free_claim_registry_20261003.sql'
+              - 'chengyinhub-admin/sql/migration_w18_content_draft_install_scope_20261003.sql'
+              - 'chengyinhub-admin/sql/migration_20261002_city_visit_persistence.sql'
+              - 'chengyinhub-admin/sql/migration_20261003_city_board_draft_candidate.sql'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/*MySqlIT.java'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/release/**'
+              - 'chengyinhub-admin/sql/migration_20261002_content_capture_snapshot.sql'
+              - 'chengyinhub-admin/sql/migration_20261003_content_capture_review_binding.sql'
               - 'chengyinhub-admin/sql/migration_*funds*.sql'
               - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
               - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
               - 'ci/funds-mysql-it-gate.sh'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/rendezvous/**'
+              - 'chengyinhub-admin/sql/migration_w16_consent_persistence_candidate.sql'
+              - 'ci/w16_mysql_gate.py'
+              - 'ci/test_w16_mysql_gate.py'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/reward/**'
+              - 'chengyinhub-admin/sql/migration_w17_noncash_inventory_candidate.sql'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/npc/**'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoring*MySql*.java'
+              - 'chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql'
+              - 'chengyinhub-admin/sql/migration_20261004_merchant_npc_knowledge_drafts.sql'
+              - 'ci/npc_draft_mysql_gate.py'
+              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CouponCommandServiceMySqlIT.java'
+              - 'chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql'
+              - 'chengyinhub-admin/sql/migration_coupon_command_receipt.sql'
+              - 'chengyinhub-admin/sql/migration_coupon_dedup.sql'
+              - 'ci/coupon_command_mysql_gate.py'
+              - 'ci/test_coupon_command_mysql_gate.py'
+              - 'ci/test_npc_draft_mysql_gate.py'
+              - 'ci/w17_mysql_gate.py'
+              - 'ci/test_w17_mysql_gate.py'
               - 'ci/funds_it_gate.py'
               - 'ci/test_funds_it_gate.py'
               - '.github/workflows/funds-mysql-it.yml'
@@ -108,7 +184,7 @@ jobs:
         if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
       - name: Run funds IT gate negative controls
         if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
-        run: python3 -m unittest ci/test_funds_it_gate.py
+        run: python3 -m unittest ci/test_funds_it_gate.py ci/test_w16_mysql_gate.py ci/test_w17_mysql_gate.py ci/test_npc_draft_mysql_gate.py ci/test_coupon_command_mysql_gate.py
       - name: Check funds IT workflow structural contract
         if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
         run: python3 ci/funds_it_gate.py workflow .github/workflows/funds-mysql-it.yml ci/funds-mysql-it-gate.sh
@@ -120,6 +196,7 @@ jobs:
     name: Funds MySQL IT (50/9/30, skipped=0, fail-closed)
     needs: funds_it_gate_selftest
     if: ${{ always() }}
+    # 真库 IT 使用本 job 的隔离 MySQL 容器；无关 PR 保留同名终态并跳过重活。
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -188,6 +265,53 @@ jobs:
           CHENGYIN_TEST_MYSQL_USER: root
           CHENGYIN_TEST_MYSQL_PASSWORD: ''
           CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _gh${{ github.run_id }}
+      - name: Upload W16 MySQL evidence
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: w16-mysql-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            chengyinhub-admin/target/w16-mysql-evidence.json
+            chengyinhub-admin/target/surefire-reports/*RendezvousConsentMySqlIT*
+          if-no-files-found: warn
+      - name: Upload W17 MySQL evidence
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: w17-mysql-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            chengyinhub-admin/target/w17-mysql-evidence.json
+            chengyinhub-admin/target/surefire-reports/*NonCashRewardMySqlIT*
+          if-no-files-found: warn
+      - name: Upload NPC draft MySQL evidence
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npc-draft-mysql-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            artifacts/npc-draft-mysql-proof.json
+            chengyinhub-admin/target/surefire-reports/*MerchantNpcKnowledgeDraftMySqlIT*
+          if-no-files-found: warn
+      - name: Upload coupon command MySQL evidence
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coupon-command-mysql-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            artifacts/coupon-command-mysql-proof.json
+            chengyinhub-admin/target/surefire-reports/*CouponCommandServiceMySqlIT*
+          if-no-files-found: warn
+      - name: Retain exact fixed-coupon and authoring MySQL reports
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixed-authoring-mysql-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.FixedCouponAtomicMySqlIT.xml
+            chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.FixedCouponSchemaMySqlIT.xml
+            chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.MerchantAuthoringCurrentRowsMySqlIT.xml
+            chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.MerchantAuthoringRevocationRaceMySqlIT.xml
+          if-no-files-found: warn
       - name: Stop Oracle MySQL scratch
         if: always() && steps.mysql.outputs.container != ''
         env:

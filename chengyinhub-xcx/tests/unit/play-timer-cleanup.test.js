@@ -20,7 +20,10 @@ global.Page = (config) => { pageConfig = config; };
 function loadPlayPage() {
   delete require.cache[require.resolve('../../pages/play/index.js')];
   require('../../pages/play/index.js');
-  return Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) });
+  return Object.assign({}, pageConfig, {
+    data: JSON.parse(JSON.stringify(pageConfig.data)),
+    setData(patch) { Object.assign(this.data, patch); }
+  });
 }
 
 test('游玩页卸载会清除所有会在销毁后写 UI 的命名 timeout', () => {

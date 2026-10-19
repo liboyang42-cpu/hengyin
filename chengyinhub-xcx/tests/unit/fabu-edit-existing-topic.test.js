@@ -19,6 +19,7 @@ let storage = {};
 let navigations = [];
 let toasts = [];
 let modals = [];
+let memberId = 0;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -26,9 +27,13 @@ global.getApp = () => ({
   tips: (m) => { toasts.push(m); },
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
+<<<<<<< public
   getUserID: () => 7,
   getNickname: () => '测试作者',
   getAvatar: () => '',
+=======
+  getUserID: () => memberId,
+>>>>>>> private-github/featu
   getUserInfo: () => null,
   getToken: () => '',
 });
@@ -50,6 +55,7 @@ let pageConfig = null;
 global.Page = (cfg) => { pageConfig = cfg; };
 
 beforeEach(() => {
+  memberId = 0;
   sent = [];
   storage = {};
   navigations = [];
@@ -289,7 +295,10 @@ test('回填还没到位就点保存:拦住,别拿空表单去重建', () => {
 
 test('主题初始状态通过手机表单保存，编辑回填及 V2 提交保持一致', () => {
   const page = openForEdit('FULL');
+  memberId = 7; // Initial-state mutations require an authenticated editor identity.
   page.openInitialState();
+  assert.equal(page.data.initialStateEditor.show, true);
+  assert.ok(page._initialStateContext);
   page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } });
   page.onInitialStateField({ currentTarget: { dataset: { field: 'hp.init' } }, detail: { value: '8' } });
   page.saveInitialState();
@@ -303,6 +312,23 @@ test('主题初始状态通过手机表单保存，编辑回填及 V2 提交保�
   request.success({ code: 200, data: { topicId: 77, reviewState: 'PENDING' } });
   assert.equal(page.data.resultSheet.title, '已提交审核');
   assert.doesNotMatch(page.data.resultSheet.sub, /已经发布/);
+});
+
+// Opening an editor does not imply authentication; keep the production guard fail-closed.
+test('未认证身份不能打开或修改主题初始状态', () => {
+  const page = openForEdit('FULL');
+  const original = JSON.stringify(page.data.formData);
+  memberId = 0;
+  sent = [];
+  page.openInitialState();
+  assert.equal(page.data.initialStateEditor.show, false);
+  assert.equal(page._initialStateContext, null);
+  assert.ok(toasts.some(value => /编辑身份或草稿已变化/.test(String(value))));
+  page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } });
+  page.onInitialStateField({ currentTarget: { dataset: { field: 'hp.init' } }, detail: { value: '8' } });
+  page.saveInitialState();
+  assert.equal(JSON.stringify(page.data.formData), original);
+  assert.equal(sent.length, 0);
 });
 
 test('V2 创建回执从 topicId 导航，不把对象写进 URL', () => {

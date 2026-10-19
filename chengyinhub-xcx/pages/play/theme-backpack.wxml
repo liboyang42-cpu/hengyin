@@ -1,3 +1,4 @@
+<<<<<<< public
 <cy-sheet show="{{themeBackpackOpen && !themePlanKey && !themeItemDetail && !themeCostChoice && !themeQuestChoice && !themeRewardPreview && !themePendingClaim && !themeTradeForm}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeThemeBackpack" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop}}px);--cy-comp-sheet-blur:0px;--cy-comp-sheet-role-glass:var(--cy-comp-sheet-player-page);--cy-comp-sheet-role-text:var(--cy-comp-sheet-player-text);--cy-comp-sheet-role-text-secondary:var(--cy-comp-sheet-player-text-secondary);--cy-comp-sheet-role-muted:var(--cy-comp-sheet-player-muted);--cy-comp-sheet-role-surface:var(--cy-comp-sheet-player-surface);--cy-comp-sheet-role-divider:var(--cy-comp-sheet-player-divider);--cy-comp-sheet-role-btn-bg:var(--cy-comp-sheet-player-text);--cy-comp-sheet-role-btn-fg:var(--cy-comp-sheet-player-page)">
 <view class="tb-sheet"><view class="tb-close" bindtap="closeThemeBackpack" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><cy-icon name="close-sm" size="32" /></view>
 <text class="tb-title">背包</text>
@@ -26,6 +27,112 @@
   <view wx:if="{{zeroHpView.canSync}}" class="tb-button tb-button--muted tb-button--flex {{themeBagBusy ? 'is-busy' : ''}}" bindtap="syncZeroHpState" aria-role="button" aria-disabled="{{themeBagBusy}}" aria-label="同步恢复状态" hover-class="cy-pressed" hover-stay-time="80">同步恢复状态</view>
   <view wx:elif="{{!zeroHpView.canSteps && !themeBag.result}}" class="tb-button tb-button--muted tb-button--flex" bindtap="refreshThemeBackpack" aria-role="button" aria-label="刷新恢复状态" hover-class="cy-pressed" hover-stay-time="80">刷新 / 等待同步</view>
   <view wx:if="{{themeBag.result}}" class="tb-button tb-button--flex" bindtap="openThemeResultCard" aria-role="button" aria-label="查看本局结果" hover-class="cy-pressed" hover-stay-time="80">查看本局结果</view>
+=======
+<cy-sheet wx:if="{{themeRuntimeReady}}" show="{{themeBackpackOpen}}" title="{{themeCardShow ? '本局结果' : '背包与本局'}}" handle="{{false}}" bind:close="closeThemeBackpack" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop}}px);--cy-comp-sheet-role-glass:#000;--cy-comp-sheet-role-text:#fff;--cy-comp-sheet-role-text-secondary:#aaa;--cy-comp-sheet-role-muted:#777;--cy-comp-sheet-role-divider:#252525;--cy-comp-sheet-role-surface:#141414;--cy-comp-sheet-blur:0px">
+ <view class="tb-sheet">
+  <block wx:if="{{themeCardShow}}">
+    <view class="tb-read-head"><view class="tb-button tb-button--muted" bindtap="closeThemeCard" aria-role="button" aria-label="返回背包历史" hover-class="cy-pressed" hover-stay-time="80">返回</view><text class="tb-purpose">{{themeCardTarget.activityLabel}} · 记录 #{{themeCardTarget.sessionId}} · 只读</text></view>
+    <view class="tb-empty" wx:if="{{themeCardBusy}}">正在读取本局结果…</view>
+    <cy-inline-error wx:if="{{themeCardError}}" title="{{themeCardError}}" action="重试" bind:action="retryThemeCard" />
+    <view class="tb-result" wx:if="{{themeCard}}">
+      <image class="tb-result-cover" wx:if="{{themeCard.cover}}" src="{{themeCard.cover}}" mode="widthFix" />
+      <text class="tb-purpose">{{themeCard.success ? '已完成' : '本局已结束'}} · {{themeCard.endedAtText}}（北京时间）</text>
+      <text class="tb-purpose" wx:if="{{themeCard.scene}}">{{themeCard.scene}}</text>
+      <text class="tb-result-title" wx:if="{{themeCard.title}}">{{themeCard.title}}</text>
+      <text class="tb-clue-copy" wx:if="{{themeCard.summary}}">{{themeCard.summary}}</text>
+      <view class="tb-result-stats" wx:if="{{themeCard.stats.length}}"><view wx:for="{{themeCard.stats}}" wx:key="key"><text class="tb-name">{{item.value}}</text><text class="tb-purpose">{{item.label}}</text></view></view>
+      <view class="tb-result-section" wx:if="{{themeCard.medals.length}}"><text class="tb-name">本局徽章</text><view class="tb-result-content" wx:for="{{themeCard.medals}}" wx:key="index"><image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" /><text>{{item.name}} × {{item.quantity}}</text></view></view>
+      <view class="tb-result-section" wx:if="{{themeCard.items.length}}"><text class="tb-name">本局物品</text><view class="tb-result-content" wx:for="{{themeCard.items}}" wx:key="index"><image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" /><text>{{item.name}} × {{item.quantity}}</text></view></view>
+      <view class="tb-result-section" wx:if="{{themeCard.epilogues.length || themeCard.exhibits.length}}"><text class="tb-name">故事尾声</text><view wx:for="{{themeCard.epilogues}}" wx:key="index"><text class="tb-purpose">{{item.name}}</text><text class="tb-clue-copy">{{item.line}}</text></view><text class="tb-clue-copy" wx:for="{{themeCard.exhibits}}" wx:key="index">{{item}}</text></view>
+      <view class="tb-result-section" wx:if="{{themeCard.unlocks}}"><text class="tb-name">已知结局 · {{themeCard.unlocks.known.length}} / {{themeCard.unlocks.total}}</text><text class="tb-purpose" wx:for="{{themeCard.unlocks.known}}" wx:key="index">{{item.title}}</text></view>
+      <view class="tb-result-section" wx:if="{{themeCard.nextScene}}"><text class="tb-name">当前发布安排 · {{themeCard.nextScene.name}}</text><text class="tb-purpose">查询于 {{themeCard.nextScene.asOfText || '当前'}}。这是当前的下一幕安排，不代表这条历史记录中已经发生的内容。</text></view>
+      <view class="tb-poster">
+        <text class="tb-name">公开结果图</text>
+        <text class="tb-purpose">生成后可在这里预览，再自行保存或分享。长内容会截断，完整公开内容仍在上方。</text>
+        <view class="tb-poster-actions">
+          <view class="tb-button {{themePosterBusy || themePosterNativeBusy ? 'is-busy' : ''}}" bindtap="generateThemePoster" aria-role="button" aria-label="生成当前公开结果图" hover-class="{{themePosterBusy || themePosterNativeBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themePosterBusy || themePosterNativeBusy}}">{{themePosterBusy ? '正在生成…' : themePosterPath ? '重新生成' : '生成结果图'}}</view>
+          <view class="tb-button tb-button--muted {{themePosterBusy || themePosterNativeBusy ? 'is-busy' : ''}}" bindtap="generateThemeTextPoster" aria-role="button" aria-label="不含封面生成文字结果图" hover-class="{{themePosterBusy || themePosterNativeBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themePosterBusy || themePosterNativeBusy}}">生成文字版</view>
+        </view>
+        <text class="tb-poster-error" wx:if="{{themePosterError}}">{{themePosterError}}</text>
+        <block wx:if="{{themePosterPath}}">
+          <image class="tb-poster-preview" src="{{themePosterPath}}" mode="widthFix" show-menu-by-longpress="{{false}}" aria-label="当前公开结果图预览" />
+          <text class="tb-purpose" wx:if="{{themePosterTextOnly}}">文字版，不包含封面图片</text>
+          <text class="tb-purpose" wx:if="{{themePosterClipped}}">内容已截断，完整公开详情请看上方结果</text>
+          <view class="tb-poster-actions">
+            <view class="tb-button {{themePosterNativeBusy ? 'is-busy' : ''}}" bindtap="saveThemePoster" aria-role="button" aria-label="保存当前公开结果图到相册" hover-class="{{themePosterBusy || themePosterNativeBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themePosterBusy || themePosterNativeBusy}}">{{themePosterNativeBusy ? '正在处理…' : '保存到相册'}}</view>
+            <view class="tb-button tb-button--muted {{themePosterNativeBusy ? 'is-busy' : ''}}" wx:if="{{themePosterShareAvailable}}" bindtap="shareThemePoster" aria-role="button" aria-label="打开当前公开结果图的系统分享菜单" hover-class="{{themePosterBusy || themePosterNativeBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themePosterBusy || themePosterNativeBusy}}">分享图片</view>
+          </view>
+          <text class="tb-purpose" wx:if="{{!themePosterShareAvailable}}">当前版本暂不支持图片分享，可先保存到相册</text>
+        </block>
+        <text class="tb-purpose" wx:if="{{themePosterNotice}}">{{themePosterNotice}}</text>
+      </view>
+    </view>
+  </block>
+  <block wx:else>
+
+   <view class="tb-run"><text class="tb-name">{{themeBag.sceneName || '本局'}} · {{themeBag.status === 'COMPLETED' ? '已完成' : themeBag.status === 'ENDED' ? '已结束' : '进行中'}}</text><text class="tb-purpose" wx:if="{{themeBag.teamGeneration != null}}">队伍第 {{themeBag.teamGeneration + 1}} 局</text></view>
+   <view class="tb-result-stats" wx:if="{{themeBackpackTab !== 'history' && themeBag.currentStats.length}}"><view wx:for="{{themeBag.currentStats}}" wx:key="key"><text class="tb-name">{{item.value}}<text wx:if="{{item.hasMax}}"> / {{item.max}}</text></text><text class="tb-purpose">{{item.label}}</text></view></view>
+   <view class="tb-current-controls" wx:if="{{themeBag.status === 'ACTIVE' && themeBackpackTab !== 'history'}}">
+     <text class="tb-name" wx:if="{{themeBag.awaitingRescue}}">本局等待救援</text>
+     <text class="tb-purpose" wx:if="{{themeBag.awaitingRescue}}">救援资格、可用次数和恢复结果按系统当前规则处理；不会重置背包或进度。</text>
+     <view class="tb-button {{themeBagBusy || themeControlBusy || themeReplayBusy ? 'is-busy' : ''}}" wx:if="{{themeBag.awaitingRescue}}" bindtap="requestThemeRescue" aria-role="button" aria-label="申请本局救援" hover-class="{{themeBagBusy || themeControlBusy || themeReplayBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themeBagBusy || themeControlBusy || themeReplayBusy}}">{{themeBagBusy ? '正在处理…' : '申请救援'}}</view>
+     <view class="tb-button tb-button--muted {{themeBagBusy || themeControlBusy || themeReplayBusy ? 'is-busy' : ''}}" bindtap="requestThemeEnd" aria-role="button" aria-label="确认结束我的当前局" hover-class="{{themeBagBusy || themeControlBusy || themeReplayBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themeBagBusy || themeControlBusy || themeReplayBusy}}">{{themeControlBusy ? '正在确认…' : '结束我的当前局'}}</view>
+   </view>
+   <view class="tb-button tb-button--muted tb-current-card" wx:if="{{themeBag.result && (themeBag.status === 'ENDED' || themeBag.status === 'COMPLETED')}}" bindtap="openCurrentThemeCard" aria-role="button" aria-label="查看本局结果" hover-class="cy-pressed" hover-stay-time="80">查看本局结果</view>
+   <view class="tb-replay" wx:if="{{themeBag.status === 'ENDED' || themeBag.status === 'COMPLETED' || themeReplayUnknown}}">
+     <text class="tb-purpose" wx:if="{{themeBag.teamReplayRequired}}">{{themeTeamNotice || '正在确认本场队伍…'}}</text>
+     <text class="tb-purpose">重玩以主题当前开放设置为准，旧局保留为历史</text>
+     <cy-inline-error wx:if="{{themeReplayError}}" title="{{themeReplayError}}" action="{{themeReplayUnknown ? '重试同一次' : '刷新状态'}}" bind:action="onThemeReplayError" />
+     <view wx:if="{{!themeReplayUnknown && (!themeBag.teamReplayRequired || themeTeamLeader)}}" class="tb-button {{themeReplayBusy || themeBagBusy ? 'is-busy' : ''}}" bindtap="requestThemeReplay" aria-role="button" aria-label="{{themeBag.teamReplayRequired ? '整队一起重开' : '开始新一局'}}" hover-class="{{themeReplayBusy || themeBagBusy ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-disabled="{{themeReplayBusy || themeBagBusy}}">{{themeReplayBusy ? '正在确认…' : themeBag.teamReplayRequired ? '整队一起重开' : '开始新一局'}}</view>
+   </view>
+   <view class="tb-slots"><view wx:for="{{themeBag.slots}}" wx:key="index" class="tb-slot {{item.filled ? 'is-filled' : ''}}"></view></view>
+  <view class="tb-switcher"><cy-tabs tabs="{{themeBagTabs}}" active="{{themeBackpackTab}}" variant="fill" wide="{{true}}" hairline="{{false}}" bind:change="changeThemeBackpackTab" /></view>
+  <cy-inline-error wx:if="{{themeBagError}}" title="{{themeBagError}}" action="重试" bind:action="retryThemeBagAction" />
+  <block wx:if="{{themeBackpackTab === 'items'}}">
+
+   <view class="tb-empty" wx:if="{{!themeBag.items.length && !themeBag.pendingRows.length}}">还没有物品</view>
+   <view class="tb-grid">
+   <view class="tb-item" wx:for="{{themeBag.items}}" wx:key="id"><image class="tb-image" src="{{item.image}}" mode="aspectFill" /><view class="tb-copy"><text class="tb-name">{{item.name}}<text wx:if="{{item.quantity > 1}}"> × {{item.quantity}}</text></text><text class="tb-purpose">{{item.statLabel}} {{item.delta > 0 ? '+' : ''}}{{item.delta}}{{item.mode === 'REDUCE' ? ' · 持有减耗' : item.mode === 'HELD' ? ' · 持有期间' : item.wear ? ' · 已生效' : ''}}</text><view class="tb-actions"><view wx:if="{{!item.wear}}" data-operation="USE" data-id="{{item.id}}" bindtap="onThemeBagAction" class="tb-button {{themeBagBusy ? 'is-busy' : ''}}" aria-role="button" aria-label="使用{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">使用</view><view wx:if="{{themeBag.allowDiscard}}" data-operation="DISCARD" data-id="{{item.id}}" bindtap="onThemeBagAction" class="tb-button tb-button--muted {{themeBagBusy ? 'is-busy' : ''}}" aria-role="button" aria-label="丢弃{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">丢弃</view></view></view></view>
+   </view>
+   <view class="tb-pending" wx:for="{{themeBag.pendingRows}}" wx:key="id"><text>{{item.name || '待领取'}} × {{item.quantity}}</text><view class="tb-button" data-operation="RECEIVE" data-id="{{item.id}}" bindtap="onThemeBagAction" hover-class="cy-pressed" hover-stay-time="80">领取</view></view>
+  </block>
+  <block wx:elif="{{themeBackpackTab === 'clues'}}"><text class="tb-purpose" wx:if="{{themeBag.recordedEventCount}}">消息状态仅指站内消息生成，不代表设备通知已送达或你已读；发送失败不会抹去已记录线索。</text><view class="tb-empty" wx:if="{{!themeBag.clues.length}}">还没有线索</view><view class="tb-clue" wx:for="{{themeBag.clues}}" wx:key="id"><text class="tb-name">{{item.name}}</text><image wx:if="{{item.image}}" src="{{item.image}}" mode="widthFix" /><text wx:if="{{item.content}}" class="tb-clue-copy">{{item.content}}</text><view wx:if="{{item.kind === 'EVENT'}}" class="tb-message-status tb-message-status--{{item.deliveryStatus}}"><text>{{item.deliveryLabel}}</text><text wx:if="{{item.deliveryStatus === 'FAILED' && item.deliveryAttempts != null}}"> · 已尝试 {{item.deliveryAttempts}} 次</text></view><view wx:if="{{item.kind === 'ITEM' && themeBag.allowDiscard}}" class="tb-button tb-button--muted" data-operation="DISCARD" data-id="{{item.id}}" bindtap="onThemeBagAction" hover-class="cy-pressed" hover-stay-time="80">丢弃</view></view></block>
+
+  <block wx:elif="{{themeBackpackTab === 'history'}}">
+    <view class="tb-read-head"><text class="tb-purpose">仅自己的本主题记录，包含不同场次；历史只读</text><view class="tb-button tb-button--muted" bindtap="reloadThemeHistory" aria-role="button" aria-label="重新加载历史记录" hover-class="cy-pressed" hover-stay-time="80">刷新</view></view>
+    <view class="tb-history-row" wx:for="{{themeHistoryRows}}" wx:key="sessionId">
+      <text class="tb-name">{{item.sceneName || '主题局'}} · {{item.statusLabel}}</text><text class="tb-purpose">{{item.activityLabel}} · 记录 #{{item.sessionId}}</text><text class="tb-purpose" wx:if="{{item.endedAtText}}">{{item.endedAtText}}（北京时间）</text>
+      <view wx:if="{{item.recordedEvents.length}}" class="tb-history-records">
+        <view class="tb-button tb-button--muted" data-sessionid="{{item.sessionId}}" bindtap="toggleHistoryThemeRecords" aria-role="button" aria-label="查看这局已记录线索" hover-class="cy-pressed" hover-stay-time="80">{{themeHistoryExpandedId === item.sessionId ? '收起' : '查看'}}已记录线索 · {{item.recordedEvents.length}}</view>
+        <view wx:if="{{themeHistoryExpandedId === item.sessionId}}"><text class="tb-purpose">仅展开历史快照，不触发重新发送或发放。</text><view class="tb-history-record" wx:for="{{item.recordedEvents}}" wx:for-item="record" wx:key="id"><text class="tb-name">{{record.name}}</text><text class="tb-clue-copy">{{record.content}}</text><text class="tb-message-status">{{record.deliveryLabel}}</text></view></view>
+      </view>
+      <view class="tb-button tb-button--muted" wx:if="{{item.hasCard}}" data-sessionid="{{item.sessionId}}" bindtap="openHistoryThemeCard" aria-role="button" aria-label="查看这局只读结果" hover-class="cy-pressed" hover-stay-time="80">查看结果</view><text class="tb-purpose" wx:else>尚无可读取的结算结果</text>
+    </view>
+    <cy-inline-error wx:if="{{themeHistoryError}}" title="{{themeHistoryError}}" action="重试" bind:action="loadThemeHistory" />
+    <view class="tb-empty" wx:if="{{themeHistoryBusy}}">正在加载历史记录…</view>
+    <view class="tb-empty" wx:elif="{{themeHistoryLoaded && !themeHistoryRows.length}}">还没有主题局记录</view>
+    <view class="tb-button tb-button--muted" wx:elif="{{themeHistoryLoaded && themeHistoryHasMore && !themeHistoryError}}" bindtap="loadThemeHistory" aria-role="button" aria-label="加载更多历史记录" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+    <text class="tb-purpose" wx:elif="{{themeHistoryLoaded && !themeHistoryHasMore}}">已加载全部可见记录</text>
+  </block>
+  </block>
+ </view>
+</cy-sheet>
+
+<!-- Author local CONFIG overview is separate from all live inventory/result actions. -->
+<cy-sheet wx:if="{{isPreview && themeOverviewAvailable}}" show="{{themeOverviewShow}}" title="主题配置清单" handle="{{false}}" bind:close="closeThemeOverview" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop}}px)">
+ <view class="tb-sheet">
+  <view class="tb-read-head"><text class="tb-name">草稿配置 · 只读</text><view class="tb-button tb-button--muted" bindtap="closeThemeOverview" aria-role="button" aria-label="关闭主题配置清单" hover-class="cy-pressed" hover-stay-time="80">关闭</view></view>
+  <text class="tb-purpose">本页仅列出打开预览时的配置，未经系统规则校验。不是玩家背包，不会发放物品、扣减数值、触发广播或计算结局。完整故事与结局仍在原预览中。</text>
+  <text class="tb-purpose" wx:if="{{themeOverviewClipped}}">部分长文案已截短；条件、奖励与高级配置只列数量，请返回编辑器查看完整配置。</text>
+  <view class="tb-result-section" wx:for="{{themeOverviewRows}}" wx:key="index">
+   <text class="tb-purpose">{{item.section}}</text><text class="tb-name">{{item.label}}</text><text class="tb-clue-copy">{{item.detail}}</text>
+  </view>
+  <text class="tb-purpose">第 {{themeOverviewPage}} / {{themeOverviewPages}} 页</text>
+  <view class="tb-actions">
+   <view class="tb-button tb-button--muted" wx:if="{{themeOverviewPage > 1}}" bindtap="previousThemeOverviewPage" aria-role="button" aria-label="上一页配置" hover-class="cy-pressed" hover-stay-time="80">上一页</view>
+   <view class="tb-button tb-button--muted" wx:if="{{themeOverviewPage < themeOverviewPages}}" bindtap="nextThemeOverviewPage" aria-role="button" aria-label="下一页配置" hover-class="cy-pressed" hover-stay-time="80">下一页</view>
+  </view>
+>>>>>>> private-github/featu
  </view>
 </view>
 <block wx:if="{{themeBackpackTab === 'items'}}">

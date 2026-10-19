@@ -338,6 +338,7 @@ function ownHandlerEntries(masked) {
   return scanTopLevelKeys(masked, def.bodyStart, def.bodyEnd).filter((k) => k.isFunction);
 }
 
+<<<<<<< public
 // Resolve only the object actually returned by a statically imported Page factory.
 // No module execution: unrelated declarations and non-exported functions cannot satisfy bindings.
 function extractFactoryHandlerEntries(filePath) {
@@ -448,6 +449,159 @@ function extractFactoryHandlerEntries(filePath) {
   const output = evaluate(argument, context);
   if (!output || output.type !== 'object') return [];
   return [...output.entries].filter(([, value]) => value && value.type === 'function').map(([name, value]) => ({ name, line: value.node.loc.start.line, file: value.context.file, start: value.node.start, end: value.node.end }));
+=======
+// 静态混入只沿页面实际展开的导出值解析，不能把 require 文件内所有对象/函数当成方法。
+// 工厂仅支持本仓使用的命名函数 + 直接 return 对象；不会执行模块或扫描嵌套回调的 return。
+function topLevelMatches(masked, re) {
+  const matches = [];
+  let cursor = 0;
+  let depth = 0;
+  let match;
+  while ((match = re.exec(masked))) {
+    while (cursor < match.index) {
+      if ('{(['.includes(masked[cursor])) depth += 1;
+      else if ('})]'.includes(masked[cursor])) depth -= 1;
+      cursor += 1;
+    }
+    if (depth === 0) matches.push(match);
+  }
+  return matches;
+}
+
+function handlerBodyRange(masked) {
+  const def = findDefinitionBody(masked);
+  if (!def) return null;
+  if (def.kind === 'Component' || def.kind === 'Behavior') {
+    const methods = scanTopLevelKeys(masked, def.bodyStart, def.bodyEnd).find(k => k.name === 'methods');
+    if (methods) {
+      const colon = masked.indexOf(':', methods.start);
+      const start = colon + 1 + (masked.slice(colon + 1, methods.end).match(/^\s*/) || [''])[0].length;
+      if (masked[start] === '{') return { start: start + 1, end: matchBrace(masked, start) };
+    }
+  }
+  return { start: def.bodyStart, end: def.bodyEnd };
+}
+
+function spreadImport(raw, local) {
+  const masked = maskNonCode(raw);
+  const declarations = topLevelMatches(masked,
+    /\b(?:const|let|var)\s+(\{[^}]*\}|[A-Za-z_$][\w$]*)\s*=\s*require\s*\(/g);
+  for (const declaration of declarations) {
+    let member = null;
+    const binding = declaration[1];
+    if (binding[0] === '{') {
+      const selected = binding.slice(1, -1).split(',').map(piece => piece.trim().split(/\s*:\s*/))
+        .find(parts => (parts[1] || parts[0]) === local);
+      if (!selected || !/^[A-Za-z_$][\w$]*$/.test(selected[0])) continue;
+      member = selected[0];
+    } else if (binding !== local) continue;
+    const tail = raw.slice(declaration.index + declaration[0].length);
+    const target = /^\s*(['"])([^'"]+)\1\s*\)/.exec(tail);
+    if (target) return { relative: target[2], member };
+  }
+  return null;
+}
+
+function exportedMixinEntries(file, member, called) {
+  const src = fs.readFileSync(file, 'utf8');
+  const masked = maskNonCode(src);
+  const assignments = topLevelMatches(masked, /\bmodule\s*\.\s*exports\s*=\s*/g);
+  // 后置成员写入/反射写入不再对应字面量里的旧导出。解析器不执行模块，必须显式阻断审计。
+  const memberWrite = /\b(?:module\s*\.\s*exports|exports)\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[^\]]*\])\s*(?:=(?!=)|(?:[+*/%&|^-]|\?\?|&&|\|\|)=|\+\+|--)/;
+  const reflectiveWrite = /\b(?:Object\.(?:assign|defineProperty|defineProperties|setPrototypeOf)|Reflect\.(?:set|defineProperty|deleteProperty|setPrototypeOf))\s*\(\s*(?:module\s*\.\s*exports|exports)\b/;
+  const deletedExport = /\bdelete\s+(?:module\s*\.\s*exports|exports)\s*(?:\.|\[)/;
+  if (assignments.length > 1 || memberWrite.test(masked) || reflectiveWrite.test(masked) || deletedExport.test(masked)) {
+    throw new Error(`无法静态解析已修改的混入导出: ${file}`);
+  }
+  if (assignments.length !== 1) return [];
+  let start = assignments[0].index + assignments[0][0].length;
+  if (masked[start] === '{') {
+    const objectEnd = matchBrace(masked, start);
+    if (objectEnd < 0 || !/^\s*(?:;|$)/.test(masked.slice(objectEnd + 1))) return [];
+  }
+  let valueEnd = masked.indexOf(';', start);
+  if (valueEnd < 0) valueEnd = masked.length;
+  if (member) {
+    if (masked[start] !== '{') return [];
+    const end = matchBrace(masked, start);
+    const segments = scanTopLevelSegments(masked, start + 1, end);
+    if (segments.some(segment => {
+      const key = masked.slice(segment.start, segment.end).trim();
+      return key && !/^[A-Za-z_$][\w$]*\s*(?::|$)/.test(key);
+    })) {
+      throw new Error(`无法静态解析含动态键的混入导出: ${file}`);
+    }
+    const selected = segments.reverse().find(segment =>
+      new RegExp('^\\s*' + member.replace(/[$]/g, '\\$&') + '\\s*(?::|$)').test(masked.slice(segment.start, segment.end)));
+    if (!selected) return [];
+    valueEnd = selected.end;
+    const value = masked.slice(selected.start, selected.end);
+    const colon = value.indexOf(':');
+    start = selected.start + (colon < 0 ? 0 : colon + 1);
+    start += (masked.slice(start).match(/^\s*/) || [''])[0].length;
+  }
+  const name = /^[A-Za-z_$][\w$]*$/.exec(masked.slice(start, valueEnd).trim());
+  if (name) {
+    const escaped = name[0].replace(/[$]/g, '\\$&');
+    const declaration = topLevelMatches(masked, called
+      ? new RegExp('\\bfunction\\s+' + escaped + '\\s*\\([^)]*\\)\\s*\\{', 'g')
+      : new RegExp('\\b(?:const|let|var)\\s+' + escaped + '\\s*=\\s*\\{', 'g'));
+    if (declaration.length !== 1) return [];
+    const bindingAt = declaration[0].index + declaration[0][0].indexOf(name[0]);
+    const writes = [...masked.matchAll(new RegExp('(^|[^\\w$.])' + escaped
+      + '\\s*(?:=(?!=|>)|(?:[+*/%&|^-]|\\?\\?|&&|\\|\\|)=|\\+\\+|--)', 'g'))];
+    if (writes.some(write => called || write.index + write[1].length !== bindingAt)) {
+      throw new Error(`无法静态解析已重新赋值的混入绑定 ${name[0]}: ${file}`);
+    }
+    // 函数表达式的局部名字不构成可导出的模块绑定（const other = function methods() {}）。
+    const prefix = masked.slice(0, declaration[0].index).trim();
+    if (called && prefix && !/[;}]$/.test(prefix)) return [];
+    start = declaration[0].index + declaration[0][0].length - 1;
+  } else if (called) return [];
+  if (masked[start] !== '{') return [];
+  let end = matchBrace(masked, start);
+  if (end < 0) return [];
+  if (called) {
+    const body = masked.slice(start + 1, end);
+    const returned = topLevelMatches(body, /\breturn[^\S\r\n]*\{/g);
+    // 块深度不能区分 if/try 的提前返回与独立函数的 return。
+    // 只遮蔽可识别的嵌套函数/箭头函数体，以及返回对象内部的方法；其他返回路径必须阻断。
+    const nestedFunctions = [];
+    for (const pattern of [
+      /\bfunction\s*\*?\s*(?:[A-Za-z_$][\w$]*\s*)?\([^)]*\)\s*\{/g,
+      /=>\s*\{/g,
+    ]) {
+      for (const match of body.matchAll(pattern)) {
+        const open = match.index + match[0].length - 1;
+        nestedFunctions.push({ open, close: matchBrace(body, open) });
+      }
+    }
+    const literals = returned.map(match => {
+      const open = match.index + match[0].length - 1;
+      return { open, close: matchBrace(body, open) };
+    });
+    const ownReturns = [...body.matchAll(/\breturn\b/g)].filter(match =>
+      !nestedFunctions.concat(literals).some(range => match.index > range.open && match.index < range.close));
+    const topReturns = new Set(topLevelMatches(body, /\breturn\b/g).map(match => match.index));
+    const hasOtherPath = ownReturns.some(match => !topReturns.has(match.index));
+    if (returned.length > 1 || hasOtherPath || (returned.length === 1
+        && (ownReturns.length !== 1 || ownReturns[0].index !== returned[0].index
+          || (body.slice(0, returned[0].index).trim()
+            && !/[;}]$/.test(body.slice(0, returned[0].index).trim()))))) {
+      throw new Error(`无法静态解析含多路径返回的混入工厂: ${file}`);
+    }
+    if (returned.length !== 1) return [];
+    start += 1 + returned[0].index + returned[0][0].length - 1;
+    end = matchBrace(masked, start);
+  }
+  return scanTopLevelKeys(masked, start + 1, end).map(k => handlerEntry(src, masked, file, k));
+}
+
+function handlerEntry(src, masked, file, key) {
+  const raw = masked.slice(key.start, key.end);
+  const start = key.start + raw.length - raw.replace(/^\s+/, '').length;
+  return { name: key.name, line: lineNumber(src, start), file, start, end: key.end, isFunction: key.isFunction };
+>>>>>>> private-github/featu
 }
 
 function extractOwnHandlerEntries(filePath, seen) {
@@ -458,39 +612,28 @@ function extractOwnHandlerEntries(filePath, seen) {
   if (factoryEntries !== null) return factoryEntries;
   const src = fs.readFileSync(filePath, 'utf8');
   const masked = maskNonCode(src);
-  // k.start 落在上一个逗号之后(可能还带着换行+缩进),直接算行号会偏到上一行。
-  const own = ownHandlerEntries(masked).map((k) => {
-    // k.start 之前的注释在 masked 里已被抹成空白；用 masked 求 lead 才能落到真实方法名 token，
-    // 否则 raw 切片会停在注释起首(如 /**)，staticSource 行号指向定义前一行。
-    const maskedRaw = masked.slice(k.start, k.end);
-    const lead = maskedRaw.length - maskedRaw.replace(/^\s+/, '').length;
-    return { name: k.name, line: lineNumber(src, k.start + lead), file: filePath, start: k.start + lead, end: k.end };
-  });
-  // 展开混入进来的方法,真源在被 require 的那个文件里 —— 不跟过去就只能记 :0。
-  const dir = path.dirname(filePath);
-  const mixed = [];
-  resolveSpreadRequireTargets(src).forEach((rel) => {
-    const resolved = resolveRequireFile(dir, rel);
-    if (!resolved) return;
-    const modSrc = fs.readFileSync(resolved, 'utf8');
-    const modMasked = maskNonCode(modSrc);
-    // 模块里是裸对象字面量(module.exports = { A, B }),没有 Page()/Component() 外壳,
-    // 所以直接扫每个顶层对象字面量的键。
-    for (const m of modMasked.matchAll(/(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*\{/g)) {
-      const open = m.index + m[0].length - 1;
-      const close = matchBrace(modMasked, open);
-      if (close === -1) continue;
-      scanTopLevelKeys(modMasked, open + 1, close)
-        .filter((k) => k.isFunction)
-        .forEach((k) => {
-          const maskedRaw = modMasked.slice(k.start, k.end);
-          const lead = maskedRaw.length - maskedRaw.replace(/^\s+/, '').length;
-          mixed.push({ name: k.name, line: lineNumber(modSrc, k.start + lead), file: resolved, start: k.start + lead, end: k.end });
-        });
+  const range = handlerBodyRange(masked);
+  if (!range) return [];
+  const byName = new Map();
+  const apply = entry => {
+    if (entry.isFunction) {
+      const { isFunction, ...value } = entry;
+      byName.set(entry.name, value);
+    } else byName.delete(entry.name);
+  };
+  // 顺序与 JavaScript 对象展开一致：后面的属性（包括非函数）覆盖前面的同名处理器。
+  scanTopLevelSegments(masked, range.start, range.end).forEach(segment => {
+    const text = masked.slice(segment.start, segment.end).trim();
+    const spread = /^\.\.\.\s*([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?\s*(\([\s\S]*\))?$/.exec(text);
+    if (spread) {
+      const binding = spreadImport(src, spread[1]);
+      if (!binding || (binding.member && spread[2])) return;
+      const file = resolveRequireFile(path.dirname(filePath), binding.relative);
+      if (file) exportedMixinEntries(file, binding.member || spread[2], !!spread[3]).forEach(apply);
+    } else {
+      scanTopLevelKeys(masked, segment.start, segment.end).forEach(key => apply(handlerEntry(src, masked, filePath, key)));
     }
   });
-  const byName = new Map();
-  mixed.concat(own).forEach((entry) => { byName.set(entry.name, entry); }); // 本文件定义的覆盖混入的
   return [...byName.values()];
 }
 
@@ -504,7 +647,7 @@ function extractHandlerNames(filePath, seen) {
   const src = fs.readFileSync(filePath, 'utf8');
   const masked = maskNonCode(src);
 
-  let names = ownHandlerEntries(masked).map((k) => k.name);
+  let names = extractOwnHandlerEntries(filePath).map((k) => k.name);
   if (!findDefinitionBody(masked)) return [];
 
   const behaviorDir = path.dirname(filePath);
@@ -517,22 +660,6 @@ function extractHandlerNames(filePath, seen) {
     if (resolved) names = names.concat(extractHandlerNames(resolved, seen));
   });
 
-  // 对象展开混入(`...X`)。Page() 不支持 behaviors,展开是它唯一的混入方式 ——
-  // 不跟过去的话,住在被 require 模块里的处理器会被判成「JS 方法不存在」(2026-09-03 实证)。
-  resolveSpreadRequireTargets(src).forEach((rel) => {
-    const resolved = resolveRequireFile(behaviorDir, rel);
-    if (!resolved || seen.has(resolved)) return;
-    seen.add(resolved);
-    const modSrc = fs.readFileSync(resolved, 'utf8');
-    const modMasked = maskNonCode(modSrc);
-    for (const m of modMasked.matchAll(/(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*\{/g)) {
-      const open = m.index + m[0].length - 1;
-      const close = matchBrace(modMasked, open);
-      if (close === -1) continue;
-      names = names.concat(
-        scanTopLevelKeys(modMasked, open + 1, close).filter((k) => k.isFunction).map((k) => k.name));
-    }
-  });
 
   return names;
 }

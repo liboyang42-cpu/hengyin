@@ -95,16 +95,16 @@ Component({
   methods: {
     /* 内部步骤返回 —— 只退一步,不是退出任务,所以单独发 back,不发 requestclose */
     onBack() {
-      if (this.data._closing) return;
+      if (this.data._closing || this.data.stacked) return;
       this.triggerEvent('back');
     },
 
     onClose() {
-      if (this.data._closing) return;
+      if (this.data._closing || this.data.stacked) return;
       this._requestClose('close');
     },
     onMask() {
-      if (this.data._closing) return;
+      if (this.data._closing || this.data.stacked) return;
       // 有脏输入时遮罩不直接关(防误触丢数据),但仍上报让父页面决定
       if (this.data.dirty) { this.triggerEvent('requestclose', { reason: 'mask' }); return; }
       if (!this.data.maskClosable) return;
@@ -112,7 +112,7 @@ Component({
     },
 
     _requestClose(reason) {
-      if (this.data._closing) return;
+      if (this.data._closing || this.data.stacked) return;
       this.triggerEvent('requestclose', { reason });
       /* 向后兼容:既有 20 处调用监听的是 bind:close。干净状态下照常发 close,
        * 旧页面零改动;脏状态只发 requestclose,强制父页面显式处理。 */
@@ -122,7 +122,7 @@ Component({
 
     /* ——— handle 拖拽:跟随 / 阈值 / 吸附 ——— */
     onDragStart(e) {
-      if (this.data._closing) return;
+      if (this.data._closing || this.data.stacked) return;
       const t = e.touches && e.touches[0];
       if (!t) return;
       if (this._snapTimer) { clearTimeout(this._snapTimer); this._snapTimer = null; }

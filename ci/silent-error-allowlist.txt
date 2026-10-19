@@ -187,6 +187,7 @@ chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身�
 chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js 4  # 详情读取落 state:error，取消预检和取消提交落 cancelError，评价提交落 commentError；各有页内反馈与恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-qr-coupon/index.js 2  # 凭证签发失败落 qrState:error，状态轮询失败落 pollError；已使用或失效会清凭证，各有页内恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 据点和商家读取落页内错误态，收藏失败落 favoriteError，打卡业务拒绝或网络异常落专用恢复面板；通道 toast 会重复报错。
+<<<<<<< public
 
 chengyinhub-xcx/utils/community-post-api.js 1  # canonical 社区内部 call 的 BASE+path 仅由本文件 publish/report 闭包生成；完整 GET/POST/PATCH/DELETE 目标逐项匹配真实 Controller，未知路由/错方法负控拒绝；业务与传输失败经 pipeline reject 分流到调用页 success/fail 可见错误或 toast，取消不报成功；owner=小程序，复核=B146
 
@@ -201,3 +202,6 @@ chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 2026-10-19 移植�
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 2026-10-19 移植基线 366b846f:路线详情失败落 state=error/notfound 的页内可见态,error 带重试
 chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2026-10-19 移植基线 f33f1180:举报失败落结果半屏 fail 态(含后端原因与重试),不再叠加统一 toast
 chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 3  # 2026-10-19 移植基线 49ee4a4d:状态键读取落 cy-error 重试;注册失败落表单 formError;删除失败落危险确认的 error 态,均为可见反馈
+=======
+chengyinhub-xcx/pages/publish/fabu/topic-saved-check.js 1  # 已保存主题检查的业务/网络/HTTP错误由原弹层显式报错并提供重试；真实重登失败清会话后仅当前可见同草稿先退休旧层再经 app.tips 提示重新进入，关闭/换草稿/新身份的迟到回包不提示，避免与通用提示重复。
+>>>>>>> private-github/featu

@@ -1,0 +1,18 @@
+name: Private home MySQL diagnostic
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/private-home-mysql-diagnostic.yml'
+      - 'ci/private_home_mysql_diagnostic.py'
+      - 'ci/fixtures/private_home_review_candidate_20261003.sql'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Observe standalone candidate schema in disposable Oracle MySQL
+        run: python3 ci/private_home_mysql_diagnostic.py

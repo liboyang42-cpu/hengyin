@@ -1,0 +1,74 @@
+name: Private home MySQL IT
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/private-home-mysql-it.yml'
+      - 'ci/private-home-mysql-it-gate.sh'
+      - 'ci/private_home_mysql_it_gate.py'
+      - 'ci/test_private_home_mysql_it_gate.py'
+      - 'chengyinhub-framework/src/main/java/com/chengyinhub/framework/privacy/**'
+      - 'chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/DruidConfig.java'
+      - 'chengyinhub-admin/src/main/resources/logback.xml'
+      - 'ci/sql_splitter.py'
+      - 'chengyinhub-admin/sql/migration_20261002_private_player_home.sql'
+      - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/*PrivateHome*.java'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/home/**'
+      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/support/IsolatedMySqlSchema.java'
+      - 'chengyinhub-system/src/main/java/com/chengyinhub/business/home/**'
+      - 'chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PrivateHomeMapper.java'
+      - 'chengyinhub-system/src/main/resources/mapper/business/PrivateHomeMapper.xml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-home-mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Verify home and retention gate negative controls
+        run: python3 -m unittest ci.test_private_home_mysql_it_gate
+      - name: Start disposable Oracle MySQL 8.0.45
+        id: mysql
+        run: |
+          set -euo pipefail
+          container="cy-home-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "container=$container" >> "$GITHUB_OUTPUT"
+          docker run -d --name "$container" -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+            -p 127.0.0.1::3306 \
+            --health-cmd='mysqladmin ping -h 127.0.0.1 -uroot --silent' \
+            --health-interval=2s --health-timeout=2s --health-retries=60 mysql:8.0.45
+          port="$(docker port "$container" 3306/tcp | awk -F: 'END {print $NF}')"
+          test -n "$port"
+          for _ in {1..90}; do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' "$container")" = healthy ]; then
+              identity="$(docker exec "$container" mysql -h127.0.0.1 -Nuroot -e 'SELECT CONCAT(VERSION(), "|", @@version_comment)')"
+              test "$identity" = '8.0.45|MySQL Community Server - GPL'
+              echo "port=$port" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$container"
+          exit 1
+      - name: Require home31 and retention28 real MySQL cases with no skips
+        run: bash ci/private-home-mysql-it-gate.sh
+        env:
+          CHENGYIN_FUNDS_MYSQL_IT: '1'
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: ${{ steps.mysql.outputs.port }}
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: ''
+      - name: Remove disposable MySQL container and volume
+        if: always() && steps.mysql.outputs.container != ''
+        env:
+          MYSQL_CONTAINER: ${{ steps.mysql.outputs.container }}
+        run: |
+          set -euo pipefail
+          docker rm -f -v "$MYSQL_CONTAINER" >/dev/null 2>&1 || true
+          remaining="$(docker ps -a --format '{{.Names}}')"
+          ! grep -Fxq "$MYSQL_CONTAINER" <<< "$remaining"

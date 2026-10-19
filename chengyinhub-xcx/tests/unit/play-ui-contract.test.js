@@ -335,8 +335,8 @@ test('三模式完成卡继续使用真实腾讯地图展示完整路径', () =>
 test('主题游玩只在玩家开始或前往时请求定位，并保留扫码降级', () => {
   const playJs = readXcx('pages/play/index.js')
   const playWxml = readXcx('pages/play/index.wxml')
-  const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData(data) {'))
-  const previewData = playJs.slice(playJs.indexOf('  applyPreviewData(data) {'), playJs.indexOf('  normNode('))
+  const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData('))
+  const previewData = playJs.slice(playJs.indexOf('  applyPreviewData('), playJs.indexOf('  normNode('))
 
   assert.doesNotMatch(loadData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
   assert.doesNotMatch(previewData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
@@ -352,7 +352,7 @@ test('主题游玩只在玩家开始或前往时请求定位，并保留扫码�
 
 test('主题游玩主数据加载在网络 reject 时落加载失败态而非死转 loading', () => {
   const playJs = readXcx('pages/play/index.js')
-  const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData(data) {'))
+  const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData('))
   // /api/play/nodes 被 reject(超时/断网/req 抛错)时必须有 .catch 落 emptyKind:'error',
   // 复用「重新加载」(reloadPlay)按钮;否则 .then 不执行、loading 永远为 true=白屏死转。
   assert.match(loadData, /\}\)\.catch\(/)

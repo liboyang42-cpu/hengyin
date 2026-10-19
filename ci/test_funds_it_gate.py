@@ -7,6 +7,7 @@
 import importlib.util
 import os
 import pathlib
+import re
 import socket
 import subprocess
 import tempfile
@@ -28,6 +29,30 @@ def write_report(directory, short, tests, skipped=0, failures=0, errors=0):
         handle.write(xml)
 
 
+def write_fixed_coupon_report(directory, short):
+    import xml.etree.ElementTree as ET
+    full = "com.chengyinhub.business.it." + short
+    names = funds_it_gate.FIXED_COUPON_METHODS[short]
+    root = ET.Element("testsuite", name=full, tests=str(len(names)), skipped="0", failures="0", errors="0")
+    for name in names:
+        ET.SubElement(root, "testcase", name=name, classname=full)
+    path = pathlib.Path(directory) / ("TEST-" + full + ".xml")
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
+    return path
+
+
+def write_merchant_authoring_report(directory, short):
+    import xml.etree.ElementTree as ET
+    full = "com.chengyinhub.business.service.ai." + short
+    names = funds_it_gate.MERCHANT_AUTHORING_METHODS[short]
+    root = ET.Element("testsuite", name=full, tests=str(len(names)), skipped="0", failures="0", errors="0")
+    for name in names:
+        ET.SubElement(root, "testcase", name=name, classname=full)
+    path = pathlib.Path(directory) / ("TEST-" + full + ".xml")
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
+    return path
+
+
 def all_required_clean(directory):
     """EXPECTED 里的每一套都产出一份干净报告。
 
@@ -36,6 +61,30 @@ def all_required_clean(directory):
     少写一套,test_green_when_all_required_ran_fully 会红,而那正是它该有的行为
     (门禁新增一套却没人跑 = fail-closed)。别为了让它绿而去删 EXPECTED 里的条目。
     """
+    write_merchant_authoring_report(directory, "MerchantAuthoringCurrentRowsMySqlIT")
+    write_merchant_authoring_report(directory, "MerchantAuthoringRevocationRaceMySqlIT")
+    write_fixed_coupon_report(directory, "FixedCouponAtomicMySqlIT")
+    write_fixed_coupon_report(directory, "FixedCouponSchemaMySqlIT")
+    write_report(directory, "CouponCommandServiceMySqlIT", 20)
+    write_report(directory, "MerchantNpcKnowledgeDraftMySqlIT", 28)
+    write_report(directory, "NonCashRewardMySqlIT", 31)
+    write_report(directory, "RendezvousConsentMySqlIT", 12)
+    write_report(directory, "CityBoardDraftMySqlIT", 16)
+    write_report(directory, "WalkingTargetMySqlIT", 16)
+    write_report(directory, "InstalledDraftReceiptMySqlIT", 42)
+    write_report(directory, "InstalledDraftReceiptIndexMySqlIT", 10)
+    write_report(directory, "FreeClaimInstallationMySqlIT", 43)
+    write_report(directory, "FreeInstallScopeSchemaMySqlIT", 7)
+    write_report(directory, "FreeModuleSchemaMySqlIT", 13)
+    write_report(directory, "FreeModuleClaimMySqlIT", 21)
+    write_report(directory, "ModuleReservationMySqlIT", 35)
+    write_report(directory, "ModuleTextInstallationMySqlIT", 38)
+    write_report(directory, "CityRuntimeMySqlIT", 31)
+    write_report(directory, "CityLegacyPointsMySqlIT", 4)
+    write_report(directory, "ContentCaptureSnapshotMySqlIT", 9)
+    write_report(directory, "ContentCaptureReviewMySqlIT", 27)
+    write_report(directory, "ContentCapturePreviewMySqlIT", 18)
+    write_report(directory, "ContentCaptureReviewSchemaMySqlIT", 31)
     write_report(directory, "CoopListReadOnlyMybatisIntegrationTest", 5)
     write_report(directory, "RegistrationFundsMybatisIntegrationTest", 92)
     write_report(directory, "RegistrationEquityMybatisIntegrationTest", 5)
@@ -114,6 +163,12 @@ class FundsItGateTest(unittest.TestCase):
     def test_green_when_all_required_ran_fully(self):
         all_required_clean(self.dir)
         self.assertEqual([], funds_it_gate.enforce(self.dir))
+
+    def test_red_when_npc_draft_suite_is_skipped(self):
+        all_required_clean(self.dir)
+        write_report(self.dir, "MerchantNpcKnowledgeDraftMySqlIT", 28, skipped=28)
+        problems = funds_it_gate.enforce(self.dir)
+        self.assertTrue(any("MerchantNpcKnowledgeDraftMySqlIT" in p and "skipped" in p for p in problems), problems)
 
     def test_red_when_newly_added_explore_suite_is_skipped(self):
         # 负控:并入 EXPECTED 的两套 Explore IT 一旦被 skip,必须和资金三套一样判红。
@@ -202,6 +257,66 @@ _GATE_SCRIPT = _REPO_ROOT / "ci" / "funds-mysql-it-gate.sh"
 _WORKFLOW = _REPO_ROOT / ".github" / "workflows" / "funds-mysql-it.yml"
 
 
+class CouponCommandIntegrationContractTest(unittest.TestCase):
+    def test_all_prior_suite_counts_are_unchanged(self):
+        import hashlib
+        import json
+        legacy = {k: v for k, v in funds_it_gate.EXPECTED.items() if k not in {"CoopListReadOnlyMybatisIntegrationTest", "MerchantAuthoringCurrentRowsMySqlIT", "MerchantAuthoringRevocationRaceMySqlIT", "CouponCommandServiceMySqlIT", "FixedCouponAtomicMySqlIT", "FixedCouponSchemaMySqlIT"}}
+        self.assertEqual("2fb7e46c9240af2487fc8d7045b870b4d6eda104e6042457499805b3501f6f14", hashlib.sha256(json.dumps(legacy, sort_keys=True).encode()).hexdigest())
+        self.assertEqual(20, funds_it_gate.EXPECTED["CouponCommandServiceMySqlIT"])
+        self.assertEqual(5, funds_it_gate.EXPECTED["CoopListReadOnlyMybatisIntegrationTest"])
+
+    def test_coupon_skip_remains_red(self):
+        with tempfile.TemporaryDirectory() as directory:
+            all_required_clean(directory)
+            write_report(directory, "CouponCommandServiceMySqlIT", 20, skipped=20)
+            self.assertTrue(any("CouponCommandServiceMySqlIT" in p and "skipped" in p for p in funds_it_gate.enforce(directory)))
+
+    def test_coupon_same_reactor_binding_and_artifact(self):
+        gate = _GATE_SCRIPT.read_text(encoding="utf-8")
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        self.assertEqual(1, gate.count("mvn -B -pl chengyinhub-admin -am clean test"))
+        selectors = re.search(r'  -Dtest=([^\n]+)', gate).group(1).split(',')
+        self.assertEqual(1, selectors.count("CouponCommandServiceMySqlIT"))
+        self.assertEqual(set(funds_it_gate.EXPECTED), set(selectors))
+        self.assertIn('coupon_commit="$(git rev-parse HEAD)"', gate)
+        self.assertIn("coupon_run_id=", gate)
+        self.assertIn('coupon_source_sha="$(python3 ci/coupon_command_mysql_gate.py --fingerprint-source .)"', gate)
+        self.assertIn('-Dcoupon.command.test.commit="$coupon_commit" -Dcoupon.command.test.run="$coupon_run_id" -Dcoupon.command.test.sourceSha256="$coupon_source_sha"', gate)
+        self.assertIn('python3 ci/coupon_command_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$coupon_commit" --run-id "$coupon_run_id" --source-sha256 "$coupon_source_sha" --output artifacts/coupon-command-mysql-proof.json', gate)
+        self.assertIn('ci/test_coupon_command_mysql_gate.py', workflow)
+        self.assertIn('name: coupon-command-mysql-${{ github.sha }}-${{ github.run_attempt }}', workflow)
+        self.assertIn('artifacts/coupon-command-mysql-proof.json', workflow)
+        self.assertIn('chengyinhub-admin/target/surefire-reports/*CouponCommandServiceMySqlIT*', workflow)
+        for path in ('chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CouponCommandServiceMySqlIT.java', 'chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql', 'chengyinhub-admin/sql/migration_coupon_command_receipt.sql', 'chengyinhub-admin/sql/migration_coupon_dedup.sql', 'ci/coupon_command_mysql_gate.py', 'ci/test_coupon_command_mysql_gate.py'):
+            self.assertIn(path, funds_it_gate.REQUIRED_TRIGGER_PATHS)
+            self.assertEqual(2, workflow.count("'" + path + "'"))
+
+
+class NpcDraftIntegrationContractTest(unittest.TestCase):
+    def test_npc_proof_binds_the_same_clean_reactor_and_has_artifact(self):
+        gate = _GATE_SCRIPT.read_text(encoding="utf-8")
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        self.assertEqual(1, gate.count("mvn -B -pl chengyinhub-admin -am clean test"))
+        selectors = re.search(r'  -Dtest=([^\n]+)', gate).group(1).split(',')
+        self.assertEqual(1, selectors.count('MerchantNpcKnowledgeDraftMySqlIT'))
+        self.assertIn('npc_commit="$(git rev-parse HEAD)"', gate)
+        self.assertIn("npc_run_id=", gate)
+        self.assertIn('-Dnpc.draft.test.commit="$npc_commit" -Dnpc.draft.test.run="$npc_run_id"', gate)
+        self.assertIn('python3 ci/npc_draft_mysql_gate.py chengyinhub-admin/target/surefire-reports --commit "$npc_commit" --run-id "$npc_run_id" --output artifacts/npc-draft-mysql-proof.json', gate)
+        self.assertIn('ci/test_npc_draft_mysql_gate.py', workflow)
+        self.assertIn('artifacts/npc-draft-mysql-proof.json', workflow)
+        self.assertIn('chengyinhub-admin/target/surefire-reports/*MerchantNpcKnowledgeDraftMySqlIT*', workflow)
+        for path in (
+            "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/npc/**",
+            "chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql",
+            "chengyinhub-admin/sql/migration_20261004_merchant_npc_knowledge_drafts.sql",
+            "ci/npc_draft_mysql_gate.py", "ci/test_npc_draft_mysql_gate.py",
+        ):
+            self.assertIn(path, funds_it_gate.REQUIRED_TRIGGER_PATHS)
+            self.assertEqual(2, workflow.count("'" + path + "'"))
+
+
 class FundsItExpectedCountTest(unittest.TestCase):
     """EXPECTED 手记数字曾经错过一次(把 @TestInstance 当 @Test 多数了一遍)——
     这里直接从已登记源码正则数 @Test,断言与 EXPECTED 一致,不再靠人肉数对。
@@ -245,6 +360,153 @@ class FundsItExpectedCountTest(unittest.TestCase):
         self.assertIn(short, funds_it_gate.SOURCE_FILES)
         self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
 
+    def test_walking_target_suite_rejects_missing_skipped_failed_errored_and_under_counted_reports(self):
+        short = "WalkingTargetMySqlIT"
+        self.assertEqual(16, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for field in ("skipped", "failures", "errors"):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                write_report(directory, short, 16, **{field: 1})
+                self.assertTrue(funds_it_gate.enforce(directory))
+        with tempfile.TemporaryDirectory() as directory:
+            all_required_clean(directory)
+            write_report(directory, short, 15)
+            self.assertTrue(funds_it_gate.enforce(directory))
+            for path in pathlib.Path(directory).glob("*WalkingTargetMySqlIT.xml"):
+                path.unlink()
+            self.assertTrue(funds_it_gate.enforce(directory))
+    def test_city_board_draft_is_registered_and_fail_closed_for_every_missing_evidence_kind(self):
+        short = "CityBoardDraftMySqlIT"
+        self.assertEqual(16, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for kwargs in ({"skipped": 1}, {"errors": 1}, {"failures": 1}, {"tests": 15}):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                self.assertEqual([], funds_it_gate.enforce(directory))
+                write_report(directory, short, **{"tests": 16, **kwargs})
+                self.assertTrue(any(short in problem for problem in funds_it_gate.enforce(directory)))
+        with tempfile.TemporaryDirectory() as directory:
+            all_required_clean(directory)
+            for report in pathlib.Path(directory).glob("*CityBoardDraftMySqlIT.xml"):
+                report.unlink()
+            self.assertTrue(any(short in problem for problem in funds_it_gate.enforce(directory)))
+
+    def test_city_board_draft_uses_original_mysql_migration_without_h2_inheritance(self):
+        path = _REPO_ROOT / funds_it_gate.SOURCE_FILES["CityBoardDraftMySqlIT"]
+        text = path.read_text(encoding="utf-8")
+        self.assertEqual(16, funds_it_gate.count_test_methods(text))
+        for required in ('named="CHENGYIN_FUNDS_MYSQL_IT", matches="1"', 'mysql.open("boarddraft")',
+                         'mysql.apply(MIGRATION)', 'mysql.close()', '20261003_city_board_draft_candidate',
+                         'new JdbcCityBoardDraftStore(source)', 'CityBoardDraftService.Mode.ISOLATED_DRAFT_EVALUATION'):
+            self.assertIn(required, text)
+        self.assertNotIn("jdbc:h2", text)
+        self.assertNotIn("extends CityBoardDraftPersistenceTest", text)
+        migration = "chengyinhub-admin/sql/migration_20261003_city_board_draft_candidate.sql"
+        self.assertIn(migration, funds_it_gate.REQUIRED_TRIGGER_PATHS)
+        self.assertEqual(2, _WORKFLOW.read_text(encoding="utf-8").count("'" + migration + "'"))
+
+    def test_capture_preview_is_registered_and_fail_closed_for_every_missing_evidence_kind(self):
+        short = "ContentCapturePreviewMySqlIT"
+        self.assertEqual(18, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for kwargs in ({"skipped": 1}, {"errors": 1}, {"failures": 1}, {"tests": 17}):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                values = {"tests": 18, **kwargs}
+                write_report(directory, short, **values)
+                self.assertTrue(any(short in problem for problem in funds_it_gate.enforce(directory)))
+        with tempfile.TemporaryDirectory() as directory:
+            all_required_clean(directory)
+            for report in pathlib.Path(directory).glob("*ContentCapturePreviewMySqlIT.xml"):
+                report.unlink()
+            self.assertTrue(any(short in problem for problem in funds_it_gate.enforce(directory)))
+
+    def test_capture_review_live_schema_suite_is_registered_with_fail_closed_readback(self):
+        short = "ContentCaptureReviewSchemaMySqlIT"
+        self.assertEqual(31, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for field in ("skipped", "failures", "errors"):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                write_report(directory, short, 31, **{field: 1})
+                self.assertTrue(funds_it_gate.enforce(directory))
+
+    def test_capture_review_suite_is_registered_with_fail_closed_readback(self):
+        short = "ContentCaptureReviewMySqlIT"
+        self.assertEqual(27, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for field in ("skipped", "failures", "errors"):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                write_report(directory, short, 27, **{field: 1})
+                self.assertTrue(funds_it_gate.enforce(directory))
+
+    def test_capture_review_transport_requires_all_27_cases(self):
+        short = "ContentCaptureReviewMySqlIT"
+        for count in (0, 20, 26):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                write_report(directory, short, count)
+                self.assertTrue(funds_it_gate.enforce(directory))
+        with tempfile.TemporaryDirectory() as directory:
+            all_required_clean(directory)
+            for report in pathlib.Path(directory).glob("*ContentCaptureReviewMySqlIT.xml"):
+                report.unlink()
+            self.assertTrue(funds_it_gate.enforce(directory))
+
+    def test_capture_snapshot_suite_is_registered_with_fail_closed_readback(self):
+        short = "ContentCaptureSnapshotMySqlIT"
+        self.assertEqual(9, funds_it_gate.EXPECTED[short])
+        self.assertIn(short, funds_it_gate.SOURCE_FILES)
+        self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+        for field in ("skipped", "failures", "errors"):
+            with tempfile.TemporaryDirectory() as directory:
+                all_required_clean(directory)
+                write_report(directory, short, 9, **{field: 1})
+                self.assertTrue(funds_it_gate.enforce(directory))
+
+    def test_module_city_suites_fail_closed_on_missing_skipped_failed_or_short_report(self):
+        for short, expected in (("InstalledDraftReceiptIndexMySqlIT", 10), ("InstalledDraftReceiptMySqlIT", 42), ("FreeClaimInstallationMySqlIT", 43), ("FreeInstallScopeSchemaMySqlIT", 7), ("FreeModuleSchemaMySqlIT", 13), ("FreeModuleClaimMySqlIT", 21), ("ModuleReservationMySqlIT", 35), ("ModuleTextInstallationMySqlIT", 38),
+                                ("CityRuntimeMySqlIT", 31), ("CityLegacyPointsMySqlIT", 4)):
+            self.assertEqual(expected, funds_it_gate.EXPECTED[short])
+            for bad in ("missing", "skipped", "failures", "errors", "short"):
+                with self.subTest(suite=short, failure=bad), tempfile.TemporaryDirectory() as directory:
+                    all_required_clean(directory)
+                    self.assertEqual([], funds_it_gate.enforce(directory))
+                    if bad == "missing":
+                        os.unlink(os.path.join(directory, "TEST-com.chengyinhub.business.service." + short + ".xml"))
+                    else:
+                        kwargs = {bad: 1} if bad in ("skipped", "failures", "errors") else {}
+                        write_report(directory, short, expected - (bad == "short"), **kwargs)
+                    self.assertTrue(funds_it_gate.enforce(directory), short + ": " + bad)
+
+    def test_module_city_inherited_suites_replace_h2_setup_and_keep_all_assertions(self):
+        for short, base in (("InstalledDraftReceiptMySqlIT", "InstalledDraftReceiptReaderTest"), ("FreeClaimInstallationMySqlIT", "FreeClaimInstallationTransactionTest"),
+                            ("ModuleReservationMySqlIT", "ModuleInstallReservationTransactionTest"),
+                            ("ModuleTextInstallationMySqlIT", "ModuleTextDraftInstallationTransactionTest"),
+                            ("CityRuntimeMySqlIT", "CityRuntimePersistenceH2Test")):
+            source = _REPO_ROOT / funds_it_gate.SOURCE_FILES[short]
+            subclass = source.parent / (short + ".java")
+            text = subclass.read_text(encoding="utf-8")
+            self.assertIn("extends " + base, text)
+            self.assertIn("@EnabledIfEnvironmentVariable", text)
+            self.assertIn('named="CHENGYIN_FUNDS_MYSQL_IT", matches="1"', text)
+            self.assertIn("createDataSource()", text)
+            self.assertIn("mysql.open(", text)
+            self.assertIn("applySchema(JdbcTemplate jdbc)", text)
+            self.assertIn("mysql.apply(", text)
+            self.assertIn("mysql.close()", text)
+            self.assertNotIn("jdbc:h2", text)
+            self.assertEqual(0, funds_it_gate.count_test_methods(text), "Shared assertions must not be shadowed")
+        text = (_REPO_ROOT / "chengyinhub-admin/src/test/java/com/chengyinhub/business/marketplace/reservation/ModuleReservationMySqlIT.java").read_text()
+        self.assertIn('return "REPEATABLE READ"', text)
+        self.assertNotIn('"SNAPSHOT"', text)
     def test_coop_list_suite_is_registered_on_both_execution_and_readback_sides(self):
         short = "CoopListReadOnlyMybatisIntegrationTest"
         self.assertEqual(5, funds_it_gate.EXPECTED[short])
@@ -566,6 +828,249 @@ class FundsItWorkflowContractTest(unittest.TestCase):
         self.assertNotEqual(self.workflow, broken, "fixture 必须真摘掉探店日资金迁移触发路径")
         problems = funds_it_gate.enforce_workflow(broken, self.gate)
         self.assertTrue(any("tandianri_product_type_backfill" in p for p in problems), problems)
+
+
+class FixedCouponExactMethodGateTest(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.expected = {"FixedCouponAtomicMySqlIT": 17, "FixedCouponSchemaMySqlIT": 13}
+        self.paths = {short: write_fixed_coupon_report(self.directory.name, short) for short in self.expected}
+
+    def problems(self):
+        return funds_it_gate.enforce(self.directory.name, self.expected)
+
+    def mutate(self, short, operation):
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(self.paths[short]); operation(tree.getroot()); tree.write(self.paths[short], encoding="utf-8")
+
+    def test_complete_thirty_exact_methods_pass(self):
+        self.assertEqual(30, sum(self.expected.values()))
+        self.assertEqual([], self.problems())
+
+    def test_each_missing_suite_is_rejected(self):
+        for short in self.expected:
+            with self.subTest(short=short):
+                path = self.paths[short]; original = path.read_bytes(); path.unlink()
+                self.assertTrue(self.problems()); path.write_bytes(original)
+
+    def test_exact_source_method_identity_and_existing_selector_set(self):
+        for short, names in funds_it_gate.FIXED_COUPON_METHODS.items():
+            source = (_REPO_ROOT / funds_it_gate.SOURCE_FILES[short]).read_text()
+            self.assertEqual(list(names), re.findall(r"@Test\s+void\s+(\w+)\s*\(", source))
+            self.assertEqual(len(names), funds_it_gate.EXPECTED[short])
+        selectors = re.search(r'  -Dtest=([^\n]+)', _GATE_SCRIPT.read_text()).group(1).split(',')
+        self.assertEqual(set(selectors), set(funds_it_gate.EXPECTED)); self.assertEqual(len(selectors), len(set(selectors)))
+
+    def test_missing_duplicated_replaced_or_extra_method_rejected(self):
+        import xml.etree.ElementTree as ET
+        operations = [lambda r: r.remove(r.find("testcase")),
+                      lambda r: r.append(ET.fromstring(ET.tostring(r.find("testcase")))),
+                      lambda r: r.find("testcase").set("name", "differentMethod"),
+                      lambda r: ET.SubElement(r, "testcase", name="unregisteredMethod", classname=r.get("name"))]
+        for short in self.expected:
+            for operation in operations:
+                with self.subTest(short=short, operation=operation):
+                    original = self.paths[short].read_bytes(); self.mutate(short, operation)
+                    self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_hidden_case_skip_failure_error_is_rejected_even_with_zero_headers(self):
+        import xml.etree.ElementTree as ET
+        for short in self.expected:
+            for tag in ["skipped", "failure", "error"]:
+                original = self.paths[short].read_bytes(); self.mutate(short, lambda r: ET.SubElement(r.find("testcase"), tag))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_suite_headers_do_not_override_actual_method_inventory(self):
+        for short in self.expected:
+            for attribute, value in [("tests", "1"), ("tests", "99"), ("skipped", "1"), ("failures", "1"), ("errors", "1")]:
+                original = self.paths[short].read_bytes(); self.mutate(short, lambda r: r.set(attribute, value))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_same_short_class_in_wrong_package_is_rejected(self):
+        for short in self.expected:
+            original = self.paths[short].read_bytes()
+            self.mutate(short, lambda r: r.set("name", "wrong.package." + short))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+            self.mutate(short, lambda r: r.find("testcase").set("classname", "wrong.package." + short))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_duplicate_suite_report_is_rejected(self):
+        duplicate = pathlib.Path(self.directory.name) / "TEST-duplicate.xml"
+        duplicate.write_bytes(self.paths["FixedCouponAtomicMySqlIT"].read_bytes())
+        self.assertTrue(self.problems())
+
+
+    def test_exact_hosted_302_method_display_identity_is_accepted(self):
+        for short in self.expected:
+            def convert(root):
+                root.set("version", "3.0.2")
+                for case in root.findall("testcase"):
+                    case.set("classname", case.get("name") + "()")
+            self.mutate(short, convert)
+        self.assertEqual([], self.problems())
+
+    def test_hosted_identity_refuses_wrong_version_wrong_method_and_mixed_forms(self):
+        for short in self.expected:
+            original = self.paths[short].read_bytes()
+            def convert(root):
+                root.set("version", "3.0.2")
+                for case in root.findall("testcase"):
+                    case.set("classname", case.get("name") + "()")
+            self.mutate(short, convert)
+            hosted = self.paths[short].read_bytes()
+            self.mutate(short, lambda root: root.set("version", "3.0"))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(hosted)
+            self.mutate(short, lambda root: root.find("testcase").set("classname", "unrelated()"))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(hosted)
+            if self.expected[short] > 1:
+                self.mutate(short, lambda root: root.find("testcase").set("classname", root.get("name")))
+                self.assertTrue(self.problems())
+            self.paths[short].write_bytes(original)
+
+    def test_hidden_retry_failures_are_rejected_with_zero_summary_errors(self):
+        import xml.etree.ElementTree as ET
+        for short in self.expected:
+            for tag in ["flakyFailure", "flakyError", "rerunFailure", "rerunError"]:
+                original = self.paths[short].read_bytes()
+                self.mutate(short, lambda root: ET.SubElement(root.find("testcase"), tag))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+
+class MerchantAuthoringExactMethodGateTest(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.expected = {'MerchantAuthoringCurrentRowsMySqlIT': 7, 'MerchantAuthoringRevocationRaceMySqlIT': 1}
+        self.paths = {short: write_merchant_authoring_report(self.directory.name, short) for short in self.expected}
+
+    def problems(self):
+        return funds_it_gate.enforce(self.directory.name, self.expected)
+
+    def mutate(self, short, operation):
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(self.paths[short]); operation(tree.getroot()); tree.write(self.paths[short], encoding="utf-8")
+
+    def test_complete_eight_exact_methods_pass(self):
+        self.assertEqual(8, sum(self.expected.values()))
+        self.assertEqual([], self.problems())
+
+    def test_each_missing_suite_is_rejected(self):
+        for short in self.expected:
+            with self.subTest(short=short):
+                path = self.paths[short]; original = path.read_bytes(); path.unlink()
+                self.assertTrue(self.problems()); path.write_bytes(original)
+
+    def test_exact_source_method_identity_and_existing_selector_set(self):
+        for short, names in funds_it_gate.MERCHANT_AUTHORING_METHODS.items():
+            source = (_REPO_ROOT / funds_it_gate.SOURCE_FILES[short]).read_text()
+            self.assertEqual(list(names), re.findall(r"@Test\s+void\s+(\w+)\s*\(", source))
+            self.assertEqual(len(names), funds_it_gate.EXPECTED[short])
+        selectors = re.search(r'  -Dtest=([^\n]+)', _GATE_SCRIPT.read_text()).group(1).split(',')
+        self.assertEqual(set(selectors), set(funds_it_gate.EXPECTED)); self.assertEqual(len(selectors), len(set(selectors)))
+
+    def test_missing_duplicated_replaced_or_extra_method_rejected(self):
+        import xml.etree.ElementTree as ET
+        operations = [lambda r: r.remove(r.find("testcase")),
+                      lambda r: r.append(ET.fromstring(ET.tostring(r.find("testcase")))),
+                      lambda r: r.find("testcase").set("name", "differentMethod"),
+                      lambda r: ET.SubElement(r, "testcase", name="unregisteredMethod", classname=r.get("name"))]
+        for short in self.expected:
+            for operation in operations:
+                with self.subTest(short=short, operation=operation):
+                    original = self.paths[short].read_bytes(); self.mutate(short, operation)
+                    self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_hidden_case_skip_failure_error_is_rejected_even_with_zero_headers(self):
+        import xml.etree.ElementTree as ET
+        for short in self.expected:
+            for tag in ["skipped", "failure", "error"]:
+                original = self.paths[short].read_bytes(); self.mutate(short, lambda r: ET.SubElement(r.find("testcase"), tag))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_suite_headers_do_not_override_actual_method_inventory(self):
+        for short in self.expected:
+            for attribute, value in [("tests", "0"), ("tests", "99"), ("skipped", "1"), ("failures", "1"), ("errors", "1")]:
+                original = self.paths[short].read_bytes(); self.mutate(short, lambda r: r.set(attribute, value))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_same_short_class_in_wrong_package_is_rejected(self):
+        for short in self.expected:
+            original = self.paths[short].read_bytes()
+            self.mutate(short, lambda r: r.set("name", "wrong.package." + short))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+            self.mutate(short, lambda r: r.find("testcase").set("classname", "wrong.package." + short))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+    def test_duplicate_suite_report_is_rejected(self):
+        duplicate = pathlib.Path(self.directory.name) / "TEST-duplicate.xml"
+        duplicate.write_bytes(self.paths["MerchantAuthoringCurrentRowsMySqlIT"].read_bytes())
+        self.assertTrue(self.problems())
+
+    def test_test_only_authoring_changes_trigger_push_and_changed_filter(self):
+        path = "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/MerchantAuthoring*MySql*.java"
+        workflow = _WORKFLOW.read_text()
+        self.assertEqual(2, workflow.count(path))
+        self.assertEqual([], funds_it_gate.enforce_workflow(workflow, _GATE_SCRIPT.read_text()))
+        self.assertTrue(funds_it_gate.enforce_workflow(workflow.replace(path, "removed/path"), _GATE_SCRIPT.read_text()))
+        push_only = workflow.replace("              - '" + path + "'\n", "")
+        self.assertTrue(funds_it_gate.enforce_workflow(push_only, _GATE_SCRIPT.read_text()))
+        filter_only = workflow.replace("      - '" + path + "'\n", "", 1)
+        self.assertTrue(funds_it_gate.enforce_workflow(filter_only, _GATE_SCRIPT.read_text()))
+
+
+    def test_exact_hosted_302_method_display_identity_is_accepted(self):
+        for short in self.expected:
+            def convert(root):
+                root.set("version", "3.0.2")
+                for case in root.findall("testcase"):
+                    case.set("classname", case.get("name") + "()")
+            self.mutate(short, convert)
+        self.assertEqual([], self.problems())
+
+    def test_hosted_identity_refuses_wrong_version_wrong_method_and_mixed_forms(self):
+        for short in self.expected:
+            original = self.paths[short].read_bytes()
+            def convert(root):
+                root.set("version", "3.0.2")
+                for case in root.findall("testcase"):
+                    case.set("classname", case.get("name") + "()")
+            self.mutate(short, convert)
+            hosted = self.paths[short].read_bytes()
+            self.mutate(short, lambda root: root.set("version", "3.0"))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(hosted)
+            self.mutate(short, lambda root: root.find("testcase").set("classname", "unrelated()"))
+            self.assertTrue(self.problems()); self.paths[short].write_bytes(hosted)
+            if self.expected[short] > 1:
+                self.mutate(short, lambda root: root.find("testcase").set("classname", root.get("name")))
+                self.assertTrue(self.problems())
+            self.paths[short].write_bytes(original)
+
+    def test_hidden_retry_failures_are_rejected_with_zero_summary_errors(self):
+        import xml.etree.ElementTree as ET
+        for short in self.expected:
+            for tag in ["flakyFailure", "flakyError", "rerunFailure", "rerunError"]:
+                original = self.paths[short].read_bytes()
+                self.mutate(short, lambda root: ET.SubElement(root.find("testcase"), tag))
+                self.assertTrue(self.problems()); self.paths[short].write_bytes(original)
+
+
+class FixedAuthoringEvidenceRetentionTest(unittest.TestCase):
+    def test_only_four_exact_mysql_xml_reports_are_retained_even_after_test_failure(self):
+        workflow = _WORKFLOW.read_text()
+        block = workflow.split("      - name: Retain exact fixed-coupon and authoring MySQL reports\n", 1)[1].split("      - name: Stop Oracle MySQL scratch", 1)[0]
+        self.assertIn("if: always() && steps.scope.outputs.run == 'true'", block)
+        self.assertIn("name: fixed-authoring-mysql-${{ github.sha }}-${{ github.run_attempt }}", block)
+        expected = {
+            "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.FixedCouponAtomicMySqlIT.xml",
+            "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.it.FixedCouponSchemaMySqlIT.xml",
+            "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.MerchantAuthoringCurrentRowsMySqlIT.xml",
+            "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.MerchantAuthoringRevocationRaceMySqlIT.xml",
+        }
+        actual = {line.strip() for line in block.splitlines() if line.strip().startswith("chengyinhub-")}
+        self.assertEqual(expected, actual)
+        self.assertNotIn("*", block)
+        self.assertNotIn("continue-on-error", block)
 
 
 if __name__ == "__main__":

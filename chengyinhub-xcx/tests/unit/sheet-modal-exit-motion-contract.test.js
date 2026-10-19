@@ -80,7 +80,7 @@ function assertExitMotion({ wxml, js, wxss, behavior, tokens, closingClass, ente
   )
   assert.match(js, /behaviors:\s*\[[^\]]*reducedMotionBehavior/, '必须同时挂 reduced-motion,否则 behavior 读不到 reducedMotion')
   assert.match(wxss, new RegExp('\\.' + closingClass + '\\s*\\{[^}]*pointer-events:\\s*none'), '退场开始后必须冻结点击')
-  assert.match(js, /if\s*\(this\.data\._closing\)\s*return/, '事件处理器必须在退场期间拒绝重复触发')
+  assert.match(js, /if\s*\(this\.data\._closing(?:\s*\|\|\s*this\.data\.stacked)?\)\s*return/, '事件处理器必须在退场期间拒绝重复触发')
 
   // behavior 本体:减动效立即卸载、重开/销毁清定时器
   assert.match(behavior, /reducedMotion[\s\S]{0,120}_render:\s*false/, 'reducedMotion 时必须立即卸载,不能空等动画时长')
@@ -208,4 +208,19 @@ test('负控:退场时长退回与进场同档(违反「退场快」)必须判�
 test('负控:摘掉 reduced-motion behavior 必须判红(behavior 会读不到 reducedMotion)', () => {
   const js = read('components/cy/modal/index.js').replace('reducedMotionBehavior, exitMotion', 'exitMotion')
   assert.throws(() => assertExitMotion(modalArgs({ js })))
+})
+
+test('sheet closing and stacked guards each block every parent close/back interaction', () => {
+  let definition
+  require('node:vm').runInNewContext(read('components/cy/sheet/index.js'), {
+    require: () => () => ({}), getApp: () => ({}), Component: value => { definition = value }
+  })
+  for (const flags of [{ _closing: true, stacked: false }, { _closing: false, stacked: true }, { _closing: true, stacked: true }]) {
+    const events = [], page = Object.assign({ data: { ...flags, maskClosable: true }, triggerEvent: (...args) => events.push(args) }, definition.methods)
+    for (const name of ['onBack', 'onClose', 'onMask', '_requestClose', 'onDragStart']) page[name]({ touches: [] })
+    assert.deepEqual(events, [], JSON.stringify(flags))
+  }
+  const events = [], page = Object.assign({ data: { _closing: false, stacked: false }, triggerEvent: name => events.push(name) }, definition.methods)
+  page.onClose()
+  assert.deepEqual(events, ['requestclose', 'close'])
 })

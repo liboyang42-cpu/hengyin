@@ -15,6 +15,7 @@ const PAGE = '../../pages/publish/fabu/index.js';
 
 let sent = [];
 let storage = {};
+let currentOwner = 0;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -22,9 +23,13 @@ global.getApp = () => ({
   tips: () => {},
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
+<<<<<<< public
   getUserID: () => 7,
   getNickname: () => '测试作者',
   getAvatar: () => '',
+=======
+  getUserID: () => currentOwner,
+>>>>>>> private-github/featu
   getUserInfo: () => null,
   getToken: () => '',
 });
@@ -46,6 +51,7 @@ global.Page = (cfg) => { pageConfig = cfg; };
 beforeEach(() => {
   sent = [];
   storage = {};
+  currentOwner = 0;
   pageConfig = null;
   delete require.cache[require.resolve(PAGE)];
   require(PAGE);
@@ -178,6 +184,7 @@ test('step3:「邀请俱乐部带队」在、绑活方法、只对非俱乐部�
 });
 
 test('初始状态只选精力和幸运，新建空白，保存重开不自动补另一项', () => {
+  currentOwner = 42;
   const page = makePage();
   page.openInitialState();
   assert.deepEqual(page.data.initialStateOptions.map(item => item.type), ['hp', 'luck']);
@@ -202,6 +209,7 @@ test('初始状态只选精力和幸运，新建空白，保存重开不自动�
 
 
 test('关闭初始状态后可保存；旧属性启用语义保持不变', () => {
+  currentOwner = 42;
   const page = makePage();
   page.openInitialState();
   page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } });
@@ -212,4 +220,17 @@ test('关闭初始状态后可保存；旧属性启用语义保持不变', () =>
   page.data.formData.journeyRules = JSON.stringify({ stateEnabled: true, hp: { enabled: false }, luck: { enabled: false }, attributes: [{ key: 'legacy', init: 1 }] });
   page.openInitialState(); page.saveInitialState();
   assert.equal(JSON.parse(page.data.formData.journeyRules).stateEnabled, true);
+});
+
+
+test('匿名身份不能打开或保存初始状态，不把身份门禁误当成功', () => {
+  const page = makePage();
+  const before = page.data.formData.journeyRules;
+  page.openInitialState();
+  assert.equal(page.data.initialStateEditor.show, false);
+  assert.equal(page.data.initialStateEditor.rules, null);
+  page.addInitialState({ currentTarget: { dataset: { type: 'hp' } } });
+  page.saveInitialState();
+  assert.equal(page.data.formData.journeyRules, before);
+  assert.equal(sent.length, 0);
 });

@@ -92,6 +92,13 @@ export const constantRoutes = [
 
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
+  ...(process.env.VUE_APP_CITY_BOARD_DRAFTS === 'true' ? [{
+    path: '/platform/city-board-drafts',
+    component: Layout,
+    hidden: true,
+    permissions: ['business:cityBoardDraft:edit'],
+    children: [{ path: '', component: () => import('@/views/business/city-board-drafts'), name: 'CityBoardDraftWorkbench', meta: { title: '城市棋盘草稿', noCache: true } }]
+  }] : []),
   {
     path: '/system/user-auth',
     component: Layout,

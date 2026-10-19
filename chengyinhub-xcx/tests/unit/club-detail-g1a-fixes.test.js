@@ -80,7 +80,9 @@ function loadPage() {
   return page;
 }
 
-test('俱乐部活动卡的日期、星期和时刻都按上海显示', () => {
+test('俱乐部活动卡的日期、星期和时刻都按上海显示', (t) => {
+  // 固定在截止前，避免真实时间经过 fixture 的 endDate 后 upcomingTopics 变空。
+  t.mock.method(Date, 'now', () => Date.parse('2026-10-06T23:59:59.999+08:00'));
   const previousTZ = process.env.TZ;
   try {
     for (const zone of ['America/Los_Angeles', 'UTC', 'Asia/Shanghai']) {
@@ -94,6 +96,40 @@ test('俱乐部活动卡的日期、星期和时刻都按上海显示', () => {
       page.loadTopics();
       assert.equal(page.data.manageTopics[0].timeText, '周三 9月30日, 00:00', zone);
       assert.equal(page.data.upcomingTopics[0].timeText, '周三 9月30日, 00:00', zone);
+    }
+  } finally {
+    if (previousTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTZ;
+  }
+});
+
+test('俱乐部活动只在截止后移入已结束列表', (t) => {
+  const end = Date.parse('2026-10-07T00:00:00+08:00');
+  let now = end;
+  t.mock.method(Date, 'now', () => now);
+  const previousTZ = process.env.TZ;
+  try {
+    for (const zone of ['America/Los_Angeles', 'UTC', 'Asia/Shanghai']) {
+      process.env.TZ = zone;
+      for (const { offsetMs, ended } of [
+        { offsetMs: -1, ended: false },
+        { offsetMs: 0, ended: false },
+        { offsetMs: 1, ended: true },
+      ]) {
+        now = end + offsetMs;
+        const label = `${zone}: now = end + ${offsetMs}ms`;
+        const page = loadPage();
+        page.data.club = { id: 9, isOwner: true };
+        page.data.clubId = 9;
+        routes['/api/club/topics'] = (r) => r.success({ code: 200, data: [
+          { id: 88, startDate: '2026-09-30 00:00:00', endDate: '2026-10-07 00:00:00' },
+        ] });
+        page.loadTopics();
+        assert.deepEqual(page.data.manageTopics.map((item) => ({ id: item.id, ended: item.ended })),
+          [{ id: 88, ended }], label);
+        assert.deepEqual(page.data.upcomingTopics.map((item) => item.id), ended ? [] : [88], label);
+        assert.deepEqual(page.data.endedTopics.map((item) => item.id), ended ? [88] : [], label);
+      }
     }
   } finally {
     if (previousTZ === undefined) delete process.env.TZ;
