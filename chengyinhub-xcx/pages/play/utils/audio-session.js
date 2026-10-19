@@ -44,6 +44,9 @@ function createAudioSession(wxApi) {
 
   function register(ctx, opts) {
     if (!ctx) return ctx;
+    // Registering the same live context is idempotent. Only unregister ends
+    // its identity; duplicate registration must retain pending resume state.
+    if (entries.has(ctx)) return ctx;
     hook();
     entries.set(ctx, { kind: (opts && opts.kind) || 'audio', wasPlaying: false, interrupted: false });
     return ctx;
