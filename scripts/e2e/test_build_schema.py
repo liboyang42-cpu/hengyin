@@ -755,5 +755,77 @@ class BuildSchemaSessionIsolationTest(unittest.TestCase):
         self.assertTrue(c.closed)
 
 
+class AdminRolePayeeForwardContractTest(unittest.TestCase):
+    ROOT = pathlib.Path(__file__).resolve().parents[2]
+    OLD = "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql"
+    NEW = "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql"
+
+    def test_exact_legacy_role_initializer_is_excluded_but_atomic_replacement_is_selected(self):
+        from ci.migration_ledger import build_manifest
+        root = self.ROOT
+        policy = json.loads((root / "scripts/e2e/schema_replay_policy_20260921.json").read_text())
+        old_sha = "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e"
+        self.assertEqual(old_sha, hashlib.sha256((root / self.OLD).read_bytes()).hexdigest())
+        self.assertIn(self.OLD, policy["dataOnlyMigrations"])
+        self.assertEqual(old_sha, policy["dataOnlyMigrations"][self.OLD])
+        self.assertNotIn(self.NEW, policy["dataOnlyMigrations"])
+        with mock.patch.multiple(build_schema, REPO=root,
+                BASELINE=root / "sql/base_schema_20260818.sql",
+                BASELINE_SEED=root / "sql/base_seed_20260818.sql",
+                BASELINE_MANIFEST=root / "scripts/e2e/base_schema_20260818_migrations.json",
+                SCHEMA_REPLAY_POLICY=root / "scripts/e2e/schema_replay_policy_20260921.json"):
+            migrations = build_manifest(root, "a" * 40)["migrations"]
+            selected = {row["path"] for row in build_schema.migrations_after_baseline(migrations)}
+        self.assertNotIn(self.OLD, selected)
+        self.assertIn(self.NEW, selected)
+        changed = dict(policy["dataOnlyMigrations"])
+        changed[self.OLD] = "0" * 64
+        policy["dataOnlyMigrations"] = changed
+        with tempfile.TemporaryDirectory() as directory:
+            bad_policy = pathlib.Path(directory) / "policy.json"
+            bad_policy.write_text(json.dumps(policy))
+            with mock.patch.multiple(build_schema, REPO=root,
+                    BASELINE=root / "sql/base_schema_20260818.sql",
+                    BASELINE_SEED=root / "sql/base_seed_20260818.sql",
+                    BASELINE_MANIFEST=root / "scripts/e2e/base_schema_20260818_migrations.json",
+                    SCHEMA_REPLAY_POLICY=bad_policy):
+                with self.assertRaisesRegex(RuntimeError, "指纹不一致"):
+                    build_schema.migrations_after_baseline(migrations)
+
+    def test_existing_applied_history_stays_valid_when_only_the_new_forward_is_pending(self):
+        from ci.migration_ledger import build_manifest, plan_release
+        root = self.ROOT
+        manifest = build_manifest(root, "a" * 40)
+        history = [{"migrationId": row["migrationId"], "path": row["path"],
+                    "checksum": row["sha256"], "targetCommit": "a" * 40,
+                    "appliedAt": "2026-10-16T00:00:00Z", "status": "APPLIED"}
+                   for row in manifest["migrations"] if row["path"] != self.NEW]
+        plan = plan_release(manifest, history, bootstrap={"status": "RECONCILED"},
+                            baseline_ids={row["migrationId"] for row in history})
+        states = {row["path"]: row["state"] for row in plan["migrations"]}
+        self.assertEqual("APPLIED", states[self.OLD])
+        self.assertEqual("PENDING", states[self.NEW])
+        self.assertFalse(any(state.startswith("BLOCKED") for state in states.values()))
+        dependencies = json.loads((root / "ci/migration-dependencies.json").read_text())["dependencies"]
+        self.assertEqual({"web_admin_roles_20260719", "20261012_missing_business_menu",
+                          "20261012_media_review_menu", "role2_analytics_perm_20260918"},
+                         set(dependencies["20261013_admin_role_page_grants"]))
+        self.assertIn("20261013_admin_role_page_grants", dependencies["20261016_admin_role_payee_separation_forward"])
+        self.assertIn("20260817_tandianri_batch3_funds_club_hours_correction",
+                      dependencies["20261016_admin_role_payee_separation_forward"])
+
+    def test_payee_forward_declares_atomic_and_only_the_two_approved_inverse_deletes(self):
+        from ci.run_migration import required_transaction_declared
+        sql = (self.ROOT / self.NEW).read_text()
+        self.assertTrue(required_transaction_declared(sql))
+        deletes = [build_schema.executable_statement(st).strip().rstrip(";")
+                   for st in build_schema.split_statements(sql)
+                   if build_schema.executable_statement(st).lstrip().upper().startswith("DELETE")]
+        prefix = "DELETE FROM sys_role_menu WHERE role_id = (SELECT role_id FROM tmp_cy_payee_roles WHERE role_key = '{}'" + ") AND menu_id = (SELECT menu_id FROM tmp_cy_payee_menus WHERE perms = '{}')"
+        self.assertEqual([prefix.format("cy_operator", "business:clubpayee:verify"),
+                          prefix.format("cy_finance", "business:clubpayee:payout")], deletes)
+        self.assertNotRegex(sql, r"(?im)^\s*(SET|CALL|PREPARE|EXECUTE|COMMIT|START|ALTER|TRUNCATE)\b")
+
+
 if __name__ == "__main__":
     unittest.main()

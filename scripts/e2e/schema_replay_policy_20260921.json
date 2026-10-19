@@ -72,6 +72,7 @@
     "chengyinhub-admin/sql/migration_seed_merchant_game_b27_20260823.sql": "46b5d9e61e32bf954f46de68f5e7dd4ef191a5efe1590a1dda569c04cbc7b37b",
     "chengyinhub-admin/sql/migration_20260825_cover_urls_off_package.sql": "a846b4ad973fadc0ebbc7fc95c73b2626f594959b5da5f138440249be6d1cfdc",
     "chengyinhub-admin/sql/migration_seed_merchant_game_v51_20260827.sql": "41169d4fece1a23de4bc7266dd5cbcf7c4b8469903be6802a2c5a0662f27c17f",
-    "chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql": "8a49f3ef24a3e654210e8bc974224292910096d220c401be26135b81c6405643"
+    "chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql": "8a49f3ef24a3e654210e8bc974224292910096d220c401be26135b81c6405643",
+    "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e"
   }
 }
