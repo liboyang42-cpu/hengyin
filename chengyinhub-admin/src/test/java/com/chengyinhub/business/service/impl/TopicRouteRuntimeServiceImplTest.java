@@ -442,6 +442,7 @@ class TopicRouteRuntimeServiceImplTest {
         when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
                 .thenReturn(Collections.singletonList(fact));
         assertTrue(runtime.hasRunningSession(7L, 10L, 0L));
+        assertNotNull(runtime.state(7L, 10L, 0L), "已开局：中途到期仍可读本局状态");
         assertTrue(runtime.canPlay(7L, 10L, 0L, 2L), "开局时有效、已记过进度：中途到期仍可打完");
     }
 
@@ -451,6 +452,7 @@ class TopicRouteRuntimeServiceImplTest {
         when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
                 .thenReturn(Collections.emptyList());
         assertFalse(runtime.hasRunningSession(7L, 10L, 0L));
+        assertThrows(IllegalStateException.class, () -> runtime.state(7L, 10L, 0L));
         assertThrows(IllegalStateException.class, () -> runtime.canPlay(7L, 10L, 0L, 1L));
     }
 

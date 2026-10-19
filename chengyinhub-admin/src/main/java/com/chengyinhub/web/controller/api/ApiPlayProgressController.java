@@ -370,6 +370,12 @@ public class ApiPlayProgressController extends BaseController
             tId = topicId;
             progActId = 0L;
             CmsRegistration pass = validSelfPlayPass(memberId, tId);
+            // 已开局的本局：通行证开局时有效即可打完，节点列表照常下发。
+            if (pass == null && topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L)) {
+                try { pass = com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date()); }
+                catch (IllegalStateException denied) { pass = null; }
+            }
             // C-26:没有(或过期的)自玩通行证不是「未报名」——自玩本来就没有报名这个动作。
             // 回 402 让前端落 needPass 空态并给出获取通行证的出路(与 /api/play 下各写入口同一语义),
             // 不再落到 registered=false 的「你还没有报名这个场次」+「去报名」错误指引。
@@ -1434,7 +1440,7 @@ public class ApiPlayProgressController extends BaseController
                 || !ownerType.equals(current.getOwnerType()) || !ownerId.equals(current.getOwnerId())
                 || !Integer.valueOf(2).equals(current.getRegistrationStatus())
                 || !Integer.valueOf(2).equals(current.getPaymentStatus())
-                || (ctx.selfPlay && current.getExpiresAt() != null && !current.getExpiresAt().after(scanTime))
+                || (ctx.selfPlay && !ctx.continuing && current.getExpiresAt() != null && !current.getExpiresAt().after(scanTime))
                 || current.getFirstSuccessfulScanAt() == null) {
             throw new com.chengyinhub.common.exception.ServiceException("订单资格已变化，请刷新票夹后重试");
         }
@@ -2667,6 +2673,7 @@ public class ApiPlayProgressController extends BaseController
         Long topicId;
         boolean selfPlay;
         boolean nightWarning;
+        boolean continuing; // 自玩本局已开局：通行证中途到期不打断
         CmsRegistration registration;
         AjaxResult error;
     }
@@ -2729,6 +2736,7 @@ public class ApiPlayProgressController extends BaseController
         c.actId = 0L;
         c.topicId = tId;
         c.selfPlay = true;
+        c.continuing = continuing;
         c.nightWarning = isNightNow();
         return c;
     }
