@@ -355,7 +355,8 @@ public class NpcChatService
             return finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
                     profile == null ? null : profile.getId(), message, null,
                     safetyFlagOf(e), null, (int) (System.currentTimeMillis() - startMs)),
-                    providerResultReceived || e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException);
+                    providerResultReceived || e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException
+                            || e instanceof com.chengyinhub.business.service.ai.AiProviderResultReceivedException);
         }
         catch (Exception e)
         {
@@ -451,7 +452,8 @@ public class NpcChatService
     private void applyGatewayFailure(NpcChatRequest processing, AiServiceException e)
     {
         AiServiceException.Reason reason = e.getReason();
-        if (e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException)
+        if (e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException
+                || e instanceof com.chengyinhub.business.service.ai.AiProviderResultReceivedException)
         {
             terminalize(processing, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
                     null, false, "原请求结果待确认，请稍后查看原请求。");
