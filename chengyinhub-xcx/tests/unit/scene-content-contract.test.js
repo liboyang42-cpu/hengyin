@@ -350,7 +350,7 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
 function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, appJson) {
   assert.match(
     profileJs,
-    /goCoupon: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index' \}\); \}/,
+    /goCoupon: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '个人页优惠券入口必须打开玩家券夹，不能进入商家发券管理页',
   )
   assert.match(
@@ -366,7 +366,7 @@ function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, 
   )
   assert.match(
     profileJs,
-    /goComplaint: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index' \}\); \}/,
+    /goComplaint: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '投诉建议必须进入完整投诉页',
   )
 }
