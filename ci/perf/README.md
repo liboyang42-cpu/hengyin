@@ -5,7 +5,7 @@ This directory is a safe, reproducible skeleton for D13 performance work. It doe
 ## Safety gates
 
 - Default mode is dry-run. `read-wrk2.sh`, `write-k6.sh`, and `write-jmeter.sh` print the command and open no network connection unless `--no-dry-run` is passed.
-- `PERF_BASE_URL` is required for every command. The harness rejects production domains and IPs, including `chengyinhub.com`, `www.chengyinhub.com`, `api.chengyinhub.com`, `47.103.124.64`, and `47.100.84.122`.
+- `PERF_BASE_URL` is required for every command. The harness rejects production domains and IPs, including `chengyinhub.com`, `www.chengyinhub.com`, `api.chengyinhub.com`, and the production DB host and app server IPs (matched by SHA-256 so the IPs are not written in this public repo; extra hosts can be denied via the comma-separated `CHENGYIN_FORBIDDEN_DB_HOSTS` environment variable).
 - Write-load execution is locked unless all are true: target is non-production, `PERF_ALLOW_WRITE_LOAD=I_UNDERSTAND_THIS_IS_NOT_PRODUCTION`, and `PERF_PAYMENT_MODE=stub`.
 - Real payment, production write pressure, production callbacks, production users, production orders, and production secrets are out of bounds.
 - Missing load tools fail closed in non-dry-run mode with `TOOL_MISSING:<tool>`. Dry-run mode does not require wrk2/k6/JMeter.

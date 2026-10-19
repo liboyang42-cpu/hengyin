@@ -17,7 +17,7 @@
 - **停在 commit** —— 不 push、不开 PR,等用户明说。
 - ⚠️ **合并前置(全局,非本 PR 引入)**:生产 `chengyin.pii.key` 必须已注入 + `piiBackfillTask` 已回填,否则 master 的 fail-closed `PiiCryptoTypeHandler` 一部署即报名瘫痪。见 `~/Documents/城瘾/小程序/P0_部署雷_39加密生产没生效_2026-07-15.md`。
 
-## 生产实测(2026-07-15 只读查 47.103.124.64/chengyinhubdb,MySQL 8.0.45)
+## 生产实测(2026-07-15 只读查 <生产库主机>/chengyinhubdb,MySQL 8.0.45)
 
 | 查询 | 结果 | 含义 |
 |---|---|---|

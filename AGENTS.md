@@ -24,7 +24,7 @@
 ## Git
 - 从 master 切 feature/<scope> 分支，别直接推 master
 - commit 用中文 + 类型前缀（feat/fix/chore/docs），与现有 git log 一致
-- **push ≠ 部署**：线上后端在 47.100.84.122（应用机，跑 jar），真库在 47.103.124.64/chengyinhubdb；部署需用户操作
+- **push ≠ 部署**：线上后端在生产应用机（跑 jar），真库是生产库主机上的 chengyinhubdb（两台主机的地址不写进本公开仓）；部署需用户操作
 
 ## 边界（重要）
 - ✅ Always：写操作必须校验 owner/scope（如活动操作要校验创建者归属）；新表结构改动写成 `sql/migration_*.sql`；改完跑相关单测

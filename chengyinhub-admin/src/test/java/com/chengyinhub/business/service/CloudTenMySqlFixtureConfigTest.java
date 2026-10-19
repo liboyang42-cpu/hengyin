@@ -1,8 +1,10 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.it.ForbiddenDbHosts;
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Pure configuration tests, run with the rest of the backend tests on the dedicated VPS. */
@@ -39,10 +41,30 @@ class CloudTenMySqlFixtureConfigTest {
         assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay"));
         assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(explicit(), "bad`suite"));
     }
-    @Test void refusesKnownProductionDestinationsBeforeOpeningAConnection() {
-        for (String host : new String[]{"47.103.124.64", "47.100.84.122"}) {
-            Map<String, String> env = explicit(); env.put("CHENGYIN_TEST_MYSQL_HOST", host);
-            assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay"));
-        }
+    // 生产地址不写明文(公开仓):负控用 TEST-NET 夹具地址,在运行时算哈希走同一条哈希比对路径。
+    private static final String FIXTURE_HOST = "203.0.113.7";
+
+    @Test void refusesHostWhoseSha256IsDenylistedBeforeOpeningAConnection() {
+        Map<String, String> env = explicit(); env.put("CHENGYIN_TEST_MYSQL_HOST", FIXTURE_HOST);
+        Set<String> denylist = Set.of(ForbiddenDbHosts.sha256Hex(FIXTURE_HOST));
+        assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay", denylist));
+        env.put("CHENGYIN_TEST_MYSQL_HOST", " " + FIXTURE_HOST + " ");
+        assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay", denylist));
+        // 对照:同一主机不在名单里就放行 —— 证明上面是哈希名单拒的,不是别的闸。
+        env.put("CHENGYIN_TEST_MYSQL_HOST", FIXTURE_HOST);
+        assertEquals("cy_cloudten_it_relay_run12345678",
+                CloudTenMySqlFixture.configuration(env, "relay", Set.of()).databaseName());
+    }
+    @Test void refusesHostListedInTheEnvironmentDenylist() {
+        Map<String, String> env = explicit();
+        env.put("CHENGYIN_TEST_MYSQL_HOST", FIXTURE_HOST);
+        env.put(ForbiddenDbHosts.ENV, "198.51.100.1, " + FIXTURE_HOST.toUpperCase());
+        assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay"));
+    }
+    @Test void builtInDenylistStillCoversBothProductionHosts() {
+        assertEquals(Set.of(
+                "d8c695fe7dd5f6ffc048b72c96621f7e7d13d3ec23b76aab523514183e7474d9",
+                "ce1a8527392b68bab1ab6a91238a5e6909cbbb937b9eb077d1025499a59f03fe"),
+                ForbiddenDbHosts.BUILT_IN_SHA256);
     }
 }
