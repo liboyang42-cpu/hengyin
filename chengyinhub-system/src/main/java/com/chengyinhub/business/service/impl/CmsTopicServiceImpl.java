@@ -4518,6 +4518,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         assertTopicDeletable(topicId);
         // 整体替换的入场闸:本次没带的子集合若库里现有行,拒收并点名缺什么(见方法注释)
         assertRebuildPayloadComplete(topicId, dto);
+        // NodeDTO 不开放前置解锁编辑；重建前保存服务端既有关系，等全部新节点生成后翻译 ID。
+        Map<Long, Long> existingUnlocks = existingNodeUnlocks(topicId);
         Long existingOpeningId = JourneyStory.openingChapterId(exist.getJourneyStoryJson());
         if (existingOpeningId != null && dto.getChapters() != null) {
             for (ChapterDTO chapter : dto.getChapters()) {
@@ -4654,6 +4656,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     productType, chapterFlowV2, allowBundledDraft);
         }
         remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
+        restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
         persistJourneyStoryAfterChapterRebuild(topicId,
                 patch.getJourneyStoryJson() == null ? exist.getJourneyStoryJson() : patch.getJourneyStoryJson(),
                 routeNodeMaps, username);
@@ -4712,6 +4715,36 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 第一次保存草稿就建等于草稿立即可售。发布时由 publishDraft 补建。
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
+        }
+    }
+
+    private Map<Long, Long> existingNodeUnlocks(Long topicId) {
+        CmsTopicNode query = new CmsTopicNode();
+        query.setTopicId(topicId);
+        Map<Long, Long> unlocks = new LinkedHashMap<Long, Long>();
+        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(query))) {
+            if (node.getId() != null && node.getUnlockAfterNodeId() != null
+                    && node.getUnlockAfterNodeId() > 0L) {
+                unlocks.put(node.getId(), node.getUnlockAfterNodeId());
+            }
+        }
+        return unlocks;
+    }
+
+    private void restoreNodeUnlocks(Map<Long, Long> existingUnlocks, RouteNodeMaps maps) {
+        for (Map.Entry<Long, Long> entry : existingUnlocks.entrySet()) {
+            Long nodeId = maps.oldToNew.get(entry.getKey());
+            if (nodeId == null) continue; // 依赖节点本次已删除，不再保留其前置关系。
+            Long predecessorId = maps.oldToNew.get(entry.getValue());
+            if (predecessorId == null) {
+                throw new IllegalArgumentException("节点前置解锁引用不在本次提交里: " + entry.getValue());
+            }
+            CmsTopicNode patch = new CmsTopicNode();
+            patch.setId(nodeId);
+            patch.setUnlockAfterNodeId(predecessorId);
+            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
+                throw new IllegalStateException("节点前置解锁保存失败: " + nodeId);
+            }
         }
     }
 
