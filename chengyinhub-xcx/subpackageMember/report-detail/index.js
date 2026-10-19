@@ -103,6 +103,7 @@ Page({
       this._requestReason = checked.reason
     }
     this._appealing = true
+    this._seq = (this._seq || 0) + 1 // BL-222 作废提交前已发出的刷新,免得旧快照在申诉成功后覆盖页面
     this.setData({ sheet: 'busy', failText: '', receiptText: '' })
     app.sendRequest({
       url: '/api/community-trust/reports/appeal', method: 'POST', hideLoading: true, silentError: true,
