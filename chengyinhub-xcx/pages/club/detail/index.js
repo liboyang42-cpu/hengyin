@@ -695,7 +695,7 @@ Page({
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。
   onShow() {
-    this.refreshCoopPublisherAccess();
+    this._navigating = false; this.refreshCoopPublisherAccess();
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
     const myAvatar = app.getAvatar() || '';
@@ -2310,8 +2310,9 @@ Page({
   goClubBadges() {
     const club = this.data.club;
     const clubId = positiveId(this.data.clubId);
-    if (!club || !(club.isOwner || club.isJoined) || !clubId) return;
-    wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId });
+    if (!club || !(club.isOwner || club.isJoined) || !clubId || this._navigating) return; // 跳转中不响应连点,免得叠两层勋章页
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId, complete: () => { this._navigating = false; } });
   },
 
   goClubRoles() {
