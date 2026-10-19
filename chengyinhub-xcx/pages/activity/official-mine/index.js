@@ -164,8 +164,8 @@ Page({
     });
   },
 
-  openEvent(e) {
-    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id });
+  openEvent(e) { if (this._navigating) return; this._navigating = true; // 跳转中不响应连点,免得叠两层详情
+    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id, complete: () => { this._navigating = false; } });
   },
 
   // 草稿在公开详情里不可见,发布等主办操作统一从控制台进

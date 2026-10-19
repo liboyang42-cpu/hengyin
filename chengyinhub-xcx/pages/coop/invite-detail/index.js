@@ -75,7 +75,7 @@ Page({
     }
     this.load();
   },
-  onShow() { merchantTheme.merchantPageShow(); },
+  onShow() { merchantTheme.merchantPageShow(); this._navigating = false; },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
     this._perkEpoch = (this._perkEpoch || 0) + 1;
@@ -286,7 +286,7 @@ Page({
     const merchantSide = inv && ((Number(inv.inviteType) === 0 && !sent)
       || (Number(inv.inviteType) === 1 && sent));
     const topicId = inv && parseInviteId(inv.topicId);
-    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !merchantSide || !topicId) return;
+    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !merchantSide || !topicId || this._navigating) return; // 跳转中不响应连点
     /* CU-M-92(走查第三轮,回到第一轮的建议):走 ?topicId= —— 身份由后端判,不再落浏览页。
        上一轮这里改的是 ?id=(浏览视图),理由是 /api/project/home 对「既不是发布者、也没有承接记录」
        的调用人直接拒(ProjectHomeReadServiceImpl),刚接受邀约的受邀方正是这种人。
@@ -294,7 +294,7 @@ Page({
        (顶部关系入口 + 他自己真有的点位/章节)。
        ⚠️ 邀约落的是整主题商务条款(coop_order),**不产生点位/章节** —— 那些要靠商家另外报名。
        所以这一跳给的是承接方的工具与条款,不是一屏凭空冒出来的站点。 */
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT' });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   // 联系合作方:T19 已签约双方取/建 1:1 会话(后端 /api/coop/contact 复用 resolveToOwner+startSingle)
