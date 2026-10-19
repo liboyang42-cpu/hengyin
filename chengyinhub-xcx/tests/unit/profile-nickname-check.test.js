@@ -186,6 +186,31 @@ test('推荐在途时用户改了输入:旧推荐作废,不覆盖也不残留', 
   assert.equal(req('/api/user/nickname/suggest').length, 1, '作废后不再续取');
 });
 
+for (const outcome of ['success', 'fail']) {
+  test(`BL-221 旧一轮推荐作废(${outcome})时不清掉新一轮的「推荐中」`, () => {
+    const vm = boot();
+    takeName(vm, '撞名A');
+    assert.equal(req('/api/user/nickname/suggest').length, 1);
+    takeName(vm, '撞名B');
+    const s = req('/api/user/nickname/suggest');
+    assert.equal(s.length, 2, '第二轮已发起');
+    assert.deepEqual(s[1].data, { baseName: '撞名B' });
+    assert.equal(vm.data.nicknameSuggesting, true);
+    if (outcome === 'success') s[0].success({ code: 200, data: { nickname: '撞名A#0001', available: true, cursor: 1 } });
+    else s[0].fail();
+    assert.equal(vm.data.nicknameSuggesting, true, '第二轮仍在途');
+    assert.deepEqual(vm.data.nicknameSuggestions, []);
+    assert.equal(req('/api/user/nickname/suggest').length, 2, '作废的一轮不续取');
+    vm.moreNicknameSuggestions();
+    assert.equal(req('/api/user/nickname/suggest').length, 2, '在途时「换一批」不并发新一轮');
+    s[1].success({ code: 200, data: { nickname: '撞名B#0001', available: true, cursor: 1 } });
+    req('/api/user/nickname/suggest')[2].success({ code: 200, data: { nickname: '撞名B#0002', available: true, cursor: 2 } });
+    req('/api/user/nickname/suggest')[3].success({ code: 200, data: { nickname: '撞名B#0003', available: true, cursor: 3 } });
+    assert.deepEqual(vm.data.nicknameSuggestions, ['撞名B#0001', '撞名B#0002', '撞名B#0003']);
+    assert.equal(vm.data.nicknameSuggesting, false);
+  });
+}
+
 test('保存被服务端以 NICKNAME_TAKEN 拒绝 → 重新打开昵称面板可恢复;保存接口语义不变', () => {
   const vm = boot();
   type(vm, '撞名的');

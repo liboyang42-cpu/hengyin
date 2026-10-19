@@ -278,12 +278,14 @@ Page({
       this._suggestCursor = null;
     }
     const seq = this._nicknameSeq;
+    // 轮次号:旧一轮作废时只在没有更新一轮接手时才清「推荐中」
+    const run = (this._suggestRun = (this._suggestRun || 0) + 1);
     const that = this;
     const collected = [];
     const stale = () => that._unloaded || seq !== that._nicknameSeq;
     const finish = (failText) => {
       if (that._unloaded) return;
-      if (stale()) { that.setData({ nicknameSuggesting: false }); return; }
+      if (stale()) { if (run === that._suggestRun) that.setData({ nicknameSuggesting: false }); return; }
       that.setData({
         nicknameSuggesting: false,
         nicknameSuggestions: collected.slice(),
