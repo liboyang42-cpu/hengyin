@@ -259,6 +259,7 @@ class FreeExplorePriceLockAcceptanceTest {
     void preview_requiredChapterWithoutLiveSupply_cannotConfirmWithTheSameReasonAsConfirm() {
         CmsTopic topic = freeExploreTopic(2);
         when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+        when(cmsTopicMapper.selectProductTypeById(TOPIC_ID)).thenReturn(ProductType.FREE_EXPLORE);
         when(offerMapper.countRequiredChaptersWithoutLiveOffer(TOPIC_ID)).thenReturn(1);
 
         PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
@@ -275,6 +276,7 @@ class FreeExplorePriceLockAcceptanceTest {
     void preview_pricingStageWithLiveSupply_canConfirmWithoutReason() {
         CmsTopic topic = freeExploreTopic(2);
         when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+        when(cmsTopicMapper.selectProductTypeById(TOPIC_ID)).thenReturn(ProductType.FREE_EXPLORE);
 
         PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
 
@@ -286,6 +288,7 @@ class FreeExplorePriceLockAcceptanceTest {
     void preview_notInPricingLifecycle_reportsTheConfirmReason() {
         CmsTopic topic = freeExploreTopic(3);
         when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+        when(cmsTopicMapper.selectProductTypeById(TOPIC_ID)).thenReturn(ProductType.FREE_EXPLORE);
 
         PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
 
