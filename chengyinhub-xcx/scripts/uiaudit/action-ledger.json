@@ -1023028,6 +1023028,7 @@
           "/api/club/my",
           "/api/common/banner",
           "/api/growth/center",
+          "/api/growth/leaderboard",
           "/api/medal/wall",
           "/api/merchant/access/me",
           "/api/merchant/public-home",
@@ -1023048,6 +1023049,7 @@
           "/api/club/my",
           "/api/common/banner",
           "/api/growth/center",
+          "/api/growth/leaderboard",
           "/api/medal/wall",
           "/api/merchant/access/me",
           "/api/merchant/public-home",
@@ -1023081,6 +1023083,12 @@
           },
           {
             "url": "/api/growth/center",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/growth/leaderboard",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
