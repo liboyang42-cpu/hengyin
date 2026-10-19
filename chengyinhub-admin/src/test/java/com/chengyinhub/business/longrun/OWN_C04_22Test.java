@@ -108,8 +108,10 @@ class OWN_C04_22Test {
             when(bounty.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
             when(cooldown.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
             WithdrawalFrozenAmountResolver resolver = new WithdrawalFrozenAmountResolver(bounty, cooldown);
-            when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(
-                    new WithdrawalBalanceAdmissionService.Admission(new BigDecimal("100"), new BigDecimal("80"), resolver.resolve(7L), true));
+            WithdrawalFrozenAmountResolver.Frozen frozen = resolver.resolve(7L);
+            WithdrawalBalanceAdmissionService.Admission admitted = new WithdrawalBalanceAdmissionService.Admission(
+                    new BigDecimal("100"), new BigDecimal("80"), frozen, true);
+            when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(admitted);
             CashWithdrawFailureRecoveryService original = mock(CashWithdrawFailureRecoveryService.class);
             doAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return null; }).when(original).prepare(any());
             when(mapper.selectByIdForUpdate(1L)).thenAnswer(i -> stored.get());
