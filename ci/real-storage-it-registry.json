@@ -103,8 +103,8 @@
     },
     "funnel-max-date": {
       "lineage": "master",
-      "registered_source": "16aedbeaa797cbada8b53939393b39f87ca3a48f",
-      "note": "F3 analytics_max_date fix: BizFunnelDailyMapper.xml inclusive TIMESTAMP(date, '23:59:59.999999') end bounds at 9999-12-30/31 with ordinary-date and next-day 00:00:00 boundaries, SHOW WARNINGS after each query, EXPLAIN range on idx_biz_event_name_time, insertFromEventLog at 9999-12-31; TIMESTAMPADD (528e9486 verbatim) kept as a negative control asserting 0 rows and Warning 1441.",
+      "registered_source": "10de6635e557714e7ed6082a8287bd28f9b7d44c",
+      "note": "F3 analytics_max_date fix: BizFunnelDailyMapper.xml inclusive TIMESTAMP(date, '23:59:59') end bounds (occurred_at DATETIME_PRECISION pinned to 0) at 9999-12-30/31 with ordinary-date and next-day 00:00:00 boundaries, SHOW WARNINGS after each query, EXPLAIN range on idx_biz_event_name_time, insertFromEventLog at 9999-12-31; TIMESTAMPADD (528e9486 verbatim) kept as a negative control asserting 0 rows and Warning 1441.",
       "classes": [
         "com.chengyinhub.business.it.FunnelMaxDateMySqlIT"
       ]
