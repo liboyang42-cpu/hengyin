@@ -42,7 +42,7 @@ chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读�
 #   的 UNREVIEWED 存量 1 处随代码整删 ⇒ 73→72。同 2026-09-16 先例:存量变少不是长大。
 # BASELINE_TOTAL_20260818 72
 
-chengyinhub-xcx/components/cy/npc-chat/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+chengyinhub-xcx/subpackageMember/components/cy/npc-chat/index.js 1  # 2026-10-19 随组件下沉会员分包一并审查(原 UNREVIEWED_BASELINE_20260818:1):NPC 提问失败(网络/异常状态码)在对话里追加一条可见回复「网络不太稳定，这条问题还没有送达，可以再试一次」并标 FAILED,配合「重试这条消息」;关自动 toast 免双弹
 chengyinhub-xcx/components/cy/profile/index.js 0  # UNREVIEWED_BASELINE_20260818:4 存量未审查,禁止新增(2026-08-21:本轮整改已删除 3 处静默调用)；2026-09-30 迁至会员分包，原路径调用清零，保留冻结收据
 chengyinhub-xcx/components/cy/scene-game-coupon-wallet/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/components/cy/scene-member-invite-history/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
@@ -207,8 +207,8 @@ chengyinhub-xcx/subpackageMember/report-mine/index.js 2  # 我的举报列表首
 chengyinhub-xcx/subpackageMember/report-detail/index.js 4  # 举报进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;申诉失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
 chengyinhub-xcx/subpackageMember/correction-mine/index.js 1  # BL-184 我的纠错列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast
 chengyinhub-xcx/subpackageMember/correction-detail/index.js 3  # BL-184 纠错进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;补证失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
-chengyinhub-xcx/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
-chengyinhub-xcx/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
+chengyinhub-xcx/subpackageMember/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
+chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
 chengyinhub-xcx/pages/merchant/verify-records/index.js 2  # BL-76:access/me 与核销记录读取失败都落页内 cy-error(带重新加载);关全局 toast 避免双弹。
 chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.js 1  # BL-79:改名失败(后端原文/网络)回显在改名半屏 cy-field 错误位;关全局 toast 避免双弹。
 chengyinhub-xcx/pages/activity/official-mine/index.js 1  # BL-80:通知复盘读取失败如实写在该卡触达行并可再点重试;关全局 toast 避免双弹。

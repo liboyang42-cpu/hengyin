@@ -5,7 +5,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 
-const model = require('../../components/cy/report-sheet/model.js')
+const model = require('../../subpackageMember/components/cy/report-sheet/model.js')
 const root = path.join(__dirname, '..', '..')
 
 test('BL-51 时效文案:紧急 15 分钟 / 标准 24 小时,字段缺失或非法不显示', () => {
@@ -31,8 +31,8 @@ test('BL-51 normalizeTaxonomy 带出 responseText,缺字段的原因不带', () 
 })
 
 test('BL-51 表单页在原因下方显示时效说明,沿用 rs__note 样式', () => {
-  const wxml = fs.readFileSync(path.join(root, 'components/cy/report-sheet/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(root, 'subpackageMember/components/cy/report-sheet/index.wxml'), 'utf8')
   assert.match(wxml, /<text class="rs__note" wx:if="\{\{reasonResponseText\}\}">\{\{reasonResponseText\}\}<\/text>/)
-  const js = fs.readFileSync(path.join(root, 'components/cy/report-sheet/index.js'), 'utf8')
+  const js = fs.readFileSync(path.join(root, 'subpackageMember/components/cy/report-sheet/index.js'), 'utf8')
   assert.match(js, /reasonResponseText: reason\.responseText \|\| ''/)
 })

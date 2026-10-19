@@ -2,7 +2,7 @@ const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/dat
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
-const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('../../../../utils/audit-detail.js');
+const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。

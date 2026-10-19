@@ -4,7 +4,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
 
-const FILE = path.join(__dirname, '..', '..', 'components/cy/report-sheet/index.js')
+const FILE = path.join(__dirname, '..', '..', 'subpackageMember/components/cy/report-sheet/index.js')
 const TAX = { code: 200, data: { policyVersion: 'v2', reasons: [{ code: 'SPAM', label: '垃圾广告' }, { code: 'HARASS', label: '骚扰' }] } }
 
 function boot() {

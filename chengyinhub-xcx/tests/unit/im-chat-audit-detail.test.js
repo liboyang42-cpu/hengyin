@@ -1,7 +1,7 @@
 // BL-87 审核结果详情:系统审核卡片打开「处理结果」时回读 GET /api/audit/{taskId}/detail。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('../../utils/audit-detail.js')
+const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('../../subpackageB/pages/im/chat/audit-detail.js')
 
 function loadChat() {
   let def

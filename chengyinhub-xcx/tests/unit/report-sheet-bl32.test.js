@@ -7,7 +7,7 @@ const path = require('node:path')
 
 const root = path.join(__dirname, '..', '..')
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8')
-const model = require('../../components/cy/report-sheet/model.js')
+const model = require('../../subpackageMember/components/cy/report-sheet/model.js')
 
 test('BL-32: taxonomy 只认后端给的原因与规则版本', () => {
   assert.equal(model.normalizeTaxonomy(null), null)
@@ -35,12 +35,12 @@ test('BL-32: 对象校验、说明校验、幂等键长度', () => {
 })
 
 test('BL-32: 组件走真实接口、无证据上传、回调不用 this 方法简写', () => {
-  const js = read('components/cy/report-sheet/index.js')
+  const js = read('subpackageMember/components/cy/report-sheet/index.js')
   assert.match(js, /\/api\/community-trust\/reports\/taxonomy/)
   assert.match(js, /\/api\/community-trust\/reports\/submit/)
   assert.doesNotMatch(js, /evidenceAssetIds/)
   assert.doesNotMatch(js, /success\s*\(res\)\s*\{|fail\s*\(\)\s*\{/)
-  const wxml = read('components/cy/report-sheet/index.wxml')
+  const wxml = read('subpackageMember/components/cy/report-sheet/index.wxml')
   assert.match(wxml, /<cy-sheet [^>]*title="\{\{title\}\}"/)
 })
 
@@ -48,7 +48,7 @@ test('BL-32: 他人主页「…」里有举报，本人与商家主页不出现'
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   assert.match(wxml, /<cy-cell wx:if="\{\{!isSelf && !subjectIsMerchant\}\}" title="举报"[^>]*bind:tap="onReportMember"/)
   assert.match(wxml, /<cy-report-sheet wx:if="\{\{!isSelf\}\}" show="\{\{reportShow\}\}" target-type="\{\{reportTargetType\}\}" target-id="\{\{reportTargetId\}\}"/)
-  assert.match(read('subpackageMember/components/cy/profile/index.json'), /"cy-report-sheet": "\/components\/cy\/report-sheet\/index"/)
+  assert.match(read('subpackageMember/components/cy/profile/index.json'), /"cy-report-sheet": "\/subpackageMember\/components\/cy\/report-sheet\/index"/)
   const js = read('subpackageMember/components/cy/profile/index.js')
   assert.match(js, /onReportMember: function \(\) \{\n    this\.closeMoreMenu\(\);\n    this\.setData\(\{ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String\(this\.data\.userId \|\| ''\)/)
 })

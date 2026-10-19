@@ -3,7 +3,7 @@ const toast = require('../../utils/toast.js');
 const app = getApp();
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
-const nicknameCheck = require('../../utils/nickname-check.js');
+const nicknameCheck = require('./nickname-check.js');
 
 // 输入停顿多久再问后端:太短每个字都打一枪,太长用户等不到反馈。
 const NICKNAME_CHECK_DEBOUNCE_MS = 400;

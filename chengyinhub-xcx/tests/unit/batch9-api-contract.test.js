@@ -31,7 +31,7 @@ test('BL-108 POST /api/merchant/subscription:BASIC_READ,只查生效行,无写�
   const xml = readRepo('chengyinhub-system/src/main/resources/mapper/business/MerchantSubscriptionMapper.xml')
   // is_active=1 时后端已按有效期过滤:前端不必再判过期
   // master 后端 isActive=1 只排除已到期行(end_date >= now),不排除开始日期还没到的预购行;
-  // 「尚未生效」由 utils/merchant-subscription-view.js 按 startDate 在前端过滤(见 merchant-subscription-view.test.js)。
+  // 「尚未生效」由 pages/merchant/utils/merchant-subscription-view.js 按 startDate 在前端过滤(见 merchant-subscription-view.test.js)。
   assert.match(xml, /isActive != null and isActive == 1"> and \(end_date is null or end_date &gt;= now\(\)\)/)
 })
 
@@ -40,7 +40,7 @@ test('BL-108 前端只读用到的字段都在 MerchantSubscription 实体里,�
   for (const f of ['id', 'subscriptionType', 'endDate', 'maxUsage', 'usedCount', 'isActive']) {
     assert.ok(fields.has(f), 'MerchantSubscription 缺字段 ' + f)
   }
-  const util = read('utils/merchant-subscription-view.js')
+  const util = read('pages/merchant/utils/merchant-subscription-view.js')
   const used = new Set((util.match(/\br\.(\w+)/g) || []).map((m) => m.slice(2)))
   for (const f of used) assert.ok(fields.has(f), '前端读了实体没有的字段 ' + f)
   assert.doesNotMatch(util, /price|amount|fee/i)

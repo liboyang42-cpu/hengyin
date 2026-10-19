@@ -21,6 +21,9 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
-    "cy-report-sheet": "/components/cy/report-sheet/index"
+    "cy-report-sheet": "/subpackageMember/components/cy/report-sheet/index"
+  },
+  "componentPlaceholder": {
+    "cy-report-sheet": "view"
   }
 }

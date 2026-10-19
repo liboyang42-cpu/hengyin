@@ -1,14 +1,14 @@
 'use strict';
 
 // BL-151:补 CL4(#27)两处纯函数的边界用例,不改被测代码。
-//   components/cy/npc-chat/chat-export.js            timeText
+//   subpackageMember/components/cy/npc-chat/chat-export.js            timeText
 //   subpackageMember/components/cy/profile/points-rules.js  pointValue(+ splitPointsRules 缺值兜底)
 // 依赖 #27,须在其后合并。
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { timeText } = require('../../components/cy/npc-chat/chat-export.js');
+const { timeText } = require('../../subpackageMember/components/cy/npc-chat/chat-export.js');
 const { pointValue, splitPointsRules } = require('../../subpackageMember/components/cy/profile/points-rules.js');
 
 test('timeText:ISO 串带 +08:00 / 毫秒 → 北京时间,去掉 T、毫秒与 +08:00', () => {

@@ -21,8 +21,8 @@ const { isRecord, isRecordList } = require('../../../../utils/response-shape.js'
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
 const mediaPreview = require('../../../../utils/media-preview.js');
-const { shapeMerchantSafety } = require('../../../../utils/merchant-safety-summary.js');
-const { shapeMerchantNode, readFavoriteToggle } = require('../../../../utils/merchant-node-favorite.js');
+const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
+const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',

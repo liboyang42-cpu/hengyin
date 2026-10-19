@@ -3,7 +3,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
-const { levelTabs, buildRatingBody, receiptText } = require('../../utils/safety-rating.js')
+const { levelTabs, buildRatingBody, receiptText } = require('../../pages/play/merchant/components/safety-rating-sheet/safety-rating.js')
 
 const SHEET = path.resolve(__dirname, '../../pages/play/merchant/components/safety-rating-sheet/index.js')
 

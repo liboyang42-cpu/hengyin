@@ -4,7 +4,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
-const { shapeMerchantSafety } = require('../../utils/merchant-safety-summary.js')
+const { shapeMerchantSafety } = require('../../subpackageMember/components/cy/profile/merchant-safety-summary.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const PROFILE_JS = path.join(ROOT, 'subpackageMember/components/cy/profile/index.js')

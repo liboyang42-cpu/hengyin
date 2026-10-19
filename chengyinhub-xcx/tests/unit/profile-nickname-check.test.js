@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../..');
 const PAGE_PATH = path.join(ROOT, 'pages/gerenziliao/gerenziliao.js');
 const VIEW_PATH = path.join(ROOT, 'pages/gerenziliao/gerenziliao.wxml');
-const nickname = require('../../utils/nickname-check.js');
+const nickname = require('../../pages/gerenziliao/nickname-check.js');
 
 let sandbox;
 

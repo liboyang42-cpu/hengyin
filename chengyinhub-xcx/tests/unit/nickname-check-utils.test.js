@@ -1,10 +1,10 @@
-// BL-149：utils/nickname-check.js 的 normalize / codePointLength / localIssue 单测补齐
+// BL-149：pages/gerenziliao/nickname-check.js(原 utils/,只给个人资料页用,下沉到分包减主包)的 normalize / codePointLength / localIssue 单测补齐
 // 依赖 #23（CL3），须在其后合并；不改被测代码。
 // 口径对照 NicknameSuggestionServiceImpl：normalize = String.trim()；
 //   合规 = codePointCount 在 [2, 24] 且匹配 [\p{L}\p{N}_#\-.· ]+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const nickname = require('../../utils/nickname-check.js');
+const nickname = require('../../pages/gerenziliao/nickname-check.js');
 
 test('常量与服务端一致：MIN_LENGTH=2，MAX_LENGTH=24', () => {
   assert.equal(nickname.MIN_LENGTH, 2);

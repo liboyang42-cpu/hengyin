@@ -1,5 +1,5 @@
 const app = getApp();
-const { LEVEL_LABELS, levelTabs, buildRatingBody, receiptText } = require('../../../../../utils/safety-rating.js');
+const { LEVEL_LABELS, levelTabs, buildRatingBody, receiptText } = require('./safety-rating.js');
 
 // BL-89:到访安全感受评价半屏。merchantId 是商家会员 ID(节点下发的 merchantId),
 // 提交前经 /api/merchant/public-home {memberId} 换成 mms_merchant.id(后端 MerchantSafetyRatingRequest.merchantId)。

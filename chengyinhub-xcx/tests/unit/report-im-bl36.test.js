@@ -15,7 +15,9 @@ test('BL-36: 可回复私信的更多菜单有「举报对方」，系统通知�
   assert.match(js, /else if \(label === '举报对方'\) this\.doReportPeer\(\);/)
   const wxml = read('subpackageB/pages/im/chat/index.wxml')
   assert.match(wxml, /<cy-report-sheet wx:if="\{\{!readOnly\}\}" show="\{\{reportShow\}\}" target-type="MEMBER" target-id="\{\{reportPeerId\}\}"/)
-  assert.match(read('subpackageB/pages/im/chat/index.json'), /"cy-report-sheet": "\/components\/cy\/report-sheet\/index"/)
+  assert.match(read('subpackageB/pages/im/chat/index.json'), /"cy-report-sheet": "\/subpackageMember\/components\/cy\/report-sheet\/index"/)
+  // 举报半屏放在会员分包(减主包),私信分包跨包使用必须带异步占位
+  assert.match(read('subpackageB/pages/im/chat/index.json'), /"componentPlaceholder": \{[^}]*"cy-report-sheet": "view"/)
 })
 
 test('BL-36: 对方 id 取最近一条对方消息，取不到就如实提示不打开', () => {

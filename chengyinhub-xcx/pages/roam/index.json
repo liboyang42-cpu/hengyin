@@ -17,7 +17,6 @@
     "cy-scene-roam-task-list": "/components/cy/scene-roam-task-list/index",
     "cy-scene-roam-poi-detail": "/subpackageMember/components/cy/scene-roam-poi-detail/index",
     "cy-modal": "/components/cy/modal/index",
-    "cy-npc-chat": "/components/cy/npc-chat/index",
     "cy-play-header": "/components/cy/play-header/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-celebrate": "/components/cy/celebrate/index",

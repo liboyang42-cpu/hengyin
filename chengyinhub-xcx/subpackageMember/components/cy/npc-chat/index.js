@@ -7,7 +7,7 @@
 //   它与是哪一轨无关;复制一份等于把这三条保证也复制一份,以后只会修好其中一份。
 //   ⚠️ 两轨的**开关是分开的**(roamNpcChat 硬编码 false / merchantNpcChat 读配置),
 //     由调用方各自判,组件不判 —— 组件判的话两轨就又绑一起了。
-const analytics = require('../../../utils/analytics.js');
+const analytics = require('../../../../utils/analytics.js');
 const chatExport = require('./chat-export.js');
 
 const MAX_MESSAGE_CODE_POINTS = 300;

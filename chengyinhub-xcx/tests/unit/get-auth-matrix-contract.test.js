@@ -66,7 +66,7 @@ const MATRIX = [
   ['pages/activity/official-organizer/index.js', "url: '/api/official/my-published'", 'required', 'publisher', 'self-publisher'],
   ['pages/activity/official-detail/index.js', "url: `/api/official/v2/events/${this.data.id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
   // CL4 N5:NPC 对话导出,身份只取登录态(getAppUserId),端点不收任何用户 ID。
-  ['components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
+  ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
@@ -138,7 +138,7 @@ const MATRIX = [
   // 2026-10-19 Claude 小程序线移植到 master:本线新增 21 处 GET 逐条归类。全部不在 SecurityConfig permitAll 清单 ⇒ required;
   //   本人记录(举报/纠错/收藏/通知/审核回读)= self-account;原因表/安全感受摘要/据点公开信息 = global-authenticated-read;
   //   商家触达 = owned-merchant-resource(MARKETING_READ);开通前置 = self-merchant;复盘统计 = self-publisher。
-  ['components/cy/report-sheet/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/components/cy/report-sheet/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['pages/activity/official-mine/index.js', "url: '/api/official/broadcast/' + encodeURIComponent(String(id)) + '/stats'", 'required', 'publisher', 'self-publisher'],
   ['pages/merchant/crm-campaigns/index.js', "url: '/api/merchant/crm/campaigns'", 'required', 'merchant', 'owned-merchant-resource'],
   ['pages/merchant/crm-campaigns/index.js', 'url: `/api/merchant/crm/campaigns/${id}`', 'required', 'merchant', 'owned-merchant-resource'],

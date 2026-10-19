@@ -9,8 +9,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const exp = require('../../components/cy/npc-chat/chat-export.js');
-const COMPONENT_PATH = require.resolve('../../components/cy/npc-chat/index.js');
+const exp = require('../../subpackageMember/components/cy/npc-chat/chat-export.js');
+const COMPONENT_PATH = require.resolve('../../subpackageMember/components/cy/npc-chat/index.js');
 const ROOT = path.resolve(__dirname, '../..');
 
 let definition;
@@ -141,7 +141,7 @@ test('组件:关闭面板或清除记录后,迟到的导出回包被丢弃', () 
 });
 
 test('模板:导出与清除并排;导出面板打开时隐藏输入区', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/npc-chat/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/npc-chat/index.wxml'), 'utf8');
   assert.match(wxml, /bindtap="onExportData"[^>]*>导出我的对话记录</);
   assert.match(wxml, /bindtap="onAskClearData"[^>]*>清除我的对话记录</);
   assert.match(wxml, /wx:if="\{\{!exportState\}\}" class="npc-chat__composer"/);

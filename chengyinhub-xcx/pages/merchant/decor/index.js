@@ -11,7 +11,7 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
-const { buildActiveSubscriptions } = require('../../../utils/merchant-subscription-view.js');
+const { buildActiveSubscriptions } = require('../utils/merchant-subscription-view.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。

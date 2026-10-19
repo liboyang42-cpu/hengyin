@@ -5,7 +5,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
-const { shapeMerchantNode, readFavoriteToggle } = require('../../utils/merchant-node-favorite.js')
+const { shapeMerchantNode, readFavoriteToggle } = require('../../subpackageMember/components/cy/profile/merchant-node-favorite.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const PROFILE_JS = path.join(ROOT, 'subpackageMember/components/cy/profile/index.js')

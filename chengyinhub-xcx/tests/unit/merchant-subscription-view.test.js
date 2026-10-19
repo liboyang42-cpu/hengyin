@@ -2,7 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('fs')
 const path = require('path')
-const { buildActiveSubscriptions, formatDay } = require('../../utils/merchant-subscription-view.js')
+const { buildActiveSubscriptions, formatDay } = require('../../pages/merchant/utils/merchant-subscription-view.js')
 const read = (p) => fs.readFileSync(path.join(__dirname, '../..', p), 'utf8')
 
 const tiers = [

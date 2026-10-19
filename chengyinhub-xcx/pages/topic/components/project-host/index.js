@@ -1,5 +1,5 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
-const circleTheme = require('../../../../utils/circle-theme.js');
+const circleTheme = require('../../utils/circle-theme.js');
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
   options: { addGlobalClass: true },
