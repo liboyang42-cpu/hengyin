@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 两参 TIMESTAMP(date, time) 使用显式 H2 方言适配，不能代替真实 MySQL 对生产 XML 的验证。
  */
 public class BizFunnelDailyMapperMyBatisTest {
-    private static final String DAY_END = "23:59:59.999999";
+    private static final String DAY_END = "23:59:59";
 
     @Test
     void pilotDenominatorSurvivesHideDeleteAndAuthorErasure() throws Exception {
@@ -101,7 +101,7 @@ public class BizFunnelDailyMapperMyBatisTest {
                 + "id bigint primary key, author_id bigint, lifecycle varchar(20))");
     }
 
-    /** H2 没有 MySQL 两参 TIMESTAMP(date, time)；测试别名只补足本查询用到的当日最后一微秒。 */
+    /** H2 没有 MySQL 两参 TIMESTAMP(date, time)；测试别名只补足本查询用到的当日最后一秒。 */
     public static Timestamp dayEnd(Date date, String time) {
         if (!DAY_END.equals(time)) {
             throw new IllegalArgumentException("unsupported time: " + time);

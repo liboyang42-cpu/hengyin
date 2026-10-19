@@ -84,7 +84,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join community_post cp
           on event.biz_type = 'community_post' and cp.id = event.biz_id
         where event.occurred_at &gt;= cast(#{statDate} as date)
-          and event.occurred_at &lt;= timestamp(cast(#{statDate} as date), '23:59:59.999999')
+          and event.occurred_at &lt;= timestamp(cast(#{statDate} as date), '23:59:59')
           and (event.event_name &lt;&gt; 'community_post_qualified_view'
                or (event.member_id is not null
                    and cp.id is not null
@@ -140,7 +140,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and event.biz_type = 'community_post'
             and event.member_id is not null
             and event.occurred_at &gt;= cast(#{startDate} as date)
-            and event.occurred_at &lt;= timestamp(cast(#{endDate} as date), '23:59:59.999999')
+            and event.occurred_at &lt;= timestamp(cast(#{endDate} as date), '23:59:59')
           group by event.member_id, event.biz_id, post.author_id
         )
         select count(distinct member_id) as qualified_user_count,

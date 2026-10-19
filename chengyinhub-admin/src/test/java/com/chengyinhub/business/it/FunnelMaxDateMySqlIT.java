@@ -46,7 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * F3 analytics_max_date 回归：BizFunnelDailyMapper.xml 两处结束边界在 MySQL 最大日期年份的真实返回。
  *
  * <p>原 DATE_ADD(+1 day) 在 9999-12-31 得 NULL（Warning 1441），{@code occurred_at < NULL} 一行不中。
- * 现行 XML 改为包含式上界 {@code <= timestamp(cast(d as date), '23:59:59.999999')}，不做会溢出的日期加法。
+ * 现行 XML 改为包含式上界 {@code <= timestamp(cast(d as date), '23:59:59')}，不做会溢出的日期加法。
+ * 不带小数秒：datetime(0) 列下 {@code '23:59:59.999999'} 会进位到 10000-01-01 而报 1441/1292（运行 39291515433）；
+ * 因此本类同时断言 {@code occurred_at} 的 DATETIME_PRECISION 为 0，列一旦加小数秒即失败，迫使重审该上界。
  * 每条查询后在同一连接上立刻 SHOW WARNINGS；另有普通日期对照组与两侧边界夹具。
  * <ul>
  *   <li>现行 XML：经 MyBatis 原样加载，试点指标各窗口返回正确计数且无告警；EXPLAIN 断言
@@ -62,9 +64,9 @@ class FunnelMaxDateMySqlIT {
     private static final String RESOURCE = "mapper/business/BizFunnelDailyMapper.xml";
     private static final String STATEMENT = "selectCommunityQualifiedPilotMetric";
     private static final String FIXED_LINE =
-            "and event.occurred_at &lt;= timestamp(cast(#{endDate} as date), '23:59:59.999999')";
+            "and event.occurred_at &lt;= timestamp(cast(#{endDate} as date), '23:59:59')";
     private static final String FIXED_DAILY_LINE =
-            "and event.occurred_at &lt;= timestamp(cast(#{statDate} as date), '23:59:59.999999')";
+            "and event.occurred_at &lt;= timestamp(cast(#{statDate} as date), '23:59:59')";
     private static final String TIMESTAMPADD_LINE =
             "and event.occurred_at &lt; timestampadd(day, 1, cast(#{endDate} as date))";
     private static final String CANDIDATE_NAMESPACE = "evidence.pr4.c528e9486";
@@ -167,6 +169,12 @@ class FunnelMaxDateMySqlIT {
         String statement = selectElement(productionXml);
         assertEquals(1, occurrences(statement, FIXED_LINE), "现行结束边界应为包含式 TIMESTAMP 上界");
         log("FIXED statement sha256=" + sha256(statement));
+        // 上界 '23:59:59' 只对秒精度列精确；列加小数秒时这里失败，提示同步改上界。
+        Integer precision = new JdbcTemplate(source).queryForObject("SELECT DATETIME_PRECISION FROM information_schema.COLUMNS "
+                + "WHERE table_schema = DATABASE() AND table_name = 'biz_event_log' AND column_name = 'occurred_at'",
+                Integer.class);
+        log("biz_event_log.occurred_at DATETIME_PRECISION=" + precision);
+        assertEquals(0, precision, "occurred_at 精度变了，需复核 '23:59:59' 结束边界");
         try (SqlSession session = productionFactory().openSession()) {
             BizFunnelDailyMapper mapper = session.getMapper(BizFunnelDailyMapper.class);
             Connection connection = session.getConnection();
@@ -316,7 +324,7 @@ class FunnelMaxDateMySqlIT {
         log(variant + " probe " + queryRows(connection,
                 "select date_add(cast('9999-12-31' as date), interval 1 day) as date_add_end, "
                         + "timestampadd(day, 1, cast('9999-12-31' as date)) as timestampadd_end, "
-                        + "timestamp(cast('9999-12-31' as date), '23:59:59.999999') as fixed_end"));
+                        + "timestamp(cast('9999-12-31' as date), '23:59:59') as fixed_end"));
         log(variant + " probe warnings " + queryRows(connection, "SHOW WARNINGS"));
     }
 
