@@ -132,8 +132,16 @@ class PlayerGrowthConcurrencyMySqlIT {
 
     @BeforeEach
     void reset() {
-        db.update("delete from player_badge");
-        db.update("delete from player_growth");
+        // 用 TRUNCATE 而不是 DELETE：DELETE 留下未 purge 的删除标记记录，间隙锁会挂在上一个用例的
+        // TOPIC_CLEAR/TOPIC_FINISH 残留上，同主题并发是否成环随之取决于用例顺序和 purge 时机。
+        db.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
+            try (java.sql.Statement statement = connection.createStatement()) {
+                statement.execute("set session lock_wait_timeout = 10");
+                statement.execute("truncate table player_badge");
+                statement.execute("truncate table player_growth");
+            }
+            return null;
+        });
         definitions = mock(GrowthBadgeMapper.class);
         when(definitions.selectByCode(anyString())).thenAnswer(call -> {
             String code = call.getArgument(0);
