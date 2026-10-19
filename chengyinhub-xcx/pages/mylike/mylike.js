@@ -84,6 +84,8 @@ Page({
     this._unlikeRequests = Object.create(null); this._postUnlikeRequests = Object.create(null);
     this._stopPullWithCurrent = false;
     this._favoriteLoadedPages = Object.create(null);
+    this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) };
+    this._unlikePrompts = Object.create(null);
     this.setData({ postList: [], ztList1: [], loading: false, refreshing: false, errorMsg: '', loginRequired: false,
       hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
     return true;
@@ -91,6 +93,16 @@ Page({
   _isFavoriteResponseCurrent(owner, generation) {
     return !this._favoritesDisposed && owner === this._favoriteMember()
       && generation === this._favoriteGeneration;
+  },
+
+  _recordFavoriteRemoval(type, id) {
+    this._favoriteRemovalVersion = (this._favoriteRemovalVersion || 0) + 1;
+    const removed = this._favoriteRemovals || (this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) });
+    removed[type][String(id)] = this._favoriteRemovalVersion;
+  },
+  _filterFavoriteRead(type, rows, version) {
+    const removed = this._favoriteRemovals && this._favoriteRemovals[type];
+    return removed ? rows.filter(row => !(removed[String(row.id)] > version)) : rows;
   },
 
   syncViewTheme() {
@@ -138,6 +150,7 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const removalVersion = that._favoriteRemovalVersion || 0;
     const pageConfig = Object.assign({}, that.data.pageConfig);
     const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
     const previousPage = loadedPages.posts || Math.max(1, pageConfig.pageNum - 1);
@@ -162,7 +175,7 @@ Page({
       success: function (res) {
         if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
-          const rows = res.data.rows.map(function (row) {
+          const rows = that._filterFavoriteRead('posts', res.data.rows, removalVersion).map(function (row) {
             row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
             return row;
           });
@@ -196,6 +209,7 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const removalVersion = that._favoriteRemovalVersion || 0;
     const pageConfig = Object.assign({}, that.data.pageConfig);
     const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
     const previousPage = loadedPages.topics || Math.max(1, pageConfig.pageNum - 1);
@@ -229,7 +243,7 @@ Page({
       success: function (res) {
         if (!that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let list = res.data.rows;
+          let list = that._filterFavoriteRead('topics', res.data.rows, removalVersion);
           
           // 处理日期格式
           list = that.processListData(list);
@@ -239,13 +253,13 @@ Page({
           if (pageConfig.pageNum === 1) {
             that.setData({ 
               ztList1: list,
-              hasMore1: list.length >= pageConfig.pageSize,
+              hasMore1: res.data.rows.length >= pageConfig.pageSize,
               errorMsg: '',
             });
           } else {
             that.setData({ 
               ztList1: [...that.data.ztList1, ...list],
-              hasMore1: list.length >= pageConfig.pageSize,
+              hasMore1: res.data.rows.length >= pageConfig.pageSize,
               errorMsg: '',
             });
           }
@@ -306,15 +320,27 @@ Page({
     // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
     that._unlikeRequests = that._unlikeRequests || Object.create(null);
     if (that._unlikeRequests[requestKey]) return;
+    const prompts = that._unlikePrompts || (that._unlikePrompts = Object.create(null));
+    if (prompts[requestKey]) return;
+    const prompt = {};
+    prompts[requestKey] = prompt;
+    const finishPrompt = () => {
+      if (prompts[requestKey] !== prompt) return false;
+      delete prompts[requestKey];
+      return true;
+    };
 
     modal.show({
       title: '提示',
       content: '确定要取消点赞吗？',
       success: function (res) {
-        if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!finishPrompt() || !that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res.confirm) {
           if (that._unlikeRequests[requestKey]) return;
-          that._unlikeRequests[requestKey] = true;
+          const request = {};
+          that._unlikeRequests[requestKey] = request;
+          const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+            && that._unlikeRequests[requestKey] === request;
           app.sendRequest({
             url: '/api/topic/like',
             method: "POST",
@@ -323,8 +349,9 @@ Page({
               type: 0 // 0表示取消点赞
             },
             success: function (res) {
-              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+              if (!isCurrent()) return;
               if (res.code == "200") {
+                that._recordFavoriteRemoval('topics', requestKey);
                 toast.success('取消点赞成功');
                 
                 // 回包顺序可能与点击顺序不同，按 ID 删除避免旧 index 误删其他收藏。
@@ -335,16 +362,18 @@ Page({
               }
             },
             fail: function (res) {
-              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+              if (!isCurrent()) return;
               toast('网络错误，请重试');
             },
             complete: function () {
-              if (!that._isFavoriteResponseCurrent(owner, generation)) return;
+              if (!isCurrent()) return;
               delete that._unlikeRequests[requestKey];
             }
           });
         }
-      }
+      },
+      fail: finishPrompt,
+      complete: finishPrompt
     });
   },
 
@@ -357,7 +386,10 @@ Page({
     const requestKey = String(item.id);
     this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
     if (this._postUnlikeRequests[requestKey]) return;
-    this._postUnlikeRequests[requestKey] = true;
+    const request = {};
+    this._postUnlikeRequests[requestKey] = request;
+    const isCurrent = () => this._isFavoriteResponseCurrent(owner, generation)
+      && this._postUnlikeRequests[requestKey] === request;
     community.request({
       hideLoading: true,
       silentError: true,
@@ -369,20 +401,21 @@ Page({
         request_id: 'bookmark-' + item.id + '-0-' + Date.now().toString(36)
       },
       success: (res) => {
-        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         if (!res || res.code != '200') {
           toast((res && res.msg) || '操作失败');
           return;
         }
+        this._recordFavoriteRemoval('posts', requestKey);
         const postList = this.data.postList.filter(post => String(post.id) !== requestKey);
         this.setData({ postList: postList });
       },
       fail: () => {
-        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         toast('网络错误，请重试');
       },
       complete: () => {
-        if (!this._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!isCurrent()) return;
         delete this._postUnlikeRequests[requestKey];
       }
     });
