@@ -776,7 +776,7 @@ Page({
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === 'event' && this._activeRoamEventId) { wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId }); return; }
+    if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
     if (key === 'event') return;   // 官方活动暂未开放:卡上已标状态,点按不进列表
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
@@ -986,7 +986,7 @@ Page({
     this._hidden = false;
     if (this._clock) this._syncStats();
     this.setData({ fontScaleStyle: readPageStyle() });
-    this._syncPresencePrivacy();
+    this._syncPresencePrivacy(); this._eventNavigating = false; // 返回时兜底清「官方活动」跳转锁
     // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();
     this._syncCommunityEntry();
