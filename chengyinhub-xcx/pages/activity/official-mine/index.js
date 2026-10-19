@@ -49,7 +49,7 @@ Page({
   },
 
   onLoad() { this._unloaded = false; this.syncViewerTheme(); this.fetch(); },
-  onShow() { this.syncViewerTheme(); if (this._loaded) this.fetch(); },
+  onShow() { this._navigating = false; this.syncViewerTheme(); if (this._loaded) this.fetch(); },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
     merchantTheme.merchantPageRestore();
@@ -170,6 +170,9 @@ Page({
 
   // 草稿在公开详情里不可见,发布等主办操作统一从控制台进
   openOrganizer(e) {
-    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + e.currentTarget.dataset.id });
+    const id = e && e.currentTarget && e.currentTarget.dataset.id;
+    if (!hasUsableId(id) || this._navigating) return; // 跳转中不响应连点,免得叠两层控制台
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 });
