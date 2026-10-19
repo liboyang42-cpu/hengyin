@@ -109,3 +109,12 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 - 2026-10-19 Codex 观察:master 移到 `4667f716`(#281,只加真 MySQL/Redis 手动回归 CI 4 个文件),已无冲突合入移植分支 `262cd9b6`,门禁同上;#69、#18 仍未合。#286(BL-227)尚无监督评论,未合。
 - 2026-10-19 12:25 云端协调:#286(BL-227 俱乐部勋章跳转中保护)、#289(BL-228 商家工作台核销记录/开店前置项)、#290(BL-229 客户页触达记录)合入集成分支 `9c432800`(全量单测 8823 过 / 8 失败,与基线同名;ui-integrity 去行号后不变;台账重建无变化);已移植 `a612a958`(移植分支 11235 过 / 8 失败同名,silent-error/ui-integrity U1–U5+Legacy/组件路径门禁通过,主包 3,169,696 B 不变——改动均在 pages/club、pages/merchant 分包)。master 仍 `4667f716`,#69、#18 仍未合。
 - 2026-10-19 云端协调:无待合 PR(仅 #35 开着,非 bl-*)。master 移到 `e1ae7514`(#288,只改 ci/ 下真库回归 3 个文件),已无冲突合入移植分支 `981aab38`(全量单测 11238 项 0 失败;silent-error、ui-integrity `UI-GATE-0:PASS`、组件路径、action-ledger/route-matrix `--check`、shot-matrix selftest 全过;主包不变,未动小程序文件)。#69、#18 仍未合。
+
+## master 移植 PR(2026-10-19,本地协调者)
+
+- 用户 2026-10-19 批准冻结数值 A–H(只针对移植分支),已在 `b4b1ffa8` 落地:全量单测 0 失败,`UI-GATE-0:PASS`。落地值按重建实测,与原清单有三处不同:B 为 83、E 直接 GET 为 62(都因收藏据点页移出),另补 action-ledger 事件合同 2323→2436(与 A 同一台账,A 通过后才显出)。集成分支仍是原来 8 个冻结失败,不在本次批准范围。
+- 收藏据点页(node-favorites)按用户决定暂不进 master,只留在集成分支。移植时跳过 `subpackageRoam/node-favorites/**`、`subpackageRoam/utils/node-favorites.js`、`tests/unit/roam-node-favorites.test.js`、`tests/unit/bl210-node-favorites-quiet-empty.test.js`,以及其他文件里该页的用例和登记。官方路线入口保持 master 现状(无入口),等用户另行决定。
+- 草稿 PR #293(移植分支 → master)已开,合并与否由用户决定;云端例程不得把它标为 ready、评论或合并。
+- 主包:移植分支 3,169,696 B,超 3 MiB 23,968 B;master 余 1,739 B,#69 另加 8,298 B。用户选择由 Codex 在 master 腾出 ≥40 KB,#293 里有给 C00 的 CY-HANDOFF(候选 `images/d_yhqon.png` 27,191 B → subpackageMember、`utils/mockData.js` 17,398 B → pages/club 分包,合计 44,589 B)。移植不得增加主包字节。
+- 另一会话在做 master 移植(9 个云端例程,跟踪 issue #292,集成分支 `integrate/master-port-20261019`),与 #293 共用冻结台账和主包预算;后落地的一方要重建台账并重新实测冻结值(需用户批准)。已在 #292 留言。
+- 冻结值此后仍只能由本地协调者在用户批准后修改;云端协调者遇到需要改冻结值的移植,不推送,在本文件记下实测旧→新值。
