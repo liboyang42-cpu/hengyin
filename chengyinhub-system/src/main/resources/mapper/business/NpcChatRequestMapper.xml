@@ -2,6 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.NpcChatRequestMapper">
 
+  <select id="lockChatUser" resultType="java.lang.Long">
+    select id from ums_member where id = #{userId} for update
+  </select>
+
+  <update id="redactChatRequestsByUserId">
+    update npc_chat_request
+    set safe_text = null, retryable = 0, lease_token = null, lease_until = null, active_slot = null,
+        safety_decision = case when status = 'PROCESSING' then 'UNKNOWN' else safety_decision end,
+        error_code = case when status = 'PROCESSING' then 'REQUEST_OUTCOME_UNKNOWN' else error_code end,
+        update_time = now()
+    where user_id = #{userId}
+  </update>
+
   <resultMap type="com.chengyinhub.business.domain.NpcChatRequest" id="NpcChatRequestResult">
     <id property="id" column="id" />
     <result property="audioAssetId" column="audio_asset_id" />

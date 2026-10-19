@@ -47,6 +47,11 @@ class ApiAiNpcChatDataTest {
         NpcChatDataService svc = new NpcChatDataService();
         ReflectionTestUtils.setField(svc, "npcChatLogMapper", mapper);
         ReflectionTestUtils.setField(svc, "npcChatRetentionDays", 90);
+        com.chengyinhub.business.service.impl.NpcChatWriteService writes =
+                mock(com.chengyinhub.business.service.impl.NpcChatWriteService.class);
+        org.mockito.Mockito.when(writes.deleteForUser(LOGIN_USER_ID))
+                .thenAnswer(inv -> mapper.deleteNpcChatLogsByUserId(LOGIN_USER_ID));
+        ReflectionTestUtils.setField(svc, "npcChatWriteService", writes);
         controller = spy(new ApiAiNpcController());
         ReflectionTestUtils.setField(controller, "npcChatDataService", svc);
         doReturn(LOGIN_USER_ID).when(controller).getAppUserId();

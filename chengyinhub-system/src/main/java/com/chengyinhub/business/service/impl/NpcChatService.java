@@ -24,7 +24,6 @@ import com.chengyinhub.business.domain.NpcProfile;
 import com.chengyinhub.business.domain.RoamSession;
 import com.chengyinhub.business.domain.dto.ai.NpcChatReq;
 import com.chengyinhub.business.domain.vo.ai.NpcChatResp;
-import com.chengyinhub.business.mapper.NpcChatLogMapper;
 import com.chengyinhub.business.mapper.NpcChatRequestMapper;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
@@ -82,7 +81,7 @@ public class NpcChatService
     private MerchantNpcFactsBuilder merchantFactsBuilder;
 
     @Autowired
-    private NpcChatLogMapper npcChatLogMapper;
+    private NpcChatWriteService npcChatWriteService;
 
     @Autowired
     private NpcChatRequestMapper npcChatRequestMapper;
@@ -110,7 +109,7 @@ public class NpcChatService
         NpcChatRequest existing;
         try
         {
-            existing = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
+            existing = npcChatWriteService.read(userId, requestId);
         }
         catch (Exception e)
         {
@@ -139,21 +138,14 @@ public class NpcChatService
                     false, SAFE_INVALID_SESSION));
         }
 
-        try
-        {
-            npcChatRequestMapper.expireProcessingByUserAndSession(userId, session.getId(), SAFE_REQUEST_TIMEOUT);
-        }
-        catch (Exception e)
-        {
-            // 不在未知的 request-state 下调用模型；否则可能产生不能重放的二次扣费请求。
-            log.error("[NpcChat] request lease cleanup failed userId={} sessionId={}", userId, session.getId(), e);
-            return requestStateUnavailable(requestId);
-        }
-
         NpcChatRequest processing = newProcessing(userId, session.getId(), requestId);
         try
         {
-            npcChatRequestMapper.insertNpcChatRequest(processing);
+            NpcChatRequest admitted = npcChatWriteService.admit(processing, SAFE_REQUEST_TIMEOUT);
+            if (admitted == null) return requestStateUnavailable(processing.getRequestId());
+            if (!processing.getSessionId().equals(admitted.getSessionId()))
+                return requestScopeMismatch(processing.getRequestId());
+            if (!processing.getLeaseToken().equals(admitted.getLeaseToken())) return fromStored(admitted);
         }
         catch (DuplicateKeyException e)
         {
@@ -231,7 +223,7 @@ public class NpcChatService
         NpcChatRequest existing;
         try
         {
-            existing = npcChatRequestMapper.selectByUserAndRequestId(userId, rid);
+            existing = npcChatWriteService.read(userId, rid);
         }
         catch (Exception e)
         {
@@ -262,20 +254,14 @@ public class NpcChatService
                     false, SAFE_SHOP_NO_PROFILE));
         }
 
-        try
-        {
-            npcChatRequestMapper.expireProcessingByUserAndSession(userId, sessionKey, SAFE_REQUEST_TIMEOUT);
-        }
-        catch (Exception e)
-        {
-            log.error("[NpcChat] shop lease cleanup failed userId={} nodeId={}", userId, nodeId, e);
-            return requestStateUnavailable(rid);
-        }
-
         NpcChatRequest processing = newProcessing(userId, sessionKey, rid);
         try
         {
-            npcChatRequestMapper.insertNpcChatRequest(processing);
+            NpcChatRequest admitted = npcChatWriteService.admit(processing, SAFE_REQUEST_TIMEOUT);
+            if (admitted == null) return requestStateUnavailable(processing.getRequestId());
+            if (!processing.getSessionId().equals(admitted.getSessionId()))
+                return requestScopeMismatch(processing.getRequestId());
+            if (!processing.getLeaseToken().equals(admitted.getLeaseToken())) return fromStored(admitted);
         }
         catch (DuplicateKeyException e)
         {
@@ -339,29 +325,33 @@ public class NpcChatService
             String system = profile.getPersona() + "\n" + (mem == null ? "" : mem);
             if(leaseLost.get() || npcChatRequestMapper.renewLease(processing.getUserId(),
                     processing.getRequestId(),processing.getLeaseToken(),new Date(System.currentTimeMillis()+LEASE_MILLIS))!=1) {
-                return requestStateUnavailable(processing.getRequestId());
+                return storedOrUnavailable(processing.getUserId(), processing.getRequestId());
             }
             AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), "player", bizType,
                     system, message);
             terminalize(processing, NpcChatRequest.STATUS_SUCCEEDED, "PASS", null, null, false,
                     truncateCodePoints(result.getText(), SAFE_TEXT_MAX_CODE_POINTS));
-            NpcChatResp response = finish(processing);
+            NpcChatResp response = finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
+                    profileId, message, result.getText(), 0, result.getModel(), (int) (System.currentTimeMillis() - startMs)));
             if (NpcChatRequest.STATUS_SUCCEEDED.equals(response.getOutcomeStatus())
                     && ("npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType)))
             {
                 attachVoice(processing, profile, response);
             }
-            saveLog(processing.getUserId(), processing.getSessionId(), profileId, message, result.getText(), 0,
-                    result.getModel(), (int) (System.currentTimeMillis() - startMs));
-            return response;
+            // Voice synthesis is another network call. Re-read after it so deletion cannot expose
+            // an answer/audio retained in this worker while the persistent answer has been erased.
+            NpcChatResp current = storedOrUnavailable(processing.getUserId(), processing.getRequestId());
+            if (current.getSafeText() != null && current.getSafeText().equals(response.getSafeText())
+                    && NpcChatRequest.STATUS_SUCCEEDED.equals(current.getOutcomeStatus()))
+                current.setAudioUrl(response.getAudioUrl());
+            return current;
         }
         catch (AiServiceException e)
         {
             applyGatewayFailure(processing, e);
-            NpcChatResp response = finish(processing);
-            saveLog(processing.getUserId(), processing.getSessionId(), profile.getId(), message, null,
-                    safetyFlagOf(e), null, (int) (System.currentTimeMillis() - startMs));
-            return response;
+            return finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
+                    profile == null ? null : profile.getId(), message, null,
+                    safetyFlagOf(e), null, (int) (System.currentTimeMillis() - startMs)));
         }
         catch (Exception e)
         {
@@ -369,10 +359,9 @@ public class NpcChatService
                     processing.getUserId(), processing.getRequestId(), e);
             terminalize(processing, NpcChatRequest.STATUS_FAILED, "NOT_RUN", "AI_UNAVAILABLE", null, true,
                     SAFE_UPSTREAM_FAILED);
-            NpcChatResp response = finish(processing);
-            saveLog(processing.getUserId(), processing.getSessionId(), profile == null ? null : profile.getId(),
-                    message, null, 3, null, (int) (System.currentTimeMillis() - startMs));
-            return response;
+            return finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
+                    profile == null ? null : profile.getId(), message, null, 3, null,
+                    (int) (System.currentTimeMillis() - startMs)));
         }
         finally
         {
@@ -487,30 +476,42 @@ public class NpcChatService
 
     private NpcChatResp finish(NpcChatRequest terminal)
     {
+        return finish(terminal, null);
+    }
+
+    private NpcChatResp finish(NpcChatRequest terminal, NpcChatLog entry)
+    {
         try
         {
-            if (npcChatRequestMapper.finishIfLeaseOwned(terminal) == 1)
-            {
-                return fromStored(terminal);
-            }
-            NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(terminal.getUserId(),
-                    terminal.getRequestId());
+            NpcChatRequest stored = npcChatWriteService.finish(terminal, entry);
             return stored != null ? fromStored(stored) : requestStateUnavailable(terminal.getRequestId());
         }
         catch (Exception e)
         {
             log.error("[NpcChat] terminal state write failed userId={} requestId={}", terminal.getUserId(),
                     terminal.getRequestId(), e);
-            return requestStateUnavailable(terminal.getRequestId());
+            return storedOrUnavailable(terminal.getUserId(), terminal.getRequestId());
         }
+    }
+
+    private NpcChatResp storedOrUnavailable(Long userId, String requestId)
+    {
+        try
+        {
+            NpcChatRequest stored = npcChatWriteService.read(userId, requestId);
+            return stored != null ? fromStored(stored) : requestStateUnavailable(requestId);
+        }
+        catch (RuntimeException unavailable) { return requestStateUnavailable(requestId); }
     }
 
     private NpcChatResp persistTerminal(NpcChatRequest terminal)
     {
         try
         {
-            npcChatRequestMapper.insertNpcChatRequest(terminal);
-            return fromStored(terminal);
+            NpcChatRequest stored = npcChatWriteService.insertTerminal(terminal);
+            if (stored != null && !terminal.getSessionId().equals(stored.getSessionId()))
+                return requestScopeMismatch(terminal.getRequestId());
+            return stored != null ? fromStored(stored) : requestStateUnavailable(terminal.getRequestId());
         }
         catch (DuplicateKeyException e)
         {
@@ -528,7 +529,7 @@ public class NpcChatService
     {
         try
         {
-            NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
+            NpcChatRequest stored = npcChatWriteService.read(userId, requestId);
             return stored != null ? fromStored(stored) : inProgress(requestId);
         }
         catch (Exception e)
@@ -575,7 +576,7 @@ public class NpcChatService
             return requestScopeMismatch(requestId);
         }
         try {
-            NpcChatRequest stored=npcChatRequestMapper.selectByUserAndRequestId(userId,requestId.trim());
+            NpcChatRequest stored=npcChatWriteService.read(userId,requestId.trim());
             if(stored==null) return null;
             if(!Long.valueOf(-nodeId).equals(stored.getSessionId())) return requestScopeMismatch(requestId);
             return fromStored(stored);
@@ -683,29 +684,21 @@ public class NpcChatService
         return resp;
     }
 
-    private void saveLog(Long userId, Long sessionId, Long profileId, String message, String reply,
-                         int safetyFlag, String model, int latencyMs)
+    private NpcChatLog logEntry(Long userId, Long sessionId, Long profileId, String message, String reply,
+                                int safetyFlag, String model, int latencyMs)
     {
-        try
-        {
-            NpcChatLog logEntry = new NpcChatLog();
-            logEntry.setUserId(userId);
-            // 旧审计表列不可空；人设和 session 都已服务端派生，0 只表示种子尚未落库的兼容态。
-            logEntry.setProfileId(profileId == null ? 0L : profileId);
-            logEntry.setActivityId(sessionId);
-            logEntry.setUserMsg(message);
-            logEntry.setNpcReply(reply);
-            logEntry.setSafetyFlag(safetyFlag);
-            logEntry.setModel(model);
-            logEntry.setLatencyMs(latencyMs);
-            logEntry.setTokenIn(0);
-            logEntry.setTokenOut(0);
-            npcChatLogMapper.insertNpcChatLog(logEntry);
-        }
-        catch (Exception e)
-        {
-            log.error("[NpcChat] saveLog failed", e);
-        }
+        NpcChatLog entry = new NpcChatLog();
+        entry.setUserId(userId);
+        entry.setProfileId(profileId == null ? 0L : profileId);
+        entry.setActivityId(sessionId);
+        entry.setUserMsg(message);
+        entry.setNpcReply(reply);
+        entry.setSafetyFlag(safetyFlag);
+        entry.setModel(model);
+        entry.setLatencyMs(latencyMs);
+        entry.setTokenIn(0);
+        entry.setTokenOut(0);
+        return entry;
     }
 
     private NpcProfile findGlobalProfile()
