@@ -76,7 +76,7 @@ function createDetailHarness() {
     '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
     '../../../utils/scene-registry.js': { getScene: () => ({}) },
     '../../../utils/datetime': { toTimestamp: () => 0 },
-    '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+    '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
     '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
     '../../../utils/group-code-session.js': {
       buildGroupCodeIssuePayload: () => ({}),
