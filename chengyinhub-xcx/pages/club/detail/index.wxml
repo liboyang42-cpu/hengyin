@@ -95,6 +95,7 @@
 
     <!-- 帖子流(默认展示) -->
     <view class="feed feed--plain" wx:if="{{activeTab === 'posts'}}">
+      <cy-club-pinned-notice notices="{{pinnedNotices}}" bind:open="onPinnedNoticeOpen" />
       <!-- 收起态:一条 pill,点开才展开输入区。原来 textarea + 图片行常驻,
            没发帖的人也要为它让出约 340rpx —— 首屏第一条帖子被挤到折线以下。 -->
       <view class="post-composer-collapsed" wx:if="{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && !composerOpen}}" bindtap="openComposer"
@@ -114,7 +115,7 @@
         <textarea class="post-input" value="{{postText}}" bindinput="onPostText" maxlength="300" focus
                   placeholder="分享俱乐部路线、战报或公告…" placeholder-class="post-ph" />
         <view class="post-imgrow">
-          <view class="post-thumb" wx:for="{{postImages}}" wx:key="*this">
+          <view class="post-thumb" wx:for="{{postImages}}" wx:key="index">
             <image class="post-thumb-img" src="{{item}}" mode="aspectFill" />
             <view class="post-thumb-del" catchtap="onRemovePostImage" data-index="{{index}}" aria-role="button" aria-label="删除发帖图片 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon class="post-thumb-del__glyph" name="close-sm" size="28" /></view>
           </view>
@@ -964,7 +965,7 @@
           <view class="ai-plan-tit">{{aiPlan.title || '未命名方案'}}</view>
           <view class="ai-plan-sub" wx:if="{{aiPlan.subtitle}}">{{aiPlan.subtitle}}</view>
           <view class="ai-plan-tags" wx:if="{{aiPlan.tags.length}}">
-            <text class="ai-plan-tag" wx:for="{{aiPlan.tags}}" wx:key="*this">{{item}}</text>
+            <text class="ai-plan-tag" wx:for="{{aiPlan.tags}}" wx:key="index">{{item}}</text>
             <text class="ai-plan-tag" wx:if="{{aiPlan.estDurationMin}}">约 {{ aiPlan.estDurationMin === 0 ? 0 : (aiPlan.estDurationMin || '--') }} 分钟</text>
           </view>
           <view class="ai-plan-text" wx:if="{{aiPlan.storyline}}">{{aiPlan.storyline}}</view>
@@ -980,10 +981,10 @@
           </view>
 
           <view class="ai-plan-lbl" wx:if="{{aiPlan.risks.length}}">风险提示</view>
-          <view class="ai-plan-risk" wx:for="{{aiPlan.risks}}" wx:key="*this">· {{item}}</view>
+          <view class="ai-plan-risk" wx:for="{{aiPlan.risks}}" wx:key="index">· {{item}}</view>
 
           <view class="ai-plan-lbl" wx:if="{{aiMerchantSuggestions.length}}">可对接商家建议</view>
-          <view class="ai-plan-msug" wx:for="{{aiMerchantSuggestions}}" wx:key="*this">· {{item}}</view>
+          <view class="ai-plan-msug" wx:for="{{aiMerchantSuggestions}}" wx:key="index">· {{item}}</view>
 
           <block wx:if="{{aiPromoCopy}}">
             <view class="ai-plan-lbl">宣传文案<text class="ai-plan-copy" catchtap="onClubAiCopy" hover-class="cy-pressed" hover-stay-time="80">复制</text></view>

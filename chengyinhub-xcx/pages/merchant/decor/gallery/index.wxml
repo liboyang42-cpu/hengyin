@@ -19,7 +19,7 @@
     <view class="dg-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在刷新门店相册…</view>
 
     <view class="dg-grid">
-      <view class="dg-item" wx:for="{{gallery}}" wx:key="*this">
+      <view class="dg-item" wx:for="{{gallery}}" wx:key="index">
         <image class="dg-image" src="{{item}}" mode="aspectFill" aria-hidden="true" />
         <view class="dg-delete" data-index="{{index}}" catchtap="removeGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="close" size="38" /></view>
       </view>

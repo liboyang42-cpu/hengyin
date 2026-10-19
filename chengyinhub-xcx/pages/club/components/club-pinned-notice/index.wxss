@@ -1,0 +1,16 @@
+.cpn {
+  margin: var(--cy-space-3) var(--cy-space-4) 0; padding: var(--cy-space-3);
+  background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-strong);
+  border-radius: var(--cy-radius-md);
+}
+.cpn__title { font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-text-title); margin-bottom: var(--cy-space-2); }
+.cpn__row { display: flex; align-items: center; gap: var(--cy-space-2); padding: var(--cy-space-1) 0; }
+.cpn__dot { width: 12rpx; height: 12rpx; border-radius: 50%; background: transparent; flex: none; }
+.cpn__dot.is-unread { background: var(--cy-color-brand, currentColor); }
+.cpn__text {
+  flex: 1; min-width: 0; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* isolated 组件内全局 .cy-pressed 进不来,本地定义一份 */
+.cy-pressed { opacity: .88; }

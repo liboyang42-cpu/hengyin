@@ -209,3 +209,5 @@ page { background: var(--cy-color-bg-page); }
 /* 进场动效用全仓共用的 .cy-rise-in;本页自身没有 transition,
  * 减动效由 style/motion-entry.wxss 里的 `.cy-motion-reduced .cy-rise-in { animation: none }`
  * 兜住 —— 生效前提是根节点真的挂得上 cy-motion-reduced(见 wxml 与 onShow)。 */
+
+.intro__claim { margin-top: var(--cy-space-3); text-decoration: underline; }

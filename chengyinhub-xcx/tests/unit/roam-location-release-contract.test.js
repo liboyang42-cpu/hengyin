@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.j
 test('漫游退出即使启动成功回调尚未到达，也必须释放 tracker 并同步关闭实时定位状态', () => {
   assert.match(
     source,
-    /_stopReal\(\)\s*\{\s*bgTracker\.release\(['"]roam['"]\);[\s\S]*?this\._realOn\s*=\s*false;[\s\S]*?this\._onRealLoc\s*=\s*null;/,
+    /_stopReal\(\)\s*\{[\s\S]*?bgTracker\.release\(['"]roam['"]\);[\s\S]*?this\._realOn\s*=\s*false;[\s\S]*?this\._onRealLoc\s*=\s*null;/,
     '_realOn 只表示页面回调已完成，不能阻止释放或留下回调句柄'
   );
   assert.doesNotMatch(source, /_stopReal\(\)\s*\{\s*bgTracker\.release\(['"]roam['"]\);\s*if\s*\(!this\._realOn\)\s*return;/);

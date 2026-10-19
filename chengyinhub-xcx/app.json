@@ -265,7 +265,9 @@
         "session/index",
         "nearby/index",
         "citystamp/index",
-        "my-teams/index"
+        "my-teams/index",
+        "official-routes/index",
+        "official-route/index"
       ]
     },
     {
