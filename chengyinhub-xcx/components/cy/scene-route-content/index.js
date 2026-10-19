@@ -160,7 +160,7 @@ Component({
       this._loadToken = (this._loadToken || 0) + 1
       this._submitToken = (this._submitToken || 0) + 1
     },
-  },
+  }, pageLifetimes: { show() { this._navigating = false } },
 
   methods: {
     loadScene() {
@@ -339,7 +339,7 @@ Component({
       const id = item.id
       if (this.data.sceneId === 'member-order-history' && id) this.emitOpen('member-order-detail', { id })
       else if (this.data.sceneId === 'settings-how-to-play' && id) this.emitOpen('settings-how-to-play-detail', { id })
-      else if (this.data.sceneId === 'settings-likes' && id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      else if (this.data.sceneId === 'settings-likes' && id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
       else if (this.data.sceneId === 'merchant-citynode' && item.poiId) this.emitOpen('qr-citynode', { poiId: item.poiId, name: item.title })
     },
 
