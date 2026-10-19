@@ -792,6 +792,19 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 return false;
             }
         }
+        if (TopicRouteState.LINEAR.equals(mode) && journeySession != null) {
+            Map<Long, String> frozen = readEngineState(journeySession.getStateJson()).getNodeStates();
+            if (frozen != null && !frozen.isEmpty()) {
+                boolean belongs = false;
+                for (CmsTopicNode node : linearSessionNodes(journeySession, nodes)) {
+                    if (nodeId.equals(node.getId())) { belongs = true; break; }
+                    if (!completed.contains(node.getId())) return false;
+                }
+                if (!belongs) return false;
+                Long prerequisite = requested.getUnlockAfterNodeId();
+                return prerequisite == null || prerequisite <= 0 || completed.contains(prerequisite);
+            }
+        }
         return accessPolicy.evaluate(mode, requested, nodes, completed, routeState).isAllowed();
     }
 
@@ -2132,6 +2145,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                     : toLinearView(session, scope, liveNodes), session);
         }
         List<CmsTopicNode> liveNodes = nodes(scope.topic.getId());
+        if (!branchOpening) liveNodes = linearSessionNodes(session, liveNodes);
         Set<Long> liveNodeIds = new LinkedHashSet<Long>();
         for (CmsTopicNode liveNode : liveNodes) liveNodeIds.add(liveNode.getId());
         if (!liveNodeIds.contains(outcome.getNodeId())) throw new IllegalStateException("节点当前不可用");
@@ -2201,6 +2215,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return view;
     }
 
+    /** Existing linear state already records the initial node universe and insertion order. */
+    private List<CmsTopicNode> linearSessionNodes(TopicRouteSession session, List<CmsTopicNode> liveNodes) {
+        Map<Long, String> frozen = readEngineState(session.getStateJson()).getNodeStates();
+        if (frozen == null || frozen.isEmpty()) return liveNodes; // Pre-snapshot compatibility.
+        Map<Long, CmsTopicNode> available = new LinkedHashMap<Long, CmsTopicNode>();
+        for (CmsTopicNode node : liveNodes) available.put(node.getId(), node);
+        List<CmsTopicNode> ordered = new ArrayList<CmsTopicNode>();
+        for (Long id : frozen.keySet()) if (available.containsKey(id)) ordered.add(available.get(id));
+        return ordered;
+    }
+
     private TopicRouteState linearState(Scope scope) {
         return linearState(scope, nodes(scope.topic.getId()));
     }
@@ -2226,7 +2251,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 供 requires/effects 的幂等写入走同一套 CAS。
      */
     private TopicRouteState toLinearView(TopicRouteSession session, Scope scope, List<CmsTopicNode> liveNodes) {
-        TopicRouteState view = linearState(scope, liveNodes);
+        TopicRouteState view = linearState(scope, linearSessionNodes(session, liveNodes));
         if (themeConfig(session).isObject() || validator.readTree(session.getConfigSnapshotJson()).path("runtimeSnapshotVersion").asInt() == 1) {
             TopicRouteEngine.State stored = readEngineState(session.getStateJson());
             view.setStatus(stored.getStatus()); view.setCurrentNodeId(stored.getCurrentNodeId()); view.setRecommendedNodeId(stored.getRecommendedNodeId());
