@@ -277,7 +277,8 @@
     "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT": {
       "tests": 4,
       "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT": {
       "tests": 5,
