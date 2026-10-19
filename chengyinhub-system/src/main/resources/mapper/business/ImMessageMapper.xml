@@ -81,16 +81,16 @@
         order by coalesce(visible_at, create_time) desc, id desc limit #{size}
     </select>
 
-    <select id="selectLatestViewerVisibleForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
+    <select id="selectLatestViewerVisibleForShare" resultMap="ImMessageResult" useCache="false" flushCache="true">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and <include refid="viewerVisible"/>
-        order by coalesce(visible_at, create_time) desc, id desc limit 1 for update
+        order by coalesce(visible_at, create_time) desc, id desc limit 1 lock in share mode
     </select>
 
-    <select id="selectViewerVisibleByIdForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
+    <select id="selectViewerVisibleByIdForShare" resultMap="ImMessageResult" useCache="false" flushCache="true">
         <include refid="selectImMessageVo"/>
         where id = #{id} and conversation_id = #{conversationId} and <include refid="viewerVisible"/>
-        for update
+        lock in share mode
     </select>
 
     <!-- 增量游标不加可见过滤：游标消息事后被屏蔽时仍按其原位置续拉；游标行不存在时退回 id 水位，避免补拉卡死。 -->

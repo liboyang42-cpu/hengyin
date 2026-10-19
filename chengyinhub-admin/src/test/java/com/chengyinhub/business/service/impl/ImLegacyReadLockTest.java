@@ -40,6 +40,7 @@ class ImLegacyReadLockTest {
         when(conversations.selectImConversationById(100L)).thenReturn(conversation);
         when(members.selectByConvAndMember(100L, 1L)).thenReturn(active);
         when(conversations.selectImConversationByIdForUpdate(100L)).thenReturn(conversation);
+        when(conversations.selectImConversationByIdForShare(100L)).thenReturn(conversation);
         when(members.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(active);
     }
 
@@ -51,13 +52,14 @@ class ImLegacyReadLockTest {
             if (latest != null) {
                 visible = new ImMessage(); visible.setId(latest); visible.setVisibleOrderAt("2026-10-13 10:00:00.000000");
             }
-            when(messages.selectLatestViewerVisibleForUpdate(100L, 1L)).thenReturn(visible);
+            when(messages.selectLatestViewerVisibleForShare(100L, 1L)).thenReturn(visible);
             when(members.markReadVisible(anyLong(), anyLong(), anyLong(), anyString())).thenReturn(1);
             service.markRead(1L, 100L);
             InOrder order = inOrder(conversations, members, messages);
-            order.verify(conversations).selectImConversationByIdForUpdate(100L);
+            // 锁序 会话(S)→消息(S)→成员(X)，与媒体审核放行「消息→会话→成员」同向，避免死锁。
+            order.verify(conversations).selectImConversationByIdForShare(100L);
+            order.verify(messages).selectLatestViewerVisibleForShare(100L, 1L);
             order.verify(members).selectByConvAndMemberForUpdate(100L, 1L);
-            order.verify(messages).selectLatestViewerVisibleForUpdate(100L, 1L);
             order.verify(members).markReadVisible(100L, 1L, latest == null ? 0L : latest,
                     latest == null ? "1970-01-01 00:00:00.000000" : "2026-10-13 10:00:00.000000");
             verify(messages, never()).selectVisiblePage(anyLong(), anyLong(), any(), anyInt());
@@ -69,7 +71,9 @@ class ImLegacyReadLockTest {
         active.setDeleted(1);
         ServiceException error = assertThrows(ServiceException.class, () -> service.markRead(1L, 100L));
         assertEquals(Integer.valueOf(403), error.getCode());
-        verifyNoInteractions(messages);
+        // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
+        verify(messages, never()).insertImMessage(any());
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
         verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
     }
 
@@ -83,7 +87,9 @@ class ImLegacyReadLockTest {
         ServiceException error = assertThrows(ServiceException.class, () -> service.markRead(1L, 100L));
         assertEquals(Integer.valueOf(409), error.getCode());
         assertEquals("IM_CONVERSATION_CLOSED", error.getDetailMessage());
-        verifyNoInteractions(messages);
+        // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
+        verify(messages, never()).insertImMessage(any());
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
     }
 
     @Test
@@ -91,7 +97,9 @@ class ImLegacyReadLockTest {
         when(members.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(null);
         when(members.selectByConvAndMember(100L, 1L)).thenReturn(null);
         assertDoesNotThrow(() -> service.markRead(1L, 100L));
-        verifyNoInteractions(messages);
+        // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
+        verify(messages, never()).insertImMessage(any());
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
         verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
         assertNotNull(ImServiceImpl.class.getMethod("markRead", Long.class, Long.class).getAnnotation(Transactional.class));
     }
@@ -108,7 +116,9 @@ class ImLegacyReadLockTest {
         InOrder order = inOrder(conversations, members);
         order.verify(conversations).selectImConversationByIdForUpdate(100L);
         order.verify(members).selectByConvAndMemberForUpdate(100L, 1L);
-        verifyNoInteractions(messages);
+        // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
+        verify(messages, never()).insertImMessage(any());
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
     }
 
     @Test

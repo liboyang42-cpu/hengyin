@@ -71,7 +71,9 @@ class ImLegacyReadLockMySqlIT {
         Path sql = Paths.get("chengyinhub-admin/sql");
         if (!Files.isDirectory(sql)) sql = Paths.get("sql");
         new ResourceDatabasePopulator(new FileSystemResource(sql.resolve("migration_im.sql").toFile()),
-                new FileSystemResource(sql.resolve("migration_im_send_idempotency_20260913.sql").toFile())).execute(source);
+                new FileSystemResource(sql.resolve("migration_im_send_idempotency_20260913.sql").toFile()),
+                // master 的可见时刻游标(visible_at / last_read_visible_at)由该迁移补齐。
+                new FileSystemResource(sql.resolve("migration_20261012_im_media_visibility.sql").toFile())).execute(source);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");

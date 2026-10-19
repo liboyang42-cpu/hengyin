@@ -13,11 +13,11 @@ public interface ImMessageMapper
 
     public ImMessage selectImMessageById(Long id);
 
-    ImMessage selectLatestViewerVisibleForUpdate(@Param("conversationId") Long conversationId,
+    ImMessage selectLatestViewerVisibleForShare(@Param("conversationId") Long conversationId,
             @Param("viewerMemberId") Long viewerMemberId);
 
     /** 显式已读位：只接受当前读者在该会话可见的消息作为截止点。 */
-    ImMessage selectViewerVisibleByIdForUpdate(@Param("conversationId") Long conversationId,
+    ImMessage selectViewerVisibleByIdForShare(@Param("conversationId") Long conversationId,
             @Param("viewerMemberId") Long viewerMemberId, @Param("id") Long id);
 
     ImMessage selectByClientMessageIdForUpdate(@Param("conversationId") Long conversationId,

@@ -395,7 +395,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     {
         if (clientMessageId == null || clientMessageId.trim().isEmpty() || clientMessageId.length() > 100)
             throw new ServiceException("原消息请求无效", 400);
-        if (lockReadAccess(memberId, conversationId) == null)
+        if (lockReadMember(conversationMapper.selectImConversationByIdForUpdate(conversationId), memberId, conversationId) == null)
             throw new ServiceException("无权查看该会话", 403);
         return projectRouteMessage(messageMapper.selectByClientMessageIdForUpdate(
                 conversationId, memberId, clientMessageId), memberId);
@@ -1118,13 +1118,15 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Transactional(rollbackFor = Exception.class)
     public void markRead(Long memberId, Long conversationId)
     {
-        ImConversationMember mine = lockReadAccess(memberId, conversationId);
+        ImConversation conversation = conversationMapper.selectImConversationByIdForShare(conversationId);
+        // 当前读最新可见消息：RR 旧快照不能把已读截止点停在锁外新提交之前；
+        // 锁序 会话(S)→消息(S)→成员(X)，与媒体审核放行的「消息→会话→成员」同向。
+        ImMessage latest = messageMapper.selectLatestViewerVisibleForShare(conversationId, memberId);
+        ImConversationMember mine = lockReadMember(conversation, memberId, conversationId);
         if (mine == null)
         {
             return;
         }
-        // 当前读最新可见消息：RR 旧快照不能把已读截止点停在锁外新提交之前。
-        ImMessage latest = messageMapper.selectLatestViewerVisibleForUpdate(conversationId, memberId);
         Long lastId = latest == null ? 0L : latest.getId();
         String cutoff = latest == null ? "1970-01-01 00:00:00.000000" : latest.getVisibleOrderAt();
         if (memberMapper.markReadVisible(conversationId, memberId, lastId, cutoff) <= 0) {
@@ -1138,15 +1140,16 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     {
         if (readTo == null) { markRead(memberId, conversationId); return; }
         if (readTo < 0) throw new ServiceException("已读位置无效", 400);
-        ImConversationMember mine = lockReadAccess(memberId, conversationId);
-        if (mine == null) return;
+        ImConversation conversation = conversationMapper.selectImConversationByIdForShare(conversationId);
         // 已读位沿用可见序游标：截止点取 min(readTo, 当前最新可见)，且不回退到已存已读位之前；
-        // readTo 对当前读者不可见(待审图片/已屏蔽/伪造)时不前进。
-        ImMessage latest = messageMapper.selectLatestViewerVisibleForUpdate(conversationId, memberId);
+        // readTo 对当前读者不可见(待审图片/已屏蔽/伪造)时不前进。锁序同 markRead(会话S→消息S→成员X)。
+        ImMessage latest = messageMapper.selectLatestViewerVisibleForShare(conversationId, memberId);
         ImMessage target = readTo == 0 ? null
-                : messageMapper.selectViewerVisibleByIdForUpdate(conversationId, memberId, readTo);
+                : messageMapper.selectViewerVisibleByIdForShare(conversationId, memberId, readTo);
+        ImConversationMember mine = lockReadMember(conversation, memberId, conversationId);
+        if (mine == null) return;
         ImMessage previous = mine.getLastReadMsgId() == null || mine.getLastReadMsgId() <= 0 ? null
-                : messageMapper.selectViewerVisibleByIdForUpdate(conversationId, memberId, mine.getLastReadMsgId());
+                : messageMapper.selectViewerVisibleByIdForShare(conversationId, memberId, mine.getLastReadMsgId());
         ImMessage cutoff = target != null && latest != null && compareVisibleOrder(target, latest) > 0 ? latest : target;
         if (cutoff == null || (previous != null && compareVisibleOrder(previous, cutoff) > 0)) {
             cutoff = previous;
@@ -1166,9 +1169,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         return order != 0 ? order : Long.compare(a.getId() == null ? 0L : a.getId(), b.getId() == null ? 0L : b.getId());
     }
 
-    private ImConversationMember lockReadAccess(Long memberId, Long conversationId)
+    private ImConversationMember lockReadMember(ImConversation conversation, Long memberId, Long conversationId)
     {
-        ImConversation conversation = conversationMapper.selectImConversationByIdForUpdate(conversationId);
         ImConversationMember mine = memberMapper.selectByConvAndMemberForUpdate(conversationId, memberId);
         if (mine == null)
         {

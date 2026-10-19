@@ -34,27 +34,28 @@ class ImFoundationReadRecoveryTest {
         active = new ImConversationMember(); active.setConversationId(100L); active.setMemberId(1L);
         active.setDeleted(0); active.setLastReadMsgId(80L);
         when(conversations.selectImConversationByIdForUpdate(100L)).thenReturn(conversation);
+        when(conversations.selectImConversationByIdForShare(100L)).thenReturn(conversation);
         when(conversations.selectImConversationById(100L)).thenReturn(conversation);
         when(members.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(active);
         when(members.selectByConvAndMember(100L, 1L)).thenReturn(active);
         when(members.selectByConversation(100L)).thenReturn(Collections.emptyList());
         when(members.markReadVisible(anyLong(), anyLong(), anyLong(), anyString())).thenReturn(1);
-        when(messages.selectLatestViewerVisibleForUpdate(100L, 1L)).thenReturn(message(100L));
-        when(messages.selectViewerVisibleByIdForUpdate(100L, 1L, 80L)).thenReturn(message(80L));
+        when(messages.selectLatestViewerVisibleForShare(100L, 1L)).thenReturn(message(100L));
+        when(messages.selectViewerVisibleByIdForShare(100L, 1L, 80L)).thenReturn(message(80L));
     }
     @Test void explicitReadToKeepsNewerMessagesUnreadAndPreservesLockOrder() {
-        when(messages.selectViewerVisibleByIdForUpdate(100L, 1L, 90L)).thenReturn(message(90L));
+        when(messages.selectViewerVisibleByIdForShare(100L, 1L, 90L)).thenReturn(message(90L));
         service.markRead(1L, 100L, 90L);
         InOrder order = inOrder(conversations, members, messages);
-        order.verify(conversations).selectImConversationByIdForUpdate(100L);
+        order.verify(conversations).selectImConversationByIdForShare(100L);
+        order.verify(messages).selectLatestViewerVisibleForShare(100L, 1L);
         order.verify(members).selectByConvAndMemberForUpdate(100L, 1L);
-        order.verify(messages).selectLatestViewerVisibleForUpdate(100L, 1L);
         order.verify(members).markReadVisible(100L, 1L, 90L, visibleOrder(90L));
         verify(members, never()).markRead(anyLong(), anyLong(), anyLong());
     }
     @Test void olderReadToCannotRegressAndForgedFutureIsClampedOrIgnored() {
-        when(messages.selectViewerVisibleByIdForUpdate(100L, 1L, 60L)).thenReturn(message(60L));
-        when(messages.selectViewerVisibleByIdForUpdate(100L, 1L, 999L)).thenReturn(message(999L));
+        when(messages.selectViewerVisibleByIdForShare(100L, 1L, 60L)).thenReturn(message(60L));
+        when(messages.selectViewerVisibleByIdForShare(100L, 1L, 999L)).thenReturn(message(999L));
         service.markRead(1L, 100L, 60L); service.markRead(1L, 100L, 998L); service.markRead(1L, 100L, 999L);
         // 60 早于已存 80；998 对当前读者不可见(待审/伪造)，均不前进也不回退。
         verify(members, times(2)).markReadVisible(100L, 1L, 80L, visibleOrder(80L));
@@ -64,7 +65,9 @@ class ImFoundationReadRecoveryTest {
         active.setDeleted(1);
         assertThrows(ServiceException.class, () -> service.readSentMessage(1L, 100L, "original"));
         assertThrows(ServiceException.class, () -> service.markRead(1L, 100L, 90L));
-        verifyNoInteractions(messages);
+        // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
+        verify(messages, never()).insertImMessage(any());
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
     }
     @Test void receiptUsesOriginalSenderAndMissingKeepsUnknown() {
         assertNull(service.readSentMessage(1L, 100L, "original"));
