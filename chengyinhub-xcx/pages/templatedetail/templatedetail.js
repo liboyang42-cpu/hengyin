@@ -232,7 +232,7 @@ Page({
 
   onShow() {
     var isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
-    this.setData({ isMerchant: isMerchant });
+    this.setData({ isMerchant: isMerchant }); this._navigating = false;
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
   },
@@ -469,7 +469,7 @@ Page({
   },
 
   goPrimary() {
-    var that = this;
+    var that = this; if (that._navigating) return; that._navigating = true; // 跳转中不响应连点
     if (that.data.scope !== 'my') {
       analytics.track('template_reuse', {
         bizType: 'template',
@@ -480,8 +480,8 @@ Page({
     // 才会走 /api/template/myinfo;丢掉它就会拿公共库接口查草稿 id,报「模版不存在」。
     wx.navigateTo({
       url: '/pages/publish/temp/index?id=' + that.data.id +
-        (that.data.scope === 'my' ? '&scope=my' : '')
-    });
+        (that.data.scope === 'my' ? '&scope=my' : ''),
+      complete: function () { that._navigating = false; } });
   },
 
   onShareAppMessage() {

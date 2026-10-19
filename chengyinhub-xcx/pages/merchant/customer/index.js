@@ -649,9 +649,9 @@ Page({
       this.setData({ selectedIds: selected, rows: markSelected(this.data.rows, selected) });
       return;
     }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层客户详情
       url: `/pages/merchant/customer/detail/index?customerMemberId=${memberId}`,
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   toggleSelectMode() {
