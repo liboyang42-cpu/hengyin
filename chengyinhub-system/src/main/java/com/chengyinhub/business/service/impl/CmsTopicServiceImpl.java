@@ -5539,15 +5539,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (chapters == null) return "";
         for (ChapterDTO chapter : chapters) {
             if (chapter == null || Boolean.TRUE.equals(chapter.getOpening()) || chapter.getNodes() == null) continue;
-            Set<Integer> storyGames = new HashSet<>();
-            if (chapter.getBlocks() != null) {
+            if (chapter.getBlocks() != null && !chapter.getBlocks().isEmpty()) {
                 for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
-                    if (block != null && Boolean.FALSE.equals(block.getLocationRequired())) storyGames.add(block.getNodeIndex());
+                    if (block == null || !"node".equals(block.getType())
+                            || Boolean.FALSE.equals(block.getLocationRequired())) continue;
+                    Integer index = block.getNodeIndex();
+                    if (index == null || index < 0 || index >= chapter.getNodes().size()) continue;
+                    NodeDTO node = chapter.getNodes().get(index);
+                    if (node != null && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
                 }
+                continue; // 块化章节的路线顺序来自 blocks，不再回退到 DTO 节点数组顺序。
             }
-            for (int i = 0; i < chapter.getNodes().size(); i++) {
-                NodeDTO node = chapter.getNodes().get(i);
-                if (node != null && !storyGames.contains(i) && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
+            for (NodeDTO node : chapter.getNodes()) {
+                if (node != null && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
             }
         }
         return "";
