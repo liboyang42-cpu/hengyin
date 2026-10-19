@@ -188,7 +188,7 @@ Page({
     this.refreshView();
   },
 
-  goPredictInbox() { wx.navigateTo({ url: '/pages/merchant/predict/index' }); },
+  goPredictInbox() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } }); },
 
   /**
    * 这一条只对**能结算竞猜的人**出现,所以问的是身份,不是待办条数。
@@ -440,8 +440,8 @@ Page({
 
   openChat(e) {
     if (this._moved) { this._moved = false; return; } // 滑动中不触发跳转
-    const ds = e.currentTarget.dataset;
-    wx.navigateTo({
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
+    this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageB/pages/im/chat/index?conversationId=' + ds.id +
         '&name=' + encodeURIComponent(ds.name || '') +
         '&avatar=' + encodeURIComponent(ds.avatar || '') +
