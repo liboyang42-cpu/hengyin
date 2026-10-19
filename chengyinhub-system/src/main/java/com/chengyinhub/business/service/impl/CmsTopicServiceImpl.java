@@ -543,10 +543,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         if (copyType >= 2) {
             Map<Long, Long> npcIdMap = new LinkedHashMap<Long, Long>();
-            copyChaptersAndNodes(id, newTopic, npcIdMap);
+            Map<Long, Long> chapterIdMap = copyChaptersAndNodes(id, newTopic, npcIdMap);
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
-            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), npcIdMap);
+            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), chapterIdMap, npcIdMap);
             preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
         }
         if (copyType >= 3) {
@@ -668,7 +668,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      *
      * @param npcIdMap 出参:源节点 NPC id → 副本 NPC id(供剧情 / 块配置按 old→new 重映射)
      */
-    private void copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+    private Map<Long, Long> copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
         Long newTopicId = newTopic.getId();
         // 查询原主题的章节
         CmsTopicChapter chapterQuery = new CmsTopicChapter();
@@ -676,7 +676,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         List<CmsTopicChapter> originalChapters = cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery);
 
         if (CollectionUtils.isEmpty(originalChapters)) {
-            return;
+            return Collections.emptyMap();
         }
 
         // 章节ID映射：旧章节ID -> 新章节ID
@@ -788,6 +788,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (String warning : chapterNpcWarnings) {
             logger.warn("复制主题 {} -> {}:{}", originalTopicId, newTopicId, warning);
         }
+        return chapterIdMap;
     }
 
     /** 复制同样是新写入，不能把历史脏招商配置扩散成新的章节。 */
@@ -3564,25 +3565,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     /**
      * R8-STORY:模板 / 官方复制的章节是整批重建(新 id),副本剧情 stages 的 chapterId 必须跟着
-     * old→new 重映射,否则副本剧情指向来源主题的章节。复制恒全量且保持 sort_id 顺序,
-     * 故两侧按序列一一配对(复制侧见 copyChaptersAndNodes 的 newChapter.setSortId)。
+     * old→new 重映射,否则副本剧情指向来源主题的章节。直接使用插入章节时记录的真实映射,
+     * 不以可能重复的 sort_id 查询顺序推断章节身份。
      *
      * <p>R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一并按 old→new 重映射;
      * 门店分身不随复制,映射不到的 npcId 置空并告警(fail-closed,不静默指向来源主题)。
      */
     private void remapCopiedJourneyStory(Long sourceTopicId, Long newTopicId, String story,
-                                         Map<Long, Long> npcIdMap) {
+                                         Map<Long, Long> chapterIdMap, Map<Long, Long> npcIdMap) {
         if (StringUtils.isBlank(story)) {
             return;
-        }
-        List<CmsTopicChapter> sourceChapters = orderedChapters(sourceTopicId);
-        List<CmsTopicChapter> copiedChapters = orderedChapters(newTopicId);
-        if (sourceChapters.size() != copiedChapters.size()) {
-            throw new IllegalStateException("剧情章节引用重映射失败:复制前后章节数量不一致");
-        }
-        Map<Long, Long> chapterIdMap = new LinkedHashMap<Long, Long>();
-        for (int i = 0; i < sourceChapters.size(); i++) {
-            chapterIdMap.put(sourceChapters.get(i).getId(), copiedChapters.get(i).getId());
         }
         List<String> npcWarnings = new ArrayList<String>();
         String remapped = JourneyStory.remapNpcIds(
@@ -3598,13 +3590,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
             throw new IllegalStateException("副本剧情配置回填失败");
         }
-    }
-
-    private List<CmsTopicChapter> orderedChapters(Long topicId) {
-        CmsTopicChapter probe = new CmsTopicChapter();
-        probe.setTopicId(topicId);
-        // selectCmsTopicChapterList 已 order by sort_id asc,与复制顺序同口径
-        return nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(probe));
     }
 
     /**
