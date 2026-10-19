@@ -782,7 +782,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectCmsTopicLifecycleById" parameterType="Long" resultMap="CmsTopicResult">
-        select id, lifecycle, del_flag from cms_topic where id = #{id}
+        select id, lifecycle, product_type, del_flag from cms_topic where id = #{id}
     </select>
 
     <!-- ⚠️ 没挂 clubMemberOnlyGate:入参只有 id,拿不到「看的人是谁」。

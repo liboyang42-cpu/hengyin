@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.SettlementRule;
+import com.chengyinhub.business.domain.dto.PricingResult;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
@@ -252,6 +253,44 @@ class FreeExplorePriceLockAcceptanceTest {
         assertEquals("无人带票价 66.60 不高于计酬成本上界 70:玩家全部通关时,每个必选章节最贵的计酬商家都要付一次人头费,"
                 + "合计 70 ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。", e.getMessage());
         assertNoWrite();
+    }
+
+    @Test
+    void preview_requiredChapterWithoutLiveSupply_cannotConfirmWithTheSameReasonAsConfirm() {
+        CmsTopic topic = freeExploreTopic(2);
+        when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+        when(offerMapper.countRequiredChaptersWithoutLiveOffer(TOPIC_ID)).thenReturn(1);
+
+        PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
+        IllegalStateException confirm = assertThrows(IllegalStateException.class,
+                () -> service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null));
+
+        assertEquals(Boolean.FALSE, preview.getCanConfirm(), "预览与锁价必须同一判据:缺必选章供给时不可确认");
+        assertEquals(confirm.getMessage(), preview.getConfirmBlockReason());
+        assertEquals("每个必选章至少需要 1 家生效商家供给,暂不能锁价开售", preview.getConfirmBlockReason());
+        assertNoWrite();
+    }
+
+    @Test
+    void preview_pricingStageWithLiveSupply_canConfirmWithoutReason() {
+        CmsTopic topic = freeExploreTopic(2);
+        when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+
+        PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
+
+        assertEquals(Boolean.TRUE, preview.getCanConfirm());
+        assertNull(preview.getConfirmBlockReason());
+    }
+
+    @Test
+    void preview_notInPricingLifecycle_reportsTheConfirmReason() {
+        CmsTopic topic = freeExploreTopic(3);
+        when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+
+        PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
+
+        assertEquals(Boolean.FALSE, preview.getCanConfirm());
+        assertEquals("主题未在定价阶段,不能确认终价", preview.getConfirmBlockReason());
     }
 
     // ------------------------------------------------------------------ (c) 控制器:归属 + 原话透传

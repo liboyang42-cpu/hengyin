@@ -45,6 +45,9 @@ public class PricingResult implements Serializable {
     /** 主题此刻能否确认终价(lifecycle==2 定价阶段)。与 confirmPrice 同一判据,供前端事先置灰。 */
     private Boolean canConfirm;
 
+    /** canConfirm=false 时的原因,与 confirmPrice 拒绝时的原话一致;可确认时为空。 */
+    private String confirmBlockReason;
+
     public static class Lineup implements Serializable {
         private static final long serialVersionUID = 1L;
         private Long toId;
@@ -91,4 +94,6 @@ public class PricingResult implements Serializable {
     public void setCityReferenceLabel(String cityReferenceLabel) { this.cityReferenceLabel = cityReferenceLabel; }
     public Boolean getCanConfirm() { return canConfirm; }
     public void setCanConfirm(Boolean canConfirm) { this.canConfirm = canConfirm; }
+    public String getConfirmBlockReason() { return confirmBlockReason; }
+    public void setConfirmBlockReason(String confirmBlockReason) { this.confirmBlockReason = confirmBlockReason; }
 }
