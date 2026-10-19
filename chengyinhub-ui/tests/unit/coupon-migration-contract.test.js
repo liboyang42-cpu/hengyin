@@ -13,7 +13,7 @@ function read(relativePath) {
 function loadCoupon(overrides = {}) {
   const source = read('src/views/business/coupon/index.vue')
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{ listCoupon, getCoupon, addCoupon, updateCoupon \} from '@\/api\/business\/coupon'$/m, 'const { listCoupon, getCoupon, addCoupon, updateCoupon } = dependencies;')
+    .replace(/^import \{ listCoupon, getCoupon, addCoupon, updateCoupon, previewCouponRule, stopIssueCoupon, invalidateCoupon, listCouponRuleVersions, getCouponAffectedHolders \} from '@\/api\/business\/coupon'$/m, 'const { listCoupon, getCoupon, addCoupon, updateCoupon, previewCouponRule, stopIssueCoupon, invalidateCoupon, listCouponRuleVersions, getCouponAffectedHolders } = dependencies;')
     .replace(/^import \{ checkPermi \} from '@\/utils\/permission'$/m, 'const { checkPermi } = dependencies;')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};')
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(Object.assign({
@@ -21,6 +21,11 @@ function loadCoupon(overrides = {}) {
     getCoupon: () => Promise.resolve({ data: {} }),
     addCoupon: () => Promise.resolve({}),
     updateCoupon: () => Promise.resolve({}),
+    previewCouponRule: () => Promise.resolve({ data: null }),
+    stopIssueCoupon: () => Promise.resolve({}),
+    invalidateCoupon: () => Promise.resolve({ data: null }),
+    listCouponRuleVersions: () => Promise.resolve({ data: [] }),
+    getCouponAffectedHolders: () => Promise.resolve({ data: { affectedHolderCount: 0 } }),
     checkPermi: () => true
   }, overrides))
 }
@@ -101,20 +106,89 @@ test('规范优惠券入口恢复并清空筛选，保留读取与状态动作�
   assert.doesNotMatch(source, /label="已使用数量"|label="领取数量"/)
 })
 
-test('手动失效只提交既有编辑接口的状态字段，保留领取和核销事实', async () => {
-  let updated = null
-  const component = loadCoupon({ updateCoupon: payload => {
-    updated = payload
-    return Promise.resolve({})
-  } })
+test('平台失效走独立接口：必须带读取时的规则版本与独立原因，并展示受影响持券人', async () => {
+  let invalidated = null
+  let promptOptions = null
+  const component = loadCoupon({
+    getCoupon: () => Promise.resolve({ data: { id: 9, ruleVersion: 4 } }),
+    getCouponAffectedHolders: () => Promise.resolve({ data: { affectedHolderCount: 2 } }),
+    invalidateCoupon: (id, payload) => {
+      invalidated = { id, payload }
+      return Promise.resolve({ data: { affectedHolderCount: 2, holders: [{ historyId: 1, memberId: 5 }], version: { reason: '套券' } } })
+    },
+    updateCoupon: () => assert.fail('平台失效不得再走通用编辑接口')
+  })
   const vm = Object.assign(component.data(), {
-    $modal: { confirm: () => Promise.resolve(), msgSuccess: () => {} },
+    $prompt: (message, title, options) => {
+      promptOptions = options
+      assert.match(message, /2 张未使用/)
+      return Promise.resolve({ value: '  套券 ' })
+    },
+    $modal: { msgSuccess: () => {} },
     getList: () => Promise.resolve()
   })
 
   await component.methods.deactivateCoupon.call(vm, { id: 9, status: 1 })
 
-  assert.deepEqual(updated, { id: 9, status: 3 })
+  assert.deepEqual(invalidated, { id: 9, payload: { expectedVersion: 4, reason: '套券' } })
+  assert.equal(promptOptions.inputValidator('   '), false, '原因必填')
+  assert.equal(vm.holdersOpen, true)
+  assert.equal(vm.invalidationResult.holders[0].memberId, 5)
+})
+
+test('停发只拦新领取：带规则版本提交到停发接口，不改已领取券', async () => {
+  let stopped = null
+  const component = loadCoupon({
+    getCoupon: () => Promise.resolve({ data: { id: 9, ruleVersion: 2 } }),
+    stopIssueCoupon: (id, payload) => {
+      stopped = { id, payload }
+      return Promise.resolve({})
+    }
+  })
+  const vm = Object.assign(component.data(), {
+    $prompt: () => Promise.resolve({ value: '' }),
+    $modal: { msgSuccess: () => {} },
+    getList: () => Promise.resolve()
+  })
+  assert.equal(component.methods.canStopIssue.call(vm, { status: 4 }), false)
+  assert.equal(component.methods.canStopIssue.call(vm, { status: 1 }), true)
+
+  await component.methods.stopIssue.call(vm, { id: 9, status: 1 })
+
+  assert.deepEqual(stopped, { id: 9, payload: { expectedVersion: 2, reason: null } })
+})
+
+test('编辑先预览影响：版本冲突或非法值时不能确认保存，失败后重读预览', async () => {
+  const previews = []
+  let updates = 0
+  const component = loadCoupon({
+    previewCouponRule: payload => {
+      previews.push(payload)
+      return Promise.resolve({ data: previews.length === 1
+        ? { versionConflict: false, validationError: null, changes: [{ field: 'amount' }], newClaims: { ruleVersion: 3, issuable: true, remaining: 10 }, claimed: { total: 4, unused: 2, used: 1, expired: 1, legacyWithoutSnapshot: 0 } }
+        : { versionConflict: true, expectedVersion: 2, currentVersion: 3, changes: [{ field: 'amount' }] } })
+    },
+    updateCoupon: () => {
+      updates += 1
+      return Promise.reject(new Error('409'))
+    }
+  })
+  const vm = Object.assign(component.data(), {
+    $modal: { msgSuccess: () => assert.fail('冲突不应提示成功') },
+    getList: () => Promise.resolve()
+  })
+  Object.defineProperty(vm, 'canConfirmRuleChange', { get() { return component.computed.canConfirmRuleChange.call(vm) } })
+
+  await component.methods.openImpactPreview.call(Object.assign(vm, {}), { id: 8, expectedVersion: 2, amount: 30 })
+  assert.equal(vm.canConfirmRuleChange, true)
+  vm.openImpactPreview = payload => component.methods.openImpactPreview.call(vm, payload)
+  await component.methods.confirmRuleChange.call(vm)
+
+  assert.equal(updates, 1)
+  assert.equal(previews.length, 2, '保存失败后重读预览')
+  assert.equal(vm.impact.versionConflict, true)
+  assert.equal(vm.canConfirmRuleChange, false)
+  assert.match(component.methods.claimedText.call(vm, { total: 4, unused: 2, used: 1, expired: 1, legacyWithoutSnapshot: 0 }), /保持领取时/)
 })
 
 test('新券保留零表示不限量，普通编辑不回写状态或跨范围残留商家归属', () => {
@@ -136,10 +210,12 @@ test('新券保留零表示不限量，普通编辑不回写状态或跨范围�
   assert.equal(createPayload.status, 1)
   assert.equal(createPayload.merchantId, null)
 
-  vm.form = Object.assign({}, vm.form, { id: 8, scopeType: 1, merchantId: 99, status: 1 })
+  vm.form = Object.assign({}, vm.form, { id: 8, scopeType: 1, merchantId: 99, status: 1, ruleVersion: 6, publishCount: 50 })
   const editPayload = component.methods.payloadForForm.call(vm)
-  assert.equal(editPayload.merchantId, 99)
+  assert.deepEqual(Object.keys(editPayload).sort(), ['amount', 'description', 'enableTime', 'endTime', 'expectedVersion', 'id', 'minPoint', 'name', 'publishCount', 'reason', 'startTime'])
+  assert.equal(editPayload.expectedVersion, 6)
   assert.equal(Object.hasOwn(editPayload, 'status'), false)
+  assert.equal(Object.hasOwn(editPayload, 'merchantId'), false)
 
   const source = read('src/views/business/coupon/index.vue')
   assert.match(source, /publishCount:\s*0/)

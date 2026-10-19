@@ -110,7 +110,12 @@ class SmsCouponDisabledTest {
 
     @Test
     void activeCouponIsGrantedWithoutStaticQrOrObjectStorage() {
+<<<<<<< public
         when(coupons.tryIncrementIssuableReceiveCount(30L)).thenReturn(1);
+=======
+        when(coupons.selectCouponRuleStateForUpdate(30L)).thenReturn(coupon(1));
+        when(coupons.tryIncrementReceiveCount(30L)).thenReturn(1);
+>>>>>>> private-feature/w2-r
         when(histories.insertSmsCouponHistory(any())).thenAnswer(invocation -> {
             SmsCouponHistory granted = invocation.getArgument(0);
             assertNull(granted.getQrcodeUrl());

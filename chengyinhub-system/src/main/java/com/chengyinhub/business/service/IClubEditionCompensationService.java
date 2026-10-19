@@ -98,6 +98,9 @@ public interface IClubEditionCompensationService {
      */
     List<Map<String, Object>> editionsForExecutingClub(Long clubId);
 
+    /** X039:期次列表为空时区分原因 —— 已承接但条款尚未开售的期次数(0 = 还没有承接)。 */
+    int undertakenEditionsAwaitingSale(Long clubId);
+
     /** FINAL 只消费已确认事实；未到 T+7 且 Q 未决 ⇒ PENDING，不得 FINAL。 */
     FinalCompensationFacts computeFinalCompensationFacts(Long topicId, Date now);
 

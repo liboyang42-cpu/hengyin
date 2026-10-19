@@ -136,6 +136,12 @@ public interface ClubEditionCompensationMapper {
      */
     List<java.util.Map<String, Object>> selectEditionsForExecutingClub(@Param("clubId") Long clubId);
 
+    /**
+     * X039 空态原因:本俱乐部在执行阵容里(有效 coop_order)、但还没有冻结条款(未开售)的期次数。
+     * 只做计数,不出主题名/金额 —— 只用来区分「还没承接」与「已承接、条款未开售」。
+     */
+    int countUndertakenEditionsWithoutTerms(@Param("clubId") Long clubId);
+
     int insertQualityDecision(ClubQualityDecision decision);
 
     int supersedeCurrentQuality(@Param("topicId") Long topicId, @Param("clubId") Long clubId,

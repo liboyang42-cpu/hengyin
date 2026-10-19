@@ -499,6 +499,10 @@ class GenericRouteRuntimeMySqlIT {
         open=payload().put("tradeKey","gift").put("toTeamId",99);open.set("give",amounts("tool",1));open.set("take",JSON.createArrayNode());player(7,"TRADE_OPEN",open);player(7,"TRADE_CONFIRM",payload().put("tradeKey","gift").put("version",1));
         player(7,"TEAM_EXIT",payload().put("teamId",90).put("reason","现场退出"));assertEquals("CANCELLED",worldState().path("trades").path("gift").path("status").asText());
         assertEquals(1,state(50,90).path("themeRuntime").path("inventory").path("tool").asInt());assertThrows(GameSessionException.class,()->player(7,"ITEM_DISCARD",payload().put("contentId","tool")));
+        // F0351：正式退出只发生一次，新请求再退出被拒且原退出回执与持有物不变
+        String exitReceipt=runState().path("exitedTeams").path("90").asText();assertFalse(exitReceipt.isEmpty());
+        assertThrows(GameSessionException.class,()->player(7,"TEAM_EXIT",payload().put("teamId",90).put("reason","再次退出")));
+        assertEquals(exitReceipt,runState().path("exitedTeams").path("90").asText());assertEquals(1,state(50,90).path("themeRuntime").path("inventory").path("tool").asInt());
     }
     @Test void fourTeamsResolveTieThroughAcceptanceConsensusEscrowAndTrustedOperation() throws Exception {
         sharedWorld(4);player(7,"PLAN_PROPOSE",payload().put("proposalKey","p1").put("endingKey","bridge"));player(9,"PLAN_PROPOSE",payload().put("proposalKey","p2").put("endingKey","trail"));

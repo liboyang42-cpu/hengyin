@@ -82,6 +82,9 @@ public class UmsMemberWithdrawal extends BaseEntity
     @Excel(name = "银行流水号/打款凭据")
     private String payoutReference;
 
+    /** 建单时校验通过的银行卡信息单独同意文本版本（bank_account_collection），旧单为空 */
+    private String consentVersion;
+
     /** 删除标记 0 代表存在  2删除 */
     private Long delFlag;
 
@@ -241,6 +244,16 @@ public class UmsMemberWithdrawal extends BaseEntity
     public String getPayoutReference()
     {
         return payoutReference;
+    }
+
+    public String getConsentVersion()
+    {
+        return consentVersion;
+    }
+
+    public void setConsentVersion(String consentVersion)
+    {
+        this.consentVersion = consentVersion;
     }
 
     public void setPayoutReference(String payoutReference)

@@ -25,6 +25,16 @@ class IdCardUtilsTest {
         assertTrue(IdCardUtils.isValid("31010119750101001x"));
     }
 
+    /**
+     * X036 修复:sum%11==10 时校验位是 '2'。原表只有 10 位,这类号码(约 1/11 的人)
+     * 在后端直接数组越界 500,前端则被误判格式错 —— 永远登记不上。
+     */
+    @Test
+    void 校验位为2的号码合法且不越界() {
+        assertTrue(IdCardUtils.isValid("110105198501010012"));
+        assertFalse(IdCardUtils.isValid("110105198501010013"));
+    }
+
     @Test
     void 用户粘贴带来的空格与换行先归一化再判() {
         assertEquals("110105199003070017", IdCardUtils.normalize("  110105 19900307 0017 \n"));

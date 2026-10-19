@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <el-alert title="主题风格预设使用范围" description="上架风格可供公开查询；当前发布页尚未接入选择与草稿渲染。来源版本与已发布内容冻结待接入，保存不代表已采用该风格。" type="info" :closable="false" show-icon />
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="风格名称" prop="name">
         <el-input v-model="queryParams.name" placeholder="请输入风格名称" clearable @keyup.enter.native="handleQuery" />
@@ -26,7 +27,8 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="styleList" @selection-change="handleSelectionChange">
+    <cy-resource-state v-if="loadError" kind="error" title="主题风格预设暂时无法读取" description="请重新读取；若仍失败，请核对查看权限。" retry-text="重新读取" :retrying="loading" @retry="getList" />
+    <el-table v-else v-loading="loading" :data="styleList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="ID" align="center" prop="id" width="60" />
       <el-table-column label="封面" align="center" prop="coverImg" width="80">
@@ -39,9 +41,10 @@
       <el-table-column label="排序" align="center" prop="sort" width="70" />
       <el-table-column label="状态" align="center" prop="status" width="80">
         <template slot-scope="scope">
-          <el-tag :type="scope.row.status === '1' ? 'success' : 'info'">{{ scope.row.status === '1' ? '上架' : '下架' }}</el-tag>
+          <el-tag :type="scope.row.status === '1' ? 'success' : 'info'">{{ scope.row.status === '1' ? '上架' : scope.row.status === '0' ? '下架' : '待确认' }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="配置更新时间" prop="updateTime" min-width="160" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)" v-hasPermi="['business:presetStyle:edit']">修改</el-button>
@@ -50,7 +53,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
+    <pagination v-show="!loadError && total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
 
     <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
@@ -72,7 +75,7 @@
         <el-form-item label="默认分类ID" prop="defaultCategoryIds">
           <el-input v-model="form.defaultCategoryIds" placeholder="逗号分隔,如 1,3" />
         </el-form-item>
-        <el-form-item label="token色值" prop="toneTokens">
+        <el-form-item label="主题色值" prop="toneTokens">
           <el-input v-model="form.toneTokens" type="textarea" :rows="2" placeholder='可选,JSON,如 {"--cy-accent":"#1A1A1A"}' />
         </el-form-item>
         <el-form-item label="排序" prop="sort">
@@ -94,13 +97,17 @@
 </template>
 
 <script>
+import CyResourceState from '@/components/CyResourceState'
 import { listPresetStyle, getPresetStyle, delPresetStyle, addPresetStyle, updatePresetStyle } from "@/api/business/presetStyle"
 
 export default {
+  components: { CyResourceState },
   name: "PresetStyle",
   data() {
     return {
       loading: true,
+      loadError: false,
+      requestToken: 0,
       ids: [],
       single: true,
       multiple: true,
@@ -127,11 +134,21 @@ export default {
   },
   methods: {
     getList() {
+      const requestToken = ++this.requestToken
       this.loading = true
-      listPresetStyle(this.queryParams).then(response => {
+      this.loadError = false
+      return listPresetStyle(this.queryParams).then(response => {
+        if (requestToken !== this.requestToken) return
+        if (!Array.isArray(response.rows)) throw new Error('列表数据不完整')
         this.styleList = response.rows
         this.total = response.total
-        this.loading = false
+      }).catch(() => {
+        if (requestToken !== this.requestToken) return
+        this.styleList = []
+        this.total = 0
+        this.loadError = true
+      }).finally(() => {
+        if (requestToken === this.requestToken) this.loading = false
       })
     },
     cancel() {

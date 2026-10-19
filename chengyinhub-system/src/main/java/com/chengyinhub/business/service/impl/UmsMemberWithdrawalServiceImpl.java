@@ -177,7 +177,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username){
+    public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username, String consentVersion){
 
         // 提现金额必须为正数：防止负数/零金额经 deductBalance(balance = balance - amount) 反向增加余额
         if (request == null || request.getWithdrawalAmount() == null
@@ -231,6 +231,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
         withdrawal.setMobilephone(request.getMobilephone());
         protectSensitiveData(withdrawal);
         withdrawal.setWithdrawalAmount(request.getWithdrawalAmount());
+        withdrawal.setConsentVersion(consentVersion);
 
         BigDecimal serviceFee = BigDecimal.ZERO;
         withdrawal.setServiceFee(serviceFee);

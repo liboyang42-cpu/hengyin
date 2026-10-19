@@ -45,6 +45,7 @@ function loadOrderDetail(dependencies) {
   const source = read('src/views/business/finance/order/detail.vue')
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
     .replace(/^import \{ getOrder \} from '@\/api\/business\/order'$/m, 'const { getOrder } = dependencies;')
+    .replace(/^import \{ getOrderPaymentFacts, queryOrderPaymentFacts \} from '@\/api\/business\/orderPaymentFacts'$/m, 'const { getOrderPaymentFacts, queryOrderPaymentFacts } = Object.assign({ getOrderPaymentFacts: () => Promise.resolve({ data: null }), queryOrderPaymentFacts: () => Promise.resolve({ data: null }) }, dependencies);')
     .replace(/^import auth from '@\/plugins\/auth'$/m, 'const auth = dependencies.auth;')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};')
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(dependencies)

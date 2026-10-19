@@ -9,6 +9,7 @@ import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.mapper.CoopGroupVerifyMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
 import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
+import com.chengyinhub.business.mapper.CoopSettlementMapper;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.IGroupCodeService;
 import com.chengyinhub.business.service.IQrcodeService;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -33,6 +35,9 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
 
     private static final Logger logger = LoggerFactory.getLogger(GroupCodeServiceImpl.class);
     private static final long GROUP_CODE_TTL_MS = 300_000L;
+    private static final int REVOKE_REASON_MAX = 200;
+    static final String MSG_REVOKE_NOT_FOUND = "接待记录不存在或已撤销";
+    static final String MSG_REVOKE_SETTLED = "该主题已进入结算，接待记录不能再撤销；如有错误请联系平台客服";
 
     private final ICmsActivityService cmsActivityService;
     private final IClubAccessService clubAccessService;
@@ -46,6 +51,10 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
 
     @Autowired
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
+
+    /** 撤销时限判据之一:本合作单已挂结算单 = 结算已跑过,接待基数已冻结进结算快照。 */
+    @Autowired
+    private CoopSettlementMapper coopSettlementMapper;
 
     public GroupCodeServiceImpl(ICmsActivityService cmsActivityService, IClubAccessService clubAccessService,
                                 CoopOrderMapper coopOrderMapper, CoopGroupVerifyMapper coopGroupVerifyMapper,
@@ -171,7 +180,9 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
             audit.setRelationId(order.getId());
             audit.setBeforeJson("{\"received\":false}");
             audit.setAfterJson("{\"received\":true}");
-            audit.setRequestId("group-redeem-" + activityId + "-" + merchantMemberId);
+            // 撤销后允许重扫:台账行 id 每次不同,带上它才不会撞 uk_business_audit_request。
+            audit.setRequestId("group-redeem-" + activityId + "-" + merchantMemberId
+                    + (verification.getId() == null ? "" : "-" + verification.getId()));
             audit.setCreateTime(new Date());
             if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
                 throw new IllegalStateException("团码核销审计写入失败");
@@ -185,6 +196,82 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
         data.put("coopOrderId", order.getId());
         data.put("alreadyVerified", inserted == 0);
         return AjaxResult.success(inserted == 0 ? "已记录过" : "已记录接待该团", data);
+    }
+
+    @Override
+    public AjaxResult listReceptions(long merchantMemberId) {
+        if (merchantMemberId <= 0) return AjaxResult.error("请先登录");
+        List<Map<String, Object>> rows = coopGroupVerifyMapper.selectReceptionsByMerchant(merchantMemberId);
+        return AjaxResult.success(rows);
+    }
+
+    /**
+     * 撤销时限(产品待定,当前默认):只在本主题合作结算开始之前可撤。判据两条,任一成立即拒:
+     * cms_topic.is_settlement=1(结算已领取),或本合作单已挂 coop_settlement 行。
+     * 先锁接待行、再锁主题行 —— 结算领取对主题行做 0→1 更新,与这里互斥,
+     * 不会出现「撤销判了未结算、结算同时按旧基数出钱」的交错。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult revoke(Long verifyId, long merchantMemberId, long actorMemberId,
+                             String actorRoleCode, String reason) {
+        if (merchantMemberId <= 0) return AjaxResult.error("请先登录");
+        if (actorMemberId <= 0 || actorRoleCode == null || actorRoleCode.trim().isEmpty()) {
+            return AjaxResult.error("撤销操作人无效");
+        }
+        if (verifyId == null || verifyId <= 0) return AjaxResult.error("参数缺失");
+        String trimmedReason = reason == null ? "" : reason.trim();
+        if (trimmedReason.isEmpty()) return AjaxResult.error("请填写撤销原因");
+        if (trimmedReason.length() > REVOKE_REASON_MAX) {
+            return AjaxResult.error("撤销原因不超过 " + REVOKE_REASON_MAX + " 字");
+        }
+
+        CoopGroupVerify row = coopGroupVerifyMapper.selectByIdForUpdate(verifyId);
+        // 别家的记录与不存在同一句话:不向扫码端泄露别的商家接待过哪些团。
+        if (row == null || !Long.valueOf(merchantMemberId).equals(row.getMerchantMemberId())) {
+            return AjaxResult.error(MSG_REVOKE_NOT_FOUND);
+        }
+        Integer settlementFlag = coopGroupVerifyMapper.selectTopicSettlementFlagForUpdate(row.getTopicId());
+        boolean settled = (settlementFlag != null && settlementFlag == 1)
+                || (row.getCoopOrderId() != null && coopSettlementMapper.countByOrderId(row.getCoopOrderId()) > 0);
+        if (settled) return AjaxResult.error(MSG_REVOKE_SETTLED);
+
+        if (coopGroupVerifyMapper.deleteByIdAndMerchant(verifyId, merchantMemberId) != 1) {
+            return AjaxResult.error(MSG_REVOKE_NOT_FOUND);
+        }
+
+        BusinessAuditEvent audit = new BusinessAuditEvent();
+        audit.setDomainType("GROUP_ACTIVITY");
+        audit.setDomainId(row.getActivityId() == null ? row.getTopicId() : row.getActivityId());
+        audit.setOwnerMemberId(merchantMemberId);
+        audit.setActorType(BusinessAuditEvent.ACTOR_TYPE_MEMBER);
+        audit.setActorMemberId(actorMemberId);
+        audit.setActorRoleCode(actorRoleCode);
+        audit.setAction("GROUP_CODE_REVOKE");
+        audit.setTargetType("COOP_GROUP_VERIFY");
+        audit.setTargetId(verifyId);
+        audit.setRelationId(row.getCoopOrderId());
+        audit.setBeforeJson("{\"received\":true,\"verifyId\":" + verifyId
+                + ",\"topicId\":" + row.getTopicId()
+                + ",\"activityId\":" + row.getActivityId()
+                + ",\"coopOrderId\":" + row.getCoopOrderId()
+                + ",\"leaderMemberId\":" + row.getLeaderMemberId()
+                + ",\"verifyTime\":" + (row.getVerifyTime() == null ? "null" : String.valueOf(row.getVerifyTime().getTime()))
+                + "}");
+        audit.setAfterJson("{\"received\":false}");
+        audit.setReason(trimmedReason);
+        audit.setRequestId("group-revoke-" + verifyId);
+        audit.setCreateTime(new Date());
+        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
+            throw new IllegalStateException("团码接待撤销审计写入失败");
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("verifyId", verifyId);
+        data.put("topicId", row.getTopicId());
+        data.put("activityId", row.getActivityId());
+        data.put("revoked", true);
+        return AjaxResult.success("已撤销该团的接待记录", data);
     }
 
     private boolean isActiveGroupActivity(CmsActivity activity) {

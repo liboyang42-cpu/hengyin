@@ -50,4 +50,13 @@ public interface IAuditTaskService {
     AuditTask selectAuditTaskById(Long id);
 
     List<AuditTask> selectAuditTaskList(AuditTask auditTask);
+
+    /** F0528:当前页已裁决任务的对象投影结果(APPLIED/PENDING/NO_EFFECT/LEGACY),key=taskId */
+    java.util.Map<Long, String> moderationOutcomes(List<AuditTask> tasks);
+
+    /** F0528:单个任务当前决定的对象投影状态;未裁决/已撤销返回 null */
+    java.util.Map<String, Object> moderationState(Long taskId);
+
+    /** F0528:重放待处置的对象投影;仅当前决定处于 PENDING 时允许,结果追加审计 */
+    java.util.Map<String, Object> replayModeration(Long taskId, Long operatorId, String actorRoleCode);
 }

@@ -23,4 +23,8 @@ public interface BusinessAuditEventMapper {
                                             @Param("targetId") Long targetId);
 
     List<BusinessAuditEvent> selectAuditLogPage(BusinessAuditLogQueryDTO query);
+
+    /** F0528:批量按目标读审计(审核台列表算「待处置」),时间倒序 */
+    List<BusinessAuditEvent> selectByTargets(@Param("targetType") String targetType,
+                                             @Param("targetIds") List<Long> targetIds);
 }

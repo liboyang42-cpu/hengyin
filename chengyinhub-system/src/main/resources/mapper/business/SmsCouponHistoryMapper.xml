@@ -112,6 +112,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="endTime != null">end_time,</if>
             <if test="note != null">note,</if>
             <if test="delFlag != null">del_flag,</if>
+            <if test="ruleVersion != null">rule_version,</if>
+            <if test="ruleAmount != null">rule_amount,</if>
+            <if test="ruleMinPoint != null">rule_min_point,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -132,6 +135,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="endTime != null">#{endTime},</if>
             <if test="note != null">#{note},</if>
             <if test="delFlag != null">#{delFlag},</if>
+            <if test="ruleVersion != null">#{ruleVersion},</if>
+            <if test="ruleAmount != null">#{ruleAmount},</if>
+            <if test="ruleMinPoint != null">#{ruleMinPoint},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -210,4 +216,36 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and ifnull(del_flag, 0) = 0
     </update>
 
+    <!-- F0572:领取时冻结的面额。迁移前领取(rule_amount 为空)回放最早的规则版本(BASELINE);
+         都没有 = 从未经治理改过规则,返回 NULL,调用方用券当前面额(与改前一致) -->
+    <select id="selectClaimRuleAmount" resultType="java.math.BigDecimal">
+        select coalesce(h.rule_amount,
+               (select v.amount from sms_coupon_rule_version v
+                 where v.coupon_id = h.coupon_id order by v.rule_version asc limit 1))
+        from sms_coupon_history h where h.id = #{id}
+    </select>
+
+    <!-- F0572:按使用状态统计已领取券(改规则影响预览:这些券保持领取时规则) -->
+    <select id="countClaimsByUseStatus" resultType="java.util.HashMap">
+        select use_status as useStatus, count(1) as total,
+               sum(case when rule_amount is null then 1 else 0 end) as legacyTotal
+        from sms_coupon_history
+        where coupon_id = #{couponId} and ifnull(del_flag, 0) = 0
+        group by use_status
+    </select>
+
+    <!-- F0572 平台失效受影响持券人:未使用、未删除、未过期的已领券 -->
+    <select id="selectUnusedHoldersByCouponId" resultMap="SmsCouponHistoryResult">
+        <include refid="selectSmsCouponHistoryVo"/>
+        where coupon_id = #{couponId} and use_status = 0 and ifnull(del_flag, 0) = 0
+          and (end_time is null or end_time &gt;= #{now})
+        order by id
+        limit #{limit}
+    </select>
+
+    <select id="countUnusedHoldersByCouponId" resultType="int">
+        select count(1) from sms_coupon_history
+        where coupon_id = #{couponId} and use_status = 0 and ifnull(del_flag, 0) = 0
+          and (end_time is null or end_time &gt;= #{now})
+    </select>
 </mapper>

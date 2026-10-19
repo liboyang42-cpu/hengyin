@@ -2008,6 +2008,69 @@ class GameSessionRuntimeServiceImplTest {
         verify(runtimeMapper, never()).updateBroadcastStatus(anyLong(), anyString(), anyString(), any());
     }
 
+    /** F0129:指定 3 人含 1 名退团者——服务端整单拒绝，不静默缩小名单，也不发出任何 IM。 */
+    @Test
+    void memberBroadcastRejectsListContainingMemberOutsideActivityScope() {
+        stubSingleBroadcastDelivery("broadcast-members-stale", 69L, 703L);
+        when(runtimeMapper.insertBroadcastMemberDeliveries(eq(69L), anyLong(), eq(ACTIVITY), eq(Arrays.asList(31L, 32L, 33L)), any()))
+                .thenReturn(2);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("targetType", "MEMBERS");
+        payload.put("memberIds", Arrays.asList(31, 32, 33));
+        payload.put("content", "集合提醒");
+
+        GameSessionException error = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(PLAYER), command("broadcast-members-stale", 2, "BROADCAST", payload)));
+
+        assertEquals("GAME_FORBIDDEN_SCOPE", error.getErrorCode());
+        verify(runtimeMapper, never()).insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any());
+        verify(imService, never()).sendSystemInNestedTransaction(anyLong(), anyInt(), anyString(), anyString());
+        verify(runtimeMapper, never()).completeReceipt(any());
+    }
+
+    @Test
+    void memberBroadcastRequiresExplicitDistinctBoundedList() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(readySession(2));
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        List<Object> tooMany = new java.util.ArrayList<>();
+        for (int i = 1; i <= 51; i++) tooMany.add(i);
+        for (Object members : Arrays.asList(null, Collections.emptyList(), Arrays.asList(31, 31), Arrays.asList(31, -1), tooMany)) {
+            stubReceiptPersistence("broadcast-members-bad");
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("targetType", "MEMBERS");
+            payload.put("memberIds", members);
+            payload.put("content", "集合提醒");
+            GameSessionException error = assertThrows(GameSessionException.class, () -> service.command(
+                    GameActorContext.club(PLAYER), command("broadcast-members-bad", 2, "BROADCAST", payload)));
+            assertEquals("GAME_BAD_REQUEST", error.getErrorCode());
+        }
+        verify(runtimeMapper, never()).insertBroadcast(any());
+    }
+
+    @Test
+    void memberBroadcastReportsReachedFailedAndUnknownSeparately() {
+        stubSingleBroadcastDelivery("broadcast-members-ok", 70L, 704L);
+        when(runtimeMapper.insertBroadcastMemberDeliveries(eq(70L), anyLong(), eq(ACTIVITY), eq(Collections.singletonList(PLAYER + 1)), any()))
+                .thenReturn(1);
+        when(imService.sendSystemInNestedTransaction(eq(PLAYER + 1), eq(ImMessage.MSG_TEXT), eq("集合提醒"), anyString())).thenReturn(804L);
+        when(runtimeMapper.markDelivery(eq(704L), eq("REACHED"), eq(804L), eq((String) null), any(Date.class))).thenReturn(1);
+        when(runtimeMapper.updateBroadcastStatus(eq(70L), eq("SENDING"), eq("SENT"), any(Date.class))).thenReturn(1);
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any())).thenReturn(1);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("targetType", "MEMBERS");
+        payload.put("memberIds", Collections.singletonList(PLAYER + 1));
+        payload.put("content", "集合提醒");
+
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt =
+                service.command(GameActorContext.club(PLAYER), command("broadcast-members-ok", 2, "BROADCAST", payload));
+
+        assertEquals(1, ((Number) receipt.getResult().get("reachedCount")).intValue());
+        assertEquals(0, ((Number) receipt.getResult().get("failedCount")).intValue());
+        assertEquals(0, ((Number) receipt.getResult().get("unknownCount")).intValue());
+        assertEquals(1, ((Number) receipt.getResult().get("recipientCount")).intValue());
+        verify(imService).sendSystemInNestedTransaction(eq(PLAYER + 1), anyInt(), anyString(), anyString());
+    }
+
     @Test
     void directorBroadcastIsRejectedByContentSafetyBeforeAnyBroadcastRowIsCreated() {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(readySession(2));

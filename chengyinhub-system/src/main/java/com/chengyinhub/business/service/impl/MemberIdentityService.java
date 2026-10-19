@@ -28,7 +28,8 @@ import java.util.Set;
  *   <li><b>只回显状态</b>:{@link #checkRegistered} 只回答「登记了没有」,明文永不下发;</li>
  *   <li><b>不叫「认证」</b>:没有三要素通道,我们只做到号码自洽(见 {@link IdCardUtils}),
  *       所以文案统一用「已登记 / 发布者实名」;</li>
- *   <li><b>改绑走人工</b>:重复提交只有证件一致才幂等成功,不一致直接拒,不给自助覆盖。</li>
+ *   <li><b>改绑走人工</b>:重复提交只有证件一致才幂等成功,不一致直接拒,不给自助覆盖;
+ *       变更只能走 {@link MemberIdentityChangeService} 申请单 + 平台人工审核(X036)。</li>
  * </ul>
  */
 @Service
@@ -101,7 +102,7 @@ public class MemberIdentityService {
             // 前者幂等放行,后者按「改绑走人工」拒掉。
             UmsMemberIdentity stored = identityMapper.selectByMemberId(memberId);
             if (stored == null || !normalizedId.equalsIgnoreCase(stored.getIdCard())) {
-                throw new ServiceException("实名信息已登记,如需变更请联系平台客服");
+                throw new ServiceException("实名信息已登记,如需变更请提交改绑申请,由平台客服人工审核");
             }
             return;
         }

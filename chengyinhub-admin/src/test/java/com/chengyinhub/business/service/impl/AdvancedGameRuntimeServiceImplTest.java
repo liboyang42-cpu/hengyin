@@ -1012,6 +1012,27 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("D20_SUCCESS", service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
     }
 
+    // F0301：D20 加值只来自作者冻结的静态配置并标明来源，客户端带来的加值/结果不影响服务端判定
+    @Test
+    void d20StaticModifierIsLabelledAndClientModifierCannotChangeTheVerdict() {
+        String config = "{\"schemaVersion\":1,\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\","
+                + "\"dc\":13,\"modifier\":2,\"rollMode\":\"normal\","
+                + "\"successText\":\"发现暗门\",\"failText\":\"继续寻找\"}}";
+        GameRuntimeSession session = runningSession(config, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(config));
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
+        Map<String, Object> payload = new LinkedHashMap<>(); payload.put("modifier", 99); payload.put("total", 30);
+        Map<String, Object> dice = playKit(service.act(MEMBER_ID, 51L, 0, "d20-static", "ROLL_DICE", payload), "diceRoll");
+        assertEquals("STATIC", dice.get("modifierSource"));
+        assertEquals(2, dice.get("modifier"));
+        assertEquals(3, dice.get("total"), "1 + 静态加值 2，客户端加值不计入");
+        assertEquals(Boolean.FALSE, dice.get("success"));
+        assertEquals("D20_FAILURE", service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
     @Test
     void d20ModesRespectThresholdAndFailureStillCompletesWithItsOutcome() {
         String[] modes = { "normal", "advantage", "disadvantage" };
@@ -1773,6 +1794,22 @@ class AdvancedGameRuntimeServiceImplTest {
         else{org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("REJECT".equals(mode)?"FAIL":"PASS",decision.getValue().path("outcome").asText());}
         if("ALBUM".equals(mode)){assertTrue(json.valueToTree(result).path("playKit").path("album").path("done").asBoolean());service.act(MEMBER_ID,51L,1,"new-key","SUBMIT_ALBUM",payload);assertEquals(2,checked.size());}
     }
+    // X019：相册证据同一提交重放、换请求号重提或重选图片，都只结算一次，已提交内容只读
+    @Test void r5AlbumSettlesOnceAcrossReplayRetryAndReselection() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);
+        config.putObject("album").put("enabled",true);config.putObject("outcomeRules").put("version",1).putObject("pass");
+        ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->assertEquals(MEMBER_ID,member));
+        ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
+        GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        Map<String,Object> first=Collections.singletonMap("imageUrls",Arrays.asList("https://oss.example.com/a.jpg","https://oss.example.com/b.jpg"));
+        service.act(MEMBER_ID,51L,0,"album-submit",action(),first);
+        String settled=session.getStateJson();
+        service.act(MEMBER_ID,51L,0,"album-submit",action(),first);
+        try{service.act(MEMBER_ID,51L,1,"album-retry",action(),Collections.singletonMap("imageUrls",Collections.singletonList("https://oss.example.com/c.jpg")));}catch(RuntimeException rejected){/* 已提交后重选可被拒绝，但不得再结算 */}
+        verify(route,org.mockito.Mockito.times(1)).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),any(),any());
+        assertEquals(json.readTree(settled).path("album"),json.readTree(session.getStateJson()).path("album"),"已提交相册只读，重选不覆盖已结算证据");
+    }
+    private static String action(){return "SUBMIT_ALBUM";}
     @Test void r5NonPublishedConfigurationCannotWriteHpThroughLegacyBranchEffects() throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);config.putObject("qa").put("enabled",true).put("mode","TYPE").put("title","问答").put("answerText","yes");config.putObject("outcomeRules").put("version",1).putObject("pass");config.with("outcomeRules").putObject("fail");com.fasterxml.jackson.databind.node.ArrayNode steps=config.putObject("branch").put("enabled",true).put("startStepId","start").putArray("steps");steps.addObject().put("id","start").putArray("options").addObject().put("id","a").put("label","继续").put("nextStepId","done").putArray("effects").addObject().put("var","sys.hp").put("op","INC").put("value",1);steps.addObject().put("id","done").put("terminal",true).putArray("options");
         CmsMemberTemplate template=new CmsMemberTemplate();template.setId(TEMPLATE_ID);template.setAdvancedConfigJson(config.toString());when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template);ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:original");

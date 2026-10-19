@@ -625,4 +625,93 @@ class GenericRouteRuntimeServiceTest {
         assertEquals(1,stored().path("themeRuntime").path("zeroChallenges").path("used").asInt());assertEquals(0,stored().path("completedNodeIds").size());
     }
 
+    @Test void clueBodyAndImagesReachOnlyTheOwningTeamAndSurviveLaterRevocationEffects() throws Exception {
+        String ev01="clue.h_aaaaaaaaaaaa";
+        ThemeStateKeyMapper keys=mock(ThemeStateKeyMapper.class);ReflectionTestUtils.setField(service,"themeStateKeyMapper",keys);
+        ThemeStateKey key=new ThemeStateKey();key.setStateKey(ev01);key.setLabel("EV01 原始采样");when(keys.selectByTopicId(80L)).thenReturn(Collections.singletonList(key));
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        snapshot.with("nodeConfigs").putObject("11").putObject("interactionRules").putArray("effects").addObject().put("var",ev01).put("op","SET").put("value",1);
+        ObjectNode content=snapshot.with("clueContent").putObject("11").put("title","采样站");
+        ObjectNode block=content.putObject("clues").putArray(ev01).addObject().put("text","03:17 三组读数被截断");block.putArray("images").add("https://oss.example.com/ev01.png");
+        session.setModuleConfigSnapshotJson(snapshot.toString());
+        TopicRouteEngine.State a=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);a.getVariables().put(ev01,1);owner.setVariablesJson(json.writeValueAsString(a));
+        // B 队：另一支已付费队伍，未取得 EV01
+        when(mapper.selectActiveTeamId(70L,9L)).thenReturn(99L);
+        PlayTeam other=new PlayTeam();other.setId(99L);other.setOwnerType(2);other.setOwnerId(70L);other.setLeaderMemberId(9L);other.setStatus(2);
+        when(teams.selectPlayTeamById(99L)).thenReturn(other);when(teams.selectPlayTeamByIdForUpdate(99L)).thenReturn(other);
+        GameStoryState otherOwner=new GameStoryState();otherOwner.setId(92L);otherOwner.setGameSessionId(50L);otherOwner.setOwnerType("TEAM");otherOwner.setOwnerId(99L);otherOwner.setRevision(0);otherOwner.setStatus("INITIAL");
+        TopicRouteEngine.State b=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);b.getVariables().remove(ev01);otherOwner.setVariablesJson(json.writeValueAsString(b));
+        when(mapper.selectStoryState(50L,"TEAM",99L)).thenReturn(otherOwner);
+        JsonNode mine=json.valueToTree(service.view(GameActorContext.player(8L),70L).getPlayer().get("clues"));
+        assertEquals(1,mine.size());assertEquals("TEAM",mine.path(0).path("scope").asText());assertEquals("EV01 原始采样",mine.path(0).path("name").asText());
+        assertEquals("03:17 三组读数被截断",mine.path(0).path("sources").path(0).path("blocks").path(0).path("text").asText());
+        assertEquals("https://oss.example.com/ev01.png",mine.path(0).path("sources").path(0).path("blocks").path(0).path("images").path(0).asText());
+        String theirs=json.writeValueAsString(service.view(GameActorContext.player(9L),70L).getPlayer());
+        for(String secret:Arrays.asList(ev01,"EV01","03:17","ev01.png","采样站"))assertFalse(theirs.contains(secret),"B 队回包不得含 A 队私有线索："+secret);
+        // 态度变化/拒绝等后续效果不撤回已取得的证据
+        TopicRouteEngine.State revoked=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);
+        TemplateEffects.apply(json.readTree("[{\"var\":\""+ev01+"\",\"op\":\"SET\",\"value\":0}]"),JourneyRules.parse(rules()),revoked);owner.setVariablesJson(json.writeValueAsString(revoked));
+        assertEquals("03:17 三组读数被截断",json.valueToTree(service.view(GameActorContext.player(7L),70L).getPlayer().get("clues")).path(0).path("sources").path(0).path("blocks").path(0).path("text").asText());
+    }
+    private ArrayNode threeCostOptions(int foodNeeded) throws Exception {
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());ObjectNode q=(ObjectNode)snapshot.path("themeConfig").path("gameplayRuntime").path("quests").get(0);q.remove("statCosts");q.remove("actionCost");
+        ArrayNode options=q.putArray("costOptions");options.addObject().put("label","口粮").putArray("resourceCosts").addObject().put("itemId","food").put("quantity",foodNeeded);
+        options.addObject().put("label","体力").put("hpCost",2);options.addObject().put("label","行动").put("actionCost",2);
+        session.setModuleConfigSnapshotJson(snapshot.toString());return options;
+    }
+    private GameSessionCommand start(String id,int option) {
+        GameSessionCommand start=new GameSessionCommand();start.setActivityId(70L);start.setExpectedRevision(session.getRevision());start.setAuthorityEpoch(1);start.setRequestId(id);start.setAction("QUEST_START");start.getPayload().put("questKey","q1");start.getPayload().put("costOption",option);
+        return start;
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints={0,1,2})
+    void eachCostOptionReservesAtStartChargesOnceOnSuccessAndSecondStartCannotReserveAgain(int option) throws Exception {
+        threeCostOptions(1);
+        service.command(GameActorContext.player(7L),start("reserve-"+option,option));
+        JsonNode reserved=stored();
+        assertEquals(option,reserved.path("themeRuntime").path("gameplay").path("activeQuestCostOption").asInt());
+        assertEquals(10,reserved.path("variables").path("sys.hp").asInt());assertEquals(1,reserved.path("themeRuntime").path("inventory").path("food").asInt());assertEquals(0,reserved.path("variables").path("sys.actions").asInt());
+        // 同一任务再次开始（另一请求号、另一付法）不会再预留第二份
+        int revision=session.getRevision();
+        assertThrows(GameSessionException.class,()->service.command(GameActorContext.player(7L),start("second-"+option,(option+1)%3)));
+        assertEquals(reserved,stored());assertEquals(revision,session.getRevision());
+        service.recordSharedRouteResult(8L,80L,70L,11L,instance(8,11),"proof-"+option,true,Collections.emptyList());
+        GameCommandReceiptView settled=send("resolve-"+option,"QUEST_RESOLVE","q1");assertEquals(option,settled.getResult().get("costOption"));
+        JsonNode paid=stored();
+        assertEquals(option==1?8:10,paid.path("variables").path("sys.hp").asInt());
+        assertEquals(option==0?1:2,paid.path("themeRuntime").path("inventory").path("food").asInt(),"口粮付法扣1再得任务奖励1");
+        assertEquals(option==2?2:0,paid.path("variables").path("sys.actions").asInt());
+        send("resolve-replay-"+option,"QUEST_RESOLVE","q1");assertEquals(paid,stored(),"重放不重复扣");
+    }
+    @Test void unaffordableOptionIsRejectedAtStartAndCancelReleasesWithoutChargingEvenOnReplay() throws Exception {
+        threeCostOptions(3);
+        int revision=session.getRevision();JsonNode before=stored();
+        assertThrows(GameSessionException.class,()->service.command(GameActorContext.player(7L),start("short",0)));
+        assertEquals(before,stored());assertEquals(revision,session.getRevision());
+        service.command(GameActorContext.player(7L),start("hp",1));
+        int cancelRevision=session.getRevision();GameCommandReceiptView cancelled=send("cancel","QUEST_CANCEL","q1");assertFalse(cancelled.isReplayed());
+        JsonNode released=stored();assertFalse(released.path("themeRuntime").path("gameplay").has("activeQuest"));assertFalse(released.path("themeRuntime").path("gameplay").has("activeQuestCostOption"));
+        assertEquals(10,released.path("variables").path("sys.hp").asInt());assertEquals(1,released.path("themeRuntime").path("inventory").path("food").asInt());
+        GameSessionCommand replay=new GameSessionCommand();replay.setActivityId(70L);replay.setExpectedRevision(cancelRevision);replay.setAuthorityEpoch(1);replay.setRequestId("cancel");replay.setAction("QUEST_CANCEL");replay.getPayload().put("questKey","q1");
+        assertTrue(service.command(GameActorContext.player(7L),replay).isReplayed());assertEquals(released,stored());
+        // 释放后可重新选付法
+        service.command(GameActorContext.player(7L),start("again",2));assertEquals(2,stored().path("themeRuntime").path("gameplay").path("activeQuestCostOption").asInt());
+    }
+    // X012：共享归零后两名队员先后提交挑战成功，只恢复一次、只计一次恢复次数
+    @Test void sharedZeroChallengeRestoresOnceWhenTwoMembersSubmitSuccess() throws Exception {
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        ObjectNode policy=(ObjectNode)snapshot.path("themeConfig").path("gameplayRuntime").path("survival");policy.put("zeroHpPolicy","CHALLENGE");
+        policy.putObject("zeroChallenge").put("challengeNodeId",101).put("restoreTo",4).put("limit",2);
+        snapshot.putObject("nodeConfigs").putObject("101").putObject("ballShake").put("enabled",true).put("goal",10);session.setModuleConfigSnapshotJson(snapshot.toString());
+        TopicRouteEngine.State state=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);state.getVariables().put("sys.hp",0);
+        new GameplaySurvivalEngine().syncChallenge(snapshot,JourneyRules.parse(rules()),state);owner.setVariablesJson(json.writeValueAsString(state));
+        when(mapper.selectStation(50L,101L)).thenReturn(null);
+        String instance=instance(7,101);
+        JsonNode first=service.recordSharedZeroChallengeResult(7L,80L,70L,101L,instance,"phone-a",false,10L,false,1);
+        assertTrue(first.path("success").asBoolean());assertEquals(4,stored().path("variables").path("sys.hp").asInt());
+        JsonNode restored=stored();int revision=session.getRevision();
+        assertThrows(GameSessionException.class,()->service.recordSharedZeroChallengeResult(8L,80L,70L,101L,instance,"phone-b",false,10L,false,1),"另一部手机的同轮成功不再恢复");
+        assertEquals(restored,stored());assertEquals(revision,session.getRevision());
+        assertEquals(1,stored().path("themeRuntime").path("zeroChallenges").path("used").asInt());
+    }
 }

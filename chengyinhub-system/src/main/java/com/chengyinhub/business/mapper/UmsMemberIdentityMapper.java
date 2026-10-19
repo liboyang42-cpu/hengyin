@@ -14,4 +14,7 @@ public interface UmsMemberIdentityMapper {
     boolean existsByMemberId(Long memberId);
 
     int deleteByMemberId(Long memberId);
+
+    /** X036 改绑审核通过时写回新证;旧证密文被覆盖即失效。 */
+    int rebindIdentity(UmsMemberIdentity identity);
 }

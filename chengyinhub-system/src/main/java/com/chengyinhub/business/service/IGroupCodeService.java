@@ -11,4 +11,14 @@ public interface IGroupCodeService {
 
     AjaxResult redeem(String code, long merchantMemberId, long actorMemberId,
                       String actorRoleCode);
+
+    /** 商家回读自己接待过的团(按商家主体口径,不按操作员)。 */
+    AjaxResult listReceptions(long merchantMemberId);
+
+    /**
+     * 撤销一条误扫/扫错团的接待记录。只允许本商家、且所在主题的合作结算尚未开始;
+     * 撤销后该团不再计入本商家的分账基数,并追加一条不可变审计。
+     */
+    AjaxResult revoke(Long verifyId, long merchantMemberId, long actorMemberId,
+                      String actorRoleCode, String reason);
 }

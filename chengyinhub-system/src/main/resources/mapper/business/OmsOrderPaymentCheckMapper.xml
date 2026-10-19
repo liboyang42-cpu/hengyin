@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OmsOrderPaymentCheckMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.OmsOrderPaymentCheck" id="OmsOrderPaymentCheckResult">
+        <id property="id" column="id" />
+        <result property="orderId" column="order_id" />
+        <result property="channel" column="channel" />
+        <result property="outTradeNo" column="out_trade_no" />
+        <result property="queryStatus" column="query_status" />
+        <result property="channelTradeState" column="channel_trade_state" />
+        <result property="channelTransactionId" column="channel_transaction_id" />
+        <result property="channelTotalFen" column="channel_total_fen" />
+        <result property="savedStatus" column="saved_status" />
+        <result property="savedTransactionId" column="saved_transaction_id" />
+        <result property="savedPayAmountFen" column="saved_pay_amount_fen" />
+        <result property="verdict" column="verdict" />
+        <result property="detail" column="detail" />
+        <result property="errorMessage" column="error_message" />
+        <result property="operatorId" column="operator_id" />
+        <result property="queryTime" column="query_time" />
+    </resultMap>
+
+    <insert id="insertPaymentCheck" parameterType="com.chengyinhub.business.domain.OmsOrderPaymentCheck"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into oms_order_payment_check (order_id, channel, out_trade_no, query_status, channel_trade_state,
+            channel_transaction_id, channel_total_fen, saved_status, saved_transaction_id, saved_pay_amount_fen,
+            verdict, detail, error_message, operator_id, query_time)
+        values (#{orderId}, #{channel}, #{outTradeNo}, #{queryStatus}, #{channelTradeState},
+            #{channelTransactionId}, #{channelTotalFen}, #{savedStatus}, #{savedTransactionId}, #{savedPayAmountFen},
+            #{verdict}, #{detail}, #{errorMessage}, #{operatorId}, #{queryTime})
+    </insert>
+
+    <select id="selectLatestByOrderId" resultMap="OmsOrderPaymentCheckResult">
+        select id, order_id, channel, out_trade_no, query_status, channel_trade_state, channel_transaction_id,
+               channel_total_fen, saved_status, saved_transaction_id, saved_pay_amount_fen, verdict, detail,
+               error_message, operator_id, query_time
+        from oms_order_payment_check
+        where order_id = #{orderId}
+        order by id desc
+        limit 1
+    </select>
+</mapper>

@@ -707,6 +707,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         return cmsActivityMapper.updateCmsActivity(cmsActivity);
     }
 
+    @Override
+    public int updateActivityOpsIfUnsold(CmsActivity activity)
+    {
+        activity.setUpdateTime(DateUtils.getNowDate());
+        return cmsActivityMapper.updateActivityOpsIfUnsold(activity);
+    }
+
     /**
      * 批量删除活动
      *
@@ -812,17 +819,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
         }
 
-        //3. 处理合作者
-        if (request.getCollaborators() != null && !request.getCollaborators().isEmpty()) {
-            for (Long collaboratorId : request.getCollaborators()) {
-                CmsCollaborators collaborator = new CmsCollaborators();
-                collaborator.setDataType(2L);
-                collaborator.setDataId(activityId);
-                collaborator.setMemberId(memberId);
-                collaborator.setCreateTime(new Date());
-                cmsCollaboratorsMapper.insertCmsCollaborators(collaborator);
-            }
-        }
+        saveActivityCollaborators(request.getCollaborators(), activityId);
 
         //4. 处理票务
         if (request.getTickets() != null && !request.getTickets().isEmpty()) {
@@ -884,9 +881,14 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (rows <= 0) {
             throw new ServiceException("更新失败");
         }
+        if (request.getCollaborators() != null) {
+            cmsCollaboratorsMapper.deleteActivityCollaboratorsByOwner(request.getId(), memberId);
+            saveActivityCollaborators(request.getCollaborators(), request.getId());
+        }
         return rows;
     }
 
+<<<<<<< public
     /**
      * F-L4-01/F-W2-01：独立活动没有主题内容槽，收款主体只能按发布者判。非平台发布的收费独立活动
      * 下单必被 CmsRegistrationServiceImpl.assertCollectible 拒绝(二清)，发布时就拒，
@@ -928,6 +930,22 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             if (existing == null || existing.getPrice() == null || existing.getPrice().signum() <= 0
                     || ticket.getPrice().compareTo(existing.getPrice()) > 0) {
                 throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
+=======
+    private void saveActivityCollaborators(List<Long> memberIds, Long activityId) {
+        if (memberIds == null) return;
+        for (Long collaboratorId : new java.util.LinkedHashSet<>(memberIds)) {
+            if (collaboratorId == null || collaboratorId <= 0
+                    || umsMemberService.selectUmsMemberById(collaboratorId) == null) {
+                throw new ServiceException("合作者不存在，请重新选择");
+            }
+            CmsCollaborators collaborator = new CmsCollaborators();
+            collaborator.setDataType(2L);
+            collaborator.setDataId(activityId);
+            collaborator.setMemberId(collaboratorId);
+            collaborator.setCreateTime(new Date());
+            if (cmsCollaboratorsMapper.insertCmsCollaborators(collaborator) <= 0) {
+                throw new ServiceException("保存合作者失败");
+>>>>>>> private-feature/w2-r
             }
         }
     }

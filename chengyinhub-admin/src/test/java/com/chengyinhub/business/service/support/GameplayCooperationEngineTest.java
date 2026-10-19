@@ -920,4 +920,51 @@ class GameplayCooperationEngineTest {
         assertEquals(6,actor.getVariables().get("counter.temperature"));assertEquals(6,actor.getVariables().get("sys.hp"));assertEquals(1,actor.getThemeRuntime().path("statLinks").path("audit").size());
     }
 
+
+    // X009：已锁定后改案——旧锁全部释放、旧票作废，新案重新表决与确认，不继承旧案承诺
+    @Test void lockedPlanChangeReleasesEveryLockAndNewPlanIsSignedAfresh() {
+        propose("p1","leave");propose("p2","stay");intent(1,"p1","tool");intent(2,"p1","tool");intent(1,"p2","clue");intent(2,"p2","clue");
+        select("p1");ObjectNode oldRound=selected("p1");for(long team:teams.keySet())call(team,"PLAN_CONFIRM",selected("p1"));
+        for(long team:teams.keySet())assertEquals(1,engine.view(theme,world,teams,team).path("locked").path("tool").asInt());
+        call(2,"PLAN_CHANGE",p());
+        ObjectNode c=world.getThemeRuntime().with("cooperation");
+        assertEquals("DRAFT",c.path("stage").asText());assertFalse(c.has("locks"));assertFalse(c.has("votes"));assertFalse(c.has("selected"));
+        for(long team:teams.keySet()){assertEquals(0,engine.view(theme,world,teams,team).path("locked").path("tool").asInt());assertEquals(2,held(team,"tool"));}
+        assertThrows(IllegalStateException.class,()->call(1,"PLAN_CONFIRM",oldRound),"旧轮确认不能复活");
+        assertThrows(IllegalStateException.class,()->call(1,"PLAN_EXECUTE",oldRound),"旧轮执行不能复活");
+        select("p2");for(long team:teams.keySet())call(team,"PLAN_CONFIRM",selected("p2"));
+        for(long team:teams.keySet()){JsonNode locked=engine.view(theme,world,teams,team).path("locked");assertEquals(0,locked.path("tool").asInt());assertEquals(1,locked.path("clue").asInt());}
+        teams.get(1L).getThemeRuntime().with("verifiedNodes").put("98",100);call(1,"PLAN_EXECUTE",selected("p2"));
+        for(long team:teams.keySet()){assertEquals(2,held(team,"tool"),"未选案不扣");assertEquals(1,held(team,"clue"));}
+        assertEquals("stay",world.getThemeRuntime().path("cooperation").path("result").path("endingKey").asText());
+    }
+    // X009：锁定物资仍占来源队负重，不能交易/使用/丢弃；执行失败不吞材料、锁定保留，改案即释放
+    @Test void lockedMaterialKeepsOccupyingCapacityAndFailedExecutionsNeverConsumeIt() {
+        propose("p1","leave");intent(1,"p1","tool");intent(2,"p1","tool");select("p1");for(long team:teams.keySet())call(team,"PLAN_CONFIRM",selected("p1"));
+        assertEquals(4,inventory.used(theme,teams.get(1L)),"锁定的工具仍计入负重");
+        assertThrows(IllegalStateException.class,()->inventory.grantAll(theme,teams.get(1L),rules,"overflow",amounts("tool",1)),"锁定物资占满负重时不能再装入");
+        assertTrue(engine.isVotingFrozen(world),"托管期间禁止使用/丢弃（会话层按 isVotingFrozen 拒绝 ITEM_USE/ITEM_DISCARD）");
+        assertThrows(IllegalStateException.class,()->engine.requireAvailable(world,1L,teams.get(1L),amounts("tool",2)));
+        assertThrows(IllegalStateException.class,()->call(1,"TRADE_OPEN",trade("swap",1,0)));
+        JsonNode lockedBefore=world.getThemeRuntime().path("cooperation").path("locks").deepCopy();
+        for(int attempt=0;attempt<2;attempt++) {
+            assertThrows(IllegalStateException.class,()->call(1,"PLAN_EXECUTE",selected("p1")),"操作未通过可信题组时执行失败");
+            assertEquals(2,held(1,"tool"));assertEquals(2,held(2,"tool"));assertEquals(lockedBefore,world.getThemeRuntime().path("cooperation").path("locks"));
+        }
+        call(1,"PLAN_CHANGE",p());
+        assertFalse(engine.isVotingFrozen(world));assertDoesNotThrow(()->engine.requireAvailable(world,1L,teams.get(1L),amounts("tool",2)));
+    }
+    // X005：全场效果各自封顶、同设施全局一次后再次触发无效果，受益者不被扣资源
+    @Test void worldEffectCapsEachRecipientRunsOnceAndNeverChargesBeneficiaries() {
+        teams.get(1L).getVariables().put("sys.hp",11);teams.get(2L).getVariables().put("sys.hp",5);
+        inventory.consumeAll(theme,teams.get(2L),rules,"empty",amounts("tool",2));
+        ObjectNode first=call(1,"FACILITY_USE",p().put("facilityKey","shelter"));
+        assertTrue(first.path("consumed").asBoolean());assertEquals(1,first.path("paidByTeamId").asLong());
+        assertEquals(12,teams.get(1L).getVariables().get("sys.hp").intValue(),"封顶 12");assertEquals(7,teams.get(2L).getVariables().get("sys.hp").intValue());
+        assertEquals(1,held(1,"tool"));assertEquals(0,held(2,"tool"),"受益队没有物资也不欠债");
+        JsonNode before=json.valueToTree(teams);
+        ObjectNode again=call(2,"FACILITY_USE",p().put("facilityKey","shelter"));
+        assertEquals(first,again,"全局一次后再次触发只回读原结果");assertEquals(before,json.valueToTree(teams));
+        ObjectNode replay=call(1,"FACILITY_USE",p().put("facilityKey","shelter"));assertEquals(first,replay);assertEquals(before,json.valueToTree(teams));
+    }
 }

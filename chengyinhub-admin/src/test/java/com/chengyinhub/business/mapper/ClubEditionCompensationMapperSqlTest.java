@@ -95,6 +95,29 @@ class ClubEditionCompensationMapperSqlTest {
         }
     }
 
+    /** X039:空态原因只数「本俱乐部有效承接、尚无冻结条款」的期次;已开售/他人/已撤/旧版邀约都不算。 */
+    @Test
+    void undertakenEditionsWithoutTermsCountOnlyThisClubsActiveLineupAwaitingSale() throws Exception {
+        try (SqlSession session = factory.openSession(true); Statement s = session.getConnection().createStatement()) {
+            s.execute("create table coop_order(id bigint primary key,topic_id bigint,to_type varchar(16),"
+                    + "to_id bigint,status int,del_flag int,invite_id bigint)");
+            s.execute("create table coop_invite(id bigint primary key,invite_type int)");
+            s.execute("insert into coop_invite(id,invite_type) values(1,1),(2,2)");
+            s.execute("insert into coop_order(id,topic_id,to_type,to_id,status,del_flag,invite_id) values"
+                    + "(1,31,'club',7,0,0,1)," // 承接、未开售 → 计
+                    + "(2,31,'club',7,0,0,1)," // 同一期两条阵容 → 去重
+                    + "(3,32,'club',7,0,0,1)," // 承接且已有条款(已开售) → 不计
+                    + "(4,33,'club',8,0,0,1)," // 别的俱乐部 → 不计
+                    + "(5,34,'club',7,1,0,1)," // 非有效阵容 → 不计
+                    + "(6,35,'club',7,0,2,1)," // 已删 → 不计
+                    + "(7,36,'club',7,0,0,2)");  // 旧版邀约 → 不计
+            s.execute("insert into club_edition_compensation_terms(topic_id,executing_club_id) values(32,7)");
+            ClubEditionCompensationMapper mapper = session.getMapper(ClubEditionCompensationMapper.class);
+            assertEquals(1, mapper.countUndertakenEditionsWithoutTerms(CLUB));
+            assertEquals(0, mapper.countUndertakenEditionsWithoutTerms(99L));
+        }
+    }
+
     @Test
     void finalSnapshotAndFrozenAttributionAreReadFromTheCurrentFinalOnly() throws Exception {
         try (SqlSession session = factory.openSession(true); Statement s = session.getConnection().createStatement()) {

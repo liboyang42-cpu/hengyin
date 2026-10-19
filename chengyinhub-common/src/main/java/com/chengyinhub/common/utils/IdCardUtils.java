@@ -10,7 +10,7 @@ package com.chengyinhub.common.utils;
 public final class IdCardUtils {
 
     private static final int[] WEIGHTS = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
-    private static final char[] CHECK_CODES = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3'};
+    private static final char[] CHECK_CODES = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'};
     /** 出生日期只校验到「像不像个日子」,不校验是否在未来 —— 那属于业务口径,交给调用方的提示文案。 */
     private static final int MIN_BIRTH_YEAR = 1900;
 

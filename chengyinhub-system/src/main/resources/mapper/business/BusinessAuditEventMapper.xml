@@ -62,6 +62,17 @@
         for update
     </select>
 
+    <select id="selectByTargets" resultMap="BusinessAuditEventResult">
+        select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
+               action, target_type, target_id, relation_id, before_json, after_json,
+               reason, request_id, create_time
+        from business_audit_event
+        where target_type = #{targetType}
+          and target_id in
+          <foreach item="id" collection="targetIds" open="(" separator="," close=")">#{id}</foreach>
+        order by create_time desc, id desc
+    </select>
+
     <select id="selectByTarget" resultMap="BusinessAuditEventResult">
         select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
                action, target_type, target_id, relation_id, before_json, after_json,

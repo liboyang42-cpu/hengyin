@@ -681,6 +681,8 @@ public class ApiUmsMemberController extends BaseController {
         // 内容安全:昵称/简介/网址等用户自填文本命中违规即拒(资料随昵称+头像在全站评论/帖子公开展示)
         UmsMember cur = umsMemberService.selectUmsMemberById(member_id);
         String openid = cur != null ? cur.getWxOpenId() : null;
+        String mediaOwnerError = verifyNewProfileMediaOwnership(request, cur, member_id);
+        if (mediaOwnerError != null) return error(mediaOwnerError);
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(request.getName(), request.getIntroduction(),
                         request.getCaseIntroducton(), request.getWechat(), request.getWebsite(), request.getWorkAddress()),
@@ -709,9 +711,11 @@ public class ApiUmsMemberController extends BaseController {
             conflict.put("errorCode", NicknameSuggestionServiceImpl.ERROR_NICKNAME_TAKEN);
             return conflict;
         }
-        // 头像/案例图异步内容安全送检,违规经回调自动清除(BIZ_TYPE_MEMBER_PROFILE)
+        // 头像/作品图/联系二维码异步内容安全送检,违规经回调按字段清除(BIZ_TYPE_MEMBER_PROFILE)。
+        // 联系二维码此前不在送检组合里:能保存、能回显,违规也永远不会被清。
         String profileImgs = (StringUtils.isNotEmpty(request.getAvatar()) ? request.getAvatar() : "")
-                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "");
+                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "")
+                + ";" + (StringUtils.isNotEmpty(request.getWechat()) ? request.getWechat() : "");
         if (profileImgs.length() > 1) {
             try { wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MEMBER_PROFILE, member_id, profileImgs, openid); } catch (Exception ignore) {}
         }
@@ -720,6 +724,49 @@ public class ApiUmsMemberController extends BaseController {
         } else {
             return error("更新失败");
         }
+    }
+
+    /**
+     * 新换上的作品图/联系二维码必须是本人经受控上传链传的(OSS 对象 member-id 元数据 = 当前会员)。
+     * 只核「这次新出现」的地址:资料里原有的旧图不重核,存量数据不会因为补闸而存不了。
+     * 头像不在此列:头像可能来自微信头像地址,不是本站上传对象(见 F0435 待定项)。
+     */
+    java.util.function.BiConsumer<String, Long> profileMediaOwnerVerifier =
+            com.chengyinhub.common.utils.file.FileOssUploadUtils::verifyUploadedPhoto;
+
+    private String verifyNewProfileMediaOwnership(UmsMemberUpdateDTO request, UmsMember current, Long memberId) {
+        java.util.Set<String> existing = new java.util.HashSet<>();
+        if (current != null) {
+            existing.addAll(splitMedia(current.getCasePics()));
+            existing.addAll(splitMedia(current.getWechat()));
+        }
+        java.util.List<String> added = new java.util.ArrayList<>();
+        for (String url : splitMedia(request.getCasePics())) {
+            if (!existing.contains(url)) added.add(url);
+        }
+        for (String url : splitMedia(request.getWechat())) {
+            if (!existing.contains(url)) added.add(url);
+        }
+        for (String url : added) {
+            try {
+                profileMediaOwnerVerifier.accept(url, memberId);
+            } catch (IllegalArgumentException e) {
+                return "作品图或联系二维码需要由本人重新上传";
+            } catch (IllegalStateException e) {
+                return "图片存储暂时不可用，请稍后重试";
+            }
+        }
+        return null;
+    }
+
+    private static java.util.List<String> splitMedia(String joined) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (StringUtils.isBlank(joined)) return out;
+        for (String part : joined.split("[,;]")) {
+            String url = part.trim();
+            if (!url.isEmpty()) out.add(url);
+        }
+        return out;
     }
 
     private Long optionalMemberId() {

@@ -83,7 +83,8 @@
         </div>
       </template>
       <template slot="status" slot-scope="scope">
-        <cy-status-tag :label="statusLabel(scope.row.status)" :tone="statusTone(scope.row.status)" />
+        <cy-status-tag :label="rowStatusLabel(scope.row)" :tone="rowStatusTone(scope.row)" />
+        <small v-if="isPendingDisposal(scope.row)" class="audit-status-note">{{ statusLabel(scope.row.status) }} · 对象未更新</small>
       </template>
       <template slot="schedule" slot-scope="scope">
         <div class="table-stack">
@@ -119,7 +120,7 @@
           <cy-entity-header
             :eyebrow="`${bizTypeLabel(detailTask.bizType)} · #${detailTask.bizId}`"
             :title="`审核任务 #${detailTask.id}`"
-            :status="{ label: statusLabel(detailTask.status), tone: statusTone(detailTask.status) }"
+            :status="{ label: rowStatusLabel(detailTask, detailModeration), tone: rowStatusTone(detailTask, detailModeration) }"
             :facts="auditHeaderFacts"
           >
             <template slot="actions">
@@ -137,6 +138,7 @@
             <el-button size="mini" @click="investigateSameTarget">查看同队伍审核历史</el-button>
             <el-button size="mini" :disabled="Number(detailTask.status) !== 0" @click="openReview(detailTask, 3)" v-hasPermi="['business:audit:review']">缺证，升级审核</el-button>
           </template>
+<<<<<<< public
           <template v-if="detailTask.bizType === 'MEDIA_ASSET'">
             <el-alert title="文件在审核通过前仅作者可见。请实际检查图片、音频或模型；无法检查时请拒绝并填写原因，作者可重新提审。" type="info" :closable="false" />
             <el-image v-if="mediaType === 'IMAGE' && mediaPreviewUrl" :src="mediaPreviewUrl" fit="contain" style="max-width: 100%; max-height: 480px" :preview-src-list="[mediaPreviewUrl]" />
@@ -144,6 +146,24 @@
             <el-link v-else-if="mediaPreviewUrl" :href="mediaPreviewUrl" target="_blank" rel="noopener noreferrer">下载并检查模型文件</el-link>
             <el-button size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
           </template>
+=======
+          <el-alert
+            v-if="detailModeration && detailModeration.outcome === 'PENDING'"
+            :title="`${statusLabel(detailTask.status)}的决定已生效，但内容对象尚未按决定更新（待处置）`"
+            :description="`原因：${detailModeration.detail || '未记录'}；已重放 ${detailModeration.replayCount || 0} 次。重放成功前，前台内容可能仍是旧状态。`"
+            type="warning"
+            :closable="false"
+            show-icon
+          />
+          <el-button
+            v-if="detailModeration && detailModeration.outcome === 'PENDING'"
+            size="mini"
+            type="warning"
+            :loading="replaying"
+            @click="replayDisposal"
+            v-hasPermi="['business:audit:review']"
+          >重放处置</el-button>
+>>>>>>> private-feature/w2-r
           <cy-evidence-panel title="内容快照" :items="auditEvidenceItems" empty-text="当前任务没有附带内容快照" />
           <cy-timeline title="处置轨迹" :items="auditTimelineItems" empty-text="尚无处置记录" />
         </template>
@@ -193,7 +213,11 @@
 </template>
 
 <script>
+<<<<<<< public
 import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, reviewMediaAsset, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
+=======
+import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, submitTopicProjectReview, submitTopicSaleReview, replayAuditModeration } from '@/api/business/auditWorkbench'
+>>>>>>> private-feature/w2-r
 import CyDataTable from '@/components/CyDataTable'
 import CyEntityHeader from '@/components/CyEntityHeader'
 import CyEntityLink from '@/components/CyEntityLink'
@@ -213,8 +237,14 @@ const STATUS_TEXT = {
   [STATUS_PENDING]: '待审核',
   [STATUS_APPROVED]: '已通过',
   [STATUS_REJECTED]: '已拒绝',
-  [STATUS_ESCALATED]: '升级审核',
+  [STATUS_ESCALATED]: '已升级 · 待裁决',
   [STATUS_CANCELLED]: '已取消'
+}
+
+/** F0529:后端以 409 拒绝旧层级/旧版本的迟到提交 */
+function isStaleReviewError(error) {
+  const message = (error && error.message) || ''
+  return /已升级|已变化|刷新后/.test(message)
 }
 
 const ACTION_META = {
@@ -222,7 +252,7 @@ const ACTION_META = {
   REPORT: { label: '收到举报', tone: 'danger' },
   APPROVE: { label: '审核通过', tone: 'success' },
   REJECT: { label: '审核拒绝', tone: 'danger' },
-  ESCALATE: { label: '升级审核', tone: 'warning' },
+  ESCALATE: { label: '升级处理层级（未裁决）', tone: 'warning' },
   CANCEL: { label: '取消任务', tone: 'neutral' }
 }
 
@@ -252,6 +282,8 @@ export default {
       mediaPreviewUrl: '',
       mediaType: '',
       detailRecords: [],
+      detailModeration: null,
+      replaying: false,
       tableColumns: [
         { key: 'subject', label: '审核对象', minWidth: 210 },
         { key: 'risk', label: '风险与来源', minWidth: 180 },
@@ -369,6 +401,31 @@ export default {
     statusLabel(status) {
       return STATUS_TEXT[status] || '未知状态'
     },
+    /** F0528:决定已生效但对象投影 PENDING 时显示「待处置」,不显示成已通过/已拒绝 */
+    isPendingDisposal(row, moderation) {
+      const outcome = moderation ? moderation.outcome : (row && row.params && row.params.moderationOutcome)
+      return Boolean(row) && (row.status === STATUS_APPROVED || row.status === STATUS_REJECTED) && outcome === 'PENDING'
+    },
+    rowStatusLabel(row, moderation) {
+      return this.isPendingDisposal(row, moderation) ? '待处置' : this.statusLabel(row && row.status)
+    },
+    rowStatusTone(row, moderation) {
+      return this.isPendingDisposal(row, moderation) ? 'warning' : this.statusTone(row && row.status)
+    },
+    replayDisposal() {
+      if (this.replaying || !this.detailTask) return Promise.resolve()
+      const row = this.detailRow || this.detailTask
+      this.replaying = true
+      return replayAuditModeration(this.detailTask.id).then(response => {
+        const outcome = response && response.data && response.data.outcome
+        if (outcome === 'APPLIED') this.$modal.msgSuccess('对象已按决定更新')
+        else this.$modal.msgWarning('重放后对象仍未更新，保持待处置')
+      }).catch(() => {}).finally(() => {
+        this.replaying = false
+        this.openDetail(row)
+        this.getList()
+      })
+    },
     statusTone(status) {
       return {
         [STATUS_PENDING]: 'warning',
@@ -401,6 +458,7 @@ export default {
       this.detailTask = null
       this.mediaPreviewUrl = ''; this.mediaType = ''
       this.detailRecords = []
+      this.detailModeration = null
       this.reportCount = 0
       return getAuditTaskDetail(row.id).then(response => {
         if (requestSeq !== this.detailRequestSeq || !this.detailOpen) return
@@ -411,6 +469,7 @@ export default {
         this.mediaPreviewUrl = response.mediaPreviewUrl || ''; this.mediaType = response.mediaType || ''
         this.detailTask = response.task
         this.detailRecords = response.records
+        this.detailModeration = response.moderation || null
         this.reportCount = response.reportCount
       }).catch(() => {
         if (requestSeq === this.detailRequestSeq && this.detailOpen) this.detailError = '审核证据加载失败，请重新加载。'
@@ -480,12 +539,23 @@ export default {
       this.reviewOpen = true
     },
     submitReview() {
+<<<<<<< public
       const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
       return review(this.reviewForm).then(() => {
         this.$modal.msgSuccess('审核处理成功')
+=======
+      return reviewAuditTask(this.reviewForm).then(() => {
+        this.$modal.msgSuccess(this.reviewForm.status === STATUS_ESCALATED ? '已升级处理层级，案件仍待裁决' : '审核处理成功')
+>>>>>>> private-feature/w2-r
         this.reviewOpen = false
         this.detailOpen = false
         this.getList()
+      }).catch(error => {
+        // F0529:案件已升级/已变化时旧层级的提交被拒,关掉旧表单并读回当前层级与版本,不保留过期版本号。
+        if (!isStaleReviewError(error)) return
+        this.reviewOpen = false
+        this.getList()
+        if (this.detailOpen && this.detailRow) this.openDetail(this.detailRow)
       })
     },
     openCommercialSubmit() {
@@ -537,6 +607,7 @@ export default {
 .table-stack span, .table-stack small { display: block; }
 .table-stack small { margin-top: 4px; color: var(--cy-color-text-tertiary); }
 .danger-action { color: var(--cy-color-status-danger); }
+.audit-status-note { display: block; margin-top: 4px; color: var(--cy-color-text-tertiary); font-size: 12px; }
 .audit-detail { min-height: 260px; padding: 0 24px var(--cy-space-7); }
 .commercial-submit__hint { margin: 0 0 0 96px; color: var(--cy-color-text-secondary); font-size: 12px; line-height: 1.6; }
 @media (max-width: 900px) { .audit-overview { grid-template-columns: repeat(2, 1fr); } }

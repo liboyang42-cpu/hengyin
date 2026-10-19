@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.SmsCouponRuleVersionMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.SmsCouponRuleVersion" id="SmsCouponRuleVersionResult">
+        <id property="id" column="id" />
+        <result property="couponId" column="coupon_id" />
+        <result property="ruleVersion" column="rule_version" />
+        <result property="changeType" column="change_type" />
+        <result property="changedFields" column="changed_fields" />
+        <result property="name" column="name" />
+        <result property="amount" column="amount" />
+        <result property="minPoint" column="min_point" />
+        <result property="startTime" column="start_time" />
+        <result property="endTime" column="end_time" />
+        <result property="enableTime" column="enable_time" />
+        <result property="publishCount" column="publish_count" />
+        <result property="status" column="status" />
+        <result property="reason" column="reason" />
+        <result property="affectedHolderCount" column="affected_holder_count" />
+        <result property="operatorId" column="operator_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectRuleVersionVo">
+        select id, coupon_id, rule_version, change_type, changed_fields, name, amount, min_point, start_time, end_time,
+               enable_time, publish_count, status, reason, affected_holder_count, operator_id, create_time
+        from sms_coupon_rule_version
+    </sql>
+
+    <insert id="insertRuleVersion" parameterType="com.chengyinhub.business.domain.SmsCouponRuleVersion"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into sms_coupon_rule_version (coupon_id, rule_version, change_type, changed_fields, name, amount, min_point,
+            start_time, end_time, enable_time, publish_count, status, reason, affected_holder_count, operator_id, create_time)
+        values (#{couponId}, #{ruleVersion}, #{changeType}, #{changedFields}, #{name}, #{amount}, #{minPoint},
+            #{startTime}, #{endTime}, #{enableTime}, #{publishCount}, #{status}, #{reason}, #{affectedHolderCount},
+            #{operatorId}, #{createTime})
+    </insert>
+
+    <select id="countByCouponAndVersion" resultType="int">
+        select count(1) from sms_coupon_rule_version where coupon_id = #{couponId} and rule_version = #{ruleVersion}
+    </select>
+
+    <select id="selectByCouponId" resultMap="SmsCouponRuleVersionResult">
+        <include refid="selectRuleVersionVo"/>
+        where coupon_id = #{couponId}
+        order by rule_version desc
+    </select>
+
+    <select id="selectLatestInvalidation" resultMap="SmsCouponRuleVersionResult">
+        <include refid="selectRuleVersionVo"/>
+        where coupon_id = #{couponId} and change_type = 'PLATFORM_INVALIDATE'
+        order by rule_version desc
+        limit 1
+    </select>
+</mapper>

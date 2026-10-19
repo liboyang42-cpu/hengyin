@@ -380,6 +380,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
 
+    <!-- F0122 领队改运营详情：已售判据(payment_status 0/1/2，同 countOpenSaleRegistrations)与写入同一语句，
+         首单与改时间并发时不存在「先查未售、后写入」的窗口。只 SET 运营白名单字段。 -->
+    <update id="updateActivityOpsIfUnsold" parameterType="CmsActivity">
+        update cms_activity
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="dayNote != null">day_note = #{dayNote},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+          and not exists (select 1 from cms_registration r
+                           where r.owner_type = 2 and r.owner_id = #{id} and r.payment_status in (0, 1, 2))
+    </update>
+
     <!-- 小程序内容更新：可编辑字段对齐 CmsActivityController.toEditableActivity。
          WHERE 必须同时钉 id 与 member_id；member_id 不进 SET，防止把归属改到调用者。 -->
     <update id="updateCmsActivityByOwner" parameterType="CmsActivity">

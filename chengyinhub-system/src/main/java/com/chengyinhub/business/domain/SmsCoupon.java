@@ -99,6 +99,12 @@ public class SmsCoupon extends BaseEntity
     @Excel(name = "说明")
     private String description;
 
+    /** F0572 规则版本:只由专用读取(selectCouponRuleState*)回填,通用列表/详情查询不带该列 */
+    private Integer ruleVersion;
+
+    public Integer getRuleVersion() { return ruleVersion; }
+    public void setRuleVersion(Integer ruleVersion) { this.ruleVersion = ruleVersion; }
+
     public void setId(Long id) 
     {
         this.id = id;

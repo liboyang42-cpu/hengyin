@@ -596,6 +596,13 @@ public class ClubEditionCompensationServiceImpl implements IClubEditionCompensat
 
     @Override
     @Transactional(readOnly = true)
+    public int undertakenEditionsAwaitingSale(Long clubId) {
+        if (clubId == null) throw new IllegalArgumentException("EDITION_HOURS_ARGUMENT_REQUIRED");
+        return Math.max(0, mapper.countUndertakenEditionsWithoutTerms(clubId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> editionsForExecutingClub(Long clubId) {
         if (clubId == null) throw new IllegalArgumentException("EDITION_HOURS_ARGUMENT_REQUIRED");
         List<Map<String, Object>> editions = mapper.selectEditionsForExecutingClub(clubId);

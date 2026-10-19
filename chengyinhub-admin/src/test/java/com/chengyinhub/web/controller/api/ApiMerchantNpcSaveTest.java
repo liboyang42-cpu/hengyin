@@ -262,8 +262,40 @@ class ApiMerchantNpcSaveTest {
         // 预设是内置资源,送检没有意义,而且会白白消耗微信的调用额度
         verify(security, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
 
-        controller.npcSave(body("小店长", "/profile/2026/a.png", null));
-        verify(security).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
+        when(npcProfileMapper.insertMerchantNpc(any())).thenAnswer(invocation -> {
+            invocation.getArgument(0, NpcProfile.class).setId(55L);
+            return 1;
+        });
+        when(security.submitMediaCheckOne(anyInt(), anyLong(), anyString(), any())).thenReturn("trace-55");
+        AjaxResult saved = controller.npcSave(body("小店长", "/profile/2026/a.png", null));
+        // F0225:送检对象是这一行 NPC(bizId=npc_profile.id),不是借商家资料(bizId=merchantId)
+        verify(security).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 55L,
+                "/profile/2026/a.png", "o_test_openid");
+        verify(security, never()).submitMediaCheckOne(
+                org.mockito.ArgumentMatchers.eq(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE),
+                anyLong(), anyString(), any());
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) saved.get(AjaxResult.DATA_TAG);
+        assertEquals(0, data.get("auditStatus"), "保存成功不等于已审核可见");
+        assertEquals("SUBMITTED", data.get("mediaCheck"));
+    }
+
+    @Test
+    void updatedPhotoIsCheckedAgainstOwnNpcRowAndFailedSubmitIsReportedAsManualReview() {
+        NpcProfile mine = new NpcProfile();
+        mine.setId(42L);
+        mine.setScopeId(MERCHANT_ID);
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
+                .thenReturn(new ArrayList<>(Arrays.asList(mine)));
+        when(security.submitMediaCheckOne(anyInt(), anyLong(), anyString(), any())).thenReturn(null);
+
+        AjaxResult saved = controller.npcSave(body("小店长", "/profile/2026/b.png", null));
+
+        verify(security).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 42L,
+                "/profile/2026/b.png", "o_test_openid");
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) saved.get(AjaxResult.DATA_TAG);
+        assertEquals("MANUAL_REVIEW", data.get("mediaCheck"), "机审没送出去要如实说,不能装作已送检");
     }
 
     // ===== 读 =====

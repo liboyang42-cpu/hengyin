@@ -337,6 +337,43 @@ class ApiPlayProgressIdempotencyTest {
         verify(growthService).addExp(eq(MEMBER), anyInt(), eq("节点探索"));
     }
 
+    /**
+     * C1:节点玩法只由设备自报成绩(反应毫秒/heldMs/方位…)撑着时,完成照常但只发探索值与徽章 ——
+     * 篡改成绩不能换到积分、券或掉落。回包带 rewardCeiling,界面据此说明而不是自行补发。
+     */
+    @Test
+    void selfReportedSensorCompletionCannotUnlockPointsCouponsOrDrops() {
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
+
+        assertEquals(true, result.get("firstTime"));
+        assertEquals("XP_BADGE_ONLY", result.get("rewardCeiling"));
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+        verify(smsCouponHistoryService, never()).grantCouponById(anyLong(), anyLong());
+        verify(rewardDropService, never()).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
+        verify(growthService).addExp(eq(MEMBER), anyInt(), eq("节点探索"));
+    }
+
+    @Test
+    void trustedAdvancedCompletionKeepsTheFullNodeRewardSet() {
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(false);
+        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
+
+        assertFalse(result.containsKey("rewardCeiling"));
+        verify(pointsAwardService).award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"));
+        verify(smsCouponHistoryService).grantCouponById(MEMBER, 909L);
+    }
+
     @Test
     void classicPuzzleCompletionPersistsScoreWithoutChangingTheExistingXpReward()
     {

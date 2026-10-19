@@ -62,6 +62,9 @@ public interface ICmsActivityService
      */
     int countOpenSaleRegistrations(Long activityId);
 
+    /** 未开卖条件更新运营字段；返回影响行数，0 表示已售或场次不存在（调用方须重读，不得报成功）。 */
+    int updateActivityOpsIfUnsold(CmsActivity activity);
+
     /**
      * 已报名人数：cms_registration.owner_type=2 且 registration_status=2。
      *

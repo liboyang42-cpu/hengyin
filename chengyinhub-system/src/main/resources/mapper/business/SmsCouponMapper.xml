@@ -253,4 +253,51 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update sms_coupon set status = 4, update_time = now()
         where id = #{id} and member_id = #{ownerMemberId} and del_flag = 0 and status in (0, 1)
     </update>
+
+    <!-- F0572 规则版本:专用读取带 rule_version;通用 selectSmsCouponVo 不变 -->
+    <resultMap type="SmsCoupon" id="SmsCouponRuleStateResult" extends="SmsCouponResult">
+        <result property="ruleVersion" column="rule_version" />
+    </resultMap>
+
+    <sql id="selectSmsCouponRuleStateVo">
+        select id, name, coupon_type, platform, amount, min_point, start_time, end_time, use_type, publish_count, use_count, receive_count, enable_time, code, scope_type, member_id, merchant_id, status, del_flag, description, create_by, create_time, update_by, update_time, rule_version from sms_coupon
+    </sql>
+
+    <select id="selectCouponRuleState" resultMap="SmsCouponRuleStateResult">
+        <include refid="selectSmsCouponRuleStateVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectCouponRuleStateForUpdate" resultMap="SmsCouponRuleStateResult">
+        <include refid="selectSmsCouponRuleStateVo"/>
+        where id = #{id} for update
+    </select>
+
+    <!-- 只认白名单列;publish_count 遵循「总量不低于已领取」(0=不限量) -->
+    <update id="updateCouponRuleCas">
+        update sms_coupon
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="c.name != null">name = #{c.name},</if>
+            <if test="c.description != null">description = #{c.description},</if>
+            <if test="c.amount != null">amount = #{c.amount},</if>
+            <if test="c.minPoint != null">min_point = #{c.minPoint},</if>
+            <if test="c.startTime != null">start_time = #{c.startTime},</if>
+            <if test="c.endTime != null">end_time = #{c.endTime},</if>
+            <if test="c.enableTime != null">enable_time = #{c.enableTime},</if>
+            <if test="c.publishCount != null">publish_count = #{c.publishCount},</if>
+            rule_version = rule_version + 1,
+            update_time = now(),
+        </trim>
+        where id = #{c.id} and rule_version = #{expectedVersion} and ifnull(del_flag, 0) = 0
+        <if test="c.publishCount != null">
+          and (#{c.publishCount} = 0 or ifnull(receive_count, 0) &lt;= #{c.publishCount})
+        </if>
+    </update>
+
+    <update id="updateCouponStatusCas">
+        update sms_coupon set status = #{toStatus}, rule_version = rule_version + 1, update_time = now()
+        where id = #{id} and rule_version = #{expectedVersion} and ifnull(del_flag, 0) = 0
+          and status in
+          <foreach item="s" collection="fromStatuses" open="(" separator="," close=")">#{s}</foreach>
+    </update>
 </mapper>

@@ -81,3 +81,8 @@ export function pauseOfficialEventV2(id, form) {
 export function resumeOfficialEventV2(id, reason) {
   return request({ url: '/business/officialevent/v2/' + id + '/resume', method: 'post', params: { reason: reason } })
 }
+
+// 读取原通知批次统计；此操作不会重发通知。
+export function getBroadcastStats(id) {
+  return request({ url: '/business/officialevent/broadcast/' + id + '/stats', method: 'get' })
+}

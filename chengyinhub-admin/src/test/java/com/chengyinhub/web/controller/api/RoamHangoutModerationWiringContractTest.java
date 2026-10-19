@@ -24,7 +24,8 @@ class RoamHangoutModerationWiringContractTest {
     @Test
     void 审核台处置有HANGOUT分支() throws Exception {
         String s = src("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java");
-        int at = s.indexOf("private void applyModeration(");
+        // F0528:applyModeration 返回对象投影实际结果(ModerationOutcome),不再是 void
+        int at = s.indexOf("private ModerationOutcome applyModeration(");
         assertTrue(at > 0);
         String body = s.substring(at, s.indexOf("\n    private ", at + 1));
         assertTrue(body.contains("AuditTask.BIZ_HANGOUT.equals(bizType)"), "applyModeration 缺 BIZ_HANGOUT 分支");

@@ -28,6 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="receivedAmount"    column="received_amount"    />
         <result property="status"    column="status"    />
         <result property="payoutReference" column="payout_reference" />
+        <result property="consentVersion" column="consent_version" />
         <result property="delFlag"    column="del_flag"    />
         <result property="remark"    column="remark"    />
         <result property="createBy"    column="create_by"    />
@@ -45,7 +46,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                realname_enc, bank_name_enc, bank_account_enc, mobilephone_enc,
                realname_mask, bank_name_mask, bank_account_mask, mobilephone_mask,
                pii_cipher_version, pii_migrated_at,
-               withdrawal_amount, service_fee, received_amount, status, payout_reference, del_flag, remark,
+               withdrawal_amount, service_fee, received_amount, status, payout_reference, consent_version, del_flag, remark,
                create_by, create_time, update_by, update_time, audit_time, audit_by, handle_by, handle_time
         from ums_member_withdrawal
     </sql>
@@ -100,6 +101,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
+    <!-- 本人最近一笔未删除提现申请：只给提现页回读原申请状态，调用方必须传当前登录会员 -->
+    <select id="selectLatestByMember" parameterType="Long" resultMap="UmsMemberWithdrawalResult">
+        <include refid="selectUmsMemberWithdrawalVo"/>
+        where member_id = #{memberId} and del_flag = 0
+        order by id desc
+        limit 1
+    </select>
+
     <insert id="insertUmsMemberWithdrawal" parameterType="UmsMemberWithdrawal" useGeneratedKeys="true" keyProperty="id">
         insert into ums_member_withdrawal
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -121,6 +130,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="receivedAmount != null">received_amount,</if>
             <if test="status != null">status,</if>
             <if test="payoutReference != null">payout_reference,</if>
+            <if test="consentVersion != null">consent_version,</if>
             <if test="delFlag != null">del_flag,</if>
             <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
@@ -151,6 +161,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="receivedAmount != null">#{receivedAmount},</if>
             <if test="status != null">#{status},</if>
             <if test="payoutReference != null">#{payoutReference},</if>
+            <if test="consentVersion != null">#{consentVersion},</if>
             <if test="delFlag != null">#{delFlag},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>

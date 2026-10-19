@@ -260,11 +260,30 @@ public class ApiClubLeadController extends BaseController {
         if (touchesTimeOrPlace && cmsActivityService.countOpenSaleRegistrations(actId) > 0) {
             return error("该场次已售出，集合时间与地点不能修改；当日备注仍可改");
         }
-        cmsActivityService.updateCmsActivity(upd);
-        // 报备留痕(入日志)+ 记发起人;实时推送为 best-effort 后续。
+        // F0122:改时间/地点时，已售判据与写入放进同一条条件更新(先查只是快速失败);
+        // 0 行不报成功:重读区分「刚被售出」与「场次已不存在/未写入」。
+        int rows = touchesTimeOrPlace ? cmsActivityService.updateActivityOpsIfUnsold(upd) : cmsActivityService.updateCmsActivity(upd);
+        if (rows != 1) {
+            if (touchesTimeOrPlace && cmsActivityService.countOpenSaleRegistrations(actId) > 0) {
+                return error("该场次刚刚售出，集合时间与地点未修改；当日备注仍可改");
+            }
+            return error("运营详情未更新，请刷新后重试");
+        }
+        CmsActivity saved = cmsActivityService.selectCmsActivityById(actId);
+        // 报备留痕(入日志)+ 记发起人;尚无可靠推送通道，回执如实标「未推送」，不把留痕称为送达。
         logger.info("运营权委托·承接方改运营详情 actId={} 领队(承接主理人)={} 发起人={} 改动=[{}]",
                 actId, memberId, act.getMemberId(), chg.toString());
-        return AjaxResult.success("已更新并报备发起人");
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("activityId", actId);
+        if (saved != null) {
+            data.put("startDate", saved.getStartDate());
+            data.put("endDate", saved.getEndDate());
+            data.put("address", saved.getAddress());
+            data.put("addressName", saved.getAddressName());
+            data.put("dayNote", saved.getDayNote());
+        }
+        data.put("notification", "NOT_SENT");
+        return AjaxResult.success("已更新并留痕；尚未推送通知参与者", data);
     }
 
     private java.util.Date parseOpsDate(Object o) {

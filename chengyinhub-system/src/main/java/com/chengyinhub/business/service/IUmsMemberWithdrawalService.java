@@ -82,7 +82,15 @@ public interface IUmsMemberWithdrawalService
      * @param username 用户昵称
      * @return
      */
-    public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username);
+    public default Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username) {
+        return withdrawalRequest(request, memberId, username, null);
+    }
+
+    /**
+     * 用户提现申请，并把建单时已校验的单独同意文本版本固定到申请上。
+     * 幂等重放返回原申请，不改写原申请绑定的同意版本与收款资料。
+     */
+    public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username, String consentVersion);
 
     /**
      * 审核提现申请。仅允许待审核状态进入通过或驳回，驳回时退款一次。

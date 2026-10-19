@@ -12,6 +12,7 @@
         icon="el-icon-plus"
         @click="handleAdd"
       >新建优惠券</el-button>
+      <el-button icon="el-icon-tickets" @click="$router.push({ name: 'platformRedemptionRecords' })">平台兑换记录</el-button>
     </cy-page-header>
 
     <section class="cy-panel coupon-directory__filters">
@@ -127,13 +128,20 @@
           @click="openLedger(scope.row)"
         >查看流水</el-button>
         <el-button
+          v-if="canStopIssue(scope.row)"
+          v-hasPermi="['business:coupon:edit']"
+          size="mini"
+          type="text"
+          @click="stopIssue(scope.row)"
+        >停发</el-button>
+        <el-button
           v-if="Number(scope.row.status) !== 3"
           v-hasPermi="['business:coupon:edit']"
           size="mini"
           type="text"
           class="coupon-directory__invalidate"
           @click="deactivateCoupon(scope.row)"
-        >手动失效</el-button>
+        >平台失效</el-button>
       </template>
     </cy-data-table>
 
@@ -147,6 +155,30 @@
         />
         <cy-detail-grid title="配置与统计事实" :items="detailItems" class="coupon-directory__detail-grid" />
         <p class="coupon-directory__drawer-note">领取与核销由业务流水原子维护；查看明细可进入该券的流水子页。</p>
+        <section class="coupon-directory__versions">
+          <h3>规则版本</h3>
+          <p>改规则、停发、平台失效都会追加一个版本；已领取的券按领取时的版本使用，不随之后的修改变化。</p>
+          <el-alert v-if="versionsError" title="规则版本暂时无法读取" type="error" :closable="false" show-icon />
+          <p v-else-if="!versionsLoading && !ruleVersions.length" class="coupon-directory__drawer-note">尚未通过规则治理修改过，当前规则即初始规则。</p>
+          <el-timeline v-else v-loading="versionsLoading">
+            <el-timeline-item
+              v-for="version in ruleVersions"
+              :key="version.id"
+              :timestamp="formatDate(version.createTime)"
+              :type="versionTone(version.changeType)"
+            >
+              <strong>v{{ version.ruleVersion }} · {{ changeTypeLabel(version.changeType) }}</strong>
+              <div class="coupon-directory__version-meta">
+                面额 {{ version.amount === null || version.amount === undefined ? '未配置' : version.amount }}
+                · 有效期 {{ formatDate(version.startTime) }} 至 {{ formatDate(version.endTime) }}
+                · 总量 {{ publishLimitLabel(version) }}
+              </div>
+              <div v-if="version.changedFields && version.changeType === 'RULE_UPDATE'" class="coupon-directory__version-meta">变更字段：{{ fieldLabels(version.changedFields) }}</div>
+              <div v-if="version.reason" class="coupon-directory__version-meta">原因：{{ version.reason }}</div>
+              <div v-if="version.changeType === 'PLATFORM_INVALIDATE'" class="coupon-directory__version-meta">受影响未使用持券：{{ version.affectedHolderCount || 0 }} 张</div>
+            </el-timeline-item>
+          </el-timeline>
+        </section>
         <el-button
           v-hasPermi="['business:couponhistory:list']"
           plain
@@ -166,7 +198,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="券类型" prop="couponType">
-              <el-select v-model="form.couponType" placeholder="请选择券类型" class="coupon-directory__full-width">
+              <el-select v-model="form.couponType" :disabled="Boolean(form.id)" placeholder="请选择券类型" class="coupon-directory__full-width">
                 <el-option label="礼品券" :value="0" />
                 <el-option label="9 折券" :value="1" />
                 <el-option label="8 折券" :value="2" />
@@ -190,7 +222,7 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="使用平台" prop="platform">
-              <el-select v-model="form.platform" class="coupon-directory__full-width">
+              <el-select v-model="form.platform" :disabled="Boolean(form.id)" class="coupon-directory__full-width">
                 <el-option label="全部平台" :value="0" />
                 <el-option label="移动端" :value="1" />
                 <el-option label="PC 端" :value="2" />
@@ -198,12 +230,10 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="!form.id" label="发放上限" prop="publishCount">
+            <el-form-item label="发放上限" prop="publishCount">
               <el-input-number v-model="form.publishCount" :min="0" :precision="0" controls-position="right" class="coupon-directory__full-width" />
-              <span class="coupon-directory__field-hint">0 表示不限量</span>
-            </el-form-item>
-            <el-form-item v-else label="发放统计">
-              <span>已领取 {{ selectedCount(form.receiveCount) }} · 已核销 {{ selectedCount(form.useCount) }}</span>
+              <span v-if="!form.id" class="coupon-directory__field-hint">0 表示不限量</span>
+              <span v-else class="coupon-directory__field-hint">0 表示不限量；不能低于已领取 {{ selectedCount(form.receiveCount) }} 张（已核销 {{ selectedCount(form.useCount) }}）</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -223,16 +253,21 @@
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="24">
+          <el-col :span="12">
             <el-form-item label="金额 / 折扣" prop="amount">
               <el-input-number v-model="form.amount" :min="0" :precision="2" :controls="false" class="coupon-directory__full-width" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="使用门槛" prop="minPoint">
+              <el-input-number v-model="form.minPoint" :min="0" :precision="2" :controls="false" class="coupon-directory__full-width" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="使用类型" prop="useType">
-              <el-select v-model="form.useType" class="coupon-directory__full-width">
+              <el-select v-model="form.useType" :disabled="Boolean(form.id)" class="coupon-directory__full-width">
                 <el-option label="全场通用" :value="0" />
                 <el-option label="指定分类" :value="1" />
                 <el-option label="指定商品" :value="2" />
@@ -246,14 +281,17 @@
           </el-col>
         </el-row>
         <el-form-item label="优惠码" prop="code">
-          <el-input v-model="form.code" placeholder="可选；留空由发放记录生成券码" />
+          <el-input v-model="form.code" :disabled="Boolean(form.id)" placeholder="可选；留空由发放记录生成券码" />
         </el-form-item>
         <el-form-item label="说明" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="4" maxlength="500" show-word-limit placeholder="说明适用场景、权益或使用限制" />
         </el-form-item>
+        <el-form-item v-if="form.id" label="变更原因" prop="changeReason">
+          <el-input v-model="form.changeReason" maxlength="255" placeholder="可选；写入规则版本，便于追溯" />
+        </el-form-item>
         <el-alert
           v-if="form.id"
-          title="发行上限、领取数、核销数、适用范围和当前状态由既有业务事实维护，编辑配置不会提交或改变它们。"
+          :title="`当前规则版本 v${form.ruleVersion || '未知'}。只可修改名称、说明、面额、门槛、有效期、可领取日期和发放上限；保存前会先预览对新领取和已领取券的影响。券类型、范围、状态与领取/核销计数不会经此改变。`"
           type="info"
           :closable="false"
           show-icon
@@ -261,14 +299,71 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button :disabled="saving" @click="formOpen = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm">保存配置</el-button>
+        <el-button type="primary" :loading="saving" @click="submitForm">{{ form.id ? '预览影响并保存' : '保存配置' }}</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="规则变更影响预览" :visible.sync="impactOpen" width="720px" append-to-body :close-on-click-modal="false">
+      <div v-loading="impactLoading" class="coupon-directory__impact">
+        <el-alert v-if="impactError" title="影响预览暂时无法读取，未提交任何修改。" type="error" :closable="false" show-icon />
+        <template v-if="impact">
+          <el-alert
+            v-if="impact.versionConflict"
+            :title="`版本冲突：表单基于 v${impact.expectedVersion || '未知'}，当前已是 v${impact.currentVersion}。请重新读取最新规则后再改。`"
+            type="error"
+            :closable="false"
+            show-icon
+          />
+          <el-alert v-if="impact.validationError" :title="impact.validationError" type="error" :closable="false" show-icon />
+          <ul class="coupon-directory__change-list">
+            <li v-if="!(impact.changes || []).length" class="coupon-directory__drawer-note">没有检测到规则变化</li>
+            <li v-for="change in impact.changes || []" :key="change.field">
+              <strong>{{ change.label }}</strong>
+              <span>{{ displayValue(change.before) }} → {{ displayValue(change.after) }}</span>
+            </li>
+          </ul>
+          <div class="coupon-directory__impact-grid">
+            <section>
+              <h4>新领取</h4>
+              <p>{{ newClaimsText(impact.newClaims) }}</p>
+            </section>
+            <section>
+              <h4>已领取</h4>
+              <p>{{ claimedText(impact.claimed) }}</p>
+            </section>
+          </div>
+        </template>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="impactOpen = false">返回修改</el-button>
+        <el-button v-if="impact && impact.versionConflict" @click="reloadLatestRule">重新读取最新规则</el-button>
+        <el-button type="primary" :loading="saving" :disabled="!canConfirmRuleChange" @click="confirmRuleChange">确认保存</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="平台失效影响的持券人" :visible.sync="holdersOpen" width="640px" append-to-body>
+      <template v-if="invalidationResult">
+        <p class="coupon-directory__drawer-note">
+          失效原因：{{ invalidationResult.version && invalidationResult.version.reason }}。
+          共 {{ invalidationResult.affectedHolderCount || 0 }} 张未使用券受影响{{ invalidationResult.holdersTruncated ? '（下表只列出前 500 张）' : '' }}；已核销的券保持原事实。
+        </p>
+        <ul class="coupon-directory__change-list">
+          <li v-if="!(invalidationResult.holders || []).length" class="coupon-directory__drawer-note">没有未使用的持券人</li>
+          <li v-for="holder in invalidationResult.holders || []" :key="holder.historyId">
+            <strong>领取记录 #{{ holder.historyId }} · 用户 #{{ holder.memberId }}</strong>
+            <span>券码 {{ holder.couponCode || '未记录' }} · 领取于 {{ formatDate(holder.getTime) }}</span>
+          </li>
+        </ul>
+      </template>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="holdersOpen = false">知道了</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { listCoupon, getCoupon, addCoupon, updateCoupon } from '@/api/business/coupon'
+import { listCoupon, getCoupon, addCoupon, updateCoupon, previewCouponRule, stopIssueCoupon, invalidateCoupon, listCouponRuleVersions, getCouponAffectedHolders } from '@/api/business/coupon'
 import { checkPermi } from '@/utils/permission'
 import CyDataTable from '@/components/CyDataTable'
 import CyDetailGrid from '@/components/CyDetailGrid'
@@ -297,6 +392,7 @@ const createCouponForm = () => ({
   couponType: null,
   platform: 0,
   amount: null,
+  minPoint: null,
   startTime: null,
   endTime: null,
   useType: 0,
@@ -306,8 +402,22 @@ const createCouponForm = () => ({
   scopeType: 0,
   merchantId: null,
   status: 1,
-  description: ''
+  description: '',
+  ruleVersion: null,
+  changeReason: ''
 })
+
+const FIELD_LABELS = {
+  name: '名称',
+  description: '说明',
+  amount: '面额',
+  minPoint: '门槛',
+  startTime: '开始时间',
+  endTime: '结束时间',
+  enableTime: '可领取日期',
+  publishCount: '发放上限',
+  status: '状态'
+}
 
 function optionalEnum(value, allowed) {
   const number = Number(value)
@@ -347,6 +457,18 @@ export default {
       formOpen: false,
       saving: false,
       form: createCouponForm(),
+      ruleVersions: [],
+      versionsLoading: false,
+      versionsError: false,
+      versionsRequestId: 0,
+      impactOpen: false,
+      impactLoading: false,
+      impactError: false,
+      impact: null,
+      impactPayload: null,
+      impactRequestId: 0,
+      holdersOpen: false,
+      invalidationResult: null,
       rules: {
         name: [{ required: true, message: '请填写优惠券名称', trigger: 'blur' }],
         couponType: [{ required: true, message: '请选择券类型', trigger: 'change' }],
@@ -372,6 +494,10 @@ export default {
     },
     canEditCoupon() {
       return checkPermi(['business:coupon:edit'])
+    },
+    canConfirmRuleChange() {
+      return Boolean(this.impact && !this.impactLoading && !this.impact.versionConflict && !this.impact.validationError &&
+        Array.isArray(this.impact.changes) && this.impact.changes.length)
     },
     activeFilters() {
       return [
@@ -552,6 +678,46 @@ export default {
     openDetail(row) {
       this.selectedCoupon = row || null
       this.detailOpen = Boolean(row)
+      if (row && row.id) this.loadRuleVersions(row.id)
+    },
+    loadRuleVersions(couponId) {
+      const requestId = ++this.versionsRequestId
+      this.versionsLoading = true
+      this.versionsError = false
+      this.ruleVersions = []
+      return listCouponRuleVersions(couponId).then(response => {
+        if (requestId !== this.versionsRequestId) return
+        this.ruleVersions = response.data || []
+      }).catch(() => {
+        if (requestId === this.versionsRequestId) this.versionsError = true
+      }).finally(() => {
+        if (requestId === this.versionsRequestId) this.versionsLoading = false
+      })
+    },
+    changeTypeLabel(type) {
+      return ({ BASELINE: '原规则', RULE_UPDATE: '修改规则', STOP_ISSUE: '停发', PLATFORM_INVALIDATE: '平台失效' })[type] || '规则记录'
+    },
+    versionTone(type) {
+      return ({ RULE_UPDATE: 'primary', STOP_ISSUE: 'warning', PLATFORM_INVALIDATE: 'danger' })[type] || 'info'
+    },
+    fieldLabels(fields) {
+      return String(fields || '').split(',').filter(Boolean).map(field => FIELD_LABELS[field] || field).join('、')
+    },
+    displayValue(value) {
+      if (value === null || value === undefined || value === '') return '未设置'
+      return String(value).replace('T', ' ').slice(0, 19)
+    },
+    newClaimsText(newClaims) {
+      if (!newClaims) return '—'
+      const lead = newClaims.issuable ? '保存后的新领取按' : '当前不可领取（已停发/失效/结束）；若恢复发放则按'
+      const remaining = newClaims.remaining === null || newClaims.remaining === undefined ? '不限量' : `剩余 ${newClaims.remaining} 张`
+      return `${lead}新规则 v${newClaims.ruleVersion} 使用；${remaining}。`
+    },
+    claimedText(claimed) {
+      if (!claimed) return '—'
+      const legacy = Number(claimed.legacyWithoutSnapshot) > 0
+        ? `其中 ${claimed.legacyWithoutSnapshot} 张领取于规则冻结上线前，按首个记录的规则版本使用。` : ''
+      return `已领取 ${claimed.total} 张（未使用 ${claimed.unused} · 已核销 ${claimed.used} · 已过期 ${claimed.expired}），保持领取时的面额、门槛与有效期，不随本次修改变化。${legacy}`
     },
     openLedger(row) {
       if (!row || !row.id) return
@@ -580,11 +746,28 @@ export default {
       })
     },
     payloadForForm() {
-      const payload = {
+      if (this.form.id) {
+        // F0572 编辑只提交白名单规则字段 + 读取时的规则版本；其余字段服务端整单拒绝
+        return {
+          id: this.form.id,
+          expectedVersion: this.form.ruleVersion,
+          name: this.form.name,
+          description: this.form.description,
+          amount: this.form.amount,
+          minPoint: this.form.minPoint,
+          startTime: this.form.startTime,
+          endTime: this.form.endTime,
+          enableTime: this.form.enableTime,
+          publishCount: this.form.publishCount,
+          reason: this.form.changeReason ? this.form.changeReason : null
+        }
+      }
+      return {
         name: this.form.name,
         couponType: this.form.couponType,
         platform: this.form.platform,
         amount: this.form.amount,
+        minPoint: this.form.minPoint,
         startTime: this.form.startTime,
         endTime: this.form.endTime,
         useType: this.form.useType,
@@ -592,25 +775,23 @@ export default {
         code: this.form.code,
         scopeType: this.form.scopeType,
         merchantId: Number(this.form.scopeType) === 1 ? this.form.merchantId : null,
-        description: this.form.description
+        description: this.form.description,
+        publishCount: this.form.publishCount,
+        status: 1,
+        delFlag: 0
       }
-      if (this.form.id) {
-        payload.id = this.form.id
-      } else {
-        payload.publishCount = this.form.publishCount
-        payload.status = 1
-        payload.delFlag = 0
-      }
-      return payload
     },
     submitForm() {
       this.$refs.couponForm.validate(valid => {
         if (!valid || this.saving) return
         const payload = this.payloadForForm()
+        if (payload.id) {
+          this.openImpactPreview(payload)
+          return
+        }
         this.saving = true
-        const request = payload.id ? updateCoupon(payload) : addCoupon(payload)
-        request.then(() => {
-          this.$modal.msgSuccess(payload.id ? '优惠券配置已更新' : '优惠券已创建')
+        addCoupon(payload).then(() => {
+          this.$modal.msgSuccess('优惠券已创建')
           this.formOpen = false
           this.getList()
         }).catch(() => {}).finally(() => {
@@ -618,14 +799,88 @@ export default {
         })
       })
     },
+    openImpactPreview(payload) {
+      const requestId = ++this.impactRequestId
+      this.impactPayload = payload
+      this.impact = null
+      this.impactError = false
+      this.impactLoading = true
+      this.impactOpen = true
+      return previewCouponRule(payload).then(response => {
+        if (requestId !== this.impactRequestId) return
+        this.impact = response.data || null
+        if (!this.impact) this.impactError = true
+      }).catch(() => {
+        if (requestId === this.impactRequestId) this.impactError = true
+      }).finally(() => {
+        if (requestId === this.impactRequestId) this.impactLoading = false
+      })
+    },
+    confirmRuleChange() {
+      if (!this.canConfirmRuleChange || this.saving) return Promise.resolve()
+      const payload = this.impactPayload
+      this.saving = true
+      return updateCoupon(payload).then(() => {
+        this.$modal.msgSuccess('规则已保存，新领取按新版本使用；已领取的券保持原规则')
+        this.impactOpen = false
+        this.formOpen = false
+        return this.getList()
+      }).catch(() => {
+        // 失败（多半是并发改动）后重读预览，把冲突摆出来，不让人盲目重试
+        return this.openImpactPreview(payload)
+      }).finally(() => {
+        this.saving = false
+      })
+    },
+    reloadLatestRule() {
+      const id = this.impactPayload && this.impactPayload.id
+      this.impactOpen = false
+      if (id) return this.handleEdit({ id })
+      return Promise.resolve()
+    },
+    canStopIssue(row) {
+      return Boolean(row) && [0, 1].indexOf(Number(row.status)) !== -1
+    },
+    stopIssue(row) {
+      if (!row || !row.id) return Promise.resolve()
+      let current = null
+      return getCoupon(row.id).then(response => {
+        current = response.data || {}
+        return this.$prompt('停发只拦截新的领取，已领取的券照常可用、可核销。可填写停发原因（选填）。', `停发“${row.name || `优惠券 #${row.id}`}”`, {
+          confirmButtonText: '确认停发',
+          cancelButtonText: '取消',
+          inputPlaceholder: '如：活动名额已满'
+        })
+      }).then(({ value }) => stopIssueCoupon(row.id, {
+        expectedVersion: current.ruleVersion,
+        reason: value && value.trim() ? value.trim() : null
+      })).then(() => {
+        this.$modal.msgSuccess('已停发：新领取已拦截，已领取的券不受影响')
+        return this.getList()
+      }).catch(() => {})
+    },
     deactivateCoupon(row) {
       if (!row || !row.id) return Promise.resolve()
-      return this.$modal.confirm(`确认将“${row.name || `优惠券 #${row.id}`}”设为手动失效？已有领取和核销流水会保留。`)
-        .then(() => updateCoupon({ id: row.id, status: 3 }))
-        .then(() => {
-          this.$modal.msgSuccess('优惠券已设为手动失效')
-          return this.getList()
-        }).catch(() => {})
+      let current = null
+      return Promise.all([getCoupon(row.id), getCouponAffectedHolders(row.id)]).then(([couponResponse, holdersResponse]) => {
+        current = couponResponse.data || {}
+        const affected = (holdersResponse.data && holdersResponse.data.affectedHolderCount) || 0
+        return this.$prompt(`平台失效后，${affected} 张未使用的已领取券将无法核销（已核销事实保留）。请填写独立的失效原因，会写入规则版本并可追溯。`, `平台失效“${row.name || `优惠券 #${row.id}`}”`, {
+          confirmButtonText: '确认失效',
+          cancelButtonText: '取消',
+          inputPlaceholder: '如：发现批量套券',
+          inputValidator: value => Boolean(value && value.trim()),
+          inputErrorMessage: '平台失效必须填写原因'
+        })
+      }).then(({ value }) => invalidateCoupon(row.id, {
+        expectedVersion: current.ruleVersion,
+        reason: value.trim()
+      })).then(response => {
+        this.invalidationResult = response.data || null
+        this.holdersOpen = Boolean(this.invalidationResult)
+        this.$modal.msgSuccess('优惠券已平台失效')
+        return this.getList()
+      }).catch(() => {})
     },
     handleExport() {
       this.download('business/coupon/export', Object.assign({}, this.query), `coupon_${new Date().getTime()}.xlsx`)
@@ -642,6 +897,19 @@ export default {
 .coupon-directory__identity span { margin-top: 4px; color: var(--cy-color-text-tertiary); font-size: 12px; }
 .coupon-directory__identity:focus-visible { outline: 3px solid var(--cy-color-focus); outline-offset: 3px; }
 .coupon-directory__invalidate { color: var(--cy-color-status-danger); }
+.coupon-directory__versions { margin: var(--cy-space-4-5) 0; }
+.coupon-directory__versions h3 { margin: 0 0 4px; font-size: 14px; color: var(--cy-color-text-primary); }
+.coupon-directory__versions > p { margin: 0 0 12px; color: var(--cy-color-text-tertiary); font-size: 12px; line-height: 1.6; }
+.coupon-directory__version-meta { margin-top: 4px; color: var(--cy-color-text-secondary); font-size: 12px; }
+.coupon-directory__impact { min-height: 120px; }
+.coupon-directory__change-list { max-height: 320px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.coupon-directory__change-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--cy-color-border-subtle); font-size: 13px; }
+.coupon-directory__change-list span { color: var(--cy-color-text-secondary); }
+.coupon-directory__impact .el-alert { margin-bottom: 12px; }
+.coupon-directory__impact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.coupon-directory__impact-grid section { padding: 12px; border: 1px solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-card); }
+.coupon-directory__impact-grid h4 { margin: 0 0 6px; font-size: 13px; color: var(--cy-color-text-primary); }
+.coupon-directory__impact-grid p { margin: 0; color: var(--cy-color-text-secondary); font-size: 12px; line-height: 1.7; }
 .coupon-directory__drawer { min-height: 320px; padding: 0 24px var(--cy-space-7); }
 .coupon-directory__detail-grid { margin-top: var(--cy-space-4-5); }
 .coupon-directory__drawer-note { margin: var(--cy-space-3-5) 0; color: var(--cy-color-text-secondary); font-size: 13px; line-height: 1.7; }

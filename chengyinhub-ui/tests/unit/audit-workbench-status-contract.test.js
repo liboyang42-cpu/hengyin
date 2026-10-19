@@ -289,7 +289,7 @@ test('状态下拉与状态列用 Integer 值 + 中文标签,运营不该看见�
 
   const { statusLabel } = loadComponent().methods;
   assert.equal(statusLabel(0), '待审核');
-  assert.equal(statusLabel(3), '升级审核');
+  assert.equal(statusLabel(3), '已升级 · 待裁决');
 });
 
 test('业务列表跳转可用 bizType + bizId 精确定位唯一审核对象', () => {

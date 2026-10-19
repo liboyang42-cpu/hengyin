@@ -40,6 +40,18 @@
         select exists(select 1 from ums_member_identity where member_id = #{memberId})
     </select>
 
+    <!-- X036 改绑审核通过:新密文与新盲索引同源于同一个明文参数写回,旧证随之失效。
+         consent_time 取改绑申请时的单独同意时间。只有这一条更新路径,且只由审核通过调用。 -->
+    <update id="rebindIdentity" parameterType="com.chengyinhub.business.domain.UmsMemberIdentity">
+        update ums_member_identity
+        set real_name = #{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            id_card = #{idCard,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            id_card_hash = #{idCard,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+            consent_time = #{consentTime},
+            update_time = #{updateTime}
+        where member_id = #{memberId}
+    </update>
+
     <delete id="deleteByMemberId" parameterType="java.lang.Long">
         delete from ums_member_identity where member_id = #{memberId}
     </delete>

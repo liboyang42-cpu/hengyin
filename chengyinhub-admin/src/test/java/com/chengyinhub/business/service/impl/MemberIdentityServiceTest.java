@@ -129,7 +129,7 @@ class MemberIdentityServiceTest {
 
         ServiceException e = assertThrows(ServiceException.class,
                 () -> service.register(MEMBER_ID, "李四", "31010119750101001X", true, SOURCE, null));
-        assertTrue(e.getMessage().contains("联系平台"));
+        assertTrue(e.getMessage().contains("改绑申请"), "X036:换证提示指向改绑申请(人工审核)");
     }
 
     @Test

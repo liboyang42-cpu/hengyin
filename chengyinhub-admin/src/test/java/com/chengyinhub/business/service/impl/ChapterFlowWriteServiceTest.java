@@ -861,6 +861,25 @@ class ChapterFlowWriteServiceTest
      * 否则编辑器摆好的图在提交时被整章打回，而报错只说「块类型只允许…」。
      */
     @Test
+    void mediaAltTextSurvivesMaterializationAndRejectsOversize() throws Exception
+    {
+        ChapterDTO chapter = chapter("媒体章", node("关卡"));
+        ChapterBlockDTO image = imageBlock("https://cdn/x.jpg");
+        image.setAltText("路口的指示牌");
+        ChapterBlockDTO audio = imageBlock("https://cdn/x.mp3");
+        audio.setType("audio");
+        audio.setAltText("向左转后到达广场");
+        chapter.setBlocks(Arrays.asList(image, audio, nodeBlock(0)));
+        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
+        assertEquals("路口的指示牌", stored.get(0).get("altText"));
+        assertEquals("向左转后到达广场", stored.get(1).get("altText"));
+        audio.setAltText(repeat("字", 2001));
+        assertThrows(ChapterFlowValidationException.class,
+                () -> ChapterFlowCompiler.compileChapterFlow(Collections.singletonList(chapter)));
+    }
+
+    @Test
     void mediaBlocksAreMaterializedWithUrl() throws Exception
     {
         ChapterDTO chapter = chapter("有图章", node("关卡"));

@@ -54,7 +54,7 @@ class BankWithdrawalCommandServiceImplTest {
                 org.mockito.ArgumentMatchers.any());
         verify(withdrawals, never()).withdrawalRequest(
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong(),
-                org.mockito.ArgumentMatchers.anyString());
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -62,7 +62,7 @@ class BankWithdrawalCommandServiceImplTest {
         WithdrawalDTO request = request();
         when(consents.hasCurrentAgreement(7L, "bank_account_collection", "withdrawal", "v1.0"))
                 .thenReturn(true);
-        when(withdrawals.withdrawalRequest(request, 7L, "member-7")).thenReturn(91L);
+        when(withdrawals.withdrawalRequest(request, 7L, "member-7", "v1.0")).thenReturn(91L);
 
         Long id = service.submit(request, 7L, "member-7");
 
@@ -72,7 +72,8 @@ class BankWithdrawalCommandServiceImplTest {
         InOrder order = inOrder(preflight, withdrawals);
         order.verify(preflight).consumeBankWithdrawal(
                 org.mockito.ArgumentMatchers.eq(7L), org.mockito.ArgumentMatchers.eq(55L), actual.capture());
-        order.verify(withdrawals).withdrawalRequest(request, 7L, "member-7");
+        // F0425：建单固定本次校验通过的同意文本版本，而不是只在入口校验后丢弃。
+        order.verify(withdrawals).withdrawalRequest(request, 7L, "member-7", "v1.0");
         assertEquals(request.getRequestId(), actual.getValue().getRequestId());
         assertEquals(request.getWithdrawalAmount(), actual.getValue().getAmount());
         assertEquals(request.getBankAccount(), actual.getValue().getBankAccount());

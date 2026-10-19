@@ -347,7 +347,7 @@ class PredictSettleAtomicityMySqlIT {
                 + "create_by varchar(64) default '', create_time datetime null,"
                 + "update_by varchar(64) default '', update_time datetime null,"
                 + "publish_minute varchar(16) generated always as (date_format(create_time, '%Y%m%d%H%i')) stored,"
-                + "per_member_limit int null,"
+                + "per_member_limit int null, rule_version int not null default 1,"
                 + "unique key uk_coupon_dedup (member_id, coupon_type, publish_minute)"
                 + ") engine=InnoDB default charset=utf8mb4");
         st.execute("create table sms_coupon_history ("
@@ -357,7 +357,16 @@ class PredictSettleAtomicityMySqlIT {
                 + "use_status int default 0, use_time datetime null, order_id bigint null,"
                 + "order_sn varchar(64) null, start_time datetime null, end_time datetime null,"
                 + "note varchar(500) null, del_flag tinyint default 0, create_by varchar(64) null,"
-                + "create_time datetime null, update_by varchar(64) null, update_time datetime null"
+                + "create_time datetime null, update_by varchar(64) null, update_time datetime null,"
+                + "rule_version int null, rule_amount decimal(10,2) null, rule_min_point decimal(10,2) null"
+                + ") engine=InnoDB default charset=utf8mb4");
+        st.execute("create table sms_coupon_rule_version ("
+                + "id bigint not null auto_increment primary key, coupon_id bigint not null, rule_version int not null,"
+                + "change_type varchar(24) not null, changed_fields varchar(255) null, name varchar(100) null,"
+                + "amount decimal(10,2) null, min_point decimal(10,2) null, start_time datetime null, end_time datetime null,"
+                + "enable_time datetime null, publish_count bigint null, status int null, reason varchar(255) null,"
+                + "affected_holder_count int null, operator_id bigint null, create_time datetime not null,"
+                + "unique key uk_coupon_rule_version (coupon_id, rule_version)"
                 + ") engine=InnoDB default charset=utf8mb4");
         // 竞猜两张表与 PredictLateBetRaceMySqlIT 同一份手写 DDL(生产列 + 同一组索引)。
         st.execute("create table play_predict_bet ("
