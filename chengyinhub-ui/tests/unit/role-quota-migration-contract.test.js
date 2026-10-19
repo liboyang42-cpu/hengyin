@@ -30,7 +30,7 @@ test('角色配额页只使用既有角色级读写合同，并保留失败态',
 })
 
 test('页面明确角色级配置边界，不伪造当前使用量', () => {
-  assert.match(canonicalPage, /当前接口只返回角色级配置，不包含当前使用量/)
+  assert.match(canonicalPage, /当前只提供角色级配置，不包含当前使用量与配置版本/)
   assert.match(canonicalPage, /toUpdatePayload\(form\)/)
   assert.match(canonicalPage, /id:\s*form\.id/)
   assert.match(canonicalPage, /maxThemes:\s*form\.maxThemes/)

@@ -134,6 +134,12 @@ public interface GameSessionRuntimeMapper {
                                   @Param("targetId") Long targetId,
                                   @Param("roleCode") String roleCode,
                                   @Param("now") Date now);
+    /** F0129 定向成员广播:只为名单内、且属于本活动有效已付款队伍的成员建送达行;返回实际建行数。 */
+    int insertBroadcastMemberDeliveries(@Param("broadcastId") Long broadcastId,
+                                        @Param("sessionId") Long sessionId,
+                                        @Param("activityId") Long activityId,
+                                        @Param("memberIds") List<Long> memberIds,
+                                        @Param("now") Date now);
     List<GameBroadcastDelivery> selectPendingDeliveries(Long broadcastId);
     int markDelivery(@Param("id") Long id, @Param("status") String status,
                      @Param("messageId") Long messageId, @Param("errorCode") String errorCode,

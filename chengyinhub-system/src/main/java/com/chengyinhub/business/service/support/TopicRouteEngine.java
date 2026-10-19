@@ -19,6 +19,7 @@ import java.util.Set;
 /** 主题路线纯计算内核：不查库、不发奖、不接受 targetNodeId。 */
 public class TopicRouteEngine {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final java.util.regex.Pattern TOOL_CLUE = java.util.regex.Pattern.compile("clue\\.h_[0-9a-f]{12}");
 
     public State initial(String configJson) {
         JsonNode config = read(configJson);
@@ -197,6 +198,10 @@ public class TopicRouteEngine {
             String var = effect.path("var").asText();
             if (var.isEmpty()) throw new IllegalArgumentException("effect 变量名不能为空");
             Number value = effect.path("value").numberValue();
+            // 玩法「线索」工具取得的证据（clue.h_*）单调累积：已取得后不因后续态度/拒绝等效果撤回
+            if (TOOL_CLUE.matcher(var).matches() && state.variables.get(var) != null && state.variables.get(var).doubleValue() >= 1
+                    && ("SET".equals(op) || "INC".equals(op)) && value != null
+                    && ("SET".equals(op) ? value.doubleValue() : state.variables.get(var).doubleValue() + value.doubleValue()) < 1) continue;
             if ("SET".equals(op)) state.variables.put(var, value);
             else if ("INC".equals(op)) {
                 Number old = state.variables.get(var);

@@ -194,6 +194,12 @@ class GameSessionRuntimeMapperSqlTest {
         assertPaidActivityMemberScope(sql("selectClubTeamProgressProjection", params()));
         assertPaidActivityMemberScope(sql("insertBroadcastDeliveries", params()));
         assertPaidActivityMemberScope(sql("selectTeamActionProjection", params()));
+        Map<String, Object> members = params(); members.put("memberIds", java.util.Arrays.asList(31L, 32L));
+        String named = sql("insertBroadcastMemberDeliveries", members);
+        assertPaidActivityMemberScope(named);
+        assertTrue(named.replace(" ", "").contains("m.member_idin(?,?)"), named);
+        assertTrue(named.contains("t.owner_type=2 and t.owner_id=?"), named);
+        assertTrue(named.contains("m.status=1"), named);
     }
 
     @Test

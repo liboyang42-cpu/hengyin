@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberIdentityChangeMapper">
+
+    <!-- 改绑申请单(X036)。real_name / id_card 落库是 AES-GCM 密文,只在 PENDING 期间保留,
+         终态 finishPending 一并置 NULL。读进度/列表的查询不选这两列。 -->
+    <resultMap id="UmsMemberIdentityChangeResult" type="com.chengyinhub.business.domain.UmsMemberIdentityChange">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="realName" column="real_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="idCard" column="id_card"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="idCardHash" column="id_card_hash"/>
+        <result property="oldIdCardHash" column="old_id_card_hash"/>
+        <result property="reason" column="reason"/>
+        <result property="status" column="status"/>
+        <result property="reviewNote" column="review_note"/>
+        <result property="reviewerUserId" column="reviewer_user_id"/>
+        <result property="reviewTime" column="review_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 不含密文列的进度视图 -->
+    <resultMap id="UmsMemberIdentityChangeSummary" type="com.chengyinhub.business.domain.UmsMemberIdentityChange">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="reviewNote" column="review_note"/>
+        <result property="reviewTime" column="review_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertChange" parameterType="com.chengyinhub.business.domain.UmsMemberIdentityChange"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into ums_member_identity_change
+            (member_id, real_name, id_card, id_card_hash, old_id_card_hash, reason, status,
+             pending_member_id, create_time)
+        values (#{memberId},
+                #{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{idCard,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{idCard,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler},
+                #{oldIdCardHash}, #{reason}, 'PENDING', #{memberId}, #{createTime})
+    </insert>
+
+    <select id="selectByIdForUpdate" resultMap="UmsMemberIdentityChangeResult">
+        select id, member_id, real_name, id_card, id_card_hash, old_id_card_hash, reason, status,
+               review_note, reviewer_user_id, review_time, create_time, update_time
+        from ums_member_identity_change
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectLatestByMember" resultMap="UmsMemberIdentityChangeSummary">
+        select id, member_id, status, review_note, review_time, create_time
+        from ums_member_identity_change
+        where member_id = #{memberId}
+        order by create_time desc, id desc
+        limit 1
+    </select>
+
+    <update id="finishPending">
+        update ums_member_identity_change
+        set status = #{status},
+            pending_member_id = null,
+            real_name = null,
+            id_card = null,
+            review_note = #{reviewNote},
+            reviewer_user_id = #{reviewerUserId},
+            review_time = now(),
+            update_time = now()
+        where id = #{id}
+          and status = 'PENDING'
+          <if test="memberId != null"> and member_id = #{memberId}</if>
+    </update>
+
+    <select id="selectAdminList" resultType="java.util.HashMap">
+        select c.id as id, c.member_id as memberId, m.nickname as memberNickname,
+               c.reason as reason, c.status as status, c.review_note as reviewNote,
+               c.reviewer_user_id as reviewerUserId, c.review_time as reviewTime, c.create_time as createTime,
+               (c.old_id_card_hash is not null and c.old_id_card_hash = c.id_card_hash) as sameIdCard,
+               exists (select 1 from ums_member_identity other
+                       where other.id_card_hash = c.id_card_hash and other.member_id &lt;&gt; c.member_id) as idCardBoundElsewhere
+        from ums_member_identity_change c
+        left join ums_member m on m.id = c.member_id
+        <where>
+            <if test="status != null and status != ''"> and c.status = #{status}</if>
+        </where>
+        order by c.create_time desc, c.id desc
+    </select>
+</mapper>

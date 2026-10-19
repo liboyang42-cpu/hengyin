@@ -80,6 +80,18 @@ public class SmsCouponHistory extends BaseEntity
     /** 删除标记 0 代表存在  2删除 */
     private Integer delFlag;
 
+    /** F0572 领取时冻结的券规则(版本/面额/门槛);NULL=迁移前领取。只写不进通用 resultMap。 */
+    private Integer ruleVersion;
+    private java.math.BigDecimal ruleAmount;
+    private java.math.BigDecimal ruleMinPoint;
+
+    public Integer getRuleVersion() { return ruleVersion; }
+    public void setRuleVersion(Integer ruleVersion) { this.ruleVersion = ruleVersion; }
+    public java.math.BigDecimal getRuleAmount() { return ruleAmount; }
+    public void setRuleAmount(java.math.BigDecimal ruleAmount) { this.ruleAmount = ruleAmount; }
+    public java.math.BigDecimal getRuleMinPoint() { return ruleMinPoint; }
+    public void setRuleMinPoint(java.math.BigDecimal ruleMinPoint) { this.ruleMinPoint = ruleMinPoint; }
+
     public void setId(Long id) 
     {
         this.id = id;

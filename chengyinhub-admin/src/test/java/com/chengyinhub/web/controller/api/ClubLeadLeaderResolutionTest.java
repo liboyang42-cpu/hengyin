@@ -45,6 +45,8 @@ class ClubLeadLeaderResolutionTest {
         clubRoleAssignmentMapper = mock(ClubRoleAssignmentMapper.class);
         cmsActivityService = mock(ICmsActivityService.class);
         clubService = mock(IClubService.class);
+        when(cmsActivityService.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
+        when(cmsActivityService.updateActivityOpsIfUnsold(any(CmsActivity.class))).thenReturn(1);
         ReflectionTestUtils.setField(controller, "clubLeadMapper", clubLeadMapper);
         ReflectionTestUtils.setField(controller, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
@@ -123,7 +125,8 @@ class ClubLeadLeaderResolutionTest {
         leader.editOps(body);
 
         org.mockito.ArgumentCaptor<CmsActivity> cap = org.mockito.ArgumentCaptor.forClass(CmsActivity.class);
-        org.mockito.Mockito.verify(cmsActivityService).updateCmsActivity(cap.capture());
+        org.mockito.Mockito.verify(cmsActivityService).updateActivityOpsIfUnsold(cap.capture());
+        org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never()).updateCmsActivity(any(CmsActivity.class));
         assertEquals("新集合点·地铁A口", cap.getValue().getAddress(), "承接方可改集合地点");
         assertEquals("雨天改室内", cap.getValue().getDayNote(), "承接方可改当日备注");
     }
@@ -139,6 +142,8 @@ class ClubLeadLeaderResolutionTest {
 
         org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
                 .updateCmsActivity(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
+                .updateActivityOpsIfUnsold(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -243,6 +248,8 @@ class ClubLeadLeaderResolutionTest {
         assertEquals(500, ((Integer) rejected.get("code")).intValue(), "实际:" + rejected.get("msg"));
         org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
                 .updateCmsActivity(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
+                .updateActivityOpsIfUnsold(org.mockito.ArgumentMatchers.any());
 
         java.util.Map<String, Object> noteOnly = new java.util.HashMap<>();
         noteOnly.put("activityId", 100L);
@@ -253,6 +260,50 @@ class ClubLeadLeaderResolutionTest {
         org.mockito.Mockito.verify(cmsActivityService).updateCmsActivity(cap.capture());
         assertEquals("雨天改室内", cap.getValue().getDayNote(), "当日备注是文字,裁决不锁");
     }
+    /**
+     * F0122:改集合时间与首单并发——先查未售，但条件更新命中 0 行(期间已售)时不得报成功，
+     * 重读后明确报「刚刚售出」;0 行且未售也不报成功。
+     */
+    @Test
+    void editOps_timeChangeLosingRaceToFirstSaleIsNotReportedAsSuccess() {
+        ApiClubLeadController leader = spyAs(9L);
+        stubLeadActivity(100L, 200L, 999L, 9L);
+        when(cmsActivityService.countOpenSaleRegistrations(100L)).thenReturn(0, 1);
+        when(cmsActivityService.updateActivityOpsIfUnsold(any(CmsActivity.class))).thenReturn(0);
+        Map<String, Object> body = new HashMap<>();
+        body.put("activityId", 100L); body.put("startDate", "2026-10-20 09:00:00");
+
+        com.chengyinhub.common.core.domain.AjaxResult raced = leader.editOps(body);
+        assertEquals(500, ((Integer) raced.get("code")).intValue());
+        org.junit.jupiter.api.Assertions.assertTrue(String.valueOf(raced.get("msg")).contains("刚刚售出"), "实际:" + raced.get("msg"));
+        org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never()).updateCmsActivity(any(CmsActivity.class));
+
+        when(cmsActivityService.countOpenSaleRegistrations(100L)).thenReturn(0);
+        com.chengyinhub.common.core.domain.AjaxResult unknown = leader.editOps(body);
+        assertEquals(500, ((Integer) unknown.get("code")).intValue(), "0 行且未售也不报成功");
+    }
+
+    /** F0122:成功时回读新时间，并如实标注通知未推送(不把留痕称为送达)。 */
+    @Test
+    void editOps_successReadsBackNewTimeAndReportsNotificationNotSent() {
+        ApiClubLeadController leader = spyAs(9L);
+        stubLeadActivity(100L, 200L, 999L, 9L);
+        CmsActivity original = cmsActivityService.selectCmsActivityById(100L);
+        Date moved = com.chengyinhub.common.utils.DateUtils.parseDate("2026-10-20 09:00:00");
+        CmsActivity reread = new CmsActivity(); reread.setId(100L); reread.setClubId(200L); reread.setMemberId(999L); reread.setStartDate(moved);
+        boolean[] updated = {false};
+        when(cmsActivityService.updateActivityOpsIfUnsold(any(CmsActivity.class))).thenAnswer(call -> { updated[0] = true; return 1; });
+        when(cmsActivityService.selectCmsActivityById(100L)).thenAnswer(call -> updated[0] ? reread : original);
+        Map<String, Object> body = new HashMap<>();
+        body.put("activityId", 100L); body.put("startDate", "2026-10-20 09:00:00");
+
+        com.chengyinhub.common.core.domain.AjaxResult ok = leader.editOps(body);
+        assertEquals(200, ((Integer) ok.get("code")).intValue(), "实际:" + ok.get("msg"));
+        @SuppressWarnings("unchecked") Map<String, Object> data = (Map<String, Object>) ok.get("data");
+        assertEquals(moved, data.get("startDate"));
+        assertEquals("NOT_SENT", data.get("notification"));
+    }
+
     @Test
     void playerLeadProjectionUsesAuthoritativeRouteSessionWithoutChangingLeader() {
         CmsActivity act = new CmsActivity();

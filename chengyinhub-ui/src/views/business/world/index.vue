@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <el-alert title="世界与城市内容目录使用范围" description="本页维护公开目录，按城市、公开状态和删除状态筛选。任务引用与发布版本冻结尚未接通，不能据此确认城市季或奖励生效。" type="info" :closable="false" show-icon />
     <el-form ref="queryForm" :model="queryParams" size="small" :inline="true" label-width="80px">
       <el-form-item label="世界名称" prop="worldName">
         <el-input v-model="queryParams.worldName" placeholder="输入世界名称" clearable @keyup.enter.native="handleQuery" />
@@ -26,12 +27,16 @@
       </el-col>
     </el-row>
 
-    <el-table v-loading="loading" :data="worldList" empty-text="暂无IP世界">
+    <cy-resource-state v-if="loadError" kind="error" title="世界与城市内容目录暂时无法读取" description="请重新读取；若仍失败，请核对查看权限。" retry-text="重新读取" :retrying="loading" @retry="getList" />
+    <el-table v-else v-loading="loading" :data="worldList" empty-text="暂无IP世界">
       <el-table-column label="世界编码" align="center" prop="worldCode" min-width="140" />
       <el-table-column label="世界名称" align="center" prop="worldName" min-width="160" />
       <el-table-column label="副标题" align="left" prop="subtitle" min-width="180" show-overflow-tooltip />
       <el-table-column label="城市" align="center" prop="cityCode" width="120" />
-      <el-table-column label="状态" align="center" prop="status" width="90" />
+      <el-table-column label="公开状态" align="center" width="110">
+        <template slot-scope="scope">{{ scope.row.status === '0' ? '公开' : scope.row.status === '1' ? '停用' : '待确认' }}</template>
+      </el-table-column>
+      <el-table-column label="目录更新时间" prop="updateTime" min-width="160" />
       <el-table-column label="排序" align="center" prop="sortNo" width="90" />
     </el-table>
 
@@ -62,13 +67,17 @@
 </template>
 
 <script>
+import CyResourceState from '@/components/CyResourceState'
 import { listWorlds, saveWorld } from '@/api/business/ipworld'
 
 export default {
+  components: { CyResourceState },
   name: 'BusinessWorld',
   data() {
     return {
       loading: false,
+      loadError: false,
+      requestToken: 0,
       open: false,
       worldList: [],
       queryParams: {
@@ -92,11 +101,19 @@ export default {
   },
   methods: {
     getList() {
+      const requestToken = ++this.requestToken
       this.loading = true
-      listWorlds(this.queryParams).then(response => {
-        this.worldList = response.rows || []
+      this.loadError = false
+      return listWorlds(this.queryParams).then(response => {
+        if (requestToken !== this.requestToken) return
+        if (!Array.isArray(response.rows)) throw new Error('列表数据不完整')
+        this.worldList = response.rows
+      }).catch(() => {
+        if (requestToken !== this.requestToken) return
+        this.worldList = []
+        this.loadError = true
       }).finally(() => {
-        this.loading = false
+        if (requestToken === this.requestToken) this.loading = false
       })
     },
     handleQuery() {

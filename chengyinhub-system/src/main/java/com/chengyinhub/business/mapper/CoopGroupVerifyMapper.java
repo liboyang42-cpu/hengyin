@@ -34,6 +34,21 @@ public interface CoopGroupVerifyMapper {
                                                                @Param("merchantMemberId") Long merchantMemberId,
                                                                @Param("leaderMemberId") Long leaderMemberId);
 
+    /** 商家端「已接待团」列表:只读本商家主体的接待记录,附带是否已进入结算。 */
+    List<java.util.Map<String, Object>> selectReceptionsByMerchant(@Param("merchantMemberId") Long merchantMemberId);
+
+    /** 撤销前锁定这条接待记录,防止两个店员同时撤销或撤销与重扫交错。 */
+    CoopGroupVerify selectByIdForUpdate(@Param("id") Long id);
+
+    /**
+     * 锁定主题行并读结算领取位。结算入口 claimTopicForSettlement 会对同一行做 0→1 更新,
+     * 撤销持锁期间结算领取必须等待,结算已领取则撤销读到 1 后拒绝。
+     */
+    Integer selectTopicSettlementFlagForUpdate(@Param("topicId") Long topicId);
+
+    /** 物理删除接待记录(审计表保留完整撤销前快照),删后该团可被重新扫码登记。 */
+    int deleteByIdAndMerchant(@Param("id") Long id, @Param("merchantMemberId") Long merchantMemberId);
+
     /** 俱乐部 360 批量读取已承接主题的团核销证据。 */
     List<ClubFulfillmentWorkspaceDTO.GroupVerification> selectFulfillmentVerificationsByClub(@Param("clubId") Long clubId);
 }

@@ -107,6 +107,19 @@
         order by t.topic_id desc
     </select>
 
+    <!-- X039:承接判据与 CmsTopicMapper.selectPublicCmsTopicList 的执行俱乐部分支同口径
+         (coop_order to_type='club' · status=0 · 未删 · 排除旧版 invite_type=2 邀约)。 -->
+    <select id="countUndertakenEditionsWithoutTerms" resultType="int">
+        select count(distinct o.topic_id)
+        from coop_order o
+        where o.to_type = 'club' and o.to_id = #{clubId}
+          and o.status = 0 and o.del_flag = 0
+          and not exists (select 1 from coop_invite legacy_invite
+                          where legacy_invite.id = o.invite_id and legacy_invite.invite_type = 2)
+          and not exists (select 1 from club_edition_compensation_terms t
+                          where t.topic_id = o.topic_id and t.executing_club_id = #{clubId})
+    </select>
+
     <!-- 只在 terms 缺失的错误路径上查一次，用来区分「历史豁免」与「配置没落」。 -->
     <select id="countLegacyExemption" resultType="int">
         select count(*) from club_edition_legacy_exemption where topic_id = #{topicId}

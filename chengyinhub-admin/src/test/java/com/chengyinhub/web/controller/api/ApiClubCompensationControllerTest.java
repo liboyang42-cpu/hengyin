@@ -93,6 +93,28 @@ class ApiClubCompensationControllerTest {
         verify(compensationService).editionsForExecutingClub(CLUB);
     }
 
+    /** X039:空态原因与列表走同一道归属闸;非主理人/越权 clubId 连计数都拿不到。 */
+    @Test
+    void emptyReasonDistinguishesNotUndertakenFromAwaitingSaleBehindOwnershipGate() {
+        loggedInMember = OUTSIDER;
+        assertEquals(500, controller.editionsEmptyReason(clubBody(CLUB)).get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(compensationService);
+
+        loggedInMember = OWNER;
+        when(compensationService.undertakenEditionsAwaitingSale(CLUB)).thenReturn(2);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> awaiting = (Map<String, Object>) controller.editionsEmptyReason(clubBody(CLUB))
+                .get(AjaxResult.DATA_TAG);
+        assertEquals("AWAITING_SALE", awaiting.get("reason"));
+        assertEquals(2, awaiting.get("awaitingSale"));
+
+        when(compensationService.undertakenEditionsAwaitingSale(CLUB)).thenReturn(0);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> none = (Map<String, Object>) controller.editionsEmptyReason(clubBody(CLUB))
+                .get(AjaxResult.DATA_TAG);
+        assertEquals("NOT_UNDERTAKEN", none.get("reason"));
+    }
+
     private static Map<String, Object> clubBody(long clubId) {
         Map<String, Object> body = new LinkedHashMap<String, Object>();
         body.put("clubId", clubId);

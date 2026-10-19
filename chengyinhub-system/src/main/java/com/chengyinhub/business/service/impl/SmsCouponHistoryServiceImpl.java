@@ -129,7 +129,9 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
             throw new IllegalStateException("优惠券状态已变化，请重试");
         }
 
-        settlementEntryService.recordCouponVerification(history, coupon);
+        // F0572:结算按领取时冻结的面额(旧券读旧规则);迁移前且从未改过规则的券回落券当前面额。
+        java.math.BigDecimal claimAmount = smsCouponHistoryMapper.selectClaimRuleAmount(historyId);
+        settlementEntryService.recordCouponVerification(history, claimAmount == null ? coupon : withAmount(coupon, claimAmount));
         if (smsCouponMapper.incrementUseCount(coupon.getId()) != 1) {
             throw new IllegalStateException("优惠券核销计数更新失败");
         }
@@ -268,10 +270,38 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
                     coupon.getId(), coupon.getStatus(), memberId);
             return null;
         }
+<<<<<<< public
         if (smsCouponMapper.tryIncrementIssuableReceiveCount(coupon.getId()) == 0) {
             logger.warn("券当前不可发放或库存耗尽,拒发 couponId={} member={}",
                     coupon.getId(), memberId);
             return null;
+=======
+        // F0572:先锁券行再判可发、再冻结规则。后台改规则/停发/平台失效走同一把行锁(CouponRuleGovernanceServiceImpl),
+        // 所以一次领取要么完整落在变更前的版本,要么完整落在变更后的版本;停发提交后的领取一律拒发。
+        com.chengyinhub.business.domain.SmsCoupon locked = smsCouponMapper.selectCouponRuleStateForUpdate(coupon.getId());
+        if (locked == null) {
+            logger.warn("券不存在,拒发 couponId={} member={}", coupon.getId(), memberId);
+            return null;
+        }
+        if (isNotIssuable(locked)) {
+            logger.warn("券已失效或停发(锁内复核),拒发 couponId={} status={} member={}",
+                    locked.getId(), locked.getStatus(), memberId);
+            return null;
+        }
+        Long publishCount = locked.getPublishCount();
+        if (publishCount != null && publishCount > 0) {
+            // 限量券:原子占坑(receive_count < publish_count 才 +1),返回 0 = 已抢光
+            if (smsCouponMapper.tryIncrementReceiveCount(coupon.getId()) == 0) {
+                logger.warn("券库存耗尽,拒发 couponId={} member={} publishCount={}",
+                        coupon.getId(), memberId, publishCount);
+                return null;
+            }
+        } else {
+            // 不限量券:仅维护领取计数(统计用),不设上限
+            if (smsCouponMapper.incrementReceiveCount(coupon.getId()) != 1) {
+                throw new IllegalStateException("优惠券领取计数更新失败");
+            }
+>>>>>>> private-feature/w2-r
         }
         SmsCouponHistory h = new SmsCouponHistory();
         h.setMemberId(memberId);
@@ -284,13 +314,31 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         h.setGetTime(new java.util.Date());
         h.setUseStatus(0);
         h.setCreateTime(new java.util.Date());
-        h.setStartTime(coupon.getStartTime());
-        h.setEndTime(coupon.getEndTime());
+        // 领取即冻结规则:有效期、面额、门槛、规则版本都取锁内当前值,之后改规则不回写已领取的券。
+        h.setStartTime(locked.getStartTime());
+        h.setEndTime(locked.getEndTime());
+        h.setRuleVersion(locked.getRuleVersion());
+        h.setRuleAmount(locked.getAmount());
+        h.setRuleMinPoint(locked.getMinPoint());
         if (smsCouponHistoryMapper.insertSmsCouponHistory(h) != 1) {
             throw new IllegalStateException("优惠券领取记录写入失败");
         }
         if (h.getId() == null) throw new IllegalStateException("优惠券领取记录缺少原ID");
         return h.getId();
+    }
+
+    /** 结算用的券副本:只替换面额,归属/范围仍取券本身(那些不是可改规则字段)。 */
+    private static com.chengyinhub.business.domain.SmsCoupon withAmount(com.chengyinhub.business.domain.SmsCoupon coupon,
+                                                                         java.math.BigDecimal amount) {
+        com.chengyinhub.business.domain.SmsCoupon copy = new com.chengyinhub.business.domain.SmsCoupon();
+        copy.setId(coupon.getId());
+        copy.setMemberId(coupon.getMemberId());
+        copy.setMerchantId(coupon.getMerchantId());
+        copy.setScopeType(coupon.getScopeType());
+        copy.setStatus(coupon.getStatus());
+        copy.setName(coupon.getName());
+        copy.setAmount(amount);
+        return copy;
     }
 
     @Override
@@ -404,6 +452,18 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     public int insertSmsCouponHistory(SmsCouponHistory smsCouponHistory)
     {
         smsCouponHistory.setCreateTime(DateUtils.getNowDate());
+        // F0572:冻结规则只认券的当前值,不接受请求体自带的 rule_* 字段。
+        smsCouponHistory.setRuleVersion(null);
+        smsCouponHistory.setRuleAmount(null);
+        smsCouponHistory.setRuleMinPoint(null);
+        if (smsCouponHistory.getCouponId() != null) {
+            com.chengyinhub.business.domain.SmsCoupon rule = smsCouponMapper.selectCouponRuleState(smsCouponHistory.getCouponId());
+            if (rule != null) {
+                smsCouponHistory.setRuleVersion(rule.getRuleVersion());
+                smsCouponHistory.setRuleAmount(rule.getAmount());
+                smsCouponHistory.setRuleMinPoint(rule.getMinPoint());
+            }
+        }
         int rows = smsCouponHistoryMapper.insertSmsCouponHistory(smsCouponHistory);
         // 领取计数维护:每新增一条领取记录,父券 receive_count +1(原子)
         if (rows > 0 && smsCouponHistory.getCouponId() != null) {

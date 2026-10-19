@@ -953,6 +953,19 @@
         </choose>
     </insert>
 
+    <!-- F0129 定向成员广播:范围判据与 insertBroadcastDeliveries 的 ALL 分支相同，再按显式名单收窄。 -->
+    <insert id="insertBroadcastMemberDeliveries">
+        insert ignore into game_broadcast_delivery
+        (broadcast_id, member_id, status, message_id, error_code, create_time, update_time)
+        select distinct #{broadcastId}, m.member_id, 'PENDING', null, null, #{now}, #{now}
+          from play_team t
+          join play_team_member m on m.team_id=t.id and m.status=1
+         where t.owner_type=2 and t.owner_id=#{activityId} and t.status in (0,1,2)
+           and <include refid="paidActivityMemberExists"/>
+           and m.member_id in
+           <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">#{memberId}</foreach>
+    </insert>
+
     <select id="selectPendingDeliveries" resultMap="GameDeliveryResult">
         select id, broadcast_id, member_id, status, message_id, error_code, create_time, update_time
           from game_broadcast_delivery where broadcast_id=#{broadcastId} and status='PENDING' order by id

@@ -44,6 +44,12 @@ public interface CmsActivityMapper
     /** 复制活动票前锁定父活动，串行化同一活动的幂等检查与插入。 */
     CmsActivity selectCmsActivityByIdForUpdate(Long id);
 
+    /**
+     * 未开卖条件更新运营字段（集合时间/地点/结束时间/当日备注）：已售判据与写入在同一条语句里，
+     * 与 countOpenSaleRegistrations 同口径（payment_status ∈ 0/1/2）。返回 0 表示已售或场次不存在，调用方须重读。
+     */
+    int updateActivityOpsIfUnsold(CmsActivity activity);
+
     /** 公开详情：SQL 固定可见性 Gate，状态不接受调用方放宽。 */
     CmsActivity selectPublicCmsActivityById(Long id);
 

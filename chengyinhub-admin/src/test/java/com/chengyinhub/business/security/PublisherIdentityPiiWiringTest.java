@@ -125,6 +125,40 @@ class PublisherIdentityPiiWiringTest {
         }
     }
 
+    /** X036 改绑申请单:写侧加密 + 盲索引同源,改绑写回同样带 typeHandler,读进度/列表不选密文列,注销一并删。 */
+    @Test
+    void 改绑申请单与改绑写回都挂着_PII_typeHandler_且进度列表不选密文列() throws IOException {
+        String raw = new String(Files.readAllBytes(moduleRelative(
+                "chengyinhub-system/src/main/resources/mapper/business/UmsMemberIdentityChangeMapper.xml")), StandardCharsets.UTF_8);
+        String xml = flatten(raw);
+        assertTrue(xml.contains("#{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}"));
+        assertTrue(xml.contains("#{idCard,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}"));
+        assertTrue(xml.contains("#{idCard,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler}"));
+        assertTrue(xml.contains("real_name=null,id_card=null"), "终态必须清空申请单密文");
+        String latest = flatten(raw.substring(raw.indexOf("id=\"selectLatestByMember\""), raw.indexOf("</select>", raw.indexOf("id=\"selectLatestByMember\""))));
+        String admin = flatten(raw.substring(raw.indexOf("id=\"selectAdminList\""), raw.indexOf("</select>", raw.indexOf("id=\"selectAdminList\""))));
+        for (String q : new String[]{latest, admin}) {
+            assertFalse(q.contains("real_name") || q.contains("c.id_card,") || q.contains("id_cardas"),
+                    "进度/后台列表不许选出姓名或号码密文列");
+        }
+        String identityXml = flatten(mapperXml());
+        String rebind = identityXml.substring(identityXml.indexOf("id=\"rebindIdentity\""));
+        assertTrue(rebind.contains("real_name=#{realName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}"));
+        assertTrue(rebind.contains("id_card=#{idCard,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}"));
+        assertTrue(rebind.contains("id_card_hash=#{idCard,typeHandler=com.chengyinhub.business.security.PiiBlindIndexTypeHandler}"));
+        String dereg = new String(Files.readAllBytes(moduleRelative(
+                "chengyinhub-system/src/main/resources/mapper/business/AccountDeregistrationMapper.xml")), StandardCharsets.UTF_8);
+        assertTrue(dereg.contains("delete from ums_member_identity_change where member_id"), "注销必须删除改绑申请单");
+
+        com.chengyinhub.business.domain.UmsMemberIdentityChange change = new com.chengyinhub.business.domain.UmsMemberIdentityChange();
+        change.setIdCard(ID);
+        assertFalse(change.toString().contains(ID));
+        com.chengyinhub.business.domain.dto.MemberIdentityChangeRequest request =
+                new com.chengyinhub.business.domain.dto.MemberIdentityChangeRequest();
+        request.setIdCard(ID);
+        assertFalse(request.toString().contains(ID));
+    }
+
     private static final String ID = "110105199003070017";
 
     private static String mapperXml() throws IOException {

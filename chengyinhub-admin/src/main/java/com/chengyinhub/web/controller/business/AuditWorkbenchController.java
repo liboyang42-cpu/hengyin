@@ -18,8 +18,6 @@ import com.chengyinhub.business.service.ITopicCommercialReviewService;
 import com.chengyinhub.business.service.ITopicSaleCanonicalDraftService;
 import com.chengyinhub.business.service.ITopicSaleFinalizationService;
 import com.chengyinhub.business.service.ITopicOperationsScopeAuthorizer;
-import com.chengyinhub.business.service.IClubPostService;
-import com.chengyinhub.business.service.IClubPostCommentService;
 import com.chengyinhub.business.service.impl.AuditTaskServiceImpl;
 import com.chengyinhub.business.service.support.JourneyReviewTextService;
 import com.chengyinhub.common.annotation.Log;
@@ -65,12 +63,6 @@ public class AuditWorkbenchController extends BaseController {
     @Autowired
     private ITopicOperationsScopeAuthorizer topicOperationsScopeAuthorizer;
 
-    @Autowired
-    private IClubPostService clubPostService;
-
-    @Autowired
-    private IClubPostCommentService clubPostCommentService;
-
     /** R12:审核详情里补 journey_rules_json / journey_story_json 与节点块叙事段可读文本(只读)。 */
     @Autowired
     private ICmsTopicService cmsTopicService;
@@ -86,7 +78,14 @@ public class AuditWorkbenchController extends BaseController {
     public TableDataInfo list(AuditTask auditTask) {
         startPage();
         List<AuditTask> list = auditTaskService.selectAuditTaskList(auditTask);
-        return getDataTable(list);
+        TableDataInfo table = getDataTable(list);
+        // F0528:已裁决任务带上对象投影结果;PENDING 在工作台显示「待处置」,直到投影真正更新
+        java.util.Map<Long, String> outcomes = auditTaskService.moderationOutcomes(list);
+        for (AuditTask task : list) {
+            String outcome = outcomes == null ? null : outcomes.get(task.getId());
+            if (outcome != null) task.getParams().put("moderationOutcome", outcome);
+        }
+        return table;
     }
 
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
@@ -125,17 +124,40 @@ public class AuditWorkbenchController extends BaseController {
             ajax.put("revertDeadline", governance.getRevertDeadline());
             ajax.put("serverTime", governance.getServerTime());
         }
+<<<<<<< public
         if (AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType())) {
             if (!com.chengyinhub.common.utils.SecurityUtils.hasPermi("business:mediaReview:query"))return error("无媒体审核读取权限");
             ajax.put("mediaPreviewUrl",appMediaAssetService.reviewerPreview(task.getBizId()));
             ajax.put("mediaType",com.alibaba.fastjson2.JSON.parseObject(task.getSnapshotJson()).getString("mediaType"));
         }
+=======
+        ajax.put("moderation", auditTaskService.moderationState(id));
+>>>>>>> private-feature/w2-r
         appendJourneyReviewTexts(ajax, task);
         return ajax;
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
+
+    /**
+     * F0528:重放待处置的对象投影(审核决定已生效、但内容对象没被真正更新)。
+     * 只在当前决定处于 PENDING 时可用;结果追加不可变审计,成功后工作台不再显示「待处置」。
+     */
+    @PreAuthorize("@ss.hasPermi('business:audit:review')")
+    @Log(title = "审核对象投影重放", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/moderation/replay")
+    public AjaxResult replayModeration(@PathVariable("id") Long id) {
+        try {
+            return success(auditTaskService.replayModeration(id, getUserId(), actorRoleCode()));
+        } catch (ServiceException e) {
+            AjaxResult error = new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
+            error.put("errorCode", "AUDIT_MODERATION_REPLAY_REJECTED");
+            return error;
+        } catch (IllegalArgumentException e) {
+            return new AjaxResult(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
 
     /**
      * R12:把旅程新叙事的可读文本追加进审核详情(只追加,不改原有字段)。
@@ -247,19 +269,8 @@ public class AuditWorkbenchController extends BaseController {
             request.setActorRoleCode(actorRoleCode());
             int rows = auditTaskService.review(request.getTaskId(), getUserId(), request);
             if (rows > 0) {
-                // 驳回成立 → 自动下架违规内容(club 动态/评论),best-effort
-                if (request.getStatus() != null && request.getStatus() == 2) {
-                    try {
-                        AuditTask t = auditTaskService.selectAuditTaskById(request.getTaskId());
-                        if (t != null && t.getBizId() != null) {
-                            if ("CLUB_POST".equals(t.getBizType())) {
-                                clubPostService.deleteClubPostById(t.getBizId());
-                            } else if ("CLUB_POST_COMMENT".equals(t.getBizType())) {
-                                clubPostCommentService.deleteClubPostCommentById(t.getBizId());
-                            }
-                        }
-                    } catch (Exception ignore) {}
-                }
+                // F0528:对象投影(含 club 动态/评论下架)已在 review 事务内按类型执行并记录实际结果;
+                // 失败不再在这里静默吞掉,而是成为可重放的待处置意图(见 /{id}/moderation/replay)。
                 return success("审核处理成功");
             }
             AjaxResult conflict = new AjaxResult(HttpStatus.CONFLICT, "审核状态已变化，请刷新后重试");
@@ -272,7 +283,9 @@ public class AuditWorkbenchController extends BaseController {
             return badRequest;
         } catch (ServiceException e) {
             AjaxResult error = new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
-            error.put("errorCode", e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
+            error.put("errorCode", AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL.equals(e.getDetailMessage())
+                    ? AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL
+                    : e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
                     ? "AUDIT_SNAPSHOT_STALE" : "AUDIT_REVIEW_FAILED");
             return error;
         }

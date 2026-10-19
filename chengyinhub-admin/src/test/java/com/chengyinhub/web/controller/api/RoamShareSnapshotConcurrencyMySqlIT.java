@@ -68,9 +68,20 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         db = new JdbcTemplate(source);
         db.execute(new String(Files.readAllBytes(Paths.get("sql/migration_20260917_roam_share_snapshot.sql")),
                 StandardCharsets.UTF_8));
+<<<<<<< public
         db.execute("alter table roam_share_snapshot add session_id bigint null");
         db.execute("create table roam_session(id bigint primary key, member_id bigint, status int, finished_at datetime) engine=InnoDB");
         db.update("insert into roam_session values(12,9,1,now())");
+=======
+        // 迁移用会话变量(@exist/@sql)做幂等守卫,必须在同一连接里逐句执行;只按引号外的分号切句(注释串里有分号)。
+        try (java.sql.Connection connection = source.getConnection();
+             java.sql.Statement statement = connection.createStatement()) {
+            for (String sql : new String(Files.readAllBytes(Paths.get("sql/migration_20261012_roam_share_snapshot_version.sql")),
+                    StandardCharsets.UTF_8).replaceAll("(?m)^--.*$", "").split(";(?=(?:[^']*'[^']*')*[^']*$)")) {
+                if (!sql.trim().isEmpty()) statement.execute(sql);
+            }
+        }
+>>>>>>> private-feature/w2-r
         db.execute("create table ums_member(id bigint primary key) engine=InnoDB");
         db.update("insert into ums_member(id) values(9)");
         db.execute("create table consent_record(id bigint auto_increment primary key,member_id bigint not null,doc_type varchar(32) not null,doc_version varchar(32) not null,scene varchar(32) not null,scope_type varchar(16),scope_id bigint,event_type varchar(16) not null,occurred_at datetime not null,request_id varchar(64) not null unique,ip_address varchar(64),create_time datetime not null) engine=InnoDB");

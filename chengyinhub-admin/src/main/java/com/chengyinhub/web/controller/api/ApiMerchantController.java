@@ -839,15 +839,27 @@ public class ApiMerchantController extends BaseController {
         }
 
         // 上传的照片要走异步内容安全;预设是内置资源,没有送检的意义。
+        // F0225:送检对象必须是这一行 NPC(bizId=npc_profile.id),不能借 MERCHANT_PROFILE(bizId=merchantId):
+        // 那条回调核对的是商家 logo/封面/相册,头像哈希永远对不上,违规头像会被当旧媒体放过。
+        String mediaCheck = "PRESET";
         if (!preset) {
-            try {
-                // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
-                wxContentSecurityService.submitMediaCheckOne(
-                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
-                        avatar, merchantOpenid(access.getOwnerMemberId()));
-            } catch (Exception ignore) {}
+            mediaCheck = "MANUAL_REVIEW";
+            Long npcId = mine != null ? mine.getId() : save.getId();
+            if (npcId != null) {
+                try {
+                    // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
+                    String traceId = wxContentSecurityService.submitMediaCheckOne(
+                            IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, npcId,
+                            avatar, merchantOpenid(access.getOwnerMemberId()));
+                    if (StringUtils.isNotEmpty(traceId)) mediaCheck = "SUBMITTED";
+                } catch (Exception ignore) {}
+            }
         }
-        return AjaxResult.success("已保存");
+        // 保存成功 ≠ 已审核可见:新形象一律回到待审(audit_status=0),人工通过后玩家侧才读得到。
+        Map<String, Object> data = new HashMap<>();
+        data.put("auditStatus", 0);
+        data.put("mediaCheck", mediaCheck);
+        return AjaxResult.success("已保存，审核通过后玩家可见", data);
     }
 
     // ===== 门店 AI 形象的声音 =====

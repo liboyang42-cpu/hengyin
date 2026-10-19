@@ -260,6 +260,21 @@ export const dynamicRoutes = [
   }
   ,
   {
+    path: '/supply/redemption-records',
+    component: Layout,
+    hidden: true,
+    permissions: ['business:couponhistory:list', 'business:order:list', 'business:crowdfunding:list'],
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/business/redemption/index'),
+        name: 'platformRedemptionRecords',
+        meta: { title: '平台兑换记录', activeMenu: '/supply/coupon' }
+      }
+    ]
+  }
+  ,
+  {
     path: '/finance',
     component: Layout,
     hidden: true,

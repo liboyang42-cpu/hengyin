@@ -17,7 +17,11 @@ import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.enums.BusinessType;
 import com.chengyinhub.business.domain.SmsCoupon;
+import com.chengyinhub.business.domain.dto.CouponRuleChangeDTO;
+import com.chengyinhub.business.service.ICouponRuleGovernanceService;
 import com.chengyinhub.business.service.ISmsCouponService;
+import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.poi.ExcelUtil;
 import com.chengyinhub.common.core.page.TableDataInfo;
 
@@ -33,6 +37,9 @@ public class SmsCouponController extends BaseController
 {
     @Autowired
     private ISmsCouponService smsCouponService;
+
+    @Autowired
+    private ICouponRuleGovernanceService couponRuleGovernanceService;
 
     /**
      * 查询优惠券列表
@@ -66,7 +73,8 @@ public class SmsCouponController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(smsCouponService.selectSmsCouponById(id));
+        // F0572:详情带 ruleVersion,编辑表单据此做乐观锁提交
+        return success(couponRuleGovernanceService.getWithRuleVersion(id));
     }
 
     /**
@@ -81,28 +89,102 @@ public class SmsCouponController extends BaseController
     }
 
     /**
-     * 修改优惠券
+     * 修改优惠券规则(F0572)。
+     *
+     * <p>只接受白名单字段(名称/说明/面额/门槛/有效期/可领取日期/发放总量),其余字段整单拒绝;
+     * 必须携带 expectedVersion,版本已变返回 409 + currentVersion。
+     * 发放总量遵循「不低于已领取」;领取/核销计数、状态、范围、归属都不能经此改写
+     * (A3-4 计数器封口由白名单延续)。改动只影响之后的领取,已领取的券保持领取时规则。
      */
     @PreAuthorize("@ss.hasPermi('business:coupon:edit')")
-    @Log(title = "优惠券", businessType = BusinessType.UPDATE)
+    @Log(title = "优惠券规则变更", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody SmsCoupon smsCoupon)
+    public AjaxResult edit(@RequestBody CouponRuleChangeDTO change)
     {
-        // A3-4(P0):发行/领取/使用量是原子计数器(tryIncrementReceiveCount / incrementUseCount)维护的真实统计,
-        // 后台经通用 PUT 裸改 = 伪造发放/使用数据。置 null 让 mapper 动态 <if> 跳过=保库中真值。
-        stripStatCounters(smsCoupon);
-        return toAjax(smsCouponService.updateSmsCoupon(smsCoupon));
+        try
+        {
+            return success(couponRuleGovernanceService.applyChange(change, getUserId()));
+        }
+        catch (ServiceException e)
+        {
+            return governanceError(e);
+        }
     }
 
-    /**
-     * A3-4(P0):剥离优惠券的运行时统计计数器,使其无法经通用 PUT 被篡改。
-     * 这些只应由领取/核销的原子自增维护;后台编辑只允许改券的配置字段(名称/面额/有效期等)。
-     */
-    private static void stripStatCounters(SmsCoupon c)
+    /** 规则变更影响预览(只读):新领取 vs 已领取、字段差异、版本冲突 */
+    @PreAuthorize("@ss.hasPermi('business:coupon:query')")
+    @PostMapping("/rule-impact")
+    public AjaxResult ruleImpact(@RequestBody CouponRuleChangeDTO change)
     {
-        c.setPublishCount(null);
-        c.setReceiveCount(null);
-        c.setUseCount(null);
+        try
+        {
+            return success(couponRuleGovernanceService.previewChange(change));
+        }
+        catch (ServiceException e)
+        {
+            return governanceError(e);
+        }
+    }
+
+    /** 停发:只拦新领取,已领取的券照常可用 */
+    @PreAuthorize("@ss.hasPermi('business:coupon:edit')")
+    @Log(title = "优惠券停发", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/stop-issue")
+    public AjaxResult stopIssue(@PathVariable("id") Long id, @RequestBody CouponRuleChangeDTO request)
+    {
+        try
+        {
+            return success(couponRuleGovernanceService.stopIssue(id,
+                    request == null ? null : request.getExpectedVersion(),
+                    request == null ? null : request.getReason(), getUserId()));
+        }
+        catch (ServiceException e)
+        {
+            return governanceError(e);
+        }
+    }
+
+    /** 平台失效:必须独立填写原因;返回受影响持券人 */
+    @PreAuthorize("@ss.hasPermi('business:coupon:edit')")
+    @Log(title = "优惠券平台失效", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/invalidate")
+    public AjaxResult invalidate(@PathVariable("id") Long id, @RequestBody CouponRuleChangeDTO request)
+    {
+        try
+        {
+            return success(couponRuleGovernanceService.invalidate(id,
+                    request == null ? null : request.getExpectedVersion(),
+                    request == null ? null : request.getReason(), getUserId()));
+        }
+        catch (ServiceException e)
+        {
+            return governanceError(e);
+        }
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:coupon:query')")
+    @GetMapping("/{id}/rule-versions")
+    public AjaxResult ruleVersions(@PathVariable("id") Long id)
+    {
+        return success(couponRuleGovernanceService.listVersions(id));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:coupon:query')")
+    @GetMapping("/{id}/affected-holders")
+    public AjaxResult affectedHolders(@PathVariable("id") Long id)
+    {
+        return success(couponRuleGovernanceService.affectedHolders(id));
+    }
+
+    private static AjaxResult governanceError(ServiceException e)
+    {
+        int code = e.getCode() == null ? HttpStatus.ERROR : e.getCode();
+        AjaxResult result = new AjaxResult(code, e.getMessage());
+        if (e.getData() != null)
+        {
+            result.put(AjaxResult.DATA_TAG, e.getData());
+        }
+        return result;
     }
 
     /**

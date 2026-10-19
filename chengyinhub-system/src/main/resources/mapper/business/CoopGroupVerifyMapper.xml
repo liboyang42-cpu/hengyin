@@ -96,6 +96,46 @@
         order by gv.verify_time desc
     </select>
 
+    <!-- 商家「已接待团」:settled = 主题已被结算领取,或本合作单已挂结算单。二者任一成立即不可撤销。 -->
+    <select id="selectReceptionsByMerchant" resultType="java.util.HashMap">
+        select gv.id as id,
+               gv.topic_id as topicId,
+               t.name as topicName,
+               gv.activity_id as activityId,
+               ca.name as activityName,
+               date_format(ca.start_date, '%Y-%m-%d %H:%i') as activityStartText,
+               gv.coop_order_id as coopOrderId,
+               coalesce(nullif(lm.nickname, ''), concat('成员#', gv.leader_member_id)) as leaderName,
+               date_format(gv.verify_time, '%Y-%m-%d %H:%i') as verifyTimeText,
+               case when coalesce(t.is_settlement, 0) = 1
+                         or exists (select 1 from coop_settlement s
+                                    where s.coop_order_id = gv.coop_order_id and s.del_flag = 0)
+                    then 1 else 0 end as settled
+          from coop_group_verify gv
+          left join cms_topic t on t.id = gv.topic_id
+          left join cms_activity ca on ca.id = gv.activity_id
+          left join ums_member lm on lm.id = gv.leader_member_id
+         where gv.merchant_member_id = #{merchantMemberId}
+         order by gv.verify_time desc, gv.id desc
+         limit 200
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="CoopGroupVerifyResult">
+        select id, topic_id, activity_id, coop_order_id, merchant_member_id, leader_member_id, verify_time
+        from coop_group_verify
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectTopicSettlementFlagForUpdate" resultType="java.lang.Integer">
+        select coalesce(is_settlement, 0) from cms_topic where id = #{topicId} for update
+    </select>
+
+    <delete id="deleteByIdAndMerchant">
+        delete from coop_group_verify
+        where id = #{id} and merchant_member_id = #{merchantMemberId}
+    </delete>
+
     <select id="selectFulfillmentVerificationsByClub"
             resultType="com.chengyinhub.business.domain.dto.ClubFulfillmentWorkspaceDTO$GroupVerification">
         select verify.id as verificationId,

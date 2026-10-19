@@ -6,6 +6,7 @@
       description="查看这张优惠券的领取、使用与过期事实;唯一的写入口是平台侧「撤销核销」(留痕:操作人/原因/时间),其余仅供调证,不支持后台手工改写。"
     >
       <el-button icon="el-icon-back" @click="backToCoupons">返回优惠券管理</el-button>
+      <el-button icon="el-icon-tickets" @click="openRedemptionRecords">平台兑换记录</el-button>
     </cy-page-header>
 
     <cy-resource-state
@@ -365,6 +366,9 @@ export default {
       if (!event) return '未记录'
       if (event.actorType === 'SYS_USER') return `平台账号 #${event.actorMemberId}`
       return `用户 #${event.actorMemberId}`
+    },
+    openRedemptionRecords() {
+      this.$router.push({ name: 'platformRedemptionRecords', query: { source: 'coupon' } })
     },
     backToCoupons() {
       this.$router.push('/business/coupon')

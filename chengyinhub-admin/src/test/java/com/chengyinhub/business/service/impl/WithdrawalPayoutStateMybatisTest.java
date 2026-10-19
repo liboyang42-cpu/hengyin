@@ -74,6 +74,7 @@ class WithdrawalPayoutStateMybatisTest {
                     + "received_amount decimal(15,2),"
                     + "status bigint not null,"
                     + "payout_reference varchar(128),"
+                    + "consent_version varchar(32),"
                     + "del_flag bigint not null,"
                     + "remark varchar(500),"
                     + "create_by varchar(64),"

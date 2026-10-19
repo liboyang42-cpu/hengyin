@@ -21,17 +21,57 @@
     <template v-else-if="loaded">
       <section class="order-detail__summary">
         <div>
-          <span>实付金额</span>
-          <strong>¥{{ money(order.payAmount) }}</strong>
+          <span>{{ isPointsSource ? '积分计价' : '实付金额（本地记录）' }}</span>
+          <strong>{{ isPointsSource ? `${money(order.payAmount)} 积分` : `¥${money(order.payAmount)}` }}</strong>
         </div>
         <div>
-          <span>订单状态</span>
+          <span>本地保存状态（未经渠道核验）</span>
           <strong>{{ statusLabel(order.status) }}</strong>
         </div>
         <div>
           <span>下单时间</span>
           <strong>{{ order.createTime || '未记录' }}</strong>
         </div>
+      </section>
+
+      <section class="cy-panel order-detail__payment">
+        <div class="cy-panel__heading">
+          <div>
+            <h2>支付事实核对</h2>
+            <p>积分与现金分开核对。现金只以原支付渠道的查询回执为准；本地保存的订单状态不等于渠道已确认。</p>
+          </div>
+          <el-button
+            v-if="paymentFacts && paymentFacts.source === 'CASH'"
+            v-hasPermi="['business:order:query']"
+            size="small"
+            icon="el-icon-refresh"
+            :loading="paymentQuerying"
+            @click="queryPaymentChannel"
+          >向渠道查询</el-button>
+        </div>
+        <el-alert v-if="paymentFactsError" :title="paymentFactsError" type="error" :closable="false" show-icon />
+        <div v-else-if="paymentFacts" class="order-detail__payment-body">
+          <template v-if="paymentFacts.source === 'POINTS'">
+            <p class="order-detail__payment-row"><strong>积分来源</strong>：{{ money(paymentFacts.points && paymentFacts.points.pointsPrice) }} 积分（{{ paymentFacts.points && paymentFacts.points.note }}）</p>
+            <p class="order-detail__payment-row"><strong>现金来源</strong>：无渠道交易</p>
+          </template>
+          <template v-else>
+            <p class="order-detail__payment-row"><strong>积分来源</strong>：无</p>
+            <p class="order-detail__payment-row">
+              <strong>现金来源</strong>：{{ channelLabel(paymentFacts.cash.channel) }} · 商户单号 {{ paymentFacts.cash.outTradeNo || '未记录' }}
+              · 本地交易号 {{ paymentFacts.cash.savedTransactionId || '未记录' }}
+            </p>
+            <p class="order-detail__payment-row">
+              <strong>核对结论</strong>：
+              <el-tag size="mini" :type="verdictTone(paymentFacts.cash.verdict)">{{ verdictLabel(paymentFacts.cash.verdict) }}</el-tag>
+              {{ paymentFacts.cash.verdictDetail }} · 最后查询 {{ paymentFacts.cash.lastQueryTime || '从未查询' }}
+            </p>
+            <p v-if="paymentFacts.cash.receipt" class="order-detail__payment-row">
+              <strong>渠道回执</strong>：{{ receiptLabel(paymentFacts.cash.receipt) }}
+            </p>
+          </template>
+        </div>
+        <p v-else class="order-detail__payment-row">正在读取支付事实…</p>
       </section>
 
       <section class="cy-panel">
@@ -78,6 +118,7 @@
 
 <script>
 import { getOrder } from '@/api/business/order'
+import { getOrderPaymentFacts, queryOrderPaymentFacts } from '@/api/business/orderPaymentFacts'
 import auth from '@/plugins/auth'
 import CyCopyValue from '@/components/CyCopyValue'
 import CyDetailGrid from '@/components/CyDetailGrid'
@@ -119,12 +160,19 @@ export default {
       detailError: false,
       detailRequestId: 0,
       order: {},
-      products: []
+      products: [],
+      paymentFacts: null,
+      paymentFactsError: '',
+      paymentFactsRequestId: 0,
+      paymentQuerying: false
     }
   },
   computed: {
     canList() {
       return auth.hasPermi('business:order:list')
+    },
+    isPointsSource() {
+      return Boolean(this.paymentFacts && this.paymentFacts.source === 'POINTS')
     },
     orderItems() {
       return [
@@ -144,7 +192,7 @@ export default {
     },
     statusAndNoteItems() {
       return [
-        { key: 'status', label: '订单状态', value: this.statusLabel(this.order.status) },
+        { key: 'status', label: '订单状态（本地保存）', value: this.statusLabel(this.order.status) },
         { key: 'merchantNote', label: '平台备注', value: this.order.merchantNote },
         { key: 'orderNote', label: '用户备注', value: this.order.orderNote, span: 3 }
       ]
@@ -159,10 +207,12 @@ export default {
   },
   created() {
     this.loadOrder(this.$route.params.id)
+    this.loadPaymentFacts(this.$route.params.id)
   },
   watch: {
     '$route.params.id'(id) {
       this.loadOrder(id)
+      this.loadPaymentFacts(id)
     }
   },
   methods: {
@@ -183,6 +233,47 @@ export default {
       }).finally(() => {
         if (requestId === this.detailRequestId) this.loading = false
       })
+    },
+    loadPaymentFacts(id) {
+      const requestId = ++this.paymentFactsRequestId
+      this.paymentFacts = null
+      this.paymentFactsError = ''
+      return getOrderPaymentFacts(id).then(response => {
+        if (requestId !== this.paymentFactsRequestId) return
+        this.paymentFacts = response.data || null
+        if (!this.paymentFacts) this.paymentFactsError = '支付事实暂时无法读取，请稍后重试。'
+      }).catch(() => {
+        if (requestId === this.paymentFactsRequestId) this.paymentFactsError = '支付事实暂时无法读取，请稍后重试。'
+      })
+    },
+    queryPaymentChannel() {
+      if (this.paymentQuerying || !this.paymentFacts) return Promise.resolve()
+      const id = this.paymentFacts.orderId
+      const requestId = ++this.paymentFactsRequestId
+      this.paymentQuerying = true
+      return queryOrderPaymentFacts(id).then(response => {
+        if (requestId !== this.paymentFactsRequestId) return
+        if (response.data) this.paymentFacts = response.data
+      }).catch(() => {}).finally(() => {
+        this.paymentQuerying = false
+      })
+    },
+    verdictLabel(verdict) {
+      return ({ UNCONFIRMED: '未确认', CONFIRMED: '已确认', CONFLICT: '冲突' })[verdict] || '未确认'
+    },
+    verdictTone(verdict) {
+      return ({ CONFIRMED: 'success', CONFLICT: 'danger' })[verdict] || 'warning'
+    },
+    channelLabel(channel) {
+      return channel === 'WECHAT' ? '微信支付' : (channel || '未知渠道')
+    },
+    receiptLabel(receipt) {
+      if (!receipt) return '无'
+      if (receipt.queryStatus === 'FAILED') return `查询失败（${receipt.errorMessage || '未返回原因'}）`
+      if (receipt.queryStatus === 'NOT_EXIST') return '渠道无此交易'
+      const total = receipt.channelTotalFen === null || receipt.channelTotalFen === undefined
+        ? '未返回' : `¥${(Number(receipt.channelTotalFen) / 100).toFixed(2)}`
+      return `渠道状态 ${receipt.channelTradeState || '未返回'} · 渠道交易号 ${receipt.channelTransactionId || '未返回'} · 渠道金额 ${total}`
     },
     goOrderList() {
       if (!auth.hasPermi('business:order:list')) return
@@ -216,6 +307,9 @@ export default {
 .order-detail__summary strong { margin-top: 8px; color: var(--cy-color-text-primary); font-size: 18px; }
 .item-aftersale { color: var(--cy-color-text-secondary); }
 .cy-panel + .cy-panel { margin-top: 16px; }
+.order-detail__payment-body { padding: 0 var(--cy-space-page) 16px; }
+.order-detail__payment-row { margin: 0 0 8px; color: var(--cy-color-text-secondary); font-size: 13px; line-height: 1.7; }
+.order-detail__payment-row strong { color: var(--cy-color-text-primary); }
 .order-detail__loading { min-height: 180px; padding: 48px 0; color: var(--cy-color-text-secondary); text-align: center; }
 @media (max-width: 768px) { .order-detail__summary { grid-template-columns: 1fr; } }
 </style>

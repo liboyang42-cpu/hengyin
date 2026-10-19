@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlatformRedemptionRecordMapper">
+
+    <!-- 优惠券领取/核销:一张领取记录一行,数量恒为 1;原始业务 ID = sms_coupon_history.id -->
+    <select id="selectCouponClaims" resultType="java.util.LinkedHashMap">
+        select h.id as historyId, h.coupon_id as couponId, c.name as couponName, c.scope_type as scopeType,
+               c.status as couponStatus, h.member_id as memberId, h.coupon_code as couponCode,
+               h.get_type as getType, h.get_time as getTime, h.use_status as useStatus, h.use_time as useTime,
+               h.order_sn as orderSn, h.start_time as startTime, h.end_time as endTime
+        from sms_coupon_history h
+        left join sms_coupon c on c.id = h.coupon_id
+        <where>
+            ifnull(h.del_flag, 0) = 0
+            <if test="memberId != null"> and h.member_id = #{memberId}</if>
+            <if test="couponId != null"> and h.coupon_id = #{couponId}</if>
+            <if test="useStatus != null"> and h.use_status = #{useStatus}</if>
+        </where>
+        order by h.id desc
+    </select>
+
+    <!-- 积分商城订单:一单一行,数量 = product_quantity;只取 order_type=2 且非商业化(biz_type 为空)。
+         收件人等 PII 列不选。 -->
+    <select id="selectPointsMallOrders" resultType="java.util.LinkedHashMap">
+        select o.id as orderId, o.order_sn as orderSn, o.member_id as memberId, o.mms_merchant_id as merchantId,
+               o.product_quantity as quantity, o.pay_amount as pointsPrice, o.status as status,
+               o.aftersale_status as aftersaleStatus, o.delivery_sn as deliverySn,
+               o.payment_time as paymentTime, o.delivery_time as deliveryTime, o.receive_time as receiveTime,
+               o.create_time as createTime,
+               (select count(1) from oms_order_item i where i.order_id = o.id) as itemCount
+        from oms_order o
+        <where>
+            o.order_type = 2 and o.biz_type is null and ifnull(o.del_flag, 0) = 0
+            <if test="memberId != null"> and o.member_id = #{memberId}</if>
+            <if test="orderSn != null and orderSn != ''"> and o.order_sn = #{orderSn}</if>
+            <if test="status != null"> and o.status = #{status}</if>
+        </where>
+        order by o.id desc
+    </select>
+
+    <!-- 礼物消费:一次赠送一行,数量恒为 1;原始业务 ID = ums_crowdfunding.id -->
+    <select id="selectGiftConsumptions" resultType="java.util.LinkedHashMap">
+        select f.id as consumptionId, f.member_id as memberId, f.active_id as activityId, f.gift_id as giftId,
+               g.gift_name as giftName, f.point as points, f.del_flag as delFlag, f.create_time as createTime
+        from ums_crowdfunding f
+        left join pms_gift g on g.id = f.gift_id
+        <where>
+            <if test="memberId != null"> and f.member_id = #{memberId}</if>
+            <if test="giftId != null"> and f.gift_id = #{giftId}</if>
+            <if test="activityId != null"> and f.active_id = #{activityId}</if>
+        </where>
+        order by f.id desc
+    </select>
+</mapper>

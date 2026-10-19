@@ -45,6 +45,15 @@ export function submitTopicSaleReview(topicId) {
   })
 }
 
+<<<<<<< public
 export function reviewMediaAsset(data) {
   return request({ url: data.status === 1 ? '/business/mediaReview/approve' : '/business/mediaReview/reject', method: 'post', data })
+=======
+// F0528 重放待处置的对象投影(决定已生效、对象未更新)
+export function replayAuditModeration(taskId) {
+  return request({
+    url: '/business/audit/' + taskId + '/moderation/replay',
+    method: 'post'
+  })
+>>>>>>> private-feature/w2-r
 }

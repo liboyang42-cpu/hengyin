@@ -96,6 +96,27 @@ public class ApiClubCompensationController extends BaseController {
         return success(compensationService.editionsForExecutingClub(clubId));
     }
 
+    /**
+     * X039:期次列表为空时的原因(只给计数,不出主题名/金额)。归属校验与 /editions 逐字相同。
+     * awaitingSale &gt; 0 = 已承接、条款未开售;0 = 还没有承接本俱乐部执行的期次。
+     */
+    @PostMapping("/editions/empty-reason")
+    public AjaxResult editionsEmptyReason(@RequestBody Map<String, Object> body) {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception notLoggedIn) {
+            return error("请先登录");
+        }
+        Long clubId = longOf(body, "clubId");
+        if (!belongsToClub(clubId, memberId)) return error("非本俱乐部负责人，无法查看期次");
+        int awaiting = compensationService.undertakenEditionsAwaitingSale(clubId);
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("reason", awaiting > 0 ? "AWAITING_SALE" : "NOT_UNDERTAKEN");
+        data.put("awaitingSale", awaiting);
+        return success(data);
+    }
+
     // 2026-09-10 用户裁决:探店日不再交质量证据,整条链路删除。
     // 原来这里是 /quality/evidence —— 俱乐部上传一个 SHA-256 摘要,再回读核对。
     // 平台在后台 business:clubquality:confirm 上照常人工判 Q,只是不再要这份附件。

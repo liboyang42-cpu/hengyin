@@ -111,8 +111,14 @@
         delete from ums_member_identity where member_id = #{memberId}
     </delete>
 
+<<<<<<< public
     <delete id="deleteMemberAddresses">
         delete from ums_member_address where member_id = #{memberId}
+=======
+    <!-- X036 改绑申请单:待审期可能残留新证密文与盲索引,随账号整行删掉。 -->
+    <delete id="deleteMemberIdentityChanges">
+        delete from ums_member_identity_change where member_id = #{memberId}
+>>>>>>> private-feature/w2-r
     </delete>
 
     <update id="markFailed">

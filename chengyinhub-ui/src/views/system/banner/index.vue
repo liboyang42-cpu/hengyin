@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <el-alert title="横幅配置使用范围" description="公开横幅读取按启用状态和显示类型筛选；显示类型不是角色受众。角色定向、排期和有效期尚未接入，保存、客户端展示与官方推送须分别核对。" type="info" :closable="false" show-icon />
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
 
       <el-form-item label="显示类型" prop="showType">
@@ -27,7 +28,8 @@
       </el-col>
     </el-row>
 
-    <el-table v-loading="loading" :data="tbannerList" @selection-change="handleSelectionChange" border>
+    <cy-resource-state v-if="loadError" kind="error" title="横幅配置暂时无法读取" description="请重新读取；若仍失败，请核对查看权限。" retry-text="重新读取" :retrying="loading" @retry="getList" />
+    <el-table v-else v-loading="loading" :data="tbannerList" @selection-change="handleSelectionChange" border>
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="显示类型" align="center" prop="showType">
         <template slot-scope="scope">
@@ -131,17 +133,21 @@
 </template>
 
 <script>
+import CyResourceState from '@/components/CyResourceState'
 import { listBanner, getBanner, delBanner, addBanner, updateBanner } from "@/api/system/banner";
 import {
   getToken
 } from "@/utils/auth";
 export default {
+  components: { CyResourceState },
   name: "Banner",
   dicts: ['sys_normal_disable', 'app_banner_event_type', 'sys_business_status', 'app_banner_show_type'],
   data() {
     return {
       // 遮罩层
       loading: true,
+      loadError: false,
+      requestToken: 0,
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -215,12 +221,22 @@ export default {
    },
     /** 查询轮播图列表 */
     getList() {
-      this.loading = true;
-      listBanner(this.queryParams).then(response => {
-        this.tbannerList = response.rows;
-        this.total = response.total;
-        this.loading = false;
-      });
+      const requestToken = ++this.requestToken
+      this.loading = true
+      this.loadError = false
+      return listBanner(this.queryParams).then(response => {
+        if (requestToken !== this.requestToken) return
+        if (!Array.isArray(response.rows)) throw new Error('列表数据不完整')
+        this.tbannerList = response.rows
+        this.total = response.total
+      }).catch(() => {
+        if (requestToken !== this.requestToken) return
+        this.tbannerList = []
+        this.total = 0
+        this.loadError = true
+      }).finally(() => {
+        if (requestToken === this.requestToken) this.loading = false
+      })
     },
     // 取消按钮
     cancel() {

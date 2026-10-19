@@ -37,6 +37,7 @@ import static org.mockito.Mockito.when;
  * 漏掉 compare 条目的 time / text,{@link #collectsCompareTimelineTexts()} 立刻红。
  */
 class JourneyReviewTextsTest {
+<<<<<<< public
 
     @Test
     void chapterAndNodeUserFacingTextIsCollectedButCoordinatesAndMediaAreNotText() {
@@ -65,6 +66,27 @@ class JourneyReviewTextsTest {
                 "{\"gameplayRuntime\":{\"survival\":{\"zeroHpPolicy\":\"WAIT\",\"zeroMessage\":\"归零反馈\"}}}");
         assertEquals(Collections.singletonList("归零反馈"), texts(zero));
         assertEquals("themeRuntimeConfig.gameplayRuntime.survival.zeroMessage", zero.get(0).getField());
+=======
+    @Test
+    void mediaAltTextUsesExistingReviewCollection() {
+        ChapterBlockDTO image = new ChapterBlockDTO();
+        image.setType("image"); image.setAltText("图片说明");
+        ChapterBlockDTO audio = new ChapterBlockDTO();
+        audio.setType("audio"); audio.setAltText("音频转写");
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setBlocks(Arrays.asList(image, audio));
+        assertEquals(Arrays.asList("图片说明", "音频转写"),
+                texts(JourneyReviewTexts.collectChapterNarrativeBlocks(Collections.singletonList(chapter))));
+        assertEquals(Collections.singletonList("图片说明"), texts(JourneyReviewTexts.collectChapterBlocks(
+                "[{\"type\":\"image\",\"altText\":\"图片说明\"}]", 1)));
+    }
+
+    @Test void r5RepliesAndZeroMessageReachExistingAuditWithoutCollectingRuleIdentifiers() {
+        String config="{\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"通过反馈\",\"costs\":[{\"statKey\":\"counter.secret\",\"amount\":3}]},\"fail\":{\"reply\":\"失败反馈\"}},\"qa\":{\"options\":[{\"after\":{\"reply\":\"选项反馈\"}}]},\"private\":{\"reply\":\"不采集\"}}";
+        assertEquals(Arrays.asList("通过反馈","失败反馈","选项反馈"),texts(JourneyReviewTexts.collectBlocks(config)));
+        List<JourneyReviewTexts.Entry> zero=JourneyReviewTexts.collectThemeRuntime("{\"gameplayRuntime\":{\"survival\":{\"zeroHpPolicy\":\"WAIT\",\"zeroMessage\":\"归零反馈\"}}}");
+        assertEquals(Collections.singletonList("归零反馈"),texts(zero));assertEquals("themeRuntimeConfig.gameplayRuntime.survival.zeroMessage",zero.get(0).getField());
+>>>>>>> private-feature/w2-r
     }
 
     @Test

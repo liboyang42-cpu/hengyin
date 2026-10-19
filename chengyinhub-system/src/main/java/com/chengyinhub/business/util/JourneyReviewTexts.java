@@ -452,6 +452,9 @@ public final class JourneyReviewTexts {
                 if (block == null) {
                     continue;
                 }
+                if ("image".equals(block.getType()) || "audio".equals(block.getType())) {
+                    add(entries, "storyFlow.chapter" + (index + 1) + ".altText", block.getAltText());
+                }
                 String field = storyFlowField(index + 1, block.getBeat(), block.getField(), block.getQid());
                 if (field != null) {
                     add(entries, field, block.getContent());
@@ -490,6 +493,9 @@ public final class JourneyReviewTexts {
         for (JsonNode block : root) {
             if (block == null || !block.isObject()) {
                 continue;
+            }
+            if ("image".equals(block.path("type").asText()) || "audio".equals(block.path("type").asText())) {
+                add(entries, "storyFlow.chapter" + chapterNumber + ".altText", block.get("altText"));
             }
             String field = storyFlowField(chapterNumber, block.path("beat").asText(""),
                     block.path("field").asText(""), block.path("qid").asText(""));

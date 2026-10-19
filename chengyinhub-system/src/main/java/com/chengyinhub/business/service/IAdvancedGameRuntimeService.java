@@ -23,4 +23,12 @@ public interface IAdvancedGameRuntimeService {
 
     /** 完成节点门禁，并返回终点声明的稳定 outcomeCode；无分支玩法时返回 null。 */
     String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId);
+
+    /**
+     * C1 可信边界:本节点当前局的完成是否只由设备自报成绩、拍照旧兜底或静态节点码撑着。
+     * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人/本队局。
+     */
+    default boolean rewardCappedToXpBadge(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
 }

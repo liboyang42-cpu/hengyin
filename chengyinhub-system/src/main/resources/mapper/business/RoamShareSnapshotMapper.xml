@@ -7,7 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="upsertSnapshot">
         insert into roam_share_snapshot (share_token, member_id, client_ts, snapshot_json, create_time, update_time)
         values (#{shareToken}, #{memberId}, #{clientTs}, #{snapshotJson}, now(), now())
-        on duplicate key update snapshot_json = values(snapshot_json), update_time = values(update_time)
+        on duplicate key update snapshot_json = values(snapshot_json), update_time = values(update_time), version = version + 1
     </insert>
 
     <insert id="upsertOwnedSnapshot">
@@ -39,6 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <delete id="deleteByMember">
         delete from roam_share_snapshot where member_id = #{memberId}
     </delete>
+<<<<<<< public
     <delete id="deleteBySession">
         delete from roam_share_snapshot where session_id = #{sessionId} and member_id = #{memberId}
     </delete>
@@ -48,4 +49,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and s.member_id=roam_share_snapshot.member_id and (s.status=0 or (s.status=1 and s.finished_at &gt; #{cutoff})))
         order by id limit #{limit}
     </delete>
+=======
+
+    <delete id="deleteByMemberToken">
+        delete from roam_share_snapshot where member_id = #{memberId} and share_token = #{shareToken}
+    </delete>
+
+    <select id="selectVersionByMemberTs" resultType="java.lang.Integer">
+        select version from roam_share_snapshot where member_id = #{memberId} and client_ts = #{clientTs}
+    </select>
+
+    <select id="selectVersionByToken" resultType="java.lang.Integer">
+        select version from roam_share_snapshot where share_token = #{shareToken}
+    </select>
+
+    <update id="updateSnapshotIfVersion">
+        update roam_share_snapshot set snapshot_json = #{snapshotJson}, update_time = now(), version = version + 1
+        where member_id = #{memberId} and client_ts = #{clientTs} and version = #{expectedVersion}
+    </update>
+>>>>>>> private-feature/w2-r
 </mapper>

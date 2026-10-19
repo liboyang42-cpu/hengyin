@@ -36,4 +36,12 @@ public class GrowthMission extends BaseEntity {
     public void setStatus(String status) { this.status = status; }
     public Integer getSortNo() { return sortNo; }
     public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }
+
+    /**
+     * F0395:完成来源标识(只读派生,不落库)。store_verify 只能由真实到店核销由服务端发放;
+     * 其余任务当前接受客户端自助上报,不能当作已证明的实际履约。
+     */
+    public String getEvidenceSource() {
+        return "store_verify".equals(triggerEvent) ? "verified_store" : "self_reported";
+    }
 }

@@ -91,17 +91,22 @@ class CouponLifecycleMybatisIntegrationTest {
     @BeforeEach
     void resetSchema() throws Exception {
         execute("DROP TABLE IF EXISTS business_audit_event", "DROP TABLE IF EXISTS settlement_detail",
-                "DROP TABLE IF EXISTS settlement_rule", "DROP TABLE IF EXISTS sms_coupon_history",
+                "DROP TABLE IF EXISTS settlement_rule", "DROP TABLE IF EXISTS sms_coupon_history", "DROP TABLE IF EXISTS sms_coupon_rule_version",
                 "DROP TABLE IF EXISTS sms_coupon");
         execute(
                 "CREATE TABLE sms_coupon (id BIGINT PRIMARY KEY, name VARCHAR(100), coupon_type INT, platform INT, amount DECIMAL(12,2), min_point DECIMAL(12,2),"
                         + "start_time DATETIME(3), end_time DATETIME(3), use_type INT, publish_count BIGINT, use_count BIGINT, receive_count BIGINT,"
                         + "enable_time DATETIME(3), code VARCHAR(100), scope_type INT, member_id BIGINT, merchant_id BIGINT, status INT, del_flag INT,"
-                        + "description VARCHAR(500), create_by VARCHAR(64), create_time DATETIME(3), update_by VARCHAR(64), update_time DATETIME(3)) ENGINE=InnoDB",
+                        + "description VARCHAR(500), create_by VARCHAR(64), create_time DATETIME(3), update_by VARCHAR(64), update_time DATETIME(3),"
+                        + "rule_version INT NOT NULL DEFAULT 1) ENGINE=InnoDB",
                 "CREATE TABLE sms_coupon_history (id BIGINT PRIMARY KEY AUTO_INCREMENT, coupon_id BIGINT, member_id BIGINT, coupon_code VARCHAR(100), qrcode_url VARCHAR(500),"
                         + "get_type INT, get_time DATETIME(3), use_status INT, use_time DATETIME(3), order_id BIGINT, order_sn VARCHAR(100),"
                         + "start_time DATETIME(3), end_time DATETIME(3), note VARCHAR(500), del_flag INT, create_by VARCHAR(64), create_time DATETIME(3),"
-                        + "update_by VARCHAR(64), update_time DATETIME(3)) ENGINE=InnoDB",
+                        + "update_by VARCHAR(64), update_time DATETIME(3), rule_version INT, rule_amount DECIMAL(10,2), rule_min_point DECIMAL(10,2)) ENGINE=InnoDB",
+                "CREATE TABLE sms_coupon_rule_version (id BIGINT PRIMARY KEY AUTO_INCREMENT, coupon_id BIGINT NOT NULL, rule_version INT NOT NULL,"
+                        + "change_type VARCHAR(24) NOT NULL, changed_fields VARCHAR(255), name VARCHAR(100), amount DECIMAL(10,2), min_point DECIMAL(10,2),"
+                        + "start_time DATETIME, end_time DATETIME, enable_time DATETIME, publish_count BIGINT, status INT, reason VARCHAR(255),"
+                        + "affected_holder_count INT, operator_id BIGINT, create_time DATETIME NOT NULL, UNIQUE KEY uk_coupon_rule_version(coupon_id, rule_version)) ENGINE=InnoDB",
                 "CREATE TABLE settlement_rule (id BIGINT PRIMARY KEY AUTO_INCREMENT, merchant_id BIGINT, biz_type VARCHAR(64), rule_name VARCHAR(100),"
                         + "settlement_cycle VARCHAR(64), platform_commission_rate DECIMAL(8,4), merchant_rate DECIMAL(8,4), creator_rate DECIMAL(8,4),"
                         + "inviter_rate DECIMAL(8,4), guarantee_base_rate DECIMAL(8,4), guarantee_step_rate DECIMAL(8,4), guarantee_max_merchant INT,"

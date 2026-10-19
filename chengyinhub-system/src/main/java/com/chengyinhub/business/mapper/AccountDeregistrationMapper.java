@@ -43,7 +43,12 @@ public interface AccountDeregistrationMapper {
     /** 清除发布者实名登记(姓名+身份证号密文+盲索引)。人不在了,这行没有留存的道理。 */
     int deleteMemberIdentity(@Param("memberId") Long memberId);
 
+<<<<<<< public
     int deleteMemberAddresses(@Param("memberId") Long memberId);
+=======
+    /** 清除发布者实名改绑申请单(X036,待审期可能残留新证密文)。 */
+    int deleteMemberIdentityChanges(@Param("memberId") Long memberId);
+>>>>>>> private-feature/w2-r
 
     /** 执行期阻断 → 置注销单失败(仅 PENDING 时) */
     int markFailed(@Param("id") Long id, @Param("reason") String reason, @Param("time") Date time);

@@ -37,6 +37,15 @@ public class UserPermissionController extends BaseController {
     @Log(title = "角色配额", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody UserPermission p) {
+        if (p == null || p.getId() == null || p.getId() <= 0) {
+            return AjaxResult.error("请选择有效的角色配额记录");
+        }
+        if (invalidQuota(p.getMaxThemes()) || invalidQuota(p.getMaxEvents()) || invalidQuota(p.getMaxCoupons())) {
+            return AjaxResult.error("主题、活动和优惠券上限必须为0到99的整数");
+        }
         return toAjax(userPermissionService.update(p));
+    }
+    private boolean invalidQuota(Integer value) {
+        return value != null && (value < 0 || value > 99);
     }
 }

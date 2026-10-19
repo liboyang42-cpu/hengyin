@@ -253,6 +253,7 @@ class AccountDeregistrationServiceImplTest {
         verify(communityPosts).deleteAccountMentions(1001L);
         verify(d).deleteMemberAddresses(1001L);
         verify(d).deleteMemberIdentity(1001L);      // ★发布者实名(姓名+身份证号密文)整行删掉
+        verify(d).deleteMemberIdentityChanges(1001L); // ★X036 改绑申请单(待审期密文)一并删掉
         verify(d).complete(eq(9L), any(Date.class));
         IAppSessionRegistryService registry = (IAppSessionRegistryService)
                 ReflectionTestUtils.getField(service, "appSessionRegistryService");

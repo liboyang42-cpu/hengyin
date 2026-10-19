@@ -72,6 +72,7 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.constant.PlayMode;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.business.service.support.ClubPostReferenceGuard;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,6 +108,10 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private IClubService clubService;
+
+    /** F0098:帖子引用「我的游玩记录」的写入资格与读取可见性。 */
+    @Autowired
+    private ClubPostReferenceGuard clubPostReferenceGuard;
 
     @Autowired
     private IClubSessionService clubSessionService;
@@ -1536,9 +1541,16 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/list")
     public AjaxResult postList(@RequestBody ClubPost body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
+<<<<<<< public
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+=======
+        Club listedClub = clubService.selectClubById(body.getClubId());
+        if (listedClub == null) return error("俱乐部不存在");
+        // 俱乐部转「仅成员可见」后,帖文与引用卡一并收起:旧链接不能绕过详情页那道闸读到动态。
+        if (!canViewClub(listedClub)) return error("这个俱乐部只对成员开放");
+>>>>>>> private-feature/w2-r
         ClubPost q = new ClubPost();
         q.setClubId(body.getClubId());
         List<ClubPost> posts = clubPostService.selectClubPostList(q);
@@ -1573,6 +1585,11 @@ public class ApiClubController extends BaseController {
         }
         if (activityIds.isEmpty() && topicIds.isEmpty()) return;
 
+        // F0098:引用卡按匿名口径重判当前可见性(帖子列表是公开接口)。被删/下架/转私密的只标「引用已不可见」,
+        // 不投影标题与封面 —— 摘要查询本身不看可见性,不能直接拿来公开。
+        activityIds.removeIf(id -> !clubPostReferenceGuard.isPubliclyVisible(ClubPostReferenceGuard.REF_ACTIVITY, id));
+        topicIds.removeIf(id -> !clubPostReferenceGuard.isPubliclyVisible(ClubPostReferenceGuard.REF_TOPIC, id));
+
         Map<Long, Map<String, Object>> byActivity = indexSummaries(
                 activityIds.isEmpty() ? null : viewCreativeSquareService.selectSportActivitySummaries(activityIds),
                 "activityId");
@@ -1584,7 +1601,10 @@ public class ApiClubController extends BaseController {
             if (p == null || p.getRefType() == null || p.getRefId() == null) continue;
             boolean isActivity = Integer.valueOf(1).equals(p.getRefType());
             Map<String, Object> summary = isActivity ? byActivity.get(p.getRefId()) : byTopic.get(p.getRefId());
-            if (summary == null) continue;
+            if (summary == null) {
+                p.setRefUnavailable(true);
+                continue;
+            }
             p.setSportName(summary.get("sportName") == null ? null : String.valueOf(summary.get("sportName")));
             p.setSportCover(summary.get("sportCover") == null ? null : String.valueOf(summary.get("sportCover")));
             p.setSportTopicId(isActivity ? Convert.toLong(summary.get("topicId")) : p.getRefId());
@@ -1788,11 +1808,15 @@ public class ApiClubController extends BaseController {
         // 引用:1=活动完赛 2=主题/模板(口径同广场帖 dataType)。
         // ⚠️ 只认这两种。3(自由漫游成绩)全仓还没有任何地方写得出来,现在放行等于开一个
         //    没有生产者的入口;前端的 variant 判定已经认得 3,等真有人写再放。
+        // F0098:被引对象当前公开可见 + 发帖人本人确有报名成功记录,才算「我的游玩记录」。
         Integer refType = body.getRefType();
         Long refId = body.getRefId();
         if (refType != null || refId != null) {
-            if (refType == null || refId == null || refId <= 0) return error("引用信息不完整");
-            if (refType != 1 && refType != 2) return error("暂不支持这种引用");
+            try {
+                clubPostReferenceGuard.requireCitable(memberId, refType, refId);
+            } catch (ServiceException e) {
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+            }
         }
 
         ClubPost post = new ClubPost();
@@ -1853,6 +1877,12 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/history")
     public AjaxResult postHistory(@RequestBody ClubPostMutationRequest body) {
         if (body == null || body.getId() == null) return error("缺少动态ID");
+        // F0119:历史每次按「当前」帖子所在俱乐部的可见性投影 —— 转仅成员可见/退团后,旧历史直链同样拒。
+        // 已确认口径:公开发布的正文大家可看,历史不另设成员门槛;帖子被删(含内容安全下架)由 service 拒。
+        ClubPost historyPost = clubPostService.selectClubPostById(body.getId());
+        if (historyPost != null && !canViewClub(clubService.selectClubById(historyPost.getClubId()))) {
+            return error("这个俱乐部只对成员开放");
+        }
         try {
             return AjaxResult.success(clubPostService.listRevisionHistory(body.getId()));
         } catch (ServiceException e) {
@@ -1865,7 +1895,10 @@ public class ApiClubController extends BaseController {
     public AjaxResult commentList(@RequestBody ClubPostComment body) {
         if (body.getPostId() == null) return error("缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getPostId());
-        if (post == null || clubService.selectClubById(post.getClubId()) == null) return error("动态不存在");
+        if (post == null) return error("动态不存在");
+        Club commentClub = clubService.selectClubById(post.getClubId());
+        if (commentClub == null) return error("动态不存在");
+        if (!canViewClub(commentClub)) return error("这个俱乐部只对成员开放");
         ClubPostComment q = new ClubPostComment();
         q.setPostId(body.getPostId());
         return AjaxResult.success(clubPostCommentService.selectClubPostCommentList(q));

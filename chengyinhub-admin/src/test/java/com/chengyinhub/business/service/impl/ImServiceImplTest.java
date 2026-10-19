@@ -710,8 +710,12 @@ class ImServiceImplTest {
         topic.setName("外滩夜行");
         topic.setStatus(1);
         topic.setUserStatus(1);
+<<<<<<< public
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
         when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), anyLong())).thenReturn(topic);
+=======
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, null)).thenReturn(topic);
+>>>>>>> private-feature/w2-r
 
         ArgumentCaptor<ImMessage> cap = forClass(ImMessage.class);
         service.send(1L, 100L, null, ImMessage.MSG_CARD, "伪造摘要",
@@ -722,7 +726,9 @@ class ImServiceImplTest {
         assertTrue(extra.contains("\"topicId\":7"), "应保留 topicId");
         assertFalse(extra.contains("我是伪造的"), "客户端传的展示字段必须丢弃");
         assertFalse(extra.contains("action"), "action 是钓鱼载体,必须丢弃");
-        assertEquals("[路线] 外滩夜行", cap.getValue().getContent(), "content 必须服务端重建");
+        assertEquals("[路线]", cap.getValue().getContent(), "content 必须服务端重建");
+        assertFalse(cap.getValue().getContent().contains("外滩夜行"),
+                "F0412:落库摘要不带主题名 —— 下架/转私密后会话列表收不回来");
     }
 
     @Test
@@ -733,12 +739,14 @@ class ImServiceImplTest {
         topic.setId(7L);
         topic.setUserStatus(0); // 未上架
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+        // F0412:匿名口径详情查不到(未上架 / 已删 / 未过审 / 仅俱乐部成员可见)一律拒发
+        when(cmsTopicMapper.selectCmsTopicDetailById(7L, null)).thenReturn(null);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
                         "{\"cardType\":\"route\",\"topicId\":7}"));
 
-        assertEquals("该路线未上架", ex.getMessage());
+        assertEquals("该路线未上架或不公开，暂不能发送", ex.getMessage());
         verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
     }
 
@@ -957,6 +965,7 @@ class ImServiceImplTest {
         when(blockMapper.existsBetween(1L, 2L)).thenReturn(0);
         assertEquals(Boolean.FALSE, service.listMessages(1L, 100L, null, 20).get("blocked"));
     }
+<<<<<<< public
     private ImServiceImpl messagePaginationService() {
         ImServiceImpl service = service();
         ImConversation conversation = new ImConversation();
@@ -1048,4 +1057,38 @@ class ImServiceImplTest {
         assertEquals(29, ((List<?>) result.get("list")).size());
     }
 
+=======
+
+    @Test
+    void legacyRouteCardSummaryNoLongerProjectsTheOldTitle() {
+        ImServiceImpl service = service();
+        ImConversation single = new ImConversation();
+        single.setId(100L);
+        single.setType(ImConversation.TYPE_SINGLE);
+        single.setLastMsgType(ImMessage.MSG_CARD);
+        single.setLastMsgText("[路线] 已下架的私密路线");
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(single);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+        ImMessage legacy = message(70L, 100L, 2L);
+        legacy.setMsgType(ImMessage.MSG_CARD);
+        legacy.setContent("[路线] 已下架的私密路线");
+        legacy.setExtraJson("{\"cardType\":\"route\",\"topicId\":7}");
+        ImMessage text = message(71L, 100L, 2L);
+        text.setMsgType(ImMessage.MSG_TEXT);
+        text.setContent("[路线] 这是普通文字,不能被改");
+        when(messageMapper.selectPage(anyLong(), any(), anyInt())).thenReturn(Arrays.asList(text, legacy));
+
+        Map<String, Object> page = service.listMessages(1L, 100L, null, 20);
+        List<?> list = (List<?>) page.get("list");
+        assertEquals("[路线]", ((ImMessage) list.get(0)).getContent(), "存量路线卡摘要读出时不再带旧标题");
+        assertEquals("[路线] 这是普通文字,不能被改", ((ImMessage) list.get(1)).getContent());
+
+        ImConversationMember mine = member(1L);
+        mine.setConversationId(100L);
+        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(mine));
+        List<Map<String, Object>> rows = service.listConversations(1L);
+        assertEquals("[路线]", rows.get(0).get("lastMsgText"), "会话列表摘要同样收起旧标题");
+    }
+>>>>>>> private-feature/w2-r
 }

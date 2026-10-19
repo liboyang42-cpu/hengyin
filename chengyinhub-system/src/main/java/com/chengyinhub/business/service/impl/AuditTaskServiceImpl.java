@@ -73,6 +73,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public static final String ERROR_REVERT_EXPIRED = "REVERT_EXPIRED";
     public static final String ERROR_REVIEW_KEY_REUSED = "AUDIT_REVIEW_IDEMPOTENCY_KEY_REUSED";
     public static final String ERROR_REVIEW_FORBIDDEN = "AUDIT_REVIEW_REPLAY_FORBIDDEN";
+    /** F0529:案件已升级(版本已推进),旧层级的迟到提交被拒 */
+    public static final String ERROR_REVIEW_STALE_LEVEL = "AUDIT_REVIEW_STALE_LEVEL";
     private static final int MAX_REASON_LENGTH = 200;
 
     private static final Logger logger = LoggerFactory.getLogger(AuditTaskServiceImpl.class);
@@ -534,7 +536,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
         }
         BusinessAuditEventMapper auditMapper = requireBusinessAuditMapper();
-        int decisionVersion = versionedReview ? request.getExpectedVersion()
+        // F0529:客户端带了 expectedVersion 就以它为本次决定的版本(与派生 requestId 的旧公式在首交/重放时一致)。
+        int decisionVersion = (versionedReview || request.getExpectedVersion() != null) ? request.getExpectedVersion()
                 : (task.getStatus().equals(request.getStatus()) ? task.getVersion() - 1 : task.getVersion());
         String auditAction = "AUDIT_DECISION_" + statusToAction(request.getStatus());
         String requestId = reviewRequestId(request.getRequestId(), taskId, decisionVersion, request.getStatus());
@@ -550,6 +553,17 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
+        }
+        // F0529:升级只推进处理层级并把案件版本 +1(原案快照不变)。升级后的裁决必须基于升级后的版本提交;
+        // 旧层级迟到的提交(没带版本,或带的是升级前版本)一律拒绝,不能借 ESCALATED→APPROVED/REJECTED 落地。
+        if (AuditTask.STATUS_ESCALATED.equals(task.getStatus()) && request.getExpectedVersion() == null) {
+            throw governanceError(ERROR_REVIEW_STALE_LEVEL, "该审核单已升级，请刷新后按当前层级提交", HttpStatus.CONFLICT);
+        }
+        if (request.getExpectedVersion() != null && !request.getExpectedVersion().equals(task.getVersion())) {
+            throw governanceError(ERROR_REVIEW_STALE_LEVEL,
+                    AuditTask.STATUS_ESCALATED.equals(task.getStatus())
+                            ? "该审核单已升级，旧层级的提交已失效，请刷新后按当前层级处理"
+                            : "审核单已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
         if (templateLock != null) assertTemplateReviewCurrent(templateLock, request);
         Date now = DateUtils.getNowDate();
@@ -590,8 +604,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
         // 审核决定 → 内容软封/恢复(REJECT=确认违规下架,APPROVE=举报无效恢复)
         notifyReviewResult(task, request);
-        applyModeration(task, request.getStatus(), request.getReasonText());
-        appendDecisionAudit(task, operatorId, request, record, now);
+        ModerationOutcome moderation = applyModeration(task, request.getStatus(), request.getReasonText());
+        appendDecisionAudit(task, operatorId, request, record, now, moderation);
         return rows;
     }
 
@@ -945,6 +959,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
      * 审核决定 → 内容软封/恢复分发。普通举报内容保持 best-effort；主题与模板是审核发布真源，
      * 状态或发布快照任一步失败都必须抛出，由 {@link #review} 的事务回滚审核决定。
      */
+<<<<<<< public
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> appMediaAssetServiceProvider;
 
@@ -952,11 +967,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
 
     private void applyModeration(AuditTask task, Integer decision, String reasonText) {
+=======
+    private ModerationOutcome applyModeration(AuditTask task, Integer decision, String reasonText) {
+>>>>>>> private-feature/w2-r
         String bizType = task.getBizType();
         Long bizId = task.getBizId();
-        if (bizType == null || bizId == null) return;
         boolean down = AuditTask.STATUS_REJECTED.equals(decision); // 确认违规 → 下架
         boolean up = AuditTask.STATUS_APPROVED.equals(decision);   // 举报无效 → 恢复
+<<<<<<< public
         if (!down && !up) return;
         if (AuditTask.BIZ_MEDIA_ASSET.equals(bizType)) {
             if (!com.chengyinhub.common.utils.SecurityUtils.hasPermi(up ? "business:mediaReview:approve" : "business:mediaReview:reject"))
@@ -964,11 +982,17 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             appMediaAssetServiceProvider.getObject().applyAudit(task,up,reasonText);
             return;
         }
+=======
+        if (!down && !up) return null;
+        if (bizType == null || bizId == null) return ModerationOutcome.noEffect(bizType, bizId, "审核对象缺失");
+>>>>>>> private-feature/w2-r
         try {
             if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType)) {
                 communityPostServiceProvider.getObject().applyAuditDecision(bizId, up);
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_COMMUNITY_POST_COMMENT.equals(bizType)) {
                 communityPostServiceProvider.getObject().applyCommentAuditDecision(bizId, up);
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_SQUARE.equals(bizType)) {
                 UmsCreativeSquare s = new UmsCreativeSquare();
                 s.setId(bizId);
@@ -978,42 +1002,48 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 boolean topicHidden = cur != null && Integer.valueOf(3).equals(cur.getStatus());
                 s.setStatus(down ? Integer.valueOf(2) : (topicHidden ? null : Integer.valueOf(1)));
                 s.setCheckStatus(down ? 2 : 1);
-                umsCreativeSquareService.updateUmsCreativeSquare(s);
+                return ModerationOutcome.ofRows(bizType, bizId, umsCreativeSquareService.updateUmsCreativeSquare(s));
             } else if (AuditTask.BIZ_COMMENT.equals(bizType)) {
                 UmsComment c = new UmsComment();
                 c.setId(bizId);
                 c.setStatus(down ? 2 : 1);
-                umsCommentService.updateUmsComment(c);
+                return ModerationOutcome.ofRows(bizType, bizId, umsCommentService.updateUmsComment(c));
             } else if (AuditTask.BIZ_CLUB_POST.equals(bizType)) {
                 if (down) {
-                    clubPostService.deleteClubPostById(bizId); // del_flag=2 软下架
+                    return ModerationOutcome.ofRows(bizType, bizId,
+                            clubPostService.deleteClubPostById(bizId)); // del_flag=2 软下架
                 } else {
                     ClubPost p = new ClubPost();
                     p.setId(bizId);
                     p.setDelFlag(0);
-                    clubPostService.updateClubPost(p);
+                    return ModerationOutcome.ofRows(bizType, bizId, clubPostService.updateClubPost(p));
                 }
             } else if (AuditTask.BIZ_CLUB_POST_COMMENT.equals(bizType)) {
                 if (down) {
-                    clubPostCommentService.deleteClubPostCommentById(bizId); // del_flag=2 软下架
+                    return ModerationOutcome.ofRows(bizType, bizId,
+                            clubPostCommentService.deleteClubPostCommentById(bizId)); // del_flag=2 软下架
                 } else {
                     ClubPostComment cc = new ClubPostComment();
                     cc.setId(bizId);
                     cc.setDelFlag(0);
-                    clubPostCommentService.updateClubPostComment(cc); // 恢复
+                    return ModerationOutcome.ofRows(bizType, bizId,
+                            clubPostCommentService.updateClubPostComment(cc)); // 恢复
                 }
             } else if (AuditTask.BIZ_HANGOUT.equals(bizType)) {
                 // 每张举报单仍如实记录自己的「无效」结论，但不能借此撤回另一张已成立举报的处罚。
                 // 局的恢复只允许走明确的申诉补偿链路，不能由新的举报单隐式完成。
-                if (up) return;
+                if (up) return ModerationOutcome.noEffect(bizType, bizId, "举报不成立不恢复组局");
                 roamHangoutServiceProvider.getObject().moderate(bizId, down);
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_TEAM.equals(bizType)) {
                 // 举报不成立:不动队伍(审核单结束后 nearby 自然恢复显示);成立:退出公开地图,不解散已组好的队。
-                if (up) return;
+                if (up) return ModerationOutcome.noEffect(bizType, bizId, "举报不成立不改动队伍");
                 playTeamMapper.hideFromPublic(bizId);
                 playTeamMapper.expirePendingApplications(bizId);
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
-                imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
+                return ModerationOutcome.ofRows(bizType, bizId,
+                        imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL));
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTopicPublication(bizId);
                 if (isTopicBundle(task)) {
@@ -1076,6 +1106,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     // 幂等:已有壳(含商家壳)不重复建;进商家池主题不建(由中标流程生成)。
                     cmsTopicServiceProvider.getObject().ensureSelfHostActivityShell(bizId);
                 }
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_ACTIVITY.equals(bizType)) {
                 // M0-6 先审后发:过审→上架(status=1/publishStatus=1);驳回→status=2
                 CmsActivity a = new CmsActivity();
@@ -1085,7 +1116,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 // 动态 SQL 仅在 reason != null 时更新；过审要显式清掉历史驳回原因。
                 a.setReason(down ? reasonText : "");
                 a.setPublishStatus(down ? 0L : 1L);
-                cmsActivityMapper.updateCmsActivity(a);
+                return ModerationOutcome.ofRows(bizType, bizId, cmsActivityMapper.updateCmsActivity(a));
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。
@@ -1099,6 +1130,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 if (templateMapper.applyAuditDecision(template, task.getSubmitterId()) != 1) {
                     throw new ServiceException("模板审核真源更新失败");
                 }
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), libraryMapper.selectCmsTemplateLibraryById(bizId), true);
                 com.chengyinhub.business.domain.CmsTemplateLibrary projection =
@@ -1112,6 +1144,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 if (libraryMapper.applyAuditDecision(projection, task.getSubmitterId()) != 1) {
                     throw new ServiceException("模板库审核投影更新失败");
                 }
+                return ModerationOutcome.applied(bizType, bizId);
             } else if (AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType)) {
                 String expectedStatus = SOURCE_REPORT.equals(task.getSourceType())
                         ? com.chengyinhub.business.domain.MerchantReview.STATUS_VISIBLE
@@ -1122,7 +1155,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                         down ? com.chengyinhub.business.domain.MerchantReview.STATUS_HIDDEN
                                 : com.chengyinhub.business.domain.MerchantReview.STATUS_VISIBLE,
                         reasonText);
+                return ModerationOutcome.applied(bizType, bizId);
             }
+            // 其余类型(主题立项/开售审等)的对象状态由 applyCommercialReviewLifecycle 处理,这里没有内容投影
+            return ModerationOutcome.noEffect(bizType, bizId, "该类型无内容投影");
         } catch (Exception e) {
             if (AuditTask.BIZ_TOPIC.equals(bizType) && isTopicBundle(task)
                     && e instanceof IllegalStateException && e.getMessage() != null
@@ -1153,12 +1189,225 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             // 其余举报内容保持 best-effort:失败不影响已提交的审核记录,但必须留痕——静默吞会造成
             // 「审核显示已通过、内容状态却没变」且无任何线索(配额闸引入锁/查后风险面更大)
             logger.warn("applyModeration best-effort 失败 bizType={} bizId={} decision={}", bizType, bizId, decision, e);
+            // F0528:不再只留日志 —— 记成待处置意图,工作台显示「待处置」,可原样重放直到对象投影真正更新。
+            return ModerationOutcome.pending(bizType, bizId, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+        }
+    }
+
+    /** F0528 对象投影实际结果:APPLIED 已更新 / PENDING 待处置(可重放) / NO_EFFECT 该决定不改对象。 */
+    static final class ModerationOutcome {
+        static final String APPLIED = "APPLIED";
+        static final String PENDING = "PENDING";
+        static final String NO_EFFECT = "NO_EFFECT";
+
+        final String outcome;
+        final String bizType;
+        final Long bizId;
+        final String detail;
+
+        private ModerationOutcome(String outcome, String bizType, Long bizId, String detail) {
+            this.outcome = outcome;
+            this.bizType = bizType;
+            this.bizId = bizId;
+            this.detail = detail == null ? null : (detail.length() > 200 ? detail.substring(0, 200) : detail);
+        }
+
+        static ModerationOutcome applied(String bizType, Long bizId) {
+            return new ModerationOutcome(APPLIED, bizType, bizId, null);
+        }
+
+        static ModerationOutcome pending(String bizType, Long bizId, String detail) {
+            return new ModerationOutcome(PENDING, bizType, bizId, detail);
+        }
+
+        static ModerationOutcome noEffect(String bizType, Long bizId, String detail) {
+            return new ModerationOutcome(NO_EFFECT, bizType, bizId, detail);
+        }
+
+        /** best-effort 写:0 行 = 对象投影没有被更新(对象缺失或状态已被并发改动),不是「已处置」。 */
+        static ModerationOutcome ofRows(String bizType, Long bizId, int rows) {
+            return rows > 0 ? applied(bizType, bizId) : pending(bizType, bizId, "对象投影未更新(0 行)");
+        }
+
+        java.util.Map<String, Object> toMap() {
+            java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("outcome", outcome);
+            map.put("bizType", bizType);
+            map.put("bizId", bizId);
+            if (detail != null) map.put("detail", detail);
+            return map;
         }
     }
 
     private boolean isTopicBundle(AuditTask task) {
         return task != null && AuditTask.BIZ_TOPIC.equals(task.getBizType())
                 && "topic_bundle_v2".equals(task.getSourceType());
+    }
+
+    // ===================================================================== F0528 对象投影待处置
+
+    static final String ACTION_MODERATION_REPLAY = "AUDIT_MODERATION_REPLAY";
+
+    @Override
+    public java.util.Map<Long, String> moderationOutcomes(List<AuditTask> tasks) {
+        java.util.Map<Long, String> result = new java.util.HashMap<>();
+        if (tasks == null || tasks.isEmpty()) return result;
+        List<Long> ids = new ArrayList<>();
+        for (AuditTask task : tasks) {
+            if (task != null && task.getId() != null && isTerminalDecision(task.getStatus())) ids.add(task.getId());
+        }
+        if (ids.isEmpty()) return result;
+        List<BusinessAuditEvent> events = requireBusinessAuditMapper().selectByTargets("AUDIT_TASK", ids);
+        java.util.Map<Long, List<BusinessAuditEvent>> byTask = new java.util.HashMap<>();
+        if (events != null) {
+            for (BusinessAuditEvent event : events) {
+                byTask.computeIfAbsent(event.getTargetId(), k -> new ArrayList<>()).add(event);
+            }
+        }
+        for (AuditTask task : tasks) {
+            if (task == null || !ids.contains(task.getId())) continue;
+            ModerationState state = moderationState(task, byTask.get(task.getId()));
+            if (state != null) result.put(task.getId(), state.outcome);
+        }
+        return result;
+    }
+
+    @Override
+    public java.util.Map<String, Object> moderationState(Long taskId) {
+        AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+        if (task == null) return null;
+        ModerationState state = moderationState(task,
+                requireBusinessAuditMapper().selectByTarget("AUDIT_TASK", taskId));
+        return state == null ? null : state.toMap();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public java.util.Map<String, Object> replayModeration(Long taskId, Long operatorId, String actorRoleCode) {
+        if (taskId == null || operatorId == null) throw new IllegalArgumentException("重放参数不完整");
+        AuditTask task = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+        if (task == null) throw new ServiceException("审核任务不存在", HttpStatus.NOT_FOUND);
+        BusinessAuditEventMapper auditMapper = requireBusinessAuditMapper();
+        ModerationState state = moderationState(task, auditMapper.selectByTarget("AUDIT_TASK", taskId));
+        if (state == null || !ModerationOutcome.PENDING.equals(state.outcome)) {
+            throw new ServiceException("该审核任务没有待处置的对象投影", HttpStatus.CONFLICT);
+        }
+        ModerationOutcome outcome = applyModeration(task, task.getStatus(), state.reasonText);
+        Date now = DateUtils.getNowDate();
+        java.util.Map<String, Object> after = new java.util.LinkedHashMap<>();
+        after.put("status", task.getStatus());
+        after.put("version", task.getVersion());
+        after.put("moderation", outcome == null ? null : outcome.toMap());
+        String afterJson;
+        try {
+            afterJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(after);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new ServiceException("重放审计序列化失败", HttpStatus.ERROR);
+        }
+        BusinessAuditEvent event = decisionAuditEvent(task, operatorId, actorRoleCode, ACTION_MODERATION_REPLAY,
+                "audit-moderation-replay:" + taskId + ":" + task.getVersion() + ":" + (state.replayCount + 1),
+                state.decisionEventId, state.reasonText,
+                "{\"moderation\":\"PENDING\",\"attempt\":" + (state.replayCount + 1) + "}", afterJson, now);
+        if (auditMapper.insertBusinessAuditEvent(event) != 1) {
+            throw new ServiceException("重放审计写入失败", HttpStatus.ERROR);
+        }
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("taskId", taskId);
+        result.put("outcome", outcome == null ? null : outcome.outcome);
+        result.put("detail", outcome == null ? null : outcome.detail);
+        result.put("attempt", state.replayCount + 1);
+        return result;
+    }
+
+    /**
+     * 从不可变审计回放当前决定的对象投影状态。只认与任务当前状态/版本一致的决定;
+     * 之后被撤销(AUDIT_DECISION_REVERTED)或任务已变化 → 无待处置。旧决定事件没有 moderation 字段 → LEGACY。
+     */
+    private ModerationState moderationState(AuditTask task, List<BusinessAuditEvent> events) {
+        if (task == null || !isTerminalDecision(task.getStatus()) || events == null) return null;
+        String decisionAction = "AUDIT_DECISION_" + statusToAction(task.getStatus());
+        ModerationState state = null;
+        int replays = 0;
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        // selectByTarget 时间倒序:先遇到的重放是最新的,遇到决定事件即止
+        for (BusinessAuditEvent event : events) {
+            String action = event.getAction();
+            if (ACTION_MODERATION_REPLAY.equals(action)) {
+                if (state == null) {
+                    state = new ModerationState();
+                    state.outcome = readOutcome(json, event.getAfterJson());
+                    state.lastAttemptAt = event.getCreateTime();
+                }
+                replays++;
+                continue;
+            }
+            if (action == null || !action.startsWith("AUDIT_DECISION_")) continue;
+            if (!decisionAction.equals(action) || !versionMatches(json, event.getAfterJson(), task.getVersion())) {
+                return null; // 最近的决定事件不是当前决定(已撤销/已变化)
+            }
+            if (state == null) {
+                state = new ModerationState();
+                state.outcome = readOutcome(json, event.getAfterJson());
+            }
+            state.decisionEventId = event.getId();
+            state.decidedAt = event.getCreateTime();
+            state.reasonText = event.getReason();
+            state.replayCount = replays;
+            state.taskId = task.getId();
+            state.detail = readDetail(json, event.getAfterJson());
+            return state;
+        }
+        return null;
+    }
+
+    private static boolean versionMatches(com.fasterxml.jackson.databind.ObjectMapper json, String afterJson, Integer version) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode after = json.readTree(afterJson);
+            return after != null && after.hasNonNull("version") && version != null
+                    && after.get("version").asInt() == version;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String readOutcome(com.fasterxml.jackson.databind.ObjectMapper json, String afterJson) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = json.readTree(afterJson).path("moderation").path("outcome");
+            return node.isTextual() ? node.asText() : "LEGACY";
+        } catch (Exception e) {
+            return "LEGACY";
+        }
+    }
+
+    private static String readDetail(com.fasterxml.jackson.databind.ObjectMapper json, String afterJson) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = json.readTree(afterJson).path("moderation").path("detail");
+            return node.isTextual() ? node.asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static final class ModerationState {
+        private Long taskId;
+        private String outcome;
+        private String detail;
+        private Long decisionEventId;
+        private Date decidedAt;
+        private Date lastAttemptAt;
+        private String reasonText;
+        private int replayCount;
+
+        java.util.Map<String, Object> toMap() {
+            java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("taskId", taskId);
+            map.put("outcome", outcome);
+            map.put("detail", detail);
+            map.put("decidedAt", decidedAt);
+            map.put("replayCount", replayCount);
+            map.put("lastAttemptAt", lastAttemptAt);
+            return map;
+        }
     }
 
     @Override
@@ -1172,14 +1421,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     }
 
     private void appendDecisionAudit(AuditTask task, Long operatorId, AuditReviewDTO request,
-                                     AuditRecord record, Date now) {
+                                     AuditRecord record, Date now, ModerationOutcome moderation) {
         BusinessAuditEventMapper auditMapper = requireBusinessAuditMapper();
         String requestId = request.getRequestId();
         BusinessAuditEvent event = decisionAuditEvent(task, operatorId, request.getActorRoleCode(),
                 "AUDIT_DECISION_" + statusToAction(request.getStatus()), requestId,
                 record.getId(), request.getReasonText(),
                 stateJson(task.getStatus(), task.getVersion()),
-                stateJson(request.getStatus(), task.getVersion() + 1), now);
+                stateJson(request.getStatus(), task.getVersion() + 1, moderation), now);
         if (auditMapper.insertBusinessAuditEvent(event) != 1) {
             throw new ServiceException("审批审计写入失败", HttpStatus.ERROR);
         }
@@ -1389,6 +1638,20 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     private String stateJson(Integer status, Integer version) {
         return "{\"status\":" + status + ",\"version\":" + version + "}";
+    }
+
+    /** F0528:决定事件的 after_json 同时记下对象投影的实际结果(APPLIED/PENDING/NO_EFFECT)。 */
+    private String stateJson(Integer status, Integer version, ModerationOutcome moderation) {
+        if (moderation == null) return stateJson(status, version);
+        java.util.Map<String, Object> state = new java.util.LinkedHashMap<>();
+        state.put("status", status);
+        state.put("version", version);
+        state.put("moderation", moderation.toMap());
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(state);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new ServiceException("审批审计序列化失败", HttpStatus.ERROR);
+        }
     }
 
     private boolean canTransition(Integer from, Integer to) {

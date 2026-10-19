@@ -37,6 +37,12 @@ public class ChapterBlockDTO implements Serializable
 
     @Schema(description = "媒体地址；仅 type=image / audio 时有效")
     private String url;
+    @Schema(description = "图片文字替代或音频转写；仅媒体块使用，最多2000字")
+    private String altText;
+
+    public String getAltText() { return altText; }
+    public void setAltText(String altText) { this.altText = altText; }
+
     /** mood 块专用:平台氛围预设名。作者只选名字,渲染参数在客户端。 */
     private String mood;
     /** thought 块专用:在这一段获得哪个念头;key 引用 journeyRules.thoughts。 */

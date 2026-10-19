@@ -72,7 +72,7 @@ public interface IWxContentSecurityService
     int BIZ_TYPE_ACTIVITY = 2;
     /** 业务类型：俱乐部动态 */
     int BIZ_TYPE_CLUB_POST = 3;
-    /** 业务类型：用户资料(头像/案例图) */
+    /** 业务类型：用户资料(头像/作品图/联系二维码) */
     int BIZ_TYPE_MEMBER_PROFILE = 4;
     /** 业务类型：俱乐部资料(logo/封面/案例图) */
     int BIZ_TYPE_CLUB_PROFILE = 5;
@@ -108,6 +108,15 @@ public interface IWxContentSecurityService
      * 清掉的是别人家的封面/相册。bizType 与 bizId 是成对的,换了语义就必须换类型。
      */
     int BIZ_TYPE_NODE_NPC = 16;
+
+    /**
+     * 门店分身 NPC 头像(npc_profile scope_type=2)。bizId = npc_profile.id。
+     *
+     * <p>此前门店头像借 {@link #BIZ_TYPE_MERCHANT_PROFILE}(bizId=merchantId)送检,回调核对的是商家
+     * logo/封面/相册,头像哈希永远对不上 ⇒ 违规头像被当「旧媒体」忽略。命中只把这一行打回驳回态
+     * (audit_status=2),玩家读闸 audit_status=1 立即失效;通过回调不代替人工审核上线。
+     */
+    int BIZ_TYPE_MERCHANT_NPC = 17;
 
     /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，

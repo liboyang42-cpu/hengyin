@@ -27,4 +27,16 @@ public interface RoamShareSnapshotMapper {
     int deleteExpiredUnbound(@Param("cutoff") java.util.Date cutoff, @Param("limit") int limit);
 
     int deleteByMember(@Param("memberId") Long memberId);
+
+    /** F0384:逐条撤回,只删本人名下的这一枚令牌;他人令牌删 0 行。 */
+    int deleteByMemberToken(@Param("memberId") Long memberId, @Param("shareToken") String shareToken);
+
+    /** M0117:当前快照版本(无行返回 null)。 */
+    Integer selectVersionByMemberTs(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs);
+
+    Integer selectVersionByToken(@Param("shareToken") String shareToken);
+
+    /** M0117:版本条件更新;版本不一致返回 0(并发改图冲突),不覆盖。 */
+    int updateSnapshotIfVersion(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs,
+                                @Param("snapshotJson") String snapshotJson, @Param("expectedVersion") Integer expectedVersion);
 }

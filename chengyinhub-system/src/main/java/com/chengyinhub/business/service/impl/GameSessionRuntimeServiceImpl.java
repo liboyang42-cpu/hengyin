@@ -347,7 +347,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
 
     private Map<String, Object> publicRunControl(GameSession session) {
         ObjectNode run = runControl(session), visible = objectMapper.createObjectNode();
-        for (String key : Arrays.asList("operationStatus", "authorityMode", "authorityEpoch", "eventSeq", "bindings", "exitedTeams", "openedActs", "operationReason")) {
+        for (String key : Arrays.asList("operationStatus", "authorityMode", "authorityEpoch", "eventSeq", "bindings", "exitedTeams", "openedActs", "operationReason", "pausedAt", "pausedTotalMs")) {
             if (run.has(key)) visible.set(key, run.get(key).deepCopy());
         }
         return objectMapper.convertValue(visible, Map.class);
@@ -414,13 +414,16 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 if (Arrays.asList("CANCELLED", "INTERRUPTED").contains(run.path("operationStatus").asText())) throw error("GAME_RUN_TERMINAL", "本局已运营中止");
                 run.put("operationReason", runReason(command));
                 run.put("operationStatus", "RUN_PAUSE".equals(action) ? "PAUSED" : "RUN_CANCEL".equals(action) ? "CANCELLED" : "INTERRUPTED");
-                if (!"RUN_PAUSE".equals(action)) releaseUnexecutedRouteReservations(session, run);
+                // 暂停时钉住冻结起点：暂停期间归零倒计时按此时刻计算，恢复时整体顺延；中止/取消不再计时，也不写任何结局。
+                if ("RUN_PAUSE".equals(action)) run.put("pausedAt", clock.now().getTime());
+                else { run.remove("pausedAt"); releaseUnexecutedRouteReservations(session, run); }
                 break;
             case "RUN_RESUME":
                 runPayload(command, "reason");
                 if (!"PAUSED".equals(run.path("operationStatus").asText()) || !"ONLINE".equals(run.path("authorityMode").asText())) throw error("GAME_STATE_CONFLICT", "人工模式须先完成校账");
                 requireActivityServiceWindow(activity, clock.now());
                 run.put("operationReason", runReason(command)); run.put("operationStatus", "RUNNING");
+                resumeFrozenTimers(session, run);
                 break;
             case "ARRIVAL_ISSUE": return issueArrival(actor, activity, session, command, run);
             case "ARRIVAL_CONFIRM": return confirmArrival(actor, activity, session, command, run);
@@ -429,7 +432,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 runPayload(command, "teamId", "questKey", "operationKind", "operationKey", "reason"); runReason(command);
                 JsonNode revokeQuest = arrivalTarget(session, command);
                 Long revokeTeam = requireFrozenTeam(session, command.getPayload().get("teamId"));
-                run.with("arrivals").remove(arrivalKey(revokeTeam, revokeQuest.path("locationKey").asText()));
+                JsonNode revoked = run.with("arrivals").remove(arrivalKey(revokeTeam, revokeQuest.path("locationKey").asText()));
+                if (revoked == null) throw error("GAME_STATE_CONFLICT", "该队在此地点没有可撤销的到达核验");
+                // 撤销留审计：谁、何时、为何撤销哪条核验；凭证本身不入审计。
+                if (run.path("arrivalRevocations").size() >= 2000) throw error("GAME_ARRIVAL_LIMIT", "本局到达撤销记录达到支持容量");
+                run.with("arrivalRevocations").putObject(String.valueOf(receiptId)).put("teamId", revokeTeam)
+                        .put("locationKey", revokeQuest.path("locationKey").asText()).put("verifiedBy", revoked.path("verifiedBy").asLong())
+                        .put("revokedBy", actor.getMemberId()).put("revokedAt", clock.now().getTime()).put("reason", runReason(command));
                 break;
             case "ACT_UNLOCK":
                 runPayload(command, "actKey", "reason"); requireOnlineRun(run); runReason(command);
@@ -452,6 +461,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             case "STAFF_TEAM_EXIT":
                 runPayload(command, "teamId", "reason"); runReason(command);
                 Long exiting = requireFrozenTeam(session, command.getPayload().get("teamId"));
+                // 已退出的队不能再用新请求退出一次：原退出回执唯一，原请求重放走回执读取
+                if (run.path("exitedTeams").has(String.valueOf(exiting))) throw error("GAME_TEAM_EXITED", "本队已退出本局");
                 run.with("exitedTeams").put(String.valueOf(exiting), receiptId);
                 releaseTeamReservations(session, exiting);
                 releaseCooperationReservations(session, exiting);
@@ -494,7 +505,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 for (JsonNode unknown : run.path("manual").path("unknownRequests")) if (Arrays.asList("UNKNOWN", "PENDING", "CONFLICT").contains(unknown.path("outcome").asText())) throw error("GAME_MANUAL_UNRESOLVED", "未知在线回执尚未复核");
                 for (JsonNode signature : run.path("manual").path("signatures")) if (!signature.path("used").asBoolean()) throw error("GAME_MANUAL_UNRESOLVED", "人工事件尚未逐条执行或复核");
                 run.with("manual").put("resolvedBy", actor.getMemberId()).put("closedAt", clock.now().getTime());
-                run.put("authorityEpoch", run.path("authorityEpoch").asInt(1) + 1).put("authorityMode", "ONLINE").put("operationStatus", "PAUSED");
+                run.put("authorityEpoch", run.path("authorityEpoch").asInt(1) + 1).put("authorityMode", "ONLINE").put("operationStatus", "PAUSED").put("pausedAt", clock.now().getTime());
                 run.remove("nonces"); run.remove("arrivals");
                 for (GameStoryState owner : safe(runtimeMapper.selectStoryStates(session.getId()))) if ("TEAM".equals(owner.getOwnerType())) {
                     TopicRouteEngine.State state = routeOwnerState(owner);
@@ -510,8 +521,41 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         return result(session, data);
     }
 
+    /** 在线暂停期间归零计时冻结在暂停时刻；其余情况按当前时间。 */
+    private long survivalTime(GameSession session) {
+        long now = clock.now().getTime();
+        JsonNode run = runControl(session);
+        if ("PAUSED".equals(run.path("operationStatus").asText()) && "ONLINE".equals(run.path("authorityMode").asText()) && run.has("pausedAt")) {
+            return Math.min(now, run.path("pausedAt").asLong());
+        }
+        return now;
+    }
+
+    /** 恢复本局：把暂停时长整体顺延到未结束的归零倒计时，不改 HP/资源。 */
+    private void resumeFrozenTimers(GameSession session, ObjectNode run) {
+        long paused = run.has("pausedAt") ? Math.max(0L, clock.now().getTime() - run.path("pausedAt").asLong()) : 0L;
+        run.remove("pausedAt");
+        run.put("pausedTotalMs", run.path("pausedTotalMs").asLong() + paused);
+        if (paused == 0L) return;
+        for (GameStoryState owner : safe(runtimeMapper.selectStoryStates(session.getId()))) if ("TEAM".equals(owner.getOwnerType())) {
+            TopicRouteEngine.State state = routeOwnerState(owner); boolean shifted = false;
+            for (String key : Arrays.asList("zeroHp", "challenge")) {
+                JsonNode timer = state.getThemeRuntime().path(key);
+                if (timer.isObject() && timer.has("deadlineAt") && !timer.path("resolved").asBoolean()) {
+                    ((ObjectNode) timer).put("deadlineAt", Math.addExact(timer.path("deadlineAt").asLong(), paused)); shifted = true;
+                }
+            }
+            if (shifted) saveRouteOwner(session, owner, state);
+        }
+    }
+
     private void saveRouteOwner(GameSession session, GameStoryState owner, TopicRouteEngine.State state) {
-        if ("TEAM".equals(owner.getOwnerType())) survivalEngine.syncChallenge(sessionConfig(session), routeRules(session), state, clock.now().getTime());
+        if ("TEAM".equals(owner.getOwnerType())) survivalEngine.syncChallenge(sessionConfig(session), routeRules(session), state, survivalTime(session));
+        saveOwnerWithoutSurvival(owner, state);
+    }
+
+    /** 只释放占用时使用：不推进归零计时，避免中止/取消/退出被记成 HP 结局。 */
+    private void saveOwnerWithoutSurvival(GameStoryState owner, TopicRouteEngine.State state) {
         owner.setVariablesJson(writeJson(state)); owner.setUpdateTime(clock.now());
         if (runtimeMapper.updateStoryStateCas(owner) != 1) throw error("GAME_STATE_CONFLICT", "归属账已更新");
     }
@@ -526,7 +570,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private void releaseTeamReservations(GameSession session, Long teamId) {
         GameStoryState owner = requireRouteOwner(session, teamId);
         TopicRouteEngine.State state = routeOwnerState(owner); state.getThemeRuntime().with("gameplay").remove("activeQuest"); state.getThemeRuntime().with("gameplay").remove("pendingTaskEffects"); state.getThemeRuntime().remove("activeOperation"); state.getThemeRuntime().remove("operationFacts");
-        saveRouteOwner(session, owner, state);
+        saveOwnerWithoutSurvival(owner, state);
     }
 
     private void releaseUnexecutedRouteReservations(GameSession session, ObjectNode run) {
@@ -716,7 +760,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         data.put("balances", routeBalances(session));
         data.put("highWaterHash", digest(writeJson(routeBalances(session)) + ":" + session.getRevision() + ":" + run.path("eventSeq").asInt()));
         data.put("events", run.path("events").deepCopy()); data.put("operationStatus", run.path("operationStatus").asText());
-        data.put("authorityMode", run.path("authorityMode").asText()); data.put("manual", run.path("manual").deepCopy());
+        // 导出最小化：人工账签名里的一次性到达凭证不随导出外流。
+        JsonNode manual = run.path("manual").deepCopy();
+        for (JsonNode signature : manual.path("signatures")) {
+            JsonNode payload = signature.path("command").path("payload");
+            if (payload.isObject()) ((ObjectNode) payload).remove("nonce");
+        }
+        data.put("authorityMode", run.path("authorityMode").asText()); data.put("manual", manual);
         return data;
     }
 
@@ -1734,6 +1784,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         JsonNode survival=routeGameplay(session).path("survival");String policy=survival.path("zeroHpPolicy").asText();
         if(!GameSession.RUNNING.equals(session.getStatus()) || !(Arrays.asList("THEME_FAIL","WAIT","STEPS").contains(policy) || "CHALLENGE".equals(policy) && survival.path("zeroChallenge").path("version").asInt()==2))return session;
         if(runControl(session).path("exitedTeams").has(String.valueOf(teamId)))return session;
+        // 暂停/中止/取消/人工账期间，读取不得推进归零计时、恢复 HP 或写结局。
+        JsonNode control=runControl(session);
+        if(!"RUNNING".equals(control.path("operationStatus").asText()) || !"ONLINE".equals(control.path("authorityMode").asText()))return session;
         GameSession locked=runtimeMapper.selectSessionByActivityForUpdate(session.getActivityId());
         if(locked==null || !Objects.equals(locked.getId(),session.getId()))throw error("GAME_STATE_CONFLICT","Play-through changed");
         GameStoryState owner=requireRouteOwner(locked,teamId);TopicRouteEngine.State state=routeOwnerState(owner);String before=writeJson(state);
@@ -2230,7 +2283,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         }
         try {requireActivity(session.getActivityId(),true);requireSessionStatus(session,GameSession.RUNNING);requireOnlineRun(runControl(session));requireNaturalPlayOpen(session,state);}
         catch(GameSessionException closed){unavailable=closed.getMessage();}
-        return GameplaySurvivalEngine.zeroView(sessionConfig(session).path("themeConfig"),state,clock.now().getTime(),memberId,recovery,name,unavailable);
+        return GameplaySurvivalEngine.zeroView(sessionConfig(session).path("themeConfig"),state,survivalTime(session),memberId,recovery,name,unavailable);
     }
 
     private Map<String, Object> sharedRoutePlayer(GameSession session, Long teamId,Long memberId) {
@@ -2377,7 +2430,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             TopicRouteEngine.State owner="TEAM".equals(scope)?state:world;
             if(owner==null)continue;
             for(Map.Entry<String,Number> entry:owner.getVariables().entrySet()) {
-                if(!entry.getKey().startsWith("clue.") || entry.getValue()==null || entry.getValue().intValue()!=1 || !labels.containsKey(entry.getKey()))continue;
+                if(!entry.getKey().startsWith("clue.") || entry.getValue()==null || entry.getValue().doubleValue()<1 || !labels.containsKey(entry.getKey()))continue;
                 ObjectNode row=out.addObject().put("id",entry.getKey()).put("name",labels.get(entry.getKey())).put("scope",scope);
                 row.set("sources",clueSources(snapshot,entry.getKey(),scope,state,world));
             }
@@ -3401,9 +3454,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         requireSessionStatus(session, GameSession.READY, GameSession.RUNNING);
         String targetType = upper(command.getPayload().get("targetType"));
         String content = text(command.getPayload().get("content"), 200);
-        if (!("ALL".equals(targetType) || "TEAM".equals(targetType) || "ROLE".equals(targetType))
+        if (!("ALL".equals(targetType) || "TEAM".equals(targetType) || "ROLE".equals(targetType) || "MEMBERS".equals(targetType))
                 || StringUtils.isBlank(content)) throw error("GAME_BAD_REQUEST", "广播对象或内容不正确");
-        Long targetId = positiveLong(command.getPayload().get("targetId"));
+        List<Long> memberIds = "MEMBERS".equals(targetType) ? broadcastMembers(command.getPayload().get("memberIds")) : null;
+        Long targetId = memberIds != null ? null : positiveLong(command.getPayload().get("targetId"));
         String roleCode = upper(command.getPayload().get("roleCode"));
         if ("TEAM".equals(targetType)
                 && (targetId == null || runtimeMapper.isActiveTeam(session.getActivityId(), targetId) != 1)) {
@@ -3426,9 +3480,16 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         broadcast.setCreateTime(clock.now());
         broadcast.setUpdateTime(clock.now());
         if (runtimeMapper.insertBroadcast(broadcast) != 1) throw error("GAME_STATE_CONFLICT", "广播创建失败");
-        if (runtimeMapper.insertBroadcastDeliveries(broadcast.getId(), session.getId(), session.getActivityId(),
-                targetType, broadcast.getTargetId(), broadcast.getRoleCode(), clock.now()) < 1) {
+        int recipients = memberIds != null
+                ? runtimeMapper.insertBroadcastMemberDeliveries(broadcast.getId(), session.getId(), session.getActivityId(), memberIds, clock.now())
+                : runtimeMapper.insertBroadcastDeliveries(broadcast.getId(), session.getId(), session.getActivityId(),
+                        targetType, broadcast.getTargetId(), broadcast.getRoleCode(), clock.now());
+        if (recipients < 1) {
             throw error("GAME_BROADCAST_NO_RECIPIENT", "广播范围内没有可送达玩家");
+        }
+        // F0129 定向名单:任一成员不在本局有效报名队伍内(含已退团)即整单拒绝，不静默缩小名单。
+        if (memberIds != null && recipients != memberIds.size()) {
+            throw error("GAME_FORBIDDEN_SCOPE", "名单含不在本局有效报名队伍内的成员，未发送");
         }
         int reached = dispatchBroadcast(broadcast);
         int failed = runtimeMapper.countBroadcastDeliveries(broadcast.getId(), "FAILED");
@@ -3443,7 +3504,23 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("broadcastId", broadcast.getId());
         data.put("reachedCount", reached);
+        data.put("failedCount", failed);
+        data.put("unknownCount", pending);
+        if (memberIds != null) data.put("recipientCount", recipients);
         return result(session, data);
+    }
+
+    private List<Long> broadcastMembers(Object raw) {
+        if (!(raw instanceof List) || ((List<?>) raw).isEmpty() || ((List<?>) raw).size() > 50) {
+            throw error("GAME_BAD_REQUEST", "请指定 1–50 名接收成员");
+        }
+        List<Long> members = new ArrayList<>();
+        for (Object item : (List<?>) raw) {
+            Long member = positiveLong(item);
+            if (member == null || members.contains(member)) throw error("GAME_BAD_REQUEST", "接收成员名单无效或重复");
+            members.add(member);
+        }
+        return members;
     }
 
     private int dispatchBroadcast(GameBroadcast broadcast) {

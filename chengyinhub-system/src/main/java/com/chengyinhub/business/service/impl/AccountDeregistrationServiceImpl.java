@@ -283,7 +283,11 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             communityPostMapper.deleteAccountMentions(memberId);
             // ★清发布者实名登记(姓名+身份证号):注销后人已经不是人了,这行密文没有留存理由
             deregistrationMapper.deleteMemberIdentity(memberId);
+<<<<<<< public
             deregistrationMapper.deleteMemberAddresses(memberId);
+=======
+            deregistrationMapper.deleteMemberIdentityChanges(memberId);
+>>>>>>> private-feature/w2-r
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
             appSessionRegistryService.revokeAll(memberId);
             appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);

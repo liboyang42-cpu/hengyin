@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -277,6 +278,29 @@ public class ApiVerifyController extends BaseController {
                 principalMemberId, MerchantPermission.VERIFY);
         return groupCodeService.redeem(code, access.getOwnerMemberId(),
                 principalMemberId, access.getRoleCode());
+    }
+
+    /** X034:商家回读「已接待团」。与扫码同一权限(VERIFY),按商家主体口径列出。 */
+    @Operation(summary = "商家已接待团列表(团码接待记录回读)")
+    @GetMapping("/groupcode/receptions")
+    public AjaxResult listGroupReceptions() {
+        long principalMemberId = appUid();
+        if (principalMemberId <= 0) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(
+                principalMemberId, MerchantPermission.VERIFY);
+        return groupCodeService.listReceptions(access.getOwnerMemberId());
+    }
+
+    /** X034:误扫/扫错团撤销接待记录。仅本商家、仅结算开始前;留不可变审计。 */
+    @Operation(summary = "撤销团码接待记录(限结算前)")
+    @PostMapping("/groupcode/revoke")
+    public AjaxResult revokeGroupReception(Long verifyId, String reason) {
+        long principalMemberId = appUid();
+        if (principalMemberId <= 0) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(
+                principalMemberId, MerchantPermission.VERIFY);
+        return groupCodeService.revoke(verifyId, access.getOwnerMemberId(),
+                principalMemberId, access.getRoleCode(), reason);
     }
 
     /** 取当前登录 App 用户 id;未登录/异常返回 0。 */

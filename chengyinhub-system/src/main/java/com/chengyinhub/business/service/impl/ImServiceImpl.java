@@ -136,6 +136,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             Map<String, Object> row = new HashMap<>();
             row.put("conversationId", c.getId());
             row.put("type", c.getType());
+<<<<<<< public
             List<ImMessage> visible = messageMapper.selectVisiblePage(c.getId(), memberId, null, 1);
             ImMessage latest = visible == null || visible.isEmpty() ? null : visible.get(0);
             if (latest != null)
@@ -147,6 +148,12 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             row.put("lastMsgText", latest == null ? "" : Integer.valueOf(ImMessage.MSG_IMAGE).equals(latest.getMsgType())
                     ? "[图片]" : projectRouteMessage(latest, memberId).getContent());
             row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
+=======
+            row.put("lastMsgType", c.getLastMsgType());
+            row.put("lastMsgText", Integer.valueOf(ImMessage.MSG_CARD).equals(c.getLastMsgType())
+                    ? redactRouteSummary(c.getLastMsgText()) : c.getLastMsgText());
+            row.put("lastMsgAt", c.getLastMsgAt());
+>>>>>>> private-feature/w2-r
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
             row.put("counterparty", counterpartyOf(c, memberId));
@@ -354,6 +361,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         // 群聊渲染:按 senderId 回填发送者昵称+头像(瞬态字段,带缓存避免重复查;系统消息 sender=0 不回填)
         Map<Long, UmsMember> senderCache = new HashMap<>();
         for (ImMessage m : asc) {
+            if (Integer.valueOf(ImMessage.MSG_CARD).equals(m.getMsgType())) {
+                m.setContent(redactRouteSummary(m.getContent()));
+            }
             Long sid = m.getSenderId();
             if (sid == null || sid == 0) continue;
             if (!senderCache.containsKey(sid)) {
@@ -734,17 +744,26 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             throw new ServiceException("路线不存在");
         }
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        // F0412:发送资格 = 匿名口径的当前公开可见(未删、审核通过、已上架、非「仅俱乐部成员可见」)。
+        // 只校 user_status 会放行已删/未过审/仅成员可见的主题,收件人点开才发现进不去,而摘要已把标题带出去了。
+        // 不区分「不存在 / 已删 / 私密」:能猜 ID 不等于能确认对象存在。卡片本身不授任何游玩权益。
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(topicId, null);
         if (topic == null)
         {
-            throw new ServiceException("路线不存在");
-        }
-        if (topic.getUserStatus() == null || topic.getUserStatus() != 1)
-        {
-            throw new ServiceException("该路线未上架");
+            throw new ServiceException("该路线未上架或不公开，暂不能发送");
         }
         out.put("topicId", topicId);
-        return new SafeCard(out.toJSONString(), "[路线] " + topic.getName());
+        // 落库摘要不写主题名:摘要会进会话列表/通知,主题下架或转私密后无法再收回;展示一律按 topicId 现拉。
+        return new SafeCard(out.toJSONString(), ROUTE_CARD_SUMMARY);
+    }
+
+    /** 路线卡的落库/回显摘要。只说「这是一张路线卡」,不带主题名(见 sanitizeUserCard)。 */
+    static final String ROUTE_CARD_SUMMARY = "[路线]";
+
+    /** 存量路线卡摘要形如「[路线] 主题名」:读出时一律收成 ROUTE_CARD_SUMMARY,不再投影旧标题。 */
+    static String redactRouteSummary(String text)
+    {
+        return text != null && text.startsWith(ROUTE_CARD_SUMMARY) ? ROUTE_CARD_SUMMARY : text;
     }
 
     @Override

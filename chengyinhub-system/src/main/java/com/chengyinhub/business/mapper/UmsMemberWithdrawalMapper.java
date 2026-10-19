@@ -35,6 +35,9 @@ public interface UmsMemberWithdrawalMapper
     /** 唯一键冲突后按会员 current-read 单在途 winner，避免 RR 旧快照误报。 */
     public Long selectPendingIdByMemberForUpdate(@Param("memberId") Long memberId);
 
+    /** 本人最近一笔未删除提现申请（只读回显）。 */
+    public UmsMemberWithdrawal selectLatestByMember(@Param("memberId") Long memberId);
+
     /**
      * 查询用户提现申请列表
      * 

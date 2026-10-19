@@ -108,4 +108,21 @@ public interface SmsCouponMapper
      * @return 受影响行数(1=本次停发,0=未改动)
      */
     public int stopIssuingCoupon(@Param("id") Long id, @Param("ownerMemberId") Long ownerMemberId);
+
+    /** F0572:带 rule_version 读券(非锁定,详情/预览用) */
+    public SmsCoupon selectCouponRuleState(@Param("id") Long id);
+
+    /** F0572:带 rule_version 锁定读券(规则变更 / 发券冻结规则用,当前读) */
+    public SmsCoupon selectCouponRuleStateForUpdate(@Param("id") Long id);
+
+    /**
+     * F0572:白名单规则字段 CAS 更新,版本 +1。publishCount 非空时 SQL 再守一次「不低于已领取」。
+     * @return 1=已更新;0=版本已变或总量低于已领取
+     */
+    public int updateCouponRuleCas(@Param("c") SmsCoupon change, @Param("expectedVersion") Integer expectedVersion);
+
+    /** F0572:状态 CAS(停发 / 平台失效),版本 +1 */
+    public int updateCouponStatusCas(@Param("id") Long id, @Param("fromStatuses") List<Integer> fromStatuses,
+                                     @Param("toStatus") Integer toStatus,
+                                     @Param("expectedVersion") Integer expectedVersion);
 }

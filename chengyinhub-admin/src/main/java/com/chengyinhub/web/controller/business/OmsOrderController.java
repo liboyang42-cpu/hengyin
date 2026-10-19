@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.ViewOrder;
 import com.chengyinhub.business.service.IOmsOrderItemService;
 import com.chengyinhub.business.service.IViewOrderService;
 import com.chengyinhub.business.service.impl.OmsOrderServiceImpl;
+import com.chengyinhub.business.service.impl.OrderPaymentFactService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +50,9 @@ public class OmsOrderController extends BaseController
 
     @Autowired
     private IOmsOrderItemService omsOrderItemService;
+
+    @Autowired
+    private OrderPaymentFactService orderPaymentFactService;
 
     /**
      * 「看全量 PII」权限。无此权限者,收件人姓名/电话/详细地址与下单人手机一律脱敏后才出后端。
@@ -134,6 +138,35 @@ public class OmsOrderController extends BaseController
             AdminPiiProtector.maskInPlace(order);
         }
         return success(order);
+    }
+
+    /**
+     * F0535 支付事实:积分来源与现金来源分开;现金来源只认渠道查询回执(未确认/已确认/冲突 + 最后查询时间),
+     * 本地保存的订单状态不当作已核验事实。
+     */
+    @PreAuthorize("@ss.hasPermi('business:order:query')")
+    @GetMapping(value = "/{id}/payment-facts")
+    public AjaxResult paymentFacts(@PathVariable("id") Long id)
+    {
+        java.util.Map<String, Object> facts = orderPaymentFactService.facts(id);
+        return facts == null ? error("订单不存在") : success(facts);
+    }
+
+    /** F0535 向原支付渠道查询一次并落只追加回执;只读渠道,不改订单与资金。 */
+    @PreAuthorize("@ss.hasPermi('business:order:query')")
+    @Log(title = "订单支付事实渠道查询", businessType = BusinessType.OTHER)
+    @PostMapping(value = "/{id}/payment-facts/query")
+    public AjaxResult queryPaymentFacts(@PathVariable("id") Long id)
+    {
+        try
+        {
+            java.util.Map<String, Object> facts = orderPaymentFactService.queryChannel(id, getUserId());
+            return facts == null ? error("订单不存在") : success(facts);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return error(e.getMessage());
+        }
     }
 
     /**

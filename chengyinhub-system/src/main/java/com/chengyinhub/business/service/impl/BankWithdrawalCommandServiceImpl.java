@@ -41,7 +41,7 @@ public class BankWithdrawalCommandServiceImpl implements IBankWithdrawalCommandS
                     "WITHDRAWAL_CONSENT_REQUIRED", "请先同意提供本次提现所需的银行卡信息");
         }
         preflightService.consumeBankWithdrawal(memberId, request.getChallengeId(), toPreflight(request));
-        return withdrawalService.withdrawalRequest(request, memberId, username);
+        return withdrawalService.withdrawalRequest(request, memberId, username, currentVersion);
     }
 
     private BankWithdrawalPreflightRequest toPreflight(WithdrawalDTO request) {

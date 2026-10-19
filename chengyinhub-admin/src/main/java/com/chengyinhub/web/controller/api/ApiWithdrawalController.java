@@ -9,6 +9,7 @@ import com.chengyinhub.business.service.IBankWithdrawalCommandService;
 import com.chengyinhub.business.service.IRoleService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IUmsMemberWithdrawalService;
+import com.chengyinhub.business.service.impl.WithdrawalSummaryService;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -48,6 +49,29 @@ public class ApiWithdrawalController extends BaseController {
 
     @Autowired
     private IRoleService roleService;
+
+    @Autowired
+    private WithdrawalSummaryService withdrawalSummaryService;
+
+    @PostMapping("/summary")
+    @Operation(summary = "提现页回显：当前渠道、可提现额、同意版本与本人最近申请")
+    public AjaxResult summary() {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (memberId == null || memberId <= 0) {
+            return error("请先登录");
+        }
+        try {
+            return success(withdrawalSummaryService.summaryFor(memberId));
+        } catch (Exception e) {
+            logger.error("提现回显读取失败 memberId={}", memberId, e);
+            return error("提现信息暂时取不到，请稍后重试");
+        }
+    }
 
     @PostMapping("/list")
     @Operation(summary = "我的提现列表")

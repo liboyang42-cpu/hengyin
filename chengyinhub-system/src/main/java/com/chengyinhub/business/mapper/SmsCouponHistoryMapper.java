@@ -86,4 +86,17 @@ public interface SmsCouponHistoryMapper
     public Long selectCompletionRewardHistoryId(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 
     public int voidUnusedCoupon(@Param("id") Long id, @Param("note") String note);
+
+    /** F0572:领取时冻结的面额;NULL=迁移前领取 */
+    public java.math.BigDecimal selectClaimRuleAmount(@Param("id") Long id);
+
+    /** F0572:按 use_status 统计已领取券,每行 {useStatus,total} */
+    public List<java.util.Map<String, Object>> countClaimsByUseStatus(@Param("couponId") Long couponId);
+
+    /** F0572:平台失效受影响持券(未使用/未删除/未过期) */
+    public List<SmsCouponHistory> selectUnusedHoldersByCouponId(@Param("couponId") Long couponId,
+                                                                @Param("now") java.util.Date now,
+                                                                @Param("limit") int limit);
+
+    public int countUnusedHoldersByCouponId(@Param("couponId") Long couponId, @Param("now") java.util.Date now);
 }
