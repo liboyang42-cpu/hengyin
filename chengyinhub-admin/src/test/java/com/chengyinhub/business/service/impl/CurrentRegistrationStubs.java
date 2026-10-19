@@ -9,10 +9,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /** A包当前资格改为「快照列表 + 原ID锁读当前行」；玩法单测按查询条件回一张当前有效的原报名。 */
-final class CurrentRegistrationStubs {
+public final class CurrentRegistrationStubs {
     private CurrentRegistrationStubs() { }
 
-    static void currentFromProbe(CmsRegistrationMapper registrations) {
+    public static void currentFromProbe(CmsRegistrationMapper registrations) {
         AtomicReference<CmsRegistration> last = new AtomicReference<>();
         when(registrations.selectCmsRegistrationList(any())).thenAnswer(call -> {
             CmsRegistration probe = call.getArgument(0);
