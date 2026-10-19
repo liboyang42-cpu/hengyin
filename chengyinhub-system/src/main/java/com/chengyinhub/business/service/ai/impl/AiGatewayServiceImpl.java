@@ -166,6 +166,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
         try
         {
             client = selectClient(bizType);
+            // This local check proves no HTTP was sent; provider exceptions cannot prove that.
+            if (client instanceof com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient)
+            {
+                ((com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client).requireReady();
+            }
         }
         catch (RuntimeException e)
         {
@@ -173,7 +178,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // ⚠️ catch RuntimeException 而非 AiServiceException:选模型/场景路由里的
             //    NPE、IllegalStateException 同样是我们的锅,窄 catch 会让它们带着已扣的额度跑掉。
             if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
-            throw e;
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
         }
         if (client == null)
         {
@@ -200,16 +206,12 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
-                    0, (int) (System.currentTimeMillis() - t0), tokenIn, 0);
-            // 模型炸了是我们的锅,用户什么都没拿到 → 退还刚才扣的那一次
-            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
-            if (isConfigurationFailure(e))
-            {
-                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
-                    "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
-            }
-            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
-                "AI 繁忙,请稍后重试(traceId=" + traceId + ")", e);
+                    0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
+            // MODEL_STARTED preserves the original receipt for the existing recovery worker.
+            // A timeout/empty or malformed response may already have incurred provider usage.
+            // Never refund or resend merely because no answer reached this service.
+            throw new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
+                "AI 请求结果待确认，请保留原请求(traceId=" + traceId + ")", e);
         }
 
         int latencyMs = (int) (System.currentTimeMillis() - t0);
@@ -245,16 +247,6 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
         retainQuota(memberId,bizType,reservation,"SUCCESS");
         return new AiGatewayResult(traceId, modelText, modelName, 0);
-    }
-
-    /** 模型未启用/未配置 key 是部署配置错误，必须和短时上游繁忙分开报。 */
-    private boolean isConfigurationFailure(RuntimeException e)
-    {
-        String message = e == null ? null : e.getMessage();
-        if (message == null) return false;
-        return message.contains("未配置 apiKey")
-            || message.contains("enabled=false")
-            || message.contains("provider is not enabled");
     }
 
     /**
@@ -552,7 +544,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     }
 
     private void saveLog(String traceId, Long memberId, String role, String bizType, String provider,
-                          String input, String output, int safetyFlag, int latencyMs, int tokenIn, int tokenOut)
+                          String input, String output, int safetyFlag, int latencyMs, int tokenIn, Integer tokenOut)
     {
         try
         {
@@ -565,7 +557,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
             l.setOutputBrief(truncate(output, BRIEF_MAX));
             l.setSafetyFlag(safetyFlag);
             l.setLatencyMs(latencyMs);
-            l.setTokenEst(tokenIn + tokenOut);
+            // Missing output is unknown usage, not a measured zero. All present counts are estimates.
+            l.setTokenEst(tokenOut == null ? null : tokenIn + tokenOut);
             l.setTokenIn(tokenIn);
             l.setTokenOut(tokenOut);
             l.setTraceId(traceId);

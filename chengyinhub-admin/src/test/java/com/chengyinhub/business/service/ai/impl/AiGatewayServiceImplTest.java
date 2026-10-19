@@ -235,8 +235,9 @@ class AiGatewayServiceImplTest {
 
     @Test
     void missingApiKeyReturnsDiagnosableConfigurationFailure() {
-        when(mockLlm.chat(anyString(), anyString()))
-                .thenThrow(new IllegalStateException("AI 模型 deepseek 未配置 apiKey"));
+        LlmClient unavailable = new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient(
+                "deepseek", "https://unused.invalid", "", "test", true, 1);
+        ReflectionTestUtils.setField(service, "llmClients", Collections.singletonList(unavailable));
 
         AiServiceException error = assertThrows(AiServiceException.class, () ->
             service.generate(MEMBER_ID, "club", "merchant_plan",
@@ -246,20 +247,21 @@ class AiGatewayServiceImplTest {
             "配置缺失必须由上游可用性闸指认，不能被普通模型繁忙兜底吞掉");
         assertTrue(error.getMessage().contains("配置缺失"));
         assertTrue(error.getMessage().contains("traceId="), "外部报错必须带可查日志的追踪号");
+        assertEquals(reserved, refunded, "local readiness failed before any provider request");
     }
 
-    // 输入审核服务故障与模型失败退本次预占；明确违规不退。
+    // 输入审核服务故障退本次预占；模型执行结果未知不退款，明确违规不退。
     // REVIEW_REQUIRED 与输出审核沿原规则，原子补偿另由真实 Redis IT 验证。
 
     @Test
-    void modelError_refundsQuota_notUserFault() {
+    void modelErrorKeepsOriginalReservationForUnknownOutcome() {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("model down"));
 
         assertThrows(AiServiceException.class, () -> service.generate(
                 MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"x\"}"));
 
-        // 模型炸了是我们的锅,用户没拿到任何东西 → 必须把刚才 increment 的那一次退回来
-        assertEquals(1, refunded.size());
+        assertEquals(1, reserved.size());
+        assertEquals(0, refunded.size(), "provider may already have executed the request");
     }
 
     @Test
@@ -769,8 +771,8 @@ class AiGatewayServiceImplTest {
         when(mockLlm.chat(anyString(), anyString())).thenReturn(null);
         AiServiceException error = assertThrows(AiServiceException.class,
                 () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
-        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
-        assertEquals(reserved, refunded);
+        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
+        assertEquals(0, refunded.size());
     }
 
     @Test
@@ -789,9 +791,33 @@ class AiGatewayServiceImplTest {
         when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("request timed out"));
         AiServiceException error = assertThrows(AiServiceException.class,
                 () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
-        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
-        // Existing refund policy is retained here; unknown-outcome accounting is phase two.
-        assertEquals(reserved, refunded);
+        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
+        assertTrue(error instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException);
+        assertEquals(0, refunded.size());
+        verify(mockLlm, times(1)).chat("s", "u");
+    }
+
+    @Test
+    void modelUnknownPreservesReceiptAndDoesNotClassifyConfigurationByMessage() {
+        com.chengyinhub.business.service.ai.AiQuotaRecoveryService recovery =
+                mock(com.chengyinhub.business.service.ai.AiQuotaRecoveryService.class);
+        ReflectionTestUtils.setField(service, "quotaRecovery", recovery);
+        when(mockLlm.chat(anyString(), anyString()))
+                .thenThrow(new IllegalStateException("upstream echoed 未配置 apiKey"));
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
+        assertTrue(error.getMessage().contains("traceId="));
+        String receipt = String.valueOf(reserved.get(0).get(2));
+        verify(recovery).stage(receipt, "MODEL_STARTED");
+        verify(recovery, never()).requireRefund(anyString(), anyString());
+        verify(recovery, never()).retain(anyString(), anyString());
+        ArgumentCaptor<AiGenerationLog> logged = ArgumentCaptor.forClass(AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(logged.capture());
+        org.junit.jupiter.api.Assertions.assertNull(logged.getValue().getTokenOut());
+        org.junit.jupiter.api.Assertions.assertNull(logged.getValue().getTokenEst());
+        assertEquals(Integer.valueOf(2), logged.getValue().getTokenIn());
+        verify(mockLlm, times(1)).chat("s", "u");
     }
 
     @Test
