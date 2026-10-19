@@ -14,6 +14,7 @@ import com.chengyinhub.business.mapper.RoamStampMapper;
 import com.chengyinhub.business.service.IUmsCommentService;
 import com.chengyinhub.business.service.IUmsCreativeSquareService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.WxTextCheckResult;
 import com.chengyinhub.business.service.IWxContentCallbackInboxService;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.common.core.redis.RedisCache;
@@ -59,6 +60,13 @@ import org.slf4j.LoggerFactory;
  */
 class WxContentSecurityServiceImplTest {
 
+    private static class RiskyResponseService extends WxContentSecurityServiceImpl {
+        @Override
+        String sendPost(String url, String body, String contentType) {
+            return "{\"errcode\":87014,\"errmsg\":\"risky content\"}";
+        }
+    }
+
     private static class ReviewResponseService extends WxContentSecurityServiceImpl {
         @Override
         String sendPost(String url, String body, String contentType) {
@@ -101,6 +109,24 @@ class WxContentSecurityServiceImplTest {
         String sendPost(String url, String body, String contentType) {
             return "{\"errcode\":50001,\"errmsg\":\"unknown\"}";
         }
+    }
+
+    @Test
+    void typedResultSeparatesRiskUnknownAndMissingContext() {
+        WxTextCheckResult risky = enabledTextService(new RiskyResponseService())
+                .checkTextTyped("bad", "openid");
+        assertEquals(WxTextCheckResult.Status.CONTENT_REJECT, risky.getStatus());
+        assertEquals(WxTextCheckResult.Reason.RISKY, risky.getReason());
+
+        WxTextCheckResult unknown = enabledTextService(new MissingSuggestResponseService())
+                .checkTextTyped("unknown", "openid");
+        assertEquals(WxTextCheckResult.Status.SERVICE_UNAVAILABLE, unknown.getStatus());
+        assertEquals(WxTextCheckResult.Reason.UNKNOWN_RESPONSE, unknown.getReason());
+
+        WxTextCheckResult missing = enabledTextService(new WxContentSecurityServiceImpl())
+                .checkTextTyped("content", "");
+        assertEquals(WxTextCheckResult.Status.SERVICE_UNAVAILABLE, missing.getStatus());
+        assertEquals(WxTextCheckResult.Reason.MISSING_CONTEXT, missing.getReason());
     }
 
     @Test
@@ -395,7 +421,10 @@ class WxContentSecurityServiceImplTest {
         WxContentSecurityServiceImpl service =
                 enabledTextService(new MissingSuggestResponseService());
 
-        // 成功包缺 result 是真「需要人工复审」,不是「审不了」:仍回 REVIEW_REQUIRED。
+        // 旧调用方保留复核提示；AI 用 typed 结果识别未知服务响应，不能当明确违规。
+        WxTextCheckResult typed = service.checkTextTyped("待检测内容", "openid");
+        assertEquals(WxTextCheckResult.Status.SERVICE_UNAVAILABLE, typed.getStatus());
+        assertEquals(WxTextCheckResult.Reason.UNKNOWN_RESPONSE, typed.getReason());
         assertSame(IWxContentSecurityService.REVIEW_REQUIRED,
                 service.checkText("待检测内容", "openid"));
     }
@@ -901,5 +930,64 @@ class WxContentSecurityServiceImplTest {
         current.setBizId(456L);
         current.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/right.png"));
         assertTrue(cap.getValue().isCurrent(current), "当前这版送检必须认得出");
+    }
+
+    @Test
+    void merchantNpcViolationUsesCurrentAvatarCasAndNeverClearsMerchantProfile() {
+        RedisCache redisCache = mock(RedisCache.class);
+        NpcProfileMapper npcMapper = mock(NpcProfileMapper.class);
+        MmsMerchantMapper merchantMapper = mock(MmsMerchantMapper.class);
+        IWxContentCallbackInboxService inboxService = mock(IWxContentCallbackInboxService.class);
+        NpcProfile row = new NpcProfile();
+        row.setId(456L);
+        row.setAvatar("https://o/current.png");
+        when(npcMapper.selectMerchantNpcById(456L)).thenReturn(row);
+        when(npcMapper.hideMerchantNpcAvatarIfCurrent(456L, "https://o/current.png")).thenReturn(1);
+        when(inboxService.isRegistered("trace-merchant-npc")).thenReturn(true);
+        when(inboxService.process(eq("trace-merchant-npc"), eq(true),
+                any(IWxContentCallbackInboxService.Mutation.class))).thenAnswer(invocation -> {
+            IWxContentCallbackInboxService.Mutation mutation = invocation.getArgument(2);
+            WxContentCallbackInbox callback = new WxContentCallbackInbox();
+            callback.setBizType(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC);
+            callback.setBizId(456L);
+            callback.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/current.png"));
+            return mutation.isCurrent(callback) && mutation.apply(callback, true);
+        });
+        WxContentSecurityServiceImpl service = service(redisCache, mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "callbackInboxService", inboxService);
+        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+        ReflectionTestUtils.setField(service, "mmsMerchantMapper", merchantMapper);
+
+        assertTrue(service.handleMediaCheckResult("trace-merchant-npc", true));
+
+        verify(npcMapper).hideMerchantNpcAvatarIfCurrent(456L, "https://o/current.png");
+        verify(merchantMapper, never()).clearProfileMedia(anyLong());
+    }
+
+    @Test
+    void staleMerchantNpcCallbackDoesNotApplyAfterAvatarChanged() {
+        RedisCache redisCache = mock(RedisCache.class);
+        NpcProfileMapper npcMapper = mock(NpcProfileMapper.class);
+        IWxContentCallbackInboxService inboxService = mock(IWxContentCallbackInboxService.class);
+        NpcProfile row = new NpcProfile();
+        row.setId(456L);
+        row.setAvatar("https://o/new.png");
+        when(npcMapper.selectMerchantNpcById(456L)).thenReturn(row);
+        when(inboxService.isRegistered("trace-old-avatar")).thenReturn(true);
+        when(inboxService.process(eq("trace-old-avatar"), eq(true),
+                any(IWxContentCallbackInboxService.Mutation.class))).thenAnswer(invocation -> {
+            IWxContentCallbackInboxService.Mutation mutation = invocation.getArgument(2);
+            WxContentCallbackInbox callback = new WxContentCallbackInbox();
+            callback.setBizType(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC);
+            callback.setBizId(456L);
+            callback.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/old.png"));
+            return !mutation.isCurrent(callback); // inbox 服务会把该分支记为 IGNORED_STALE 并确认成功
+        });
+        WxContentSecurityServiceImpl service = service(redisCache, mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "callbackInboxService", inboxService);
+        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+
+        assertTrue(service.handleMediaCheckResult("trace-old-avatar", true));
+        verify(npcMapper, never()).hideMerchantNpcAvatarIfCurrent(anyLong(), anyString());
     }
 }

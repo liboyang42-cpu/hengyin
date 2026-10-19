@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import java.util.Arrays;
 import org.springframework.stereotype.Service;
 
 import com.chengyinhub.business.domain.AiGenerationLog;
@@ -18,6 +20,7 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.AiGenerationLogMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.WxTextCheckResult;
 import com.chengyinhub.business.service.ai.AiGatewayResult;
 import com.chengyinhub.business.service.ai.AiGatewayService;
 import com.chengyinhub.business.service.ai.AiSceneRouter;
@@ -40,6 +43,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final String RATE_KEY_PREFIX = "ai:gen:limit:";
     private static final int BRIEF_MAX = 500;
+<<<<<<< public
     private static final int REVIEW_CHUNK_MAX = 2000;
     private static final int REVIEW_OVERLAP = 100;
     private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
@@ -70,6 +74,38 @@ public class AiGatewayServiceImpl implements AiGatewayService
                     "if used>0 then redis.call('DECR',KEYS[1]); refunded=1 end; end;\n" +
                     "redis.call('SET',KEYS[3],'0','EX',172800); return refunded;", Long.class);
 
+=======
+    private static final int SAFETY_CHUNK_SIZE = 2000;
+    private static final int SAFETY_CHUNK_OVERLAP = 32;
+    private static final String REFUND_KEY_PREFIX = "ai:gen:refund:";
+    private static final DefaultRedisScript<Long> REFUND_SCRIPT = new DefaultRedisScript<>(
+        "if redis.call('EXISTS', KEYS[2]) == 1 then return 0 end; "
+        + "local used = redis.call('GET', KEYS[1]); "
+        + "if used and not string.match(used, '^%d+$') then return -1 end; "
+        + "redis.call('SET', KEYS[2], '1', 'EX', 172800); "
+        + "if used and tonumber(used) > 0 then redis.call('DECR', KEYS[1]); return 1 end; "
+        + "return 0", Long.class);
+
+    // shortcut: 持续 Redis 故障或进程退出仍缺持久补偿，要求完整恢复时接入现有补偿任务。
+    private static final DefaultRedisScript<Long> RESERVE_SCRIPT = new DefaultRedisScript<>(
+        "local reserved = redis.call('GET', KEYS[2]); "
+        + "if reserved then if tonumber(reserved) and tonumber(reserved) > 0 then return tonumber(reserved) end; return -1 end; "
+        + "local used = redis.call('GET', KEYS[1]); "
+        + "if used and not string.match(used, '^%d+$') then return -1 end; "
+        + "if not string.match(ARGV[1], '^%d+$') or tonumber(ARGV[1]) < 1 or tonumber(ARGV[1]) > 86400 then return -1 end; "
+        + "local next = redis.call('INCR', KEYS[1]); "
+        + "if next == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end; "
+        + "redis.call('SET', KEYS[2], next, 'EX', 172800); return next", Long.class);
+    private static final DefaultRedisScript<Long> RESERVED_REFUND_SCRIPT = new DefaultRedisScript<>(
+        "local reserved = redis.call('GET', KEYS[2]); "
+        + "if not reserved then redis.call('SET', KEYS[2], '0', 'EX', 172800); return 0 end; "
+        + "if reserved == '0' then return 0 end; "
+        + "local used = redis.call('GET', KEYS[1]); "
+        + "if not tonumber(reserved) or tonumber(reserved) <= 0 or (used and not string.match(used, '^%d+$')) then return -1 end; "
+        + "redis.call('SET', KEYS[2], '0', 'EX', 172800); "
+        + "if used and tonumber(used) > 0 then redis.call('DECR', KEYS[1]); return 1 end; "
+        + "return 0", Long.class);
+>>>>>>> private-codex/batch1
 
     /** 频控分组:NPC 聊天(独立额度) */
     private static final String RATE_GROUP_NPC = "npc";
@@ -129,6 +165,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
         String traceId = IdUtils.simpleUUID();
 
+<<<<<<< public
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
@@ -159,6 +196,54 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
             }
             throw new AiServiceException(secIn);
+=======
+        // 1. 频控:单用户每日上限,按「组」分池(npc 一池 / 创作类共用一池)
+        //
+        // ⚠️ 额度先扣、后调模型 ⇒ 从这里到「拿到 modelText」之间**每一条失败路径**都要想清楚
+        //    退不退(refundQuota 的 javadoc 列了当前判定)。现在是**逐点**退(选模型/调模型两处
+        //    catch),不是区域级守卫 —— 代价是:**新加的前置检查若不显式退,就默认白扣用户额度**。
+        //    typed 审核已明确：SERVICE_UNAVAILABLE 退，CONTENT_REJECT 不退。
+        boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
+        String rateKey = null;
+        Long used = null;
+        if (!playerThemeDraft)
+        {
+            String today = LocalDate.now().format(DATE_FMT);
+            String rateGroup = rateGroupOf(bizType);
+            rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
+            used = reserveQuota(rateKey, "v2:" + traceId);
+            int dailyLimit = dailyLimitOf(rateGroup);
+            if (used != null && used > dailyLimit)
+            {
+                log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
+                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+            }
+        }
+
+        // 2. 入参内容安全
+        String openid = resolveOpenid(memberId);
+        WxTextCheckResult secIn = checkCompleteModelInput(systemPrompt, userPrompt, openid);
+        if (secIn.getStatus() != WxTextCheckResult.Status.PASS)
+        {
+            if (secIn.getStatus() == WxTextCheckResult.Status.SERVICE_UNAVAILABLE)
+            {
+                log.warn("[AiGateway] input-check-unavailable memberId={} bizType={} reason={}",
+                        memberId, bizType, secIn.getReason());
+                saveLog(traceId, memberId, role, bizType, null, userPrompt,
+                        "INPUT_CHECK_UNAVAILABLE:" + secIn.getReason(), 0, 0, 0, 0);
+                if (!playerThemeDraft) refundQuota(traceId, memberId, rateKey, used);
+            }
+            else
+            {
+                log.info("[AiGateway] input-blocked memberId={} bizType={} reason={}",
+                        memberId, bizType, secIn.getReason());
+                saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn.getMessage(),
+                        AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
+            }
+            throw new AiServiceException(secIn.getStatus() == WxTextCheckResult.Status.CONTENT_REJECT
+                    ? AiServiceException.Reason.INPUT_BLOCKED : AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    secIn.getMessage());
+>>>>>>> private-codex/batch1
         }
 
         // 3. 选模型(场景路由)
@@ -214,11 +299,21 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 "AI 请求结果待确认，请保留原请求(traceId=" + traceId + ")", e);
         }
 
+        if (modelText == null || modelText.trim().length() == 0)
+        {
+            int emptyOutputTokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
+            saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:EMPTY_MODEL_OUTPUT",
+                    0, (int) (System.currentTimeMillis() - t0), emptyOutputTokenIn, 0);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 返回空结果,请稍后重试(traceId=" + traceId + ")");
+        }
+
         int latencyMs = (int) (System.currentTimeMillis() - t0);
         int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
         int tokenOut = estimateSingle(modelText);
 
         // 4. 出参内容安全
+<<<<<<< public
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
@@ -227,6 +322,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
         if (secOut != null)
+=======
+        WxTextCheckResult secOut = checkTextInChunks(modelText, openid);
+        if (secOut.getStatus() != WxTextCheckResult.Status.PASS)
+>>>>>>> private-codex/batch1
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
             {
@@ -249,6 +348,51 @@ public class AiGatewayServiceImpl implements AiGatewayService
         return new AiGatewayResult(traceId, modelText, modelName, 0);
     }
 
+<<<<<<< public
+=======
+    /**
+     * 安全覆盖必须与真正发送的输入一致：system 资料和 user 文本均逐段送检。
+     * 每段不超过既有 2000 字符边界，但不再丢弃第 2001 字符之后的内容。
+     */
+    private WxTextCheckResult checkCompleteModelInput(String systemPrompt, String userPrompt, String openid)
+    {
+        WxTextCheckResult result = checkTextInChunks(systemPrompt, openid);
+        return result.getStatus() == WxTextCheckResult.Status.PASS
+                ? checkTextInChunks(userPrompt, openid) : result;
+    }
+
+    private WxTextCheckResult checkTextInChunks(String text, String openid)
+    {
+        String value = text == null ? "" : text;
+        if (value.length() == 0) return wxContentSecurityService.checkTextTyped(value, openid);
+        int start = 0;
+        while (start < value.length())
+        {
+            int end = Math.min(value.length(), start + SAFETY_CHUNK_SIZE);
+            if (end < value.length() && Character.isHighSurrogate(value.charAt(end - 1)))
+            {
+                end--;
+            }
+            WxTextCheckResult result = wxContentSecurityService.checkTextTyped(value.substring(start, end), openid);
+            if (result.getStatus() != WxTextCheckResult.Status.PASS) return result;
+            if (end == value.length()) break;
+            start = Math.max(start + 1, end - SAFETY_CHUNK_OVERLAP);
+            if (Character.isLowSurrogate(value.charAt(start))) start--;
+        }
+        return WxTextCheckResult.pass(WxTextCheckResult.Reason.PASS);
+    }
+
+    /** 模型未启用/未配置 key 是部署配置错误，必须和短时上游繁忙分开报。 */
+    private boolean isConfigurationFailure(RuntimeException e)
+    {
+        String message = e == null ? null : e.getMessage();
+        if (message == null) return false;
+        return message.contains("未配置 apiKey")
+            || message.contains("enabled=false")
+            || message.contains("provider is not enabled");
+    }
+
+>>>>>>> private-codex/batch1
     /**
      * 频控分组:决定这次调用记在哪个额度池上。
      *
@@ -313,6 +457,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public String consumeQuota(Long memberId, String bizType)
     {
+<<<<<<< public
         String group = rateGroupOf(bizType);
         String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now().format(DATE_FMT);
         String nonce = IdUtils.simpleUUID();
@@ -341,11 +486,27 @@ public class AiGatewayServiceImpl implements AiGatewayService
             throw new AiServiceException("今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
         }
         return key + "|" + nonce;
+=======
+        String today = LocalDate.now().format(DATE_FMT);
+        String rateGroup = rateGroupOf(bizType);
+        String rateKey = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + today;
+        String reservationId = "v2:" + IdUtils.simpleUUID();
+        Long used = reserveQuota(rateKey, reservationId);
+        int dailyLimit = dailyLimitOf(rateGroup);
+        if (used != null && used > dailyLimit)
+        {
+            log.info("[AiGateway] rate-limit bizType={} group={} memberId={} used={} limit={}",
+                    bizType, rateGroup, memberId, used, dailyLimit);
+            throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+        }
+        return rateKey + "|" + reservationId;
+>>>>>>> private-codex/batch1
     }
 
     @Override
     public void refundQuota(Long memberId, String bizType, String reservation)
     {
+<<<<<<< public
         if (reservation == null) return;
         int split = reservation.lastIndexOf('|');
         if (split <= 0) return;
@@ -389,6 +550,18 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // 若确定退款意图尚未提交，原结果仍待核；已提交意图由任务按原身份重放。
             log.warn("[AiGateway] quota compensation unavailable key={}", key, unavailable);
         }
+=======
+        String expectedPrefix = RATE_KEY_PREFIX + rateGroupOf(bizType) + ":" + memberId + ":";
+        int separator = reservation == null ? -1 : reservation.lastIndexOf('|');
+        if (separator <= expectedPrefix.length() || !reservation.startsWith(expectedPrefix)
+                || separator == reservation.length() - 1)
+        {
+            log.warn("[AiGateway] invalid refund reservation memberId={} bizType={}", memberId, bizType);
+            return;
+        }
+        refundQuota("non-text:" + bizType, memberId, reservation.substring(0, separator), 1L,
+                reservation.substring(separator + 1));
+>>>>>>> private-codex/batch1
     }
 
     private String rateGroupOf(String bizType)
@@ -497,6 +670,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         return requireAvailableClient(m.get(provider), provider);
     }
 
+<<<<<<< public
     /** 生产网关不接受 mock，包括显式配置和按 bean 名误绑定的 mock。测试使用 LlmClient 替身。 */
     private LlmClient requireAvailableClient(LlmClient client, String provider)
     {
@@ -506,6 +680,70 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.warn("[AiGateway] unavailable provider={}", provider);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务配置缺失，请联系管理员");
+=======
+    /**
+     * 退还刚才 increment 掉的那一次每日额度。
+     *
+     * <p>⚠️ 只在**我们的锅**时调用 —— 输入审核服务不可用、模型炸(AI 繁忙)、无可用模型(配置错)。
+     * 这些情况用户什么都没拿到,不该扣他的额度:每天 20 次的池子,AI 抖 3 次就白掉 15%,
+     * 而用户完全无从知晓(日志里只有 ERROR),也无处申诉。
+     *
+     * <p>⚠️ 本次<b>不</b>退的几处,理由各不相同,别一视同仁:
+     * <ul>
+     *   <li>已超限 —— 本来就超了,退了反而让狂刷看起来像没刷过。<b>这条是确定的。</b></li>
+     *   <li>出参安全拦截 —— 模型产出违规算谁的?产品策略未拍板,不动。</li>
+     *   <li>入参明确 CONTENT_REJECT —— 用户内容被拒，不退；审核 SERVICE_UNAVAILABLE 在调用处退款。</li>
+     *   <li>cache-only 早返回(选不到 client ⇒ npc_event 直接返回 {@code []})——
+     *       <b>扣了额度但没调模型</b>。当前不退:调用方拿到了可用结果,算一次。
+     *       ⚠️ 若将来认为「没调模型就不该计费」,这里就是要改的地方。</li>
+     * </ul>
+     *
+     * <p>用与 increment 逐字相同的 rateKey(退错池子 = 没退,还会还错别人的额度)。
+     * used==null 表示 increment 本身就没成功(Redis 异常),没什么可退。
+     * 退失败只 warn:少还一次额度事小,把原始错误盖掉事大。
+     */
+    private void refundQuota(String traceId, Long memberId, String rateKey, Long used)
+    {
+        refundQuota(traceId, memberId, rateKey, used, "v2:" + traceId);
+    }
+
+    private void refundQuota(String traceId, Long memberId, String rateKey, Long used, String reservationId)
+    {
+        if (used == null) return;
+        try
+        {
+            // 旧在途 opaque 凭据仍按旧退款协议收口，新凭据必须有自己的预占记录。
+            Long result = redisTemplate.execute(reservationId.startsWith("v2:") ? RESERVED_REFUND_SCRIPT : REFUND_SCRIPT,
+                    Arrays.asList(rateKey, REFUND_KEY_PREFIX + reservationId));
+            if (result == null || result < 0)
+                log.warn("[AiGateway] refund not confirmed traceId={} memberId={} key={}", traceId, memberId, rateKey);
+        }
+        catch (RuntimeException e)
+        {
+            // 丢响应时可能已执行；保留防重标记，重试不能再次补额。
+            log.warn("[AiGateway] refund-quota failed traceId={} memberId={} key={}", traceId, memberId, rateKey, e);
+        }
+    }
+
+    private Long reserveQuota(String rateKey, String reservationId)
+    {
+        try
+        {
+            Long used = redisTemplate.execute(RESERVE_SCRIPT,
+                    Arrays.asList(rateKey, REFUND_KEY_PREFIX + reservationId), 86400);
+            if (used == null || used < 1)
+            {
+                // 未确认预占属于基础设施故障，不能被消费者误判为次数超限。
+                throw new IllegalStateException("AI次数记录未确认，请稍后重试");
+            }
+            return used;
+        }
+        catch (RuntimeException e)
+        {
+            // 保留调用方原异常语义；取消缺失预占只落标记，不能扣减其他请求。
+            refundQuota("reserve-failed", null, rateKey, 1L, reservationId);
+            throw e;
+>>>>>>> private-codex/batch1
         }
         return client;
     }

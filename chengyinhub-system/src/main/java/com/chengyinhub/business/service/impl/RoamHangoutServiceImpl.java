@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
     @Autowired private IWxContentSecurityService wxContentSecurityService;
     @Autowired private IAuditTaskService auditTaskService;
     @Autowired private IUmsMemberService umsMemberService;
+    @Autowired private PlatformTransactionManager transactionManager;
 
     private static final int LIST_LIMIT = 100;
 
@@ -218,11 +222,20 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         List<RoamHangout> due = roamHangoutMapper.selectExpired(now == null ? new Date() : now);
         int n = 0;
         if (due == null) return 0;
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         for (RoamHangout h : due) {
             try {
-                roamHangoutMapper.updateStatus(h.getId(), RoamHangout.STATUS_CLOSED);
-                imService.closeHangoutGroup(h.getId());
-                n++;
+                Boolean closed = transaction.execute(ignored -> {
+                    RoamHangout current = roamHangoutMapper.selectByIdForUpdate(h.getId());
+                    if (current == null || !Integer.valueOf(RoamHangout.STATUS_OPEN).equals(current.getStatus())) return false;
+                    if (roamHangoutMapper.updateStatus(h.getId(), RoamHangout.STATUS_CLOSED) != 1) {
+                        throw new ServiceException("过期关局状态保存失败");
+                    }
+                    imService.closeHangoutGroup(h.getId());
+                    return true;
+                });
+                if (Boolean.TRUE.equals(closed)) n++;
             } catch (Exception e) {
                 log.error("[附近的局] 过期关局失败 id={}", h.getId(), e);
             }

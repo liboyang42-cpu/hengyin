@@ -17,9 +17,12 @@ public interface ImConversationMemberMapper
     ImConversationMember selectByConvAndMemberForUpdate(@Param("conversationId") Long conversationId,
                                                        @Param("memberId") Long memberId);
 
+<<<<<<< public
     int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
                                  @Param("memberId") Long memberId, @Param("delta") int delta);
 
+=======
+>>>>>>> private-codex/batch1
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 
@@ -33,12 +36,22 @@ public interface ImConversationMemberMapper
     public int addUnread(@Param("conversationId") Long conversationId,
                          @Param("memberId") Long memberId, @Param("delta") int delta);
 
+    /** 群发不得重新激活已经退出的参与者。 */
+    int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
+                                 @Param("memberId") Long memberId, @Param("delta") int delta);
+
     /** 已读:清零未读并更新已读位 */
     public int markRead(@Param("conversationId") Long conversationId,
                         @Param("memberId") Long memberId, @Param("lastReadMsgId") Long lastReadMsgId);
 
+<<<<<<< public
     int markReadVisible(@Param("conversationId") Long conversationId, @Param("memberId") Long memberId,
                         @Param("lastReadMsgId") Long lastReadMsgId, @Param("visibleOrderAt") String visibleOrderAt);
+=======
+    /** CAS 推进读位，并按读位后的有效他人消息重算未读；发送并发由同一成员行更新串行化。 */
+    int advanceReadTo(@Param("conversationId") Long conversationId,
+                      @Param("memberId") Long memberId, @Param("readToMessageId") Long readToMessageId);
+>>>>>>> private-codex/batch1
 
     /** 未读总数 */
     public Integer sumUnread(@Param("memberId") Long memberId);

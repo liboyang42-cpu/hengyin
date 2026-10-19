@@ -35,6 +35,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,6 +67,11 @@ class RoamHangoutServiceTest {
         members = mock(IUmsMemberService.class);
         topicMapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         svc = new RoamHangoutServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactionManager =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactionManager.getTransaction(any())).thenAnswer(inv ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);
         ReflectionTestUtils.setField(svc, "roamHangoutMapper", mapper);
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(svc, "imService", im);
@@ -220,9 +227,30 @@ class RoamHangoutServiceTest {
     @Test
     void expireDue_逐条关局关群() {
         when(mapper.selectExpired(any(Date.class))).thenReturn(Arrays.asList(open(1L, 9L, 10L), open(2L, 9L, 20L)));
+        when(mapper.selectByIdForUpdate(1L)).thenReturn(open(1L, 9L, 10L));
+        when(mapper.selectByIdForUpdate(2L)).thenReturn(open(2L, 9L, 20L));
         assertEquals(2, svc.expireDue(new Date()));
         verify(mapper).updateStatus(1L, RoamHangout.STATUS_CLOSED);
         verify(im).closeHangoutGroup(2L);
+    }
+
+    @Test
+    void expireDue_单项失败回滚且后项继续_不覆盖已处置状态() {
+        RoamHangout hidden = open(3L, 9L, 30L);
+        hidden.setStatus(RoamHangout.STATUS_HIDDEN);
+        when(mapper.selectExpired(any(Date.class))).thenReturn(Arrays.asList(
+                open(1L, 9L, 10L), open(2L, 9L, 20L), hidden));
+        when(mapper.selectByIdForUpdate(1L)).thenReturn(open(1L, 9L, 10L));
+        when(mapper.selectByIdForUpdate(2L)).thenReturn(open(2L, 9L, 20L));
+        when(mapper.selectByIdForUpdate(3L)).thenReturn(hidden);
+        doThrow(new IllegalStateException("IM write failed")).when(im).closeHangoutGroup(1L);
+        assertEquals(1, svc.expireDue(new Date()));
+        org.springframework.transaction.PlatformTransactionManager tx =
+                (org.springframework.transaction.PlatformTransactionManager) ReflectionTestUtils.getField(svc, "transactionManager");
+        verify(tx).rollback(any());
+        verify(tx, times(2)).commit(any());
+        verify(im).closeHangoutGroup(2L);
+        verify(mapper, never()).updateStatus(3L, RoamHangout.STATUS_CLOSED);
     }
 
     @Test

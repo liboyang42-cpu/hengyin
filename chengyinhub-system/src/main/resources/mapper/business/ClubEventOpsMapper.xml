@@ -436,6 +436,7 @@
         where registration_id = #{registrationId} and state = 'CLAIMED'
     </update>
 
+<<<<<<< public
     <select id="selectWaitlistMaintenanceMaxId" resultType="long">
         select max(id) from club_event_waitlist
     </select>
@@ -478,6 +479,19 @@
     <select id="selectExpiredOfferedIds" resultType="long">
         select id from club_event_waitlist
         where state = 'OFFERED' and offer_expires_at &lt;= #{now}
+=======
+    <select id="selectWaitlistScanUpperId" resultType="long">
+        select max(id) from club_event_waitlist
+    </select>
+
+    <select id="selectExpiredOfferedPage" resultMap="waitlistResult">
+        select id, offer_expires_at from club_event_waitlist
+        where state = 'OFFERED' and offer_expires_at &lt;= #{now} and id &lt;= #{upperId}
+        <if test="afterId != null">
+            and (offer_expires_at &gt; #{afterTime}
+              or (offer_expires_at = #{afterTime} and id &gt; #{afterId}))
+        </if>
+>>>>>>> private-codex/batch1
         order by offer_expires_at asc, id asc limit #{limit}
     </select>
 
@@ -488,20 +502,24 @@
           and offer_expires_at &lt;= #{now}
     </update>
 
-    <select id="selectClaimedPaidRegistrationIds" resultType="long">
-        select w.registration_id
+    <select id="selectClaimedPaidPage" resultMap="waitlistResult">
+        select w.id, w.registration_id
         from club_event_waitlist w
         inner join cms_registration r on r.id = w.registration_id
         where w.state = 'CLAIMED' and r.payment_status = 2 and r.registration_status = 2
+          and w.id &lt;= #{upperId}
+        <if test="afterId != null">and w.id &gt; #{afterId}</if>
         order by w.id asc limit #{limit}
     </select>
 
-    <select id="selectClaimedTerminalRegistrationIds" resultType="long">
-        select w.registration_id
+    <select id="selectClaimedTerminalPage" resultMap="waitlistResult">
+        select w.id, w.registration_id
         from club_event_waitlist w
         inner join cms_registration r on r.id = w.registration_id
         where w.state = 'CLAIMED'
           and (r.registration_status in (3, 4) or r.payment_status in (3, 4))
+          and w.id &lt;= #{upperId}
+        <if test="afterId != null">and w.id &gt; #{afterId}</if>
         order by w.id asc limit #{limit}
     </select>
 
@@ -514,8 +532,8 @@
     </update>
 
     <!-- 普通报名关单/取消已由既有流程回补库存；任务只发现有余量的 WAITING 队列并尝试晋级。 -->
-    <select id="selectPromotableWaitlistScopes" resultType="java.util.LinkedHashMap">
-        select w.activity_id as activityId, w.ticket_id as ticketId
+    <select id="selectPromotableWaitlistScopePage" resultMap="waitlistResult">
+        select min(w.id) as id, min(w.joined_at) as joined_at, w.activity_id, w.ticket_id
         from club_event_waitlist w
         inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
         inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
@@ -524,10 +542,14 @@
           and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
         inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
           and t.owner_id = w.activity_id and t.del_flag = 0 and t.remaining_inventory &gt; 0
-        where w.state = 'WAITING'
+        where w.state = 'WAITING' and w.id &lt;= #{upperId}
           and (coalesce(t.signup_deadline, t.start_time) is null
             or coalesce(t.signup_deadline, t.start_time) &gt; #{now})
         group by w.activity_id, w.ticket_id
+        <if test="afterId != null">
+            having (min(w.joined_at) &gt; #{afterTime}
+              or (min(w.joined_at) = #{afterTime} and min(w.id) &gt; #{afterId}))
+        </if>
         order by min(w.joined_at) asc, min(w.id) asc
         limit #{limit}
     </select>

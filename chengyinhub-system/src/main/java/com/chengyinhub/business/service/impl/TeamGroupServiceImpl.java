@@ -13,6 +13,7 @@ import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.service.IRefundService;
 import com.chengyinhub.business.service.ITeamGroupService;
 import com.chengyinhub.business.service.WechatOrderNotExistException;
@@ -95,6 +96,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     @Autowired
     private INotifyService notifyService;
+
+    @Autowired
+    private NotificationDeliveryReceiptService notificationReceiptService;
 
     @Autowired
     private com.chengyinhub.business.service.IImService imService;
@@ -1365,7 +1369,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /**
      * 出发前提醒批量下发。返回本轮计数:scanned=扫到的「票×人」候选数、skipped=已送达跳过、
-     * delivered=**真实送达条数**(微信 errcode==0 的那些,不是扫到的票种数)、failed=发送失败数。
+     * delivered=**渠道确认接受条数**(微信 errcode==0 且收据落库，不代表设备送达)、failed=发送失败数。
      *
      * 为什么不是一个 int:0 同时表示「没人需要发」「全都已在去重键里」「全部发送失败」三件事,
      * 任务层据此既留不了痕也告不了警(审查D §8 P1-1)。计数拆开后,任务层对 failed&gt;0 出声。
@@ -1373,7 +1377,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 去重键的粒度是「票 × 人」而不是「票」,且只有下发成功才写。原实现是按票去重、且不管成败
      * 都写键 + 计数:整批全失败也会被标记成已发,而窗口只有 24h、键存 2 天 ⇒ 永久错过、零信号;
      * 返回值又是票种数,日志里的 N 就算在 100% 发送失败时也 >0,看着像发出去了。
-     * 下沉到人之后,失败的那几个下一轮 cron 会重试,已收到的不会被重发。
+     * 下沉到人之后,失败的那几个下一轮 cron 会重试,已确认接受的不会被重发；UNKNOWN/PROCESSING 保留供应商核对断点。
      *
      * ⚠️ notifyBeforeStart 是 best-effort、**失败不抛异常**(见 IWxSubscribeMsgService#send:
      * 抛出会回滚退款事务 = 资损),所以这里判成败只能看返回值,try/catch 接不到东西。
@@ -1398,18 +1402,29 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                         skipped++; // 这个人已收到过,去重
                         continue;
                     }
-                    boolean ok;
+                    if (!claimBeforeStartReceipt(t.getId(), r.getMemberId())) {
+                        skipped++; // 已确认、UNKNOWN 或其他 worker 已领取，均不盲重发
+                        continue;
+                    }
+                    NotifyResult result;
                     try {
-                        ok = notifyService.notifyBeforeStart(
+                        result = notifyService.notifyBeforeStartResult(
                                 r.getMemberId(), t.getName(), fmt(t.getStartTime()));
-                    } catch (Exception e) {
-                        // 契约上不该抛;真抛了也不能拖垮同批其他人,但绝不静默吞掉
+                    } catch (Throwable e) {
+                        // 可能已越过外部边界，只能 UNKNOWN，不能回退 FAILED 造成小时盲重发。
+                        completeBeforeStartReceipt(t.getId(), r.getMemberId(),
+                                NotifyResult.Status.UNKNOWN.name(), null);
                         logger.warn("出发前提醒下发异常 ticketId={} memberId={} reason={}",
                                 t.getId(), r.getMemberId(), e.getClass().getSimpleName());
-                        ok = false;
+                        failed++;
+                        continue;
                     }
-                    if (!ok) {
-                        failed++; // 不写去重键 ⇒ 下一轮重试(窗口内每小时一次)
+                    if (result == null) result = NotifyResult.unknown("WECHAT_SUBSCRIBE");
+                    boolean recorded = completeBeforeStartReceipt(t.getId(), r.getMemberId(),
+                            result.getStatus().name(), result.getProviderCode());
+                    if (!recorded || result.getStatus() != NotifyResult.Status.CHANNEL_ACCEPTED
+                            || !"WECHAT_SUBSCRIBE".equals(result.getChannel())) {
+                        failed++; // 只有明确 FAILED 能在下轮 CAS 重试；UNKNOWN 会被持久收据挡住
                         continue;
                     }
                     redisCache.setCacheObject(key, "1", 2, java.util.concurrent.TimeUnit.DAYS);
@@ -1418,6 +1433,28 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             }
         }
         return new BeforeStartNotifyResult(scanned, skipped, delivered, failed);
+    }
+
+    private boolean claimBeforeStartReceipt(Long ticketId, Long memberId) {
+        try {
+            return notificationReceiptService.claim("BEFORE_START", ticketId, memberId,
+                    "WECHAT_SUBSCRIBE", true);
+        } catch (Throwable e) {
+            logger.warn("出发前提醒收据领取失败 ticketId={} memberId={} reason={}",
+                    ticketId, memberId, e.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    private boolean completeBeforeStartReceipt(Long ticketId, Long memberId, String status, String providerCode) {
+        try {
+            return notificationReceiptService.complete("BEFORE_START", ticketId, memberId,
+                    "WECHAT_SUBSCRIBE", status, providerCode);
+        } catch (Throwable e) {
+            logger.warn("出发前提醒收据落库失败 ticketId={} memberId={} status={} reason={}",
+                    ticketId, memberId, status, e.getClass().getSimpleName());
+            return false;
+        }
     }
 
     private String fmt(Date d) {

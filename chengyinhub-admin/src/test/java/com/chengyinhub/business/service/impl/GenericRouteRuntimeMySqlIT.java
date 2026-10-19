@@ -564,6 +564,129 @@ class GenericRouteRuntimeMySqlIT {
         staff("RUN_PAUSE",payload().put("reason","到达过期校验"));ObjectNode run=(ObjectNode)runState();for(JsonNode a:run.path("arrivals"))((ObjectNode)a).put("expiresAt",0);writeOwner("RUN",50,run);staff("RUN_RESUME",payload().put("reason","继续"));
         assertThrows(GameSessionException.class,()->runtime.recordSharedRouteResult(8L,80L,70L,11L,instance(8,11),"late",true,Collections.emptyList(),1));
     }
+    @Test void pausedAndInterruptedRunRejectLateSettlementWithoutCostOrChapterRations() throws Exception {
+        sharedWorld(2);
+        ObjectNode snapshot = (ObjectNode) JSON.readTree(mapper.selectSessionByActivity(70L).getModuleConfigSnapshotJson());
+        ArrayNode chapters = ((ObjectNode) snapshot.path("themeConfig")).putArray("chapters");
+        ObjectNode first = chapters.addObject().put("index", 0);
+        first.putObject("binding").putArray("nodeIds").add(11);
+        first.putArray("grants").addObject().put("timing", "END").put("itemId", "clue").put("quantity", 1);
+        ObjectNode next = chapters.addObject().put("index", 1);
+        next.putObject("binding").putArray("nodeIds").add(12);
+        next.putArray("grants").addObject().put("timing", "START").put("itemId", "tool").put("quantity", 1);
+        try (Connection c = ds.getConnection(); PreparedStatement st = c.prepareStatement("UPDATE game_session SET module_config_snapshot_json=? WHERE id=50")) {
+            st.setString(1, snapshot.toString()); st.executeUpdate();
+        }
+        player(7, "QUEST_START", payload().put("questKey", "q1"));
+        String activeInstance = instance(8, 11);
+        for (String stop : Arrays.asList("RUN_PAUSE", "RUN_INTERRUPT")) {
+            staff(stop, payload().put("reason", "现场停止后核对迟到任务"));
+            JsonNode owner = state(50, 90), other = state(50, 99), world = worldState(), run = runState();
+            int revision = mapper.selectSessionByActivity(70L).getRevision(), count = receipts();
+            assertThrows(GameSessionException.class, () -> player(7, "FACILITY_USE", payload().put("facilityKey", "shelter")));
+            assertThrows(GameSessionException.class, () -> player(7, "QUEST_RESOLVE", payload().put("questKey", "q1")));
+            assertThrows(GameSessionException.class, () -> runtime.recordSharedRouteResult(
+                    8L, 80L, 70L, 11L, activeInstance, "late-success-" + stop, true, Collections.emptyList(), 1));
+            assertEquals(owner, state(50, 90)); assertEquals(other, state(50, 99));
+            assertEquals(world, worldState()); assertEquals(run, runState());
+            assertEquals(revision, mapper.selectSessionByActivity(70L).getRevision()); assertEquals(count, receipts());
+            assertEquals(2, state(50, 90).path("themeRuntime").path("inventory").path("clue").asInt());
+        }
+    }
+
+    @Test void pauseAndResourceUseRaceCommitsOnlyOneWholeCommand() throws Exception {
+        sharedWorld(2);
+        GameSessionCommand pause = envelope(88, "RUN_PAUSE", payload().put("reason", "资源操作竞态暂停"));
+        GameSessionCommand use = envelope(7, "FACILITY_USE", payload().put("facilityKey", "shelter"));
+        ExecutorService pool = Executors.newFixedThreadPool(2); CountDownLatch start = new CountDownLatch(1);
+        try {
+            Future<Boolean> stopped = pool.submit(() -> { start.await(); try {
+                runtime.command(GameActorContext.club(88L), pause); return true;
+            } catch (GameSessionException conflict) { return false; } });
+            Future<Boolean> consumed = pool.submit(() -> { start.await(); try {
+                runtime.command(GameActorContext.player(7L), use); return true;
+            } catch (GameSessionException conflict) { return false; } });
+            start.countDown();
+            boolean pauseWon = stopped.get(15, TimeUnit.SECONDS), useWon = consumed.get(15, TimeUnit.SECONDS);
+            assertNotEquals(pauseWon, useWon);
+            assertEquals(1, receipts()); assertEquals(1, mapper.selectSessionByActivity(70L).getRevision());
+            assertEquals(pauseWon ? "PAUSED" : "RUNNING", runState().path("operationStatus").asText());
+            assertEquals(useWon ? 1 : 0, worldState().path("facilities").path("shelter_once").path("count").asInt());
+            assertEquals(useWon ? 1 : 2, state(50, 90).path("themeRuntime").path("inventory").path("tool").asInt());
+            assertEquals(2, state(50, 99).path("themeRuntime").path("inventory").path("tool").asInt());
+            for (long team : new long[]{90, 99}) assertEquals(useWon ? 10 : 8, state(50, team).path("variables").path("sys.hp").asInt());
+            if (useWon) staff("RUN_PAUSE", payload().put("reason", "资源提交后暂停"));
+            JsonNode owner = state(50, 90), world = worldState(); int count = receipts();
+            assertThrows(GameSessionException.class, () -> player(7, "FACILITY_USE", payload().put("facilityKey", "shelter")));
+            assertEquals(owner, state(50, 90)); assertEquals(world, worldState()); assertEquals(count, receipts());
+        } finally { pool.shutdownNow(); }
+    }
+
+    @Test void consumedManualSignatureAndOriginalReceiptNeverAddBalanceAfterEpochChange() throws Exception {
+        sharedWorld(2); staff("RUN_PAUSE", payload().put("reason", "人工接管"));
+        Map<String, Object> exported = runtime.exportSharedRun(GameActorContext.club(88L), 70L);
+        ObjectNode begin = payload().put("reason", "纸账核对").put("configHash", (String) exported.get("configHash"))
+                .put("highWaterHash", (String) exported.get("highWaterHash"));
+        begin.putArray("unknownRequests"); staff("MANUAL_BEGIN", begin);
+        ObjectNode signed = payload().put("sequence", 1).put("occurredAt", System.currentTimeMillis());
+        signed.putObject("command").put("action", "RECOVER").putObject("payload").put("recoveryKey", "break");
+        String signature = String.valueOf(player(7, "MANUAL_SIGN", signed).getResult().get("signatureId"));
+        GameSessionCommand original = envelope(88, "MANUAL_IMPORT", payload().put("signatureId", signature));
+        GameCommandReceiptView applied = runtime.command(GameActorContext.club(88L), original);
+        JsonNode once = state(50, 90);
+        GameCommandReceiptView duplicate = staff("MANUAL_IMPORT", payload().put("signatureId", signature));
+        assertEquals(applied.getResult().get("manualResult"), duplicate.getResult().get("manualResult"));
+        assertEquals(once, state(50, 90));
+        assertTrue(runState().path("manual").path("signatures").path(signature).path("used").asBoolean());
+        assertEquals(2, runState().path("manual").path("nextSequence").asInt());
+        staff("AUTHORITY_RESUME", payload().put("reason", "纸账完成")); staff("RUN_RESUME", payload().put("reason", "恢复在线"));
+        JsonNode resumedOwner = state(50, 90), resumedRun = runState(); int count = receipts();
+        GameSessionCommand oldDevice = envelope(88, "MANUAL_IMPORT", payload().put("signatureId", signature));
+        oldDevice.setAuthorityEpoch(1);
+        assertThrows(GameSessionException.class, () -> runtime.command(GameActorContext.club(88L), oldDevice));
+        GameCommandReceiptView replay = runtime.command(GameActorContext.club(88L), original);
+        assertTrue(replay.isReplayed()); assertEquals(applied.getReceiptId(), replay.getReceiptId());
+        assertEquals(resumedOwner, state(50, 90)); assertEquals(resumedRun, runState()); assertEquals(count, receipts());
+        assertEquals(10, state(50, 90).path("variables").path("sys.hp").asInt());
+        assertEquals(1, state(50, 90).path("themeRuntime").path("recoveries").path("break").asInt());
+    }
+
+    @Test void manualImportReceiptFailureRollsBackBalanceUsedFlagAndSequenceBeforeRetry() throws Exception {
+        sharedWorld(2); staff("RUN_PAUSE", payload().put("reason", "人工接管回滚验收"));
+        Map<String, Object> exported = runtime.exportSharedRun(GameActorContext.club(88L), 70L);
+        ObjectNode begin = payload().put("reason", "纸账核对").put("configHash", (String) exported.get("configHash"))
+                .put("highWaterHash", (String) exported.get("highWaterHash"));
+        begin.putArray("unknownRequests"); staff("MANUAL_BEGIN", begin);
+        ObjectNode signed = payload().put("sequence", 1).put("occurredAt", System.currentTimeMillis());
+        signed.putObject("command").put("action", "RECOVER").putObject("payload").put("recoveryKey", "break");
+        String signature = String.valueOf(player(7, "MANUAL_SIGN", signed).getResult().get("signatureId"));
+        GameSessionCommand command = envelope(88, "MANUAL_IMPORT", payload().put("signatureId", signature));
+        JsonNode owner = state(50, 90), run = runState(), world = worldState();
+        int revision = mapper.selectSessionByActivity(70L).getRevision(), count = receipts();
+        GameSessionRuntimeMapper failing = (GameSessionRuntimeMapper) java.lang.reflect.Proxy.newProxyInstance(
+                getClass().getClassLoader(), new Class[]{GameSessionRuntimeMapper.class}, (proxy, method, args) -> {
+                    if (method.getName().equals("completeReceipt") && "MANUAL_IMPORT".equals(((GameCommandReceipt) args[0]).getAction()))
+                        throw new IllegalStateException("test outer manual receipt failure");
+                    try { return method.invoke(mapper, args); }
+                    catch (java.lang.reflect.InvocationTargetException cause) { throw cause.getCause(); }
+                });
+        ReflectionTestUtils.setField(target, "runtimeMapper", failing);
+        try { assertThrows(IllegalStateException.class, () -> runtime.command(GameActorContext.club(88L), command)); }
+        finally { ReflectionTestUtils.setField(target, "runtimeMapper", mapper); }
+        assertEquals(owner, state(50, 90)); assertEquals(run, runState()); assertEquals(world, worldState());
+        assertEquals(count, receipts()); assertEquals(revision, mapper.selectSessionByActivity(70L).getRevision());
+        assertFalse(runState().path("manual").path("signatures").path(signature).path("used").asBoolean());
+        assertEquals(1, runState().path("manual").path("nextSequence").asInt());
+        GameCommandReceiptView applied = runtime.command(GameActorContext.club(88L), command);
+        assertEquals(10, state(50, 90).path("variables").path("sys.hp").asInt());
+        assertEquals(1, state(50, 90).path("themeRuntime").path("recoveries").path("break").asInt());
+        assertTrue(runState().path("manual").path("signatures").path(signature).path("used").asBoolean());
+        assertEquals(2, runState().path("manual").path("nextSequence").asInt());
+        JsonNode after = state(50, 90); int afterCount = receipts();
+        assertEquals(applied.getReceiptId(), runtime.command(GameActorContext.club(88L), command).getReceiptId());
+        assertEquals(after, state(50, 90)); assertEquals(afterCount, receipts());
+    }
+
     @Test void manualReplayRequiresActualSignerContinuousSequenceAndRejectsOldEpoch() throws Exception {
         sharedWorld(2);staff("RUN_PAUSE",payload().put("reason","人工接管"));Map<String,Object> exported=runtime.exportSharedRun(GameActorContext.club(88L),70L);
         ObjectNode begin=payload().put("reason","断网接管").put("configHash",(String)exported.get("configHash")).put("highWaterHash",(String)exported.get("highWaterHash"));begin.putArray("unknownRequests");staff("MANUAL_BEGIN",begin);
@@ -574,6 +697,41 @@ class GenericRouteRuntimeMySqlIT {
         assertEquals(2,runState().path("authorityEpoch").asInt());staff("RUN_RESUME",payload().put("reason","在线恢复"));GameSessionCommand stale=envelope(7,"RECOVER",payload().put("recoveryKey","break"));stale.setAuthorityEpoch(1);
         assertThrows(GameSessionException.class,()->runtime.command(GameActorContext.player(7L),stale));
         assertThrows(GameSessionException.class,()->runtime.recordSharedRouteResult(8L,80L,70L,11L,instance(8,11),"old",true,Collections.emptyList(),1));
+    }
+    @Test void manualAuthorityRejectsRepeatedPauseWithoutMutatingAnchorAndKeepsEmergencyStops() throws Exception {
+        sharedWorld(2);
+        staff("RUN_PAUSE",payload().put("reason","正常暂停"));
+        assertEquals("PAUSED",runState().path("operationStatus").asText());
+        assertEquals("正常暂停",runState().path("operationReason").asText());
+        staff("RUN_RESUME",payload().put("reason","正常恢复"));
+        assertEquals("RUNNING",runState().path("operationStatus").asText());
+
+        staff("RUN_PAUSE",payload().put("reason","切换人工账"));
+        Map<String,Object> exported=runtime.exportSharedRun(GameActorContext.club(88L),70L);
+        ObjectNode begin=payload().put("reason","现场断网")
+                .put("configHash",(String)exported.get("configHash"))
+                .put("highWaterHash",(String)exported.get("highWaterHash"));
+        begin.putArray("unknownRequests");staff("MANUAL_BEGIN",begin);
+        JsonNode before=runState().deepCopy();
+        GameSessionException rejected=assertThrows(GameSessionException.class,
+                ()->staff("RUN_PAUSE",payload().put("reason","旧端重复暂停")));
+        assertEquals("GAME_RUN_PAUSED",rejected.getErrorCode());
+        JsonNode after=runState();
+        assertEquals(before.path("operationReason"),after.path("operationReason"));
+        assertEquals(before.path("manual").path("highWaterHash"),after.path("manual").path("highWaterHash"));
+        assertEquals(before.path("authorityEpoch"),after.path("authorityEpoch"));
+        assertEquals(before,after,"被拒绝的重复暂停不得留下任何运行态副作用");
+        staff("RUN_INTERRUPT",payload().put("reason","天气紧急中止"));
+        assertEquals("INTERRUPTED",runState().path("operationStatus").asText());
+
+        seed();sharedWorld(2);staff("RUN_PAUSE",payload().put("reason","取消前暂停"));
+        exported=runtime.exportSharedRun(GameActorContext.club(88L),70L);
+        begin=payload().put("reason","取消前人工接管")
+                .put("configHash",(String)exported.get("configHash"))
+                .put("highWaterHash",(String)exported.get("highWaterHash"));
+        begin.putArray("unknownRequests");staff("MANUAL_BEGIN",begin);
+        staff("RUN_CANCEL",payload().put("reason","安全取消"));
+        assertEquals("CANCELLED",runState().path("operationStatus").asText());
     }
     @Test void coupledFacilityQuestHasOneWorldWinnerAndLoserKeepsMaterialAndTaskSlots() throws Exception {
         sharedWorld(2);GameSession session=mapper.selectSessionByActivity(70L);ObjectNode snapshot=(ObjectNode)JSON.readTree(session.getModuleConfigSnapshotJson());

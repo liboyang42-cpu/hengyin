@@ -96,6 +96,7 @@ public interface ClubEventOpsMapper {
     ClubWaitlistEntry selectWaitlistByRegistration(@Param("registrationId") Long registrationId);
     ClubWaitlistEntry selectWaitlistByRegistrationForUpdate(@Param("registrationId") Long registrationId);
     int convertClaimedByRegistration(@Param("registrationId") Long registrationId);
+<<<<<<< public
     /** 维护页按原waitlist行身份推进，固定MAX排除扫描期新插入。kind 0过期/1已付/2终态/3晋级。 */
     Long selectWaitlistMaintenanceMaxId();
     java.util.List<java.util.Map<String, Object>> selectWaitlistMaintenancePage(
@@ -104,13 +105,24 @@ public interface ClubEventOpsMapper {
 
     java.util.List<Long> selectExpiredOfferedIds(@Param("now") java.util.Date now,
                                                   @Param("limit") int limit);
+=======
+    Long selectWaitlistScanUpperId();
+    java.util.List<ClubWaitlistEntry> selectExpiredOfferedPage(
+            @Param("now") java.util.Date now, @Param("upperId") Long upperId,
+            @Param("afterTime") java.util.Date afterTime, @Param("afterId") Long afterId,
+            @Param("limit") int limit);
+>>>>>>> private-codex/batch1
     int expireOfferedCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion,
                          @Param("now") java.util.Date now);
-    java.util.List<Long> selectClaimedPaidRegistrationIds(@Param("limit") int limit);
-    java.util.List<Long> selectClaimedTerminalRegistrationIds(@Param("limit") int limit);
+    java.util.List<ClubWaitlistEntry> selectClaimedPaidPage(
+            @Param("upperId") Long upperId, @Param("afterId") Long afterId, @Param("limit") int limit);
+    java.util.List<ClubWaitlistEntry> selectClaimedTerminalPage(
+            @Param("upperId") Long upperId, @Param("afterId") Long afterId, @Param("limit") int limit);
     int expireClaimedTerminalCas(@Param("registrationId") Long registrationId);
-    java.util.List<java.util.Map<String, Object>> selectPromotableWaitlistScopes(
-            @Param("now") java.util.Date now, @Param("limit") int limit);
+    java.util.List<ClubWaitlistEntry> selectPromotableWaitlistScopePage(
+            @Param("now") java.util.Date now, @Param("upperId") Long upperId,
+            @Param("afterTime") java.util.Date afterTime, @Param("afterId") Long afterId,
+            @Param("limit") int limit);
     java.util.List<java.util.Map<String, Object>> selectPaidRoster(@Param("activityId") Long activityId);
     java.util.List<java.util.Map<String, Object>> selectWaitlistRoster(@Param("activityId") Long activityId);
     java.util.Map<String, Object> selectAttendanceTargetForUpdate(@Param("activityId") Long activityId,

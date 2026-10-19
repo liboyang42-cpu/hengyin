@@ -106,6 +106,12 @@ test('揭雾失败保留队列、禁止 finish，人工重试成功后才结算'
   assert.deepEqual(page._pendingTiles, ['a']);
   assert.equal(page.data.finish.settleErr, 'reveal');
   page.retrySettle();
+  const lookup = requests.find(request => request.url === '/api/roam/session');
+  assert.ok(lookup);
+  assert.equal(lookup.data.clientSessionKey, page._clientSessionKey);
+  assert.equal(revealCalls().length, 1, '原会话未核对前不能重发');
+  lookup.success({ code: 200, data: { state: 'ACTIVE', sessionId: '88', clientSessionKey: page._clientSessionKey } });
+  await tick();
   revealCalls()[1].success({ code: 200, data: { sessionId: 88 } }); await tick();
   assert.equal(finishCalls().length, 1);
 });

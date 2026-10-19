@@ -15,7 +15,7 @@ import com.chengyinhub.business.mapper.OfficialAudienceMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
 import com.chengyinhub.business.mapper.OfficialEventMapper;
-import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
 import com.chengyinhub.business.service.INotifyService;
@@ -47,9 +47,9 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     @Autowired
     private OfficialBroadcastLogMapper logMapper;
     @Autowired
-    private OfficialAudienceMapper audienceMapper;
+    private NotificationDeliveryReceiptService receiptService;
     @Autowired
-    private IImService imService;
+    private OfficialAudienceMapper audienceMapper;
     @Autowired
     private INotifyService notifyService;
     @Autowired
@@ -114,26 +114,48 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
             String[] ts = resolveTitleSub(copyMode, content, role, bc.getTitle());
             String title = ts[0], sub = ts[1];
 
-            // 站内信(必达渠道):uk 防重发。insertLog 先落 reached=0 的占位行防重发,
-            // 发送成功后才 markReached=1 —— 发送失败则该行保持 reached=0,不计入触达统计(避免虚高)。
             if (inapp && insertLog(bc.getId(), memberId, role, "inapp")) {
                 try {
                     String extra = "{\"title\":\"" + esc(title) + "\",\"sub\":\"" + esc(sub)
                             + "\",\"bcId\":" + bc.getId() + "}";
-                    imService.sendSystem(memberId, ImMessage.MSG_CARD, title, extra);
-                    logMapper.markReached(bc.getId(), memberId, "inapp");
-                    reached++;
-                } catch (Exception ex) {
-                    log.warn("[官方通知] 站内信失败(未置达,统计不计) member={}", memberId, ex);
+                    if (receiptService.storeInApp("OFFICIAL_BROADCAST", bc.getId(), memberId,
+                            ImMessage.MSG_CARD, title, extra)
+                            || receiptService.confirmed("OFFICIAL_BROADCAST", bc.getId(), memberId, "IN_APP")) {
+                        logMapper.markReached(bc.getId(), memberId, "inapp");
+                        reached++;
+                    }
+                } catch (Throwable ex) {
+                    log.warn("[官方通知] 站内落库失败 member={} reason={}",
+                            memberId, ex.getClass().getSimpleName());
                 }
             }
             // 订阅消息(强触达,best-effort;未授权/未配模板跳过)
             if (subscribe && insertLog(bc.getId(), memberId, role, "subscribe")) {
+                if (!claimReceipt("OFFICIAL_BROADCAST", bc.getId(), memberId, "WECHAT_SUBSCRIBE")) {
+                    try {
+                        if (receiptService.confirmed("OFFICIAL_BROADCAST", bc.getId(), memberId, "WECHAT_SUBSCRIBE")) {
+                            logMapper.markReached(bc.getId(), memberId, "subscribe");
+                        }
+                    } catch (Throwable ex) {
+                        log.warn("[官方通知] 收据回读失败 member={} reason={}", memberId, ex.getClass().getSimpleName());
+                    }
+                    continue;
+                }
                 try {
-                    notifyService.notifyOfficialBroadcast(memberId, title, sub);
-                    logMapper.markReached(bc.getId(), memberId, "subscribe");
-                } catch (Exception ex) {
-                    log.warn("[官方通知] 订阅消息失败(未置达) member={}", memberId, ex);
+                    NotifyResult result = notifyService.notifyOfficialBroadcastResult(memberId, title, sub);
+                    String status = result == null ? NotifyResult.Status.UNKNOWN.name() : result.getStatus().name();
+                    String code = result == null ? null : result.getProviderCode();
+                    boolean recorded = completeReceipt("OFFICIAL_BROADCAST", bc.getId(), memberId,
+                            "WECHAT_SUBSCRIBE", status, code);
+                    if (recorded && result != null && result.getStatus() == NotifyResult.Status.CHANNEL_ACCEPTED
+                            && "WECHAT_SUBSCRIBE".equals(result.getChannel())) {
+                        logMapper.markReached(bc.getId(), memberId, "subscribe");
+                    }
+                } catch (Throwable ex) {
+                    // 越过外部边界后的 Throwable 不能推断失败；留 UNKNOWN，且不穿透主流程。
+                    completeReceipt("OFFICIAL_BROADCAST", bc.getId(), memberId,
+                            "WECHAT_SUBSCRIBE", NotifyResult.Status.UNKNOWN.name(), null);
+                    log.warn("[官方通知] 订阅消息失败(未置达) member={} reason={}", memberId, ex.getClass().getSimpleName());
                 }
             }
         }
@@ -142,6 +164,28 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         broadcastMapper.updateOfficialBroadcast(bc);
         log.info("[官方通知] bc={} 圈人={} 站内触达={} 频控跳过={}", bc.getId(), targets.size(), reached, capped);
         return reached;
+    }
+
+    private boolean claimReceipt(String eventType, Long eventId, Long memberId, String channel) {
+        try {
+            return receiptService.claim(eventType, eventId, memberId, channel, false);
+        } catch (Throwable ex) {
+            log.warn("[官方通知] 收据领取失败 event={} member={} channel={} reason={}",
+                    eventId, memberId, channel, ex.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    private boolean completeReceipt(String eventType, Long eventId, Long memberId,
+                                    String channel, String status, String providerCode) {
+        try {
+            return receiptService.complete(eventType, eventId, memberId, channel, status, providerCode);
+        } catch (Throwable ex) {
+            // 外部成功但本地落库失败时原 PROCESSING 是 UNKNOWN，不可补写已达或盲重发。
+            log.error("[官方通知] 收据结果落库失败 event={} member={} channel={} status={} reason={}",
+                    eventId, memberId, channel, status, ex.getClass().getSimpleName());
+            return false;
+        }
     }
 
     @Override
@@ -242,7 +286,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     }
 
     /**
-     * insert ignore 占位:返回 true=新记录(本次可发送),false=已占位过(不重发)。
+     * insert ignore 保留尝试日志；发送身份由收据 CAS 判断。
      * 落 reached=0 的尝试行;真正发送成功后由 markReached 置 1,避免"发送失败仍计触达"。
      */
     private boolean insertLog(Long bcId, Long memberId, String role, String channel) {
@@ -253,8 +297,9 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         l.setChannel(channel);
         l.setReached(0);
         try {
-            return logMapper.insertIgnore(l) > 0;
-        } catch (Exception ex) {
+            logMapper.insertIgnore(l);
+            return true; // 收据 CAS 是唯一发送闸门，日志占位不能阻断恢复。
+        } catch (Throwable ex) {
             return false;
         }
     }

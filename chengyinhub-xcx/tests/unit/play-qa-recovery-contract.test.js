@@ -231,7 +231,7 @@ function shootAndUpload(page, comp, name, size = 1 * MIB) {
   dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/' + name, name, size }))
   assert.equal(wxUploads.length >= 1, true)
   const control = wxUploads[wxUploads.length - 1]
-  control.success({ data: JSON.stringify({ code: 200, url: 'https://cdn/' + name }) })
+  control.success({ statusCode: 200, data: JSON.stringify({ code: 200, url: 'https://cdn/' + name }) })
 }
 
 const tick = () => new Promise((resolve) => setImmediate(resolve))

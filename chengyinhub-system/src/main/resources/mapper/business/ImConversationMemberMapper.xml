@@ -34,6 +34,7 @@
         where conversation_id = #{conversationId} and member_id = #{memberId} limit 1 for update
     </select>
 
+<<<<<<< public
     <update id="addUnreadForActiveMember">
         update im_conversation_member m
         join im_conversation c on c.id = m.conversation_id and c.status = 0
@@ -41,6 +42,8 @@
         where m.conversation_id = #{conversationId} and m.member_id = #{memberId} and m.deleted = 0
     </update>
 
+=======
+>>>>>>> private-codex/batch1
     <select id="selectMyConversations" resultMap="ImConversationMemberResult">
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id, m.muted, m.deleted, m.create_time
         from im_conversation_member m
@@ -68,11 +71,21 @@
         where m.conversation_id = #{conversationId} and m.member_id = #{memberId}
     </update>
 
+<<<<<<< public
     <sql id="storedReadCutoff">
         select coalesce(visible_at, create_time) from im_message
         where id = #{lastReadMsgId} and conversation_id = #{conversationId} and status != 2
           and (msg_type != 2 or check_status = 1 or sender_id = #{memberId})
     </sql>
+=======
+    <update id="addUnreadForActiveMember">
+        update im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        set m.unread_count = m.unread_count + #{delta}
+        where m.conversation_id = #{conversationId} and m.member_id = #{memberId} and m.deleted = 0
+    </update>
+
+>>>>>>> private-codex/batch1
     <update id="markRead">
         update im_conversation_member
         set last_read_msg_id = #{lastReadMsgId},
@@ -86,6 +99,7 @@
         where conversation_id = #{conversationId} and member_id = #{memberId}
     </update>
 
+<<<<<<< public
     <update id="markReadVisible">
         update im_conversation_member
         set last_read_msg_id = #{lastReadMsgId}, last_read_visible_at = #{visibleOrderAt},
@@ -102,6 +116,20 @@
                       and cutoff.status != 2
                       and (cutoff.msg_type != 2 or cutoff.check_status = 1 or cutoff.sender_id = #{memberId})
                       and date_format(coalesce(cutoff.visible_at, cutoff.create_time), '%Y-%m-%d %H:%i:%s.%f') = #{visibleOrderAt}))
+=======
+    <update id="advanceReadTo">
+        update im_conversation_member
+        set last_read_msg_id = #{readToMessageId},
+            unread_count = (
+                select count(*) from im_message
+                where conversation_id = #{conversationId}
+                  and id &gt; #{readToMessageId}
+                  and sender_id != #{memberId}
+                  and status != 2
+            )
+        where conversation_id = #{conversationId} and member_id = #{memberId}
+          and last_read_msg_id &lt; #{readToMessageId}
+>>>>>>> private-codex/batch1
     </update>
 
     <select id="sumUnread" resultType="java.lang.Integer">

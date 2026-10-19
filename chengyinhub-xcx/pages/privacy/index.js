@@ -1,4 +1,5 @@
 const toast = require('../../utils/toast.js');
+const bgTracker = require('../../utils/location/bg-tracker.js');
 const app = getApp();
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -316,10 +317,21 @@ Page({
       scene: 'roam_location',
       eventType: 'REVOKE',
     }).then(() => {
+<<<<<<< public
       bgTracker.revoke('roam');
       toast('已撤回漫游定位同意');
       this.data.failedAction = '';
       this.setData({ submitting: false, submitError: '' });
+=======
+      return bgTracker.revoke('roam').then(() => {
+        toast('已撤回漫游定位同意');
+        this.data.failedAction = '';
+        this.setData({ submitting: false, submitError: '' });
+      }, () => {
+        this.data.failedAction = 'revoke';
+        this.setData({ submitting: false, submitError: '同意已撤回，定位停止尚未确认，请重试' });
+      });
+>>>>>>> private-codex/batch1
     }).catch(() => {
       Object.assign(this.data, { failedAction: 'revoke' });
       this.setData({

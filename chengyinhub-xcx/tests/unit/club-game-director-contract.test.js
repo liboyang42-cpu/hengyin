@@ -145,11 +145,12 @@ function loadDirector(adapter, initialStorage, options) {
   vm.runInNewContext((options && options.directorSource) || read(DIRECTOR_JS), {
     module: moduleShim,
     exports: moduleShim.exports,
-    getApp: () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserID: () => '9' }),
+    getApp: () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserID: () => options && options.memberId != null ? options.memberId : '9' }),
     Page(config) { definition = config },
     require(request) {
       if (request === '../utils/club-game-director-adapter.js') {
-        return { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } }
+        return Object.assign({}, require('../../pages/club/utils/club-game-director-adapter.js'),
+          { createClubGameDirectorAdapter() { throw new Error('测试必须注入 adapter') } })
       }
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
@@ -165,10 +166,14 @@ function loadDirector(adapter, initialStorage, options) {
       showToast(options) { toasts.push(options) },
       showModal(options) { modals.push(options) },
       navigateBack() {},
-      getStorageSync(key) { return storage[key] },
+      getStorageSync(key) {
+        if (options && options.storageReadError) throw new Error('storage read unavailable')
+        return storage[key]
+      },
       setStorageSync(key, value) {
         if (options && options.storageWriteError) throw new Error('storage unavailable')
-        storage[key] = value
+        if (options && options.storageDropWrites) return
+        storage[key] = options && options.storageWriteEcho ? options.storageWriteEcho(value) : value
       },
       removeStorageSync(key) { delete storage[key] },
       setClipboardData(options) {
@@ -694,6 +699,87 @@ test('adapter 写入固定 club 角色，unknown 结果只能经原 requestId �
     { kind: 'submit', role: 'club', input: command },
     { kind: 'receipt', activityId: 701, requestId: 'gd-701-1' },
   ])
+})
+
+test('旧 RUNNING 投影迟到不能覆盖最新暂停或中止状态', async () => {
+  const reads = []
+  const harness = loadDirector({ load() { return new Promise((resolve, reject) => reads.push({ resolve, reject })) } })
+  harness.page.initDirector('701')
+  harness.page.loadProjection()
+  reads[1].resolve({ activityId: 701, status: 'RUNNING', revision: 11, authorityEpoch: 3,
+    genericControl: { revision: 11, run: { operationStatus: 'PAUSED', authorityMode: 'ONLINE', authorityEpoch: 3 }, teams: [], availableActions: [] } })
+  await settle()
+  reads[0].resolve({ activityId: 701, status: 'RUNNING', revision: 10, authorityEpoch: 2 })
+  await settle()
+  assert.equal(harness.page.data.revision, 11)
+  assert.equal(harness.page.data.authorityEpoch, 3)
+  assert.match(harness.page.data.genericOpsStatus, /^PAUSED/)
+})
+
+for (const late of ['submit', 'receipt']) test('切换场次后旧 ' + late + ' 不解锁或清除新场次操作', async () => {
+  let resolveOld
+  const harness = loadDirector({
+    load(activityId) { return Promise.resolve({ activityId, status: 'RUNNING', revision: 9, authorityEpoch: 2 }) },
+    submit(command) { return command.activityId === '701'
+      ? late === 'submit' ? new Promise(resolve => { resolveOld = resolve })
+        : Promise.resolve({ state: 'unknown-write' })
+      : new Promise(() => {}) },
+    readReceipt() { return new Promise(resolve => { resolveOld = resolve }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  harness.page.executeAction('RUN_PAUSE', { reason: '暂停' })
+  await settle()
+  if (late === 'receipt') harness.page.onReconcileUnknownWrite()
+  harness.page.initDirector('702')
+  await settle()
+  harness.page.executeAction('RUN_CANCEL', { reason: '中止另一场' })
+  const pending = harness.page._pendingCommand
+  resolveOld({ state: 'confirmed' })
+  await settle()
+  assert.equal(harness.page._pendingCommand, pending)
+  assert.equal(harness.page.data.writeLocked, true)
+  assert.equal(harness.storage['cy.gameDirector.pendingWrite.m9.a702'].requestId, pending.requestId)
+  assert.ok(harness.storage['cy.gameDirector.pendingWrite.m9.a701'],
+    '原场次结果应保留原索引供重进核对')
+})
+
+test('账号切换后旧提交不清原账号索引或改变当前页面', async () => {
+  const identity = { memberId: '9' }
+  let resolveSubmit
+  const harness = loadDirector({
+    load: async () => ({ activityId: 701, status: 'RUNNING', revision: 9 }),
+    submit: () => new Promise(resolve => { resolveSubmit = resolve }),
+  }, {}, identity)
+  harness.page.initDirector('701')
+  await settle()
+  harness.page.executeAction('RUN_PAUSE', { reason: '暂停' })
+  const pending = harness.page._pendingCommand
+  identity.memberId = '10'
+  resolveSubmit({ state: 'confirmed' })
+  await settle()
+  assert.equal(harness.page._pendingCommand, pending)
+  assert.equal(harness.page.data.writeLocked, true)
+  assert.ok(harness.storage['cy.gameDirector.pendingWrite.m9.a701'])
+})
+
+for (const change of [{ authorityEpoch: 3 }, { sessionId: 9002 }]) test('同场次切换本局身份或纪元后旧提交只留原索引核对 ' + JSON.stringify(change), async () => {
+  let resolveSubmit
+  const projection = { activityId: 701, sessionId: 9001, status: 'RUNNING', revision: 9, authorityEpoch: 2 }
+  const harness = loadDirector({
+    load: async () => projection,
+    submit: () => new Promise(resolve => { resolveSubmit = resolve }),
+  })
+  harness.page.initDirector('701')
+  await settle()
+  harness.page.executeAction('RUN_PAUSE', { reason: '暂停' })
+  const pending = harness.page._pendingCommand
+  harness.page.applyProjection(Object.assign({}, projection, change))
+  resolveSubmit({ state: 'confirmed' })
+  await settle()
+  assert.equal(harness.page._pendingCommand, pending)
+  assert.equal(harness.page.data.writeLocked, true)
+  assert.ok(harness.storage['cy.gameDirector.pendingWrite.m9.a701'])
 })
 
 test('unknown 写在回执仍 pending 时保持全页写锁，不能再次发送', async () => {
@@ -1262,6 +1348,69 @@ test('导演写命令在发请求前就持久化 requestId，请求抛错也必�
   assert.equal(harness.page.data.writeLocked, true)
   assert.equal(harness.storage[storageKey].action, 'START')
 })
+
+test('导演回执索引必须实际回读一致，静默丢写或旧值不发命令，字段重排可用', async () => {
+  for (const [options, expectedSubmits] of [[{ storageDropWrites: true }, 0], [{ storageReadError: true }, 0],
+    [{ storageWriteEcho: value => Object.assign({}, value, { requestId: 'old_request' }) }, 0],
+    [{ storageWriteEcho: value => Object.assign({}, value, { extra: 'unexpected' }) }, 0],
+    [{ storageWriteEcho: value => Object.fromEntries(Object.entries(value).reverse()) }, 1]]) {
+    let submits = 0;
+    const harness = loadDirector({ load: async () => ({ sessionId: 9001, activityId: 701, status: 'READY', revision: 8,
+      availableActions: ['START'], readiness: { requiredStations: 1, readyStations: 1, teamsReady: true, blockers: [], canStart: true },
+      stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null, recap: null }),
+      submit: async () => { submits++; return { state: 'unknown-write' }; } }, {}, options);
+    harness.page.initDirector('701'); await settle();
+    harness.page.executeAction('START', {}); await settle();
+    assert.equal(submits, expectedSubmits);
+    if (!expectedSubmits) {
+      assert.equal(harness.page._pendingCommand, null);
+      assert.equal(harness.page.data.writeLocked, false);
+      assert.equal(harness.page.data.writeState, 'storage-error');
+    }
+  }
+});
+
+test('初始化读缓存失败后恢复，不能用新命令覆盖原未知回执索引', async () => {
+  let submits = 0;
+  const adapter = { load: async () => ({ sessionId: 9001, activityId: 701, status: 'READY', revision: 8,
+    availableActions: ['START'], readiness: { requiredStations: 1, readyStations: 1, teamsReady: true, blockers: [], canStart: true },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null, recap: null }),
+    submit: async () => { submits++; return { state: 'unknown-write' }; } };
+  const first = loadDirector(adapter); first.page.initDirector('701'); await settle();
+  first.page.executeAction('START', {}); await settle();
+  const key = Object.keys(first.storage)[0];
+  first.storage[key].requestId = 'original_unknown_request';
+  const original = JSON.stringify(first.storage[key]);
+  const options = { storageReadError: true }, second = loadDirector(adapter, first.storage, options);
+  second.page.initDirector('701'); await settle();
+  options.storageReadError = false;
+  second.page.executeAction('START', {}); await settle();
+  assert.equal(submits, 1);
+  assert.equal(JSON.stringify(second.storage[key]), original);
+  assert.equal(second.page.data.writeState, 'storage-error');
+});
+
+test('未知写重试回读失败保持原命令与写锁，恢复后只发同一请求', async () => {
+  const submitted = [], options = {};
+  const h = loadDirector({ load: async () => ({ sessionId: 9001, activityId: 701, status: 'READY', revision: 8,
+    availableActions: ['START'], readiness: { requiredStations: 1, readyStations: 1, teamsReady: true, blockers: [], canStart: true },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null, recap: null }),
+    submit: async command => { submitted.push(command); return { state: 'unknown-write' }; } }, {}, options);
+  h.page.initDirector('701'); await settle();
+  h.page.executeAction('START', {}); await settle();
+  const original = h.page._pendingCommand;
+  options.storageReadError = true;
+  assert.equal(h.page.retryUnknownWrite(), false);
+  assert.equal(submitted.length, 1);
+  assert.equal(h.page._pendingCommand, original);
+  assert.equal(h.page.data.writeLocked, true);
+  assert.equal(h.page.data.writeState, 'unknown-write');
+  options.storageReadError = false;
+  assert.equal(h.page.retryUnknownWrite(), true); await settle();
+  assert.equal(submitted.length, 2);
+  assert.equal(submitted[1].requestId, submitted[0].requestId);
+  assert.deepEqual(submitted[1].payload, submitted[0].payload);
+});
 
 test('导演回执索引落盘失败时 fail closed，网络请求不得发出', async () => {
   const submits = []

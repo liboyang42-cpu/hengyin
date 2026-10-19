@@ -3,10 +3,13 @@ package com.chengyinhub.business.service.impl;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -65,6 +68,9 @@ public class NpcChatService
     private static final String SAFE_IN_PROGRESS = "上一条问题还在处理中，请稍后再试。";
     private static final String SAFE_REQUEST_TIMEOUT = "本次请求等待超时，请重新发送。";
     private static final String SAFE_SHOP_NO_PROFILE = "这家店的分身还没上线，去店里问问店主吧。";
+    private static final String SAFE_INTENT_CONFLICT = "请求编号已用于另一个问题，请重新发送。";
+    private static final String SAFE_INTENT_UNVERIFIABLE = "旧请求无法确认原问题，已停止自动恢复。";
+    private static final String SAFE_PROVIDER_UNKNOWN = "原请求结果待核对，请勿重复发起。";
 
     @Autowired
     private AiGatewayService aiGatewayService;
@@ -107,6 +113,7 @@ public class NpcChatService
                     false, true, SAFE_INVALID_REQUEST);
         }
 
+<<<<<<< public
         NpcChatRequest existing;
         try
         {
@@ -123,6 +130,8 @@ public class NpcChatService
             return fromStored(existing);
         }
 
+=======
+>>>>>>> private-codex/batch1
         String message = normalizedMessage(req);
         if (!isMessageValid(message))
         {
@@ -138,26 +147,27 @@ public class NpcChatService
                     NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_SESSION", null,
                     false, SAFE_INVALID_SESSION));
         }
-
-        try
+        NpcProfile profile = findGlobalProfile();
+        if (profile == null || !nonBlank(profile.getPersona()))
         {
-            npcChatRequestMapper.expireProcessingByUserAndSession(userId, session.getId(), SAFE_REQUEST_TIMEOUT);
+            return response(requestId, NpcChatRequest.STATUS_FAILED, "NOT_RUN", "NPC_PROFILE_UNAVAILABLE", null,
+                    true, true, SAFE_UPSTREAM_FAILED);
         }
-        catch (Exception e)
-        {
-            // 不在未知的 request-state 下调用模型；否则可能产生不能重放的二次扣费请求。
-            log.error("[NpcChat] request lease cleanup failed userId={} sessionId={}", userId, session.getId(), e);
-            return requestStateUnavailable(requestId);
-        }
+        String version = profileVersion(profile);
+        String hash = intentHash(message, 3, profile.getId(), userId, session.getId(), "npc_chat", version);
+        NpcChatResp replay = replayIfPresent(userId, requestId, hash);
+        if (replay != null) return replay;
 
-        NpcChatRequest processing = newProcessing(userId, session.getId(), requestId);
+        if (!expireUnstartedRequests(userId, session.getId())) return requestStateUnavailable(requestId);
+        NpcChatRequest processing = newProcessing(userId, session.getId(), requestId, hash, 3,
+                profile.getId(), "npc_chat", version);
         try
         {
             npcChatRequestMapper.insertNpcChatRequest(processing);
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(userId, requestId);
+            return afterInsertCollision(userId, requestId, hash);
         }
         catch (Exception e)
         {
@@ -165,8 +175,8 @@ public class NpcChatService
             return requestStateUnavailable(requestId);
         }
 
-        return generateAndFinish(processing, findGlobalProfile(),
-                profile -> memoryBuilder.buildRoam(session), "npc_chat", message);
+        return generateAndFinish(processing, profile,
+                ignored -> memoryBuilder.buildRoam(session), "npc_chat", message);
     }
 
     /**
@@ -228,6 +238,7 @@ public class NpcChatService
                     false, true, SAFE_INVALID_REQUEST);
         }
 
+<<<<<<< public
         NpcChatRequest existing;
         try
         {
@@ -244,6 +255,8 @@ public class NpcChatService
             return fromStored(existing);
         }
 
+=======
+>>>>>>> private-codex/batch1
         Long sessionKey = -nodeId;
         String message = rawMessage == null ? null : rawMessage.trim();
         if (!isMessageValid(message))
@@ -262,24 +275,20 @@ public class NpcChatService
                     false, SAFE_SHOP_NO_PROFILE));
         }
 
-        try
-        {
-            npcChatRequestMapper.expireProcessingByUserAndSession(userId, sessionKey, SAFE_REQUEST_TIMEOUT);
-        }
-        catch (Exception e)
-        {
-            log.error("[NpcChat] shop lease cleanup failed userId={} nodeId={}", userId, nodeId, e);
-            return requestStateUnavailable(rid);
-        }
+        String version = profileVersion(profile);
+        String hash = intentHash(message, 2, profile.getId(), userId, sessionKey, bizType, version);
+        NpcChatResp replay = replayIfPresent(userId, rid, hash);
+        if (replay != null) return replay;
 
-        NpcChatRequest processing = newProcessing(userId, sessionKey, rid);
+        if (!expireUnstartedRequests(userId, sessionKey)) return requestStateUnavailable(rid);
+        NpcChatRequest processing = newProcessing(userId, sessionKey, rid, hash, 2, profile.getId(), bizType, version);
         try
         {
             npcChatRequestMapper.insertNpcChatRequest(processing);
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(userId, rid);
+            return afterInsertCollision(userId, rid, hash);
         }
         catch (Exception e)
         {
@@ -316,9 +325,14 @@ public class NpcChatService
                                           Function<NpcProfile, String> memory, String bizType, String message)
     {
         long startMs = System.currentTimeMillis();
+<<<<<<< public
         java.util.concurrent.atomic.AtomicBoolean leaseLost = new java.util.concurrent.atomic.AtomicBoolean(false);
         ScheduledFuture<?> leaseHeartbeat = startLeaseHeartbeat(processing,leaseLost);
         if (leaseHeartbeat == null)
+=======
+        LeaseGuard lease = startLeaseHeartbeat(processing);
+        if (lease == null)
+>>>>>>> private-codex/batch1
         {
             terminalize(processing, NpcChatRequest.STATUS_FAILED, "NOT_RUN", "REQUEST_STATE_UNAVAILABLE", null,
                     true, SAFE_UPSTREAM_FAILED);
@@ -337,12 +351,26 @@ public class NpcChatService
             Long profileId = profile.getId();
             String mem = memory.apply(profile);
             String system = profile.getPersona() + "\n" + (mem == null ? "" : mem);
+<<<<<<< public
             if(leaseLost.get() || npcChatRequestMapper.renewLease(processing.getUserId(),
                     processing.getRequestId(),processing.getLeaseToken(),new Date(System.currentTimeMillis()+LEASE_MILLIS))!=1) {
                 return requestStateUnavailable(processing.getRequestId());
             }
+=======
+            // 心跳已判失权时，不能因数据库短暂恢复又启动一次上游。
+            if (lease.lost.get()) return providerStateUnknown(processing.getRequestId());
+            if (npcChatRequestMapper.markProviderStarted(processing.getUserId(), processing.getRequestId(),
+                    processing.getLeaseToken()) != 1)
+            {
+                lease.lost.set(true);
+                return providerStateUnknown(processing.getRequestId());
+            }
+            processing.setProviderState("STARTED");
+            if (lease.lost.get()) return providerStateUnknown(processing.getRequestId());
+>>>>>>> private-codex/batch1
             AiGatewayResult result = aiGatewayService.generate(processing.getUserId(), "player", bizType,
                     system, message);
+            if (lease.lost.get()) return providerStateUnknown(processing.getRequestId());
             terminalize(processing, NpcChatRequest.STATUS_SUCCEEDED, "PASS", null, null, false,
                     truncateCodePoints(result.getText(), SAFE_TEXT_MAX_CODE_POINTS));
             NpcChatResp response = finish(processing);
@@ -357,6 +385,7 @@ public class NpcChatService
         }
         catch (AiServiceException e)
         {
+            if (lease.lost.get()) return providerStateUnknown(processing.getRequestId());
             applyGatewayFailure(processing, e);
             NpcChatResp response = finish(processing);
             saveLog(processing.getUserId(), processing.getSessionId(), profile.getId(), message, null,
@@ -367,6 +396,7 @@ public class NpcChatService
         {
             log.error("[NpcChat] unexpected error bizType={} userId={} requestId={}", bizType,
                     processing.getUserId(), processing.getRequestId(), e);
+            if (lease.lost.get()) return providerStateUnknown(processing.getRequestId());
             terminalize(processing, NpcChatRequest.STATUS_FAILED, "NOT_RUN", "AI_UNAVAILABLE", null, true,
                     SAFE_UPSTREAM_FAILED);
             NpcChatResp response = finish(processing);
@@ -376,7 +406,7 @@ public class NpcChatService
         }
         finally
         {
-            leaseHeartbeat.cancel(false);
+            lease.future.cancel(false);
         }
     }
 
@@ -410,8 +440,12 @@ public class NpcChatService
         }
     }
 
+<<<<<<< public
     private ScheduledFuture<?> startLeaseHeartbeat(final NpcChatRequest processing,
             final java.util.concurrent.atomic.AtomicBoolean leaseLost)
+=======
+    private LeaseGuard startLeaseHeartbeat(final NpcChatRequest processing)
+>>>>>>> private-codex/batch1
     {
         if (scheduledExecutorService == null)
         {
@@ -421,7 +455,8 @@ public class NpcChatService
         }
         try
         {
-            return scheduledExecutorService.scheduleAtFixedRate(new Runnable()
+            final AtomicBoolean lost = new AtomicBoolean(false);
+            ScheduledFuture<?> future = scheduledExecutorService.scheduleAtFixedRate(new Runnable()
             {
                 @Override
                 public void run()
@@ -433,25 +468,46 @@ public class NpcChatService
                                 new Date(System.currentTimeMillis() + LEASE_MILLIS));
                         if (updated != 1)
                         {
+<<<<<<< public
                             leaseLost.set(true);
+=======
+                            lost.set(true);
+>>>>>>> private-codex/batch1
                             log.warn("[NpcChat] lease heartbeat lost userId={} requestId={}",
                                     processing.getUserId(), processing.getRequestId());
                         }
                     }
                     catch (Exception e)
                     {
+<<<<<<< public
                         leaseLost.set(true);
+=======
+                        lost.set(true);
+>>>>>>> private-codex/batch1
                         log.error("[NpcChat] lease heartbeat failed userId={} requestId={}",
                                 processing.getUserId(), processing.getRequestId(), e);
                     }
                 }
             }, LEASE_HEARTBEAT_MILLIS, LEASE_HEARTBEAT_MILLIS, TimeUnit.MILLISECONDS);
+            return future == null ? null : new LeaseGuard(future, lost);
         }
         catch (Exception e)
         {
             log.error("[NpcChat] lease heartbeat scheduling failed userId={} requestId={}", processing.getUserId(),
                     processing.getRequestId(), e);
             return null;
+        }
+    }
+
+    private static final class LeaseGuard
+    {
+        private final ScheduledFuture<?> future;
+        private final AtomicBoolean lost;
+
+        private LeaseGuard(ScheduledFuture<?> future, AtomicBoolean lost)
+        {
+            this.future = future;
+            this.lost = lost;
         }
     }
 
@@ -493,9 +549,8 @@ public class NpcChatService
             {
                 return fromStored(terminal);
             }
-            NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(terminal.getUserId(),
-                    terminal.getRequestId());
-            return stored != null ? fromStored(stored) : requestStateUnavailable(terminal.getRequestId());
+            // CAS=0 就是本 worker 已不再拥有发布权；不用后读结果掩盖失权。
+            return providerStateUnknown(terminal.getRequestId());
         }
         catch (Exception e)
         {
@@ -514,7 +569,7 @@ public class NpcChatService
         }
         catch (DuplicateKeyException e)
         {
-            return afterInsertCollision(terminal.getUserId(), terminal.getRequestId());
+            return afterInsertCollision(terminal.getUserId(), terminal.getRequestId(), terminal.getIntentHash());
         }
         catch (Exception e)
         {
@@ -524,18 +579,59 @@ public class NpcChatService
         }
     }
 
-    private NpcChatResp afterInsertCollision(Long userId, String requestId)
+    private NpcChatResp afterInsertCollision(Long userId, String requestId, String intentHash)
     {
         try
         {
             NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
-            return stored != null ? fromStored(stored) : inProgress(requestId);
+            return stored != null ? checkedReplay(stored, intentHash) : inProgress(requestId);
         }
         catch (Exception e)
         {
             log.error("[NpcChat] request state collision lookup failed userId={} requestId={}", userId, requestId, e);
             return requestStateUnavailable(requestId);
         }
+    }
+
+    private boolean expireUnstartedRequests(Long userId, Long sessionId)
+    {
+        try {
+            // SQL releases only fingerprinted requests proven not to have started a provider call.
+            npcChatRequestMapper.expireProcessingByUserAndSession(userId, sessionId, SAFE_REQUEST_TIMEOUT);
+            return true;
+        } catch (Exception e) {
+            log.error("[NpcChat] unstarted lease cleanup failed userId={} sessionId={}", userId, sessionId, e);
+            return false;
+        }
+    }
+
+    private NpcChatResp replayIfPresent(Long userId, String requestId, String intentHash)
+    {
+        try
+        {
+            NpcChatRequest stored = npcChatRequestMapper.selectByUserAndRequestId(userId, requestId);
+            return stored == null ? null : checkedReplay(stored, intentHash);
+        }
+        catch (Exception e)
+        {
+            log.error("[NpcChat] request state lookup failed userId={} requestId={}", userId, requestId, e);
+            return requestStateUnavailable(requestId);
+        }
+    }
+
+    private NpcChatResp checkedReplay(NpcChatRequest stored, String intentHash)
+    {
+        if (!nonBlank(stored.getIntentHash()))
+        {
+            return response(stored.getRequestId(), NpcChatRequest.STATUS_FAILED, "NOT_RUN",
+                    "REQUEST_INTENT_UNVERIFIABLE", null, false, true, SAFE_INTENT_UNVERIFIABLE);
+        }
+        if (!stored.getIntentHash().equals(intentHash))
+        {
+            return response(stored.getRequestId(), NpcChatRequest.STATUS_REJECTED, "NOT_RUN",
+                    "REQUEST_INTENT_CONFLICT", null, false, true, SAFE_INTENT_CONFLICT);
+        }
+        return fromStored(stored);
     }
 
     private NpcChatResp fromStored(NpcChatRequest state)
@@ -593,6 +689,12 @@ public class NpcChatService
                 true, true, SAFE_UPSTREAM_FAILED);
     }
 
+    private NpcChatResp providerStateUnknown(String requestId)
+    {
+        return response(requestId, NpcChatRequest.STATUS_PROCESSING, "NOT_RUN", "PROVIDER_RESULT_UNKNOWN", null,
+                false, true, SAFE_PROVIDER_UNKNOWN);
+    }
+
     private RoamSession ownedActiveSession(Long userId, Long sessionId)
     {
         try
@@ -611,12 +713,19 @@ public class NpcChatService
         }
     }
 
-    private NpcChatRequest newProcessing(Long userId, Long sessionId, String requestId)
+    private NpcChatRequest newProcessing(Long userId, Long sessionId, String requestId, String intentHash,
+                                         Integer scopeType, Long scopeId, String scene, String profileVersion)
     {
         NpcChatRequest state = new NpcChatRequest();
         state.setUserId(userId);
         state.setSessionId(sessionId);
         state.setRequestId(requestId);
+        state.setIntentHash(intentHash);
+        state.setScopeType(scopeType);
+        state.setScopeId(scopeId);
+        state.setScene(scene);
+        state.setProfileVersion(profileVersion);
+        state.setProviderState("NOT_STARTED");
         state.setStatus(NpcChatRequest.STATUS_PROCESSING);
         state.setSafetyDecision("NOT_RUN");
         state.setRetryable(false);
@@ -753,6 +862,43 @@ public class NpcChatService
     private boolean nonBlank(String value)
     {
         return value != null && value.trim().length() > 0;
+    }
+
+    private String profileVersion(NpcProfile profile)
+    {
+        return fingerprintValues(profile.getName(), profile.getPersona(), profile.getGreeting(),
+                profile.getKnowledge(), profile.getUpdateTime() == null ? ""
+                        : String.valueOf(profile.getUpdateTime().getTime()));
+    }
+
+    private String intentHash(String message, Integer scopeType, Long scopeId, Long userId, Long sessionId,
+                              String scene, String version)
+    {
+        return fingerprintValues(message, String.valueOf(scopeType), String.valueOf(scopeId),
+                String.valueOf(userId), String.valueOf(sessionId), scene, version);
+    }
+
+    private String fingerprintValues(String... values)
+    {
+        try
+        {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            for (String value : values)
+            {
+                byte[] bytes = (value == null ? "" : value).getBytes(StandardCharsets.UTF_8);
+                digest.update(Integer.toString(bytes.length).getBytes(StandardCharsets.US_ASCII));
+                digest.update((byte) ':');
+                digest.update(bytes);
+            }
+            byte[] hash = digest.digest();
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) hex.append(String.format("%02x", b & 0xff));
+            return hex.toString();
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
     }
 
     private String truncateCodePoints(String value, int maxCodePoints)

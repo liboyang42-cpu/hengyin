@@ -93,8 +93,13 @@ public class PhotoCheckVisionService
             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
             return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
         }
+<<<<<<< public
         String reservation = chargeQuota(memberId);
         if (reservation == null)
+=======
+        String quotaReservation = chargeQuota(memberId);
+        if (quotaReservation == null)
+>>>>>>> private-codex/batch1
         {
             return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
         }
@@ -113,7 +118,11 @@ public class PhotoCheckVisionService
         {
             // 没走到模型(未配置 key / 未启用)或调用失败(超时 / 限流 / HTTP 错):
             // 用户没拿到结论,按网关口径退还这一次,再按降级处理。
+<<<<<<< public
             refundQuota(memberId, reservation);
+=======
+            refundQuota(memberId, quotaReservation);
+>>>>>>> private-codex/batch1
             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             alarm("拍照视觉审核调用失败", "memberId=" + memberId + " reason=" + truncate(reason, 200));
             return PhotoCheckVisionResult.degraded("照片暂时无法审核(" + truncate(reason, MAX_REASON_LENGTH) + ")");
@@ -139,13 +148,21 @@ public class PhotoCheckVisionService
     /**
      * 抢一次每日额度。超限不是错误,是降级原因之一 —— 玩家侧绝不因为额度耗尽被硬拦。
      *
+<<<<<<< public
      * @return 凭证=已计费；空串=原基础服务故障降级；null=真实超限
+=======
+     * @return 成功时为原额度预留凭据;null=超限;unmetered=额度层未参与
+>>>>>>> private-codex/batch1
      */
     private String chargeQuota(Long memberId)
     {
         if (aiGatewayService == null || memberId == null)
         {
+<<<<<<< public
             return "";
+=======
+            return "unmetered";
+>>>>>>> private-codex/batch1
         }
         try
         {
@@ -161,13 +178,21 @@ public class PhotoCheckVisionService
             // 额度层自身故障(Redis 抖动等)不该把玩家拦死:放行去调模型,
             // 与 remainingQuota 读不到时报满额的 fail-open 口径一致。
             log.warn("[PhotoCheckVision] quota-charge-failed memberId={}", memberId, quotaBroken);
+<<<<<<< public
             return "";
+=======
+            return "unmetered";
+>>>>>>> private-codex/batch1
         }
     }
 
     private void refundQuota(Long memberId, String reservation)
     {
+<<<<<<< public
         if (aiGatewayService == null || memberId == null || reservation == null || reservation.isEmpty())
+=======
+        if (aiGatewayService == null || memberId == null || "unmetered".equals(reservation))
+>>>>>>> private-codex/batch1
         {
             return;
         }

@@ -20,8 +20,6 @@ import org.mockito.InOrder;
 
 import java.util.Date;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,7 +52,11 @@ class ClubWaitlistServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(ClubEventOpsMapper.class);
+<<<<<<< public
         when(mapper.selectWaitlistMaintenanceMaxId()).thenReturn(100L);
+=======
+        when(mapper.selectWaitlistScanUpperId()).thenReturn(1000L);
+>>>>>>> private-codex/batch1
         ticketMapper = mock(OmsTicketMapper.class);
         participationGuard = mock(IClubParticipationGuard.class);
         tokenCodec = new ClubWaitlistTokenCodec("waitlist-test-secret");
@@ -310,7 +312,13 @@ class ClubWaitlistServiceImplTest {
     void claimedTerminalOrderIsExpiredAndPromotedWithoutSecondInventoryRestore() {
         ClubWaitlistEntry claimed = entry(61L, ClubWaitlistEntry.CLAIMED, 2, NOW);
         claimed.setRegistrationId(71L);
+<<<<<<< public
         when(mapper.selectWaitlistMaintenancePage(2, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
+=======
+        when(mapper.selectExpiredOfferedPage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedTerminalPage(1000L, null, 100)).thenReturn(Collections.singletonList(scanEntry(71L, 71L)));
+>>>>>>> private-codex/batch1
         when(mapper.selectWaitlistByRegistration(71L)).thenReturn(claimed);
         when(mapper.selectWaitlistByRegistrationForUpdate(71L)).thenReturn(claimed);
         when(mapper.expireClaimedTerminalCas(71L)).thenReturn(1);
@@ -329,7 +337,14 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceCountsOnlyAnActualClaimedToConvertedCas() {
+<<<<<<< public
         when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
+=======
+        when(mapper.selectExpiredOfferedPage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(Collections.singletonList(scanEntry(71L, 71L)));
+        when(mapper.selectClaimedTerminalPage(1000L, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(1);
 
         assertEquals(1, service.maintain(NOW));
@@ -339,7 +354,14 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceDoesNotReportSuccessAfterCallbackWonTheCasRace() {
+<<<<<<< public
         when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
+=======
+        when(mapper.selectExpiredOfferedPage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(Collections.singletonList(scanEntry(71L, 71L)));
+        when(mapper.selectClaimedTerminalPage(1000L, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(0);
 
         assertEquals(0, service.maintain(NOW));
@@ -348,12 +370,38 @@ class ClubWaitlistServiceImplTest {
     }
 
     @Test
+    void malformedPromotionScopeDoesNotBlockFollowingValidScope() {
+        ClubWaitlistEntry badTicket = scanScope(60L, ACTIVITY, 0L);
+        for (ClubWaitlistEntry poison : java.util.Arrays.asList(null, new ClubWaitlistEntry(), badTicket)) {
+            setUp();
+            when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, null, null, 100))
+                    .thenReturn(java.util.Arrays.asList(poison, scanScope(61L, ACTIVITY, TICKET)));
+            when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
+            when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET))
+                    .thenReturn(entry(61L, ClubWaitlistEntry.WAITING, 0, null));
+            when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
+            when(mapper.offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any())).thenReturn(1);
+            assertEquals(1, service.maintain(NOW));
+            verify(ticketMapper).deductInventory(TICKET, 1L);
+            verify(mapper).offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any());
+        }
+    }
+
+    @Test
     void maintenancePromotesWaitingQueueAfterNormalOrderRestoredInventory() {
+<<<<<<< public
         Map<String, Object> scope = new HashMap<>();
         scope.put("scanId", 61L);
         scope.put("activityId", ACTIVITY);
         scope.put("ticketId", TICKET);
         when(mapper.selectWaitlistMaintenancePage(3, NOW, 0L, 100L, 100)).thenReturn(Collections.singletonList(scope));
+=======
+        when(mapper.selectExpiredOfferedPage(NOW, 1000L, null, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedTerminalPage(1000L, null, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, null, null, 100))
+                .thenReturn(Collections.singletonList(scanScope(61L, ACTIVITY, TICKET)));
+>>>>>>> private-codex/batch1
         when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
         when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET))
                 .thenReturn(entry(61L, ClubWaitlistEntry.WAITING, 0, null));
@@ -544,6 +592,78 @@ class ClubWaitlistServiceImplTest {
                 "★保留期不能活过这张票的报名截止");
     }
 
+    @Test
+    void persistentPaidPoisonPageDoesNotStarveLaterClaimAndUsesStartupUpperBound() {
+        java.util.List<ClubWaitlistEntry> first = new java.util.ArrayList<>();
+        for (long id = 1; id <= 100; id++) first.add(scanEntry(id, id));
+        when(mapper.selectWaitlistScanUpperId()).thenReturn(101L, 999L);
+        when(mapper.selectClaimedPaidPage(101L, null, 100)).thenReturn(first);
+        when(mapper.selectClaimedPaidPage(101L, 100L, 100))
+                .thenReturn(Collections.singletonList(scanEntry(101L, 101L)));
+        when(mapper.convertClaimedByRegistration(anyLong())).thenAnswer(invocation -> {
+            if (((Long) invocation.getArgument(0)) <= 100L) throw new IllegalStateException("persistent poison");
+            return 1;
+        });
+        assertEquals(1, service.maintain(NOW));
+        verify(mapper).selectWaitlistScanUpperId();
+        verify(mapper).convertClaimedByRegistration(101L);
+        verify(mapper).selectClaimedPaidPage(101L, 100L, 100);
+    }
+
+    @Test
+    void successfulPaidFirstPageDoesNotSkipLaterPage() {
+        java.util.List<ClubWaitlistEntry> first = new java.util.ArrayList<>();
+        for (long id = 1; id <= 100; id++) first.add(scanEntry(id, id));
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(first);
+        when(mapper.selectClaimedPaidPage(1000L, 100L, 100))
+                .thenReturn(Collections.singletonList(scanEntry(101L, 101L)));
+        when(mapper.convertClaimedByRegistration(anyLong())).thenReturn(1);
+        assertEquals(101, service.maintain(NOW));
+        verify(mapper).convertClaimedByRegistration(101L);
+    }
+
+    @Test
+    void persistentTerminalPoisonPageDoesNotStarveLaterTerminalClaim() {
+        java.util.List<ClubWaitlistEntry> first = new java.util.ArrayList<>();
+        for (long id = 1; id <= 100; id++) first.add(scanEntry(id, id));
+        when(mapper.selectClaimedTerminalPage(1000L, null, 100)).thenReturn(first);
+        when(mapper.selectClaimedTerminalPage(1000L, 100L, 100))
+                .thenReturn(Collections.singletonList(scanEntry(101L, 101L)));
+        when(mapper.selectWaitlistByRegistration(anyLong())).thenAnswer(invocation -> {
+            throw new IllegalStateException("persistent poison");
+        });
+        assertEquals(0, service.maintain(NOW));
+        verify(mapper).selectWaitlistByRegistration(101L);
+    }
+
+    @Test
+    void promotionPagesSkipRepeatedScopeButReachLaterValidScope() {
+        java.util.List<ClubWaitlistEntry> first = new java.util.ArrayList<>();
+        for (long id = 1; id <= 100; id++) first.add(scanScope(id, 1000L + id, TICKET));
+        when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, null, null, 100)).thenReturn(first);
+        when(mapper.selectPromotableWaitlistScopePage(NOW, 1000L, NOW, 100L, 100))
+                .thenReturn(java.util.Arrays.asList(scanScope(101L, 1001L, TICKET),
+                        scanScope(102L, ACTIVITY, TICKET)));
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
+        when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET))
+                .thenReturn(entry(61L, ClubWaitlistEntry.WAITING, 0, null));
+        when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
+        when(mapper.offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any())).thenReturn(1);
+        assertEquals(1, service.maintain(NOW));
+        verify(mapper, times(1)).selectSeriesPolicyByActivityForUpdate(1001L);
+        verify(mapper).offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any());
+    }
+
+    @Test
+    void repeatedFullPageFailsClosedRatherThanLoopingForever() {
+        java.util.List<ClubWaitlistEntry> first = new java.util.ArrayList<>();
+        for (long id = 1; id <= 100; id++) first.add(scanEntry(id, id));
+        when(mapper.selectClaimedPaidPage(1000L, null, 100)).thenReturn(first);
+        when(mapper.selectClaimedPaidPage(1000L, 100L, 100)).thenReturn(first);
+        assertThrows(ServiceException.class, () -> service.maintain(NOW));
+        verify(mapper, times(1)).selectClaimedPaidPage(1000L, 100L, 100);
+    }
+
     private ClubEventSeries policy(boolean enabled) {
         ClubEventSeries policy = new ClubEventSeries();
         policy.setId(11L);
@@ -586,5 +706,21 @@ class ClubWaitlistServiceImplTest {
         request.setWaitlistOfferId(offerId);
         request.setWaitlistOfferToken(token);
         return request;
+    }
+
+    private ClubWaitlistEntry scanEntry(Long id, Long registrationId) {
+        ClubWaitlistEntry row = new ClubWaitlistEntry();
+        row.setId(id);
+        row.setRegistrationId(registrationId);
+        row.setJoinedAt(NOW);
+        row.setOfferExpiresAt(NOW);
+        return row;
+    }
+
+    private ClubWaitlistEntry scanScope(Long id, Long activityId, Long ticketId) {
+        ClubWaitlistEntry row = scanEntry(id, null);
+        row.setActivityId(activityId);
+        row.setTicketId(ticketId);
+        return row;
     }
 }

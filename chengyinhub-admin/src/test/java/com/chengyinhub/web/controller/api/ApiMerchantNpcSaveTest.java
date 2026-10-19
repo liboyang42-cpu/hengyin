@@ -257,13 +257,20 @@ class ApiMerchantNpcSaveTest {
     @Test
     void submitsMediaCheckOnlyForUploadedPhoto() {
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<NpcProfile>());
+        org.mockito.Mockito.doAnswer(invocation -> {
+            NpcProfile inserted = invocation.getArgument(0);
+            inserted.setId(42L);
+            return 1;
+        }).when(npcProfileMapper).insertMerchantNpc(any());
 
         controller.npcSave(body("小店长", "px1:p01", null));
         // 预设是内置资源,送检没有意义,而且会白白消耗微信的调用额度
         verify(security, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
 
         controller.npcSave(body("小店长", "/profile/2026/a.png", null));
-        verify(security).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
+        verify(security).submitMediaCheckOne(
+                IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 42L,
+                "/profile/2026/a.png", "o_test_openid");
     }
 
     // ===== 读 =====

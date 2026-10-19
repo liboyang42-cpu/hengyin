@@ -53,7 +53,22 @@ public interface IWxContentSecurityService
         return message == MSG_BUSY || message == MSG_UNAVAILABLE;
     }
 
+    /**
+     * 存量调用方兼容入口：null 仍表示放行，非 null 仍表示 fail-close 拦截文案。
+     */
     String checkText(String content, String openid);
+
+    /**
+     * 结构化文本审核。新业务必须按 status 分支，禁止匹配 message 文本。
+     *
+     * <p>默认实现仅用于兼容仓外旧实现；真实微信实现会覆盖本方法并保留服务故障类型。</p>
+     */
+    default WxTextCheckResult checkTextTyped(String content, String openid)
+    {
+        String message = checkText(content, openid);
+        return message == null ? WxTextCheckResult.pass(WxTextCheckResult.Reason.PASS)
+                : WxTextCheckResult.reject(WxTextCheckResult.Reason.RISKY, message);
+    }
 
     /**
      * 图片/媒体内容安全异步检测（mediaCheckAsync）。
@@ -108,6 +123,9 @@ public interface IWxContentSecurityService
      * 清掉的是别人家的封面/相册。bizType 与 bizId 是成对的,换了语义就必须换类型。
      */
     int BIZ_TYPE_NODE_NPC = 16;
+
+    /** 商家门店 NPC 头像(npc_profile scope_type=2,bizId=npc_profile.id)。 */
+    int BIZ_TYPE_MERCHANT_NPC = 17;
 
     /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，

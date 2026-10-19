@@ -54,6 +54,7 @@ function setByPath(target, keyPath, value) {
 // 从**源码字符串**装载页面:负控要能把真源码改回病灶形态后**真跑一遍**,
 // 而不是拿一个手搭的假对象证明「断言不是恒真」——后者证不到源码那一侧。
 function loadPage(rel, hostOverrides, transform) {
+  const storage = new Map()
   const requests = []
   const routes = []
   global.getApp = () => Object.assign({
@@ -65,8 +66,14 @@ function loadPage(rel, hostOverrides, transform) {
   }, (hostOverrides && hostOverrides.app) || {})
   const storage = new Map()
   global.wx = Object.assign({
+<<<<<<< public
     getStorageSync: key => storage.get(key) || '',
     setStorageSync(key, value) { storage.set(key, value) },
+=======
+    getStorageSync: key => storage.has(key) ? storage.get(key) : '',
+    setStorageSync: (key, value) => storage.set(key, JSON.parse(JSON.stringify(value))),
+    removeStorageSync: key => storage.delete(key),
+>>>>>>> private-codex/batch1
     getWindowInfo: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getMenuButtonBoundingClientRect: () => ({ left: 300 }),
@@ -271,21 +278,24 @@ test('C06-2 行为:缺参态连轮询也不打后端', () => {
   healthy.page.onUnload()
 })
 
-test('negative control: 轮询不看 conversationId ⇒ 坏链接每 8s 拿 0 打后端', () => {
+test('negative control: 缺参时启动轮询必须判红，增量出口仍阻止无效请求', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
     '    if (!this.data.conversationId\n        || !this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;\n',
     '    if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;\n',
   ))
   ctx.page.onLoad({})
   ctx.page.onShow()
-  assert.ok(ctx.page._poll, '变异没生效(轮询没被启动)')
-  ctx.page.pollNew()
-  assert.equal(ctx.requests[0].data.conversation_id, 0, '病灶形态就是拿 0 去打后端')
-  ctx.page.onUnload()
-  assert.throws(
-    () => assert.equal(ctx.requests.length, 0, '缺参时轮询也不得发请求'),
-    assert.AssertionError,
-  )
+  try {
+    assert.ok(ctx.page._poll, '变异没生效(轮询没被启动)')
+    ctx.page.pollNew()
+    assert.equal(ctx.requests.length, 0, '增量出口仍须拒绝缺参请求')
+    assert.throws(
+      () => assert.equal(ctx.page._poll, null, '缺参时不应启动轮询'),
+      assert.AssertionError,
+    )
+  } finally {
+    ctx.page.onUnload()
+  }
 })
 
 // 一次瞬时失败之后:轮询读到消息就是恢复了,错误卡不能钉在实时消息上方、输入栏不能一直死。
@@ -295,7 +305,7 @@ test('C06-2 行为:轮询读到消息即自动解除 error(输入栏不会被永
   ctx.requests[0].fail()
   assert.equal(ctx.page.data.loadState, 'error')
   ctx.page.pollNew()
-  ctx.requests[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }] } })
+  ctx.requests[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }], nextAfter: 9, watermark: 9, hasMore: false } })
   assert.equal(ctx.page.data.loadState, 'ready', '轮询恢复后必须解掉 error,否则输入栏永久禁用')
 })
 
@@ -310,10 +320,15 @@ test('negative control: 轮询不解 error ⇒ 消息在流里、输入栏还是
   ctx.requests[0].success({ code: 200, data: { list: [{ id: 8, msgType: 1, content: 'baseline', senderId: 3 }], hasMore: false } })
   ctx.page.setData({ loadState: 'error' })
   ctx.page.pollNew()
+<<<<<<< public
   const polls = ctx.requests.filter(request => request.url === '/api/im/messages')
   polls[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }], hasMore: false } })
   assert.equal(ctx.page.data.msgs.length, 2, '变异没生效(消息没进来)')
   assert.equal(ctx.page._pollInFlight, false)
+=======
+  ctx.requests[1].success({ code: 200, data: { list: [{ id: 9, msgType: 1, content: 'hi', senderId: 3 }], nextAfter: 9, watermark: 9, hasMore: false } })
+  assert.equal(ctx.page.data.msgs.length, 1, '变异没生效(消息没进来)')
+>>>>>>> private-codex/batch1
   assert.throws(
     () => assert.equal(ctx.page.data.loadState, 'ready', '轮询恢复后必须解掉 error'),
     assert.AssertionError,
@@ -426,13 +441,13 @@ test('C06-2 行为:名字缺失时按会话类型兜底,不留无名会话', () 
   assert.equal(named.page.data.name, '阿岚', '气泡上的发送人名仍取真名,不能被兜底串污染')
 })
 
-test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说成空对话', () => {
+test('negative control: 去掉缺参终态必须判红，加载出口仍拒绝零会话', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
     "    if (!conversationId) { this.setData({ loadState: 'missing' }); return; }\n",
     '',
   ))
   ctx.page.onLoad({})
-  assert.equal(ctx.requests.length, 1, '病灶形态下应当照旧发请求,否则变异没生效')
+  assert.equal(ctx.requests.length, 0, '加载出口仍须拒绝零会话请求')
   assert.notEqual(ctx.page.data.loadState, 'missing')
   assert.throws(
     () => assert.equal(ctx.page.data.loadState, 'missing', '缺 conversationId 必须落 missing'),
@@ -442,7 +457,11 @@ test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说
 
 test('negative control: 去掉 fail 分支 ⇒ 网络失败停在 loading,永远不承认异常', () => {
   const ctx = loadPage(CHAT_JS, null, (src) => src.replace(
+<<<<<<< public
     "      fail(res) {\n        if (!current()) return;\n        that._pollInFlight = false;\n        that._setMessageLoadError(res);\n      },\n",
+=======
+    "      fail(res) {\n        if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;\n        that._loadingInitial = false;\n        that._setMessageLoadError(res);\n      },\n",
+>>>>>>> private-codex/batch1
     '',
   ))
   ctx.page.onLoad({ conversationId: '11' })

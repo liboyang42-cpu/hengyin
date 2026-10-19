@@ -172,6 +172,7 @@ Page({
   // (只挡 onPlus 的话,任何绕过动作面板的调用路径都能照旧把 conversation_id:0 发出去)
   _canSend() { return this.data.loadState === 'ready' && !this.data.disabled && !this.data.readOnly; },
 
+<<<<<<< public
   _isReadContextCurrent(conversationId, memberId) {
     return !this._disposed
       && this.data.conversationId === conversationId
@@ -189,6 +190,13 @@ Page({
     this._pendingReadConversationId = 0;
     this._pendingReadMemberId = 0;
     this.markRead();
+=======
+  _messageViewCurrent(owner, conversationId, requestEpoch) {
+    return !this._disposed && this._visible !== false
+      && this.data.myId === owner && this.data.conversationId === conversationId
+      && (this._messageRequestEpoch || 0) === requestEpoch
+      && (!app.getUserID || app.getUserID() == owner);
+>>>>>>> private-codex/batch1
   },
 
   retryLoad() {
@@ -205,12 +213,24 @@ Page({
   },
 
   loadMessages(toBottom) {
+    if (this._disposed || this._visible === false || !this.data.conversationId) return;
     const that = this;
+<<<<<<< public
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     const pollEpoch = (this._pollRequestEpoch || 0) + 1;
     this._pollRequestEpoch = pollEpoch;
     this._pollInFlight = true;
+=======
+    const owner = this.data.myId;
+    const conversationId = this.data.conversationId;
+    if (app.getUserID && app.getUserID() != owner) return;
+    this._syncEpoch = (this._syncEpoch || 0) + 1;
+    this._syncing = false;
+    this._loadingInitial = true;
+    this._reloadInitialOnShow = false;
+    this.setData({ loadingMore: false });
+>>>>>>> private-codex/batch1
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
     const current = function () {
@@ -222,8 +242,13 @@ Page({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: conversationId, cursor_id: 0, size: 30 },
       success(res) {
+<<<<<<< public
         if (!current()) return;
         that._pollInFlight = false;
+=======
+        if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+        that._loadingInitial = false;
+>>>>>>> private-codex/batch1
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           const list = that.decorate(Array.isArray(res.data.list) ? res.data.list : []);
@@ -231,19 +256,34 @@ Page({
           const pending = that.data.msgs.filter(m => m.sendPayload && !list.some(server =>
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
-          that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
+          that._loadingInitial = true;
+          that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' }, () => {
+            if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+            that._loadingInitial = false;
+            that._consumeRenderedMessages(list);
+            if (toBottom) that.scrollBottom();
+            that._recoverPendingFromMessages(msgs);
+            that.syncNewMessages();
+          });
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
+<<<<<<< public
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
           that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
+=======
+          if (res.data.blocked === true) {
+            that.setData({ disabled: true, disabledText: res.data.blockedByMe === true ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息' });
+          }
+>>>>>>> private-codex/batch1
           return;
         }
         that._setMessageLoadError(res);
       },
       fail(res) {
+<<<<<<< public
         if (!current()) return;
         that._pollInFlight = false;
         that._setMessageLoadError(res);
@@ -251,13 +291,27 @@ Page({
       successStatusAbnormal(res) {
         if (!current()) return;
         that._pollInFlight = false;
+=======
+        if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+        that._loadingInitial = false;
+        that._setMessageLoadError(res);
+      },
+      successStatusAbnormal(res) {
+        if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+        that._loadingInitial = false;
+>>>>>>> private-codex/batch1
         that._setMessageLoadError(res);
       },
     });
   },
 
   _setMessageLoadError(response) {
-    if (response && response.errorCode === 'HANGOUT_CLOSED') {
+    if (response && (response.errorCode === 'HANGOUT_CLOSED' || response.errorCode === 'IM_CONVERSATION_CLOSED')) {
+      this._messageRequestEpoch = (this._messageRequestEpoch || 0) + 1;
+      this._syncEpoch = (this._syncEpoch || 0) + 1;
+      this._loadingInitial = false;
+      this._syncing = false;
+      this.stopPoll();
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
       return;
@@ -274,8 +328,12 @@ Page({
   },
 
   loadMore() {
-    if (!this.data.hasMore || this.data.loadingMore) return;
+    if (!this.data.hasMore || this.data.loadingMore || this._loadingInitial) return;
     const that = this;
+    const owner = this.data.myId;
+    const conversationId = this.data.conversationId;
+    const requestEpoch = this._messageRequestEpoch || 0;
+    if (!this._messageViewCurrent(owner, conversationId, requestEpoch)) return;
     const cursor = this.data.cursor;
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
@@ -290,7 +348,11 @@ Page({
       url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: conversationId, cursor_id: cursor, size: 30 },
       success(res) {
+<<<<<<< public
         if (!current()) return;
+=======
+        if (!that._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+>>>>>>> private-codex/batch1
         if (res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
             && (res.data.list == null || isRecordList(res.data.list))) {
           that._mergeMessages(Array.isArray(res.data.list) ? res.data.list : [], true);
@@ -299,12 +361,22 @@ Page({
           that._setLoadMoreError(res);
         }
       },
+<<<<<<< public
       fail(res) { if (current()) that._setLoadMoreError(res); },
       successStatusAbnormal(res) { if (current()) that._setLoadMoreError(res); },
+=======
+      fail(res) { if (that._messageViewCurrent(owner, conversationId, requestEpoch)) that._setLoadMoreError(res); },
+      successStatusAbnormal(res) { if (that._messageViewCurrent(owner, conversationId, requestEpoch)) that._setLoadMoreError(res); },
+>>>>>>> private-codex/batch1
     });
   },
 
   _setLoadMoreError(response) {
+    if (response && (response.errorCode === 'HANGOUT_CLOSED' || response.errorCode === 'IM_CONVERSATION_CLOSED')) {
+      this.setData({ loadingMore: false });
+      this._setMessageLoadError(response);
+      return;
+    }
     const msg = app.getRequestErrorMessage
       ? app.getRequestErrorMessage(response, '更早消息加载失败，请重试')
       : ((response && (response.msg || response.errMsg)) || '更早消息加载失败，请重试');
@@ -398,8 +470,7 @@ Page({
     if (!content || this.data.sending) return;
     if (!this._canSend()) return;
     if (this._disposed || (app.getUserID && app.getUserID() != this.data.myId)) return;
-    this.setData({ text: '' });
-    this._sendMessage({ msg_type: 1, content });
+    if (this._sendMessage({ msg_type: 1, content })) this.setData({ text: '' });
   },
 
   _sendMessage(message, retryId) {
@@ -411,6 +482,11 @@ Page({
     if (!payload.client_message_id) {
       this._sendSequence = (this._sendSequence || 0) + 1;
       payload.client_message_id = 'im_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + this._sendSequence;
+    }
+    if (!this._savePendingSend({ accountId: owner, conversationId,
+      clientMessageId: payload.client_message_id, msgType: payload.msg_type, state: 'submitting' })) {
+      app.tips && app.tips('无法安全保存发送状态，请清理存储空间后重试');
+      return;
     }
     const tmpId = retryId || 'tmp_' + payload.client_message_id;
     let msgs = this.data.msgs.slice();
@@ -426,6 +502,7 @@ Page({
     }
     this.setData({ msgs, sending: true });
     this.scrollBottom();
+    const requestEpoch = this._messageRequestEpoch || 0;
     const current = () => !this._disposed && this.data.myId === owner && this.data.conversationId === conversationId
       && (!app.getUserID || app.getUserID() == owner);
     const finish = (res) => {
@@ -437,6 +514,7 @@ Page({
         const validId = (typeof id === 'number' || (typeof id === 'string' && /^[1-9]\d*$/.test(id)))
           && Number.isSafeInteger(Number(id)) && Number(id) > 0;
         if (isBizOk(res) && validId) {
+          this._clearPendingSend(payload.client_message_id);
           list.splice(index, 1);
           this.setData({ msgs: list });
           this._mergeMessages([res.data]);
@@ -448,24 +526,140 @@ Page({
         }
       }
       this.setData({ sending: this.data.msgs.some(m => m.sending) });
+      if (this._messageViewCurrent(owner, conversationId, requestEpoch) && res
+          && (res.errorCode === 'HANGOUT_CLOSED' || res.errorCode === 'IM_CONVERSATION_CLOSED')) {
+        this._setMessageLoadError(res);
+      }
     };
     app.sendRequest({
       url: '/api/im/send', method: 'POST', hideLoading: true,
       data: payload, success: finish, fail: finish, successStatusAbnormal: finish,
     });
+    return true;
   },
 
+  _scopeKey(kind) {
+    return 'im_' + kind + '_v1_' + String(this.data.myId || 0) + '_' + String(this.data.conversationId || 0);
+  },
+
+  _savePendingSend(meta) {
+    try {
+      const saved = wx.getStorageSync(this._scopeKey('pending'));
+      const pending = Array.isArray(saved) ? saved.slice() : (saved && saved.clientMessageId ? [saved] : []);
+      const clean = { accountId: meta.accountId, conversationId: meta.conversationId,
+        clientMessageId: meta.clientMessageId, msgType: meta.msgType, state: meta.state };
+      const index = pending.findIndex(item => item && item.clientMessageId === clean.clientMessageId);
+      if (index >= 0) pending[index] = clean; else pending.push(clean);
+      const key = this._scopeKey('pending');
+      wx.setStorageSync(key, pending);
+      return JSON.stringify(wx.getStorageSync(key)) === JSON.stringify(pending);
+    } catch (e) { return false; }
+  },
+
+  _clearPendingSend(clientMessageId) {
+    try {
+      const saved = wx.getStorageSync(this._scopeKey('pending'));
+      const pending = Array.isArray(saved) ? saved : (saved && saved.clientMessageId ? [saved] : []);
+      const remaining = pending.filter(item => !item || item.clientMessageId !== clientMessageId);
+      if (!remaining.length) wx.removeStorageSync(this._scopeKey('pending'));
+      else if (remaining.length !== pending.length) wx.setStorageSync(this._scopeKey('pending'), remaining);
+    } catch (e) {}
+  },
+
+  _recoverPendingFromMessages(messages) {
+    try {
+      const saved = wx.getStorageSync(this._scopeKey('pending'));
+      const pending = Array.isArray(saved) ? saved : (saved && saved.clientMessageId ? [saved] : []);
+      pending.filter(item => item && item.accountId == this.data.myId
+        && item.conversationId == this.data.conversationId).forEach(item => {
+          if (messages.some(m => m.senderId == this.data.myId && m.clientMessageId === item.clientMessageId)) {
+            this._clearPendingSend(item.clientMessageId);
+          } else {
+            this._recoverPendingSend(item);
+          }
+        });
+    } catch (e) {}
+  },
+
+  _recoverPendingSend(pending) {
+    const owner = this.data.myId;
+    const conversationId = this.data.conversationId;
+    const requestEpoch = this._messageRequestEpoch;
+    const current = () => !this._disposed && this.data.myId === owner
+      && this.data.conversationId === conversationId && this._messageRequestEpoch === requestEpoch
+      && (!app.getUserID || app.getUserID() == owner);
+    const terminal = res => {
+      if (!current() || !res
+          || (res.errorCode !== 'HANGOUT_CLOSED' && res.errorCode !== 'IM_CONVERSATION_CLOSED')) return false;
+      this._setMessageLoadError(res);
+      return true;
+    };
+    app.sendRequest({
+      url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
+      data: { conversation_id: conversationId, client_message_id: pending.clientMessageId },
+      success: res => {
+        if (!current() || terminal(res)) return;
+        const message = isBizOk(res) && res.data && res.data.clientMessageId === pending.clientMessageId
+          && res.data.senderId == owner ? res.data : null;
+        if (message) {
+          this._clearPendingSend(pending.clientMessageId);
+          this._mergeMessages([message]);
+          return;
+        }
+        this._markPendingRecoveryBreak(pending.clientMessageId);
+      },
+      fail: terminal, successStatusAbnormal: terminal,
+    });
+  },
+
+<<<<<<< public
   _mergeMessages(incoming, prepend) {
     const list = prepend ? incoming.slice() : this.data.msgs.slice();
     const additions = prepend ? this.data.msgs : incoming;
+=======
+  _markPendingRecoveryBreak(clientMessageId) {
+    try {
+      const saved = wx.getStorageSync(this._scopeKey('pending'));
+      const pending = Array.isArray(saved) ? saved.slice() : (saved && saved.clientMessageId ? [saved] : []);
+      const index = pending.findIndex(item => item && item.clientMessageId === clientMessageId);
+      if (index < 0) return;
+      pending[index] = Object.assign({}, pending[index], { state: 'recovery-missing-body' });
+      wx.setStorageSync(this._scopeKey('pending'), pending);
+    } catch (e) {}
+  },
+
+  _storedAfterId() {
+    try {
+      const value = Number(wx.getStorageSync(this._scopeKey('cursor')) || 0);
+      return Number.isSafeInteger(value) && value > 0 ? value : 0;
+    } catch (e) { return 0; }
+  },
+
+  _commitAfterId(value) {
+    try {
+      const key = this._scopeKey('cursor');
+      wx.setStorageSync(key, value);
+      return wx.getStorageSync(key) === value;
+    } catch (e) { return false; }
+  },
+
+  _mergeMessages(incoming, prepend, onRendered) {
+    const decorated = this.decorate(incoming);
+    const list = prepend ? decorated : this.data.msgs.slice();
+    const additions = prepend ? this.data.msgs : decorated;
+>>>>>>> private-codex/batch1
     additions.forEach(message => {
       const index = list.findIndex(m => m.id == message.id || (message.clientMessageId
         && m.clientMessageId === message.clientMessageId && m.senderId == message.senderId));
       if (index >= 0) { if (!prepend) list[index] = message; }
       else list.push(message);
     });
+<<<<<<< public
     list.sort(compareMessages);
     this.setData({ msgs: this.decorate(list), sending: list.some(m => m.sending) });
+=======
+    this.setData({ msgs: list, sending: list.some(m => m.sending) }, onRendered);
+>>>>>>> private-codex/batch1
   },
 
   onResend(e) {
@@ -608,8 +802,39 @@ Page({
     });
   },
 
-  markRead() {
-    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true, data: { conversation_id: this.data.conversationId } });
+  _consumeRenderedMessages(messages) {
+    const epoch = this._messageRequestEpoch || 0;
+    if (!this._messageViewCurrent(this.data.myId, this.data.conversationId, epoch)
+        || this.data.loadState === 'closed') return;
+    const scope = this._scopeKey('cursor');
+    const previous = this._consumedRead;
+    let readTo = previous && previous.scope === scope && previous.epoch === epoch ? previous.readTo : 0;
+    messages.forEach(message => {
+      const id = Number(message.id);
+      if (Number.isSafeInteger(id) && id > readTo) readTo = id;
+    });
+    this._consumedRead = { scope, epoch, readTo };
+  },
+
+  markRead(readTo) {
+    const consumed = this._consumedRead;
+    const epoch = this._messageRequestEpoch || 0;
+    if (!Number.isSafeInteger(readTo) || readTo <= 0 || !this.data.conversationId
+        || this.data.loadState === 'closed' || this.data.loadState === 'missing'
+        || !this._messageViewCurrent(this.data.myId, this.data.conversationId, epoch)
+        || !consumed || consumed.scope !== this._scopeKey('cursor')
+        || consumed.epoch !== epoch || readTo > consumed.readTo) return;
+    const owner = this.data.myId;
+    const conversationId = this.data.conversationId;
+    const finish = response => {
+      if (this._messageViewCurrent(owner, conversationId, epoch) && response
+          && (response.errorCode === 'HANGOUT_CLOSED' || response.errorCode === 'IM_CONVERSATION_CLOSED')) {
+        this._setMessageLoadError(response);
+      }
+    };
+    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true,
+      data: { conversation_id: conversationId, read_to: readTo },
+      success: finish, fail: finish, successStatusAbnormal: finish });
   },
 
   onMore() {
@@ -860,6 +1085,7 @@ Page({
 
   // ===== 准实时:页面可见时轮询新消息 =====
   onShow() {
+<<<<<<< public
     this._hidden = false;
     const cleared = this._pendingClearReturn;
     const reported = this._pendingReportTip;
@@ -905,6 +1131,36 @@ Page({
     this.stopPoll();
     clearTimeout(this._routeTimer);
   },
+=======
+    this._visible = true;
+    this.startPoll();
+    if (!this.data.conversationId || this.data.loadState === 'closed' || this.data.loadState === 'missing') return;
+    if (this._reloadInitialOnShow || this.data.loadState === 'loading' || this.data.loadState === 'error') {
+      if (!this._loadingInitial) this.loadMessages(true);
+    } else {
+      const owner = this.data.myId;
+      const conversationId = this.data.conversationId;
+      const requestEpoch = this._messageRequestEpoch || 0;
+      const msgs = this.data.msgs;
+      this.setData({ msgs }, () => {
+        if (!this._messageViewCurrent(owner, conversationId, requestEpoch)) return;
+        this._consumeRenderedMessages(msgs);
+        this.syncNewMessages();
+      });
+    }
+  },
+  onHide() {
+    this._visible = false;
+    this._messageRequestEpoch = (this._messageRequestEpoch || 0) + 1;
+    this._reloadInitialOnShow = this._loadingInitial || this.data.loadState === 'loading';
+    this._loadingInitial = false;
+    this.setData({ loadingMore: false });
+    this._syncEpoch = (this._syncEpoch || 0) + 1;
+    this._syncing = false;
+    this.stopPoll();
+  },
+  onUnload() { this._disposed = true; this.stopPoll(); if (this._routeTimer) clearTimeout(this._routeTimer); },
+>>>>>>> private-codex/batch1
   startPoll() {
     const that = this;
     this.stopPoll();
@@ -916,6 +1172,7 @@ Page({
   },
   stopPoll() { if (this._poll) { clearInterval(this._poll); this._poll = null; } },
   pollNew() {
+<<<<<<< public
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     if (this._hidden || this._pollInFlight || !this._isReadContextCurrent(conversationId, memberId)) return;
@@ -980,7 +1237,99 @@ Page({
       },
       fail,
       successStatusAbnormal: fail,
+=======
+    this.syncNewMessages();
+  },
+
+  // 从账号+会话隔离的已提交游标追到首次响应固定水位；中途失败绝不推进游标或报已读。
+  syncNewMessages() {
+    if (this._syncing || this._loadingInitial || this._disposed || this._visible === false
+        || !this.data.conversationId || this.data.loadState === 'closed' || this.data.loadState === 'missing'
+        || (app.getUserID && app.getUserID() != this.data.myId)) return;
+    const that = this;
+    const owner = this.data.myId;
+    const conversationId = this.data.conversationId;
+    const epoch = this._syncEpoch || 0;
+    const syncScope = this._scopeKey('cursor');
+    // 未提交起点属于当前页面的账号+会话，恢复消息或未确认的存储写入不能跳过缺口。
+    if (!this._syncBaseline || this._syncBaseline.scope !== syncScope) {
+      this._syncBaseline = { scope: syncScope, after: this._storedAfterId() || this.maxLocalId() };
+    }
+    let after = this._syncBaseline.after;
+    let watermark = 0;
+    let consumed = after;
+    this._syncing = true;
+    const current = () => !that._disposed && that._visible !== false
+      && (that._syncEpoch || 0) === epoch && that.data.myId === owner
+      && that.data.conversationId === conversationId
+      && (!app.getUserID || app.getUserID() == owner);
+    const finishError = response => {
+      if (!current()) return;
+      that._syncing = false;
+      if (response && (response.errorCode === 'HANGOUT_CLOSED' || response.errorCode === 'IM_CONVERSATION_CLOSED')) that._setMessageLoadError(response);
+    };
+    const page = () => {
+      const data = { conversation_id: conversationId, after_id: after, size: 50 };
+      if (watermark) data.watermark_id = watermark;
+    app.sendRequest({
+      url: '/api/im/messages', method: 'POST', hideLoading: true,
+        silentError: true, data,
+      success(res) {
+          if (!current()) return;
+        if (!(res && res.code == 200 && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
+              && isRecordList(res.data.list))) { finishError(res); return; }
+          const serverWatermark = Number(res.data.watermark);
+          const nextAfter = Number(res.data.nextAfter);
+          if (!Number.isSafeInteger(serverWatermark) || serverWatermark < after
+              || !Number.isSafeInteger(nextAfter) || nextAfter < after
+              || nextAfter > serverWatermark || typeof res.data.hasMore !== 'boolean'
+              || (res.data.hasMore && nextAfter <= after)
+              || res.data.hasMore !== (nextAfter < serverWatermark)) {
+            that._syncing = false;
+            return;
+          }
+          if (!watermark) watermark = serverWatermark;
+          const list = res.data.list || [];
+          let previousId = after;
+          const validIds = list.every(message => {
+            const id = Number(message.id);
+            if (!Number.isSafeInteger(id) || id <= previousId || id > nextAfter) return false;
+            previousId = id;
+            return true;
+          });
+          if (serverWatermark !== watermark || !validIds || (res.data.hasMore && !list.length)
+              || previousId !== nextAfter) {
+            that._syncing = false;
+            return;
+          }
+          const rendered = () => {
+            if (!current()) return;
+            if (list.length) {
+              that._consumeRenderedMessages(list);
+              that._recoverPendingFromMessages(list);
+              consumed = nextAfter;
+              after = consumed;
+            }
+            if (res.data.hasMore === true) { page(); return; }
+            that._syncing = false;
+            const committed = Math.max(consumed, watermark || 0);
+            if (that.data.loadState !== 'ready') that.setData({ loadState: 'ready' });
+            if (committed && that._commitAfterId(committed)) {
+              that._syncBaseline = { scope: syncScope, after: committed };
+              that.markRead(consumed || committed);
+            }
+            if (list.length) that.scrollBottom();
+          };
+          // 视图渲染完成后才推进游标和已读，后台或旧页面回调仍须拒绝。
+          if (list.length) that._mergeMessages(list, false, rendered);
+          else rendered();
+      },
+        fail: finishError,
+        successStatusAbnormal: finishError,
+>>>>>>> private-codex/batch1
     });
+    };
+    page();
   },
 
 

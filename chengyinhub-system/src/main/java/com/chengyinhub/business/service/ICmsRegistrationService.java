@@ -237,14 +237,21 @@ public interface ICmsRegistrationService
     /**
      * P0-10 弃单关单:过期未支付订单 id 列表(供定时任务扫描)
      */
+    long registrationScanUpperBound();
+
     public List<Long> listExpiredUnpaidIds();
 
+<<<<<<< public
     /** 固定本轮时间及最大ID，失败订单不阻塞后页。 */
     public Long getExpiredUnpaidScanUpperBound(java.util.Date now);
     public List<Long> listExpiredUnpaidIdsAfter(java.util.Date now, long afterId, long maxId, int limit);
 
     /** 在调用方事务内按 activity→registration 当前读，拒绝旧归属/退款/到期快照。 */
     public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot);
+=======
+    /** 过期待支付订单的有序一页，失败项不阻挡 afterId 后的订单。 */
+    public List<Long> listExpiredUnpaidIds(long afterId);
+>>>>>>> private-codex/batch1
 
     /**
      * §5-3 PAYING 超时对账:过支付窗口仍处支付中(payment_status=1)的订单 id 列表(供定时任务扫描)。
@@ -281,6 +288,9 @@ public interface ICmsRegistrationService
     public Long getPaidMissingQrcodeScanUpperBound();
     public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit);
 
+    /** 沿用补码时间窗口，按 id 有序读取 afterId 后的一页。 */
+    public List<Long> listPaidMissingQrcodeIds(long afterId);
+
     /**
      * P0-10 弃单关单:关闭单笔过期未支付订单(回补库存+退还预扣积分)
      * @param registrationId 报名ID
@@ -293,6 +303,8 @@ public interface ICmsRegistrationService
      * 只收口活动单(owner_type=2);主题单(①②③)的结算写入在核销动作里,不允许无台账自动置位。
      */
     public List<Long> listExpiredUnverifiedIds();
+
+    List<Long> listExpiredUnverifiedIds(long afterId);
 
     /**
      * RUN-01 到期自动核销:把一笔已确认到期的场次票置成已核销并记 {@code update_by}=自动任务来源。

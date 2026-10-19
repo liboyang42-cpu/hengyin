@@ -126,8 +126,23 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
                 "select count(*) from club_event_delivery_outbox", Long.class));
     }
 
+    @Test
+    void hundredPersistentPoisonRowsDoNotStarveNextExpiry() {
+        jdbc.update("delete from club_event_waitlist");
+        for (long id = 1; id <= 100; id++) insertOffered(id, BAD_ACTIVITY, BAD_TICKET);
+        insertOffered(101L, GOOD_ACTIVITY, GOOD_TICKET);
+
+        assertEquals(1, service.maintain(NOW));
+        assertEquals(100, jdbc.queryForObject("select count(*) from club_event_waitlist where state='OFFERED'", Integer.class));
+        assertEquals("EXPIRED", state(101L));
+        assertEquals(1L, jdbc.queryForObject("select remaining_inventory from oms_ticket where id=?", Long.class, GOOD_TICKET));
+        assertEquals(0, service.maintain(NOW));
+        assertEquals(1L, jdbc.queryForObject("select remaining_inventory from oms_ticket where id=?", Long.class, GOOD_TICKET));
+    }
+
     private ClubEventOpsMapper dataBackedMapper() {
         ClubEventOpsMapper mapper = mock(ClubEventOpsMapper.class);
+<<<<<<< public
         when(mapper.selectWaitlistMaintenanceMaxId()).thenAnswer(call ->
                 jdbc.queryForObject("select max(id) from club_event_waitlist", Long.class));
         when(mapper.selectWaitlistMaintenancePage(eq(0), any(Date.class), anyLong(), anyLong(), anyInt()))
@@ -138,6 +153,36 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
                             normalized.put("scanId", row.get("SCANID")); normalized.put("targetId", row.get("TARGETID"));
                             return normalized;
                         }).collect(java.util.stream.Collectors.toList()));
+=======
+        when(mapper.selectWaitlistScanUpperId()).thenAnswer(call ->
+                jdbc.queryForObject("select max(id) from club_event_waitlist", Long.class));
+        when(mapper.selectExpiredOfferedPage(any(Date.class), any(Long.class), any(), any(), anyInt()))
+                .thenAnswer(call -> {
+                    Long afterId = call.getArgument(3);
+                    String sql = "select id,offer_expires_at from club_event_waitlist "
+                            + "where state='OFFERED' and offer_expires_at<=? and id<=?";
+                    java.util.List<Object> args = new java.util.ArrayList<>();
+                    args.add(call.getArgument(0));
+                    args.add(call.getArgument(1));
+                    if (afterId != null) {
+                        sql += " and (offer_expires_at>? or (offer_expires_at=? and id>?))";
+                        args.add(call.getArgument(2));
+                        args.add(call.getArgument(2));
+                        args.add(afterId);
+                    }
+                    args.add(call.getArgument(4));
+                    return jdbc.query(sql + " order by offer_expires_at,id limit ?", (rs, rowNum) -> {
+                        ClubWaitlistEntry row = new ClubWaitlistEntry();
+                        row.setId(rs.getLong("id"));
+                        row.setOfferExpiresAt(rs.getTimestamp("offer_expires_at"));
+                        return row;
+                    }, args.toArray());
+                });
+        when(mapper.selectClaimedPaidPage(any(Long.class), any(), anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectClaimedTerminalPage(any(Long.class), any(), anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectPromotableWaitlistScopePage(any(Date.class), any(Long.class), any(), any(), anyInt()))
+                .thenReturn(Collections.emptyList());
+>>>>>>> private-codex/batch1
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(any(Long.class))).thenAnswer(call -> policy());
         when(mapper.selectSeriesPolicyByActivity(any(Long.class))).thenReturn(null);
         when(mapper.selectWaitlistById(any(Long.class))).thenAnswer(call -> selectWaitlist(call.getArgument(0), false));

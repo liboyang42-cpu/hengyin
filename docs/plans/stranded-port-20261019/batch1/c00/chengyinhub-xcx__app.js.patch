@@ -1,0 +1,12 @@
+diff --git a/chengyinhub-xcx/app.js b/chengyinhub-xcx/app.js
+index ba2426ff..c1376e17 100644
+--- a/chengyinhub-xcx/app.js
++++ b/chengyinhub-xcx/app.js
+@@ -359,6 +359,7 @@ App({
+       var that = this;
+       this._uploadClient = createUploadClient({
+         wxUploadFile: function (opts) { return wx.uploadFile(opts); },
++        getUserID: function () { return that.getUserID(); },
+         getBaseUrl: function () { return that.globalData.siteBaseUrl; },
+         getClientVersion: function () { return readClientVersion(wx); },
+         getUserID: function () { return that.getUserID(); },

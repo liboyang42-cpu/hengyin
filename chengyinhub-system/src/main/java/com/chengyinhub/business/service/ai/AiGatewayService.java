@@ -63,6 +63,7 @@ public interface AiGatewayService
      *
      * @param memberId 会员
      * @param bizType  与 consumeQuota 逐字相同的场景(退错池子 = 没退)
+<<<<<<< public
      * @param reservation 本次 consumeQuota 返回的原预占凭证
      */
     void refundQuota(Long memberId, String bizType, String reservation);
@@ -70,4 +71,9 @@ public interface AiGatewayService
     void stageQuota(Long memberId,String bizType,String reservation,String stage);
     /** 保持该消费者已有不退款结论，仅保存固定内部原因码。 */
     void retainQuota(Long memberId,String bizType,String reservation,String reason);
+=======
+     * @param reservation consumeQuota 返回的原预留凭据
+     */
+    void refundQuota(Long memberId, String bizType, String reservation);
+>>>>>>> private-codex/batch1
 }

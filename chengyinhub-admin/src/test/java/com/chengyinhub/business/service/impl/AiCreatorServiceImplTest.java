@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -197,8 +198,12 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+<<<<<<< public
         reserveResult = 1L;
         installReservationStub();
+=======
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+>>>>>>> private-codex/batch1
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -211,8 +216,14 @@ class AiCreatorServiceImplTest {
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
         assertEquals("AI 服务暂未就绪,请稍后重试", ex.getMessage());
 
+<<<<<<< public
         assertEquals(1, reserved.size());
         assertEquals(1, refunded.size());
+=======
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+        verify(valueOperations, never()).decrement(anyString());
+>>>>>>> private-codex/batch1
     }
 
     @Test
@@ -222,8 +233,12 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+<<<<<<< public
         reserveResult = 1L;
         installReservationStub();
+=======
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+>>>>>>> private-codex/batch1
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -234,8 +249,14 @@ class AiCreatorServiceImplTest {
         AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
 
         assertNotNull(resp.getDraft());
+<<<<<<< public
         assertEquals(1, reserved.size());
         assertEquals(0, refunded.size());
+=======
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        ArgumentCaptor<Integer> ttlCaptor = ArgumentCaptor.forClass(Integer.class);
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), ttlCaptor.capture(), eq(3));
+>>>>>>> private-codex/batch1
         LocalDateTime after = LocalDateTime.now();
         long ttl = reserveTtls.get(0).longValue();
         if (before.toLocalDate().equals(after.toLocalDate())) {
@@ -253,8 +274,12 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+<<<<<<< public
         reserveResult = 1L;
         installReservationStub();
+=======
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+>>>>>>> private-codex/batch1
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -264,8 +289,14 @@ class AiCreatorServiceImplTest {
 
         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+<<<<<<< public
         assertEquals(1, reserved.size());
         assertEquals(1, refunded.size());
+=======
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+        verify(valueOperations, never()).decrement(anyString());
+>>>>>>> private-codex/batch1
     }
 
     @Test
@@ -274,8 +305,12 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+<<<<<<< public
         reserveResult = -2L;
         installReservationStub();
+=======
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(0L);
+>>>>>>> private-codex/batch1
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -288,7 +323,96 @@ class AiCreatorServiceImplTest {
 
         verify(gateway, never()).generate(any(Long.class), anyString(), eq("theme_draft"),
                 anyString(), anyString());
+<<<<<<< public
         assertEquals(0, refunded.size());
+=======
+        verify(redisTemplate, never()).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+        verify(valueOperations, never()).decrement(anyString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftRealGatewayContentRejectKeepsQuotaAndNpcRejectsWithoutRetry() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(wxContentSecurityService.checkTextTyped(anyString(), anyString())).thenReturn(
+                com.chengyinhub.business.service.WxTextCheckResult.reject(
+                        com.chengyinhub.business.service.WxTextCheckResult.Reason.RISKY, "内容违规"));
+        com.chengyinhub.business.service.ai.impl.AiGatewayServiceImpl realGateway =
+                new com.chengyinhub.business.service.ai.impl.AiGatewayServiceImpl();
+        ReflectionTestUtils.setField(realGateway, "wxContentSecurityService", wxContentSecurityService);
+        ReflectionTestUtils.setField(realGateway, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(realGateway, "redisTemplate", redisTemplate);
+        ReflectionTestUtils.setField(realGateway, "aiGenerationLogMapper",
+                mock(com.chengyinhub.business.mapper.AiGenerationLogMapper.class));
+        ReflectionTestUtils.setField(service, "gateway", realGateway);
+
+        com.chengyinhub.business.service.ai.AiServiceException exception = assertThrows(
+                com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+        assertEquals(com.chengyinhub.business.service.ai.AiServiceException.Reason.INPUT_BLOCKED, exception.getReason());
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(valueOperations, never()).decrement(anyString());
+        verify(redisTemplate, never()).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+        com.chengyinhub.business.domain.NpcChatRequest terminal = new com.chengyinhub.business.domain.NpcChatRequest();
+        NpcChatService npc = new NpcChatService();
+        ReflectionTestUtils.invokeMethod(npc, "applyGatewayFailure", terminal, exception);
+        assertEquals("REJECTED", terminal.getStatus());
+        assertEquals("INPUT_BLOCK", terminal.getErrorCode());
+        assertFalse(Boolean.TRUE.equals(terminal.getRetryable()));
+        assertEquals(Integer.valueOf(1), (Integer) ReflectionTestUtils.invokeMethod(npc, "safetyFlagOf", exception));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftContentRejectKeepsConsumedQuota() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+                anyString(), anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiServiceException(
+                com.chengyinhub.business.service.ai.AiServiceException.Reason.INPUT_BLOCKED, "内容违规"));
+
+        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(valueOperations, never()).decrement(anyString());
+        verify(redisTemplate, never()).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftServiceUnavailableRefundsOriginalReservation() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class))).thenReturn(1L);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
+                anyString(), anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiServiceException(
+                com.chengyinhub.business.service.ai.AiServiceException.Reason.UPSTREAM_UNAVAILABLE, "审核服务故障"));
+
+        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+
+        ArgumentCaptor<List> counter = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List> refundKeys = ArgumentCaptor.forClass(List.class);
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), counter.capture(), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), refundKeys.capture());
+        assertEquals(counter.getValue(), refundKeys.getValue());
+        assertTrue(String.valueOf(refundKeys.getValue().get(1)).startsWith("ai:theme:draft:player:refund:"));
+        verify(valueOperations, never()).decrement(anyString());
+>>>>>>> private-codex/batch1
     }
 
     @Test
@@ -297,8 +421,12 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+<<<<<<< public
         reserveResult = 1L;
         installReservationStub();
+=======
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenReturn(1L);
+>>>>>>> private-codex/batch1
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -307,8 +435,58 @@ class AiCreatorServiceImplTest {
         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
 
+<<<<<<< public
         assertEquals(1, reserved.size());
         assertEquals(1, refunded.size());
+=======
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(List.class));
+        verify(valueOperations, never()).decrement(anyString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftUnknownReservationReplyCancelsSameNonceAndNeverCallsModel() {
+        redisTemplate = mock(RedisTemplate.class);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+
+        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+
+        ArgumentCaptor<List> reserveKeys = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List> refundKeys = ArgumentCaptor.forClass(List.class);
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class),
+                reserveKeys.capture(), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), refundKeys.capture());
+        assertEquals(reserveKeys.getValue(), refundKeys.getValue());
+        verify(gateway, never()).generate(any(Long.class), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftReserveExceptionCancelsSameNonceAndPreservesOriginalFailure() {
+        redisTemplate = mock(RedisTemplate.class);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class),
+                any(List.class), org.mockito.ArgumentMatchers.anyInt(), eq(3))).thenThrow(new IllegalStateException("reserve reply lost"));
+        when(redisTemplate.execute(any(org.springframework.data.redis.core.script.RedisScript.class),
+                any(List.class))).thenThrow(new IllegalStateException("refund unavailable"));
+
+        com.chengyinhub.business.service.ai.AiServiceException failure = assertThrows(
+                com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+
+        assertEquals("AI 服务繁忙,请稍后重试", failure.getMessage());
+        ArgumentCaptor<List> reserveKeys = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List> refundKeys = ArgumentCaptor.forClass(List.class);
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class),
+                reserveKeys.capture(), org.mockito.ArgumentMatchers.anyInt(), eq(3));
+        verify(redisTemplate).execute(any(org.springframework.data.redis.core.script.RedisScript.class), refundKeys.capture());
+        assertEquals(reserveKeys.getValue(), refundKeys.getValue());
+        verify(gateway, never()).generate(any(Long.class), anyString(), anyString(), anyString(), anyString());
+>>>>>>> private-codex/batch1
     }
 
     @Test

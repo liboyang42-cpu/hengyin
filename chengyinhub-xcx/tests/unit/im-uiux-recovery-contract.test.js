@@ -42,7 +42,12 @@ function loadPage(modulePath) {
       if (done) done.call(this)
     },
   })
+<<<<<<< public
   return { page, requests, toasts, app, setUserId: (id) => { userId = id } }
+=======
+  page.data.myId = 8
+  return { page, requests, toasts }
+>>>>>>> private-codex/batch1
 }
 
 test('消息列表静默刷新失败保留旧会话，并给原位重试而不是整页错误', () => {

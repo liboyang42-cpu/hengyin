@@ -65,7 +65,11 @@ class PhotoCheckVisionServiceTest {
         ReflectionTestUtils.setField(service, "mediaReferences", media);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         gateway = mock(AiGatewayService.class);
+<<<<<<< public
         org.mockito.Mockito.when(gateway.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
+=======
+        when(gateway.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("original-rate-key|reservation-1");
+>>>>>>> private-codex/batch1
         alarm = mock(AlarmService.class);
         sentImage = new AtomicReference<>();
         ReflectionTestUtils.setField(service, "aiGatewayService", gateway);
@@ -167,7 +171,11 @@ class PhotoCheckVisionServiceTest {
         org.mockito.Mockito.doAnswer(invocation -> {
             refunded.set(true);
             return null;
+<<<<<<< public
         }).when(gateway).refundQuota(MEMBER_ID, "photo_check", "reservation");
+=======
+        }).when(gateway).refundQuota(MEMBER_ID, "photo_check", "original-rate-key|reservation-1");
+>>>>>>> private-codex/batch1
 
         PhotoCheckVisionResult result = service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
 

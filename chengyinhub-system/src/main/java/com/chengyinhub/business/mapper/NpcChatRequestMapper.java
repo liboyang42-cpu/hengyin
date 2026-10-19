@@ -28,5 +28,9 @@ public interface NpcChatRequestMapper
     int renewLease(@Param("userId") Long userId, @Param("requestId") String requestId,
                    @Param("leaseToken") String leaseToken, @Param("leaseUntil") Date leaseUntil);
 
+    /** 只有当前 lease owner 能将请求标记为已进入供应商。 */
+    int markProviderStarted(@Param("userId") Long userId, @Param("requestId") String requestId,
+                            @Param("leaseToken") String leaseToken);
+
     int deleteNpcChatRequestsBefore(@Param("cutoff") Date cutoff, @Param("limit") int limit);
 }

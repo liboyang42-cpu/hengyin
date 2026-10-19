@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IWxSubscribeMsgService;
@@ -85,24 +86,30 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     @Override
     public boolean send(String openid, String templateId, String page, Map<String, String> fields) {
-        return send(openid, templateId, page, fields, null, null, null);
+        return sendResult(openid, templateId, page, fields, null, null, null).isConfirmed();
     }
 
-    private boolean send(String openid, String templateId, String page, Map<String, String> fields,
-                         Long memberId, String templateKey, String businessEvent) {
+    private NotifyResult sendResult(String openid, String templateId, String page, Map<String, String> fields,
+                                    Long memberId, String templateKey, String businessEvent) {
         if (StringUtils.isEmpty(openid)) {
             log.debug("[订阅消息] 无 openid,跳过 templateChars={}", safeLength(templateId)); // 用户没走微信登录,属正常
-            return false;
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_OPENID");
         }
         if (StringUtils.isEmpty(templateId)) {
             log.warn("[订阅消息] 模板未配置,本条不发(配置缺失,非用户问题)");
-            return false;
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_TEMPLATE");
         }
-        String token = wxSec.getAccessToken();
+        String token;
+        try {
+            token = wxSec.getAccessToken();
+        } catch (RuntimeException ex) {
+            log.warn("[订阅消息] 获取 token 失败，尚未发送 reason={}", ex.getClass().getSimpleName());
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "TOKEN_UNAVAILABLE");
+        }
         if (StringUtils.isEmpty(token)) {
             log.error("[订阅消息] access_token 获取失败,本条不发 templateChars={}",
                     safeLength(templateId));
-            return false; // 不阻断业务,但不能不吭声
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_ACCESS_TOKEN");
         }
         try {
             StringBuilder data = new StringBuilder("{");
@@ -123,7 +130,18 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
             // ⚠️ 微信 send 失败也返 HTTP 200 + body {"errcode":40003,...};不解析 errcode 就是把失败当成功记。
             // 网络层异常由 HttpUtils 显式抛出，在本方法 catch 中按 best-effort 合同安全降级。
             Map<String, Object> r = JSON.parseObject(resp);
-            int errcode = r == null ? -1 : Convert.toInt(r.get("errcode"), -1);
+            Integer errcode = null;
+            try {
+                if (r != null && r.get("errcode") != null) {
+                    errcode = Integer.valueOf(String.valueOf(r.get("errcode")));
+                }
+            } catch (NumberFormatException ignored) {
+                // 非整数响应不能猜作拒绝或截成接受，否则可能盲重发。
+            }
+            if (errcode == null) {
+                log.warn("[订阅消息] 响应未确认 errcode，保留 UNKNOWN templateChars={}", safeLength(templateId));
+                return NotifyResult.unknown("WECHAT_SUBSCRIBE");
+            }
             if (errcode != 0) {
                 // 只 error 不抛:调用方(如 refundOne)在 @Transactional(rollbackFor=Exception.class) 里,
                 // 抛出会把已在微信网关受理的退款连带回滚 = 资损。best-effort 的含义就是这个。
@@ -136,14 +154,14 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
                     log.error("[订阅消息] 发送失败 templateChars={} errcode={} responseChars={}",
                             safeLength(templateId), errcode, resp == null ? 0 : resp.length());
                 }
-                return false;
+                return NotifyResult.failed("WECHAT_SUBSCRIBE", String.valueOf(errcode));
             }
             log.info("[订阅消息] send ok templateChars={}", safeLength(templateId));
-            return true;
+            return NotifyResult.accepted("WECHAT_SUBSCRIBE");
         } catch (Exception ex) {
-            log.warn("[订阅消息] 发送失败 templateChars={} reason={}",
+            log.warn("[订阅消息] 发送失败，结果未知 templateChars={} reason={}",
                     safeLength(templateId), ex.getClass().getSimpleName());
-            return false;
+            return NotifyResult.unknown("WECHAT_SUBSCRIBE");
         }
     }
 
@@ -153,7 +171,16 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
             warnTplMissing(templateKey, businessEvent);
             return false;
         }
-        return send(openidOf(memberId), templateId, page, fields,
+        return sendToMemberResult(memberId, templateKey, businessEvent, templateId, page, fields).isConfirmed();
+    }
+
+    private NotifyResult sendToMemberResult(Long memberId, String templateKey, String businessEvent,
+                                            String templateId, String page, Map<String, String> fields) {
+        if (StringUtils.isEmpty(templateId)) {
+            warnTplMissing(templateKey, businessEvent);
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_TEMPLATE");
+        }
+        return sendResult(openidOf(memberId), templateId, page, fields,
                 memberId, templateKey, businessEvent);
     }
 
@@ -204,6 +231,11 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     @Override
     public boolean notifyBeforeStart(Long memberId, String topicName, String whenText) {
+        return notifyBeforeStartResult(memberId, topicName, whenText).isConfirmed();
+    }
+
+    @Override
+    public NotifyResult notifyBeforeStartResult(Long memberId, String topicName, String whenText) {
         // 模板【活动开始提醒】:活动名称 thing1 / 开始时间 date5 / 活动地点 thing8 / 备注 thing7 / 用户昵称 thing12
         Map<String, String> f = new HashMap<>();
         f.put("thing1", clip(topicName));
@@ -211,7 +243,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("thing8", "详见活动详情");
         f.put("thing7", "请准时到场");
         f.put("thing12", nickOf(memberId));
-        return sendToMember(memberId, "tplBeforeStart", "before_start", tplBeforeStart, defaultPage, f);
+        return sendToMemberResult(memberId, "tplBeforeStart", "before_start", tplBeforeStart, defaultPage, f);
     }
 
     @Override
@@ -267,18 +299,23 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     @Override
     public boolean notifyOfficialBroadcast(Long memberId, String title, String sub) {
+        return notifyOfficialBroadcastResult(memberId, title, sub).isConfirmed();
+    }
+
+    @Override
+    public NotifyResult notifyOfficialBroadcastResult(Long memberId, String title, String sub) {
         // 模板【官方活动通知】:活动名称 thing1 / 活动时间 time2 / 温馨提示 thing3。best-effort。
         // 未配专用模板 ⇒ 不发。不回退 tplRecruit:那是「新活动招募→发布者」的真实模板,
         // 拿它给玩家发官方广播既是模板语义错配,又会烧掉用户为招募授权的配额(一次授权=一次发送)。
         if (StringUtils.isEmpty(tplOfficialEvent)) {
             warnTplMissing("tplOfficialEvent", "official_broadcast");
-            return false;
+            return NotifyResult.failed("WECHAT_SUBSCRIBE", "NO_TEMPLATE");
         }
         Map<String, String> f = new HashMap<>();
         f.put("thing1", clip(title));
         f.put("time2", nowTime());
         f.put("thing3", clip(sub));
-        return sendToMember(memberId, "tplOfficialEvent", "official_broadcast", tplOfficialEvent, defaultPage, f);
+        return sendToMemberResult(memberId, "tplOfficialEvent", "official_broadcast", tplOfficialEvent, defaultPage, f);
     }
 
     @Override

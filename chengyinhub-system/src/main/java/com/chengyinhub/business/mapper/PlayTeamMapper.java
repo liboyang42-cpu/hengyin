@@ -34,6 +34,10 @@ public interface PlayTeamMapper {
     int markActiveMembersExited(Long teamId);
     int hasPaidRegistration(@Param("memberId") Long memberId, @Param("ownerType") Integer ownerType,
                             @Param("ownerId") Long ownerId);
+<<<<<<< public
+=======
+    /** NPC 生成入口专用；只将自玩使用有效期加入当前资格，不改变组队报名查询。 */
+>>>>>>> private-codex/batch1
     int hasCurrentNpcRegistration(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
     List<PlayTeam> selectMyTeams(Long memberId);
     List<Long> selectExpiredTeamIds(@Param("now") Date now, @Param("limit") int limit);

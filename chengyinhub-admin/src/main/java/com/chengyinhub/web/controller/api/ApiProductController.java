@@ -91,7 +91,8 @@ public class ApiProductController extends BaseController {
         }
 
         pmsProduct = pmsProductService.selectPmsProductById(productId);
-        if (pmsProduct == null) {
+        if (pmsProduct == null || !Integer.valueOf(1).equals(pmsProduct.getPublishStatus())
+                || !Integer.valueOf(0).equals(pmsProduct.getDelFlag())) {
             return error("商品不存在");
         }
         PmsSku pmsSku = new PmsSku();

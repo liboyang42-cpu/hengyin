@@ -22,6 +22,49 @@ function makeWf(over) {
   return { wf, calls, resolve: (r) => reqCb(r) };
 }
 
+test('上一请求迟到回调不能结束或解锁当前重试', () => {
+  const callbacks = [], events = [];
+  const wf = createPublishWorkflow({ request: (payload, cb) => callbacks.push(cb) });
+  const h = { onSuccess: data => events.push(['success', data]), onFail: res => events.push(['fail', res]) };
+  wf.submit({ name: '原稿' }, h);
+  callbacks[0]({ ok: false, networkError: true });
+  wf.submit({ name: '重试稿' }, h);
+  callbacks[0]({ ok: true, data: { id: 1 } });
+  callbacks[0]({ ok: false, msg: '旧失败' });
+  assert.equal(wf.getState(), 'submitting');
+  assert.equal(wf.submit({}, h), false);
+  assert.equal(events.length, 1);
+  callbacks[1]({ ok: true, data: { id: 2 } });
+  callbacks[1]({ ok: true, data: { id: 2 } });
+  callbacks[1]({ ok: false });
+  assert.deepEqual(events.map(e => e[0]), ['fail', 'success']);
+  assert.deepEqual(events[1][1], { id: 2 });
+  assert.equal(wf.getState(), 'done');
+});
+
+test('同步请求抛错释放锁并报告网络失败，原输入可重试', () => {
+  let attempts = 0;
+  const h = handlers();
+  const wf = createPublishWorkflow({ request: (payload, cb) => {
+    attempts++;
+    if (attempts === 1) throw new Error('transport unavailable');
+    cb({ ok: true, data: payload });
+  } });
+  const payload = { name: '完整原稿' };
+  assert.doesNotThrow(() => wf.submit(payload, h));
+  assert.equal(wf.getState(), 'idle');
+  assert.deepEqual(h.log, [['fail', { ok: false, networkError: true }]]);
+  assert.equal(wf.submit(payload, h), true);
+  assert.deepEqual(h.log[1], ['success', payload]);
+});
+
+test('销毁后的空闲发布器不再发出请求', () => {
+  const { wf, calls } = makeWf();
+  wf.destroy();
+  assert.equal(wf.submit({}, handlers()), false);
+  assert.equal(calls.request, 0);
+});
+
 const handlers = () => {
   const log = [];
   return {

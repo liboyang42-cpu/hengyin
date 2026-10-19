@@ -47,7 +47,13 @@ public class RefundReconcileTask {
     @Autowired
     private com.chengyinhub.business.service.ICoopInviteService coopInviteService;
 
+<<<<<<< public
     private long scanCursor;
+=======
+    // shortcut: restart rescans from zero; persist the cursor if restart frequency prevents a full sweep.
+    private long payoutScanAfterId;
+    private long payoutScanUpperId;
+>>>>>>> private-codex/batch1
 
     public synchronized void reconcile() {
         // 保证金与报名退款队列隔离；双方仍复用同一已注册调度入口。
@@ -78,6 +84,7 @@ public class RefundReconcileTask {
                 log.error("退款派发卡滞计数异常告警发送失败", alarmException);
             }
         }
+<<<<<<< public
         Long upperBound = refundApplicationMapper.selectStalePayoutScanUpperBound(STALE_MINUTES);
         long afterId = scanCursor;
         if (upperBound == null || afterId >= upperBound) {
@@ -113,6 +120,29 @@ public class RefundReconcileTask {
                             }
                         }
                         if (refundNo == null || refundNo.trim().isEmpty()) {
+=======
+        if (payoutScanUpperId == 0) {
+            Long upper = refundApplicationMapper.selectPayoutScanUpperId();
+            payoutScanUpperId = upper == null ? 0 : upper;
+            payoutScanAfterId = 0;
+        }
+        List<RefundApplication> stale = refundApplicationMapper.selectStalePayoutProcessingPage(
+                STALE_MINUTES, payoutScanAfterId, payoutScanUpperId);
+        int done = 0;
+        for (RefundApplication r : stale) {
+            payoutScanAfterId = r.getId();
+            try {
+                if (Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(r.getPayoutStatus())
+                        || Integer.valueOf(RefundApplication.PAYOUT_DISPATCHING).equals(r.getPayoutStatus())) {
+                    // afterCommit 前宕机时这里会补派；微信以 RF+registrationId 幂等，重复调用不会二次退款。
+                    refundPayoutService.payoutAfterReview(r.getId());
+                } else {
+                    String refundNo = r.getRefundNo();
+                    if ((refundNo == null || refundNo.trim().isEmpty())
+                            && "registration".equals(r.getSourceType()) && r.getSourceId() != null) {
+                        refundNo = "RF" + r.getSourceId();
+                        if (refundApplicationMapper.ensureRefundNo(r.getId(), refundNo) != 1) {
+>>>>>>> private-codex/batch1
                             continue;
                         }
                         // 查微信真实态并经 handleRefundNotify 回写:SUCCESS→1 / ABNORMAL|CLOSED→2 / PROCESSING 保持
@@ -124,9 +154,18 @@ public class RefundReconcileTask {
                 }
             }
         }
+<<<<<<< public
         if (upperBound != null && afterId >= upperBound) scanCursor = 0L;
         if (scanned > 0) {
             log.info("退款对账:扫描 {} 单,刷新 {} 单", scanned, done);
+=======
+        if (stale.size() < 200 || payoutScanAfterId >= payoutScanUpperId) {
+            payoutScanAfterId = 0;
+            payoutScanUpperId = 0;
+        }
+        if (!stale.isEmpty()) {
+            log.info("退款对账:扫描 {} 单,刷新 {} 单", stale.size(), done);
+>>>>>>> private-codex/batch1
         }
         // 待人工/待复核积压巡检告警(即使无新失败,也提醒财务清理堆积)
         try {

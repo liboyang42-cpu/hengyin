@@ -13,6 +13,7 @@ async function syncRoamTileMemory(options) {
   }
   if (typeof fetchPage !== 'function') throw new Error('缺少迷雾记忆分页读取器')
 
+<<<<<<< public
   const epoch = typeof memory.cacheEpoch === 'function' ? memory.cacheEpoch() : null
   const assertCurrent = () => {
     if (typeof config.isCurrent === 'function' && !config.isCurrent()) throw new Error('漫游读取上下文已变化')
@@ -20,6 +21,15 @@ async function syncRoamTileMemory(options) {
   }
   assertCurrent()
   const initial = memory.readTiles()
+=======
+  function readConfirmedTiles() {
+    const state = typeof memory.readTileState === 'function' ? memory.readTileState() : memory.readTiles()
+    if (state && state.ok === false) throw new Error('迷雾记忆本地读取失败')
+    return state
+  }
+
+  const initial = readConfirmedTiles()
+>>>>>>> private-codex/batch1
   let tiles = { ...((initial && initial.tiles) || {}) }
   let cursor = Number(initial && initial.serverCursor) || 0
 
@@ -31,7 +41,7 @@ async function syncRoamTileMemory(options) {
     }
     const next = Number(page.nextAfterId)
     if (!Number.isSafeInteger(next) || next < cursor) throw new Error('迷雾记忆游标无效')
-    const latest = memory.readTiles()
+    const latest = readConfirmedTiles()
     const pending = readPendingTiles()
     tiles = {
       ...((latest && latest.tiles) || {}),

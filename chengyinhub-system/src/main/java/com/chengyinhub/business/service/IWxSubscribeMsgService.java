@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.notify.NotifyResult;
 import java.util.Map;
 
 /**
@@ -33,6 +34,7 @@ public interface IWxSubscribeMsgService {
 
     /** 出发前提醒(发给某成员)。返回是否真的下发成功 —— 调用方据此决定要不要重试(见 send 的说明)。 */
     boolean notifyBeforeStart(Long memberId, String topicName, String whenText);
+    NotifyResult notifyBeforeStartResult(Long memberId, String topicName, String whenText);
 
     // —— 合作/定价订阅(F3-2 骨架;字段参数名待与实际模板对齐) ——
 
@@ -53,6 +55,7 @@ public interface IWxSubscribeMsgService {
 
     /** 官方活动/公告通知(发给某成员)。复用【新活动招募】模板;可配 tplOfficialEvent 专用模板。 */
     boolean notifyOfficialBroadcast(Long memberId, String title, String sub);
+    NotifyResult notifyOfficialBroadcastResult(Long memberId, String title, String sub);
 
     /** 漫游完成 24–72h 召回；返回微信是否明确受理，未配模板/未授权均为 false。 */
     boolean notifyRoamRecall(Long memberId, int distanceM, int poisFound);

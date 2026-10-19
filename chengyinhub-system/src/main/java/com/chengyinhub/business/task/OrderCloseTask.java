@@ -47,6 +47,10 @@ public class OrderCloseTask {
     private volatile long reconcileCursor = 0L;
     private long unpaidCursor = 0L;
 
+    // shortcut: 游标仅保留到进程退出；频繁重启造成重复扫描时再采用持久调度游标。
+    private long unpaidCursor = 0L;
+    private long unpaidUpperBound = 0L;
+
     @Autowired
     private ICmsRegistrationService cmsRegistrationService;
 
@@ -58,6 +62,7 @@ public class OrderCloseTask {
 
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
     public synchronized void closeExpired() {
+<<<<<<< public
         Date now = new Date();
         Long maxId = cmsRegistrationService.getExpiredUnpaidScanUpperBound(now);
         if (maxId == null) { unpaidCursor = 0L; return; }
@@ -69,19 +74,44 @@ public class OrderCloseTask {
                     now, unpaidCursor, maxId, Math.min(200, RECONCILE_SCAN_LIMIT - scanned));
             if (ids.isEmpty()) { reachedEnd = true; break; }
             for (Long id : ids) {
+=======
+        if (unpaidCursor == 0L) unpaidUpperBound = cmsRegistrationService.registrationScanUpperBound();
+        long afterId = unpaidCursor;
+        int scanned = 0, closed = 0;
+        boolean reachedEnd = false;
+        while (scanned < RECONCILE_SCAN_LIMIT && !reachedEnd) {
+            List<Long> ids = cmsRegistrationService.listExpiredUnpaidIds(afterId);
+            if (ids.isEmpty()) { reachedEnd = true; break; }
+            for (Long id : ids) {
+                if (scanned >= RECONCILE_SCAN_LIMIT) break;
+                if (id == null || id <= afterId) throw new IllegalStateException("过期订单扫描游标未推进");
+                if (id > unpaidUpperBound) { reachedEnd = true; break; }
+                afterId = id;
+>>>>>>> private-codex/batch1
                 scanned++;
                 try {
                     if (cmsRegistrationService.closeExpiredOne(id)) closed++;
                 } catch (Exception e) {
                     log.error("过期关单失败 registrationId={}", id, e);
+<<<<<<< public
                 } finally {
                     unpaidCursor = id;
                 }
+=======
+                }
+                // 已尝试的行即时推进；后续分页查询失败时，下轮从此处恢复。
+                unpaidCursor = afterId;
+>>>>>>> private-codex/batch1
             }
             if (unpaidCursor >= maxId) { reachedEnd = true; break; }
         }
+<<<<<<< public
         if (reachedEnd) unpaidCursor = 0L;
         log.info("过期关单完成:扫描 {} 单,关闭 {} 单,下轮起点 id={}", scanned, closed, unpaidCursor);
+=======
+        unpaidCursor = reachedEnd || afterId >= unpaidUpperBound ? 0L : afterId;
+        if (scanned > 0) log.info("过期关单完成:扫描 {} 单,关闭 {} 单,下轮起点 id={}", scanned, closed, unpaidCursor);
+>>>>>>> private-codex/batch1
     }
 
     /**

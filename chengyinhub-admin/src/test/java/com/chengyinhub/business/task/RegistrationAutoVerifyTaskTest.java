@@ -22,6 +22,7 @@ class RegistrationAutoVerifyTaskTest {
 
     private RegistrationAutoVerifyTask task(ICmsRegistrationService service) {
         RegistrationAutoVerifyTask task = new RegistrationAutoVerifyTask();
+        when(service.registrationScanUpperBound()).thenReturn(Long.MAX_VALUE);
         ReflectionTestUtils.setField(task, "cmsRegistrationService", service);
         return task;
     }
@@ -29,7 +30,7 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_closesEveryExpiredOrderPerId() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Arrays.asList(101L, 102L, 103L));
+        when(service.listExpiredUnverifiedIds(0L)).thenReturn(Arrays.asList(101L, 102L, 103L));
         when(service.autoVerifyExpiredOne(101L)).thenReturn(true);
         when(service.autoVerifyExpiredOne(102L)).thenReturn(false); // 竞态已被商家真核销,跳过
         when(service.autoVerifyExpiredOne(103L)).thenReturn(true);
@@ -44,7 +45,7 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_singleFailureDoesNotAbortRemainingIds() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Arrays.asList(201L, 202L));
+        when(service.listExpiredUnverifiedIds(0L)).thenReturn(Arrays.asList(201L, 202L));
         when(service.autoVerifyExpiredOne(201L)).thenThrow(new RuntimeException("模拟单笔异常"));
         when(service.autoVerifyExpiredOne(202L)).thenReturn(true);
 
@@ -56,11 +57,59 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_emptyScan_touchesNothing() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Collections.emptyList());
+        when(service.listExpiredUnverifiedIds(0L)).thenReturn(Collections.emptyList());
 
         task(service).run();
 
         verify(service, never()).autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
+    void boundedCircleGetsPastFailedPrefixAndNewArrivalsCannotPostponeRetry() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        RegistrationAutoVerifyTask task = task(service);
+        when(service.registrationScanUpperBound()).thenReturn(201L, 401L);
+        when(service.listExpiredUnverifiedIds(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+            long after = call.getArgument(0);
+            return java.util.stream.LongStream.rangeClosed(after + 1, after + 200)
+                    .boxed().collect(java.util.stream.Collectors.toList());
+        });
+        when(service.autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        task.run();
+        verify(service, never()).autoVerifyExpiredOne(201L);
+        task.run();
+        verify(service).autoVerifyExpiredOne(201L);
+        verify(service, never()).autoVerifyExpiredOne(202L);
+        task.run();
+        verify(service, org.mockito.Mockito.times(2)).autoVerifyExpiredOne(1L);
+        verify(service, org.mockito.Mockito.times(2)).registrationScanUpperBound();
+    }
+
+    @Test
+    void removalDoesNotSkipNextPageAndRestartOnlyRevisitsUnresolvedOrders() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        java.util.List<Long> pending = new java.util.ArrayList<>();
+        for (long id = 1; id <= 201; id++) pending.add(id);
+        when(service.listExpiredUnverifiedIds(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+            long after = call.getArgument(0);
+            return pending.stream().filter(id -> id > after).limit(200).collect(java.util.stream.Collectors.toList());
+        });
+        when(service.autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> pending.remove((Long) call.getArgument(0)));
+        RegistrationAutoVerifyTask first = task(service);
+        first.run();
+        assertEquals(Collections.singletonList(201L), pending);
+        task(service).run();
+        assertTrue(pending.isEmpty());
+        verify(service, org.mockito.Mockito.times(201)).autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
+    void malformedPageDoesNotRepeatTheSameTicket() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        when(service.listExpiredUnverifiedIds(0L)).thenReturn(Arrays.asList(1L, 1L));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> task(service).run());
+        verify(service).autoVerifyExpiredOne(1L);
     }
 
     @Test

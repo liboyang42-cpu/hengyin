@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CartSettlementReceiptMapper">
+  <resultMap id="receipt" type="com.chengyinhub.business.domain.CartSettlementReceipt">
+    <id property="id" column="id"/><result property="memberId" column="member_id"/>
+    <result property="requestId" column="request_id"/><result property="requestHash" column="request_hash"/>
+    <result property="intentHash" column="intent_hash"/><result property="firstOrderId" column="first_order_id"/>
+    <result property="totalPoints" column="total_points"/><result property="status" column="status"/>
+  </resultMap>
+  <insert id="insertRequest" parameterType="com.chengyinhub.business.domain.CartSettlementReceipt" useGeneratedKeys="true" keyProperty="id">
+    insert ignore into oms_cart_settlement_receipt(member_id,request_id,request_hash,status,create_time,update_time)
+    values(#{memberId},#{requestId},#{requestHash},'PROCESSING',now(),now())
+  </insert>
+  <select id="selectForUpdate" resultMap="receipt">select * from oms_cart_settlement_receipt where member_id=#{memberId} and request_id=#{requestId} for update</select>
+  <select id="selectOwned" resultMap="receipt">select * from oms_cart_settlement_receipt where member_id=#{memberId} and request_id=#{requestId}</select>
+  <update id="markSucceeded">
+    update oms_cart_settlement_receipt set intent_hash=#{intentHash},first_order_id=#{firstOrderId},total_points=#{totalPoints},status='SUCCEEDED',update_time=now()
+    where id=#{id} and status='PROCESSING'
+  </update>
+  <insert id="insertOrder">insert into oms_cart_settlement_order(receipt_id,order_id,sort_order) values(#{receiptId},#{orderId},#{sortOrder})</insert>
+  <select id="selectOrderIds" resultType="long">select order_id from oms_cart_settlement_order where receipt_id=#{receiptId} order by sort_order</select>
+</mapper>

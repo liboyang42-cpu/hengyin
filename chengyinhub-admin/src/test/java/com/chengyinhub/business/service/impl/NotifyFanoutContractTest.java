@@ -170,7 +170,7 @@ public class NotifyFanoutContractTest {
     public void 出发前提醒字段原样透传() {
         Fixture f = new Fixture();
         f.svc.notifyBeforeStart(100L, "上海骑行", "2026-08-21 09:00");
-        verify(f.wx).notifyBeforeStart(100L, "上海骑行", "2026-08-21 09:00");
+        verify(f.wx).notifyBeforeStartResult(100L, "上海骑行", "2026-08-21 09:00");
     }
 
     @Test
@@ -213,7 +213,7 @@ public class NotifyFanoutContractTest {
     public void 官方广播字段原样透传() {
         Fixture f = new Fixture();
         f.svc.notifyOfficialBroadcast(100L, "中秋城市漫游", "本周六开跑");
-        verify(f.wx).notifyOfficialBroadcast(100L, "中秋城市漫游", "本周六开跑");
+        verify(f.wx).notifyOfficialBroadcastResult(100L, "中秋城市漫游", "本周六开跑");
     }
 
     @Test

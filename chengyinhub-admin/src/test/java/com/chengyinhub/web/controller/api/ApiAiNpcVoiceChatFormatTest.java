@@ -32,6 +32,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 class ApiAiNpcVoiceChatFormatTest
@@ -39,6 +41,7 @@ class ApiAiNpcVoiceChatFormatTest
     private MockMvc mvc;
     private SpeechToTextService speechToTextService;
     private NpcChatService npcChatService;
+    private PlayTeamMapper playTeamMapper;
 
     @BeforeEach
     void setUp()
@@ -60,7 +63,11 @@ class ApiAiNpcVoiceChatFormatTest
         ICmsTopicNodeService nodeService = mock(ICmsTopicNodeService.class);
         when(nodeService.selectCmsTopicNodeById(21L)).thenReturn(node);
 
+<<<<<<< public
         PlayTeamMapper playTeamMapper = mock(PlayTeamMapper.class);
+=======
+        playTeamMapper = mock(PlayTeamMapper.class);
+>>>>>>> private-codex/batch1
         when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(1);
 
         npcChatService = mock(NpcChatService.class);
@@ -79,6 +86,79 @@ class ApiAiNpcVoiceChatFormatTest
         ReflectionTestUtils.setField(controller, "npcChatService", npcChatService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
         mvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @Test
+    void expiredSelfPlayPassBlocksTextAndVoiceBeforeGeneratingOrTranscribing() throws Exception
+    {
+        when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(0);
+        mvc.perform(post("/api/ai/npc/shop-chat").contentType("application/json")
+                        .content("{\"nodeId\":21,\"requestId\":\"expired-text\",\"message\":\"hi\"}"))
+                .andExpect(jsonPath("$.code").value(403));
+        mvc.perform(multipart("/api/ai/npc/voice-chat")
+                        .file(new MockMultipartFile("file", "voice.mp3", "audio/mpeg", mp3Bytes()))
+                        .param("nodeId", "21").param("requestId", "expired-voice"))
+                .andExpect(jsonPath("$.code").value(403));
+        verify(speechToTextService, never()).transcribe(any(byte[].class), anyString());
+        verify(npcChatService, never()).chatWithShop(anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString());
+        verify(playTeamMapper, never()).hasPaidRegistration(anyLong(), any(), anyLong());
+    }
+
+    @Test
+    void passExpiringDuringAsrBlocksModelAfterTranscription() throws Exception
+    {
+        when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(1, 0);
+        mvc.perform(multipart("/api/ai/npc/voice-chat")
+                        .file(new MockMultipartFile("file", "voice.mp3", "audio/mpeg", mp3Bytes()))
+                        .param("nodeId", "21").param("requestId", "expires-during-asr"))
+                .andExpect(jsonPath("$.code").value(403));
+        verify(speechToTextService).transcribe(any(byte[].class), eq("mp3"));
+        verify(playTeamMapper, times(2)).hasCurrentNpcRegistration(1001L, 31L);
+        verify(npcChatService, never()).chatWithShop(anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void renewedCurrentPassRestoresTextEntry() throws Exception
+    {
+        when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(0, 1);
+        String request = "{\"nodeId\":21,\"requestId\":\"renewed-text\",\"message\":\"hi\"}";
+        mvc.perform(post("/api/ai/npc/shop-chat").contentType("application/json").content(request))
+                .andExpect(jsonPath("$.code").value(403));
+        mvc.perform(post("/api/ai/npc/shop-chat").contentType("application/json").content(request))
+                .andExpect(jsonPath("$.code").value(200));
+        verify(npcChatService).chatWithShop(eq("renewed-text"), eq(1001L), eq(21L), eq(41L), anyString(), eq("hi"));
+    }
+
+    @Test
+    void renewedCurrentPassRestoresVoiceEntryThroughAsrAndChat() throws Exception
+    {
+        when(playTeamMapper.hasCurrentNpcRegistration(1001L, 31L)).thenReturn(0, 1, 1);
+        byte[] audio = mp3Bytes();
+        mvc.perform(multipart("/api/ai/npc/voice-chat")
+                        .file(new MockMultipartFile("file", "voice.mp3", "audio/mpeg", audio))
+                        .param("nodeId", "21").param("requestId", "expired-before-renewal"))
+                .andExpect(jsonPath("$.code").value(403));
+        verify(speechToTextService, never()).transcribe(any(byte[].class), anyString());
+        verify(npcChatService, never()).chatWithShop(anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString());
+
+        mvc.perform(multipart("/api/ai/npc/voice-chat")
+                        .file(new MockMultipartFile("file", "voice.mp3", "audio/mpeg", audio))
+                        .param("nodeId", "21").param("requestId", "voice-request-1"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.asr").value("你好"))
+                .andExpect(jsonPath("$.data.requestId").value("voice-request-1"))
+                .andExpect(jsonPath("$.data.outcomeStatus").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.data.safeText").value("欢迎来店里"));
+
+        org.mockito.InOrder chain = org.mockito.Mockito.inOrder(playTeamMapper, speechToTextService, npcChatService);
+        chain.verify(playTeamMapper, org.mockito.Mockito.calls(2)).hasCurrentNpcRegistration(1001L, 31L);
+        chain.verify(speechToTextService).transcribe(eq(audio), eq("mp3"));
+        chain.verify(playTeamMapper).hasCurrentNpcRegistration(1001L, 31L);
+        chain.verify(npcChatService).chatWithShop(eq("voice-request-1"), eq(1001L), eq(21L),
+                eq(41L), anyString(), eq("你好"));
+        verify(playTeamMapper, never()).hasPaidRegistration(anyLong(), any(), anyLong());
+        verify(speechToTextService, times(1)).transcribe(any(byte[].class), anyString());
+        verify(npcChatService, times(1)).chatWithShop(anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString());
     }
 
     @Test

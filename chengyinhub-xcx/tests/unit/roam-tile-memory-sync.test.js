@@ -17,6 +17,46 @@ function fakeMemory(initial) {
   }
 }
 
+test('真实玩家桶初始读故障不能用空快照覆盖旧格子，恢复后从原游标继续', async () => {
+  const { createPlayerRoamMemory } = require('../../utils/roam-player-memory.js')
+  const key = 'roam_memory_v1:101:tiles'
+  let failRead = true, writes = 0, fetches = 0
+  const values = { [key]: { tiles: { localOnly: 1 }, serverCursor: 7 } }
+  const memory = createPlayerRoamMemory('101', {
+    getStorageSync(storageKey) { if (failRead) throw new Error('read unavailable'); return values[storageKey] },
+    setStorageSync(storageKey, value) { writes++; values[storageKey] = JSON.parse(JSON.stringify(value)); failRead = false },
+  })
+  const run = () => syncRoamTileMemory({
+    memory,
+    fetchPage(cursor) { fetches++; return Promise.resolve({
+      tiles: ['serverTile'], nextAfterId: cursor + 1, hasMore: false,
+    }) },
+  })
+  await assert.rejects(run, /读取/)
+  assert.equal(writes, 0)
+  assert.equal(fetches, 0)
+  assert.deepEqual(values[key], { tiles: { localOnly: 1 }, serverCursor: 7 })
+  failRead = false
+  assert.deepEqual(await run(), { tiles: { localOnly: 1, serverTile: 1 }, serverCursor: 8 })
+})
+
+test('真实玩家桶分页在途读故障不写盘、不推进游标，修复后从已确认页继续', async () => {
+  const { createPlayerRoamMemory } = require('../../utils/roam-player-memory.js')
+  const key = 'roam_memory_v1:101:tiles'
+  let failRead = false, writes = 0
+  const values = { [key]: { tiles: { old: 1 }, serverCursor: 7 } }
+  const memory = createPlayerRoamMemory('101', {
+    getStorageSync(storageKey) { if (failRead) throw new Error('read unavailable'); return values[storageKey] },
+    setStorageSync(storageKey, value) { writes++; values[storageKey] = JSON.parse(JSON.stringify(value)) },
+  })
+  await assert.rejects(() => syncRoamTileMemory({
+    memory,
+    fetchPage() { failRead = true; return Promise.resolve({ tiles: ['server'], nextAfterId: 8, hasMore: false }) },
+  }), /读取/)
+  assert.equal(writes, 0)
+  assert.deepEqual(values[key], { tiles: { old: 1 }, serverCursor: 7 })
+})
+
 test('迷雾记忆从已保存游标增量拉取全部分页，并逐页持久化', async () => {
   const memory = fakeMemory({ tiles: { oldTile: 1 }, serverCursor: 10 })
   const calls = []
@@ -43,6 +83,55 @@ test('迷雾记忆从已保存游标增量拉取全部分页，并逐页持久�
     serverCursor: 13,
   })
   assert.deepEqual(memory.state(), result)
+})
+
+test('真实桶分页写配额/静默丢写失败保留上一页，重试合并同批未落盘GPS格子', async () => {
+  const { createPlayerRoamMemory } = require('../../utils/roam-player-memory.js')
+  for (const fault of ['quota', 'drop']) {
+    const values = {}, painted = [], calls = []
+    let failWrite = false
+    const memory = createPlayerRoamMemory('101', {
+      getStorageSync: key => values[key],
+      setStorageSync(key, value) {
+        if (failWrite) { if (fault === 'quota') throw new Error('quota'); return }
+        values[key] = JSON.parse(JSON.stringify(value))
+      },
+    })
+    memory.writeTiles({ old: 1 }, 7)
+    const run = () => syncRoamTileMemory({
+      memory, readPendingTiles: () => ({ gps: 1 }),
+      fetchPage(cursor) {
+        calls.push(cursor)
+        failWrite = cursor === 8 && calls.length <= 2
+        return Promise.resolve({ tiles: [cursor === 7 ? 'first' : 'second'],
+          nextAfterId: cursor + 1, hasMore: cursor === 7 })
+      },
+      onPage: page => painted.push(page),
+    })
+    await assert.rejects(run, /持久化失败/)
+    assert.deepEqual(memory.readTiles(), { tiles: { old: 1, gps: 1, first: 1 }, serverCursor: 8 })
+    assert.deepEqual(painted, [['first']])
+    failWrite = false
+    await run()
+    assert.deepEqual(calls, [7, 8, 8])
+    assert.deepEqual(memory.readTiles(), { tiles: { old: 1, gps: 1, first: 1, second: 1 }, serverCursor: 9 })
+  }
+})
+
+test('重复旧页回包拒绝游标回退，不覆盖已确认的玩家桶', async () => {
+  const memory = fakeMemory({ tiles: { old: 1 }, serverCursor: 7 })
+  let calls = 0, painted = 0
+  await assert.rejects(() => syncRoamTileMemory({
+    memory,
+    fetchPage: () => {
+      calls++
+      return Promise.resolve({ tiles: ['first'], nextAfterId: 8, hasMore: true })
+    },
+    onPage: () => { painted++ },
+  }), /游标没有推进/)
+  assert.equal(calls, 2)
+  assert.equal(painted, 1)
+  assert.deepEqual(memory.state(), { tiles: { old: 1, first: 1 }, serverCursor: 8 })
 })
 
 test('服务端声称还有下一页却不推进游标时立即失败，不能死循环', async () => {

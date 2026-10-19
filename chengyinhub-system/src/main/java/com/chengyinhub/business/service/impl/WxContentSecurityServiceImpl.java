@@ -41,6 +41,8 @@ import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IWxContentCallbackInboxService;
+import com.chengyinhub.business.service.WxTextCheckResult;
+import com.chengyinhub.business.service.WxTextCheckResult.Reason;
 import com.chengyinhub.common.config.WxPayConfig;
 import com.chengyinhub.common.core.redis.RedisCache;
 import com.chengyinhub.common.core.text.Convert;
@@ -140,9 +142,21 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkText(String content, String openid)
     {
+<<<<<<< public
         if (StringUtils.isEmpty(content))
+=======
+        WxTextCheckResult result = checkTextTyped(content, openid);
+        return result.getStatus() == WxTextCheckResult.Status.PASS ? null : result.getMessage();
+    }
+
+    @Override
+    public WxTextCheckResult checkTextTyped(String content, String openid)
+    {
+        // 未启用 → 放行（与现有 checkTextSecurity 行为一致；配置 wx secCheckEnabled=true 后生效）
+        if (!isEnabled() || StringUtils.isEmpty(content))
+>>>>>>> private-codex/batch1
         {
-            return null;
+            return WxTextCheckResult.pass(Reason.DISABLED_OR_EMPTY);
         }
 
         if (!isEnabled())
@@ -157,7 +171,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         if (StringUtils.isEmpty(openid))
         {
             log.error("[内容安全] 文本检测缺少 openid(v2 必填,微信必判 40003),fail-close 拦截");
-            return MSG_UNAVAILABLE;
+            return WxTextCheckResult.unavailable(Reason.MISSING_CONTEXT, MSG_UNAVAILABLE);
         }
 
         try
@@ -169,7 +183,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 log.error("[内容安全] access_token 获取失败,文本检测 fail-close 拦截");
                 // 合并 #1057×master(RUN-29 语义):「审不了」回 MSG_BUSY,master 侧调用方按
                 // isDetectionUnavailable 判「繁忙 ≠ 违规」;真 suggest=review 才回 REVIEW_REQUIRED。
-                return MSG_BUSY;
+                return WxTextCheckResult.unavailable(Reason.TOKEN_UNAVAILABLE, MSG_BUSY);
             }
 
             JSONObject body = new JSONObject();
@@ -191,7 +205,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 log.error("[内容安全] 文本检测无响应,fail-close 拦截。contentLength={}", content.length());
                 // 合并 #1057×master(RUN-29 语义):「审不了」回 MSG_BUSY,master 侧调用方按
                 // isDetectionUnavailable 判「繁忙 ≠ 违规」;真 suggest=review 才回 REVIEW_REQUIRED。
-                return MSG_BUSY;
+                return WxTextCheckResult.unavailable(Reason.UNKNOWN_RESPONSE, MSG_BUSY);
             }
 
             int errcode = Convert.toInt(resp.get("errcode"), -1);
@@ -209,7 +223,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             // 87014 命中违规；其余非 0 错误码容错放行并告警
             if (errcode == 87014)
             {
-                return "内容包含违规信息，请修改后重试";
+                return WxTextCheckResult.reject(Reason.RISKY, "内容包含违规信息，请修改后重试");
             }
             if (errcode != 0)
             {
@@ -218,34 +232,39 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 if (errcode == 40003)
                 {
                     log.error("[内容安全] 文本检测调用方参数错误 errcode={}, fail-close 拦截(非繁忙,重试无用)", errcode);
-                    return MSG_UNAVAILABLE;
+                    return WxTextCheckResult.unavailable(Reason.MISSING_CONTEXT, MSG_UNAVAILABLE);
                 }
                 log.error("[内容安全] 文本检测返回异常 errcode={}, fail-close 拦截", errcode);
                 // 合并 #1057×master(RUN-29 语义):「审不了」回 MSG_BUSY,master 侧调用方按
                 // isDetectionUnavailable 判「繁忙 ≠ 违规」;真 suggest=review 才回 REVIEW_REQUIRED。
-                return MSG_BUSY;
+                return WxTextCheckResult.unavailable(Reason.SERVICE_ERROR, MSG_BUSY);
             }
 
             // errcode==0：再看 result.suggest（risky=拦截，review=人工复审，pass=通过）
             Object resultObj = resp.get("result");
             if (resultObj == null)
             {
-                log.warn("[内容安全] 文本检测成功包缺少 result，转人工复审。contentLength={}", content.length());
-                return IWxContentSecurityService.REVIEW_REQUIRED;
+                log.warn("[内容安全] 文本检测成功包缺少 result，审核未确认。contentLength={}", content.length());
+                return WxTextCheckResult.unavailable(Reason.UNKNOWN_RESPONSE, IWxContentSecurityService.REVIEW_REQUIRED);
             }
             Map<String, Object> r = JSON.parseObject(JSON.toJSONString(resultObj));
             String suggest = Convert.toStr(r.get("suggest"), "");
-            if ("pass".equalsIgnoreCase(suggest)) return null;
+            if ("pass".equalsIgnoreCase(suggest)) return WxTextCheckResult.pass(Reason.PASS);
             if ("risky".equalsIgnoreCase(suggest))
             {
-                return "内容包含违规信息，请修改后重试";
+                return WxTextCheckResult.reject(Reason.RISKY, "内容包含违规信息，请修改后重试");
+            }
+            if (!"review".equalsIgnoreCase(suggest))
+            {
+                log.error("[内容安全] 文本检测未知结论 suggest={}，fail-close。contentLength={}", suggest, content.length());
+                return WxTextCheckResult.unavailable(Reason.UNKNOWN_RESPONSE, IWxContentSecurityService.REVIEW_REQUIRED);
             }
             log.info("[内容安全] 文本需人工复审，suggest={}，contentLength={}", suggest, content.length());
-            return IWxContentSecurityService.REVIEW_REQUIRED;
+            return WxTextCheckResult.reject(Reason.REVIEW_REQUIRED, IWxContentSecurityService.REVIEW_REQUIRED);
         }
         catch (TokenConfigurationException e)
         {
-            return MSG_UNAVAILABLE;
+            return WxTextCheckResult.unavailable(Reason.TOKEN_UNAVAILABLE, MSG_UNAVAILABLE);
         }
         catch (Exception e)
         {
@@ -254,8 +273,25 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     e.getClass().getSimpleName());
             // 合并 #1057×master(RUN-29 语义):「审不了」回 MSG_BUSY,master 侧调用方按
             // isDetectionUnavailable 判「繁忙 ≠ 违规」;真 suggest=review 才回 REVIEW_REQUIRED。
-            return MSG_BUSY;
+            Reason reason = isTimeoutOrNetwork(e) ? Reason.TIMEOUT_OR_NETWORK : Reason.SERVICE_ERROR;
+            return WxTextCheckResult.unavailable(reason, MSG_BUSY);
         }
+    }
+
+    private boolean isTimeoutOrNetwork(Throwable error)
+    {
+        Throwable current = error;
+        while (current != null)
+        {
+            if (current instanceof java.net.SocketTimeoutException
+                    || current instanceof java.net.ConnectException
+                    || current instanceof java.net.UnknownHostException)
+            {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     @Override
@@ -672,6 +708,17 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 return confirmMutation(affected, "节点NPC头像违规已自动下架", bizId);
             }
+            else if (bizType == BIZ_TYPE_MERCHANT_NPC)
+            {
+                com.chengyinhub.business.domain.NpcProfile current =
+                        npcProfileMapper.selectMerchantNpcById(bizId);
+                if (current == null || StringUtils.isEmpty(current.getAvatar()))
+                {
+                    return false;
+                }
+                int affected = npcProfileMapper.hideMerchantNpcAvatarIfCurrent(bizId, current.getAvatar());
+                return confirmMutation(affected, "商家NPC头像违规已自动下架", bizId);
+            }
             else if (bizType == BIZ_TYPE_SQUARE)
             {
                 com.chengyinhub.business.domain.UmsCreativeSquare current =
@@ -888,6 +935,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_NODE_NPC:
                 com.chengyinhub.business.domain.NpcProfile nodeNpc = npcProfileMapper.selectNodeNpcById(id);
                 return nodeNpc != null && containsMediaHash(hash, nodeNpc.getAvatar());
+            case BIZ_TYPE_MERCHANT_NPC:
+                com.chengyinhub.business.domain.NpcProfile merchantNpc = npcProfileMapper.selectMerchantNpcById(id);
+                return merchantNpc != null && containsMediaHash(hash, merchantNpc.getAvatar());
             case BIZ_TYPE_SQUARE:
                 UmsCreativeSquare square = umsCreativeSquareService.selectUmsCreativeSquareById(id);
                 return square != null && containsMediaHash(hash,

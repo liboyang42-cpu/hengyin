@@ -18,28 +18,57 @@ var stopping = false;
 var usingBackground = false;
 var generation = 0;
 var waiters = [];
+<<<<<<< public
 var revokedThroughGeneration = -1;
 var revisions = Object.create(null);
 var revokeListeners = Object.create(null);
+=======
+var revokedEpochs = Object.create(null);
+var pendingStarts = Object.create(null);
+var revocations = [];
+var stopError = null;
+
+function epoch(key) { return revokedEpochs[key] || 0; }
+function settleRevocations() {
+  if (count() === 0 && (stopping || Object.keys(pendingStarts).length > 0) && !stopError) return;
+  var done = revocations;
+  revocations = [];
+  done.forEach(function (item) {
+    clearTimeout(item.timer);
+    if (count() === 0 && stopError) item.reject(stopError);
+    else item.resolve();
+  });
+}
+>>>>>>> private-codex/batch1
 
 function count() { return Object.keys(owners).length; }
 function stopLocation() {
   if (stopping) return;
   stopping = true;
+  stopError = null;
   var completed = false;
-  var finish = function () {
+  var finish = function (err) {
     if (completed) return;
     completed = true;
     stopping = false;
+    stopError = err || null;
+    settleRevocations();
     beginStart();
   };
   try {
-    wx.stopLocationUpdate({ success: finish, fail: finish, complete: finish });
+    wx.stopLocationUpdate({
+      success: function () { finish(null); },
+      fail: function (err) { finish(err || new Error('定位停止失败')); },
+      complete: function (result) {
+        if (!completed) finish(result && /:ok$/.test(result.errMsg || '') ? null : new Error('定位停止结果未知'));
+      },
+    });
   } catch (e) {
-    finish();
+    finish(e);
   }
 }
 
+<<<<<<< public
 function finishSuccess(gen, background) {
   // 撤回前的系统 start 不能代替之后的新授权；补停完成后再为当前持有者真启动。
   if (gen <= revokedThroughGeneration) {
@@ -49,11 +78,16 @@ function finishSuccess(gen, background) {
     stopLocation();
     return;
   }
+=======
+function finishSuccess(gen, background, borrowed) {
+  if (!borrowed) delete pendingStarts[gen];
+>>>>>>> private-codex/batch1
   // release 后旧启动才成功：没有新持有者就必须补偿 stop；若已有新一代启动在等，
   // 全局定位能力已经可用，可直接满足新一代，避免旧成功反过来停掉新行程。
   if (gen !== generation) {
     if (count() === 0) stopLocation();
-    else if (starting) finishSuccess(generation, background);
+    else if (starting) finishSuccess(generation, background, true);
+    settleRevocations();
     return;
   }
   starting = false;
@@ -74,7 +108,8 @@ function finishSuccess(gen, background) {
 }
 
 function finishFailure(gen, err) {
-  if (gen !== generation || started) return;
+  delete pendingStarts[gen];
+  if (gen !== generation || started) { settleRevocations(); return; }
   starting = false;
   started = false;
   usingBackground = false;
@@ -91,9 +126,10 @@ function beginStart() {
   starting = true;
   generation += 1;
   var gen = generation;
+  pendingStarts[gen] = true;
 
   var toForeground = function (bgErr) {
-    if (gen !== generation || count() === 0 || started) return;
+    if (gen !== generation || count() === 0 || started) { delete pendingStarts[gen]; settleRevocations(); return; }
     // 后台权限没开通/用户拒绝 → 退回前台版,功能降级但不中断行程。
     wx.startLocationUpdate({
       success: function () { finishSuccess(gen, false); },
@@ -116,7 +152,7 @@ function beginStart() {
 function acquire(key, opts) {
   opts = opts || {};
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
-  owners[key] = true;
+  owners[key] = opts;
   if (started) { opts.success && opts.success(usingBackground); return; }
   waiters.push({ key: key, opts: opts });
   beginStart();
@@ -137,6 +173,32 @@ function release(key, force) {
   started = false;
   usingBackground = false;
   stopLocation();
+}
+
+/** 只撤回指定用途；共享定位仍有其他用途时保留其持有者。 */
+function revoke(key) {
+  revokedEpochs[key] = epoch(key) + 1;
+  return new Promise(function (resolve, reject) {
+    var item = { resolve: resolve, reject: reject };
+    item.timer = setTimeout(function () {
+      revocations = revocations.filter(function (pending) { return pending !== item; });
+      reject(new Error('定位停止结果未知，请重试'));
+    }, 10000);
+    revocations.push(item);
+    var owner = owners[key];
+    var retryStop = !!stopError;
+    try {
+      if (owner && owner.onRevoke) owner.onRevoke();
+      release(key);
+      if (retryStop && count() === 0 && !stopping) stopLocation();
+      settleRevocations();
+    } catch (err) {
+      release(key);
+      revocations = revocations.filter(function (pending) { return pending !== item; });
+      clearTimeout(item.timer);
+      reject(err);
+    }
+  });
 }
 
 function isBackground() { return started && usingBackground; }
@@ -169,5 +231,9 @@ function revoke(key) {
   (revokeListeners[key] || []).slice().forEach(function (listener) { listener(); });
 }
 
+<<<<<<< public
 module.exports = { acquire: acquire, release: release, revoke: revoke, revision: revision,
   observeRevocation: observeRevocation, hasOwner: hasOwner, isBackground: isBackground, isRunning: isRunning };
+=======
+module.exports = { acquire: acquire, release: release, isBackground: isBackground, isRunning: isRunning, revoke: revoke, epoch: epoch };
+>>>>>>> private-codex/batch1

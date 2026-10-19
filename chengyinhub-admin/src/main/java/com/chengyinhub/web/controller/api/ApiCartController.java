@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -128,11 +129,30 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "remark", description = "订单备注"),
             @Parameter(name = "addressid", description = "收货地址")
     })
-    public AjaxResult orderSettlement(String cartids, String remark, String addressid) {
+    public AjaxResult orderSettlement(String cartids, String remark, String addressid, String requestId) {
         LoginUser loginUser = getLoginUser();
         try {
+            if (requestId == null) {
+                return success(umsMemberCartService.settleCart(loginUser.getUserId(), loginUser.getUsername(),
+                        cartids, remark, addressid));
+            }
             return success(umsMemberCartService.settleCart(loginUser.getUserId(), loginUser.getUsername(),
-                    cartids, remark, addressid));
+                    requestId, cartids, remark, addressid));
+        } catch (com.chengyinhub.common.exception.ServiceException exception) {
+            return error(exception.getMessage());
+        }
+    }
+
+    /** 保留旧 Controller 三参数直接调用合同；HTTP 映射由上方可选 requestId 方法承接。 */
+    public AjaxResult orderSettlement(String cartids, String remark, String addressid) {
+        return orderSettlement(cartids, remark, addressid, null);
+    }
+
+    @GetMapping("/order/settlement/receipt")
+    @Operation(summary = "回读本人积分兑换结果")
+    public AjaxResult settlementReceipt(String requestId) {
+        try {
+            return success(umsMemberCartService.getSettlementReceipt(getLoginUser().getUserId(), requestId));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
         }

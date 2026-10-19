@@ -111,8 +111,20 @@ Page({
             that.setData({ qrcodeUrl: '', state: 'error', errMsg: '团码二维码生成失败，请稍后重试' });
             return;
           }
+          // 以服务端的绝对过期时间为准：签发到回包之间的网络耗时也是 TTL 的一部分。
+          // 若仍按完整 ttlMs 起钟，弱网下会在码已失效后继续展示。
+          const hasExpiresAt = data.expiresAt !== undefined && data.expiresAt !== null && data.expiresAt !== '';
+          const expiresAt = Number(data.expiresAt);
+          const ttlMs = Number(data.ttlMs);
+          const remainingMs = hasExpiresAt && Number.isFinite(expiresAt)
+            ? expiresAt - Date.now()
+            : (Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : 300000);
+          if (!(remainingMs > 0)) {
+            that.setData({ qrcodeUrl: '', state: 'error', errMsg: '团码已过期，请重新出码' });
+            return;
+          }
           that.setData({ qrcodeUrl: data.qrcodeUrl, state: 'ready' });
-          that.startCountdown(Math.floor((data.ttlMs || 300000) / 1000));
+          that.startCountdown(Math.max(1, Math.ceil(remainingMs / 1000)));
           return;
         }
         if (isPermissionDenial(res)) {

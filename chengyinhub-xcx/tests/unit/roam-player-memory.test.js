@@ -23,6 +23,25 @@ function memoryStorage(initial) {
   }
 }
 
+test('迷雾写入必须回读确认，静默丢写、变更和读异常均失败', () => {
+  for (const fault of ['drop', 'changed', 'read-error']) {
+    let written = false
+    let value
+    const storage = {
+      setStorageSync(_key, input) {
+        written = true
+        if (fault !== 'drop') value = fault === 'changed'
+          ? { tiles: {}, serverCursor: 99 } : JSON.parse(JSON.stringify(input))
+      },
+      getStorageSync() {
+        if (written && fault === 'read-error') throw new Error('read unavailable')
+        return value
+      },
+    }
+    assert.equal(createPlayerRoamMemory('101', storage).writeTiles({ aTile: 1 }, 17), false, fault)
+  }
+})
+
 test('漫游探索记忆按玩家隔离，同设备切换账号不会串迷雾与历史', () => {
   const storage = memoryStorage({
     roam_tiles: { legacy: 1 },

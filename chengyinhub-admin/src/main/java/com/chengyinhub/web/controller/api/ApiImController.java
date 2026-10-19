@@ -45,37 +45,70 @@ public class ApiImController extends BaseController
         }
     }
 
+<<<<<<< public
     public AjaxResult messages(String conversation_id, String cursor_id, String size)
     {
         return messages(conversation_id, cursor_id, size, null);
+=======
+    public AjaxResult messages(String conversation_id, String cursor_id, String after_id,
+                               String watermark_id, String size)
+    {
+        return messages(conversation_id, cursor_id, after_id, watermark_id, size, null);
+>>>>>>> private-codex/batch1
     }
 
     @Operation(summary = "会话消息分页")
     @PostMapping("/messages")
+<<<<<<< public
     public AjaxResult messages(String conversation_id, String cursor_id, String size, String after_id)
+=======
+    public AjaxResult messages(String conversation_id, String cursor_id, String after_id,
+                               String watermark_id, String size,
+                               @RequestParam(value = "client_message_id", required = false) String client_message_id)
+>>>>>>> private-codex/batch1
     {
         try
         {
             Long cid = Convert.toLong(conversation_id, 0L);
             Long cursor = Convert.toLong(cursor_id, 0L);
+            Long after = Convert.toLong(after_id, 0L);
+            Long watermark = Convert.toLong(watermark_id, 0L);
             int sz = Convert.toInt(size, 20);
+<<<<<<< public
             return AjaxResult.success(after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
                     : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L)));
+=======
+            if (client_message_id != null)
+            {
+                return AjaxResult.success(imService.findOwnMessage(getAppUserId(), cid, client_message_id));
+            }
+            if (cursor > 0 && after > 0)
+            {
+                return AjaxResult.error("cursor_id 与 after_id 不能同时使用");
+            }
+            if (after_id != null)
+            {
+                return AjaxResult.success(imService.listMessagesAfter(getAppUserId(), cid, after,
+                        watermark > 0 ? watermark : null, sz));
+            }
+            return AjaxResult.success(imService.listMessages(getAppUserId(), cid, cursor, sz));
+>>>>>>> private-codex/batch1
         }
         catch (ServiceException e)
         {
-            AjaxResult result = new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
-            if ("HANGOUT_CLOSED".equals(e.getDetailMessage())) {
-                result.put("errorCode", "HANGOUT_CLOSED");
-                result.put("returnPath", "/subpackageB/pages/im/list/index");
-            }
-            return result;
+            return bizError(e);
         }
         catch (Exception e)
         {
             logger.error("IM 会话消息分页异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
+    }
+
+    /** 供既有直接调用/测试保留的旧签名。 */
+    public AjaxResult messages(String conversation_id, String cursor_id, String size)
+    {
+        return messages(conversation_id, cursor_id, null, null, size);
     }
 
     public AjaxResult send(String conversation_id, String target_member_id, String msg_type, String content, String extra_json)
@@ -139,15 +172,37 @@ public class ApiImController extends BaseController
     {
         try
         {
+<<<<<<< public
             if (read_to == null) imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L));
             else imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L), Convert.toLong(read_to, -1L));
+=======
+            Long cid = Convert.toLong(conversation_id, 0L);
+            if (read_to == null)
+            {
+                imService.markRead(getAppUserId(), cid);
+            }
+            else
+            {
+                imService.markRead(getAppUserId(), cid, Convert.toLong(read_to, 0L));
+            }
+>>>>>>> private-codex/batch1
             return AjaxResult.success();
+        }
+        catch (ServiceException e)
+        {
+            return bizError(e);
         }
         catch (Exception e)
         {
             logger.error("IM 标记已读异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
+    }
+
+    /** 供既有直接调用保留的旧签名。 */
+    public AjaxResult read(String conversation_id)
+    {
+        return read(conversation_id, null);
     }
 
     @Operation(summary = "删除会话")
@@ -280,9 +335,16 @@ public class ApiImController extends BaseController
         }
     }
 
-    /** 业务拒绝(拉黑、违规、参数)把后端原话给用户;其余异常仍走通用文案,不外泄内部信息(3-22)。 */
+    /** 只透传服务端已知终态，普通业务拒绝仍保留原消息。 */
     private static AjaxResult bizError(ServiceException e)
     {
-        return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+        AjaxResult result = new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+        String detail = e.getDetailMessage();
+        if ("HANGOUT_CLOSED".equals(detail) || "IM_CONVERSATION_CLOSED".equals(detail))
+        {
+            result.put("errorCode", detail);
+            result.put("returnPath", "/subpackageB/pages/im/list/index");
+        }
+        return result;
     }
 }

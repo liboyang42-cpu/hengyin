@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -12,6 +14,8 @@ import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.dto.BeforeStartNotifyResult;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.mapper.NotificationDeliveryReceiptMapper;
+import com.chengyinhub.business.notify.NotifyResult;
 import com.chengyinhub.business.notify.NotifyChannel;
 import com.chengyinhub.business.notify.NotifyMessage;
 import com.chengyinhub.business.service.INotifyService;
@@ -81,6 +85,27 @@ public class BeforeStartNotifyRetryContractTest {
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
         ReflectionTestUtils.setField(service, "redisCache", redisCache);
         ReflectionTestUtils.setField(service, "notifyService", wx);
+        NotificationDeliveryReceiptMapper receipts = mock(NotificationDeliveryReceiptMapper.class);
+        Map<Long, String> states = new HashMap<>();
+        when(receipts.claim(eq("BEFORE_START"), eq(ticket.getId()), anyLong(), eq("WECHAT_SUBSCRIBE")))
+                .thenAnswer(inv -> {
+                    Long memberId = inv.getArgument(2);
+                    String state = states.get(memberId);
+                    if (state == null || "FAILED".equals(state)) {
+                        states.put(memberId, "PROCESSING");
+                        return 1;
+                    }
+                    return 0;
+                });
+        when(receipts.complete(eq("BEFORE_START"), eq(ticket.getId()), anyLong(),
+                eq("WECHAT_SUBSCRIBE"), anyString(), any()))
+                .thenAnswer(inv -> { states.put(inv.getArgument(2), inv.getArgument(4)); return 1; });
+        org.springframework.transaction.PlatformTransactionManager manager =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(manager.getTransaction(any())).thenAnswer(inv ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(service, "notificationReceiptService",
+                new NotificationDeliveryReceiptService(receipts, mock(com.chengyinhub.business.service.IImService.class), manager));
         return service;
     }
 
@@ -100,6 +125,7 @@ public class BeforeStartNotifyRetryContractTest {
         FakeCache cache = new FakeCache();
         NotifyServiceImpl real = new NotifyServiceImpl();
         NotifyChannel explodingChannel = new NotifyChannel() {
+            @Override public String channelId() { return "WECHAT_SUBSCRIBE"; }
             @Override
             public boolean send(NotifyMessage message) {
                 // 模拟 P0-2 要接的 JPush SDK 缺类:抛的是 Error,不是 Exception。
@@ -132,7 +158,8 @@ public class BeforeStartNotifyRetryContractTest {
         FakeCache cache = new FakeCache();
         INotifyService wx = mock(INotifyService.class);
         // 关键:失败时**返回 false 而不是抛异常** —— 这正是 best-effort 合同的形状
-        when(wx.notifyBeforeStart(anyLong(), anyString(), anyString())).thenReturn(false);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.failed("WECHAT_SUBSCRIBE", "43101"));
 
         TeamGroupServiceImpl service = newService(cache, wx, ticket(7L), 100L, 101L);
 
@@ -143,7 +170,8 @@ public class BeforeStartNotifyRetryContractTest {
         assertTrue(cache.keys.isEmpty(), "失败却写了去重键 ⇒ 24h 窗口内永不重试,等于永久错过");
 
         // 第二轮:微信恢复了
-        when(wx.notifyBeforeStart(anyLong(), anyString(), anyString())).thenReturn(true);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
         BeforeStartNotifyResult second = service.notifyBeforeStartBatch();
         assertEquals(2, second.getDelivered(), "上一轮失败的两个人,这一轮必须补发成功");
         assertEquals(0, second.getFailed(), "失败已清零");
@@ -155,8 +183,10 @@ public class BeforeStartNotifyRetryContractTest {
         FakeCache cache = new FakeCache();
         INotifyService wx = mock(INotifyService.class);
         // 100 成功、101 失败 —— 混合场景才能同时验"不重发"和"能重试"
-        when(wx.notifyBeforeStart(eq(100L), anyString(), anyString())).thenReturn(true);
-        when(wx.notifyBeforeStart(eq(101L), anyString(), anyString())).thenReturn(false);
+        when(wx.notifyBeforeStartResult(eq(100L), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
+        when(wx.notifyBeforeStartResult(eq(101L), anyString(), anyString()))
+                .thenReturn(NotifyResult.failed("WECHAT_SUBSCRIBE", "43101"));
 
         TeamGroupServiceImpl service = newService(cache, wx, ticket(7L), 100L, 101L);
 
@@ -164,18 +194,20 @@ public class BeforeStartNotifyRetryContractTest {
         assertTrue(cache.keys.contains("team:beforenotify:7:100"), "成功的人必须写键");
         assertFalse(cache.keys.contains("team:beforenotify:7:101"), "失败的人不能写键");
 
-        when(wx.notifyBeforeStart(eq(101L), anyString(), anyString())).thenReturn(true);
+        when(wx.notifyBeforeStartResult(eq(101L), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
         assertEquals(1, service.notifyBeforeStartBatch().getDelivered(), "第二轮只补 101,不能重发 100");
         // 100 全程只被调用一次 = 没有重复打扰已收到的用户
-        verify(wx, times(1)).notifyBeforeStart(eq(100L), anyString(), anyString());
-        verify(wx, times(2)).notifyBeforeStart(eq(101L), anyString(), anyString());
+        verify(wx, times(1)).notifyBeforeStartResult(eq(100L), anyString(), anyString());
+        verify(wx, times(2)).notifyBeforeStartResult(eq(101L), anyString(), anyString());
     }
 
     @Test
     public void 去重粒度必须是票乘人_不能退回按票去重() {
         FakeCache cache = new FakeCache();
         INotifyService wx = mock(INotifyService.class);
-        when(wx.notifyBeforeStart(anyLong(), anyString(), anyString())).thenReturn(true);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         TeamGroupServiceImpl service = newService(cache, wx, ticket(7L), 100L, 101L);
         service.notifyBeforeStartBatch();
@@ -195,7 +227,8 @@ public class BeforeStartNotifyRetryContractTest {
     public void whenText必须是带年份的完整日期_不能是MMdd() {
         FakeCache cache = new FakeCache();
         INotifyService wx = mock(INotifyService.class);
-        when(wx.notifyBeforeStart(anyLong(), anyString(), anyString())).thenReturn(true);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
 
         OmsTicket t = ticket(7L);
         long startMillis = t.getStartTime().getTime();
@@ -203,8 +236,42 @@ public class BeforeStartNotifyRetryContractTest {
         service.notifyBeforeStartBatch();
 
         ArgumentCaptor<String> whenText = ArgumentCaptor.forClass(String.class);
-        verify(wx).notifyBeforeStart(eq(100L), anyString(), whenText.capture());
+        verify(wx).notifyBeforeStartResult(eq(100L), anyString(), whenText.capture());
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date(startMillis)),
                 whenText.getValue(), "whenText 必须含年份:微信 date 类型拒绝 MM-dd 形状");
+    }
+
+    @Test
+    public void unknown收据不得在下一小时盲重发() {
+        FakeCache cache = new FakeCache();
+        INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.unknown("WECHAT_SUBSCRIBE"));
+        TeamGroupServiceImpl service = newService(cache, wx, ticket(7L), 100L);
+
+        assertEquals(1, service.notifyBeforeStartBatch().getFailed());
+        assertEquals(1, service.notifyBeforeStartBatch().getSkipped());
+        verify(wx, times(1)).notifyBeforeStartResult(eq(100L), anyString(), anyString());
+    }
+
+    @Test
+    public void 外部接受后本地落库失败_原processing不得再发() {
+        FakeCache cache = new FakeCache();
+        INotifyService wx = mock(INotifyService.class);
+        when(wx.notifyBeforeStartResult(anyLong(), anyString(), anyString()))
+                .thenReturn(NotifyResult.accepted("WECHAT_SUBSCRIBE"));
+        TeamGroupServiceImpl service = newService(cache, wx, ticket(7L), 100L);
+        NotificationDeliveryReceiptService receiptService =
+                (NotificationDeliveryReceiptService) ReflectionTestUtils.getField(service, "notificationReceiptService");
+        NotificationDeliveryReceiptMapper receipts =
+                (NotificationDeliveryReceiptMapper) ReflectionTestUtils.getField(receiptService, "mapper");
+        when(receipts.complete(anyString(), anyLong(), anyLong(), anyString(), anyString(), any()))
+                .thenThrow(new RuntimeException("db result write failed"));
+
+        assertEquals(0, service.notifyBeforeStartBatch().getDelivered());
+        assertTrue(cache.keys.isEmpty(), "收据失败不得写成功键");
+        cache.keys.clear(); // 模拟 Redis 丢键，持久 PROCESSING 仍必须拦住第二 worker
+        assertEquals(1, service.notifyBeforeStartBatch().getSkipped());
+        verify(wx, times(1)).notifyBeforeStartResult(eq(100L), anyString(), anyString());
     }
 }

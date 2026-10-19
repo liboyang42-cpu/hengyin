@@ -324,7 +324,11 @@ public class ApiAiNpcController extends BaseController
             // 拿空问题去调模型 = 白花钱且必然答非所问
             return AjaxResult.error("没听清，再说一次");
         }
+<<<<<<< public
         // 转写可能跨过通行证有效期，进模型前重新读取当前资格与节点归属。
+=======
+        // 转写可能跨过自玩通行证到期点，进生成链前重新读取当前资格。
+>>>>>>> private-codex/batch1
         gate = gateShopChat(userId, nodeId);
         if (gate.deny != null) return gate.deny;
         node = gate.node;

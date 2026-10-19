@@ -152,7 +152,7 @@ test('authority conflict is preserved and unknown / replay receipt uses the orig
   assert.equal((await receipt).state, 'confirmed');
 });
 
-function pageHarness(adapter, suppliedStorage, realLoad) {
+function pageHarness(adapter, suppliedStorage, realLoad, storageOptions) {
   const modals = [], toasts = [], storage = suppliedStorage || {}, exported = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../pages/club/topic-detail/director.js'), 'utf8'), {
     module: exported, Date, Promise, JSON, setTimeout, clearTimeout,
@@ -164,7 +164,14 @@ function pageHarness(adapter, suppliedStorage, realLoad) {
       if (file.endsWith('toast.js')) return Object.assign(message => toasts.push(message), { success(message) { toasts.push(message); } });
       throw new Error(file);
     },
-    wx: { getStorageSync: key => storage[key], setStorageSync: (key, value) => { storage[key] = value; }, removeStorageSync: key => { delete storage[key]; } },
+    wx: {
+      getStorageSync(key) { if (storageOptions && storageOptions.readError) throw new Error('storage read unavailable'); return storage[key]; },
+      setStorageSync(key, value) {
+        if (storageOptions && storageOptions.dropWrites) return;
+        storage[key] = storageOptions && storageOptions.corruptEpoch ? { epoch: value.epoch + 1 } : value;
+      },
+      removeStorageSync(key) { delete storage[key]; },
+    },
   });
   const page = Object.assign({}, exported.exports.DIRECTOR_METHODS, { data: JSON.parse(JSON.stringify(exported.exports.DIRECTOR_DATA)),
     _activityId: 71, _directorAdapter: adapter, setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback(); } });
@@ -364,6 +371,89 @@ test('offline start confirms first, unknown reads back only, and a current serve
   assert.equal(await page.retryUnknownWrite(), true);
   assert.equal(writes, 1); assert.equal(reads, 2); assert.equal(page.data.writeLocked, false);
   assert.equal(page._genericControl.offlineAnchor, offlineAnchor);
+});
+
+test('旧离线起点回读不采用旧投影或解锁新场次，也不清新检查点', async () => {
+  let resolveOld
+  const snapshot = Object.assign(control([]), { offlineAnchor })
+  const { page, storage } = pageHarness({
+    load: () => new Promise(resolve => { resolveOld = resolve }),
+  }, {
+    'cy.gameDirector.pendingWrite.m99.a71:offline-start': { epoch: 2 },
+    'cy.gameDirector.pendingWrite.m99.a72:offline-start': { epoch: 2 },
+  })
+  page._offlineAnchorPending = { epoch: 2 }
+  page.setData({ writeLocked: true })
+  const reading = page._reconcileOfflineAnchor()
+  page.loadProjection = () => {}
+  page.initDirector(72)
+  const nextPending = page._offlineAnchorPending
+  resolveOld({ activityId: 71, revision: 9, authorityEpoch: 2, status: 'RUNNING', genericControl: snapshot })
+  assert.equal(await reading, false)
+  assert.equal(page._offlineAnchorPending, nextPending)
+  assert.equal(page.data.writeLocked, true)
+  assert.ok(storage['cy.gameDirector.pendingWrite.m99.a72:offline-start'])
+  assert.ok(storage['cy.gameDirector.pendingWrite.m99.a71:offline-start'])
+  assert.equal(page._genericControl.offlineAnchor, undefined)
+})
+
+test('另一场同版本人工账导出迟到不能覆盖当前高水位与签名列表', async () => {
+  const reads = []
+  const { page } = pageHarness({ loadSharedExport: () => new Promise(resolve => reads.push(resolve)) })
+  page.openGenericOps({ currentTarget: { dataset: { action: 'MANUAL_BEGIN' } } })
+  page.initDirector(72)
+  page.applyProjection({ activityId: 72, revision: 9, authorityEpoch: 2, status: 'RUNNING', genericControl: control(['MANUAL_BEGIN']) })
+  page.openGenericOps({ currentTarget: { dataset: { action: 'MANUAL_BEGIN' } } })
+  reads[1]({ activityId: 72, revision: 9, authorityEpoch: 2, highWaterHash: 'b'.repeat(64), configHash: 'd'.repeat(64) })
+  await tick()
+  reads[0]({ activityId: 71, revision: 9, authorityEpoch: 2, highWaterHash: 'a'.repeat(64), configHash: 'c'.repeat(64) })
+  await tick()
+  assert.equal(page.data.genericOpsDraft.highWaterHash, 'b'.repeat(64))
+  assert.equal(page._genericExport.activityId, 72)
+})
+
+test('旧离线开始确认弹窗跨场次后不发送新场次 anchor', async () => {
+  let writes = 0
+  const { page, modals } = pageHarness({ anchorSharedRun: async () => { writes++; return { status: 'unknown-write' } } })
+  page._genericControl.offlineAnchorAvailable = true
+  page.startOfflineRecord()
+  page.initDirector(72)
+  page.applyProjection({ activityId: 72, revision: 9, authorityEpoch: 2, status: 'RUNNING',
+    genericControl: Object.assign(control([]), { offlineAnchorAvailable: true }) })
+  modals[0].success({ confirm: true })
+  await tick()
+  assert.equal(writes, 0)
+})
+
+test('offline start requires persisted epoch readback, silent drops or corrupted records never POST', async () => {
+  for (const fault of [{ dropWrites: true }, { readError: true }, { corruptEpoch: true }]) {
+    let writes = 0;
+    const h = pageHarness({ anchorSharedRun: async () => { writes++; return { status: 'unknown-write' }; } }, {}, false, fault);
+    h.page._genericControl.offlineAnchorAvailable = true;
+    h.page.startOfflineRecord(); h.modals[0].success({ confirm: true });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(writes, 0);
+    assert.equal(h.page.data.writeLocked, false);
+    assert.equal(h.page._offlineAnchorPending, undefined);
+    assert.match(h.toasts[0], /无法保存/);
+  }
+});
+
+test('offline existing checkpoint after an initial read failure is reconciled without another anchor POST', async () => {
+  let writes = 0, reads = 0;
+  const adapter = { anchorSharedRun: async () => { writes++; return { status: 'unknown-write' }; },
+    load: async () => { reads++; return { revision: 9, authorityEpoch: 2, status: 'RUNNING', genericControl: control([]) }; } };
+  const first = pageHarness(adapter); first.page._genericControl.offlineAnchorAvailable = true;
+  first.page.startOfflineRecord(); first.modals[0].success({ confirm: true }); await new Promise(resolve => setTimeout(resolve, 0));
+  const key = Object.keys(first.storage)[0], original = JSON.stringify(first.storage[key]);
+  const fault = { readError: true }, second = pageHarness(adapter, first.storage, false, fault);
+  second.page.initDirector('71');
+  fault.readError = false; second.page._genericControl.offlineAnchorAvailable = true;
+  second.page.startOfflineRecord(); second.modals[0].success({ confirm: true }); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(writes, 1);
+  assert.ok(reads >= 2);
+  assert.equal(JSON.stringify(second.storage[key]), original);
+  assert.equal(second.page.data.writeLocked, true);
 });
 
 test('offline start cancellation, stale availability and epoch never write', () => {

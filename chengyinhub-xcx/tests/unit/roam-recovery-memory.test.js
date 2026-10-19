@@ -2,6 +2,17 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const { createPlayerRoamMemory } = require('../../utils/roam-player-memory')
 
+test('恢复记录可选数组损坏必须拒绝，不能进入恢复Page的map/filter链', () => {
+  const { validRecovery } = require('../../utils/roam-recovery.js')
+  const record = { sessionId: '9007199254740993', pendingTiles: ['wtw3sjq'], finishRequested: true }
+  assert.ok(validRecovery(record), '旧版本缺省字段继续兼容')
+  for (const field of ['allTiles', 'track', 'photos', 'pois']) {
+    assert.equal(!!validRecovery({ ...record, [field]: {} }), false, field)
+    assert.ok(validRecovery({ ...record, [field]: [] }), field)
+    assert.ok(validRecovery({ ...record, [field]: null }), '旧版本空字段继续兼容')
+  }
+})
+
 test('恢复记录写入失败可观测，不能假称已经持久化', () => {
   const memory = createPlayerRoamMemory('9', {
     getStorageSync() { return '' }, setStorageSync() { throw new Error('full') },

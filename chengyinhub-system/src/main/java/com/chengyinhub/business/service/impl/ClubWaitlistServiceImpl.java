@@ -27,7 +27,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+<<<<<<< public
 import java.util.UUID;
+=======
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+>>>>>>> private-codex/batch1
 import java.util.function.Supplier;
 
 @Service
@@ -342,6 +349,7 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     @Override
     public synchronized int maintain(Date now) {
         if (now == null) throw badRequest("维护时间不能为空");
+<<<<<<< public
         Long maxId = mapper.selectWaitlistMaintenanceMaxId();
         if (maxId == null) { java.util.Arrays.fill(maintenanceCursors, 0L); return 0; }
         int changed = 0;
@@ -386,6 +394,61 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
             if (reachedEnd) maintenanceCursors[kind] = 0L;
         }
         return changed;
+=======
+        final Date cutoff = new Date(now.getTime());
+        final Long upperId = mapper.selectWaitlistScanUpperId();
+        if (upperId == null) return 0;
+        int changed = maintainPages("EXPIRE_OFFERED",
+                cursor -> mapper.selectExpiredOfferedPage(cutoff, upperId,
+                        cursor == null ? null : cursor.getOfferExpiresAt(),
+                        cursor == null ? null : cursor.getId(), 100),
+                entry -> expireOffered(entry.getId(), cutoff));
+        changed += maintainPages("CONVERT_CLAIMED",
+                cursor -> mapper.selectClaimedPaidPage(upperId, cursor == null ? null : cursor.getId(), 100),
+                entry -> convertClaimedByRegistration(entry.getRegistrationId()));
+        changed += maintainPages("EXPIRE_CLAIMED",
+                cursor -> mapper.selectClaimedTerminalPage(upperId, cursor == null ? null : cursor.getId(), 100),
+                entry -> expireClaimedTerminal(entry.getRegistrationId(), cutoff));
+        Set<String> inspectedScopes = new HashSet<>();
+        changed += maintainPages("PROMOTE",
+                cursor -> mapper.selectPromotableWaitlistScopePage(cutoff, upperId,
+                        cursor == null ? null : cursor.getJoinedAt(), cursor == null ? null : cursor.getId(), 100),
+                entry -> {
+                    requirePositive(entry.getActivityId(), entry.getTicketId());
+                    if (!inspectedScopes.add(entry.getActivityId() + ":" + entry.getTicketId())) return false;
+                    return promoteNext(entry.getActivityId(), entry.getTicketId(), cutoff);
+                });
+        return changed;
+    }
+
+    private int maintainPages(String kind,
+                              Function<ClubWaitlistEntry, List<ClubWaitlistEntry>> query,
+                              Function<ClubWaitlistEntry, Boolean> work) {
+        int changed = 0;
+        ClubWaitlistEntry cursor = null;
+        while (true) {
+            List<ClubWaitlistEntry> page = safe(query.apply(cursor));
+            if (page.isEmpty()) return changed;
+            for (ClubWaitlistEntry entry : page) {
+                try {
+                    if (maintenanceRequiresNew(() -> work.apply(entry))) changed++;
+                } catch (Exception poison) {
+                    logger.error("候补维护单项失败，已隔离并继续: kind={} entryId={}",
+                            kind, entry == null ? null : entry.getId(), poison);
+                }
+            }
+            if (page.size() < 100) return changed;
+            ClubWaitlistEntry last = page.get(page.size() - 1);
+            if (last == null || last.getId() == null || (cursor != null
+                    && Objects.equals(cursor.getId(), last.getId())
+                    && Objects.equals(cursor.getOfferExpiresAt(), last.getOfferExpiresAt())
+                    && Objects.equals(cursor.getJoinedAt(), last.getJoinedAt()))) {
+                throw conflict("候补扫描游标未推进");
+            }
+            // 失败行仍在库内，必须采用查询页游标，不能按成功数偏移。
+            cursor = last;
+        }
+>>>>>>> private-codex/batch1
     }
 
     private boolean isActiveParticipantForPromotionLocked(Long clubId, Long memberId,
@@ -568,15 +631,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private void requirePositive(Long... values) {
         for (Long value : values) if (value == null || value <= 0) throw badRequest("候补参数不完整");
     }
-    private List<Long> safe(List<Long> values) {
-        return values == null ? Collections.<Long>emptyList() : values;
-    }
-    private Long scopedId(java.util.Map<String, Object> scope, String key) {
-        Object value = scope == null ? null : scope.get(key);
-        if (!(value instanceof Number) || ((Number) value).longValue() <= 0) {
-            throw conflict("候补晋级范围状态不完整");
-        }
-        return ((Number) value).longValue();
+    private <T> List<T> safe(List<T> values) {
+        return values == null ? Collections.<T>emptyList() : values;
     }
     private ServiceException badRequest(String message) { return new ServiceException(message, HttpStatus.BAD_REQUEST); }
     private ServiceException forbidden(String message) { return new ServiceException(message, HttpStatus.FORBIDDEN); }

@@ -8,16 +8,21 @@ const file = path.resolve(__dirname, '../../subpackageB/pages/im/chat/index.js')
 function chat() {
   let page;
   const requests = [];
+  const storage = new Map();
   let imageCallback;
   let account = 1;
   const app = { sendRequest: r => requests.push(r), getUserID: () => account,
     chooseImage: cb => { imageCallback = cb; } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     require: createRequire(file), getApp: () => app,
-    Page: p => { page = p; }, wx: {}, setTimeout: () => {}, clearTimeout() {},
+    Page: p => { page = p; }, wx: {
+      getStorageSync: key => storage.get(key),
+      setStorageSync: (key, value) => storage.set(key, value),
+      removeStorageSync: key => storage.delete(key),
+    }, setTimeout: () => {}, clearTimeout() {},
   }, { filename: file });
   page.data = { ...page.data, loadState: 'ready', conversationId: 26, myId: 1, msgs: [], text: 'same text' };
-  page.setData = patch => Object.assign(page.data, patch);
+  page.setData = (patch, rendered) => { Object.assign(page.data, patch); if (rendered) rendered(); };
   return { page, requests, selectedImage: () => imageCallback(['https://cdn/image.jpg']), account: id => { account = id; } };
 }
 test('a retry and an intentional identical new message must have distinguishable request identities', () => {
@@ -61,7 +66,7 @@ test('polling the committed message replaces pending bubble and late failure can
   h.page.onSend();
   h.page.pollNew();
   h.requests[1].success({ code: 200, data: { list: [{ id: 61, senderId: 1, msgType: 1,
-    content: 'same text', clientMessageId: h.requests[0].data.client_message_id }] } });
+    content: 'same text', clientMessageId: h.requests[0].data.client_message_id }], nextAfter: 61, watermark: 61, hasMore: false } });
   h.requests[0].fail({ errMsg: 'lost' });
   assert.equal(h.page.data.msgs.length, 1);
   assert.equal(h.page.data.msgs[0].id, 61);

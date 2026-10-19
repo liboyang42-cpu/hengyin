@@ -27,7 +27,7 @@ const roleGuard = require('../../../utils/roleGuard.js');
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
-const { createServerDraftSaver } = require('../utils/publish/server-draft.js');
+const { createServerDraftSaver, topicIdOf } = require('../utils/publish/server-draft.js');
 const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../../../utils/publish/pro-editor-draft.js');
 
@@ -6992,7 +6992,7 @@ Page({
       this._serverDraftSaver = createServerDraftSaver({
         save: (payload, cb) => {
           const editingId = this.data.editingTopicId;
-          const handlers = reply(cb);
+          const handlers = reply(cb, data => !editingId || String(topicIdOf(data)) === String(editingId));
           sendUiStateRequest(app, this._topicEndpoint(payload, editingId), {
             data: JSON.stringify(editingId ? Object.assign({}, payload, { id: editingId }) : payload),
             method: 'POST',
@@ -7045,14 +7045,23 @@ Page({
   _runServerDraft(apiData, publish) {
     const previous = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
+    if (String(memberId) !== String(app.getUserID())) { cyToast('登录账号已变化，请重新打开草稿'); return; }
+    let boundTopicId = this.data.editingTopicId || '';
+    const localContent = () => JSON.stringify([this.data.formData, this.data.pendingMaterials,
+      this.data.selectedCategoryIds, this.data.selectedCategoryNames, this.data.startDateTime, this.data.endDateTime]);
+    const submittedContent = localContent();
     const saver = this.getServerDraftSaver();
     this.setData({ draftSaving: !publish, submitting: publish, submitError: '' });
     cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
     const handlers = {
+      isCurrent: () => String(memberId) === String(app.getUserID())
+        && String(boundTopicId) === String(this.data.editingTopicId || ''),
+      hasChanges: () => localContent() !== submittedContent,
       onSaved: (topicId) => {
         if (String(this.data.editingTopicId) === String(topicId)) return;
         // 服务端已经建好这份草稿:之后的保存都 update 同一个主题 —— 回读失败后重试也不会再建一份
-        this.setData({ editingTopicId: String(topicId), editIsDraft: true, editLoaded: true });
+        boundTopicId = String(topicId);
+        this.setData({ editingTopicId: boundTopicId, editIsDraft: true, editLoaded: true });
         this._persistDraftEnvelope();
       },
       onSuccess: (result) => {
@@ -7087,11 +7096,13 @@ Page({
   },
 
   _onServerDraftFailed(res, publish, memberId) {
+    const publishUnknown = res.stage === 'publish' && res.networkError;
+    if (res.localChanged || publishUnknown) this._persistDraftEnvelope();
     const reason = res.networkError
       ? '网络暂时不可用，当前内容仍在本机，请重试'
       : (res.msg || '保存失败，当前内容已保留，请重试');
     // 存进去了、只是发布这一步没成:先换上回读到的版本(拿到真实编号),本机恢复稿此时才可以清
-    if (res.stage === 'publish' && res.detail) {
+    if (res.stage === 'publish' && res.detail && !res.localChanged && !publishUnknown) {
       this._adoptServerDraft = { previous: null, memberId };
       this._draftAutosaveReady = false;
       this.applyEditingTopic(res.detail);
@@ -7104,7 +7115,11 @@ Page({
       return;
     }
     const sheet = res.stage === 'publish'
-      ? { title: '草稿已保存，但还没有发布', sub: '最新内容已经在云端草稿里，可以直接重试发布', meta: '' }
+      ? { title: publishUnknown ? '发布结果待核对' : '草稿已保存，但还没有发布', sub: publishUnknown
+          ? '草稿已保存，但发布结果尚未确认；请从「我的项目」核对，原内容仍在本机。'
+          : res.localChanged
+          ? '本次提交的版本已保存，后续修改仍在本机，请再保存后发布'
+          : '最新内容已经在云端草稿里，可以直接重试发布', meta: '' }
       : res.stage === 'readback'
         ? { title: '草稿已存到云端，但没能读回确认', sub: '再点一次「保存草稿」会更新同一份草稿，不会重复创建', meta: '草稿仍在本机' }
         : publish
@@ -7121,22 +7136,28 @@ Page({
     const reviewNextStep = pub.commercialNextStep || '主题与引用的玩法将一起审核。';
     const topicId = result.topicId;
     // 发布的是刚存进去且回读确认过的那一版,本机恢复稿到这里才清
+    if (result.localChanged) this._persistDraftEnvelope();
     this._draftAutosaveReady = false;
-    [previous, { topicId }].forEach((identity) => {
+    if (!result.localChanged) [previous, { topicId }].forEach((identity) => {
       if (!identity) return;
       try { proEditorDraft.removeDraft(wx, identity, { memberId }); } catch (error) {}
     });
     analytics.track('topic_publish_success', {
       bizType: 'topic',
       bizId: topicId || null,
-      properties: { name: this.data.formData.name }
+      properties: { name: result.detail.topic.name }
     });
     this._resultSheetNext = '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId
       + (this.data.operationScope ? '&scope=MERCHANT' : '');
     this.setData({
       submitting: false, submitError: '', editIsDraft: false,
       resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
+<<<<<<< public
         sub: pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接站点、找俱乐部带团。',
+=======
+        sub: result.localChanged ? '本次提交的版本已处理，后续修改仍保留在本机，尚未发布。'
+          : pendingReview ? '主题与引用的玩法将一起审核。' : '草稿已发布，接下来去招商家承接站点、找俱乐部带团。',
+>>>>>>> private-codex/batch1
         why: '', duration: RESULT_SHEET_MS }
     });
   },

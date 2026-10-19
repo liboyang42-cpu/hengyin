@@ -12,8 +12,13 @@ const assert = require('node:assert/strict');
 // storage 桩
 const store = {};
 global.wx = {
+<<<<<<< public
   getStorageSync: (k) => { if (failReads) throw new Error('storage read failed'); return store[k]; },
   setStorageSync: (k, v) => { if (failWrites) throw new Error('storage write failed'); store[k] = v; },
+=======
+  getStorageSync: (k) => store[k] === undefined ? undefined : JSON.parse(JSON.stringify(store[k])),
+  setStorageSync: (k, v) => { store[k] = JSON.parse(JSON.stringify(v)); },
+>>>>>>> private-codex/batch1
   removeStorageSync: (k) => { delete store[k]; },
 };
 
@@ -47,6 +52,126 @@ beforeEach(() => {
   delete require.cache[require.resolve(ANALYTICS_PATH)];
   analytics = require(ANALYTICS_PATH);
   analytics.setSessionContext({ sessionId: 's1' });
+});
+
+test('在途期间队列溢出后，旧成功只删原事件，不误删新队头', () => {
+  analytics.track('content_view', { bizId: 'first', idempotencyKey: 'first-event-key-0001' });
+  for (let i = 1; i <= 105; i++) {
+    analytics.track('content_view', { bizId: 'next' + i, idempotencyKey: 'next-event-key-' + i });
+  }
+  assert.equal(store[QKEY].length, 100);
+  const firstRetained = store[QKEY][0].bizId;
+  sent[0].success({ code: 200, data: { accepted: 1 } });
+  assert.equal(store[QKEY].length, 100, '原事件已被上限截掉，不能再按旧数量删除新事件');
+  assert.equal(store[QKEY][0].bizId, firstRetained);
+  assert.equal(sent[1].data.events[0].bizId, firstRetained);
+});
+
+test('入队未确认保存时不触发投递，原队列保持可重试', () => {
+  analytics.track('content_view', { bizId: 'saved' });
+  sent[0].fail();
+  const original = JSON.stringify(store[QKEY]);
+  const write = wx.setStorageSync;
+  for (const fault of ['drop', 'throw']) {
+    wx.setStorageSync = () => { if (fault === 'throw') throw new Error('quota'); };
+    try {
+      assert.equal(analytics.track('content_view', { bizId: 'not saved' }), false);
+      assert.equal(sent.length, 1);
+      assert.equal(JSON.stringify(store[QKEY]), original);
+    } finally { wx.setStorageSync = write; }
+  }
+});
+
+test('队列读取失败或损坏不当作空队列覆盖旧记录', () => {
+  analytics.track('content_view', { bizId: 'saved' });
+  sent[0].fail();
+  const read = wx.getStorageSync;
+  const original = JSON.stringify(store[QKEY]);
+  wx.getStorageSync = () => { throw new Error('read unavailable'); };
+  try {
+    assert.equal(analytics.track('content_view', { bizId: 'new' }), false);
+    assert.equal(JSON.stringify(store[QKEY]), original);
+    assert.equal(sent.length, 1);
+  } finally { wx.getStorageSync = read; }
+  store[QKEY] = 'broken queue';
+  assert.doesNotThrow(() => analytics.track('content_view', { bizId: 'new' }));
+  assert.equal(store[QKEY], 'broken queue');
+});
+
+test('成功后出队保存失败不立即重复投递，恢复后仍使用原事件ID和内容', () => {
+  analytics.track('content_view', { bizId: 'original' });
+  const original = JSON.parse(JSON.stringify(sent[0].data.events));
+  const write = wx.setStorageSync;
+  wx.setStorageSync = () => {};
+  try {
+    sent[0].success({ code: 200, data: { accepted: 1 } });
+    assert.equal(sent.length, 1, '未确认出队时不能递归重新投递');
+    assert.deepEqual(store[QKEY], original);
+  } finally { wx.setStorageSync = write; }
+  analytics.flush();
+  assert.deepEqual(sent[1].data.events, original);
+});
+
+test('旧批次重复回调不得解锁新投递或删除新事件', () => {
+  analytics.track('content_view', { bizId: 'A' });
+  analytics.track('content_view', { bizId: 'B' });
+  sent[0].success({ code: 200, data: { accepted: 1 } });
+  const next = sent[1];
+  sent[0].success({ code: 200, data: { accepted: 1 } });
+  assert.equal(store[QKEY].length, 1);
+  assert.equal(store[QKEY][0].bizId, 'B');
+  analytics.track('content_view', { bizId: 'C' });
+  assert.equal(sent.length, 2, '新投递的锁仍有效');
+  next.success({ code: 200, data: { accepted: 1 } });
+  assert.equal(store[QKEY][0].bizId, 'C');
+});
+
+
+test('冷重进后仍重试原事件ID、时间与内容，不重新归一化', () => {
+  analytics.track('content_view', { bizId: 'original' });
+  const original = JSON.parse(JSON.stringify(sent[0].data.events));
+  sent[0].fail();
+  delete require.cache[require.resolve(ANALYTICS_PATH)];
+  analytics = require(ANALYTICS_PATH);
+  analytics.setSessionContext({ sessionId: 'new-session' });
+  analytics.flush();
+  assert.deepEqual(sent[1].data.events, original);
+});
+
+test('统一请求通道同步抛错时不崩溃、不丢队列，下一次可用原事件重试', () => {
+  const appGetter = global.getApp;
+  global.getApp = () => ({
+    ...appGetter(),
+    sendRequest() { throw new Error('transport unavailable'); },
+  });
+  try {
+    assert.doesNotThrow(() => analytics.track('content_view', { bizId: 'original' }));
+    assert.equal(store[QKEY].length, 1);
+  } finally { global.getApp = appGetter; }
+  const original = JSON.parse(JSON.stringify(store[QKEY]));
+  analytics.flush();
+  assert.deepEqual(sent[0].data.events, original);
+});
+
+test('缺失或非法 accepted 回执不消费原队列，合法重复确认零新增可出队', () => {
+  analytics.track('content_view', { bizId: 'original' });
+  const original = JSON.parse(JSON.stringify(store[QKEY]));
+  for (const body of [
+    { code: 200 },
+    { code: 200, data: {} },
+    { code: 200, data: { accepted: -1 } },
+    { code: 200, data: { accepted: 2 } },
+    { code: 200, data: { accepted: '1' } },
+    { code: 200, data: { accepted: 0.5 } },
+  ]) {
+    const count = sent.length;
+    sent[count - 1].success(body);
+    assert.deepEqual(store[QKEY], original);
+    assert.equal(sent.length, count, '畸形回执不能自动继续发送');
+    analytics.flush();
+  }
+  sent[sent.length - 1].success({ code: 200, data: { accepted: 0 } });
+  assert.equal(store[QKEY].length, 0, '重复原事件导致零新增仍是合法回执');
 });
 
 test('迁移:走 app.sendRequest、POST 正确地址、不手拼 Authorization', () => {

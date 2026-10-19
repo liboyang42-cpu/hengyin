@@ -215,7 +215,11 @@ test('首张当前世代 image load 前不启动计时或持续定位', () => {
   page._fogMode = 'screen';
   page._fogScreenG = {};
   page._fogStartPending = { p: page._c, startTracking: true, generation: 6,
+<<<<<<< public
     locationRevision: require('../../utils/location/bg-tracker.js').revision('roam') };
+=======
+    locationEpoch: require('../../utils/location/bg-tracker.js').epoch('roam') };
+>>>>>>> private-codex/batch1
   page._addReveal = () => {};
   let clocks = 0;
   let locations = 0;

@@ -302,6 +302,15 @@ function pendingWriteKey(activityId) {
     ? '' : 'cy.gameDirector.pendingWrite.m' + memberId + '.a' + String(activityId)
 }
 
+function directorContext(page) {
+  const activityId = page._activityId, generation = page._directorGeneration
+  const sessionId = page._directorSessionId, epoch = page.data.authorityEpoch
+  const actorKey = pendingWriteKey(activityId)
+  return () => page._activityId === activityId && page._directorGeneration === generation
+    && page._directorSessionId === sessionId && page.data.authorityEpoch === epoch
+    && pendingWriteKey(activityId) === actorKey
+}
+
 function legacyPendingWriteKey(activityId) {
   return 'cy.gameDirector.pendingWrite.' + String(activityId || '')
 }
@@ -343,14 +352,19 @@ function savePendingWrite(activityId, command) {
   const key = pendingWriteKey(activityId)
   if (!key) return false
   try {
-    wx.setStorageSync(key, {
+    const index = {
       activityId: String(activityId),
       nodeId: command.nodeId == null ? null : command.nodeId,
       requestId: command.requestId,
       expectedRevision: command.expectedRevision,
       action: command.action,
-    })
-    return true
+    }
+    const matches = value => !!value && Object.keys(value).length === Object.keys(index).length
+      && Object.keys(index).every(field => value[field] === index[field])
+    const previous = wx.getStorageSync(key)
+    if (previous && !matches(previous)) return false
+    wx.setStorageSync(key, index)
+    return matches(wx.getStorageSync(key))
   } catch (_) {
     return false
   }
@@ -629,13 +643,16 @@ const DIRECTOR_METHODS = {
   // 由宿主页(活动详情)在自己的 onLoad 里按需调用 —— 只有拿得到 activityId
   // 且当前身份能管活动时才进导演台那套状态机。
   initDirector(activityId) {
+    this._directorGeneration = (this._directorGeneration || 0) + 1
     this._activityId = activityId || null
+    this._directorSessionId = null
     const pendingWrite = activityId ? readPendingWrite(activityId) : null
     this._pendingCommand = null
     this._pendingReceiptIndex = pendingWrite
     this._unknownRequestId = pendingWrite ? pendingWrite.requestId : ''
     this._autoReceiptStarted = false
     this._offlineAnchorPending = null
+    this._offlineAnchorReading = null
     try {
       const key = pendingWriteKey(activityId), pending = key ? wx.getStorageSync(key + ':offline-start') : null
       if (pending && Number.isSafeInteger(pending.epoch) && pending.epoch > 0) this._offlineAnchorPending = pending
@@ -656,11 +673,15 @@ const DIRECTOR_METHODS = {
   loadProjection() {
     const that = this
     if (!this._activityId) return
+    const current = directorContext(this)
+    const token = this._directorLoadToken = (this._directorLoadToken || 0) + 1
     this.setData({ loadState: 'loading', errorText: '' })
     this._getAdapter().load(this._activityId).then(function (projection) {
+      if (!current() || token !== that._directorLoadToken) return
       that.applyProjection(projection)
       if (typeof that.loadPlanFallback === 'function') that.loadPlanFallback()
     }).catch(function (error) {
+      if (!current() || token !== that._directorLoadToken) return
       that.setData({
         loadState: classifyLoadError(error),
         errorText: (error && error.message) || '活动导演台暂时无法打开',
@@ -669,6 +690,7 @@ const DIRECTOR_METHODS = {
   },
 
   applyProjection(projection) {
+    this._directorSessionId = projection.sessionId
     const that = this
     const readiness = projection.readiness || {}
     const availableActions = projection.availableActions || []
@@ -755,9 +777,9 @@ const DIRECTOR_METHODS = {
     this.setData(Object.assign({ genericOpsSheet: true, genericOpsAction: action, genericOpsTitle: option.title, genericOpsDraft: draft,
       genericOpsError: '', genericOpsLedgerRows: [] }, genericOpsForm(action, draft, this._genericControl)))
     if (!['MANUAL_BEGIN', 'STAFF_MANUAL_SIGN', 'MANUAL_IMPORT', 'MANUAL_REVIEW'].includes(action)) return
-    const revision = this.data.revision
+    const revision = this.data.revision, current = directorContext(this)
     this._getAdapter().loadSharedExport(this._activityId).then(snapshot => {
-      if (!this.data.genericOpsSheet || this.data.genericOpsAction !== action || this.data.revision !== revision) return
+      if (!current() || !this.data.genericOpsSheet || this.data.genericOpsAction !== action || this.data.revision !== revision) return
       if (snapshot.revision !== revision || snapshot.authorityEpoch !== this.data.authorityEpoch) {
         this.setData({ genericOpsError: '本局版本已变化，请关闭并重新读取' }); return
       }
@@ -773,7 +795,10 @@ const DIRECTOR_METHODS = {
       this.setData(Object.assign({ genericOpsDraft: filled,
         genericOpsLedgerRows: rows,
         genericOpsError: snapshot.manual && snapshot.manual.needsReview ? '人工账高水位尚待复核，不能先签署或执行' : '' }, genericOpsForm(action, filled, this._genericControl)))
-    }).catch(error => this.setData({ genericOpsError: error.message || '本局账本未读到，请关闭后重试' }))
+    }).catch(error => {
+      if (current() && this.data.genericOpsSheet && this.data.genericOpsAction === action && this.data.revision === revision)
+        this.setData({ genericOpsError: error.message || '本局账本未读到，请关闭后重试' })
+    })
   },
 
   closeGenericOps() {
@@ -783,19 +808,34 @@ const DIRECTOR_METHODS = {
   startOfflineRecord() {
     if (this.data.writeLocked || !this._genericControl || this._genericControl.offlineAnchorAvailable !== true) return false
     const epoch = this.data.authorityEpoch, revision = this.data.revision
+    const current = directorContext(this)
     modal.show({ title: '开始离线记录', content: '记录当前进度后，按纸账记下现场操作。恢复网络后先暂停本局，再核对并导入已签记录。',
       confirmText: '开始记录', cancelText: '暂不开始', success: result => {
-        if (!result.confirm || this.data.writeLocked) return
+        if (!result.confirm || this.data.writeLocked || !current()) return
         if (!this._genericControl || this._genericControl.offlineAnchorAvailable !== true || this.data.authorityEpoch !== epoch || this.data.revision !== revision) {
           toast('本局状态已变化，请重新读取'); return
         }
         const key = pendingWriteKey(this._activityId)
         if (!key) { toast('请先确认当前登录身份'); return }
-        try { wx.setStorageSync(key + ':offline-start', { epoch }) }
+        try {
+          const pending = wx.getStorageSync(key + ':offline-start')
+          if (pending) {
+            const keys = Object.keys(pending)
+            if (keys.length !== 1 || keys[0] !== 'epoch' || !Number.isSafeInteger(pending.epoch) || pending.epoch < 1) throw new Error('invalid offline checkpoint')
+            this._offlineAnchorPending = { epoch: pending.epoch }
+            this.setData({ writeLocked: true, writeState: 'unknown-write', canRetryUnknownWrite: false })
+            this._reconcileOfflineAnchor()
+            return
+          }
+          wx.setStorageSync(key + ':offline-start', { epoch })
+          const saved = wx.getStorageSync(key + ':offline-start')
+          if (!saved || Object.keys(saved).length !== 1 || saved.epoch !== epoch) throw new Error('offline epoch not persisted')
+        }
         catch (_) { toast('无法保存核对状态，未开始离线记录'); return }
-        this._offlineAnchorPending = { epoch }
+        const pending = this._offlineAnchorPending = { epoch }
         this.setData({ writeLocked: true, writeState: 'submitting', writeMessage: '正在确认离线记录起点…', canRetryUnknownWrite: false })
         this._getAdapter().anchorSharedRun(this._activityId).then(response => {
+          if (!current() || this._offlineAnchorPending !== pending) return
           if (response && response.status === 'business-error') {
             this._clearOfflineAnchorPending()
             this.setData({ writeLocked: false, writeState: 'idle', writeMessage: response.message || '离线记录未开始' })
@@ -803,7 +843,7 @@ const DIRECTOR_METHODS = {
             this.loadProjection(); return
           }
           return this._reconcileOfflineAnchor()
-        }).catch(() => this._reconcileOfflineAnchor())
+        }).catch(() => current() && this._offlineAnchorPending === pending ? this._reconcileOfflineAnchor() : false)
       }
     })
     return true
@@ -816,9 +856,12 @@ const DIRECTOR_METHODS = {
 
   _reconcileOfflineAnchor() {
     if (!this._offlineAnchorPending || this._offlineAnchorReading) return false
-    this._offlineAnchorReading = true
+    const pending = this._offlineAnchorPending, current = directorContext(this)
+    const token = this._directorLoadToken = (this._directorLoadToken || 0) + 1
+    const reading = this._offlineAnchorReading = {}
     this._autoReceiptStarted = true
     return this._getAdapter().load(this._activityId).then(projection => {
+      if (!current() || this._offlineAnchorPending !== pending || token !== this._directorLoadToken) return false
       this.applyProjection(projection)
       const control = projection.genericControl, anchor = control && control.offlineAnchor
       if (!anchor || anchor.epoch !== this._offlineAnchorPending.epoch || anchor.epoch !== control.run.authorityEpoch
@@ -831,9 +874,10 @@ const DIRECTOR_METHODS = {
       toast('离线记录起点已确认')
       return true
     }).catch(() => {
+      if (!current() || this._offlineAnchorPending !== pending || token !== this._directorLoadToken) return false
       this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '离线记录结果待确认，请重新核对；不会重复开始。', canRetryUnknownWrite: false })
       return false
-    }).finally(() => { this._offlineAnchorReading = false })
+    }).finally(() => { if (this._offlineAnchorReading === reading) this._offlineAnchorReading = null })
   },
 
   inputGenericOps(event) {
@@ -1305,7 +1349,9 @@ const DIRECTOR_METHODS = {
       toast('无法安全保存，请稍后重试')
       return false
     }
+    const current = directorContext(this)
     this._getAdapter().submit(command).then(function (result) {
+      if (!current() || that._pendingCommand !== command) return
       if (that._handleDirectorAuthorityConflict(result)) return
       if (result && (result.state === 'unknown-write' || result.state === 'business-error'
         || (command.action === 'PLAN_FALLBACK' || that._genericControl) && result.raw && result.raw.receipt && result.raw.receipt.replayed)) {
@@ -1344,6 +1390,7 @@ const DIRECTOR_METHODS = {
       // 写成功后主题维度的核销数/场次也变了,宿主页一起刷,别停在旧态
       if (typeof that.fetchDetail === 'function') that.fetchDetail()
     }).catch(function () {
+      if (!current() || that._pendingCommand !== command) return
       that._unknownRequestId = requestId
       that.setData({
         writeState: 'unknown-write',
@@ -1363,9 +1410,12 @@ const DIRECTOR_METHODS = {
     if (!this.data.writeLocked || !this._unknownRequestId) return
     const that = this
     const requestId = this._unknownRequestId
+    const pending = this._pendingCommand || this._pendingReceiptIndex
+    const current = directorContext(this)
     this.setData({ writeState: 'receipt-reading', writeMessage: '正在核对最终结果…' })
     this._getAdapter().readReceipt(this._activityId, requestId,
-      this._pendingCommand || this._pendingReceiptIndex).then(function (result) {
+      pending).then(function (result) {
+      if (!current() || (that._pendingCommand || that._pendingReceiptIndex) !== pending || that._unknownRequestId !== requestId) return
       if (!result || result.state === 'pending' || result.state === 'business-error') {
         that.setData({
           writeState: 'unknown-write',
@@ -1392,6 +1442,7 @@ const DIRECTOR_METHODS = {
         { icon: confirmed ? 'success' : 'none' })
       that.loadProjection()
     }).catch(function () {
+      if (!current() || (that._pendingCommand || that._pendingReceiptIndex) !== pending || that._unknownRequestId !== requestId) return
       that.setData({
         writeState: 'unknown-write',
         writeMessage: '暂时无法核对，写操作继续锁定',
@@ -1431,7 +1482,9 @@ const DIRECTOR_METHODS = {
       return false
     }
     this.setData({ writeState: 'submitting', writeMessage: '正在用原请求号重试…', writeLocked: true })
+    const current = directorContext(this)
     this._getAdapter().submit(command).then(function (result) {
+      if (!current() || that._pendingCommand !== command) return
       if (that._handleDirectorAuthorityConflict(result)) return
       if (!result || result.state === 'unknown-write' || result.state === 'business-error') {
         that.setData({
@@ -1450,6 +1503,7 @@ const DIRECTOR_METHODS = {
       toast(confirmed ? '结果已确认' : '操作未生效', { icon: confirmed ? 'success' : 'none' })
       that.loadProjection()
     }).catch(function () {
+      if (!current() || that._pendingCommand !== command) return
       that.setData({
         writeState: 'unknown-write', writeMessage: '重试结果仍待核对，写操作继续锁定', writeLocked: true,
       })

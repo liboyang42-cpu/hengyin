@@ -35,7 +35,7 @@ function load(options = {}) {
     wxUploadFile(opts) {
       state.uploads.push(opts);
       // 真实 wx.uploadFile 是回调式的:这里同步回一个成功包,走完共享入口的完整链路
-      opts.success({ data: JSON.stringify({ code: 200, url: options.uploadUrl || 'https://o/up.png' }) });
+      opts.success({ statusCode: 200, data: JSON.stringify({ code: 200, url: options.uploadUrl || 'https://o/up.png' }) });
       return { abort() {} };
     },
     getBaseUrl: () => 'https://base',

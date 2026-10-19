@@ -18,10 +18,19 @@ public interface IImService
     /** 会话消息分页(校验我是参与者)；返回 { list(按时间正序), nextCursor, hasMore } */
     Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size);
 
+<<<<<<< public
     Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size, Long afterId);
 
     /** 只读原发送收据，不重新发消息。 */
     ImMessage readSentMessage(Long memberId, Long conversationId, String clientMessageId);
+=======
+    /** 增量同步；afterId 之后按 id 升序读取，并把首次查询水位固定在 watermarkId。 */
+    Map<String, Object> listMessagesAfter(Long memberId, Long conversationId, Long afterId,
+                                          Long watermarkId, int size);
+
+    /** 在当前会话内按客户端消息标识精确回读本人原消息。 */
+    ImMessage findOwnMessage(Long memberId, Long conversationId, String clientMessageId);
+>>>>>>> private-codex/batch1
 
     /** 发送消息(文本/图片)；内容安全前置；成功返回落库的消息 */
     ImMessage send(Long memberId, Long conversationId, Long targetMemberId, Integer msgType, String content, String extraJson);
@@ -38,7 +47,12 @@ public interface IImService
     /** 标记会话已读 */
     void markRead(Long memberId, Long conversationId);
 
+<<<<<<< public
     void markRead(Long memberId, Long conversationId, Long readTo);
+=======
+    /** 仅把客户端实际消费到的本会话消息推进为已读；读位单调不回退。 */
+    void markRead(Long memberId, Long conversationId, Long readToMessageId);
+>>>>>>> private-codex/batch1
 
     /** 删除会话(仅对当前用户隐藏) */
     void deleteConversation(Long memberId, Long conversationId);

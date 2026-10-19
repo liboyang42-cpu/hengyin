@@ -25,7 +25,7 @@ function makeApp(requests) {
   };
 }
 
-function mountPage(rel, extraRequires) {
+function mountPage(rel, extraRequires, clock) {
   const requests = [];
   const navigations = [];
   const app = makeApp(requests);
@@ -38,14 +38,15 @@ function mountPage(rel, extraRequires) {
     stopPullDownRefresh() {}, getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
     getSystemInfoSync: () => ({}),
   };
+  const intervals = [];
   vm.runInNewContext(read(rel), {
     getApp: () => app,
     Page(p) { definition = p; },
     Component(p) { definition = p; },
     getCurrentPages: () => [{}, {}],
     setTimeout(fn) { if (fn) fn(); return 1; },
-    setInterval() { return 1; },
-    clearInterval() {}, clearTimeout() {}, console, Set, Date, JSON, Math, Object, String, Number, Array,
+    setInterval(fn) { intervals.push(fn); return intervals.length; },
+    clearInterval() {}, clearTimeout() {}, console, Set, Date: (clock && clock.Date) || Date, JSON, Math, Object, String, Number, Array,
     require(id) {
       if (extraRequires && extraRequires[id]) return extraRequires[id];
       return require(path.resolve(path.dirname(file), id));
@@ -56,7 +57,7 @@ function mountPage(rel, extraRequires) {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback.call(this); },
   });
-  return { page, requests };
+  return { page, requests, intervals };
 }
 
 // club/detail 的依赖比团码页重,按 club-e-fixes-gate-contract.test.js 的既有做法逐个替换
@@ -107,6 +108,47 @@ test('CU-C-78 group-code:后端真的回了失败回执时也是 error 态(端�
     .success({ code: 500, msg: '团码二维码生成失败，请稍后重试' });
   assert.equal(page.data.state, 'error');
   assert.match(page.data.errMsg, /二维码/);
+});
+
+test('C补充:真实页面回包按绝对到期时间扣除延迟，过期拒绝，缺字段兼容 ttl', () => {
+  class FixedDate extends Date { static now() { return 1_000_000; } }
+  const delayed = mountPage('pages/club/group-code/index.js', null, { Date: FixedDate });
+  delayed.page.onLoad({ activityId: '30' });
+  delayed.requests[0].success({ code: 200, data: { code: 'signed', qrcodeUrl: 'qr', expiresAt: 1_004_100, ttlMs: 300000 } });
+  assert.equal(delayed.page.data.state, 'ready');
+  assert.equal(delayed.page._countdown, 5, '4.1 秒剩余向上取整，不按完整 ttl 重启');
+
+  const expired = mountPage('pages/club/group-code/index.js', null, { Date: FixedDate });
+  expired.page.onLoad({ activityId: '30' });
+  expired.requests[0].success({ code: 200, data: { code: 'signed', qrcodeUrl: 'qr', expiresAt: 999_999, ttlMs: 300000 } });
+  assert.equal(expired.page.data.state, 'error');
+  assert.equal(expired.page.data.qrcodeUrl, '');
+  assert.match(expired.page.data.errMsg, /已过期/);
+  assert.equal(expired.intervals.length, 0);
+
+  for (const expiresAt of [undefined, null, '', '异常值']) {
+    const legacy = mountPage('pages/club/group-code/index.js', null, { Date: FixedDate });
+    legacy.page.onLoad({ activityId: '30' });
+    legacy.requests[0].success({ code: 200, data: { code: 'signed', qrcodeUrl: 'qr', expiresAt, ttlMs: 12_500 } });
+    assert.equal(legacy.page.data.state, 'ready', `旧回包 expiresAt=${String(expiresAt)} 应兼容`);
+    assert.equal(legacy.page._countdown, 13);
+  }
+});
+
+test('C补充:旧 epoch 的迟到成功回包不覆盖新请求页面状态或计时', () => {
+  class FixedDate extends Date { static now() { return 2_000_000; } }
+  const mounted = mountPage('pages/club/group-code/index.js', null, { Date: FixedDate });
+  mounted.page.setData({ activityId: '30' });
+  mounted.page.issue();
+  mounted.page.issue();
+  assert.equal(mounted.requests.length, 2);
+  mounted.requests[1].success({ code: 200, data: { code: 'new', qrcodeUrl: 'new-qr', expiresAt: 2_009_000 } });
+  assert.equal(mounted.page.data.qrcodeUrl, 'new-qr');
+  assert.equal(mounted.page._countdown, 9);
+  mounted.requests[0].success({ code: 200, data: { code: 'old', qrcodeUrl: 'old-qr', expiresAt: 2_100_000 } });
+  assert.equal(mounted.page.data.qrcodeUrl, 'new-qr');
+  assert.equal(mounted.page._countdown, 9);
+  assert.equal(mounted.intervals.length, 1, '迟到回包不得另起计时器');
 });
 
 test('CU-C-78 club/detail:回执成功但没有 qrcodeUrl 时不进 ready,也不把签名令牌铺进码区', () => {

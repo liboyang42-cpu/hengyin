@@ -843,7 +843,7 @@ public class ApiMerchantController extends BaseController {
             try {
                 // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
                 wxContentSecurityService.submitMediaCheckOne(
-                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
+                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, save.getId(),
                         avatar, merchantOpenid(access.getOwnerMemberId()));
             } catch (Exception ignore) {}
         }

@@ -3,6 +3,47 @@ const assert = require('node:assert/strict')
 
 const { createGameSessionClient } = require('../../utils/game-session-client.js')
 
+test('请求启动同步抛错通过既有终态返回，读取为网络失败、写入保持未知', async () => {
+  const client = createGameSessionClient({ sendRequest() { throw new Error('transport startup failure'); } });
+  const reads = [() => client.loadProjection('player', 71), () => client.loadMerchantEntries(), () => client.loadClubRecapExport(71),
+    () => client.loadSharedControl(71), () => client.loadSharedExport(71), () => client.readReceipt(71, 'req-merchant-71-ready')];
+  for (const read of reads) assert.equal((await read()).status, 'network-error');
+  const command = await client.submitAction('merchant', commandInput());
+  assert.equal(command.status, 'unknown'); assert.equal(command.requestId, 'req-merchant-71-ready');
+  assert.equal((await client.anchorSharedRun(71)).status, 'unknown-write');
+});
+
+test('命令按提交时的JSON快照发送，迟到回执仍匹配原活动', async () => {
+  const h = requestHarness(), client = createGameSessionClient(h);
+  const input = commandInput({ payload: { entries: [{ amount: 12 }], note: 'original' }, authorityEpoch: 3 });
+  const task = client.submitAction('merchant', input);
+  input.activityId = 99; input.payload.entries[0].amount = 90; input.payload.note = 'changed'; input.authorityEpoch = 9;
+  assert.equal(h.calls[0].data.activityId, 71);
+  assert.deepEqual(h.calls[0].data.payload, { entries: [{ amount: 12 }], note: 'original' });
+  assert.equal(h.calls[0].data.authorityEpoch, 3);
+  h.calls[0].success({ code: 200, data: { activityId: 71, requestId: input.requestId,
+    action: 'STATION_READY', outcome: 'APPLIED', receiptId: 201, revision: 5 } });
+  assert.equal((await task).status, 'success');
+});
+
+test('不能编码的命令在请求前失败，已有成功回执不被后续同步异常改成未知', async () => {
+  const h = requestHarness(), client = createGameSessionClient(h);
+  const circular = {}; circular.self = circular;
+  for (const payload of [circular, { value: BigInt(1) }]) {
+    const task = client.submitAction('merchant', commandInput({ payload }));
+    assert.equal(h.calls.length, 0);
+    const result = await task;
+    assert.equal(result.status, 'business-error'); assert.equal(result.requestId, 'req-merchant-71-ready');
+  }
+  assert.equal(h.calls.length, 0);
+  const confirmed = createGameSessionClient({ sendRequest(options) {
+    options.success({ code: 200, data: { activityId: 71, requestId: options.data.requestId,
+      action: 'STATION_READY', outcome: 'APPLIED', receiptId: 201, revision: 5 } });
+    throw new Error('after confirmed callback');
+  } });
+  assert.equal((await confirmed.submitAction('merchant', commandInput())).status, 'success');
+});
+
 function requestHarness() {
   const calls = []
   return {
