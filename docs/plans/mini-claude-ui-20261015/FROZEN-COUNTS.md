@@ -1,5 +1,7 @@
 # 冻结计数累计表（BL-171，2026-10-16）
 
+> **2026-10-19 更新**：用户已批准冻结数值更新 A–H，已在移植分支 `claude/mini-ui-on-master-20261019`（`b4b1ffa8`）落地，该分支单测 0 失败、ui-integrity PASS。本表保留为 10-16 的历史实测记录，不代表当前待批项。
+
 > 只写文档，不改任何计数文件。基线 `claude/mini-ui-features-20261015`（`7587358c`）。
 > 方法：对 79 个 open `claude/bl-*`/`claude/cl*` PR 中**有小程序代码改动**的分支（排除 tests 后 diff 非空，共 78 个），逐个在临时 worktree 用 `FROZEN-COUNTS-measure.js` 按各计数测试**同一扫描口径**实测：
 > `app.json` 页面数、`route-matrix` 路由数（`build-route-matrix.build()`）、`nav-page-title` 页数（含 `<cy-page-title` 的页面 wxml）、`action-ledger` 控件数（`buildLedger().controlCount`，即重建后应有值）、`get-auth-matrix` 直接 GET 数 / req 包装 GET 数、成功 toast 数（棘轮上限 101）。同时读取各分支测试文件里写的期望值。
