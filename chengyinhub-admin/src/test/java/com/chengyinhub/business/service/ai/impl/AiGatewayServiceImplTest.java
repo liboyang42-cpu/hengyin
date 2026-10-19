@@ -97,11 +97,11 @@ class AiGatewayServiceImplTest {
         // @Value not processed outside Spring → set fields manually
         ReflectionTestUtils.setField(aiModelConfig, "dailyLimit", 20);
         ReflectionTestUtils.setField(aiModelConfig, "npcDailyLimit", 100);
-        ReflectionTestUtils.setField(aiModelConfig, "provider", "mock");
+        ReflectionTestUtils.setField(aiModelConfig, "provider", "deepseek");
         mockLlm = mock(LlmClient.class);
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(mockLlm.name()).thenReturn("mock");
+        when(mockLlm.name()).thenReturn("deepseek");
         when(mockLlm.chat(anyString(), anyString())).thenReturn("{\"result\":\"ok\"}");
 
         // 默认: 内容安全放行
@@ -140,7 +140,7 @@ class AiGatewayServiceImplTest {
                 "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
 
         assertNotNull(result);
-        assertEquals("mock", result.getModel());
+        assertEquals("deepseek", result.getModel());
         assertNotNull(result.getText());
         assertNotNull(result.getTraceId());
         assertEquals(0, result.getSafetyFlag());
@@ -416,7 +416,7 @@ class AiGatewayServiceImplTest {
     @Test
     void cacheOnlyLogsSameTraceIdAsReturned() {
         // cache-only 分支只有注入 sceneRouter 且 isCacheOnly=true 才可达
-        // (默认 setUp 不注入 → selectClient 走 resolveClient(provider="mock") → 拿到 mockLlm)
+        // (默认 setUp 不注入 → selectClient 走 resolveClient(provider="deepseek") → 拿到 mockLlm)
         AiSceneRouter sceneRouter = mock(AiSceneRouter.class);
         when(sceneRouter.resolve(anyString())).thenReturn("cache");
         when(sceneRouter.isCacheOnly(anyString())).thenReturn(true);
@@ -597,4 +597,216 @@ class AiGatewayServiceImplTest {
         assertEquals(reserved, refunded);
         verify(mockLlm, never()).chat(anyString(), anyString());
     }
+    // A02: these test doubles never contact a paid provider.
+    private void assertProviderUnavailable() {
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(reserved, refunded);
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void legacyUnknownProviderDoesNotUseAvailableMock() {
+        ReflectionTestUtils.setField(aiModelConfig, "provider", "missing");
+        when(mockLlm.name()).thenReturn("mock");
+        assertProviderUnavailable();
+    }
+
+    @Test
+    void sceneProviderMissingDoesNotUseAvailableMock() {
+        ReflectionTestUtils.setField(service, "sceneRouter", new AiSceneRouter());
+        when(mockLlm.name()).thenReturn("mock");
+        assertProviderUnavailable();
+    }
+
+    @Test
+    void explicitLegacyMockConfigurationCannotSucceed() {
+        ReflectionTestUtils.setField(aiModelConfig, "provider", "mock");
+        when(mockLlm.name()).thenReturn("mock");
+        assertProviderUnavailable();
+    }
+
+    @Test
+    void sceneBeanAliasCannotReturnMock() {
+        ReflectionTestUtils.setField(service, "sceneRouter", new AiSceneRouter());
+        ReflectionTestUtils.setField(service, "llmClientsByBeanName",
+                Collections.singletonMap("deepseekLlmClient", mockLlm));
+        when(mockLlm.name()).thenReturn("mock");
+        assertProviderUnavailable();
+    }
+
+    @Test
+    void unknownSceneRefundsAndDoesNotCallMock() {
+        ReflectionTestUtils.setField(service, "sceneRouter", new AiSceneRouter());
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "unregistered_scene", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(reserved, refunded);
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void configuredRealSceneBeanIsUsed() {
+        ReflectionTestUtils.setField(service, "sceneRouter", new AiSceneRouter());
+        ReflectionTestUtils.setField(service, "llmClientsByBeanName",
+                Collections.singletonMap("deepseekLlmClient", mockLlm));
+        assertEquals("deepseek", service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u").getModel());
+        verify(mockLlm).chat("s", "u");
+    }
+
+    @Test
+    void bothSelectionPathsRejectUnconfiguredRealClientWithoutNetwork() {
+        // requireReady rejects before HTTP: both scene and legacy provider selection are covered.
+        for (boolean routed : new boolean[] {false, true}) {
+            for (boolean enabled : new boolean[] {false, true}) {
+                ReflectionTestUtils.setField(service, "clientMap", null);
+                ReflectionTestUtils.setField(service, "sceneRouter", routed ? new AiSceneRouter() : null);
+                LlmClient unavailable = new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient(
+                        "deepseek", "https://unused.invalid", "", "test", enabled, 1);
+                ReflectionTestUtils.setField(service, "llmClients", Collections.singletonList(unavailable));
+                AiServiceException error = assertThrows(AiServiceException.class,
+                        () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+                assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+                assertTrue(error.getMessage().contains("配置缺失"));
+            }
+        }
+        assertEquals(4, reserved.size());
+        assertEquals(reserved, refunded);
+    }
+
+    private String repeatText(char value, int length) {
+        char[] chars = new char[length];
+        java.util.Arrays.fill(chars, value);
+        return new String(chars);
+    }
+
+    private String uniqueText(int first, int length) {
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < length; i++) text.append((char) (first + i));
+        return text.toString();
+    }
+
+    @Test
+    void unsafeUserSuffixBeyondTwoThousandNeverReachesProvider() {
+        String prompt = repeatText('a', 2100) + "UNSAFE_SUFFIX";
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenAnswer(inv ->
+                ((String) inv.getArgument(0)).contains("UNSAFE_SUFFIX")
+                        ? "内容包含违规信息，请修改后重试" : null);
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", prompt));
+        assertEquals(AiServiceException.Reason.INPUT_BLOCKED, error.getReason());
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void assembledSystemContextIsReviewedBeforeProvider() {
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenAnswer(inv ->
+                ((String) inv.getArgument(0)).contains("UNSAFE_CONTEXT")
+                        ? "内容包含违规信息，请修改后重试" : null);
+        assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "UNSAFE_CONTEXT", "safe"));
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void longSafeInputPreservesEveryCharacterAndOriginalProviderArguments() {
+        String system = uniqueText(0x4e00, 2100);
+        String user = uniqueText(0x6000, 1999) + "\uD83D\uDE00" + uniqueText(0x7000, 2001);
+        service.generate(MEMBER_ID, "club", "merchant_plan", system, user);
+        verify(mockLlm).chat(system, user);
+        ArgumentCaptor<String> parts = ArgumentCaptor.forClass(String.class);
+        verify(wxContentSecurityService, org.mockito.Mockito.atLeastOnce()).checkText(parts.capture(), anyString());
+        java.util.List<String> reviewed = parts.getAllValues();
+        String assembled = system + "\n" + user;
+        int previousEnd = 0;
+        // Last captured part is the output; all preceding parts cover input in order with overlap.
+        for (int i = 0; i < reviewed.size() - 1; i++) {
+            String part = reviewed.get(i);
+            assertTrue(part.length() <= 2000);
+            assertTrue(!Character.isLowSurrogate(part.charAt(0)));
+            assertTrue(!Character.isHighSurrogate(part.charAt(part.length() - 1)));
+            int start = assembled.indexOf(part, Math.max(0, previousEnd - 101));
+            assertTrue(start >= 0 && start <= previousEnd, "review chunks cannot leave a gap");
+            previousEnd = start + part.length();
+        }
+        assertEquals(assembled.length(), previousEnd);
+    }
+
+    @Test
+    void longOutputSuffixIsBlockedBeforeReturningResult() {
+        String output = repeatText('o', 2100) + "UNSAFE_OUTPUT";
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(output);
+        when(wxContentSecurityService.checkText(anyString(), anyString())).thenAnswer(inv ->
+                ((String) inv.getArgument(0)).contains("UNSAFE_OUTPUT") ? "生成内容违规" : null);
+        assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(0, refunded.size(), "model ran; output rejection keeps existing quota policy");
+    }
+
+    @Test
+    void outputReviewOutageIsUnavailableAndKeepsUsedQuota() {
+        when(wxContentSecurityService.checkText(anyString(), anyString()))
+                .thenReturn(null).thenReturn(IWxContentSecurityService.MSG_BUSY);
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(0, refunded.size());
+    }
+
+    @Test
+    void outputReviewExceptionIsUnavailableAndKeepsUsedQuota() {
+        when(wxContentSecurityService.checkText(anyString(), anyString()))
+                .thenReturn(null).thenThrow(new IllegalStateException("review unavailable"));
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(0, refunded.size());
+    }
+
+    @Test
+    void emptyProviderReplyCannotBecomeSuccessfulResult() {
+        when(mockLlm.chat(anyString(), anyString())).thenReturn(null);
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(reserved, refunded);
+    }
+
+    @Test
+    void laterInputReviewFailureRefundsBeforeAnyProviderCall() {
+        when(wxContentSecurityService.checkText(anyString(), anyString()))
+                .thenReturn(null).thenThrow(new IllegalStateException("review unavailable"));
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", repeatText('u', 4000)));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        assertEquals(reserved, refunded);
+        verify(mockLlm, never()).chat(anyString(), anyString());
+    }
+
+    @Test
+    void providerTimeoutFailsWithoutSuccessfulResult() {
+        when(mockLlm.chat(anyString(), anyString())).thenThrow(new RuntimeException("request timed out"));
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> service.generate(MEMBER_ID, "club", "merchant_plan", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        // Existing refund policy is retained here; unknown-outcome accounting is phase two.
+        assertEquals(reserved, refunded);
+    }
+
+    @Test
+    void reviewChunksNeverSplitSurrogatePairAtLimitOrOverlap() {
+        String user = repeatText('a', 1897) + "\uD83D\uDE00" + repeatText('b', 98)
+                + "\uD83D\uDE00" + repeatText('c', 2000);
+        service.generate(MEMBER_ID, "club", "merchant_plan", "s", user);
+        ArgumentCaptor<String> parts = ArgumentCaptor.forClass(String.class);
+        verify(wxContentSecurityService, org.mockito.Mockito.atLeastOnce()).checkText(parts.capture(), anyString());
+        for (String part : parts.getAllValues()) {
+            assertTrue(part.length() <= 2000);
+            assertTrue(!Character.isLowSurrogate(part.charAt(0)));
+            assertTrue(!Character.isHighSurrogate(part.charAt(part.length() - 1)));
+        }
+        verify(mockLlm).chat("s", user);
+    }
+
 }
