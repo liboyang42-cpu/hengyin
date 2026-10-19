@@ -57,6 +57,7 @@ function stopLocation() {
   try {
     wx.stopLocationUpdate({ success: finish, fail: finish, complete: finish });
   } catch (e) {
+    if (completed) throw e; // 来自重启后的消费者回调
     finish();
   }
 }
