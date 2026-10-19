@@ -98,3 +98,10 @@ BL-185/186 是主监督写的卡，BL-187 是监督线写的卡，三张都在�
 **主包体积阻塞(发版 preflight 硬限)**:移植分支主包未压缩 3,235,112 B,超 3 MiB 棘轮 89,384 B;master 自身只剩约 1.7 KB(#259 之后)。本线主包增量 91,123 B,其中只有约 13 KB 是单一分包独用、可下沉的工具(nickname-check、audit-detail、merchant-subscription-view、safety-rating、merchant-safety-summary、merchant-node-favorite);其余在主包 tab 页漫游(BL-01/02/03/41/70 约 20 KB)、多分包共用组件(举报半屏 12 KB、circle-theme 9 KB)、AI 对话导出/清除、集邮册等。需要决策后才能合 master。
 
 **集成分支照旧作为云端开发基线**:新 PR 照常合入,并同步移植到移植分支(#280 / BL-224 已同步)。待定位置:收藏据点页(node-favorites)未注册、无入口;官方路线入口随 master 漫游改版消失。
+
+## 云端代管(2026-10-19 起,用户出差)
+
+- 移植分支最新 `96da5312`:本线代码已下沉分包(6 个单分包工具、举报半屏改跨包异步组件、AI 对话组件下沉会员分包、圈层主题表两分包各一份并有一致性单测),主包 3,235,112 → 3,169,696 B,仍超 3 MiB 23,968 B(约等于本线漫游功能,需 master 腾空间或分批上)。
+- Codex #69 头 `b90b44b2` 自身让 master 主包超 6,559 B(CI 不跑发版 preflight),已在 #69 留体积复核评论(含一处更正)。
+- 新增云端例程「hengyin 协调者(云端代管 :25)」`trig_01VLcUSL11R8BuTiAovHj27R`:合入监督判 OK 的 PR(同一套全量单测/ui-integrity 对比)、移植到 `claude/mini-ui-on-master-20261019`(带上面的路径映射)、只读观察 master/#69/#18、在本文件记一行。不碰 master、不改 A–H 冻结数值。
+- 仍等用户:A–H 冻结数值审批;主包空间方案;收藏据点页入口、官方路线入口位置。
