@@ -102,16 +102,16 @@
       ]
     },
     "port-f3-growth": {
-      "lineage": "port/f3-be-20261019 (F3 + #294 deadlock retry ported onto master e1ae7514)",
-      "registered_source": "cfea9c749aae21eed49d5732f89a3a2e16641e54",
+      "lineage": "port/f3-be-20261019 (F3 + #294 deadlock retry on master, merged with integrate/master-port-20261019 a53883f1)",
+      "registered_source": "89e874250182d079a0a4642a3f2205c0020b4fc1",
       "note": "Master-side port of F3 growth concurrency (12) with @DeadlockRetry; test file is byte-identical to 604b8c66 (#294 head: truncate both tables before each test, wait for the InnoDB LOCK WAIT).",
       "classes": [
         "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT"
       ]
     },
     "port-f3-evidence": {
-      "lineage": "port/f3-be-20261019 (master e1ae7514 based)",
-      "registered_source": "0f97bcf6db5c76bfe18cc4c287777ec1290e5193",
+      "lineage": "port/f3-be-20261019 (merged with integrate/master-port-20261019 a53883f1)",
+      "registered_source": "89e874250182d079a0a4642a3f2205c0020b4fc1",
       "note": "F3 RR old read view evidence for redeemExploreChapterAndRecord (4): same-ticket lock-first read view, early read view negative control, cross-path completion under REPEATABLE READ vs READ COMMITTED. The max-year evidence is FunnelMaxDateMySqlIT in batch funnel-max-date (#296), not duplicated here.",
       "classes": [
         "com.chengyinhub.business.it.RedeemExploreReadViewMySqlIT"
