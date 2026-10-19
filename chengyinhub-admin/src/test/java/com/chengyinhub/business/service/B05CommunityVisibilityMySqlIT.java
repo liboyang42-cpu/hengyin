@@ -154,6 +154,9 @@ class B05CommunityVisibilityMySqlIT {
         jdbc.execute("create table community_post_revision(id bigint auto_increment primary key,post_id bigint,editor_member_id bigint,snapshot_version int,immutable_snapshot_json json,edit_reason varchar(500),review_state varchar(16),create_time datetime,unique(post_id,snapshot_version))");
         jdbc.execute("create table community_post_media(id bigint,post_id bigint,media_type varchar(32),derived_object_key varchar(255),mime_type varchar(100),width int,height int,duration_ms bigint,sort_order int,alt_text varchar(255),review_state varchar(16),retention_state varchar(16))");
         jdbc.execute("create table community_post_reference(id bigint,post_id bigint,reference_type varchar(32),reference_id bigint,snapshot_json json,privacy_snapshot varchar(32),invalidated_at datetime)");
+        // master 的 selectReferences 另 LEFT JOIN 上架主题投影 topic_id：活动补 del_flag/topic_id 两列及空主题表。
+        jdbc.execute("create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime,del_flag int,topic_id bigint)");
+        jdbc.execute("create table cms_topic(id bigint primary key,status int,user_status int,del_flag int,is_template int)");
         jdbc.execute("create table community_post_mention(post_id bigint,mentioned_member_id bigint)");
         jdbc.update("insert into ums_member values (11,'synthetic author',''),(8,'synthetic viewer','')");
     }
