@@ -3,6 +3,19 @@ const cyToast = require('../../../utils/toast.js');
 const { activityStatusMeta, activityStatusText } = require('../../../utils/activity-status');
 const officialChannel = require('../../../utils/merchant-official-channel.js');
 const app = getApp();
+const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
+
+function authorization() {
+  return typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+}
+function hasSession() { return !!(memberId(app) && authorization()); }
+function currentPrivate(page) {
+  const epoch = page._readEpoch || 0, owner = memberId(app), token = authorization();
+  return (res, statusCode) => !page._hidden && !page._unloaded && (page._readEpoch || 0) === epoch
+    && ((owner === memberId(app) && token === authorization())
+      || res && res.reason === 'sessionChanged' || failureStatus(res, statusCode) === 401 && !hasSession());
+}
 
 // 日期兼容:后端 Date 可能是毫秒数或 "yyyy-MM-dd HH:mm:ss" 字符串
 function toTs(v) {
@@ -57,6 +70,12 @@ Page({
     _all: [],
     _mine: [],
     loading: true,
+    publicLoading: true,
+    mineLoading: false,
+    mineAuthRequired: false,
+    mineAccessDenied: false,
+    loadErrorMsg: '',
+    mineErrorMsg: '',
     loadError: false,   // /api/official/events 失败
     mineError: false,   // /api/official/my-events 失败
     curError: false,    // 当前 tab 数据源的错误(applyFilter 派生,防两接口串台)
@@ -71,11 +90,65 @@ Page({
   },
 
   onLoad() {
+    this._hidden = false;
+    this._unloaded = false;
+    this._ownerId = memberId(app);
+    this._authorization = authorization();
     this.fetchAll();
     this.checkPublish();
   },
   onShow() {
-    if (this._loaded) this.fetchMine();
+    const hidden = this._hidden;
+    this._hidden = false;
+    const changed = this._ownerId !== memberId(app) || this._authorization !== authorization();
+    if (changed) {
+      this.resetPrivate(!hasSession());
+      this._ownerId = memberId(app);
+      this._authorization = authorization();
+    }
+    if (hidden && (!this._loaded || this.data.publicLoading)) this.fetchAll();
+    else if (this._loaded || changed || hidden) this.fetchMine();
+    if (changed || hidden) this.checkPublish();
+  },
+  onHide() {
+    this._hidden = true;
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    this._allSeq = (this._allSeq || 0) + 1;
+    this._mineSeq = (this._mineSeq || 0) + 1;
+    this._publishSeq = (this._publishSeq || 0) + 1;
+    this.setData({ mineLoading: false });
+  },
+  onUnload() { this.onHide(); this._unloaded = true; },
+
+  resetPrivate(authRequired) {
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    this._mineSeq = (this._mineSeq || 0) + 1;
+    this._publishSeq = (this._publishSeq || 0) + 1;
+    this._mineLoaded = false;
+    this._loginRequired = !!authRequired;
+    this.setData({ _mine: [], mineLoading: false, mineError: !!authRequired,
+      mineAuthRequired: !!authRequired, mineAccessDenied: false, mineErrorMsg: '', canPublish: false });
+    this.applyFilter();
+  },
+
+  reloadPrivate() {
+    this._ownerId = memberId(app);
+    this._authorization = authorization();
+    this.resetPrivate(!hasSession());
+    this.fetchMine();
+    this.checkPublish();
+  },
+
+  mineFailure(res, statusCode) {
+    if (recoverReadSession(this, app, res, function () { this.resetPrivate(!hasSession()); }, this.reloadPrivate, statusCode)) return;
+    if (isLoginRequired(app, res, statusCode) || !authorization()) { this.resetPrivate(true); return; }
+    this._mineLoaded = true;
+    const denied = failureStatus(res, statusCode) === 403;
+    if (denied) this.setData({ _mine: [] });
+    this.setData({ mineLoading: false, mineError: true,
+      mineAuthRequired: false, mineAccessDenied: denied,
+      mineErrorMsg: app.getRequestErrorMessage(res, '活动列表暂时没能打开，请稍后重试') });
+    this.applyFilter();
   },
 
   // 深链直达(栈深=1)时返回键无处可退,兜底回首页
@@ -85,13 +158,26 @@ Page({
   },
 
   checkPublish() {
+    if (this._hidden || this._unloaded) return;
+    this.setData({ canPublish: false });
+    if (!hasSession() || this._loginRequired) return;
+    const current = currentPrivate(this), seq = (this._publishSeq || 0) + 1;
+    this._publishSeq = seq;
+    const failed = (res, statusCode) => {
+      if (!current(res, statusCode) || this._publishSeq !== seq) return;
+      this.setData({ canPublish: false });
+      if (res && res.reason === 'sessionChanged' || isLoginRequired(app, res, statusCode)) this.mineFailure(res, statusCode);
+    };
     app.sendRequest({
       url: '/api/official/can-publish', method: 'GET', hideLoading: true,
       success: (res) => {
+        if (!current(res) || this._publishSeq !== seq) return;
         if (res && (res.code == 200 || res.code == '200')) {
           this.setData({ canPublish: !!(res.data && res.data.canPublish) });
-        }
-      }
+        } else failed(res);
+      },
+      successStatusAbnormal: failed,
+      fail: failed,
     });
   },
 
@@ -100,47 +186,79 @@ Page({
   // 所有路径(含 401 重登失败→fail、重试再 401→statusAbnormal)必落其一;
   // 不用 complete:401 重登窗口它会先于终态开火,导致假空态/丢错误态。
   fetchAll() {
-    this.setData({ loading: true, loadError: false, curError: false, errorMsg: '' });
-    const done = (patch) => { this.setData(Object.assign({ loading: false }, patch)); this.applyFilter(); };
+    if (this._hidden || this._unloaded) return;
+    const seq = (this._allSeq || 0) + 1;
+    this._allSeq = seq;
+    this.setData({ publicLoading: true, loadError: false, loadErrorMsg: '' });
+    this.applyFilter();
+    const done = (patch) => {
+      if (this._hidden || this._unloaded || this._allSeq !== seq) return;
+      this.setData(Object.assign({ publicLoading: false }, patch)); this.applyFilter();
+    };
     app.sendRequest({
       url: '/api/official/events', method: 'GET', data: {}, hideLoading: true, silentError: true,
       success: (res) => {
         if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)) {
+          if (this._hidden || this._unloaded || this._allSeq !== seq) return;
           this._loaded = true;
           done({ _all: res.data.filter(this._isCompleteEvent).map(this._decorate) });
         } else {
-          done({ loadError: true, errorMsg: app.getRequestErrorMessage(res, '网络开了点小差，请稍后再试') });
+          done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络开了点小差，请稍后再试') });
         }
       },
       successStatusAbnormal: (data) => {
-        done({ loadError: true, errorMsg: app.getRequestErrorMessage(data, '服务暂时不可用，请稍后再试') });
+        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(data, '服务暂时不可用，请稍后再试') });
       },
       fail: (res) => {
-        done({ loadError: true, errorMsg: app.getRequestErrorMessage(res, '网络异常，请稍后再试') });
+        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，请稍后再试') });
       },
     });
     this.fetchMine();
   },
   fetchMine() {
-    const done = (patch) => {
-      this.setData(patch);
-      if (this.data.tab === 3) this.applyFilter();
+    if (this._hidden || this._unloaded) return;
+    if (this._ownerId !== memberId(app) || this._authorization !== authorization()) {
+      this.resetPrivate(!hasSession());
+      this._ownerId = memberId(app);
+      this._authorization = authorization();
+    }
+    if (!hasSession() || this._loginRequired) {
+      if (!this.data.mineAuthRequired) this.resetPrivate(true);
+      const epoch = this._readEpoch || 0;
+      waitForInitialSession(this, app, function () {
+        if ((this._readEpoch || 0) === epoch) this.reloadPrivate();
+      });
+      return;
+    }
+    if (this.data.mineLoading) return;
+    const current = currentPrivate(this), seq = (this._mineSeq || 0) + 1;
+    this._mineSeq = seq;
+    this.setData({ mineLoading: true, mineError: false, mineAuthRequired: false, mineAccessDenied: false, mineErrorMsg: '' });
+    this.applyFilter();
+    const failed = (res, statusCode) => {
+      if (current(res, statusCode) && this._mineSeq === seq) this.mineFailure(res, statusCode);
     };
     app.sendRequest({
       url: '/api/official/my-events', method: 'GET', hideLoading: true, silentError: true,
       success: (res) => {
+        if (!current(res) || this._mineSeq !== seq) return;
         if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)) {
-          done({ _mine: res.data.filter(this._isCompleteEvent).map(this._decorate), mineError: false });
-        } else {
-          done({ mineError: true, errorMsg: app.getRequestErrorMessage(res, '网络开了点小差，请稍后再试') });
-        }
+          this._mineLoaded = true;
+          this.setData({ _mine: res.data.filter(this._isCompleteEvent).map(this._decorate), mineError: false, mineLoading: false });
+          this.applyFilter();
+        } else failed(res);
       },
-      successStatusAbnormal: (data) => done({ mineError: true, errorMsg: app.getRequestErrorMessage(data, '服务暂时不可用，请稍后再试') }),
-      fail: (res) => done({ mineError: true, errorMsg: app.getRequestErrorMessage(res, '网络异常，请稍后再试') }),
+      successStatusAbnormal: failed,
+      fail: failed,
     });
   },
   onRetry() {
-    this.fetchAll();
+    if (this.data.tab !== 3) { this.fetchAll(); return; }
+    if (!this.data.mineAuthRequired) { this.fetchMine(); return; }
+    const epoch = this._readEpoch || 0;
+    return retryLogin(this, app, function () {
+      if ((this._readEpoch || 0) === epoch) this.reloadPrivate();
+    });
   },
 
   _decorate(e) {
@@ -171,6 +289,8 @@ Page({
 
   onTab(ev) {
     this.applyFilter({ tab: +ev.detail.key });
+    if (this.data.tab === 3 && (!this._mineLoaded || !hasSession()
+      || this._ownerId !== memberId(app) || this._authorization !== authorization())) this.fetchMine();
     wx.pageScrollTo({ scrollTop: 0, duration: 0 });
   },
   onSearchInput(ev) {
@@ -182,7 +302,7 @@ Page({
   applyFilter(extra) {
     const d = extra ? Object.assign({}, this.data, extra) : this.data;
     let list;
-    if (d.tab === 3) list = d._mine;
+    if (d.tab === 3) list = this.data._mine;
     else if (d.tab === 0) list = d._all.filter(e => e._live);
     else if (d.tab === 1) list = d._all.filter(e => e.status == 1);
     else list = d._all.filter(e => e.status >= 5);
@@ -211,7 +331,9 @@ Page({
     }
     this.setData(Object.assign({
       events: list, summary, emptyTitle, emptySub, emptyKind,
-      curError: d.tab === 3 ? d.mineError : d.loadError,
+      curError: d.tab === 3 ? this.data.mineError : this.data.loadError,
+      loading: d.tab === 3 ? this.data.mineLoading : this.data.publicLoading,
+      errorMsg: d.tab === 3 ? this.data.mineErrorMsg : this.data.loadErrorMsg,
     }, extra));
   },
 

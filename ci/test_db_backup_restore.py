@@ -37,7 +37,7 @@ class BackupRestoreTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             dump = Path(temp) / "backup.sql"
             dump.write_text("fixture SQL")
-            Path(str(dump) + ".json").write_text(json.dumps({"formatVersion": 2, "serverUuid": "source", "mysqlVersion": "8.0.45",
+            Path(str(dump) + ".json").write_text(json.dumps({"formatVersion": 3, "definitionAlgorithm": "mysql8-column-charset-v1", "serverUuid": "source", "mysqlVersion": "8.0.45",
                                                           "database": "test_db", "sha256": tool.digest(dump),
                                                           "snapshot": SNAPSHOT}))
             args = SimpleNamespace(defaults_file=Path(temp) / "mysql.cnf", database="test_db", backup=dump,
@@ -69,7 +69,7 @@ class BackupRestoreTest(unittest.TestCase):
             manifest = {"serverUuid": "source", "mysqlVersion": "8.0.45", "database": "test_db",
                         "sha256": tool.digest(dump), "snapshot": SNAPSHOT}
             args = SimpleNamespace(database="test_db", backup=dump, confirm_test_target=True)
-            for changes in ({}, {"formatVersion": 2, "snapshot": {key: value for key, value in SNAPSHOT.items()
+            for changes in ({}, {"formatVersion": 3, "definitionAlgorithm": "mysql8-column-charset-v1", "snapshot": {key: value for key, value in SNAPSHOT.items()
                                                                  if key != "definitions"}}):
                 with self.subTest(fields=tuple(changes)):
                     Path(str(dump) + ".json").write_text(json.dumps({**manifest, **changes}))
@@ -94,8 +94,13 @@ DDL = {
 }
 
 
-def fixture_mysql(definitions):
+def fixture_mysql(definitions, columns=None):
     def query(args, sql, definition=False):
+        if sql == "SELECT @@SESSION.sql_mode":
+            return "STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
+        if "JSON_ARRAY(COLUMN_NAME, CHARACTER_SET_NAME, COLLATION_NAME)" in sql:
+            values = columns if columns is not None else [["id", None, None], ["value", None, None]]
+            return "\n".join(json.dumps(row) for row in values)
         if sql == "SHOW FULL TABLES":
             return "example\tBASE TABLE\nsample_view\tVIEW"
         if sql.startswith("CHECKSUM TABLE"):
@@ -186,7 +191,7 @@ class DefinitionSnapshotTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             dump = Path(temp) / "backup.sql"
             dump.write_text("fixture SQL")
-            manifest = {"formatVersion": 2, "serverUuid": "source", "mysqlVersion": "8.0.45",
+            manifest = {"formatVersion": 3, "definitionAlgorithm": "mysql8-column-charset-v1", "serverUuid": "source", "mysqlVersion": "8.0.45",
                         "database": "test_db", "sha256": tool.digest(dump), "snapshot": source}
             args = SimpleNamespace(database="test_db", backup=dump, confirm_test_target=True)
             for omitted in source["definitions"]:
@@ -214,7 +219,7 @@ class DefinitionSnapshotTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             dump = Path(temp) / "backup.sql"
             dump.write_text("fixture SQL")
-            Path(str(dump) + ".json").write_text(json.dumps({"formatVersion": 2, "serverUuid": "source",
+            Path(str(dump) + ".json").write_text(json.dumps({"formatVersion": 3, "definitionAlgorithm": "mysql8-column-charset-v1", "serverUuid": "source",
                 "mysqlVersion": "8.0.45", "database": "test_db", "sha256": tool.digest(dump), "snapshot": source}))
             args = SimpleNamespace(defaults_file=Path(temp) / "private.cnf", database="test_db", backup=dump,
                                    confirm_test_target=True)
@@ -244,6 +249,114 @@ class DefinitionSnapshotTest(unittest.TestCase):
         self.assertIn("--skip-raw", command)
         self.assertIn("--column-names", command)
         self.assertNotIn("--raw", command)
+
+
+class CharsetDefinitionProofTest(unittest.TestCase):
+    def fingerprint(self, ddl, columns=None):
+        definitions = {("TABLE", "example"): {"Table": "example", "Create Table": ddl}}
+        with patch.object(tool, "mysql", side_effect=fixture_mysql(definitions, columns)):
+            return tool.definition_hash(SimpleNamespace(database="test_db"), "TABLE", "example")
+
+    def ddl(self, declaration):
+        return ("CREATE TABLE `example` (\n  " + declaration
+                + "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci")
+
+    def test_quote_changing_sql_modes_are_rejected_instead_of_guessing(self):
+        ddl = self.ddl("`value` varchar(40) COLLATE utf8mb4_general_ci DEFAULT 'back\\\\slash'")
+        for mode in ("NO_BACKSLASH_ESCAPES", "ANSI_QUOTES",
+                     "STRICT_TRANS_TABLES,NO_BACKSLASH_ESCAPES"):
+            query = fixture_mysql({}, [["value", "utf8mb4", "utf8mb4_general_ci"]])
+            with self.subTest(mode=mode), patch.object(tool, "mysql", side_effect=lambda args, sql: mode if sql == "SELECT @@SESSION.sql_mode" else query(args, sql)):
+                with self.assertRaisesRegex(ValueError, "SQL mode"):
+                    tool.table_charset_definition(SimpleNamespace(database="test_db"), "example", ddl)
+
+    def test_mysql110825_implicit_and_explicit_charset_have_one_structural_fingerprint(self):
+        implicit = self.ddl("`value` varchar(40) COLLATE utf8mb4_general_ci NOT NULL")
+        explicit = implicit.replace(" COLLATE utf8mb4_general_ci NOT NULL",
+                                    " CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL")
+        columns = [["value", "utf8mb4", "utf8mb4_general_ci"]]
+        self.assertEqual(self.fingerprint(implicit, columns), self.fingerprint(explicit, columns))
+
+    def test_only_real_column_clause_changes_and_quoted_tokens_remain_exact(self):
+        declaration = ("`v``name` varchar(40) COLLATE utf8mb4_general_ci "
+                       "DEFAULT 'COLLATE utf8mb4_bin' COMMENT 'CHARACTER SET utf8mb4, fake COLLATE'")
+        columns = [["v`name", "utf8mb4", "utf8mb4_general_ci"]]
+        implicit = self.ddl(declaration)
+        explicit = implicit.replace(" COLLATE utf8mb4_general_ci DEFAULT",
+                                    " CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT")
+        self.assertEqual(self.fingerprint(implicit, columns), self.fingerprint(explicit, columns))
+        self.assertNotEqual(self.fingerprint(implicit, columns),
+                            self.fingerprint(implicit.replace("fake COLLATE", "real COLLATE"), columns))
+
+    def test_column_semantics_and_noncolumn_structure_are_never_erased(self):
+        original = self.ddl("`value` varchar(40) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'x' COMMENT 'original'")
+        columns = [["value", "utf8mb4", "utf8mb4_general_ci"]]
+        before = self.fingerprint(original, columns)
+        for old, new in (("varchar(40)", "varchar(41)"), ("NOT NULL", "NULL"),
+                         ("DEFAULT 'x'", "DEFAULT 'y'"), ("original", "changed"),
+                         ("ENGINE=InnoDB", "ENGINE=MyISAM")):
+            with self.subTest(new=new):
+                self.assertNotEqual(before, self.fingerprint(original.replace(old, new), columns))
+        changed = original.replace("utf8mb4_general_ci NOT NULL", "utf8mb4_bin NOT NULL")
+        self.assertNotEqual(before, self.fingerprint(changed, [["value", "utf8mb4", "utf8mb4_bin"]]))
+
+    def test_metadata_mismatch_duplicate_or_missing_column_is_rejected(self):
+        ddl = self.ddl("`value` varchar(40) COLLATE utf8mb4_general_ci")
+        for columns in ([], [["other", "utf8mb4", "utf8mb4_general_ci"]],
+                        [["value", "latin1", "latin1_swedish_ci"]],
+                        [["value", "utf8mb4", "utf8mb4_bin"]],
+                        [["value", "utf8mb4", "utf8mb4_general_ci"]] * 2):
+            with self.subTest(columns=columns), self.assertRaises(ValueError):
+                self.fingerprint(ddl, columns)
+
+    def test_ambiguous_or_unterminated_definition_fails_closed(self):
+        columns = [["value", "utf8mb4", "utf8mb4_general_ci"]]
+        for declaration in ("`value` varchar(40) COLLATE utf8mb4_general_ci COMMENT 'unterminated",
+                            "`value` varchar(40) COLLATE utf8mb4_general_ci COLLATE utf8mb4_general_ci",
+                            "`value` varchar(40) COLLATE utf8mb4_general_ci /* unterminated"):
+            with self.subTest(declaration=declaration), self.assertRaises(ValueError):
+                self.fingerprint(self.ddl(declaration), columns)
+
+    def test_generation_comments_and_literal_backslashes_are_not_normalized(self):
+        columns = [["value", "utf8mb4", "utf8mb4_general_ci"]]
+        first = self.ddl("`value` varchar(40) COLLATE utf8mb4_general_ci "
+                         "GENERATED ALWAYS AS (concat('COLLATE,', 'a\\\\n')) STORED")
+        second = first.replace("'a\\\\n'", "'a\n'")
+        self.assertNotEqual(self.fingerprint(first, columns), self.fingerprint(second, columns))
+        self.assertNotEqual(self.fingerprint(first, columns),
+                            self.fingerprint(first.replace("'COLLATE,'", "'COLLATE;'"), columns))
+
+    def test_backup_writes_new_explicit_algorithm_marker(self):
+        with tempfile.TemporaryDirectory() as temp:
+            args = SimpleNamespace(defaults_file=Path(temp) / "private.cnf", database="test_db",
+                                   output=Path(temp) / "new.sql")
+            def succeed(command, **kwargs):
+                kwargs["stdout"].write(b"fixture SQL")
+                return SimpleNamespace(returncode=0)
+            with patch.object(tool, "identify", return_value=["source", "8.0.45", "test_db"]), \
+                    patch.object(tool, "snapshot", return_value=SNAPSHOT), \
+                    patch.object(tool.subprocess, "run", side_effect=succeed), patch("builtins.print"):
+                tool.backup(args)
+            receipt = json.loads(Path(str(args.output) + ".json").read_text())
+            self.assertEqual(3, receipt["formatVersion"])
+            self.assertEqual("mysql8-column-charset-v1", receipt["definitionAlgorithm"])
+
+    def test_raw_v2_or_unrecognized_algorithm_rejected_before_target_access(self):
+        with tempfile.TemporaryDirectory() as temp:
+            dump = Path(temp) / "old.sql"
+            dump.write_text("fixture SQL")
+            args = SimpleNamespace(database="test_db", backup=dump, confirm_test_target=True)
+            for version, algorithm in ((2, None), (2, "mysql8-column-charset-v1"), (3, "unknown"), (3, None)):
+                manifest = {"formatVersion": version, "definitionAlgorithm": algorithm,
+                            "snapshot": SNAPSHOT, "database": "test_db", "serverUuid": "source",
+                            "mysqlVersion": "8.0.45", "sha256": tool.digest(dump)}
+                Path(str(dump) + ".json").write_text(json.dumps(manifest))
+                with self.subTest(version=version, algorithm=algorithm), \
+                        patch.object(tool, "identify") as identify, patch.object(tool.subprocess, "run") as run:
+                    with self.assertRaisesRegex(ValueError, "manifest|definition|algorithm"):
+                        tool.restore(args)
+                    identify.assert_not_called()
+                    run.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -9,6 +9,10 @@ import re
 import subprocess
 
 
+BACKUP_FORMAT = 3
+DEFINITION_ALGORITHM = "mysql8-column-charset-v1"
+
+
 def mysql(args, sql, definition=False):
     # SHOW CREATE uses escaped batch cells, so embedded newlines/tabs cannot become records.
     options = ["--batch", "--skip-raw", "--column-names"] if definition else ["--batch", "--raw", "--skip-column-names"]
@@ -50,6 +54,93 @@ def batch_cell(value):
     return "".join(result)
 
 
+def table_charset_definition(args, name, ddl):
+    """Make only MySQL #110825's implicit utf8mb4 column charset explicit."""
+    modes = {mode.strip().upper() for mode in mysql(args, "SELECT @@SESSION.sql_mode").split(",")}
+    if modes & {"ANSI_QUOTES", "NO_BACKSLASH_ESCAPES"}:
+        raise ValueError("Unsupported SQL mode for verifiable table definition quoting")
+    raw = mysql(args, "SELECT JSON_ARRAY(COLUMN_NAME, CHARACTER_SET_NAME, COLLATION_NAME)"
+                " FROM information_schema.COLUMNS WHERE BINARY TABLE_SCHEMA=BINARY DATABASE()"
+                " AND BINARY TABLE_NAME=0x" + name.encode("utf-8").hex() + " ORDER BY ORDINAL_POSITION")
+    rows = [json.loads(line) for line in raw.split("\n") if line]
+    columns = {}
+    for row in rows:
+        if (not isinstance(row, list) or len(row) != 3 or not isinstance(row[0], str)
+                or not row[0] or row[0] in columns or ((row[1] is None) != (row[2] is None))
+                or any(value is not None and (not isinstance(value, str)
+                       or not re.fullmatch("[a-zA-Z0-9_]+", value)) for value in row[1:])):
+            raise ValueError("Unverifiable column charset metadata")
+        columns[row[0]] = row[1:]
+    # Locate column-level clauses without rewriting whitespace, quoted strings or comments.
+    pattern = re.compile(r"\s+|--[ \t\r\n][^\n]*|#[^\n]*|/\*.*?\*/|"
+                         r"'(?:\\.|''|[^'\\])*'|\"(?:\\.|\"\"|[^\"\\])*\"|"
+                         r"`(?:``|[^`])*`|[a-zA-Z_][a-zA-Z0-9_$]*|[^\s]", re.S)
+    tokens, depth = [], 0
+    for match in pattern.finditer(ddl):
+        value = match.group()
+        if value.isspace() or value.startswith(("--", "#")):
+            continue
+        if value.startswith("/*"):
+            tokens.append(("comment", value, match.start(), depth))
+            continue
+        if value in ("'", '"', "`") or (ddl[match.start():].startswith("/*") and not value.endswith("*/")):
+            raise ValueError("Unterminated table definition token")
+        kind = "identifier" if value.startswith("`") else "literal" if value[0] in "'\"" else "word"
+        if value == ")":
+            depth -= 1
+            if depth < 0:
+                raise ValueError("Unbalanced table definition")
+        tokens.append((kind, value, match.start(), depth))
+        if value == "(":
+            depth += 1
+    if depth:
+        raise ValueError("Unbalanced table definition")
+    opening = next((i for i, token in enumerate(tokens) if token[1] == "(" and token[3] == 0), None)
+    closing = next((i for i, token in enumerate(tokens) if token[1] == ")" and token[3] == 0), None)
+    if opening is None or closing is None or closing <= opening:
+        raise ValueError("Unverifiable CREATE TABLE column list")
+    boundaries = [opening] + [i for i in range(opening + 1, closing)
+                              if tokens[i][1] == "," and tokens[i][3] == 1] + [closing]
+    insertions, seen = [], set()
+    for left, right in zip(boundaries, boundaries[1:]):
+        part = tokens[left + 1:right]
+        if not part:
+            raise ValueError("Empty table definition declaration")
+        first = part[0]
+        if first[0] != "identifier":
+            if first[1].upper() not in ("PRIMARY", "UNIQUE", "KEY", "CONSTRAINT", "CHECK", "FULLTEXT", "SPATIAL"):
+                raise ValueError("Unknown table definition declaration")
+            continue
+        column = first[1][1:-1].replace("`" * 2, "`")
+        if column not in columns or column in seen:
+            raise ValueError("CREATE TABLE differs from column metadata")
+        seen.add(column)
+        charset, collation = columns[column]
+        top = [token for token in part[1:] if token[3] == 1 and token[0] == "word"]
+        collates = [i for i, token in enumerate(top) if token[1].upper() == "COLLATE"]
+        charsets = [i for i, token in enumerate(top) if token[1].upper() in ("CHARACTER", "CHARSET")]
+        if len(collates) > 1 or len(charsets) > 1:
+            raise ValueError("Ambiguous column charset clauses")
+        if charsets:
+            index = charsets[0]
+            if (top[index][1].upper() != "CHARACTER" or index + 2 >= len(top)
+                    or top[index + 1][1].upper() != "SET" or top[index + 2][1] != charset):
+                raise ValueError("Column charset differs from actual metadata")
+        if collates:
+            index = collates[0]
+            if index + 1 >= len(top) or top[index + 1][1] != collation:
+                raise ValueError("Column collation differs from actual metadata")
+            if charset == "utf8mb4" and not charsets:
+                if any(token[0] == "comment" and token[1].startswith("/*!") for token in part):
+                    raise ValueError("Cannot canonicalize executable column comments")
+                insertions.append(top[index][2])
+    if seen != set(columns):
+        raise ValueError("Column metadata is incomplete")
+    for position in sorted(insertions, reverse=True):
+        ddl = ddl[:position] + "CHARACTER SET utf8mb4 " + ddl[position:]
+    return ddl, rows
+
+
 def definition_hash(args, kind, name):
     rows = mysql(args, "SHOW CREATE " + kind + " " + quoted(name), definition=True).split("\n")
     if len(rows) != 2:
@@ -64,6 +155,8 @@ def definition_hash(args, kind, name):
     if fields.get(identity_column) != name or not fields.get(create_column, "").lstrip().upper().startswith("CREATE "):
         # SHOW CREATE ROUTINE can return SQL NULL when the account cannot see the body.
         raise ValueError("Object definition is missing or not visible to the backup account")
+    if kind == "TABLE":
+        fields[create_column], fields["Column Charsets"] = table_charset_definition(args, name, fields[create_column])
     if kind == "TRIGGER":
         fields.pop("Created", None)  # Server-assigned creation time changes on a legitimate restore.
     return hashlib.sha256(json.dumps(fields, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
@@ -135,7 +228,7 @@ def backup(args):
             os.fsync(stream.fileno())
             if run.returncode or partial.stat().st_size == 0 or snapshot(args) != before:
                 raise ValueError("Dump failed, is empty, or source changed; quiesce writes and retry")
-            manifest = {"formatVersion": 2, "serverUuid": identity[0], "mysqlVersion": identity[1], "database": args.database,
+            manifest = {"formatVersion": BACKUP_FORMAT, "definitionAlgorithm": DEFINITION_ALGORITHM, "serverUuid": identity[0], "mysqlVersion": identity[1], "database": args.database,
                         "sha256": digest(partial), "snapshot": before}
             with receipt.open("x", encoding="utf-8") as result:
                 os.chmod(receipt, 0o600)
@@ -151,7 +244,7 @@ def manifest_definitions(manifest, database):
     """Legacy or truncated receipts cannot authorize a restore write."""
     snapshot = manifest.get("snapshot", {}) if isinstance(manifest, dict) else {}
     proof = snapshot.get("definitions", {}) if isinstance(snapshot, dict) else {}
-    valid = isinstance(proof, dict) and bool(proof) and isinstance(manifest, dict) and manifest.get("formatVersion") == 2
+    valid = isinstance(proof, dict) and bool(proof) and isinstance(manifest, dict) and manifest.get("formatVersion") == BACKUP_FORMAT and manifest.get("definitionAlgorithm") == DEFINITION_ALGORITHM
     if valid:
         tables, views, counts = snapshot.get("tables"), snapshot.get("views"), snapshot.get("objects")
         valid = isinstance(tables, dict) and isinstance(views, list) and isinstance(counts, dict)
@@ -165,7 +258,7 @@ def manifest_definitions(manifest, database):
             count = counts.get(plural)
             valid = valid and type(count) is int and count >= 0 and count == sum(key.partition(":")[0] in kinds for key in stored)
     if not valid:
-        raise ValueError("Backup manifest lacks complete definition proof; keep the old backup and create a verified v2 backup")
+        raise ValueError("Backup manifest lacks complete definition proof; keep the old backup and create a verified v3 backup with the explicit definition algorithm")
     return proof
 
 

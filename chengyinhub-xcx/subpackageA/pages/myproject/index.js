@@ -223,9 +223,13 @@ Page({
         projectState: this.data.loaded ? 'ready' : 'error',
         projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试') });
     } else {
-      this.setData(Object.assign({ tplLoading: false, tplAccessDenied: denied,
-        tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') },
-      denied ? { tplList: [], tplLoaded: false } : {}));
+      if (denied) {
+        this.setData({ tplLoading: false, tplAccessDenied: true, tplList: [], tplLoaded: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      } else {
+        this.setData({ tplLoading: false, tplAccessDenied: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      }
     }
   },
 

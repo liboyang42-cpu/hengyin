@@ -13,6 +13,8 @@ function loadPage() {
   const requests = []
   let definition
   global.getApp = () => ({
+    getUserID: () => '7',
+    getAuthorization: () => 'Bearer unit-fixture',
     getRequestErrorMessage: (response, fallback) => (response && (response.msg || response.errMsg)) || fallback,
     getUserRole: () => 'user',
     getUserType: () => 'user',
@@ -96,7 +98,7 @@ test('列表区分首屏错误、刷新错误、加载更多错误和在途态',
 
 test('负控：加载更多失败分支不得再覆写 list', () => {
   const source = read('subpackageMember/mytemplate/mytemplate.js')
-  const handler = source.slice(source.indexOf('handleListError(isLoadMore'), source.indexOf('// 删除模板API调用'))
+  const handler = source.slice(source.indexOf('\n  handleListError(isLoadMore, message)'), source.indexOf('// 删除模板API调用'))
   const loadMoreBranch = handler.slice(handler.indexOf('if (isLoadMore)'), handler.indexOf('if (this.data.list.length'))
   assert.match(source, /loadingMore/)
   assert.match(loadMoreBranch, /loadMoreError/)
