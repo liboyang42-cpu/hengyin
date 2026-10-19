@@ -1,0 +1,7 @@
+'use strict';
+// NOT_RUN; authored source-only regression.
+const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
+function load(){let definition;const merges=[];global.getApp=()=>({globalData:{},getUserID:()=> '11'});global.Page=p=>{definition=p;};global.wx={};const file=path.resolve(__dirname,'../../pages/play/index.js');delete require.cache[file];require(file);const component={data:{state:{sessionId:'s9',version:12}}};const page=Object.assign({},definition,{data:{activityId:9,topicId:8,chapter:{},advancedPlay:{show:true,node:{nodeId:31}},playKit:{kit:{sessionId:'s9',version:12}}},selectComponent:()=>component,_mergeStoryVars:v=>merges.push(v)});return{page,component,merges};}
+test('session event with old producer session cannot merge variables',()=>{const h=load();h.page.onAdvancedSession({detail:{nodeId:31,sessionId:'s-old',version:12,vars:{fixture:'old'}}});assert.deepEqual(h.merges,[]);});
+test('session event with old producer version cannot merge variables',()=>{const h=load();h.page.onAdvancedSession({detail:{nodeId:31,sessionId:'s9',version:10,vars:{fixture:'old'}}});assert.deepEqual(h.merges,[]);});
+test('older same-session event remains rejected even if producer state was stale',()=>{const h=load();h.component.data.state.version=10;h.page.onAdvancedSession({detail:{nodeId:31,sessionId:'s9',version:10,vars:{fixture:'old'}}});assert.deepEqual(h.merges,[]);});

@@ -1,0 +1,8 @@
+'use strict';
+// NOT_RUN: source-only authored regressions.
+const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
+function load(){let definition;const failures=[];global.getApp=()=>({globalData:{},getUserID:()=> '11'});global.Page=p=>{definition=p;};global.wx={};const file=path.resolve(__dirname,'../../pages/play/index.js');delete require.cache[file];require(file);const game={data:{state:{sessionId:'s9'}}};const page=Object.assign({},definition,{data:{activityId:9,topicId:8,advancedPlay:{show:true},playKit:{kit:{type:'photocheck',sessionId:'s9'}}},selectComponent:()=>game,_notifyPhotoFail:()=>failures.push('fail'),setData(){}});return{page,game,failures};}
+test('old-session photo failure cannot notify current card',()=>{const h=load();h.page.onAdvancedActionFail({detail:{action:'SUBMIT_PHOTO_CHECK',sessionId:'old'}});assert.deepEqual(h.failures,[]);});
+test('missing failure session cannot be guessed as current card',()=>{const h=load();h.page.onAdvancedActionFail({detail:{action:'SUBMIT_PHOTO_CHECK'}});assert.deepEqual(h.failures,[]);});
+test('current unknown-readback failure keeps original card recovery notification',()=>{const h=load();h.game.data.unknown=true;h.page.onAdvancedActionFail({detail:{action:'SUBMIT_PHOTO_CHECK',sessionId:'s9'}});assert.deepEqual(h.failures,['fail']);});
+test('unknown typein failure still cannot restart its timer',()=>{const h=load();h.game.data.unknown=true;h.page.data.playKit.kit.type='typein';const pending={fixture:true};h.page._typeInStart=pending;h.page.onAdvancedActionFail({detail:{action:'START_CHALLENGE',sessionId:'s9'}});assert.equal(h.page._typeInStart,pending);});
