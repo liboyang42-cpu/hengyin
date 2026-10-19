@@ -1,6 +1,7 @@
 import unittest
 
-from scripts.e2e.chain_lib import load_db_config, validate_db_config, verify_connected_database
+from scripts.e2e.chain_lib import (FORBIDDEN, load_base, load_db_config, validate_db_config,
+                                   verify_connected_database)
 
 
 class ChainLibDatabaseConfigTest(unittest.TestCase):
@@ -48,6 +49,16 @@ class ChainLibDatabaseConfigTest(unittest.TestCase):
         verify_connected_database(self.Connection("cy_e2e_52"), "cy_e2e_52")
         with self.assertRaisesRegex(RuntimeError, "cy_e2e_51.*cy_e2e_52"):
             verify_connected_database(self.Connection("cy_e2e_51"), "cy_e2e_52")
+
+    def test_base_defaults_to_local_backend_and_refuses_production_override(self):
+        self.assertEqual("http://127.0.0.1:8099", load_base({}))
+        self.assertEqual("http://127.0.0.1:18099",
+                         load_base({"CHENGYIN_E2E_BASE": "http://127.0.0.1:18099/"}))
+        for host in sorted(FORBIDDEN):
+            with self.assertRaises(SystemExit):
+                load_base({"CHENGYIN_E2E_BASE": "http://%s:8080" % host})
+        with self.assertRaises(SystemExit):
+            load_base({"CHENGYIN_E2E_BASE": "not-a-url"})
 
 
 if __name__ == "__main__":
