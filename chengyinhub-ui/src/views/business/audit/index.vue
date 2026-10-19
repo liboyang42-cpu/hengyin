@@ -142,8 +142,9 @@
             <el-image v-if="mediaType === 'IMAGE' && mediaPreviewUrl" :src="mediaPreviewUrl" fit="contain" style="max-width: 100%; max-height: 480px" :preview-src-list="[mediaPreviewUrl]" />
             <audio v-else-if="mediaType === 'AUDIO' && mediaPreviewUrl" :src="mediaPreviewUrl" controls preload="none" />
             <el-link v-else-if="mediaPreviewUrl" :href="mediaPreviewUrl" target="_blank" rel="noopener noreferrer">下载并检查模型文件</el-link>
-            <el-button size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
           </template>
+          <el-alert v-if="detailTask.bizType === 'COMMUNITY_POST' && communityMediaPreviewError" :title="communityMediaPreviewError" type="warning" :closable="false" show-icon />
+          <el-button v-if="detailTask.bizType === 'MEDIA_ASSET' || detailTask.bizType === 'COMMUNITY_POST'" size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
           <cy-evidence-panel title="内容快照" :items="auditEvidenceItems" empty-text="当前任务没有附带内容快照" />
           <cy-timeline title="处置轨迹" :items="auditTimelineItems" empty-text="尚无处置记录" />
         </template>
@@ -250,6 +251,8 @@ export default {
       auditList: [],
       detailTask: null,
       mediaPreviewUrl: '',
+      communityMediaPreview: null,
+      communityMediaPreviewError: '',
       mediaType: '',
       detailRecords: [],
       tableColumns: [
@@ -296,8 +299,14 @@ export default {
       const bizType = this.detailTask.bizType
       const render = bizType === 'HANGOUT' ? (value, label) => this.hangoutEvidence(value, label)
         : bizType === 'TEAM' ? (value, label) => this.teamEvidence(value, label) : null
-      if (!render) return this.detailTask.snapshotJson
-        ? [{ kind: 'text', content: this.snapshotText(this.detailTask.snapshotJson) }] : []
+      if (!render) {
+        const items = this.detailTask.snapshotJson
+          ? [{ kind: 'text', content: this.snapshotText(this.detailTask.snapshotJson) }] : []
+        if (bizType === 'COMMUNITY_POST' && this.communityMediaPreview) {
+          items.push(...this.communityMediaPreview.items.map(item => ({ kind: 'image', src: item.url })))
+        }
+        return items
+      }
       const items = render(this.detailTask.snapshotJson || '{}', '首次举报快照')
       this.detailRecords.filter(record => record.action === 'REPORT' && record.snapshotJson).forEach(record => {
         items.push(...render(record.snapshotJson, `举报记录 #${record.id}`))
@@ -400,6 +409,8 @@ export default {
       this.detailRow = row
       this.detailTask = null
       this.mediaPreviewUrl = ''; this.mediaType = ''
+      this.communityMediaPreview = null
+      this.communityMediaPreviewError = ''
       this.detailRecords = []
       this.reportCount = 0
       return getAuditTaskDetail(row.id).then(response => {
@@ -409,6 +420,17 @@ export default {
           throw new Error('Invalid audit detail response')
         }
         this.mediaPreviewUrl = response.mediaPreviewUrl || ''; this.mediaType = response.mediaType || ''
+        if (response.task.bizType === 'COMMUNITY_POST') {
+          const preview = response.communityMediaPreview
+          if (preview && preview.taskId === response.task.id && preview.taskVersion === response.task.version
+            && preview.status === 'READY' && preview.expiresInSeconds === 300 && Array.isArray(preview.items)
+            && preview.items.every(item => item && Number.isSafeInteger(item.id) && item.id > 0
+              && typeof item.url === 'string' && /^https:\/\//.test(item.url))) {
+            this.communityMediaPreview = preview
+          } else {
+            this.communityMediaPreviewError = '当前图片预览不可用，请刷新；原内容快照与处置轨迹仍保留。'
+          }
+        }
         this.detailTask = response.task
         this.detailRecords = response.records
         this.reportCount = response.reportCount

@@ -67,6 +67,8 @@ public interface IViewCreativeSquareService
 
     public List<UmsCreativeSquareLike> selectCreativeSquareLikesByMemberAndDataIds(Long memberId, List<Long> dataIds);
 
+    public Long selectMappedCommunityPostId(Long legacySquareId);
+
     public List<Long> selectCommunityBookmarkedPostIds(Long memberId, List<Long> postIds);
 
     public List<UmsMemberFollow> selectMemberFollowsByMemberAndFollowIds(Long memberId, List<Long> followMemberIds);

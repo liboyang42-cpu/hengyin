@@ -100,6 +100,62 @@
         "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
         "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
       ]
+    },
+    "port-e04-07-coupon": {
+      "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
+      "note": "Master-side port of e04-07-coupon. RedemptionRewardClawbackMyBatisTest is master's own version (4 tests); EXTRA's clawback current-read change waits for the base port (selectPointsForUpdate).",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_07MySqlIT",
+        "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest"
+      ]
+    },
+    "port-community-e02": {
+      "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
+      "note": "Master-side port of community-e02. The fixtures add del_flag/topic_id and an empty cms_topic for master's selectReferences topic join.",
+      "classes": [
+        "com.chengyinhub.business.longrun.E02_22Test",
+        "com.chengyinhub.business.longrun.E02_25MySqlIT",
+        "com.chengyinhub.business.longrun.E02_01Test",
+        "com.chengyinhub.business.longrun.E02_06Test",
+        "com.chengyinhub.business.longrun.E02_11Test"
+      ]
+    },
+    "port-b05-visibility": {
+      "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
+      "note": "Master-side port of b05-visibility: 2ac55d20 plus the same cms_topic fixture adaptation.",
+      "classes": [
+        "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT"
+      ]
+    },
+    "port-extra-storage": {
+      "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
+      "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
+      "note": "Master-side port of extra-storage, same 20 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions.",
+      "classes": [
+        "com.chengyinhub.business.longrun.E01_06Test",
+        "com.chengyinhub.business.longrun.E01_09Test",
+        "com.chengyinhub.business.longrun.E01_10Test",
+        "com.chengyinhub.business.longrun.E01_18Test",
+        "com.chengyinhub.business.longrun.E04_06Test",
+        "com.chengyinhub.business.longrun.E04_10Test",
+        "com.chengyinhub.business.longrun.E04_13Test",
+        "com.chengyinhub.business.longrun.E04_14Test",
+        "com.chengyinhub.business.longrun.E02_10Test",
+        "com.chengyinhub.business.longrun.E02_15Test",
+        "com.chengyinhub.business.longrun.E02_16Test",
+        "com.chengyinhub.business.longrun.E02_18Test",
+        "com.chengyinhub.business.longrun.E02_20Test",
+        "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+        "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+        "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+        "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+        "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
+        "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
+        "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -165,7 +221,7 @@
       "note": "No class gate: *IT is only run when selected by name, then missing configuration must fail."
     },
     "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest": {
-      "tests": 3,
+      "tests": 4,
       "storage": ["mysql"],
       "gates": {}
     },
@@ -291,7 +347,7 @@
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
     },
     "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest": {
-      "tests": 12,
+      "tests": 16,
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "note": "12 at the EXTRA lineage; master has 16. Running a master-based source needs a reviewed count change."
@@ -302,7 +358,7 @@
       "gates": {}
     },
     "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT": {
-      "tests": 2,
+      "tests": 3,
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "note": "Asserts the server version is exactly 8.0.45."

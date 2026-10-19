@@ -64,6 +64,8 @@ class ViewCreativeSquareCommunityPolicyMyBatisTest
         createSchema(jdbc);
         insertPost(jdbc, 1L, 11L, "saved");
         insertPost(jdbc, 2L, 12L, "not-saved");
+        jdbc.update("insert into ums_creative_square(id,member_id) values (1,11)");
+        jdbc.update("insert into community_post(id,author_id,client_request_id,safety_labels_json) values (1,11,'legacy-square-1','[\"LEGACY_MIGRATED\"]')");
         jdbc.update("insert into community_post_member_action(post_id, member_id, action_type) values (1, 8, 'BOOKMARK')");
 
         ViewCreativeSquare query = new ViewCreativeSquare();
@@ -101,6 +103,10 @@ class ViewCreativeSquareCommunityPolicyMyBatisTest
                 + "create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp,"
                 + "member_nickname varchar(100), member_avatar varchar(500), member_user_type int, member_level_id bigint,"
                 + "comment_count bigint, no_like_count bigint, like_count bigint)");
+        jdbc.execute("create alias JSON_TYPE for \"com.chengyinhub.business.longrun.E02_23Test.jsonType\"");
+        jdbc.execute("create alias JSON_CONTAINS for \"com.chengyinhub.business.longrun.E02_23Test.jsonContains\"");
+        jdbc.execute("create table ums_creative_square(id bigint primary key,member_id bigint)");
+        jdbc.execute("create table community_post(id bigint primary key,author_id bigint,client_request_id varchar(96),safety_labels_json varchar(500))");
         jdbc.execute("create table ums_member_follow(member_id bigint, follow_member_id bigint)");
         jdbc.execute("create table im_block(member_id bigint, blocked_member_id bigint)");
         jdbc.execute("create table community_post_member_action(post_id bigint, member_id bigint, action_type varchar(32))");

@@ -45,7 +45,7 @@ class SmsCouponRedemptionAuditTest {
     void redeemedCouponKeepsOwnerForSettlementAndRecordsActualEmployeeActor() {
         SmsCouponHistory history = history();
         SmsCoupon coupon = coupon();
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon);
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
@@ -74,7 +74,7 @@ class SmsCouponRedemptionAuditTest {
 
     @Test
     void auditWriteFailureFailsTheTransactionalRedemption() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history());
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
@@ -90,7 +90,7 @@ class SmsCouponRedemptionAuditTest {
     void alreadyUsedReplayDoesNotCreateAnotherAuditEvent() {
         SmsCouponHistory history = history();
         history.setUseStatus(1);
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.ALREADY_USED,
@@ -104,7 +104,7 @@ class SmsCouponRedemptionAuditTest {
         SmsCoupon legacyClub = coupon();
         legacyClub.setScopeType(null);
         legacyClub.setMerchantId(null);
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history());
         when(coupons.selectSmsCouponById(30L)).thenReturn(legacyClub);
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.FORBIDDEN,
@@ -116,7 +116,7 @@ class SmsCouponRedemptionAuditTest {
 
     @Test
     void legacyClubScopeCannotRedeemMerchantCouponEvenWhenOwnerMatches() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history());
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.FORBIDDEN,
@@ -128,7 +128,7 @@ class SmsCouponRedemptionAuditTest {
 
     @Test
     void employeeCannotRedeemCouponFromAnotherMerchantRowUnderSameOwner() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history());
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.FORBIDDEN,
@@ -145,6 +145,7 @@ class SmsCouponRedemptionAuditTest {
 
         assertEquals("优惠券核销作用域与操作者角色不匹配", error.getMessage());
         verify(histories, never()).selectSmsCouponHistoryById(any());
+        verify(histories, never()).selectSmsCouponHistoryByIdForUpdate(any());
     }
 
     @Test
@@ -154,6 +155,7 @@ class SmsCouponRedemptionAuditTest {
 
         assertEquals("优惠券核销作用域与操作者角色不匹配", error.getMessage());
         verify(histories, never()).selectSmsCouponHistoryById(any());
+        verify(histories, never()).selectSmsCouponHistoryByIdForUpdate(any());
     }
 
     private static SmsCouponHistory history() {

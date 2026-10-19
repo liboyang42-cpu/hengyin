@@ -54,7 +54,10 @@ public class RoamSharePrivacyService {
         if (value == null) return "";
         if (!(value instanceof String)) throw new IllegalArgumentException("text");
         String s = ((String) value).replaceAll("[\\p{Cntrl}]", "").trim();
-        return s.length() > max ? s.substring(0, max) : s;
+        if (s.length() <= max) return s;
+        int end = max;
+        if (Character.isHighSurrogate(s.charAt(end - 1)) && Character.isLowSurrogate(s.charAt(end))) end--;
+        return s.substring(0, end);
     }
 
     private static Double number(Object value, double max) {
