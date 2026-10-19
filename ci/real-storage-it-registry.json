@@ -133,14 +133,13 @@
     "port-extra-storage": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
       "registered_source": "849b0566e1c6404f393c0a39c8d8809afaf19b84",
-      "note": "Master-side port of extra-storage without E01_10Test, B03CouponLifecycleMySqlIT and B04ScheduleReadbackMySqlIT, which need base-port symbols. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions.",
+      "note": "Master-side port of extra-storage without E01_10Test, B03CouponLifecycleMySqlIT and B04ScheduleReadbackMySqlIT, which need base-port symbols, and without E04_13Test, whose clawback current read (f3e0198e) waits for the owner's funds decision. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions.",
       "classes": [
         "com.chengyinhub.business.longrun.E01_06Test",
         "com.chengyinhub.business.longrun.E01_09Test",
         "com.chengyinhub.business.longrun.E01_18Test",
         "com.chengyinhub.business.longrun.E04_06Test",
         "com.chengyinhub.business.longrun.E04_10Test",
-        "com.chengyinhub.business.longrun.E04_13Test",
         "com.chengyinhub.business.longrun.E04_14Test",
         "com.chengyinhub.business.longrun.E02_10Test",
         "com.chengyinhub.business.longrun.E02_15Test",

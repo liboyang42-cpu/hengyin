@@ -87,13 +87,17 @@ class E04_07MySqlIT {
 
     @BeforeEach void reset() throws Exception {
         for(String table:new String[]{"sms_coupon_history","sms_coupon","cms_topic_completion_coupon_reward_log",
-                "ums_member","ums_member_points_detail","growth_mission_progress","member_growth","topic_completion_xp_award","business_audit_event"})
+                "ums_member","ums_member_points_detail","growth_mission_progress","member_growth","topic_completion_xp_award","business_audit_event","member_exp_earned"})
             jdbc.execute("DROP TABLE IF EXISTS "+table);
         for(String table:new String[]{"sms_coupon_history","sms_coupon","cms_topic_completion_coupon_reward_log",
                 "ums_member","ums_member_points_detail","growth_mission_progress","member_growth"}) createTable("sql/base_schema_20260818.sql",table);
         jdbc.execute("ALTER TABLE cms_topic_completion_coupon_reward_log ADD COLUMN history_id BIGINT NULL");
         jdbc.execute("ALTER TABLE ums_member ADD COLUMN app_open_id VARCHAR(128) NULL");
         createTable("chengyinhub-admin/sql/migration_20260817_tandianri_r6_product_contracts.sql","topic_completion_xp_award");
+        // master 的经验冲回按 migration_20261012_exp_reward_reversal 的 earned_exp_id 定位原入账；本夹具无原入账行。
+        jdbc.execute("ALTER TABLE topic_completion_xp_award ADD COLUMN earned_exp_id BIGINT NULL");
+        createTable("chengyinhub-admin/sql/migration_member_exp_earned_20261011.sql","member_exp_earned");
+        jdbc.execute("ALTER TABLE member_exp_earned ADD COLUMN revoked_exp INT NOT NULL DEFAULT 0");
         createTable("chengyinhub-admin/sql/migration_business_audit_event_20260823.sql","business_audit_event");
         jdbc.execute("ALTER TABLE business_audit_event ADD COLUMN actor_type VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN' AFTER owner_member_id, MODIFY COLUMN request_id VARCHAR(64) NOT NULL");
         jdbc.update("INSERT INTO sms_coupon(id,name,publish_count,receive_count,status) VALUES(30,'E04',10,0,1)");

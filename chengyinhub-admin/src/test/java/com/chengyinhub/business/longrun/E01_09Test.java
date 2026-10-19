@@ -84,7 +84,9 @@ class E01_09Test {
         }
         for (String table : Arrays.asList("club", "club_member", "cms_topic", "cms_activity", "cms_registration", "oms_ticket")) createTable(base, table);
         String migration = new String(Files.readAllBytes(Paths.get("sql/migration_club_role_event_ops_20260823.sql")), StandardCharsets.UTF_8);
-        for (String table : Arrays.asList("club_event_series", "club_event_occurrence", "club_event_waitlist")) createTable(migration, table);
+        // master 候补晋升/过期同事务写站内通知三表（见 ClubEventOpsMapper.xml insertCampaign/Delivery/Outbox）。
+        for (String table : Arrays.asList("club_event_series", "club_event_occurrence", "club_event_waitlist",
+                "club_event_notification_campaign", "club_event_notification_delivery", "club_event_notification_outbox")) createTable(migration, table);
         Configuration config = new Configuration(new Environment("e01-bind-terminal", new SpringManagedTransactionFactory(), dataSource));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String name : Arrays.asList("ClubEventOpsMapper", "OmsTicketMapper")) {
