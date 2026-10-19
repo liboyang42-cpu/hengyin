@@ -108,7 +108,7 @@ function callStart(start, success, fail) {
   var called = false;
   function wrap(cb) { return function (v) { called = true; return cb(v); }; }
   try {
-    start.call(wx, { success: wrap(success), fail: wrap(fail) });
+    start({ success: wrap(success), fail: wrap(fail) });
   } catch (e) {
     if (called) throw e; // 消费者回调的同步异常不是启动失败
     fail(e);
@@ -124,12 +124,12 @@ function beginStart() {
   var toForeground = function (bgErr) {
     if (gen !== generation || count() === 0 || started) return;
     // 后台权限没开通/用户拒绝 → 退回前台版,功能降级但不中断行程。
-    callStart(wx.startLocationUpdate, function () { finishSuccess(gen, false); },
+    callStart(function (o) { wx.startLocationUpdate(o); }, function () { finishSuccess(gen, false); },
       function (e) { finishFailure(gen, e || bgErr); });
   };
 
   if (!wx.startLocationUpdateBackground) { toForeground(null); return; }
-  callStart(wx.startLocationUpdateBackground, function () { finishSuccess(gen, true); }, toForeground);
+  callStart(function (o) { wx.startLocationUpdateBackground(o); }, function () { finishSuccess(gen, true); }, toForeground);
 }
 
 /**
