@@ -6,8 +6,9 @@
 ## 1. 工具保证什么
 
 - 备份命令固定为 `mysqldump --single-transaction --routines --triggers --events --set-gtid-purged=OFF --no-tablespaces --hex-blob`，**不加 `--force`**。坏视图、权限不足、任何对象导出失败都会让整次备份失败，而不是得到「看似成功、实际不完整」的文件（旧交接文档里的 `--force` 命令作废）。
-- 备份前后各取一次快照：每张表的行数与 `CHECKSUM TABLE … EXTENDED`、视图清单、例程/触发器/事件数量。前后不一致即判失败（说明备份期间有写入），不发布 `.partial` 为成功备份。
-- 回执 `<备份>.json`（600）记录来源 server_uuid、MySQL 版本、库名、备份文件 SHA-256 与快照。
+- 备份前后各取一次快照：每张表的行数与 `CHECKSUM TABLE … EXTENDED`、视图清单、例程/触发器/事件数量，以及数据库、表、视图、过程、函数、触发器、事件的 `SHOW CREATE` 字段指纹。表定义含列、索引、约束和 `AUTO_INCREMENT`；对象定义含 SQL 正文、definer、SQL mode、字符集、事件计划等。前后不一致即判失败，不发布 `.partial` 为成功备份。
+- 定义按字段名排序后计算 SHA-256，不替换 schema 名、不折叠 SQL 空白、不删 `AUTO_INCREMENT`。仅排除触发器的 `Created` 字段：它是恢复时重新生成的创建时刻，不是触发器正文。MySQL batch 输出只解转义一次，保留 Unicode、真实换行/制表符与字面反斜杠的区别；客户端显式使用 `utf8mb4`。定义不可见（例如例程正文返回 SQL NULL）时拒绝生成成功备份。参见 [MySQL batch/raw 输出规则](https://dev.mysql.com/doc/refman/8.0/en/mysql-command-options.html)、[SHOW CREATE TRIGGER 字段](https://dev.mysql.com/doc/refman/8.0/en/show-create-trigger.html)。
+- 回执 `<备份>.json`（600）使用 `formatVersion: 2`，记录来源 server_uuid、MySQL 版本、库名、备份文件 SHA-256 与快照；只存定义指纹，不写 SQL 正文。
 - 恢复只接受：与来源**不同** server_uuid、**相同** MySQL 版本、库名与来源一致、目标库**完全为空**、`event_scheduler` 为 OFF/DISABLED 的实例，且必须显式 `--confirm-test-target`。恢复后重新计算快照，必须与回执逐表、逐对象完全一致。失败目标保持现场，不覆盖重试，不 DROP 任何东西。
 
 ## 2. 备份
@@ -26,7 +27,7 @@ python3 scripts/db-backup-restore.py backup \
 
 ## 3. 隔离恢复
 
-恢复到任务独占的另一台 MySQL 实例（同版本、`--event-scheduler=OFF`），先建同名空库。保留同名 schema 是为了避免备份中的视图引用错库。
+恢复到任务独占的另一台 MySQL 实例（同版本、`--event-scheduler=OFF`），先建同名、数据库定义选项一致的空库（含字符集、排序规则等）。保留同名 schema 是为了避免备份中的视图引用错库。当前 dump 不含 `CREATE DATABASE`，工具不会代建或修改目标库；数据库定义指纹不一致会在导入前拒绝。
 
 ```sh
 python3 scripts/db-backup-restore.py restore \
@@ -35,6 +36,8 @@ python3 scripts/db-backup-restore.py restore \
 ```
 
 确认参数不自动证明主机属于测试环境：执行者必须先核对容器/实例归属、端点与 server_uuid。
+
+旧回执没有完整定义证明，或 v2 回执缺少任何对象指纹时，工具在访问恢复目标、执行导入前就拒绝。旧 SQL/回执保持原样，不自动升级为已验证；需在可核对的来源重新生成 v2 备份。只有旧备份时须保留现场并另行安排人工恢复调查，不能用旧的对象数量冒充结构一致。
 
 ## 4. 恢复后应用冒烟与 RTO/RPO 记录
 
@@ -83,4 +86,4 @@ CREATE PROCEDURE sample_total() SELECT COUNT(*) FROM sample_data;
 CREATE EVENT sample_disabled ON SCHEDULE EVERY 1 DAY DISABLE DO INSERT INTO trigger_history VALUES (0);
 ```
 
-正控：恢复侧行数、BLOB、视图、`CALL sample_total()`、例程/触发器/事件定义一致；向恢复侧插入新行后 trigger_history 增加，证明触发器可用；事件保持禁用。负控：篡改备份一字节、同 UUID、非空目标、缺确认、源库坏视图时必须失败且不覆盖备份、不清空目标。
+正控：恢复侧行数、BLOB、视图、`CALL sample_total()`、例程/触发器/事件定义一致；向恢复侧插入新行后 trigger_history 增加，证明触发器可用；事件保持禁用。负控：篡改备份一字节、同 UUID、非空目标、缺确认、源库坏视图时必须失败且不覆盖备份、不清空目标。同名/同数量对象被改定义、索引或约束丢失、事件计划改变时也必须失败；仅触发器创建时刻变化允许通过。旧回执、缺对象指纹、目标库默认定义不同必须在导入前拒绝。

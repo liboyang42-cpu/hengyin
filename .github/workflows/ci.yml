@@ -636,6 +636,13 @@ jobs:
           output-file: ${{ github.workspace }}/chengyin-dependency-scan.json
       - name: Block Critical and High dependency vulnerabilities
         run: python3 ci/dependency-audit-gate.py chengyin-dependency-scan.json
+      - name: Preserve dependency scan evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: chengyin-dependency-scan-${{ github.run_attempt }}
+          path: chengyin-dependency-scan.json
+          if-no-files-found: error
 
   migration_layout:
     name: Migration layout gate

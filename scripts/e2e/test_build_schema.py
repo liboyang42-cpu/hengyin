@@ -212,6 +212,165 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
                         build_schema.REPO, target_commit="a" * 40,
                         dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])
 
+    def test_marked_file_begins_and_commits_after_engine_preflight(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = True
+            cursor.connection.server_status = 2
+            cursor.fetchone.return_value = ("cy_e2e_atomic",)
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True) as engine:
+                self.assertTrue(build_schema.run_file(cursor, path, "atomic", [], False))
+                engine.assert_called_once()
+            cursor.connection.begin.assert_called_once()
+            cursor.connection.commit.assert_called_once()
+            cursor.connection.rollback.assert_not_called()
+
+    def test_marked_file_sql_failure_rolls_back_and_ignores_keep_going(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n"
+                            "INSERT INTO sys_job(job_name) VALUES('bad');\n"
+                            "INSERT INTO sys_job(job_name) VALUES('must_not_run');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = True
+            cursor.connection.server_status = 2
+            cursor.fetchone.return_value = ("cy_e2e_atomic",)
+            def execute(sql):
+                if "'bad'" in sql:
+                    raise RuntimeError("owned SQL failure")
+            cursor.execute.side_effect = execute
+            errors = []
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", errors, True))
+            cursor.connection.rollback.assert_called_once()
+            cursor.connection.commit.assert_not_called()
+            self.assertTrue(errors)
+            self.assertFalse(any("must_not_run" in call.args[0] for call in cursor.execute.call_args_list))
+
+    def test_marked_file_rowcount_assertion_failure_rolls_back(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\n-- runner: assert=rowcount-positive\n"
+                            "INSERT INTO sys_job(job_name) SELECT 'one' WHERE FALSE;\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = True
+            cursor.connection.server_status = 2
+            cursor.fetchone.return_value = ("cy_e2e_atomic",)
+            cursor.rowcount = 0
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
+            cursor.connection.rollback.assert_called_once()
+            cursor.connection.commit.assert_not_called()
+
+    def test_marked_file_unsupported_shape_is_rejected_before_touching_connection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nSELECT 1;\n", encoding="utf-8")
+            cursor = mock.Mock()
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
+            cursor.execute.assert_not_called()
+            cursor.connection.begin.assert_not_called()
+
+    def test_marked_file_non_innodb_is_rejected_before_begin_or_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = True
+            cursor.connection.server_status = 2
+            cursor.fetchone.return_value = ("cy_e2e_atomic",)
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True,
+                                   side_effect=ValueError("non-InnoDB fixture")):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
+            cursor.connection.begin.assert_not_called()
+            self.assertFalse(any("INSERT" in call.args[0] for call in cursor.execute.call_args_list))
+
+    def test_marked_file_does_not_commit_a_callers_existing_transaction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = False
+            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
+            cursor.connection.begin.assert_not_called()
+            cursor.connection.commit.assert_not_called()
+            cursor.connection.rollback.assert_not_called()
+
+    def test_marked_file_does_not_commit_an_explicit_transaction_with_autocommit_true(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "atomic.sql"
+            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            cursor.connection.get_autocommit.return_value = True
+            cursor.connection.server_status = 3
+            cursor.fetchone.return_value = ("cy_e2e_atomic",)
+            with mock.patch.object(build_schema, "assert_innodb_references"):
+                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
+            cursor.execute.assert_not_called()
+            cursor.connection.begin.assert_not_called()
+            cursor.connection.commit.assert_not_called()
+            cursor.connection.rollback.assert_not_called()
+
+    def test_unconfirmed_rollback_stops_keep_going_before_the_next_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            baseline = root / "baseline.sql"
+            baseline.write_text("", encoding="utf-8")
+            atomic = root / "atomic.sql"
+            atomic.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('bad');\n", encoding="utf-8")
+            later = root / "later.sql"
+            later.write_text("INSERT INTO sys_job(job_name) VALUES('must_not_run');\n", encoding="utf-8")
+            cursor = mock.Mock()
+            connection = mock.Mock()
+            cursor.connection = connection
+            connection.cursor.return_value = cursor
+            connection.get_autocommit.return_value = True
+            connection.server_status = 2
+            connection.rollback.side_effect = RuntimeError("owned rollback failure")
+            last_sql = [""]
+            def execute(sql, *args):
+                last_sql[0] = sql
+                if "'bad'" in sql:
+                    raise RuntimeError("owned write failure")
+            cursor.execute.side_effect = execute
+            cursor.fetchone.side_effect = lambda: ("8.0.45", "isolated-test") if "VERSION()" in last_sql[0] else (
+                ("cy_e2e_atomic",) if "DATABASE()" in last_sql[0] else (0,))
+            migrations = [{"migrationId": "atomic", "path": str(atomic)},
+                          {"migrationId": "later", "path": str(later)}]
+            with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_atomic", "--keep-going"]), \
+                    mock.patch.object(build_schema, "build_manifest", return_value={"migrations": migrations}), \
+                    mock.patch.object(build_schema, "migrations_after_baseline", return_value=migrations), \
+                    mock.patch.object(build_schema, "connect", side_effect=[mock.Mock(cursor=mock.Mock(return_value=cursor)), connection]), \
+                    mock.patch.object(build_schema, "BASELINE", baseline), \
+                    mock.patch.object(build_schema, "BASELINE_SEED", baseline), \
+                    mock.patch.object(build_schema, "assert_innodb_references"), \
+                    mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
+                    mock.patch("builtins.print"):
+                with self.assertRaisesRegex(RuntimeError, "rollback"):
+                    build_schema.main()
+            self.assertFalse(any("must_not_run" in call.args[0] for call in cursor.execute.call_args_list))
+            connection.close.assert_called_once()
+
+    def test_retention_job_registration_forward_replays_without_rewriting_the_included_seed(self):
+        historical = "chengyinhub-admin/sql/migration_data_retention_job.sql"
+        forward = "chengyinhub-admin/sql/migration_20261015_retention_job_missing_registration.sql"
+        manifest = build_schema.build_manifest(
+            build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        selected = build_schema.migrations_after_baseline(manifest["migrations"])
+        selected_by_path = {item["path"]: item for item in selected}
+        self.assertIn(forward, selected_by_path, "fresh rebuild must register the missing paused retention job")
+        self.assertNotIn(historical, selected_by_path)
+        self.assertNotEqual("POST_DEPLOY", selected_by_path[forward].get("executionPhase"))
+        self.assertEqual("e263fb95eb2f83ebc29429aabac9da3db39c16a3b20c589ba8711c6af4514a60",
+                         hashlib.sha256((build_schema.REPO / historical).read_bytes()).hexdigest())
+        dependencies = json.loads((build_schema.REPO / "ci/migration-dependencies.json").read_text())["dependencies"]
+        self.assertIn("data_retention_job", dependencies["20261015_retention_job_missing_registration"])
+
     def test_category_collation_forward_replays_without_changing_historical_fingerprint(self):
         historical = "chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql"
         forward = "chengyinhub-admin/sql/migration_20261012_legacy_game_v51_category_collation.sql"
