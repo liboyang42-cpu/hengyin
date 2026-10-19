@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# A single disposable hosted fixture, not the live VPS/UAT or a cash-payment test.
+set -euo pipefail
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+python3 -I "$ROOT/ci/authenticated_redis_recovery_probe.py" --check-execution-only
+test "$(git -C "$ROOT" rev-parse HEAD)" = "$GITHUB_SHA"
+test "$(timeout 20s docker --context default context inspect --format '{{.Endpoints.docker.Host}}')" = unix:///var/run/docker.sock
+python3 -c 'import crypt; assert crypt.METHOD_BLOWFISH in crypt.methods'
+command -v strace >/dev/null
+JAR="$ROOT/chengyinhub-admin/target/chengyinhub-admin.jar"
+test -f "$JAR"
+RUN_NAME="cy-auth-$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+SCHEMA="cy_e2e_auth_${RUN_NAME#cy-auth-}"
+mkdir -p "${TMPDIR:?}"
+OUT=$(mktemp -d "$TMPDIR/cy-auth.XXXXXXXX")
+chmod 755 "$OUT"
+PRIVATE=$(mktemp -d)
+chmod 700 "$PRIVATE"
+export CHENGYIN_AUTH_FIXTURE_DB_PASSWORD
+CHENGYIN_AUTH_FIXTURE_DB_PASSWORD=$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')
+export MYSQL_ROOT_PASSWORD="$CHENGYIN_AUTH_FIXTURE_DB_PASSWORD"
+docker() { timeout 120s docker --context default "$@"; }
+cleanup() {
+  local result=$? unknown=0
+  trap - EXIT
+  if ! python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" cleanup "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "${PORT:-0}"; then unknown=1; fi
+  rm -f "$PRIVATE/credentials.json"
+  rm -f "$PRIVATE/mysql-version"
+  rm -f "$PRIVATE/startup.log"
+  rmdir "$PRIVATE" || unknown=1
+  if [ "$unknown" -ne 0 ]; then result=1; fi
+  printf 'Fixture terminal exit=%s cleanupUnknown=%s evidence=%s\n' "$result" "$unknown" "$OUT"
+  exit "$result"
+}
+trap cleanup EXIT
+trap 'exit 143' TERM HUP INT
+JDK_IMAGE=maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237
+MYSQL_IMAGE=mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff
+REDIS_IMAGE=redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+for image in "$JDK_IMAGE" "$MYSQL_IMAGE" "$REDIS_IMAGE"; do docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; done
+docker network create --internal --label "chengyin.auth-recovery=$RUN_NAME" "$RUN_NAME" >/dev/null
+test "$(docker network inspect "$RUN_NAME" --format '{{.Internal}}')" = true
+docker run -d --name "$RUN_NAME-mysql" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" -p 127.0.0.1::3306 \
+  --memory=1g --memory-swap=1g --cpus=1 --tmpfs /var/lib/mysql:rw,size=768m \
+  -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% "$MYSQL_IMAGE" --skip-log-bin --performance-schema=OFF --event-scheduler=OFF >/dev/null
+MYSQL_CID=$(docker inspect "$RUN_NAME-mysql" --format '{{.Id}}')
+docker run -d --name "$RUN_NAME-redis" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" --memory=64m --memory-swap=64m \
+  --tmpfs /data:rw,size=32m "$REDIS_IMAGE" redis-server --save '' --appendonly no >/dev/null
+REDIS_CID=$(docker inspect "$RUN_NAME-redis" --format '{{.Id}}')
+PORT=$(docker inspect "$MYSQL_CID" --format '{{(index (index .NetworkSettings.Ports "3306/tcp") 0).HostPort}}')
+ready=false
+for attempt in $(seq 1 90); do
+  if docker exec "$MYSQL_CID" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot -N -e "SELECT VERSION()"' > "$PRIVATE/mysql-version" 2>/dev/null; then ready=true; break; fi
+  sleep 1
+done
+test "$ready" = true
+grep -qx '8.0.45' "$PRIVATE/mysql-version"
+rm "$PRIVATE/mysql-version"
+python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" prepare "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
+mkdir "$OUT/trace-libs"
+STRACE=$(command -v strace)
+while read -r library; do cp -L "$library" "$OUT/trace-libs/"; done < <(ldd "$STRACE" | awk '/=> \// && $1 != "libc.so.6" {print $3}')
+MYSQL_IP=$(docker inspect "$MYSQL_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+REDIS_IP=$(docker inspect "$REDIS_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+docker run -d --name "$RUN_NAME-app" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" --dns 127.0.0.1 \
+  --memory=1g --memory-swap=1g --cpus=1 --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
+  --user "$(id -u):$(id -g)" -e LD_LIBRARY_PATH=/trace-libs \
+  -v "$STRACE:/trace/strace:ro" -v "$OUT/trace-libs:/trace-libs:ro" \
+  -v "$JAR:/application.jar:ro" -v "$ROOT/ci/upgrade-startup:/fixture:ro" -v "$OUT:/evidence" \
+  --entrypoint /trace/strace "$JDK_IMAGE" -f -s 0 -e trace=connect,sendto,sendmsg -o /evidence/network.trace \
+  java -Xmx512m -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
+  -jar /application.jar --spring.config.location=file:/fixture/application.properties \
+  "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/$SCHEMA?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
+  "--spring.data.redis.host=$REDIS_IP" >/dev/null
+APP_CID=$(docker inspect "$RUN_NAME-app" --format '{{.Id}}')
+ready=false
+for attempt in $(seq 1 150); do
+  docker logs "$APP_CID" > "$PRIVATE/startup.log" 2>&1
+  if grep -q '城瘾API启动成功' "$PRIVATE/startup.log"; then ready=true; break; fi
+  test "$(docker inspect "$APP_CID" --format '{{.State.Running}}')" = true || break
+  sleep 1
+done
+test "$ready" = true
+rm "$PRIVATE/startup.log"
+python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" exercise "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" "$PORT"
+python3 -I "$ROOT/ci/upgrade_startup_network.py" "$OUT/network.trace" "$MYSQL_IP" "$REDIS_IP"
+docker inspect "$APP_CID" "$MYSQL_CID" "$REDIS_CID" \
+  --format '{{.Id}} {{.Name}} networks={{range $key, $value := .NetworkSettings.Networks}}{{$key}} {{end}}' > "$OUT/isolation.log"
+echo 'PASS authenticated refund-lease Redis fault recovery; no cash/payment/human UI acceptance'
