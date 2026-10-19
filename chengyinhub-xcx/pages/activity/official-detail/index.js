@@ -154,7 +154,7 @@ Page({
     this.fetch();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
+  onShow() { this._navigating = false; merchantTheme.merchantPageShow(); },
 
   onHide() { merchantTheme.merchantPageRestore(); },
 
@@ -271,8 +271,9 @@ Page({
   },
 
   openOrganizer() {
-    if (!this.data.organizerEntry) return;
-    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + this.data.id });
+    if (!this.data.organizerEntry || this._navigating) return; // 跳转中不响应连点,免得叠两层控制台
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + this.data.id, complete: () => { this._navigating = false; } });
   },
 
   _rewards(e) {
