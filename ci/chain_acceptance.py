@@ -40,6 +40,9 @@ RECEIPT_SCHEMA = "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019"
 SUMMARY_SCHEMA = "CY-CHAIN-ACCEPTANCE-SUMMARY-20261019"
 REGISTRY_PATH = Path(__file__).resolve().parent / "real-storage-it-registry.json"
 FIXTURE_CONFIG = Path(__file__).resolve().parent / "chain-acceptance" / "application-e2e.properties"
+# 打包的 logback.xml 写死 /home/ruoyi/logs，非 root 的 runner 建不了目录，Spring 直接中止；
+# 两个开关都要给：logback 自身的早期初始化会先于 Spring 的 logging.config 读取类路径上的配置。
+FIXTURE_LOGBACK = Path(__file__).resolve().parent / "chain-acceptance" / "logback.xml"
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 FAIL_PATH_RE = re.compile(r"^/(?:api|business)/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+){0,8}$")
@@ -657,8 +660,10 @@ def main_class(app_dir):
     return match.group(1)
 
 
-def java_command(app_dir, fail_path, config=FIXTURE_CONFIG):
-    command = ["java", "-Xmx1536m", "-Duser.timezone=Asia/Shanghai", "-Dfile.encoding=UTF-8"]
+def java_command(app_dir, fail_path, config=FIXTURE_CONFIG, logback=FIXTURE_LOGBACK):
+    logback = Path(logback).resolve()
+    command = ["java", "-Xmx1536m", "-Duser.timezone=Asia/Shanghai", "-Dfile.encoding=UTF-8",
+               "-Dlogging.config=%s" % logback, "-Dlogback.configurationFile=%s" % logback]
     if fail_path:
         command.append("-De2e.fail.path=%s" % fail_path)
     command += ["-cp", str(Path(app_dir).resolve()), main_class(app_dir),
@@ -686,6 +691,8 @@ def start_app(app_dir, work_dir, out_dir, fail_path, environ):
              "env": public_env(env), "pid": process.pid}
     if not ready:
         stop_app(process)
+        tail = (Path(out_dir) / "application.log").read_text(encoding="utf-8", errors="replace").splitlines()[-60:]
+        print("---- application.log (last %d lines) ----\n%s" % (len(tail), "\n".join(tail)), file=sys.stderr)
         raise GateError("应用未在 %ds 内就绪（退出码 %s）" % (APP_READY_SECONDS, process.poll()))
     return process, facts
 
