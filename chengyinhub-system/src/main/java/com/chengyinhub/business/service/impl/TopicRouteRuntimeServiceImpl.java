@@ -2570,9 +2570,13 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordMistake(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        recordMistake(memberId, topicId, activityId, nodeId, null);
+    }
+
+    private void recordMistake(Long memberId, Long topicId, Long activityId, Long nodeId, TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -2639,33 +2643,55 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordPassed(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, boolean passed) {
+        recordPassed(memberId, topicId, activityId, nodeId, actionId, passed, null);
+    }
+
+    private void recordPassed(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, boolean passed, TopicRouteSession targetSession) {
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
         receipt.put("nodeId", nodeId); receipt.put("passed", passed);
         recordFact(memberId, topicId, activityId, nodeId, actionId, "passed:", "PASSED",
-                SYS_PASSED_PREFIX, Integer.valueOf(passed ? 1 : 0), receipt);
+                SYS_PASSED_PREFIX, Integer.valueOf(passed ? 1 : 0), receipt, targetSession);
     }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordOutcome(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, int outcome) {
+        recordOutcome(memberId, topicId, activityId, nodeId, actionId, outcome, null);
+    }
+
+    private void recordOutcome(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, int outcome, TopicRouteSession targetSession) {
         if (outcome <= 0) return;   // 序号从 1 起;0 / 负数 = 调用方没算出结果,不写
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
         receipt.put("nodeId", nodeId); receipt.put("outcome", outcome);
         recordFact(memberId, topicId, activityId, nodeId, actionId, "outcome:", "OUTCOME",
-                SYS_OUTCOME_PREFIX, Integer.valueOf(outcome), receipt);
+                SYS_OUTCOME_PREFIX, Integer.valueOf(outcome), receipt, targetSession);
     }
 
     /**
      * 玩法事实写本局(recordPassed / recordOutcome 共用):gate、外来节点、幂等、CAS 一处实现。
      * 两者只差写哪个 sys 键、动作 id 前缀和回执 —— 各抄一份的话,改一边的闸另一边就漏了。
      */
+    /** Internal composite results retain the verified instance; legacy public fact methods keep their scope. */
+    private TopicRouteSession factSession(Long memberId, Long topicId, Long activityId,
+                                          TopicRouteSession targetSession) {
+        if (targetSession == null) return TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = routeMapper.selectAccessibleById(targetSession.getId(), memberId);
+        if (session == null || !memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())
+                || !java.util.Objects.equals(targetSession.getActivityId(), session.getActivityId())
+                || !java.util.Objects.equals(targetSession.getPlayInstanceId(), session.getPlayInstanceId())) {
+            throw new ServiceException("本局已更新，请刷新", 409);
+        }
+        return session;
+    }
+
     private void recordFact(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, String actionPrefix,
-                            String outcomeCode, String varPrefix, Integer value, Map<String, Object> receipt) {
+                            String outcomeCode, String varPrefix, Integer value, Map<String, Object> receipt,
+                            TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
         String key = actionId == null ? "" : actionId.trim();
         if (key.isEmpty()) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -2719,12 +2745,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordChoice(Long memberId, Long topicId, Long activityId, Long nodeId, String stepOrKit, String optionId) {
+        recordChoice(memberId, topicId, activityId, nodeId, stepOrKit, optionId, null);
+    }
+
+    private void recordChoice(Long memberId, Long topicId, Long activityId, Long nodeId, String stepOrKit, String optionId, TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
         // stepOrKit 是分支步骤 id 或玩法段名,两种都由下面的配置查找定夺,这里不预筛。
         String kit = stepOrKit == null ? "" : stepOrKit.trim();
         if (kit.isEmpty()) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -3371,7 +3401,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
     private void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices,JsonNode decision,String attemptId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(session==null || !instance.equals(genericPlayer(session)?gameplayInstance(memberId,topicId,activityId,nodeId):session.getPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
+        if(session==null || instance==null || !instance.equals(genericPlayer(session)?gameplayInstance(memberId,topicId,activityId,nodeId):session.getPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
         JourneyRules rules = sessionRules(session);
         if (decision!=null && !genericPlayer(session))throw new ServiceException("Outcome settlement requires a generic player session",409);
         if (genericPlayer(session)) {
@@ -3453,10 +3483,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             commitJourneyAction(session, nodeId, event, "CHOICE", receipt, state);
             return;
         }
-        if(mistake) recordMistake(memberId,topicId,activityId,nodeId);
-        if(passed!=null) recordPassed(memberId,topicId,activityId,nodeId,actionId,passed);
-        if(outcome>0) recordOutcome(memberId,topicId,activityId,nodeId,actionId,outcome);
-        for(String[] choice:choices) recordChoice(memberId,topicId,activityId,nodeId,choice[0],choice[1]);
+        if(mistake) recordMistake(memberId,topicId,activityId,nodeId,session);
+        if(passed!=null) recordPassed(memberId,topicId,activityId,nodeId,actionId,passed,session);
+        if(outcome>0) recordOutcome(memberId,topicId,activityId,nodeId,actionId,outcome,session);
+        for(String[] choice:choices) recordChoice(memberId,topicId,activityId,nodeId,choice[0],choice[1],session);
     }
     @Override public JsonNode publishedR5NodeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {
         JsonNode frozen=sharedSnapshot(memberId,topicId,activityId,nodeId);
