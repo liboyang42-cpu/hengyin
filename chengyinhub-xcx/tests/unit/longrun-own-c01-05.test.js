@@ -25,7 +25,7 @@ for (const change of ['activity', 'session', 'task', 'submission', 'unload']) te
   if (change === 'session') h.page.data.gameModule.sessionId = 92;
   if (change === 'task') h.page.data.gameModule.nodes[0].playerTask.taskCode = 'PHOTO_B';
   if (change === 'submission') h.page.data.gameModule.nodes[0].submission = { submissionId: 8, status: 'PENDING' };
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   h.uploads[0](['https://cdn.example.com/fixture.jpg']);
   assert.equal(h.page.data.gameModule.nodes[0].taskEvidence, undefined);
 });

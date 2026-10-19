@@ -20,7 +20,7 @@ for (const change of ['target', 'restarted', 'stopped', 'account', 'activity', '
   if (change === 'stopped') h.page.data.nav.active = false;
   if (change === 'account') h.account('22');
   if (change === 'activity') h.page.data.activityId = 19;
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   h.requests[0].success({ code: 200, data: { line: 'old fixture line' } });
   await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(h.bubbles, []);

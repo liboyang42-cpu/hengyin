@@ -25,7 +25,7 @@ for (const change of ['activity', 'session', 'task', 'status', 'unload']) test('
   if (change === 'session') h.page.data.gameModule.sessionId = 92;
   if (change === 'task') h.page.data.gameModule.nodes[0].playerTask.taskCode = 'SCAN_B';
   if (change === 'status') h.page.data.gameModule.nodes[0].status = 'COMPLETED';
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   h.scans[0].success({ result: 'fixture-code' });
   h.scans[0].fail({ errMsg: 'camera failed' });
   assert.equal(h.page.data.gameModule.nodes[0].taskEvidence, undefined);

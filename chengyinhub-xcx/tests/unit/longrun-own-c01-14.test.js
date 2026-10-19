@@ -20,7 +20,7 @@ for (const change of ['topic', 'activity', 'account', 'load', 'unload']) test('O
   if (change === 'activity') h.page.data.activityId = 19;
   if (change === 'account') h.account('22');
   if (change === 'load') h.page._playLoadEpoch = 1;
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   const before = h.patches.length; h.requests[0].success(response);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(h.patches.length, before);

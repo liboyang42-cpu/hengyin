@@ -20,7 +20,7 @@ for (const change of ['activity', 'epoch', 'unload']) test('restore read ignores
   h.page._restoreRunSession({}, {}, []);
   if (change === 'activity') h.page.data.activityId = '19';
   if (change === 'epoch') h.page._runRestoreEpoch += 1;
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   h.requests[0].success({ code: 200, data: { runState: 'PAUSED', elapsedSeconds: 90, savedAt: 100 } });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(h.page.restores || 0, 0);

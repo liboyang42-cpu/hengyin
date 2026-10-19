@@ -3,8 +3,11 @@
 const { test } = require('node:test'); const assert = require('node:assert/strict'); const path = require('node:path');
 function load() {
   let definition, member = '11'; const requests = [], feedback = [], reads = [];
-  global.getApp = () => ({ globalData: {}, getUserID: () => member, sendRequest: r => requests.push(r) });
-  global.Page = v => { definition = v; }; global.wx = {};
+  // master 的 leadArrive 先经用途说明弹窗、再取一次 GCJ02 定位才 POST:真实登录态 + 用户同意 + 定位成功。
+  global.getApp = () => ({ globalData: {}, DEV_TOKEN: 'dev-token', getUserID: () => member, getAuthorization: () => 'fixture-session',
+    sendRequest: r => requests.push(r) });
+  global.Page = v => { definition = v; };
+  global.wx = { showModal: o => o.success({ confirm: true }), getLocation: o => o.success({ latitude: 31.23, longitude: 121.47 }) };
   const file = path.resolve(__dirname, '../../pages/play/index.js'); delete require.cache[file]; require(file);
   const page = Object.assign({}, definition, { data: { activityId: 9, topicId: 8 }, diegetic: v => feedback.push(v), loadTeamProgress: () => reads.push(true) });
   return { page, requests, feedback, reads, account: v => { member = v; } };

@@ -51,6 +51,8 @@ function loadPlayPage() {
   delete require.cache[require.resolve(PLAY_PAGE)]
   require(PLAY_PAGE)
   const page = Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) })
+  // 里程碑只在通关卡展示时读取(openFinish 先置 showFinish 再调 loadMilestone)
+  page.data.showFinish = true
   page.setData = (patch, callback) => {
     Object.keys(patch || {}).forEach((key) => setByPath(page.data, key, patch[key]))
     if (callback) callback()

@@ -22,7 +22,7 @@ for (const change of ['activity', 'account', 'load', 'unload']) test('route GET 
   if (change === 'activity') h.page.data.activityId = 19;
   if (change === 'account') h.account('22');
   if (change === 'load') h.page._playLoadEpoch = 1;
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   h.requests[0].success({ code: 200, data: { revision: 3 } });
   assert.equal(await pending, false);
   assert.deepEqual(h.applied, []);

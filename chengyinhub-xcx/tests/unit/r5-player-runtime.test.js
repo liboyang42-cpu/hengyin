@@ -82,7 +82,8 @@ test('Page R5 check uses Advanced actions; legacy keeps existing endpoint', asyn
 });
 
 test('Frozen R5 encounter opens Advanced session rather than legacy check, and check close returns to pending task', async () => {
-  const p = page();
+  // 探测由打开节点卡触发:回包落地时节点卡仍开着这个未完成节点
+  const p = page({ nodes: [{ nodeId: 29, done: false }], sheet: { show: true, node: { nodeId: 29 } } });
   response = { code: 200, data: { nodeId: 29, config: { outcomeRulesVersion: 1 }, allowedActions: ['check'], check: { checkId: 'c' } } };
   p._probeJourneyCheck({ nodeId: 29 });
   await new Promise(resolve => setImmediate(resolve));

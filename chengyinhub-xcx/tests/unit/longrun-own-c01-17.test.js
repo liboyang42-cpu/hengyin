@@ -25,7 +25,7 @@ for (const change of ['node', 'kit', 'account', 'unload', 'component']) test('st
   if (change === 'node') h.page._playKitNodeId = 32;
   if (change === 'kit') h.page.data.playKit.kit = { type: 'steps' };
   if (change === 'account') h.account('22');
-  if (change === 'unload') h.page._playUnloaded = true;
+  if (change === 'unload') h.page._playDisposed = true;
   if (change === 'component') h.page.selectComponent = () => ({});
   h.runs[0].success({ encryptedData: 'fixture-encrypted', iv: 'fixture-iv' });
   assert.deepEqual(h.actions, []);
