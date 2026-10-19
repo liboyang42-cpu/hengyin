@@ -2,7 +2,7 @@
 -- 只读预检(全 SELECT,绝不改库)。用途:确认 d78f18c 系列迁移是否已落生产库,
 -- 判断小程序能否安全上体验版。本机出口 IP 不在白名单,需在白名单主机/宝塔 phpMyAdmin
 -- 上对库 chengyinhubdb 执行本文件,逐段对照「期望」。
--- 库:jdbc:mysql://47.103.124.64:3306/chengyinhubdb
+-- 库:jdbc:mysql://<生产库主机>:3306/chengyinhubdb
 -- ============================================================
 SET @db := 'chengyinhubdb';
 

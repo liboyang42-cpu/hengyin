@@ -65,7 +65,7 @@ class RoamExploreDayCandidateMyBatisIT {
     @Test
     void rejectsAnyNonDedicatedLocalJdbcBeforeDatasourceCreation() {
         assertThrows(IllegalStateException.class,
-                () -> requireDedicatedLocalFixture("jdbc:mysql://47.103.124.64:3306/chengyinhubdb"));
+                () -> requireDedicatedLocalFixture("jdbc:mysql://203.0.113.7:3306/chengyinhubdb"));
         assertThrows(IllegalStateException.class,
                 () -> requireDedicatedLocalFixture("jdbc:mysql://127.0.0.1:3306/chengyinhubdb"));
         assertThrows(IllegalStateException.class,
