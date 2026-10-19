@@ -1,6 +1,7 @@
 package com.chengyinhub.framework.aspectj;
 
 import com.chengyinhub.common.annotation.DeadlockRetry;
+import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.framework.config.DeadlockRetryConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,6 +31,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 死锁重试边界：用与生产相同的装配（AspectJ 自动代理 + 默认顺序的事务通知器 + DeadlockRetryConfig），
@@ -89,6 +98,16 @@ class DeadlockRetryInterceptorTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void rateLimiterCountsOnceAcrossTheRetry() {
+        // master 的打卡端点同时挂 @RateLimiter（Redis 计数不随事务回滚）：限流必须在重试外层，只计一次。
+        RedisTemplate<Object, Object> redis = context.getBean(RedisTemplate.class);
+        assertEquals("ok", worker.limitedFailFirst());
+        assertEquals(Arrays.asList("attempt1:tx", "rolled_back", "attempt2:tx", "committed"), worker.events());
+        verify(redis, times(1)).execute(any(RedisScript.class), anyList(), any(), any());
+    }
+
+    @Test
     void retryAdvisorIsOrderedOutsideTheDefaultTransactionAdvisor() {
         assertTrue(DeadlockRetryConfig.ORDER < org.springframework.core.Ordered.LOWEST_PRECEDENCE);
     }
@@ -96,8 +115,22 @@ class DeadlockRetryInterceptorTest {
     @Configuration
     @EnableAspectJAutoProxy(proxyTargetClass = true)
     @EnableTransactionManagement(proxyTargetClass = true)
-    @Import(DeadlockRetryConfig.class)
+    @Import({DeadlockRetryConfig.class, RateLimiterAspect.class})
     static class Wiring {
+        @Bean
+        @SuppressWarnings("unchecked")
+        RedisTemplate<Object, Object> redisTemplate() {
+            RedisTemplate<Object, Object> redis = mock(RedisTemplate.class);
+            when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(1L);
+            return redis;
+        }
+
+        @Bean
+        @SuppressWarnings("unchecked")
+        RedisScript<Long> limitScript() {
+            return mock(RedisScript.class);
+        }
+
         @Bean
         DataSource dataSource() {
             return new DriverManagerDataSource("jdbc:h2:mem:deadlock_retry;DB_CLOSE_DELAY=-1", "sa", "");
@@ -140,6 +173,14 @@ class DeadlockRetryInterceptorTest {
         public void alwaysDeadlock() {
             begin();
             throw new DeadlockLoserDataAccessException("1213", null);
+        }
+
+        @RateLimiter(time = 10, count = 120)
+        @DeadlockRetry
+        @Transactional(rollbackFor = Exception.class)
+        public String limitedFailFirst() {
+            if (begin() == 1) throw new DeadlockLoserDataAccessException("1213", null);
+            return "ok";
         }
 
         @Transactional(rollbackFor = Exception.class)
