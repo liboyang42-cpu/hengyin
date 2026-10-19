@@ -140,6 +140,7 @@ function beginStart() {
 function acquire(key, opts) {
   opts = opts || {};
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
+  cancelNotifications(key, false); // 新领取取代该 key 在途的旧失败通知
   var owner = owners[key] = { key: key, opts: opts };
   if (started) { opts.success && opts.success(usingBackground); return; }
   waiters.push(owner);
