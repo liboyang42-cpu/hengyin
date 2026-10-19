@@ -6007,7 +6007,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         activity.setDelFlag(0);
         activity.setCreateBy(username);
         activity.setCreateTime(new Date());
-        cmsActivityMapper.insertCmsActivity(activity);
+        if (cmsActivityMapper.insertCmsActivity(activity) != 1
+                || activity.getId() == null || activity.getId() <= 0L) {
+            throw new IllegalStateException("自办活动创建失败，未生成有效活动身份");
+        }
         Long activityId = activity.getId();
 
         // 2) 把主题票(ownerType=1)复制为活动票(ownerType=2)，否则活动无票可买(与进池调配中标共用同一 helper)
