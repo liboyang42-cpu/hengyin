@@ -69,6 +69,9 @@ class E04_07Test {
         when(members.deductPoints(501L,5)).thenReturn(1);
         when(points.insertUmsMemberPointsDetail(any())).thenReturn(1);
         when(xp.selectXpForUpdate(501L,700L)).thenReturn(3);
+        // master 校验通关经验发放事实删除恰为 1 行，并按 earned_exp_id 冲回原笔。
+        when(xp.deleteAward(501L,700L)).thenReturn(1);
+        when(xp.selectEarnedExpId(501L,700L)).thenReturn(null); // 历史直发无原笔获得明细
         when(growth.selectExpForUpdate(501L)).thenReturn(8);
         when(growth.deductExp(501L,3)).thenReturn(1);
         reverse();
