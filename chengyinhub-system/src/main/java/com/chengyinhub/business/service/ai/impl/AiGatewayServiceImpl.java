@@ -121,7 +121,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             if (used != null && used > dailyLimit)
             {
                 log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
-                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+                throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
             }
         }
 
@@ -288,7 +288,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             log.info("[AiGateway] rate-limit bizType={} group={} memberId={} used={} limit={}",
                     bizType, rateGroup, memberId, used, dailyLimit);
-            throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+            throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
         }
     }
 
