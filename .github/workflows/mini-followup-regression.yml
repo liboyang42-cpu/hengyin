@@ -36,13 +36,11 @@ jobs:
       CHENGYIN_FUNDS_MYSQL_IT: '1'
       CHENGYIN_NPC_DELETE_IT: '1'
       CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
-      CHENGYIN_TEST_MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
       CHENGYIN_TEST_MYSQL_DATABASE_BASE: cy_followup
       CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
       CHENGYIN_TEST_MYSQL_USER: root
       CHENGYIN_TEST_MYSQL_PASSWORD: root
       CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
-      CHENGYIN_MYBATIS_IT_PORT: ${{ job.services.mysql.ports[3306] }}
       CHENGYIN_MYBATIS_IT_DB_SUFFIX: _${{ github.run_id }}
       CHENGYIN_MYBATIS_IT_USER: root
       CHENGYIN_MYBATIS_IT_PASSWORD: root
@@ -57,7 +55,11 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Verify exact checkout and record execution start
+        env:
+          MYSQL_MAPPED_PORT: ${{ job.services.mysql.ports[3306] }}
         run: |
+          echo "CHENGYIN_TEST_MYSQL_PORT=$MYSQL_MAPPED_PORT" >> "$GITHUB_ENV"
+          echo "CHENGYIN_MYBATIS_IT_PORT=$MYSQL_MAPPED_PORT" >> "$GITHUB_ENV"
           test "$(git rev-parse HEAD)" = "$VALIDATED_SOURCE_SHA"
           date +%s > /tmp/mini-followup-started-at
       - name: Run explicit unit and real MySQL suites
