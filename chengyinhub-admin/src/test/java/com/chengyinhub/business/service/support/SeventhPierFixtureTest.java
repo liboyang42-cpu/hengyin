@@ -326,6 +326,8 @@ class SeventhPierFixtureTest {
         when(sessionMapper.selectMemberTopicSessions(memberId, TOPIC_ID)).thenAnswer(inv -> java.util.Collections.singletonList(stored[0]));
         when(sessionMapper.insertAction(any())).thenReturn(1);
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        // CORE OWN-C06-25：动作回执总以最终结算值回写原动作。
+        when(sessionMapper.updateActionResponse(any(), any())).thenReturn(1);
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(5009L);

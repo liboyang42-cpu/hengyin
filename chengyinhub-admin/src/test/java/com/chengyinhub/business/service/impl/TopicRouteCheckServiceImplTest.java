@@ -108,6 +108,10 @@ class TopicRouteCheckServiceImplTest {
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         session = newSession();
         when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenAnswer(inv -> java.util.Collections.singletonList(session));
+        // CORE OWN-C06-1x：检定按「当前局」定位（selectCurrentByOwner），只回该场次的本局。
+        when(routeMapper.selectCurrentByOwner(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq(TOPIC),
+                org.mockito.ArgumentMatchers.eq(MEMBER))).thenAnswer(inv -> session != null
+                && java.util.Objects.equals(inv.getArgument(0), session.getActivityId()) ? session : null);
         when(routeMapper.insertAction(any(TopicRouteAction.class))).thenAnswer(inv -> {
             TopicRouteAction action = inv.getArgument(0);
             action.setId(500L + actions.size());
@@ -122,6 +126,13 @@ class TopicRouteCheckServiceImplTest {
             TopicRouteSession value = inv.getArgument(0);
             value.setVersion(value.getVersion() + 1);
             return 1;
+        });
+        // CORE OWN-C06-25：检定回执总以最终结算值回写原动作；夹具把回写落到已记录的动作上。
+        when(routeMapper.updateActionResponse(anyLong(), anyString())).thenAnswer(inv -> {
+            for (TopicRouteAction action : actions) {
+                if (inv.getArgument(0).equals(action.getId())) { action.setResponseJson(inv.getArgument(1)); return 1; }
+            }
+            return 0;
         });
     }
 

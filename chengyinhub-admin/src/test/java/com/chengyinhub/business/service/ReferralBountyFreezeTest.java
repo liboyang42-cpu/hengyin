@@ -78,8 +78,12 @@ class ReferralBountyFreezeTest {
     @org.junit.jupiter.api.BeforeEach
     void wireSharedFrozenResolver() {
         when(playerWithdrawalCooldownService.frozenAmount(anyLong())).thenReturn(BigDecimal.ZERO);
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "frozenAmountResolver",
-                new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, playerWithdrawalCooldownService));
+        com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver resolver =
+                new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, playerWithdrawalCooldownService);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "frozenAmountResolver", resolver);
+        // CORE OWN-C04-21：银行卡腿改由 WithdrawalBalanceAdmissionService 锁读余额与冻结额后扣款，沿用其夹具适配器。
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
     }
 
     private void givenBalance(String balance) {
