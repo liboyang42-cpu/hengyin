@@ -56,10 +56,10 @@
             <!-- 未登录时 userInfo.role 为 null,直传会触发 roleBadge 属性类型告警(2026-07-30 复拍采到);
                  兜底放在调用方,不动 components/roleBadge -->
             <view class="pc-role-badge"><roleBadge role="{{userInfo.role || ''}}" /></view>
-            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==2}}" src="/images/group2.png" mode="widthFix" />
-            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==3}}" src="/images/group3.png" mode="widthFix" />
-            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==4}}" src="/images/group4.png" mode="widthFix" />
-            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==5}}" src="/images/group5.png" mode="widthFix" />
+            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==2}}" src="/subpackageMember/images/group2.png" mode="widthFix" />
+            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==3}}" src="/subpackageMember/images/group3.png" mode="widthFix" />
+            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==4}}" src="/subpackageMember/images/group4.png" mode="widthFix" />
+            <image class="pc-lv-badge" wx:if="{{userInfo.levelId==5}}" src="/subpackageMember/images/group5.png" mode="widthFix" />
             <text>Lv.{{growthLevel}} 城市探索者</text>
           </view>
           <view class="pc-gamer-meta">
