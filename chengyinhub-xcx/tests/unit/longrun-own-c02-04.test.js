@@ -1,7 +1,7 @@
 // NOT_RUN: verification deferred to user local session.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const d = require('../../utils/publish/pro-editor-draft.js');
+const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
 test('existing-topic revision checks preserve drafts when either baseline is unknown', () => {
   for (const [stored, current] of [['v1','v2'], ['','v2'], ['v1',''], ['','']]) {
     const values = {};

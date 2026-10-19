@@ -1,7 +1,7 @@
 // NOT_RUN: local verification deferred by user.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const d = require('../../utils/publish/pro-editor-draft.js');
+const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
 test('wrong owner cannot delete scoped or legacy envelopes, and own delete removes stale legacy copy', () => {
   const values = {};
   const wx = { getStorageSync: k => values[k], setStorageSync: (k,v) => { values[k]=v; }, removeStorageSync: k => { delete values[k]; } };

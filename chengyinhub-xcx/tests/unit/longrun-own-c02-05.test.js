@@ -1,7 +1,7 @@
 // NOT_RUN: local verification deferred. Guards the existing L05 contract without changing it.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const d = require('../../utils/publish/pro-editor-draft.js');
+const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
 test('restoring and autosaving the same UNKNOWN envelope preserves its original publish identity', () => {
   for (const identity of [{ draftUuid:'new-topic' }, { topicId:77 }]) {
     const values = {};

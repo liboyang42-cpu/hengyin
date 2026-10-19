@@ -75,6 +75,6 @@ test('late user info cannot replace collaborators from the actual edit-detail ma
   page.applyEditingTopic({ topic:{ id:77, updateTime:'v1', productType:1 }, collaboratorIds:[42,43], chapters:[], tickets:[] });
   sent[0].success({ code:200, data:{ id:42, nickname:'Owner', avatar:'' } });
   assert.deepEqual(page.data.formData.collaboratorIds, [42,43]);
-  const d = require('../../utils/publish/pro-editor-draft.js');
+  const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   assert.deepEqual(d.loadDraft(wx, { topicId:'77' }, { memberId:42 }).envelope.formData.collaboratorIds, [42,43]);
 });

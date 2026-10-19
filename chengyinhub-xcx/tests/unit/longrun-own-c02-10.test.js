@@ -83,7 +83,7 @@ test('unreadable active draft cannot be treated as missing and cannot send or ov
   } finally { wx.getStorageSync = originalGet; }
 });
 test('a read failure of a pointed UNKNOWN envelope propagates instead of silently creating another UUID', () => {
-  const d = require('../../utils/publish/pro-editor-draft.js');
+  const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   const key = d.saveDraft(wx, { memberId:42, draftUuid:'unknown', publishAttempt:{ status:'UNKNOWN', topicId:'' }, formData:{} });
   const originalGet = wx.getStorageSync;
   wx.getStorageSync = k => { if (k === key) throw new Error('unreadable envelope'); return originalGet(k); };

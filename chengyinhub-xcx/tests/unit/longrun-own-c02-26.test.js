@@ -67,7 +67,7 @@ function makePage() {
 }
 
 function restoreUnknown(attemptTopicId = '77') {
-  const draft = require('../../utils/publish/pro-editor-draft.js');
+  const draft = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   draft.saveDraft(wx, { memberId: 42, topicId: '77', baseRevision: 'same-second',
     publishAttempt: { status: 'UNKNOWN', topicId: attemptTopicId },
     formData: { name: 'local pending', chapters: [] } });
@@ -103,7 +103,7 @@ test('keeping local draft with equal revision retains UNKNOWN and local text', (
   assert.equal(page._publishAttempt.status, 'UNKNOWN');
   page.sendData({ name: 'local pending' });
   assert.equal(sent.length, 0);
-  const draft = require('../../utils/publish/pro-editor-draft.js');
+  const draft = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   assert.equal(draft.loadDraft(wx, { topicId: '77' }, { memberId: 42 }).envelope.publishAttempt.status, 'UNKNOWN');
 });
 

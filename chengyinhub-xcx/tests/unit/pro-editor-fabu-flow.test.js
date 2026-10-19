@@ -5,7 +5,7 @@ const path = require('node:path')
 
 const PAGE = '../../pages/publish/fabu/index.js'
 const ROOT = path.join(__dirname, '../..')
-const draftStore = require('../../utils/publish/pro-editor-draft.js')
+const draftStore = require('../../pages/publish/utils/publish/pro-editor-draft.js')
 
 let pageConfig
 let storage
@@ -322,7 +322,7 @@ test('每次素材变更立即原子保存完整草稿信封，重进恢复同�
   first.confrimNode()
 
   const draftUuid = first.data.draftUuid
-  const draftKey = draftStore.draftKeyFor({ draftUuid })
+  const draftKey = draftStore.draftKeyFor({ draftUuid }, 42)
   const envelope = storage[draftKey]
   assert.equal(envelope.memberId, 42)
   assert.equal(envelope.draftUuid, draftUuid)

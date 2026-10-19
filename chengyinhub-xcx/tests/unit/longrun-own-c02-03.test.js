@@ -1,7 +1,7 @@
 // NOT_RUN: user deferred verification.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const d = require('../../utils/publish/pro-editor-draft.js');
+const d = require('../../pages/publish/utils/publish/pro-editor-draft.js');
 test('pointer write failure leaves durable envelope recoverable and stale pointer resolves only own draft', () => {
   const values = {};
   const wx = { getStorageSync: k => values[k], getStorageInfoSync: () => ({ keys: Object.keys(values) }),

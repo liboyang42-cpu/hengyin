@@ -1,7 +1,7 @@
 // NOT_RUN: deferred to the next local verification session.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const drafts = require('../../utils/publish/pro-editor-draft.js');
+const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
 function storage() {
   const values = {};
   return { values, getStorageSync: k => values[k], setStorageSync: (k, v) => { values[k] = v; } };
