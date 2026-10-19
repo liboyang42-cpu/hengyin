@@ -83,6 +83,7 @@ Page({
     this._favoriteGeneration = (this._favoriteGeneration || 0) + 1;
     this._unlikeRequests = Object.create(null); this._postUnlikeRequests = Object.create(null);
     this._stopPullWithCurrent = false;
+    this._favoriteLoadedPages = Object.create(null);
     this.setData({ postList: [], ztList1: [], loading: false, refreshing: false, errorMsg: '', loginRequired: false,
       hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
     return true;
@@ -137,10 +138,13 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
-    const pageConfig = that.data.pageConfig;
+    const pageConfig = Object.assign({}, that.data.pageConfig);
+    const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
+    const previousPage = loadedPages.posts || Math.max(1, pageConfig.pageNum - 1);
     const hasOldContent = that.data.postList.length > 0;
     const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
+      that.setData({ pageConfig: { pageNum: previousPage, pageSize: pageConfig.pageSize } });
       that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message,
         loginRequired: !hasOldContent && isLoginRequired(app, res, statusCode) });
     };
@@ -162,6 +166,7 @@ Page({
             row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
             return row;
           });
+          loadedPages.posts = pageConfig.pageNum;
           const postList = pageConfig.pageNum === 1 ? rows : that.data.postList.concat(rows);
           that.setData({ postList: postList, hasMorePosts: res.data.hasMore === true, errorMsg: '' });
         } else finishLoadError(res, '收藏帖文加载失败');
@@ -191,10 +196,13 @@ Page({
     const that = this;
     this._syncFavoriteAccount();
     const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
-    const pageConfig = that.data.pageConfig;
+    const pageConfig = Object.assign({}, that.data.pageConfig);
+    const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
+    const previousPage = loadedPages.topics || Math.max(1, pageConfig.pageNum - 1);
     const hasOldContent = that.data.ztList1.length > 0;
     const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
+      that.setData({ pageConfig: { pageNum: previousPage, pageSize: pageConfig.pageSize } });
       if (hasOldContent) {
         that.setData({
           refreshing: false,
@@ -225,6 +233,7 @@ Page({
           
           // 处理日期格式
           list = that.processListData(list);
+          loadedPages.topics = pageConfig.pageNum;
           
           // 如果是第一页，直接替换；否则追加
           if (pageConfig.pageNum === 1) {
@@ -470,8 +479,7 @@ Page({
     if (!hasMore) return;
     
     // 加载下一页
-    pageConfig.pageNum += 1;
-    that.setData({ pageConfig });
+    that.setData({ pageConfig: { pageNum: pageConfig.pageNum + 1, pageSize: pageConfig.pageSize } });
     that.loadLikeData();
   },
 
