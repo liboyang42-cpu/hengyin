@@ -432,6 +432,7 @@ class ApiPlayProgressIdempotencyTest {
         doThrow(new DuplicateKeyException("badge dup")).when(badgeMapper)
                 .insertPlayerBadge(any(PlayerBadge.class));
         when(badgeMapper.selectOne(anyLong(), anyString(), anyLong())).thenReturn(new PlayerBadge());
+        when(badgeMapper.selectOneForUpdate(anyLong(), anyString(), anyLong())).thenReturn(new PlayerBadge());
 
         Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
 
@@ -566,6 +567,7 @@ class ApiPlayProgressIdempotencyTest {
         doThrow(new DuplicateKeyException("Duplicate badge")).when(badgeMapper)
                 .insertPlayerBadge(any(PlayerBadge.class));
         when(badgeMapper.selectOne(anyLong(), anyString(), anyLong())).thenReturn(new PlayerBadge());
+        when(badgeMapper.selectOneForUpdate(anyLong(), anyString(), anyLong())).thenReturn(new PlayerBadge());
 
         Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
 

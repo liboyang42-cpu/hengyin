@@ -193,6 +193,7 @@ class ApiRegistrationCompletionCouponTest
         }).doThrow(new DuplicateKeyException("uk_member_badge"))
                 .when(badgeMapper).insertPlayerBadge(any(PlayerBadge.class));
         when(badgeMapper.selectOne(PLAYER, "TOPIC_FINISH_" + TOPIC, TOPIC)).thenReturn(storedBadge);
+        when(badgeMapper.selectOneForUpdate(PLAYER, "TOPIC_FINISH_" + TOPIC, TOPIC)).thenReturn(storedBadge);
 
         for (int i = 0; i < 3; i++) {
             AjaxResult result = controller.scanQrCode("activity", CODE);

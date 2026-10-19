@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class TopicCompletionAwardServiceTest {
@@ -42,7 +43,7 @@ class TopicCompletionAwardServiceTest {
         when(f.badgeMapper.insertPlayerBadge(any(PlayerBadge.class)))
                 .thenReturn(1)
                 .thenThrow(new org.springframework.dao.DuplicateKeyException("duplicate"));
-        when(f.badgeMapper.selectOne(9L, "TOPIC_FINISH_7", 7L)).thenReturn(new PlayerBadge());
+        when(f.badgeMapper.selectOneForUpdate(9L, "TOPIC_FINISH_7", 7L)).thenReturn(new PlayerBadge());
 
         assertEquals(36, f.service.grantOnce(9L, 7L, 11L, redemptionTime).getEarnedXp());
         assertFalse(f.service.grantOnce(9L, 7L, 11L, redemptionTime).isFirstCompletion());
@@ -91,7 +92,7 @@ class TopicCompletionAwardServiceTest {
         when(f.budgets.computeBudget(7L)).thenReturn(Collections.<String, Object>singletonMap("remain", 36));
         when(f.badgeMapper.insertPlayerBadge(any(PlayerBadge.class)))
                 .thenThrow(new org.springframework.dao.DuplicateKeyException("duplicate"));
-        when(f.badgeMapper.selectOne(9L, "TOPIC_FINISH_7", 7L)).thenReturn(new PlayerBadge());
+        when(f.badgeMapper.selectOneForUpdate(9L, "TOPIC_FINISH_7", 7L)).thenReturn(new PlayerBadge());
         when(f.progressMapper.countCompletionClawbackMarkers(9L, 7L)).thenReturn(markers.length);
         when(f.progressMapper.selectCompletionClawbackMarkersForUpdate(9L, 7L)).thenReturn(java.util.Arrays.asList(markers));
         return f;
@@ -129,7 +130,8 @@ class TopicCompletionAwardServiceTest {
         verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
     }
 
-    /** 历史通关者(无冲回标记)或标记已被上一次补发消费:什么都不发,不加锁 —— 换一场再通关不许再领。 */
+    /** 历史通关者(无冲回标记)或标记已被上一次补发消费:什么都不发,也不加锁读冲回标记 —— 换一场再通关不许再领。
+     *  会员行照常在方法开头锁一次(串行并发通关),只锁一次。 */
     @Test
     void repeatCompletionWithoutClawbackGrantsNothingRetroactively() {
         Fixture f = repeatCompletion();
@@ -139,7 +141,8 @@ class TopicCompletionAwardServiceTest {
         verify(f.points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
         verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
         verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
-        verify(f.members, never()).lockMemberById(anyLong());
+        verify(f.members, times(1)).lockMemberById(9L);
+        verify(f.progressMapper, never()).selectCompletionClawbackMarkersForUpdate(anyLong(), anyLong());
     }
 
     /** 冲回后已重新发过一次 XP(发放事实又在了):即使 XP 标记还在也不再发第二份。 */
@@ -152,6 +155,49 @@ class TopicCompletionAwardServiceTest {
 
         verify(f.growth, never()).addCompletionExp(anyLong(), anyInt(), anyLong());
         verify(f.xpAwardMapper, never()).insert(any(), any(), any(), any());
+    }
+
+    // ---------------- 并发重复通关:先锁会员行排队,撞唯一键后用当前读确认「已通关」
+
+    /** 会员行锁在通关勋章写入之前:并发的第二个请求排在会员行上,不会在未提交的勋章行上与首个请求互等。 */
+    @Test
+    void memberRowIsLockedBeforeTheCompletionBadgeIsWritten() {
+        Fixture f = new Fixture();
+
+        assertTrue(f.service.grantOnce(9L, 7L, 11L, new Date(1000L)).isFirstCompletion());
+
+        org.mockito.InOrder order = inOrder(f.members, f.badgeMapper);
+        order.verify(f.members).lockMemberById(9L);
+        order.verify(f.badgeMapper).insertPlayerBadge(any(PlayerBadge.class));
+        verify(f.members, times(1)).lockMemberById(9L);
+    }
+
+    /** 撞唯一键后用当前读回查:REPEATABLE READ 调用方的旧快照不能把「已通关」误判成别的唯一键冲突。 */
+    @Test
+    void duplicateCompletionIsConfirmedWithACurrentRead() {
+        Fixture f = new Fixture();
+        when(f.badgeMapper.insertPlayerBadge(any(PlayerBadge.class)))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("duplicate"));
+        when(f.badgeMapper.selectOneForUpdate(9L, "TOPIC_FINISH_7", 7L)).thenReturn(new PlayerBadge());
+
+        assertFalse(f.service.grantOnce(9L, 7L, 11L, new Date(1000L)).isFirstCompletion());
+
+        verify(f.badgeMapper, never()).selectOne(anyLong(), anyString(), anyLong());
+        verify(f.progression, never()).onTopicComplete(anyLong(), anyLong());
+        verify(f.points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    /** 当前读也查不到这枚通关勋章:冲突来自别的唯一键,照旧抛出,不当成已通关。 */
+    @Test
+    void duplicateWithoutTheCompletionBadgeStillPropagates() {
+        Fixture f = new Fixture();
+        when(f.badgeMapper.insertPlayerBadge(any(PlayerBadge.class)))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("other unique key"));
+
+        assertThrows(org.springframework.dao.DuplicateKeyException.class,
+                () -> f.service.grantOnce(9L, 7L, 11L, new Date(1000L)));
+
+        verify(f.progression, never()).onTopicComplete(anyLong(), anyLong());
     }
 
     private static final class Fixture {

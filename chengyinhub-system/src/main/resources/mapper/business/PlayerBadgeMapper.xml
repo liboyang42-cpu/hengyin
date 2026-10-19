@@ -31,6 +31,15 @@
         limit 1
     </select>
 
+    <!-- 当前读(加锁读):通关勋章撞唯一键后的回查。调用方(如商家按章核销)可能在 REPEATABLE READ 里
+         已建过旧快照,普通读看不到并发请求刚提交的那一行。 -->
+    <select id="selectOneForUpdate" resultMap="PlayerBadgeResult">
+        <include refid="selectPlayerBadgeVo"/>
+        where member_id = #{memberId} and badge_code = #{badgeCode} and source_id = #{sourceId} and del_flag = 0
+        limit 1
+        for update
+    </select>
+
     <select id="countByMemberAndCode" resultType="int">
         select count(1) from player_badge
         where member_id = #{memberId} and badge_code = #{badgeCode} and del_flag = 0

@@ -273,6 +273,7 @@ class RedemptionRewardClawbackMyBatisTest {
         when(badges.insertPlayerBadge(any())).thenReturn(1)
                 .thenThrow(new org.springframework.dao.DuplicateKeyException("勋章已在"));
         when(badges.selectOne(anyLong(), anyString(), anyLong())).thenReturn(new com.chengyinhub.business.domain.PlayerBadge());
+        when(badges.selectOneForUpdate(anyLong(), anyString(), anyLong())).thenReturn(new com.chengyinhub.business.domain.PlayerBadge());
         com.chengyinhub.business.service.IPlayerProgressionService progression = mock(com.chengyinhub.business.service.IPlayerProgressionService.class);
         when(progression.onTopicComplete(anyLong(), anyLong())).thenReturn(java.util.Collections.emptyList());
         com.chengyinhub.business.service.IXpBudgetService budget = mock(com.chengyinhub.business.service.IXpBudgetService.class);

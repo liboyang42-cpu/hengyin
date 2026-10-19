@@ -19,5 +19,8 @@ public interface PlayerBadgeMapper
 
     PlayerBadge selectOne(@Param("memberId") Long memberId, @Param("badgeCode") String badgeCode, @Param("sourceId") Long sourceId);
 
+    /** 当前读(加锁读):通关勋章撞唯一键后的回查专用,调用方可能在 REPEATABLE READ 里已有旧快照。 */
+    PlayerBadge selectOneForUpdate(@Param("memberId") Long memberId, @Param("badgeCode") String badgeCode, @Param("sourceId") Long sourceId);
+
     int insertPlayerBadge(PlayerBadge playerBadge);
 }

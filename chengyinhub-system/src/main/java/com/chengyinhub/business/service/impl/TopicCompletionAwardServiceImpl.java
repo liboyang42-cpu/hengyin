@@ -44,6 +44,12 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
     @Transactional(rollbackFor = Exception.class)
     public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt,
             RewardPolicy rewardPolicy) {
+        // 同一会员的通关发奖按会员行串行:并发的重复通关(玩家最后一站打卡与商家扫码同时到、
+        // 连点或弱网重试)在这里排队,等先到的那笔提交后撞通关勋章唯一键,按「已通关」返回。
+        // 不先锁的话,它会在未提交的勋章行上等待,与先到那笔随后写入的里程/通关徽章互相等待,
+        // 被 InnoDB 选为死锁牺牲者整单回滚(F3 真库 PlayerGrowthConcurrencyMySqlIT)。
+        // 锁序:打卡路径在外层已先锁会员行(节点打卡积分)再写成长;商家核销先锁报名/台账行再进这里;两边一致。
+        umsMemberService.lockMemberById(memberId);
         CmsTopic topic = topicService.selectCmsTopicById(topicId);
         if (topic == null) throw new IllegalStateException("主题不存在 topicId=" + topicId);
         Date factTime = occurredAt == null ? new Date() : occurredAt;
@@ -67,7 +73,9 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
             if (rows != 1) throw new IllegalStateException("通关勋章插入异常 rows=" + rows);
             firstCompletion = true;
         } catch (DuplicateKeyException duplicate) {
-            if (playerBadgeMapper.selectOne(memberId, code, topicId) == null) throw duplicate;
+            // 当前读:商家核销路径按 DEFAULT 隔离级别进来、此前已有普通读,REPEATABLE READ 下的旧快照
+            // 看不到并发请求刚提交的勋章;普通读回查会误把「已通关」当成别的唯一键冲突抛出去。
+            if (playerBadgeMapper.selectOneForUpdate(memberId, code, topicId) == null) throw duplicate;
             firstCompletion = false;
         }
 
@@ -78,10 +86,9 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
         // ⚠️ 非首次通关只补发「确实被冲回过」的那几项,补发即消费标记:
         //    · 历史通关者(早于券日志/XP 事实表上线)没有标记 ⇒ 不倒补;
         //    · 积分判重键是 (member,13,本场 id),标记不消费的话换一场再通关会再领一次 ⇒ 补发后立刻删标记;
-        //    · 并发:先锁会员行再加锁读标记,两个同时到的通关请求只有一个补发。
+        //    · 并发:会员行已在方法开头锁住,再加锁读标记,两个同时到的通关请求只有一个补发。
         java.util.Set<String> reopened = java.util.Collections.emptySet();
         if (!firstCompletion && growthMissionProgressMapper.countCompletionClawbackMarkers(memberId, topicId) > 0) {
-            umsMemberService.lockMemberById(memberId);
             reopened = new java.util.HashSet<>(
                     growthMissionProgressMapper.selectCompletionClawbackMarkersForUpdate(memberId, topicId));
         }
