@@ -646,6 +646,7 @@ public class ApiTemplateController extends BaseController {
             return error("模版不存在");
         } else {
             boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
+            cmsMemberTemplate.setCanEdit(isOwner);
             // 草稿(draftStatus=0)允许本人回填编辑,跳过"审核中/已下架"拦截
             boolean isDraft = cmsMemberTemplate.getDraftStatus() != null && cmsMemberTemplate.getDraftStatus() == 0;
             boolean isOwnerPending = isOwner
