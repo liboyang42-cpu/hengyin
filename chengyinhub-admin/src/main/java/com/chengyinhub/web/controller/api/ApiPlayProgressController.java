@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.vo.LeaderboardItemVO;
 import com.chengyinhub.business.domain.vo.SpoilerAccessSnapshot;
 import java.util.ArrayList;
@@ -1314,6 +1315,7 @@ public class ApiPlayProgressController extends BaseController
      */
     @Operation(summary = "扫码打卡")
     @PostMapping("/checkin")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId)
@@ -1453,6 +1455,7 @@ public class ApiPlayProgressController extends BaseController
      */
     @Operation(summary = "答题完成(文字/选项)")
     @PostMapping("/answer")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion)
@@ -1565,6 +1568,7 @@ public class ApiPlayProgressController extends BaseController
     /** 查看答案以 0 解谜分辅助完成；仅适用于城市定向文字/单选谜题。 */
     @Operation(summary = "城市定向谜题查看答案并辅助完成")
     @PostMapping("/puzzle/reveal")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(String activityId, String nodeId, String topicId,
             String routeActionId, Integer expectedRouteVersion)
@@ -1859,6 +1863,7 @@ public class ApiPlayProgressController extends BaseController
 
     @Operation(summary = "App 传感器挑战完成上报")
     @PostMapping("/sensor-result")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult sensorResult(@RequestBody SensorResultRequest request)
     {
@@ -1913,6 +1918,7 @@ public class ApiPlayProgressController extends BaseController
      */
     @Operation(summary = "GPS到达/到点即完成")
     @PostMapping("/arrive")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy)
@@ -2086,6 +2092,7 @@ public class ApiPlayProgressController extends BaseController
      */
     @Operation(summary = "拍照打卡(提交即完成,审核后置)")
     @PostMapping("/photo")
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion)

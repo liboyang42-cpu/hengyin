@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.PlayerBadge;
 import com.chengyinhub.business.domain.vo.TopicCompletionAwardVO;
@@ -32,12 +33,14 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
     @Autowired private IUmsMemberService umsMemberService;
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt) {
         return grantOnce(memberId, topicId, pointsSourceId, occurredAt, RewardPolicy.FULL);
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt,
             RewardPolicy rewardPolicy) {
