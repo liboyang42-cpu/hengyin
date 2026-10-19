@@ -33,5 +33,50 @@ test('BL-41: 页面接线——护照 tab 拉取、失败静默、单场直达�
   assert.match(js, /req\('\/api\/official\/active-for-roam', 'GET', \{\}, \{ silentError: true \}\)/)
   assert.match(js, /if \(this\._activeRoamToken !== token \|\| !apiOk\(res\)\) return;/)
   assert.match(js, /this\.setData\(\{ 'passport\.plays': applyEventCard\(passport\.plays, card\) \}\);/)
-  assert.match(js, /if \(key === 'event' && this\._activeRoamEventId\) wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ this\._activeRoamEventId \}\);/)
+  assert.match(js, /if \(key === 'event' && this\._activeRoamEventId\) \{ if \(this\._eventNavigating\) return; this\._eventNavigating = true; wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ this\._activeRoamEventId, complete: \(\) => \{ this\._eventNavigating = false; \} \}\); return; \}/)
+  // onShow 兜底清锁(返回时 complete 万一没回调也不会锁死入口)
+  assert.match(js, /onShow\(\)\s*\{[\s\S]{0,600}?this\._syncRoamPermission\(\); this\._eventNavigating = false;/)
+})
+
+function loadRoamPage() {
+  let definition
+  const wxMock = { getStorageSync: () => undefined }
+  const appMock = { globalData: { features: {} }, getUserID: () => '101', sendRequest() {} }
+  const previous = { Page: global.Page, getApp: global.getApp, getCurrentPages: global.getCurrentPages, wx: global.wx }
+  const PAGE_MODULE = '../../pages/roam/index.js'
+  try {
+    global.Page = (config) => { definition = config }
+    global.getApp = () => appMock
+    global.getCurrentPages = () => []
+    global.wx = wxMock
+    delete require.cache[require.resolve(PAGE_MODULE)]
+    require(PAGE_MODULE)
+  } finally {
+    global.Page = previous.Page
+    global.getApp = previous.getApp
+    global.getCurrentPages = previous.getCurrentPages
+    global.wx = previous.wx
+  }
+  const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) })
+  page.setData = function (patch) { Object.assign(this.data, patch) }
+  return { page, wxMock }
+}
+
+test('BL-41: 官方活动直达详情连点只跳一次,complete 回调后可再跳', () => {
+  const { page, wxMock } = loadRoamPage()
+  const navs = []
+  let complete = null
+  wxMock.navigateTo = (o) => { navs.push(o.url); complete = o.complete }
+  const oldWx = global.wx
+  try {
+    global.wx = wxMock
+    page._activeRoamEventId = '7'
+    const tap = { currentTarget: { dataset: { key: 'event' } } }
+    page.onPassportPlayTap(tap)
+    page.onPassportPlayTap(tap)
+    assert.deepEqual(navs, ['/pages/activity/official-detail/index?id=7'])
+    complete()
+    page.onPassportPlayTap(tap)
+    assert.equal(navs.length, 2)
+  } finally { global.wx = oldWx }
 })

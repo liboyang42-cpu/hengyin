@@ -774,7 +774,7 @@ Page({
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === 'event' && this._activeRoamEventId) wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId });
+    if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
     else if (key === 'event') this.openRoamTasks();   // 官方活动 = roam-task-list 场景(route 同为 activity/list)
     else this.goDiscover();
   },
@@ -1004,7 +1004,7 @@ Page({
     if (this._clock) this._syncStats();
     this.setData({ fontScaleStyle: readPageStyle() });
     // 回到本页(含从系统设置页返回)时刷新权限态:设置页那三行不能再显示与系统相反的值
-    this._syncRoamPermission();
+    this._syncRoamPermission(); this._eventNavigating = false; // 返回时兜底清「官方活动」跳转锁
     const app = getApp();
     const playerId = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
     if (this._roamMemory && this._roamMemory.playerId !== playerId) {
