@@ -1,6 +1,7 @@
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../utils/modal.js');
+const clubPinnedNotice = require('../utils/club-pinned-notice.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
 const { isPoolList, decoratePool } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
@@ -489,6 +490,7 @@ Page({
     membersState: 'idle', // idle | loading | ready | business-error | network-error
     canSeeMembers: false,
     posts: [],
+    pinnedNotices: [],
     postsLoaded: false,
     postText: '',
     // 发帖区默认收起,点一下才展开(2026-08-26)
@@ -1599,7 +1601,7 @@ Page({
       const posts = mockData.getDemoClubPosts().map(function (p) {
         return normalizeClubPost(p, that.data.club && that.data.club.memberId);
       });
-      that.setData({ posts: posts, postsLoaded: true }, function () { that.scrollToRequestedPost(); });
+      that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true }, function () { that.scrollToRequestedPost(); });
       return;
     }
     app.sendRequest({
@@ -1613,10 +1615,20 @@ Page({
         const posts = res.data.map(function (p) {
           return normalizeClubPost(p, that.data.club && that.data.club.memberId);
         });
-        that.setData({ posts: posts, postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
+        that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
       fail() { that.setData({ postsLoaded: true, postsError: '网络不稳定，帖子没能加载出来' }); },
     });
+  },
+
+  // C10:点置顶公告 → 记本地已读并滚到该帖
+  onPinnedNoticeOpen(e) {
+    const id = e.detail && e.detail.id;
+    if (id === undefined || id === null) return;
+    clubPinnedNotice.markRead(this.data.clubId, id);
+    this.setData({ pinnedNotices: clubPinnedNotice.pick(this.data.posts, this.data.clubId) });
+    this._requestedPostId = String(id);
+    this.scrollToRequestedPost();
   },
 
   openComposer() { this.setData({ composerOpen: true }); },
