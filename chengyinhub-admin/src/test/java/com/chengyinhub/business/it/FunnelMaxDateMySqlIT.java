@@ -5,6 +5,7 @@ import com.chengyinhub.business.mapper.BizFunnelDailyMapper;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
@@ -28,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -35,22 +37,22 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * F3 analytics_max_date 证据：selectCommunityQualifiedPilotMetric 在 MySQL 最大日期年份的真实返回。
+ * F3 analytics_max_date 回归：BizFunnelDailyMapper.xml 两处结束边界在 MySQL 最大日期年份的真实返回。
  *
- * <p>只取证、不改产品代码。两种结束边界各跑同样三条查询（12-30 单日、12-31 单日、12-30~12-31 合并），
- * 每条查询后在同一连接上立刻 SHOW WARNINGS；另有普通日期对照组。断言写的是正确期望
- * （单日各 1、合并 2），MySQL 若返回别的值，本类就以失败记录缺陷。
+ * <p>原 DATE_ADD(+1 day) 在 9999-12-31 得 NULL（Warning 1441），{@code occurred_at < NULL} 一行不中。
+ * 现行 XML 改为包含式上界 {@code <= timestamp(cast(d as date), '23:59:59.999999')}，不做会溢出的日期加法。
+ * 每条查询后在同一连接上立刻 SHOW WARNINGS；另有普通日期对照组与两侧边界夹具。
  * <ul>
- *   <li>DATE_ADD：master 现行 BizFunnelDailyMapper.xml，经 MyBatis 原样加载。</li>
+ *   <li>现行 XML：经 MyBatis 原样加载，试点指标各窗口返回正确计数且无告警；EXPLAIN 断言
+ *       {@code idx_biz_event_name_time} 上的 range；每日聚合写入 statDate=9999-12-31 落行。</li>
  *   <li>TIMESTAMPADD：PR #4 提交 528e9486 的同一语句，原文抄录在 {@link #CANDIDATE_528E9486}，
- *       并校验它与现行语句只差结束边界这一行。</li>
+ *       校验它与现行语句只差结束边界这一行，并作为负控断言它在 9999-12-31 仍得 0 且带 Warning 1441。</li>
  * </ul>
  * 所有取证行以 {@code [F3-MAXDATE]} 开头打到标准输出，供 workflow 日志回读。
  */
@@ -59,11 +61,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FunnelMaxDateMySqlIT {
     private static final String RESOURCE = "mapper/business/BizFunnelDailyMapper.xml";
     private static final String STATEMENT = "selectCommunityQualifiedPilotMetric";
-    private static final String DATE_ADD_LINE =
-            "and event.occurred_at &lt; date_add(cast(#{endDate} as date), interval 1 day)";
+    private static final String FIXED_LINE =
+            "and event.occurred_at &lt;= timestamp(cast(#{endDate} as date), '23:59:59.999999')";
+    private static final String FIXED_DAILY_LINE =
+            "and event.occurred_at &lt;= timestamp(cast(#{statDate} as date), '23:59:59.999999')";
     private static final String TIMESTAMPADD_LINE =
             "and event.occurred_at &lt; timestampadd(day, 1, cast(#{endDate} as date))";
     private static final String CANDIDATE_NAMESPACE = "evidence.pr4.c528e9486";
+    private static final String MAPPER_NAMESPACE = "com.chengyinhub.business.mapper.BizFunnelDailyMapper";
+    private static final String NAME_TIME_INDEX = "idx_biz_event_name_time";
+    private static final int FILLER_ROWS = 200;
 
     /** 528e948631569ac94215c957e6c485e4ebfd722f:BizFunnelDailyMapper.xml 第 131-153 行原文。 */
     private static final String CANDIDATE_528E9486 = """
@@ -107,8 +114,9 @@ class FunnelMaxDateMySqlIT {
         source = source(config.databaseUrl());
         JdbcTemplate db = new JdbcTemplate(source);
         Path root = Files.exists(Paths.get("sql/base_schema_20260818.sql")) ? Paths.get("") : Paths.get("..");
-        db.execute(ddl(Files.readString(root.resolve("sql/base_schema_20260818.sql")),
-                "CREATE TABLE `biz_event_log` ("));
+        String baseSchema = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
+        db.execute(ddl(baseSchema, "CREATE TABLE `biz_event_log` ("));
+        db.execute(ddl(baseSchema, "CREATE TABLE `biz_funnel_daily` ("));
         // community_post 不在 0818 基线快照里；它的建表语句以平台迁移为准（语句 left join 它）。
         // 只去掉指向 community_guideline_version 的外键：语句不读那张表，不为它多建一张表。
         String postDdl = ddl(Files.readString(root.resolve(
@@ -122,19 +130,27 @@ class FunnelMaxDateMySqlIT {
         insertPost(db, 20L, 200L);
         insertPost(db, 30L, 300L);
         insertPost(db, 40L, 400L);
-        // 最大年份：两条互不相同的合格事件（不同会员、不同帖子），12-31 取当天最后一秒。
+        insertPost(db, 50L, 500L);
+        // 最大年份：两条互不相同的合格事件（不同会员、不同帖子），12-31 取当天最后一秒（包含式上界的近侧）。
         insertQualifiedView(db, 1L, 10L, "9999-12-30 12:00:00");
         insertQualifiedView(db, 2L, 20L, "9999-12-31 23:59:59");
-        // 普通日期对照组。
+        // 普通日期对照组：09-02 取当天最后一秒，09-03 取次日 00:00:00（上界远侧，不得算进 09-02）。
         insertQualifiedView(db, 3L, 30L, "2026-09-01 12:00:00");
         insertQualifiedView(db, 4L, 40L, "2026-09-02 23:59:59");
+        insertQualifiedView(db, 5L, 50L, "2026-09-03 00:00:00");
+        // 落在所有窗口之外的填充行：让 (event_name, occurred_at) 的范围成为明确最优，EXPLAIN 结论不靠小表偶然。
+        for (int i = 0; i < FILLER_ROWS; i++) {
+            insertQualifiedView(db, 1000L + i, 10L, "2000-01-01 12:00:00");
+        }
+        db.execute("ANALYZE TABLE biz_event_log, community_post");
         try (InputStream stream = Resources.getResourceAsStream(RESOURCE)) {
             productionXml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
         log("resource=" + Resources.getResourceURL(RESOURCE));
         log("engine=" + db.queryForList("SELECT table_name, engine FROM information_schema.tables "
                 + "WHERE table_schema = DATABASE() ORDER BY table_name"));
-        log("fixtures=" + db.queryForList("SELECT id, member_id, biz_id, occurred_at FROM biz_event_log ORDER BY id"));
+        log("fixtures=" + db.queryForList("SELECT id, member_id, biz_id, occurred_at FROM biz_event_log "
+                + "WHERE member_id < 1000 ORDER BY id") + " filler=" + FILLER_ROWS + "@2000-01-01");
     }
 
     @AfterAll
@@ -147,28 +163,47 @@ class FunnelMaxDateMySqlIT {
     }
 
     @Test
-    void dateAddEndBoundAtMaxYear() throws Exception {
+    void fixedEndBoundAtMaxYear() throws Exception {
         String statement = selectElement(productionXml);
-        assertEquals(1, occurrences(statement, DATE_ADD_LINE), "master 结束边界应仍是 DATE_ADD");
-        log("DATE_ADD statement sha256=" + sha256(statement));
-        Configuration configuration = configuration();
-        configuration.getTypeAliasRegistry().registerAlias("BizFunnelDaily", BizFunnelDaily.class);
-        configuration.addMapper(BizFunnelDailyMapper.class);
-        try (InputStream stream = Resources.getResourceAsStream(RESOURCE)) {
-            new XMLMapperBuilder(stream, configuration, RESOURCE, configuration.getSqlFragments()).parse();
-        }
-        SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(configuration);
-        try (SqlSession session = factory.openSession()) {
+        assertEquals(1, occurrences(statement, FIXED_LINE), "现行结束边界应为包含式 TIMESTAMP 上界");
+        log("FIXED statement sha256=" + sha256(statement));
+        try (SqlSession session = productionFactory().openSession()) {
             BizFunnelDailyMapper mapper = session.getMapper(BizFunnelDailyMapper.class);
-            runAndAssert("DATE_ADD", session, mapper::selectCommunityQualifiedPilotMetric);
+            Connection connection = session.getConnection();
+            probe("FIXED", connection);
+            List<Executable> checks = new ArrayList<>();
+            String[][] windows = {
+                    {"2026-09-01", "2026-09-01", "1"},
+                    {"2026-09-02", "2026-09-02", "1"},
+                    {"2026-09-01", "2026-09-02", "2"},
+                    {"2026-09-03", "2026-09-03", "1"},
+                    {"9999-12-30", "9999-12-30", "1"},
+                    {"9999-12-31", "9999-12-31", "1"},
+                    {"9999-12-30", "9999-12-31", "2"},
+            };
+            for (String[] window : windows) {
+                session.clearCache();
+                Map<String, Object> metric = mapper.selectCommunityQualifiedPilotMetric(window[0], window[1]);
+                // 同一连接上紧跟着取诊断：中间不夹任何其它语句。
+                List<Map<String, Object>> warnings = queryRows(connection, "SHOW WARNINGS");
+                String label = "FIXED " + window[0] + ".." + window[1];
+                log(label + " result=" + metric + " warnings=" + warnings);
+                long expected = Long.parseLong(window[2]);
+                checks.add(() -> assertEquals(expected, number(metric, "qualified_user_count"),
+                        label + " qualified_user_count; warnings=" + warnings));
+                checks.add(() -> assertEquals(expected, number(metric, "qualified_user_post_count"),
+                        label + " qualified_user_post_count; warnings=" + warnings));
+                checks.add(() -> assertEquals(List.of(), warnings, label + " warnings"));
+            }
+            assertAll("FIXED", checks);
         }
     }
 
     @Test
-    void timestampAddCandidateEndBoundAtMaxYear() throws Exception {
+    void timestampAddCandidateStillLosesMaxYearRows() throws Exception {
         String production = selectElement(productionXml);
         String candidate = selectElement(CANDIDATE_528E9486);
-        assertEquals(production.replace(DATE_ADD_LINE, TIMESTAMPADD_LINE), candidate,
+        assertEquals(production.replace(FIXED_LINE, TIMESTAMPADD_LINE), candidate,
                 "528e9486 候选与现行语句应只差结束边界一行");
         log("TIMESTAMPADD statement sha256=" + sha256(candidate));
         Configuration configuration = configuration();
@@ -180,42 +215,113 @@ class FunnelMaxDateMySqlIT {
                 configuration.getSqlFragments()).parse();
         SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(configuration);
         try (SqlSession session = factory.openSession()) {
-            runAndAssert("TIMESTAMPADD", session, (start, end) -> session.selectOne(
-                    CANDIDATE_NAMESPACE + "." + STATEMENT, Map.of("startDate", start, "endDate", end)));
+            Connection connection = session.getConnection();
+            probe("TIMESTAMPADD", connection);
+            List<Executable> checks = new ArrayList<>();
+            // 负控：结束日 9999-12-31 时上界为 NULL，一行不中且带 1441；其余窗口照常。
+            String[][] windows = {
+                    {"2026-09-01", "2026-09-02", "2", "none"},
+                    {"9999-12-30", "9999-12-30", "1", "none"},
+                    {"9999-12-31", "9999-12-31", "0", "1441"},
+                    {"9999-12-30", "9999-12-31", "0", "1441"},
+            };
+            for (String[] window : windows) {
+                session.clearCache();
+                Map<String, Object> metric = session.selectOne(CANDIDATE_NAMESPACE + "." + STATEMENT,
+                        Map.of("startDate", window[0], "endDate", window[1]));
+                List<Map<String, Object>> warnings = queryRows(connection, "SHOW WARNINGS");
+                String label = "TIMESTAMPADD " + window[0] + ".." + window[1];
+                log(label + " result=" + metric + " warnings=" + warnings);
+                long expected = Long.parseLong(window[2]);
+                checks.add(() -> assertEquals(expected, number(metric, "qualified_user_count"),
+                        label + " qualified_user_count; warnings=" + warnings));
+                checks.add(() -> assertEquals(expected, number(metric, "qualified_user_post_count"),
+                        label + " qualified_user_post_count; warnings=" + warnings));
+                if ("none".equals(window[3])) {
+                    checks.add(() -> assertEquals(List.of(), warnings, label + " warnings"));
+                } else {
+                    checks.add(() -> assertTrue(warningCodes(warnings).contains(Long.parseLong(window[3])),
+                            label + " should warn " + window[3] + "; warnings=" + warnings));
+                }
+            }
+            assertAll("TIMESTAMPADD negative control", checks);
         }
     }
 
-    private void runAndAssert(String variant, SqlSession session,
-                              BiFunction<String, String, Map<String, Object>> query) throws Exception {
-        Connection connection = session.getConnection();
-        log(variant + " session " + queryRows(connection, "select @@version, @@sql_mode"));
+    @Test
+    void fixedEndBoundKeepsNameTimeRangeAccess() throws Exception {
+        Configuration configuration = productionFactory().getConfiguration();
+        BoundSql bound = configuration.getMappedStatement(MAPPER_NAMESPACE + "." + STATEMENT)
+                .getBoundSql(Map.of("startDate", "9999-12-31", "endDate", "9999-12-31"));
+        assertEquals(2, bound.getParameterMappings().size(), "试点指标只应绑定 startDate/endDate");
+        try (Connection connection = source.getConnection();
+             PreparedStatement explain = connection.prepareStatement("EXPLAIN " + bound.getSql())) {
+            explain.setString(1, "9999-12-31");
+            explain.setString(2, "9999-12-31");
+            List<Map<String, Object>> plan = rows(explain.executeQuery());
+            log("FIXED EXPLAIN 9999-12-31..9999-12-31 plan=" + plan);
+            log("FIXED EXPLAIN note=" + queryRows(connection, "SHOW WARNINGS"));
+            Map<String, Object> event = plan.stream()
+                    .filter(row -> "event".equals(row.get("table")))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("no plan row for biz_event_log event: " + plan));
+            assertAll("EXPLAIN event",
+                    () -> assertEquals(NAME_TIME_INDEX, event.get("key"), "plan=" + plan),
+                    () -> assertEquals("range", event.get("type"), "plan=" + plan));
+        }
+    }
+
+    @Test
+    void dailyInsertWritesMaxYearRow() throws Exception {
+        String insert = insertElement(productionXml);
+        assertEquals(1, occurrences(insert, FIXED_DAILY_LINE), "每日聚合结束边界应为包含式 TIMESTAMP 上界");
+        try (SqlSession session = productionFactory().openSession()) {
+            BizFunnelDailyMapper mapper = session.getMapper(BizFunnelDailyMapper.class);
+            Connection connection = session.getConnection();
+            List<Executable> checks = new ArrayList<>();
+            // 9999-12-31 只有 23:59:59 那一条合格事件；09-02 只有 23:59:59 那条，09-03 00:00:00 归次日。
+            for (String statDate : new String[] {"9999-12-31", "2026-09-02", "2026-09-03"}) {
+                mapper.deleteByStatDate(statDate);
+                int inserted = mapper.insertFromEventLog(statDate);
+                List<Map<String, Object>> warnings = queryRows(connection, "SHOW WARNINGS");
+                List<Map<String, Object>> written = queryRows(connection,
+                        "SELECT stat_date, funnel_code, step_code, source, city_code, user_count, event_count, "
+                                + "conversion_rate FROM biz_funnel_daily WHERE stat_date = '" + statDate + "'");
+                String label = "FIXED insertFromEventLog " + statDate;
+                log(label + " inserted=" + inserted + " warnings=" + warnings + " rows=" + written);
+                checks.add(() -> assertEquals(1, inserted, label + " inserted; warnings=" + warnings));
+                checks.add(() -> assertEquals(List.of(), warnings, label + " warnings"));
+                checks.add(() -> assertEquals(1, written.size(), label + " rows=" + written));
+                checks.add(() -> assertEquals("community_post_engagement", written.get(0).get("funnel_code"), label));
+                checks.add(() -> assertEquals("community_post_qualified_view", written.get(0).get("step_code"), label));
+                checks.add(() -> assertEquals(1L, ((Number) written.get(0).get("event_count")).longValue(), label));
+            }
+            session.rollback();
+            assertAll("insertFromEventLog", checks);
+        }
+    }
+
+    private SqlSessionFactory productionFactory() throws Exception {
+        Configuration configuration = configuration();
+        configuration.getTypeAliasRegistry().registerAlias("BizFunnelDaily", BizFunnelDaily.class);
+        configuration.addMapper(BizFunnelDailyMapper.class);
+        try (InputStream stream = Resources.getResourceAsStream(RESOURCE)) {
+            new XMLMapperBuilder(stream, configuration, RESOURCE, configuration.getSqlFragments()).parse();
+        }
+        return new SqlSessionFactoryBuilder().build(configuration);
+    }
+
+    private static void probe(String variant, Connection connection) throws Exception {
+        log(variant + " session " + queryRows(connection, "select @@version, @@sql_mode, @@time_zone"));
         log(variant + " probe " + queryRows(connection,
                 "select date_add(cast('9999-12-31' as date), interval 1 day) as date_add_end, "
-                        + "timestampadd(day, 1, cast('9999-12-31' as date)) as timestampadd_end"));
+                        + "timestampadd(day, 1, cast('9999-12-31' as date)) as timestampadd_end, "
+                        + "timestamp(cast('9999-12-31' as date), '23:59:59.999999') as fixed_end"));
         log(variant + " probe warnings " + queryRows(connection, "SHOW WARNINGS"));
-        List<Executable> checks = new ArrayList<>();
-        String[][] windows = {
-                {"2026-09-01", "2026-09-01", "1"},
-                {"2026-09-02", "2026-09-02", "1"},
-                {"2026-09-01", "2026-09-02", "2"},
-                {"9999-12-30", "9999-12-30", "1"},
-                {"9999-12-31", "9999-12-31", "1"},
-                {"9999-12-30", "9999-12-31", "2"},
-        };
-        for (String[] window : windows) {
-            session.clearCache();
-            Map<String, Object> metric = query.apply(window[0], window[1]);
-            // 同一连接上紧跟着取诊断：中间不夹任何其它语句。
-            List<Map<String, Object>> warnings = queryRows(connection, "SHOW WARNINGS");
-            String label = variant + " " + window[0] + ".." + window[1];
-            log(label + " result=" + metric + " warnings=" + warnings);
-            long expected = Long.parseLong(window[2]);
-            checks.add(() -> assertEquals(expected, number(metric, "qualified_user_count"),
-                    label + " qualified_user_count; warnings=" + warnings));
-            checks.add(() -> assertEquals(expected, number(metric, "qualified_user_post_count"),
-                    label + " qualified_user_post_count; warnings=" + warnings));
-        }
-        assertAll(variant, checks);
+    }
+
+    private static List<Long> warningCodes(List<Map<String, Object>> warnings) {
+        return warnings.stream().map(row -> ((Number) row.get("Code")).longValue()).toList();
     }
 
     private Configuration configuration() {
@@ -225,8 +331,14 @@ class FunnelMaxDateMySqlIT {
     }
 
     private static List<Map<String, Object>> queryRows(Connection connection, String sql) throws Exception {
+        try (Statement statement = connection.createStatement()) {
+            return rows(statement.executeQuery(sql));
+        }
+    }
+
+    private static List<Map<String, Object>> rows(ResultSet result) throws Exception {
         List<Map<String, Object>> rows = new ArrayList<>();
-        try (Statement statement = connection.createStatement(); ResultSet result = statement.executeQuery(sql)) {
+        try (result) {
             int columns = result.getMetaData().getColumnCount();
             while (result.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
@@ -254,6 +366,13 @@ class FunnelMaxDateMySqlIT {
         int to = xml.indexOf("</select>", from);
         assertTrue(from >= 0 && to > from, "statement " + STATEMENT + " not found");
         return xml.substring(from, to + "</select>".length());
+    }
+
+    private static String insertElement(String xml) {
+        int from = xml.indexOf("<insert id=\"insertFromEventLog\"");
+        int to = xml.indexOf("</insert>", from);
+        assertTrue(from >= 0 && to > from, "statement insertFromEventLog not found");
+        return xml.substring(from, to + "</insert>".length());
     }
 
     private static String ddl(String script, String head) {
