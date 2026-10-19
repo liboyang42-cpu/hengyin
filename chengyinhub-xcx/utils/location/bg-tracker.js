@@ -11,7 +11,7 @@
  *    后台版**不能**在 onHide 停 —— 玩家锁屏塞兜里走路正是它存在的理由。
  *    停的时机只有一个:这次行程结束(通关/退出/离开页面)。
  */
-var owners = Object.create(null);   // sessionKey -> true
+var owners = Object.create(null);   // sessionKey -> 领取身份
 var started = false;
 var starting = false;
 var stopping = false;
@@ -21,6 +21,25 @@ var waiters = [];
 var revokedThroughGeneration = -1;
 var revisions = Object.create(null);
 var revokeListeners = Object.create(null);
+var notifying = []; // 回调中的批次：owners 已清空时仍可按身份取消
+
+function cancelNotifications(key, force) {
+  notifying.forEach(function (batch) {
+    batch.forEach(function (item) { if (force || item.key === key) item.cancelled = true; });
+  });
+}
+
+function notify(batch, callback, value) {
+  notifying.push(batch);
+  try {
+    batch.forEach(function (item) {
+      if (item.cancelled || (callback === 'success' && owners[item.key] !== item)) return;
+      if (item.opts[callback]) item.opts[callback](value);
+    });
+  } finally {
+    notifying.splice(notifying.indexOf(batch), 1);
+  }
+}
 
 function count() { return Object.keys(owners).length; }
 function stopLocation() {
@@ -68,9 +87,7 @@ function finishSuccess(gen, background) {
   usingBackground = background;
   var ready = waiters;
   waiters = [];
-  ready.forEach(function (item) {
-    if (owners[item.key] && item.opts.success) item.opts.success(background);
-  });
+  notify(ready, 'success', background);
 }
 
 function finishFailure(gen, err) {
@@ -78,12 +95,10 @@ function finishFailure(gen, err) {
   starting = false;
   started = false;
   usingBackground = false;
-  var failed = waiters.filter(function (item) { return owners[item.key]; });
+  var failed = waiters.filter(function (item) { return owners[item.key] === item; });
   waiters = [];
   owners = Object.create(null);
-  failed.forEach(function (item) {
-    if (item.opts.fail) item.opts.fail(err);
-  });
+  notify(failed, 'fail', err);
 }
 
 function beginStart() {
@@ -116,14 +131,15 @@ function beginStart() {
 function acquire(key, opts) {
   opts = opts || {};
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
-  owners[key] = true;
+  var owner = owners[key] = { key: key, opts: opts };
   if (started) { opts.success && opts.success(usingBackground); return; }
-  waiters.push({ key: key, opts: opts });
+  waiters.push(owner);
   beginStart();
 }
 
 /** 释放一个持有者;归零才真停。传 force=true 用于「无论如何都收干净」的兜底。 */
 function release(key, force) {
+  cancelNotifications(key, force);
   delete owners[key];
   waiters = waiters.filter(function (item) { return item.key !== key; });
   if (!force && count() > 0) return;
@@ -156,6 +172,7 @@ function observeRevocation(key, listener) {
 /** 撤回的是用途授权；其他独立获准的持有者继续运行，最后一个才停系统定位。 */
 function revoke(key) {
   revisions[key] = revision(key) + 1;
+  cancelNotifications(key, false);
   delete owners[key];
   waiters = waiters.filter(function (item) { return item.key !== key; });
   if (count() === 0) {
