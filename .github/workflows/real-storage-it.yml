@@ -32,6 +32,8 @@ on:
           - b05-visibility
           - f3-growth
           - extra-storage
+          - port-core-funds
+          - port-ai-quota
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false

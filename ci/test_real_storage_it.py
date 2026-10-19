@@ -85,8 +85,10 @@ class RegistryContractTest(unittest.TestCase):
 
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+3；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 11。
+        # port-core-funds / port-ai-quota：CORE 同批 master 侧移植，类与条数同原批。
         expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 8, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 11, "extra-storage": 71}
+                    "b05-visibility": 3, "f3-growth": 11, "extra-storage": 71,
+                    "port-core-funds": 27, "port-ai-quota": 22}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

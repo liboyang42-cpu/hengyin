@@ -100,6 +100,30 @@
         "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
         "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
       ]
+    },
+    "port-core-funds": {
+      "lineage": "PORT port/core-be-20261019: CORE 1e403b13..5752ee6f backend re-applied on master (Java 21 / Boot 4), stacked on port/base-be-20261019",
+      "registered_source": "0f65a9184538bd3311b732cedf609403651e9465",
+      "note": "Master-side port of core-funds, same 8 classes and @Test counts as 5752ee6f. OWN_C04_20MySqlIT cuts the merchant_payable_batch DDL at a line-ending semicolon because Spring 7 no longer exposes ScriptUtils.splitSqlScript. The withdrawal classes run against master's inline insert design (no CashWithdrawFailureRecoveryService).",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_13Test",
+        "com.chengyinhub.business.longrun.OWN_C04_19Test",
+        "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C06_10Test",
+        "com.chengyinhub.business.longrun.OWN_C06_30Test",
+        "com.chengyinhub.business.service.impl.OWN_C01_51Test"
+      ]
+    },
+    "port-ai-quota": {
+      "lineage": "PORT port/core-be-20261019: CORE 1e403b13..5752ee6f backend re-applied on master (Java 21 / Boot 4), stacked on port/base-be-20261019",
+      "registered_source": "0f65a9184538bd3311b732cedf609403651e9465",
+      "note": "Master-side port of ai-quota (Redis 15 + MySQL/Redis 7). Both classes come from the base port; CORE does not change them.",
+      "classes": [
+        "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
+      ]
     }
   },
   "classes": {
