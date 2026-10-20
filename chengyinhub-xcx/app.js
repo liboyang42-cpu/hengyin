@@ -432,8 +432,10 @@ App({
       return;
     }
     this._privacyNavigationPending = true;
+    // SC-PRIV-04:回退页打不开(如页面栈满)时,把全部待决调用方按 disagree 各结算一次,不让它们永久挂起。
     wx.navigateTo({
       url: '/pages/privacy/index',
+      fail: function () { this.resolvePrivacyAuthorization({ event: 'disagree' }); }.bind(this),
       complete: function () { this._privacyNavigationPending = false; }.bind(this)
     });
   },

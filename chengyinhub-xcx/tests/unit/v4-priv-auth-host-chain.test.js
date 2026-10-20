@@ -64,7 +64,7 @@ function load(h, file, kind) {
   if (kind === 'page') inst.route = 'pages/privacy/index';
   return inst;
 }
-// 真机 navigateTo 失败:先 fail(若调用方提供)再 complete。app.js 只给了 complete。
+// 真机 navigateTo 失败:先 fail 再 complete。
 const failNav = (nav) => { if (nav.fail) nav.fail({ errMsg: 'navigateTo:fail webview count limit exceed' }); nav.complete(); };
 const hostPage = (h) => ({ route: 'pages/shezhi/shezhi', showPrivacyGate() { h.gateShows += 1; } });
 
@@ -146,22 +146,20 @@ test('SC-PRIV-04 回退路由页:页内点「不同意」结算全部调用方,�
   assert.equal(h.agreeRequests().length, 0);
 });
 
-test('SC-PRIV-04 DEFECT(记录现状):回退路由 navigateTo 失败(如页面栈满)时待决调用方无人结算', () => {
+test('SC-PRIV-04 回退路由 navigateTo 失败(如页面栈满):每个待决调用方恰好拿到一次 disagree,不挂起也不记 AGREE', async () => {
   const h = harness();
   h.pages.push({ route: 'pages/legacy/no-gate' });
-  const caller = h.caller();
+  const callers = [h.caller(), h.caller()];
+  assert.equal(h.navs.length, 1, '并发调用方只压一次隐私页');
   failNav(h.navs[0]);
-  // app.js:434-438 只在 complete 里清 _privacyNavigationPending,没有 fail 分支结算 _privacyResolvers
-  assert.deepEqual(caller, []);
-  assert.equal(h.app._privacyResolvers.length, 1);
-});
-
-test('SC-PRIV-04 期望:回退路由打不开时也要给待决调用方明确结果', {
-  todo: 'app.js:434-438 openPrivacyAuthorizationPage 的 navigateTo 无 fail 结算,调用方会一直挂到下一次触发',
-}, () => {
-  const h = harness();
-  h.pages.push({ route: 'pages/legacy/no-gate' });
-  const caller = h.caller();
-  failNav(h.navs[0]);
-  assert.equal(caller.length, 1);
+  for (const c of callers) assert.deepEqual(c, [{ event: 'disagree' }]);
+  assert.equal(h.app._privacyResolvers.length, 0);
+  assert.equal(h.app._privacyNavigationPending, false, 'complete 必须清掉在途标记');
+  // 下一次触发能重新尝试打开隐私页,而不是被残留的在途标记吞掉
+  const next = h.caller();
+  assert.equal(h.navs.length, 2);
+  assert.deepEqual(next, []);
+  await settle();
+  assert.equal(h.agreeRequests().length, 0);
+  assert.equal(h.app.getUsageConsent().granted(), false);
 });
