@@ -719322,7 +719322,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:34:bind:action:onDismissResult:3",
+      "id": "pages/activity/official-organizer/index.wxml:33:bind:action:onDismissResult:3",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719345,7 +719345,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onDismissResult",
-        "line": 34,
+        "line": 33,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -719389,7 +719389,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:51:bindtap:onAction:4",
+      "id": "pages/activity/official-organizer/index.wxml:50:bindtap:onAction:4",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719412,7 +719412,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 51,
+        "line": 50,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.schedule.enabled || !check.pass || !!busyAction}}",
@@ -719456,7 +719456,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:58:bind:input:onFieldInput:5",
+      "id": "pages/activity/official-organizer/index.wxml:57:bind:input:onFieldInput:5",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719479,7 +719479,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFieldInput",
-        "line": 58,
+        "line": 57,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{!!busyAction}}",
@@ -719523,7 +719523,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:61:bindtap:onAction:6",
+      "id": "pages/activity/official-organizer/index.wxml:60:bindtap:onAction:6",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719546,7 +719546,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 61,
+        "line": 60,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.resume.enabled || !!busyAction}}",
@@ -719590,7 +719590,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:67:bindtap:onPickPreset:7",
+      "id": "pages/activity/official-organizer/index.wxml:66:bindtap:onPickPreset:7",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719613,7 +719613,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickPreset",
-        "line": 67,
+        "line": 66,
         "selectorHint": ".oo-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -719657,7 +719657,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:69:bind:input:onFieldInput:8",
+      "id": "pages/activity/official-organizer/index.wxml:68:bind:input:onFieldInput:8",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719680,7 +719680,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFieldInput",
-        "line": 69,
+        "line": 68,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{!!busyAction}}",
@@ -719724,7 +719724,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:73:bindtap:onAction:9",
+      "id": "pages/activity/official-organizer/index.wxml:72:bindtap:onAction:9",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719747,7 +719747,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onAction",
-        "line": 73,
+        "line": 72,
         "selectorHint": ".oo-btn",
         "visibleCondition": null,
         "disabledCondition": "{{!avail.pause.enabled || !!busyAction}}",
@@ -719791,7 +719791,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:79:bind:confirm:onConfirmSchedule:10",
+      "id": "pages/activity/official-organizer/index.wxml:78:bind:confirm:onConfirmSchedule:10",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719814,7 +719814,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmSchedule",
-        "line": 79,
+        "line": 78,
         "selectorHint": "#dc-schedule",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -719917,7 +719917,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:80:bind:confirm:onConfirmPause:11",
+      "id": "pages/activity/official-organizer/index.wxml:79:bind:confirm:onConfirmPause:11",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -719940,7 +719940,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmPause",
-        "line": 80,
+        "line": 79,
         "selectorHint": "#dc-pause",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -720043,7 +720043,7 @@
       }
     },
     {
-      "id": "pages/activity/official-organizer/index.wxml:81:bind:confirm:onConfirmResume:12",
+      "id": "pages/activity/official-organizer/index.wxml:80:bind:confirm:onConfirmResume:12",
       "route": "pages/activity/official-organizer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -720066,7 +720066,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmResume",
-        "line": 81,
+        "line": 80,
         "selectorHint": "#dc-resume",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -723506,7 +723506,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:37:bindtap:openGrant:5",
+      "id": "pages/club/badges/index.wxml:36:bindtap:openGrant:5",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723529,7 +723529,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openGrant",
-        "line": 37,
+        "line": 36,
         "selectorHint": ".badge-grant",
         "visibleCondition": "{{isOwner}}",
         "disabledCondition": null,
@@ -723631,7 +723631,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:48:bind:close:closeCreate:6",
+      "id": "pages/club/badges/index.wxml:46:bind:close:closeCreate:6",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723654,7 +723654,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeCreate",
-        "line": 48,
+        "line": 46,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -723698,7 +723698,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:51:bind:input:onFormInput:7",
+      "id": "pages/club/badges/index.wxml:49:bind:input:onFormInput:7",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723721,7 +723721,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFormInput",
-        "line": 51,
+        "line": 49,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{creating}}",
@@ -723765,7 +723765,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:54:bind:input:onFormInput:8",
+      "id": "pages/club/badges/index.wxml:52:bind:input:onFormInput:8",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723788,7 +723788,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onFormInput",
-        "line": 54,
+        "line": 52,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": "{{creating}}",
@@ -723832,7 +723832,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:58:bind:action:confirmCreateChecked:9",
+      "id": "pages/club/badges/index.wxml:55:bind:action:confirmCreateChecked:9",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723855,7 +723855,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "confirmCreateChecked",
-        "line": 58,
+        "line": 55,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{createError && createUnknown}}",
         "disabledCondition": null,
@@ -723899,77 +723899,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
-      "route": "pages/club/badges/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/badges/index.wxml",
-        "js": "pages/club/badges/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-nav-bar",
-        "event": "bind:back",
-        "handler": "goBack",
-        "line": 6,
-        "selectorHint": "cy-nav-bar[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/talent/list/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/badges/index.js:120"
-      }
-    },
-    {
-      "id": "pages/club/badges/index.wxml:61:bindtap:submitCreate:10",
+      "id": "pages/club/badges/index.wxml:58:bindtap:submitCreate:10",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -723992,7 +723922,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitCreate",
-        "line": 61,
+        "line": 58,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{createUnknown}}",
@@ -724097,7 +724027,77 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:64:bind:close:closeMemberPicker:11",
+      "id": "pages/club/badges/index.wxml:6:bind:back:goBack:0",
+      "route": "pages/club/badges/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/badges/index.wxml",
+        "js": "pages/club/badges/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 6,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/talent/list/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/badges/index.js:120"
+      }
+    },
+    {
+      "id": "pages/club/badges/index.wxml:61:bind:close:closeMemberPicker:11",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -724120,7 +724120,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMemberPicker",
-        "line": 64,
+        "line": 61,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -724164,7 +724164,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:69:bind:action:loadMembers:12",
+      "id": "pages/club/badges/index.wxml:66:bind:action:loadMembers:12",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -724187,7 +724187,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadMembers",
-        "line": 69,
+        "line": 66,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{membersState === 'error'}}",
         "disabledCondition": null,
@@ -724289,7 +724289,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:73:bindtap:pickMember:13",
+      "id": "pages/club/badges/index.wxml:70:bindtap:pickMember:13",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -724312,7 +724312,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMember",
-        "line": 73,
+        "line": 70,
         "selectorHint": ".picker-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -724358,7 +724358,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:84:bind:confirm:onConfirmGrant:14",
+      "id": "pages/club/badges/index.wxml:81:bind:confirm:onConfirmGrant:14",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -724381,7 +724381,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmGrant",
-        "line": 84,
+        "line": 81,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -724484,7 +724484,7 @@
       }
     },
     {
-      "id": "pages/club/badges/index.wxml:84:bind:done:onGrantDone:15",
+      "id": "pages/club/badges/index.wxml:81:bind:done:onGrantDone:15",
       "route": "pages/club/badges/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -724507,7 +724507,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onGrantDone",
-        "line": 84,
+        "line": 81,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098994,7 +1098994,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:15:bindtap:backToPick:8",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:14:bindtap:backToPick:8",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099047,7 +1099047,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "backToPick",
-        "line": 15,
+        "line": 14,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099091,7 +1099091,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:16:bindtap:submit:9",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:15:bindtap:submit:9",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099144,7 +1099144,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 16,
+        "line": 15,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099233,7 +1099233,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:23:bind:close:close:12",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:22:bind:close:close:12",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099286,7 +1099286,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "close",
-        "line": 23,
+        "line": 22,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099331,7 +1099331,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:23:bind:primary:close:10",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:22:bind:primary:close:10",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099384,7 +1099384,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "close",
-        "line": 23,
+        "line": 22,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099429,7 +1099429,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:23:bind:secondary:openMine:11",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:22:bind:secondary:openMine:11",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099482,7 +1099482,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "openMine",
-        "line": 23,
+        "line": 22,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099529,7 +1099529,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:25:bind:close:close:15",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:24:bind:close:close:15",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099582,7 +1099582,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "close",
-        "line": 25,
+        "line": 24,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099627,7 +1099627,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:25:bind:primary:backToForm:13",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:24:bind:primary:backToForm:13",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099680,7 +1099680,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "backToForm",
-        "line": 25,
+        "line": 24,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099724,7 +1099724,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:25:bind:secondary:close:14",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:24:bind:secondary:close:14",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099777,7 +1099777,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "close",
-        "line": 25,
+        "line": 24,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099822,7 +1099822,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:27:bind:close:close:18",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:26:bind:close:close:18",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099875,7 +1099875,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "close",
-        "line": 27,
+        "line": 26,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099920,7 +1099920,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:27:bind:primary:submit:16",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:26:bind:primary:submit:16",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1099973,7 +1099973,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "submit",
-        "line": 27,
+        "line": 26,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1100062,7 +1100062,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:27:bind:secondary:close:17",
+      "id": "subpackageMember/components/cy/merchant-correction-sheet/index.wxml:26:bind:secondary:close:17",
       "route": "component:subpackageMember/components/cy/merchant-correction-sheet/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1100115,7 +1100115,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "close",
-        "line": 27,
+        "line": 26,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126568,7 +1126568,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:39:bindtap:openSupplement:2",
+      "id": "subpackageMember/correction-detail/index.wxml:38:bindtap:openSupplement:2",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126591,7 +1126591,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openSupplement",
-        "line": 39,
+        "line": 38,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126635,7 +1126635,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:41:bindtap:goMine:3",
+      "id": "subpackageMember/correction-detail/index.wxml:40:bindtap:goMine:3",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126658,7 +1126658,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMine",
-        "line": 41,
+        "line": 40,
         "selectorHint": ".rd-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126705,7 +1126705,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:50:bind:close:closeSheet:4",
+      "id": "subpackageMember/correction-detail/index.wxml:49:bind:close:closeSheet:4",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126728,7 +1126728,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeSheet",
-        "line": 50,
+        "line": 49,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126814,7 +1126814,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:50:bind:requestclose:closeSheet:5",
+      "id": "subpackageMember/correction-detail/index.wxml:49:bind:requestclose:closeSheet:5",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126837,7 +1126837,7 @@
         "tag": "cy-sheet",
         "event": "bind:requestclose",
         "handler": "closeSheet",
-        "line": 50,
+        "line": 49,
         "selectorHint": "cy-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126923,7 +1126923,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:56:bind:input:onSupplementInput:6",
+      "id": "subpackageMember/correction-detail/index.wxml:55:bind:input:onSupplementInput:6",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126946,7 +1126946,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onSupplementInput",
-        "line": 56,
+        "line": 55,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126990,7 +1126990,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:58:bindtap:submitSupplement:7",
+      "id": "subpackageMember/correction-detail/index.wxml:56:bindtap:submitSupplement:7",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127013,7 +1127013,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSupplement",
-        "line": 58,
+        "line": 56,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1127178,7 +1127178,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:66:bindtap:closeSheet:8",
+      "id": "subpackageMember/correction-detail/index.wxml:64:bindtap:closeSheet:8",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127201,7 +1127201,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 66,
+        "line": 64,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1127287,7 +1127287,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:70:bindtap:closeSheet:9",
+      "id": "subpackageMember/correction-detail/index.wxml:68:bindtap:closeSheet:9",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127310,7 +1127310,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 70,
+        "line": 68,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1127396,7 +1127396,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:75:bindtap:closeSheet:10",
+      "id": "subpackageMember/correction-detail/index.wxml:73:bindtap:closeSheet:10",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127419,7 +1127419,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 75,
+        "line": 73,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1127505,7 +1127505,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-detail/index.wxml:76:bindtap:submitSupplement:11",
+      "id": "subpackageMember/correction-detail/index.wxml:74:bindtap:submitSupplement:11",
       "route": "subpackageMember/correction-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127528,7 +1127528,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSupplement",
-        "line": 76,
+        "line": 74,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1127869,7 +1127869,7 @@
       }
     },
     {
-      "id": "subpackageMember/correction-mine/index.wxml:31:bindtap:loadMore:4",
+      "id": "subpackageMember/correction-mine/index.wxml:30:bindtap:loadMore:4",
       "route": "subpackageMember/correction-mine/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127892,7 +1127892,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".rp__more",
         "visibleCondition": "{{hasMore}}",
         "disabledCondition": null,
@@ -1133609,7 +1133609,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:44:bindtap:openAppeal:2",
+      "id": "subpackageMember/report-detail/index.wxml:43:bindtap:openAppeal:2",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133632,7 +1133632,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openAppeal",
-        "line": 44,
+        "line": 43,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133676,7 +1133676,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:49:bindtap:goMine:3",
+      "id": "subpackageMember/report-detail/index.wxml:48:bindtap:goMine:3",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133699,7 +1133699,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMine",
-        "line": 49,
+        "line": 48,
         "selectorHint": ".rd-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133746,7 +1133746,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:58:bind:close:closeSheet:4",
+      "id": "subpackageMember/report-detail/index.wxml:57:bind:close:closeSheet:4",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133769,7 +1133769,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeSheet",
-        "line": 58,
+        "line": 57,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133863,7 +1133863,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:58:bind:requestclose:closeSheet:5",
+      "id": "subpackageMember/report-detail/index.wxml:57:bind:requestclose:closeSheet:5",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133886,7 +1133886,7 @@
         "tag": "cy-sheet",
         "event": "bind:requestclose",
         "handler": "closeSheet",
-        "line": 58,
+        "line": 57,
         "selectorHint": "cy-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134050,7 +1134050,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:64:bind:input:onReasonInput:6",
+      "id": "subpackageMember/report-detail/index.wxml:63:bind:input:onReasonInput:6",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134073,7 +1134073,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onReasonInput",
-        "line": 64,
+        "line": 63,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134117,7 +1134117,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:66:bindtap:toConfirm:7",
+      "id": "subpackageMember/report-detail/index.wxml:64:bindtap:toConfirm:7",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134140,7 +1134140,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "toConfirm",
-        "line": 66,
+        "line": 64,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134184,7 +1134184,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:72:bindtap:backToForm:8",
+      "id": "subpackageMember/report-detail/index.wxml:70:bindtap:backToForm:8",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134207,7 +1134207,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "backToForm",
-        "line": 72,
+        "line": 70,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134251,7 +1134251,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:73:bindtap:submitAppeal:9",
+      "id": "subpackageMember/report-detail/index.wxml:71:bindtap:submitAppeal:9",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134274,7 +1134274,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitAppeal",
-        "line": 73,
+        "line": 71,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134369,7 +1134369,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:83:bindtap:closeSheet:10",
+      "id": "subpackageMember/report-detail/index.wxml:81:bindtap:closeSheet:10",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134392,7 +1134392,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 83,
+        "line": 81,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134486,7 +1134486,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:87:bindtap:closeSheet:11",
+      "id": "subpackageMember/report-detail/index.wxml:85:bindtap:closeSheet:11",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134509,7 +1134509,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 87,
+        "line": 85,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134603,7 +1134603,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:92:bindtap:closeSheet:12",
+      "id": "subpackageMember/report-detail/index.wxml:90:bindtap:closeSheet:12",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134626,7 +1134626,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 92,
+        "line": 90,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134720,7 +1134720,7 @@
       }
     },
     {
-      "id": "subpackageMember/report-detail/index.wxml:93:bindtap:submitAppeal:13",
+      "id": "subpackageMember/report-detail/index.wxml:91:bindtap:submitAppeal:13",
       "route": "subpackageMember/report-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134743,7 +1134743,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitAppeal",
-        "line": 93,
+        "line": 91,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,

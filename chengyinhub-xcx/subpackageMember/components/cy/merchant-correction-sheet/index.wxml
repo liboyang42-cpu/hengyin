@@ -10,7 +10,6 @@
               placeholder="写一下哪里不对、正确的信息是什么"
               value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
               bind:input="onDescriptionInput" />
-    <text class="mcs__note">本次纠错仅支持文字说明，平台审核后才会更新商家信息。</text>
     <view class="mcs__row">
       <view class="mcs__cell"><cy-btn variant="secondary" bindtap="backToPick">换个类型</cy-btn></view>
       <view class="mcs__cell"><cy-btn variant="primary" bindtap="submit">提交纠错</cy-btn></view>

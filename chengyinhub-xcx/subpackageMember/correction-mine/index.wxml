@@ -24,7 +24,6 @@
               <cy-tag variant="{{item.statusTone}}">{{item.statusText}}</cy-tag>
             </view>
             <text class="rp-row__sub">受理编号 {{item.id}}{{item.createText ? ' · ' + item.createText : ''}}</text>
-            <text class="rp-row__sub" wx:if="{{item.canSupplement}}">可以补充说明后重新审核</text>
           </view>
           <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
         </view>

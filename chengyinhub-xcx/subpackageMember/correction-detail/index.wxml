@@ -35,7 +35,6 @@
         </view>
 
         <view class="rd-actions" wx:if="{{item.canSupplement}}">
-          <text class="rd-actions__hint">补充说明后，这条纠错会重新进入审核</text>
           <cy-btn variant="secondary" bindtap="openSupplement">补充说明</cy-btn>
         </view>
         <view class="rd-link" bindtap="goMine" aria-role="button" aria-label="查看我的全部纠错"
@@ -54,7 +53,6 @@
                 placeholder="补充审核需要的事实，比如正确的地址或营业时间"
                 value="{{supplement}}" error="{{!!supplementError}}" error-text="{{supplementError}}"
                 bind:input="onSupplementInput" />
-      <text class="rd-sheet__note">本次补充仅支持文字说明，暂不能附图片或文件。</text>
       <cy-btn variant="primary" bindtap="submitSupplement">提交补充</cy-btn>
     </block>
     <block wx:elif="{{sheet === 'busy'}}">
