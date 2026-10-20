@@ -11,11 +11,12 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'chengyinhub-admin/src/test/tools'
-EXPECTED = {'GenericGameplayHttpE2eIT': 14, 'FreezeGameHttpE2eIT': 8,
+EXPECTED = {'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
             'FreezeReuseThemeHttpE2eIT': 2}
 PACKAGE = 'com.chengyinhub.business.it.'
 
@@ -25,6 +26,40 @@ def selection(value):
     if not names or len(names) != len(set(names)) or any(n not in EXPECTED for n in names):
         raise ValueError('Select only the exact reviewed HTTP classes, without duplicates')
     return names
+
+
+def reviewed_case_identities(simple):
+    source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
+    plain = re.findall(r'(?m)^\s*@Test(?:\s+@Order\([1-9][0-9]*\))?\s+void\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*\)', source)
+    plain_count = {'GenericGameplayHttpE2eIT': 14, 'FreezeGameHttpE2eIT': 8, 'FreezeReuseThemeHttpE2eIT': 2}
+    if len(plain) != plain_count[simple] or len(set(plain)) != len(plain):
+        raise ValueError('Reviewed ordinary HTTP test declarations changed')
+    aliases = {name: name for name in plain}
+    reviewed = {
+        'r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry': ('boolean', [False, True]),
+        'r5HttpCheckRollRerollSubmitHasAuthoritativeActions': ('String', ['easy', 'medium', 'hard']),
+        'r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath': ('String', ['PASS', 'FAIL', 'CLOSED']),
+        'r5HttpTeamCheckRerollIsCaptainOnlyAndSharedSettlementIsIdempotent': ('String', ['easy', 'medium', 'hard']),
+    } if simple == 'GenericGameplayHttpE2eIT' else {}
+    declared = {}
+    for field, values, method, kind in re.findall(
+            r'@org\.junit\.jupiter\.params\.ParameterizedTest\s+'
+            r'@org\.junit\.jupiter\.params\.provider\.ValueSource\(\s*(booleans|strings)\s*=\s*\{([^}]*)\}\s*\)\s+'
+            r'void\s+([A-Za-z_$][A-Za-z0-9_$]*)\((boolean|String)\s+[A-Za-z_$][A-Za-z0-9_$]*\)', source):
+        if method in declared or field != ('booleans' if kind == 'boolean' else 'strings'):
+            raise ValueError('Unexpected parameterized HTTP declaration')
+        declared[method] = (kind, json.loads('[' + values + ']'))
+    if declared != reviewed or source.count('@org.junit.jupiter.params.ParameterizedTest') != len(reviewed):
+        raise ValueError('Reviewed HTTP parameter methods/types/values changed')
+    for method, (kind, values) in reviewed.items():
+        for index in range(1, len(values) + 1):
+            canonical = method + '(' + kind + ')[' + str(index) + ']'
+            aliases[canonical] = canonical
+            if kind == 'String':
+                aliases[method + '(java.lang.String)[' + str(index) + ']'] = canonical
+    if len(set(aliases.values())) != EXPECTED[simple]:
+        raise ValueError('Reviewed expanded HTTP count changed')
+    return aliases
 
 
 def verified_xml(path, simple):
@@ -37,8 +72,9 @@ def verified_xml(path, simple):
         raise ValueError('Actual testcase count differs from the reviewed class')
     if any(int(root.get(k, '-1')) != 0 for k in ('failures', 'errors', 'skipped')):
         raise ValueError('HTTP tests must have zero failures/errors/skips')
-    identities = [(c.get('classname'), c.get('name')) for c in cases]
-    if len(set(identities)) != expected or any(c != PACKAGE + simple or not re.fullmatch(r'[A-Za-z_$][A-Za-z0-9_$]*', n or '') for c, n in identities):
+    allowed = reviewed_case_identities(simple)
+    identities = [(c.get('classname'), allowed.get(c.get('name'))) for c in cases]
+    if len(set(identities)) != expected or {name for _, name in identities} != set(allowed.values()) or any(c != PACKAGE + simple for c, _ in identities):
         raise ValueError('Unexpected/duplicate testcase identity')
     if any(node.tag in ('failure', 'error', 'skipped', 'rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')
            for c in cases for node in c.iter()):
@@ -82,7 +118,7 @@ def summarize(paths, source):
     if sorted(seen) != sorted(EXPECTED):
         raise ValueError('All three classes exactly once are required')
     return {'sourceSha': source, 'state': 'PASS_HTTP_FIXTURE_ONLY', 'classes': EXPECTED,
-            'tests': 24, 'failures': 0, 'errors': 0, 'skipped': 0,
+            'tests': 35, 'failures': 0, 'errors': 0, 'skipped': 0,
             'cleanupAllVerified': True, 'businessAccepted': False, 'migrationAccepted': False}
 
 
@@ -219,25 +255,42 @@ def cli():
                                         failure[key] = int(value)
                                 source_dir = ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it'
                                 source = (source_dir / (n + '.java')).read_text()
-                                known_methods = set(re.findall(r'\bvoid\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(', source))
+                                known_cases = reviewed_case_identities(n)
                                 source_lines = {name + '.java': len((source_dir / (name + '.java')).read_text().splitlines())
                                                 for name in EXPECTED}
-                                methods = []
-                                for case in failed.findall('testcase'):
+                                cases = failed.findall('testcase')
+                                failure.update(testcaseCount=len(cases), uniqueMethodCount=len({case.get('name') for case in cases}),
+                                               failureNodeCount=sum(len(case.findall('failure')) for case in cases),
+                                               errorNodeCount=sum(len(case.findall('error')) for case in cases),
+                                               retryNodeCount=sum(len(case.findall(tag)) for case in cases
+                                                                  for tag in ('rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')))
+                                methods, codes = [], set()
+                                for case in cases:
                                     errors = case.findall('failure') + case.findall('error')
                                     method = case.get('name', '')
                                     if (errors and case.get('classname') == PACKAGE + n and
-                                            method in known_methods):
-                                        methods.append(method)
+                                            method in known_cases):
+                                        methods.append(known_cases[method])
+                                        for error in errors:
+                                            text = error.get('message', '') + '\n' + (error.text or '')
+                                            codes.update(int(code) for code in re.findall(r'"code"\s*:\s*([1-5][0-9]{2}|601)(?=\s*[,}])', text))
                                         if 'sourceFrame' not in failure:
                                             for error in errors:
+                                                frames = []
                                                 for filename, line in re.findall(r'\bat com\.chengyinhub\.[A-Za-z0-9_.$]+\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([0-9]{1,7})\)', error.text or ''):
                                                     if filename in source_lines and 1 <= int(line) <= source_lines[filename]:
-                                                        failure['sourceFrame'] = filename + ':' + str(int(line))
-                                                        break
-                                                if 'sourceFrame' in failure:
+                                                        frame = filename + ':' + str(int(line))
+                                                        if frame not in frames:
+                                                            frames.append(frame)
+                                                        if len(frames) == 2:
+                                                            break
+                                                if frames:
+                                                    failure['sourceFrame'] = frames[0]
+                                                    if len(frames) == 2:
+                                                        failure['callerFrame'] = frames[1]
                                                     break
                                 failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
+                                failure['responseCodes'] = sorted(codes)
                         except (OSError, ET.ParseError):
                             pass
                     (a.output / 'xml-failure.json').write_text(json.dumps(failure, sort_keys=True) + '\n')
@@ -271,13 +324,62 @@ def cli():
 class HttpReceiptTest(unittest.TestCase):
     def sample(self, simple='FreezeReuseThemeHttpE2eIT'):
         root = ET.Element('testsuite', name=PACKAGE + simple, tests=str(EXPECTED[simple]), failures='0', errors='0', skipped='0')
-        for i in range(EXPECTED[simple]): ET.SubElement(root, 'testcase', classname=PACKAGE + simple, name='case' + str(i))
+        for name in sorted(set(reviewed_case_identities(simple).values())):
+            ET.SubElement(root, 'testcase', classname=PACKAGE + simple, name=name)
         return root
 
-    def verify(self, root):
+    def verify(self, root, simple='FreezeReuseThemeHttpE2eIT'):
         with tempfile.TemporaryDirectory() as d:
             p = pathlib.Path(d) / 'test.xml'; ET.ElementTree(root).write(p)
-            return verified_xml(p, 'FreezeReuseThemeHttpE2eIT')
+            return verified_xml(p, simple)
+
+    def test_reviewed_ordinary_and_value_source_expansion_is_25_8_2(self):
+        self.assertEqual({'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
+                          'FreezeReuseThemeHttpE2eIT': 2}, EXPECTED)
+        self.assertEqual(35, sum(EXPECTED.values()))
+        for simple, count in EXPECTED.items():
+            aliases = reviewed_case_identities(simple)
+            self.assertEqual(count, len(set(aliases.values())))
+            self.verify(self.sample(simple), simple)
+        simple = 'GenericGameplayHttpE2eIT'
+        path = ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')
+        source = path.read_text()
+        baseline = reviewed_case_identities(simple)
+        self.assertEqual(11, sum('(' in n for n in set(baseline.values())))
+        mutants = [source.replace('booleans={false,true}', 'booleans={true,false}'),
+                   source.replace('strings={"easy","medium","hard"}', 'strings={"easy","medium","other"}'),
+                   source.replace('strings={"easy","medium","hard"}', 'strings={"easy","medium"}'),
+                   source.replace('String tier', 'Object tier'),
+                   source.replace('r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry', 'unknownParameterMethod'),
+                   source + '\n@Test void unreviewedExtraHttpTest() {}']
+        for changed in mutants:
+            self.assertNotEqual(source, changed)
+            with mock.patch.object(pathlib.Path, 'read_text', return_value=changed):
+                with self.assertRaises(ValueError):
+                    reviewed_case_identities(simple)
+        with mock.patch.object(pathlib.Path, 'read_text', return_value=source + '\nprivate void fixtureHelperOnly() {}'):
+            self.assertEqual(baseline, reviewed_case_identities(simple))
+
+    def test_parameter_case_type_index_value_unknown_missing_duplicate_and_skip_are_red(self):
+        simple = 'GenericGameplayHttpE2eIT'
+        method = 'r5HttpTypeInUnlimitedAndTimerDeadlineSurviveReentry'
+        canonical = method + '(boolean)[1]'
+        for name in [method + '(String)[1]', method + '(boolean)[0]', method + '(boolean)[3]',
+                     canonical + ' false', 'unknownMethod(boolean)[1]', method + '(false)[1]']:
+            root = self.sample(simple)
+            next(c for c in root.findall('testcase') if c.get('name') == canonical).set('name', name)
+            with self.assertRaises(ValueError): self.verify(root, simple)
+        root = self.sample(simple); root.remove(root.find('testcase'))
+        with self.assertRaises(ValueError): self.verify(root, simple)
+        root = self.sample(simple); ET.SubElement(next(c for c in root.findall('testcase') if c.get('name') == canonical), 'skipped')
+        with self.assertRaises(ValueError): self.verify(root, simple)
+        root = self.sample(simple)
+        for case in root.findall('testcase'):
+            case.set('name', case.get('name').replace('(String)', '(java.lang.String)'))
+        self.verify(root, simple)
+        string_method = 'r5HttpCheckRollRerollSubmitHasAuthoritativeActions'
+        next(c for c in root.findall('testcase') if c.get('name') == string_method + '(java.lang.String)[2]').set('name', string_method + '(String)[1]')
+        with self.assertRaises(ValueError): self.verify(root, simple)
 
     def test_exact_reviewed_classes_only(self):
         self.assertEqual(list(EXPECTED), selection(','.join(EXPECTED)))
@@ -294,7 +396,7 @@ class HttpReceiptTest(unittest.TestCase):
         for changed in ['remove', 'duplicate', 'wrongclass']:
             root = self.sample()
             if changed == 'remove': root.remove(root.find('testcase'))
-            elif changed == 'duplicate': root.findall('testcase')[1].set('name', 'case0')
+            elif changed == 'duplicate': root.findall('testcase')[1].set('name', root.find('testcase').get('name'))
             else: root.find('testcase').set('classname', 'OtherTest')
             with self.assertRaises(ValueError): self.verify(root)
         with self.assertRaises(FileNotFoundError): verified_xml(pathlib.Path('/nonexistent/http-test.xml'), 'FreezeReuseThemeHttpE2eIT')
@@ -322,7 +424,7 @@ class HttpReceiptTest(unittest.TestCase):
             paths=[]
             for n, count in EXPECTED.items():
                 p=pathlib.Path(d)/(n+'.json'); p.write_text(json.dumps({'profile':'github-hosted','database':'cy_e2e_w1_http_123_456','fixtureReportVerified':True,'sourceSha':'a'*40,'classes':[n],'state':'PASS','javaExit':0,'tests':count,'xmlVerified':True,'cleanup':{'mysqlAbsent':True,'redisStoppedAndPortFree':True}}));paths.append(p)
-            self.assertEqual(24,summarize(paths,'a'*40)['tests'])
+            self.assertEqual(35,summarize(paths,'a'*40)['tests'])
             for bad in [paths[:-1],paths+[paths[0]]]:
                 with self.assertRaises(ValueError):summarize(bad,'a'*40)
             with self.assertRaises(ValueError):summarize(paths,'b'*40)
@@ -485,20 +587,22 @@ class FailureDiagnosticTest(unittest.TestCase):
         marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
         simple = 'GenericGameplayHttpE2eIT'
         source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
-        known_method = re.findall(r'\bvoid\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(', source)[0]
+        known_cases = sorted(set(reviewed_case_identities(simple).values()))
+        known_method = next(name for name in known_cases if '(' not in name)
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d); reports = root / 'reports'; reports.mkdir(); public = root / 'public'
             schema = root / 'schema.json'; database = 'cy_e2e_w1_http_123_456'
             files = [{'path': 'fixture_' + str(i)} for i in range(101)]
             schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': database, 'files': files,
                                           'completed': [f['path'] for f in files]}))
-            xml = ET.Element('testsuite', name=PACKAGE + simple, tests='14', failures='1', errors='0', skipped='0')
+            xml = ET.Element('testsuite', name=PACKAGE + simple, tests='25', failures='1', errors='0', skipped='0')
             props = ET.SubElement(xml, 'properties'); ET.SubElement(props, 'property', name='password', value=marker)
             ET.SubElement(xml, 'system-out').text = marker
-            for i in range(14):
-                case = ET.SubElement(xml, 'testcase', classname=PACKAGE + simple, name=known_method if i == 0 else 'case' + str(i))
+            ordered_cases = [known_method] + [name for name in known_cases if name != known_method]
+            for i, name in enumerate(ordered_cases):
+                case = ET.SubElement(xml, 'testcase', classname=PACKAGE + simple, name=name)
                 if i == 0:
-                    ET.SubElement(case, 'failure', message=marker).text = marker + '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:123)\n'
+                    ET.SubElement(case, 'failure', message='{"code":403,"msg":"' + marker + '"}').text = '{"code":500,"token":"' + marker + '"}\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:123)\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.caller(GenericGameplayHttpE2eIT.java:124)\n'
             path = reports / ('TEST-' + PACKAGE + simple + '.xml'); ET.ElementTree(xml).write(path)
             env = dict(os.environ, SOURCE_SHA='a' * 40, CHENGYIN_HTTP_E2E_PROFILE='github-hosted',
                        CHENGYIN_HTTP_E2E_DATABASE=database, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema))
@@ -507,12 +611,24 @@ class FailureDiagnosticTest(unittest.TestCase):
             run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
             self.assertNotEqual(0, run.returncode)
             failure = json.loads((public / 'xml-failure.json').read_text())
-            self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 14, 'failures': 1,
+            self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 25, 'failures': 1,
                               'errors': 0, 'skipped': 0, 'failedMethods': [known_method],
-                              'sourceFrame': 'GenericGameplayHttpE2eIT.java:123'}, failure)
+                              'sourceFrame': 'GenericGameplayHttpE2eIT.java:123', 'callerFrame': 'GenericGameplayHttpE2eIT.java:124',
+                              'testcaseCount': 25, 'uniqueMethodCount': 25, 'failureNodeCount': 1,
+                              'errorNodeCount': 0, 'retryNodeCount': 0, 'responseCodes': [403, 500]}, failure)
             self.assertNotIn(marker, json.dumps(failure) + run.stdout + run.stderr)
             self.assertFalse((public / path.name).exists())
-            for mutation in ('nonNumericCount', 'unknownMethod', 'outsideFrame', 'unknownSuite'):
+            parameter = next(name for name in known_cases if '(boolean)' in name)
+            parameter_xml = ET.fromstring(ET.tostring(xml))
+            parameter_xml.find('testcase').remove(parameter_xml.find('testcase/failure'))
+            parameter_case = next(case for case in parameter_xml.findall('testcase') if case.get('name') == parameter)
+            ET.SubElement(parameter_case, 'failure', message=marker).text = marker
+            ET.ElementTree(parameter_xml).write(path)
+            run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            self.assertEqual([parameter], json.loads((public / 'xml-failure.json').read_text())['failedMethods'])
+            self.assertNotIn(marker, (public / 'xml-failure.json').read_text() + run.stderr)
+            for mutation in ('nonNumericCount', 'unknownMethod', 'outsideFrame', 'unknownSuite', 'duplicateCase'):
                 bad = ET.fromstring(ET.tostring(xml))
                 error = bad.find('testcase/failure'); error.set('type', marker); error.set('message', marker)
                 if mutation == 'nonNumericCount':
@@ -521,6 +637,8 @@ class FailureDiagnosticTest(unittest.TestCase):
                     bad.find('testcase').set('name', marker)
                 elif mutation == 'outsideFrame':
                     error.text = marker + '\n at com.chengyinhub.' + marker + '.method(' + marker + '.java:1)\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:9999999)\n'
+                elif mutation == 'duplicateCase':
+                    bad.append(ET.fromstring(ET.tostring(bad.find('testcase'))))
                 else:
                     bad.set('name', marker)
                 ET.ElementTree(bad).write(path)
@@ -531,6 +649,11 @@ class FailureDiagnosticTest(unittest.TestCase):
                 self.assertIn('HTTP test XML verification failed; see safe diagnostic', run.stderr)
                 if mutation in ('unknownMethod', 'outsideFrame'):
                     self.assertNotIn('sourceFrame', json.loads(safe))
+                    self.assertNotIn('callerFrame', json.loads(safe))
+                if mutation == 'duplicateCase':
+                    self.assertEqual(26, json.loads(safe)['testcaseCount'])
+                    self.assertEqual(25, json.loads(safe)['uniqueMethodCount'])
+                    self.assertEqual(2, json.loads(safe)['failureNodeCount'])
             path.unlink()
             run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
             self.assertNotEqual(0, run.returncode)

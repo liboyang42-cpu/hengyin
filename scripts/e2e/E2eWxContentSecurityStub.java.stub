@@ -31,7 +31,7 @@ public class E2eWxContentSecurityStub extends WxContentSecurityServiceImpl {
             return null;
         }
         // 入口闸与真实实现一致:总开关关闭或缺 openid 时 fail-close。
-        if (!isEnabled() || openid == null || openid.isEmpty()) {
+        if (!isEnabled() || com.chengyinhub.common.utils.StringUtils.isBlank(openid)) {
             return MSG_UNAVAILABLE;
         }
         return content.contains(REJECT_MARKER) ? RISKY_TEXT : null;

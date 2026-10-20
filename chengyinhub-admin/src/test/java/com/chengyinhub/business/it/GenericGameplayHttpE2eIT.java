@@ -27,6 +27,11 @@ import com.chengyinhub.framework.web.service.AppLoginService;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.net.URL;
+import java.net.URLClassLoader;
+import javax.tools.ToolProvider;
+import java.util.Comparator;
 import java.security.Permission;
 import java.security.AllPermission;
 import java.security.CodeSource;
@@ -126,14 +131,66 @@ class GenericGameplayHttpE2eIT {
                     "token.secret=" + secret, "coupon.qr-secret=" + secret,
                     "chengyin.pii.key=" + Base64.getEncoder().encodeToString(key),
                     "withdrawal.pii.key=" + Base64.getEncoder().encodeToString(key),
-                    "wx.pay.enabled=false", "wx.pay.api-v3-key=", "wx.sec-check.enabled=false", "wx.mini.secret=",
+                    "wx.pay.enabled=false", "wx.pay.api-v3-key=", "wx.sec-check.enabled=true", "wx.mini.secret=",
                     "alarm.webhook=", "alarm.failure-webhook=",
                     "spring.quartz.auto-startup=false", "spring.devtools.restart.enabled=false",
                     "chengyin.status.feed-file=target/http-e2e/status.json", "logging.level.com.chengyinhub=WARN");
+            registerContentSecurityFixture(application);
         }
     }
 
+    private static void registerContentSecurityFixture(ConfigurableApplicationContext application) {
+        Path root = Paths.get("").toAbsolutePath();
+        while (root != null && !Files.exists(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"))) root = root.getParent();
+        assertNotNull(root, "Reviewed content-security fixture must exist");
+        assertNotNull(ToolProvider.getSystemJavaCompiler(), "Content-security fixture requires a JDK");
+        try {
+            Path scratch = Files.createTempDirectory("cy-http-content-security-");
+            try {
+                Path source = scratch.resolve("E2eWxContentSecurityStub.java");
+                Files.copy(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"), source);
+                String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+                assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null,
+                        "-proc:none", "-classpath", classpath, "-d", scratch.toString(), source.toString()));
+                try (URLClassLoader loader = new URLClassLoader(new URL[]{scratch.toUri().toURL()},
+                        GenericGameplayHttpE2eIT.class.getClassLoader())) {
+                    Class<?> stub = loader.loadClass("com.chengyinhub.e2e.E2eWxContentSecurityStub");
+                    org.springframework.beans.factory.support.RootBeanDefinition definition =
+                            new org.springframework.beans.factory.support.RootBeanDefinition(stub);
+                    definition.setPrimary(true);
+                    ((org.springframework.beans.factory.support.BeanDefinitionRegistry) application.getBeanFactory())
+                            .registerBeanDefinition("httpE2eWxContentSecurityStub", definition);
+                }
+            } finally {
+                try (java.util.stream.Stream<Path> files = Files.walk(scratch)) {
+                    for (Path file : (Iterable<Path>) files.sorted(Comparator.reverseOrder())::iterator) Files.delete(file);
+                }
+            }
+        } catch (Exception failure) {
+            throw new IllegalStateException("Reviewed content-security fixture could not be registered", failure);
+        }
+    }
+
+    static void assertContentSecurityFixture(ConfigurableApplicationContext application) {
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                application.getBean(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        assertSame(application.getBean("httpE2eWxContentSecurityStub"), security);
+        Object target = org.springframework.test.util.AopTestUtils.getUltimateTargetObject(security);
+        assertEquals("com.chengyinhub.e2e.E2eWxContentSecurityStub", target.getClass().getName());
+        assertEquals(com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl.class, target.getClass().getSuperclass());
+        assertTrue(security.isEnabled());
+        assertNull(security.checkText("HTTP fixture", "e2e-http-security-probe"));
+        assertEquals("内容包含违规信息，请修改后重试", security.checkText("E2E-SEC-REJECT", "e2e-http-security-probe"));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", null));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", ""));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", " "));
+        com.chengyinhub.business.service.IWxContentSecurityService real = application.getBean(
+                "wxContentSecurityServiceImpl", com.chengyinhub.business.service.IWxContentSecurityService.class);
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, real.checkText("HTTP fixture", " "));
+    }
+
     @org.junit.jupiter.api.BeforeAll void loadExistingPermissionFixture() throws Exception {
+        assertContentSecurityFixture(context);
         // Fresh-schema skips migration data; reuse its existing role defaults for local author capabilities.
         for(String file:new String[]{"sql/migration_p1_rbac_permission_defaults.sql","sql/migration_m1_permission_full.sql","sql/migration_p1_rbac_permission_defaults.sql"})
             for(String statement:ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)),java.nio.charset.StandardCharsets.UTF_8))) {
@@ -158,7 +215,7 @@ class GenericGameplayHttpE2eIT {
         record("GET","/api/play/theme/state?topicId=1",null,anonymous);
         assertNotEquals(200, anonymous.getBody().path("code").asInt());
         UmsMember author = new UmsMember();author.setPhone("13800000001");author.setNickname("本地测试作者");
-        author.setStatus(1L);author.setDelFlag(0);members.insertUmsMember(author);
+        author.setStatus(1L);author.setDelFlag(0);author.setWxOpenId("e2e-http-generic-13800000001");members.insertUmsMember(author);
         MockHttpServletRequest issuance = new MockHttpServletRequest();issuance.setRemoteAddr("127.0.0.1");
         issuance.addHeader("User-Agent", "Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(issuance));
@@ -662,7 +719,7 @@ class GenericGameplayHttpE2eIT {
         request.put("configVersion",database.queryForObject("SELECT config_version FROM cms_topic WHERE id=?",Long.class,topicId));
     }
     private org.springframework.http.HttpHeaders loginHeaders(String phone,String nickname) {
-        UmsMember member=new UmsMember();member.setPhone(phone);member.setNickname(nickname);member.setStatus(1L);member.setDelFlag(0);members.insertUmsMember(member);
+        UmsMember member=new UmsMember();member.setPhone(phone);member.setNickname(nickname);member.setStatus(1L);member.setDelFlag(0);member.setWxOpenId("e2e-http-generic-"+phone);members.insertUmsMember(member);
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(),"club_leader",member.getId());
         MockHttpServletRequest request=new MockHttpServletRequest();request.setRemoteAddr("127.0.0.1");request.addHeader("User-Agent","Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));

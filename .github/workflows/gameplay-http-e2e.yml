@@ -1,6 +1,6 @@
 name: Gameplay HTTP fixtures (manual)
 
-# Real HTTP24 in three isolated hosted jobs; not persistent migration/provider/device acceptance.
+# Real HTTP35 in three isolated hosted jobs; not persistent migration/provider/device acceptance.
 on:
   workflow_dispatch:
     inputs:

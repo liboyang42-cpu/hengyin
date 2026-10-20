@@ -71,6 +71,7 @@ class FreezeGameHttpE2eIT {
     private final Map<String, String> questKeys = new LinkedHashMap<>();
 
     @BeforeAll void loadExistingPermissionFixture() throws Exception {
+        GenericGameplayHttpE2eIT.assertContentSecurityFixture(context);
         for (String file : new String[]{"sql/migration_p1_rbac_permission_defaults.sql", "sql/migration_m1_permission_full.sql", "sql/migration_p1_rbac_permission_defaults.sql"})
             for (String statement : ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8))) {
                 String sql = statement.replaceAll("(?m)^\\s*--.*$", "").trim();
@@ -927,7 +928,7 @@ class FreezeGameHttpE2eIT {
     private String nextPhone() { return "1391" + String.format("%07d", (phoneBase + (++phones)) % 10000000); }
     private long memberId(String phone) { return database.queryForObject("SELECT id FROM ums_member WHERE phone=?", Long.class, phone); }
     private HttpHeaders loginHeaders(String phone, String nickname) {
-        UmsMember member = new UmsMember(); member.setPhone(phone); member.setNickname(nickname); member.setStatus(1L); member.setDelFlag(0); members.insertUmsMember(member);
+        UmsMember member = new UmsMember(); member.setPhone(phone); member.setNickname(nickname); member.setStatus(1L); member.setDelFlag(0); member.setWxOpenId("e2e-http-freeze-" + phone); members.insertUmsMember(member);
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(), "club_leader", member.getId());
         MockHttpServletRequest request = new MockHttpServletRequest(); request.setRemoteAddr("127.0.0.1"); request.addHeader("User-Agent", "Freeze HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
