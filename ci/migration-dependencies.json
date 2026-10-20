@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "audit_followup_20261020": ["community_post_platform_20260909", "p3_platform_foundation"],
     "audit_level_20261020": ["community_post_platform_20260909"],
     "content_safety_hold_20261020": [],
     "community_enforcement_links_20261020": ["community_post_platform_20260909"],

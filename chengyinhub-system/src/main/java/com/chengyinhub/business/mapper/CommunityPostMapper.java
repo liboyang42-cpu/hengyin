@@ -267,8 +267,11 @@ public interface CommunityPostMapper {
     int insertAppeal(@Param("enforcementId") Long enforcementId,
                      @Param("appellantMemberId") Long appellantMemberId,
                      @Param("reason") String reason, @Param("evidenceJson") String evidenceJson,
-                     @Param("requestId") String requestId, @Param("now") Date now);
+                     @Param("requestId") String requestId, @Param("dueAt") Date dueAt, @Param("now") Date now);
     Map<String, Object> selectAppeal(Long id);
+    int claimAppealCas(@Param("id") Long id, @Param("reviewerUserId") Long reviewerUserId,
+                       @Param("expectedVersion") int expectedVersion, @Param("now") Date now);
+    Integer selectReportCaseFirstResponseMinutes(@Param("reportCaseId") Long reportCaseId);
     List<Map<String, Object>> selectAppeals(@Param("status") String status,
                                             @Param("cursor") Long cursor, @Param("limit") int limit);
     int reviewAppealCas(@Param("id") Long id, @Param("decision") String decision,

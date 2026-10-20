@@ -16,6 +16,7 @@ import com.chengyinhub.business.service.ICommunityMediaReceiptService;
 import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
+import com.chengyinhub.business.service.support.CommunityReportPolicy;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.JsonUtils;
 import com.chengyinhub.common.utils.file.FileOssUploadUtils;
@@ -879,12 +880,14 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             throw error("证据附件归属与脱敏链路尚未接通，请先提交文字申诉", 409);
         }
         Date now = new Date();
+        Date dueAt = appealDueAt(enforcement, now);
         try {
             mapper.insertAppeal(request.getEnforcementId(), memberId, request.getReason().trim(),
                     json(Collections.emptyList()),
-                    request.getRequestId(), now);
+                    request.getRequestId(), dueAt, now);
         } catch (DuplicateKeyException e) { throw error("该处置已有进行中的申诉", 409); }
         notifyGovernance(memberId, postId, 0L, "APPEAL_SUBMITTED", request.getEnforcementId(), now);
+        notifyAppealReceived(memberId, request.getEnforcementId(), postId, dueAt);
         if (positive(postId)) outbox(postId, "APPEAL_SUBMITTED", payload("enforcementId", request.getEnforcementId()), now);
         else typedOutbox("COMMUNITY_MEMBER", memberId, "ACCOUNT_APPEAL_SUBMITTED",
                 payload("enforcementId", request.getEnforcementId()), now);
@@ -1115,6 +1118,63 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         outbox(postId, "COMMENT_ENFORCED", payload("commentId", commentId), now);
         saveCommandReceipt(operatorUserId, request.getRequestId(), commandType, commentId, now);
         return enforcementId;
+    }
+
+    /** 申诉时限：来源举报单的首响时限快照、处置原因/规则编码命中的举报原因取最短；都没有则标准 24 小时。 */
+    private Date appealDueAt(Map<String, Object> enforcement, Date now) {
+        long minutes = APPEAL_STANDARD_DUE_MINUTES;
+        Long reportCaseId = number(value(enforcement, "report_case_id"));
+        if (positive(reportCaseId)) {
+            Integer caseMinutes = mapper.selectReportCaseFirstResponseMinutes(reportCaseId);
+            if (caseMinutes != null && caseMinutes > 0) minutes = Math.min(minutes, caseMinutes);
+        }
+        for (String key : new String[]{"reason_code", "rule_code"}) {
+            Object code = value(enforcement, key);
+            CommunityReportPolicy.Reason reason = code == null ? null : CommunityReportPolicy.find(upper(code.toString()));
+            if (reason != null) minutes = Math.min(minutes, reason.getFirstResponseMinutes());
+        }
+        return new Date(now.getTime() + minutes * 60_000L);
+    }
+
+    /** 申诉已受理：与审核通知同一系统消息通道与卡片结构，同事务写入；requestId 重放撞唯一键在此之前返回，不重复通知。 */
+    private void notifyAppealReceived(Long memberId, Long enforcementId, Long postId, Date dueAt) {
+        com.chengyinhub.business.service.IImService im = imServiceProvider == null ? null : imServiceProvider.getIfAvailable();
+        if (im == null) {
+            log.warn("[社区申诉] 系统消息服务不可用，申诉受理通知未发送: enforcementId={}", enforcementId);
+            return;
+        }
+        String deadline = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(dueAt);
+        String outcome = "你的申诉已受理，平台将在 " + deadline + " 前完成复核";
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("bizType", "COMMUNITY_POST_ENFORCEMENT");
+        result.put("bizId", enforcementId);
+        result.put("postId", postId);
+        result.put("outcome", outcome);
+        result.put("dueAt", dueAt);
+        result.put("followUp", "复核期间原处理暂时维持，结果会再通知你。");
+        im.sendSystem(memberId, com.chengyinhub.business.domain.ImMessage.MSG_CARD, "申诉已受理",
+                com.chengyinhub.business.service.support.SystemNoticeCard.json("申诉已受理", outcome + "。", result));
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> claimAppeal(Long operatorUserId, Long appealId, Integer expectedVersion) {
+        if (!positive(operatorUserId)) throw error("请先登录", 401);
+        if (!positive(appealId)) throw error("申诉 id 无效", 400);
+        Map<String, Object> appeal = mapper.selectAppeal(appealId);
+        if (appeal == null) throw error("申诉不存在", 404);
+        String status = String.valueOf(value(appeal, "status"));
+        Long reviewer = number(value(appeal, "reviewer_user_id"));
+        // 同一审核员重复打开 = 幂等；他人已认领或已结案 = 409。
+        if (!"REVIEWING".equals(status) || !operatorUserId.equals(reviewer)) {
+            if (!"SUBMITTED".equals(status)) throw error("申诉已被认领或已处理", 409);
+            int version = requiredVersion(expectedVersion);
+            if (mapper.claimAppealCas(appealId, operatorUserId, version, new Date()) != 1) {
+                throw error("申诉已被认领或已处理", 409);
+            }
+            appeal = mapper.selectAppeal(appealId);
+        }
+        return appeal;
     }
 
     @Override

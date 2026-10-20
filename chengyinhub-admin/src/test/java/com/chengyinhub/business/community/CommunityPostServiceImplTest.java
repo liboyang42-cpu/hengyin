@@ -868,7 +868,7 @@ class CommunityPostServiceImplTest {
                 () -> service.appeal(9L, request));
 
         assertEquals(Integer.valueOf(409), error.getCode());
-        verify(mapper, never()).insertAppeal(anyLong(), anyLong(), anyString(), anyString(), anyString(), any());
+        verify(mapper, never()).insertAppeal(anyLong(), anyLong(), anyString(), anyString(), anyString(), any(), any());
     }
 
     @Test

@@ -67,6 +67,14 @@ public class CommunityPostModerationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:audit:review')")
+    @Log(title = "广场帖文申诉认领", businessType = BusinessType.UPDATE)
+    @PostMapping("/appeals/{id}/claim")
+    public AjaxResult claimAppeal(@PathVariable Long id, @RequestBody(required = false) CommunityPostRequests.AppealReview request) {
+        try { return success(service.claimAppeal(getUserId(), id, request == null ? null : request.getExpectedVersion())); }
+        catch (ServiceException e) { return serviceError(e); }
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:audit:review')")
     @Log(title = "广场帖文申诉复核", businessType = BusinessType.UPDATE)
     @PostMapping("/enforcements/{id}/appeals/review")
     public AjaxResult reviewAppeal(@PathVariable Long id, @RequestBody(required = false) CommunityPostRequests.AppealReview request) {

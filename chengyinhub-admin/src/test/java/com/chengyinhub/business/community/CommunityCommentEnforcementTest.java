@@ -113,7 +113,7 @@ class CommunityCommentEnforcementTest {
         appeal.setReason("评论没有违规");
         appeal.setRequestId("comment-appeal-1");
         service.appeal(COMMENT_AUTHOR, appeal);
-        verify(mapper).insertAppeal(eq(41L), eq(COMMENT_AUTHOR), anyString(), anyString(), eq("comment-appeal-1"), any());
+        verify(mapper).insertAppeal(eq(41L), eq(COMMENT_AUTHOR), anyString(), anyString(), eq("comment-appeal-1"), any(), any());
 
         Map<String, Object> row = new HashMap<>();
         row.put("enforcement_id", 41L);
