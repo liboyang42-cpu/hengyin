@@ -303,6 +303,12 @@
       UPDATE community_post_media SET review_state=#{reviewState},update_time=#{now}
       WHERE post_id=#{postId} AND retention_state='ACTIVE' AND review_state IN ('PENDING','HOLD')
     </update>
+    <update id="updateAuditMarks">
+      UPDATE community_post SET audit_level=COALESCE(#{auditLevel},audit_level),
+        audit_before_publish=COALESCE(#{auditBeforePublish},audit_before_publish),
+        review_flag=COALESCE(#{reviewFlag},review_flag),update_time=#{now}
+      WHERE id=#{postId}
+    </update>
     <delete id="deleteTopics">DELETE FROM community_post_topic WHERE post_id=#{postId}</delete>
     <insert id="insertTopic">INSERT INTO community_post_topic(post_id,topic_code,create_time) VALUES(#{postId},#{topicCode},#{now})</insert>
     <delete id="deleteMentions">DELETE FROM community_post_mention WHERE post_id=#{postId}</delete>
