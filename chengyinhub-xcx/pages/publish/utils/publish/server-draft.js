@@ -22,7 +22,8 @@ const initial = require('./story-initial-state.js');
 
 function topicIdOf(data) {
   const id = data && typeof data === 'object' ? data.topicId : data;
-  return Number(id) > 0 ? Number(id) : 0;
+  if (!['number', 'string'].includes(typeof id) || String(id).trim() === '') return 0;
+  return Number.isSafeInteger(Number(id)) && Number(id) > 0 ? Number(id) : 0;
 }
 
 function matchingTopic(detail, topicId) {
@@ -34,7 +35,7 @@ function matchingTopic(detail, topicId) {
 
 function confirmedPublication(data, topicId) {
   return data && typeof data === 'object'
-    && (data.topicId == null || Number(data.topicId) === Number(topicId))
+    && topicIdOf(data) > 0 && topicIdOf(data) === Number(topicId)
     && (data.published === true || data.published === false
       && (data.commercialAwaitingReview === true || ['PENDING', 'ESCALATED'].includes(data.reviewState)));
 }
@@ -145,26 +146,26 @@ function createServerDraftSaver(deps) {
   const current = () => !destroyed && (!deps.isCurrent || deps.isCurrent());
   let unconfirmedPublish = 0; // 上次发布结果不确定的主题号:下次发布前先查真实状态,别对已发布主题再存草稿
 
-  function request(kind, value, callback) {
-    let settled = false;
-    const done = (result) => {
-      if (settled || !current()) return;
-      settled = true;
-      callback(result);
-    };
-    try { deps[kind](value, done); }
-    catch (error) { done({ ok: false, networkError: true }); }
-  }
-
   function run(payload, publish, handlers) {
     handlers = handlers || {};
+    const runCurrent = () => current() && (!handlers.isCurrent || handlers.isCurrent());
+    function request(kind, value, callback) {
+      let settled = false;
+      const done = (result) => {
+        if (settled || !runCurrent()) return;
+        settled = true;
+        callback(result);
+      };
+      try { deps[kind](value, done); }
+      catch (error) { done({ ok: false, networkError: true }); }
+    }
     // 防重:在途或已发布都不再发起(连点只会有一次请求)
-    if (busy || published || !current()) return false;
+    if (busy || published || !runCurrent()) return false;
     busy = true;
     if (deps.pendingPublish) unconfirmedPublish = topicIdOf(deps.pendingPublish());
     const finish = (fn, arg) => {
       busy = false;
-      if (current() && typeof fn === 'function') fn(arg);
+      if (runCurrent() && typeof fn === 'function') fn(arg);
     };
     const draftPayload = Object.assign({}, payload, { saveDraft: 1 });
 
@@ -189,7 +190,8 @@ function createServerDraftSaver(deps) {
     const afterSaved = (topicId) => {
       request('readback', topicId, (back) => {
         if (!current()) return;
-        const issue = back && back.ok ? readbackIssue(payload, back.data, true) : '';
+        const issue = back && back.ok ? (!matchingTopic(back.data, topicId)
+          ? '云端保存的主题编号与本次不一致' : readbackIssue(payload, back.data, true)) : '';
         if (!back || !back.ok || issue) {
           finish(handlers.onFail, Object.assign({ stage: 'readback', topicId }, back || {}, issue ? { ok: false, msg: issue } : {}));
           return;
@@ -263,4 +265,4 @@ function createServerDraftSaver(deps) {
   };
 }
 
-module.exports = { createServerDraftSaver, readbackIssue, topicIdOf };
+module.exports = { createServerDraftSaver, readbackIssue, topicIdOf, confirmedPublication };

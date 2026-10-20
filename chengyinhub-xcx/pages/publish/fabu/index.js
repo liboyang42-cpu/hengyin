@@ -27,7 +27,7 @@ const roleGuard = require('../../../utils/roleGuard.js');
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
-const { createServerDraftSaver } = require('../utils/publish/server-draft.js');
+const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
 const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
@@ -635,6 +635,22 @@ Page({
     if (this.data.editingTopicId) return { topicId: this.data.editingTopicId };
     if (this.data.draftUuid) return { draftUuid: this.data.draftUuid };
     return null;
+  },
+
+  _draftContentRevision() {
+    return JSON.stringify([this.data.formData, this.data.pendingMaterials,
+      this.data.selectedCategoryIds, this.data.selectedCategoryNames,
+      this.data.startDateTime, this.data.endDateTime]);
+  },
+
+  _showUnstoredPublishedChanges(rejected) {
+    this._draftAutosaveReady = true;
+    this._resultSheetNext = '';
+    const reason = '本次提交的结果已确认，但当前修改未能保存到本机。请勿退出，腾出存储空间后继续编辑以重试保存。';
+    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
+      resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
+        sub: '内容暂留在本页，请勿关闭或退出。', meta: '当前修改尚未保存',
+        why: reason, duration: RESULT_SHEET_MS } });
   },
 
   _installDraftAutosave() {
@@ -7101,13 +7117,19 @@ Page({
           const editingId = this.data.editingTopicId;
           const endpoint = this._topicEndpoint(payload, editingId);
           const owner = memberId(app);
+          const draftMemberId = this.data.draftMemberId;
           const draftUuid = this.data.draftUuid;
           const editLoadToken = this._editLoadToken;
+          const baseRevision = this.data.baseRevision;
+          const scope = this.data.operationScope;
           const isCurrent = () => !this._unloaded
             && owner === memberId(app)
+            && draftMemberId === this.data.draftMemberId
             && editingId === this.data.editingTopicId
             && draftUuid === this.data.draftUuid
-            && editLoadToken === this._editLoadToken;
+            && editLoadToken === this._editLoadToken
+            && baseRevision === this.data.baseRevision
+            && scope === this.data.operationScope;
           sendUiStateRequest(app, endpoint, {
             data: JSON.stringify(editingId ? Object.assign({}, payload, { id: editingId }) : payload),
             method: "POST",
@@ -7116,7 +7138,13 @@ Page({
             },
             success: (res) => {
               if (!isCurrent()) return;
-              if (res && res.code == "200") cb({ ok: true, data: res.data });
+              if (res && res.code == "200") {
+                const id = topicIdOf(res.data);
+                const sameTopic = id > 0 && (!editingId || id === Number(editingId));
+                const confirmed = sameTopic && (typeof res.data !== 'object'
+                  || confirmedPublication(res.data, id));
+                cb(confirmed ? { ok: true, data: res.data } : { ok: false, networkError: true });
+              }
               else if (res && /^4\d\d$/.test(String(res.code))) cb({ ok: false, msg: res.msg });
               else cb({ ok: false, networkError: true });
             },
@@ -7150,13 +7178,20 @@ Page({
       this._publishAttempt = null;
       return;
     }
+    const draftRevision = this._draftContentRevision();
     const started = workflow.submit(data, {
       onSuccess: (resData) => {
         const tid = resData && typeof resData === 'object' ? resData.topicId : resData;
         const pendingReview = !!(resData && (resData.commercialAwaitingReview || !resData.published && ['PENDING', 'ESCALATED'].includes(resData.reviewState)));
         const reviewNextStep = resData && resData.commercialNextStep || '主题与引用的玩法将一起审核。';
-        that._draftAutosaveReady = false;
-        that._clearDraftEnvelope();
+        const localChanges = draftRevision !== that._draftContentRevision();
+        that._publishAttempt = null;
+        that._draftAutosaveReady = localChanges;
+        if (localChanges && !that._persistDraftEnvelope()) {
+          that._showUnstoredPublishedChanges(false);
+          return;
+        }
+        if (!localChanges) that._clearDraftEnvelope();
         // 改已有主题走这条:不进发布成功那套全屏弹层(它的「去招商家 / 预览玩家视角」
         // 对已存在的主题没意义)。这里只报结果、然后回项目主页,没有导航分叉,
         // 正是 result-sheet 的形状。
@@ -7172,7 +7207,9 @@ Page({
           that.setData({
             submitting: false, submitError: '',
             resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
-              sub: pendingReview ? reviewNextStep : '这份主题的改动已经发布。', why: '', duration: RESULT_SHEET_MS }
+              sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
+                : pendingReview ? reviewNextStep : '这份主题的改动已经发布。',
+              meta: localChanges ? '草稿仍在本机' : '', why: '', duration: RESULT_SHEET_MS }
           });
           return;
         }
@@ -7205,8 +7242,9 @@ Page({
         that.setData({
           resultSheet: {
             show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
-            sub: pendingReview ? reviewNextStep : tid ? '接下来去招商家承接站点、找俱乐部带团。' : '路线已进入你的项目列表。',
-            meta: chapterCount ? (chapterCount + ' 个章节') : '',
+            sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
+              : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接站点、找俱乐部带团。' : '路线已进入你的项目列表。',
+            meta: localChanges ? '草稿仍在本机' : chapterCount ? (chapterCount + ' 个章节') : '',
             why: '', duration: RESULT_SHEET_MS,
           }
         });
@@ -7257,12 +7295,14 @@ Page({
     const scope = this.data.operationScope;
     const current = () => !this._unloaded && owner === String(app.getUserID() || '')
       && scope === this.data.operationScope;
-    if (this._serverDraftSaver && this._serverDraftContext !== owner + ':' + scope) {
+    const context = JSON.stringify([owner, scope, this._draftIdentity(), this.data.draftUuid,
+      this.data.baseRevision, this._editLoadToken]);
+    if (this._serverDraftSaver && this._serverDraftContext !== context) {
       this._serverDraftSaver.destroy();
       this._serverDraftSaver = null;
     }
     if (!this._serverDraftSaver) {
-      this._serverDraftContext = owner + ':' + scope;
+      this._serverDraftContext = context;
       const reply = (cb, check) => ({
         success: (res) => {
           if (res.code == '200' && (!check || check(res.data))) cb({ ok: true, data: res.data });
@@ -7348,12 +7388,25 @@ Page({
         && String(this.data.draftMemberId) !== String(app.getUserID()))) return;
     const previous = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
+    const scope = this.data.operationScope;
+    const draftUuid = this.data.draftUuid;
+    const baseRevision = this.data.baseRevision;
+    const editLoadToken = this._editLoadToken;
+    const draftRevision = this._draftContentRevision();
+    let activeTopicId = String(this.data.editingTopicId || '');
+    const current = () => !this._unloaded && String(memberId) === String(app.getUserID() || '')
+      && String(memberId) === String(this.data.draftMemberId || app.getUserID() || '')
+      && scope === this.data.operationScope && draftUuid === this.data.draftUuid
+      && baseRevision === this.data.baseRevision && editLoadToken === this._editLoadToken
+      && activeTopicId === String(this.data.editingTopicId || '');
     const saver = this.getServerDraftSaver();
     this.setData({ draftSaving: !publish, submitting: publish, submitError: '' });
     cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
     const handlers = {
+      isCurrent: current,
       onSaved: (topicId) => {
-        if (String(this.data.editingTopicId) === String(topicId)) return;
+        activeTopicId = String(topicId);
+        if (String(this.data.editingTopicId) === activeTopicId) return;
         const intent = publishIntent.pending(wx, this._draftCreateIntentScope(), memberId);
         if (intent) publishIntent.settle(wx, this._draftCreateIntentScope(), memberId, intent.key, 'success');
         // 服务端已经建好这份草稿:之后的保存都 update 同一个主题 —— 回读失败后重试也不会再建一份
@@ -7364,7 +7417,9 @@ Page({
         cyLoading.hide();
         // 发布,或上次发布结果不确定、这次查到其实已发布:都按已发布收口
         if (publish || result.published) {
-          this._onServerDraftPublished(result, previous, memberId);
+          this._onServerDraftPublished(Object.assign({}, result, {
+            localChanges: result.localChanges || draftRevision !== this._draftContentRevision()
+          }), previous, memberId);
           return;
         }
         // 用回读到的版本替换编辑器:章节、站点拿到真实编号,章节规则才能引用它们
@@ -7434,32 +7489,40 @@ Page({
   _onServerDraftPublished(result, previous, memberId) {
     this._publishAttempt = null;
     const pub = (result && result.published) || {};
-    // 丢回包后经回读确认的发布:按主题真实状态展示(status=1 已上架,否则在审核中)
-    const pendingReview = pub.recovered ? Number(pub.status) !== 1
+    // 回读的拒审终态不能冒充待审，也不能自动重发发布。
+    const rejected = pub.recovered && Number(pub.status) === 2;
+    const pendingReview = pub.recovered ? Number(pub.status) === 0
       : !!(pub.commercialAwaitingReview || !pub.published && ['PENDING', 'ESCALATED'].includes(pub.reviewState));
     const reviewNextStep = pub.commercialNextStep || '主题与引用的玩法将一起审核。';
+    const rejectionReason = rejected && result.detail && result.detail.topic.reason || '';
     const topicId = result.topicId;
-    // 发布的是刚存进去且回读确认过的那一版,本机恢复稿到这里才清
-    this._draftAutosaveReady = !!result.localChanges;
-    if (result.localChanges) this._persistDraftEnvelope();
-    else [previous, { topicId }].forEach((identity) => {
+    // 只清已确认的那版；在途新编辑或拒审后待修改的内容继续留在本机。
+    const keepDraft = !!(result.localChanges || rejected);
+    this._draftAutosaveReady = keepDraft;
+    if (keepDraft && !this._persistDraftEnvelope()) {
+      this._showUnstoredPublishedChanges(rejected);
+      return;
+    }
+    if (!keepDraft) [previous, { topicId }].forEach((identity) => {
       if (!identity) return;
       try { proEditorDraft.removeDraft(wx, identity, { memberId, operationScope: this.data.operationScope }); } catch (error) {}
     });
-    analytics.track('topic_publish_success', {
+    if (!rejected) analytics.track('topic_publish_success', {
       bizType: 'topic',
       bizId: topicId || null,
       properties: { name: this.data.formData.name }
     });
-    this._resultSheetNext = '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId
+    this._resultSheetNext = rejected ? '' : '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId
       + (this.data.operationScope ? '&scope=MERCHANT' : '');
     this.setData({
       submitting: false, submitError: '', editIsDraft: false,
-      resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
-        sub: result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
-          : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接站点、找俱乐部带团。',
-        meta: result.localChanges ? '草稿仍在本机' : '',
-        why: '', duration: RESULT_SHEET_MS }
+      resultSheet: { show: true, kind: rejected ? 'fail' : 'success',
+        title: rejected ? '审核未通过' : pendingReview ? '已提交审核' : '城市路线已发布',
+        sub: rejected ? '内容仍保留，可以修改后重新提交。'
+          : result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
+            : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接站点、找俱乐部带团。',
+        meta: keepDraft ? '草稿仍在本机' : '',
+        why: rejectionReason, duration: RESULT_SHEET_MS }
     });
   },
 

@@ -877414,7 +877414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5450"
+        "staticSource": "pages/play/index.js:5489"
       }
     },
     {
@@ -877492,7 +877492,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5450"
+        "staticSource": "pages/play/index.js:5489"
       }
     },
     {
@@ -877569,7 +877569,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7922"
+        "staticSource": "pages/play/index.js:7961"
       }
     },
     {
@@ -877646,7 +877646,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7975"
+        "staticSource": "pages/play/index.js:8014"
       }
     },
     {
@@ -877723,7 +877723,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7965"
+        "staticSource": "pages/play/index.js:8004"
       }
     },
     {
@@ -877790,7 +877790,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5460"
+        "staticSource": "pages/play/index.js:5499"
       }
     },
     {
@@ -877867,7 +877867,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7975"
+        "staticSource": "pages/play/index.js:8014"
       }
     },
     {
@@ -877944,7 +877944,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7965"
+        "staticSource": "pages/play/index.js:8004"
       }
     },
     {
@@ -878011,7 +878011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5461"
+        "staticSource": "pages/play/index.js:5500"
       }
     },
     {
@@ -878088,7 +878088,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7969"
+        "staticSource": "pages/play/index.js:8008"
       }
     },
     {
@@ -878179,7 +878179,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5498"
+        "staticSource": "pages/play/index.js:5537"
       }
     },
     {
@@ -878257,7 +878257,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5599"
+        "staticSource": "pages/play/index.js:5638"
       }
     },
     {
@@ -878324,7 +878324,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5631"
+        "staticSource": "pages/play/index.js:5670"
       }
     },
     {
@@ -878416,7 +878416,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5580"
+        "staticSource": "pages/play/index.js:5619"
       }
     },
     {
@@ -878483,7 +878483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3442"
+        "staticSource": "pages/play/index.js:3448"
       }
     },
     {
@@ -878552,9 +878552,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -878591,18 +878589,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -878801,7 +878793,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5518"
+        "staticSource": "pages/play/index.js:5557"
       }
     },
     {
@@ -878868,7 +878860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5502"
+        "staticSource": "pages/play/index.js:5541"
       }
     },
     {
@@ -878935,7 +878927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5503"
+        "staticSource": "pages/play/index.js:5542"
       }
     },
     {
@@ -878978,9 +878970,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "chooseImage",
         "chooseImage-denied": "chooseImage",
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "authorize-denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879018,9 +879008,6 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -879028,9 +879015,6 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879287,7 +879271,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5667"
+        "staticSource": "pages/play/index.js:5706"
       }
     },
     {
@@ -879316,9 +879300,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879355,18 +879337,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879400,9 +879376,7 @@
         "timeout",
         "duplicate-trigger",
         "forbidden-owner",
-        "authorize-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -879411,7 +879385,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5350"
       }
     },
     {
@@ -879440,9 +879414,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879479,18 +879451,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879524,9 +879490,7 @@
         "timeout",
         "duplicate-trigger",
         "forbidden-owner",
-        "authorize-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -879535,7 +879499,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5350"
       }
     },
     {
@@ -879564,9 +879528,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879603,18 +879565,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879648,9 +879604,7 @@
         "timeout",
         "duplicate-trigger",
         "forbidden-owner",
-        "authorize-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -879659,7 +879613,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5350"
       }
     },
     {
@@ -879688,9 +879642,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879727,18 +879679,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879772,9 +879718,7 @@
         "timeout",
         "duplicate-trigger",
         "forbidden-owner",
-        "authorize-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -879783,7 +879727,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5350"
       }
     },
     {
@@ -879814,9 +879758,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "scanCode",
         "authorize-denied": "authorize",
-        "scanCode-denied": "scanCode",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "scanCode-denied": "scanCode"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -879854,9 +879796,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -879864,9 +879803,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -879902,9 +879838,7 @@
         "forbidden-owner",
         "cancelled",
         "authorize-denied",
-        "scanCode-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "scanCode-denied"
       ],
       "requiredPlatforms": [
         "ios",
@@ -879913,7 +879847,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5350"
       }
     },
     {
@@ -880033,7 +879967,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5795"
+        "staticSource": "pages/play/index.js:5834"
       }
     },
     {
@@ -880074,9 +880008,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -880113,18 +880045,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -880355,7 +880281,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5897"
+        "staticSource": "pages/play/index.js:5936"
       }
     },
     {
@@ -880398,9 +880324,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "scanCode",
         "authorize-denied": "authorize",
-        "scanCode-denied": "scanCode",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "scanCode-denied": "scanCode"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -880438,9 +880362,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -880448,9 +880369,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -880683,7 +880601,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5647"
+        "staticSource": "pages/play/index.js:5686"
       }
     },
     {
@@ -880726,9 +880644,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "chooseImage",
         "chooseImage-denied": "chooseImage",
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "authorize-denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -880766,9 +880682,6 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -880776,9 +880689,6 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -881035,7 +880945,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5667"
+        "staticSource": "pages/play/index.js:5706"
       }
     },
     {
@@ -881104,9 +881014,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -881143,18 +881051,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -881377,7 +881279,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5632"
+        "staticSource": "pages/play/index.js:5671"
       }
     },
     {
@@ -881446,9 +881348,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -881485,18 +881385,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -881695,7 +881589,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5508"
+        "staticSource": "pages/play/index.js:5547"
       }
     },
     {
@@ -881736,9 +881630,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -881775,18 +881667,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -882017,7 +881903,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5723"
+        "staticSource": "pages/play/index.js:5762"
       }
     },
     {
@@ -882084,7 +881970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6341"
+        "staticSource": "pages/play/index.js:6380"
       }
     },
     {
@@ -882152,7 +882038,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -882219,7 +882105,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6341"
+        "staticSource": "pages/play/index.js:6380"
       }
     },
     {
@@ -882296,7 +882182,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3444"
+        "staticSource": "pages/play/index.js:3450"
       }
     },
     {
@@ -882364,7 +882250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -882431,7 +882317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6306"
+        "staticSource": "pages/play/index.js:6345"
       }
     },
     {
@@ -882513,7 +882399,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7369"
+        "staticSource": "pages/play/index.js:7408"
       }
     },
     {
@@ -882979,7 +882865,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6279"
+        "staticSource": "pages/play/index.js:6318"
       }
     },
     {
@@ -883057,7 +882943,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7772"
+        "staticSource": "pages/play/index.js:7811"
       }
     },
     {
@@ -883208,9 +883094,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -883247,18 +883131,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -883549,7 +883427,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7421"
+        "staticSource": "pages/play/index.js:7460"
       }
     },
     {
@@ -883627,7 +883505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7385"
+        "staticSource": "pages/play/index.js:7424"
       }
     },
     {
@@ -883719,7 +883597,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7255"
+        "staticSource": "pages/play/index.js:7294"
       }
     },
     {
@@ -883825,7 +883703,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7633"
+        "staticSource": "pages/play/index.js:7672"
       }
     },
     {
@@ -883907,7 +883785,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7369"
+        "staticSource": "pages/play/index.js:7408"
       }
     },
     {
@@ -883974,7 +883852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4436"
+        "staticSource": "pages/play/index.js:4442"
       }
     },
     {
@@ -884072,7 +883950,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7848"
+        "staticSource": "pages/play/index.js:7887"
       }
     },
     {
@@ -884153,7 +884031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7878"
+        "staticSource": "pages/play/index.js:7917"
       }
     },
     {
@@ -884220,7 +884098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7153"
+        "staticSource": "pages/play/index.js:7192"
       }
     },
     {
@@ -884290,7 +884168,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3868"
+        "staticSource": "pages/play/index.js:3874"
       }
     },
     {
@@ -884359,9 +884237,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -884398,18 +884274,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -884632,7 +884502,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3876"
+        "staticSource": "pages/play/index.js:3882"
       }
     },
     {
@@ -884701,9 +884571,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -884740,18 +884608,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -884974,7 +884836,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3883"
+        "staticSource": "pages/play/index.js:3889"
       }
     },
     {
@@ -885044,7 +884906,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3886"
+        "staticSource": "pages/play/index.js:3892"
       }
     },
     {
@@ -885114,7 +884976,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3886"
+        "staticSource": "pages/play/index.js:3892"
       }
     },
     {
@@ -885185,7 +885047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3871"
+        "staticSource": "pages/play/index.js:3877"
       }
     },
     {
@@ -885255,7 +885117,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3868"
+        "staticSource": "pages/play/index.js:3874"
       }
     },
     {
@@ -885322,7 +885184,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7152"
+        "staticSource": "pages/play/index.js:7191"
       }
     },
     {
@@ -885431,7 +885293,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3242"
+        "staticSource": "pages/play/index.js:3248"
       }
     },
     {
@@ -885500,9 +885362,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -885539,18 +885399,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -885749,7 +885603,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5434"
+        "staticSource": "pages/play/index.js:5473"
       }
     },
     {
@@ -886110,7 +885964,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5389"
+        "staticSource": "pages/play/index.js:5428"
       }
     },
     {
@@ -886179,9 +886033,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -886218,18 +886070,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -886436,7 +886282,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6379"
+        "staticSource": "pages/play/index.js:6418"
       }
     },
     {
@@ -886542,7 +886388,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6163"
+        "staticSource": "pages/play/index.js:6202"
       }
     },
     {
@@ -886611,9 +886457,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -886650,18 +886494,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -886860,7 +886698,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6141"
+        "staticSource": "pages/play/index.js:6180"
       }
     },
     {
@@ -886928,7 +886766,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -886995,7 +886833,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -887063,7 +886901,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -887130,7 +886968,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -887197,7 +887035,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -887265,7 +887103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -887332,7 +887170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -887400,7 +887238,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -887467,7 +887305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -887534,7 +887372,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -887605,7 +887443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6218"
+        "staticSource": "pages/play/index.js:6257"
       }
     },
     {
@@ -887711,7 +887549,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6257"
+        "staticSource": "pages/play/index.js:6296"
       }
     },
     {
@@ -887779,7 +887617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -887846,7 +887684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -887914,7 +887752,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -887981,7 +887819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -888052,7 +887890,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6268"
+        "staticSource": "pages/play/index.js:6307"
       }
     },
     {
@@ -888119,7 +887957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -888225,7 +888063,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6257"
+        "staticSource": "pages/play/index.js:6296"
       }
     },
     {
@@ -888293,7 +888131,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -888360,7 +888198,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -888428,7 +888266,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -888495,7 +888333,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -888562,7 +888400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -888668,7 +888506,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6257"
+        "staticSource": "pages/play/index.js:6296"
       }
     },
     {
@@ -888736,7 +888574,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -888779,9 +888617,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "scanCode",
         "authorize-denied": "authorize",
-        "scanCode-denied": "scanCode",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "scanCode-denied": "scanCode"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -888819,9 +888655,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -888829,9 +888662,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -889064,7 +888894,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6276"
+        "staticSource": "pages/play/index.js:6315"
       }
     },
     {
@@ -889131,7 +888961,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -889199,7 +889029,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -889266,7 +889096,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -889333,7 +889163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -889439,7 +889269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6257"
+        "staticSource": "pages/play/index.js:6296"
       }
     },
     {
@@ -889507,7 +889337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -889574,7 +889404,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -889642,7 +889472,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -889709,7 +889539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -889776,7 +889606,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -889853,7 +889683,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6261"
+        "staticSource": "pages/play/index.js:6300"
       }
     },
     {
@@ -889921,7 +889751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -889988,7 +889818,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890056,7 +889886,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -890123,7 +889953,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890190,7 +890020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -890296,7 +890126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6257"
+        "staticSource": "pages/play/index.js:6296"
       }
     },
     {
@@ -890364,7 +890194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -890431,7 +890261,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890499,7 +890329,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -890566,7 +890396,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890633,7 +890463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6209"
+        "staticSource": "pages/play/index.js:6248"
       }
     },
     {
@@ -890701,7 +890531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -890768,7 +890598,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890836,7 +890666,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -890903,7 +890733,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -890981,7 +890811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6770"
+        "staticSource": "pages/play/index.js:6809"
       }
     },
     {
@@ -891048,7 +890878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6209"
+        "staticSource": "pages/play/index.js:6248"
       }
     },
     {
@@ -891116,7 +890946,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -891183,7 +891013,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -891251,7 +891081,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -891318,7 +891148,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -891385,7 +891215,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6209"
+        "staticSource": "pages/play/index.js:6248"
       }
     },
     {
@@ -891453,7 +891283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -891520,7 +891350,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -891588,7 +891418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -891655,7 +891485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -891722,7 +891552,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6209"
+        "staticSource": "pages/play/index.js:6248"
       }
     },
     {
@@ -891790,7 +891620,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6273"
+        "staticSource": "pages/play/index.js:6312"
       }
     },
     {
@@ -891857,7 +891687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -891925,7 +891755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -891992,7 +891822,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3265"
+        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -892063,7 +891893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6264"
+        "staticSource": "pages/play/index.js:6303"
       }
     },
     {
@@ -892130,7 +891960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6228"
+        "staticSource": "pages/play/index.js:6267"
       }
     },
     {
@@ -892197,7 +892027,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6250"
+        "staticSource": "pages/play/index.js:6289"
       }
     },
     {
@@ -892264,7 +892094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6237"
+        "staticSource": "pages/play/index.js:6276"
       }
     },
     {
@@ -892590,7 +892420,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6277"
+        "staticSource": "pages/play/index.js:6316"
       }
     },
     {
@@ -892657,7 +892487,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6321"
+        "staticSource": "pages/play/index.js:6360"
       }
     },
     {
@@ -892724,7 +892554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:516"
+        "staticSource": "pages/play/index.js:517"
       }
     },
     {
@@ -892791,7 +892621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1105"
+        "staticSource": "pages/play/index.js:1111"
       }
     },
     {
@@ -892858,7 +892688,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1105"
+        "staticSource": "pages/play/index.js:1111"
       }
     },
     {
@@ -892927,9 +892757,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -892966,18 +892794,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -893176,7 +892998,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1086"
+        "staticSource": "pages/play/index.js:1092"
       }
     },
     {
@@ -893243,7 +893065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2398"
+        "staticSource": "pages/play/index.js:2404"
       }
     },
     {
@@ -893431,9 +893253,7 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
         "cancelled": "requestSubscribeMessage",
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -893471,18 +893291,12 @@
         "getSetting",
         "login",
         "requestSubscribeMessage",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -893636,7 +893450,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6596"
+        "staticSource": "pages/play/index.js:6635"
       }
     },
     {
@@ -893746,7 +893560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6983"
+        "staticSource": "pages/play/index.js:7022"
       }
     },
     {
@@ -893847,7 +893661,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7027"
+        "staticSource": "pages/play/index.js:7066"
       }
     },
     {
@@ -893916,9 +893730,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -893955,18 +893767,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -894165,7 +893971,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2400"
+        "staticSource": "pages/play/index.js:2406"
       }
     },
     {
@@ -894234,9 +894040,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -894273,18 +894077,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -894483,7 +894281,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2724"
+        "staticSource": "pages/play/index.js:2730"
       }
     },
     {
@@ -894552,9 +894350,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -894591,18 +894387,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -894801,7 +894591,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3158"
+        "staticSource": "pages/play/index.js:3164"
       }
     },
     {
@@ -894868,7 +894658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2723"
+        "staticSource": "pages/play/index.js:2729"
       }
     },
     {
@@ -894936,7 +894726,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -895003,7 +894793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2723"
+        "staticSource": "pages/play/index.js:2729"
       }
     },
     {
@@ -895072,9 +894862,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -895111,18 +894899,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -895321,7 +895103,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2724"
+        "staticSource": "pages/play/index.js:2730"
       }
     },
     {
@@ -895390,9 +895172,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -895429,18 +895209,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -895639,7 +895413,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2724"
+        "staticSource": "pages/play/index.js:2730"
       }
     },
     {
@@ -895708,9 +895482,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -895747,18 +895519,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -895957,7 +895723,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3090"
+        "staticSource": "pages/play/index.js:3096"
       }
     },
     {
@@ -896026,9 +895792,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -896065,18 +895829,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -896275,7 +896033,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3158"
+        "staticSource": "pages/play/index.js:3164"
       }
     },
     {
@@ -896342,7 +896100,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6278"
+        "staticSource": "pages/play/index.js:6317"
       }
     },
     {
@@ -896411,9 +896169,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
@@ -896450,18 +896206,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -896661,7 +896411,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2900"
+        "staticSource": "pages/play/index.js:2906"
       }
     },
     {
@@ -896730,9 +896480,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
@@ -896769,18 +896517,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -896980,7 +896722,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2948"
+        "staticSource": "pages/play/index.js:2954"
       }
     },
     {
@@ -897047,7 +896789,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3029"
+        "staticSource": "pages/play/index.js:3035"
       }
     },
     {
@@ -897140,7 +896882,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3044"
+        "staticSource": "pages/play/index.js:3050"
       }
     },
     {
@@ -897261,7 +897003,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3071"
+        "staticSource": "pages/play/index.js:3077"
       }
     },
     {
@@ -897290,9 +897032,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
@@ -897329,18 +897069,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -897570,7 +897304,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6301"
+        "staticSource": "pages/play/index.js:6340"
       }
     },
     {
@@ -897639,9 +897373,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -897678,18 +897410,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -897888,7 +897614,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2776"
+        "staticSource": "pages/play/index.js:2782"
       }
     },
     {
@@ -897957,9 +897683,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -897996,18 +897720,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -898206,7 +897924,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2726"
+        "staticSource": "pages/play/index.js:2732"
       }
     },
     {
@@ -898273,7 +897991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3237"
+        "staticSource": "pages/play/index.js:3243"
       }
     },
     {
@@ -898341,7 +898059,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3262"
+        "staticSource": "pages/play/index.js:3268"
       }
     },
     {
@@ -898408,7 +898126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3237"
+        "staticSource": "pages/play/index.js:3243"
       }
     },
     {
@@ -898499,7 +898217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3215"
+        "staticSource": "pages/play/index.js:3221"
       }
     },
     {
@@ -898602,7 +898320,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6299"
+        "staticSource": "pages/play/index.js:6338"
       }
     },
     {
@@ -898669,7 +898387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5607"
+        "staticSource": "pages/play/index.js:5646"
       }
     },
     {
@@ -898760,7 +898478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5608"
+        "staticSource": "pages/play/index.js:5647"
       }
     },
     {
@@ -898827,7 +898545,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3644"
+        "staticSource": "pages/play/index.js:3650"
       }
     },
     {
@@ -899242,7 +898960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:337"
+        "staticSource": "pages/play/index.js:338"
       }
     },
     {
@@ -899538,9 +899256,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -899577,18 +899293,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -899893,7 +899603,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6300"
+        "staticSource": "pages/play/index.js:6339"
       }
     },
     {
@@ -899922,9 +899632,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
@@ -899961,18 +899669,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -900202,7 +899904,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6298"
+        "staticSource": "pages/play/index.js:6337"
       }
     },
     {
@@ -900231,9 +899933,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
@@ -900270,18 +899970,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -900511,7 +900205,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6302"
+        "staticSource": "pages/play/index.js:6341"
       }
     },
     {
@@ -900581,7 +900275,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5053"
+        "staticSource": "pages/play/index.js:5092"
       }
     },
     {
@@ -900687,7 +900381,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6335"
+        "staticSource": "pages/play/index.js:6374"
       }
     },
     {
@@ -900796,7 +900490,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7151"
+        "staticSource": "pages/play/index.js:7190"
       }
     },
     {
@@ -900863,7 +900557,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6371"
       }
     },
     {
@@ -901224,7 +900918,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6283"
+        "staticSource": "pages/play/index.js:6322"
       }
     },
     {
@@ -901585,7 +901279,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6283"
+        "staticSource": "pages/play/index.js:6322"
       }
     },
     {
@@ -901946,7 +901640,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6283"
+        "staticSource": "pages/play/index.js:6322"
       }
     },
     {
@@ -902055,7 +901749,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7151"
+        "staticSource": "pages/play/index.js:7190"
       }
     },
     {
@@ -902122,7 +901816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6371"
       }
     },
     {
@@ -902189,7 +901883,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3425"
+        "staticSource": "pages/play/index.js:3431"
       }
     },
     {
@@ -902256,7 +901950,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6288"
+        "staticSource": "pages/play/index.js:6327"
       }
     },
     {
@@ -902357,7 +902051,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3787"
+        "staticSource": "pages/play/index.js:3793"
       }
     },
     {
@@ -902424,7 +902118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3638"
+        "staticSource": "pages/play/index.js:3644"
       }
     },
     {
@@ -902501,7 +902195,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3759"
+        "staticSource": "pages/play/index.js:3765"
       }
     },
     {
@@ -902572,9 +902266,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "openSetting",
         "authorize-denied": "authorize",
-        "openSetting-denied": "openSetting",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "openSetting-denied": "openSetting"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -902612,18 +902304,12 @@
         "getSetting",
         "login",
         "openSetting",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -902822,7 +902508,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3324"
+        "staticSource": "pages/play/index.js:3330"
       }
     },
     {
@@ -902916,7 +902602,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4891"
+        "staticSource": "pages/play/index.js:4930"
       }
     },
     {
@@ -903104,9 +902790,7 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
         "cancelled": "requestSubscribeMessage",
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -903144,18 +902828,12 @@
         "getSetting",
         "login",
         "requestSubscribeMessage",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -903309,7 +902987,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6596"
+        "staticSource": "pages/play/index.js:6635"
       }
     },
     {
@@ -903377,7 +903055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6545"
+        "staticSource": "pages/play/index.js:6584"
       }
     },
     {
@@ -903487,7 +903165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6983"
+        "staticSource": "pages/play/index.js:7022"
       }
     },
     {
@@ -903588,7 +903266,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7027"
+        "staticSource": "pages/play/index.js:7066"
       }
     },
     {
@@ -903625,9 +903303,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -903664,18 +903340,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -903915,7 +903585,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3668"
+        "staticSource": "pages/play/index.js:3674"
       }
     },
     {
@@ -903984,9 +903654,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -904023,18 +903691,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -904233,7 +903895,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5041"
+        "staticSource": "pages/play/index.js:5080"
       }
     },
     {
@@ -904302,9 +903964,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -904341,18 +904001,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -904551,7 +904205,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7295"
+        "staticSource": "pages/play/index.js:7334"
       }
     },
     {
@@ -904620,9 +904274,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -904659,18 +904311,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -904869,7 +904515,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3611"
+        "staticSource": "pages/play/index.js:3617"
       }
     },
     {
@@ -904938,9 +904584,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -904977,18 +904621,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -905195,7 +904833,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2328"
+        "staticSource": "pages/play/index.js:2334"
       }
     },
     {
@@ -905262,7 +904900,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3630"
+        "staticSource": "pages/play/index.js:3636"
       }
     },
     {
@@ -905365,7 +905003,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3830"
+        "staticSource": "pages/play/index.js:3836"
       }
     },
     {
@@ -905432,7 +905070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2322"
+        "staticSource": "pages/play/index.js:2328"
       }
     },
     {
@@ -905499,7 +905137,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2323"
+        "staticSource": "pages/play/index.js:2329"
       }
     },
     {
@@ -905568,9 +905206,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -905607,18 +905243,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -905817,7 +905447,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4927"
+        "staticSource": "pages/play/index.js:4966"
       }
     },
     {
@@ -905911,7 +905541,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1424"
+        "staticSource": "pages/play/index.js:1430"
       }
     },
     {
@@ -905988,7 +905618,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1164"
+        "staticSource": "pages/play/index.js:1170"
       }
     },
     {
@@ -906056,7 +905686,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1204"
+        "staticSource": "pages/play/index.js:1210"
       }
     },
     {
@@ -906133,7 +905763,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1215"
+        "staticSource": "pages/play/index.js:1221"
       }
     },
     {
@@ -906210,7 +905840,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1229"
+        "staticSource": "pages/play/index.js:1235"
       }
     },
     {
@@ -906287,7 +905917,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1229"
+        "staticSource": "pages/play/index.js:1235"
       }
     },
     {
@@ -906356,9 +905986,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -906395,18 +906023,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -906629,7 +906251,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4625"
+        "staticSource": "pages/play/index.js:4664"
       }
     },
     {
@@ -906696,7 +906318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2319"
+        "staticSource": "pages/play/index.js:2325"
       }
     },
     {
@@ -906802,7 +906424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6163"
+        "staticSource": "pages/play/index.js:6202"
       }
     },
     {
@@ -906869,7 +906491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2289"
+        "staticSource": "pages/play/index.js:2295"
       }
     },
     {
@@ -906938,9 +906560,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -906977,18 +906597,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -907187,7 +906801,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1434"
+        "staticSource": "pages/play/index.js:1440"
       }
     },
     {
@@ -907254,7 +906868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2176"
+        "staticSource": "pages/play/index.js:2182"
       }
     },
     {
@@ -907321,7 +906935,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2159"
+        "staticSource": "pages/play/index.js:2165"
       }
     },
     {
@@ -907389,7 +907003,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2151"
+        "staticSource": "pages/play/index.js:2157"
       }
     },
     {
@@ -907456,7 +907070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2189"
+        "staticSource": "pages/play/index.js:2195"
       }
     },
     {
@@ -907523,7 +907137,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1779"
+        "staticSource": "pages/play/index.js:1785"
       }
     },
     {
@@ -907600,7 +907214,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2203"
+        "staticSource": "pages/play/index.js:2209"
       }
     },
     {
@@ -907694,7 +907308,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2299"
+        "staticSource": "pages/play/index.js:2305"
       }
     },
     {
@@ -907761,7 +907375,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1490"
+        "staticSource": "pages/play/index.js:1496"
       }
     },
     {
@@ -907862,7 +907476,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1532"
+        "staticSource": "pages/play/index.js:1538"
       }
     },
     {
@@ -907939,7 +907553,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1505"
+        "staticSource": "pages/play/index.js:1511"
       }
     },
     {
@@ -908006,7 +907620,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1490"
+        "staticSource": "pages/play/index.js:1496"
       }
     },
     {
@@ -908100,7 +907714,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2299"
+        "staticSource": "pages/play/index.js:2305"
       }
     },
     {
@@ -908167,7 +907781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1501"
+        "staticSource": "pages/play/index.js:1507"
       }
     },
     {
@@ -908245,7 +907859,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1866"
+        "staticSource": "pages/play/index.js:1872"
       }
     },
     {
@@ -908313,7 +907927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1864"
+        "staticSource": "pages/play/index.js:1870"
       }
     },
     {
@@ -908380,7 +907994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1858"
+        "staticSource": "pages/play/index.js:1864"
       }
     },
     {
@@ -908448,7 +908062,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1857"
+        "staticSource": "pages/play/index.js:1863"
       }
     },
     {
@@ -908525,7 +908139,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2102"
+        "staticSource": "pages/play/index.js:2108"
       }
     },
     {
@@ -908887,7 +908501,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3434"
+        "staticSource": "pages/play/index.js:3440"
       }
     },
     {
@@ -908985,7 +908599,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2111"
+        "staticSource": "pages/play/index.js:2117"
       }
     },
     {
@@ -909083,7 +908697,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2016"
+        "staticSource": "pages/play/index.js:2022"
       }
     },
     {
@@ -909150,7 +908764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1879"
+        "staticSource": "pages/play/index.js:1885"
       }
     },
     {
@@ -909217,7 +908831,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1880"
+        "staticSource": "pages/play/index.js:1886"
       }
     },
     {
@@ -909285,7 +908899,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1956"
+        "staticSource": "pages/play/index.js:1962"
       }
     },
     {
@@ -909353,7 +908967,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1956"
+        "staticSource": "pages/play/index.js:1962"
       }
     },
     {
@@ -909478,7 +909092,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1913"
+        "staticSource": "pages/play/index.js:1919"
       }
     },
     {
@@ -909576,7 +909190,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2016"
+        "staticSource": "pages/play/index.js:2022"
       }
     },
     {
@@ -909654,7 +909268,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2012"
+        "staticSource": "pages/play/index.js:2018"
       }
     },
     {
@@ -909763,7 +909377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3242"
+        "staticSource": "pages/play/index.js:3248"
       }
     },
     {
@@ -909944,7 +909558,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4628"
+        "staticSource": "pages/play/index.js:4667"
       }
     },
     {
@@ -910013,9 +909627,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -910052,18 +909664,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -910294,7 +909900,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4677"
+        "staticSource": "pages/play/index.js:4716"
       }
     },
     {
@@ -910365,7 +909971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6184"
+        "staticSource": "pages/play/index.js:6223"
       }
     },
     {
@@ -910432,7 +910038,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6193"
+        "staticSource": "pages/play/index.js:6232"
       }
     },
     {
@@ -910501,9 +910107,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -910540,18 +910144,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -910750,7 +910348,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7314"
+        "staticSource": "pages/play/index.js:7353"
       }
     },
     {
@@ -910828,7 +910426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5033"
+        "staticSource": "pages/play/index.js:5072"
       }
     },
     {
@@ -910905,7 +910503,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5027"
+        "staticSource": "pages/play/index.js:5066"
       }
     },
     {
@@ -910974,9 +910572,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -911013,18 +910609,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -911292,9 +910882,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -911331,18 +910919,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -911608,7 +911190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6167"
+        "staticSource": "pages/play/index.js:6206"
       }
     },
     {
@@ -911702,7 +911284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5327"
+        "staticSource": "pages/play/index.js:5366"
       }
     },
     {
@@ -912063,7 +911645,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4902"
+        "staticSource": "pages/play/index.js:4941"
       }
     },
     {
@@ -912106,9 +911688,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "scanCode",
         "authorize-denied": "authorize",
-        "scanCode-denied": "scanCode",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "scanCode-denied": "scanCode"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -912146,9 +911726,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -912156,9 +911733,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -912391,7 +911965,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5121"
+        "staticSource": "pages/play/index.js:5160"
       }
     },
     {
@@ -912434,9 +912008,7 @@
       "requiredCapabilityByBranch": {
         "cancelled": "scanCode",
         "authorize-denied": "authorize",
-        "scanCode-denied": "scanCode",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "scanCode-denied": "scanCode"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -912474,9 +912046,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
@@ -912484,9 +912053,6 @@
         "getSetting",
         "login",
         "scanCode",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -912719,7 +912285,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5121"
+        "staticSource": "pages/play/index.js:5160"
       }
     },
     {
@@ -912796,7 +912362,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5013"
+        "staticSource": "pages/play/index.js:5052"
       }
     },
     {
@@ -912873,7 +912439,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3737"
+        "staticSource": "pages/play/index.js:3743"
       }
     },
     {
@@ -912944,7 +912510,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4428"
+        "staticSource": "pages/play/index.js:4434"
       }
     },
     {
@@ -913041,7 +912607,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6369"
+        "staticSource": "pages/play/index.js:6408"
       }
     },
     {
@@ -913108,7 +912674,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4424"
+        "staticSource": "pages/play/index.js:4430"
       }
     },
     {
@@ -913175,7 +912741,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6279"
+        "staticSource": "pages/play/index.js:6318"
       }
     },
     {
@@ -913245,7 +912811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5097"
+        "staticSource": "pages/play/index.js:5136"
       }
     },
     {
@@ -915874,9 +915440,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -915913,18 +915477,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -916334,9 +915892,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -916373,18 +915929,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -916732,9 +916282,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -916771,18 +916319,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -917050,9 +916592,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -917089,18 +916629,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -917481,9 +917015,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -917520,18 +917052,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -917880,7 +917406,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5022"
+        "staticSource": "pages/play/index.js:5061"
       }
     },
     {
@@ -918039,9 +917565,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -918078,18 +917602,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -919753,9 +919271,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -919792,18 +919308,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -920100,9 +919610,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -920139,18 +919647,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -920715,9 +920217,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -920754,18 +920254,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -921517,9 +921011,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -921556,18 +921048,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -922057,9 +921543,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -922096,18 +921580,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -922568,9 +922046,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -922607,18 +922083,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -922984,9 +922454,7 @@
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {
-        "authorize-denied": "authorize",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+        "denied": "authorize"
       },
       "requestMode": "ordered",
       "confirmationMode": null,
@@ -923023,18 +922491,12 @@
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
         "getSetting",
         "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
         "vibrateShort"
       ],
       "targets": {
@@ -936400,7 +935862,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7688"
+        "staticSource": "pages/publish/fabu/index.js:7751"
       }
     },
     {
@@ -936482,7 +935944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7688"
+        "staticSource": "pages/publish/fabu/index.js:7751"
       }
     },
     {
@@ -936564,7 +936026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4749"
+        "staticSource": "pages/publish/fabu/index.js:4765"
       }
     },
     {
@@ -936700,7 +936162,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8107"
+        "staticSource": "pages/publish/fabu/index.js:8170"
       }
     },
     {
@@ -936767,7 +936229,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5932"
+        "staticSource": "pages/publish/fabu/index.js:5948"
       }
     },
     {
@@ -936834,7 +936296,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5932"
+        "staticSource": "pages/publish/fabu/index.js:5948"
       }
     },
     {
@@ -936901,7 +936363,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5956"
+        "staticSource": "pages/publish/fabu/index.js:5972"
       }
     },
     {
@@ -936968,7 +936430,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5921"
+        "staticSource": "pages/publish/fabu/index.js:5937"
       }
     },
     {
@@ -937035,7 +936497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4029"
+        "staticSource": "pages/publish/fabu/index.js:4045"
       }
     },
     {
@@ -937134,7 +936596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3915"
+        "staticSource": "pages/publish/fabu/index.js:3931"
       }
     },
     {
@@ -937201,7 +936663,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3760"
+        "staticSource": "pages/publish/fabu/index.js:3776"
       }
     },
     {
@@ -937268,7 +936730,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3766"
+        "staticSource": "pages/publish/fabu/index.js:3782"
       }
     },
     {
@@ -938322,7 +937784,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4947"
+        "staticSource": "pages/publish/fabu/index.js:4963"
       }
     },
     {
@@ -938399,7 +937861,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5015"
+        "staticSource": "pages/publish/fabu/index.js:5031"
       }
     },
     {
@@ -938466,7 +937928,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5004"
+        "staticSource": "pages/publish/fabu/index.js:5020"
       }
     },
     {
@@ -938533,7 +937995,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3770"
+        "staticSource": "pages/publish/fabu/index.js:3786"
       }
     },
     {
@@ -938615,7 +938077,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6827"
+        "staticSource": "pages/publish/fabu/index.js:6843"
       }
     },
     {
@@ -938883,7 +938345,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6784"
+        "staticSource": "pages/publish/fabu/index.js:6800"
       }
     },
     {
@@ -938950,7 +938412,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6800"
+        "staticSource": "pages/publish/fabu/index.js:6816"
       }
     },
     {
@@ -939017,7 +938479,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6808"
+        "staticSource": "pages/publish/fabu/index.js:6824"
       }
     },
     {
@@ -939084,7 +938546,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6808"
+        "staticSource": "pages/publish/fabu/index.js:6824"
       }
     },
     {
@@ -939151,7 +938613,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6808"
+        "staticSource": "pages/publish/fabu/index.js:6824"
       }
     },
     {
@@ -939218,7 +938680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2838"
+        "staticSource": "pages/publish/fabu/index.js:2854"
       }
     },
     {
@@ -939327,7 +938789,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3780"
+        "staticSource": "pages/publish/fabu/index.js:3796"
       }
     },
     {
@@ -939394,7 +938856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3791"
+        "staticSource": "pages/publish/fabu/index.js:3807"
       }
     },
     {
@@ -939461,7 +938923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3809"
+        "staticSource": "pages/publish/fabu/index.js:3825"
       }
     },
     {
@@ -939528,7 +938990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3809"
+        "staticSource": "pages/publish/fabu/index.js:3825"
       }
     },
     {
@@ -939595,7 +939057,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3809"
+        "staticSource": "pages/publish/fabu/index.js:3825"
       }
     },
     {
@@ -939662,7 +939124,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3853"
+        "staticSource": "pages/publish/fabu/index.js:3869"
       }
     },
     {
@@ -939729,7 +939191,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3860"
+        "staticSource": "pages/publish/fabu/index.js:3876"
       }
     },
     {
@@ -939796,7 +939258,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4726"
+        "staticSource": "pages/publish/fabu/index.js:4742"
       }
     },
     {
@@ -939863,7 +939325,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3800"
+        "staticSource": "pages/publish/fabu/index.js:3816"
       }
     },
     {
@@ -939955,7 +939417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3545"
+        "staticSource": "pages/publish/fabu/index.js:3561"
       }
     },
     {
@@ -940022,7 +939484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6515"
+        "staticSource": "pages/publish/fabu/index.js:6531"
       }
     },
     {
@@ -940165,7 +939627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6536"
+        "staticSource": "pages/publish/fabu/index.js:6552"
       }
     },
     {
@@ -940308,7 +939770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6536"
+        "staticSource": "pages/publish/fabu/index.js:6552"
       }
     },
     {
@@ -940398,7 +939860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6502"
+        "staticSource": "pages/publish/fabu/index.js:6518"
       }
     },
     {
@@ -940488,7 +939950,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6502"
+        "staticSource": "pages/publish/fabu/index.js:6518"
       }
     },
     {
@@ -940578,7 +940040,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6507"
+        "staticSource": "pages/publish/fabu/index.js:6523"
       }
     },
     {
@@ -940645,7 +940107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6515"
+        "staticSource": "pages/publish/fabu/index.js:6531"
       }
     },
     {
@@ -940735,7 +940197,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6471"
+        "staticSource": "pages/publish/fabu/index.js:6487"
       }
     },
     {
@@ -940840,7 +940302,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6430"
+        "staticSource": "pages/publish/fabu/index.js:6446"
       }
     },
     {
@@ -940947,7 +940409,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6430"
+        "staticSource": "pages/publish/fabu/index.js:6446"
       }
     },
     {
@@ -941014,7 +940476,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3116"
+        "staticSource": "pages/publish/fabu/index.js:3132"
       }
     },
     {
@@ -941081,7 +940543,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3119"
+        "staticSource": "pages/publish/fabu/index.js:3135"
       }
     },
     {
@@ -941148,7 +940610,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3172"
+        "staticSource": "pages/publish/fabu/index.js:3188"
       }
     },
     {
@@ -941215,7 +940677,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3182"
+        "staticSource": "pages/publish/fabu/index.js:3198"
       }
     },
     {
@@ -941284,7 +940746,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7478"
+        "staticSource": "pages/publish/fabu/index.js:7541"
       }
     },
     {
@@ -941351,7 +940813,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2996"
+        "staticSource": "pages/publish/fabu/index.js:3012"
       }
     },
     {
@@ -941442,7 +940904,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3003"
+        "staticSource": "pages/publish/fabu/index.js:3019"
       }
     },
     {
@@ -941509,7 +940971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2980"
+        "staticSource": "pages/publish/fabu/index.js:2996"
       }
     },
     {
@@ -941576,7 +941038,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2988"
+        "staticSource": "pages/publish/fabu/index.js:3004"
       }
     },
     {
@@ -941643,7 +941105,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5488"
+        "staticSource": "pages/publish/fabu/index.js:5504"
       }
     },
     {
@@ -941710,7 +941172,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5503"
+        "staticSource": "pages/publish/fabu/index.js:5519"
       }
     },
     {
@@ -941777,7 +941239,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5493"
+        "staticSource": "pages/publish/fabu/index.js:5509"
       }
     },
     {
@@ -941844,7 +941306,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5498"
+        "staticSource": "pages/publish/fabu/index.js:5514"
       }
     },
     {
@@ -941911,7 +941373,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3064"
+        "staticSource": "pages/publish/fabu/index.js:3080"
       }
     },
     {
@@ -942002,7 +941464,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3071"
+        "staticSource": "pages/publish/fabu/index.js:3087"
       }
     },
     {
@@ -942069,7 +941531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3048"
+        "staticSource": "pages/publish/fabu/index.js:3064"
       }
     },
     {
@@ -942136,7 +941598,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3056"
+        "staticSource": "pages/publish/fabu/index.js:3072"
       }
     },
     {
@@ -942203,7 +941665,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3467"
+        "staticSource": "pages/publish/fabu/index.js:3483"
       }
     },
     {
@@ -942293,7 +941755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3463"
+        "staticSource": "pages/publish/fabu/index.js:3479"
       }
     },
     {
@@ -942360,7 +941822,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2845"
+        "staticSource": "pages/publish/fabu/index.js:2861"
       }
     },
     {
@@ -942427,7 +941889,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2845"
+        "staticSource": "pages/publish/fabu/index.js:2861"
       }
     },
     {
@@ -942497,7 +941959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2852"
+        "staticSource": "pages/publish/fabu/index.js:2868"
       }
     },
     {
@@ -942564,7 +942026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2848"
+        "staticSource": "pages/publish/fabu/index.js:2864"
       }
     },
     {
@@ -942663,7 +942125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1737"
+        "staticSource": "pages/publish/fabu/index.js:1753"
       }
     },
     {
@@ -942730,7 +942192,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2848"
+        "staticSource": "pages/publish/fabu/index.js:2864"
       }
     },
     {
@@ -943984,7 +943446,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6662"
+        "staticSource": "pages/publish/fabu/index.js:6678"
       }
     },
     {
@@ -944051,7 +943513,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6662"
+        "staticSource": "pages/publish/fabu/index.js:6678"
       }
     },
     {
@@ -944118,7 +943580,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6680"
+        "staticSource": "pages/publish/fabu/index.js:6696"
       }
     },
     {
@@ -944185,7 +943647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6671"
+        "staticSource": "pages/publish/fabu/index.js:6687"
       }
     },
     {
@@ -944252,7 +943714,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6671"
+        "staticSource": "pages/publish/fabu/index.js:6687"
       }
     },
     {
@@ -944319,7 +943781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6708"
+        "staticSource": "pages/publish/fabu/index.js:6724"
       }
     },
     {
@@ -944386,7 +943848,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6835"
+        "staticSource": "pages/publish/fabu/index.js:6851"
       }
     },
     {
@@ -944453,7 +943915,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6835"
+        "staticSource": "pages/publish/fabu/index.js:6851"
       }
     },
     {
@@ -944520,7 +943982,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6867"
+        "staticSource": "pages/publish/fabu/index.js:6883"
       }
     },
     {
@@ -944587,7 +944049,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6836"
+        "staticSource": "pages/publish/fabu/index.js:6852"
       }
     },
     {
@@ -944654,7 +944116,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6836"
+        "staticSource": "pages/publish/fabu/index.js:6852"
       }
     },
     {
@@ -944721,7 +944183,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6836"
+        "staticSource": "pages/publish/fabu/index.js:6852"
       }
     },
     {
@@ -944788,7 +944250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6836"
+        "staticSource": "pages/publish/fabu/index.js:6852"
       }
     },
     {
@@ -944855,7 +944317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6836"
+        "staticSource": "pages/publish/fabu/index.js:6852"
       }
     },
     {
@@ -944922,7 +944384,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6860"
+        "staticSource": "pages/publish/fabu/index.js:6876"
       }
     },
     {
@@ -945012,7 +944474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1081"
+        "staticSource": "pages/publish/fabu/index.js:1097"
       }
     },
     {
@@ -945079,7 +944541,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2364"
+        "staticSource": "pages/publish/fabu/index.js:2380"
       }
     },
     {
@@ -945146,7 +944608,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6647"
+        "staticSource": "pages/publish/fabu/index.js:6663"
       }
     },
     {
@@ -945253,7 +944715,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1930"
+        "staticSource": "pages/publish/fabu/index.js:1946"
       }
     },
     {
@@ -945345,7 +944807,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1834"
+        "staticSource": "pages/publish/fabu/index.js:1850"
       }
     },
     {
@@ -945413,7 +944875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2368"
+        "staticSource": "pages/publish/fabu/index.js:2384"
       }
     },
     {
@@ -945496,7 +944958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1793"
+        "staticSource": "pages/publish/fabu/index.js:1809"
       }
     },
     {
@@ -945629,7 +945091,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1863"
+        "staticSource": "pages/publish/fabu/index.js:1879"
       }
     },
     {
@@ -945737,7 +945199,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1912"
+        "staticSource": "pages/publish/fabu/index.js:1928"
       }
     },
     {
@@ -945804,7 +945266,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1002"
+        "staticSource": "pages/publish/fabu/index.js:1018"
       }
     },
     {
@@ -945871,7 +945333,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1002"
+        "staticSource": "pages/publish/fabu/index.js:1018"
       }
     },
     {
@@ -945988,7 +945450,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3570"
+        "staticSource": "pages/publish/fabu/index.js:3586"
       }
     },
     {
@@ -946056,7 +945518,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4384"
+        "staticSource": "pages/publish/fabu/index.js:4400"
       }
     },
     {
@@ -946146,7 +945608,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4387"
+        "staticSource": "pages/publish/fabu/index.js:4403"
       }
     },
     {
@@ -946213,7 +945675,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4108"
+        "staticSource": "pages/publish/fabu/index.js:4124"
       }
     },
     {
@@ -946280,7 +945742,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4381"
+        "staticSource": "pages/publish/fabu/index.js:4397"
       }
     },
     {
@@ -946417,7 +945879,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2026"
+        "staticSource": "pages/publish/fabu/index.js:2042"
       }
     },
     {
@@ -946558,7 +946020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2543"
+        "staticSource": "pages/publish/fabu/index.js:2559"
       }
     },
     {
@@ -946665,7 +946127,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2056"
+        "staticSource": "pages/publish/fabu/index.js:2072"
       }
     },
     {
@@ -946798,7 +946260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4041"
+        "staticSource": "pages/publish/fabu/index.js:4057"
       }
     },
     {
@@ -946915,7 +946377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3570"
+        "staticSource": "pages/publish/fabu/index.js:3586"
       }
     },
     {
@@ -947032,7 +946494,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2081"
+        "staticSource": "pages/publish/fabu/index.js:2097"
       }
     },
     {
@@ -947131,7 +946593,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:945"
+        "staticSource": "pages/publish/fabu/index.js:961"
       }
     },
     {
@@ -947199,7 +946661,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8068"
+        "staticSource": "pages/publish/fabu/index.js:8131"
       }
     },
     {
@@ -947289,7 +946751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1053"
+        "staticSource": "pages/publish/fabu/index.js:1069"
       }
     },
     {
@@ -947379,7 +946841,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1053"
+        "staticSource": "pages/publish/fabu/index.js:1069"
       }
     },
     {
@@ -947469,7 +946931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1053"
+        "staticSource": "pages/publish/fabu/index.js:1069"
       }
     },
     {
@@ -947536,7 +946998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1122"
+        "staticSource": "pages/publish/fabu/index.js:1138"
       }
     },
     {
@@ -947603,7 +947065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1128"
+        "staticSource": "pages/publish/fabu/index.js:1144"
       }
     },
     {
@@ -947693,7 +947155,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1134"
+        "staticSource": "pages/publish/fabu/index.js:1150"
       }
     },
     {
@@ -947830,7 +947292,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1191"
+        "staticSource": "pages/publish/fabu/index.js:1207"
       }
     },
     {
@@ -947920,7 +947382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1221"
+        "staticSource": "pages/publish/fabu/index.js:1237"
       }
     },
     {
@@ -947998,7 +947460,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1149"
+        "staticSource": "pages/publish/fabu/index.js:1165"
       }
     },
     {
@@ -948088,7 +947550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1488"
+        "staticSource": "pages/publish/fabu/index.js:1504"
       }
     },
     {
@@ -948155,7 +947617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -948245,7 +947707,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1598"
+        "staticSource": "pages/publish/fabu/index.js:1614"
       }
     },
     {
@@ -948337,7 +947799,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1582"
+        "staticSource": "pages/publish/fabu/index.js:1598"
       }
     },
     {
@@ -948404,7 +947866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -948495,7 +947957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -948562,7 +948024,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -948694,7 +948156,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1233"
+        "staticSource": "pages/publish/fabu/index.js:1249"
       }
     },
     {
@@ -948771,7 +948233,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5050"
+        "staticSource": "pages/publish/fabu/index.js:5066"
       }
     },
     {
@@ -948862,7 +948324,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -948929,7 +948391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -949019,7 +948481,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1425"
+        "staticSource": "pages/publish/fabu/index.js:1441"
       }
     },
     {
@@ -949109,7 +948571,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1447"
+        "staticSource": "pages/publish/fabu/index.js:1463"
       }
     },
     {
@@ -949200,7 +948662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1460"
+        "staticSource": "pages/publish/fabu/index.js:1476"
       }
     },
     {
@@ -949337,7 +948799,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1434"
+        "staticSource": "pages/publish/fabu/index.js:1450"
       }
     },
     {
@@ -949428,7 +948890,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -949495,7 +948957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -949585,7 +949047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1349"
+        "staticSource": "pages/publish/fabu/index.js:1365"
       }
     },
     {
@@ -949676,7 +949138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -949743,7 +949205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -949876,7 +949338,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4071"
+        "staticSource": "pages/publish/fabu/index.js:4087"
       }
     },
     {
@@ -949966,7 +949428,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1380"
+        "staticSource": "pages/publish/fabu/index.js:1396"
       }
     },
     {
@@ -950056,7 +949518,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1386"
+        "staticSource": "pages/publish/fabu/index.js:1402"
       }
     },
     {
@@ -950146,7 +949608,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1369"
+        "staticSource": "pages/publish/fabu/index.js:1385"
       }
     },
     {
@@ -950237,7 +949699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -950304,7 +949766,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -950394,7 +949856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1386"
+        "staticSource": "pages/publish/fabu/index.js:1402"
       }
     },
     {
@@ -950484,7 +949946,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1386"
+        "staticSource": "pages/publish/fabu/index.js:1402"
       }
     },
     {
@@ -950575,7 +950037,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -950642,7 +950104,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -950732,7 +950194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1380"
+        "staticSource": "pages/publish/fabu/index.js:1396"
       }
     },
     {
@@ -950823,7 +950285,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -950890,7 +950352,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -950980,7 +950442,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1393"
+        "staticSource": "pages/publish/fabu/index.js:1409"
       }
     },
     {
@@ -951071,7 +950533,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1474"
+        "staticSource": "pages/publish/fabu/index.js:1490"
       }
     },
     {
@@ -951138,7 +950600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1574"
+        "staticSource": "pages/publish/fabu/index.js:1590"
       }
     },
     {
@@ -951272,7 +950734,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1616"
+        "staticSource": "pages/publish/fabu/index.js:1632"
       }
     },
     {
@@ -951340,7 +950802,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8068"
+        "staticSource": "pages/publish/fabu/index.js:8131"
       }
     },
     {
@@ -951499,7 +950961,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1626"
+        "staticSource": "pages/publish/fabu/index.js:1642"
       }
     },
     {
@@ -951566,7 +951028,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1128"
+        "staticSource": "pages/publish/fabu/index.js:1144"
       }
     },
     {
@@ -951656,7 +951118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1134"
+        "staticSource": "pages/publish/fabu/index.js:1150"
       }
     },
     {
@@ -951793,7 +951255,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1191"
+        "staticSource": "pages/publish/fabu/index.js:1207"
       }
     },
     {
@@ -951883,7 +951345,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1221"
+        "staticSource": "pages/publish/fabu/index.js:1237"
       }
     },
     {
@@ -951961,7 +951423,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1149"
+        "staticSource": "pages/publish/fabu/index.js:1165"
       }
     },
     {
@@ -952028,7 +951490,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1530"
+        "staticSource": "pages/publish/fabu/index.js:1546"
       }
     },
     {
@@ -952118,7 +951580,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1540"
+        "staticSource": "pages/publish/fabu/index.js:1556"
       }
     },
     {
@@ -952235,7 +951697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4023"
+        "staticSource": "pages/publish/fabu/index.js:4039"
       }
     },
     {
@@ -952325,7 +951787,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4248"
+        "staticSource": "pages/publish/fabu/index.js:4264"
       }
     },
     {
@@ -952417,7 +951879,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6877"
+        "staticSource": "pages/publish/fabu/index.js:6893"
       }
     },
     {
@@ -952511,7 +951973,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6877"
+        "staticSource": "pages/publish/fabu/index.js:6893"
       }
     },
     {
@@ -952578,7 +952040,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7486"
+        "staticSource": "pages/publish/fabu/index.js:7549"
       }
     },
     {
@@ -952645,7 +952107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4755"
+        "staticSource": "pages/publish/fabu/index.js:4771"
       }
     },
     {
@@ -952712,7 +952174,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4755"
+        "staticSource": "pages/publish/fabu/index.js:4771"
       }
     },
     {
@@ -952779,7 +952241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4726"
+        "staticSource": "pages/publish/fabu/index.js:4742"
       }
     },
     {
@@ -952875,7 +952337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7328"
+        "staticSource": "pages/publish/fabu/index.js:7368"
       }
     },
     {
@@ -952973,7 +952435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7328"
+        "staticSource": "pages/publish/fabu/index.js:7368"
       }
     },
     {
@@ -953072,7 +952534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6527"
+        "staticSource": "pages/publish/fabu/index.js:6543"
       }
     },
     {
@@ -953164,7 +952626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6877"
+        "staticSource": "pages/publish/fabu/index.js:6893"
       }
     },
     {
@@ -953258,7 +952720,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6877"
+        "staticSource": "pages/publish/fabu/index.js:6893"
       }
     },
     {
@@ -953325,7 +952787,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2181"
+        "staticSource": "pages/publish/fabu/index.js:2197"
       }
     },
     {
@@ -953392,7 +952854,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2187"
+        "staticSource": "pages/publish/fabu/index.js:2203"
       }
     },
     {
@@ -953459,7 +952921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2195"
+        "staticSource": "pages/publish/fabu/index.js:2211"
       }
     },
     {
@@ -953526,7 +952988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7612"
+        "staticSource": "pages/publish/fabu/index.js:7675"
       }
     },
     {
@@ -953593,7 +953055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7612"
+        "staticSource": "pages/publish/fabu/index.js:7675"
       }
     },
     {
@@ -953660,7 +953122,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7566"
+        "staticSource": "pages/publish/fabu/index.js:7629"
       }
     },
     {
@@ -953727,7 +953189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7619"
+        "staticSource": "pages/publish/fabu/index.js:7682"
       }
     },
     {
@@ -953794,7 +953256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4126"
+        "staticSource": "pages/publish/fabu/index.js:4142"
       }
     },
     {
@@ -953861,7 +953323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8095"
+        "staticSource": "pages/publish/fabu/index.js:8158"
       }
     },
     {
@@ -954013,7 +953475,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7713"
+        "staticSource": "pages/publish/fabu/index.js:7776"
       }
     },
     {
@@ -954080,7 +953542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4126"
+        "staticSource": "pages/publish/fabu/index.js:4142"
       }
     },
     {
@@ -954179,7 +953641,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4427"
+        "staticSource": "pages/publish/fabu/index.js:4443"
       }
     },
     {
@@ -954246,7 +953708,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1789"
+        "staticSource": "pages/publish/fabu/index.js:1805"
       }
     },
     {
@@ -954333,7 +953795,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8253"
+        "staticSource": "pages/publish/fabu/index.js:8316"
       }
     },
     {
@@ -954459,7 +953921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8045"
+        "staticSource": "pages/publish/fabu/index.js:8108"
       }
     },
     {
@@ -954584,7 +954046,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8070"
+        "staticSource": "pages/publish/fabu/index.js:8133"
       }
     },
     {
@@ -954720,7 +954182,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7853"
+        "staticSource": "pages/publish/fabu/index.js:7916"
       }
     },
     {
@@ -954805,7 +954267,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7841"
+        "staticSource": "pages/publish/fabu/index.js:7904"
       }
     },
     {
@@ -954872,7 +954334,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7922"
+        "staticSource": "pages/publish/fabu/index.js:7985"
       }
     },
     {
@@ -955029,7 +954491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3754"
+        "staticSource": "pages/publish/fabu/index.js:3770"
       }
     },
     {
@@ -955163,7 +954625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5848"
+        "staticSource": "pages/publish/fabu/index.js:5864"
       }
     },
     {
@@ -955230,7 +954692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4170"
+        "staticSource": "pages/publish/fabu/index.js:4186"
       }
     },
     {
@@ -955297,7 +954759,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4922"
+        "staticSource": "pages/publish/fabu/index.js:4938"
       }
     },
     {
@@ -955418,7 +954880,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4902"
+        "staticSource": "pages/publish/fabu/index.js:4918"
       }
     },
     {
@@ -955510,7 +954972,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4177"
+        "staticSource": "pages/publish/fabu/index.js:4193"
       }
     },
     {
@@ -955646,7 +955108,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8107"
+        "staticSource": "pages/publish/fabu/index.js:8170"
       }
     },
     {
@@ -955782,7 +955244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8107"
+        "staticSource": "pages/publish/fabu/index.js:8170"
       }
     },
     {
@@ -955899,7 +955361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8143"
+        "staticSource": "pages/publish/fabu/index.js:8206"
       }
     },
     {
@@ -955981,7 +955443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7688"
+        "staticSource": "pages/publish/fabu/index.js:7751"
       }
     },
     {
@@ -957390,7 +956852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5637"
+        "staticSource": "pages/publish/fabu/index.js:5653"
       }
     },
     {
@@ -957822,7 +957284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5618"
+        "staticSource": "pages/publish/fabu/index.js:5634"
       }
     },
     {
@@ -957943,7 +957405,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5627"
+        "staticSource": "pages/publish/fabu/index.js:5643"
       }
     },
     {
@@ -958077,7 +957539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7549"
+        "staticSource": "pages/publish/fabu/index.js:7612"
       }
     },
     {
@@ -958211,7 +957673,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7555"
+        "staticSource": "pages/publish/fabu/index.js:7618"
       }
     },
     {
@@ -958278,7 +957740,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7546"
+        "staticSource": "pages/publish/fabu/index.js:7609"
       }
     },
     {
@@ -959567,7 +959029,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3610"
+        "staticSource": "pages/publish/fabu/index.js:3626"
       }
     },
     {
@@ -959634,7 +959096,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3616"
+        "staticSource": "pages/publish/fabu/index.js:3632"
       }
     },
     {
@@ -959701,7 +959163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3620"
+        "staticSource": "pages/publish/fabu/index.js:3636"
       }
     },
     {
@@ -959768,7 +959230,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3620"
+        "staticSource": "pages/publish/fabu/index.js:3636"
       }
     },
     {
@@ -959835,7 +959297,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3624"
+        "staticSource": "pages/publish/fabu/index.js:3640"
       }
     },
     {
@@ -959902,7 +959364,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5258"
+        "staticSource": "pages/publish/fabu/index.js:5274"
       }
     },
     {
@@ -959969,7 +959431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5258"
+        "staticSource": "pages/publish/fabu/index.js:5274"
       }
     },
     {
@@ -960036,7 +959498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5313"
+        "staticSource": "pages/publish/fabu/index.js:5329"
       }
     },
     {
@@ -960103,7 +959565,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5406"
+        "staticSource": "pages/publish/fabu/index.js:5422"
       }
     },
     {
@@ -960170,7 +959632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5406"
+        "staticSource": "pages/publish/fabu/index.js:5422"
       }
     },
     {
@@ -960237,7 +959699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5406"
+        "staticSource": "pages/publish/fabu/index.js:5422"
       }
     },
     {
@@ -960304,7 +959766,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960371,7 +959833,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960438,7 +959900,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960505,7 +959967,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960572,7 +960034,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5406"
+        "staticSource": "pages/publish/fabu/index.js:5422"
       }
     },
     {
@@ -960659,7 +960121,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5525"
+        "staticSource": "pages/publish/fabu/index.js:5541"
       }
     },
     {
@@ -960726,7 +960188,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5437"
+        "staticSource": "pages/publish/fabu/index.js:5453"
       }
     },
     {
@@ -960793,7 +960255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960860,7 +960322,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5448"
+        "staticSource": "pages/publish/fabu/index.js:5464"
       }
     },
     {
@@ -960927,7 +960389,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2946"
+        "staticSource": "pages/publish/fabu/index.js:2962"
       }
     },
     {
@@ -960994,7 +960456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5406"
+        "staticSource": "pages/publish/fabu/index.js:5422"
       }
     },
     {
@@ -961062,7 +960524,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5341"
+        "staticSource": "pages/publish/fabu/index.js:5357"
       }
     },
     {
@@ -961153,7 +960615,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5347"
+        "staticSource": "pages/publish/fabu/index.js:5363"
       }
     },
     {
@@ -961243,7 +960705,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5662"
+        "staticSource": "pages/publish/fabu/index.js:5678"
       }
     },
     {
@@ -961333,7 +960795,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5665"
+        "staticSource": "pages/publish/fabu/index.js:5681"
       }
     },
     {
@@ -961400,7 +960862,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5668"
+        "staticSource": "pages/publish/fabu/index.js:5684"
       }
     },
     {
@@ -961467,7 +960929,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2951"
+        "staticSource": "pages/publish/fabu/index.js:2967"
       }
     },
     {
@@ -961557,7 +961019,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5657"
+        "staticSource": "pages/publish/fabu/index.js:5673"
       }
     },
     {
@@ -961624,7 +961086,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3603"
+        "staticSource": "pages/publish/fabu/index.js:3619"
       }
     },
     {
@@ -965535,7 +964997,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4750"
+        "staticSource": "pages/publish/fabu/index.js:4766"
       }
     },
     {
@@ -965669,7 +965131,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4750"
+        "staticSource": "pages/publish/fabu/index.js:4766"
       }
     },
     {
@@ -965893,7 +965355,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5646"
+        "staticSource": "pages/publish/fabu/index.js:5662"
       }
     },
     {
@@ -965983,7 +965445,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5653"
+        "staticSource": "pages/publish/fabu/index.js:5669"
       }
     },
     {
@@ -966117,7 +965579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5611"
+        "staticSource": "pages/publish/fabu/index.js:5627"
       }
     },
     {
@@ -966207,7 +965669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3747"
+        "staticSource": "pages/publish/fabu/index.js:3763"
       }
     },
     {
@@ -966274,7 +965736,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3597"
+        "staticSource": "pages/publish/fabu/index.js:3613"
       }
     },
     {
@@ -966424,7 +965886,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:912"
+        "staticSource": "pages/publish/fabu/index.js:928"
       }
     },
     {
@@ -966491,7 +965953,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3446"
+        "staticSource": "pages/publish/fabu/index.js:3462"
       }
     },
     {
@@ -966628,7 +966090,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4934"
+        "staticSource": "pages/publish/fabu/index.js:4950"
       }
     },
     {
@@ -966749,7 +966211,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5109"
+        "staticSource": "pages/publish/fabu/index.js:5125"
       }
     },
     {
@@ -966816,7 +966278,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5120"
+        "staticSource": "pages/publish/fabu/index.js:5136"
       }
     },
     {
@@ -966906,7 +966368,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4717"
+        "staticSource": "pages/publish/fabu/index.js:4733"
       }
     },
     {
@@ -966973,7 +966435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6651"
+        "staticSource": "pages/publish/fabu/index.js:6667"
       }
     },
     {
@@ -967040,7 +966502,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4750"
+        "staticSource": "pages/publish/fabu/index.js:4766"
       }
     },
     {
