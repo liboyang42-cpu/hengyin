@@ -303,13 +303,20 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public boolean lockOpenTopicBundleTask(Long topicId) {
         if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("主题ID不能为空");
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TOPIC, topicId);
+        // 先发后审的抽检单(post_review_flag)不是组合审核:不锁编辑、不挡简易版;
+        // 若之后提交组合审核,由 submitOrRefresh 把这张单原地升级为 topic_bundle_v2。
+        if (open != null && SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())) return false;
         if (open != null) requireRefreshableTask(open, "topic_bundle_v2");
         return open != null;
     }
 
+    /** 先发后审打标的非阻断抽检单来源(活动 / 主题共用) */
+    private static final String SOURCE_POST_REVIEW_FLAG = "post_review_flag";
+
     private void requireRefreshableTask(AuditTask task, String sourceType) {
         boolean legacyTopicTask = "topic_bundle_v2".equals(sourceType)
-                && ("user_publish".equals(task.getSourceType()) || "user_republish".equals(task.getSourceType()));
+                && ("user_publish".equals(task.getSourceType()) || "user_republish".equals(task.getSourceType())
+                        || SOURCE_POST_REVIEW_FLAG.equals(task.getSourceType()));
         if (!sourceType.equals(task.getSourceType()) && !legacyTopicTask) {
             throw new IllegalStateException("存在其他开放审核任务，请先处理后再提交");
         }
