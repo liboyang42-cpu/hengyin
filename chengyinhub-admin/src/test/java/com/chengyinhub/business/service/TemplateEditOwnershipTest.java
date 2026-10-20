@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -123,6 +124,31 @@ class TemplateEditOwnershipTest {
         assertEquals(0L, projection.getPublishStatus());
         verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
         verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
+    }
+
+    /**
+     * AUDIT-INT-9(#384):撤销在途模板审核单之前,先把该条目的未结申诉以 WITHDRAWN 结案并通知作者
+     * (与 AUDIT-INT-6 同口径:作者改内容 = 放弃申诉);cancelOpenTemplateTasks 本身不再碰申诉单。
+     */
+    @Test
+    void editingTemplateWithdrawsOpenAppealsBeforeCancellingTasks() {
+        CmsMemberTemplate existing = existing(OWNER, 0); existing.setMerchantNodeEnabled(1);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
+        CmsTemplateLibrary projection = new CmsTemplateLibrary(); projection.setId(171L);
+        projection.setMemberTemplateId(TEMPLATE_ID); projection.setDelFlag(0);
+        projection.setStatus(1L); projection.setPublishStatus(1L);
+        when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID)).thenReturn(Collections.singletonList(projection));
+        when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
+        CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
+        input.setTitle("新据点玩法");
+
+        service.saveMerchantNodeTemplate(input, OWNER, "商家");
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(auditTaskService, taskMapper);
+        order.verify(auditTaskService).withdrawOpenAppeal(eq("TEMPLATE_LIBRARY"), eq(171L), anyString());
+        order.verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
+        order.verify(auditTaskService).withdrawOpenAppeal(eq("TEMPLATE"), eq(TEMPLATE_ID), anyString());
+        order.verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
     }
 
     /** 最小可发布请求:只填必要字段,其余走默认。 */

@@ -551,6 +551,25 @@ class AuditAppealRevertContentTest {
         verify(im).sendSystem(eq(AUTHOR), any(), eq("申诉已撤回"), contains("申诉已自动撤回"));
     }
 
+    /** AUDIT-INT-9:withdrawOpenAppeal 只撤申诉单(WITHDRAWN + 通知作者);没有未结申诉或开着的是别的单则不动。 */
+    @Test
+    void withdrawOpenAppealClosesOnlyAppealTasks() {
+        AuditTask appealTask = task(APPEAL_TASK, AuditTask.STATUS_PENDING, AuditTaskServiceImpl.SOURCE_APPEAL);
+        appealTask.setBizType(AuditTask.BIZ_TEMPLATE_LIBRARY);
+        when(tasks.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TEMPLATE_LIBRARY, BIZ_ID)).thenReturn(appealTask);
+        when(tasks.cancelOpenAuditTaskCas(APPEAL_TASK, VERSION)).thenReturn(1);
+        when(appeals.withdrawByTask(eq(APPEAL_TASK), any(Date.class))).thenReturn(1);
+
+        assertTrue(service.withdrawOpenAppeal(AuditTask.BIZ_TEMPLATE_LIBRARY, BIZ_ID, "你撤下了被申诉的内容"));
+        verify(appeals).withdrawByTask(eq(APPEAL_TASK), any(Date.class));
+        verify(im).sendSystem(eq(AUTHOR), any(), eq("申诉已撤回"), contains("你撤下了被申诉的内容"));
+
+        AuditTask review = task(73L, AuditTask.STATUS_PENDING, "template_market");
+        when(tasks.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TEMPLATE, BIZ_ID)).thenReturn(review);
+        assertFalse(service.withdrawOpenAppeal(AuditTask.BIZ_TEMPLATE, BIZ_ID, "x"));
+        verify(tasks, never()).cancelOpenAuditTaskCas(eq(73L), any());
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test

@@ -116,6 +116,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     private com.chengyinhub.business.mapper.CmsTemplateLibraryMapper cmsTemplateLibraryMapper;
     @Autowired
     private com.chengyinhub.business.mapper.AuditTaskMapper auditTaskMapper;
+
+    /** 申诉单撤回走审核服务(同一处通知作者);ObjectProvider 破环。 */
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditTaskServiceProvider;
+
+    /** 内容安全下架关闭未结申诉时给作者的说明。 */
+    static final String APPEAL_CLOSED_BY_SAFETY = "图片未通过内容安全检测已被下架，原申诉已关闭；请更换图片后重新提交审核";
     // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.ICommunityPostService> communityPostServiceProvider;
@@ -775,6 +782,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     {
                         continue;
                     }
+                    // AUDIT-INT-9:未结申诉一并结案(WITHDRAWN + 通知作者),免得申诉成立把违规图放回去。
+                    auditTaskServiceProvider.getObject().withdrawOpenAppeal(
+                            com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId(), APPEAL_CLOSED_BY_SAFETY);
                     auditTaskMapper.cancelOpenTemplateTasks(
                             com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
                     if (Long.valueOf(0L).equals(row.getPublishStatus()) && Long.valueOf(2L).equals(row.getStatus()))

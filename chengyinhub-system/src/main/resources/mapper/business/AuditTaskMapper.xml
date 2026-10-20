@@ -170,10 +170,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and version = #{version} and status in (0, 3)
     </update>
 
+    <!-- 申诉单不在此撤销(AUDIT-INT-9):调用方先经 IAuditTaskService#withdrawOpenAppeal 以 WITHDRAWN 结案并通知作者 -->
     <update id="cancelOpenTemplateTasks">
         update audit_task set status = 4, version = version + 1, update_time = now()
         where biz_type = #{bizType} and biz_type in ('TEMPLATE', 'TEMPLATE_LIBRARY')
           and biz_id = #{bizId} and status in (0, 3)
+          and (source_type is null or source_type &lt;&gt; 'appeal')
     </update>
 
     <update id="refreshOpenAuditSnapshot">

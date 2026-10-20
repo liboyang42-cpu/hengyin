@@ -358,7 +358,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         requireActiveTemplate(projection.getMemberTemplateId());
         projection = lockedProjection(projection.getMemberTemplateId(), projectionId);
         if (projection == null || !Integer.valueOf(0).equals(projection.getDelFlag())) throw new ServiceException("模板库记录已删除");
-        auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, projectionId);
+        cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, projectionId);
         projection.setDelFlag(2);
         projection.setPublishStatus(0L);
         projection.setUpdateBy(username);
@@ -418,7 +418,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (memberTemplateService.insertCmsMemberTemplate(saved) != 1) throw new ServiceException("保存据点模板失败");
         } else {
             withdrawProjections(existing.getId(), false, username);
-            auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, existing.getId());
+            cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, existing.getId());
             if (memberTemplateService.updateCmsMemberTemplate(saved) != 1) throw new ServiceException("保存据点模板失败");
         }
         return saved.getId();
@@ -454,7 +454,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (deleting) row.setDelFlag(2);
             row.setUpdateBy(username); row.setUpdateTime(new Date());
             if (templateLibraryService.updateCmsTemplateLibrary(row) != 1) throw new ServiceException("撤下广场投影失败");
-            auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
+            cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
         }
     }
 
@@ -651,7 +651,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             t.setId(request.getId());
             t.setCheckStatus(0);
             withdrawProjections(t.getId(), false, username);
-            auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, t.getId());
+            cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, t.getId());
             if (memberTemplateService.updateCmsMemberTemplate(t) != 1) throw new ServiceException("保存草稿失败");
             return request.getId();
         } else {
@@ -1110,7 +1110,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             throw new ServiceException("模板不存在或无权删除");
         }
         withdrawProjections(templateId, true, memberTemplate.getUpdateBy());
-        auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, templateId);
+        cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE, templateId);
         memberTemplate.setDelFlag(2);
         memberTemplate.setPublishStatus(0L);
         memberTemplate.setUpdateTime(new Date());
@@ -1153,7 +1153,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                     throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
                 }
                 if (Integer.valueOf(0).equals(publishStatus)) {
-                    auditTaskMapper.cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, libraryTemplate.getId());
+                    cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, libraryTemplate.getId());
                     if (!Long.valueOf(1L).equals(libraryTemplate.getStatus())) {
                         libraryTemplate.setStatus(2L);
                         libraryTemplate.setReason("作者已撤回，请重新提交广场审核");
@@ -1287,4 +1287,15 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         return new ArrayList<>(list.subList(0, Math.min(n, list.size())));
     }
 
+    /** 作者修改/撤下/删除模板时给作者的申诉撤回说明(AUDIT-INT-9)。 */
+    private static final String APPEAL_WITHDRAWN_BY_AUTHOR = "你修改、撤下或删除了被申诉的玩法，原申诉已自动撤回；如需上架请重新提交审核";
+
+    /**
+     * 撤销该条目在途的模板审核单。AUDIT-INT-9:先把未结申诉以 WITHDRAWN 结案并通知作者(与活动/主题编辑撤回申诉同口径),
+     * 再撤其余在途审核单 —— 申诉单不再被静默置 4、留下永远 SUBMITTED 的申诉记录。
+     */
+    private void cancelOpenTemplateTasks(String bizType, Long bizId) {
+        auditTaskService.withdrawOpenAppeal(bizType, bizId, APPEAL_WITHDRAWN_BY_AUTHOR);
+        auditTaskMapper.cancelOpenTemplateTasks(bizType, bizId);
+    }
 }

@@ -374,6 +374,16 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return open != null;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean withdrawOpenAppeal(String bizType, Long bizId, String reasonText) {
+        if (bizType == null || bizId == null) return false;
+        AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(bizType, bizId);
+        if (open == null || !SOURCE_APPEAL.equals(open.getSourceType())) return false;
+        withdrawAppeal(open, reasonText);
+        return true;
+    }
+
     /** 作者修改被申诉内容时给作者的说明(系统消息)。 */
     static final String APPEAL_WITHDRAWN_BY_EDIT = "你修改了被驳回的内容，原申诉已自动撤回，修改后的内容将重新审核";
 

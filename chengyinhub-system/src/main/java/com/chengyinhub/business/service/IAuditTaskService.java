@@ -66,6 +66,12 @@ public interface IAuditTaskService {
 
     List<AuditTask> selectAuditTaskList(AuditTask auditTask);
 
+    /**
+     * 撤回该内容未结的申诉单:任务撤销 + 申诉记录 WITHDRAWN + 通知作者(reasonText 即通知原因)。
+     * 开着的不是申诉单或没有未结单时不动并返回 false。
+     */
+    boolean withdrawOpenAppeal(String bizType, Long bizId, String reasonText);
+
     /** 认领待审单(仅未被认领的 status=0 单);已被认领或已处理抛 ServiceException。 */
     void claim(Long taskId, Long operatorId);
 
