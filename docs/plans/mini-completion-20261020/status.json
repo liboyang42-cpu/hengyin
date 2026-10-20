@@ -19,7 +19,14 @@
     "uiIntegrity": "PASS with mutation self-tests; no new exemption; U4 debt 129 to 127",
     "draftIndependentPeer": "6/6",
     "java": "PENDING_GITHUB_HOSTED_CI",
-    "fullNode": "PENDING_FINAL_FROZEN_TREE_RUN"
+    "fullNode": {
+      "tests": 12104,
+      "pass": 12099,
+      "fail": 0,
+      "skipped": 2,
+      "todo": 3,
+      "receipt": "local full-node-sealed; Mini Program source at 9225b380d4247425dceb3384123ff723b4599f09"
+    }
   },
   "migrations": [
     {

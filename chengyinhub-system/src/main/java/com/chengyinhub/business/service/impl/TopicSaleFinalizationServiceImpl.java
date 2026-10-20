@@ -289,11 +289,10 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
     }
 
     private String ticketProjectionKey(OmsTicket ticket, CmsActivity activity) {
-        boolean clubSession = activity.getClubId() != null;
         return String.valueOf(ticket.getName()) + '|' + String.valueOf(ticket.getMode()) + '|'
                 + String.valueOf(ticket.getPrice()) + '|' + String.valueOf(ticket.getTotalInventory()) + '|'
-                + String.valueOf(clubSession ? activity.getStartDate() : ticket.getStartTime()) + '|'
-                + String.valueOf(clubSession ? activity.getEndDate() : ticket.getEndTime()) + '|'
+                + String.valueOf(OmsTicketServiceImpl.projectedStartTime(ticket, activity)) + '|'
+                + String.valueOf(OmsTicketServiceImpl.projectedEndTime(ticket, activity)) + '|'
                 + String.valueOf(ticket.getSignupDeadline()) + '|' + String.valueOf(ticket.getMeetingPoint()) + '|'
                 + String.valueOf(ticket.getGatherLng()) + '|' + String.valueOf(ticket.getGatherLat()) + '|'
                 + String.valueOf(ticket.getSubType()) + '|' + String.valueOf(ticket.getRefundRule()) + '|'
@@ -306,10 +305,9 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         assertTicketField("PRICE", source.getPrice(), projected.getPrice());
         assertTicketField("TOTAL_INVENTORY", source.getTotalInventory(), projected.getTotalInventory());
         // 俱乐部票投影按真实场次时间生成，开售校验须沿用同一时间来源。
-        boolean clubSession = activity.getClubId() != null;
-        assertTicketField("START_TIME", clubSession ? activity.getStartDate() : source.getStartTime(),
+        assertTicketField("START_TIME", OmsTicketServiceImpl.projectedStartTime(source, activity),
                 projected.getStartTime());
-        assertTicketField("END_TIME", clubSession ? activity.getEndDate() : source.getEndTime(),
+        assertTicketField("END_TIME", OmsTicketServiceImpl.projectedEndTime(source, activity),
                 projected.getEndTime());
         assertTicketField("SIGNUP_DEADLINE", source.getSignupDeadline(), projected.getSignupDeadline());
         assertTicketField("MEETING_POINT", source.getMeetingPoint(), projected.getMeetingPoint());

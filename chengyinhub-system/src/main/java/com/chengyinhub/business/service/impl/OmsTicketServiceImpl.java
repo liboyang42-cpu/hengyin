@@ -695,6 +695,25 @@ public class OmsTicketServiceImpl implements IOmsTicketService
                 HttpStatus.CONFLICT);
     }
 
+    /**
+     * 活动票投影的场次窗口唯一口径：俱乐部开团的场次时间独立于主题原票，复制、同步都不能把旧日期带回新场次；
+     * 其余活动沿用主题票时间。开售审核核对投影时用同一口径(TopicSaleFinalizationServiceImpl)。
+     */
+    public static Date projectedStartTime(OmsTicket source, CmsActivity activity)
+    {
+        return isClubSession(activity) ? activity.getStartDate() : source.getStartTime();
+    }
+
+    public static Date projectedEndTime(OmsTicket source, CmsActivity activity)
+    {
+        return isClubSession(activity) ? activity.getEndDate() : source.getEndTime();
+    }
+
+    private static boolean isClubSession(CmsActivity activity)
+    {
+        return activity != null && activity.getClubId() != null;
+    }
+
     private OmsTicket newActivityTicket(OmsTicket source, Long activityId, Long memberId, CmsActivity activity)
     {
         OmsTicket target = new OmsTicket();
@@ -706,10 +725,8 @@ public class OmsTicketServiceImpl implements IOmsTicketService
         target.setPrice(source.getPrice());
         target.setTotalInventory(source.getTotalInventory());
         target.setRemainingInventory(source.getTotalInventory());
-        // 俱乐部开团的场次时间独立于主题原票；复制、同步都不能把旧日期带回新场次。
-        boolean clubSession = activity != null && activity.getClubId() != null;
-        target.setStartTime(clubSession ? activity.getStartDate() : source.getStartTime());
-        target.setEndTime(clubSession ? activity.getEndDate() : source.getEndTime());
+        target.setStartTime(projectedStartTime(source, activity));
+        target.setEndTime(projectedEndTime(source, activity));
         target.setMode(source.getMode());
         target.setSubType(source.getSubType());
         target.setMeetingPoint(source.getMeetingPoint());
