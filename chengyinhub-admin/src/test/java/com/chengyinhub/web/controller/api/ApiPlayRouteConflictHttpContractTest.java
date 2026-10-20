@@ -154,6 +154,7 @@ class ApiPlayRouteConflictHttpContractTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @Test

@@ -140,3 +140,25 @@ test('提交错误在固定动作区使用可访问 inline error，并为扩展�
     /\.bmbottom\s*,\s*\.bmbottom-spacer\s*\{[^}]*var\(--baoming-action-extra, 0rpx\)[^}]*env\(safe-area-inset-bottom\)/s,
     '错误出现时动作栏和正文占位必须使用同一高度算式')
 })
+
+test('报名与支付事实携带Checkout原registrationId及稳定原事件键', () => {
+  const analytics = require('../../utils/analytics')
+  const original = analytics.track
+  const events = []
+  analytics.track = (name, payload) => events.push({ name, payload })
+  try {
+    const page = loadReadyPage()
+    page.finishSignup = () => {}
+    page.handlePayment()
+    latestHandlers.onFreeSuccess({ registrationId: 991, payableAmount: 0 })
+    latestHandlers.onFreeSuccess({ registrationId: 991, payableAmount: 0 })
+    latestHandlers.onPaySuccess({ registrationId: 991, payableAmount: 88 })
+    assert.equal(events[0].payload.properties.registrationId, 991)
+    assert.equal(events[0].payload.eventKey, 'signup_submit_registration_991')
+    assert.equal(events[1].payload.eventKey, events[0].payload.eventKey)
+    assert.equal(events[2].payload.properties.registrationId, 991)
+    assert.equal(events[2].payload.eventKey, 'payment_success_registration_991')
+  } finally {
+    analytics.track = original
+  }
+})

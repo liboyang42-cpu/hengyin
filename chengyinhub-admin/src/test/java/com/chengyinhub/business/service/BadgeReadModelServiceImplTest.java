@@ -40,6 +40,32 @@ class BadgeReadModelServiceImplTest {
     }
 
     @Test
+    void buildWallV2_showsOwnedClubBadge_butNotUnownedOnes() {
+        when(defMapper.selectAllActive()).thenReturn(Collections.singletonList(def("FIRST_STEP", "初次启程", "IDENTITY")));
+        PlayerBadge pb = new PlayerBadge();
+        pb.setBadgeCode("CLUB_X"); pb.setObtainTime(new Date());
+        when(playerBadgeMapper.selectListByMember(1L)).thenReturn(Collections.singletonList(pb));
+        when(defMapper.selectActiveClubByCodes(Collections.singletonList("CLUB_X")))
+            .thenReturn(Collections.singletonList(def("CLUB_X", "俱乐部勋章", "HONOR")));
+
+        BadgeWallV2VO vo = svc.buildWallV2(1L);
+
+        assertEquals(1, vo.getHonor().size());
+        assertTrue(vo.getHonor().get(0).isUnlocked());
+        assertEquals(1, vo.getIdentity().size());
+    }
+
+    @Test
+    void buildWallV2_withNoOwnedBadges_doesNotQueryClubDefs() {
+        when(defMapper.selectAllActive()).thenReturn(Collections.<GrowthBadge>emptyList());
+        when(playerBadgeMapper.selectListByMember(1L)).thenReturn(Collections.<PlayerBadge>emptyList());
+
+        svc.buildWallV2(1L);
+
+        verify(defMapper, never()).selectActiveClubByCodes(any());
+    }
+
+    @Test
     void buildWallV2_groupsByAssetType_andMarksUnlocked() {
         when(defMapper.selectAllActive()).thenReturn(Arrays.asList(
             def("FIRST_STEP", "初次启程", "IDENTITY"),

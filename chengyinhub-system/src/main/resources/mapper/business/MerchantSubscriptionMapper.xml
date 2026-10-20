@@ -28,7 +28,7 @@
             <if test="merchantId != null"> and merchant_id = #{merchantId}</if>
             <if test="subscriptionType != null and subscriptionType != ''"> and subscription_type = #{subscriptionType}</if>
             <if test="isActive != null"> and is_active = #{isActive}</if>
-            <if test="isActive != null and isActive == 1"> and (end_date is null or end_date &gt;= now())</if>
+            <if test="isActive != null and isActive == 1"> and (start_date is null or start_date &lt;= now()) and (end_date is null or end_date &gt; now())</if>
         </where>
         order by id desc
     </select>

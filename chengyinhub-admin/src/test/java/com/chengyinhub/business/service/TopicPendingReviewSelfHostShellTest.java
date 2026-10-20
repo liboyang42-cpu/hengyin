@@ -67,6 +67,11 @@ class TopicPendingReviewSelfHostShellTest {
         }
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
+        // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        org.mockito.Mockito.lenient().when(activityMapper.insertCmsActivity(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> {
+            ((com.chengyinhub.business.domain.CmsActivity) inv.getArgument(0)).setId(880001L);
+            return 1;
+        });
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
         // R19-DRAFT2/状态键闸随旅程分支合入后,publishDraft 会走引用收集 —— 自动 mock 的

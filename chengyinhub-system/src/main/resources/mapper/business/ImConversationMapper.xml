@@ -33,9 +33,15 @@
         where id = #{id}
     </select>
 
-    <select id="selectImConversationByIdForUpdate" parameterType="Long" resultMap="ImConversationResult">
+    <select id="selectImConversationByIdForUpdate" parameterType="Long" resultMap="ImConversationResult" useCache="false" flushCache="true">
         <include refid="selectImConversationVo"/>
         where id = #{id} for update
+    </select>
+
+    <!-- 已读只需挡住并发关闭/退群(二者持 X 锁)；共享锁与媒体审核放行的会话 S 读兼容，避免与其「消息→会话→成员」锁序成环。 -->
+    <select id="selectImConversationByIdForShare" parameterType="Long" resultMap="ImConversationResult" useCache="false" flushCache="true">
+        <include refid="selectImConversationVo"/>
+        where id = #{id} lock in share mode
     </select>
 
     <select id="selectByTypeAndBizKey" resultMap="ImConversationResult">

@@ -89,7 +89,8 @@ class ThemeActionIdempotencyAcceptanceTest {
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(list);
         when(templates.selectCmsMemberTemplateByIds(any())).thenReturn(tpl);
         topic.setPublishedRouteGraphJson(service.freezePublication(topic, null));
-        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(new CmsRegistration()));
+        // 移植分支 A包当前资格按 activity→registration 锁读当前行(CurrentPlayRegistration)，夹具同 PersonalGameplayRuntimeServiceTest。
+        CurrentRegistrationStubs.currentFromProbe(registrations);
         when(arrival.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         when(mapper.selectByOwner(0L, 10L, 7L, "default")).thenAnswer(i -> session);
         when(mapper.selectCurrentByOwner(0L, 10L, 7L)).thenAnswer(i -> session);

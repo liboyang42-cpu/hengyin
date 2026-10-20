@@ -108,7 +108,9 @@ class ApiCreativeSquareCommunityPolicyTest {
                 .thenReturn(Collections.emptyMap());
         when(postService.unact(8L, 42L, "BOOKMARK", "bookmark-42-off"))
                 .thenReturn(Collections.emptyMap());
-        ApiCreativeSquareController controller = controller(8L, null, null, null, null);
+        IViewCreativeSquareService viewService = mock(IViewCreativeSquareService.class);
+        when(viewService.selectMappedCommunityPostId(42L)).thenReturn(42L);
+        ApiCreativeSquareController controller = controller(8L, viewService, null, null, null);
         ReflectionTestUtils.setField(controller, "communityPostService", postService);
 
         assertEquals(200, controller.creativeSquareBookmark("42", 1, "bookmark-42-on").get("code"));

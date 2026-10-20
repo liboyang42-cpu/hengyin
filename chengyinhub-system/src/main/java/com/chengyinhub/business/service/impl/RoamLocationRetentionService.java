@@ -17,6 +17,9 @@ public class RoamLocationRetentionService {
     }
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.transaction.PlatformTransactionManager transactionManager;
+    /** 客户端上报的会话档案同为定位数据(geohash7+时刻)，随会话位置一并按保留期删除。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.RoamSessionRecordMapper records;
     public int clearRewardLocations(Date cutoff,int limit) {
         if(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("Roam cleanup candidates require a transaction-free read");
@@ -67,6 +70,7 @@ public class RoamLocationRetentionService {
                 throw new IllegalStateException("Roam shop cleanup receipt missing");
         }
         shares.deleteBySession(id, memberId);
+        if (records != null) records.deleteBySession(id, memberId);
         if (mapper.clearEndedSessionLocation(id, memberId, cutoff, result) != 1)
             throw new IllegalStateException("Roam location cleanup changed concurrently");
         return 1;

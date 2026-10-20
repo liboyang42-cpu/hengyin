@@ -104,6 +104,7 @@ Page({
             error: false,
             errorMsg: '',
           });
+          that._conversationAppliedEpoch = requestEpoch;
           that.refreshView();
         } else {
           that._setConversationError(res, preserveConfirmed);
@@ -345,8 +346,10 @@ Page({
         pending.submitting = false;
         if (!current()) return;
         if (!isBizOk(res)) { if (dc) dc.failed((res && res.msg) || '删除失败'); return; }
+        // 删除确认后，早于该确认发出的列表不能把旧会话及摘要带回来。
+        that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
         const list = that.data.list.filter(function (c) { return c.conversationId !== id; });
-        that.setData({ list: list });
+        that.setData({ list: list, loading: false, refreshing: false });
         that.refreshView();
         that._pendingDelete = null;
         if (dc) dc.done();
@@ -369,15 +372,36 @@ Page({
     if (!cur || cur.conversationId !== id) return;
     const memberId = app.getUserID ? app.getUserID() : 0;
     if (!this._isPageContextCurrent(memberId)) return;
-    const pending = this._mutePending || (this._mutePending = new Set());
+    const pending = this._mutePending || (this._mutePending = new Map());
     const pendingKey = memberId + ':' + id;
     if (pending.has(pendingKey)) return;
     const prevMuted = cur.muted; // 基本类型拷贝:viewList[idx] 与 list[li] 是同一引用(refreshView 的 filter/map 不克隆),setData 路径写法会就地污染 cur,不能再用 cur.muted 回滚
     const next = (prevMuted == 1) ? 0 : 1;
     const li = this.data.list.findIndex(function (c) { return c.conversationId === id; });
     if (li < 0) return;
-    pending.add(pendingKey);
-    const current = () => that._isPageContextCurrent(memberId) && that.data.list[li] === cur;
+    // 每次请求一个令牌:迟到/重复的旧回调不能释放新请求的锁。
+    const operation = {};
+    pending.set(pendingKey, operation);
+    const startEpoch = this._conversationRequestEpoch || 0;
+    // 本行已被替换:若当前列表是本次 mute 之前就发出的旧请求回包,仍按会话 ID 落结果;
+    // 否则是新列表回读,以服务端回读为准,旧结果不再改行也不提示。
+    const newerListRead = function () {
+      const row = that.data.list.find(function (c) { return c.conversationId === id; });
+      if (row === cur) return false;
+      return !(that._conversationAppliedEpoch > 0 && that._conversationAppliedEpoch <= startEpoch);
+    };
+    const finish = function () {
+      if (pending.get(pendingKey) !== operation) return false;
+      pending.delete(pendingKey);
+      return that._isPageContextCurrent(memberId) && !newerListRead();
+    };
+    const rollback = function () {
+      // 请求期间列表可能重排或移除对象，回滚必须重新按会话 ID 定位。
+      const currentIndex = that.data.list.findIndex(function (c) { return c.conversationId === id; });
+      if (currentIndex < 0) return;
+      that.setData({ ['list[' + currentIndex + '].muted']: prevMuted });
+      that.refreshView();
+    };
     // 乐观更新
     this.setData({ ['list[' + li + '].muted']: next });
     this.refreshView();
@@ -386,22 +410,25 @@ Page({
       url: '/api/im/mute', method: 'POST', hideLoading: true,
       data: { conversation_id: id, muted: next },
       success(res) {
-        pending.delete(pendingKey);
-        if (!current()) return;
+        if (!finish()) return;
         if (!(res && res.code == 200)) {
           // 回滚,不留假状态
-          that.setData({ ['list[' + li + '].muted']: prevMuted });
-          that.refreshView();
+          rollback();
           app.tips && app.tips((res && res.msg) || '操作失败');
           return;
         }
+        // 确认后丢弃更早发出的列表回包;按会话 ID 重新定位,新对象替换该行,不就地改 viewList 共享引用。
+        that._conversationRequestEpoch = (that._conversationRequestEpoch || 0) + 1;
+        const list = that.data.list.map(function (c) {
+          return c.conversationId === id ? Object.assign({}, c, { muted: next }) : c;
+        });
+        that.setData({ loading: false, refreshing: false, list: list });
+        that.refreshView();
         toast(next ? '已开启免打扰' : '已关闭免打扰');
       },
       fail() {
-        pending.delete(pendingKey);
-        if (!current()) return;
-        that.setData({ ['list[' + li + '].muted']: prevMuted });
-        that.refreshView();
+        if (!finish()) return;
+        rollback();
         app.tips && app.tips('操作失败');
       },
     });

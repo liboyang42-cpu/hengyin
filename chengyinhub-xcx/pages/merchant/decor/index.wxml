@@ -524,4 +524,10 @@
     show="{{privacyGateShow}}"
     bind:settled="onPrivacyGateSettled"
   />
+  <!-- 物理返回守卫:图片编辑/字段面板/放弃确认任一开着时,返回键先关浮层而不是退页;backGuardOff 用于消费后重挂 -->
+  <page-container
+    show="{{!backGuardOff && (imageEditor || fieldSheet.show || discardVisible)}}"
+    duration="{{0}}" overlay="{{false}}"
+    custom-style="width:0;height:0;background:transparent;pointer-events:none"
+    bind:afterleave="onNativeBackGuard" />
 </view>

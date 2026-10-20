@@ -106,6 +106,8 @@ final class ChapterFlowCompiler
             com.fasterxml.jackson.databind.JsonNode ending = chapter.getEnding();
             if (ending != null && !ending.isNull()) {
                 if (!ending.isObject()) throw invalid(chapterNumber, "结局设置格式不对");
+                if (ending.has("fallback") && !ending.get("fallback").isBoolean())
+                    throw invalid(chapterNumber, "结局兜底 fallback 必须是布尔值");
                 if (Boolean.TRUE.equals(chapter.getOpening())) throw invalid(chapterNumber, "开局不能同时是结局");
                 if (Integer.valueOf(1).equals(chapter.getRecruitEnabled()))
                     throw invalid(chapterNumber, "结局章不能开放商家承接");

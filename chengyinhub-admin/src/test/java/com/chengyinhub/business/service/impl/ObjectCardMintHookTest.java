@@ -151,6 +151,7 @@ class ObjectCardMintHookTest {
         activity.setId(ACTIVITY_ID);
         activity.setTopicId(TOPIC_ID);
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @AfterEach

@@ -55,6 +55,12 @@ class TopicCopyRecruitmentGuardTest {
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        // CORE OWN-C03-13：复制写入章节后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(600L);
+        org.mockito.Mockito.when(chapterMapper.insertCmsTopicChapter(org.mockito.ArgumentMatchers.any(CmsTopicChapter.class))).thenAnswer(invocation -> {
+            ((CmsTopicChapter) invocation.getArgument(0)).setId(chapterIds.incrementAndGet());
+            return 1;
+        });
     }
 
     @Test

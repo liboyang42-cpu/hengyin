@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamSessionRecordMapper">
+    <select id="selectOriginalRecords" resultType="java.util.HashMap" useCache="false">
+        select tile, collected_at as collectedAt from roam_session_record_archive
+        where member_id = #{memberId} and session_id = #{sessionId} and tile in
+        <foreach collection="tiles" item="tile" open="(" separator="," close=")">#{tile}</foreach>
+    </select>
+    <insert id="insertRecords">
+        insert into roam_session_record_archive
+            (member_id, session_id, tile, collected_at, received_at, evidence_type)
+        values
+        <foreach collection="records" item="record" separator=",">
+            (#{memberId}, #{sessionId}, #{record.tile}, #{record.collectedAt}, #{receivedAt}, 'CLIENT_REPORTED')
+        </foreach>
+        on duplicate key update tile = tile
+    </insert>
+    <delete id="deleteBySession">
+        delete from roam_session_record_archive where member_id = #{memberId} and session_id = #{sessionId}
+    </delete>
+</mapper>

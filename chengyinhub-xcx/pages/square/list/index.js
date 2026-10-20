@@ -1,4 +1,4 @@
-const reportSheet = require('../../../utils/community-report-sheet.js');
+const reportSheet = require('../utils/community-report-sheet.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
@@ -1004,6 +1004,16 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    // 换号先清上一身份缓存再同步社区权限:_syncCommunityAccess 可能同步拉首屏并改写 _feedAccount。
+    const accountId = String(app.getUserID() || 0);
+    if (this._feedAccount !== undefined && this._feedAccount !== accountId) {
+      // 原接口含本人待审/驳回与个人态；换号不能继续展示上一身份的缓存。
+      this._feedRequestId = (this._feedRequestId || 0) + 1;
+      this._feedRequestInFlight = false;
+      this.setData({ list: [], page_no: 1, hasMore: false, isRefreshing: false,
+        isLoadingMore: false, userId: app.getUserID() || 0 });
+      this.refreshList();
+    }
     this._syncCommunityAccess();
     wx.hideTabBar(); // 重试一次
     // 广场属于玩家内容域：身份只影响能力，不改变页面/原生 chrome 的深色归属。
@@ -1178,6 +1188,8 @@ Page({
     if (isRefresh && that._feedRequestTask && typeof that._feedRequestTask.abort === 'function') {
       that._feedRequestTask.abort();
     }
+    const requestAccount = String(app.getUserID() || 0);
+    that._feedAccount = requestAccount;
     const requestId = (that._feedRequestId || 0) + 1;
     that._feedRequestId = requestId;
     that._feedRequestInFlight = true;
@@ -1212,9 +1224,17 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
-        if (requestId !== that._feedRequestId) return;
+        if (requestId !== that._feedRequestId || String(app.getUserID() || 0) !== requestAccount) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let newlist = res.data.rows
+          const seen = Object.create(null);
+          if (isLoadMore) that.data.list.forEach(function (item) { seen[String(item.id)] = true; });
+          let newlist = res.data.rows.filter(function (item) {
+            if (item.id === null || item.id === undefined) return false;
+            const key = String(item.id);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+          });
           for (let i = 0; i < newlist.length; i++) {
             if (newlist[i]['pics'] != null) {
               // R10-06:清空后的 '' 不得被解析成一个空图片位

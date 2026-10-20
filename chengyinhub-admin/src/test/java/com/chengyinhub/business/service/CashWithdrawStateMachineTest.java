@@ -93,7 +93,12 @@ class CashWithdrawStateMachineTest {
                 .thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(svc, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
+        ReflectionTestUtils.setField(svc, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(svc, "frozenAmountResolver")));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
+        when(mapper.selectById(1L)).thenAnswer(i -> pendingRecord());
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
+        when(mapper.updateReceiptIfProcessing(any())).thenReturn(1);
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
             ((MemberCashWithdraw) inv.getArgument(0)).setId(1L);
             return 1;
@@ -141,18 +146,19 @@ class CashWithdrawStateMachineTest {
         res.put("batchStatus", "ACCEPTED");
         when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
 
-        svc.withdraw(9L, new BigDecimal("10.00"));
+        MemberCashWithdraw current = svc.withdraw(9L, new BigDecimal("10.00"));
+        assertEquals(Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING), current.getStatus());
 
         // 绝不置成功(不走终态守卫)
         verify(mapper, never()).updateStatusIfProcessing(any());
         verify(umsMemberService, never()).addBalance(anyLong(), any());
-        // 受理更新:某次 update 带 submitTime 且 status=处理中
+        // 受理只写观察字段，返回的原持久状态仍是处理中
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateReceiptIfProcessing(cap.capture());
         boolean acceptedUpdate = cap.getAllValues().stream().anyMatch(v ->
-                v.getSubmitTime() != null && Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(v.getStatus())
+                v.getSubmitTime() != null && v.getStatus() == null
                         && "B1".equals(v.getTransferBatchId()));
-        assertTrue(acceptedUpdate, "受理应置处理中+记录批次号与提交时间");
+        assertTrue(acceptedUpdate, "受理仅记录批次号与提交时间，不写状态");
     }
 
     // ② 原子防重:insert 唯一键冲突(DuplicateKey)→ 拦截,不扣款不转账
@@ -179,6 +185,7 @@ class CashWithdrawStateMachineTest {
     // ④ 扣款抛异常(DB 未知异常,余额可能已扣)→ 置待人工(status=3)+告警,不假称已退款,不转账
     @Test
     void deductThrows_marksFailed_noZombie_noTransfer() {
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
         when(mapper.countPendingByMember(9L)).thenReturn(0);
         stubMemberWithOpenid();
         doThrow(new RuntimeException("扣款状态不明")).when(umsMemberService).deductWithdrawableBalance(eq(9L), any(), any());
@@ -188,7 +195,7 @@ class CashWithdrawStateMachineTest {
         verify(wechatPayService, never()).transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString());
         // 未知异常 → STATUS_FAILED_MANUAL=3(非 FAILED_REFUNDED),且触发告警
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
         boolean markedManual = cap.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(v.getStatus()));
         assertTrue(markedManual, "扣款异常应置待人工(3),不可假称已退款");
@@ -306,7 +313,7 @@ class CashWithdrawStateMachineTest {
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
         verify(mapper, never()).updateStatusIfProcessing(any()); // 未超时不升级
-        verify(mapper, times(1)).updateMemberCashWithdraw(any());
+        verify(mapper, times(1)).updateReceiptIfProcessing(any());
     }
 
     // ⑩ 超时兜底:处理中过久(submitTime 很旧)+ 仍 UNKNOWN → CAS 升级人工 + 告警

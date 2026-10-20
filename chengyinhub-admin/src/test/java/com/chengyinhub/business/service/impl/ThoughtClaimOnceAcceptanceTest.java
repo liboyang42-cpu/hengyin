@@ -101,13 +101,13 @@ class ThoughtClaimOnceAcceptanceTest {
         chapter.setBlocksJson("[{\"type\":\"thought\",\"thoughtKey\":\"afternoon\"},{\"type\":\"node\",\"nodeId\":1}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter));
-        CmsRegistration pass = new CmsRegistration(); pass.setExpiresAt(null);
-        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
-                .thenReturn(Collections.singletonList(pass));
+        // 移植分支 A包当前资格按 activity→registration 锁读当前行(CurrentPlayRegistration)，夹具同 PersonalGameplayRuntimeServiceTest。
+        CurrentRegistrationStubs.currentFromProbe(registrationMapper);
         CmsActivity activity = new CmsActivity();
         activity.setId(44L); activity.setTopicId(10L); activity.setStatus(1L);
         activity.setPublishStatus(1L); activity.setDelFlag(0);
         when(activityMapper.selectCmsActivityById(44L)).thenReturn(activity);
+        when(activityMapper.selectCmsActivityByIdForUpdate(44L)).thenReturn(activity);
 
         when(routeMapper.selectByOwner(anyLong(), eq(10L), anyLong(), eq("default")))
                 .thenAnswer(inv -> sessions.get(key(inv.getArgument(0), inv.getArgument(2))));

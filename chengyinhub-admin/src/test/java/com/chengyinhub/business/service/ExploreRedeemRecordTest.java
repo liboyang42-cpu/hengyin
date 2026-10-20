@@ -89,6 +89,7 @@ class ExploreRedeemRecordTest {
         activity.setDelFlag(0);
         activity.setId(800L);
         activity.setTopicId(TOPIC);
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         when(activityMapper.selectCmsActivityByIdForUpdate(800L)).thenReturn(activity);
         scanMapper = mock(CmsRegistrationScanMapper.class);
         perkSvc = mock(IPerkLedgerService.class);
@@ -136,6 +137,7 @@ class ExploreRedeemRecordTest {
         r.setOwnerId(800L);   // ③ 的 ownerId 是 activityId
         r.setPaymentStatus(2);
         r.setRegistrationStatus(2);
+        r.setPurchaseKind(3);
         return r;
     }
 

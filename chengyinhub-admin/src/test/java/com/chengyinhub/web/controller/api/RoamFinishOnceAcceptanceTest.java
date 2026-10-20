@@ -41,6 +41,9 @@ class RoamFinishOnceAcceptanceTest {
         ReflectionTestUtils.setField(controller, "roamMapper", roam);
         ReflectionTestUtils.setField(controller, "growthService", growth);
         ReflectionTestUtils.setField(controller, "playerBadgeMapper", mock(PlayerBadgeMapper.class));
+        // 移植分支结算回包带原徽章投递状态(badgeDelivery)，需装配投递服务替身。
+        ReflectionTestUtils.setField(controller, "roamBadgeDeliveryService",
+                mock(com.chengyinhub.business.service.impl.RoamBadgeDeliveryService.class));
         ReflectionTestUtils.setField(controller, "growthBadgeMapper", mock(GrowthBadgeMapper.class));
         ReflectionTestUtils.setField(controller, "ruleEvaluator", new RuleEvaluator());
         ReflectionTestUtils.setField(controller, "npcFeatureFlags",

@@ -11,6 +11,10 @@ import java.util.List;
 
 /**
  * 主题发布-请求参数
+ *
+ * <p>编辑复用本 DTO 时，未传 publishMode、teamMode/teamMaxMembers、xpBudget、selfPlay
+ * 保留已有配置；显式 0 仍按关闭处理。productType 未传且票中也没有 mode 时保留已有有效类型。
+ * 创建入口继续使用原有默认值，章节/票/合作者集合仍遵守全量替换合同。
  */
 @Schema(description = "主题发布-请求参数")
 public class TopicCreateDTO implements Serializable {
@@ -210,6 +214,20 @@ public class TopicCreateDTO implements Serializable {
 
     public void setSaveDraft(Integer saveDraft) {
         this.saveDraft = saveDraft;
+    }
+
+    /**
+     * 首次存草稿的请求意图键(16-64 位字母数字/下划线/连字符,客户端按本机草稿稳定生成)。
+     * 建草稿丢回包后,同一账号用同一键重试 → 回到已建的那份草稿,不重复建题。仅 saveDraft=1 的创建使用。
+     */
+    private String requestId;
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     /** 是否同步发布到创意广场：1=发主题时同步发一条创意广场帖 0/null=不发(默认) */

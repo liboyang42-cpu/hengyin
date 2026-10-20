@@ -12,6 +12,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.ICmsRegistrationService;
+import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.impl.AlarmService;
+import org.springframework.test.util.ReflectionTestUtils;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 /**
  * §5-3:bean 名与方法名必须与 sys_job 注册的 invoke_target 一字不差 —— Quartz 找不到就是
  * 每 10 分钟静默 NoSuchMethodException,任务等于不存在(predictVoidExpiredTask 的老教训)。
@@ -47,6 +62,62 @@ class OrderClosePayingReconcileTaskContractTest {
         String migrationId = MIGRATION.substring("migration_".length(), MIGRATION.length() - ".sql".length());
         assertTrue(dependencies.contains("\"" + migrationId + "\""),
                 "新增迁移必须在 ci/migration-dependencies.json 有条目");
+    }
+
+    @Test
+    void failedSecondPageKeepsAttemptedPayingPrefixUntilQueryRecovers() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        OrderCloseTask task = new OrderCloseTask();
+        ReflectionTestUtils.setField(task, "cmsRegistrationService", service);
+        ReflectionTestUtils.setField(task, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
+        when(wechat.isReady()).thenReturn(true);
+        List<Long> firstPage = LongStream.rangeClosed(1L, 200L).boxed().collect(Collectors.toList());
+        when(service.listExpiredPayingIds(0L)).thenReturn(firstPage);
+        when(service.listExpiredPayingIds(200L))
+                .thenThrow(new IllegalStateException("second page unavailable"))
+                .thenThrow(new IllegalStateException("second page unavailable"))
+                .thenReturn(Collections.singletonList(201L));
+        when(service.listExpiredPayingIds(201L)).thenReturn(Collections.emptyList());
+        when(service.selectCmsRegistrationById(anyLong())).thenAnswer(call -> {
+            long id = call.getArgument(0);
+            CmsRegistration registration = new CmsRegistration();
+            registration.setId(id);
+            registration.setRegistrationNo("PAYING-" + id);
+            registration.setPaymentStatus(1);
+            registration.setRegistrationStatus(1);
+            return registration;
+        });
+        when(wechat.queryOrderStatus(anyString())).thenAnswer(call -> {
+            String orderNo = call.getArgument(0);
+            if (!"PAYING-201".equals(orderNo)) throw new IllegalStateException("provider unavailable");
+            Map<String, String> result = new HashMap<>();
+            result.put("out_trade_no", orderNo);
+            result.put("trade_state", "CLOSED");
+            return result;
+        });
+        when(service.settlePayingOne(eq(201L), anyString(), anyString(), eq(4))).thenReturn(true);
+
+        assertThrows(IllegalStateException.class, task::reconcileExpiredPaying);
+        assertEquals(200L, ReflectionTestUtils.getField(task, "reconcileCursor"));
+        assertThrows(IllegalStateException.class, task::reconcileExpiredPaying);
+        assertEquals(200L, ReflectionTestUtils.getField(task, "reconcileCursor"));
+        verify(service, never()).settlePayingOne(anyLong(), anyString(), anyString(), anyInt());
+
+        task.reconcileExpiredPaying();
+
+        verify(service, times(1)).listExpiredPayingIds(0L);
+        verify(service, times(3)).listExpiredPayingIds(200L);
+        for (long id = 1L; id <= 201L; id++) {
+            verify(wechat, times(1)).queryOrderStatus("PAYING-" + id);
+        }
+        verify(service, times(1)).settlePayingOne(201L,
+                com.chengyinhub.common.constant.EntitlementInvalidReason.ORGANIZER_CANCEL,
+                "payment-reconcile-task", 4);
+        verify(service, never()).handleWechatPayCallback(anyMap());
+        verify(wechat, never()).closeOrder(anyString());
+        assertEquals(0L, ReflectionTestUtils.getField(task, "reconcileCursor"));
     }
 
     private String readFirstExisting(Path... candidates) throws Exception {

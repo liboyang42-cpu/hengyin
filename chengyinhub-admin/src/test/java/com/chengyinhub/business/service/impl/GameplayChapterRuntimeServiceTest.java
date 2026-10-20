@@ -35,7 +35,7 @@ class GameplayChapterRuntimeServiceTest {
         CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
-        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(new CmsRegistration()));
+        CurrentRegistrationStubs.currentFromProbe(registrations);
         runtime = new TopicRouteRuntimeServiceImpl(routes, topics, nodeMapper, templates, mock(PlayerNodeProgressMapper.class), null,
                 registrations, null, mock(IShopDayProofService.class), () -> 1L, () -> 10, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(runtime,"cmsTopicChapterMapper",chapterMapper);

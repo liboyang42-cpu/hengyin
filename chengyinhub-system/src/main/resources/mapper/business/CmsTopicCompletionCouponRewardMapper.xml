@@ -9,6 +9,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         values (#{topicId}, #{memberId}, #{couponId}, now())
     </insert>
 
+    <update id="bindHistoryId">
+        update cms_topic_completion_coupon_reward_log set history_id = #{historyId}
+        where topic_id = #{topicId} and member_id = #{memberId} and coupon_id = #{couponId}
+          and history_id is null
+    </update>
+
     <!-- 批5 凭证面只读:这张幂等日志就是「券真发过」的事实,不去 sms_coupon_history 二次推断。 -->
     <select id="selectGrantedAt" resultType="java.util.Date">
         select created_at from cms_topic_completion_coupon_reward_log

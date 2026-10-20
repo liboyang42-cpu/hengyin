@@ -61,6 +61,9 @@ class CommunityPostServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(CommunityPostMapper.class);
+        // Match MyBatis selectOne's absent-row contract rather than Mockito's empty Map default.
+        when(mapper.selectMediaByOwnerRequest(anyLong(), anyString())).thenReturn(null);
+        when(mapper.selectMediaByReceiptHash(anyString())).thenReturn(null);
         safetyGate = mock(IContentSafetyGate.class);
         mediaReceiptService = mock(ICommunityMediaReceiptService.class);
         communityTrustService = mock(CommunityTrustService.class);
@@ -131,6 +134,13 @@ class CommunityPostServiceImplTest {
         request.setExpectedVersion(3);
         request.setMediaIds(Arrays.asList(41L, 42L));
         when(mapper.attachMedia(eq(7L), eq(9L), anyLong(), anyInt(), any())).thenReturn(1);
+        Map<String, Object> firstMedia = new HashMap<>();
+        firstMedia.put("id", 41L);
+        firstMedia.put("object_key", "upload/0123456789abcdef0123456789abcdef.png");
+        Map<String, Object> secondMedia = new HashMap<>();
+        secondMedia.put("id", 42L);
+        secondMedia.put("object_key", "upload/ffffffffffffffffffffffffffffffff.png");
+        when(mapper.selectMediaForSafety(7L)).thenReturn(Arrays.asList(firstMedia, secondMedia));
         service.edit(9L, 7L, request);
         verify(mapper).detachMedia(eq(7L), eq(9L), eq(Arrays.asList(41L, 42L)), any());
 
@@ -138,7 +148,11 @@ class CommunityPostServiceImplTest {
                 .getField(service, "auditTaskService");
         verify(audits).submitSafetyHold(eq(AuditTask.BIZ_COMMUNITY_POST), eq(7L), eq(9L),
                 eq("EDIT_REVIEW"), argThat(snapshot -> {
-                    CommunityPost saved = JsonUtils.parseObject(snapshot, CommunityPost.class);
+                    com.alibaba.fastjson2.JSONObject evidence = com.alibaba.fastjson2.JSON.parseObject(snapshot);
+                    CommunityPost saved = evidence.getJSONObject("post").toJavaObject(CommunityPost.class);
+                    if (evidence.getJSONArray("media") == null || evidence.getJSONArray("media").size() != 2
+                            || !Long.valueOf(41L).equals(evidence.getJSONArray("media").getJSONObject(0).getLong("id"))
+                            || !Long.valueOf(42L).equals(evidence.getJSONArray("media").getJSONObject(1).getLong("id"))) return false;
                     return Integer.valueOf(4).equals(saved.getVersion()) && "CHECKING".equals(saved.getLifecycle())
                             && request.getBody().equals(saved.getBody());
                 }));
@@ -439,12 +453,13 @@ class CommunityPostServiceImplTest {
         when(mapper.selectByIdForUpdate(7L)).thenReturn(post);
         when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("id", 5L));
         when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        String key = "upload/0123456789abcdef0123456789abcdef.jpg";
+        String preview = "https://private-test.oss-cn-shanghai.aliyuncs.com/" + key + "?Expires=300&Signature=short";
         Map<String, Object> media = new HashMap<>();
-        media.put("derived_object_key", "https://cdn.example/community/image.jpg");
+        media.put("derived_object_key", key);
         when(mapper.selectMediaForSafety(7L)).thenReturn(Collections.singletonList(media));
         when(safetyGate.decide(argThat(request -> request.getMediaUrls().equals(
-                Collections.singletonList("https://cdn.example/community/image.jpg")))))
-                .thenReturn(SafetyDecision.pass());
+                Collections.singletonList(preview))))).thenReturn(SafetyDecision.pass());
         when(mapper.transitionCas(eq(7L), eq("DRAFT"), eq("PUBLISHED"), eq(3), any(), eq(null),
                 eq(1), eq(1), eq(1), any())).thenReturn(1);
         when(mapper.updateMediaReviewState(eq(7L), eq("PASS"), any())).thenReturn(1);
@@ -455,9 +470,15 @@ class CommunityPostServiceImplTest {
         when(mapper.selectById(7L, 9L)).thenReturn(visible);
         when(mapper.selectMedia(7L)).thenReturn(Collections.singletonList(media));
         when(mapper.selectReferences(7L)).thenReturn(Collections.emptyList());
-
-        service.publish(9L, null, 7L, state(3));
-
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> storage =
+                     org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.communityMediaObjectKey(key))
+                    .thenReturn(key);
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateCommunityMediaPresignedUrl(key))
+                    .thenReturn(preview);
+            service.publish(9L, null, 7L, state(3));
+        }
+        assertEquals(key, media.get("derived_object_key"), "rendering must not rewrite stored media");
         verify(mapper).updateMediaReviewState(eq(7L), eq("PASS"), any());
     }
 
@@ -466,13 +487,14 @@ class CommunityPostServiceImplTest {
         CommunityPostRequests.MediaRegister request = new CommunityPostRequests.MediaRegister();
         request.setUploadRequestId("upload-request-1");
         request.setMediaType("IMAGE");
-        request.setObjectKey("https://cdn.example/community/new.jpg");
+        request.setObjectKey("upload/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.jpg");
         request.setMimeType("image/jpeg");
         request.setByteSize(123L);
         request.setUploadReceipt("receipt");
         Map<String, Object> existing = new HashMap<>();
         existing.put("media_type", "IMAGE");
-        existing.put("derived_object_key", "https://cdn.example/community/old.jpg");
+        existing.put("object_key", "upload/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg");
+        existing.put("derived_object_key", "upload/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg");
         existing.put("mime_type", "image/jpeg");
         existing.put("byte_size", 123L);
         when(mapper.selectMediaByOwnerRequest(9L, "upload-request-1")).thenReturn(existing);
@@ -490,7 +512,7 @@ class CommunityPostServiceImplTest {
         CommunityPostRequests.MediaRegister request = new CommunityPostRequests.MediaRegister();
         request.setUploadRequestId("another-request");
         request.setMediaType("IMAGE");
-        request.setObjectKey("https://cdn.example/community/photo.jpg");
+        request.setObjectKey("upload/cccccccccccccccccccccccccccccccc.jpg");
         request.setMimeType("image/jpeg");
         request.setByteSize(123L);
         request.setUploadReceipt("signed-receipt");
@@ -502,6 +524,8 @@ class CommunityPostServiceImplTest {
                 () -> service.registerMedia(9L, request));
 
         assertEquals(Integer.valueOf(409), error.getCode());
+        verify(mediaReceiptService).verify(9L, request.getObjectKey(), 123L, "signed-receipt");
+        verify(mapper).selectMediaByReceiptHash(anyString());
         verify(mapper, never()).insertMedia(anyLong(), anyString(), anyString(), anyString(), anyString(),
                 anyLong(), any(), any(), any(), any(), anyString(), anyString(), any());
     }
@@ -978,16 +1002,12 @@ class CommunityPostServiceImplTest {
 
     @Test
     void notificationPreferencesPatchMergesAndGovernanceCannotBeDisabled() {
-        Map<String, Object> before = new HashMap<>();
-        before.put("interaction_enabled", 1);
-        before.put("mention_enabled", 1);
-        before.put("social_enabled", 0);
         Map<String, Object> after = new HashMap<>();
         after.put("interaction_enabled", 1);
         after.put("mention_enabled", 0);
         after.put("social_enabled", 0);
-        when(mapper.selectNotificationPreferences(9L)).thenReturn(before, after);
-        when(mapper.upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any())).thenReturn(1);
+        when(mapper.selectNotificationPreferences(9L)).thenReturn(after);
+        when(mapper.upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any())).thenReturn(1);
         CommunityPostRequests.NotificationPreferences request = new CommunityPostRequests.NotificationPreferences();
         request.setMentionEnabled(false);
 
@@ -995,7 +1015,7 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Boolean.FALSE, result.get("mentionEnabled"));
         assertEquals(Boolean.TRUE, result.get("governanceEnabled"));
-        verify(mapper).upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any());
+        verify(mapper).upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any());
     }
 
     @Test
@@ -1003,7 +1023,9 @@ class CommunityPostServiceImplTest {
         Map<String, Object> comment = new HashMap<>();
         comment.put("post_id", 7L);
         when(mapper.selectCommentForAudit(17L)).thenReturn(comment);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-1")).thenReturn(null);
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L)).thenReturn(null);
+        when(mapper.selectCommandReceiptForUpdate(9L, "like-comment-1")).thenReturn(null);
+        when(mapper.selectCommandReceiptForUpdate(9L, "unlike-comment-1")).thenReturn(null);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-1"), any())).thenReturn(1);
         when(mapper.deleteCommentAction(17L, 9L)).thenReturn(1);
 
@@ -1018,7 +1040,9 @@ class CommunityPostServiceImplTest {
     void concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox() {
         Map<String, Object> replay = new HashMap<>();
         replay.put("comment_id", 17L);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-race"))
+        replay.put("request_id", "like-comment-race");
+        when(mapper.selectCommandReceiptForUpdate(9L, "like-comment-race")).thenReturn(null);
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L))
                 .thenReturn(null, replay);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-race"), any()))
                 .thenThrow(new DuplicateKeyException("duplicate request"));

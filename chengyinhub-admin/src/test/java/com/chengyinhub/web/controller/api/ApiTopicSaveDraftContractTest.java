@@ -51,6 +51,7 @@ class ApiTopicSaveDraftContractTest {
     private ICmsTopicService topicService;
     private IQuotaService quotaService;
     private IUmsCreativeSquareService creativeSquareService;
+    private com.chengyinhub.common.core.redis.RedisCache redis;
 
     @BeforeEach
     void setUp() {
@@ -65,6 +66,8 @@ class ApiTopicSaveDraftContractTest {
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "umsCreativeSquareService", creativeSquareService);
+        redis = mock(com.chengyinhub.common.core.redis.RedisCache.class);
+        ReflectionTestUtils.setField(controller, "redisCache", redis);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "omsTicketService", mock(com.chengyinhub.business.service.IOmsTicketService.class));
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
@@ -201,6 +204,106 @@ class ApiTopicSaveDraftContractTest {
         AjaxResult result = controller.topicEditDetail(String.valueOf(TOPIC_ID), null);
         assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
         return (java.util.Map<String, Object>) result.get(AjaxResult.DATA_TAG);
+    }
+
+    private static final String REQUEST_ID = "draftAbc123456789XY";
+    private static final String REQUEST_KEY = "topic:draft-request:" + MEMBER + ":" + REQUEST_ID;
+
+    private TopicCreateDTO draftWithRequest() {
+        TopicCreateDTO dto = draftDto();
+        dto.setRequestId(REQUEST_ID);
+        return dto;
+    }
+
+    private CmsTopic ownedTopic(Integer delFlag) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC_ID);
+        topic.setMemberId(MEMBER);
+        topic.setDelFlag(delFlag);
+        return topic;
+    }
+
+    /** 首次存草稿:占住意图键,建题成功后立刻把键落成主题号。 */
+    @Test
+    void firstDraftRequestClaimsKeyAndRecordsTopicId() {
+        when(redis.setIfAbsent(eq(REQUEST_KEY), eq("PENDING"), eq(10), eq(java.util.concurrent.TimeUnit.MINUTES))).thenReturn(Boolean.TRUE);
+
+        AjaxResult result = controller.createTopic(draftWithRequest());
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        assertEquals(TOPIC_ID, result.get(AjaxResult.DATA_TAG));
+        verify(redis).setCacheObject(REQUEST_KEY, TOPIC_ID, 7, java.util.concurrent.TimeUnit.DAYS);
+    }
+
+    /** 丢回包后同键重试:回到已建的那份草稿,不再建题。 */
+    @Test
+    void sameDraftRequestReturnsExistingDraftWithoutCreating() {
+        when(redis.getCacheObject(REQUEST_KEY)).thenReturn(TOPIC_ID);
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(ownedTopic(0));
+        when(topicService.selectTopicIsDraft(TOPIC_ID)).thenReturn(1);
+
+        AjaxResult result = controller.createTopic(draftWithRequest());
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) result.get(AjaxResult.DATA_TAG);
+        assertEquals(TOPIC_ID, data.get("topicId"));
+        assertEquals(Boolean.TRUE, data.get("recovered"));
+        assertEquals(Boolean.TRUE, data.get("isDraft"));
+        verify(topicService, never()).createTopic(any(TopicCreateDTO.class), anyLong(), anyString());
+    }
+
+    /** 同键请求还在途:不建题,也不释放别人的占位。 */
+    @Test
+    void inFlightDraftRequestIsRejectedWithoutCreating() {
+        when(redis.getCacheObject(REQUEST_KEY)).thenReturn("PENDING");
+        when(redis.setIfAbsent(eq(REQUEST_KEY), any(), any(), any())).thenReturn(Boolean.FALSE);
+
+        AjaxResult result = controller.createTopic(draftWithRequest());
+
+        assertTrue(!Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)), result.toString());
+        verify(topicService, never()).createTopic(any(TopicCreateDTO.class), anyLong(), anyString());
+        verify(redis, never()).deleteObject(REQUEST_KEY);
+    }
+
+    /** 建题失败:释放本次占的键,重试可以再建。 */
+    @Test
+    void failedDraftCreateReleasesKey() {
+        when(redis.setIfAbsent(eq(REQUEST_KEY), any(), any(), any())).thenReturn(Boolean.TRUE);
+        when(redis.getCacheObject(REQUEST_KEY)).thenReturn(null, "PENDING");
+        when(topicService.createTopic(any(TopicCreateDTO.class), anyLong(), anyString()))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("在架额度已满"));
+
+        AjaxResult result = controller.createTopic(draftWithRequest());
+
+        assertTrue(!Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)), result.toString());
+        verify(redis).deleteObject(REQUEST_KEY);
+    }
+
+    /** 键指向的草稿已被作者删除:不找回已删主题,当作新的一次建题。 */
+    @Test
+    void deletedPriorDraftIsNotRecovered() {
+        when(redis.getCacheObject(REQUEST_KEY)).thenReturn(9999L);
+        CmsTopic deleted = ownedTopic(2);
+        deleted.setId(9999L);
+        when(topicService.selectCmsTopicById(9999L)).thenReturn(deleted);
+        when(redis.setIfAbsent(eq(REQUEST_KEY), any(), any(), any())).thenReturn(Boolean.TRUE);
+
+        AjaxResult result = controller.createTopic(draftWithRequest());
+
+        assertEquals(TOPIC_ID, result.get(AjaxResult.DATA_TAG), result.toString());
+        verify(redis).deleteObject(REQUEST_KEY);
+        verify(topicService).createTopic(any(TopicCreateDTO.class), eq(MEMBER), anyString());
+    }
+
+    /** 非法意图键不参与幂等(按普通存草稿处理),也不碰缓存。 */
+    @Test
+    void malformedRequestIdIsIgnored() {
+        TopicCreateDTO dto = draftDto();
+        dto.setRequestId("短");
+        AjaxResult result = controller.createTopic(dto);
+        assertEquals(TOPIC_ID, result.get(AjaxResult.DATA_TAG), result.toString());
+        verify(redis, never()).setIfAbsent(any(), any(), any(), any());
     }
 
     /** 他人读草稿编辑器详情:在归属闸就被拒,不碰章节/票/合作者等下游读。 */
