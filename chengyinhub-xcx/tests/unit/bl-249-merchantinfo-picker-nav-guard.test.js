@@ -74,5 +74,5 @@ test('BL-249:两个入口先判锁再收半屏,跳转带 complete 清锁;onShow 
     assert.match(body, /if \(this\._navigating\) return; this\.setData\(\{ topicShow: false \}\);/)
     assert.match(body, /this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
   }
-  assert.match(source, /onShow\(\) \{[\s\S]{0,300}this\._navigating = false; \},/)
+  assert.match(source, /onShow\(\) \{[\s\S]{0,800}?merchantTheme\.merchantPageShow\(\); this\._navigating = false;\s*\},/)
 })
