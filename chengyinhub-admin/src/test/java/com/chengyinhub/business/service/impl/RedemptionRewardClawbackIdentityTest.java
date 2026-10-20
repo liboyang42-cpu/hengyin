@@ -17,6 +17,7 @@ class RedemptionRewardClawbackIdentityTest {
     void unknownReceiptNeverVoidsOrDeletesTheGrant() {
         CmsTopicCompletionCouponRewardMapper grants = mock(CmsTopicCompletionCouponRewardMapper.class);
         SmsCouponHistoryMapper histories = mock(SmsCouponHistoryMapper.class);
+        when(histories.selectCompletionRewardHistoryId(501L, 700L)).thenReturn(null);
         Map<String, Object> result = reverse(grants, histories);
         assertEquals("UNKNOWN_IDENTITY_NOT_RECOVERED", result.get("result"));
         verify(histories, never()).selectSmsCouponHistoryByIdForUpdate(anyLong());

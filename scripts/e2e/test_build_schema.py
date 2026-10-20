@@ -99,6 +99,7 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
     class SchemaCursor:
         def __init__(self):
             self.tables = set()
+            self.connection = mock.Mock()
 
         def execute(self, sql):
             match = re.match(r"CREATE TABLE(?: IF NOT EXISTS)?\s+`?([a-z0-9_]+)`?",
@@ -308,6 +309,8 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
 
     def test_schema_mode_reports_data_assertion_without_hiding_schema_assertion(self):
         class FalseCursor:
+            connection = mock.Mock()
+
             def execute(self, _sql):
                 pass
 
@@ -421,6 +424,170 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "unreadable SQL"):
                 build_schema.main()
         self.assertEqual(2, connection.close.call_count)
+
+
+class BuildSchemaFileBoundaryTest(unittest.TestCase):
+    class Cursor:
+        def __init__(self):
+            self.connection = mock.Mock()
+            self.connection.begin.side_effect = self.begin
+            self.connection.commit.side_effect = self.commit
+            self.connection.rollback.side_effect = self.rollback
+            self.isolation = "REPEATABLE-READ"
+            self.active = False
+            self.pending = []
+            self.persisted = []
+            self.executed = []
+            self.observed_isolations = []
+            self.rowcount = 1
+
+        def begin(self):
+            self.active = True
+
+        def commit(self):
+            self.persisted.extend(self.pending)
+            self.pending.clear()
+            self.active = False
+
+        def rollback(self):
+            self.pending.clear()
+            self.active = False
+
+        def execute(self, sql):
+            self.executed.append(sql)
+            if "TRANSACTION ISOLATION LEVEL READ COMMITTED" in sql:
+                self.isolation = "READ-COMMITTED"
+            elif "TRANSACTION ISOLATION LEVEL REPEATABLE READ" in sql:
+                self.isolation = "REPEATABLE-READ"
+            elif "fail_step" in sql:
+                raise RuntimeError("controlled SQL failure")
+            elif sql.startswith("SELECT"):
+                self.observed_isolations.append(self.isolation)
+            elif sql.startswith(("INSERT", "UPDATE", "CREATE")):
+                (self.pending if self.active else self.persisted).append(sql)
+            self.rowcount = 0 if "zero_rows" in sql else 1
+
+        def fetchone(self):
+            return (1,)
+
+    def replay(self, cursor, source, keep_going=False, failures=None):
+        if failures is None:
+            failures = []
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "migration.sql"
+            path.write_text(source, encoding="utf-8")
+            result = build_schema.run_file(cursor, path, "fixture", failures, keep_going)
+        return result, failures
+
+    def test_explicit_rc_runs_as_written_but_next_file_starts_in_rr(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor,
+            "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED; SELECT 1;"))
+        self.assertEqual("REPEATABLE-READ", cursor.isolation)
+        self.assertEqual((True, []), self.replay(cursor, "SELECT 1;"))
+        self.assertEqual(["READ-COMMITTED", "REPEATABLE-READ"], cursor.observed_isolations)
+
+    def test_required_transaction_failure_stops_inside_file_and_rolls_back_with_keep_going(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1); UPDATE fixture SET n=fail_step WHERE id=1;"
+            "INSERT INTO fixture VALUES (2);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("EXEC", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        self.assertEqual([], cursor.pending)
+        self.assertFalse(any("VALUES (2)" in sql for sql in cursor.executed))
+        cursor.connection.begin.assert_called_once_with()
+        cursor.connection.commit.assert_not_called()
+        cursor.connection.rollback.assert_called_once_with()
+        self.assertEqual([mock.call(False), mock.call(True)], cursor.connection.autocommit.call_args_list)
+        self.assertEqual((True, failures), self.replay(cursor, "CREATE TABLE later(id INT);", failures=failures))
+        self.assertEqual(1, len(failures), "continuing outside the file cannot erase its failure")
+
+    def test_required_transaction_success_commits_all_writes_and_restores_session(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1); UPDATE fixture SET n=2 WHERE id=1;"))
+        self.assertEqual(2, len(cursor.persisted))
+        cursor.connection.begin.assert_called_once_with()
+        cursor.connection.commit.assert_called_once_with()
+        cursor.connection.rollback.assert_not_called()
+        self.assertEqual(mock.call(True), cursor.connection.autocommit.call_args)
+        self.assertEqual("REPEATABLE-READ", cursor.isolation)
+
+    def test_required_transaction_assertion_failure_rolls_back_without_commit(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1);\n-- runner: assert=rowcount-positive\n"
+            "UPDATE fixture SET n=zero_rows WHERE id=1; INSERT INTO fixture VALUES (2);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("ASSERT", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        self.assertFalse(any("VALUES (2)" in sql for sql in cursor.executed))
+        cursor.connection.commit.assert_not_called()
+        cursor.connection.rollback.assert_called_once_with()
+
+    def test_required_transaction_rejects_implicit_commit_ddl_before_execution(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor,
+            "-- runner: requires=transaction\nCREATE TABLE forbidden(id INT);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("PREFLIGHT", failures[0][2])
+        self.assertEqual([], cursor.executed)
+        cursor.connection.begin.assert_not_called()
+
+    def test_ordinary_ddl_is_not_wrapped_in_a_transaction(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor, "CREATE TABLE ordinary(id INT);"))
+        self.assertEqual(["CREATE TABLE ordinary(id INT)"], cursor.persisted)
+        cursor.connection.begin.assert_not_called()
+        cursor.connection.commit.assert_not_called()
+
+    def test_commit_failure_aborts_even_with_keep_going_and_rolls_back(self):
+        cursor = self.Cursor()
+        cursor.connection.commit.side_effect = RuntimeError("commit unavailable")
+        failures = []
+        with self.assertRaisesRegex(RuntimeError, "commit unavailable"):
+            self.replay(cursor, "-- runner: requires=transaction\nINSERT INTO fixture VALUES (1);",
+                        keep_going=True, failures=failures)
+        self.assertEqual("COMMIT_UNKNOWN", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        cursor.connection.rollback.assert_called_once_with()
+
+    def test_malformed_data_assertion_readback_never_becomes_an_observation(self):
+        for row in (None, (), (0, 1), (None,), (2,), ("0",)):
+            with self.subTest(row=row), tempfile.TemporaryDirectory() as tmp:
+                cursor = self.Cursor()
+                cursor.fetchone = lambda: row
+                path = pathlib.Path(tmp) / "data.sql"
+                path.write_text("-- runner: assert=scalar-true\nSELECT COUNT(*)=1 FROM fixture;",
+                                encoding="utf-8")
+                failures, observations = [], []
+                self.assertFalse(build_schema.run_file(cursor, path, "data", failures, False,
+                                                       schema_only=True, observations=observations))
+                self.assertEqual("ASSERT", failures[0][2])
+                self.assertEqual([], observations)
+
+    def test_data_assertion_fetch_failure_never_becomes_an_observation(self):
+        cursor = self.Cursor()
+        cursor.fetchone = mock.Mock(side_effect=RuntimeError("fetch unavailable"))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "data.sql"
+            path.write_text("-- runner: assert=scalar-true\nSELECT COUNT(*)=1 FROM fixture;",
+                            encoding="utf-8")
+            failures, observations = [], []
+            self.assertFalse(build_schema.run_file(cursor, path, "data", failures, False,
+                                                   schema_only=True, observations=observations))
+            self.assertEqual("ASSERT", failures[0][2])
+            self.assertEqual([], observations)
+
+    def test_failed_rollback_aborts_instead_of_reusing_an_unknown_session(self):
+        cursor = self.Cursor()
+        cursor.connection.rollback.side_effect = RuntimeError("rollback unknown")
+        with self.assertRaisesRegex(RuntimeError, "rollback unknown"):
+            self.replay(cursor, "-- runner: requires=transaction\n"
+                "UPDATE fixture SET n=fail_step WHERE id=1;", keep_going=True)
+        self.assertNotIn(mock.call(True), cursor.connection.autocommit.call_args_list)
 
 
 if __name__ == "__main__":
