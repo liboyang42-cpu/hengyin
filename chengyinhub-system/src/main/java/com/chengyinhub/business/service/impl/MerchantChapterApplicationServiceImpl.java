@@ -166,6 +166,12 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             // 点位内容保留待重申，但先退出待审/公开链路，避免独立点位审核入口误放行。
             chapterMerchantNodeService.auditAlongApplication(application.getChapterId(), merchantId, merchantId,
                     false, "商家已撤回承接申请");
+            // 只有本次真正撤回成功才通知主办；幂等重放与并发落败分支都不进这里，不会重复发。
+            CmsTopic topic = topicMapper.selectCmsTopicById(application.getTopicId());
+            if (topic != null && topic.getMemberId() != null) {
+                committedNotice.sendAfterCommit(topic.getMemberId(), "章节申请已撤回", "商家已撤回章节承接申请",
+                        "chapter-application-withdraw", application.getId());
+            }
             return application;
         }
 

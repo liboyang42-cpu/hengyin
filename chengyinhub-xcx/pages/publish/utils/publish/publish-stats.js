@@ -118,6 +118,16 @@ function totalDurationText(chapters) {
 
 // 路线总统计:时长/节点/模板/格式化里程(= 原 calculateTotalStats)。
 // totalDistance 由调用方传入(= totalDistanceKm(chapters)),与原实现内部调用 calculateTotalDistance() 等价。
+// 站数口径与服务端一致:只数上架节点。status=0 = 后台隐藏(edit-detail 会带回,保存时服务端保留隐藏);
+// 编辑器里新加的节点还没有 status,按上架算。
+function isListedNode(node) {
+  return !!node && node.status !== 0 && node.status !== '0';
+}
+
+function listedNodeCount(chapters) {
+  return (chapters || []).reduce((sum, c) => sum + ((c && c.nodes) || []).filter(isListedNode).length, 0);
+}
+
 function totalStats(chapters, totalDistance) {
   const list = chapters || [];
   let totalMinutes = 0;
@@ -126,8 +136,8 @@ function totalStats(chapters, totalDistance) {
 
   list.forEach(chapter => {
     if (chapter.nodes) {
-      // 节点总数
-      totalNodes += chapter.nodes.length;
+      // 节点总数(只数上架节点)
+      totalNodes += chapter.nodes.filter(isListedNode).length;
 
       chapter.nodes.forEach(node => {
         // 总时长
@@ -235,5 +245,6 @@ module.exports = {
   totalDistanceKm: totalDistanceKm,
   totalDurationText: totalDurationText,
   totalStats: totalStats,
+  listedNodeCount: listedNodeCount,
   computeCompleteness: computeCompleteness,
 };

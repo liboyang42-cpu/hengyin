@@ -37,18 +37,25 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
         metadata = json.loads(build_schema.BASELINE_MANIFEST.read_text(encoding="utf-8"))
         changed = [item for item in metadata["migrations"]
                    if "currentSourceSha256" in item]
-        self.assertEqual(1, len(changed))
-        item = changed[0]
-        self.assertTrue(item["reason"])
-        original = build_schema.source_file_bytes(metadata["sourceCommit"], item["path"])
-        current = (build_schema.REPO / item["path"]).read_bytes()
-        self.assertEqual(item["sourceSha256"], hashlib.sha256(original).hexdigest())
-        self.assertEqual(item["currentSourceSha256"], hashlib.sha256(current).hexdigest())
+        self.assertEqual(2, len(changed))
         def executable_contract(source):
             return [(build_schema.executable_statement(statement),
                      build_schema.statement_assertion(statement))
                     for statement in build_schema.split_statements(source.decode("utf-8"))]
-        self.assertEqual(executable_contract(original), executable_contract(current))
+        for item in changed:
+            with self.subTest(path=item["path"]):
+                self.assertTrue(item["reason"])
+                current = (build_schema.REPO / item["path"]).read_bytes()
+                self.assertEqual(item["currentSourceSha256"], hashlib.sha256(current).hexdigest())
+                if "executableContractSha256" in item:
+                    # 原始字节含生产地址、不在公开快照里保留:钉的是原文件的可执行语句+断言。
+                    contract = json.dumps(executable_contract(current), ensure_ascii=False)
+                    self.assertEqual(item["executableContractSha256"],
+                                     hashlib.sha256(contract.encode("utf-8")).hexdigest())
+                    continue
+                original = build_schema.source_file_bytes(metadata["sourceCommit"], item["path"])
+                self.assertEqual(item["sourceSha256"], hashlib.sha256(original).hexdigest())
+                self.assertEqual(executable_contract(original), executable_contract(current))
 
     def test_public_provenance_rejects_unknown_commit_and_byte_drift(self):
         metadata = json.loads(build_schema.BASELINE_MANIFEST.read_text())
