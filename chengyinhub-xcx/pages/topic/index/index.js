@@ -1731,7 +1731,7 @@ Page({
 
           that.setData({
             info: res.data,
-            canReport: canReportTopic(res.data, app.getUserID()),
+            canReport: canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : ''),
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
@@ -1915,7 +1915,7 @@ Page({
   // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
   reportTopic() {
     if (!this.data.canReport) return;
-    contentReport.report(this, app, 'topic', this.data.id);
+    contentReport.reportTopic(this, app, this.data.id);
   },
   onReportReasonSelect(e) { reportSheet.select(this, e); },
   onReportReasonCancel() { reportSheet.cancel(this); },

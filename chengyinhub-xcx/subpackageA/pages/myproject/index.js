@@ -342,7 +342,7 @@ Page({
   },
 
   onOpsPick(e) {
-    const k = e.currentTarget.dataset.k;
+    const k = e.currentTarget.dataset.k; if (k === 'audit') return this.onOpsAudit();
     const p = this.data.opsSheet;
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };

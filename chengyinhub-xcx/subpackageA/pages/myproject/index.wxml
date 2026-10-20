@@ -143,7 +143,7 @@
       <text class="mp-ops-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text>
       <text class="mp-ops-sub">已有人买票会走退款，报名作废</text>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsAudit" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="mp-ops-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80">
       <text class="mp-ops-label">审核记录</text>
       <text class="mp-ops-sub">看平台每次的处理结果和原因，可以时发起申诉</text>
     </view>

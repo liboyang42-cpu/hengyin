@@ -232,7 +232,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true; this._unloaded = true; reportSheet.cancel(this);
+    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -350,7 +350,7 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
-          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, app.getUserID()) });
+          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, typeof app.getUserID === 'function' ? app.getUserID() : '') });
         } else {
           that.setData({
             loadError: true,
@@ -459,14 +459,20 @@ Page({
     this.setData({ moreShow: false });
   },
 
-  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)
+  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
+  // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
   reportTemplate() {
-    if (!this.data.reportKind) return;
+    if (this.data.reportKind !== 'template') return;
     this.setData({ moreShow: false });
-    contentReport.report(this, app, this.data.reportKind, this.data.id);
+    require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
   },
-  onReportReasonSelect(e) { reportSheet.select(this, e); },
-  onReportReasonCancel() { reportSheet.cancel(this); },
+  reportPersonalTemplate() {
+    if (this.data.reportKind !== 'personalTemplate') return;
+    this.setData({ moreShow: false });
+    require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
+  },
+  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({
@@ -544,11 +550,6 @@ Page({
     };
   }
 });
-
-// FOLLOWUP-A-1 的依赖放在文件尾:上方 U4-DYNAMIC 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
-// 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
-const contentReport = require('../../utils/content-report.js');
-const reportSheet = require('../../utils/community-report-sheet.js');
 
 // FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
 // library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。

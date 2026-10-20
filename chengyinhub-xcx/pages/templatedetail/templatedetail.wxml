@@ -283,7 +283,8 @@
   <cy-sheet variant="full" show="{{moreShow}}" maskClosable bind:close="closeMore">
     <button class="xb-sheet-item" open-type="share" bindtap="onShare" hover-class="xb-sheet-item--press" hover-stay-time="80">分享玩法</button>
     <view class="xb-sheet-item" wx:if="{{ info.validationMethod }}" bindtap="openPopFromMore" hover-class="xb-sheet-item--press" hover-stay-time="80">预览节点</view>
-    <view class="xb-sheet-item" wx:if="{{ reportKind }}" bindtap="reportTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
+    <view class="xb-sheet-item" wx:if="{{ reportKind === 'template' }}" bindtap="reportTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
+    <view class="xb-sheet-item" wx:elif="{{ reportKind === 'personalTemplate' }}" bindtap="reportPersonalTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
     <view class="xb-sheet-item xb-sheet-cancel" bindtap="closeMore" hover-class="xb-sheet-item--press" hover-stay-time="80">取消</view>
   </cy-sheet>
 

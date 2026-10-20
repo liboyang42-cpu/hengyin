@@ -59,7 +59,7 @@ test('FOLLOWUP-A-2 未通过 / 已下架的主题、活动:长按面板出「审
     h.requests.length = 0;
     longPress({ id: 31, bizType: biz, state, title: '老城夜巡', _canDelete: true, _canAudit: true });
     assert.equal(h.page.data.opsSheet.canAudit, true);
-    h.page.onOpsAudit();
+    h.page.onOpsPick({ currentTarget: { dataset: { k: 'audit' } } });
     assert.equal(h.page.data.opsSheet.show, false, '先收起长按面板');
     const req = h.requests[0];
     assert.equal(req.url, '/api/audit/timeline');
@@ -68,7 +68,7 @@ test('FOLLOWUP-A-2 未通过 / 已下架的主题、活动:长按面板出「审
     assert.equal(h.page.data.auditSheet.show, true);
   }
   const wxml = read('subpackageA/pages/myproject/index.wxml');
-  assert.match(wxml, /wx:if="\{\{opsSheet\.canAudit\}\}" bindtap="onOpsAudit"/);
+  assert.match(wxml, /wx:if="\{\{opsSheet\.canAudit\}\}" bindtap="onOpsPick" data-k="audit"/);
   assert.match(wxml, /<cy-sheet show="\{\{auditSheet\.show\}\}" title="审核记录"/);
   assert.match(wxml, /wx:if="\{\{auditSheet\.canAppeal\}\}" bindtap="appealAudit"/);
 });

@@ -6,20 +6,10 @@ const modal = require('./modal.js');
 const toast = require('./toast.js');
 const reportSheet = require('./community-report-sheet.js');
 
-const KINDS = ['topic', 'template', 'personalTemplate'];
-
 // 网络失败:结束在途,页面还在才如实提示。
 function networkFailed(callbacks) {
   callbacks.done();
   if (callbacks.current()) toast('网络异常，请重试');
-}
-
-// 三个举报接口各写一次字面量 URL(UI-GATE U1 只认字面量路径;U5 要求 fail 在同一请求里可见)。
-function submitReport(app, kind, data, callbacks) {
-  const success = callbacks.success;
-  if (kind === 'topic') return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/topic/report', method: 'POST', data: data, success: success, fail: function () { networkFailed(callbacks); } });
-  if (kind === 'template') return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/template/report', method: 'POST', data: data, success: success, fail: function () { networkFailed(callbacks); } });
-  return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/template/personal-report', method: 'POST', data: data, success: success, fail: function () { networkFailed(callbacks); } });
 }
 
 function reasonLabels(res) {
@@ -30,9 +20,9 @@ function reasonLabels(res) {
     .filter(Boolean);
 }
 
-// current():页面仍在、登录身份没换,才继续下一步或弹结果。
-function report(page, app, kind, id) {
-  if (KINDS.indexOf(kind) < 0 || !id || page._contentReporting) return false;
+// current():页面仍在、登录身份没换,才继续下一步或弹结果。submit 发本入口唯一的举报写请求。
+function run(page, app, id, submit) {
+  if (!id || page._contentReporting) return false;
   const owner = String(app.getUserID() || '');
   const current = function () { return !page._unloaded && !page._disposed && owner === String(app.getUserID() || ''); };
   const done = function () { page._contentReporting = false; };
@@ -51,7 +41,7 @@ function report(page, app, kind, id) {
           if (!labels.length) { done(); toast('举报原因暂不可用'); return; }
           reportSheet.open(page, labels, { aborted: false }).then(function (index) {
             if (!current()) { done(); return; }
-            submitReport(app, kind, { id: id, reason: labels[index] }, {
+            submit({ id: id, reason: labels[index] }, {
               done: done, current: current,
               success: function (r) {
                 done();
@@ -73,4 +63,22 @@ function report(page, app, kind, id) {
   return true;
 }
 
-module.exports = { report };
+// 三个入口各自只发一个字面量写接口(UI-GATE U1 只认字面量路径;U5 要求 fail 在同一请求里可见;
+// 按钮台账按 handler 认写接口,不能让一个入口同时挂上三个举报 API)。
+function reportTopic(page, app, id) {
+  return run(page, app, id, function (data, callbacks) {
+    return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/topic/report', method: 'POST', data: data, success: callbacks.success, fail: function () { networkFailed(callbacks); } });
+  });
+}
+function reportTemplate(page, app, id) {
+  return run(page, app, id, function (data, callbacks) {
+    return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/template/report', method: 'POST', data: data, success: callbacks.success, fail: function () { networkFailed(callbacks); } });
+  });
+}
+function reportPersonalTemplate(page, app, id) {
+  return run(page, app, id, function (data, callbacks) {
+    return app.sendRequest({ hideLoading: true, silentError: true, url: '/api/template/personal-report', method: 'POST', data: data, success: callbacks.success, fail: function () { networkFailed(callbacks); } });
+  });
+}
+
+module.exports = { reportTopic, reportTemplate, reportPersonalTemplate };

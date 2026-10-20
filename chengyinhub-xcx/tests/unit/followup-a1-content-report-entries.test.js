@@ -134,7 +134,9 @@ test('FOLLOWUP-A-1 个人玩法:别人已公开的个人玩法 → 提交 /api/t
   const h = harness('pages/templatedetail/templatedetail.js');
   loadTemplate(h, 'my', { memberId: 22, draftStatus: 1, status: 1, publishStatus: 1, delFlag: 0 });
   assert.equal(h.page.data.reportKind, 'personalTemplate');
-  const submit = await runReport(h, () => h.page.reportTemplate(), r => r.success({ code: 500, msg: '模版不存在' }));
+  h.page.reportTemplate();
+  assert.equal(h.modals.length, 0, '广场入口不接个人玩法');
+  const submit = await runReport(h, () => h.page.reportPersonalTemplate(), r => r.success({ code: 500, msg: '模版不存在' }));
   assert.equal(submit.url, '/api/template/personal-report');
   assert.deepEqual(submit.data, { id: '5', reason: '违法违规' });
   assert.deepEqual(h.toasts, ['模版不存在']);
@@ -155,11 +157,13 @@ test('FOLLOWUP-A-1 玩法详情:本人的 / 未公开的玩法不出举报,处�
     loadTemplate(h, scope, info);
     assert.equal(h.page.data.reportKind, '', scope + JSON.stringify(info));
     h.page.reportTemplate();
+    h.page.reportPersonalTemplate();
     assert.equal(h.modals.length, 0);
     assert.equal(h.requests.length, 0);
   }
   const wxml = read('pages/templatedetail/templatedetail.wxml');
-  assert.match(wxml, /<view class="xb-sheet-item" wx:if="\{\{ reportKind \}\}" bindtap="reportTemplate"[^>]*>举报<\/view>/);
+  assert.match(wxml, /<view class="xb-sheet-item" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"[^>]*>举报<\/view>/);
+  assert.match(wxml, /<view class="xb-sheet-item" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"[^>]*>举报<\/view>/);
   assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);
   assert.ok(JSON.parse(read('pages/templatedetail/templatedetail.json')).usingComponents['cy-option-sheet']);
 });
