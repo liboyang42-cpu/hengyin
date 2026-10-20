@@ -115,6 +115,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     private com.chengyinhub.business.mapper.CmsTemplateLibraryMapper cmsTemplateLibraryMapper;
     @Autowired
     private com.chengyinhub.business.mapper.AuditTaskMapper auditTaskMapper;
+    // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.ICommunityPostService> communityPostServiceProvider;
 
     @Autowired
     private RoamStampMapper roamStampMapper;
@@ -784,6 +787,16 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                         ? confirmMutation(affected, "模板图片违规已自动下架", bizId)
                         : confirmAlreadyApplied("模板图片违规已自动下架", bizId);
             }
+            else if (bizType == BIZ_TYPE_COMMUNITY_POST)
+            {
+                // 生命周期、乐观版本、搜索投影与复核单都在帖文服务一处;已隐藏/待审/终态返回 true(幂等已落地)
+                boolean applied = communityPostServiceProvider.getObject().applyRiskyMediaResult(bizId);
+                if (applied)
+                {
+                    log.warn("[内容安全] 社区帖文图片违规已隐藏待复核: id={}", bizId);
+                }
+                return applied;
+            }
             else
             {
                 // 其它业务类型(如据点模板/官方活动,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
@@ -955,6 +968,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_HANGOUT:
                 com.chengyinhub.business.domain.RoamHangout hangout = roamHangoutMapper.selectById(id, 0L);
                 return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());
+            case BIZ_TYPE_COMMUNITY_POST:
+                return containsMediaHash(hash,
+                        communityPostServiceProvider.getObject().activeMediaUrls(id).toArray(new String[0]));
             default:
                 return false;
         }

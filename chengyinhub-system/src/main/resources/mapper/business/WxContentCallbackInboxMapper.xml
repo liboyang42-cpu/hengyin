@@ -87,6 +87,7 @@
             <when test="bizType == 12">select id from im_message where id = #{bizId} for update</when>
             <when test="bizType == 13">select id from cms_member_template where id = #{bizId} for update</when>
             <when test="bizType == 15">select id from roam_hangout where id = #{bizId} for update</when>
+            <when test="bizType == 17">select id from community_post where id = #{bizId} for update</when>
             <otherwise>select cast(null as signed)</otherwise>
         </choose>
     </select>
