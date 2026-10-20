@@ -279,7 +279,7 @@ Page({
     if (markerId % 10 === T.TEAM_MARKER_TAG) { this.openTeam(Math.floor(markerId / 10)); return; }
     const hit = H.parseMarkerId(markerId);
     if (!hit) return;
-    if (hit.kind === 'activity') { wx.navigateTo({ url: ACTIVITY_PAGE + '?id=' + encodeURIComponent(hit.id) }); return; }
+    if (hit.kind === 'activity') { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ACTIVITY_PAGE + '?id=' + encodeURIComponent(hit.id), complete: () => { this._navigating = false; } }); return; }
     if (hit.kind === 'topic') this.openTopicCard(hit.id);
   },
 
@@ -527,7 +527,7 @@ Page({
 
   openTopicCard(id) {
     const row = (this._items || []).find((it) => String(it.id) === String(id) && it.kind === 'topic');
-    if (!row) { wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(id) }); return; }
+    if (!row) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(id), complete: () => { this._navigating = false; } }); return; }
     const free = Number(row.productType) === 2;
     this.setData({
       topic: {
