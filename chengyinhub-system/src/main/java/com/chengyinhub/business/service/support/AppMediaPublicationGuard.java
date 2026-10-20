@@ -25,6 +25,9 @@ public class AppMediaPublicationGuard {
     @Autowired private CmsTopicNodeMapper nodes;
     @Autowired private CmsMemberTemplateMapper templates;
     private final ObjectMapper json = new ObjectMapper();
+    /** Absolute http(s) URL anywhere, or a protocol-relative //host at the start; slashes may be backslashes. */
+    private static final java.util.regex.Pattern EXTERNAL_LINK =
+            java.util.regex.Pattern.compile("(?i)https?:[/\\\\]{2}|^\\s*[/\\\\]{2}");
 
     public void requireTemplate(Long owner, Object template, boolean publish) {
         requireFields(owner, template, publish, "imgUrl", "medalImg", "storyImg", "audioUrl", "questionImg", "questionAudio",
@@ -112,6 +115,8 @@ public class AppMediaPublicationGuard {
                 if ((text.startsWith("/images/") || text.startsWith("/assets/")) && !text.contains("..") && !text.contains("%")) return value;
                 return json.getNodeFactory().textNode(requireMedia(owner, text, publish));
             }
+            // F-L5C-16: no URL review channel exists, so an external link cannot become public (fail-closed).
+            if (publish && EXTERNAL_LINK.matcher(text).find()) throw new ServiceException("暂不支持外部链接，请删除后再发布", 422);
             return value;
         }
         if (value.isArray()) {

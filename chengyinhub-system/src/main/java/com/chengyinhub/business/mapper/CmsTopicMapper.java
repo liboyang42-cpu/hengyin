@@ -25,6 +25,9 @@ public interface CmsTopicMapper
     /** 5-4 后台逐期开关窄读；避免把新列扩散进全部主题查询。 */
     Integer selectRoamReferralEnabledById(Long id);
 
+    /** 仅读 product_type;定价预览判断自由探索开售闸用。 */
+    Integer selectProductTypeById(Long id);
+
     /** R9-ACTIONS 开场通话窄读：只读 journey_story_json，列未落库时不影响其它主题查询。 */
     String selectJourneyStoryJsonById(Long id);
 

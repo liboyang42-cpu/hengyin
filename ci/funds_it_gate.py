@@ -135,6 +135,9 @@ EXPECTED = {
     # 现在:由 gate 脚本点名跑,库不可达改为硬失败,再由本门禁回读 skipped=0。
     "ExploreAllianceMvpRealDbIT": 5,
     "ExploreAllianceRedeemRealDbIT": 4,
+    # 2026-10-19 并入:F-L3-08 按章核销重放的并发证明(SC-SCAN-RACE,4 条 @Test)。
+    # 它和上面两套用同一个 ExploreItDatabase,但从未被点名 ⇒ 任何 CI 都没在真库上跑过它。
+    "ExploreScanReplayRealDbIT": 4,
     # 2026-09-16 提现闸(用户硬规则「等所有玩家都退不了才可提现」):14 → 16,+2 = 活动/主题结算选单
     # 在仍有已付未退未核销、退款截止未到的票时不入选(活动结束早于集合 / 自由定向票期长于主题)。
     "TandianriBatch0FundsMybatisIntegrationTest": 16,
@@ -290,6 +293,9 @@ SOURCE_FILES = {
     "ExploreAllianceRedeemRealDbIT":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
         "ExploreAllianceRedeemRealDbIT.java",
+    "ExploreScanReplayRealDbIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
+        "ExploreScanReplayRealDbIT.java",
     "TandianriBatch0FundsMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "TandianriBatch0FundsMybatisIntegrationTest.java",

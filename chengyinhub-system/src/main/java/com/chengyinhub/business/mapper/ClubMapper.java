@@ -33,6 +33,13 @@ public interface ClubMapper
     /** 工作台批量补齐俱乐部显示名，避免对申请/邀约/合作单逐条查询。 */
     public List<Club> selectClubsByIds(@Param("clubIds") List<Long> clubIds);
 
+    /**
+     * 俱乐部名称全站唯一(用户 2026-10-20 决定):数去空格后同名、待审或在营、未删除的俱乐部。
+     * memberId 不为空时跳过该主理人自己的行(本人同名按重放处理);excludeClubId 不为空时跳过正在改名的那一行。
+     */
+    public int countClubsHoldingName(@Param("name") String name, @Param("memberId") Long memberId,
+            @Param("excludeClubId") Long excludeClubId);
+
     public List<Club> selectClubList(Club club);
 
     public int insertClub(Club club);

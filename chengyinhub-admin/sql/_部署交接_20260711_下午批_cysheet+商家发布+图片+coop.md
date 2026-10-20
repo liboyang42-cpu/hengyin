@@ -1,6 +1,6 @@
 # 部署交接清单(2026-07-11 下午批)
 
-> 分支 `feature/app-backend-support`,以下提交**已 push 未部署**。**push≠部署**,下列服务器侧动作交你在 `47.103.124.64` / 微信开发者工具执行。
+> 分支 `feature/app-backend-support`,以下提交**已 push 未部署**。**push≠部署**,下列服务器侧动作交你在 `<生产库主机>` / 微信开发者工具执行。
 > 本机已备好:`chengyinhub-admin/target/chengyinhub-admin.jar`(103MB,17:14 新编,mvn 成功)+ xcx 预检 ✅ 无阻断。
 > ⚠️ 与并行会话的 `_部署交接_20260711.md`(11:19)不冲突,本文件是当日下午新增批(cy-sheet 大批 + 商家发布主题 + 图片 + coop 结算/提现)。
 

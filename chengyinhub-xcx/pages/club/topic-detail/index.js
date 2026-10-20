@@ -700,14 +700,17 @@ Page({
     this.openSessionPick();
   },
 
+  // CL-06:行与「接下来」同源(buildSessions 已按 F-W5-08 去掉取消/已过/自办壳并按集合时刻升序),
+  // 不再按 activityList 原序(后端 create_time desc)出行,也不再把被滤掉的场次显示成「时间待定」。
   openSessionPick() {
-    const sessions = this.data.sessions || [];
-    const rows = (this._topicActivities || []).map(function (item) {
-      const row = sessions.filter(function (s) { return String(s.id) === String(item.id); })[0] || {};
+    const ids = (this._topicActivities || []).map(function (item) { return String(item.id); });
+    const rows = (this.data.sessions || []).filter(function (s) {
+      return ids.indexOf(String(s.id)) >= 0;
+    }).map(function (s) {
       return {
-        id: item.id,
-        whenText: row.whenText || '时间待定',
-        whoText: row.whoText || '',
+        id: s.id,
+        whenText: s.whenText || '时间待定',
+        whoText: s.whoText || '',
       };
     });
     if (!rows.length) { this.goEventOps(); return; }

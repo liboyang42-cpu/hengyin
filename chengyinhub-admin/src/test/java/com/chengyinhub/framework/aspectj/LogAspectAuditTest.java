@@ -129,6 +129,17 @@ class LogAspectAuditTest
     }
 
     @Test
+    void successMarkedAsNoChangeByTheControllerPersistsNoAudit() throws Exception
+    {
+        RequestContextHolder.currentRequestAttributes().setAttribute(LogAspect.SKIP_OPER_LOG_ATTRIBUTE, Boolean.TRUE,
+                org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+
+        invokeSuccess(null, null);
+
+        assertEquals(0, persistedLogs.size());
+    }
+
+    @Test
     void appFailurePersistsExactlyOneSanitizedFailureAudit() throws Exception
     {
         AppUser appUser = new AppUser();

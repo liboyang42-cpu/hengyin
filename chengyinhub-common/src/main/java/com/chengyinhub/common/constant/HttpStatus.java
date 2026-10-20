@@ -58,6 +58,11 @@ public class HttpStatus
     public static final int FORBIDDEN = 403;
 
     /**
+     * 客户端版本过旧，需更新后重试（小程序 request-client 统一走「版本需更新」分支）
+     */
+    public static final int UPGRADE_REQUIRED = 426;
+
+    /**
      * 资源，服务未找到
      */
     public static final int NOT_FOUND = 404;

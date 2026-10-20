@@ -385,7 +385,7 @@
 ### 迁移已于 2026-09-20 落库（用户批准执行）
 
 `run_migration.py --config <druid.yml> --sql migration_template_library_pack_type_20260905.sql`
-经 ssh 隧道打到 `47.103.124.64/chengyinhubdb`，7/7 句 OK，分句器用的是 worktree 里的 `ci/sql_splitter.py`。
+经 ssh 隧道打到 `<生产库主机>/chengyinhubdb`，7/7 句 OK，分句器用的是 worktree 里的 `ci/sql_splitter.py`。
 
 **新只读连接回读**（不用执行会话自身的回执）：
 - `pack_type  tinyint  null=NO  模板形态:0单节点玩法 1剧情包 2店铺IP包` ⇒ 列已存在，形状与注释正确

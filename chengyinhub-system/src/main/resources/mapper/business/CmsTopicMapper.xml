@@ -781,6 +781,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select roam_referral_enabled from cms_topic where id = #{id}
     </select>
 
+    <select id="selectProductTypeById" parameterType="Long" resultType="Integer">
+        select product_type from cms_topic where id = #{id}
+    </select>
+
     <select id="selectCmsTopicLifecycleById" parameterType="Long" resultMap="CmsTopicResult">
         select id, lifecycle, del_flag from cms_topic where id = #{id}
     </select>
