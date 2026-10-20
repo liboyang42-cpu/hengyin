@@ -16,12 +16,15 @@ import static org.junit.jupiter.api.Assertions.*;
 /** 隔离 MySQL：作者保存、节点重映射、发布冻结和队伍账本持久化。 */
 class GameplayReskinMySqlIT {
     private static PooledDataSource source;
+    private static boolean scratchCreated;
     private static SqlSessionTemplate sql;
     private static JdbcTemplate db;
     @BeforeAll static void database() throws Exception {
         assertEquals("127.0.0.1",MybatisItDatabase.host());
         assertTrue(MybatisItDatabase.databaseName("gameplay_reskin").matches("chengyin_mybatis_gameplay_reskin[a-zA-Z0-9_]*"));
-        source=new PooledDataSource("com.mysql.cj.jdbc.Driver",MybatisItDatabase.url("gameplay_reskin"),MybatisItDatabase.user(),MybatisItDatabase.password());
+        String scratchUrl = MybatisItDatabase.url("gameplay_reskin");
+        scratchCreated = true;
+        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", scratchUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
         try(Connection connection=source.getConnection()) {
             ItSchema.apply(connection,"it-schema/generic-route-runtime-it-schema.sql");
             ItSchema.apply(connection,"it-schema/cms-topic-it-schema.sql");
@@ -39,7 +42,10 @@ class GameplayReskinMySqlIT {
         }
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean();factory.setDataSource(source);factory.setConfiguration(configuration);sql=new SqlSessionTemplate(factory.getObject());db=new JdbcTemplate(source);
     }
-    @AfterAll static void close() {if(source!=null)source.forceCloseAll();}
+    @AfterAll static void close() throws Exception {
+        try { if (source != null) source.forceCloseAll(); }
+        finally { dropScratch(); }
+    }
     @Test void threeThemesPublishWithTrustedBindingsAndPersistRenamedResources() throws Exception {
         GameplayReskinFixture fixture=new GameplayReskinFixture();fixture.useSql(sql);
         com.chengyinhub.business.mapper.AppMediaAssetMapper mediaMapper =
@@ -89,5 +95,29 @@ class GameplayReskinMySqlIT {
         }
         assertEquals(reviewedItem, publication.requireJson(7L, reviewedItem, true));
         assertEquals("APPROVED", mediaMapper.select(1L).get("reviewState"));
+    }
+
+    private static void dropScratch() throws Exception {
+        if (!scratchCreated) return;
+        String database = MybatisItDatabase.databaseName("gameplay_reskin");
+        if (!"127.0.0.1".equals(MybatisItDatabase.host()) || !database.matches("chengyin_mybatis_[A-Za-z0-9_]+")) {
+            throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+        }
+        try (java.sql.Connection admin = java.sql.DriverManager.getConnection(
+                "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port() + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+             java.sql.Statement statement = admin.createStatement()) {
+            statement.execute("DROP DATABASE `" + database + "`");
+            try (java.sql.PreparedStatement check = admin.prepareStatement(
+                    "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                check.setString(1, database);
+                try (java.sql.ResultSet row = check.executeQuery()) {
+                    assertTrue(row.next());
+                    assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                    assertFalse(row.next());
+                }
+            }
+            scratchCreated = false;
+        }
     }
 }

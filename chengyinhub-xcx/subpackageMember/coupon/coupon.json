@@ -11,7 +11,8 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-sheet": "/components/cy/sheet/index"
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-stat-card": "/components/cy/stat-card/index"
   },
   "navigationBarTitleText": "我发布的优惠券",
   "navigationBarTextStyle": "black",

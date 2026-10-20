@@ -515,6 +515,102 @@ class RoamLocationRetentionMySqlIT {
         assertEquals(1,db.queryForObject("select total from roam_shop_visitor_total where source_type=1 and source_id=77",Integer.class));
         assertEquals(9,db.queryForObject("select xp_awarded from roam_session where id=1",Integer.class));
     }
+
+    @Test void realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay() throws Exception {
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request")) {
+            String timeColumn = table.equals("tms_browse_record") ? "browse_time" : "create_time";
+            db.execute("create table " + table + "(id bigint primary key," + timeColumn + " datetime not null) engine=InnoDB");
+            String oldAge = switch (table) {
+                case "tms_browse_record" -> "181 day";
+                case "biz_event_log" -> "366 day";
+                case "npc_chat_log" -> "91 day";
+                default -> "49 hour";
+            };
+            db.execute("insert into " + table + " values(1,date_sub(now(),interval " + oldAge + ")),(2,now())");
+        }
+        // These are the real topic-route/favorite columns used by /api/topic/like_list, not a cleanup-only table.
+        db.execute("create table cms_topic(id bigint primary key,name varchar(100),route_mode varchar(32),route_graph_json json,"
+                + "published_route_graph_json json,config_version bigint,published_config_version bigint,del_flag int) engine=InnoDB");
+        db.execute("create table cms_topic_like(id bigint primary key,member_id bigint,data_id bigint,like_type bigint,"
+                + "create_by varchar(64),create_time datetime,update_by varchar(64),update_time datetime) engine=InnoDB");
+        String route = "{\"nodes\":[{\"id\":1,\"lat\":31.6,\"lng\":121.8}],\"edges\":[]}";
+        db.update("insert into cms_topic values(77,'retention favorite route','BRANCH_GRAPH',?,?,4,4,0)", route, route);
+        db.update("insert into cms_topic_like values(1,9,77,1,'fixture',date_sub(now(),interval 400 day),'fixture',now())");
+        var favoritesBefore = favoriteRouteSnapshot();
+
+        db.execute("update roam_session set finished_at=date_sub(now(),interval 31 day) where id=1");
+        db.execute("insert into roam_session(id,member_id,status,finished_at,last_lat,last_lng,finish_result_json,distance_m,tiles_revealed,xp_awarded)"
+                + " values(4,9,1,null,31.7,121.9,'{\"totalXp\":5,\"stats\":{\"distanceM\":600}}',600,2,5)");
+        db.execute("insert into roam_fog_tile(member_id,session_id,geohash7,revealed_at) values(9,null,'wtw3sjz',null)");
+        db.execute("insert into roam_poi_found(member_id,session_id,poi_id,found_at) values(9,1,77,date_sub(now(),interval 31 day))");
+        db.execute("insert into roam_poi_reward_log(member_id,poi_id,trigger_lat,trigger_lng,status,create_time) values(9,77,31.2,121.4,1,null)");
+        db.execute("insert into roam_shop_visit(member_id,session_id,source_type,source_id,shop_name,visited_at)"
+                + " values(9,1,1,77,'expired',now()),(9,null,1,78,'unknown orphan',null)");
+
+        SqlSessionFactoryBean extraFactory = new SqlSessionFactoryBean();
+        extraFactory.setDataSource(source);
+        extraFactory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        extraFactory.setMapperLocations(new ClassPathResource("mapper/business/TmsBrowseRecordMapper.xml"),
+                new ClassPathResource("mapper/business/BizEventLogMapper.xml"),
+                new ClassPathResource("mapper/business/NpcChatLogMapper.xml"),
+                new ClassPathResource("mapper/business/NpcChatRequestMapper.xml"));
+        SqlSessionTemplate extra = new SqlSessionTemplate(extraFactory.getObject());
+        var target = new com.chengyinhub.business.service.impl.DataRetentionServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "tmsBrowseRecordMapper", extra.getMapper(com.chengyinhub.business.mapper.TmsBrowseRecordMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "bizEventLogMapper", extra.getMapper(com.chengyinhub.business.mapper.BizEventLogMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatLogMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatLogMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatRequestMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatRequestMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "roamMapper", roam);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "roamShareSnapshotMapper", shares);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "roamLocationRetentionService", service(roam));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "roamOrphanLocationRetentionService", orphanService(roam, orphan));
+        var task = new com.chengyinhub.business.task.DataRetentionCleanupTask();
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "dataRetentionService", target);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "browseDays", 180);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "eventDays", 365);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatDays", 90);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatRequestHours", 48);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "batchSize", 2);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "maxBatches", 20);
+
+        assertDoesNotThrow(task::run);
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request"))
+            assertEquals(java.util.List.of(2L), db.queryForList("select id from " + table + " order by id", Long.class));
+        assertEquals(0, db.queryForObject("select count(*) from roam_session where id in(1,4) and (last_lat is not null or last_lng is not null)", Integer.class));
+        assertEquals(14, db.queryForObject("select sum(xp_awarded) from roam_session where id in(1,4)", Integer.class));
+        assertEquals(1800, db.queryForObject("select sum(distance_m) from roam_session where id in(1,4)", Integer.class));
+        assertEquals(0, db.queryForObject("select count(*) from roam_session where id in(1,4) and finish_result_json like '%track%'", Integer.class));
+        assertNotNull(db.queryForObject("select last_lat from roam_session where id=2", Double.class));
+        assertNotNull(db.queryForObject("select last_lat from roam_session where id=3", Double.class));
+        assertEquals(0, db.queryForObject("select count(*) from roam_share_snapshot where share_token in('old','legacy')", Integer.class));
+        assertEquals(0, db.queryForObject("select count(*) from roam_fog_tile where member_id=9 and geohash7 is not null and session_id is null", Integer.class));
+        assertEquals(1, db.queryForObject("select count(*) from roam_poi_found where member_id=9 and poi_id is null and claim_fingerprint is not null", Integer.class));
+        assertEquals(1, db.queryForObject("select count(*) from roam_poi_reward_log where trigger_lat is null and trigger_lng is null and poi_id is null and claim_fingerprint is not null", Integer.class));
+        assertEquals(1, visitorCount(77L));
+        assertEquals(1, visitorCount(78L));
+        assertEquals(favoritesBefore, favoriteRouteSnapshot());
+        var afterFirstRun = retainedFactsSnapshot();
+        assertDoesNotThrow(task::run);
+        assertEquals(afterFirstRun, retainedFactsSnapshot(), "second real task run must not change retained facts or recreate coordinates");
+        assertEquals(favoritesBefore, favoriteRouteSnapshot());
+        assertEquals(0, roam.insertPoiFoundIgnore(9L,77L,2L,new Date()), "cleanup must not permit a second reward");
+    }
+
+    private java.util.List<java.util.Map<String,Object>> favoriteRouteSnapshot() {
+        return db.queryForList("select t.id,t.name,t.route_mode,cast(t.route_graph_json as char) as route_graph_json,"
+                + "cast(t.published_route_graph_json as char) as published_route_graph_json,t.config_version,t.published_config_version,t.del_flag,"
+                + "l.id as favorite_id,l.member_id,l.data_id,l.like_type,l.create_by,l.create_time,l.update_by,l.update_time"
+                + " from cms_topic t join cms_topic_like l on l.data_id=t.id order by t.id,l.id");
+    }
+
+    private java.util.Map<String,java.util.List<java.util.Map<String,Object>>> retainedFactsSnapshot() {
+        var result = new java.util.LinkedHashMap<String,java.util.List<java.util.Map<String,Object>>>();
+        for (String table : java.util.List.of("roam_session","roam_fog_tile","roam_poi_found","roam_poi_reward_log",
+                "roam_shop_visit","roam_share_snapshot","roam_shop_visitor_claim","roam_shop_visitor_total",
+                "tms_browse_record","biz_event_log","npc_chat_log","npc_chat_request"))
+            result.put(table,db.queryForList("select * from " + table + " order by 1,2"));
+        return result;
+    }
     private int visitorCount(Long sourceId) {
         var transaction=new org.springframework.transaction.support.TransactionTemplate(new DataSourceTransactionManager(source));
         transaction.setReadOnly(true);

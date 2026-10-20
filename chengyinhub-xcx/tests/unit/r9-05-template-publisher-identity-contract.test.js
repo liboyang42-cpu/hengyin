@@ -54,7 +54,7 @@ function makePage(scope) {
 
 test('RED 锚点:个人草稿缺作者名时显示本人昵称而不是「城瘾/官方」', () => {
   const page = makePage('my')
-  page.applyDetailPayload({ id: 6029, title: '我的私有草稿', memberId: 9004 })
+  page.applyDetailPayload({ id: 6029, title: '我的私有草稿', memberId: 9004, canEdit: true })
 
   assert.equal(page.data.publisherText, '玩家9004')
   assert.equal(page.data.isOfficialPublisher, false)

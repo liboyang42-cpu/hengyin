@@ -82,7 +82,7 @@ public interface SmsCouponHistoryMapper
      */
     public int updateExpiredCouponsByMemberId(Long memberId);
 
-    /** 拍板4 冲回:这位玩家这主题通关券对应的领取记录 id;没有返 null。 */
+    /** 仅返回该通关日志绑定且会员/券模板一致的原领取回执；未知旧记录返回 null。 */
     public Long selectCompletionRewardHistoryId(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 
     public int voidUnusedCoupon(@Param("id") Long id, @Param("note") String note);

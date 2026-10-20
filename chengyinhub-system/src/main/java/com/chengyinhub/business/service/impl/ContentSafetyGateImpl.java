@@ -6,6 +6,9 @@ import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,7 @@ import org.springframework.stereotype.Service;
 public class ContentSafetyGateImpl implements IContentSafetyGate {
 
     private static final Logger logger = LoggerFactory.getLogger(ContentSafetyGateImpl.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
@@ -128,9 +132,41 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
             return SafetyDecision.hold(reasonCode, null);
         }
         Long taskId = auditTaskService.submitSafetyHold(
-                req.getContentType(), req.getContentId(), req.getMemberId(), riskLevel, req.getSnapshot());
+                req.getContentType(), req.getContentId(), req.getMemberId(), riskLevel,
+                withGateReason(req.getSnapshot(), reasonCode, riskLevel));
         logger.info("UGC门禁 HOLD contentType={} id={} reason={} auditTaskId={}",
                 req.getContentType(), req.getContentId(), reasonCode, taskId);
         return SafetyDecision.hold(reasonCode, taskId);
+    }
+
+    /**
+     * 把门禁裁决原因写进审核单快照的 {@code _gate} 键,审核员才能看到「为什么被拦」(免 DDL)。
+     * 快照是 JSON 对象就原地追加;为空则新建;不是对象(数组/非法 JSON)则原样放进 {@code _raw},不丢内容。
+     */
+    static String withGateReason(String snapshot, String reasonCode, String riskLevel) {
+        ObjectNode gate = JSON.createObjectNode();
+        gate.put("reasonCode", reasonCode);
+        gate.put("riskLevel", riskLevel);
+        ObjectNode root = null;
+        if (snapshot != null && !snapshot.trim().isEmpty()) {
+            try {
+                JsonNode parsed = JSON.readTree(snapshot);
+                if (parsed instanceof ObjectNode) root = (ObjectNode) parsed;
+            } catch (Exception ignored) {
+                // 非法 JSON 走下面的 _raw 兜底
+            }
+            if (root == null) {
+                root = JSON.createObjectNode();
+                root.put("_raw", snapshot);
+            }
+        } else {
+            root = JSON.createObjectNode();
+        }
+        root.set("_gate", gate);
+        try {
+            return JSON.writeValueAsString(root);
+        } catch (Exception e) {
+            return snapshot;
+        }
     }
 }

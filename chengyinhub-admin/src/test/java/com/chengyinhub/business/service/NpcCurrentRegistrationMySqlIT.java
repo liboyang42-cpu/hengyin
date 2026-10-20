@@ -50,7 +50,7 @@ class NpcCurrentRegistrationMySqlIT {
                 try (SqlSession session = factory.openSession(true)) {
                     Connection db = session.getConnection();
                     assertEquals(schema, db.getCatalog());
-                    execute(db, "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT, end_date DATETIME(6))");
+                    execute(db, "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT, end_date DATETIME(6), cancel_time DATETIME(6))");
                     execute(db, "CREATE TABLE cms_registration (id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                             + "member_id BIGINT, owner_type INT, owner_id BIGINT, payment_status INT, "
                             + "registration_status INT, purchase_kind INT, expires_at DATETIME(6), pay_expire_time DATETIME(6))");
@@ -125,6 +125,11 @@ class NpcCurrentRegistrationMySqlIT {
                         assertEquals(0, mapper.hasCurrentNpcRegistration(21L, 31L), "Same-session uncached read sees newly ended activity");
                         execute(db, "UPDATE cms_activity SET end_date=NOW()+INTERVAL 1 DAY WHERE id=61");
                         assertEquals(1, mapper.hasCurrentNpcRegistration(21L, 31L), "A future end restores eligibility without replacing the order");
+                        execute(db, "UPDATE cms_activity SET cancel_time=NOW() WHERE id=61");
+                        assertEquals(0, mapper.hasCurrentNpcRegistration(21L, 31L), "Cancelled explore activity loses NPC eligibility before its end");
+                        assertEquals(1, mapper.hasPaidRegistration(21L, 2, 61L), "Shared paid/history predicate stays unchanged on cancellation");
+                        execute(db, "UPDATE cms_activity SET cancel_time=NULL WHERE id=61");
+                        assertEquals(1, mapper.hasCurrentNpcRegistration(21L, 31L), "Same-session uncached read observes cancellation being cleared");
                     } finally {
                         execute(db, "SET timestamp = 0");
                     }

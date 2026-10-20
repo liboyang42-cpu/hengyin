@@ -29,6 +29,7 @@ function harness(relativePath, kind) {
     setUserRole() {},
     getImgUrl(value) { return value || ''; },
   };
+  if (relativePath === 'subpackageA/pages/myproject/index.js' || relativePath === 'subpackageMember/components/cy/profile/index.js') app.getAuthorization = () => 'current-session';
   global.getApp = () => app;
   global.wx = {
     getStorageSync() { return ''; },

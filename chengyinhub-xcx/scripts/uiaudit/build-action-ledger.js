@@ -31,6 +31,7 @@ const {
   maskJavaScriptComments,
   matchBrace,
   resolveRequireFile,
+  parseJavaScript,
 } = require('../lib/xcx-scan')
 const { readAppRoutes } = require('./build-route-matrix')
 const { CONTRACT: ROAM_REVOKE_CONTRACT } = require('./roam-revocation-evidence')
@@ -279,6 +280,25 @@ function withdrawSubmitVariant(handler) {
 }
 
 const ACTION_VARIANTS = new Map([
+  // 清本机失败不联网；成功后只作废本人分享，不发布或读取快照。重复确认会再次幂等作废。
+  ['pages/roam/index.js:confirmClearRoamLocal', [{
+    id: null, handler: 'confirmClearRoamLocal',
+    apis: ['/api/roam/share/revoke'], writeApis: ['/api/roam/share/revoke'],
+    effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' }],
+    requiredBranches: ['success', 'error', 'timeout', 'clear-local-failed', 'duplicate-trigger'],
+    requiredRequestsByBranch: {
+      'clear-local-failed': [],
+      'duplicate-trigger': [
+        { urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' },
+      ],
+    },
+    requiredRequestOutcomes: {
+      success: ['success'], error: ['error'], timeout: ['timeout'],
+      'clear-local-failed': [], 'duplicate-trigger': ['success', 'success'],
+    },
+  }]],
   // 集合签到的主事务是本次GPS→arrive；team-progress是独立权威回读。
   // 生命周期/随后展示刷新不是再次签到，不能把整页所有玩法SDK都要求为本次签到成功。
   ['pages/play/index.js:leadArrive', [{
@@ -1488,6 +1508,67 @@ function expandModuleFunction(file, name, seen) {
   return parts.join('\n')
 }
 
+// Narrow only proven flat CommonJS namespaces; unresolved exports/aliases keep the conservative full module.
+function namespaceDependencySource(file, aliases, source, inlineExports) {
+  const full = fs.readFileSync(file, 'utf8')
+  const code = maskNonCodeSafely(source)
+  const called = new Set(inlineExports || [])
+  for (const alias of aliases) {
+    const pattern = new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}\\b`, 'g')
+    for (const reference of code.matchAll(pattern)) {
+      const call = code.slice(reference.index + alias.length).match(/^\.([A-Za-z_$][\w$]*)\s*\(/)
+      if (!call) return full
+      called.add(call[1])
+    }
+  }
+  if (!called.size) return full
+  let ast
+  try { ast = parseJavaScript(full) } catch (error) {
+    if (error.name === 'SyntaxError') return full
+    throw error
+  }
+  const bodies = moduleFunctionBodies(file)
+  const functions = new Set()
+  let exportsObject
+  for (const statement of ast.body) {
+    if (statement.type === 'FunctionDeclaration' && statement.id) {
+      if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
+      functions.add(statement.id.name)
+      continue
+    }
+    if (statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && init && init.type === 'CallExpression' && init.callee.name === 'require'
+      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) continue
+    const expression = statement.type === 'ExpressionStatement' && statement.expression
+    if (expression && expression.type === 'Literal' && expression.value === 'use strict') continue
+    if (!exportsObject && expression && expression.type === 'AssignmentExpression' && expression.operator === '='
+        && expression.left.type === 'MemberExpression' && !expression.left.computed
+        && expression.left.object.name === 'module' && expression.left.property.name === 'exports'
+        && expression.right.type === 'ObjectExpression') {
+      exportsObject = expression.right
+      continue
+    }
+    return full
+  }
+  if (!exportsObject || exportsObject.properties.some(property => property.type !== 'Property'
+      || property.computed || property.kind !== 'init' || property.key.type !== 'Identifier'
+      || property.value.type !== 'Identifier' || property.key.name !== property.value.name
+      || !functions.has(property.value.name))) return full
+  const exported = new Set(exportsObject.properties.map(property => property.key.name))
+  if ([...called].some(name => !exported.has(name))) return full
+  const selected = [...called].map(name => expandModuleFunction(file, name)).join('\n')
+  const selectedCode = maskNonCodeSafely(selected)
+  // Passing a local helper as a callback/alias is not a proven direct-call closure.
+  for (const name of functions) {
+    const pattern = new RegExp(`\\b${name.replace(/[$]/g, '\\$&')}\\b`, 'g')
+    for (const reference of selectedCode.matchAll(pattern)) {
+      if (selectedCode[reference.index - 1] === '.'
+          || !/^\s*\(/.test(selectedCode.slice(reference.index + name.length))) return full
+    }
+  }
+  return selected
+}
+
 /** `const { a } = require('x')` 与 `const ns = require('x')` 两种绑定。 */
 function requireBindings(src, dir) {
   const named = new Map()
@@ -2046,7 +2127,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     if (listName === 'recommendedTopicList') targets.apis.push('/api/topic/list')
     if (listName === 'nearbyActivityList' || listName === 'upcomingActivityList') targets.apis.push('/api/activity/list')
   }
-  const appendDependencyTargets = (scanFile) => {
+  const appendDependencyTargets = (scanFile, inlineSource) => {
     const jsSource = fs.readFileSync(scanFile, 'utf8')
     const dependencies = []
     for (const match of jsSource.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"]([^'"]+)['"]\)/g)) {
@@ -2060,8 +2141,14 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         request: match[2],
       })
     }
-    dependencies.forEach(({ names, request, namedImports }) => {
-      if (!names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
+    const inlineCode = maskNonCodeSafely(inlineSource)
+    for (const match of inlineSource.matchAll(/\brequire\(\s*['"]([^'"]+)['"]\s*\)\.([A-Za-z_$][\w$]*)\s*\(/g)) {
+      if (inlineCode.slice(match.index).startsWith('require')) {
+        dependencies.push({ names: [], request: match[1], inlineExports: [match[2]] })
+      }
+    }
+    dependencies.forEach(({ names, request, namedImports, inlineExports }) => {
+      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
@@ -2074,7 +2161,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
           submitAction: ['/api/game/session/command', 'POST'],
           readReceipt: ['/api/game/session/receipt', 'GET'],
         }
-        const called = new Set()
+        const called = new Set(inlineExports || [])
         if (namedImports) {
           namedImports.forEach((parts) => {
             const alias = parts.at(-1).replace(/[$]/g, '\\$&')
@@ -2137,14 +2224,18 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         })
         return
       }
-      const dependencyTargets = extractTargets(fs.readFileSync(path.join(ROOT, dependency), 'utf8'))
+      const dependencyFile = path.join(ROOT, dependency)
+      const dependencyTargets = extractTargets(namedImports ? fs.readFileSync(dependencyFile, 'utf8')
+        : namespaceDependencySource(dependencyFile, names, expandedSource, inlineExports))
       targets.routes.push(...dependencyTargets.routes)
       targets.apis.push(...dependencyTargets.apis)
       targets.apiContracts.push(...dependencyTargets.apiContracts)
     })
   }
-  appendDependencyTargets(jsFile)
-  if (appHelperCalls(source, appHelperBodies).length) appendDependencyTargets(path.join(ROOT, 'app.js'))
+  appendDependencyTargets(jsFile, source)
+  const calledAppHelpers = appHelperCalls(source, appHelperBodies)
+  if (calledAppHelpers.length) appendDependencyTargets(path.join(ROOT, 'app.js'),
+    calledAppHelpers.map(([, body]) => body).join('\n'))
   targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
   targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
   if (!/['"]\/api\/compliance\/consents\/latest['"]/.test(source)

@@ -102,7 +102,8 @@ function runBackCase(spec, stackLength, transform = (source) => source) {
   assert.ok(methods[spec.handler], `${spec.file} 缺少 ${spec.handler}`)
   const context = Object.assign({
     data: Object.assign({ previewVisible: false, mode: 'form', step: 1, clubId: 7 }, spec.data),
-    setData(patch) { Object.assign(this.data, patch) },
+    // 与真机一致:setData 第二参是渲染后回调(券编辑页离场先关返回守卫再导航)
+    setData(patch, callback) { Object.assign(this.data, patch); if (typeof callback === 'function') callback.call(this) },
     refreshStep() {},
     destroyPreviewAudio() {},
   }, spec.instance, methods)

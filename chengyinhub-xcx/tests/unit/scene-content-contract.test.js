@@ -74,7 +74,9 @@ test('集邮册场景复用真实分页接口与失败/空态互斥，不用静�
   assert.equal(hostJson.usingComponents['cy-scene-roam-stamp-album'], '/components/cy/scene-roam-stamp-album/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'roam-stamp-album'/)
   assert.match(hostWxml, /<cy-scene-roam-stamp-album[^>]*bind:camera="openStampCamera"[^>]*bind:close="closeScene"/)
-  assert.match(componentJs, /url: '\/api\/roam\/stamp\/list'/)
+  // 集邮册「我的 / 收到的」两个 tab 各用一个字面量路径(UI-GATE 要求请求路径可枚举)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/list'/)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/received'/)
   assert.match(componentJs, /pageSize: 50/)
   // 2026-09-10 漫游四模式脱离小程序 DS:集邮册整屏照原型 f-sticker 重做成三列方格,
   //   「收藏夹合上/展开 + 散落票面」(Figma 220:1388)整套退场。
@@ -127,7 +129,7 @@ test('任务场景复用官方活动与我的活动接口，详情打开官方�
   // 3-18:行是 official_event,不能进查 cms_activity 的 play-activity-detail
   assert.match(componentJs, /triggerEvent\('official'/)
   assert.match(hostWxml, /<cy-scene-roam-task-list[^>]*bind:official="openOfficialEvent"/)
-  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ e\.detail\.id/)
+  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ const id = e && e\.detail && e\.detail\.id; if \(!id \|\| this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ id/)
   assert.doesNotMatch(componentJs, /id: 'play-activity-detail'/)
   assert.match(componentWxml, /state === 'loading'/)
   assert.match(componentWxml, /活动列表没能打开/)
@@ -349,7 +351,7 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
 function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, appJson) {
   assert.match(
     profileJs,
-    /goCoupon: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index' \}\); \}/,
+    /goCoupon: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '个人页优惠券入口必须打开玩家券夹，不能进入商家发券管理页',
   )
   assert.match(
@@ -365,7 +367,7 @@ function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, 
   )
   assert.match(
     profileJs,
-    /goComplaint: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index' \}\); \}/,
+    /goComplaint: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '投诉建议必须进入完整投诉页',
   )
 }

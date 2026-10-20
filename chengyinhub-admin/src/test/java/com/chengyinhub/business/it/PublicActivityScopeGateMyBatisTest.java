@@ -146,7 +146,7 @@ class PublicActivityScopeGateMyBatisTest {
         st.execute("CREATE TABLE club (id BIGINT PRIMARY KEY, del_flag INT)");
         st.execute("DROP TABLE IF EXISTS cms_topic");
         st.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, club_id BIGINT, product_type INT, del_flag INT,"
-                + " team_mode INT, team_max_members INT)");
+                + " status INT, user_status INT, team_mode INT, team_max_members INT)");
         st.execute("INSERT INTO club (id, del_flag) VALUES (700, 0)");
     }
 

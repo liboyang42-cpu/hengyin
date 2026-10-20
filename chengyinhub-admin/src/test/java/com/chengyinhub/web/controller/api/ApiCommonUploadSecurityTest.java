@@ -618,6 +618,108 @@ class ApiCommonUploadSecurityTest
         assertTrue(Files.exists(outside));
     }
 
+    @Test
+    void localSingleMissingSecurityReturnsHttp503WithoutWritingOrReturningUrl(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService());
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(multipart("/api/common/upload").file(png("image.png", 160, 90)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value(503))
+                .andExpect(jsonPath("$.url").doesNotExist());
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localSingleRejectedImageReturnsHttp400WithoutWritingOrReturningUrl(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> { throw new UploadRejectedException("图片包含违规内容"); }));
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(multipart("/api/common/upload").file(png("image.png", 160, 90)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.url").doesNotExist());
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchUnavailableOnSecondImageNeverWritesAnEarlierImage(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> {
+                    assertNoLocalFiles(tempDir);
+                    if (reviews.incrementAndGet() == 2)
+                        throw new UploadSecurityUnavailableException("安全检查服务异常，请稍后重试");
+                }));
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertServiceUnavailable(response);
+        assertEquals(2, reviews.get());
+        assertFalse(response.getBody().containsKey("urls"));
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchRejectedSecondImageNeverWritesAnEarlierImage(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> {
+                    assertNoLocalFiles(tempDir);
+                    if (reviews.incrementAndGet() == 2)
+                        throw new UploadRejectedException("图片包含违规内容");
+                }));
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getBody().get(AjaxResult.CODE_TAG));
+        assertEquals(2, reviews.get());
+        assertFalse(response.getBody().containsKey("urls"));
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchApprovesEverySanitizedImageOnceBeforeAnyFileIsWritten(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> { assertNoLocalFiles(tempDir); reviews.incrementAndGet(); }));
+
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, reviews.get());
+        assertTrue(containsUploadedFile(tempDir));
+        assertEquals(2, String.valueOf(response.getBody().get("urls")).split(",").length);
+    }
+
+    private void assertNoLocalFiles(Path directory)
+    {
+        try { assertFalse(containsUploadedFile(directory), "all image approvals must precede the first write"); }
+        catch (IOException e) { throw new AssertionError(e); }
+    }
+
     private boolean containsUploadedFile(Path uploadDirectory) throws IOException
     {
         if (!Files.exists(uploadDirectory))
@@ -642,6 +744,9 @@ class ApiCommonUploadSecurityTest
         ServerConfig serverConfig = mock(ServerConfig.class);
         when(serverConfig.getUrl()).thenReturn("https://example.test");
         ReflectionTestUtils.setField(controller, "serverConfig", serverConfig);
+        // Explicit approved-image fixture; production constructors still require real content security.
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult, file -> { }));
         return controller;
     }
 

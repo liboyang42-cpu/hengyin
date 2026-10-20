@@ -941,7 +941,7 @@
           <text class="node-badge">{{img.list(nodesForm.imgUrl).length}}/9</text>
         </view>
         <view class="pgrid">
-          <block wx:for="{{img.list(nodesForm.imgUrl)}}" wx:key="*this" wx:for-item="p" wx:for-index="pi">
+          <block wx:for="{{img.list(nodesForm.imgUrl)}}" wx:key="index" wx:for-item="p" wx:for-index="pi">
             <view class="pgrid-cell">
               <image lazy-load="true" class="pgrid-cell-img" src="{{p}}" mode="aspectFill" />
               <view class="pgrid-del" catchtap="removeNodePhoto" data-imgindex="{{pi}}" aria-role="button" aria-label="删除节点照片 {{pi + 1}}" hover-class="cy-pressed" hover-stay-time="80">

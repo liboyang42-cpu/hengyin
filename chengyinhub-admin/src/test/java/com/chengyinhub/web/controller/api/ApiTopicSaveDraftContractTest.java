@@ -73,6 +73,7 @@ class ApiTopicSaveDraftContractTest {
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
         when(security.checkText(anyString(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
+        TopicContentSafetyTestFixtures.wire(controller, security);
         // RUN-52 发布者实名:本用例测的是草稿/发布两条路的创意广场同步契约,实名闸在这里放行
         // (mock 的 checkRegistered 返回 null = 已登记)。
         ReflectionTestUtils.setField(controller, "memberIdentityService",

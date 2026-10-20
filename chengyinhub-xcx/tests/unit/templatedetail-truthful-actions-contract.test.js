@@ -31,6 +31,7 @@ function loadPage(options = {}) {
     setNavigationBarColor() {},
     setBackgroundColor() {},
     navigateTo(navigation) { navigations.push(navigation); if (!options.deferNavigation && navigation.success) navigation.success() },
+    switchTab(navigation) { navigations.push(navigation) },
     getAccountInfoSync: () => ({ miniProgram: { envVersion: 'release' } }),
     nextTick: (done) => { if (options.deferTicks) nextTicks.push(done); else done() },
     createSelectorQuery: () => ({
@@ -53,7 +54,7 @@ function loadPage(options = {}) {
 }
 
 function reply(request, title) {
-  request.success({ code: 200, data: { id: request.data.id, title } })
+  request.success({ code: 200, data: { id: request.data.id, title, canEdit: request.url === '/api/template/myinfo' } })
   request.complete()
 }
 
@@ -157,6 +158,7 @@ test('return from own editor refreshes the same personal template once', () => {
 test('merchant own editor keeps its existing route and reload scope', () => {
   const h = loadPage()
   h.page.onLoad({ id: '8', scope: 'my', operationScope: 'MERCHANT' })
+  reply(h.requests[0], 'owned merchant template')
   h.page.goPrimary()
   assert.equal(h.navigations[0].url, '/pages/publish/temp/index?id=8&scope=MERCHANT&templateScope=my')
   h.page.onShow()
@@ -167,6 +169,7 @@ test('merchant own editor keeps its existing route and reload scope', () => {
 test('failed or stale editor navigation does not arm a later unrelated refresh', () => {
   const h = loadPage({ deferNavigation: true })
   h.page.onLoad({ id: '8', scope: 'my' })
+  reply(h.requests[0], 'owned template')
   h.page.goPrimary()
   h.page.onShow()
   assert.equal(h.requests.length, 1)
@@ -176,6 +179,7 @@ test('failed or stale editor navigation does not arm a later unrelated refresh',
   assert.equal(h.requests.length, 2)
   h.page.onShow()
   assert.equal(h.requests.length, 2)
+  reply(h.requests[1], 'new account owned template')
   h.page.goPrimary()
   h.page.onUnload()
   h.navigations[1].success()

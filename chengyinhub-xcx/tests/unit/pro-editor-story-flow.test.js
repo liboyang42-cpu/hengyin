@@ -2,7 +2,7 @@ const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
 const storyFlow = require('../../pages/publish/utils/publish/pro-editor-story.js')
-const draftStore = require('../../utils/publish/pro-editor-draft.js')
+const draftStore = require('../../pages/publish/utils/publish/pro-editor-draft.js')
 
 const PAGE = '../../pages/publish/fabu/index.js'
 let pageConfig
@@ -460,7 +460,7 @@ test('A13：删除节点后一次 storage 写入,且删掉的节点不在信封�
 
   page.removeStoryNode({ currentTarget: { dataset: { blockkey: 'node-block' } } })
 
-  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' })]
+  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' }, 42)]
   assert.equal(envelope.baseRevision, 'server-v1')
   assert.deepEqual(envelope.chapters, page.data.formData.chapters)
   assert.deepEqual(envelope.pendingMaterials, page.data.pendingMaterials)

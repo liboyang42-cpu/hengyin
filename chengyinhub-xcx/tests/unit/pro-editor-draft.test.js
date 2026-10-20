@@ -9,7 +9,7 @@ const {
   rememberActiveNewDraft,
   removeDraft,
   saveDraft,
-} = require('../../utils/publish/pro-editor-draft.js')
+} = require('../../pages/publish/utils/publish/pro-editor-draft.js')
 
 function makeStorage() {
   const values = Object.create(null)
@@ -26,6 +26,7 @@ function makeStorage() {
 function input(over) {
   return Object.assign({
     memberId: 42,
+    operationScope: '',
     draftUuid: 'draft-a',
     baseRevision: '',
     formData: { name: '河畔路线', chapters: [{ name: '第一章', nodes: [] }] },
@@ -61,6 +62,7 @@ test('一次同步写入完整草稿信封，章节与待编排素材来自同�
   assert.equal(envelopeWrites.length, 1, '完整信封必须一次 setStorageSync 原子写入')
   assert.deepEqual(envelopeWrites[0].value, {
     memberId: 42,
+    operationScope: '',
     draftUuid: 'draft-a',
     baseRevision: '',
     formData: source.formData,
@@ -75,7 +77,8 @@ test('一次同步写入完整草稿信封，章节与待编排素材来自同�
 
 test('恢复前校验 memberId，绝不把 A 的草稿恢复给 B', () => {
   const storage = makeStorage()
-  saveDraft(storage, input({ memberId: 7 }))
+  const legacySource = saveDraft(storage, input({ memberId: 7 }))
+  storage.values[draftKeyFor({ draftUuid: 'draft-a' })] = storage.values[legacySource]
 
   const result = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 8 })
   assert.equal(result.status, 'member_mismatch')
@@ -96,6 +99,8 @@ test('编辑既有主题时 baseRevision 不一致必须返回冲突而非静默
 
 test('活跃新草稿指针按账号隔离，删除草稿会同时清掉当前账号指针', () => {
   const storage = makeStorage()
+  saveDraft(storage, input({ memberId: 1, draftUuid: 'draft-one' }))
+  saveDraft(storage, input({ memberId: 2, draftUuid: 'draft-two' }))
   rememberActiveNewDraft(storage, 1, 'draft-one')
   rememberActiveNewDraft(storage, 2, 'draft-two')
   assert.equal(readActiveNewDraft(storage, 1), 'draft-one')
@@ -106,4 +111,15 @@ test('活跃新草稿指针按账号隔离，删除草稿会同时清掉当前�
   assert.equal(loadDraft(storage, { draftUuid: 'draft-one' }, { memberId: 1 }).status, 'missing')
   assert.equal(readActiveNewDraft(storage, 1), '')
   assert.equal(readActiveNewDraft(storage, 2), 'draft-two')
+})
+
+test('UNKNOWN marker roundtrips without extra payload fields and remains account fenced', () => {
+  const storage = makeStorage()
+  saveDraft(storage, input({ publishAttempt: { status: 'UNKNOWN', topicId: 77, token: 'discard' } }))
+  const restored = loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 })
+  assert.deepEqual(restored.envelope.publishAttempt, { status: 'UNKNOWN', topicId: '77' })
+  storage.values[draftKeyFor({ draftUuid: 'draft-a' })] = restored.envelope
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 43 }).status, 'member_mismatch')
+  saveDraft(storage, input())
+  assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.publishAttempt, undefined)
 })

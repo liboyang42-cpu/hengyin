@@ -36,6 +36,15 @@ public interface IOfficialEventService
     /** 白名单发布:建活动(按时间定初始 status)。 */
     OfficialEvent publish(OfficialEvent e, Long senderAccount);
 
+    /**
+     * 白名单轻发布(2026-10-20 先审后发):建活动为待审(status=0 + control_state=PENDING_REVIEW,不公开),
+     * 同事务建 OFFICIAL_EVENT 审核单;审核台通过后 {@link #applyAuditDecision} 上架。
+     */
+    OfficialEvent submitForReview(OfficialEvent e, Long senderAccount);
+
+    /** 审核台裁决回写(V1/V2 统一入口):approved=true 上架,false 保持不公开。状态已变化抛 ServiceException。 */
+    void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId);
+
     List<OfficialEvent> listBySender(Long senderAccount);
 
     /** 后台:按条件列出全部活动。 */

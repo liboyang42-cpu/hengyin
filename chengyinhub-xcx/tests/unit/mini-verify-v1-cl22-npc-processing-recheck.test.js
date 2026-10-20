@@ -6,7 +6,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const COMPONENT_PATH = require.resolve('../../components/cy/npc-chat/index.js');
+const COMPONENT_PATH = require.resolve('../../subpackageMember/components/cy/npc-chat/index.js'); // 本线已把 npc-chat 移进会员分包
 
 function loadChat(sendRequest) {
   let definition;

@@ -92,3 +92,7 @@
   font-size: var(--cy-type-caption);
   text-align: center;
 }
+/* BL-06 角色说明 / 暂停提示;第三项(承接名额)出现时允许换行 */
+.oi-scope { flex-wrap: wrap; }
+.oi-role-note { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
+.oi-paused { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-primary); }

@@ -23,13 +23,13 @@ public class CmsTemplateLibraryServiceImpl implements ICmsTemplateLibraryService
     private CmsTemplateLibraryMapper cmsTemplateLibraryMapper;
 
     /**
-     * 模板市场热度:被引用发布一次 use_num +1(原子自增)。
+     * 模板市场热度:会员首次引用发布 use_num +1(原子自增,按会员幂等)。
      * 调用点在 TemplatePublishServiceImpl —— 「从模板起草→发布」链路带 originalTemplateId 时计数。
      */
     @Override
-    public int incrementUseNum(Long id)
+    public int incrementUseNumOnFirstAdoption(Long libraryId, Long memberId, Long memberTemplateId)
     {
-        return cmsTemplateLibraryMapper.incrementUseNum(id);
+        return cmsTemplateLibraryMapper.incrementUseNumOnFirstAdoption(libraryId, memberId, memberTemplateId);
     }
 
     /**

@@ -46,7 +46,11 @@ public interface IOfficialEventV2Service {
     /** 仅本场已接受的官方主办/协办关系成员可读取受控发布检查。 */
     boolean canManage(Long eventId, Long memberId);
 
+    /** 提交排期:白名单 + 结构化发布检查 + 文本门禁通过后进入待审(PENDING_REVIEW),审核通过才真正排期。 */
     String schedule(Long eventId, Long operatorId);
+
+    /** 审核台裁决:approved=true → 复核发布检查后进入已排期;false → 退回草稿(不公开,可修改后重提)。 */
+    void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId);
 
     String signup(Long eventId, Long memberId);
 

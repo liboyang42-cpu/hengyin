@@ -6,6 +6,7 @@ const app = getApp()
 const { isRecord, isRecordList, bizFailureMessage } = require('../../../../utils/response-shape.js')
 
 const { validationMethodLabel } = require('../../../../utils/validation-method-labels.js')
+const mediaPreview = require('../../../../utils/media-preview.js')
 const VALIDATION_METHODS = [1, 2, 3, 4, 5]
 
 function nonEmptyString(value) {
@@ -201,7 +202,7 @@ Component({
     retry() { this._load() },
     previewGallery(event) {
       const current = event.currentTarget.dataset.src
-      if (current && wx.previewImage) wx.previewImage({ current, urls: this.data.gallery || [current] })
+      if (current) mediaPreview.open(this.data.gallery || [current], current)
     },
     toggleFavorite() {
       if (this.data.favoriteBusy || !this.data.poiId) return

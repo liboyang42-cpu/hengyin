@@ -17,7 +17,8 @@ function harness(patch = {}) {
   const page = { data: { ...definition.data, activityId: 100, lead: { exists: true }, ...patch }, setData() {} };
   // Unrelated lifecycle effects are outside this action's test; run the actual hide/unload fence.
   for (const [name, value] of Object.entries(definition)) if (typeof value === 'function') page[name] = () => {};
-  for (const name of ['leadArrive', 'onHide', 'onUnload']) page[name] = definition[name];
+  for (const name of ['leadArrive', 'onHide', 'onUnload', '_playMember', '_boundPlayOwner', '_isPlayAccountCurrent']) page[name] = definition[name];
+  page._boundPlayOwner(); // 正常进页先绑定账号；不能把新增账号守卫替换成无返回值的noop。
   page.diegetic = text => hints.push(text); let refreshes = 0;
   page.loadTeamProgress = () => { refreshes++; };
   return { page, dialogs, locations, requests, hints, app, get refreshes() { return refreshes; },
@@ -88,4 +89,9 @@ test('访客、演示身份、预览、mock和未指定场次不启动定位', (
   }
   let h = harness(); h.member(0); h.page.leadArrive(); assert.equal(h.dialogs.length, 0);
   h = harness(); h.token('dev-token'); h.page.leadArrive(); assert.equal(h.dialogs.length, 0);
+});
+
+test('已绑定A的旧游玩页切为B，点击集合签到也不能启动用途说明或定位', () => {
+  const h = harness(); h.member(8); h.page.leadArrive();
+  assert.equal(h.dialogs.length, 0); assert.equal(h.locations.length, 0); assert.equal(h.requests.length, 0);
 });

@@ -50,9 +50,10 @@ class ContentSafetyGateImplTest {
         return r;
     }
 
-    /** 不设模式 = 入参默认值(POST_REVIEW) */
+    /** 先发后审请求:显式 POST_REVIEW(入参默认值已是 PRE_REVIEW,见 PublishSafetyRequestDefaultModeTest) */
     private PublishSafetyRequest postReq(String text) {
         PublishSafetyRequest r = new PublishSafetyRequest();
+        r.setReviewMode(PublishSafetyRequest.ReviewMode.POST_REVIEW.name());
         r.setContentType("SQUARE");
         r.setContentId(1L);
         r.setMemberId(100L);
@@ -161,8 +162,9 @@ class ContentSafetyGateImplTest {
     // ==================== 2026-10-20 分级审核:POST_REVIEW / PRE_REVIEW / EXEMPT ====================
 
     @Test
-    void defaultReviewModeIsPostReview() {
-        assertEquals("POST_REVIEW", new PublishSafetyRequest().getReviewMode());
+    void defaultReviewModeIsPreReview() {
+        // AUDIT-INT-10:初值与门禁对空值/脏值的兜底一致,未设置 = 先审后发
+        assertEquals("PRE_REVIEW", new PublishSafetyRequest().getReviewMode());
     }
 
     @Test
@@ -304,5 +306,34 @@ class ContentSafetyGateImplTest {
         assertEquals("STRUCTURED_REVIEW", d.getReasonCode());
         assertEquals(null, d.getAuditTaskId());
         verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    /** AUDIT-G3-7:HOLD 建单时把门禁 reasonCode 落进快照 _gate,审核员能看到为什么被拦。 */
+    @Test
+    void hold_storesGateReasonInAuditSnapshot() {
+        when(wxSec.checkText(anyString(), anyString()))
+                .thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+        PublishSafetyRequest r = req("疑似风险内容");
+        r.setSnapshot("{\"contents\":\"疑似风险内容\"}");
+
+        gate.decide(r);
+
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), eq("NORMAL"), snapshot.capture());
+        com.alibaba.fastjson2.JSONObject root = com.alibaba.fastjson2.JSON.parseObject(snapshot.getValue());
+        assertEquals("疑似风险内容", root.getString("contents"));
+        assertEquals("TEXT_REVIEW", root.getJSONObject("_gate").getString("reasonCode"));
+        assertEquals("NORMAL", root.getJSONObject("_gate").getString("riskLevel"));
+    }
+
+    @Test
+    void gateReason_survivesMissingOrNonObjectSnapshot() {
+        assertEquals("MEDIA_PENDING", com.alibaba.fastjson2.JSON.parseObject(
+                ContentSafetyGateImpl.withGateReason(null, "MEDIA_PENDING", "NORMAL"))
+                .getJSONObject("_gate").getString("reasonCode"));
+        com.alibaba.fastjson2.JSONObject wrapped = com.alibaba.fastjson2.JSON.parseObject(
+                ContentSafetyGateImpl.withGateReason("[1,2]", "DETECT_ERROR", "HIGH"));
+        assertEquals("[1,2]", wrapped.getString("_raw"));
+        assertEquals("HIGH", wrapped.getJSONObject("_gate").getString("riskLevel"));
     }
 }

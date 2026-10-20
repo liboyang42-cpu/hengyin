@@ -25,12 +25,16 @@ function loadPage() {
   const backs = []
   const timers = []
   const clearedTimers = new Set()
+  const images = []
+  const masks = []
+  const session = { owner: 7, token: 'unit-session-a', nickname: '', avatar: '' }
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => 7,
-    setNickname() {}, setAvatar() {},
+    getUserID: () => session.owner,
+    getAuthorization: () => session.token,
+    setNickname(value) { session.nickname = value }, setAvatar(value) { session.avatar = value },
     tips() {},
-    chooseImage() {},
+    chooseImage(callback) { images.push(callback) },
     sendRequest(options) { requests.push(options) },
   }
   vm.runInNewContext(read('pages/gerenziliao/gerenziliao.js'), {
@@ -41,11 +45,12 @@ function loadPage() {
     require(request) {
       if (request === '../../utils/response-shape.js') return require('../../utils/response-shape.js')
       if (request === '../../utils/form-state.js') return require('../../utils/form-state.js')
+      if (request === './nickname-check.js') return require('../../pages/gerenziliao/nickname-check.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
-      hideLoading() {},
-      showLoading() {},
+      hideLoading() { masks.push('hide') },
+      showLoading() { masks.push('show') },
       showToast(options) { toasts.push(options) },
       navigateBack(options) { backs.push(options || {}) },
     },
@@ -59,7 +64,7 @@ function loadPage() {
     applyPatch(this.data, patch)
     if (callback) callback()
   }
-  return { page, requests, toasts, backs, timers, clearedTimers }
+  return { page, requests, toasts, backs, timers, clearedTimers, session, images, masks }
 }
 
 function assertStateContract(wxml, jsonText) {
@@ -257,3 +262,216 @@ test('正常资料刷新更新原始name快照，失败刷新不得覆盖快照'
   h.page.saveInfo()
   assert.equal(Object.hasOwn(JSON.parse(h.requests[4].data), 'name'), false)
 })
+
+test('profile identity change clears old private draft before the new owner can save', () => {
+  const h = loadPage()
+  h.page.onLoad({})
+  h.requests[0].success({ code: 200, data: { name: 'owner-a', phone: '13800000000', avatar: 'avatar-a', introduction: 'private-a' } })
+  h.page.data.tempName = 'dirty-a'
+  h.page.data.tempWechat = 'private-qr-a'
+  if (h.page.onHide) h.page.onHide()
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.onShow()
+  assert.equal(h.page.data.userInfo.name, '')
+  assert.equal(h.page.data.userInfo.phone, '')
+  assert.equal(h.page.data.tempName, '')
+  assert.equal(h.page.data.tempWechat, '')
+  assert.equal(h.page.data.canSave, false)
+  h.page.saveInfo()
+  assert.equal(h.requests.filter(x => x.url === '/api/user/update').length, 0)
+  assert.equal(h.requests.length, 2, 'new owner gets one fresh read')
+  h.requests[1].success({ code: 200, data: { name: 'owner-b' } })
+  assert.equal(h.page.data.userInfo.name, 'owner-b')
+})
+
+test('same owner token renewal keeps the normal draft and successful save', () => {
+  const h = loadPage()
+  h.page.onLoad({})
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.data.userInfo.name = 'edited-a'
+  h.page.data.userInfo.introduction = 'unsaved-draft'
+  if (h.page.onHide) h.page.onHide()
+  h.session.token = 'unit-session-a-renewed'
+  h.page.onShow()
+  assert.equal(h.page.data.userInfo.introduction, 'unsaved-draft')
+  assert.equal(h.requests.length, 1)
+  h.page.saveInfo()
+  h.requests[1].success({ code: 200 })
+  assert.equal(h.session.nickname, 'edited-a')
+  assert.equal(h.page.data.saveSucceeded, true)
+})
+
+test('old saved-page timer cannot navigate a new identity or a later lifecycle', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.saveInfo()
+  h.requests[1].success({ code: 200 })
+  assert.equal(h.timers.length, 1)
+  if (h.page.onHide) h.page.onHide()
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.onShow()
+  h.timers[0].callback()
+  assert.deepEqual(h.backs, [])
+})
+
+test('old image-picker callbacks are rejected after an observed A to B to A change', () => {
+  const h = loadPage()
+  h.page.onLoad({})
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.uploadPic()
+  h.page.uploadWechat()
+  h.page.uploadCasePics()
+  if (h.page.onHide) h.page.onHide()
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.onShow()
+  if (h.page.onHide) h.page.onHide()
+  Object.assign(h.session, { owner: 7, token: 'unit-session-a-new-login' })
+  h.page.onShow()
+  h.images[0](['old-avatar-a'])
+  h.images[1](['old-qr-a'])
+  h.images[2](['old-case-a'])
+  assert.equal(h.page.data.userInfo.avatar, '')
+  assert.equal(h.page.data.tempWechat, '')
+  assert.equal(h.page.data.tempCasePics.length, 0)
+})
+
+test('normal same-owner image picker survives hide and applies only after return', () => {
+  const h = loadPage()
+  h.page.onLoad({})
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.uploadPic()
+  if (h.page.onHide) h.page.onHide()
+  h.session.token = 'unit-session-a-renewed'
+  h.images[0](['new-avatar-a'])
+  assert.equal(h.page.data.userInfo.avatar, '')
+  h.page.onShow()
+  assert.equal(h.page.data.userInfo.avatar, 'new-avatar-a')
+})
+
+test('hidden save settles its original response once without automatically sending a second write', () => {
+  const h = loadPage()
+  h.page.onLoad({})
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.data.userInfo.name = 'edited-a'
+  h.page.saveInfo()
+  if (h.page.onHide) h.page.onHide()
+  h.requests[1].success({ code: 200 })
+  assert.equal(h.page.data.saving, true)
+  assert.equal(h.session.nickname, '')
+  h.page.onShow()
+  assert.equal(h.page.data.saving, false)
+  assert.equal(h.session.nickname, 'edited-a')
+  assert.equal(h.requests.filter(x => x.url === '/api/user/update').length, 1)
+})
+
+test('identity changes before onShow cannot dispatch the previous owner draft', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: 'owner-a', phone: '13800000000' } })
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.saveInfo()
+  assert.equal(h.requests.length, 1)
+  assert.equal(h.page.data.userInfo.phone, '')
+  assert.equal(h.page.data.canSave, false)
+})
+
+test('same-owner hide/show invalidates only the old navigation and pending read', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  const oldRead = h.requests[0]
+  h.page.onHide()
+  h.page.onShow()
+  assert.equal(h.requests.length, 2)
+  h.requests[1].success({ code: 200, data: { name: 'new-visible-read' } })
+  oldRead.success({ code: 200, data: { name: 'old-hidden-read' } })
+  assert.equal(h.page.data.userInfo.name, 'new-visible-read')
+  h.page.saveInfo()
+  h.requests[2].success({ code: 200 })
+  h.page.onHide()
+  h.page.onShow()
+  const currentTimer = h.page._profileReturnTimer
+  h.timers[0].callback()
+  assert.deepEqual(h.backs, [])
+  assert.equal(h.page._profileReturnTimer, currentTimer, 'old timer cannot clear the new lifecycle handle')
+  assert.equal(h.timers.length, 2, 'saved receipt resumes its return without another save')
+  h.timers[1].callback()
+  assert.equal(h.backs.length, 1)
+})
+
+test('deferred phone or save response is cleared when the visible owner changes', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  h.page.getPhoneNumber({ detail: { errMsg: 'getPhoneNumber:ok', code: 'unit-phone-code' } })
+  h.page.saveInfo()
+  h.page.onHide()
+  h.requests[1].success({ code: 200, data: '13800000000' })
+  h.requests[2].success({ code: 200 })
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.onShow()
+  assert.equal(h.page.data.userInfo.phone, '')
+  assert.equal(h.page.data.saving, false)
+  assert.equal(h.page.data.saveSucceeded, false)
+  assert.equal(h.session.nickname, '')
+  assert.equal(h.timers.length, 0)
+  assert.equal(h.requests.filter(x => x.url === '/api/user/update').length, 1)
+})
+
+test('phone loading is released once on hide and an old response cannot close the next owner mask', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  const event = { detail: { errMsg: 'getPhoneNumber:ok', code: 'unit-phone-code' } }
+  h.page.getPhoneNumber(event)
+  h.page.getPhoneNumber(event)
+  assert.equal(h.requests.length, 2, 'the in-flight owned mask keeps phone binding single-flight')
+  h.page.onHide()
+  assert.deepEqual(h.masks, ['show', 'hide'])
+  Object.assign(h.session, { owner: 8, token: 'unit-session-b' })
+  h.page.onShow()
+  h.page.getPhoneNumber(event)
+  h.requests[1].success({ code: 200, data: '13800000000' })
+  assert.deepEqual(h.masks, ['show', 'hide', 'show'])
+  h.requests[3].success({ code: 200, data: '13900000000' })
+  assert.deepEqual(h.masks, ['show', 'hide', 'show', 'hide'])
+  assert.equal(h.page.data.userInfo.phone, '13900000000')
+})
+
+test('a private read without a matching loading show must not dismiss phone binding loading', () => {
+  const h = loadPage()
+  h.page.getUserData()
+  h.page.getPhoneNumber({ detail: { errMsg: 'getPhoneNumber:ok', code: 'unit-phone-code' } })
+  h.requests[0].success({ code: 200, data: { name: 'owner-a' } })
+  assert.deepEqual(h.masks, ['show'])
+  h.requests[1].fail()
+  assert.deepEqual(h.masks, ['show', 'hide'])
+})
+
+for (const transition of ['owner', 'hide']) {
+  test(`昵称查重和推荐在 ${transition} 后不写回旧账号`, () => {
+    for (const kind of ['check', 'suggest']) {
+      const h = loadPage()
+      h.page.getUserData()
+      h.requests[0].success({ code: 200, data: { name: '原昵称', phone: '' } })
+      h.page.openPop4()
+      h.page.data.tempName = '新昵称'
+      h.page._nicknameSeq = 3
+      if (kind === 'check') h.page.requestNicknameCheck('新昵称', 3)
+      else h.page.loadNicknameSuggestions('新昵称', false)
+      const pending = h.requests.at(-1)
+      if (transition === 'owner') {
+        h.session.owner = 8
+        h.session.token = 'unit-session-b'
+      } else h.page.onHide()
+      pending.success({ code: 200, data: { nickname: '旧账号推荐', available: false, cursor: 1 } })
+      assert.equal(h.requests.length, 2, '旧回复不继续触发下一轮推荐')
+      assert.equal(h.page.data.nicknameSuggestions.length, 0)
+      if (transition === 'owner') {
+        assert.equal(h.page.data.userInfo.name, '')
+        assert.equal(h.page.data.nicknameState, '')
+        assert.equal(h.page._savedName, undefined)
+      }
+    }
+  })
+}

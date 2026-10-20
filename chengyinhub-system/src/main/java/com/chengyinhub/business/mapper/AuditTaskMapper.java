@@ -18,7 +18,11 @@ public interface AuditTaskMapper {
     int cancelTopicPublicationTaskCas(@Param("id") Long id, @Param("version") Integer version);
     int cancelOpenTemplateTasks(@Param("bizType") String bizType, @Param("bizId") Long bizId);
 
+    /** 按 submitted_at desc 取历史(get(0)=最新一单),供内部状态源读取。 */
     List<AuditTask> selectAuditTaskList(AuditTask auditTask);
+
+    /** 工作台队列:deadline_at 升序(最紧急在前),无 deadline 垫底。 */
+    List<AuditTask> selectAuditTaskQueue(AuditTask auditTask);
 
     int insertAuditTask(AuditTask auditTask);
 
@@ -28,6 +32,10 @@ public interface AuditTaskMapper {
                                  @Param("assignee") Long assignee,
                                  @Param("version") Integer version,
                                  @Param("updateTime") Date updateTime);
+
+    /** 认领待审单:仅 status=0 且未被认领时生效,返回影响行数。 */
+    int claimAuditTask(@Param("id") Long id, @Param("assignee") Long assignee,
+                       @Param("updateTime") Date updateTime);
 
     int revertAuditTaskDecisionCas(@Param("id") Long id,
                                    @Param("expectedStatus") Integer expectedStatus,
@@ -41,6 +49,12 @@ public interface AuditTaskMapper {
                                @Param("submittedAt") Date submittedAt);
 
     AuditTask selectOpenAuditTaskForUpdate(@Param("bizType") String bizType, @Param("bizId") Long bizId);
+
+    /** 改写审核单快照(不看状态);举报成立下架前把下架前公开态并入举报单快照(AUDIT-INT-4)。 */
+    int updateTaskSnapshot(@Param("id") Long id, @Param("snapshotJson") String snapshotJson);
+
+    /** 按版本 CAS 撤销一张未结审核单(status → 4);用于作者改内容时撤回申诉单。 */
+    int cancelOpenAuditTaskCas(@Param("id") Long id, @Param("version") Integer version);
 
     int refreshOpenAuditSnapshot(@Param("id") Long id,
                                  @Param("bizType") String bizType,

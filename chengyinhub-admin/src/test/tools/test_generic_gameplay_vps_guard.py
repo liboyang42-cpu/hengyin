@@ -24,7 +24,7 @@ class VpsRunnerGuardTest(unittest.TestCase):
                 path.write_text(body)
                 path.chmod(0o700)
             environment = {key: value for key, value in os.environ.items()
-                           if not key.startswith("CHENGYIN_")}
+                           if not key.startswith(("CHENGYIN_", "GITHUB_", "RUNNER_"))}
             environment.update(settings)
             environment["PATH"] = str(root) + ":/usr/bin:/bin"
             result = subprocess.run(["/bin/bash", str(runner)], env=environment,
@@ -47,7 +47,7 @@ class VpsRunnerGuardTest(unittest.TestCase):
     def test_schema_execution_requires_explicit_vps_before_planning_or_mysql(self):
         schema = pathlib.Path(__file__).with_name("generic-gameplay-fresh-schema.py")
         environment = {key: value for key, value in os.environ.items()
-                       if not key.startswith("CHENGYIN_")}
+                       if not key.startswith(("CHENGYIN_", "GITHUB_", "RUNNER_"))}
         with tempfile.TemporaryDirectory() as directory:
             report = pathlib.Path(directory) / "report.json"
             result = subprocess.run([sys.executable, str(schema), "--execute", "--report", str(report)],

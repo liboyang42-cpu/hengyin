@@ -54,7 +54,14 @@ public interface ICommunityPostService {
     void readNotification(Long memberId, Long notificationId, String requestId);
     void feature(Long operatorUserId, Long postId, CommunityPostRequests.Featured request);
     void enforce(Long operatorUserId, Long postId, CommunityPostRequests.Enforcement request);
+    /** 评论下架处置(仅 REMOVE),返回处置 id。 */
+    Long enforceComment(Long operatorUserId, Long commentId, CommunityPostRequests.Enforcement request);
+    /** 举报单裁定违规后落处置并回指举报单(targetType = CONTENT / COMMENT),返回处置 id。 */
+    Long enforceReportedTarget(Long operatorUserId, Long reportCaseId, String targetType, Long targetId,
+                               CommunityPostRequests.Enforcement request);
     void reviewAppeal(Long operatorUserId, Long appealId, CommunityPostRequests.AppealReview request);
+    /** 审核员认领/打开申诉：SUBMITTED → REVIEWING(按 expectedVersion CAS)；本人重复打开幂等。 */
+    Map<String, Object> claimAppeal(Long operatorUserId, Long appealId, Integer expectedVersion);
     List<Map<String, Object>> enforcements(Long postId);
     Map<String, Object> appeals(String status, Long cursor, Integer limit);
     void applyAuditDecision(Long postId, boolean approved);

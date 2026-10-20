@@ -96,7 +96,7 @@ class E04_07Test {
 
     @Test void lockedHistoryMustStillMatchOriginalMemberTemplateAndLiveIdentity() {
         when(histories.selectCompletionRewardHistoryId(501L,700L)).thenReturn(41L);
-        SmsCouponHistory wrongMember = history(30L,999L,0); 
+        SmsCouponHistory wrongMember = history(30L,999L,0);
         SmsCouponHistory wrongCoupon = history(31L,501L,0);
         SmsCouponHistory deleted = history(30L,501L,0); deleted.setDelFlag(1);
         SmsCouponHistory wrongId = history(30L,501L,0); wrongId.setId(42L);

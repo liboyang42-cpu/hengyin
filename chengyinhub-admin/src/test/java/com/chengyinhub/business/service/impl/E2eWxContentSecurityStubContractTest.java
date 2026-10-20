@@ -72,6 +72,8 @@ class E2eWxContentSecurityStubContractTest {
         assertNull(stub.checkText("", "openid-e2e"));
         assertEquals("内容包含违规信息，请修改后重试", stub.checkText("含 E2E-SEC-REJECT 的正文", "openid-e2e"));
         assertEquals(IWxContentSecurityService.MSG_UNAVAILABLE, stub.checkText("正文", null));
+        assertEquals(IWxContentSecurityService.MSG_UNAVAILABLE, stub.checkText("正文", ""));
+        assertEquals(IWxContentSecurityService.MSG_UNAVAILABLE, stub.checkText("正文", " \t\n"));
         assertEquals(IWxContentSecurityService.MSG_UNAVAILABLE, stub(false).checkText("正文", "openid-e2e"));
     }
 

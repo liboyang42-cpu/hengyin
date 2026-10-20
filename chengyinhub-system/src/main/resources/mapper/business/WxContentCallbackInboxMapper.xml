@@ -81,6 +81,7 @@
             <when test="bizType == 4">select id from ums_member where id = #{bizId} for update</when>
             <when test="bizType == 5">select id from club where id = #{bizId} for update</when>
             <when test="bizType == 6">select id from mms_merchant where id = #{bizId} for update</when>
+            <when test="bizType == 8">select id from official_event where id = #{bizId} for update</when>
             <when test="bizType == 9">select id from ums_creative_square where id = #{bizId} for update</when>
             <when test="bizType == 10">select id from ums_comment where id = #{bizId} for update</when>
             <when test="bizType == 11">select id from roam_stamp where id = #{bizId} for update</when>

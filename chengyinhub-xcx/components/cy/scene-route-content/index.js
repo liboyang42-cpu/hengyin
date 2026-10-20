@@ -160,7 +160,7 @@ Component({
       this._loadToken = (this._loadToken || 0) + 1
       this._submitToken = (this._submitToken || 0) + 1
     },
-  },
+  }, pageLifetimes: { show() { this._navigating = false } },
 
   methods: {
     loadScene() {
@@ -339,7 +339,7 @@ Component({
       const id = item.id
       if (this.data.sceneId === 'member-order-history' && id) this.emitOpen('member-order-detail', { id })
       else if (this.data.sceneId === 'settings-how-to-play' && id) this.emitOpen('settings-how-to-play-detail', { id })
-      else if (this.data.sceneId === 'settings-likes' && id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      else if (this.data.sceneId === 'settings-likes' && id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
       else if (this.data.sceneId === 'merchant-citynode' && item.poiId) this.emitOpen('qr-citynode', { poiId: item.poiId, name: item.title })
     },
 
@@ -362,9 +362,9 @@ Component({
                 toast((res && res.msg) || '操作失败')
                 return
               }
-              const items = this.data.items.slice()
-              items.splice(index, 1)
-              this.setData({ items, state: items.length ? 'ready' : 'empty' })
+              // BL-190:按 id 移除，请求期间列表重载过也不会删错行
+              const items = this.data.items.filter((row) => !row || row.id !== item.id)
+              if (items.length !== this.data.items.length) this.setData({ items, state: items.length ? 'ready' : 'empty' })
               toast.success('取消点赞成功')
             },
             fail: () => toast('网络错误，请重试'),
@@ -401,7 +401,7 @@ Component({
     onNestedTransferOwner() {
       const clubId = this.data.params && (this.data.params.id || this.data.params.clubId)
       if (!clubId) return
-      wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId, complete: () => { this._navigating = false } })
     },
     onNestedDirtyChange(event) {
       this.triggerEvent('dirtychange', { dirty: !!(event.detail && event.detail.dirty) })

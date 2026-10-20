@@ -155,7 +155,7 @@ test('SC-TPL-OLD-BACKEND 对照:采用成功拿到草稿 id 后,保存只更新�
   const { editor, adoption } = openFromTemplateDetail()
   adoption.success({ code: 200, data: 9101 })
   requests.filter(r => r.url === '/api/template/myinfo').at(-1)
-    .success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, originalTemplateId: 16 }) })
+    .success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, canEdit: true, originalTemplateId: 16 }) })
   editor.validateForm = () => true
   editor.saveDraft()
   const drafts = writes().filter(r => r.url === '/api/template/draft')

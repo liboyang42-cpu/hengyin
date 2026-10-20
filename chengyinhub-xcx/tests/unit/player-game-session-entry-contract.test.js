@@ -1019,3 +1019,187 @@ test('F-L3-07:晚到的旧投影不覆盖新状态 —— 请求纪元与同局 
     harness.cleanup()
   }
 })
+
+function deferredPlayerResult() {
+  let resolve, reject
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no })
+  return { promise, resolve, reject }
+}
+
+test('late APPLIED receipt confirms current pending without rolling projection revision back', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    const old = deferredPlayerResult()
+    h.setReceiptResult(old.promise)
+    h.page.reconcilePlayerChoice()
+    h.page.data.gameModule = Object.assign({}, h.page.data.gameModule, { revision: 12,
+      nodes: [{ nodeId: 32, status: 'COMPLETED' }], sheetShow: true })
+    old.resolve({ status: 'matched', receipt: terminalReceipt(h.command, 'APPLIED') })
+    await settle()
+    assert.equal(h.page.data.gameModule.revision, 12)
+    assert.equal(h.page.data.gameModule.nodes[0].nodeId, 32)
+    assert.equal(h.page.data.gameModule.sheetShow, true)
+    assert.equal(h.page.data.gameModule.write.status, 'confirmed')
+  } finally { h.cleanup() }
+})
+
+for (const change of ['pending', 'activity', 'session']) test('receipt ignores changed ' + change + ' context', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page.data.gameModule.sessionId = 91
+    const old = deferredPlayerResult()
+    h.setReceiptResult(old.promise)
+    h.page.reconcilePlayerChoice()
+    if (change === 'pending') {
+      h.page._playerPendingWrite = { ...h.page._playerPendingWrite, requestId: 'new-pending-request' }
+      h.page.data.gameModule.write = { status: 'unknown', requestId: 'new-pending-request' }
+    } else if (change === 'activity') h.page.data.activityId = 702
+    else h.page.data.gameModule.sessionId = 92
+    const pending = h.page._playerPendingWrite
+    const before = JSON.parse(JSON.stringify(h.page.data.gameModule))
+    old.resolve({ status: 'matched', receipt: terminalReceipt(h.command, 'APPLIED') })
+    await settle()
+    assert.deepEqual(h.page.data.gameModule, before)
+    assert.equal(h.page._playerPendingWrite, pending)
+    assert.equal(h.page._reloads, 0)
+  } finally { h.cleanup() }
+})
+
+for (const outcome of ['ready', 'error', 'rejected']) test('older projection ' + outcome + ' cannot override newer projection', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page._playerPendingWrite = null
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    h.page.rebuild = () => {}
+    const old = deferredPlayerResult()
+    h.setProjectionResult(old.promise); h.page._loadPlayerGameModule()
+    h.setProjectionResult(readyPlayerProjection(12)); h.page._loadPlayerGameModule()
+    await settle()
+    if (outcome === 'rejected') old.reject(new Error('old error'))
+    else old.resolve(outcome === 'ready' ? readyPlayerProjection(10) : { status: 'network-error' })
+    await settle()
+    assert.equal(h.page.data.gameModule.revision, 12)
+    assert.equal(h.page.data.gameModule.stale, false)
+    assert.equal(h.page.data.gameModule.error, '')
+  } finally { h.cleanup() }
+})
+
+for (const change of ['activity', 'session', 'mismatched response']) test('projection ignores ' + change + ' context', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page._playerPendingWrite = null
+    h.page.data.gameModule.sessionId = 91
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    const old = deferredPlayerResult()
+    h.setProjectionResult(old.promise); h.page._loadPlayerGameModule()
+    if (change === 'activity') h.page.data.activityId = 702
+    if (change === 'session') h.page.data.gameModule.sessionId = 92
+    const before = JSON.parse(JSON.stringify(h.page.data.gameModule))
+    const response = readyPlayerProjection(12)
+    if (change === 'mismatched response') response.data.activityId = 702
+    old.resolve(response); await settle()
+    assert.deepEqual(h.page.data.gameModule, before)
+  } finally { h.cleanup() }
+})
+
+test('same-session lower projection cannot replace current revision', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page._playerPendingWrite = null
+    h.page.data.gameModule.sessionId = 91
+    h.page.data.gameModule.revision = 12
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    h.setProjectionResult(readyPlayerProjection(10)); h.page._loadPlayerGameModule()
+    await settle()
+    assert.equal(h.page.data.gameModule.revision, 12)
+    assert.equal(h.page.data.gameModule.loading, false)
+  } finally { h.cleanup() }
+})
+
+test('projection refresh preserves same pending in-memory command and original-key retry', async () => {
+  const storage = new Map()
+  const h = loadUnknownWritePlayer({ storage })
+  try {
+    assert.equal(h.page._savePlayerPending(h.command), true)
+    const memory = h.page._playerPendingWrite
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    h.page.rebuild = () => {}
+    h.setProjectionResult(readyPlayerProjection(12)); h.page._loadPlayerGameModule()
+    await settle()
+    assert.equal(h.page._playerPendingWrite, memory)
+    assert.equal(h.page.data.gameModule.write.canRetry, true)
+    assert.equal(h.page.retryPlayerUnknownWrite(), true)
+    assert.deepEqual(h.submitCalls[0].input, h.command)
+    assert.equal(storage.get('game_player_pending_m9_a701').command, undefined)
+    await settle()
+  } finally { h.cleanup() }
+})
+
+for (const outcome of ['unknown', 'applied', 'rejected']) test('old write ' + outcome + ' cannot affect replacement pending', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page.data.gameModule.write = { status: 'idle', requestId: '' }
+    const old = deferredPlayerResult()
+    h.setSubmitResult(old.promise)
+    h.page.submitPlayerChoice({ currentTarget: { dataset: { node: 31, choice: 'A' } } })
+    const original = h.submitCalls[0].input
+    const replacement = { ...original, requestId: 'replacement-pending-701' }
+    h.page._savePlayerPending(replacement)
+    h.page.data.gameModule.write = { status: 'unknown', requestId: replacement.requestId }
+    const current = h.page._playerPendingWrite
+    const before = JSON.parse(JSON.stringify(h.page.data.gameModule.write))
+    if (outcome === 'rejected') old.reject(new Error('late rejection'))
+    else old.resolve(outcome === 'applied'
+      ? { status: 'success', receipt: terminalReceipt(original, 'APPLIED') } : { status: 'unknown' })
+    await settle()
+    assert.equal(h.page._playerPendingWrite, current)
+    assert.deepEqual(h.page.data.gameModule.write, before)
+    assert.equal(h.page._reloads, 0)
+  } finally { h.cleanup() }
+})
+
+test('projection refresh does not turn an in-flight write into retryable unknown', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page.data.gameModule.sessionId = 91
+    h.page.data.gameModule.write = { status: 'idle', requestId: '' }
+    const write = deferredPlayerResult()
+    h.setSubmitResult(write.promise)
+    h.page.submitPlayerChoice({ currentTarget: { dataset: { node: 31, choice: 'A' } } })
+    const input = h.submitCalls[0].input
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    h.page.rebuild = () => {}
+    h.setProjectionResult(readyPlayerProjection(9)); h.page._loadPlayerGameModule()
+    await settle()
+    assert.equal(h.page.data.gameModule.write.status, 'submitting')
+    assert.equal(h.page.retryPlayerUnknownWrite(), false)
+    assert.equal(h.submitCalls.length, 1)
+    assert.equal(h.receiptCalls.length, 0)
+    write.resolve({ status: 'unknown', requestId: input.requestId }); await settle()
+    assert.equal(h.page.data.gameModule.write.status, 'unknown')
+  } finally { h.cleanup() }
+})
+
+test('deferred receipt after real projection refresh keeps revision12 and current projected nodes', async () => {
+  const h = loadUnknownWritePlayer()
+  try {
+    h.page.data.gameModule.sessionId = 91
+    h.page._savePlayerPending(h.command)
+    const receipt = deferredPlayerResult()
+    h.setReceiptResult(receipt.promise)
+    h.page.reconcilePlayerChoice()
+    h.page._loadPlayerGameModule = h.definition._loadPlayerGameModule
+    h.page.rebuild = () => {}
+    const projection = readyPlayerProjection(12)
+    projection.data.player.nodes = [{ nodeId: 32, personalState: 'AVAILABLE' }]
+    h.setProjectionResult(projection)
+    h.page._loadPlayerGameModule(); await settle()
+    assert.equal(h.page.data.gameModule.revision, 12)
+    receipt.resolve({ status: 'matched', receipt: terminalReceipt(h.command, 'APPLIED') })
+    await settle(); await settle()
+    assert.equal(h.page.data.gameModule.revision, 12)
+    assert.equal(h.page.data.gameModule.nodes[0].nodeId, 32)
+    assert.equal(h.page._playerPendingWrite, null)
+    assert.equal(h.submitCalls.length, 0)
+  } finally { h.cleanup() }
+})

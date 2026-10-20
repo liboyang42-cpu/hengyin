@@ -152,7 +152,7 @@ EXPECTED = {
     # test_expected_counts_match_source_files 会拿 SOURCE_FILES 现数来比,加一条不改这里当场红。
     # 2026-08-16 R3:+1 = thePayeeVerifyAndPayoutPermissionsLandOnTwoDifferentRoles
     # (把 remark 里那句「与审核权限互斥分派」做成可回读的事实)。
-    "ClubCorporatePayeeMybatisIntegrationTest": 11,
+    "ClubCorporatePayeeMybatisIntegrationTest": 14,
     # 2026-08-16 R4:18 → 21,+3 = 已决质量行必须带 reason 的 DB CHECK、
     # business:clubextra:approve 真授到 cy_operator、business:topic:query 真授到两个资金角色。
     "ClubEditionCompensationMybatisIntegrationTest": 21,
@@ -219,6 +219,8 @@ EXPECTED = {
     "ClubWaitlistTokenMybatisIntegrationTest": 7,
     "CmsMemberTemplateAudioPatchMybatisIntegrationTest": 9,
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest": 9,
+    # 2026-10-20 AUDIT-G2-5:模板市场 use_num 按会员首次采用计数(同人重复/删了再建不涨、他人首次 +1)。
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest": 3,
     # 2026-09-17 3-11 修复 +3 条(对象存不存在都不发分 / 未参与者不发分 / 主题认其下活动已核销票),14 → 17。
     # 2026-09-18 RV-p3 F3:+1 会员隔离用例(别人的已支付票不能给评价人换分),17 → 18。
     "ContentInteractionMybatisIntegrationTest": 18,
@@ -236,7 +238,8 @@ EXPECTED = {
     # 2026-10-13 小程序底层C包移植到 master:12 → 15,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
     "RoamSessionWriteMybatisIntegrationTest": 15,
     # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
-    "RoamLocationRetentionMySqlIT": 20,
+    # +1: real cleanup task preserves favorite routes, non-location facts and reward dedupe across replay.
+    "RoamLocationRetentionMySqlIT": 21,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
@@ -382,6 +385,9 @@ SOURCE_FILES = {
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CmsTemplateLibraryAudioPatchMybatisIntegrationTest.java",
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
+        "TemplateUseNumFirstAdoptionMybatisIntegrationTest.java",
     "ContentInteractionMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "ContentInteractionMybatisIntegrationTest.java",

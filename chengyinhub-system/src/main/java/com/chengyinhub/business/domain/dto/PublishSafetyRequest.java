@@ -12,7 +12,8 @@ public class PublishSafetyRequest {
      * POST_REVIEW = 先发后审(明确违规仍 BLOCK,审不了只打标不拦);
      * PRE_REVIEW  = 先审后发(今天的语义,社区推文/回复必须显式传它);
      * EXEMPT      = 豁免门禁。
-     * 无法识别的取值按 PRE_REVIEW 处理(见 ContentSafetyGateImpl#resolveMode),绝不因脏值 fail-open。
+     * 未设置(字段初值)与无法识别的取值都按 PRE_REVIEW 处理(见 ContentSafetyGateImpl#resolveMode),
+     * 绝不因漏传或脏值 fail-open;要先发后审的调用方必须显式传 POST_REVIEW。
      */
     public enum ReviewMode { POST_REVIEW, PRE_REVIEW, EXEMPT }
 
@@ -36,8 +37,8 @@ public class PublishSafetyRequest {
     private boolean hasSignup;
     /** 审核单快照 JSON(供人工审核回溯) */
     private String snapshot;
-    /** 审核模式,取 ReviewMode 名称 */
-    private String reviewMode = ReviewMode.POST_REVIEW.name();
+    /** 审核模式,取 ReviewMode 名称;未设置 = PRE_REVIEW(最严一档,与门禁对空值/脏值的兜底一致) */
+    private String reviewMode = ReviewMode.PRE_REVIEW.name();
 
     public String getContentType() { return contentType; }
     public void setContentType(String contentType) { this.contentType = contentType; }

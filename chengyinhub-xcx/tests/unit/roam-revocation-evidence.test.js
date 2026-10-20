@@ -61,18 +61,19 @@ function harness(noBackground) {
   const revoke = h.tracker.revoke
   h.tracker.revoke = key => { h.revokedOrder = ++h.order; revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
-  const context = { wx, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) }, playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
+  const context = { wx, app, playLocationOwnerSequence: 0, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) },
+    playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
-  // 2026-10-19 移植基线 1ab1fcb8:定位回调先记精度提示(_noteLocAccuracy),一并取真源方法
-  for (const name of ['requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
+  for (const name of ['_playMember', '_boundPlayOwner', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
     h.play[name] = vm.runInNewContext('({' + playSource.slice(start, end + 4).trim() + '})', context)[name]
   }
   h.startPlay = () => {
     h.play.requestPlayLocation(); h.modals.at(-1).success({ confirm: true })
-    h.playAtStart = { ownerAtStart: h.tracker.hasOwner(h.play._trackKey()), gpsOkAtStart: h.play.data.gpsOk,
+    h.playKey = h.play._playTrackingKey || h.play._trackKey()
+    h.playAtStart = { ownerAtStart: h.tracker.hasOwner(h.playKey), gpsOkAtStart: h.play.data.gpsOk,
       watchingAtStart: !!h.play._watching }
   }
   h.fire = (call, outcome = 'success') => {
@@ -110,7 +111,7 @@ async function receiptFor(kind, branch = 'success') {
   if (kind === 'already-stopped') { h.roam._stopReal(); h.fire(h.calls.at(-1)) }
   if (kind === 'retained' || kind.startsWith('pending-play')) h.startPlay()
   if (kind === 'prior-stop') { h.roam._stopReal(); h.roam._startReal() }
-  const before = h.frame(); const playBefore = h.tracker.hasOwner('play:31')
+  const before = h.frame(); const playBefore = h.tracker.hasOwner(h.playKey || h.play._trackKey())
   if (kind === 'record-failed') h.rejectRecord = true
   h.privacy.withdrawRoamLocationConsent(); await settle()
   if (['bg-restart', 'fg-restart', 'both-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) h.startPlay()
@@ -140,8 +141,8 @@ async function receiptFor(kind, branch = 'success') {
   const proof = { captureId: 'unit-capture', principalFingerprint: principal, scenario, requestId: h.recordRequest.body.requestId, recordRequest: h.recordRequest, recordEcho: h.recordEcho, before,
     after: h.frame(), sourceRefs: Object.fromEntries(Object.entries(sources).map(([key, value]) => [key, ref(value)])),
     sdk: { revokedOrder: h.revokedOrder, settledOrder: ++h.order, calls },
-    play: { key: 'play:31', ...h.playAtStart, ownerBefore: playBefore, ownerAfter: h.tracker.hasOwner('play:31'),
-      watchingAfter: !!h.play._watching, ownerSource: ref('utils/location/bg-tracker.js#hasOwner:play:31'),
+    play: { key: h.playKey || h.play._trackKey(), ...h.playAtStart, ownerBefore: playBefore, ownerAfter: h.tracker.hasOwner(h.playKey || h.play._trackKey()),
+      watchingAfter: !!h.play._watching, ownerSource: ref('utils/location/bg-tracker.js#hasOwner:' + (h.playKey || h.play._trackKey())),
       permissionSource: ref('pages/play/index.js#requestPlayLocation'), backgroundApiAvailable: typeof global.wx.startLocationUpdateBackground === 'function',
       availabilitySource: { ...ref('wx.startLocationUpdateBackground#available'), value: typeof global.wx.startLocationUpdateBackground === 'function' } } }
   const latest = { ...h.recordEcho, ...(kind === 'record-failed' ? { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } : {}) }

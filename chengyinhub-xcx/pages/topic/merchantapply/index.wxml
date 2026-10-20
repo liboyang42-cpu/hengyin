@@ -113,7 +113,7 @@
           <text class="ma-hint">建议 5:3 横图 · 至少 1 张,最多 9 张</text>
         </view>
         <view class="ma-pgrid" wx:if="{{picUrl}}">
-          <view class="ma-pgrid-cell" wx:for="{{picUrl.split(',')}}" wx:key="*this" wx:if="{{item}}">
+          <view class="ma-pgrid-cell" wx:for="{{picUrl.split(',')}}" wx:key="index" wx:if="{{item}}">
             <image class="ma-pgrid-img" src="{{item}}" mode="aspectFill" />
             <view class="ma-pgrid-del" catchtap="removePic" data-imgindex="{{index}}" aria-role="button" aria-label="删除场地照片 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="ma-pgrid-del__glyph"><cy-icon name="close-sm" size="24" /></view>

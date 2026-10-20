@@ -22,9 +22,8 @@ import com.chengyinhub.business.domain.LedgerDiscrepancy;
  * <p>★本轮范围边界(与任务书一致,不越界):
  * <ul>
  *   <li>只产出差异明细,<b>不做自动补偿/自动重放</b>——"差异可重放"留给后续阶段;</li>
- *   <li>微信交易维度依赖 {@code wx_trade_bill_snapshot} 表,本轮该表大概率是空表(P1-7 才接入
- *       真实下载),{@link #reconcileWechatBillAgainstRegistrations} 对此显式判断并跳过,
- *       不会把"账单未下载"误报成"金额对不上";</li>
+ *   <li>微信交易维度只使用完整导入的交易账单;未下载、生成中或完整性事实缺失时明确待核,
+ *       不把缺失账单当作金额差异或对账一致;</li>
  *   <li>settlement_detail/coop_settlement 只是辅助台账,不参与本轮的比对断言(见 P1-5 doc:
  *       它们口径与 merchant_payable 不完全重叠,归一化视图留给后续决定)。</li>
  * </ul>
@@ -38,11 +37,10 @@ public interface IFourLedgerReconcileService {
      * {@code wx_trade_bill_snapshot} 中该订单号(biz_type=支付)的金额之和是否等于
      * {@code cms_registration.wechat_payment_amount}。
      *
-     * <p>⚠️ 若 {@code wx_trade_bill_snapshot} 在该账单日一行都没有(账单尚未下载,P1-7 前的
-     * 常态),本方法返回空列表——"未下载"不是"对不上",不应产出误报差异。
+     * <p>未完整导入时抛出待核异常;完整的零行账单仍会核对内部订单，检出遗漏支付记录。
      *
      * @param billDate 账单日期(T日)
-     * @return 差异明细(维度="微信交易vs报名订单");若该日账单未下载,返回空列表
+     * @return 差异明细(维度="微信交易vs报名订单")
      */
     List<LedgerDiscrepancy> reconcileWechatBillAgainstRegistrations(Date billDate);
 

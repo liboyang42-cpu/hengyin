@@ -21,6 +21,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 // 开场倒计时文案:天/小时/分三档取整,不到 1 分钟按「即将开始」收口。
 // 与 activity/list 的 fmtDur 同一套档位,避免两处对同一活动给出不同口径。
@@ -186,7 +187,7 @@ Page({
         }
         // 赞/取消赞在途时列表可能已重拉换序:按 id 找回此刻位置,帖子已不在列表就丢弃回包,不按旧下标串写到别的帖子
         let newlist = that.data.list || []
-        let currentIndex = newlist.findIndex(row => row && String(row.id) === requestKey)
+        let currentIndex = newlist.findIndex(row => row && String(row.id) === requestKey); if (currentIndex < 0) return;
         let currentItem = Object.assign({}, newlist[currentIndex], { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
 
         // 更新列表数据
@@ -272,9 +273,12 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           const nextFollowState = intendedFollow;
-          const nextList = topicList.slice();
-          nextList[index] = Object.assign({}, topicList[index], { isFollowTheUser: nextFollowState });
-          that.setData({ list: nextList });
+          const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+          if (pos >= 0) {
+            const nextList = that.data.list.slice();
+            nextList[pos] = Object.assign({}, nextList[pos], { isFollowTheUser: nextFollowState });
+            that.setData({ list: nextList });
+          }
 
           toast(nextFollowState ? '关注成功' : '已取消关注');
         } else {
@@ -371,8 +375,8 @@ Page({
         that._deletingPost = false;
         if (res && res.code == '200') {
           if (pa) pa.deleteDone();
-          const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-          that.setData({ list: list, nodata: list.length < 1 });
+          const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+          if (list.length !== that.data.list.length) that.setData({ list: list, nodata: list.length < 1 });
           that.closePostActions();
         } else if (pa) {
           pa.deleteFailed((res && res.msg) || '删除失败');
@@ -433,11 +437,13 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-              that.setData({
-                list: list,
-                nodata: list.length < 1
-              });
+              const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+              if (list.length !== that.data.list.length) {
+                that.setData({
+                  list: list,
+                  nodata: list.length < 1
+                });
+              }
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
@@ -614,10 +620,10 @@ Page({
     }
   },
 
-  goUserInfo(id) {
+  goUserInfo(id) { if (!id || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
       url: '/pages/userinfo/userinfo?userId=' + id,
-      fail: () => toast('打不开这个主页'),
+      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -628,10 +634,7 @@ Page({
     const detail = e && e.detail;
     const picList = detail && Array.isArray(detail.picList) ? detail.picList : e.currentTarget.dataset.piclist;
     const index = detail && detail.picIndex !== undefined ? detail.picIndex : e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index], // 当前显示图片的http链接
-      urls: picList // 需要预览的图片http链接列表
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   /**
@@ -643,11 +646,11 @@ Page({
   // 关联(roam/index.js data_id/data_type 留空),所以这里【不存在】跳 roam 的分支,不写死分支。
   goPlay: function (e) {
     const item = this.data.list[feedIndexFromEvent(e)];
-    if (!item || !item.dataId) return;
+    if (!item || !item.dataId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     const query = String(item.dataType) === '1'
       ? ('activityId=' + item.dataId)
       : ('topicId=' + item.dataId);
-    wx.navigateTo({ url: '/pages/play/index?' + query });
+    wx.navigateTo({ url: '/pages/play/index?' + query, complete: () => { this._navigating = false; } });
   },
 
   // 「看详情」:两种关联类型后端都回填了 sportTopicId(活动取其所属 topicId、主题即自身),
@@ -659,7 +662,7 @@ Page({
     const item = this.data.list[index];
     if (!item) return;
     if (!item.sportTopicId) return this.jumpDetail(e);
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + item.sportTopicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + item.sportTopicId, complete: () => { this._navigating = false; } });
   },
 
   // 只有后端明确回填 isTopicTemplate=true 才允许改编；普通主题仍走“看详情”。
@@ -674,17 +677,17 @@ Page({
   jumpDetail: function (e) {
     const index = feedIndexFromEvent(e);
     const activity = this.data.list[index];
-    // 传递活动数据到详情页
+    if (!activity || !activity.id || this._navigating) return; this._navigating = true; // 传递活动数据到详情页;跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/square/detail/index?id=' + activity.id
+      url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; }
     });
   },
   jumpDetail2: function (e) {
     const index = feedIndexFromEvent(e);
     const activity = this.data.list[index];
-    // 传递活动数据到详情页
+    if (!activity || !activity.id || this._navigating) return; this._navigating = true; // 传递活动数据到详情页;跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/square/detail/index?comment=1&id=' + activity.id
+      url: '/pages/square/detail/index?comment=1&id=' + activity.id, complete: () => { this._navigating = false; }
     });
   },
   
@@ -807,8 +810,8 @@ Page({
       : null;
     var up = this.data.upcoming;
     id = id || (up && up.id);
-    if (!id) return;
-    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id });
+    if (!id || this._navigating) return; var self = this; self._navigating = true; // 跳转中不响应连点
+    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id, complete: function () { self._navigating = false; } });
   },
 
   // 为节点选择地点
@@ -1015,7 +1018,7 @@ Page({
       this.refreshList();
     }
     this._syncCommunityAccess();
-    wx.hideTabBar(); // 重试一次
+    wx.hideTabBar(); this._navigating = false; // 重试一次
     // 广场属于玩家内容域：身份只影响能力，不改变页面/原生 chrome 的深色归属。
     merchantTheme.merchantPageRestore();
     // A-05:从详情返回且详情删/改过 → 刷一次首屏,别让用户看到旧卡;没脏标就不动,不每次 onShow 重拉。

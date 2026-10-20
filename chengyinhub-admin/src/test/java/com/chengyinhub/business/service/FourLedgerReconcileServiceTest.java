@@ -5,9 +5,13 @@ import com.chengyinhub.business.domain.LedgerDiscrepancy;
 import com.chengyinhub.business.domain.MerchantPayableBatch;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.WxTradeBillSnapshot;
+import com.chengyinhub.business.domain.WxBillImport;
 import com.chengyinhub.business.mapper.FourLedgerReconcileMapper;
 import com.chengyinhub.business.mapper.MerchantPayableBatchMapper;
 import com.chengyinhub.business.mapper.WxTradeBillSnapshotMapper;
+import com.chengyinhub.business.mapper.WxBillImportMapper;
+import com.chengyinhub.common.config.WxPayConfig;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.service.impl.FourLedgerReconcileServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -49,6 +54,8 @@ class FourLedgerReconcileServiceTest {
 
     private FourLedgerReconcileMapper reconcileMapper;
     private WxTradeBillSnapshotMapper wxTradeBillSnapshotMapper;
+    private WxBillImportMapper wxBillImportMapper;
+    private WxPayConfig wxPayConfig;
     private IUmsMemberService umsMemberService;
     private IMerchantPayableService merchantPayableService;
     private MerchantPayableBatchMapper merchantPayableBatchMapper;
@@ -58,6 +65,15 @@ class FourLedgerReconcileServiceTest {
     void setUp() {
         reconcileMapper = mock(FourLedgerReconcileMapper.class);
         wxTradeBillSnapshotMapper = mock(WxTradeBillSnapshotMapper.class);
+        wxBillImportMapper = mock(WxBillImportMapper.class);
+        wxPayConfig = mock(WxPayConfig.class);
+        when(wxPayConfig.getMerchantId()).thenReturn("test-merchant");
+        WxBillImport complete = new WxBillImport();
+        complete.setStatus("SUCCESS");
+        complete.setRowCount(3);
+        complete.setSourceHash("0123456789abcdef0123456789abcdef01234567");
+        when(wxBillImportMapper.selectImport(eq("test-merchant"), eq("TRADE"), any(Date.class)))
+                .thenReturn(complete);
         umsMemberService = mock(IUmsMemberService.class);
         merchantPayableService = mock(IMerchantPayableService.class);
         merchantPayableBatchMapper = mock(MerchantPayableBatchMapper.class);
@@ -65,6 +81,8 @@ class FourLedgerReconcileServiceTest {
         service = new FourLedgerReconcileServiceImpl();
         ReflectionTestUtils.setField(service, "reconcileMapper", reconcileMapper);
         ReflectionTestUtils.setField(service, "wxTradeBillSnapshotMapper", wxTradeBillSnapshotMapper);
+        ReflectionTestUtils.setField(service, "wxBillImportMapper", wxBillImportMapper);
+        ReflectionTestUtils.setField(service, "wxPayConfig", wxPayConfig);
         ReflectionTestUtils.setField(service, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(service, "merchantPayableService", merchantPayableService);
         ReflectionTestUtils.setField(service, "merchantPayableBatchMapper", merchantPayableBatchMapper);
@@ -72,18 +90,75 @@ class FourLedgerReconcileServiceTest {
 
     // ------------------------------------------------- 维度一:微信交易 vs 报名/订单
 
-    /** ★ 账单当天尚未下载(P1-7前的常态)⇒ 不应产出任何差异——"未下载"不是"对不上"。 */
+    /** 未下载必须明确待核，不能用空差异列表表示账单一致。 */
     @Test
-    void wechatBill_returnsEmpty_whenBillNotDownloadedYet() {
+    void wechatBill_requiresReview_whenBillNotDownloadedYet() {
         Date billDate = new Date();
-        when(wxTradeBillSnapshotMapper.countByBillDate(billDate)).thenReturn(0);
-
-        List<LedgerDiscrepancy> result = service.reconcileWechatBillAgainstRegistrations(billDate);
-
-        assertTrue(result.isEmpty());
+        when(wxBillImportMapper.selectImport(anyString(), eq("TRADE"), any(Date.class))).thenReturn(null);
+        assertEquals(409, assertThrows(ServiceException.class,
+                () -> service.reconcileWechatBillAgainstRegistrations(billDate)).getCode());
         // 未下载时不应该再去查逐笔订单/账单明细,连误报的机会都不给自己留。
         org.mockito.Mockito.verify(reconcileMapper, org.mockito.Mockito.never())
                 .selectPaidWechatRegistrationsByBillDate(any());
+    }
+
+    @Test void wechatBill_requiresReviewForIncompleteImportFacts() {
+        for (String status : new String[]{"NO_STATEMENT", "CREATING", "FAILED", "SUCCESS"}) {
+            WxBillImport incomplete = new WxBillImport();
+            incomplete.setStatus(status);
+            incomplete.setRowCount(0);
+            when(wxBillImportMapper.selectImport(anyString(), eq("TRADE"), any(Date.class)))
+                    .thenReturn(incomplete);
+            assertEquals(409, assertThrows(ServiceException.class,
+                    () -> service.reconcileWechatBillAgainstRegistrations(new Date())).getCode());
+        }
+        org.mockito.Mockito.verify(reconcileMapper, org.mockito.Mockito.never())
+                .selectPaidWechatRegistrationsByBillDate(any());
+    }
+
+    @Test void aCompleteZeroRowBillStillDetectsAnInternalPaymentMissingFromTheBill() {
+        java.time.ZoneId zone = java.time.ZoneId.of("Asia/Shanghai");
+        Date billDate = java.sql.Date.valueOf("2026-10-10");
+        Date day = Date.from(java.time.LocalDate.of(2026, 10, 10).atStartOfDay(zone).toInstant());
+        WxBillImport empty = new WxBillImport();
+        empty.setStatus("SUCCESS"); empty.setRowCount(0);
+        empty.setSourceHash("0123456789abcdef0123456789abcdef01234567");
+        when(wxBillImportMapper.selectImport("test-merchant", "TRADE", day)).thenReturn(empty);
+        CmsRegistration paid = new CmsRegistration();
+        paid.setRegistrationNo("REG-MISSING-BILL"); paid.setWechatPaymentAmount(new BigDecimal("10.00"));
+        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(day)).thenReturn(List.of(paid));
+        List<LedgerDiscrepancy> differences = service.reconcileWechatBillAgainstRegistrations(billDate);
+        assertEquals(1, differences.size());
+        assertEquals("REG-MISSING-BILL", differences.get(0).getBizKey());
+        assertEquals(0, BigDecimal.ZERO.compareTo(differences.get(0).getActualAmount()));
+        org.mockito.Mockito.verify(wxBillImportMapper).selectImport("test-merchant", "TRADE", day);
+        org.mockito.Mockito.verify(wxTradeBillSnapshotMapper, org.mockito.Mockito.never()).countByBillDate(any());
+    }
+
+    @Test void aNonMidnightInputUsesTheSameBeijingDayForTheBillAndInternalPayments() {
+        Date noon = Date.from(java.time.Instant.parse("2026-10-10T04:00:00Z"));
+        Date day = Date.from(java.time.Instant.parse("2026-10-09T16:00:00Z"));
+        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(day)).thenReturn(List.of());
+        assertTrue(service.reconcileWechatBillAgainstRegistrations(noon).isEmpty());
+        org.mockito.Mockito.verify(wxBillImportMapper).selectImport("test-merchant", "TRADE", day);
+        org.mockito.Mockito.verify(reconcileMapper).selectPaidWechatRegistrationsByBillDate(day);
+        org.mockito.Mockito.verify(reconcileMapper, org.mockito.Mockito.never())
+                .selectPaidWechatRegistrationsByBillDate(noon);
+    }
+
+    @Test void aSqlCalendarDateDoesNotMoveBackADayOnAHostAheadOfChina() {
+        java.util.TimeZone original = java.util.TimeZone.getDefault();
+        try {
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Pacific/Auckland"));
+            Date calendarDay = java.sql.Date.valueOf("2026-10-10");
+            Date day = Date.from(java.time.Instant.parse("2026-10-09T16:00:00Z"));
+            when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(day)).thenReturn(List.of());
+            assertTrue(service.reconcileWechatBillAgainstRegistrations(calendarDay).isEmpty());
+            org.mockito.Mockito.verify(wxBillImportMapper).selectImport("test-merchant", "TRADE", day);
+            org.mockito.Mockito.verify(reconcileMapper).selectPaidWechatRegistrationsByBillDate(day);
+        } finally {
+            java.util.TimeZone.setDefault(original);
+        }
     }
 
     /**
@@ -99,7 +174,7 @@ class FourLedgerReconcileServiceTest {
         r.setId(1L);
         r.setRegistrationNo("REG20260725001");
         r.setWechatPaymentAmount(new BigDecimal("100.00"));
-        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(billDate)).thenReturn(Arrays.asList(r));
+        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(any(Date.class))).thenReturn(Arrays.asList(r));
 
         // 账单里这笔订单号只找到 80 元(比如另一笔 20 元支付成功记录漏下载了)
         when(wxTradeBillSnapshotMapper.sumAmountByOutTradeNoAndBizType(
@@ -125,7 +200,7 @@ class FourLedgerReconcileServiceTest {
         CmsRegistration r = new CmsRegistration();
         r.setRegistrationNo("REG2");
         r.setWechatPaymentAmount(new BigDecimal("50.00"));
-        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(billDate)).thenReturn(Arrays.asList(r));
+        when(reconcileMapper.selectPaidWechatRegistrationsByBillDate(any(Date.class))).thenReturn(Arrays.asList(r));
         when(wxTradeBillSnapshotMapper.sumAmountByOutTradeNoAndBizType(eq("REG2"), anyInt()))
                 .thenReturn(new BigDecimal("50.00"));
 

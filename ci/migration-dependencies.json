@@ -1,8 +1,16 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
+    "audit_followup_20261020": ["community_post_platform_20260909", "p3_platform_foundation"],
     "audit_level_20261020": ["community_post_platform_20260909"],
+    "content_safety_hold_20261020": [],
+    "community_enforcement_links_20261020": ["community_post_platform_20260909"],
+    "audit_appeal_20261020": ["p3_platform_foundation", "audit_open_task_guard_20260721"],
+    "audit_report_lane_20261020": ["audit_open_task_guard_20260721"],
+    "audit_report_lane_verify_20261020": ["audit_report_lane_20261020"],
     "community_legacy_comment_like_counts_20261015": ["community_post_platform_20260909"],
+    "club_name_unique_20261020": [],
     "wechat_identity_unique_20261013": [],
     "20261012_member_password_width": [],
     "20261013_drop_member_pii_backup_tables": [],
@@ -761,6 +769,9 @@
       "20261012_media_review_menu",
       "role2_analytics_perm_20260918"
     ],
+    "20261015_wx_bill_ingestion": [],
+    "20261015_retention_job_missing_registration": [],
+    "20261017_job_dictionary_missing_seed": [],
     "20261013_monitor_remaining_jobs": [
       "club_session_reconciliation_job_20260807",
       "activity_designer_commission",

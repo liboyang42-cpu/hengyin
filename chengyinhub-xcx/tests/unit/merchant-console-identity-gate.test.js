@@ -496,12 +496,17 @@ test('营业状态写回只接受当前商家当前动作，逆序、切主体�
   const second = requests[1]
 
   second.success({ code: 200 })
+  // BL-141:写成功后先回读营业状态,以回读值为准刷新开关
+  assert.equal(requests[2].url, '/api/merchant/business-status')
+  assert.equal(toasts.length, 0, '回读前不得宣称成功')
+  requests[2].success({ code: 200, data: { businessStatus: 1, businessStatusText: '营业中' } })
   first.success({ code: 200 })
+  assert.equal(requests.length, 3, '旧动作不得再发回读')
   assert.equal(page.data.businessStatus, 1, '旧动作不得逆序覆盖最新营业状态')
   assert.equal(toasts.length, 1, '旧动作不得再弹成功回执')
 
   page.toggleBusiness()
-  const oldScope = requests[2]
+  const oldScope = requests[3]
   page._merchantScopeKey = '22:202'
   oldScope.success({ code: 200 })
   assert.equal(page.data.businessStatus, 1, 'A 商家回调不得写进 B 商家页面')
@@ -509,10 +514,41 @@ test('营业状态写回只接受当前商家当前动作，逆序、切主体�
 
   page._merchantScopeKey = '22:202'
   page.toggleBusiness()
-  const afterUnload = requests[3]
+  const afterUnload = requests[4]
   page.onUnload()
   afterUnload.fail()
   assert.equal(toasts.length, 1, '卸载后的失败回调也不得弹 toast')
+})
+
+test('BL-141 营业状态写后回读：以回读值刷新开关，不一致或回读失败提示状态未同步', () => {
+  userId = 11
+  const page = loadPage()
+  page._merchantScopeKey = '11:101'
+  page.data.merchantAccess = { canWriteProfile: true }
+  page.data.businessStatus = 1
+
+  page.toggleBusiness()
+  requests[0].success({ code: 200 })
+  assert.equal(page.data.businessStatus, 1, '回读前不改开关')
+  assert.equal(requests[1].url, '/api/merchant/business-status')
+  assert.equal(requests[1].method, 'POST')
+  requests[1].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(page.data.businessStatus, 0)
+  assert.equal(toasts.length, 1)
+
+  page.toggleBusiness()
+  requests[2].success({ code: 200 })
+  requests[3].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(page.data.businessStatus, 0, '以回读值为准')
+  assert.equal(toasts.length, 2)
+  assert.doesNotMatch(JSON.stringify(toasts[1]), /已营业/)
+  assert.match(JSON.stringify(toasts[1]), /状态未同步/)
+
+  page.toggleBusiness()
+  requests[4].success({ code: 200 })
+  requests[5].fail()
+  assert.equal(page.data.businessStatus, 0)
+  assert.match(JSON.stringify(toasts[2]), /状态未同步/)
 })
 
 test('页面卸载后身份成功、降级或失败回调都不得写页、跳转或再发子请求', () => {
