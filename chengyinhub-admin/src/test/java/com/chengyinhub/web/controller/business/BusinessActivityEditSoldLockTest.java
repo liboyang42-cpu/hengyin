@@ -3,6 +3,14 @@ package com.chengyinhub.web.controller.business;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.service.IContentSafetyGate;
+import com.chengyinhub.business.service.support.ActivityReviewPolicy;
+import com.chengyinhub.common.core.domain.entity.SysUser;
+import com.chengyinhub.common.core.domain.model.LoginUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +21,7 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,7 +53,13 @@ class BusinessActivityEditSoldLockTest {
         cmsActivityService = mock(ICmsActivityService.class);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
         when(cmsActivityService.selectCmsActivityById(ACTIVITY)).thenReturn(current());
-        when(cmsActivityService.updateCmsActivity(any())).thenReturn(1);
+        when(cmsActivityService.updateCmsActivityByAdmin(any(), any(), anyBoolean(), any())).thenReturn(1);
+        ContentAuditBypassControllerSafetyTest.wireReviewGate(controller);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void clearLogin() {
+        SecurityContextHolder.clearContext();
     }
 
     private CmsActivity current() {
@@ -86,7 +101,7 @@ class BusinessActivityEditSoldLockTest {
 
         assertEquals(500, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
         assertTrue(String.valueOf(res.get("msg")).contains("时间"), "实际:" + res.get("msg"));
-        verify(cmsActivityService, never()).updateCmsActivity(any());
+        verify(cmsActivityService, never()).updateCmsActivityByAdmin(any(), any(), anyBoolean(), any());
     }
 
     @Test
@@ -99,7 +114,7 @@ class BusinessActivityEditSoldLockTest {
 
         assertEquals(500, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
         assertTrue(String.valueOf(res.get("msg")).contains("地点"), "实际:" + res.get("msg"));
-        verify(cmsActivityService, never()).updateCmsActivity(any());
+        verify(cmsActivityService, never()).updateCmsActivityByAdmin(any(), any(), anyBoolean(), any());
     }
 
     @Test
@@ -114,7 +129,7 @@ class BusinessActivityEditSoldLockTest {
 
         assertEquals(200, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
         ArgumentCaptor<CmsActivity> cap = ArgumentCaptor.forClass(CmsActivity.class);
-        verify(cmsActivityService).updateCmsActivity(cap.capture());
+        verify(cmsActivityService).updateCmsActivityByAdmin(cap.capture(), any(), anyBoolean(), any());
         assertEquals("改过的活动名", cap.getValue().getName());
         assertEquals("改过的简介", cap.getValue().getDescription());
         assertEquals("雨天改室内", cap.getValue().getDayNote());
@@ -128,7 +143,7 @@ class BusinessActivityEditSoldLockTest {
         AjaxResult res = controller.edit(p);
 
         assertEquals(200, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
-        verify(cmsActivityService).updateCmsActivity(any());
+        verify(cmsActivityService).updateCmsActivityByAdmin(any(), any(), anyBoolean(), any());
     }
 
     /**
@@ -145,7 +160,7 @@ class BusinessActivityEditSoldLockTest {
         AjaxResult res = controller.edit(p);
 
         assertEquals(200, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
-        verify(cmsActivityService).updateCmsActivity(any());
+        verify(cmsActivityService).updateCmsActivityByAdmin(any(), any(), anyBoolean(), any());
     }
 
     /** 真改坐标(超出 1e-6 容差)仍拒。 */
@@ -159,6 +174,6 @@ class BusinessActivityEditSoldLockTest {
 
         assertEquals(500, ((Integer) res.get("code")).intValue(), "实际:" + res.get("msg"));
         assertTrue(String.valueOf(res.get("msg")).contains("地点"), "实际:" + res.get("msg"));
-        verify(cmsActivityService, never()).updateCmsActivity(any());
+        verify(cmsActivityService, never()).updateCmsActivityByAdmin(any(), any(), anyBoolean(), any());
     }
 }
