@@ -72,6 +72,7 @@ def main(tid):
     quote = http("POST", "/api/registration/quote", token=ptok, json_body=body)
     show("quote", json.dumps(quote.get("data"), ensure_ascii=False)[:140])
     if not quote.get("data"):
+        show("quote 原始响应", json.dumps(quote, ensure_ascii=False)[:300])
         print("   ✗ 报价失败,链路在此中断"); return 1
     body["quoteSign"] = quote["data"]["quoteSign"]
     body["requestId"] = "e2e-reg-%d-1" % tid
