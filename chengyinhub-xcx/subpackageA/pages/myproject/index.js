@@ -119,7 +119,7 @@ Page({
     //   路径(同步抛错 / 页面被顶掉再回来)会把 flag 永远留在 true,按钮就此死掉。
     this._togglingIds = null;
     this._templateActionIds = null;
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false; // 兜底清跳转中标记
     this.reload();
   },
   onHide() { merchantTheme.merchantPageRestore(); },
@@ -243,19 +243,19 @@ Page({
   // ===== 项目卡交互(沿旧版) =====
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
-    if (!item) return;
+    if (!item || this._navigating) return; // 跳转中不响应连点
     // 草稿 / 未通过(编辑重发)→ 进专业编辑器继续编辑
     if (item.bizType === 'topic' && (item.state === 'draft' || item.state === 'rejected')) {
-      wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
-        + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+      this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
+        + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
       return;
     }
     if (item.bizType === 'activity') {
       // 待审核 / 未通过的活动还没有玩家可见的详情页,点击进编辑器续写 ——
       // 与上面主题卡「草稿/未通过 → 编辑器」同判据;_canEdit 已挡掉承办只读卡。
       if (item._canEdit && (item.state === 'pending' || item.state === 'rejected')) {
-        wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-          + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+        this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+          + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
         return;
       }
       const id = item.id;
@@ -264,8 +264,8 @@ Page({
     }
     // 这个列表就是「我发布的」,所以主题一律进项目主页(主办视图)——
     // 原来跳的 topic/index 是玩家买票页,发布者在那儿看不到谁来接、卖了多少。
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   /* 长按 = 列表管理动作的唯一入口(稿裁决:卡面不放按钮)。
@@ -365,8 +365,8 @@ Page({
 
   goCreateActivity() {
     // CU-M-05:不带 scope 进去就按俱乐部主理人判身份,商家自家活动反而被拦在门外。
-    wx.navigateTo({ url: '/pages/publish/activity/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   editActivity(e) {
@@ -523,8 +523,8 @@ Page({
 
   tplTap(e) {
     const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my' });
+    if (!id || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my', complete: () => { this._navigating = false; } });
   },
 
   tplSubmitMarket(e) {
