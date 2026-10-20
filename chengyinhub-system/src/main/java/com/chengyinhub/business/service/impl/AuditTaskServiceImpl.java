@@ -655,6 +655,36 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (current == null || !TemplateAuditSnapshot.matches(task.getSnapshotJson(), current)) {
             throw new ServiceException("提交内容已变化，请重新提交审核", HttpStatus.CONFLICT);
         }
+        if (AuditTask.STATUS_APPROVED.equals(request.getStatus())) {
+            requireTemplateConfigStillValid(task, template, locked.projections);
+        }
+    }
+
+    /**
+     * AUDIT-G2-6:过审前对落库配置重跑 schema 校验器。快照一致只说明「内容没被改」,
+     * 不说明它在今天的校验规则下仍可玩(规则升级/审核期间旁路写入都会让它失效);
+     * 失效就 409 打回,作者修正后重新提交。驳回不受影响。
+     */
+    private void requireTemplateConfigStillValid(AuditTask task, CmsMemberTemplate template,
+                                                 java.util.List<CmsTemplateLibrary> projections) {
+        try {
+            if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+                com.chengyinhub.business.service.support.TemplateConfigRevalidation.requireValid(
+                        template.getValidationMethod(), template.getSensorType(), template.getSensorConfig(),
+                        template.getAdvancedConfigJson());
+                return;
+            }
+            for (CmsTemplateLibrary row : projections) {
+                if (task.getBizId().equals(row.getId())) {
+                    com.chengyinhub.business.service.support.TemplateConfigRevalidation.requireValid(
+                            row.getValidationMethod(), row.getSensorType(), row.getSensorConfig(),
+                            row.getAdvancedConfigJson());
+                }
+            }
+        } catch (IllegalArgumentException invalid) {
+            throw new ServiceException("模板配置校验未通过：" + invalid.getMessage()
+                    + "，请作者修改后重新提交审核", HttpStatus.CONFLICT);
+        }
     }
 
     private static final class TemplateReviewLock {
