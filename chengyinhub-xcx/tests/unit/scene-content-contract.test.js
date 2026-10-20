@@ -129,7 +129,7 @@ test('任务场景复用官方活动与我的活动接口，详情打开官方�
   // 3-18:行是 official_event,不能进查 cms_activity 的 play-activity-detail
   assert.match(componentJs, /triggerEvent\('official'/)
   assert.match(hostWxml, /<cy-scene-roam-task-list[^>]*bind:official="openOfficialEvent"/)
-  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ e\.detail\.id/)
+  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ const id = e && e\.detail && e\.detail\.id; if \(!id \|\| this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ id/)
   assert.doesNotMatch(componentJs, /id: 'play-activity-detail'/)
   assert.match(componentWxml, /state === 'loading'/)
   assert.match(componentWxml, /活动列表没能打开/)
