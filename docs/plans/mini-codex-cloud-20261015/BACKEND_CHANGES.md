@@ -1,4 +1,16 @@
-## 当前唯一剩余夹具：既有私有媒体出站签名URL合同已核定
+## 当前单测试增量：PR394固定663729，a89九批存储证据分源签收
+
+[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已固定 `663729b8623fa63c2f1c2a0812ea2a287d70c4fc`，直接父 `a89a74c4077f0ee12369e5199446619b40f79695`。C00直接核读公开diff：仅CommunityPostAuditLevelTest一个文件，3行新增／2行删除，只含SIGNED_IMAGE现有URL常量／stub返回／断言第三参；17／7／openid／一次调用／真实canonical parser及其他11方法保持。状态 **SOURCE_DELIVERED_FROZEN／WAIT_CI**，唯一修复槽冻结，无新增作者。
+
+**真库／存储实跑仍只归a89**：九批全部SUCCESS，C00核到九个工作流源SHA一致且完成成功；root独立核40类工件／40份原始XML／169个选择用例、0失败／错误／跳过、逐类Maven退出0及所有精确teardown removed=true。批次数为core27／ai22／growth12／rr4／coupon9／community14／B05 3／extra74／maxdate4。Extra为19类74项subset=true，已排掉与CORE重复E04_13的2项，不能改称76或BUG数；core27含4项普通outer负控，不能说169项全部是实库业务。
+
+券clawback保留清理粒度：RedemptionRewardClawbackMyBatisTest一类4方法的类级receipt仍有LEFTOVER／4 scratch标记，精确容器removed=true；不是四份逐testcase清理回执，也不抹掉LEFTOVER。a89 HTTP39437293832工作流SUCCESS，最终13读回工件本次仍待root最后核。a89 jar39437646837已由root下载核CRC／SOURCE_SHA／SHA256 `c586172facac9ad3338d4006a7f393b9f4b55cd9fbb02aebfb3c9af793072ecd`，C00仅核工作流元数据，未部署。
+
+a89→663只有该普通test差异；排除该文件的全部git tree等值及指纹 `f95ad20084aac5e8a90b052b56242dc7c9a5cd779e4657ccc57ce85a8bd3c39d` 由root核验，生产／SQL／依赖／40IT／HTTP源码相同。此为源码等值证据，**不把a89真库／HTTP改写成663实跑**。root只让唯一失败普通类由自然CI复验，不手动重跑40个已通过类。663现有CI39439276632、Funds39439278301、selected39439276885及jar39439466174在同头运行，最终结果／同头jar待签收；a89唯一1F及全部旧失败保留。
+
+本次集中登记一次，等root收最终663结果及剩余工件后再一条收口，不为pending反复改文档。原来源／三队保持冻结，Cloud不测试／编译／触发CI；未合master、部署、执行迁移或新增入口。真实微信／设备、支付与内容安全出站stub、持久迁移和生产未验边界保留。精确证据见 `LONGRUN_REMAINING.json.independent_backend_acceptance` 的 `latest_frozen_repair`、`a89_real_storage_evidence`、`a89_to_663_unchanged_source_proof`。
+
+## 已实施单测试夹具授权历史：私有媒体出站签名URL
 
 固定 `a89a74c4077f0ee12369e5199446619b40f79695` 完整Backend报告12696项／1失败／0错误／628跳过，仅CommunityPostAuditLevelTest的directPublishWithImages用例仍期待原IMAGE key；其余原失败报告已闭环。不是OSS凭据问题：C00只读核到publish先mediaForRead并真实校验canonical key，再把临时签名URL放入mediaUrls供微信异步审核。既有CommunityPrivateMediaContractTest／CommunityAuditMediaPreviewTest源码也保签名投影、存储key不变及签名失败无长URL降级合同；未执行这些回归。
 

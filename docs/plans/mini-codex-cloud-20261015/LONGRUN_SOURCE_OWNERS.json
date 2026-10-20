@@ -5181,7 +5181,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "A89_BACKEND_ONE_FIXTURE_FAIL_SIGNED_URL_CONTRACT_CONFIRMED_REPAIR_AUTHORIZED",
+    "state": "663_TEST_ONLY_REPAIR_FROZEN_WAIT_CI_A89_STORAGE_SOURCE_BOUND",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -5190,7 +5190,7 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "a89a74c4077f0ee12369e5199446619b40f79695 / ONE_FIXTURE_FAILURE_REMAINS_OVERALL_NOT_ACCEPTED",
+    "combined_candidate": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc / TEST_ONLY_SOURCE_DELIVERED_FROZEN_WAIT_CI; actual storage/HTTP remains ata89",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -5226,7 +5226,7 @@
         "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       }
     },
-    "creation_or_candidate_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+    "creation_or_candidate_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
     "combined_pr": {
       "number": 394,
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/394",
@@ -5240,8 +5240,8 @@
     },
     "current_runs": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
-      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "state": "A89_HTTP_FUNDS_SUCCESS_BACKEND_FAILURE_OTHER_RESULTS_PENDING"
+      "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+      "state": "IN_PROGRESS_NO_FINAL_RESULT"
     },
     "conflict_resolution": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -5471,10 +5471,10 @@
     },
     "latest_frozen_repair": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_frozen_repair",
-      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "parent_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+      "parent_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
       "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
-      "writer_status": "STOPPED_PENDING_FINAL_VERIFIER_FEEDBACK; sole root repair slot frozen",
+      "writer_status": "STOPPED_PENDING_FINAL_CI_FEEDBACK; same sole root combination repair slot frozen",
       "inherited_pass": false
     },
     "shared_report_sheet_repair_authority": {
@@ -5556,29 +5556,49 @@
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "base_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "state": "AUTHORIZED_SINGLE_TEST_SIGNED_URL_FIXTURE_ASSERTION_SOURCE_NOT_DELIVERED",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "authorized_exact_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java"
       ],
       "scope": "Only SIGNED_IMAGE constant/existing signing stub return and one async assertion third argument; preserve canonical parser, exact identity/count and all other test assertions.",
-      "new_source_sha": "NOT_DELIVERED"
+      "new_source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+      "writer_status": "STOPPED_PENDING_FINAL_CI_FEEDBACK; same sole root combination repair slot frozen"
     },
     "a89_current_validation": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_current_validation",
       "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
       "state": "BACKEND_ONE_FIXTURE_FAILURE_HTTP_FUNDS_SUCCESS_OVERALL_NOT_ACCEPTED",
       "backend": "12696 reported/1F0E628Skipped; no storage skipped0 claim",
-      "new_source_result_inherited": false
+      "new_source_result_inherited": false,
+      "historical_for_current_candidate": true
     },
     "signed_image_assertion_path_grant": {
       "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
         "base_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-        "state": "AUTHORIZED_SINGLE_TEST_SIGNED_URL_FIXTURE_ASSERTION_SOURCE_NOT_DELIVERED",
+        "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
         "scope": "Only existing signed URL fixture constant/stub and exact third-argument assertion; parser real, type17/post7/openid-9/count1 preserved. No other method/business assertion or production change.",
-        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.signed_image_assertion_repair_authority"
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.signed_image_assertion_repair_authority",
+        "frozen_repair_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+        "writer_status": "STOPPED_PENDING_FINAL_CI_FEEDBACK; same sole root combination repair slot frozen"
       }
+    },
+    "a89_real_storage_evidence": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_real_storage_evidence",
+      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "state": "NINE_EXISTING_BATCHES_SUCCESS_RECEIPTS_REVIEWED_BY_VERIFIER",
+      "class_artifacts": 40,
+      "xml": 40,
+      "selected_testcases": 169,
+      "extra_subset_tests": 74,
+      "ordinary_controls_included": 4,
+      "executed_at663": false
+    },
+    "a89_to_663_unchanged_source_proof": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_to_663_unchanged_source_proof",
+      "only_changed_test": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java",
+      "executed_storage_http_results_reassigned": false
     }
   }
 }
