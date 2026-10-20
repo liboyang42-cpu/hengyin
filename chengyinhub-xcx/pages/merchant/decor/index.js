@@ -377,7 +377,7 @@ Page({
   retryLoad() { this.load(); },
 
   // 空态引导:没有店铺记录 → 去商家入驻
-  goApply() { wx.navigateTo({ url: '/pages/merchant/apply/index' }); },
+  goApply() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/apply/index', complete: () => { this._navigating = false; } }); },
 
   _startSave(options) {
     if (this.data.saving || this.data.refreshing) return false;
