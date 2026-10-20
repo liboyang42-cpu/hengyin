@@ -46,6 +46,7 @@ import com.chengyinhub.business.service.IViewCommentService;
 import com.chengyinhub.business.service.IViewRegistrationService;
 import com.chengyinhub.business.service.ITmsBrowseRecordService;
 import com.chengyinhub.business.service.impl.TemplatePublishServiceImpl;
+import com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper;
@@ -136,6 +137,10 @@ class ApiTemplateSecretsGateTest {
         tplController = spy(new ApiTemplateController());
         doReturn(VIEWER).when(tplController).getAppUserId();
         ReflectionTestUtils.setField(tplController, "memberTemplateService", tplSvc);
+        LegacyCmsTemplateBodyReader legacyReader = mock(LegacyCmsTemplateBodyReader.class);
+        when(legacyReader.findLegacy(anyLong())).thenAnswer(invocation ->
+                tplSvc.selectCmsMemberTemplateById(invocation.getArgument(0)));
+        ReflectionTestUtils.setField(tplController, "legacyTemplateBodyReader", legacyReader);
         ReflectionTestUtils.setField(tplController, "templateLibraryService", libSvc);
         TemplatePublishServiceImpl publishService = new TemplatePublishServiceImpl();
         ReflectionTestUtils.setField(publishService, "memberTemplateService", tplSvc);

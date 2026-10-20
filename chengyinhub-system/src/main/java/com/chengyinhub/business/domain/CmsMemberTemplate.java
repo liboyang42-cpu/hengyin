@@ -1,5 +1,6 @@
 package com.chengyinhub.business.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.chengyinhub.system.domain.SysCategory;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -37,6 +38,10 @@ public class CmsMemberTemplate extends BaseEntity
     /** 引用的模板库ID(可为空) */
     @Excel(name = "引用的模板库ID(可为空)")
     private Long originalTemplateId;
+
+    /** Server-owned provenance sentinel; null alone is not evidence of independent authorship. */
+    @JsonIgnore
+    private String w18ProvenanceKind;
 
     /** 发布用户ID */
     @Excel(name = "发布用户ID")
@@ -376,6 +381,18 @@ public class CmsMemberTemplate extends BaseEntity
     public Long getOriginalTemplateId() 
     {
         return originalTemplateId;
+    }
+
+    @JsonIgnore
+    public String getW18ProvenanceKind()
+    {
+        return w18ProvenanceKind;
+    }
+
+    @JsonIgnore
+    public void setW18ProvenanceKind(String w18ProvenanceKind)
+    {
+        this.w18ProvenanceKind = w18ProvenanceKind;
     }
 
     public void setMemberId(Long memberId) 

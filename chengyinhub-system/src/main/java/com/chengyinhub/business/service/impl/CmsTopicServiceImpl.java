@@ -37,6 +37,7 @@ import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
 import com.chengyinhub.business.service.support.TopicRoutePublishGate;
 import com.chengyinhub.business.service.support.TopicStateKeyRefService;
+import com.chengyinhub.business.service.support.TopicPublicationValidator;
 import com.chengyinhub.business.support.OmsTicketWriteValidator;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.constant.ProductType;
@@ -82,6 +83,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class CmsTopicServiceImpl implements ICmsTopicService {
 
+    private final TopicPublicationValidator publicationValidator = new TopicPublicationValidator();
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
     private final TopicRouteConfigValidator topicRouteConfigValidator = new TopicRouteConfigValidator();
     private final TopicRoutePublishGate topicRoutePublishGate = new TopicRoutePublishGate();
@@ -186,6 +188,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.mapper.CmsMemberTemplateMapper cmsMemberTemplateMapper;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard legacyCmsProvenanceGuard;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.MerchantAuthoringCopyGuard merchantAuthoringCopyGuard;
+
     /** B1 发布期状态键闸。手工 new 的旧单测不注入该字段时闸跳过;Spring 运行态必注入。 */
     @Autowired
     private com.chengyinhub.business.service.support.ThemeStateKeyService themeStateKeyService;
@@ -198,6 +206,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
+
     /** R2-B10 主题数值规则校验器。无状态,直接 new,与 AdvancedGameConfigValidator 的用法一致。 */
     private final com.chengyinhub.business.service.support.JourneyRulesValidator journeyRulesValidator =
             new com.chengyinhub.business.service.support.JourneyRulesValidator();
@@ -205,10 +216,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     /** R8-STORY 主题级剧情配置校验器。无状态,直接 new;引用核对上下文由调用处给。 */
     private final com.chengyinhub.business.service.support.JourneyStoryValidator journeyStoryValidator =
             new com.chengyinhub.business.service.support.JourneyStoryValidator();
-
-    /** R22-SEC S16 块配置节点引用闸:无状态,直接 new,与其它校验器用法一致。 */
-    private final com.chengyinhub.business.service.support.AdvancedGameConfigValidator advancedGameConfigValidator =
-            new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
 
     @Autowired
     private CmsCollaboratorsMapper cmsCollaboratorsMapper;
@@ -1014,7 +1021,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     /**
      * [W4闭环] 把节点引用的私有模板深拷贝给副本归属。
-     * 返回副本节点应引用的 templateId;无模板 / 无法判定归属(P0-35 无 memberId 的复制)时原样返回。
+     * 返回副本节点应引用的 templateId;无模板时原样返回。正数 ID 先校验持久来源，
+     * 仅确认 legacy 后才保留无法判定归属(P0-35 无 memberId 的复制)时原样返回的行为。
      * {@code forceCopy=true}(块配置引用了 NPC)时,即使归属未变也深拷贝一份 —— 否则没有可回写的行,
      * enter/outcome.npcId 只能继续指向来源主题的 NPC。
      * 拷贝保留 status=1 / draft_status=1(源模板本就是审核通过的已发布模板,否则 W4 会拦节点引用),
@@ -1023,7 +1031,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private Long copyTemplateForOwner(Long templateId, Long newOwnerMemberId, Map<Long, Long> templateIdMap,
                                       boolean forceCopy) {
-        if (templateId == null || templateId <= 0L || newOwnerMemberId == null) {
+        if (templateId == null || templateId <= 0L) {
+            return templateId;
+        }
+        // Persistent provenance applies even to legacy no-owner reuse and this call's cache.
+        legacyCmsProvenanceGuard.requireLegacy(templateId);
+        if (newOwnerMemberId == null) {
             return templateId;
         }
         Long mapped = templateIdMap.get(templateId);
@@ -1031,10 +1044,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return mapped;
         }
         CmsMemberTemplate source = cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
-        if (source == null || (!forceCopy && newOwnerMemberId.equals(source.getMemberId()))) {
+        if (source == null) {
+            throw new ServiceException("复制主题失败: 来源节点模板不存在, templateId=" + templateId);
+        }
+        if (!forceCopy && newOwnerMemberId.equals(source.getMemberId())) {
             templateIdMap.put(templateId, templateId);
             return templateId;
         }
+        // Same-id reuse preserves W05 provenance; a new id would lose its binding.
+        merchantAuthoringCopyGuard.requireUnboundForDeepCopy(templateId);
         CmsMemberTemplate copy = new CmsMemberTemplate();
         BeanUtils.copyProperties(source, copy);
         copy.setId(null);
@@ -2859,6 +2877,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return publishDraftInternal(id, null, false);
     }
 
+<<<<<<< port
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publishDraft(Long id, Long expectedOwnerId) {
@@ -2929,6 +2948,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(id, taskId, "PENDING", submission.getBundledTemplateIds());
             result.setPublished(false);
             return result;
+=======
+    private TopicBundleSubmitResultVO publishDraftInternal(Long id) {
+        CmsTopic themeDraft = cmsTopicMapper.selectCmsTopicById(id);
+        if (themeDraft != null) themeRuntimePolicy.requireConfiguredEnabled(themeDraft.getThemeRuntimeConfigJson());
+        // 竞态安全门禁:仅当前确为草稿(is_draft=1)才清标记并继续,
+        // 防 rejected(审核未通过)/online 主题借道 publish-draft 绕过审核。
+        if (cmsTopicMapper.clearDraftIfDraft(id) <= 0) {
+            return null;
+        }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(id);
+        if (topic == null) {
+            throw new IllegalStateException("草稿发布失败: 主题不存在或无法锁定");
+>>>>>>> questify
         }
         // R19-DRAFT2:草稿保存放宽的那批完整度校验,在这里补回来 —— 半成品可以存,不能发。
         // 直接发布路径的同批校验在 createTopicInternal/rebuildTopicContent 的非草稿分支(它们从未放宽)。
@@ -3144,25 +3176,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         CmsTopicChapter probe = new CmsTopicChapter();
         probe.setTopicId(topic.getId());
         List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
-        if (chapters == null) return;
-        java.util.Set<String> refs = new java.util.LinkedHashSet<String>();
-        for (CmsTopicChapter chapter : chapters) {
-            if (chapter == null || StringUtils.isBlank(chapter.getBlocksJson())) continue;
-            refs.addAll(com.chengyinhub.business.util.StateKeyRefs.collectChapterThoughtRefs(chapter.getBlocksJson()));
-        }
-        if (refs.isEmpty()) return;
-        java.util.Set<String> defined = new java.util.LinkedHashSet<String>();
-        if (StringUtils.isNotBlank(topic.getJourneyRulesJson())) {
-            for (com.fasterxml.jackson.databind.JsonNode row
-                    : com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()).getThoughts()) {
-                defined.add(row.path("key").asText());
-            }
-        }
-        for (String key : refs) {
-            if (!defined.contains(key)) {
-                throw new ServiceException("故事里用到的念头「" + key + "」还没在思维阁里定义,玩家永远得不到它");
-            }
-        }
+        publicationValidator.assertThoughtRefsResolvable(topic, chapters);
     }
 
     /**
@@ -3198,126 +3212,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     private void assertStateKeysRegistered(CmsTopic topic) {
-        if (themeStateKeyService == null) {
-            // 手工 new 的旧单测没注入本类依赖(Spring 运行态必注入,缺失会是启动期错误)。
-            return;
-        }
-        // 键 → 引用它的节点名,发布失败时一起报出来
-        Map<String, Set<String>> refNodeNames = new LinkedHashMap<String, Set<String>>();
-        Set<String> storyKeys = new LinkedHashSet<String>();
-        Set<String> chapterKeys = new LinkedHashSet<String>();
-        String exhaustTag;
-        if (topicStateKeyRefService == null) {
-            // 收集服务未注入(手工 new 的单测):数值规则的力竭标记按本类口径兜底核对;
-            // 节点块引用只在收集服务里,这一支没有,行为与旧单测一致。
-            exhaustTag = journeyRulesExhaustTag(topic);
-        } else {
-            TopicStateKeyRefService.RefCollection refs = topicStateKeyRefService.collect(topic);
-            if (!refs.getParseErrors().isEmpty()) {
-                throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(refs.getParseErrors().get(0)));
-            }
-            for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
-                String label = refs.getNodeLabels().get(entry.getKey());
-                for (String ref : entry.getValue()) {
-                    Set<String> names = refNodeNames.get(ref);
-                    if (names == null) {
-                        names = new LinkedHashSet<String>();
-                        refNodeNames.put(ref, names);
-                    }
-                    names.add(label);
-                }
-            }
-            storyKeys.addAll(refs.getStoryKeys());
-            chapterKeys.addAll(refs.getChapterKeys());
-            exhaustTag = refs.getExhaustTag();
-        }
-        // R8-STORY:剧情配置里 cond / optionalClues 引用的键单独收一份 —— 收集服务那份只认 when
-        // (且未注入时会整侧跳过),这里按键去重后补齐 optionalClues。
-        Map<String, String> storyRefs = journeyStoryStateKeyRefs(topic);
-        if (refNodeNames.isEmpty() && exhaustTag == null && storyKeys.isEmpty() && storyRefs.isEmpty()
-                && chapterKeys.isEmpty()) {
-            return;
-        }
-        Set<String> thoughtDoneTags = com.chengyinhub.business.util.StateKeyRefs
-                .declaredThoughtDoneTags(topic.getJourneyRulesJson());
-        autoRegisterOptionTags(topic.getId(), refNodeNames.keySet(), storyKeys, chapterKeys, storyRefs.keySet());
-        Set<String> registered = new LinkedHashSet<String>();
-        Map<String, String> registeredTypes = new LinkedHashMap<String, String>();
-        for (ThemeStateKey row : themeStateKeyService.listByTopic(topic.getId())) {
-            if (row != null && !StringUtils.isEmpty(row.getStateKey())) {
-                registered.add(row.getStateKey());
-                registeredTypes.put(row.getStateKey(), row.getKeyType());
-            }
-        }
-        List<String> missing = new ArrayList<String>();
-        for (Map.Entry<String, Set<String>> entry : refNodeNames.entrySet()) {
-            if (!registered.contains(entry.getKey())) {
-                missing.add(entry.getKey() + "(节点:" + String.join(",", entry.getValue()) + ")");
-            }
-        }
-        // R2-B10:主题数值规则的力竭标记与玩法块引用同一道闸 —— 它会被检定链路写进本局 state_json,
-        // 没注册就是往一个主题没声明过的键上写。
-        if (exhaustTag != null && !registered.contains(exhaustTag)) {
-            missing.add(exhaustTag + "(来源:主题数值规则)");
-        }
-        // R8:主题剧情配置(journey_story_json)的 when 条件同样只能引用已注册的键。
-        for (String storyKey : storyKeys) {
-            if (!registered.contains(storyKey) && !thoughtDoneTags.contains(storyKey)) {
-                missing.add(storyKey + "(来源:主题剧情配置)");
-            }
-        }
-        // R19:叙事搬进章节故事流后,beat 块上的 when(brief carry / outcome fact / revisit change)
-        // 与模板叙事段同一道闸 —— 否则「配了条件但没注册键」会从必拦变成静默放行。
-        for (String chapterKey : chapterKeys) {
-            if (!registered.contains(chapterKey) && !thoughtDoneTags.contains(chapterKey)) {
-                missing.add(chapterKey + "(来源:章节故事流)");
-            }
-        }
-        // R8-STORY:剧情配置的 cond 与 optionalClues 引用同一注册表(收集服务已收过的键不重复报)
-        for (Map.Entry<String, String> entry : storyRefs.entrySet()) {
-            if (!registered.contains(entry.getKey()) && !storyKeys.contains(entry.getKey())
-                    && !thoughtDoneTags.contains(entry.getKey())) {
-                missing.add(entry.getKey() + "(来源:" + entry.getValue() + ")");
-            }
-        }
-        // R11-C:尾声的 relationKey 已注册还不够,类型必须就是 relation(关系值来源口径)。
-        for (String relationKey : journeyStoryRelationKeys(topic)) {
-            if (!registered.contains(relationKey)) {
-                continue;       // 未注册已由上面的通用闸报出,不重复报
-            }
-            if (!ThemeStateKey.TYPE_RELATION.equals(registeredTypes.get(relationKey))) {
-                missing.add(relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)");
-            }
-        }
-        if (!missing.isEmpty()) {
-            throw new ServiceException("主题发布失败:以下状态键未注册 → " + missing);
-        }
-    }
-
-    /**
-     * R2-B10:主题数值规则启用时,{@link JourneyRules.Recovery#getExhaustTag()} 就是发布期必须
-     * 已注册的键。未配置/未启用/没填标记一律返回 null(老主题行为不变)。
-     *
-     * <p>配置解析不了时 fail-closed:坏配置不能当成「没有引用」放过去。收集服务未注入的
-     * 手工单测里,发布闸的力竭标记核对走这一支。
-     */
-    private String journeyRulesExhaustTag(CmsTopic topic) {
-        String raw = topic == null ? null : topic.getJourneyRulesJson();
-        if (StringUtils.isEmpty(raw)) {
-            return null;
-        }
-        JourneyRules rules;
-        try {
-            rules = JourneyRules.parse(raw);
-        } catch (RuntimeException e) {
-            throw new ServiceException("主题的旅程数值规则无法解析,主题发布失败:" + e.getMessage());
-        }
-        // R22-SEC S15:checkEnabled 只关检定,不豁免力竭标记的注册闸(运行期仍会写入)。
-        if (rules.getRecovery() == null) {
-            return null;
-        }
-        String tag = rules.getRecovery().getExhaustTag();
-        return StringUtils.isEmpty(tag) ? null : tag;
+        if (themeStateKeyService == null) return; // Existing hand-built-test compatibility only.
+        TopicPublicationValidator.StateKeys context = topicStateKeyRefService == null
+                ? publicationValidator.prepareWithoutCollector(topic)
+                : publicationValidator.prepareStateKeys(topic, topicStateKeyRefService.collect(topic));
+        if (context == null) return;
+        autoRegisterOptionTags(topic.getId(), context.optionTagReferences());
+        publicationValidator.assertRegisteredStateKeys(context, themeStateKeyService.listByTopic(topic.getId()));
     }
 
     // ==================== R8-STORY 主题级剧情配置 ====================
@@ -3358,16 +3259,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 if (profile.getId() != null) ids.add(profile.getId());
             }
             if (node.getMerchantMemberId() != null) {
-                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, node.getMerchantMemberId()))) {
+                Long merchantId = merchantNpcIdentityDirectory.availableMerchantIdForMember(node.getMerchantMemberId());
+                if (merchantId == null) continue;
+                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, merchantId))) {
                     if (profile.getId() != null) ids.add(profile.getId());
                 }
             }
         }
         return ids;
     }
-
-    /** 节点叙事段里带 npcId 的段;两段都按「谁在说话」解析 NPC。 */
-    private static final List<String> NARRATIVE_NPC_SECTIONS = Arrays.asList("enter", "outcome");
 
     /**
      * R11-A 发布期节点叙事闸:玩法模板 advancedConfigJson 里 enter.npcId / outcome.npcId 必须是
@@ -3391,6 +3291,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (templateIds.isEmpty()) {
             return;
         }
+        for (Long templateId : new TreeSet<Long>(templateIds)) {
+            legacyCmsProvenanceGuard.requireLegacy(templateId);
+        }
         Map<Long, String> configByTemplate = new LinkedHashMap<Long, String>();
         for (CmsMemberTemplate template : nullToEmpty(
                 cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds)))) {
@@ -3399,44 +3302,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
         }
         // 老主题没有任何叙事 npcId 时连 NPC 名单都不查(发布行为与以前一致)。
-        Map<Long, List<String>> declared = new LinkedHashMap<Long, List<String>>();
-        for (CmsTopicNode node : nodes) {
-            String raw = node.getTemplateId() == null ? null : configByTemplate.get(node.getTemplateId());
-            for (String section : NARRATIVE_NPC_SECTIONS) {
-                Long npcId = blockNarrativeNpcId(raw, section);
-                if (npcId == null) {
-                    continue;
-                }
-                declareNpc(declared, npcId, "节点:" + node.getName() + ",段:" + section);
-            }
-        }
-        // R18:叙事段已迁往章节故事流 —— beat 块(enter / outcome)上的 npcId 过同一道闸,
-        // 否则故事流里配了本主题外的 NPC 会静默通过发布,玩家侧只看到 npc=null。
+        Map<Long, List<String>> declared = publicationValidator.templateNarrativeNpcReferences(nodes, configByTemplate);
         if (cmsTopicChapterMapper != null) {
-            Map<Long, String> nodeNames = new LinkedHashMap<Long, String>();
-            for (CmsTopicNode node : nodes) {
-                if (node.getId() != null) nodeNames.put(node.getId(), node.getName());
-            }
             CmsTopicChapter chapterProbe = new CmsTopicChapter();
             chapterProbe.setTopicId(topic.getId());
-            for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe))) {
-                if (chapter == null || StringUtils.isEmpty(chapter.getBlocksJson())) {
-                    continue;
-                }
-                for (Map.Entry<Long, com.fasterxml.jackson.databind.node.ObjectNode> entry
-                        : ChapterNarrativeBlocks.assembleByNode(chapter.getBlocksJson()).entrySet()) {
-                    String nodeName = nodeNames.get(entry.getKey());
-                    if (nodeName == null) nodeName = "节点#" + entry.getKey();
-                    for (String section : NARRATIVE_NPC_SECTIONS) {
-                        JsonNode npcId = entry.getValue().path(section).path("npcId");
-                        if (!npcId.isIntegralNumber() || npcId.asLong() <= 0L) {
-                            continue;
-                        }
-                        declareNpc(declared, Long.valueOf(npcId.asLong()),
-                                "节点:" + nodeName + ",段:" + section + "(故事流)");
-                    }
-                }
-            }
+            publicationValidator.addChapterNarrativeNpcReferences(declared, nodes,
+                    nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe)));
         }
         if (declared.isEmpty()) {
             return;
@@ -3445,15 +3316,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (available == null) {
             return;
         }
-        List<String> missing = new ArrayList<String>();
-        for (Map.Entry<Long, List<String>> entry : declared.entrySet()) {
-            if (!available.contains(entry.getKey())) {
-                missing.add("npcId=" + entry.getKey() + "(" + String.join(",", entry.getValue()) + ")");
-            }
-        }
-        if (!missing.isEmpty()) {
-            throw new ServiceException("主题发布失败:节点叙事的 npcId 不属于本主题可用 NPC → " + missing);
-        }
+        publicationValidator.assertNarrativeNpcReferences(declared, available);
     }
 
     /**
@@ -3481,6 +3344,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (templateIds.isEmpty()) {
             return;
         }
+        for (Long templateId : new TreeSet<Long>(templateIds)) {
+            legacyCmsProvenanceGuard.requireLegacy(templateId);
+        }
         Map<Long, String> configByTemplate = new LinkedHashMap<Long, String>();
         for (CmsMemberTemplate template : nullToEmpty(
                 cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds)))) {
@@ -3488,65 +3354,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 configByTemplate.put(template.getId(), template.getAdvancedConfigJson());
             }
         }
-        List<String> missing = new ArrayList<String>();
-        List<String> foreignCompleted = new ArrayList<String>();
-        for (CmsTopicNode node : nodes) {
-            String raw = node.getTemplateId() == null ? null : configByTemplate.get(node.getTemplateId());
-            if (StringUtils.isEmpty(raw)) {
-                continue;
-            }
-            for (Long referenced : com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(raw)) {
-                if (!nodeIds.contains(referenced)) {
-                    missing.add("nodeId=" + referenced + "(节点:" + node.getName() + ")");
-                }
-            }
-            // R22-SEC S16:NODE_COMPLETED 也是节点引用 —— nodeId 写错的条件永远不成立,发布期必须拦。
-            try {
-                advancedGameConfigValidator.assertCompletedNodeIdsOwned(raw, nodeIds);
-            } catch (RuntimeException e) {
-                foreignCompleted.add("节点:" + node.getName() + " — " + e.getMessage());
-            }
-        }
-        if (!missing.isEmpty() || !foreignCompleted.isEmpty()) {
-            StringBuilder message = new StringBuilder("主题发布失败:");
-            if (!missing.isEmpty()) {
-                message.append("块配置引用的系统变量节点不属于本主题 → ").append(missing);
-            }
-            if (!foreignCompleted.isEmpty()) {
-                if (!missing.isEmpty()) {
-                    message.append(";");
-                }
-                message.append("块配置的 NODE_COMPLETED 引用无效 → ").append(foreignCompleted);
-            }
-            throw new ServiceException(message.toString());
-        }
-    }
-
-    /** 同一 npcId 可能被模板与故事流多处引用;where 列出全部位置,报错时人能定位。 */
-    private static void declareNpc(Map<Long, List<String>> declared, Long npcId, String where) {
-        List<String> positions = declared.get(npcId);
-        if (positions == null) {
-            positions = new ArrayList<String>();
-            declared.put(npcId, positions);
-        }
-        positions.add(where);
-    }
-
-    /** 块配置某段声明的 npcId;缺省 / 非对象 / 坏 JSON / 非正整数一律当没配。 */
-    private static Long blockNarrativeNpcId(String advancedConfigJson, String section) {
-        if (StringUtils.isEmpty(advancedConfigJson)) {
-            return null;
-        }
-        try {
-            JsonNode config = ROUTE_JSON.readTree(advancedConfigJson);
-            if (config == null || !config.isObject()) {
-                return null;
-            }
-            JsonNode npcId = config.path(section).path("npcId");
-            return npcId.isIntegralNumber() && npcId.asLong() > 0L ? Long.valueOf(npcId.asLong()) : null;
-        } catch (Exception unusableBlockConfig) {
-            return null;
-        }
+        publicationValidator.assertBlockSysVarReferences(nodes, nodeIds, configByTemplate);
     }
 
     /**
@@ -3625,7 +3433,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * R8-STORY 发布期剧情引用闸:stages[].chapterId 必须属于本主题现存章节,
      * call / epilogues 的 npcId 必须是本主题可用 NPC。解析不了 fail-closed。
      */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy themeRuntimePolicy =
+            new com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy();
+
     private void assertThemeRuntimeReferences(CmsTopic topic) {
+        themeRuntimePolicy.requireConfiguredEnabled(topic.getThemeRuntimeConfigJson());
         com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(topic.getThemeRuntimeConfigJson());
         try {
             com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(topic.getJourneyStoryJson()==null?"{}":topic.getJourneyStoryJson()),config);
@@ -3635,7 +3448,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         Set<Long> nodeIds = new LinkedHashSet<Long>();
         for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
             nodeIds.add(node.getId());
-            if(cmsMemberTemplateMapper!=null && node.getTemplateId()!=null) {CmsMemberTemplate template=cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());if(template!=null && StringUtils.isNotEmpty(template.getAdvancedConfigJson()))try {com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(template.getAdvancedConfigJson()),config);}catch(java.io.IOException invalid){throw new IllegalArgumentException("节点条件无法读取",invalid);}}
+            if(cmsMemberTemplateMapper!=null && node.getTemplateId()!=null) {legacyCmsProvenanceGuard.requireLegacy(node.getTemplateId()); CmsMemberTemplate template=cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());if(template!=null && StringUtils.isNotEmpty(template.getAdvancedConfigJson()))try {com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertItemReferences(ROUTE_JSON.readTree(template.getAdvancedConfigJson()),config);}catch(java.io.IOException invalid){throw new IllegalArgumentException("节点条件无法读取",invalid);}}
         }
         if(config==null)return;
         Set<String> keys = new LinkedHashSet<String>();
@@ -3691,14 +3504,17 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             branchNodeRefs = null;      // 手工 new 的单测:该侧不核对
             outcomeNodeRefs = null;
         } else if (!templateIds.isEmpty()) {
+            for (Long templateId : new TreeSet<Long>(templateIds)) {
+                legacyCmsProvenanceGuard.requireLegacy(templateId);
+            }
             // 空模板集合不能进 in 查询(生成 where id in 空,语法错)
             Map<Long, Boolean> branchByTemplate = new LinkedHashMap<Long, Boolean>();
             Map<Long, Boolean> outcomeByTemplate = new LinkedHashMap<Long, Boolean>();
             for (CmsMemberTemplate template : nullToEmpty(
                     cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds)))) {
                 if (template != null && template.getId() != null) {
-                    branchByTemplate.put(template.getId(), blockIsBranch(template.getAdvancedConfigJson()));
-                    outcomeByTemplate.put(template.getId(), blockWritesOutcome(template.getAdvancedConfigJson()));
+                    branchByTemplate.put(template.getId(), TopicPublicationValidator.blockIsBranch(template.getAdvancedConfigJson()));
+                    outcomeByTemplate.put(template.getId(), TopicPublicationValidator.blockWritesOutcome(template.getAdvancedConfigJson()));
                 }
             }
             for (CmsTopicNode node : nodes) {
@@ -3707,75 +3523,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 if (Boolean.TRUE.equals(outcomeByTemplate.get(node.getTemplateId()))) outcomeNodeIds.add(node.getId());
             }
         }
+        Set<Long> availableNpcIds;
         try {
-            journeyStoryValidator.validate(raw, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.of(
-                    chapterIds, journeyStoryAvailableNpcIds(topic.getId()), nodeIds, branchNodeRefs, outcomeNodeRefs));
+            availableNpcIds = journeyStoryAvailableNpcIds(topic.getId());
         } catch (RuntimeException e) {
             throw new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage());
         }
-    }
-
-    /** 块配置会不会写 sys.outcome:分支玩法,或随机类(抛硬币 / 掷骰子 / 抽卡)。口径同 blockIsBranch。 */
-    private static boolean blockWritesOutcome(String advancedConfigJson) {
-        if (StringUtils.isEmpty(advancedConfigJson)) {
-            return false;
-        }
-        try {
-            JsonNode config = ROUTE_JSON.readTree(advancedConfigJson);
-            if (config == null || !config.isObject()) return false;
-            for (String kit : new String[]{"branch", "coinFlip", "diceRoll", "random"}) {
-                if (config.path(kit).path("enabled").asBoolean(false)) return true;
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /** 块配置是否配了分支玩法;缺省 / 坏 JSON / 非对象按「不是」处理(坏配置由状态键闸拦)。 */
-    private static boolean blockIsBranch(String advancedConfigJson) {
-        if (StringUtils.isEmpty(advancedConfigJson)) {
-            return false;
-        }
-        try {
-            JsonNode config = ROUTE_JSON.readTree(advancedConfigJson);
-            return config != null && config.isObject()
-                    && config.path("branch").path("enabled").asBoolean(false);
-        } catch (Exception unusableBlockConfig) {
-            return false;
-        }
-    }
-
-    /** 剧情配置里 cond / optionalClues 引用到的状态键;解析不了 fail-closed。 */
-    private Map<String, String> journeyStoryStateKeyRefs(CmsTopic topic) {
-        String raw = topic == null ? null : topic.getJourneyStoryJson();
-        Map<String, String> refs = new LinkedHashMap<String, String>();
-        if (StringUtils.isEmpty(raw)) {
-            return refs;
-        }
-        Set<String> keys;
-        try {
-            keys = com.chengyinhub.business.util.StateKeyRefs.collectJourneyStory(raw);
-        } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置无法解析,主题发布失败:" + e.getMessage());
-        }
-        for (String key : keys) {
-            refs.put(key, "剧情配置");
-        }
-        return refs;
-    }
-
-    /** R11-C:剧情配置尾声的 relationKey 集合(发布闸核对类型用);解析不了 fail-closed。 */
-    private Set<String> journeyStoryRelationKeys(CmsTopic topic) {
-        String raw = topic == null ? null : topic.getJourneyStoryJson();
-        if (StringUtils.isEmpty(raw)) {
-            return new LinkedHashSet<String>();
-        }
-        try {
-            return com.chengyinhub.business.util.StateKeyRefs.collectJourneyStoryRelationKeys(raw);
-        } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置无法解析,主题发布失败:" + e.getMessage());
-        }
+        publicationValidator.assertJourneyStoryReferences(raw, chapterIds, availableNpcIds,
+                nodeIds, branchNodeRefs, outcomeNodeRefs);
     }
 
     private void remapRebuiltTemplateNodes(Long topicId,Map<Long,Long> nodeMap,Long ownerId) {
@@ -4108,11 +3863,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R2-B10 主题数值规则:带才校验落库,不带保持 NULL(= 未启用)。非法配置在这里就抛,
         // 不静默落一份运行期读不懂的 JSON。
         topic.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
+<<<<<<< port
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig(), !saveDraft);
         topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(runtimeRaw));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()));
+=======
+        topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.normalize(dto.getThemeRuntimeConfig()));
+        if (!saveDraft) themeRuntimePolicy.requireConfiguredEnabled(topic.getThemeRuntimeConfigJson());
+>>>>>>> questify
         // R8-STORY 主题剧情:建题时章节/NPC 尚无 id,这里只校验形状与自身自洽,
         // 章节/NPC 引用由发布期带上下文重验(assertJourneyStoryReferences)。
         topic.setJourneyStoryJson(journeyStoryValidator.validate(dto.getJourneyStory(),
@@ -5829,6 +5589,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (memberId == null || !memberId.equals(tpl.getMemberId())) {
             throw new RuntimeException("不能引用他人的模板:" + templateId);
         }
+        legacyCmsProvenanceGuard.requireLegacy(templateId);
         boolean privateDraft = allowBundledDraft
                 && Long.valueOf(0L).equals(tpl.getStatus())
                 && Integer.valueOf(0).equals(tpl.getDraftStatus())

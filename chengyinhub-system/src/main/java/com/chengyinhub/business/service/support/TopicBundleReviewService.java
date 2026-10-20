@@ -47,6 +47,8 @@ public class TopicBundleReviewService {
     private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
     private final ObjectMapper json = new ObjectMapper()
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    private LegacyCmsTemplateApprovalBoundary legacyTemplateApprovalBoundary;
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
 
     public TopicBundleReviewService(CmsTopicMapper topicMapper,
@@ -246,6 +248,11 @@ public class TopicBundleReviewService {
                 ? Collections.<CmsMemberTemplate>emptyList()
                 : safe(templateMapper.selectCmsMemberTemplateByIdsForUpdate(submittedIds));
         if (templates.size() != submittedIds.size()) throw stale();
+        if (approve && !templates.isEmpty()) {
+            if (legacyTemplateApprovalBoundary == null) throw new IllegalStateException("LEGACY_TEMPLATE_APPROVAL_GUARD_UNAVAILABLE");
+            // Check the entire already-locked set before any bundled draft is approved.
+            for (CmsMemberTemplate template : templates) legacyTemplateApprovalBoundary.requireGenericApprovalAllowed(template);
+        }
         for (int i = 0; i < templates.size(); i++) {
             CmsMemberTemplate template = templates.get(i);
             Long expectedId = submittedIds.get(i);

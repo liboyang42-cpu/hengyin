@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicCouponRewardSupplyMapper">
+    <select id="options" resultMap="com.chengyinhub.business.mapper.SmsCouponMapper.SmsCouponResult">
+        <include refid="com.chengyinhub.business.mapper.SmsCouponMapper.selectSmsCouponVo"/>
+        where member_id = #{owner} and merchant_id = #{merchant} and scope_type = 1
+          and del_flag = 0 and status = 1
+          and start_time is not null and end_time is not null
+          and start_time &lt; end_time and end_time &gt; #{now}
+          and name is not null and trim(name) != '' and description is not null and trim(description) != ''
+          and (receive_count is null or receive_count &gt;= 0)
+          and (publish_count is null or publish_count &lt;= 0 or ifnull(receive_count, 0) &lt; publish_count)
+          <if test="cursor != null">and id &gt; #{cursor}</if>
+        order by id asc limit #{limit}
+    </select>
+</mapper>

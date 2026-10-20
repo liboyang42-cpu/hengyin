@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidProfessionalTargetStore">
+  <sql id="projection">
+    SELECT t.id,t.member_id AS publisherMemberId,SUBSTRING(t.name,1,257) AS name,t.product_type AS productType,
+      t.config_version AS configVersion,t.del_flag AS delFlag,r.id AS roleId,r.topic_id AS roleTopicId,
+      r.slot AS roleSlot,r.entity_type AS entityType,r.entity_id AS entityId,r.status AS roleStatus,r.declared_by AS declaredBy,r.created_at AS createdAt
+    FROM cms_topic t JOIN product_role r ON r.topic_id=t.id AND r.slot='CONTENT' AND r.status=1
+    WHERE t.del_flag=0 AND t.member_id=#{actor} AND r.entity_type='MEMBER' AND r.entity_id=#{actor}
+      AND (SELECT COUNT(*) FROM product_role active_role WHERE active_role.topic_id=t.id AND active_role.slot='CONTENT' AND active_role.status=1)=1
+  </sql>
+  <select id="list" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalTargetStore$Row" useCache="false" flushCache="true">
+    <include refid="projection"/><if test="before != null"> AND t.id &lt; #{before}</if> ORDER BY t.id DESC LIMIT 51
+  </select>
+  <select id="capture" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalTargetStore$Row" useCache="false" flushCache="true">
+    <include refid="projection"/> AND t.id=#{topic}
+  </select>
+</mapper>

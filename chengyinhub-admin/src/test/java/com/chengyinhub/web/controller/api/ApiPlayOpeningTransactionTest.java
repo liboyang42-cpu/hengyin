@@ -97,11 +97,11 @@ class ApiPlayOpeningTransactionTest
         // 本局读不到 ⇒ openingSnapshot 为空 ⇒ completeOpening 抛 IllegalArgumentException
         when(routeMapper.selectByOwner(0L, 10L, 7L, "default")).thenReturn(null);
 
-        TopicRouteRuntimeServiceImpl target = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper,
+        TopicRouteRuntimeServiceImpl target = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper,
                 mock(CmsTopicNodeMapper.class), mock(CmsMemberTemplateMapper.class),
                 mock(PlayerNodeProgressMapper.class), mock(CmsActivityMapper.class), registrationMapper,
                 mock(PlayerActivityRoleMapper.class), () -> 12345L, Clock.systemUTC(),
-                RouteReachabilityProvider.UNKNOWN);
+                RouteReachabilityProvider.UNKNOWN), mock(CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(target, "topicCompletionAwardService", awards);
 
         ProxyFactory factory = new ProxyFactory(target);

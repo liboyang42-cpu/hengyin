@@ -106,6 +106,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from roam_poi p
         where p.status = 1
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
           and p.lat between #{minLat} and #{maxLat}
           and p.lng between #{minLng} and #{maxLng}
     </select>
@@ -122,6 +123,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select <include refid="poiCols" /> from roam_poi p
         where p.status = 1
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
           and p.id in
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
@@ -458,6 +460,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join cms_member_template t on p.template_id = t.id
     </sql>
 
+    <!-- Player discovery is a legacy reader, not a paid-materialization entitlement.
+         Keep template-less POIs; a bound ID must resolve to a real unmarked row without
+         any provenance sidecar. Do not use this predicate for merchant/admin evidence. -->
+    <sql id="playerLegacyTemplateReadable">
+        (p.template_id is null or exists (
+            select 1 from cms_member_template legacy_template
+            where legacy_template.id = p.template_id
+              and legacy_template.w18_provenance_kind is null
+              and not exists (
+                  select 1 from w18_cms_template_provenance provenance
+                  where provenance.template_id = legacy_template.id
+              )
+        ))
+    </sql>
+
     <sql id="cityNodeContentApproved">
         (p.application_type is null or p.application_type = 2
          or (p.application_type = 1 and p.audit_status = 1))
@@ -484,6 +501,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join cms_member_template t on p.template_id = t.id
         where p.type = 2 and p.status = 1
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
           and p.lat between #{minLat} and #{maxLat}
           and p.lng between #{minLng} and #{maxLng}
           <if test="keyword != null and keyword != ''">
@@ -504,6 +522,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="cityNodeSelect" />
         where p.id = #{id} and p.type = 2
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
           and (p.status = 1 or (p.status = 0 and #{memberId} > 0 and exists (
               select 1 from roam_poi_reward_log r
               where r.poi_id = p.id and r.member_id = #{memberId} and r.status in (0, 1)
@@ -521,6 +540,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and c.member_id = #{memberId} and c.coll_type = 3
         where p.type = 2 and p.status = 1
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
         order by c.create_time desc, p.id desc
     </select>
 
@@ -671,6 +691,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="cityNodeSelect" />
         where p.type = 2 and p.status = 1 and p.merchant_id = #{merchantId}
           and <include refid="cityNodeContentApproved" />
+          and <include refid="playerLegacyTemplateReadable" />
         order by p.id desc
         limit 1
     </select>

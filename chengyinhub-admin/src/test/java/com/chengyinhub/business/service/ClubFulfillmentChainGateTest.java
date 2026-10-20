@@ -3,6 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.mapper.ClubMapper;
@@ -151,7 +152,13 @@ class ClubFulfillmentChainGateTest {
         reg.setPointUsed(null);
         reg.setWechatPaymentAmount(null);   // 非现金:只做标记/返积分,不触微信
         when(registrationMapper.selectCmsRegistrationById(11L)).thenReturn(reg);
-        when(registrationMapper.claimRegistrationRefunded(anyLong(), anyString(), any())).thenReturn(1);
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> persisted =
+                new java.util.concurrent.atomic.AtomicReference<>(reg);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(11L)).thenAnswer(inv -> persisted.get());
+        when(registrationMapper.claimRegistrationRefunded(anyLong(), anyString(), any())).thenAnswer(inv -> {
+            persisted.set(RegistrationLifecycleFixture.persisted(reg, 4, 3, inv.getArgument(2, Date.class)));
+            return 1;
+        });
 
         CmsActivity session = new CmsActivity();
         session.setId(50L);
@@ -165,7 +172,7 @@ class ClubFulfillmentChainGateTest {
         topic.setMemberId(7L);              // 调用者 = 主题作者,授权闸放行
         when(topicMapper.selectCmsTopicById(70L)).thenReturn(topic);
 
-        assertEquals(1, service.cancelPaidRegistrationByOwner(11L, 7L),
+        assertEquals(1, RegistrationLifecycleFixture.transactional(service).cancelPaidRegistrationByOwner(11L, 7L),
                 "集合时间早已过去不该拦住主办清退");
         verify(registrationMapper).claimRegistrationRefunded(anyLong(), anyString(), any());
     }

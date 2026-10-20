@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 public interface ITopicRouteRuntimeService {
+<<<<<<< port
     default JsonNode trustedGuidedRouteEffects(JsonNode frozen,Long nodeId,JsonNode verifiedAnswers) { throw new UnsupportedOperationException(); }
     default boolean verifyGuidedRouteAnswer(JsonNode frozen, Long nodeId, JsonNode answers) { throw new UnsupportedOperationException(); }
     default boolean genericPlayer(Long memberId, Long topicId, Long activityId) { return false; }
@@ -34,6 +35,88 @@ public interface ITopicRouteRuntimeService {
     default String compileTemplateRules(com.chengyinhub.business.domain.CmsTopic topic) { return topic.getThemeRuntimeConfigJson(); }
     default String freezePublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot) { throw new UnsupportedOperationException(); }
     default String freezePublishedJourney(com.chengyinhub.business.domain.CmsTopic topic) { throw new UnsupportedOperationException(); }
+=======
+    /** Request-local permission under the caller's transaction; never accepted from a client. */
+    final class NodeAwardPermit {
+        private final Long memberId, topicId, activityId, nodeId;
+        private final String playInstanceId;
+        private final boolean eligible;
+        public NodeAwardPermit(Long memberId, Long topicId, Long activityId, Long nodeId,
+                               String playInstanceId, boolean eligible) {
+            this.memberId=memberId; this.topicId=topicId; this.activityId=activityId; this.nodeId=nodeId;
+            this.playInstanceId=playInstanceId; this.eligible=eligible;
+        }
+        public String getPlayInstanceId() { return playInstanceId; }
+        public boolean isEligible() { return eligible; }
+        public boolean matches(Long member, Long topic, Long activity, Long node, String instance) {
+            return java.util.Objects.equals(memberId,member) && java.util.Objects.equals(topicId,topic)
+                    && java.util.Objects.equals(activityId,activity) && java.util.Objects.equals(nodeId,node)
+                    && java.util.Objects.equals(playInstanceId,instance);
+        }
+    }
+    default NodeAwardPermit beginOriginalNodeAward(Long memberId, Long topicId, Long activityId,
+                                                  Long nodeId, String instance) {
+        throw new UnsupportedOperationException("原始节点奖励边界未实现");
+    }
+    /** A shared team game and the actor's personal journey can have distinct authoritative tokens. */
+    final class TeamGameScope {
+        private final Long teamId,teamRunId,templateId;
+        private final String playInstanceId,actorPlayInstanceId;
+        private final String firstConfigFingerprint;
+        private final JsonNode config;
+        public TeamGameScope(Long teamId,Long teamRunId,String playInstanceId,String actorPlayInstanceId,Long templateId,JsonNode config) {
+            this(teamId,teamRunId,playInstanceId,actorPlayInstanceId,templateId,config,null);
+        }
+        /** Non-null fingerprint is supplied only after verifying the persisted FIRST actor. */
+        public TeamGameScope(Long teamId,Long teamRunId,String playInstanceId,String actorPlayInstanceId,Long templateId,JsonNode config,String firstConfigFingerprint) {
+            this.teamId=teamId;this.teamRunId=teamRunId;this.playInstanceId=playInstanceId;this.actorPlayInstanceId=actorPlayInstanceId;this.templateId=templateId;this.config=config.deepCopy();
+            this.firstConfigFingerprint=firstConfigFingerprint;
+        }
+        public Long getTeamId(){return teamId;} public Long getTeamRunId(){return teamRunId;}
+        public String getPlayInstanceId(){return playInstanceId;} public String getActorPlayInstanceId(){return actorPlayInstanceId;}
+        public Long getTemplateId(){return templateId;} public JsonNode getConfig(){return config.deepCopy();}
+        public String getFirstConfigFingerprint(){return firstConfigFingerprint;}
+    }
+    default TeamGameScope resolveTeamGameScope(Long memberId,Long topicId,Long activityId,Long nodeId,Long teamId,boolean forWrite) { return null; }
+    default boolean isOriginalNodeAwardEligible(Long memberId,Long topicId,Long activityId,Long nodeId,String instance) { return !isReplayInstance(memberId,topicId,activityId,instance); }
+    default boolean isReplayInstance(Long memberId,Long topicId,Long activityId,String instance) { return instance!=null && !"default".equals(instance); }
+    default Map<String,Object> replayThemeTeam(Long actorId,Long teamId,Long activityId,Long topicId,Long sourceSessionId,Long previousTeamRunId,String actionId) { throw new UnsupportedOperationException(); }
+
+    /** Minimal completion truth; never exposes frozen configuration or full state. */
+    final class CurrentSessionFact {
+        private final Integer status;
+        private final String playInstanceId;
+        private final boolean theme;
+        public CurrentSessionFact(Integer status, String playInstanceId, boolean theme) {
+            this.status = status; this.playInstanceId = playInstanceId; this.theme = theme;
+        }
+        public Integer getStatus() { return status; }
+        public String getPlayInstanceId() { return playInstanceId; }
+        public boolean isTheme() { return theme; }
+    }
+
+    /** Compatibility for pre-theme implementations; the production runtime overrides this. */
+    default Map<String,CurrentSessionFact> currentSessionFacts(List<TopicRouteSession> scopes) {
+        Map<String,Integer> statuses = sessionStatuses(scopes);
+        Map<String,CurrentSessionFact> result = new java.util.LinkedHashMap<>();
+        if (statuses != null) for (Map.Entry<String,Integer> entry : statuses.entrySet()) {
+            result.put(entry.getKey(),new CurrentSessionFact(entry.getValue(),"default",false));
+        }
+        return result;
+    }
+
+    default Map<String,String> playInstances(List<TopicRouteSession> scopes) {
+        Map<String,String> result = new java.util.LinkedHashMap<>();
+        if (scopes != null) for (TopicRouteSession scope : scopes) {
+            result.put(sessionKey(scope.getMemberId(),scope.getTopicId(),scope.getActivityId()),
+                    playInstance(scope.getMemberId(),scope.getTopicId(),scope.getActivityId()));
+        }
+        return result;
+    }
+
+    default Long nodeRuntimeTemplateId(Long memberId, Long topicId, Long nodeId, Long activityId) { return null; }
+    default boolean assertCurrentPlayInstance(Long memberId, Long topicId, Long activityId, String playInstanceId) { return false; }
+>>>>>>> questify
     default List<Map<String,Object>> themeHistory(Long memberId,Long topicId,Long beforeSessionId,Integer limit) {return themeHistory(memberId,topicId);}
     default Map<String,Object> themeCard(Long memberId,Long sessionId) {throw new UnsupportedOperationException();}
     default JsonNode nodeRuntimeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {return nodeRuntimeConfig(memberId,topicId,nodeId);}
@@ -58,6 +141,8 @@ public interface ITopicRouteRuntimeService {
     TopicRouteState state(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);
     void requireOpeningAccess(Long memberId, Long topicId, Long activityId, Long nodeId);
+    /** Checks existing opening state without initializing a journey or writing stage-rest records. */
+    void requireOpeningAccessReadOnly(Long memberId, Long topicId, Long activityId, Long nodeId);
 
     /**
      * 思维阁:到站时同步一次步数。{@code todaySteps} 必须是服务端解密微信运动拿到的今日累计,

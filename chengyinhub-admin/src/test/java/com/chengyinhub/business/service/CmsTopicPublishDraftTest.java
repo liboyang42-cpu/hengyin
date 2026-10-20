@@ -99,6 +99,7 @@ class CmsTopicPublishDraftTest {
         // F4 起专业版提交审核也验状态键,故三板斧齐备(无引用的老主题走不到注册表查询)。
         ReflectionTestUtils.setField(svc, "cmsTopicNodeMapper", cmsTopicNodeMapper);
         ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper", cmsMemberTemplateMapper);
+<<<<<<< port
         // Real publication/reference guards, with only the reviewed asset persistence mocked.
         com.chengyinhub.business.service.support.AppMediaReferenceGuard references =
                 new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
@@ -114,6 +115,14 @@ class CmsTopicPublishDraftTest {
         ReflectionTestUtils.setField(svc, "mediaPublicationGuard", mediaGuard);
         when(mediaAssetMapper.select(901L)).thenReturn(java.util.Map.of(
                 "id", 901L, "ownerType", "APP", "memberId", 7L, "reviewState", "APPROVED"));
+=======
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
+>>>>>>> questify
         ReflectionTestUtils.setField(svc, "themeStateKeyService", new ThemeStateKeyService(themeStateKeyMapper));
         // R8 起引用收集在 TopicStateKeyRefService(节点块 + 数值规则),发布闸与试检查共用。
         ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
@@ -141,7 +150,14 @@ class CmsTopicPublishDraftTest {
         when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(9L)).thenReturn(nonDraft);
         assertFalse(svc.publishDraft(9L), "非草稿不应发布(审核绕过防护)");
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
+<<<<<<< port
         verify(topicBundleReviewService, never()).freezeForSubmission(anyLong(), anyLong());
+=======
+        // Theme policy discovery is read-only and precedes the draft compare-and-set.
+        verify(cmsTopicMapper).selectCmsTopicById(9L);
+        verify(cmsTopicMapper, never()).selectCmsTopicByIdForUpdate(any());
+        org.mockito.Mockito.verifyNoInteractions(auditTaskService, topicBundleReviewService);
+>>>>>>> questify
     }
 
     @Test

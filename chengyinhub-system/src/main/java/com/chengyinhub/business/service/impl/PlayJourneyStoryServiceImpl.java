@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,10 @@ import java.util.Map;
  */
 @Service
 public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy themeRuntimePolicy =
+            new com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy();
+
 
     private static final Logger LOG = LoggerFactory.getLogger(PlayJourneyStoryServiceImpl.class);
 
@@ -98,7 +103,12 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
+<<<<<<< port
         TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
+=======
+        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        themeRuntimePolicy.requireSessionEnabled(session);
+>>>>>>> questify
         JourneyStory story = requireStory(topic, session);
         if (story.getStages() == null || story.getStages().isEmpty()) {
             throw new ServiceException("本主题未配置剧情阶段");
@@ -113,13 +123,25 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if (stage == null) {
             throw new ServiceException("本章节未配置阶段结算");
         }
-        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterById(chapterId);
-        if (chapter == null || !topicId.equals(chapter.getTopicId())) {
-            throw new ServiceException("章节不存在");
-        }
         requireSession(session, memberId);
         TopicRouteEngine.State state = readState(session);
+<<<<<<< port
         assertChapterNodesCompleted(topicId, chapterId, state, session);
+=======
+        JsonNode frozen = frozenThemeSnapshot(session);
+        if (frozen == null) {
+            CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterById(chapterId);
+            if (chapter == null || !topicId.equals(chapter.getTopicId())) throw new ServiceException("章节不存在");
+            assertChapterNodesCompleted(topicId, chapterId, state);
+        } else {
+            JsonNode chapter = frozen.path("themeStoryChapters").get(String.valueOf(chapterId));
+            if (chapter == null || !chapter.isObject() || !chapter.path("nodeIds").isArray()) throw new ServiceException("章节快照不可用");
+            for (JsonNode id : chapter.path("nodeIds")) {
+                if (!id.isIntegralNumber() || !id.canConvertToLong() || id.longValue() <= 0) throw new ServiceException("章节节点快照不可用");
+                if (!state.getCompletedNodeIds().contains(id.longValue())) throw new ServiceException("本章节还有站点未完成");
+            }
+        }
+>>>>>>> questify
 
         Map<String, Object> view = new LinkedHashMap<String, Object>();
         view.put("changed", passingTexts(stage.getEnd() == null ? null : stage.getEnd().getChanged(), state));
@@ -154,7 +176,12 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
+<<<<<<< port
         TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
+=======
+        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        themeRuntimePolicy.requireSessionEnabled(session);
+>>>>>>> questify
         if (session != null && session.getStatus() != null && session.getStatus() != TopicRouteSession.STATUS_RUNNING) {
             TopicRouteEngine.State frozenState = readState(session);
             if (frozenState.getThemeRuntime().has("result")) {
@@ -184,6 +211,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
     }
 
     /** 同一结局求值用于结束事务的不可变存档；不要求已落库为完成状态。 */
+<<<<<<< port
     public Map<String,Object> freezeEnding(Long topicId,String raw,TopicRouteEngine.State state) {
         return freezeEnding(topicId, raw, state, null);
     }
@@ -195,6 +223,52 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if(story==null || story.getEnding()==null)return java.util.Collections.emptyMap();
         return evaluateEnding(topicId,story,state,topicMapper.selectCmsTopicById(topicId),session,
                 session == null ? null : session.getMemberId(),false);
+=======
+    public Map<String,Object> freezeEnding(TopicRouteSession session, TopicRouteEngine.State state) {
+        themeRuntimePolicy.requireSessionEnabled(session);
+        if (session == null || !com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy.hasFrozenTheme(session)) {
+            throw new ServiceException("主题快照不可用");
+        }
+        String raw = NodeJourneySnapshot.journeyStory(session.getConfigSnapshotJson());
+        if (raw == null) throw new ServiceException("剧情快照不可用");
+        JourneyStory story=JourneyStory.parse(raw);
+        if(story==null || story.getEnding()==null)return java.util.Collections.emptyMap();
+        return evaluateEnding(session.getTopicId(),story,state,null,session,session.getMemberId());
+    }
+
+    /** Capture only public NPC display names through the existing guarded identity resolver. */
+    public com.fasterxml.jackson.databind.node.ObjectNode freezeNpcNames(Long topicId) {
+        return JSON.valueToTree(npcNames(topicId));
+    }
+
+    private JsonNode frozenThemeSnapshot(TopicRouteSession session) {
+        if (session == null || !com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy.hasFrozenTheme(session)) return null;
+        try { return JSON.readTree(session.getConfigSnapshotJson()); }
+        catch (Exception invalid) { throw new ServiceException("主题快照不可用"); }
+    }
+
+    private Map<Long, String> frozenNpcNames(JsonNode snapshot) {
+        JsonNode names = snapshot.get("themeNpcNames");
+        if (names == null || !names.isObject()) throw new ServiceException("角色快照不可用");
+        Map<Long, String> out = new LinkedHashMap<>();
+        names.fields().forEachRemaining(row -> out.put(Long.valueOf(row.getKey()), row.getValue().isNull() ? null : row.getValue().asText()));
+        return out;
+    }
+
+    private Map<String, Object> frozenEndingChapter(JsonNode snapshot, JourneyStory.EndingCase chosen, TopicRouteEngine.State state) {
+        if (chosen == null || chosen.getChapterId() == null) return null;
+        JsonNode chapter = snapshot.path("themeStoryChapters").get(String.valueOf(chosen.getChapterId()));
+        if (chapter == null || !chapter.isObject() || !chapter.path("blocks").isArray()) throw new ServiceException("结局章节快照不可用");
+        // The frozen blocks have the same DTO shape as the existing ChapterBlockReadSupport output.
+        List<Object> frozenBlocks = JSON.convertValue(chapter.path("blocks"), new com.fasterxml.jackson.core.type.TypeReference<List<Object>>(){});
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", chosen.getChapterId());out.put("name", chapter.path("name").isNull() ? null : chapter.path("name").asText());
+        out.put("atmospherePreset", chapter.path("atmospherePreset").isNull() ? null : chapter.path("atmospherePreset").asText());
+        out.put("audioUrl", chapter.path("audioUrl").isNull() ? null : chapter.path("audioUrl").asText());
+        out.put("blocks", com.chengyinhub.business.util.ChapterBlockReadSupport.projectForPlayer(frozenBlocks,
+                new java.util.HashSet<Long>(state.getCompletedNodeIds()), new java.util.HashSet<String>(state.getTags())));
+        return out;
+>>>>>>> questify
     }
     private Map<String,Object> evaluateEnding(Long topicId,JourneyStory story,TopicRouteEngine.State state,CmsTopic topic,TopicRouteSession session,Long memberId,boolean includeArchive) {
         JourneyStory.Ending ending=story.getEnding();
@@ -203,15 +277,22 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         view.put("code", chosen == null ? null : chosen.getCode());
         view.put("title", chosen == null ? null : chosen.getTitle());
         view.put("summary", chosen == null ? null : chosen.getSummary());
-        view.put("epilogues", epilogues(ending.getEpilogues(), topicId, state));
+        JsonNode frozen = frozenThemeSnapshot(session);
+        view.put("epilogues", frozen == null ? epilogues(ending.getEpilogues(), topicId, state)
+                : epilogues(ending.getEpilogues(), state, frozenNpcNames(frozen)));
         view.put("exhibits", exhibitTexts(ending.getExhibits(), state));
         view.put("badge", badgeView(ending.getBadges(), state));
         view.put("costs", costs(topicId, state, rulesOf(topic, session), session == null ? null : session.getConfigSnapshotJson()));
         int[] found = foundClues(ending.getOptionalClues(), state);
         view.put("found", found[0]);
         view.put("total", found[1]);
+<<<<<<< port
         if(includeArchive && session != null) view.put("archive", archive(memberId, topicId, session));
         view.put("chapter", endingChapter(topicId, chosen, state, session));
+=======
+        if(session != null) view.put("archive", archive(memberId, topicId, session));
+        view.put("chapter", frozen == null ? endingChapter(topicId, chosen, state) : frozenEndingChapter(frozen, chosen, state));
+>>>>>>> questify
         return view;
     }
 
@@ -279,7 +360,9 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if (gameSessionMapper == null || session == null) return out;
         Long activityId = session.getActivityId() == null ? Long.valueOf(0L) : session.getActivityId();
         List<com.chengyinhub.business.domain.GameRuntimeSession> rows =
-                gameSessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId);
+                frozenThemeSnapshot(session) == null
+                    ? gameSessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId)
+                    : gameSessionMapper.selectPlayerSessionsByTopicForInstance(activityId, topicId, memberId, session.getPlayInstanceId());
         if (rows == null) return out;
         // 旧模型缺省实例沿用既有 null→default 兼容；空白不是默认实例，也不是通配。
         String instance = session.getPlayInstanceId() == null ? "default" : session.getPlayInstanceId();
@@ -487,11 +570,13 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
     /** 尾声按 relationKey 指向的变量值选句:≥1 ally、=0 或缺 neutral、≤-1 guarded。 */
     private List<Map<String, Object>> epilogues(List<JourneyStory.Epilogue> epilogues, Long topicId,
                                                 TopicRouteEngine.State state) {
+        return epilogues(epilogues, state, npcNames(topicId));
+    }
+
+    private List<Map<String, Object>> epilogues(List<JourneyStory.Epilogue> epilogues,
+                                               TopicRouteEngine.State state, Map<Long, String> names) {
         List<Map<String, Object>> view = new ArrayList<Map<String, Object>>();
-        if (epilogues == null) {
-            return view;
-        }
-        Map<Long, String> names = npcNames(topicId);
+        if (epilogues == null) return view;
         for (JourneyStory.Epilogue item : epilogues) {
             if (item == null || item.getNpcId() == null) {
                 continue;
@@ -595,7 +680,12 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
             return view;
         }
         Map<String, String> labels = new LinkedHashMap<String, String>();
-        for (ThemeStateKey row : JourneyInitialState.visibleKeys(themeStateKeyService.listByTopic(topicId), rules, snapshot)) {
+        boolean frozenTheme = false;
+        if (snapshot != null) {
+            try { frozenTheme = JSON.readTree(snapshot).has("themeConfig"); }
+            catch (Exception invalid) { throw new ServiceException("本局快照不可用"); }
+        }
+        for (ThemeStateKey row : JourneyInitialState.visibleKeys(frozenTheme ? Collections.emptyList() : themeStateKeyService.listByTopic(topicId), rules, snapshot)) {
             if (row == null || StringUtils.isBlank(row.getStateKey())) {
                 continue;
             }
@@ -658,6 +748,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
 
     private JourneyRules rulesOf(CmsTopic topic, TopicRouteSession session) {
         String frozen = session == null ? null : NodeJourneySnapshot.journeyRules(session.getConfigSnapshotJson());
+        if (frozen == null && frozenThemeSnapshot(session) != null) throw new ServiceException("数值规则快照不可用");
         return JourneyRules.parse(frozen != null ? frozen : topic.getJourneyRulesJson());
     }
 

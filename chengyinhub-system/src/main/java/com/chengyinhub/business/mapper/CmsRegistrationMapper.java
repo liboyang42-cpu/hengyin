@@ -111,6 +111,10 @@ public interface CmsRegistrationMapper
 
     List<java.util.Map<String, Object>> selectPureContentExploreCompletion(@Param("topicId") Long topicId);
 
+    /** Enumerates paid, live explore owner scopes only; completion is resolved against each current run. */
+    List<CmsRegistration> selectPureContentExploreScopes(@Param("topicId") Long topicId,
+            @Param("afterId") Long afterId, @Param("limit") int limit);
+
     /**
      * 新增活动/主题报名
      * 

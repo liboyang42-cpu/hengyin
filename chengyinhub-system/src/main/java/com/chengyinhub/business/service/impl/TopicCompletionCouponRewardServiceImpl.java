@@ -24,6 +24,14 @@ public class TopicCompletionCouponRewardServiceImpl implements ITopicCompletionC
     @Autowired
     private ISmsCouponHistoryService smsCouponHistoryService;
 
+    /** Absent by default; only the separately reviewed receipt profile installs this hook. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.coupon.TopicCompletionCouponReceiptService receiptService;
+
+    @Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("topicCompletionCouponHistoryResolver")
+    private com.chengyinhub.business.service.coupon.TopicCompletionCouponHistoryResolving receiptProtocol;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean grantOnce(Long topicId, Long memberId, Long couponId)
@@ -35,10 +43,21 @@ public class TopicCompletionCouponRewardServiceImpl implements ITopicCompletionC
             logger.warn("COUPON_DISABLED_SKIP caller=topicCompletion topicId={} memberId={} couponId={}", topicId, memberId, couponId);
             return false;
         }
+        if (receiptProtocol == null) throw new IllegalStateException("Completion receipt protocol guard is unavailable");
+        boolean recordedProtocol = receiptProtocol.protocolInstalled();
+        if (recordedProtocol && receiptService == null) throw new IllegalStateException("Recorded completion issuer is disabled");
+        if (!recordedProtocol && receiptService != null) throw new IllegalStateException("Recorded completion schema is unavailable");
         if (rewardMapper.insertIgnore(topicId, memberId, couponId) == 0) return false;
+<<<<<<< port
         Long historyId = smsCouponHistoryService.grantCouponWithReceipt(memberId,
                 smsCouponMapper.selectSmsCouponById(couponId));
         if (historyId == null || historyId <= 0)
+=======
+        boolean granted = receiptService == null
+                ? smsCouponHistoryService.grantCouponById(memberId, couponId)
+                : receiptService.grantForNewCompletion(topicId, memberId, couponId);
+        if (!granted)
+>>>>>>> questify
         {
             throw new IllegalStateException("主题通关奖励券发放失败");
         }

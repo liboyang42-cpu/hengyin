@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.reservation.store.ModuleInstallationStore">
+  <resultMap id="Receipt" type="com.chengyinhub.business.marketplace.reservation.store.ModuleOwnedDraftRow">
+    <id property="id" column="id"/>
+    <result property="reservationKey" column="reservation_key"/>
+    <result property="buyerKind" column="buyer_kind"/>
+    <result property="buyerId" column="buyer_id"/>
+    <result property="targetDraftId" column="target_draft_id"/>
+    <result property="targetRevision" column="target_revision"/>
+    <result property="installedAt" column="committed_at"/>
+  </resultMap>
+  <insert id="insertOwnedDraft" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO w18_module_owned_draft
+      (reservation_key, buyer_kind, buyer_id, target_draft_id, target_revision, revision, state,
+       review_status, publish_status, is_sync, source_content, terms_document, frozen_rights, installed_by, installed_at)
+    VALUES (#{reservationKey}, #{buyerKind}, #{buyerId}, #{targetDraftId}, #{targetRevision}, 1, 'DRAFT',
+            0, 0, 0, #{sourceContent}, #{termsDocument}, #{rightsJson}, #{installedBy}, #{installedAt})
+  </insert>
+  <insert id="insertTextComponent">
+    INSERT INTO w18_module_draft_component (draft_id, local_key, component_kind, schema_version, content_json)
+    VALUES (#{id}, 'template', 'TEXT_TEMPLATE', 1, #{contentJson})
+  </insert>
+  <insert id="insertUsage">
+    INSERT INTO w18_module_install_usage (reservation_key, owned_draft_id, committed_at)
+    VALUES (#{key}, #{draftId}, #{now})
+  </insert>
+  <update id="consume">
+    UPDATE w18_module_install_reservation SET state = 'CONSUMED', terminal_at = #{now}
+    WHERE reservation_key = #{key} AND buyer_kind = #{buyerKind} AND buyer_id = #{buyerId}
+      AND state = 'RESERVED' AND expires_at &gt; #{now}
+  </update>
+  <select id="findReceipt" resultMap="Receipt">
+    SELECT d.id, d.reservation_key, d.buyer_kind, d.buyer_id, d.target_draft_id, d.target_revision, u.committed_at
+    FROM w18_module_owned_draft d JOIN w18_module_install_usage u
+      ON u.owned_draft_id = d.id AND u.reservation_key = d.reservation_key
+    WHERE d.reservation_key = #{key} AND d.buyer_kind = #{buyerKind} AND d.buyer_id = #{buyerId}
+    FOR UPDATE
+  </select>
+</mapper>

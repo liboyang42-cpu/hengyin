@@ -81,6 +81,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </select>
 
+    <!-- Exact own-topic predicate. No optional WHERE and no like_type filtering. -->
+    <select id="countOwnTopicLikes" resultType="java.lang.Long">
+        select count(1) from cms_topic_like
+        where member_id = #{memberId,jdbcType=BIGINT}
+          and data_id = #{topicId,jdbcType=BIGINT}
+          and #{memberId,jdbcType=BIGINT} &gt; 0
+          and #{topicId,jdbcType=BIGINT} &gt; 0
+    </select>
+
+    <delete id="deleteOwnTopicLikes">
+        delete from cms_topic_like
+        where member_id = #{memberId,jdbcType=BIGINT}
+          and data_id = #{topicId,jdbcType=BIGINT}
+          and #{memberId,jdbcType=BIGINT} &gt; 0
+          and #{topicId,jdbcType=BIGINT} &gt; 0
+    </delete>
+
     <delete id="deleteCmsTopicLikeById" parameterType="Long">
         delete from cms_topic_like where id = #{id}
     </delete>

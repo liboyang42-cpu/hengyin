@@ -134,6 +134,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private com.chengyinhub.business.service.ICmsTemplateLibraryService cmsTemplateLibraryService;
     @Autowired
     private CmsMemberTemplateMapper templateMapper;
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    private com.chengyinhub.business.service.support.LegacyCmsTemplateApprovalBoundary legacyTemplateApprovalBoundary;
     @Autowired
     private CmsTemplateLibraryMapper libraryMapper;
     // 过审自动上架需过配额闸(锁+复查,单一实现在 QuotaService),防并发批准绕过 maxThemes
@@ -163,8 +165,15 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.IRoamHangoutService> roamHangoutServiceProvider;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.release.ContentCaptureReviewService contentCaptureReviewService;
+
     @Override
     public Long submit(String bizType, Long bizId, Long submitterId, String sourceType, String snapshotJson) {
+        requireGenericCreation(bizType, sourceType);
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(bizType)) {
+            throw new IllegalArgumentException("Candidate review requires an immutable persisted binding");
+        }
         AuditTask task = new AuditTask();
         task.setBizType(bizType);
         task.setBizId(bizId);
@@ -337,6 +346,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long reportContent(String bizType, Long bizId, Long reporterId, String reasonText) {
+        requireGenericCreation(bizType, SOURCE_REPORT);
         String snapshot = buildReportSnapshot(bizType, bizId, reasonText);
         // 幂等:同一内容的多次举报汇聚到同一张未结审核单,避免刷单顶爆工作台;
         // 但每次举报仍 append 一条 AuditRecord(action=REPORT)留痕 → 举报数=REPORT 记录数、处置记录=记录历史,免迁移。
@@ -364,6 +374,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     public List<AuditRecord> listAuditRecords(Long taskId) {
+        if (isNpcDraft(auditTaskMapper.selectAuditTaskById(taskId))) return Collections.emptyList();
         AuditRecord q = new AuditRecord();
         q.setTaskId(taskId);
         return auditRecordMapper.selectAuditRecordList(q);
@@ -375,6 +386,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
      */
     private Long findOrCreateOpenTask(String bizType, Long bizId, Long submitterId,
                                       String sourceType, String riskLevel, String snapshotJson) {
+        requireGenericCreation(bizType, sourceType);
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(bizType)) {
+            throw new IllegalArgumentException("Candidate review requires an immutable persisted binding");
+        }
         Long open = findOpenTaskId(bizType, bizId);
         if (open != null) {
             return open;
@@ -503,6 +518,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
         }
+        requireGenericDecision(task);
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(task.getBizType())) {
+            if (contentCaptureReviewService == null || operatorId == null) throw new IllegalStateException("Candidate review unavailable");
+            task = contentCaptureReviewService.lockAndValidateReview(taskId, operatorId, request);
+        }
         if (AuditTask.BIZ_TOPIC.equals(task.getBizType()) || AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(task.getBizType())
                 || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())) {
             auditTaskMapper.selectTopicPublicationTasksForUpdate(task.getBizId());
@@ -552,6 +572,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
         if (templateLock != null) assertTemplateReviewCurrent(templateLock, request);
+        if (templateLock != null && AuditTask.STATUS_APPROVED.equals(request.getStatus())) {
+            if (legacyTemplateApprovalBoundary == null) throw new IllegalStateException("LEGACY_TEMPLATE_APPROVAL_GUARD_UNAVAILABLE");
+            legacyTemplateApprovalBoundary.requireGenericApprovalAllowed(templateLock.template);
+        }
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -704,6 +728,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 ? "举报成立，组局聊天已关闭" : "举报成立，已按规则处理") : (AuditTask.BIZ_HANGOUT.equals(task.getBizType())
                         ? "本次举报不成立，既有处理不变" : "你举报的内容未发现违规"))
                 : (upheld ? "你提交的内容未通过审核" : "你提交的内容已通过审核");
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(task.getBizType())) {
+            outcome = upheld ? "候选内容审核未通过；尚未发布" : "候选内容审核已记录；发布条件仍未满足，尚未发布";
+        }
         String reason = request.getReasonText() == null || request.getReasonText().isEmpty()
                 ? outcome : request.getReasonText();
         for (java.util.Map.Entry<Long, String> recipient : recipients.entrySet()) {
@@ -768,6 +795,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (taskId == null || operatorId == null || request == null || request.getExpectedVersion() == null) {
             throw governanceError(ERROR_REVERT_BAD_REQUEST, "撤销参数不完整", HttpStatus.BAD_REQUEST);
         }
+        // Reserved NPC tasks must not enter the generic receipt replay path either.
+        requireGenericDecision(auditTaskMapper.selectAuditTaskById(taskId));
         String requestId = requireStableKey(request.getIdempotencyKey());
         String reason = requireReason(request.getReason(), "撤销理由不能为空");
         BusinessAuditEventMapper auditMapper = requireBusinessAuditMapper();
@@ -780,11 +809,23 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             if (!replayMatches(replay, request.getExpectedVersion(), reason)) {
                 throw governanceError(ERROR_REVERT_KEY_REUSED, "idempotencyKey 已用于其他撤销请求", HttpStatus.CONFLICT);
             }
+            // New candidate receipts remain scoped to current content ownership even on replay.
+            AuditTask replayTask = auditTaskMapper.selectAuditTaskById(taskId);
+            requireGenericDecision(replayTask);
+            if (replayTask != null && com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(replayTask.getBizType())) {
+                if (contentCaptureReviewService == null) throw new IllegalStateException("Candidate review unavailable");
+                contentCaptureReviewService.lockAndValidateRevert(taskId);
+            }
             return replayResult(taskId, requestId, replay);
         }
 
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
         if (task == null) throw governanceError(ERROR_REVERT_BAD_REQUEST, "审核任务不存在", HttpStatus.NOT_FOUND);
+        requireGenericDecision(task);
+        if (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(task.getBizType())) {
+            if (contentCaptureReviewService == null) throw new IllegalStateException("Candidate review unavailable");
+            task = contentCaptureReviewService.lockAndValidateRevert(taskId);
+        }
         if (!request.getExpectedVersion().equals(task.getVersion())) {
             throw governanceError(ERROR_REVERT_STALE, "审核状态已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
@@ -859,6 +900,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Override
     public AuditTaskDetailVO detail(Long taskId, Long viewerId, boolean platformAdmin) {
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+        requireGenericRead(task);
         if (task == null) throw new ServiceException("审核任务不存在", HttpStatus.NOT_FOUND);
         List<AuditRecord> timeline = listAuditRecords(taskId);
         Set<Long> reporters = new HashSet<>();
@@ -1163,12 +1205,35 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     public AuditTask selectAuditTaskById(Long id) {
-        return auditTaskMapper.selectAuditTaskById(id);
+        AuditTask task = auditTaskMapper.selectAuditTaskById(id);
+        return isNpcDraft(task) ? null : task;
     }
 
     @Override
     public List<AuditTask> selectAuditTaskList(AuditTask auditTask) {
         return auditTaskMapper.selectAuditTaskList(auditTask);
+    }
+
+    /** Neither the generic permission nor administrator status supplies NPC object authority. */
+    private boolean isNpcDraft(AuditTask task) {
+        return task != null && isNpcIdentity(task.getBizType(), task.getSourceType());
+    }
+
+    private boolean isNpcIdentity(String bizType, String sourceType) {
+        return com.chengyinhub.business.service.ai.npc.MerchantNpcKnowledgeDraftService.BIZ_TYPE.equals(bizType)
+                || com.chengyinhub.business.service.ai.npc.MerchantNpcKnowledgeDraftService.SOURCE_TYPE.equals(sourceType);
+    }
+
+    private void requireGenericCreation(String bizType, String sourceType) {
+        if (isNpcIdentity(bizType, sourceType)) throw governanceError("AUDIT_TYPE_UNAVAILABLE", "该审核类型暂不可处理", HttpStatus.FORBIDDEN);
+    }
+
+    private void requireGenericRead(AuditTask task) {
+        if (isNpcDraft(task)) throw new ServiceException("审核任务不存在", HttpStatus.NOT_FOUND);
+    }
+
+    private void requireGenericDecision(AuditTask task) {
+        if (isNpcDraft(task)) throw governanceError("AUDIT_TYPE_UNAVAILABLE", "该审核类型暂不可处理", HttpStatus.FORBIDDEN);
     }
 
     private void appendDecisionAudit(AuditTask task, Long operatorId, AuditReviewDTO request,
@@ -1348,8 +1413,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     private boolean isRevertSupported(String bizType, Integer status) {
         // 仅开放具备领域行锁 + version CAS 的补偿路径；其余类型在补齐目标状态 CAS 前 fail closed。
-        return AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType)
-                && AuditTask.STATUS_REJECTED.equals(status);
+        return (AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType) && AuditTask.STATUS_REJECTED.equals(status))
+                || (com.chengyinhub.business.service.support.release.ContentCaptureReviewService.BIZ_TYPE.equals(bizType)
+                    && isTerminalDecision(status));
     }
 
     private String requireStableKey(String value) {

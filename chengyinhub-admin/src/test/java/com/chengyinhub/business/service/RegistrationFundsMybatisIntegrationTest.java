@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.service.support.RegistrationLifecycleMySqlFixture;
 import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
@@ -116,6 +117,12 @@ class RegistrationFundsMybatisIntegrationTest {
             s.execute("CREATE DATABASE " + MYSQL.databaseName() + " CHARACTER SET utf8mb4");
         }
         dataSource = dataSource(MYSQL.databaseUrl());
+        wireServices(dataSource);
+    }
+
+    // Test-only reuse: callers provide their own isolated schema; no database lifecycle is borrowed.
+    void wireServices(DataSource source) throws Exception {
+        dataSource = source;
         template = new SqlSessionTemplate(buildFactory(dataSource));
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
 
@@ -126,6 +133,8 @@ class RegistrationFundsMybatisIntegrationTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
         ReflectionTestUtils.setField(target, "platformMemberId", 1L);
+        ReflectionTestUtils.setField(target, "businessAuditEventMapper",
+                RegistrationLifecycleMySqlFixture.mapper(dataSource));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));
@@ -200,8 +209,13 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(refundService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
     }
 
+    ICmsRegistrationService registrationServiceForCityTest() { return registrationService; }
+    IRegistrationOrderService orderServiceForCityTest() { return registrationOrderService; }
+
     @BeforeEach
     void resetSchema() throws Exception {
+        execute("DROP TABLE IF EXISTS business_audit_event");
+        RegistrationLifecycleMySqlFixture.createTable(new JdbcTemplate(dataSource));
         execute("DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS club_edition_compensation_terms",
@@ -516,6 +530,8 @@ class RegistrationFundsMybatisIntegrationTest {
             assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
             assertEquals(115, number("SELECT point FROM ums_member WHERE id=7"));
             assertEquals(2, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+            RegistrationLifecycleMySqlFixture.assertEvent(new JdbcTemplate(dataSource),
+                    11L, "PAYMENT_CONFIRMED", 2, 2);
         } finally {
             pool.shutdownNow();
         }
@@ -801,6 +817,8 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
         assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertEquals(0, number("SELECT COUNT(*) FROM business_audit_event"),
+                "The lifecycle event must roll back with the failed payment transaction");
     }
 
     @Test
@@ -2265,6 +2283,8 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "refundService", refunds);
         ReflectionTestUtils.setField(target, "refundPayoutService", mock(IRefundPayoutService.class));
         ReflectionTestUtils.setField(target, "manualRefundCaseService", mock(IActivityCancelManualRefundCaseService.class));
+        ReflectionTestUtils.setField(target, "registrationLifecycleAuditMapper",
+                RegistrationLifecycleMySqlFixture.mapper(dataSource));
         ReflectionTestUtils.setField(target, "wechatPayService", wechat);
         ReflectionTestUtils.setField(target, "cmsRegistrationService", registrationService);
         ReflectionTestUtils.setField(target, "alarmService", alarm);

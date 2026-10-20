@@ -28,6 +28,7 @@ import com.chengyinhub.business.mapper.RedemptionMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.service.IMmsMerchantService;
 import com.chengyinhub.business.service.support.MerchantFinanceStateResolver;
+import com.chengyinhub.business.service.support.MerchantAccrualBasis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -123,7 +124,7 @@ public class MerchantFinanceQueryService {
         // 汇总条按【筛选前】的全集算:它回答「我这个月接待了多少」,切筛选 chip 时不该跟着变。
         List<MerchantRedemptionView> unfiltered = new ArrayList<MerchantRedemptionView>();
         for (Redemption redemption : safeList(redemptionMapper.selectByMerchant(memberId))) {
-            MerchantRedemptionView row = toRedemptionView(redemption, byRedemption.get(redemption == null ? null : redemption.getId()),
+            MerchantRedemptionView row = toRedemptionView(memberId, redemption, byRedemption.get(redemption == null ? null : redemption.getId()),
                     batches, merchant == null ? null : merchant.getName());
             if (row == null) continue;
             unfiltered.add(row);
@@ -155,7 +156,7 @@ public class MerchantFinanceQueryService {
             if (payable != null && redemptionId.equals(payable.getRedemptionId())) facts.add(payable);
         }
         MmsMerchant merchant = merchantService == null ? null : merchantService.selectMmsMerchantByMemberId(memberId);
-        return toRedemptionView(redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
+        return toRedemptionView(memberId, redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
     }
 
     public MerchantFinancePage<PublicTransferBatch> publicTransferBatches(Long memberId, int pageNum, int pageSize) {
@@ -341,7 +342,7 @@ public class MerchantFinanceQueryService {
         return result;
     }
 
-    private MerchantRedemptionView toRedemptionView(Redemption redemption, List<MerchantPayable> payables,
+    private MerchantRedemptionView toRedemptionView(Long ownerMemberId, Redemption redemption, List<MerchantPayable> payables,
                                                     Map<String, MerchantPayableBatch> batches, String storeName) {
         if (redemption == null || redemption.getId() == null) return null;
         MerchantRedemptionView row = new MerchantRedemptionView();
@@ -414,7 +415,27 @@ public class MerchantFinanceQueryService {
         else if (paid) row.setSettlementState("SETTLED");
         else row.setSettlementState("PENDING");
         row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
+        projectAccrualBasis(row, ownerMemberId, redemption, facts);
         return row;
+    }
+
+    private void projectAccrualBasis(MerchantRedemptionView row, Long ownerMemberId,
+                                     Redemption redemption, List<MerchantPayable> payables) {
+        if (!"CHAPTER_OFFER".equals(row.getSettlementRoute()) || ownerMemberId == null
+                || !ownerMemberId.equals(redemption.getMerchantId())) return;
+        List<MerchantAccrualBasis.Fact> facts = new ArrayList<MerchantAccrualBasis.Fact>();
+        for (MerchantPayable payable : payables) {
+            if (payable == null) return;
+            facts.add(new MerchantAccrualBasis.Fact(payable.getId(), payable.getClaimId(),
+                    payable.getMerchantMemberId(), payable.getRedemptionId(), payable.getEventKey(),
+                    payable.getEntryType(), payable.getIdempotencyKey(),
+                    payable.getPerHeadFeeSnapshot(), payable.getAmount()));
+        }
+        MerchantAccrualBasis basis = MerchantAccrualBasis.project(ownerMemberId, redemption.getId(), facts);
+        if (basis != null) {
+            row.setUnitFee(basis.getUnitFee());
+            row.setHeadCount(basis.getHeadCount());
+        }
     }
 
     private PublicTransferBatch toPublicBatch(MerchantPayableBatch batch) {

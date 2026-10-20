@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentCaptureReviewMapper">
+  <select id="lockTopic" resultType="com.chengyinhub.business.domain.CmsTopic">
+    select id, del_flag as delFlag from cms_topic where id=#{topicId} for update
+  </select>
+  <select id="lockContentOwners" resultType="com.chengyinhub.business.domain.ProductRole">
+    select id, topic_id as topicId, slot, entity_type as entityType, entity_id as entityId, status
+    from product_role where topic_id=#{topicId} and slot='CONTENT' and status=1 order by id for update
+  </select>
+  <select id="lockSnapshot" resultType="com.chengyinhub.business.domain.ContentCaptureSnapshot">
+    select id, topic_id as topicId, captured_by_member_id as capturedByMemberId, request_id as requestId,
+    source_config_version as sourceConfigVersion, content_hash as contentHash, canonical_json as canonicalJson,
+    state, contract_version as contractVersion, canonicalization_version as canonicalizationVersion
+    from content_capture_snapshot where id=#{snapshotId} for update
+  </select>
+  <sql id="bindingColumns">id, snapshot_id as snapshotId, topic_id as topicId, member_id as memberId,
+    request_id as requestId, audit_task_id as auditTaskId, source_config_version as sourceConfigVersion, content_hash as contentHash</sql>
+  <select id="selectRequest" resultType="com.chengyinhub.business.domain.ContentCaptureReviewBinding">
+    select <include refid="bindingColumns"/> from content_capture_review_binding
+    where topic_id=#{topicId} and member_id=#{memberId} and request_id=#{requestId} for update
+  </select>
+  <select id="selectSnapshot" resultType="com.chengyinhub.business.domain.ContentCaptureReviewBinding">
+    select <include refid="bindingColumns"/> from content_capture_review_binding where snapshot_id=#{snapshotId} for update
+  </select>
+  <select id="selectTask" resultType="com.chengyinhub.business.domain.ContentCaptureReviewBinding">
+    select <include refid="bindingColumns"/> from content_capture_review_binding where audit_task_id=#{taskId} for update
+  </select>
+  <select id="selectLatestDecision" resultType="com.chengyinhub.business.domain.AuditRecord">
+    select id, task_id as taskId, action, operator_id as operatorId, snapshot_json as snapshotJson,
+    create_time as createTime from audit_record
+    where task_id=#{taskId} and action in ('APPROVE','REJECT','REVERT') order by id desc limit 1 for update
+  </select>
+  <insert id="insertBinding" useGeneratedKeys="true" keyProperty="id">
+    insert into content_capture_review_binding(snapshot_id,topic_id,member_id,request_id,audit_task_id,source_config_version,content_hash)
+    values(#{snapshotId},#{topicId},#{memberId},#{requestId},#{auditTaskId},#{sourceConfigVersion},#{contentHash})
+  </insert>
+</mapper>

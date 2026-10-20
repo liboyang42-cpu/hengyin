@@ -297,6 +297,43 @@ class ApiMerchantNodeOperatorAccessTest {
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
     }
 
+    @Test
+    void rulesAreCheckedBeforeMerchantTemplateCanBeSaved() {
+        when(accessService.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE)).thenReturn(managerAccess());
+        when(merchantService.selectMmsMerchantById(MERCHANT)).thenReturn(activeMerchant());
+        CmsMemberTemplate body = new CmsMemberTemplate();
+        body.setTitle("Rule check");
+        body.setValidationMethod(0);
+        body.setRuleInstructions("First step\nSecond step");
+        IWxContentSecurityService security = (IWxContentSecurityService) ReflectionTestUtils.getField(controller, "wxSec");
+        when(security.checkText(eq("Rule check\nFirst step\nSecond step"), any())).thenReturn("Rule requires review");
+
+        AjaxResult result = controller.templateSubmit(body);
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        verify(security).checkText(eq("Rule check\nFirst step\nSecond step"), any());
+        verify(templatePublishService, never()).saveMerchantNodeTemplate(any(CmsMemberTemplate.class), any(), any());
+    }
+
+    @Test
+    void approvedRulesKeepTheirOriginalValueForTheExistingSave() {
+        when(accessService.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE)).thenReturn(managerAccess());
+        when(merchantService.selectMmsMerchantById(MERCHANT)).thenReturn(activeMerchant());
+        when(templatePublishService.saveMerchantNodeTemplate(any(CmsMemberTemplate.class), eq(OWNER), any())).thenReturn(802L);
+        CmsMemberTemplate body = new CmsMemberTemplate();
+        body.setTitle("Rule check");
+        body.setValidationMethod(0);
+        body.setRuleInstructions("First step\nSecond step");
+
+        AjaxResult result = controller.templateSubmit(body);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals("First step\nSecond step", body.getRuleInstructions());
+        IWxContentSecurityService security = (IWxContentSecurityService) ReflectionTestUtils.getField(controller, "wxSec");
+        verify(security).checkText(eq("Rule check\nFirst step\nSecond step"), any());
+        verify(templatePublishService).saveMerchantNodeTemplate(eq(body), eq(OWNER), any());
+    }
+
     private MerchantAccessContext managerAccess() {
         return new MerchantAccessContext(PRINCIPAL, MERCHANT, OWNER, MerchantRoleCode.MERCHANT_MANAGER);
     }

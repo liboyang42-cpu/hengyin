@@ -8,6 +8,9 @@ import java.util.List;
 
 public interface TopicRouteSessionMapper {
     String selectMemberNickname(@Param("memberId") Long memberId);
+    List<TopicRouteSession> selectCurrentCandidatesByOwners(@Param("scopes") List<TopicRouteSession> scopes);
+    TopicRouteSession selectCurrentByOwnerForUpdate(@Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("memberId") Long memberId);
+    TopicRouteSession selectByOwnerForUpdate(@Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("memberId") Long memberId, @Param("playInstanceId") String playInstanceId);
     int insertSession(TopicRouteSession session);
     TopicRouteSession selectAccessibleByIdForUpdate(@Param("id") Long id,@Param("memberId") Long memberId);
     List<TopicRouteSession> selectHistoryPage(@Param("memberId") Long memberId,@Param("topicId") Long topicId,@Param("beforeSessionId") Long beforeSessionId,@Param("limit") int limit);

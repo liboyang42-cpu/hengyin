@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidProfessionalMaterializationStore">
+  <select id="lockTopic" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalTargetStore$Row" useCache="false" flushCache="true">
+    SELECT id,member_id AS publisherMemberId,SUBSTRING(name,1,257) AS name,product_type AS productType,
+      config_version AS configVersion,del_flag AS delFlag
+    FROM cms_topic WHERE id=#{topic} AND member_id=#{actor} AND del_flag=0 FOR UPDATE
+  </select>
+  <select id="lockContentRoles" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalTargetStore$Row" useCache="false" flushCache="true">
+    SELECT id AS roleId,topic_id AS roleTopicId,slot AS roleSlot,entity_type AS entityType,
+      entity_id AS entityId,status AS roleStatus,declared_by AS declaredBy,created_at AS createdAt
+    FROM product_role WHERE topic_id=#{topic} AND slot='CONTENT' AND status=1 ORDER BY id LIMIT 2 FOR UPDATE
+  </select>
+  <select id="lockCurrentDraft" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalMaterializationStore$DraftRow" useCache="false" flushCache="true">
+    SELECT id,owner_member_id AS ownerMemberId,business_type AS businessType,status,version,payload_hash AS payloadHash
+    FROM content_draft WHERE id=#{draft} AND owner_member_id=#{actor} FOR UPDATE
+  </select>
+</mapper>

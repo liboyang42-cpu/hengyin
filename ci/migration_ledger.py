@@ -53,9 +53,17 @@ EXPLICIT_MANAGED_SQL = {
 EXPLICIT_AUXILIARY_SQL = {
     # Only the reviewed synthetic schema for the disposable, network-isolated startup gate.
     "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/materialization/cms-mapped-columns.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/workshop/market-template-columns.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/fixtures/coupon-command-existing-schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/fixtures/merchant-npc-existing-schema.sql": "TEST_FIXTURE",
+    # Isolated H2-only W17 fixture; exact path, never a production migration or directory exemption.
+    "chengyinhub-admin/src/test/resources/reward/noncash-fixture.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/reward/coupon-history-join-view.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/fixed-coupon-mysql.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/coop-it-schema.sql": "TEST_FIXTURE",
     # R11-A 新增(晚于 #732):两套探店日联盟 IT 收口到门禁唯一临时 schema 时用的建表资源。
     # 与上面两份同档 —— 它只被 ExploreItDatabase 在临时 schema 里执行,不进发布台账、不在生产跑。

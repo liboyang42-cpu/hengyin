@@ -51,6 +51,8 @@ public class TopicStateKeyRefService {
     public static final String KIND_JOURNEY_STORY = "journeyStory";
     /** 章节故事流 blocks 解析失败(R22-SEC S14:与节点块同口径,发布闸 fail-closed)。 */
     public static final String KIND_CHAPTER_BLOCKS = "chapterBlocks";
+    /** 背包、场景、广播与终局运行配置解析失败。 */
+    public static final String KIND_THEME_RUNTIME = "themeRuntime";
 
     private final CmsTopicNodeMapper cmsTopicNodeMapper;
     private final CmsMemberTemplateMapper cmsMemberTemplateMapper;
@@ -81,7 +83,31 @@ public class TopicStateKeyRefService {
         }
         collectJourneyRules(topic, refs);
         collectJourneyStory(topic, refs);
+        collectThemeRuntime(topic, refs);
         collectChapters(topic, refs);
+        return refs;
+    }
+
+    /** Same collector over one transaction-local observation; never reads mappers or invents rows. */
+    public static RefCollection collectLoaded(CmsTopic topic, List<CmsTopicNode> nodes,
+                                              Map<Long, CmsMemberTemplate> templates,
+                                              List<CmsTopicChapter> chapters) {
+        if (topic == null || topic.getId() == null || nodes == null || templates == null || chapters == null) {
+            throw new IllegalArgumentException("Complete loaded publication sources are required");
+        }
+        RefCollection refs = new RefCollection();
+        for (CmsTopicNode node : nodes) {
+            if (node == null) throw new IllegalArgumentException("Loaded node is missing");
+            Long id = node.getTemplateId();
+            if (id == null || id <= 0L) continue;
+            CmsMemberTemplate template = templates.get(id);
+            if (template == null) throw new IllegalArgumentException("Loaded referenced template is missing");
+            collectNode(node, template, refs);
+        }
+        collectJourneyRules(topic, refs);
+        collectJourneyStory(topic, refs);
+        collectThemeRuntime(topic, refs);
+        collectLoadedChapters(chapters, refs);
         return refs;
     }
 
@@ -109,10 +135,23 @@ public class TopicStateKeyRefService {
         if (KIND_JOURNEY_RULES.equals(error.getKind())) {
             return "主题的旅程数值规则无法解析,主题发布失败:" + error.getMessage();
         }
+        if (KIND_THEME_RUNTIME.equals(error.getKind())) {
+            return "主题运行配置无法解析,主题发布失败:" + error.getMessage();
+        }
         if (KIND_CHAPTER_BLOCKS.equals(error.getKind())) {
             return "章节故事流配置无法解析,主题发布失败:" + error.getMessage();
         }
         return "主题剧情配置无法解析,主题发布失败:" + error.getMessage();
+    }
+
+    private static void collectThemeRuntime(CmsTopic topic, RefCollection refs) {
+        try {
+            // Author drafts may legitimately lack publication-only names/media. Shape/reference syntax remains checked.
+            refs.themeRuntimeKeys.addAll(ThemeRuntimeConfig.referencedStateKeys(
+                    ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson())));
+        } catch (RuntimeException e) {
+            refs.parseErrors.add(new ParseError(null, null, KIND_THEME_RUNTIME, e.getMessage()));
+        }
     }
 
     private void collectNode(CmsTopicNode node, CmsTopic topic, RefCollection refs) {
@@ -124,6 +163,10 @@ public class TopicStateKeyRefService {
             return;
         }
         CmsMemberTemplate template = cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
+        collectNode(node, template, refs);
+    }
+
+    private static void collectNode(CmsTopicNode node, CmsMemberTemplate template, RefCollection refs) {
         if (template == null || StringUtils.isEmpty(template.getAdvancedConfigJson())) {
             return;
         }
@@ -153,7 +196,7 @@ public class TopicStateKeyRefService {
         }
     }
 
-    private void collectJourneyRules(CmsTopic topic, RefCollection refs) {
+    private static void collectJourneyRules(CmsTopic topic, RefCollection refs) {
         String raw = topic.getJourneyRulesJson();
         if (StringUtils.isEmpty(raw)) {
             return;
@@ -185,7 +228,7 @@ public class TopicStateKeyRefService {
      * <p>走 {@link JourneyStory#parse} 的真实模型解析(先过 JourneyStoryValidator 再反序列化),
      * 不再反射 getter、也不再按 JSON 树盲收 when:结构坏了就是解析错误,fail-closed。
      */
-    private void collectJourneyStory(CmsTopic topic, RefCollection refs) {
+    private static void collectJourneyStory(CmsTopic topic, RefCollection refs) {
         String raw = topic.getJourneyStoryJson();
         if (StringUtils.isBlank(raw)) {
             return;
@@ -210,7 +253,7 @@ public class TopicStateKeyRefService {
      * ending.optionalClues[]。epilogues 的 relationKey 由
      * {@link StateKeyRefs#collectJourneyStoryRelationKeys} 单独收集(发布闸还要核对键类型)。
      */
-    private void collectStoryKeys(JourneyStory story, Set<String> keys) {
+    private static void collectStoryKeys(JourneyStory story, Set<String> keys) {
         if (story.getStages() != null) {
             for (JourneyStory.Stage stage : story.getStages()) {
                 if (stage == null || stage.getEnd() == null) {
@@ -266,6 +309,10 @@ public class TopicStateKeyRefService {
         CmsTopicChapter probe = new CmsTopicChapter();
         probe.setTopicId(topic.getId());
         List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
+        collectLoadedChapters(chapters, refs);
+    }
+
+    private static void collectLoadedChapters(List<CmsTopicChapter> chapters, RefCollection refs) {
         if (chapters == null) {
             return;
         }
@@ -281,7 +328,7 @@ public class TopicStateKeyRefService {
         }
     }
 
-    private void collectChangeKeys(List<JourneyStory.Change> changes, Set<String> keys) {
+    private static void collectChangeKeys(List<JourneyStory.Change> changes, Set<String> keys) {
         if (changes == null) {
             return;
         }
@@ -312,6 +359,9 @@ public class TopicStateKeyRefService {
         /** 章节故事流 beat 块 when 引用到的键(R19)。 */
         private final Set<String> chapterKeys = new LinkedHashSet<String>();
 
+        /** 与运行配置发布引用闸同口径;不把 sys.* 事实当作注册键。 */
+        private final Set<String> themeRuntimeKeys = new LinkedHashSet<String>();
+
         /** 解析失败项,按遇到顺序;空 = 全部可解析。 */
         private final List<ParseError> parseErrors = new ArrayList<ParseError>();
 
@@ -328,6 +378,8 @@ public class TopicStateKeyRefService {
         public Set<String> getStoryKeys() { return storyKeys; }
 
         public Set<String> getChapterKeys() { return chapterKeys; }
+
+        public Set<String> getThemeRuntimeKeys() { return themeRuntimeKeys; }
 
         public List<ParseError> getParseErrors() { return parseErrors; }
 
@@ -351,6 +403,9 @@ public class TopicStateKeyRefService {
             }
             for (String key : chapterKeys) {
                 addPosition(positions, key, "章节故事流");
+            }
+            for (String key : themeRuntimeKeys) {
+                addPosition(positions, key, "主题运行配置");
             }
             return positions;
         }

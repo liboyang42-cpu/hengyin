@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "roles": [{"code": "EXPLORER", "name": "探索者"}],
+  "stations": [{"code": "START", "nodeName": "起点", "playerTask": {
+    "taskCode": "QUESTION", "prompt": "说出线索", "inputType": "TEXT", "verificationRequired": true
+  }, "merchantInstruction": "按既有规则确认", "hiddenInfoReminder": "不可透露答案"}]
+}

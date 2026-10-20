@@ -20,6 +20,7 @@ import com.chengyinhub.business.service.ISettlementEntryService;
 import com.chengyinhub.business.service.ISettlementRuleService;
 import com.chengyinhub.business.service.IWxPaymentCallbackInboxService;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
+import com.chengyinhub.business.service.support.RegistrationLifecycleAudit;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
@@ -232,9 +233,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertCmsRegistration(CmsRegistration cmsRegistration) {
         cmsRegistration.setCreateTime(DateUtils.getNowDate());
-        return cmsRegistrationMapper.insertCmsRegistration(cmsRegistration);
+        int changed = cmsRegistrationMapper.insertCmsRegistration(cmsRegistration);
+        if (changed > 0) captureRegistrationState(cmsRegistration.getId(), "GENERIC_INSERT");
+        return changed;
     }
 
     /**
@@ -244,9 +248,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateCmsRegistration(CmsRegistration cmsRegistration) {
+        CmsRegistration before = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(cmsRegistration.getId());
         cmsRegistration.setUpdateTime(DateUtils.getNowDate());
-        return cmsRegistrationMapper.updateCmsRegistration(cmsRegistration);
+        int changed = cmsRegistrationMapper.updateCmsRegistration(cmsRegistration);
+        if (changed > 0) {
+            CmsRegistration after = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(cmsRegistration.getId());
+            if (after == null) throw new IllegalStateException("Registration lifecycle row missing after update");
+            if (registrationEvidenceChanged(before, after)) captureRegistrationState(after, "GENERIC_UPDATE");
+        }
+        return changed;
     }
 
     /**
@@ -2002,7 +2014,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Transactional
     public boolean updatePaymentStatus(CmsRegistration registration) {
         registration.setUpdateTime(new Date());
-        return cmsRegistrationMapper.updateCmsRegistration(registration) > 0;
+        return updateCmsRegistration(registration) > 0;
     }
 
     /**
@@ -2115,6 +2127,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (registration == null) {
                     throw new IllegalStateException("退款报名在状态迁移后不存在");
                 }
+
+                captureRegistrationState(registration.getId(), "REFUND_INVALIDATED");
 
                 // [赏金] clawback 必须在 registration_status=3 落库**之后**调:countStillValidAmong 读的就是
                 // 这一列,早调会数到这条还没置 3 的记录 ⇒ stillValid 偏高 ⇒ 该追的追不回。
@@ -2231,6 +2245,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         paidRegistrationIds.add(registration.getId());
         registration = freezeTicketSourceOnPayment(registration);
         settlementEntryService.recordOnPayment(registration);
+        if (paymentTransitioned) captureRegistrationState(registration.getId(), "PAYMENT_CONFIRMED");
 
         if (StringUtils.isNotEmpty(registration.getParentOrderNo())) {
             List<CmsRegistration> siblings = cmsRegistrationMapper.selectByParentOrderNo(
@@ -2239,18 +2254,23 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (sibling.getId().equals(registration.getId())) {
                     continue;
                 }
-                if (cmsRegistrationMapper.claimPaymentSuccess(sibling.getId(), transactionId, paidAt) == 0) {
+                boolean siblingTransitioned = cmsRegistrationMapper.claimPaymentSuccess(sibling.getId(), transactionId, paidAt) == 1;
+                if (!siblingTransitioned) {
                     sibling = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(sibling.getId());
+                    boolean siblingHalfState = sibling != null && Integer.valueOf(2).equals(sibling.getPaymentStatus())
+                            && Integer.valueOf(1).equals(sibling.getRegistrationStatus());
                     sibling = repairHistoricalPaidHalfState(sibling, transactionId,
                             sibling == null ? null : sibling.getWechatPaymentAmount(), paidAt);
                     if (!isSameCompletedPayment(sibling, transactionId)) {
                         throw new IllegalStateException("支付从单状态冲突,registrationId=" + sibling.getId());
                     }
+                    siblingTransitioned = siblingHalfState;
                 } else {
                     sibling = cmsRegistrationMapper.selectCmsRegistrationById(sibling.getId());
                 }
                 sibling = freezeTicketSourceOnPayment(sibling);
                 settlementEntryService.recordOnPayment(sibling);
+                if (siblingTransitioned) captureRegistrationState(sibling.getId(), "PAYMENT_CONFIRMED");
                 paidRegistrationIds.add(sibling.getId());
             }
         }
@@ -2572,6 +2592,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             throw new RuntimeException("该报名状态已变化,无法取消");
         }
+        captureRegistrationState(registrationId, "UNPAID_CANCELLED");
         if (registration.getTicketId() != null) {
             long qty = registration.getOrderNum() != null && registration.getOrderNum() > 0
                     ? registration.getOrderNum() : 1L;
@@ -2668,6 +2689,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (r == null) {
             return true;
         }
+        captureRegistrationState(r, "UNPAID_EXPIRED");
         releaseHeldResources(r, EntitlementInvalidReason.ORGANIZER_CANCEL, "order-close-task");
         logger.info("过期未支付订单已关单 registrationId={}, memberId={}", registrationId, r.getMemberId());
         return true;
@@ -2688,6 +2710,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (r == null) {
             return true;
         }
+        captureRegistrationState(r, "PAYING_CLOSED");
         releaseHeldResources(r, releaseReason, updateBy);
         // P1-PT-7:多票父单整单关 —— 从单停 0 态且被老关单任务排除,主单确认未支付时一起关、一起回补。
         // 从单终态跟主单一致(清单 3):同一次关单动作,真实原因只有一个。
@@ -2695,6 +2718,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             for (CmsRegistration sibling : cmsRegistrationMapper.selectByParentOrderNo(r.getParentOrderNo())) {
                 if (!sibling.getId().equals(registrationId)
                         && cmsRegistrationMapper.closeExpired(sibling.getId(), updateBy, finalStatus) == 1) {
+                    captureRegistrationState(sibling.getId(), "PAYING_CLOSED");
                     releaseHeldResources(sibling, releaseReason, updateBy);
                 }
             }
@@ -3258,6 +3282,25 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 "{\"chapterRedeemed\":false}", "{\"chapterRedeemed\":true}");
         growthService.enqueueStoreVerification(registration.getId());
         return new ExploreChapterRedemptionResult(redemptionId, completionEarnedXp);
+    }
+
+    private boolean registrationEvidenceChanged(CmsRegistration before, CmsRegistration after) {
+        return after != null && (before == null
+                || !java.util.Objects.equals(before.getMemberId(), after.getMemberId())
+                || !java.util.Objects.equals(before.getPaymentStatus(), after.getPaymentStatus())
+                || !java.util.Objects.equals(before.getRegistrationStatus(), after.getRegistrationStatus()));
+    }
+
+    private void captureRegistrationState(Long id, String reason) {
+        captureRegistrationState(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id), reason);
+    }
+
+    private void captureRegistrationState(CmsRegistration persisted, String reason) {
+        if (persisted == null) throw new IllegalStateException("Registration lifecycle row missing after mutation");
+        Date occurredAt = "GENERIC_INSERT".equals(reason) ? persisted.getCreateTime() : persisted.getUpdateTime();
+        RegistrationLifecycleAudit.append(businessAuditEventMapper, RegistrationLifecycleAudit.changed(
+                persisted.getId(), persisted.getMemberId(), persisted.getPaymentStatus(),
+                persisted.getRegistrationStatus(), occurredAt, new Date(), reason, persisted.getPaymentTime()));
     }
 
     private void writeVerificationAudit(String domainType, Long domainId, Long ownerMemberId,

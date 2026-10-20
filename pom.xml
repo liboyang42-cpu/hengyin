@@ -43,6 +43,7 @@
         <baomidou.version>3.5.17</baomidou.version>
         <hutool.version>5.8.47</hutool.version>
         <wechatpay.version>0.2.15</wechatpay.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
         <zxing.version>3.5.2</zxing.version>
         <!-- Same-minor security floors: see docs/upgrade/java21-boot41-candidate.md. -->
         <jackson2.version>2.21.7</jackson2.version>

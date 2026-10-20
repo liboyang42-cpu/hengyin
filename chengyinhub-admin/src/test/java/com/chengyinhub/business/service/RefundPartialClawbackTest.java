@@ -13,6 +13,7 @@ import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.RefundServiceImpl;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -82,6 +83,7 @@ class RefundPartialClawbackTest {
         when(umsMemberMapper.lockMemberById(anyLong())).thenAnswer(invocation -> invocation.getArgument(0));
         when(umsMemberMapper.deductBalance(anyLong(), any())).thenReturn(1);
         when(umsMemberBalanceDetailMapper.insertUmsMemberBalanceDetail(any())).thenReturn(1);
+        svc = RegistrationLifecycleFixture.transactional(svc);
     }
 
     private RefundApplication refund(String amount, String paid) {
@@ -119,6 +121,7 @@ class RefundPartialClawbackTest {
         reg.setOwnerType(2L);   // 活动报名
         reg.setOwnerId(77L);
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
+        RegistrationLifecycleFixture.refundWinner(cmsRegistrationMapper, reg);
         CmsActivity activity = new CmsActivity();
         activity.setId(77L);
         activity.setIsSettlement(1);   // [P0-1] 系统1 已打款 ⇒ 该扣,本类才测得了「扣多少」
@@ -156,6 +159,7 @@ class RefundPartialClawbackTest {
         reg.setPaymentStatus(2);
         reg.setPayableAmount(new BigDecimal("100"));
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
+        RegistrationLifecycleFixture.refundWinner(cmsRegistrationMapper, reg);
 
         RefundApplication over = new RefundApplication();
         over.setSourceType("registration");

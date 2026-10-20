@@ -4,6 +4,7 @@ import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
 
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
+import com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +15,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/play/theme")
 public class ApiThemeRuntimeController extends BaseController {
     @Autowired private ITopicRouteRuntimeService runtime;
+<<<<<<< port
     @GetMapping("/support-matrix")
     public AjaxResult supportMatrix() {
         return success(com.chengyinhub.business.service.support.GameplaySupportMatrix.view());
     }
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
+=======
+    @Autowired private ThemeRuntimeFeaturePolicy featurePolicy = new ThemeRuntimeFeaturePolicy();
+
+    /** Read-only switch discovery: clients must not use state (which can create/advance a run) as a probe. */
+    @GetMapping("/capabilities")
+    public AjaxResult capabilities() {
+        member();
+        return success(java.util.Collections.singletonMap("enabled", featurePolicy.isEnabled()));
+    }
+
+>>>>>>> questify
     @GetMapping("/state")
     public AjaxResult state(Long topicId, Long activityId, Long sessionId) {
         return success(runtime.themeView(member(),topicId,activityId,sessionId));
@@ -54,7 +67,21 @@ public class ApiThemeRuntimeController extends BaseController {
     }
     @RateLimiter(time = 10, count = 10, limitType = LimitType.MEMBER)
     @PostMapping("/replay")
+<<<<<<< port
     public AjaxResult replay(@RequestBody Action request) { if(request==null)throw new IllegalArgumentException("参数不正确"); if(request.weRun!=null)throw new IllegalArgumentException("仅步数恢复接受微信运动密文"); return success(runtime.replayTheme(member(),request.sessionId)); }
+=======
+    public AjaxResult replay(@RequestBody Action request) { if(request==null)throw new IllegalArgumentException("参数不正确"); return success(runtime.replayTheme(member(),request.sessionId)); }
+    @PostMapping("/team/replay")
+    public AjaxResult replayTeam(@RequestBody TeamReplay request) {
+        if(request==null)throw new IllegalArgumentException("参数不正确");
+        return success(runtime.replayThemeTeam(member(),request.teamId,request.activityId,request.topicId,
+                request.sourceSessionId,request.previousTeamRunId,request.actionId));
+    }
+    public static class TeamReplay {
+        public Long teamId,activityId,topicId,sourceSessionId,previousTeamRunId;
+        public String actionId;
+    }
+>>>>>>> questify
     @GetMapping("/card")
     public AjaxResult card(Long sessionId) {return success(runtime.themeCard(member(),sessionId));}
     @GetMapping("/history")

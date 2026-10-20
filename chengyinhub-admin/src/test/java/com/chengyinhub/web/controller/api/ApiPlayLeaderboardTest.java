@@ -80,7 +80,7 @@ class ApiPlayLeaderboardTest {
     @Test
     @SuppressWarnings("unchecked")
     void ranksAssignedInOrder_andMeFoundInList() {
-        when(progressService.selectActivityLeaderboard(eq(ACT), isNull(), anyInt()))
+        when(progressService.selectActivityLeaderboard(eq(ACT), eq(300L), anyInt()))
                 .thenReturn(Arrays.asList(row(7L, 4L), row(ME, 3L)));
 
         Map<String, Object> data = callOk("500", null);
@@ -94,7 +94,7 @@ class ApiPlayLeaderboardTest {
 
     @Test
     void offListMe_countsOnlyCompletedRows() {
-        when(progressService.selectActivityLeaderboard(eq(ACT), isNull(), anyInt()))
+        when(progressService.selectActivityLeaderboard(eq(ACT), eq(300L), anyInt()))
                 .thenReturn(Arrays.asList(row(7L, 4L)));
         PlayerNodeProgress done = new PlayerNodeProgress();
         done.setStatus(1);
@@ -174,6 +174,14 @@ class ApiPlayLeaderboardTest {
         assertEquals("主理人暂未开放本场排行榜", result.get(AjaxResult.MSG_TAG));
         org.mockito.Mockito.verify(progressService, org.mockito.Mockito.never())
                 .selectActivityLeaderboard(any(), any(), anyInt());
+    }
+
+    @Test
+    void activityLeaderboardRejectsAnAssertedForeignTopicBeforeReadingProgress() {
+        AjaxResult result = controller.leaderboard("500", "301");
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("活动与主题不匹配", result.get(AjaxResult.MSG_TAG));
+        org.mockito.Mockito.verifyNoInteractions(progressService, registrationService);
     }
 
 }

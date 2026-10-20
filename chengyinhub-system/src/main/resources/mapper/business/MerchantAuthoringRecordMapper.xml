@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MerchantAuthoringRecordMapper">
+  <resultMap id="candidate" type="com.chengyinhub.business.domain.MerchantAuthoringCandidate">
+    <result property="id" column="id"/>
+    <result property="principalMemberId" column="principal_member_id"/>
+    <result property="merchantRowId" column="merchant_row_id"/>
+    <result property="ownerMemberId" column="owner_member_id"/>
+    <result property="factsJson" column="facts_json"/>
+    <result property="factsHash" column="facts_hash"/>
+    <result property="constraintsJson" column="constraints_json"/>
+    <result property="constraintsHash" column="constraints_hash"/>
+    <result property="aiTraceId" column="ai_trace_id"/>
+    <result property="templateJson" column="template_json"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <insert id="insertCandidate" parameterType="com.chengyinhub.business.domain.MerchantAuthoringCandidate" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO merchant_authoring_candidate (principal_member_id, merchant_row_id, owner_member_id, facts_json, facts_hash, constraints_json, constraints_hash, ai_trace_id, template_json, created_at)
+    VALUES (#{principalMemberId}, #{merchantRowId}, #{ownerMemberId}, #{factsJson}, #{factsHash}, #{constraintsJson}, #{constraintsHash}, #{aiTraceId}, #{templateJson}, #{createdAt})
+  </insert>
+  <resultMap id="source" type="com.chengyinhub.business.domain.MerchantAuthoringSource">
+    <result property="id" column="id"/>
+    <result property="candidateId" column="candidate_id"/>
+    <result property="ownerMemberId" column="owner_member_id"/>
+    <result property="merchantRowId" column="merchant_row_id"/>
+    <result property="actualTemplateId" column="actual_template_id"/>
+    <result property="templateSnapshotJson" column="template_snapshot_json"/>
+    <result property="templateContentHash" column="template_content_hash"/>
+    <result property="confirmationHash" column="confirmation_hash"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="sourceJson" column="source_json"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <insert id="insertSource" parameterType="com.chengyinhub.business.domain.MerchantAuthoringSource" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO merchant_authoring_source (candidate_id, owner_member_id, merchant_row_id, actual_template_id, template_snapshot_json, template_content_hash, confirmation_hash, content_hash, source_json, created_at)
+    VALUES (#{candidateId}, #{ownerMemberId}, #{merchantRowId}, #{actualTemplateId}, #{templateSnapshotJson}, #{templateContentHash}, #{confirmationHash}, #{contentHash}, #{sourceJson}, #{createdAt})
+  </insert>
+  <select id="lockCandidate" resultMap="candidate" flushCache="true" useCache="false">
+    SELECT * FROM merchant_authoring_candidate WHERE id = #{id} FOR UPDATE
+  </select>
+  <select id="sourceForCandidate" resultMap="source" flushCache="true" useCache="false">
+    SELECT * FROM merchant_authoring_source WHERE candidate_id = #{candidateId} FOR UPDATE
+  </select>
+  <select id="lockMerchantOwnerRows" resultType="java.lang.Long" flushCache="true" useCache="false">
+    SELECT id FROM mms_merchant WHERE member_id = #{ownerMemberId} ORDER BY id FOR UPDATE
+  </select>
+  <select id="lockMerchant" resultType="java.lang.Long" flushCache="true" useCache="false">
+    SELECT id FROM mms_merchant WHERE id = #{merchantRowId} FOR UPDATE
+  </select>
+  <select id="lockProduct" resultType="java.lang.Long" flushCache="true" useCache="false">
+    SELECT id FROM pms_product WHERE id = #{id} AND merchant_id = #{merchantRowId} AND (del_flag = 0 OR del_flag IS NULL) FOR UPDATE
+  </select>
+  <select id="lockSku" resultType="java.lang.Long" flushCache="true" useCache="false">
+    SELECT id FROM pms_sku WHERE id = #{id} AND product_id = #{productId} FOR UPDATE
+  </select>
+  <!-- Full rows from current locking reads, never a later RR consistent-read snapshot. -->
+  <select id="lockMerchantSnapshot" resultMap="com.chengyinhub.business.mapper.MmsMerchantMapper.MmsMerchantResult" flushCache="true" useCache="false">
+    SELECT * FROM mms_merchant WHERE id = #{merchantRowId} FOR UPDATE
+  </select>
+  <select id="lockAuthorityMerchants" resultMap="com.chengyinhub.business.mapper.MmsMerchantMapper.MmsMerchantResult" flushCache="true" useCache="false">
+    SELECT * FROM mms_merchant WHERE member_id IN (#{principalMemberId}, #{ownerMemberId}) ORDER BY id FOR UPDATE
+  </select>
+  <select id="lockProductSnapshot" resultMap="com.chengyinhub.business.mapper.PmsProductMapper.PmsProductResult" flushCache="true" useCache="false">
+    SELECT * FROM pms_product WHERE id = #{id} AND merchant_id = #{merchantRowId} FOR UPDATE
+  </select>
+  <select id="lockSkuSnapshot" resultMap="com.chengyinhub.business.mapper.PmsSkuMapper.PmsSkuResult" flushCache="true" useCache="false">
+    SELECT * FROM pms_sku WHERE id = #{id} AND product_id = #{productId} FOR UPDATE
+  </select>
+</mapper>

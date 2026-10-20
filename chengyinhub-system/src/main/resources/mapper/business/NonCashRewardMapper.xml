@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.reward.NonCashRewardMapper">
+  <!-- Canonical stock is removed ONCE when approved supply is dedicated, never copied. -->
+  <select id="lockProduct" resultType="java.lang.Long">
+    SELECT id FROM pms_product WHERE id=#{productId} AND merchant_id=#{merchantId}
+      AND publish_status=1 AND del_flag=0 FOR UPDATE
+  </select>
+  <update id="deductStock">
+    UPDATE pms_sku SET stock=stock-#{quantity}
+    WHERE id=#{skuId} AND product_id=#{productId} AND #{quantity}>0 AND stock>=#{quantity}
+  </update>
+  <select id="lockPledge" resultType="com.chengyinhub.business.reward.NonCashRewardRows$PledgeRow">
+    SELECT pledge_id AS pledgeId, fingerprint, payload, total, available, reserved, awarded, consumed, retired
+    FROM w17_noncash_pledge WHERE pledge_id=#{pledgeId} FOR UPDATE
+  </select>
+  <insert id="insertPledge">
+    INSERT INTO w17_noncash_pledge(pledge_id,fingerprint,payload,total,available,reserved,awarded,consumed,retired)
+    VALUES(#{pledgeId},#{fingerprint},#{payload},#{total},#{available},0,0,0,0)
+  </insert>
+  <update id="move">
+    UPDATE w17_noncash_pledge SET available=available+#{available}, reserved=reserved+#{reserved},
+      awarded=awarded+#{awarded}, consumed=consumed+#{consumed}, retired=retired+#{retired}
+    WHERE pledge_id=#{pledgeId} AND available+#{available}>=0 AND reserved+#{reserved}>=0
+      AND awarded+#{awarded}>=0 AND consumed+#{consumed}>=0 AND retired+#{retired}>=0
+      AND #{available}+#{reserved}+#{awarded}+#{consumed}+#{retired}=0
+  </update>
+  <!-- Current reads are mandatory under MySQL RR, even AFTER waiting on the pledge lock. -->
+  <select id="reservation" resultType="com.chengyinhub.business.reward.NonCashRewardRows$ReservationRow">
+    SELECT reservation_id AS reservationId, pledge_id AS pledgeId, member_id AS memberId, state
+    FROM w17_noncash_reservation WHERE reservation_id=#{reservationId} FOR UPDATE
+  </select>
+  <insert id="insertReservation">
+    INSERT INTO w17_noncash_reservation(reservation_id,pledge_id,member_id,state)
+    VALUES(#{reservationId},#{pledgeId},#{memberId},#{state})
+  </insert>
+  <update id="finishReservation">
+    UPDATE w17_noncash_reservation SET state=#{state} WHERE reservation_id=#{reservationId} AND state='RESERVED'
+  </update>
+  <select id="award" resultType="com.chengyinhub.business.reward.NonCashRewardRows$AwardRow">
+    SELECT award_id AS awardId, pledge_id AS pledgeId, member_id AS memberId, source_event_id AS sourceEventId,
+      reservation_id AS reservationId, state, awarded_at AS awardedAt
+    FROM w17_noncash_award WHERE award_id=#{awardId} FOR UPDATE
+  </select>
+  <insert id="insertAward">
+    INSERT INTO w17_noncash_award(award_id,pledge_id,member_id,source_event_id,reservation_id,state,awarded_at)
+    VALUES(#{awardId},#{pledgeId},#{memberId},#{sourceEventId},#{reservationId},#{state},#{awardedAt})
+  </insert>
+  <update id="finishAward">
+    UPDATE w17_noncash_award SET state=#{state} WHERE award_id=#{awardId} AND state='AWARDED'
+  </update>
+  <select id="consumption" resultType="java.lang.String">
+    SELECT award_id FROM w17_noncash_consumption WHERE source_receipt_id=#{sourceReceiptId} FOR UPDATE
+  </select>
+  <insert id="insertConsumption">
+    INSERT INTO w17_noncash_consumption(source_receipt_id,award_id,staff_actor_id) VALUES(#{sourceReceiptId},#{awardId},#{staffActorId})
+  </insert>
+  <select id="audit" resultType="java.lang.String">
+    SELECT kind FROM w17_noncash_audit WHERE audit_id=#{auditId} FOR UPDATE
+  </select>
+  <insert id="insertAudit">
+    INSERT INTO w17_noncash_audit(audit_id,pledge_id,award_id,kind,source_id,occurred_at)
+    VALUES(#{auditId},#{pledgeId},#{awardId},#{kind},#{sourceId},#{occurredAt})
+  </insert>
+</mapper>

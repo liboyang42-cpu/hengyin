@@ -67,6 +67,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectAuditTaskList" parameterType="AuditTask" resultMap="AuditTaskResult">
         <include refid="selectAuditTaskVo"/>
         <where>
+            <!-- Exclude reserved NPC identity before pagination/count, including mismatched pairs. -->
+            (biz_type is null or biz_type != 'MERCHANT_NPC_KNOWLEDGE_DRAFT')
+            and (source_type is null or source_type != 'merchant_npc_public_facts_draft_v1')
             <if test="bizType != null and bizType != ''"> and biz_type = #{bizType}</if>
             <if test="bizId != null"> and biz_id = #{bizId}</if>
             <if test="submitterId != null"> and submitter_id = #{submitterId}</if>

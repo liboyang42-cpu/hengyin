@@ -32,6 +32,7 @@ class PlayBingoArrivalFactTest
         progressMapper = mock(PlayerNodeProgressMapper.class);
         service = new PlayBingoServiceImpl();
         ReflectionTestUtils.setField(service, "progressMapper", progressMapper);
+        ReflectionTestUtils.setField(service, "routeSessionMapper", mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class));
     }
 
     private PlayerNodeProgress row(long nodeId, Integer status)

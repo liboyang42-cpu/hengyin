@@ -61,6 +61,9 @@ public class ApiAiNpcController extends BaseController
     private NpcChatService npcChatService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
+
+    @Autowired
     private NpcChatDataService npcChatDataService;
 
     @Autowired
@@ -231,13 +234,29 @@ public class ApiAiNpcController extends BaseController
         if (nodeId == null || nodeId <= 0) return ShopGate.deny(AjaxResult.error("参数有误"));
 
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
-        if (node == null || node.getTopicId() == null || node.getMerchantMemberId() == null)
+        if (node == null || node.getTopicId() == null || node.getMerchantMemberId() == null
+                || !Long.valueOf(1L).equals(node.getStatus())
+                || !Integer.valueOf(1).equals(node.getNodeAuditStatus()))
         {
             return ShopGate.deny(AjaxResult.error("这家店不存在或还没绑定商家"));
         }
         if (playTeamMapper.hasCurrentNpcRegistration(userId, node.getTopicId()) <= 0)
         {
             return ShopGate.deny(AjaxResult.error(HttpStatus.FORBIDDEN, "先拿到这个主题的通行证再来问我"));
+        }
+        try
+        {
+            // A valid pass does not make a disabled or ambiguously owned merchant public.
+            // Shared by text and voice so unavailable identities never reach ASR or a model.
+            if (merchantNpcIdentityDirectory.availableMerchantIdForMember(node.getMerchantMemberId()) == null)
+            {
+                return ShopGate.deny(AjaxResult.error("这家店不存在或未开放"));
+            }
+        }
+        catch (RuntimeException e)
+        {
+            log.warn("[npc/shop-chat] merchant directory unavailable nodeId={}", nodeId, e);
+            return ShopGate.deny(AjaxResult.error("店铺信息暂时不可用"));
         }
         return ShopGate.pass(node);
     }

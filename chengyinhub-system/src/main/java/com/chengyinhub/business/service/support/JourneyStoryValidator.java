@@ -448,7 +448,8 @@ public class JourneyStoryValidator {
         String op = condition.path("op").asText("");
         if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
             if (!condition.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !condition.path("quantity").isIntegralNumber()
-                || condition.path("quantity").asLong() < 1 || condition.path("quantity").asLong() > 999) throw new IllegalArgumentException(path + " 物资条件不合法");
+                || !condition.path("quantity").canConvertToLong() || condition.path("quantity").asLong() < 1
+                || condition.path("quantity").asLong() > 999) throw new IllegalArgumentException(path + " 物资条件不合法");
             return;
         }
         if ("NODE_COMPLETED".equals(op)) {

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentCaptureSnapshotMapper">
+  <resultMap id="Snapshot" type="com.chengyinhub.business.domain.ContentCaptureSnapshot">
+    <id column="id" property="id"/>
+    <result column="topic_id" property="topicId"/>
+    <result column="captured_by_member_id" property="capturedByMemberId"/>
+    <result column="request_id" property="requestId"/>
+    <result column="source_config_version" property="sourceConfigVersion"/>
+    <result column="content_hash" property="contentHash"/>
+    <result column="canonical_json" property="canonicalJson"/>
+    <result column="state" property="state"/>
+    <result column="contract_version" property="contractVersion"/>
+    <result column="canonicalization_version" property="canonicalizationVersion"/>
+  </resultMap>
+  <select id="selectOwnedRequest" resultMap="Snapshot">
+    SELECT id, topic_id, captured_by_member_id, request_id, source_config_version,
+           content_hash, canonical_json, state, contract_version, canonicalization_version
+    FROM content_capture_snapshot
+    WHERE topic_id=#{topicId} AND captured_by_member_id=#{memberId} AND request_id=#{requestId}
+  </select>
+  <insert id="insertFrozen" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO content_capture_snapshot
+      (topic_id, captured_by_member_id, request_id, source_config_version, content_hash,
+       canonical_json, state, contract_version, canonicalization_version)
+    VALUES
+      (#{topicId}, #{capturedByMemberId}, #{requestId}, #{sourceConfigVersion}, #{contentHash},
+       #{canonicalJson}, 'FROZEN_INCOMPLETE', 'questify.content-capture-candidate.v1', 'questify.canonical-content-json.v1')
+  </insert>
+</mapper>

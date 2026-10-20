@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.service.support.RegistrationLifecycleMySqlFixture;
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
@@ -110,6 +111,7 @@ class ActivityCancelFreeOrderMybatisIT {
     private String database;
     private JdbcTemplate jdbc;
     private CmsRegistrationMapper regMapper;
+    private com.chengyinhub.business.mapper.BusinessAuditEventMapper lifecycleAudit;
     private CmsActivityMapper activityMapper;
     private OmsTicketMapper ticketMapper;
     private TransactionTemplate transaction;
@@ -140,6 +142,8 @@ class ActivityCancelFreeOrderMybatisIT {
                     "sql/migration_20260930_registration_first_successful_scan.sql");
         }
         jdbc = new JdbcTemplate(ds);
+        RegistrationLifecycleMySqlFixture.createTable(jdbc);
+        lifecycleAudit = RegistrationLifecycleMySqlFixture.mapper(ds);
         Configuration cfg = new Configuration(new Environment("r916-cancel",
                 new SpringManagedTransactionFactory(), ds));
         cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
@@ -178,6 +182,7 @@ class ActivityCancelFreeOrderMybatisIT {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService", mock(IPerkLedgerService.class));
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
+        ReflectionTestUtils.setField(service, "registrationLifecycleAuditMapper", lifecycleAudit);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "refundService", refundService);
@@ -215,6 +220,7 @@ class ActivityCancelFreeOrderMybatisIT {
 
     @BeforeEach
     void seedBase() throws Exception {
+        jdbc.update("DELETE FROM business_audit_event");
         for (String table : new String[]{"cms_registration", "cms_activity", "cms_topic", "oms_ticket"}) {
             exec("DELETE FROM " + table);
         }
@@ -238,7 +244,19 @@ class ActivityCancelFreeOrderMybatisIT {
         seedReg(95L, "A20260913B66DBF70", "P202609134D242E16", FREE_ACTIVITY, FREE_TICKET, 9004L,
                 1, "0.00", "0.00", 0, 0);
 
+        transaction.executeWithoutResult(status -> {
+            service.cancelActivityByOwner(FREE_ACTIVITY, OWNER, "rollback probe");
+            RegistrationLifecycleMySqlFixture.assertEvent(jdbc, 95L, "REFUND_INVALIDATED", 4, 3);
+            status.setRollbackOnly();
+        });
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM business_audit_event", Integer.class));
+        assertEquals(2, regMapper.selectCmsRegistrationById(95L).getPaymentStatus());
+        assertEquals(2, regMapper.selectCmsRegistrationById(95L).getRegistrationStatus());
+        assertEquals(3, inventory(FREE_TICKET), "Rollback must undo inventory and audit together");
+        assertActivityNotCancelled(FREE_ACTIVITY);
+
         ActivityCancelResult result = cancel(FREE_ACTIVITY);
+        RegistrationLifecycleMySqlFixture.assertEvent(jdbc, 95L, "REFUND_INVALIDATED", 4, 3);
 
         assertEquals(1, result.getRefundedOrders(), "免费单张必须算一单已退,不能被父单守卫拦下");
         assertEquals(0, result.getManualOrders());

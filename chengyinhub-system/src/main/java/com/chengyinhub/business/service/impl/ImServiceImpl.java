@@ -71,6 +71,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     private ImPollMapper pollMapper;
     @Autowired
     private ImBlockMapper blockMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.rendezvous.ImBlockMutation imBlockMutation;
     @Autowired
     private IUmsMemberService umsMemberService;
     @Autowired
@@ -1374,7 +1376,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImBlock b = new ImBlock();
         b.setMemberId(memberId);
         b.setBlockedMemberId(targetMemberId);
-        blockMapper.insertImBlock(b);
+        if (imBlockMutation == null) blockMapper.insertImBlock(b);
+        else imBlockMutation.insert(b);
     }
 
     @Override

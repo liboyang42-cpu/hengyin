@@ -7,6 +7,10 @@ import com.chengyinhub.business.domain.vo.TemplateLibraryVO;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
+import com.chengyinhub.business.service.support.LegacyCmsMutationGuard;
+import com.chengyinhub.business.service.support.LegacyCmsTemplateApprovalBoundary;
+import com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.io.Resources;
@@ -55,7 +59,7 @@ class TemplateMarketLifecycleMySqlIT {
                 MemberTemplateVO.class, TemplateLibraryVO.class, AuditTask.class, AuditRecord.class,
                 BusinessAuditEvent.class}) config.getTypeAliasRegistry().registerAlias(type.getSimpleName(), type);
         config.setEnvironment(new Environment("it", new SpringManagedTransactionFactory(), source));
-        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "AppMediaAsset"}) {
+        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "AppMediaAsset", "LegacyCmsTemplateRead", "LegacyCmsProvenance"}) {
             String resource = "mapper/business/" + name + "Mapper.xml";
             try (InputStream input = Resources.getResourceAsStream(resource)) {
                 new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();
@@ -66,6 +70,9 @@ class TemplateMarketLifecycleMySqlIT {
         try (Connection connection = source.getConnection()) {
             assertTrue(connection.getMetaData().getDatabaseProductVersion().startsWith("8.0"));
             ItSchema.apply(connection, "it-schema/journey-full-flow-it-schema.sql");
+            // Test-only consumer schema; production migration remains owned by the paid materializer.
+            connection.createStatement().execute("ALTER TABLE cms_member_template ADD w18_provenance_kind VARCHAR(32) NULL");
+            connection.createStatement().execute("CREATE TABLE w18_cms_template_provenance(template_id BIGINT PRIMARY KEY)");
             connection.createStatement().execute("CREATE TABLE cms_template_library LIKE cms_member_template");
             connection.createStatement().execute("ALTER TABLE cms_template_library ADD member_template_id BIGINT, ADD pack_type INT, ADD INDEX idx_member_template(member_template_id)");
             String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("../sql/ry_20250522.sql")), java.nio.charset.StandardCharsets.UTF_8);
@@ -89,7 +96,7 @@ class TemplateMarketLifecycleMySqlIT {
     @BeforeEach
     void services() {
         jdbc = new JdbcTemplate(source);
-        for (String table : new String[]{"business_audit_event", "audit_record", "audit_task", "cms_template_library", "cms_member_template"})
+        for (String table : new String[]{"business_audit_event", "audit_record", "audit_task", "w18_cms_template_provenance", "cms_template_library", "cms_member_template"})
             jdbc.update("DELETE FROM " + table);
         members = sql.getMapper(CmsMemberTemplateMapper.class);
         libraries = sql.getMapper(CmsTemplateLibraryMapper.class);
@@ -99,16 +106,24 @@ class TemplateMarketLifecycleMySqlIT {
         field(auditTarget, "auditTaskMapper", tasks);
         field(auditTarget, "auditRecordMapper", sql.getMapper(AuditRecordMapper.class));
         field(auditTarget, "businessAuditEventMapper", sql.getMapper(BusinessAuditEventMapper.class));
+        field(auditTarget, "legacyTemplateApprovalBoundary", proxy(new LegacyCmsTemplateApprovalBoundary(
+                sql.getMapper(LegacyCmsTemplateReadMapper.class))));
         ObjectProvider<IImService> im = mock(ObjectProvider.class);
         when(im.getObject()).thenReturn(mock(IImService.class)); field(auditTarget, "imServiceProvider", im);
         field(auditTarget, "mediaPublicationGuard", MediaPublicationMySqlFixture.guard(sql, members));
         audit = proxy(auditTarget);
         CmsMemberTemplateServiceImpl memberService = new CmsMemberTemplateServiceImpl();
         field(memberService, "cmsMemberTemplateMapper", members);
+        LegacyCmsMutationGuard mutationGuard = proxy(new LegacyCmsMutationGuard(sql.getMapper(LegacyCmsTemplateReadMapper.class)));
+        field(memberService, "legacyCmsMutationGuard", mutationGuard);
+        field(memberService, "legacyCmsTemplateBodyReader", proxy(new LegacyCmsTemplateBodyReader(
+                sql.getMapper(LegacyCmsTemplateReadMapper.class), members)));
         CmsTemplateLibraryServiceImpl libraryService = new CmsTemplateLibraryServiceImpl();
         field(libraryService, "cmsTemplateLibraryMapper", libraries);
         TemplatePublishServiceImpl target = new TemplatePublishServiceImpl();
-        field(target, "memberTemplateService", memberService); field(target, "memberTemplateMapper", members);
+        field(target, "legacyCmsMutationGuard", mutationGuard);
+        field(target, "legacyCmsProvenanceGuard", new LegacyCmsProvenanceGuard(sql.getMapper(LegacyCmsProvenanceMapper.class)));
+        field(target, "memberTemplateService", proxy(memberService)); field(target, "memberTemplateMapper", members);
         field(target, "templateLibraryService", libraryService); field(target, "libraryMapper", libraries);
         field(target, "auditTaskMapper", tasks); field(target, "auditTaskService", audit);
         field(target, "capabilityGuard", mock(ICapabilityGuard.class));

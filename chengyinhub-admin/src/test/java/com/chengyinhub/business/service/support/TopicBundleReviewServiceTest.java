@@ -11,6 +11,8 @@ import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -25,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class TopicBundleReviewServiceTest {
+    private LegacyCmsUnitGuardFixture provenance;
+    @AfterEach void closeLegacySource() { if (provenance != null) provenance.close(); }
     private CmsTopicMapper topicMapper;
     private CmsTopicChapterMapper chapterMapper;
     private CmsTopicNodeMapper nodeMapper;
@@ -34,12 +38,14 @@ class TopicBundleReviewServiceTest {
     private CmsMemberTemplate template;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        provenance = new LegacyCmsUnitGuardFixture(100L);
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         nodeMapper = mock(CmsTopicNodeMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         service = new TopicBundleReviewService(topicMapper, chapterMapper, nodeMapper, templateMapper);
+        ReflectionTestUtils.setField(service, "legacyTemplateApprovalBoundary", provenance.approvalBoundary);
 
         topic = new CmsTopic();
         topic.setId(10L);
@@ -351,6 +357,7 @@ class TopicBundleReviewServiceTest {
         when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(100L)))
                 .thenReturn(Collections.singletonList(template));
     }
+<<<<<<< port
     @Test
     void acceptedMerchantSupplyAllowsOnlyItsApprovedTemplateAndDecisionRechecksSupply() {
         com.chengyinhub.business.mapper.MerchantChapterApplicationMapper applications = mock(com.chengyinhub.business.mapper.MerchantChapterApplicationMapper.class);
@@ -391,4 +398,26 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(100L, 88L);
     }
 
+=======
+
+    @Test
+    void missingApprovalGuardRejectsBeforeAnyBundledDraftWrite() {
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        stubLockedRows();
+        ReflectionTestUtils.setField(service, "legacyTemplateApprovalBoundary", null);
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
+        assertEquals("LEGACY_TEMPLATE_APPROVAL_GUARD_UNAVAILABLE", error.getMessage());
+        verify(templateMapper, never()).approveBundledDraft(100L, 7L);
+    }
+
+    @Test
+    void markerNullButSidecarPresentRejectsBeforeBundledDraftWrite() {
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        stubLockedRows(); provenance.addSidecar(100L);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
+        verify(templateMapper, never()).approveBundledDraft(100L, 7L);
+    }
+>>>>>>> questify
 }

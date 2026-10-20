@@ -153,8 +153,12 @@ public class TopicRouteEngine {
         for (JsonNode condition : conditions) {
             String op = condition.path("op").asText();
             if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
+                JsonNode quantity = condition.path("quantity");
+                if (!condition.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}")
+                        || !quantity.isIntegralNumber() || !quantity.canConvertToLong()
+                        || quantity.asLong() < 1 || quantity.asLong() > 999) return false;
                 String field = "ITEM_HELD".equals(op) ? "inventory" : "acquired";
-                if (state.themeRuntime.path(field).path(condition.path("itemId").asText()).asInt() < condition.path("quantity").asInt()) return false;
+                if (state.themeRuntime.path(field).path(condition.path("itemId").asText()).asLong() < quantity.asLong()) return false;
                 continue;
             }
             if ("NODE_COMPLETED".equals(op)) {

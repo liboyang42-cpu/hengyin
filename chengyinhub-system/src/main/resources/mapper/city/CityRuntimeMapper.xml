@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.city.CityRuntimeMapper">
+    <insert id="insertBoard">
+        INSERT INTO city_board (board_id, payload, state_version) VALUES (#{boardId}, #{payload}, #{version})
+    </insert>
+    <select id="lockBoard" resultType="com.chengyinhub.business.city.CityPersistenceRows$BoardRow" useCache="false" flushCache="true">
+        SELECT board_id AS boardId, payload, state_version AS version FROM city_board WHERE board_id=#{boardId} FOR UPDATE
+    </select>
+    <update id="updateBoard">
+        UPDATE city_board SET payload=#{payload}, state_version=#{after} WHERE board_id=#{boardId} AND state_version=#{before}
+    </update>
+    <select id="rounds" resultType="com.chengyinhub.business.city.CityPersistenceRows$FactRow" useCache="false" flushCache="true">
+        SELECT round_key AS factKey, payload FROM city_action_round WHERE board_id=#{boardId} ORDER BY round_key FOR UPDATE
+    </select>
+    <select id="visits" resultType="com.chengyinhub.business.city.CityPersistenceRows$FactRow" useCache="false" flushCache="true">
+        SELECT visit_key AS factKey, status, payload FROM city_service_visit WHERE board_id=#{boardId} ORDER BY visit_key FOR UPDATE
+    </select>
+    <select id="effects" resultType="com.chengyinhub.business.city.CityPersistenceRows$EffectRow" useCache="false" flushCache="true">
+        SELECT id, board_id AS boardId, effect_key AS effectKey, kind, sequence, payload
+        FROM city_action_effect WHERE board_id=#{boardId} ORDER BY id FOR UPDATE
+    </select>
+    <select id="requests" resultType="com.chengyinhub.business.city.CityPersistenceRows$RequestRow" useCache="false" flushCache="true">
+        SELECT board_id AS boardId, actor_id AS actorId, request_id AS requestId, request_key AS requestKey,
+               payload_hash AS payloadHash, effect_id AS effectId
+        FROM city_action_receipt WHERE board_id=#{boardId} ORDER BY actor_id, request_id FOR UPDATE
+    </select>
+    <select id="scopes" resultType="com.chengyinhub.business.city.CityPersistenceRows$ScopeRow" useCache="false" flushCache="true">
+        SELECT scope_key AS scopeKey, kind, effect_key AS effectKey FROM city_consumed_scope
+        WHERE board_id=#{boardId} ORDER BY kind, scope_key FOR UPDATE
+    </select>
+    <insert id="insertRound">
+        INSERT INTO city_action_round (board_id, round_key, team_id, round_sequence, payload)
+        VALUES (#{boardId}, #{factKey}, #{teamId}, #{roundSequence}, #{payload})
+    </insert>
+    <update id="updateRound">
+        UPDATE city_action_round SET payload=#{payload} WHERE board_id=#{boardId} AND round_key=#{factKey}
+    </update>
+    <insert id="insertVisit">
+        INSERT INTO city_service_visit (board_id, visit_key, team_id, service_instance_id, visit_scope, status, payload)
+        VALUES (#{boardId}, #{factKey}, #{teamId}, #{serviceInstanceId}, #{visitScope}, #{status}, #{payload})
+    </insert>
+    <update id="finishVisit">
+        UPDATE city_service_visit SET status=#{status}, payload=#{payload}
+        WHERE board_id=#{boardId} AND visit_key=#{factKey} AND status='ACCEPTED'
+    </update>
+    <insert id="insertEffect" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO city_action_effect (board_id, effect_key, kind, sequence, payload)
+        VALUES (#{boardId}, #{effectKey}, #{kind}, #{sequence}, #{payload})
+    </insert>
+    <insert id="insertRequest">
+        INSERT INTO city_action_receipt (board_id, actor_id, request_id, request_key, payload_hash, effect_id)
+        VALUES (#{boardId}, #{actorId}, #{requestId}, #{requestKey}, #{payloadHash}, #{effectId})
+    </insert>
+    <insert id="insertScope">
+        INSERT INTO city_consumed_scope (board_id, kind, scope_key, effect_key)
+        VALUES (#{boardId}, #{kind}, #{scopeKey}, #{effectKey})
+    </insert>
+    <insert id="insertBudget">
+        INSERT INTO city_reward_budget (budget_id, board_id, rules_release_id, approval_id, version, ceiling, reserved, consumed, released)
+        VALUES (#{budgetId}, #{boardId}, #{rulesReleaseId}, #{approvalId}, #{version}, #{ceiling}, 0, 0, 0)
+    </insert>
+    <select id="lockBudget" resultType="com.chengyinhub.business.city.CityPersistenceRows$BudgetRow" useCache="false" flushCache="true">
+        SELECT budget_id AS budgetId, board_id AS boardId, rules_release_id AS rulesReleaseId, approval_id AS approvalId,
+               version, ceiling, reserved, consumed, released FROM city_reward_budget WHERE budget_id=#{budgetId} FOR UPDATE
+    </select>
+    <update id="reserveBudget">
+        UPDATE city_reward_budget SET reserved=reserved+#{gross}
+        WHERE budget_id=#{budgetId} AND #{gross} &gt; 0 AND ceiling-consumed-reserved &gt;= #{gross}
+    </update>
+    <update id="finishBudget">
+        UPDATE city_reward_budget SET reserved=reserved-#{gross},
+        <choose><when test="consume">consumed=consumed+#{gross}</when><otherwise>released=released+#{gross}</otherwise></choose>
+        WHERE budget_id=#{budgetId} AND #{gross} &gt; 0 AND reserved &gt;= #{gross}
+    </update>
+    <select id="findReservation" resultType="com.chengyinhub.business.city.CityPersistenceRows$ReservationRow" useCache="false" flushCache="true">
+        SELECT reservation_id AS reservationId, board_id AS boardId, budget_id AS budgetId, effect_key AS effectKey,
+               offer_hash AS offerHash, gross, status FROM city_reward_reservation
+        WHERE board_id=#{boardId} AND effect_key=#{effectKey}
+    </select>
+    <select id="lockReservation" resultType="com.chengyinhub.business.city.CityPersistenceRows$ReservationRow" useCache="false" flushCache="true">
+        SELECT reservation_id AS reservationId, board_id AS boardId, budget_id AS budgetId, effect_key AS effectKey,
+               offer_hash AS offerHash, gross, status FROM city_reward_reservation
+        WHERE board_id=#{boardId} AND effect_key=#{effectKey} FOR UPDATE
+    </select>
+    <insert id="insertReservation">
+        INSERT INTO city_reward_reservation (reservation_id, board_id, budget_id, effect_key, offer_hash, gross, status)
+        VALUES (#{reservationId}, #{boardId}, #{budgetId}, #{effectKey}, #{offerHash}, #{gross}, #{status})
+    </insert>
+    <update id="finishReservation">
+        UPDATE city_reward_reservation SET status=#{status} WHERE reservation_id=#{reservationId} AND status='RESERVED'
+    </update>
+    <insert id="insertPointFact">
+        INSERT INTO city_point_effect_member
+        (effect_id, member_id, reward_credit, fee_credit, fee_debit, net_change, before_points, after_points, points_detail_id, mapping_approval)
+        VALUES (#{effectId}, #{entry.memberId}, #{entry.rewardCredit}, #{entry.feeCredit}, #{entry.feeDebit}, #{entry.netChange},
+                #{entry.expectedBefore}, #{entry.proposedAfter}, #{detailId}, #{mappingApproval})
+    </insert>
+    <insert id="insertOutbox">
+        INSERT INTO city_domain_outbox (effect_id, board_id, sequence, event_type, payload)
+        VALUES (#{id}, #{boardId}, #{sequence}, #{kind}, #{payload})
+    </insert>
+</mapper>

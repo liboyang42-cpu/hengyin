@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WalkingTargetMapper">
+    <!-- Ingestion can only stage a new, exact-coordinate candidate. No review/promote/upsert
+         statement exists. The server constants ignore every caller review/revision field. -->
+    <insert id="insertUnreviewed">
+        insert into roam_poi_navigation_provenance
+            (poi_id, provenance_revision, review_state, latitude, longitude, coordinate_datum,
+             country_region, source_kind, source_reference, source_revision)
+        select p.id, 1, 'UNREVIEWED', p.lat, p.lng, #{candidate.coordinateDatum},
+               #{candidate.countryRegion}, #{candidate.sourceKind}, #{candidate.sourceReference}, #{candidate.sourceRevision}
+        from roam_poi p
+        where p.id = #{candidate.poiId} and p.type = 2
+          and p.lat = #{candidate.latitude} and p.lng = #{candidate.longitude}
+    </insert>
+    <!-- Fixed visibility; never uses historical reward membership or caller status/audit filters.
+         POI content approval matches RoamMapper.cityNodeContentApproved. Merchant visibility
+         matches ApiMerchantController.isPubliclyVisible. No release, licence or player unlock. -->
+    <select id="selectCurrentPublicCityTarget" useCache="false" flushCache="true" resultType="com.chengyinhub.business.navigation.WalkingTargetContracts$CityTargetRow">
+        select p.id as currentPoiId, p.type as poiType, p.status as poiStatus,
+               p.application_type as applicationType, p.audit_status as auditStatus,
+               p.lat as currentLatitude, p.lng as currentLongitude,
+               m.id as merchantId, m.status as merchantStatus,
+               m.account_status as merchantAccountStatus, m.del_flag as merchantDeleted,
+               n.poi_id as poiId, n.provenance_revision as provenanceRevision,
+               n.review_state as reviewState, n.latitude as latitude, n.longitude as longitude,
+               n.coordinate_datum as coordinateDatum, n.country_region as countryRegion,
+               n.source_kind as sourceKind, n.source_reference as sourceReference,
+               n.source_revision as sourceRevision, n.review_reference as reviewReference,
+               n.reviewed_at as reviewedAt
+        from roam_poi p
+        inner join mms_merchant m on m.id = p.merchant_id
+        left join roam_poi_navigation_provenance n on n.poi_id = p.id
+        where p.id = #{poiId} and p.type = 2 and p.status = 1
+          and (p.application_type is null or p.application_type = 2
+            or (p.application_type = 1 and p.audit_status = 1))
+          and m.status = 1 and m.account_status = 1 and m.del_flag = 0
+    </select>
+</mapper>

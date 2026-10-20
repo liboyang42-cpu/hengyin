@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,7 +31,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>不在施工图的清单里,是核对基线时顺带发现的。
  *
- * ⚠️ 负控已实测:去掉 advanceProgress 里的 `if (actId == null || actId == 0L) setTopicId(...)`
+ * ⚠️ 负控已实测:去掉 advanceProgress 里 done 探针的 `setTopicId(...)`
  *    ⇒ selfPlaySession_doneProbeNarrowedByTopic 红。
  */
 class PlaySelfPlayCompletionTest {
@@ -125,14 +124,16 @@ class PlaySelfPlayCompletionTest {
     }
 
     /**
-     * 活动会话 ⇒ **不加** topicId 收窄。activityId 天然一对一绑定主题,加了是多余条件;
-     * 且历史进度行的 topic_id 未必回填过,加了反而可能少算 done。
+     * 活动会话同样限定本人、主题与活动；运行时按这一三元组选局，不读入其它主题的完成行。
+     * 兼容风险仍在：migration_m2_self_play.sql 的旧活动行 topic_id=0（另有 nullable 旧表形态）。
+     * 本例只验证当前局隔离合同，不证明历史行已回填；归属恢复须另做审查，不能靠放宽查询发奖。
      */
     @Test
-    void activitySession_doneProbeNotNarrowed() {
+    void activitySession_doneProbeUsesExactOwnerTopicAndActivity() {
         advance(ACTIVITY);
         PlayerNodeProgress probe = lastDoneProbe();
         assertEquals(ACTIVITY, probe.getActivityId());
-        assertNull(probe.getTopicId(), "活动会话 activityId 已唯一确定主题,不该再加 topicId 条件");
+        assertEquals(MEMBER, probe.getMemberId());
+        assertEquals(TOPIC, probe.getTopicId(), "活动完成计数同样绑定运行时的精确主题归属");
     }
 }

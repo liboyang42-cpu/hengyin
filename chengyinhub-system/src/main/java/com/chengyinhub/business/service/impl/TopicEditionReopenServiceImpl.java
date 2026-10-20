@@ -19,12 +19,14 @@ import com.chengyinhub.business.mapper.TopicEditionReopenMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.ITopicEditionReopenService;
 import com.chengyinhub.business.util.NarrativeNpcRefs;
+import com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard;
 import com.chengyinhub.common.constant.ProductSlot;
 import com.chengyinhub.common.constant.RoleEntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +51,11 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
     private final TopicEditionReopenMapper reopenMapper;
     private final ProductRoleMapper productRoleMapper;
     private final CmsMemberTemplateMapper templateMapper;
+    @Autowired
+    private LegacyCmsProvenanceGuard legacyCmsProvenanceGuard;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.MerchantAuthoringCopyGuard merchantAuthoringCopyGuard;
     private final ClubMapper clubMapper;
     private final UmsMemberMapper memberMapper;
     /** R13-NPC:节点 NPC(scope_type=4)随节点复制;手工 new 的旧单测传 null 时该侧跳过。 */
@@ -399,15 +406,21 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         if (templateId == null || templateId <= 0L) {
             return templateId;
         }
+        legacyCmsProvenanceGuard.requireLegacy(templateId);
         Long mapped = editionTemplateIds.get(templateId);
         if (mapped != null) {
             return mapped;
         }
         CmsMemberTemplate source = templateMapper.selectCmsMemberTemplateById(templateId);
-        if (source == null || !NarrativeNpcRefs.hasNpcRefs(source.getAdvancedConfigJson())) {
+        if (source == null) {
+            throw new IllegalStateException("新期节点来源模板不存在: templateId=" + templateId);
+        }
+        if (!NarrativeNpcRefs.hasNpcRefs(source.getAdvancedConfigJson())) {
             editionTemplateIds.put(templateId, templateId);
             return templateId;
         }
+        // Same-id reuse preserves W05 provenance; a new id would lose its binding.
+        merchantAuthoringCopyGuard.requireUnboundForDeepCopy(templateId);
         CmsMemberTemplate copy = new CmsMemberTemplate();
         BeanUtils.copyProperties(source, copy);
         copy.setId(null);

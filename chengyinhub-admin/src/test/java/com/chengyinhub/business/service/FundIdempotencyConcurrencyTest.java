@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.domain.OmsTicket;
@@ -74,9 +75,18 @@ class FundIdempotencyConcurrencyTest {
                     "两个退款线程必须先共同读到同一笔已支付快照");
             return registration;
         });
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> persisted =
+                new java.util.concurrent.atomic.AtomicReference<>(registration);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(registrationId))
+                .thenAnswer(invocation -> persisted.get());
         AtomicBoolean registrationClaimed = new AtomicBoolean();
         when(registrationMapper.claimRegistrationRefunded(eq(registrationId), any(), any()))
-                .thenAnswer(invocation -> registrationClaimed.compareAndSet(false, true) ? 1 : 0);
+                .thenAnswer(invocation -> {
+                    if (!registrationClaimed.compareAndSet(false, true)) return 0;
+                    persisted.set(RegistrationLifecycleFixture.persisted(
+                            registration, 4, 3, invocation.getArgument(2, Date.class)));
+                    return 1;
+                });
         AtomicBoolean pointsClaimed = new AtomicBoolean();
         when(registrationMapper.claimPointsReturn(eq(registrationId), any(), any()))
                 .thenAnswer(invocation -> pointsClaimed.compareAndSet(false, true) ? 1 : 0);
@@ -110,10 +120,12 @@ class FundIdempotencyConcurrencyTest {
         ReflectionTestUtils.setField(service, "refundPayoutService", mock(IRefundPayoutService.class));
         ReflectionTestUtils.setField(service, "notifyService", mock(INotifyService.class));
 
+        TeamGroupServiceImpl transactionalService = RegistrationLifecycleFixture.transactional(service);
+
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
-            Future<Integer> first = pool.submit(() -> service.cancelPaidRegistration(registrationId, memberId));
-            Future<Integer> second = pool.submit(() -> service.cancelPaidRegistration(registrationId, memberId));
+            Future<Integer> first = pool.submit(() -> transactionalService.cancelPaidRegistration(registrationId, memberId));
+            Future<Integer> second = pool.submit(() -> transactionalService.cancelPaidRegistration(registrationId, memberId));
             assertEquals(1, first.get(10, TimeUnit.SECONDS));
             assertEquals(1, second.get(10, TimeUnit.SECONDS));
         } finally {
