@@ -1524,6 +1524,8 @@ public class ApiTopicController extends BaseController {
 
                 CmsTopicNode cmsTopicNode = new CmsTopicNode();
                 cmsTopicNode.setChapterId(chapter.getId());
+                // 后台「隐藏」(status=0)的节点玩家侧不下发;站数口径(locationCount / nodeCount / play 节点)同为 status=1
+                cmsTopicNode.setStatus(1L);
                 List<CmsTopicNode> listCmsTopicNode = cmsTopicNodeService.selectCmsTopicNodeList(cmsTopicNode);
 
                 List<TopicNodeVO> nodeVOList = new ArrayList<>();

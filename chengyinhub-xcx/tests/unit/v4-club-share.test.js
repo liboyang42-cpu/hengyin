@@ -15,6 +15,7 @@ function loadDetail() {
   let definition
   const requests = []
   const toasts = []
+  const nav = []
   const app = {
     globalData: {}, sendRequest(r) { requests.push(r) },
     getUserRole: () => 'player', getUserID: () => 7, getAvatar: () => '', getImgUrl: (v) => v,
@@ -51,13 +52,14 @@ function loadDetail() {
     wx: {
       navigateTo() {}, showToast(o) { toasts.push(o && o.title) }, showModal() {}, showShareMenu() {},
       setStorageSync() {}, getStorageSync() { return '' }, pageScrollTo() {},
+      navigateBack(o) { nav.push('back'); if (o && o.fail) o.fail() }, switchTab(o) { nav.push(o && o.url) },
     },
   }, { filename: 'pages/club/detail/index.js' })
   const page = Object.assign({}, definition, {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb.call(this) },
   })
-  return { page, requests, toasts, definition }
+  return { page, requests, toasts, definition, nav }
 }
 
 function parseRoute(url) {
@@ -114,25 +116,36 @@ test('无 id 的链接:不发 id:null 请求,并给出「缺少俱乐部」提�
   assert.equal(h.page.data.notFound, true)
 })
 
-// ---- 以下记录当前行为(DEFECT):失效/无效链接没有显式状态 ----
-test('[DEFECT 记录] 失效/已解散俱乐部链接:业务拒绝与网络失败同落 notFound,而 notFound 渲染为无文案的空白占位', () => {
+// ---- SC-CL-SHARE(已修):失效/无效链接给显式状态;网络失败仍走既有 load-failure(F-W1-12) ----
+test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存在或已解散」+ 返回入口)', () => {
   const h = loadDetail()
   h.page.onLoad({ id: '404404' })
   h.requests.find((r) => r.url === '/api/club/detail').success({ code: '500', msg: '俱乐部不存在或已解散' })
-  assert.equal(h.page.data.notFound, true)
+  // 业务拒绝不再落 notFound 留白,服务端原因被承载出来
+  assert.equal(h.page.data.notFound, false)
   assert.equal(h.page.data.club, null)
-  // 后端给出的原因被丢弃,页面上没有任何字段承载它
-  assert.ok(!JSON.stringify(h.page.data).includes('已解散'), '当前实现丢弃了失效原因(记录现状)')
-  // wxml:notFound → <cy-error load-failure="{{true}}">,组件在 loadFailure 下只渲染 aria-hidden 空白 veil
-  assert.match(read('pages/club/detail/index.wxml'), /<cy-error wx:if="\{\{notFound\}\}" load-failure="\{\{true\}\}"\s*\/>/)
-  assert.match(read('components/cy/error/index.wxml'), /<view wx:if="\{\{loadFailure\}\}" aria-hidden="true" class="cy-error-veil/)
-})
-
-test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存在或已解散」+ 返回入口)', { todo: 'DEFECT:pages/club/detail/index.wxml:24 notFound 一律用 load-failure 空白占位' }, () => {
-  const h = loadDetail()
-  h.page.onLoad({ id: '404404' })
-  h.requests.find((r) => r.url === '/api/club/detail').success({ code: '500', msg: '俱乐部不存在或已解散' })
-  assert.doesNotMatch(read('pages/club/detail/index.wxml'), /<cy-error wx:if="\{\{notFound\}\}" load-failure="\{\{true\}\}"\s*\/>/)
+  assert.equal(h.page.data.clubGoneText, '俱乐部不存在或已解散')
+  const wxml = read('pages/club/detail/index.wxml')
+  const gone = wxml.match(/<cy-error wx:elif="\{\{clubGoneText\}\}"[^>]*\/>/)
+  assert.ok(gone, '失效态必须渲染成有文案的 cy-error')
+  assert.doesNotMatch(gone[0], /load-failure/, '失效态不能是空白占位')
+  assert.match(gone[0], /title="\{\{clubGoneText\}\}"/)
+  // 返回入口 = 导航栏常驻返回(goBack;分享直达页栈只有一页时 switchTab 回发现页),失效态不另加按钮
+  assert.match(gone[0], /sub="[^"]*返回[^"]*"/, '失效态要指明怎么返回')
+  assert.match(wxml, /<cy-nav-bar custom-back bind:back="goBack" wx:if="\{\{!\(groupCodeVisible && groupCodeState !== 'selecting'\)\}\}">/)
+  h.page.goBack()
+  assert.deepEqual(h.nav, ['back', '/pages/talent/list/index'], '分享直达(无上一页)也必须能回去')
+  // 200 但没有 data:同样给明确的不存在态
+  const empty = loadDetail()
+  empty.page.onLoad({ id: '404405' })
+  empty.requests.find((r) => r.url === '/api/club/detail').success({ code: '200', data: null })
+  assert.equal(empty.page.data.clubGoneText, '俱乐部不存在或已解散')
+  // 网络失败不是失效:仍走 notFound(既有 load-failure 分支),不冒充「不存在」
+  const offline = loadDetail()
+  offline.page.onLoad({ id: '9' })
+  offline.requests.find((r) => r.url === '/api/club/detail').fail({ errMsg: 'request:fail offline' })
+  assert.equal(offline.page.data.notFound, true)
+  assert.equal(offline.page.data.clubGoneText, '')
 })
 
 test('[现状记录] 俱乐部详情未实现 onShareTimeline,朋友圈分享不可用', () => {
