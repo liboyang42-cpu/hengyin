@@ -1026,7 +1026,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 if (isTopicBundle(task)) {
                     topicBundleReviewService.applyDecision(bizId, task.getSubmitterId(), task.getSnapshotJson(), up);
                 }
-                // M0-6 先审后发:过审(APPROVE)→上架(status=1/userStatus=1);驳回(REJECT)→status=2
+                // 主题先发后审(2026-10-20):这里是发布之后的人工结论。驳回(REJECT)→status=2 并下架;
+                // 过审(APPROVE)→check_status=1,首发进 Beta,在架态按下方规则保持/恢复。
                 if (down) {
                     CmsTopic t = new CmsTopic();
                     t.setId(bizId);
