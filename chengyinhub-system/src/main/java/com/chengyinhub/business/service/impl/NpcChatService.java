@@ -452,10 +452,8 @@ public class NpcChatService
     private void applyGatewayFailure(NpcChatRequest processing, AiServiceException e)
     {
         AiServiceException.Reason reason = e.getReason();
-        // 出参审核拦截是确定结论（master #322 OUTPUT_BLOCKED），不按「结果待确认」处理。
         if (e instanceof com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException
-                || (e instanceof com.chengyinhub.business.service.ai.AiProviderResultReceivedException
-                        && reason != AiServiceException.Reason.OUTPUT_BLOCKED))
+                || e instanceof com.chengyinhub.business.service.ai.AiProviderResultReceivedException)
         {
             terminalize(processing, NpcChatRequest.STATUS_PROCESSING, "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN",
                     null, false, "原请求结果待确认，请稍后查看原请求。");
