@@ -342,6 +342,20 @@ class RuntimeIsolationTest(unittest.TestCase):
         with self.assertRaises(ca.GateError):
             ca.container_names({"GITHUB_RUN_ID": "1;id"})
 
+    def test_app_logs_to_console_fixture_not_packaged_file_path(self):
+        with tempfile.TemporaryDirectory() as app:
+            Path(app, "META-INF").mkdir()
+            Path(app, "META-INF", "MANIFEST.MF").write_text("Main-Class: x.Launcher\n", encoding="utf-8")
+            command = ca.java_command(app, "")
+        logback = str(ca.FIXTURE_LOGBACK.resolve())
+        self.assertIn("-Dlogging.config=" + logback, command)
+        self.assertIn("-Dlogback.configurationFile=" + logback, command)
+        self.assertLess(command.index("-Dlogback.configurationFile=" + logback), command.index("-cp"))
+        fixture = ca.FIXTURE_LOGBACK.read_text(encoding="utf-8")
+        self.assertIn("ConsoleAppender", fixture)
+        for forbidden in ("FileAppender", "<file>", "/home/ruoyi"):
+            self.assertNotIn(forbidden, fixture.split("-->", 1)[1])
+
     def test_fixture_config_is_loopback_scratch_only(self):
         text = ca.FIXTURE_CONFIG.read_text(encoding="utf-8")
         props = dict(line.split("=", 1) for line in text.splitlines() if line and not line.startswith("#"))
@@ -407,6 +421,57 @@ def workflow_problems(text):
         if "if: always()" not in block:
             problems.append("%s must run if: always()" % always)
     return problems
+
+
+class ContentSecurityStubTest(unittest.TestCase):
+    """内容安全桩:必须在、必须贴口径、只许桩出站调用;拿掉或越权都让 explode 变红。"""
+
+    def setUp(self):
+        self.repo = _HERE.parent
+        self.stub = self.repo / "scripts" / "e2e" / ("%s.java.stub" % ca.CONTENT_SECURITY_STUB)
+
+    def _copy(self, text=None, drop=None):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name) / "scripts" / "e2e"
+        root.mkdir(parents=True)
+        for name in ca.STUBS:
+            if name == drop:
+                continue
+            source = self.repo / "scripts" / "e2e" / ("%s.java.stub" % name)
+            content = source.read_text(encoding="utf-8")
+            if name == ca.CONTENT_SECURITY_STUB and text is not None:
+                content = text
+            (root / ("%s.java.stub" % name)).write_text(content, encoding="utf-8")
+        return tmp.name
+
+    def test_real_stub_is_present_labelled_and_compiled_with_the_others(self):
+        self.assertIn(ca.CONTENT_SECURITY_STUB, ca.STUBS)
+        self.assertEqual([], ca.stub_problems(self.repo))
+        self.assertTrue(any(item.startswith(ca.CONTENT_SECURITY_GATE) for item in ca.NOT_COVERED))
+        text = self.stub.read_text(encoding="utf-8")
+        self.assertIn("REJECT_MARKER", text)
+        self.assertIn("@Primary", text)
+
+    def test_negative_controls(self):
+        text = self.stub.read_text(encoding="utf-8")
+        override = ("    @Override\n    public CallbackResult processMediaCheckCallback(String s, String t, String n, "
+                    "String b) {\n        return CallbackResult.SUCCESS;\n    }\n}\n")
+        mutations = {
+            "stub removed": self._copy(drop=ca.CONTENT_SECURITY_STUB),
+            "label removed": self._copy(text.replace(ca.CONTENT_SECURITY_GATE, "content security")),
+            "not the real service": self._copy(text.replace("extends WxContentSecurityServiceImpl",
+                                                            "implements IWxContentSecurityService")),
+            "callback overridden": self._copy(text.rstrip()[:-1] + override),
+        }
+        for label, directory in mutations.items():
+            with self.subTest(label):
+                self.assertTrue(ca.stub_problems(directory), label)
+
+    def test_receipt_carries_the_gate_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ca.merge_receipt(tmp, {"not_covered": ca.NOT_COVERED})
+            self.assertIn(ca.CONTENT_SECURITY_GATE, ca.receipt_path(tmp).read_text(encoding="utf-8"))
 
 
 class WorkflowContractTest(unittest.TestCase):

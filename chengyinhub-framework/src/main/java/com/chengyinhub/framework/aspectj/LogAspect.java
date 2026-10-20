@@ -39,6 +39,12 @@ public class LogAspect
 {
     private static final Logger log = LoggerFactory.getLogger(LogAspect.class);
 
+    /**
+     * 请求属性：控制器判定本次请求没有改变任何业务状态（如对已暂停站点的重复暂停）时置为 TRUE，
+     * 本次成功返回不再写 sys_oper_log，避免一次状态迁移在审计里出现两条操作记录。
+     */
+    public static final String SKIP_OPER_LOG_ATTRIBUTE = LogAspect.class.getName() + ".SKIP_OPER_LOG";
+
     /** 计算操作消耗时间 */
     private static final ThreadLocal<Long> TIME_THREADLOCAL = new NamedThreadLocal<Long>("Cost Time");
 
@@ -82,6 +88,10 @@ public class LogAspect
             SysOperLog operLog = new SysOperLog();
             operLog.setStatus(BusinessStatus.SUCCESS.ordinal());
             HttpServletRequest request = getCurrentRequest();
+            if (e == null && request != null && Boolean.TRUE.equals(request.getAttribute(SKIP_OPER_LOG_ATTRIBUTE)))
+            {
+                return;
+            }
             operLog.setOperIp(IpUtils.getIpAddr(request));
             if (request != null)
             {

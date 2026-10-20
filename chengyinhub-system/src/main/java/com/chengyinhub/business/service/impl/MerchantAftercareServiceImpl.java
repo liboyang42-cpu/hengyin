@@ -462,7 +462,8 @@ public class MerchantAftercareServiceImpl implements IMerchantAftercareService {
 
     private String normalizeEvidence(MerchantAftercareRespondRequest request) {
         if (request.getEvidenceUrl() != null && !request.getEvidenceUrl().trim().isEmpty()) {
-            throw badRequest("evidenceUrl 已停用，请上传后提交 evidenceKeys");
+            // 只有旧客户端还会带这个字段：给 426 让它走「版本需更新」，文案不变。
+            throw new ServiceException("evidenceUrl 已停用，请上传后提交 evidenceKeys", HttpStatus.UPGRADE_REQUIRED);
         }
         List<String> keys = request.getEvidenceKeys();
         if (keys != null && keys.size() > 1) {

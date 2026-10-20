@@ -121,7 +121,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             if (used != null && used > dailyLimit)
             {
                 log.info("[AiGateway] rate-limit memberId={} used={} limit={}", memberId, used, dailyLimit);
-                throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+                throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
             }
         }
 
@@ -133,7 +133,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.info("[AiGateway] input-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
-            throw new AiServiceException(secIn);
+            throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
         }
 
         // 3. 选模型(场景路由)
@@ -192,7 +192,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
-            throw new AiServiceException("生成内容未通过安全检测,请调整后重试");
+            throw new AiServiceException(AiServiceException.Reason.OUTPUT_BLOCKED, "生成内容未通过安全检测,请调整后重试");
         }
 
         // 5. 落日志
@@ -288,7 +288,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             log.info("[AiGateway] rate-limit bizType={} group={} memberId={} used={} limit={}",
                     bizType, rateGroup, memberId, used, dailyLimit);
-            throw new AiServiceException("今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
+            throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(" + dailyLimit + "/天),明天再来吧");
         }
     }
 

@@ -90,8 +90,40 @@ function createConsentClient(options) {
         clearTimeout(timer);
         fn(value);
       };
+      // SC-PRIV-03:撤回超时/回包丢失 = 结果未知(服务端可能已落库)。先用既有 latest 回读服务端真状态:
+      // 服务端最新一条就是撤回 → 按成功;读不到/不是撤回 → 仍按原错误 reject。业务失败(有回包)不走这里。
+      let checking = false;
+      const unknown = function (error) {
+        if (settled || checking) return;
+        if (eventType !== 'REVOKE') { settle(reject, error); return; }
+        checking = true;
+        clearTimeout(timer);
+        const giveUp = function () { settle(reject, error); };
+        const readTimer = setTimeout(giveUp, settleTimeoutMs);
+        const done = function (fn) { clearTimeout(readTimer); fn(); };
+        try { sendRequest({
+          url: '/api/compliance/consents/latest', method: 'POST', data: JSON.stringify({ docType, scene }),
+          header: { 'Content-Type': 'application/json' }, hideLoading: true, autoErrorToast: false,
+          success: function (res) {
+            const row = res && res.data;
+            if (res && Number(res.code) === 200 && row && row.docType === docType && row.scene === scene
+                && row.eventType === 'REVOKE' && typeof row.requestId === 'string' && row.requestId
+                && intentCurrent() && (!options.getUserID || owner === String(options.getUserID() || ''))) {
+              done(function () {
+                pending.delete(key);
+                if (options.setPending) options.setPending(key, null);
+                settle(resolve, { requestId: requestId, response: res, readback: row });
+              });
+              return;
+            }
+            done(giveUp);
+          },
+          successStatusAbnormal: function () { done(giveUp); },
+          fail: function () { done(giveUp); },
+        }); } catch (readError) { done(giveUp); }
+      };
       const timer = setTimeout(function () {
-        settle(reject, new Error('同意记录超时'));
+        unknown(new Error('同意记录超时'));
       }, settleTimeoutMs);
       try { sendRequest({
         // 后端 /api/compliance/consents 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded,
@@ -121,7 +153,7 @@ function createConsentClient(options) {
         },
         successStatusAbnormal: function () { settle(reject, new Error('同意记录失败')); },
         fail: function () {
-          settle(reject, new Error('同意记录失败'));
+          unknown(new Error('同意记录失败'));
         },
       }); } catch (error) { settle(reject, new Error('同意记录失败')); }
     });

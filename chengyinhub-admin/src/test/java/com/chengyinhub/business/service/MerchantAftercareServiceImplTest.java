@@ -647,7 +647,22 @@ class MerchantAftercareServiceImplTest {
         ServiceException error = assertThrows(ServiceException.class, () -> service.respond(PRINCIPAL, REFUND,
                 request("EVIDENCE", "补图", "javascript:alert(1)", "req-bad-url")));
 
-        assertEquals(400, error.getCode());
+        // F-L6-09：任何 evidenceUrl 输入都只来自旧客户端 → 426（需更新）。
+        assertEquals(426, error.getCode());
+        verify(mapper, never()).insertResponse(any());
+    }
+
+    /** F-L6-09：只有旧客户端还会带 evidenceUrl → 426（需更新），文案不变；普通参数错误仍是 400。 */
+    @Test
+    void legacyEvidenceUrlFieldAsksOldClientToUpgradeWhileOrdinaryValidationStays400() {
+        ServiceException legacy = assertThrows(ServiceException.class, () -> service.respond(PRINCIPAL, REFUND,
+                request("EVIDENCE", "补图", "https://www.chengyinhub.com/upload/a.jpg", "req-legacy-url")));
+        assertEquals(426, legacy.getCode());
+        assertEquals("evidenceUrl 已停用，请上传后提交 evidenceKeys", legacy.getMessage());
+
+        ServiceException ordinary = assertThrows(ServiceException.class, () -> service.respond(PRINCIPAL, REFUND,
+                request("MAYBE", "补图", null, "req-bad-decision")));
+        assertEquals(400, ordinary.getCode());
         verify(mapper, never()).insertResponse(any());
     }
 
@@ -672,7 +687,8 @@ class MerchantAftercareServiceImplTest {
                         "https://www.chengyinhub.com/upload/evidence.jpg?Expires=9999999999&Signature=long-lived",
                         "req-legacy-url")));
 
-        assertEquals(400, error.getCode());
+        // F-L6-09：任何 evidenceUrl 输入都只来自旧客户端 → 426（需更新）。
+        assertEquals(426, error.getCode());
         verify(mapper, never()).lockActiveMerchantOwner(any(), any());
         verify(mapper, never()).insertResponse(any());
     }

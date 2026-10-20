@@ -58,6 +58,7 @@ Page({
     submitErrorKind: 'data',
     submitError: '',
     submissionReceipt: null,
+    submissionPending: false,
     createdClubId: ''
   },
 
@@ -131,7 +132,9 @@ Page({
           return;
         }
         const owned = res.data.owned;
-        if (owned.length >= 2) {
+        // 被驳回的俱乐部不占名额(后端同口径),重新提交会改回原来那一条
+        const counted = owned.filter((club) => !(club && Number(club.status) === 2));
+        if (counted.length >= 2) {
           this._bootstrapChecking = false;
           this._bootstrapEpoch = epoch + 1;
           this.setData({ bootstrapState: 'limit', bootstrapError: '' });
@@ -338,6 +341,7 @@ Page({
             submitState: 'success',
             submitError: '',
             submissionReceipt: { name: payload.name, city: payload.city },
+            submissionPending: Number(res.data && res.data.status) === 0,
           });
         } else {
           that.setData({

@@ -6038,7 +6038,7 @@ Page({
   _buildPublishPassed(precheckOk) {
     const fd = this.data.formData || {};
     const chapters = fd.chapters || [];
-    const nodeCount = chapters.reduce((sum, c) => sum + ((c && c.nodes) || []).length, 0);
+    const nodeCount = publishStats.listedNodeCount(chapters);
     // CU-C-168:只数**填全了**的票 —— 数组里躺一张空票不等于配好了一种票。
     const readyTickets = (fd.tickets || []).filter((t) => !this._ticketBlockReason(t));
     const items = [
@@ -6090,7 +6090,7 @@ Page({
   _buildPublishSummary() {
     const formData = this.data.formData || {};
     const chapters = formData.chapters || [];
-    const nodeCount = chapters.reduce((sum, chapter) => sum + ((chapter && chapter.nodes) || []).length, 0);
+    const nodeCount = publishStats.listedNodeCount(chapters);
     // CU-C-168:同一张「发布前检查」里不能既说票没填完、又说配了 N 种 —— 没填全的不计数,
     // 但也不能不吭声,差额如实报出来。
     const allTickets = formData.tickets || [];

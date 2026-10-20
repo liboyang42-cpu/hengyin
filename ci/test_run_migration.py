@@ -875,13 +875,11 @@ class SshDestinationTest(unittest.TestCase):
                 mock.patch.dict(sys.modules, {"pymysql": fake_pymysql}), \
                 mock.patch.dict(os.environ, {"CHENGYIN_DB_SSH_HOST": ""}):
 
-            _connection, db = runner.connect("/tmp/unit-scratch.yml")
+            with self.assertRaises(SystemExit):
+                runner.connect("/tmp/unit-scratch.yml")
 
-        self.assertEqual("chengyinhubdb", db)
-        tunnel.assert_called_once_with("47.103.124.64", 3306)
-        pymysql_connect.assert_called_once_with(
-            host="127.0.0.1", port=13306, user="dbuser", password="<unit-placeholder>",
-            database="chengyinhubdb", connect_timeout=8, autocommit=True)
+        tunnel.assert_not_called()
+        pymysql_connect.assert_not_called()
 
 
     def test_only_an_explicit_token_disables_the_tunnel(self):
@@ -889,16 +887,18 @@ class SshDestinationTest(unittest.TestCase):
 
         判据分两半,缺哪半这道闸都会退化:
           · 显式 token(local/localhost/none/127.0.0.1/::1)⇒ 不开隧道,目标就是本机;
-          · **未设置 / 空串 / 纯空白仍然打到生产** —— 它们不是「选择本机」,
+          · **未设置 / 空串 / 纯空白直接退出** —— 它们不是「选择本机」,
             而是「没说」,而没说时连上操作者自己的 MySQL 是本仓明令禁止的形态。
+            (2026-10-19 起不再默认打到生产库主机:本仓公开,源码里不写生产地址。)
         """
         runner = load_runner()
         for token in ("local", "LOCAL", "localhost", "none", "127.0.0.1", "::1"):
             self.assertEqual("", runner.resolve_ssh_host(token),
                              f"显式本机 token {token!r} 没能关掉隧道")
         for silent in (None, "", "   "):
-            self.assertEqual("47.103.124.64", runner.resolve_ssh_host(silent),
-                             f"{silent!r} 被当成了「选择本机」—— 沉默不是选择,必须 fail-closed 到生产")
+            with self.assertRaises(SystemExit,
+                                   msg=f"{silent!r} 没有 fail-closed —— 沉默不是选择,不许回落到本机"):
+                runner.resolve_ssh_host(silent)
         self.assertEqual("10.0.0.9", runner.resolve_ssh_host(" 10.0.0.9 "),
                          "显式给了别的跳板机却没被采用")
 

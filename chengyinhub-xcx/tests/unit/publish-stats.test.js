@@ -8,8 +8,20 @@ const {
   totalDistanceKm,
   totalDurationText,
   totalStats,
+  listedNodeCount,
   computeCompleteness,
 } = require('../../pages/publish/utils/publish/publish-stats.js');
+
+test('SC-UI-DATE-COUNT 站数只数上架节点:status=0/"0"(后台隐藏)不计,新节点(无 status / null)与 1 计入', () => {
+  const chapters = [
+    { nodes: [{ status: 1 }, { status: 0 }, {}] },
+    { nodes: [{ status: '0' }, { status: null }, { status: '1' }] },
+    { },
+  ];
+  assert.equal(listedNodeCount(chapters), 4);
+  assert.equal(totalStats(chapters, 0).totalNodes, 4);
+  assert.equal(listedNodeCount(null), 0);
+});
 
 test('无需地点的故事玩法不报缺地址或坐标，到店节点仍必须补齐', () => {
   const fd = { chapters: [{ nodes: [{ _storyGame: true, templateId: 71 }] }] };
