@@ -76,7 +76,7 @@ class ActivityParentTopicSignupGateTest {
             when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(t);
             RuntimeException e = assertThrows(RuntimeException.class, this::validate,
                     "父主题不在架时场次必须拒单:" + (t == null ? "null" : t.getStatus() + "/" + t.getUserStatus() + "/" + t.getDelFlag()));
-            assertEquals("活动所属主题已下架", e.getMessage());
+            assertEquals("主题活动已下架", e.getMessage());
         }
     }
 
