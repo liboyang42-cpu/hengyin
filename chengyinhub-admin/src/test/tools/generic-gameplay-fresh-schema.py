@@ -137,17 +137,37 @@ def execute(args, plan):
     plan.pop('currentFile', None)
 
 
+def execution_profile_error(profile, platform, env):
+    if platform != 'linux':
+        return 'Database execution requires the dedicated test VPS or GitHub-hosted Linux; macOS backend execution is forbidden'
+    if profile == 'vps':
+        if env.get('GITHUB_ACTIONS') == 'true':
+            return 'GitHub Actions must use the honest github-hosted profile, not the VPS flag'
+        return None if env.get('CHENGYIN_VPS_TEST_RUN') == '1' else 'Database execution requires the dedicated test VPS (CHENGYIN_VPS_TEST_RUN=1)'
+    if profile == 'github-hosted':
+        if (env.get('GITHUB_ACTIONS') == 'true' and
+                env.get('GITHUB_REPOSITORY') == 'liboyang42-cpu/hengyin' and
+                env.get('RUNNER_ENVIRONMENT') == 'github-hosted' and
+                env.get('CHENGYIN_VPS_TEST_RUN', '') == ''):
+            return None
+        return 'Explicit public-repository GitHub-hosted execution is required; never impersonate the VPS'
+    return 'Unknown execution profile'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--profile', choices=('vps', 'github-hosted'), default='vps')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=3316)
     parser.add_argument('--user', default='root')
     parser.add_argument('--database', default='cy_e2e_generic_gameplay')
     parser.add_argument('--report', type=pathlib.Path, required=True)
     args = parser.parse_args()
-    if args.execute and (sys.platform != 'linux' or os.environ.get('CHENGYIN_VPS_TEST_RUN') != '1'):
-        parser.error('Database execution requires the dedicated test VPS (CHENGYIN_VPS_TEST_RUN=1)')
+    if args.execute:
+        error = execution_profile_error(args.profile, sys.platform, os.environ)
+        if error:
+            parser.error(error)
     plan = build_plan()
     try:
         for file in plan['files']:

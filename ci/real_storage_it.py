@@ -881,15 +881,24 @@ def cmd_run(args, environ):
     try:
         if "mysql" in entry["storage"]:
             after = mysql_schemas(storage["mysql"]["container"])
+            before = storage["mysql"].get("schemas_before")
+            if not after or not before or set(before) - set(after):
+                raise GateError("MySQL 清理回读缺失或初始 schema 不再可见")
             cleanup["mysql_schemas_after"] = after
-            cleanup["mysql_leftover_schemas"] = sorted(set(after) - set(storage["mysql"]["schemas_before"]))
+            cleanup["mysql_leftover_schemas"] = sorted(set(after) - set(before))
         if "redis" in entry["storage"]:
             cleanup["redis_dbsize_after"] = redis_dbsize(storage["redis"]["container"])
+            if not isinstance(cleanup["redis_dbsize_after"], int) or cleanup["redis_dbsize_after"] < 0:
+                raise GateError("Redis 清理回读缺失或不是非负键数")
         cleanup["status"] = "CLEAN" if not cleanup.get("mysql_leftover_schemas") and not cleanup.get(
             "redis_dbsize_after") else "LEFTOVER"
-    except GateError as error:
+    except (GateError, ValueError) as error:
         cleanup.update(status="UNKNOWN", error=str(error))
-    merge_receipt(args.out, {"cleanup": cleanup})
+    if cleanup.get("status") != "CLEAN":
+        problems.append("cleanup %s: 必须独立回读 CLEAN" % cleanup.get("status", "MISSING"))
+        verdict = "FAIL"
+    merge_receipt(args.out, {"cleanup": cleanup, "verdict": verdict,
+                             "problems": ["run: %s" % problem for problem in problems]})
     line = "%s: %s %d/%d (%s)" % (simple_name(fqcn), verdict, executed["tests"], entry["tests"],
                                   "; ".join(problems) if problems else "skipped=0, cleanup " + cleanup["status"])
     print(line)
@@ -941,12 +950,17 @@ def summarize(registry, receipts_dir, planned, batch, source_sha):
             problems.append("%s: 回执的 SHA/批次与本次不符" % simple_name(fqcn))
         elif verdict != "PASS":
             problems.append("%s: %s %s" % (simple_name(fqcn), verdict, receipt.get("problems")))
+        cleanup = receipt.get("cleanup")
+        cleanup_status = cleanup.get("status") if isinstance(cleanup, dict) else None
+        if cleanup_status != "CLEAN":
+            verdict = "FAIL"
+            problems.append("%s: cleanup %s，必须有 CLEAN 回读" % (simple_name(fqcn), cleanup_status or "MISSING"))
         rows.append({
             "class": fqcn,
             "expected": expected,
             "executed": receipt.get("executed", {}).get("tests", 0),
             "verdict": verdict,
-            "cleanup": receipt.get("cleanup", {}).get("status"),
+            "cleanup": cleanup_status,
             "run_attempt": receipt.get("workflow", {}).get("run_attempt"),
         })
     for fqcn in sorted(set(latest) - set(planned_classes)):

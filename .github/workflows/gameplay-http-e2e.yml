@@ -1,0 +1,124 @@
+name: Gameplay HTTP fixtures (manual)
+
+# Real HTTP24 in three isolated hosted jobs; not persistent migration/provider/device acceptance.
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Reviewed full40-character public candidate SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: gameplay-http-${{ inputs.source_sha }}
+  cancel-in-progress: false
+jobs:
+  http:
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        test_class: [GenericGameplayHttpE2eIT, FreezeGameHttpE2eIT, FreezeReuseThemeHttpE2eIT]
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      CHENGYIN_HTTP_E2E_PROFILE: github-hosted
+      CHENGYIN_HTTP_E2E_TESTS: ${{ matrix.test_class }}
+      CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
+      CHENGYIN_MYBATIS_IT_PORT: '33080'
+      CHENGYIN_MYBATIS_IT_USER: root
+      CHENGYIN_HTTP_E2E_REDIS_PORT: '6387'
+      TZ: Asia/Shanghai
+    steps:
+      - name: Validate exact source input
+        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify source and pure entry negative controls
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git show-ref --verify --quiet refs/heads/master || git branch master origin/master
+          python3 -m unittest -v ci/test_http_e2e_entry.py chengyinhub-admin/src/test/tools/test_generic_gameplay_vps_guard.py chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: '**/pom.xml'
+      - name: Install clients and private Redis executable
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends mysql-client redis-server ripgrep
+      - name: Resolve candidate test dependencies before offline execution
+        run: mvn -B -q -pl chengyinhub-admin -am test -DskipTests
+      - name: Start pinned private MySQL on loopback
+        run: |
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          echo "CHENGYIN_MYBATIS_IT_PASSWORD=$password" >> "$GITHUB_ENV"
+          export MYSQL_ROOT_PASSWORD="$password"
+          name="cy-http-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${CHENGYIN_HTTP_E2E_TESTS,,}"
+          echo "HTTP_MYSQL_CONTAINER=$name" >> "$GITHUB_ENV"
+          docker run -d --name "$name" --label "chengyin.http.run=$GITHUB_RUN_ID" \
+            -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% -p 127.0.0.1:33080:3306 \
+            mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
+            --default-time-zone=+08:00
+          export MYSQL_PWD="$password"
+          ready=0
+          for attempt in {1..90}; do
+            if mysql --no-defaults --protocol=TCP -h127.0.0.1 -P33080 -uroot --execute='SELECT 1' >/dev/null 2>&1; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+      - name: Run original class and exact XML plus cleanup readbacks
+        run: bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+      - name: Remove only this owned MySQL container
+        if: always()
+        run: |
+          if [[ -n "${HTTP_MYSQL_CONTAINER:-}" ]] && docker inspect "$HTTP_MYSQL_CONTAINER" >/dev/null 2>&1; then
+            test "$(docker inspect -f '{{index .Config.Labels "chengyin.http.run"}}' "$HTTP_MYSQL_CONTAINER")" = "$GITHUB_RUN_ID"
+            docker rm -f "$HTTP_MYSQL_CONTAINER"
+            if docker inspect "$HTTP_MYSQL_CONTAINER" >/dev/null 2>&1; then exit 1; fi
+          fi
+      - name: Upload sanitized XML and cleanup receipt only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameplay-http-${{ matrix.test_class }}-a${{ github.run_attempt }}
+          path: chengyinhub-admin/target/http-e2e/public/
+          if-no-files-found: error
+          retention-days: 1
+  summary:
+    if: always() && github.repository == 'liboyang42-cpu/hengyin'
+    needs: http
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      HTTP_JOBS_RESULT: ${{ needs.http.result }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gameplay-http-*-a${{ github.run_attempt }}
+          path: receipts
+      - name: Require all three exact class receipts and independent cleanup
+        run: |
+          python3 ci/test_http_e2e_entry.py summarize --receipts receipts --source "$SOURCE_SHA" --output summary.json
+          test "$HTTP_JOBS_RESULT" = success
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gameplay-http-summary-a${{ github.run_attempt }}
+          path: summary.json
+          if-no-files-found: error
+          retention-days: 1

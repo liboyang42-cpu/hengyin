@@ -110,7 +110,10 @@
         "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT",
         "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT",
         "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
-        "com.chengyinhub.business.it.UmsMemberRankMySqlIT"
+        "com.chengyinhub.business.it.UmsMemberRankMySqlIT",
+        "com.chengyinhub.business.service.PersonalExplorationGoalMySqlIT",
+        "com.chengyinhub.business.service.ExplorationAnniversaryMySqlIT",
+        "com.chengyinhub.web.controller.api.PersonalExplorationExportMySqlIT"
       ]
     },
     "port-core-funds": {
@@ -218,7 +221,10 @@
         "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT",
         "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT",
         "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
-        "com.chengyinhub.business.it.UmsMemberRankMySqlIT"
+        "com.chengyinhub.business.it.UmsMemberRankMySqlIT",
+        "com.chengyinhub.business.service.PersonalExplorationGoalMySqlIT",
+        "com.chengyinhub.business.service.ExplorationAnniversaryMySqlIT",
+        "com.chengyinhub.web.controller.api.PersonalExplorationExportMySqlIT"
       ]
     },
     "funnel-max-date": {
@@ -511,6 +517,24 @@
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.PersonalExplorationGoalMySqlIT": {
+      "tests": 8,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "database_base": "cy_cloudten_it"
+    },
+    "com.chengyinhub.business.service.ExplorationAnniversaryMySqlIT": {
+      "tests": 9,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "database_base": "cy_cloudten_it"
+    },
+    "com.chengyinhub.web.controller.api.PersonalExplorationExportMySqlIT": {
+      "tests": 7,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "database_base": "cy_cloudten_it"
     },
     "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
       "tests": 4,

@@ -89,9 +89,9 @@ class RegistryContractTest(unittest.TestCase):
         # 漏斗最大年份修复 4（含 TIMESTAMPADD 负控，master）。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 107,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 131,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 107,
+                    "port-extra-storage": 131,
                     "port-core-funds": 27, "port-ai-quota": 22,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4}
@@ -123,6 +123,43 @@ class RegistryContractTest(unittest.TestCase):
                 facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
                 self.assertEqual([], problems)
                 self.assertEqual([], facts["nested"])
+
+    def test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.PersonalExplorationGoalMySqlIT": 8,
+            "com.chengyinhub.business.service.ExplorationAnniversaryMySqlIT": 9,
+            "com.chengyinhub.web.controller.api.PersonalExplorationExportMySqlIT": 7,
+        }
+        runner = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": "liboyang42-cpu/hengyin",
+                  "RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "Linux"}
+        suffix = rs.database_suffix(123456789, 1)
+        for fqcn, tests in expected.items():
+            with self.subTest(fqcn=fqcn):
+                self.assertEqual({"tests": tests, "storage": ["mysql"],
+                                  "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+                                  "database_base": "cy_cloudten_it"}, reg["classes"][fqcn])
+                for batch in ("extra-storage", "port-extra-storage"):
+                    self.assertEqual(1, reg["batches"][batch]["classes"].count(fqcn))
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual([], facts["nested"])
+                env = rs.class_env(reg, fqcn, mysql_port=40001, suffix=suffix, timezone="Asia/Shanghai")
+                self.assertEqual("cy_cloudten_it", env["CHENGYIN_TEST_MYSQL_DATABASE_BASE"])
+                self.assertEqual("127.0.0.1", env["CHENGYIN_TEST_MYSQL_HOST"])
+                self.assertEqual("40001", env["CHENGYIN_TEST_MYSQL_PORT"])
+                self.assertEqual(suffix, env["CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"])
+                self.assertEqual("Asia/Shanghai", env["TZ"])
+                self.assertNotIn("CHENGYIN_TEN_FEATURES_VPS", env)
+                child = rs.child_env(dict(runner, CHENGYIN_TEN_FEATURES_VPS="1"), env)
+                self.assertNotIn("CHENGYIN_TEN_FEATURES_VPS", child)
+                for key, value in runner.items():
+                    self.assertEqual(value, child[key])
+                for gates in ({}, {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "0"},
+                              {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1", "CHENGYIN_TEN_FEATURES_VPS": "1"}):
+                    mutated = copy.deepcopy(reg)
+                    mutated["classes"][fqcn]["gates"] = gates
+                    self.assertTrue(rs.precheck(mutated, _HERE.parent, fqcn)[1], gates)
 
     def test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes(self):
         reg = registry()
@@ -391,6 +428,20 @@ class SummaryTest(unittest.TestCase):
         receipts = [self.receipt(E04), self.receipt(C01, "FAIL", "1"), self.receipt(C01, "PASS", "2")]
         self.assertEqual("PASS", self.summarize(receipts)["verdict"])
 
+    def test_nonclean_or_missing_cleanup_cannot_be_hidden_by_pass_receipt(self):
+        for cleanup in ({"status": "LEFTOVER"}, {"status": "UNKNOWN", "error": "container gone"},
+                        {}, None):
+            receipt = self.receipt(C01)
+            if cleanup is None:
+                receipt.pop("cleanup")
+            else:
+                receipt["cleanup"] = cleanup
+            with self.subTest(cleanup=cleanup):
+                summary = self.summarize([self.receipt(E04), receipt])
+                self.assertEqual("FAIL", summary["verdict"])
+                self.assertEqual("FAIL", summary["classes"][1]["verdict"])
+                self.assertTrue(any("cleanup" in problem for problem in summary["problems"]))
+
 
 class FakeClock:
     def __init__(self, step):
@@ -560,11 +611,28 @@ class RunFlowTest(unittest.TestCase):
         def gone(name):
             raise rs.GateError("container gone")
         Patch(self, run_maven=self.maven(c01_cases()), mysql_schemas=gone, first_line=lambda command: "stub")
-        self.assertEqual(0, rs.main(["run", "--source", str(self.source), "--out", str(self.out)], self.environ))
+        self.assertEqual(1, rs.main(["run", "--source", str(self.source), "--out", str(self.out)], self.environ))
         receipt = rs.read_receipt(self.out)
-        self.assertEqual("PASS", receipt["verdict"])
+        self.assertEqual("FAIL", receipt["verdict"])
         self.assertEqual(5, receipt["executed"]["tests"])
         self.assertEqual("UNKNOWN", receipt["cleanup"]["status"])
+        self.assertEqual("container gone", receipt["cleanup"]["error"])
+
+    def test_leftover_fails_even_when_every_case_passes(self):
+        code, receipt = self.run_class(c01_cases(), schemas_after=("mysql", "sys", "cyit_leak"))
+        self.assertEqual(1, code)
+        self.assertEqual("FAIL", receipt["verdict"])
+        self.assertEqual(5, receipt["executed"]["passed"])
+        self.assertEqual("LEFTOVER", receipt["cleanup"]["status"])
+        self.assertEqual(["cyit_leak"], receipt["cleanup"]["mysql_leftover_schemas"])
+
+    def test_missing_schema_readback_fails_and_preserves_xml_results(self):
+        code, receipt = self.run_class(c01_cases(), schemas_after=())
+        self.assertEqual(1, code)
+        self.assertEqual("FAIL", receipt["verdict"])
+        self.assertEqual(5, receipt["executed"]["passed"])
+        self.assertEqual("UNKNOWN", receipt["cleanup"]["status"])
+        self.assertTrue((self.out / "surefire-reports").is_dir())
 
     def test_surefire_version_reads_maven_39_lines_for_the_target_module(self):
         log = ("[INFO] --- surefire:3.5.2:test (default-test) @ chengyinhub-common ---\n"
