@@ -381,6 +381,24 @@ class CommunityPostMapperMyBatisTest {
         }
     }
 
+    /** 审核分级 P2:标记列 null=保持原值,且不 bump version(生命周期 CAS 已在同一事务里 bump 过)。 */
+    @Test
+    void auditMarksKeepUnspecifiedColumnsAndDoNotBumpVersion() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "body");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.updateAuditMarks(1L, 1, null, 1, new java.util.Date()));
+            assertEquals(1, mapper.updateAuditMarks(1L, 2, 1, null, new java.util.Date()));
+            assertEquals(0, mapper.updateAuditMarks(99L, 2, 1, 1, new java.util.Date()));
+        }
+        assertEquals(java.util.Arrays.asList(2, 1, 1, 0), jdbc.queryForObject(
+                "select audit_level,audit_before_publish,review_flag,version from community_post where id=1",
+                (rs, row) -> java.util.Arrays.asList(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getInt(4))));
+    }
+
     @Test
     void checkingEditRetainsOwnerVersionAndRemovedDeletedGuards() throws Exception {
         DriverManagerDataSource ds = dataSource();
@@ -524,7 +542,7 @@ class CommunityPostMapperMyBatisTest {
     }
 
     private void schema(JdbcTemplate jdbc) {
-        jdbc.execute("create table community_post(id bigint primary key,author_id bigint,community_id bigint,client_request_id varchar(96),body varchar(100),title varchar(100),post_type varchar(32),audience varchar(16),comment_policy varchar(16),reply_approval_enabled int,slow_mode_seconds int,lifecycle varchar(16),location_precision varchar(16),city_code varchar(32),poi_name varchar(100),approximate_geohash varchar(16),recommendation_eligible int,search_eligible int,interaction_enabled int,disclosure_type varchar(24),safety_labels_json varchar(100),guideline_version_id bigint,like_count int,comment_count int,bookmark_count int,share_count int,published_at timestamp,edited_at timestamp,deleted_at timestamp,version int,create_time timestamp,update_time timestamp)");
+        jdbc.execute("create table community_post(id bigint primary key,author_id bigint,community_id bigint,client_request_id varchar(96),body varchar(100),title varchar(100),post_type varchar(32),audience varchar(16),comment_policy varchar(16),reply_approval_enabled int,slow_mode_seconds int,lifecycle varchar(16),location_precision varchar(16),city_code varchar(32),poi_name varchar(100),approximate_geohash varchar(16),recommendation_eligible int,search_eligible int,interaction_enabled int,disclosure_type varchar(24),safety_labels_json varchar(100),guideline_version_id bigint,like_count int,comment_count int,bookmark_count int,share_count int,published_at timestamp,edited_at timestamp,deleted_at timestamp,version int,create_time timestamp,update_time timestamp,audit_level tinyint not null default 0,audit_before_publish tinyint not null default 0,review_flag tinyint not null default 0)");
         jdbc.execute("create table ums_member(id bigint primary key,nickname varchar(100),avatar varchar(100))");
         jdbc.execute("create table ums_member_follow(member_id bigint,follow_member_id bigint)");
         jdbc.execute("create table im_block(member_id bigint,blocked_member_id bigint)");

@@ -73,6 +73,22 @@ class AuditTaskSafetyHoldTest {
         rejectCommunityReview(null);
     }
 
+    /** 审核分级 P2:工作台人审通过推文 → 帖文服务 applyAuditDecision(approved=true),在那里落 audit_level=2。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void approvedCommunityReviewHandsApprovalToPostServiceWhichWritesHumanAuditLevel() {
+        com.chengyinhub.business.service.ICommunityPostService posts =
+                mock(com.chengyinhub.business.service.ICommunityPostService.class);
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.ICommunityPostService> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getObject()).thenReturn(posts);
+        ReflectionTestUtils.setField(svc, "communityPostServiceProvider", provider);
+
+        ReflectionTestUtils.invokeMethod(svc, "applyModeration", communityTask(2), AuditTask.STATUS_APPROVED, null);
+
+        verify(posts).applyAuditDecision(1L, true);
+    }
+
     private void rejectCommunityReview(Integer expectedVersion) {
         AuditTask task = communityTask(2);
         when(auditTaskMapper.selectAuditTaskById(5L)).thenReturn(task);
