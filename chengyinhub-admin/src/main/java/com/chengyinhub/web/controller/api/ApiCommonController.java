@@ -187,6 +187,8 @@ public class ApiCommonController extends BaseController {
             return ResponseEntity.ok(ajax);
         } catch (UploadRejectedException e) {
             return badUploadRequest(e.getMessage());
+        } catch (UploadSecurityUnavailableException e) {
+            return securityServiceUnavailable(e.getMessage());
         } catch (UploadStorageException e) {
             logger.error("本地文件上传失败", e);
             return uploadFailed();
@@ -218,6 +220,8 @@ public class ApiCommonController extends BaseController {
             return ResponseEntity.ok(ajax);
         } catch (UploadRejectedException e) {
             return badUploadRequest(e.getMessage());
+        } catch (UploadSecurityUnavailableException e) {
+            return securityServiceUnavailable(e.getMessage());
         } catch (UploadStorageException e) {
             logger.error("批量本地文件上传失败", e);
             return uploadFailed();

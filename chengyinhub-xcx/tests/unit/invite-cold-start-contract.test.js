@@ -85,7 +85,7 @@ function setupPage(options) {
     if (typeof cb === 'function') cb();
   };
   // 只桩掉与本契约无关的同步副作用;handleInviter 必须是真的(它才是被测行为)。
-  ['_layoutChrome', 'startCountdownTimer', 'loadPageData', 'getHomeLocation']
+  ['_layoutChrome', 'startCountdownTimer', 'loadPageData', 'getHomeCityLocation']
     .forEach((name) => { page[name] = () => { calls.push(name); }; });
 
   global.getCurrentPages = () => [page];

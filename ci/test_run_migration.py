@@ -663,6 +663,102 @@ class TransactionCliTest(unittest.TestCase):
             runner.referenced_persistent_tables(statements, "scratch"),
         )
 
+    def payee_key_tables(self):
+        return [
+            "CREATE TEMPORARY TABLE tmp_cy_payee_roles(role_key VARCHAR(100), role_id BIGINT)",
+            "CREATE TEMPORARY TABLE tmp_cy_payee_menus(perms VARCHAR(100), menu_id BIGINT)",
+        ]
+
+    def payee_delete(self, role="cy_operator", permission="business:clubpayee:verify"):
+        return ("DELETE FROM sys_role_menu WHERE role_id = "
+                "(SELECT role_id FROM tmp_cy_payee_roles WHERE role_key = '" + role + "') "
+                "AND menu_id = (SELECT menu_id FROM tmp_cy_payee_menus WHERE perms = '"
+                + permission + "')")
+
+    def test_only_two_payee_separation_deletes_commit_with_declared_temporary_keys(self):
+        for role, permission in (("cy_operator", "business:clubpayee:verify"),
+                                 ("cy_finance", "business:clubpayee:payout")):
+            with self.subTest(role=role):
+                statement = self.payee_delete(role, permission)
+                connection = FakeConnection(engine_rows=(("sys_role_menu", "InnoDB"),))
+                exit_code, output = self.invoke(self.payee_key_tables() + [statement], connection)
+                self.assertIsNone(exit_code)
+                self.assertEqual(1, connection.commit_count)
+                self.assertEqual(0, connection.rollback_count)
+                self.assertIn((statement, None), connection.cursor_instance.executed)
+                self.assertIn("COMMIT OK", output)
+
+    def test_payee_delete_rejects_every_broader_shape_before_connect(self):
+        runner = load_runner()
+        exact = self.payee_delete()
+        rejected = [
+            "DELETE FROM sys_role_menu",
+            "DELETE FROM sys_role_menu WHERE 1=1",
+            "DELETE FROM sys_role_menu WHERE role_id=100 AND menu_id=2543",
+            exact + " OR 1=1",
+            exact.replace(" AND menu_id", " OR menu_id"),
+            exact.replace("role_id =", "role_id >"),
+            exact.replace("sys_role_menu WHERE", "sys_role_menu rm WHERE"),
+            exact.replace("DELETE FROM", "DELETE rm FROM"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu USING sys_role_menu"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu JOIN sys_role"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu, sys_role"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM other.sys_role_menu"),
+            exact.replace("tmp_cy_payee_roles WHERE", "other.tmp_cy_payee_roles WHERE"),
+            exact.replace("tmp_cy_payee_roles", "unreviewed_roles"),
+            exact.replace("cy_operator", "cy_support"),
+            exact.replace("cy_operator", "CY_OPERATOR"),
+            exact.replace("business:clubpayee:verify", "business:clubpayee:payout"),
+            exact.replace("business:clubpayee:verify", "business:clubpayable:confirm"),
+            exact + " LIMIT 1",
+            exact + "; DELETE FROM sys_role_menu",
+            exact.replace(" WHERE role_id", " /*!80000 LOW_PRIORITY */ WHERE role_id", 1),
+            "SELECT role_id FROM tmp_cy_payee_roles",
+        ]
+        for statement in rejected:
+            with self.subTest(statement=statement):
+                with self.assertRaises(ValueError):
+                    runner.validate_transaction_statements(self.payee_key_tables() + [statement])
+
+    def test_payee_delete_requires_both_temporary_keys_still_live(self):
+        runner = load_runner()
+        for prefix in ([], self.payee_key_tables()[:1],
+                       self.payee_key_tables() + ["DROP TEMPORARY TABLE tmp_cy_payee_menus"],
+                       self.payee_key_tables() + ["DROP TEMPORARY TABLE tmp_cy_payee_roles, tmp_cy_payee_menus"],
+                       self.payee_key_tables() + ["CREATE TEMPORARY TABLE sys_role_menu(role_id BIGINT,menu_id BIGINT)"]):
+            with self.subTest(prefix=prefix):
+                with self.assertRaises(ValueError):
+                    runner.validate_transaction_statements(prefix + [self.payee_delete()])
+
+    def test_payee_delete_target_must_be_innodb_before_begin(self):
+        for rows, message in (((("sys_role_menu", "MyISAM"),), "非 InnoDB"),
+                              ((("some_other_table", "InnoDB"),), "表不存在")):
+            with self.subTest(rows=rows):
+                connection = FakeConnection(engine_rows=rows)
+                statement = self.payee_delete()
+                exit_code, output = self.invoke(self.payee_key_tables() + [statement], connection)
+                self.assertEqual(1, exit_code)
+                self.assertEqual(0, connection.begin_count)
+                self.assertNotIn((statement, None), connection.cursor_instance.executed)
+                self.assertIn(message, output)
+
+    def test_failure_after_payee_delete_rolls_back_without_commit(self):
+        statement = self.payee_delete()
+        later = "INSERT INTO sys_role_menu(role_id,menu_id) VALUES (100,999)"
+        connection = FakeConnection(fail_on=later, engine_rows=(("sys_role_menu", "InnoDB"),))
+        exit_code, output = self.invoke(self.payee_key_tables() + [statement, later], connection)
+        self.assertEqual(1, exit_code)
+        self.assertEqual(1, connection.begin_count)
+        self.assertEqual(1, connection.rollback_count)
+        self.assertEqual(0, connection.commit_count)
+        self.assertIn((statement, None), connection.cursor_instance.executed)
+        self.assertIn("ROLLBACK OK", output)
+
+    def test_payee_delete_engine_references_exclude_only_live_temporary_keys(self):
+        runner = load_runner()
+        self.assertEqual(["sys_role_menu"], runner.referenced_persistent_tables(
+            self.payee_key_tables() + [self.payee_delete()], "scratch"))
+
     def test_unknown_exit_two_survives_cursor_and_connection_close_errors(self):
         failing_statement = "INSERT INTO cms_topic(id) VALUES (99)"
         connection = FakeConnection(

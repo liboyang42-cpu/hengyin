@@ -446,7 +446,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     require.cache[guardPath] = { id: guardPath, filename: guardPath, loaded: true,
       exports: { role: () => (isLeader ? 'club' : 'merchant'), load: (cb) => cb && cb(), hasSnapshot: () => true } };
     const navigations = [];
-    const page = loadPage('subpackageA/pages/myproject/index.js', { sendRequest() {} });
+    const page = loadPage('subpackageA/pages/myproject/index.js', { getAuthorization: () => 'current-session', sendRequest() {} });
     global.wx.navigateTo = (o) => navigations.push(o.url);
     page.onLoad(options);
     return { page, navigations };

@@ -14,7 +14,7 @@
     "cy-btn": "/components/cy/btn/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-scene-route-content": "/components/cy/scene-route-content/index",
-    "cy-scene-game-coupon-wallet": "/components/cy/scene-game-coupon-wallet/index",
+    "cy-scene-game-coupon-wallet": "/subpackageMember/components/cy/scene-game-coupon-wallet/index",
     "cy-scene-qr-coupon": "/subpackageMember/components/cy/scene-qr-coupon/index",
     "cy-scene-roam-stamp-album": "/components/cy/scene-roam-stamp-album/index",
     "cy-scene-share-invite": "/components/cy/scene-share-invite/index",

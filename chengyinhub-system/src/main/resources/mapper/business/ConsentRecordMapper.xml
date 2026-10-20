@@ -37,6 +37,16 @@
     <select id="selectLatestRoamLocation" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
         <include refid="roamLocationLatest"/>
     </select>
+    <sql id="locationLatest">
+        select * from consent_record where member_id=#{memberId} and doc_type='privacy_policy' and scene=#{scene}
+        and scope_type is null and scope_id is null order by id desc limit 1
+    </sql>
+    <select id="selectLatestLocationForUpdate" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        <include refid="locationLatest"/> for update
+    </select>
+    <select id="selectLatestLocation" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
+        <include refid="locationLatest"/>
+    </select>
     <select id="selectLatestRoamPresence" resultMap="ConsentRecordResult" useCache="false" flushCache="true">
         select c.* from consent_record c join roam_presence_revoke_intent e
             on e.request_id=c.request_id and e.member_id=c.member_id and e.event_type=c.event_type

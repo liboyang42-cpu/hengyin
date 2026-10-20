@@ -144,7 +144,7 @@ test('所有隔离组件消费内容淡入时必须 @import 同一份定义,不�
 })
 
 test('六个代表性状态页的 error/empty/ready 主分支都挂内容淡入', () => {
-  const coupon = read('components/cy/scene-game-coupon-wallet/index.wxml')
+  const coupon = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
   assert.match(coupon, /cy-empty[^>]*class="cy-fade-in"/)
   assert.match(coupon, /wx:else class="wallet-list cy-fade-in"/)
   const discover = read('components/cy/scene-roam-discover/index.wxml')

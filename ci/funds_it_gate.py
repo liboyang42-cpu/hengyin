@@ -236,7 +236,7 @@ EXPECTED = {
     # 2026-10-13 小程序底层C包移植到 master:12 → 15,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
     "RoamSessionWriteMybatisIntegrationTest": 15,
     # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
-    "RoamLocationRetentionMySqlIT": 20,
+    "RoamLocationRetentionMySqlIT": 21,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
@@ -259,10 +259,12 @@ EXPECTED = {
     "MissingBusinessSeedsMySqlIT": 4,
     "RoamPresenceRevokeDurabilityMySqlIT": 10,
     "RoamPresenceRevokeJobMySqlIT": 4,
+    "WxBillIngestionPersistenceTest": 6,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
+    "WxBillIngestionPersistenceTest": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
     "CommunityPostCommentIdempotencyMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CommunityPostCommentIdempotencyMySqlIT.java",
     "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
     "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",

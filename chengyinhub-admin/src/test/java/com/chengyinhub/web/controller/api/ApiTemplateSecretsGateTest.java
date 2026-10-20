@@ -114,6 +114,15 @@ class ApiTemplateSecretsGateTest {
         return t;
     }
 
+    @Test
+    void canEditIsResponseOnlyAndCannotBeSuppliedByClient() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        CmsMemberTemplate input = mapper.readValue("{\"canEdit\":true}", CmsMemberTemplate.class);
+        assertNull(input.getCanEdit());
+        input.setCanEdit(true);
+        assertTrue(mapper.readTree(mapper.writeValueAsString(input)).get("canEdit").asBoolean());
+    }
+
     // ---------- ApiTemplateController ----------
 
     private ICmsMemberTemplateService tplSvc;
@@ -150,6 +159,7 @@ class ApiTemplateSecretsGateTest {
         assertEquals(200, res.get("code"), res.toString());
         CmsMemberTemplate out = (CmsMemberTemplate) res.get("data");
         assertMemberTemplateSecretsStripped(out);
+        assertEquals(Boolean.FALSE, out.getCanEdit());
     }
 
     @Test
@@ -192,6 +202,7 @@ class ApiTemplateSecretsGateTest {
 
         assertEquals(200, res.get("code"), res.toString());
         CmsMemberTemplate out = (CmsMemberTemplate) res.get("data");
+        assertEquals(Boolean.TRUE, out.getCanEdit());
         assertEquals("暗号是「北纬31」", out.getQuestionAnswer());
         assertEquals("A", out.getCorrectAnswer());
         assertEquals("留意店内的特色陈设", out.getHint1());

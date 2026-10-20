@@ -33,7 +33,8 @@ public interface ICmsInfomationService
      * @param cmsInfomation 玩法说明
      * @return 结果
      */
-    public int insertCmsInfomation(CmsInfomation cmsInfomation);
+    public int insertCmsInfomation(CmsInfomation cmsInfomation, String auditReason,
+            Long operatorUserId, String operatorUsername);
 
     /**
      * 修改玩法说明
@@ -41,7 +42,8 @@ public interface ICmsInfomationService
      * @param cmsInfomation 玩法说明
      * @return 结果
      */
-    public int updateCmsInfomation(CmsInfomation cmsInfomation);
+    public int updateCmsInfomation(CmsInfomation cmsInfomation, String auditReason,
+            Long operatorUserId, String operatorUsername);
 
     /**
      * 批量删除玩法说明

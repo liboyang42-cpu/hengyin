@@ -161,7 +161,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
 
         // msgSecCheck v2 的 openid 必填:为空微信必判 40003(invalid openid)。当场 fail-close,
         // 别把调用方 bug 伪装成「服务繁忙,请稍后重试」——重试永远不会通,用户还会以为再试就好。
-        if (StringUtils.isEmpty(openid))
+        if (StringUtils.isBlank(openid))
         {
             log.error("[内容安全] 文本检测缺少 openid(v2 必填,微信必判 40003),fail-close 拦截");
             return MSG_UNAVAILABLE;
@@ -268,7 +268,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkMediaAsync(String mediaUrl, String openid)
     {
-        if (!isEnabled() || StringUtils.isEmpty(mediaUrl))
+        if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
             return null;
         }

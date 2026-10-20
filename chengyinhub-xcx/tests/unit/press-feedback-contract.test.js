@@ -28,7 +28,7 @@ const INTERACTIVE = [
   'subpackageMember/components/cy/scene-play-activity-detail',
   'components/cy/scene-roam-task-list',
   'components/cy/scene-roam-stamp-album',
-  'components/cy/scene-game-coupon-wallet',
+  'subpackageMember/components/cy/scene-game-coupon-wallet',
 ]
 
 function pressAbility(base, wxmlSrc) {

@@ -36,7 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </select>
 
-    <insert id="insertCmsInfomation" parameterType="CmsInfomation">
+    <insert id="insertCmsInfomation" parameterType="CmsInfomation" useGeneratedKeys="true" keyProperty="id">
         insert into cms_infomation
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
@@ -76,6 +76,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </trim>
         where id = #{id}
     </update>
+
+    <insert id="insertCmsInfomationChangeAudit">
+        insert into cms_infomation_change_audit
+            (infomation_id, action, operator_user_id, operator_username, reason, create_time)
+        values
+            (#{infomationId}, #{action}, #{operatorUserId}, #{operatorUsername}, #{reason}, #{createTime})
+    </insert>
 
     <delete id="deleteCmsInfomationById" parameterType="Long">
         delete from cms_infomation where id = #{id}

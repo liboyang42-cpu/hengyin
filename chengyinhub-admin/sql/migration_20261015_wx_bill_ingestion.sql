@@ -1,0 +1,73 @@
+-- New external bill ingestion facts only. No existing PAYMENT/REFUND/ledger data is changed.
+-- Amounts are CNY yuan with exact two-decimal storage; merchant and account are explicit.
+CREATE TABLE IF NOT EXISTS wx_trade_bill_detail (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ bill_date DATE NOT NULL,
+ merchant_id VARCHAR(64) NOT NULL,
+ record_key VARCHAR(80) NOT NULL,
+ trade_time DATETIME NOT NULL,
+ transaction_id VARCHAR(64) NOT NULL,
+ out_trade_no VARCHAR(64) NOT NULL,
+ trade_state VARCHAR(16) NOT NULL,
+ refund_id VARCHAR(64) NULL,
+ out_refund_no VARCHAR(64) NULL,
+ refund_status VARCHAR(16) NULL,
+ order_amount DECIMAL(20,2) NOT NULL,
+ settlement_amount DECIMAL(20,2) NOT NULL,
+ coupon_amount DECIMAL(20,2) NOT NULL,
+ requested_refund_amount DECIMAL(20,2) NOT NULL,
+ settlement_refund_amount DECIMAL(20,2) NOT NULL,
+ coupon_refund_amount DECIMAL(20,2) NOT NULL,
+ fee DECIMAL(20,2) NOT NULL,
+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ UNIQUE KEY uk_wx_trade_detail (merchant_id,bill_date,record_key),
+ KEY idx_wx_trade_detail_order (merchant_id,out_trade_no),
+ CONSTRAINT ck_wx_trade_detail_state CHECK (trade_state IN ('SUCCESS','REFUND','REVOKED')),
+ CONSTRAINT ck_wx_trade_detail_key CHECK (record_key = CASE WHEN trade_state='SUCCESS' THEN CONCAT('PAY:',transaction_id) ELSE CONCAT('REFUND:',refund_id) END),
+ CONSTRAINT ck_wx_trade_detail_amount CHECK (order_amount>=0 AND settlement_amount>=0 AND coupon_amount>=0 AND requested_refund_amount>=0 AND settlement_refund_amount>=0 AND coupon_refund_amount>=0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;
+
+CREATE TABLE IF NOT EXISTS wx_fund_flow_bill_snapshot (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ bill_date DATE NOT NULL,
+ merchant_id VARCHAR(64) NOT NULL,
+ account_type VARCHAR(16) NOT NULL,
+ accounting_time DATETIME NOT NULL,
+ wx_business_no VARCHAR(128) NOT NULL,
+ flow_no VARCHAR(128) NOT NULL,
+ business_name VARCHAR(128) NOT NULL,
+ business_type VARCHAR(128) NOT NULL,
+ direction VARCHAR(8) NOT NULL,
+ amount DECIMAL(20,2) NOT NULL,
+ balance DECIMAL(20,2) NOT NULL,
+ initiator TEXT NULL,
+ remark TEXT NULL,
+ voucher_no TEXT NULL,
+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ UNIQUE KEY uk_wx_fund_flow (merchant_id,account_type,flow_no),
+ KEY idx_wx_fund_flow_date (merchant_id,account_type,bill_date),
+ CONSTRAINT ck_wx_fund_account CHECK (account_type IN ('BASIC','OPERATION','FEES')),
+ CONSTRAINT ck_wx_fund_direction CHECK (direction IN ('收入','支出')),
+ CONSTRAINT ck_wx_fund_amount CHECK (amount>=0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;
+
+CREATE TABLE IF NOT EXISTS wx_bill_import (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ bill_date DATE NOT NULL,
+ merchant_id VARCHAR(64) NOT NULL,
+ bill_type VARCHAR(16) NOT NULL,
+ status VARCHAR(16) NOT NULL,
+ source_hash VARCHAR(64) NULL,
+ row_count INT NOT NULL,
+ income_amount DECIMAL(20,2) NULL,
+ expense_amount DECIMAL(20,2) NULL,
+ net_amount DECIMAL(20,2) NULL,
+ balance_status VARCHAR(16) NOT NULL,
+ review_reason VARCHAR(1000) NULL,
+ UNIQUE KEY uk_wx_bill_import (merchant_id,bill_type,bill_date),
+ CONSTRAINT ck_wx_bill_import_type CHECK (bill_type IN ('TRADE','BASIC','OPERATION','FEES')),
+ CONSTRAINT ck_wx_bill_import_status CHECK (status IN ('SUCCESS','NO_STATEMENT','CREATING')),
+ CONSTRAINT ck_wx_bill_import_balance CHECK (balance_status IN ('CONSISTENT','UNVERIFIED','GAP')),
+ CONSTRAINT ck_wx_bill_import_count CHECK (row_count>=0),
+ CONSTRAINT ck_wx_bill_import_success CHECK (status<>'SUCCESS' OR (source_hash IS NOT NULL AND source_hash<>''))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

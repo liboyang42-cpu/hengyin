@@ -9,13 +9,18 @@
     <cy-tabs variant="fill" wide="{{true}}" tabs="{{typeTabs}}" active="{{typeTab}}" bind:change="switchTypeTab" />
   </view>
 
+  <view class="mp-state" wx:if="{{authRequired}}">
+    <cy-empty kind="no-permission" title="登录后查看我的项目" sub="登录后可管理你的主题、活动和模板"
+      cta="登录" bind:cta="onLogin" fill size="lg" />
+  </view>
   <!-- ===== 主题 / 活动 ===== -->
-  <block wx:if="{{typeTab !== 'template'}}">
+  <block wx:elif="{{typeTab !== 'template'}}">
     <view class="mp-state" wx:if="{{projectState === 'loading'}}">
       <cy-empty kind="loading" title="项目加载中" fill size="lg" />
     </view>
     <view class="mp-state" wx:elif="{{projectState === 'error'}}">
-      <cy-error load-failure title="项目暂时没能加载" sub="{{projectErrorMsg}}" bind:retry="loadProjects" fill size="lg" />
+      <cy-empty wx:if="{{projectAccessDenied}}" kind="no-permission" title="当前身份不能查看这些项目" sub="请使用具有项目查看权限的账号" fill size="lg" />
+      <cy-error wx:else load-failure title="项目暂时没能加载" sub="{{projectErrorMsg}}" bind:retry="loadProjects" fill size="lg" />
     </view>
     <view wx:if="{{loading && loaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
@@ -115,7 +120,8 @@
     </view>
 
     <cy-skeleton wx:if="{{tplLoading && !tplLoaded}}" type="card" count="{{skeletonItems.length}}" />
-    <cy-error load-failure wx:if="{{!tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
+    <cy-empty wx:if="{{tplAccessDenied}}" kind="no-permission" title="当前身份不能查看这些模板" sub="请使用具有模板查看权限的账号" fill size="lg" />
+    <cy-error load-failure wx:if="{{!tplAccessDenied && !tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
     <view wx:if="{{tplLoading && tplLoaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新节点玩法…</view>
     <cy-empty wx:if="{{tplLoaded && !tplErrorMsg && tplList.length===0}}" title="还没有节点玩法" sub="发布路线时可以沉淀自己的节点互动，之后在这里复用和管理" />
   </block>

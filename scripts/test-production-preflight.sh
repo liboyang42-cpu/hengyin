@@ -27,6 +27,9 @@ if env \
   CHENGYIN_OSS_BUCKET_NAME=test-bucket \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
+  CHENGYIN_SMS_ACCESS_KEY_ID=test-sms-id \
+  CHENGYIN_SMS_ACCESS_KEY_SECRET=test-sms-secret \
+  CHENGYIN_DEEPSEEK_API_KEY=test-deepseek-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
   CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/invalid-key.log" 2>&1; then
@@ -51,6 +54,9 @@ if env \
   CHENGYIN_OSS_BUCKET_NAME=test-bucket \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
+  CHENGYIN_SMS_ACCESS_KEY_ID=test-sms-id \
+  CHENGYIN_SMS_ACCESS_KEY_SECRET=test-sms-secret \
+  CHENGYIN_DEEPSEEK_API_KEY=test-deepseek-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
   CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/reused.log" 2>&1; then
@@ -78,6 +84,9 @@ env \
   CHENGYIN_OSS_BUCKET_NAME=test-bucket \
   CHENGYIN_TENCENT_MAP_ENABLED=true \
   CHENGYIN_TENCENT_MAP_KEY=test-map-key \
+  CHENGYIN_SMS_ACCESS_KEY_ID=test-sms-id \
+  CHENGYIN_SMS_ACCESS_KEY_SECRET=test-sms-secret \
+  CHENGYIN_DEEPSEEK_API_KEY=test-deepseek-key \
   CHENGYIN_WXPAY_REFUND_NOTIFY_URL=https://api.example.com/prod-api/api/registration/refund-callback \
   CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback \
   bash "$SCRIPT" --env >"$TMP/valid.log" 2>&1
@@ -99,6 +108,9 @@ refund_env=(
   CHENGYIN_OSS_BUCKET_NAME=test-bucket
   CHENGYIN_TENCENT_MAP_ENABLED=true
   CHENGYIN_TENCENT_MAP_KEY=test-map-key
+  CHENGYIN_SMS_ACCESS_KEY_ID=test-sms-id
+  CHENGYIN_SMS_ACCESS_KEY_SECRET=test-sms-secret
+  CHENGYIN_DEEPSEEK_API_KEY=test-deepseek-key
   CHENGYIN_WXPAY_NOTIFY_URL=https://api.example.com/prod-api/api/registration/callback
 )
 if env -i PATH="$PATH" "${refund_env[@]}" bash "$SCRIPT" --env >"$TMP/refund-missing.log" 2>&1; then

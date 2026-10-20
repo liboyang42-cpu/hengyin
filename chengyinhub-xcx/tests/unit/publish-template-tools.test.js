@@ -74,6 +74,7 @@ test('移除奖励和剧情只清空对应旧字段，未移除字段不列入 c
   const editor = page();
   editor._templateId = 21;
   editor.data.isMyScope = true;
+  editor._templateCanEdit = true; // myinfo 已确认 canEdit=true
   editor.fillFormWithTemplateData({ id: 21, title: '旧玩法', advancedConfigJson: '',
     rewardRulesJson: '{"reward":1}', merchantGuide: '到柜台', sensorType: 'steps',
     sensorConfig: '{"goal":10}', storyImg: 'story.png' });
@@ -117,6 +118,7 @@ test('主题内修改原模板沿用本人草稿 id，清空字段走同一 draf
   editor.data.from = 'fabu';
   editor.data.isMyScope = true;
   editor._templateId = 31;
+  editor._templateCanEdit = true; // myinfo 已确认 canEdit=true
   editor._boundDraftId = 31;
   editor.fillFormWithTemplateData({ id: 31, title: '原模板', advancedConfigJson: '',
     rewardRulesJson: '{"reward":1}' });

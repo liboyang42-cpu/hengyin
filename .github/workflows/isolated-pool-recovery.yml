@@ -1,0 +1,62 @@
+name: Isolated pool recovery
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/isolated-pool-recovery.yml'
+      - 'ci/upgrade-startup-smoke.sh'
+      - 'ci/pool_recovery_probe.py'
+      - 'ci/test_pool_recovery_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-pool-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify exact hosted execution scope and pure negative control
+        env:
+          CHENGYIN_CI_POOL_RECOVERY: 'true'
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -I ci/pool_recovery_probe.py --check-execution-only
+          python3 -B ci/test_pool_recovery_probe.py
+      - name: Package the same candidate without repeating tests
+        run: mvn -B -DskipTests package
+      - name: Bounded real SQL pool timeout and same-process recovery
+        id: pool
+        env:
+          CHENGYIN_CI_POOL_RECOVERY: 'true'
+          TMPDIR: ${{ runner.temp }}/isolated-pool-recovery
+        run: |
+          set -o pipefail
+          mkdir -p "$TMPDIR"
+          if ! command -v strace >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y strace
+          fi
+          bash ci/upgrade-startup-smoke.sh 2>&1 | tee "$TMPDIR/entry.log"
+      - name: Preserve bounded recovery evidence including failures
+        if: ${{ !cancelled() && steps.pool.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-pool-recovery-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/isolated-pool-recovery/entry.log
+            ${{ runner.temp }}/isolated-pool-recovery/**/pool-recovery.json
+            ${{ runner.temp }}/isolated-pool-recovery/**/pool-recovery-health.log
+            ${{ runner.temp }}/isolated-pool-recovery/**/application.log
+            ${{ runner.temp }}/isolated-pool-recovery/**/mysql-version
+            ${{ runner.temp }}/isolated-pool-recovery/**/network.trace
+            ${{ runner.temp }}/isolated-pool-recovery/**/isolation.log

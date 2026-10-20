@@ -59,9 +59,9 @@ class NodeNpcServiceTest {
 
     private static final String REGISTRY_AUDIO_KEY = "upload/0123456789abcdef0123456789abcdef.mp3";
     private static final String REGISTRY_AUDIO_REF = "media-asset:73";
-    private void actualAudioRegistry(String reviewState) {
+    private void actualAudioRegistry(String reviewState, Long uploaderMemberId) {
         com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
-        java.util.Map<String,Object> fact = java.util.Map.of("id",73L,"memberId",ME,"ownerType","APP",
+        java.util.Map<String,Object> fact = java.util.Map.of("id",73L,"memberId",uploaderMemberId,"ownerType","APP",
                 "objectKey",REGISTRY_AUDIO_KEY,"mediaType","AUDIO","reviewState",reviewState);
         when(assets.select(73L)).thenReturn(fact);
         when(assets.selectByObjectKey(REGISTRY_AUDIO_KEY)).thenReturn(fact);
@@ -72,14 +72,14 @@ class NodeNpcServiceTest {
     }
 
     @Test void longSignedAliasesOfApprovedSampleReplayPendingAndReadyWithoutAnyProviderOrWrite() {
-        actualAudioRegistry("APPROVED");
+        actualAudioRegistry("APPROVED", ME);
         for (int state : new int[]{1,2}) {
             NpcProfile row = existing(555L, NODE, 1);
             row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(state);
             when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
             for (String signature : new String[]{"x", "y"}) {
                 String signed = "https://approved.example/"+REGISTRY_AUDIO_KEY+"?signature="+signature.repeat(320);
-                assertEquals(state, service.voiceEnroll(ME, NODE, signed).getVoiceStatus());
+                assertEquals(state, service.voiceEnroll(ME, ME, NODE, signed).getVoiceStatus());
             }
         }
         org.mockito.Mockito.verifyNoInteractions(voice);
@@ -87,18 +87,18 @@ class NodeNpcServiceTest {
     }
 
     @Test void heldSampleCannotUseExistingVoiceStateAsAnApprovalBypass() {
-        actualAudioRegistry("HOLD");
+        actualAudioRegistry("HOLD", ME);
         NpcProfile row = existing(555L, NODE, 1);
         row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(2);
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                () -> service.voiceEnroll(ME, NODE, REGISTRY_AUDIO_REF));
+                () -> service.voiceEnroll(ME, ME, NODE, REGISTRY_AUDIO_REF));
         org.mockito.Mockito.verifyNoInteractions(voice);
         verify(mapper,never()).updateNodeNpcVoice(any());
     }
 
     @Test void newApprovedSampleStoresCanonicalReferenceAndSignsOnlyOnceBeforeMockProviderCall() {
-        actualAudioRegistry("APPROVED");
+        actualAudioRegistry("APPROVED", ME);
         NpcProfile row = existing(555L, NODE, 1);
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
         when(mapper.updateNodeNpcVoice(any())).thenReturn(1);
@@ -109,13 +109,84 @@ class NodeNpcServiceTest {
                      org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
             signatures.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY,300))
                     .thenReturn("provider-short-sample");
-            service.voiceEnroll(ME, NODE, "https://approved.example/"+REGISTRY_AUDIO_KEY+"?signature="+"x".repeat(320));
+            service.voiceEnroll(ME, ME, NODE, "https://approved.example/"+REGISTRY_AUDIO_KEY+"?signature="+"x".repeat(320));
             signatures.verify(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY,300),org.mockito.Mockito.times(1));
         }
         verify(voice,org.mockito.Mockito.times(1)).enroll("provider-short-sample");
         ArgumentCaptor<NpcProfile> writes = ArgumentCaptor.forClass(NpcProfile.class);
         verify(mapper,org.mockito.Mockito.times(2)).updateNodeNpcVoice(writes.capture());
         assertEquals(REGISTRY_AUDIO_REF,writes.getAllValues().get(0).getVoiceSample());
+    }
+
+    @Test
+    void managerCannotEnrollOwnersApprovedAudioThroughOwnerNodeScope() {
+        Long manager = 99L;
+        actualAudioRegistry("APPROVED", ME);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(voice.usable()).thenReturn(true);
+        com.chengyinhub.business.service.ConsentGuard consent =
+                (com.chengyinhub.business.service.ConsentGuard)
+                        org.springframework.test.util.ReflectionTestUtils.getField(service, "consentGuard");
+
+        com.chengyinhub.common.exception.ServiceException denied = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.voiceEnroll(manager, ME, NODE, REGISTRY_AUDIO_REF));
+
+        assertEquals(403, denied.getCode());
+        verify(nodeGate).requireOwnLiveNode(ME, NODE);
+        verify(consent).requireCurrentAgreement(manager, "voice_clone_processing", "merchant_voice");
+        verify(consent, never()).requireCurrentAgreement(ME, "voice_clone_processing", "merchant_voice");
+        verify(voice, never()).enroll(anyString());
+        verify(voice, never()).isReady(anyString());
+        verify(mapper, never()).updateNodeNpcVoice(any());
+    }
+
+    @Test
+    void managerOwnAudioUsesManagerConsentButKeepsOwnerNodeScope() {
+        Long manager = 99L;
+        actualAudioRegistry("APPROVED", manager);
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(mapper.updateNodeNpcVoice(any())).thenReturn(1);
+        when(voice.usable()).thenReturn(true);
+        when(voice.enroll("manager-private-sample")).thenReturn("manager-voice");
+        when(voice.isReady("manager-voice")).thenReturn(true);
+        com.chengyinhub.business.service.ConsentGuard consent =
+                (com.chengyinhub.business.service.ConsentGuard)
+                        org.springframework.test.util.ReflectionTestUtils.getField(service, "consentGuard");
+
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> signatures =
+                     org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            signatures.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils
+                    .generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY, 300))
+                    .thenReturn("manager-private-sample");
+            assertEquals(NodeNpcService.VOICE_READY,
+                    service.voiceEnroll(manager, ME, NODE, REGISTRY_AUDIO_REF).getVoiceStatus());
+            signatures.verify(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils
+                    .generateShortLivedPresignedUrl(REGISTRY_AUDIO_KEY, 300));
+        }
+        verify(nodeGate).requireOwnLiveNode(ME, NODE);
+        verify(nodeGate, never()).requireOwnLiveNode(manager, NODE);
+        verify(consent).requireCurrentAgreement(manager, "voice_clone_processing", "merchant_voice");
+        verify(consent, never()).requireCurrentAgreement(ME, "voice_clone_processing", "merchant_voice");
+        verify(voice).enroll("manager-private-sample");
+    }
+
+    @Test
+    void managerCannotUseOwnersConsentForOwnAudio() {
+        Long manager = 99L;
+        actualAudioRegistry("APPROVED", manager);
+        com.chengyinhub.business.service.ConsentGuard consent =
+                (com.chengyinhub.business.service.ConsentGuard)
+                        org.springframework.test.util.ReflectionTestUtils.getField(service, "consentGuard");
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("请先单独同意", 403))
+                .when(consent).requireCurrentAgreement(manager, "voice_clone_processing", "merchant_voice");
+
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.voiceEnroll(manager, ME, NODE, REGISTRY_AUDIO_REF));
+
+        verify(nodeGate).requireOwnLiveNode(ME, NODE);
+        verify(consent, never()).requireCurrentAgreement(ME, "voice_clone_processing", "merchant_voice");
+        verifyNoInteractions(voice, mapper);
     }
 
     @BeforeEach
@@ -177,7 +248,7 @@ class NodeNpcServiceTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IConsentRecordService.class), versions);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", guard);
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                () -> service.voiceEnroll(ME, NODE, "/profile/voice.mp3"));
+                () -> service.voiceEnroll(ME, ME, NODE, "/profile/voice.mp3"));
         org.mockito.Mockito.verifyNoInteractions(voice);
     }
 
@@ -359,13 +430,13 @@ class NodeNpcServiceTest {
     void voiceEnroll_requiresSavedNpcThenOpenService() {
         assertEquals("请先保存节点 NPC,再给他配声音",
                 assertThrows(IllegalStateException.class,
-                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+                        () -> service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3")).getMessage());
 
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
         when(voice.usable()).thenReturn(false);
         assertEquals("语音服务未开通",
                 assertThrows(IllegalStateException.class,
-                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+                        () -> service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3")).getMessage());
         verify(voice, never()).enroll(anyString());
     }
 
@@ -378,7 +449,7 @@ class NodeNpcServiceTest {
         when(voice.enroll("/profile/a.mp3")).thenReturn("cosyvoice-v2-abc");
         when(voice.isReady("cosyvoice-v2-abc")).thenReturn(true);
 
-        service.voiceEnroll(ME, NODE, "/profile/a.mp3");
+        service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3");
 
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
         verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
@@ -403,7 +474,7 @@ class NodeNpcServiceTest {
 
         assertEquals("录音太短",
                 assertThrows(IllegalStateException.class,
-                        () -> service.voiceEnroll(ME, NODE, "/profile/a.mp3")).getMessage());
+                        () -> service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3")).getMessage());
 
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
         verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
@@ -420,7 +491,7 @@ class NodeNpcServiceTest {
         row.setVoiceStatus(NodeNpcService.VOICE_PENDING);
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
 
-        assertEquals(NodeNpcService.VOICE_PENDING, service.voiceEnroll(ME, NODE, "/profile/a.mp3").getVoiceStatus());
+        assertEquals(NodeNpcService.VOICE_PENDING, service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3").getVoiceStatus());
         verify(voice, never()).enroll(anyString());
     }
 
@@ -467,7 +538,7 @@ class NodeNpcServiceTest {
     @Timeout(5)
     void voiceEnrollMustNotRunInTransactionOrFailureEvidenceIsRolledBack() throws Exception {
         java.lang.reflect.Method m = NodeNpcService.class.getMethod(
-                "voiceEnroll", Long.class, Long.class, String.class);
+                "voiceEnroll", Long.class, Long.class, Long.class, String.class);
         assertNull(m.getAnnotation(org.springframework.transaction.annotation.Transactional.class),
                 "voiceEnroll 不能加 @Transactional:失败状态要落库,不能随异常回滚");
     }

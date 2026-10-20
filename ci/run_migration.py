@@ -278,6 +278,15 @@ _UNSUPPORTED_FROM_SHAPE = re.compile(
     rf"\bFROM\s+(?:\(|{_QUALIFIED_IDENTIFIER}(?:\s+(?:AS\s+)?{_IDENTIFIER})?\s*,)",
     re.IGNORECASE,
 )
+# Only the two reviewed payee separation removals may use DELETE in atomic migrations.
+_TRANSACTION_PAYEE_DELETE = re.compile(
+    r"DELETE\s+FROM\s+sys_role_menu\s+WHERE\s+role_id\s*=\s*"
+    r"\(\s*SELECT\s+role_id\s+FROM\s+tmp_cy_payee_roles\s+WHERE\s+role_key\s*=\s*"
+    r"'(?P<role>[^']+)'\s*\)\s+AND\s+menu_id\s*=\s*"
+    r"\(\s*SELECT\s+menu_id\s+FROM\s+tmp_cy_payee_menus\s+WHERE\s+perms\s*=\s*"
+    r"'(?P<permission>[^']+)'\s*\)",
+    re.IGNORECASE,
+)
 _TRANSACTION_TEMPORARY_DDL = re.compile(
     r"^(?:CREATE|DROP)\s+TEMPORARY\s+TABLE\b", re.IGNORECASE)
 _WHERE_CLAUSE = re.compile(r"\bWHERE\b", re.IGNORECASE)
@@ -409,6 +418,7 @@ def validate_transaction_statements(statements):
     commits, and rejects every other statement shape before opening a database connection.
     The caller must still prove every persistently written table uses a transactional engine.
     """
+    temporary_tables = set()
     for index, statement in enumerate(statements, 1):
         normalized = executable_statement(statement)
         if "/*!" in _mask_literals_and_comments(normalized, mask_backticks=True):
@@ -417,8 +427,19 @@ def validate_transaction_statements(statements):
         if _contains_unquoted_semicolon(normalized):
             raise ValueError(
                 f"第 {index} 句仍含引号外分号，疑似分句失败，已在连接数据库前拒绝")
+        payee_delete = _TRANSACTION_PAYEE_DELETE.fullmatch(normalized.strip())
+        reviewed_payee_delete = (
+            payee_delete is not None
+            and (payee_delete["role"], payee_delete["permission"]) in {
+                ("cy_operator", "business:clubpayee:verify"),
+                ("cy_finance", "business:clubpayee:payout"),
+            }
+            and {"tmp_cy_payee_roles", "tmp_cy_payee_menus"} <= temporary_tables
+            and "sys_role_menu" not in temporary_tables
+        )
         dml_allowed = (_TRANSACTION_INSERT.match(normalized)
-                       or _TRANSACTION_UPDATE.match(normalized))
+                       or _TRANSACTION_UPDATE.match(normalized)
+                       or reviewed_payee_delete)
         if (_TRANSACTION_UPDATE.match(normalized)
                 and not _WHERE_CLAUSE.search(
                     _mask_literals_and_comments(normalized, mask_backticks=True))):
@@ -427,6 +448,13 @@ def validate_transaction_statements(statements):
         if dml_allowed and _UNSUPPORTED_FROM_SHAPE.search(normalized):
             dml_allowed = False
         if dml_allowed or _TRANSACTION_TEMPORARY_DDL.match(normalized):
+            create_match = _TEMPORARY_TABLE_NAME.match(normalized)
+            if create_match:
+                temporary_tables.add(create_match["name"].replace("`", "").lower())
+            drop_match = _DROP_TEMPORARY_TABLE_NAMES.match(normalized)
+            if drop_match:
+                for name in re.finditer(_IDENTIFIER, drop_match["names"]):
+                    temporary_tables.discard(name.group(0).replace("`", "").lower())
             continue
         preview = " ".join(normalized.split())[:160]
         raise ValueError(

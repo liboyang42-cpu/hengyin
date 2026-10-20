@@ -131,14 +131,13 @@ Component({
 
     onRetry() {
       if (this.data.authRequired) { retryLogin(this, app, () => this.getList()); return }
-      this.setData({ page_no: 1, list: [] })
       this.getList()
     },
 
     // 壳的 onReachBottom / 弹窗正文的 scrolltolower 都转发到这里
     loadMore() {
       if (this.data.activeFilter === 'club' || this.data.loading || !this.data.hasMore) return
-      this.setData({ page_no: this.data.page_no + 1 })
+      if (!this.data.loadErr) this.setData({ page_no: this.data.page_no + 1 })
       this.getList()
     },
 

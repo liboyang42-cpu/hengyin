@@ -76,7 +76,7 @@
   <!-- 请求失败/部分数据失败:身份卡仍可见,但不能把缺失的城市纪念章静默当成完整结果 -->
   <cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
     icon="/images/no_data.svg"
-    title="{{loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
+    title="{{wallAuthRequired ? '登录后查看我的勋章' : loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
     sub="{{wallAuthRequired ? '登录后可查看你已获得的城市勋章' : wallAccessDenied ? '请确认当前账号的查看权限' : partialFail ? '当前结果不完整，请重试获取全部勋章。' : '网络或渲染暂时失败，重试会重新加载'}}"
     retry="{{wallAuthRequired ? '登录' : '重试'}}" bind:retry="retryWall" />
 

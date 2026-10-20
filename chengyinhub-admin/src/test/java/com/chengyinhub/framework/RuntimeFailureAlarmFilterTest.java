@@ -17,6 +17,25 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class RuntimeFailureAlarmFilterTest {
+    @Test void actualLettuceTimeoutInsideSpringQueryTimeoutIsClassifiedByItsCause() {
+        AlarmService alarms = mock(AlarmService.class);
+        RuntimeFailureAlarmFilter filter = new RuntimeFailureAlarmFilter(alarms);
+        filter.systemFailure(new IllegalStateException("private-wrapper",
+                new org.springframework.dao.QueryTimeoutException("private-command",
+                        new io.lettuce.core.RedisCommandTimeoutException("private-redis"))));
+        verify(alarms).alarmThrottled("runtime.redis.connection", "缓存连接异常", "type=RedisCommandTimeoutException");
+        verifyNoMoreInteractions(alarms);
+    }
+
+    @Test void ordinaryJdbcQueryTimeoutIsNeverMisclassifiedAsRedis() {
+        AlarmService alarms = mock(AlarmService.class);
+        RuntimeFailureAlarmFilter filter = new RuntimeFailureAlarmFilter(alarms);
+        filter.systemFailure(new org.springframework.dao.QueryTimeoutException("private-sql",
+                new java.sql.SQLTimeoutException("private-jdbc-detail")));
+        verify(alarms).alarmThrottled("runtime.request.unhandled", "服务请求异常", "type=QueryTimeoutException");
+        verifyNoMoreInteractions(alarms);
+    }
+
     @Test
     void real5xxUsesFixedKeyAndNoRequestSecrets() throws Exception {
         AlarmService alarms = mock(AlarmService.class);

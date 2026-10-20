@@ -776,6 +776,20 @@
     "ai_quota_reservation_recovery_20261013": [],
     "topic_completion_coupon_history_receipt_20261016": [
       "topic_completion_coupon_20260722"
-    ]
+    ],
+    "20261015_retention_job_missing_registration": [
+      "data_retention_job"
+    ],
+    "20261015_wx_bill_ingestion": [
+      "wx_trade_bill_snapshot_20260725"
+    ],
+    "20261016_admin_role_payee_separation_forward": [
+      "20261013_admin_role_page_grants",
+      "20260816_tandianri_batch3_funds_club_compensation",
+      "20260816_tandianri_batch3_funds_club_payee",
+      "20260817_tandianri_batch3_funds_club_hours_correction"
+    ],
+    "20261017_job_dictionary_missing_seed": [],
+    "20261018_infomation_change_audit": []
   }
 }
