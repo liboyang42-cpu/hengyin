@@ -1804,10 +1804,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         try {
             lifecycle = TopicLifecycleState.fromCode(topic.getLifecycle());
         } catch (IllegalArgumentException ex) {
-            throw new RuntimeException("主题生命周期未知或缺失,暂不可售票", ex);
+            // CL-37:与 assertCommercialSaleOpen 同口径,未知生命周期 fail-closed 按未开售拦截,不露内部状态名。
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名", ex);
         }
         if (!lifecycle.isDirectSaleOpen()) {
-            throw new RuntimeException("该主题当前不在 SELLING,暂不可售票");
+            if (lifecycle.isSaleStarted()) {
+                throw new RuntimeException("报名已结束，本主题已停止售卖");
+            }
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
         }
         assertExploreSellable(topic);
 

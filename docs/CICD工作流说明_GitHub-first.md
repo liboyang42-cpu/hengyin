@@ -17,7 +17,7 @@ GitHub(唯一主仓 · source of truth: liboyang42-cpu/chengyin)
   └─ CI 通过后  → 自动镜像已验证的 master 到 Codeup(备份,不参与部署)
 
 Codeup   = 纯镜像备份 + 国内应急访问,不参与 CD
-ECS      = 生产后端(47.103.124.64),jar 由 systemd 服务 spring_chengyinhub-admin 管
+ECS      = 生产后端(<生产库主机>),jar 由 systemd 服务 spring_chengyinhub-admin 管
 runner   = arlan-mac-chengyin(用户的 Mac,labels self-hosted,macOS,ARM64,chengyin)
 ```
 
@@ -119,7 +119,7 @@ DeepSeek 密钥放在那里,结果一直没进 jar,线上报「AI 模型 deepsee
 `git.properties`,它自己会说:
 
 ```bash
-ssh -i ~/.ssh/chengyin_deploy -o IdentitiesOnly=yes root@47.103.124.64 \
+ssh -i ~/.ssh/chengyin_deploy -o IdentitiesOnly=yes root@<生产库主机> \
   'unzip -p /www/wwwroot/bin/chengyinhub-admin.jar BOOT-INF/classes/git.properties'
 # 输出的 git.commit.id 必须 == git rev-parse github/master
 ```
@@ -230,7 +230,7 @@ A: 技术上 fast-forward 可以,但会跳过 PR 审阅+CI 门禁。**规范是�
 
 > 旧 `docs/CICD_云效_runbook.md`(Codeup-first,MR 流程/Codeup 分支保护/deploy-restart.sh)已废弃删除。以下仍有效的生产机事实并入此处。
 
-后端生产机 `47.103.124.64` = **systemd 服务 `spring_chengyinhub-admin`**(⚠️ 2026-07-16 更正:
+后端生产机 `<生产库主机>` = **systemd 服务 `spring_chengyinhub-admin`**(⚠️ 2026-07-16 更正:
 此前本文写「宝塔 Java 项目,非 systemd」,是错的。`systemctl cat` + `journalctl` 实证如下):
 
 ```

@@ -40,6 +40,11 @@ function harness(noBackground) {
   }
   if (noBackground) wx.startLocationUpdateBackground = undefined
   h.consent = createConsentClient({ getUserID: app.getUserID, sendRequest(request) {
+    // SC-PRIV-03:撤回结果未知时 consent-client 会先回读 latest;服务端最新仍是旧的同意(与 record-failed 回执的 latest 一致)
+    if (request.url === '/api/compliance/consents/latest') {
+      request.success({ code: 200, data: { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } })
+      return
+    }
     h.recordRequest = { url: request.url, method: request.method, body: JSON.parse(request.data) }
     if (h.rejectRecord) { request.fail(); return }
     h.recordEcho = { ...h.recordRequest.body, docVersion: 'unit-version' }

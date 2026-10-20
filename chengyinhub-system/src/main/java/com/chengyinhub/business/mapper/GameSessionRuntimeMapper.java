@@ -99,6 +99,7 @@ public interface GameSessionRuntimeMapper {
                                               @Param("requestId") String requestId);
     int insertReceiptClaim(GameCommandReceipt receipt);
     int completeReceipt(GameCommandReceipt receipt);
+    int updateAppliedReceiptResult(GameCommandReceipt receipt);
 
     int insertSubmission(GameTaskSubmission submission);
     GameTaskSubmission selectSubmission(Long id);
@@ -137,6 +138,8 @@ public interface GameSessionRuntimeMapper {
                                   @Param("roleCode") String roleCode,
                                   @Param("now") Date now);
     List<GameBroadcastDelivery> selectPendingDeliveries(Long broadcastId);
+    GameBroadcast selectBroadcast(Long id);
+    int resetFailedDeliveries(@Param("broadcastId") Long broadcastId, @Param("now") Date now);
     int markDelivery(@Param("id") Long id, @Param("status") String status,
                      @Param("messageId") Long messageId, @Param("errorCode") String errorCode,
                      @Param("now") Date now);

@@ -27,7 +27,7 @@
       (`coop-finance-merchant-white-2026-08-04.png` 就干过一次)。
 - [ ] **微信官方包体读回**:先用开发者工具 `preview` 或 `upload` 的 `--info-output` 保存 JSON,再执行 `node scripts/wechat-release-contract.js --info <info.json>`；门禁兼容 DevTools `size.total/packages` 与 miniprogram-ci `subPackageInfo`（`__APP__`=主包、`__FULL__`=整包，数字按 bytes），逐项确认主包/每个分包 ≤2M、分包合计 ≤30M,内部主包 `<1.8M` 目标仍保留。没有 `info-output` 不得写“包体合规”。
 
-## C. 发布三件套顺序(自有服务器 47.103.124.64 / www.chengyinhub.com)
+## C. 发布三件套顺序(自有服务器 <生产库主机> / www.chengyinhub.com)
 
 1. 跑预检 SQL(只读)→ 备份 → 执行本批 migration
 2. 打 jar 部署后端(旧 jar 留作热回滚)

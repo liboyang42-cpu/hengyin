@@ -1972,17 +1972,19 @@ class GameSessionRuntimeServiceImplTest {
 
     /** F-L3-01:站点已被另一终端恢复时,后到的恢复返回当前站点而不是冲突;且不再要求全局 revision 精确相等。 */
     @Test
-    void clubResumeOfAlreadyActiveStationIsIdempotentWithStaleRevision() {
+    void clubResumeOfAlreadyActiveStationIsANoOpWithStaleRevision() {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
         stubReceiptPersistence("resume-already-active");
 
-        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.command(
+        // SC-CITY-RESUME-RACE:旧 revision 也不报「版本过期」,而是明确的无变化结果,且不落 APPLIED
+        GameSessionException noop = assertThrows(GameSessionException.class, () -> service.command(
                 GameActorContext.club(DIRECTOR),
-                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap()));
+                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap())));
 
-        assertEquals("APPLIED", receipt.getOutcome());
+        assertEquals("GAME_STATION_ALREADY_ACTIVE", noop.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
         verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
         verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }

@@ -592,11 +592,12 @@ class AiGatewayServiceImplTest {
     }
 
     @Test
-    void reviewRequiredRetainsUnknownAndDoesNotRefundOrdinaryPool() {
+    void reviewRequiredIsInputBlockedAndDoesNotRefundOrdinaryPool() {
         when(wxContentSecurityService.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
         AiServiceException error = assertThrows(AiServiceException.class,
                 () -> service.generate(MEMBER_ID, "club", "theme_draft", "s", "u"));
-        assertEquals(AiServiceException.Reason.UNKNOWN, error.getReason());
+        // master #322：微信审核拒绝（含人工复核）一律 INPUT_BLOCKED。
+        assertEquals(AiServiceException.Reason.INPUT_BLOCKED, error.getReason());
         assertEquals(0, refunded.size());
     }
 

@@ -231,6 +231,8 @@ function synchronizeChapter(chapter) {
     block._nodeAddress = node._storyGame ? '故事玩法 · 无需到达地点' : (node.address || '地点待补');
     if (node._storyGame) block.locationRequired = false;
     else delete block.locationRequired;
+    // 已保存站点的编号:故事流块上的「计入完成 / 额外站点 / 机动」标记按它写进章节规则
+    block._nodeId = Number(node.id) > 0 ? Number(node.id) : 0;
     block._nodeGameplayReady = Number(node.templateId) > 0
       || !!(node.templateInfo && node.templateInfo.title);
     // 节点块要显示节点实拍缩略图(用户 2026-08-10 定)。imgUrl 是逗号分隔的多图串,
