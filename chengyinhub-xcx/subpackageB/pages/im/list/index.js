@@ -216,7 +216,7 @@ Page({
   // 空态 CTA:私信→广场(帖文已降级为非 tab 页面,改为 navigateTo)
   onEmptyCta() {
     const tab = this.data.activeTab;
-    if (tab === 'dm') { wx.navigateTo({ url: '/pages/square/list/index' }); }
+    if (tab === 'dm' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
   },
 
   fmtPreview(c) {
