@@ -49,10 +49,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from cms_activity
     </sql>
 
+    <!-- 挂主题的场次只在父主题在架时公开:status=1(未被驳回/下架) · user_status=1(作者未下架) · del_flag=0。
+         只看 del_flag 时,主题被驳回、作者下架或图片违规下架后,publishBeforeReview 建出的自办场次
+         (status=1/publish_status=1)仍在列表/详情可见、可下单。下单闸见 CmsRegistrationServiceImpl#validateAndGetActivity。 -->
     <sql id="livePublicParentTopic">
         (topic_id is null or topic_id = 0 or exists (
             select 1 from cms_topic live_parent
             where live_parent.id = cms_activity.topic_id and live_parent.del_flag = 0
+              and live_parent.status = 1 and live_parent.user_status = 1
         ))
     </sql>
 
@@ -511,4 +515,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </choose>
         group by owner_id
     </select>
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_activity set status = 0, check_status = 0, publish_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus} and publish_status = #{fromPublishStatus}
+          <if test="decidedAt != null">and (update_time is null or update_time &lt;= #{decidedAt})</if>
+    </update>
+
+    <!-- AUDIT-INT-7:内容安全留置标记,独立语句,不进通用 resultMap/动态更新 -->
+    <update id="markContentSafetyHold">
+        update cms_activity set content_safety_hold = 1 where id = #{id}
+    </update>
+    <update id="clearContentSafetyHold">
+        update cms_activity set content_safety_hold = 0 where id = #{id} and content_safety_hold = 1
+    </update>
+    <select id="selectContentSafetyHold" resultType="java.lang.Integer">
+        select content_safety_hold from cms_activity where id = #{id}
+    </select>
+
 </mapper>

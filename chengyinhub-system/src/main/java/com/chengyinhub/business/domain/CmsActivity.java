@@ -124,8 +124,9 @@ public class CmsActivity extends BaseEntity
     /** M1-3 查询开关(非入库):publicOnly=1 时公域列表排除社群活动(club_id 有值) */
     private Integer publicOnly;
 
-    /** 查询开关(非入库):excludeCancelled=1 时排除已取消的活动(cancel_time 非空)。
-     *  注:不能靠 publish_status 排除 —— 公域列表从不设该条件,「下架」实际不生效(既有缺陷)。 */
+    /** 查询开关(非入库):excludeCancelled=1 时在 selectCmsActivityList(主办方/后台口径)里排除已取消的活动(cancel_time 非空)。
+     *  公开列表 selectPublicCmsActivityList 已把 status=1 · publish_status=1 · cancel_time is null · 父主题在架
+     *  写死在 SQL 里,不读本开关;下架/取消的活动在公开面一律不出。 */
     private Integer excludeCancelled;
 
     /** C 端通用列表专用：隐藏直接或父主题归属已解散俱乐部的活动；后台审计查询不设置。 */

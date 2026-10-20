@@ -11,6 +11,21 @@ import com.chengyinhub.business.service.IClubSessionService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IOmsTicketService;
+import com.chengyinhub.business.domain.AuditTask;
+import com.chengyinhub.business.domain.OmsTicket;
+import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
+import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.service.IContentSafetyGate;
+import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.support.ActivityAuditSnapshot;
+import com.chengyinhub.business.service.support.ActivityReviewPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +47,30 @@ import java.util.TimeZone;
 @Service
 public class ClubSessionServiceImpl implements IClubSessionService {
 
+    private static final Logger log = LoggerFactory.getLogger(ClubSessionServiceImpl.class);
+
     private final IClubService clubService;
     private final ICmsTopicService topicService;
     private final ICmsActivityService activityService;
     private final IOmsTicketService ticketService;
     private final CoopOrderMapper orderMapper;
     private final com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
+    private final IContentSafetyGate contentSafetyGate;
+    private final ActivityReviewPolicy activityReviewPolicy;
+    private final IAuditTaskService auditTaskService;
+    private final IUmsMemberService umsMemberService;
 
     public ClubSessionServiceImpl(IClubService clubService, ICmsTopicService topicService,
                                   ICmsActivityService activityService, IOmsTicketService ticketService,
                                   CoopOrderMapper orderMapper,
-                                  com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger) {
+                                  com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger,
+                                  IContentSafetyGate contentSafetyGate, ActivityReviewPolicy activityReviewPolicy,
+                                  IAuditTaskService auditTaskService, IUmsMemberService umsMemberService) {
         this.settlementDebtLedger = settlementDebtLedger;
+        this.contentSafetyGate = contentSafetyGate;
+        this.activityReviewPolicy = activityReviewPolicy;
+        this.auditTaskService = auditTaskService;
+        this.umsMemberService = umsMemberService;
         this.clubService = clubService;
         this.topicService = topicService;
         this.activityService = activityService;
@@ -100,10 +127,37 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) {
             throw new IllegalArgumentException("主题不存在或已失效");
         }
+        // AUDIT-G1-3:父主题被驳回 / 作者下架 / 违规下架后不能再开场次(公开读与下单同口径,见 livePublicParentTopic)。
+        if (!Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())) {
+            throw new IllegalArgumentException("主题未上架或已下架，不能开团");
+        }
         boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
         if (!clubOwned && !hasEffectiveClubOrder(request.getTopicId(), request.getClubId())) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
         }
+        // AUDIT-G1-3:场次是一条新的公开售卖面,与 /api/activity/publish 同一道门禁 + 同一套分级。
+        // 收费场的实名闸在 copyTopicTicketsToActivity(OmsTicketServiceImpl)里,同事务,拒了整笔回滚。
+        CmsActivityPublishRequest policyView = new CmsActivityPublishRequest();
+        policyView.setName(topic.getName());
+        policyView.setDescription(topic.getDescription());
+        policyView.setImgUrl(topic.getImgUrl());
+        policyView.setCategoryIds(topic.getCategoryIds());
+        policyView.setClubId(request.getClubId());
+        policyView.setTickets(topicTicketView(request.getTopicId()));
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_ACTIVITY);
+        safety.setMemberId(memberId);
+        safety.setOpenid(resolveOpenid(memberId));
+        safety.setText(IWxContentSecurityService.joinText(topic.getName(), topic.getDescription()));
+        safety.setHasPrice(activityReviewPolicy.hasCharge(policyView));
+        safety.setHasSignup(true);
+        safety.setReviewMode(activityReviewPolicy.modeOf(policyView,
+                new ActivityReviewPolicy.Publisher(false, false)).name());
+        SafetyDecision decision = contentSafetyGate.decide(safety);
+        if (decision == null || decision.isBlock()) {
+            throw new IllegalArgumentException("主题内容包含违规信息，不能开团");
+        }
+        boolean preReview = decision.isHold();
 
         CmsActivity activity = new CmsActivity();
         activity.setMemberId(memberId);
@@ -116,8 +170,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         activity.setAddressName(topic.getAddressName());
         activity.setStartDate(assemblyMoment);
         activity.setEndDate(dayBoundary(assemblyMoment, true));
-        activity.setStatus(1L);
-        activity.setPublishStatus(1L);
+        // 先审 ⇒ 待审(status=0/publish_status=0),审核台通过后 applyModeration 上架;先发后审 ⇒ 直接上架。
+        activity.setStatus(preReview ? 0L : 1L);
+        activity.setPublishStatus(preReview ? 0L : 1L);
         activity.setDelFlag(0);
         activity.setCreateBy(username);
         activity.setCreateTime(new Date());
@@ -127,7 +182,56 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             throw new IllegalStateException("开团场次创建失败");
         }
         ticketService.copyTopicTicketsToActivity(request.getTopicId(), activity.getId(), memberId);
+        if (preReview || decision.isFlagged()) {
+            String snap = ActivityAuditSnapshot.of(activity.getId(), activity,
+                    activityTickets(activity.getId()), decision.isFlagged() ? decision.getFlagReason() : null);
+            if (preReview) {
+                // 待审场次必须有单可审:建单失败整笔回滚,不留「待审却无人审」的场次。
+                auditTaskService.submitOrRefreshActivity(activity.getId(), memberId, "user_publish", snap);
+            } else {
+                try {
+                    auditTaskService.submitOrRefreshActivity(activity.getId(), memberId, "post_review_flag", snap);
+                } catch (Exception e) {
+                    log.error("开团场次抽检单提交失败 activityId={}", activity.getId(), e);
+                }
+            }
+        }
         return activity.getId();
+    }
+
+    private List<ActivityTicketRequest> topicTicketView(Long topicId) {
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topicId);
+        query.setDelFlag(0);
+        List<ActivityTicketRequest> view = new ArrayList<>();
+        List<OmsTicket> tickets = ticketService.selectOmsTicketList(query);
+        if (tickets == null) return view;
+        for (OmsTicket ticket : tickets) {
+            if (ticket == null) continue;
+            ActivityTicketRequest row = new ActivityTicketRequest();
+            row.setName(ticket.getName());
+            row.setPrice(ticket.getPrice());
+            view.add(row);
+        }
+        return view;
+    }
+
+    private List<OmsTicket> activityTickets(Long activityId) {
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(2L);
+        query.setOwnerId(activityId);
+        query.setDelFlag(0);
+        return ticketService.selectOmsTicketList(query);
+    }
+
+    private String resolveOpenid(Long memberId) {
+        try {
+            UmsMember member = umsMemberService.selectUmsMemberById(memberId);
+            return member == null || member.getWxOpenId() == null ? "" : member.getWxOpenId();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**

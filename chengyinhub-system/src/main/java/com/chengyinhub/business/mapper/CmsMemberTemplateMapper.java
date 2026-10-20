@@ -74,6 +74,9 @@ public interface CmsMemberTemplateMapper
 
     int applyAuditDecision(@Param("row") CmsMemberTemplate row, @Param("ownerId") Long ownerId);
 
+    /** AUDIT-G2-2:举报成立下架已公开的个人玩法(只动公开中的行,幂等) */
+    int takeDownReported(@Param("id") Long id, @Param("reason") String reason);
+
     /**
      * 删除我的模板
      * 
@@ -89,4 +92,14 @@ public interface CmsMemberTemplateMapper
      * @return 结果
      */
     public int deleteCmsMemberTemplateByIds(Long[] ids);
+
+    /** 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审(0/0/0)，与 applyAuditDecision 的待审前置对称。 */
+    int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
+                            @Param("fromStatus") Long fromStatus, @Param("fromCheckStatus") Integer fromCheckStatus,
+                            @Param("fromPublishStatus") Long fromPublishStatus);
+
+    /** 举报下架申诉成立(AUDIT-INT-4):从举报下架态(2/2/0)原样恢复到下架前记录的状态。 */
+    int restoreReportTakedown(@Param("id") Long id, @Param("ownerId") Long ownerId, @Param("status") Long status,
+                              @Param("checkStatus") Integer checkStatus, @Param("publishStatus") Long publishStatus,
+                              @Param("reason") String reason);
 }

@@ -109,6 +109,9 @@ public interface IWxContentSecurityService
      */
     int BIZ_TYPE_NODE_NPC = 16;
 
+    /** 社区帖文图片(bizId = community_post.id;命中 → 生命周期 HIDE 隐藏待复核 + 建人工复核单) */
+    int BIZ_TYPE_COMMUNITY_POST = 17;
+
     /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，
      * 并把 trace_id 与业务目标登记进 MySQL inbox；Redis 映射仅保留作迁移兼容与辅助清理。

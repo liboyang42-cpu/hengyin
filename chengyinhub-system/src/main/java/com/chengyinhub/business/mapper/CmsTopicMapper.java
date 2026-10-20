@@ -122,6 +122,9 @@ public interface CmsTopicMapper
     /** 供给、候选或商家状态变化后使旧城市复核失效；NULL 必须用专用 SQL 显式写入。 */
     int clearCircleReviewedAt(@Param("id") Long id, @Param("updateTime") Date updateTime);
 
+    /** 抽检池标记(#377 cms_topic.review_flag):1=先发后审放行但待抽检,0=抽检已通过/未打标。 */
+    public int updateReviewFlag(@Param("id") Long id, @Param("reviewFlag") int reviewFlag);
+
     /** 上下架 CAS：只有当前值等于 expected 才翻转，禁止陈旧请求覆盖新状态(NULL 按 0 处理)。 */
     public int casUserStatus(@Param("id") Long id,
                              @Param("expected") Integer expected,
@@ -220,4 +223,19 @@ public interface CmsTopicMapper
                                   @Param("clubCoopOpen") Integer clubCoopOpen,
                                   @Param("clubPinned") Integer clubPinned,
                                   @Param("clubMemberOnly") Integer clubMemberOnly);
+
+    /**
+     * 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审未上架(status=0/check_status=0/user_status=0)。
+     * configVersion 非空时(主题包快照)，提交后又改过配置的主题返回 0 行。
+     */
+    int reopenAuditDecision(@Param("id") Long id, @Param("fromStatus") Integer fromStatus,
+                            @Param("fromCheckStatus") Integer fromCheckStatus,
+                            @Param("configVersion") Long configVersion);
+
+    /** 内容安全留置(AUDIT-INT-7,content_safety_hold):图片机审违规置 1,作者新提交经人工过审清 0。 */
+    int markContentSafetyHold(@Param("id") Long id);
+
+    int clearContentSafetyHold(@Param("id") Long id);
+
+    Integer selectContentSafetyHold(@Param("id") Long id);
 }

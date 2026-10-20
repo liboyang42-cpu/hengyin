@@ -1,7 +1,13 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "audit_level_20261020": ["community_post_platform_20260909"],
+    "content_safety_hold_20261020": [],
+    "community_enforcement_links_20261020": ["community_post_platform_20260909"],
+    "audit_appeal_20261020": ["p3_platform_foundation", "audit_open_task_guard_20260721"],
+    "audit_report_lane_20261020": ["audit_open_task_guard_20260721"],
     "community_legacy_comment_like_counts_20261015": ["community_post_platform_20260909"],
+    "club_name_unique_20261020": [],
     "wechat_identity_unique_20261013": [],
     "20261012_member_password_width": [],
     "20261013_drop_member_pii_backup_tables": [],

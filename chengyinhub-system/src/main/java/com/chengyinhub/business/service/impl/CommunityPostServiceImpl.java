@@ -14,10 +14,15 @@ import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.ICommunityPostService;
 import com.chengyinhub.business.service.ICommunityMediaReceiptService;
 import com.chengyinhub.business.service.IContentSafetyGate;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.JsonUtils;
 import com.chengyinhub.common.utils.file.FileOssUploadUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +59,10 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private static final Set<String> MEMBER_ENFORCEMENTS = set("POST_RATE_LIMIT", "COMMENT_TIMEOUT", "READ_ONLY", "TEMP_SUSPEND", "PERMANENT_BAN");
     private static final Set<String> AGGREGATED_NOTIFICATION_ACTIONS = set("LIKE", "BOOKMARK", "COMMENT_LIKE");
     private static final long NOTIFICATION_AGGREGATION_WINDOW_MILLIS = 6L * 60L * 60L * 1000L;
+    /** community_post.audit_level:1 机审通过 / 2 人审通过(0 未审为列默认值) */
+    private static final int AUDIT_LEVEL_MACHINE = 1;
+    private static final int AUDIT_LEVEL_HUMAN = 2;
+    private static final Logger log = LoggerFactory.getLogger(CommunityPostServiceImpl.class);
 
     private final CommunityPostMapper mapper;
     private final CommunityPostLifecyclePolicy policy;
@@ -61,6 +70,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private final IAuditTaskService auditTaskService;
     private final CommunityTrustService communityTrustService;
     private final ICommunityMediaReceiptService mediaReceiptService;
+    private ObjectProvider<IWxContentSecurityService> wxContentSecurityProvider;
 
     public CommunityPostServiceImpl(CommunityPostMapper mapper, CommunityPostLifecyclePolicy policy,
                                     IContentSafetyGate safetyGate, IAuditTaskService auditTaskService,
@@ -72,6 +82,12 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         this.auditTaskService = auditTaskService;
         this.communityTrustService = communityTrustService;
         this.mediaReceiptService = mediaReceiptService;
+    }
+
+    /** 图片异步机审(WxContentSecurityServiceImpl 反向依赖本服务,setter 注入 ObjectProvider 懒取破环)。 */
+    @Autowired(required = false)
+    public void setWxContentSecurityProvider(ObjectProvider<IWxContentSecurityService> wxContentSecurityProvider) {
+        this.wxContentSecurityProvider = wxContentSecurityProvider;
     }
 
     @Override
@@ -251,6 +267,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         safetySnapshot.put("post", current);
         safetySnapshot.put("media", media);
         safety.setSnapshot(json(safetySnapshot));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
         SafetyDecision safetyDecision = safetyGate.decide(safety);
         if (safetyDecision == null || safetyDecision.isBlock()) {
             throw error("内容未通过安全检查，请修改后重试", 400);
@@ -261,10 +278,16 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 safetyDecision.isPass() ? now : null, null, safetyDecision.isPass() ? 1 : 0,
                 safetyDecision.isPass() ? 1 : 0, 1, now) != 1) stale();
         mapper.updateMediaReviewState(postId, safetyDecision.isPass() ? "PASS" : "HOLD", now);
+        // 审核分级:机审直发 → audit_level=1;门禁「放行但打标」→ 进抽检池。HOLD 的等级在人审通过时落(applyAuditDecision)。
+        if (safetyDecision.isPass() || safetyDecision.isFlagged()) {
+            mapper.updateAuditMarks(postId, safetyDecision.isPass() ? AUDIT_LEVEL_MACHINE : null, null,
+                    safetyDecision.isFlagged() ? 1 : null, now);
+        }
         mapper.upsertSearchDocument(postId, safetyDecision.isPass() ? "VISIBLE" : "HIDDEN", now);
         outbox(postId, safetyDecision.isPass() ? "POST_PUBLISHED" : "POST_REVIEW_REQUESTED",
                 payload("auditTaskId", safetyDecision.getAuditTaskId()), now);
         if (safetyDecision.isPass()) {
+            submitMediaForAsyncCheck(postId, safety.getOpenid(), mediaUrls);
             for (Long mentionedMemberId : mapper.selectMentionedMemberIds(postId)) {
                 notifyMember(mentionedMemberId, postId, memberId, "COMMENT_MENTION", "POST_MENTION", now);
             }
@@ -579,6 +602,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         safety.setText(request.getBody().trim());
         safety.setMediaUrls(Collections.<String>emptyList());
         safety.setSnapshot(json(inserted));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
         SafetyDecision decision = safetyGate.decide(safety);
         if (decision == null || decision.isBlock()) throw error("回复未通过安全检查，请修改后重试", 400);
         String lifecycle = decision.isPass() ? "PUBLISHED" : "CHECKING";
@@ -992,6 +1016,31 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Override
     @Transactional
     public void enforce(Long operatorUserId, Long postId, CommunityPostRequests.Enforcement request) {
+        applyPostEnforcement(operatorUserId, postId, request, null);
+    }
+
+    @Override
+    @Transactional
+    public Long enforceComment(Long operatorUserId, Long commentId, CommunityPostRequests.Enforcement request) {
+        return applyCommentEnforcement(operatorUserId, commentId, request, null);
+    }
+
+    /**
+     * 举报→处置桥接(AUDIT-G3-5):举报单裁定违规时由 CommunityTrustService 在同一事务里调用,
+     * 处置行带 report_case_id 回指举报单。CONTENT 走帖文处置,COMMENT 走评论处置;返回处置 id。
+     */
+    @Override
+    @Transactional
+    public Long enforceReportedTarget(Long operatorUserId, Long reportCaseId, String targetType, Long targetId,
+                                      CommunityPostRequests.Enforcement request) {
+        if (!positive(reportCaseId) || !positive(targetId)) throw error("举报处置参数不完整", 400);
+        String type = upper(targetType);
+        if ("CONTENT".equals(type)) return applyPostEnforcement(operatorUserId, targetId, request, reportCaseId);
+        if ("COMMENT".equals(type)) return applyCommentEnforcement(operatorUserId, targetId, request, reportCaseId);
+        throw error("该举报对象不支持内容处置", 400);
+    }
+
+    private void validateEnforcementRequest(CommunityPostRequests.Enforcement request) {
         if (request == null || !ENFORCEMENTS.contains(upper(request.getEnforcementType())) || blank(request.getRuleCode())
                 || !positive(request.getGuidelineVersionId()) || blank(request.getReasonCode())
                 || !nonEmptyJsonObject(request.getEvidenceJson())) throw error("处置参数不完整", 400);
@@ -999,15 +1048,22 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         if (mapper.countGuidelineVersion(request.getGuidelineVersionId()) != 1) {
             throw error("社区规范版本不存在", 409);
         }
-        String ruleCode = upper(request.getRuleCode());
-        if (mapper.countGuidelineRule(request.getGuidelineVersionId(), ruleCode) != 1) {
+        if (mapper.countGuidelineRule(request.getGuidelineVersionId(), upper(request.getRuleCode())) != 1) {
             throw error("处置规则不属于该社区规范版本", 409);
         }
+    }
+
+    private Long applyPostEnforcement(Long operatorUserId, Long postId, CommunityPostRequests.Enforcement request,
+                                      Long reportCaseId) {
+        validateEnforcementRequest(request);
+        String ruleCode = upper(request.getRuleCode());
         String commandType = fingerprintedCommand("POST_ENFORCE", request.getTargetMemberId(), request.getEnforcementType(),
                 ruleCode, request.getGuidelineVersionId(), request.getReasonCode(), request.getEvidenceJson(),
                 request.getStartsAt(), request.getEndsAt());
         CommunityPost post = locked(postId);
-        if (isCommandReplay(operatorUserId, request.getRequestId(), commandType, postId)) return;
+        if (isCommandReplay(operatorUserId, request.getRequestId(), commandType, postId)) {
+            return number(value(mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId()), "id"));
+        }
         Date now = new Date();
         String type = upper(request.getEnforcementType());
         if (MEMBER_ENFORCEMENTS.contains(type)
@@ -1037,13 +1093,61 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         } catch (DuplicateKeyException e) { throw error("处置请求号已使用", 409); }
         Map<String, Object> enforcement = mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId());
         if (enforcement == null) throw error("处置记录保存失败", 500);
+        Long enforcementId = number(value(enforcement, "id"));
+        if (reportCaseId != null && mapper.linkEnforcement(enforcementId, reportCaseId, null) != 1) {
+            throw error("处置与举报单关联失败", 500);
+        }
         if (!startsAt.after(now)) reconcileEnforcements(postId, now);
         Long notificationTarget = MEMBER_ENFORCEMENTS.contains(type)
                 ? request.getTargetMemberId() : post.getAuthorId();
-        notifyGovernance(notificationTarget, postId, operatorUserId, type,
-                number(value(enforcement, "id")), now);
+        notifyGovernance(notificationTarget, postId, operatorUserId, type, enforcementId, now);
         outbox(postId, "POST_ENFORCED", payload("type", type), now);
         saveCommandReceipt(operatorUserId, request.getRequestId(), commandType, postId, now);
+        return enforcementId;
+    }
+
+    /**
+     * 评论处置(AUDIT-G3-6):只支持 REMOVE,把已公开的评论下架。处置行 post_id 留空、comment_id 指向评论、
+     * target_member_id 指向评论作者 —— 帖文级的生效/恢复查询都按 post_id 走,评论处置不会被当成整帖下架;
+     * 评论作者在「我的处置」里能看到并申诉,申诉撤销时恢复评论(见 reviewAppeal)。
+     */
+    private Long applyCommentEnforcement(Long operatorUserId, Long commentId, CommunityPostRequests.Enforcement request,
+                                         Long reportCaseId) {
+        validateEnforcementRequest(request);
+        String type = upper(request.getEnforcementType());
+        if (!"REMOVE".equals(type)) throw error("评论只支持下架处置", 400);
+        if (request.getEndsAt() != null) throw error("评论下架不支持设置结束时间", 400);
+        if (!positive(commentId)) throw error("评论 id 无效", 400);
+        String ruleCode = upper(request.getRuleCode());
+        String commandType = fingerprintedCommand("COMMENT_ENFORCE", type, ruleCode, request.getGuidelineVersionId(),
+                request.getReasonCode(), request.getEvidenceJson());
+        Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
+        if (comment == null) throw error("评论不存在", 404);
+        if (isCommandReplay(operatorUserId, request.getRequestId(), commandType, commentId)) {
+            return number(value(mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId()), "id"));
+        }
+        if (!"PUBLISHED".equals(String.valueOf(value(comment, "lifecycle")))) {
+            throw error("只能处置已公开的评论", 409);
+        }
+        Integer version = integer(value(comment, "version"));
+        Long postId = number(value(comment, "post_id"));
+        Long authorId = number(value(comment, "author_id"));
+        Date now = new Date();
+        if (version == null || mapper.updateCommentLifecycle(commentId, "PUBLISHED", "REMOVED", version, now) != 1) stale();
+        try {
+            mapper.insertEnforcement(null, authorId, type, ruleCode, request.getGuidelineVersionId(),
+                    request.getReasonCode(), request.getEvidenceJson().trim(), "PUBLISHED",
+                    operatorUserId, now, null, request.getRequestId(), now);
+        } catch (DuplicateKeyException e) { throw error("处置请求号已使用", 409); }
+        Map<String, Object> enforcement = mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId());
+        if (enforcement == null) throw error("处置记录保存失败", 500);
+        Long enforcementId = number(value(enforcement, "id"));
+        if (mapper.linkEnforcement(enforcementId, reportCaseId, commentId) != 1) throw error("评论处置关联失败", 500);
+        mapper.recomputeCounts(postId);
+        notifyGovernance(authorId, postId, operatorUserId, "COMMENT_" + type, enforcementId, now);
+        outbox(postId, "COMMENT_ENFORCED", payload("commentId", commentId), now);
+        saveCommandReceipt(operatorUserId, request.getRequestId(), commandType, commentId, now);
+        return enforcementId;
     }
 
     @Override
@@ -1061,16 +1165,27 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         String decision = upper(request.getDecision());
         Date now = new Date();
         if (mapper.reviewAppealCas(appealId, decision, request.getReason().trim(), operatorUserId, version, now) != 1) stale();
+        Long commentId = number(value(enforcement, "comment_id"));
         if ("REVERSED".equals(decision)) {
             Integer enforcementVersion = integer(value(enforcement, "version"));
             if (mapper.reverseEnforcement(enforcementId, enforcementVersion == null ? 0 : enforcementVersion, now) != 1) stale();
-            if (postId != null) reconcileEnforcements(postId, now);
+            if (commentId != null) restoreEnforcedComment(commentId, now);
+            else if (postId != null) reconcileEnforcements(postId, now);
         }
         notifyGovernance(number(value(appeal, "appellant_member_id")), postId, operatorUserId,
                 "APPEAL_" + decision, enforcementId, now);
         if (positive(postId)) outbox(postId, "APPEAL_REVIEWED", payload("decision", decision), now);
         else typedOutbox("COMMUNITY_MEMBER", number(value(appeal, "appellant_member_id")),
                 "ACCOUNT_APPEAL_REVIEWED", payload("decision", decision), now);
+    }
+
+    /** 评论处置被申诉撤销:REMOVED 的评论放回 PUBLISHED;作者已自行删除(DELETED)的不复活。 */
+    private void restoreEnforcedComment(Long commentId, Date now) {
+        Map<String, Object> comment = mapper.selectCommentForAudit(commentId);
+        if (comment == null || !"REMOVED".equals(String.valueOf(value(comment, "lifecycle")))) return;
+        Integer version = integer(value(comment, "version"));
+        if (version == null || mapper.updateCommentLifecycle(commentId, "REMOVED", "PUBLISHED", version, now) != 1) stale();
+        mapper.recomputeCounts(number(value(comment, "post_id")));
     }
 
     @Override
@@ -1102,9 +1217,98 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         if (mapper.transitionCas(postId, post.getLifecycle(), decision.getLifecycle(), post.getVersion(), approved ? now : null,
                 null, approved ? 1 : 0, approved ? 1 : 0, approved ? 1 : 0, now) != 1) stale();
         mapper.updateMediaReviewState(postId, approved ? "PASS" : "REJECTED", now);
+        if (!approved) recordReviewRejection(post, now);
+        if (approved) {
+            // 人审通过 → audit_level=2;从待审(CHECKING)放出来的 = 先审后发。从 HIDDEN 复核放回的是先发后审,不改该标记。
+            mapper.updateAuditMarks(postId, AUDIT_LEVEL_HUMAN,
+                    CommunityPost.LIFECYCLE_CHECKING.equals(post.getLifecycle()) ? 1 : null, null, now);
+        }
         mapper.upsertSearchDocument(postId, approved ? "VISIBLE" : "HIDDEN", now);
         notifyMember(post.getAuthorId(), postId, 0L, "SYSTEM_GOVERNANCE", approved ? "APPROVED" : "REMOVED", now);
         outbox(postId, approved ? "POST_REVIEW_APPROVED" : "POST_REVIEW_REJECTED", payload("postId", postId), now);
+    }
+
+    /**
+     * 人审驳回落一条 REMOVE 处置(AUDIT-G3-1):作者在「我的处置」里看得到,并能走既有申诉(按处置 id)。
+     * 原实现只把帖子改成 REMOVED,没有处置行,作者无从申诉。previous_lifecycle 是申诉撤销后要恢复到的状态:
+     * 待审(CHECKING)被驳回的,撤销即视为人审通过 → PUBLISHED;已公开/受限的恢复原状;HIDDEN 优先取既有处置基线。
+     * 系统操作人记 0,request_id 由帖子 id + 驳回前版本号构成,同一次驳回重放不会重复建行。
+     */
+    private void recordReviewRejection(CommunityPost post, Date now) {
+        String from = post.getLifecycle();
+        String restoreTo = CommunityPost.LIFECYCLE_LIMITED.equals(from) ? CommunityPost.LIFECYCLE_LIMITED
+                : CommunityPost.LIFECYCLE_HIDDEN.equals(from)
+                ? defaultIfBlank(mapper.selectActiveEnforcementBaseline(post.getId(), now), CommunityPost.LIFECYCLE_PUBLISHED)
+                : CommunityPost.LIFECYCLE_PUBLISHED;
+        Map<String, Object> evidence = new HashMap<>();
+        evidence.put("source", "AUDIT_REVIEW_REJECTED");
+        evidence.put("postId", post.getId());
+        evidence.put("fromLifecycle", from);
+        evidence.put("postVersion", post.getVersion());
+        try {
+            mapper.insertEnforcement(post.getId(), null, "REMOVE", "AUDIT_REVIEW_REJECTED", post.getGuidelineVersionId(),
+                    "REVIEW_REJECTED", json(evidence), restoreTo, 0L, now, null,
+                    "AUDIT_REJECT:" + post.getId() + ":" + post.getVersion(), now);
+        } catch (DuplicateKeyException ignored) {
+            // 同一驳回(同帖同版本)重放:处置行已在,保持幂等
+        }
+    }
+
+    /**
+     * 图片异步机审命中风险。复用生命周期 HIDE 而不是 LIMIT:
+     * LIMIT 只是降分发(仅 PUBLISHED 可进),违规图仍挂在帖子上;HIDE 是「隐藏待复核」——与执法
+     * HIDE_PENDING_REVIEW 落 HIDDEN 同义,且 APPROVE 可从 HIDDEN 放回,误判能由人审一键恢复。
+     * 只处理公开态(PUBLISHED/LIMITED);CHECKING 本就待人审、HIDDEN/REMOVED/DELETED 已不公开,视为已落地。
+     */
+    @Override
+    @Transactional
+    public boolean applyRiskyMediaResult(Long postId) {
+        CommunityPost post = mapper.selectByIdForUpdate(postId);
+        if (post == null) return false;
+        String lifecycle = post.getLifecycle();
+        if (!CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) && !CommunityPost.LIFECYCLE_LIMITED.equals(lifecycle)) {
+            return true;
+        }
+        int expectedVersion = post.getVersion() == null ? 0 : post.getVersion();
+        CommunityPostLifecyclePolicy.Decision decision =
+                policy.decide(post, CommunityPostLifecyclePolicy.ACTION_HIDE, expectedVersion, false);
+        Date now = new Date();
+        if (mapper.transitionCas(postId, lifecycle, decision.getLifecycle(), expectedVersion,
+                null, null, 0, 0, 0, now) != 1) stale();
+        mapper.upsertSearchDocument(postId, "HIDDEN", now);
+        Map<String, Object> snapshot = new HashMap<>();
+        snapshot.put("post", post);
+        snapshot.put("media", mapper.selectMediaForSafety(postId));
+        snapshot.put("reason", "MEDIA_RISKY");
+        Long auditTaskId = auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId,
+                post.getAuthorId(), "HIGH", json(snapshot));
+        outbox(postId, "POST_MEDIA_RISKY_HIDDEN", payload("auditTaskId", auditTaskId), now);
+        return true;
+    }
+
+    @Override
+    public List<String> activeMediaUrls(Long postId) {
+        List<String> urls = new ArrayList<>();
+        for (Map<String, Object> row : mapper.selectMediaForSafety(postId)) {
+            Object url = value(row, "derived_object_key");
+            if (url != null && !blank(url.toString())) urls.add(url.toString());
+        }
+        return urls;
+    }
+
+    /** 直发且带图:图片送微信异步机审,命中由回调走 applyRiskyMediaResult。送检失败只告警,不回滚已发布内容(同附近的局)。 */
+    private void submitMediaForAsyncCheck(Long postId, String openid, List<String> mediaUrls) {
+        if (mediaUrls.isEmpty() || wxContentSecurityProvider == null) return;
+        IWxContentSecurityService wx = wxContentSecurityProvider.getIfAvailable();
+        if (wx == null) return;
+        for (String url : mediaUrls) {
+            try {
+                wx.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, postId, url, openid);
+            } catch (Exception e) {
+                log.error("[社区帖文] 图片送检异常,需人工复审: postId={}, exceptionType={}",
+                        postId, e.getClass().getSimpleName());
+            }
+        }
     }
 
     @Override

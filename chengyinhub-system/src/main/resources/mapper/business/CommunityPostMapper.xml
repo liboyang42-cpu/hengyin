@@ -303,6 +303,12 @@
       UPDATE community_post_media SET review_state=#{reviewState},update_time=#{now}
       WHERE post_id=#{postId} AND retention_state='ACTIVE' AND review_state IN ('PENDING','HOLD')
     </update>
+    <update id="updateAuditMarks">
+      UPDATE community_post SET audit_level=COALESCE(#{auditLevel},audit_level),
+        audit_before_publish=COALESCE(#{auditBeforePublish},audit_before_publish),
+        review_flag=COALESCE(#{reviewFlag},review_flag),update_time=#{now}
+      WHERE id=#{postId}
+    </update>
     <delete id="deleteTopics">DELETE FROM community_post_topic WHERE post_id=#{postId}</delete>
     <insert id="insertTopic">INSERT INTO community_post_topic(post_id,topic_code,create_time) VALUES(#{postId},#{topicCode},#{now})</insert>
     <delete id="deleteMentions">DELETE FROM community_post_mention WHERE post_id=#{postId}</delete>
@@ -967,6 +973,10 @@
       VALUES(#{postId},#{targetMemberId},#{enforcementType},#{ruleCode},#{guidelineVersionId},#{reasonCode},#{previousLifecycle},
         #{evidenceJson},#{operatorUserId},#{startsAt},#{endsAt},'ACTIVE',#{requestId},0,#{now},#{now})
     </insert>
+    <update id="linkEnforcement">
+      UPDATE community_post_enforcement SET report_case_id=#{reportCaseId},comment_id=#{commentId}
+      WHERE id=#{id} AND report_case_id IS NULL AND comment_id IS NULL
+    </update>
     <select id="selectEnforcement" resultType="map">SELECT * FROM community_post_enforcement WHERE id=#{id}</select>
     <select id="selectEnforcementByRequest" resultType="map">
       SELECT * FROM community_post_enforcement WHERE operator_user_id=#{operatorUserId} AND request_id=#{requestId}
@@ -1049,7 +1059,9 @@
     </update>
     <update id="reconcilePostEnforcementCas">
       UPDATE community_post SET lifecycle=#{lifecycle},recommendation_eligible=#{recommendationEligible},
-        search_eligible=#{searchEligible},interaction_enabled=#{interactionEnabled},update_time=#{now},version=version+1
+        search_eligible=#{searchEligible},interaction_enabled=#{interactionEnabled},
+        published_at=CASE WHEN #{lifecycle}='PUBLISHED' THEN COALESCE(published_at,#{now}) ELSE published_at END,
+        update_time=#{now},version=version+1
       WHERE id=#{postId} AND version=#{expectedVersion} AND lifecycle!='DELETED'
     </update>
     <select id="selectNotifications" resultType="map">

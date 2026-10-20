@@ -40,11 +40,11 @@ class FreeClubPublisherIdentityTest {
             ticket.setStartTime(request.getStartDate()); ticket.setEndTime(request.getEndDate());
             request.setTickets(Collections.singletonList(ticket));
             if (price.signum() == 0) {
-                assertEquals(Long.valueOf(9L), service.publishActivity(request, 88L, "test"));
+                assertEquals(Long.valueOf(9L), service.publishActivity(request, 88L, "test", true));
                 verify(identity, never()).checkRegistered(any());
                 verify(tickets).insertOmsTicket(any());
             } else {
-                assertThrows(ServiceException.class, () -> service.publishActivity(request, 88L, "test"));
+                assertThrows(ServiceException.class, () -> service.publishActivity(request, 88L, "test", true));
                 verify(activities, never()).insertCmsActivity(any());
                 verify(tickets, never()).insertOmsTicket(any());
             }
@@ -79,12 +79,12 @@ class FreeClubPublisherIdentityTest {
             request.setTickets(Collections.singletonList(ticket));
             if (publisher == 88L) {
                 ServiceException e = assertThrows(ServiceException.class,
-                        () -> service.publishActivity(request, publisher, "test"));
+                        () -> service.publishActivity(request, publisher, "test", true));
                 assertTrue(e.getMessage().contains("票价只能是 0"), e.getMessage());
                 verify(activities, never()).insertCmsActivity(any());
                 verify(tickets, never()).insertOmsTicket(any());
             } else {
-                assertEquals(Long.valueOf(9L), service.publishActivity(request, publisher, "test"));
+                assertEquals(Long.valueOf(9L), service.publishActivity(request, publisher, "test", true));
             }
         }
     }

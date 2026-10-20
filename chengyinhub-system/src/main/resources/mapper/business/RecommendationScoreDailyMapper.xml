@@ -41,6 +41,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 where a.status = 1
                   and a.publish_status = 1
                   and (a.del_flag = 0 or a.del_flag is null)
+                  and (a.topic_id is null or a.topic_id = 0 or exists (
+                      select 1 from cms_topic live_parent
+                      where live_parent.id = a.topic_id and live_parent.del_flag = 0
+                        and live_parent.status = 1 and live_parent.user_status = 1))
                 order by a.create_time desc, a.id desc
                 limit #{limit}
             </when>
@@ -82,6 +86,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 inner join cms_activity a on a.id = s.candidate_id
                 where s.member_id = #{memberId}
                   and s.candidate_type = 'activity'
+                  and (a.topic_id is null or a.topic_id = 0 or exists (
+                      select 1 from cms_topic live_parent
+                      where live_parent.id = a.topic_id and live_parent.del_flag = 0
+                        and live_parent.status = 1 and live_parent.user_status = 1))
                 order by s.rank_position asc, s.score desc
                 limit #{limit}
             </when>

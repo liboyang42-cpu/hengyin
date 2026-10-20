@@ -39,6 +39,7 @@ import com.chengyinhub.business.mapper.RoamStampMapper;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.util.TopicContentSafetyHold;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IWxContentCallbackInboxService;
 import com.chengyinhub.common.config.WxPayConfig;
@@ -116,6 +117,16 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Autowired
     private com.chengyinhub.business.mapper.AuditTaskMapper auditTaskMapper;
 
+    /** 申诉单撤回走审核服务(同一处通知作者);ObjectProvider 破环。 */
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditTaskServiceProvider;
+
+    /** 内容安全下架关闭未结申诉时给作者的说明。 */
+    static final String APPEAL_CLOSED_BY_SAFETY = "图片未通过内容安全检测已被下架，原申诉已关闭；请更换图片后重新提交审核";
+    // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.ICommunityPostService> communityPostServiceProvider;
+
     @Autowired
     private RoamStampMapper roamStampMapper;
 
@@ -137,6 +148,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     /** 主题节点 NPC 头像(scope_type=4)。bizId = npc_profile.id,不是 merchantId —— 见 BIZ_TYPE_NODE_NPC 注释。 */
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.OfficialEventMapper officialEventMapper;
 
     @Override
     public boolean isEnabled()
@@ -594,18 +608,27 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 {
                     return false;
                 }
-                if (Integer.valueOf(0).equals(current.getUserStatus()))
+                // AUDIT-INT-7:无论是否已下架/已被人工驳回都落留置标记,申诉/撤销不能凭它恢复违规图。
+                cmsTopicService.markContentSafetyHold(bizId);
+                if (topicTakedownApplied(current))
                 {
                     return confirmAlreadyApplied("主题图片违规已自动下架", bizId);
                 }
                 CmsTopic t = new CmsTopic();
                 t.setId(bizId);
                 t.setUserStatus(0); // 0=下架
+                // AUDIT-G2-1:记下「为什么下架」(check_status=2 + 固定原因),作者不能再自助翻回上架,
+                // 须人工复核通过才解除(见 TopicContentSafetyHold)。人工已驳回(status=2)的不改写其驳回原因。
+                if (!Integer.valueOf(2).equals(current.getStatus()))
+                {
+                    t.setCheckStatus(2);
+                    t.setReason(TopicContentSafetyHold.REASON);
+                }
                 int affected = cmsTopicService.updateCmsTopic(t);
                 if (affected <= 0)
                 {
                     CmsTopic observed = cmsTopicService.selectCmsTopicById(bizId);
-                    return observed != null && Integer.valueOf(0).equals(observed.getUserStatus())
+                    return topicTakedownApplied(observed)
                             ? confirmAlreadyApplied("主题图片违规已自动下架", bizId)
                             : confirmMutation(affected, "主题图片违规已自动下架", bizId);
                 }
@@ -620,6 +643,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 {
                     return false;
                 }
+                // AUDIT-INT-7:已下架/已驳回的活动也落留置标记,申诉成立或撤销驳回不能把违规图放回去。
+                cmsActivityService.markContentSafetyHold(bizId);
                 if (Long.valueOf(0L).equals(current.getPublishStatus()))
                 {
                     return confirmAlreadyApplied("活动图片违规已自动下架", bizId);
@@ -761,6 +786,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     {
                         continue;
                     }
+                    // AUDIT-INT-9:未结申诉一并结案(WITHDRAWN + 通知作者),免得申诉成立把违规图放回去。
+                    auditTaskServiceProvider.getObject().withdrawOpenAppeal(
+                            com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId(), APPEAL_CLOSED_BY_SAFETY);
                     auditTaskMapper.cancelOpenTemplateTasks(
                             com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
                     if (Long.valueOf(0L).equals(row.getPublishStatus()) && Long.valueOf(2L).equals(row.getStatus()))
@@ -784,9 +812,39 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                         ? confirmMutation(affected, "模板图片违规已自动下架", bizId)
                         : confirmAlreadyApplied("模板图片违规已自动下架", bizId);
             }
+            else if (bizType == BIZ_TYPE_COMMUNITY_POST)
+            {
+                // 生命周期、乐观版本、搜索投影与复核单都在帖文服务一处;已隐藏/待审/终态返回 true(幂等已落地)
+                boolean applied = communityPostServiceProvider.getObject().applyRiskyMediaResult(bizId);
+                if (applied)
+                {
+                    log.warn("[内容安全] 社区帖文图片违规已隐藏待复核: id={}", bizId);
+                }
+                return applied;
+            }
+            else if (bizType == BIZ_TYPE_OFFICIAL_EVENT)
+            {
+                // AUDIT-G1-4:官方活动封面违规 ⇒ 下线(ST_OFFLINE,与审核台驳回同一终态,详情/列表都不出)。
+                // 行锁在 WxContentCallbackMutationService(lockBusinessTarget),封面已换则 isCurrent 判 stale 不进这里。
+                // 只改状态,不删数据、不动已有报名/订单。
+                com.chengyinhub.business.domain.OfficialEvent current = officialEventMapper.selectOfficialEventById(bizId);
+                if (current == null)
+                {
+                    return false;
+                }
+                if (Integer.valueOf(com.chengyinhub.business.domain.OfficialEvent.ST_OFFLINE).equals(current.getStatus()))
+                {
+                    return confirmAlreadyApplied("官方活动封面违规已自动下线", bizId);
+                }
+                com.chengyinhub.business.domain.OfficialEvent offline = new com.chengyinhub.business.domain.OfficialEvent();
+                offline.setId(bizId);
+                offline.setStatus(com.chengyinhub.business.domain.OfficialEvent.ST_OFFLINE);
+                offline.setUpdateTime(new java.util.Date());
+                return confirmMutation(officialEventMapper.updateOfficialEvent(offline), "官方活动封面违规已自动下线", bizId);
+            }
             else
             {
-                // 其它业务类型(如据点模板/官方活动,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
+                // 其它业务类型(如据点模板,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
                 log.error("[内容安全] 图片违规但该业务类型无自动下架处理,需人工核查下架: bizType={}, bizId={}", bizType, bizId);
                 return false;
             }
@@ -808,6 +866,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
         log.warn("[内容安全] {}: id={}", action, bizId);
         return true;
+    }
+
+    /** 已下架且已留置(或已被人工驳回)= 本次违规结论已落地 */
+    private static boolean topicTakedownApplied(CmsTopic topic)
+    {
+        return topic != null && Integer.valueOf(0).equals(topic.getUserStatus())
+                && (TopicContentSafetyHold.isHeld(topic) || Integer.valueOf(2).equals(topic.getStatus()));
     }
 
     private boolean confirmAlreadyApplied(String action, Long bizId)
@@ -955,6 +1020,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_HANGOUT:
                 com.chengyinhub.business.domain.RoamHangout hangout = roamHangoutMapper.selectById(id, 0L);
                 return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());
+            case BIZ_TYPE_COMMUNITY_POST:
+                return containsMediaHash(hash,
+                        communityPostServiceProvider.getObject().activeMediaUrls(id).toArray(new String[0]));
+            case BIZ_TYPE_OFFICIAL_EVENT:
+                // 官方活动只送检封面(ApiOfficialEventController 发布口)。
+                com.chengyinhub.business.domain.OfficialEvent event = officialEventMapper.selectOfficialEventById(id);
+                return event != null && containsMediaHash(hash, event.getCoverImg());
             default:
                 return false;
         }

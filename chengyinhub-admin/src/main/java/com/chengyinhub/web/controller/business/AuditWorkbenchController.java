@@ -94,6 +94,15 @@ public class AuditWorkbenchController extends BaseController {
         return data;
     }
 
+    /** 认领待审单(协作提示,不阻止其他审核员处理);已被认领或已处理返回错误。 */
+    @PreAuthorize("@ss.hasPermi('business:audit:list')")
+    @Log(title = "P3审核认领", businessType = BusinessType.UPDATE)
+    @PostMapping("/{id}/claim")
+    public AjaxResult claim(@PathVariable("id") Long id) {
+        auditTaskService.claim(id, getUserId());
+        return success();
+    }
+
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {

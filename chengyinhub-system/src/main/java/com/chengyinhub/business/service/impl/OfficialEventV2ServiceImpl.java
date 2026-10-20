@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.EventSignup;
@@ -34,6 +35,8 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.OfficialEventV2ArrivalRequest;
 import com.chengyinhub.business.domain.dto.OfficialEventV2DraftRequest;
 import com.chengyinhub.business.domain.dto.OfficialEventV2PublishCheck;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.EventSignupMapper;
@@ -42,7 +45,10 @@ import com.chengyinhub.business.mapper.OfficialEventMapper;
 import com.chengyinhub.business.mapper.OfficialEventV2Mapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -91,6 +97,10 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private ISysConfigService configService;
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
+    @Autowired
+    private IAuditTaskService auditTaskService;
     @Autowired
     private ISysUserService sysUserService;
     @Autowired
@@ -198,6 +208,10 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             }
             if (stored.getStatus() == null || stored.getStatus() != OfficialEvent.ST_DRAFT) {
                 throw new ServiceException("仅草稿活动可整体修改；运行中请走受控变更命令");
+            }
+            if (OfficialEvent.CONTROL_PENDING_REVIEW.equals(stored.getControlState())) {
+                // 审核中改内容会让审核员看到的快照与实际上架内容不一致
+                throw new ServiceException("活动审核中，暂不能修改");
             }
             preservedParties = v2Mapper.selectPartiesByEventForUpdate(stored.getId());
             if (preservedParties == null) preservedParties = new ArrayList<>();
@@ -425,10 +439,67 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         if (!isEffectiveOrganizerOperator(event, v2Mapper.selectPartiesByEventForUpdate(eventId), operatorId)) {
             return "仅本场有效主办方账号可执行该命令";
         }
+        if (OfficialEvent.CONTROL_PENDING_REVIEW.equals(event.getControlState())) {
+            return "活动已提交审核，请等待审核结果";
+        }
         OfficialEventV2PublishCheck check = checkPublishableInternal(eventId);
         if (!check.isPass()) {
             return "发布检查未通过：" + join(check.getBlockers());
         }
+        // 2026-10-20 分级审核:官方活动先审后发。文本过统一门禁(PRE_REVIEW),明确违规直接拒;
+        // 其余一律进待审(仍是草稿,不公开、不进生命周期),审核台通过后 applyAuditDecision 才真正排期。
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_OFFICIAL_EVENT);
+        safety.setMemberId(operatorId);
+        safety.setOpenid(openidOf(operatorId));
+        safety.setText(IWxContentSecurityService.joinText(event.getTitle(), event.getSubtitle(), event.getStory()));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+        SafetyDecision decision = contentSafetyGate.decide(safety);
+        if (decision == null || decision.isBlock()) {
+            return "活动内容包含违规信息，请修改后重试";
+        }
+        event.setControlState(OfficialEvent.CONTROL_PENDING_REVIEW);
+        eventMapper.updateOfficialEvent(event);
+        v2Mapper.insertAuditLog(eventId, "SUBMITTED_FOR_REVIEW", operatorId, "发布检查通过，已提交平台审核", null, null);
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", AuditTask.BIZ_OFFICIAL_EVENT);
+        snap.put("bizId", eventId);
+        snap.put("contractVersion", event.getContractVersion());
+        snap.put("title", event.getTitle());
+        snap.put("subtitle", event.getSubtitle());
+        snap.put("story", event.getStory());
+        snap.put("coverImg", event.getCoverImg());
+        snap.put("city", event.getCity());
+        snap.put("gateReason", decision.getReasonCode());
+        auditTaskService.submit(AuditTask.BIZ_OFFICIAL_EVENT, eventId, operatorId, "user_publish", snap.toJSONString());
+        return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId) {
+        OfficialEvent event = requireV2EventForUpdate(eventId);
+        if (event.getStatus() == null || event.getStatus() != OfficialEvent.ST_DRAFT
+                || !OfficialEvent.CONTROL_PENDING_REVIEW.equals(event.getControlState())) {
+            throw new ServiceException("官方活动审核状态已变化，请刷新后重试");
+        }
+        if (!approved) {
+            // 驳回:退回草稿(仍不公开),主办方可修改后重新提交排期
+            event.setControlState(CONTROL_NORMAL);
+            eventMapper.updateOfficialEvent(event);
+            v2Mapper.insertAuditLog(eventId, "REVIEW_REJECTED", submitterId,
+                    "平台审核未通过：" + (reason == null ? "" : reason), null, null);
+            return;
+        }
+        // 审核期间时间线可能已过期:过审时复核同一套结构化发布检查,不通过则审核不提交
+        OfficialEventV2PublishCheck check = checkPublishableInternal(eventId);
+        if (!check.isPass()) {
+            throw new ServiceException("发布检查未通过：" + join(check.getBlockers()));
+        }
+        activateScheduled(event, eventId, submitterId, "平台审核通过，活动进入已排期");
+    }
+
+    private void activateScheduled(OfficialEvent event, Long eventId, Long operatorId, String note) {
         v2Mapper.activateDraftBindings(eventId);
         v2Mapper.activateDraftMissions(eventId);
         v2Mapper.activateDraftRequirements(eventId);
@@ -446,8 +517,16 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         eventMapper.updateOfficialEvent(event);
         v2Mapper.updateV2ControlState(eventId, CONTROL_NORMAL, null, null, null, null,
                 null, null, null, null, null);
-        v2Mapper.insertAuditLog(eventId, "SCHEDULED", operatorId, "发布检查通过，活动进入已排期", null, null);
-        return null;
+        v2Mapper.insertAuditLog(eventId, "SCHEDULED", operatorId, note, null, null);
+    }
+
+    private String openidOf(Long memberId) {
+        try {
+            UmsMember m = umsMemberService.selectUmsMemberById(memberId);
+            return m == null ? null : m.getWxOpenId();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

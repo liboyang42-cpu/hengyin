@@ -34,9 +34,10 @@ public class CommunityPostLifecyclePolicy {
             requireOneOf(current, CommunityPost.LIFECYCLE_DRAFT);
             target = CommunityPost.LIFECYCLE_CHECKING;
         } else if (ACTION_DELETE.equals(action)) {
+            // 被下架(REMOVED)的帖子作者仍可删除:删除自己的内容是数据权利,不因被处置而丧失(AUDIT-G3-1)。
             requireOneOf(current, CommunityPost.LIFECYCLE_DRAFT, CommunityPost.LIFECYCLE_CHECKING,
                     CommunityPost.LIFECYCLE_PUBLISHED, CommunityPost.LIFECYCLE_LIMITED,
-                    CommunityPost.LIFECYCLE_HIDDEN);
+                    CommunityPost.LIFECYCLE_HIDDEN, CommunityPost.LIFECYCLE_REMOVED);
             target = CommunityPost.LIFECYCLE_DELETED;
         } else if (ACTION_APPROVE.equals(action)) {
             requireOneOf(current, CommunityPost.LIFECYCLE_CHECKING, CommunityPost.LIFECYCLE_HIDDEN);
