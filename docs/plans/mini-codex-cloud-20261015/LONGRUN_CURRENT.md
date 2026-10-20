@@ -1,10 +1,18 @@
+## 当前独立整合授权：本地root单写者，先预演再登记冲突
+
+用户已明确允许“独立整合与现有CI验收”：范围为移植分支 `integrate/master-port-20261019` 与 #385、#387、#388、#390、#391，在 `codex/final-backend-acceptance-20261020` 独立分支处理。本地root为唯一集成写者；先固定各公开来源SHA并预演合并，实际冲突路径交C00逐项登记后处理。当前未报告组合候选SHA或冲突路径，不授予笼统源码写权。三队源码及原归属保持冻结，C00仅维护控制文档，不派新作者、不编译测试或触发CI。
+
+固定 `8bc728ad99d0c748698c5210343e6f4ec782e894` 的 Backend tests、Funds MySQL IT、Mini program static checks 已直接核读为 **COMPLETED/SUCCESS**；此前pending读数保留为历史。该源五链HTTP PASS与九批41f83真库存储仍分源，均不继承到尚未运行的最终组合。
+
+GitHub当前另显示 #391 已由外部合入master，合并提交 `a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18`；这是既成外部状态，不是本轮执行或新增授权。本轮独立整合仍不合master、不部署、不执行生产迁移、不新增入口或修改212／CI／网络。精确来源与授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance`；真实微信／设备、出站stub边界、持久迁移与最终组合未验边界保持。
+
 ## 当前HTTP闭环：固定8bc728五链PASS，出站stub与最终验收边界保留
 
 [既有运行39427671750](https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750) 在固定源码 `8bc728ad99d0c748698c5210343e6f4ec782e894` 已完成SUCCESS。工件 `12265809908` summary已独立核验 **verdict=PASS、problems=[]**；platform、merchant_club、sale_close、player、finance **五链全PASS**，每条terminal_readbacks全部ok。玩家订单唯一、回调交易号一致、四权益各核销一次、4条ACTIVE redemption及唯一勋章；FINAL资金快照唯一、batchPAID、确认付款身份分离。本次仅签收已有报告，没有新测试或CI执行。
 
 **NOT_COVERED保持**：支付、内容安全出站为stub；真实微信／设备／最终审核跨分支候选／持久迁移／生产仍未验。九批真实存储只属于 `41f83e65797edd5c17511ea609659f9a55de8767`，与此8bc728 HTTP证据分源，不相加、不继承。原a9售票时间投影失败、798报名等待顺序失败及finance NOT_RUN均保留为各自SHA的历史。
 
-PR391仍OPEN；同head Backend/Funds检查本次核读时IN_PROGRESS，以最终head检查为准，不提前报整套CI通过。[PR390](https://github.com/liboyang42-cpu/hengyin/pull/390) `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a`保持源码已交、最终验收未完。未新增本地grant、源码线或团队，原外部作者边界保留。
+PR391当前由外部合入master；固定8bc728的 Backend/Funds/Mini static 三项检查现均COMPLETED/SUCCESS，此前OPEN及pending为历史读数，不推定最终组合通过。[PR390](https://github.com/liboyang42-cpu/hengyin/pull/390) `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a`保持源码已交、最终验收未完。未新增该修复的本地源码写权或Cloud团队，原外部来源与归属保留；本地独立整合仅按本节精确范围执行。
 
 ## 当前验证更新：九批真实存储通过，仅限固定41f83候选
 

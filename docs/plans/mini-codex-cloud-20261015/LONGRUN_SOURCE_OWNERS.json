@@ -5087,7 +5087,7 @@
         "state": "PASS_FIVE_CHAINS_EXACT_SOURCE_WITH_DECLARED_STUBS",
         "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain",
         "final_cross_branch_acceptance": "NOT_COVERED",
-        "backend_and_funds_checks": "AT_READ_IN_PROGRESS; use final PR head checks, no overall CI success inferred"
+        "backend_and_funds_checks": "COMPLETED_SUCCESS at exact8bc728; Mini program static checks also SUCCESS; combined candidate NOT_RUN and no inheritance"
       },
       "not_covered": {
         "payment_outbound": "STUB",
@@ -5102,18 +5102,42 @@
         {
           "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
         },
         {
           "name": "Backend tests",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+        },
+        {
+          "name": "Mini program static checks",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784796"
         }
-      ]
+      ],
+      "source_checks_history": {
+        "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain.source_checks_history",
+        "scope": "Previous pending metadata at exact8bc retained there; superseded by current three named checks SUCCESS."
+      },
+      "source_check_result": {
+        "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain.source_check_result",
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+        "state": "COMPLETED_SUCCESS_FOR_THREE_NAMED_CHECKS_ONLY",
+        "combined_candidate_inheritance": false
+      },
+      "observed_pr_state": {
+        "state": "closed",
+        "merged": true,
+        "merged_at": "2026-10-20T13:21:15Z",
+        "merge_commit_sha": "a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18",
+        "scope": "External GitHub merge observed, not performed by C00 or this independent integration task."
+      }
     },
     "product_followup": {
       "pr": 390,
@@ -5126,5 +5150,16 @@
     "public_review_scope": "C00 read public PR390/391 metadata and exact PR391 changed paths. No code edit, compilation/test/CI invocation, merge, deployment or migration execution.",
     "new_local_repair_authorization": "NONE; existing external delivery retained, no local writer or new team",
     "nine_batch_boundary": "Existing nine Real Storage PASS batches remain tied to41f83e65797edd5c17511ea609659f9a55de8767 only; not inherited by391,390 or later source."
+  },
+  "independent_backend_acceptance": {
+    "record": "LONGRUN_REMAINING.json#independent_backend_acceptance",
+    "authorization": "User approved independent integration and existing CI acceptance.",
+    "integration_writer": "local root coordinator only",
+    "target_branch": "codex/final-backend-acceptance-20261020",
+    "state": "AUTHORIZED_MERGE_PREVIEW_PENDING_EXACT_CONFLICT_LIST",
+    "authorized_exact_conflict_paths": [],
+    "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
+    "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior source results inherited",
+    "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task."
   }
 }

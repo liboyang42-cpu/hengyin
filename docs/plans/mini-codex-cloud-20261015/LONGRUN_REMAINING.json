@@ -2384,21 +2384,78 @@
         {
           "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
         },
         {
           "name": "Backend tests",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+        },
+        {
+          "name": "Mini program static checks",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784796"
         }
       ],
-      "pr391_state_at_read": "OPEN; final Backend/Funds checks still pending, use final PR head checks",
+      "pr391_state_at_read": "CLOSED/MERGED externally; three named checks COMPLETED/SUCCESS at8bc728; combined acceptance candidate not reported and NOT_RUN",
       "source_boundary": "Only exact8bc728 HTTP evidence; nine Real Storage batches remain at41f83. No result summed with or inherited across source SHAs.",
-      "local_repair_grant": "NONE; existing external author boundary retained"
+      "local_repair_grant": "NONE; existing external author boundary retained",
+      "source_checks_history": [
+        {
+          "checks": [
+            {
+              "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+              "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+              "status": "in_progress",
+              "conclusion": null,
+              "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+            },
+            {
+              "name": "Backend tests",
+              "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+              "status": "in_progress",
+              "conclusion": null,
+              "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+            }
+          ],
+          "pr_state": "OPEN; final Backend/Funds checks still pending, use final PR head checks",
+          "scope": "Prior metadata read only; historical pending status at the same source."
+        }
+      ],
+      "source_check_result": {
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+        "state": "COMPLETED_SUCCESS_FOR_THREE_NAMED_CHECKS_ONLY",
+        "checks": [
+          {
+            "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+          },
+          {
+            "name": "Backend tests",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+          },
+          {
+            "name": "Mini program static checks",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784796"
+          }
+        ],
+        "coverage": "GitHub check metadata only; not a new raw report or class-count validation. No results inherited by the combined candidate."
+      }
     },
     "not_accepted": [
       "real WeChat/payment/device/business acceptance",
@@ -2478,7 +2535,7 @@
         "state": "PASS_FIVE_CHAINS_EXACT_SOURCE_WITH_DECLARED_STUBS",
         "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain",
         "final_cross_branch_acceptance": "NOT_COVERED",
-        "backend_and_funds_checks": "AT_READ_IN_PROGRESS; use final PR head checks, no overall CI success inferred"
+        "backend_and_funds_checks": "COMPLETED_SUCCESS at exact8bc728; Mini program static checks also SUCCESS; combined candidate NOT_RUN and no inheritance"
       },
       "not_covered": {
         "payment_outbound": "STUB",
@@ -2493,18 +2550,81 @@
         {
           "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
         },
         {
           "name": "Backend tests",
           "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "success",
           "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+        },
+        {
+          "name": "Mini program static checks",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784796"
         }
-      ]
+      ],
+      "source_checks_history": [
+        {
+          "scope": "Prior metadata read at the same exact source, preserved as history",
+          "checks": [
+            {
+              "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+              "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+              "status": "in_progress",
+              "conclusion": null,
+              "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+            },
+            {
+              "name": "Backend tests",
+              "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+              "status": "in_progress",
+              "conclusion": null,
+              "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+            }
+          ]
+        }
+      ],
+      "source_check_result": {
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+        "state": "COMPLETED_SUCCESS_FOR_THREE_NAMED_CHECKS_ONLY",
+        "checks": [
+          {
+            "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+          },
+          {
+            "name": "Backend tests",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+          },
+          {
+            "name": "Mini program static checks",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784796"
+          }
+        ],
+        "coverage": "GitHub check metadata only; not a new raw report or class-count validation. No results inherited by the combined candidate."
+      },
+      "observed_pr_state": {
+        "state": "closed",
+        "merged": true,
+        "merged_at": "2026-10-20T13:21:15Z",
+        "merge_commit_sha": "a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18",
+        "scope": "External GitHub merge observed, not performed by C00 or this independent integration task."
+      }
     },
     "product_followup": {
       "pr": 390,
@@ -2517,5 +2637,88 @@
     "public_review_scope": "C00 read public PR390/391 metadata and exact PR391 changed paths. No code edit, compilation/test/CI invocation, merge, deployment or migration execution.",
     "new_local_repair_authorization": "NONE; existing external delivery retained, no local writer or new team",
     "nine_batch_boundary": "Existing nine Real Storage PASS batches remain tied to41f83e65797edd5c17511ea609659f9a55de8767 only; not inherited by391,390 or later source."
+  },
+  "independent_backend_acceptance": {
+    "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
+    "integration_writer": "local root coordinator only",
+    "target_branch": "codex/final-backend-acceptance-20261020",
+    "state": "AUTHORIZED_MERGE_PREVIEW_PENDING_EXACT_CONFLICT_LIST",
+    "creation_or_candidate_sha": "NOT_REPORTED",
+    "port_source": {
+      "pr": 386,
+      "branch": "integrate/master-port-20261019",
+      "recorded_integration_sha": "b548cdc4d098defb5c4857c793897ca79668d579",
+      "source_role": "Previously recorded port candidate; root must freeze actual integration starting SHA separately."
+    },
+    "source_prs": [
+      {
+        "pr": 385,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/385",
+        "source_sha": "b19200a3ad6fc19319665fe5b81ad6161fd9dac7",
+        "branch": "claude/audit-integration-20261020",
+        "state": "open",
+        "merged": false,
+        "merged_at": null
+      },
+      {
+        "pr": 387,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/387",
+        "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3",
+        "branch": "claude/audit-followup-mini-20261020",
+        "state": "open",
+        "merged": false,
+        "merged_at": null
+      },
+      {
+        "pr": 388,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/388",
+        "source_sha": "f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a",
+        "branch": "claude/audit-followup-admin-activity-20261020",
+        "state": "open",
+        "merged": false,
+        "merged_at": null
+      },
+      {
+        "pr": 390,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/390",
+        "source_sha": "9e8c870c7b748b3f25e3ca3bbb970609bc9a137a",
+        "branch": "claude/audit-followup-product-20261020",
+        "state": "open",
+        "merged": false,
+        "merged_at": null
+      },
+      {
+        "pr": 391,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+        "branch": "claude/sale-ticket-projection-endtime-20261020",
+        "state": "closed",
+        "merged": true,
+        "merged_at": "2026-10-20T13:21:15Z",
+        "merge_commit_sha": "a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18"
+      }
+    ],
+    "sequence": "Local writer freezes actual public source SHAs and previews merges first; reports actual conflicts for C00 exact-path registration before editing conflict resolutions.",
+    "conflict_write_authority": {
+      "state": "PENDING_ACTUAL_PREVIEW",
+      "authorized_exact_paths": [],
+      "blanket_source_write_grant": false
+    },
+    "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
+    "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
+    "validation": {
+      "combined_candidate": "NOT_RUN",
+      "existing_source_results_inherited": false,
+      "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution."
+    },
+    "prohibited": [
+      "merge independent acceptance work into master",
+      "deployment",
+      "production migration execution",
+      "new validation entry",
+      "network/212/CI configuration changes",
+      "new Cloud team"
+    ],
+    "external_merge_observation": "PR391 was externally merged to master at a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18; this observation neither performs nor authorizes a master merge by this integration task."
   }
 }
