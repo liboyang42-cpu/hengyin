@@ -8,15 +8,20 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IClubEventOpsService;
+import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.IQuotaService;
 import com.chengyinhub.business.service.IRoleService;
 import com.chengyinhub.business.service.ITeamGroupService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.support.ActivityReviewPolicy;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.system.service.ISysConfigService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -27,6 +32,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -74,6 +80,14 @@ class ActivityPublishRoleGateTest
         ReflectionTestUtils.setField(controller, "teamGroupService", teamGroupService);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", wxContentSecurityService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        // 分级审核 P0:发布链路改走统一门禁;本类只测身份/归属,门禁一律放行,模式按默认(先发后审)
+        IContentSafetyGate contentSafetyGate = mock(IContentSafetyGate.class);
+        when(contentSafetyGate.decide(any())).thenReturn(SafetyDecision.pass());
+        ActivityReviewPolicy activityReviewPolicy = new ActivityReviewPolicy();
+        ReflectionTestUtils.setField(activityReviewPolicy, "configService", mock(ISysConfigService.class));
+        ReflectionTestUtils.setField(controller, "contentSafetyGate", contentSafetyGate);
+        ReflectionTestUtils.setField(controller, "activityReviewPolicy", activityReviewPolicy);
+        ReflectionTestUtils.setField(controller, "auditTaskService", mock(IAuditTaskService.class));
     }
 
     /** 让配额闸的「锁+复查+写」在本测试里等价于直接执行写动作。 */
@@ -260,14 +274,14 @@ class ActivityPublishRoleGateTest
     {
         grantMerchantProjectManage();
         passCreateGuardThrough();
-        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString())).thenReturn(9L);
+        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean())).thenReturn(9L);
 
         AjaxResult result = controller.publish(merchantRequest());
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(quotaService).checkCreate(MERCHANT_OWNER_ID, IQuotaService.TYPE_EVENT);
-        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString());
-        verify(cmsActivityService, never()).publishActivity(any(), eq(MEMBER_ID), anyString());
+        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean());
+        verify(cmsActivityService, never()).publishActivity(any(), eq(MEMBER_ID), anyString(), anyBoolean());
         verify(roleService, never()).resolveRole(member);
     }
 
@@ -283,7 +297,7 @@ class ActivityPublishRoleGateTest
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家身份无效或权限不足", result.get(AjaxResult.MSG_TAG));
         verify(quotaService, never()).checkCreate(anyLong(), anyString());
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
     /**
@@ -299,7 +313,7 @@ class ActivityPublishRoleGateTest
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家主办活动还没开通收款，票价只能是 0", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
     /** 负控的另一半:0 元票是「免费场」不是「没开通收款」,必须放行 —— 误把 >0 写成 >=0 会在这儿红。 */
@@ -308,12 +322,12 @@ class ActivityPublishRoleGateTest
     {
         grantMerchantProjectManage();
         passCreateGuardThrough();
-        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString())).thenReturn(9L);
+        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean())).thenReturn(9L);
 
         AjaxResult result = controller.publish(merchantRequestWithPrice("0"));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString());
+        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean());
     }
 
     /** 俱乐部主线不受本次改动影响:同样 69 元的票,主理人照样能发(收款进平台是既有口径)。 */
@@ -322,7 +336,7 @@ class ActivityPublishRoleGateTest
     {
         when(roleService.resolveRole(member)).thenReturn(IRoleService.ROLE_CLUB);
         passCreateGuardThrough();
-        when(cmsActivityService.publishActivity(any(), eq(MEMBER_ID), anyString())).thenReturn(9L);
+        when(cmsActivityService.publishActivity(any(), eq(MEMBER_ID), anyString(), anyBoolean())).thenReturn(9L);
 
         CmsActivityPublishRequest request = new CmsActivityPublishRequest();
         request.setName("外滩夜行");
@@ -334,7 +348,7 @@ class ActivityPublishRoleGateTest
         AjaxResult result = controller.publish(request);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString());
+        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), anyBoolean());
     }
 
     /** 两种身份不能混挂:商家 scope 带 club_id 就是「冒用俱乐部主办」,拒。 */
@@ -349,7 +363,7 @@ class ActivityPublishRoleGateTest
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家主办活动不能挂到俱乐部", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
     /** 商家的活动商家能改:SQL 的 where 带 member_id,必须拿主体(77)去改,传操作人(101)一行都写不动。 */
@@ -514,7 +528,7 @@ class ActivityPublishRoleGateTest
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("业务作用域参数不合法", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
     private CmsActivity hostedRun()
