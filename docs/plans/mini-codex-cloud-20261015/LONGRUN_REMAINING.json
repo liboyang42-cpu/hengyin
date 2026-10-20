@@ -2642,8 +2642,8 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "6AA_BACKEND_TWO_CLASSES_REMAIN_SINGLE_TEST_GRANT_NEXT_PATCH_PENDING",
-    "creation_or_candidate_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+    "state": "A89_COMMON_REPAIR_FROZEN_WAIT_CI_NO_INHERITED_ACCEPTANCE",
+    "creation_or_candidate_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
     "port_source": {
       "pr": 386,
       "branch": "integrate/master-port-20261019",
@@ -2724,12 +2724,12 @@
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
     "validation": {
-      "combined_candidate": "6aa_BACKEND_FAIL_TWO_CLASSES_REPORTED; next unpublished package/helper/status-assertion patch pending",
+      "combined_candidate": "A89_SOURCE_DELIVERED_FROZEN_WAIT_CI; no new Java/final combination verdict accepted",
       "existing_source_results_inherited": false,
       "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
-      "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-      "real_storage": "FUNDS_SUCCESS_CHECK_AT6AA_ONLY; no next-patch result",
-      "real_http": "NOT_ACCEPTED_AT6AA; oldf8 five-chain13-readback PASS not inherited"
+      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "real_storage": "WAIT_NEW_FIXED_A89_RESULT; old6aa/f8 Funds not inherited",
+      "real_http": "EXACT_A89_RUN39437293832_IN_PROGRESS_NO_FINAL_VERDICT"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -2823,22 +2823,32 @@
     ],
     "current_runs": [
       {
-        "run_id": 39435545650,
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "run_id": 39437260043,
         "name": "GitHub CI",
-        "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "state": "NATURAL_OR_EXISTING_AUTHORIZED_RUN_IN_PROGRESS_NO_VERDICT",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260043"
       },
       {
-        "run_id": 39435545671,
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "run_id": 39437260044,
         "name": "Funds MySQL IT",
-        "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "state": "NATURAL_OR_EXISTING_AUTHORIZED_RUN_IN_PROGRESS_NO_VERDICT",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260044"
       },
       {
-        "run_id": 39435545738,
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-        "name": "Followup selected backend",
-        "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+        "run_id": 39437260070,
+        "name": "Followup39 selected backend",
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "state": "NATURAL_OR_EXISTING_AUTHORIZED_RUN_IN_PROGRESS_NO_VERDICT",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260070"
+      },
+      {
+        "run_id": 39437293832,
+        "name": "Real HTTP chains",
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "state": "NATURAL_OR_EXISTING_AUTHORIZED_RUN_IN_PROGRESS_NO_VERDICT",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437293832"
       }
     ],
     "conflict_resolution": {
@@ -3067,6 +3077,29 @@
           }
         ],
         "scope": "Prior f8 metadata retained with original source; never inherited by6aa."
+      },
+      {
+        "runs": [
+          {
+            "run_id": 39435545650,
+            "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+            "name": "GitHub CI",
+            "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+          },
+          {
+            "run_id": 39435545671,
+            "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+            "name": "Funds MySQL IT",
+            "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+          },
+          {
+            "run_id": 39435545738,
+            "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+            "name": "Followup selected backend",
+            "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
+          }
+        ],
+        "scope": "Earlier6aa source observations, retained without transfer to a89."
       }
     ],
     "integration_repair_progress": {
@@ -3339,65 +3372,81 @@
       "additional_verifier_readback": "Root reports samef8 five HTTP chains/13 readbacks PASS and39-selected suite PASS; no independent count inferred for Funds and no result inherited by6aa."
     },
     "latest_frozen_repair": {
-      "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-      "parent_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "parent_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
       "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "exact_paths": [
-        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
-        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
-        "ci/prelaunch-seed-provenance.json"
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicPostReviewTest.java",
+        "chengyinhub-xcx/pages/square/utils/community-report-sheet.js",
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/utils/community-report-sheet.js",
+        "chengyinhub-xcx/utils/content-report.js"
       ],
       "diff_stats": {
-        "total": 28,
-        "additions": 23,
-        "deletions": 5
+        "total": 95,
+        "additions": 52,
+        "deletions": 43
       },
-      "public_diff_review": "C00 read exact commit/parent/six-path patch. Controller only two blocked400 returns; fixture gate wiring/canonical image key/successful insert identity setup; provenance only one CmsActivity hash. No other production, SQL, permissions or CI configuration changes.",
-      "fixture_contract": "Existing real TopicContentSafetyTestFixtures, no null fallback. C03_24 rejected helper permits only selectCmsTopicById(77L) once then verifyNoMoreInteractions, retaining zero writes. Community IMAGE uses existing upload/32hex.jpg shape without OSS credentials or mocked-away safety boundary. SaleReview setup generates chapter/node/activity successful insert IDs along existing production identity protection.",
-      "assertion_preservation": "Integration writer reports all26 @Test bodies across four classes byte-identical tof8 and original Journey5 tests unchanged; C00 public diff shows changes confined to setup/constants and the explicitly granted rejected helper. Do not infer26 tests executed.",
-      "provenance": "Single approved CmsActivity sourceFiles hash update only;6 static contracts PASS and6 permission entries byte-identical reported. Other fingerprint/menu/role/viewCoverage proof untouched in public diff.",
-      "java_manual_validation": "NOT_RUN at delivery; no new Java result supplied. Existing natural CI now running, no final verdict.",
-      "writer_status": "Six-file6aa delivery remains frozen; same root slot may work only the newly granted shared-tool relocation and existing three require callers.",
-      "scope": "Source delivery receipt; C00 did not compile/test/trigger CI. f8 HTTP/Funds/39-selected PASS stays atf8, not inherited."
+      "public_diff_review": "C00 read exact parent and seven-file patch; main tool equals6aa old implementation by direct source-content comparison, old path one forwarding export, seven caller imports to main. Community only helper/import fixture, ApiTopicPostReview only two BLOCK status assertions500->400. No production Java/app/config/component/policy/SQL/CI/test-gate edit.",
+      "community_fixture": "Only publishWith outbound preview signing stub in scoped MockedStatic, canonical communityMediaObjectKey(IMAGE) thenCallRealMethod retained. Original12 @Test bodies unchanged reported; no actual Java PASS inferred.",
+      "post_review_assertions": "Exactly two BLOCK500->400 changes; all other bytes equal reported and public patch confirms no other lines changed.",
+      "reported_local_validation": {
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "resource_gate": {
+          "state": "PASS",
+          "references": 2084,
+          "legal_async": 19,
+          "cross_package": 0,
+          "subpackage_cross_references": 0
+        },
+        "javascript": {
+          "passed": 71,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "action_ledger": {
+          "state": "PASS",
+          "entries": 4755,
+          "source_diff": "NONE"
+        },
+        "module_identity": "Old/new requires same object reported; implementation byte equality reported and C00 source comparison true.",
+        "scope": "Integration-verifier evidence bound to frozen a89 delivery; C00 did not execute Node/resource/Java tests. No old-source pass inherited."
+      },
+      "java_manual_validation": "NOT_RUN at delivery; new natural CI running, final results not accepted.",
+      "writer_status": "STOPPED_PENDING_FINAL_VERIFIER_FEEDBACK; sole root repair slot frozen",
+      "result_policy": "Consolidate next final verifier results once in this index; no repeated pending-only documentation changes, no old-source inheritance."
     },
     "current_check_metadata": [
       {
-        "name": "Migration safety gate",
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545650/job/118671659066"
-      },
-      {
-        "name": "Backend tests",
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545650/job/118671659045"
-      },
-      {
-        "name": "Mini program static checks",
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
         "status": "in_progress",
         "conclusion": null,
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545650/job/118671658852"
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260044/job/118677624914"
       },
       {
-        "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
-        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
-        "status": "completed",
-        "conclusion": "success",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545671/job/118671645709"
+        "name": "Real-HTTP chains",
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437293832/job/118677576592"
+      },
+      {
+        "name": "Followup 39 selected backend cases",
+        "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260070/job/118677445833"
       }
     ],
     "shared_report_sheet_repair_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "repair_slot": "Same single integration repair slot; no new author",
-      "state": "AUTHORIZED_EXACT_SHARED_TOOL_MOVE_SOURCE_NOT_DELIVERED",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "base_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
       "additional_exact_paths": [
         "chengyinhub-xcx/utils/community-report-sheet.js",
@@ -3427,16 +3476,17 @@
         "resource gate and all CI rules"
       ],
       "original_ownership": "Original source authors/locks and sources frozen; only same root combination branch writer, no Cloud author.",
-      "new_source_sha": "NOT_DELIVERED",
+      "new_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
       "new_validation": "NOT_RUN; no pass inherited",
-      "local_patch_status": "Five-path move/forward/require patch reported complete but not pushed; wait final combined freeze."
+      "local_patch_status": "Delivered and frozen at a89a74c4077f0ee12369e5199446619b40f79695; no unpublished source remains for this granted repair.",
+      "writer_status": "STOPPED_PENDING_FINAL_VERIFIER_FEEDBACK; sole root repair slot frozen"
     },
-    "next_validation_policy": "Do not cancel or repeat existing6aa CI. Root defers manual HTTP/storage until the exact dependency repair is frozen; C00 does not execute validation.",
+    "next_validation_policy": "Root collects final existing CI/Funds/HTTP evidence at exact a89, then one consolidated index update. C00 no manual execution/retrigger, no new source writer.",
     "post_review_test_repair_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "repair_slot": "Same sole root integration repair slot; freeze together with existing package dependency repair",
-      "state": "AUTHORIZED_SINGLE_TEST_TWO_STATUS_ASSERTIONS_SOURCE_NOT_DELIVERED",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "base_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
       "additional_exact_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicPostReviewTest.java"
@@ -3450,7 +3500,8 @@
       },
       "no_other_path_or_policy_permission": true,
       "original_ownership": "Retain original sources and locks frozen; root-only independent combination branch, no Cloud writer.",
-      "new_source_sha": "NOT_DELIVERED"
+      "new_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "writer_status": "STOPPED_PENDING_FINAL_VERIFIER_FEEDBACK; sole root repair slot frozen"
     },
     "six_aa_remaining_validation": {
       "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
@@ -3527,7 +3578,44 @@
         "scope": "Root verifier observations at unpublished working patch, no result attached to6aa or any future SHA. No tests/config modified reported."
       },
       "validation_boundary": "Natural6aa CI not all finished at report; retain its real failures/results. Next combined package/helper/assertion patch awaits one public SHA, no pass inherited.",
-      "C00_execution": "NONE; no test/build/CI trigger or source edit"
-    }
+      "C00_execution": "NONE; no test/build/CI trigger or source edit",
+      "historical_for_current_candidate": true,
+      "final_reported_backend_summary": {
+        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "tests": 12696,
+        "failures": 2,
+        "errors": 1,
+        "skipped": 628,
+        "scope": "Verifier-provided6aa final Backend history, not a89 and not storage skipped0.",
+        "original_19_regression_cases": "PASS reported at6aa; overlaps suite, do not add to a total or inherit."
+      }
+    },
+    "frozen_repair_history": [
+      {
+        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "parent_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
+        "exact_paths": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+          "ci/prelaunch-seed-provenance.json"
+        ],
+        "diff_stats": {
+          "total": 28,
+          "additions": 23,
+          "deletions": 5
+        },
+        "public_diff_review": "C00 read exact commit/parent/six-path patch. Controller only two blocked400 returns; fixture gate wiring/canonical image key/successful insert identity setup; provenance only one CmsActivity hash. No other production, SQL, permissions or CI configuration changes.",
+        "fixture_contract": "Existing real TopicContentSafetyTestFixtures, no null fallback. C03_24 rejected helper permits only selectCmsTopicById(77L) once then verifyNoMoreInteractions, retaining zero writes. Community IMAGE uses existing upload/32hex.jpg shape without OSS credentials or mocked-away safety boundary. SaleReview setup generates chapter/node/activity successful insert IDs along existing production identity protection.",
+        "assertion_preservation": "Integration writer reports all26 @Test bodies across four classes byte-identical tof8 and original Journey5 tests unchanged; C00 public diff shows changes confined to setup/constants and the explicitly granted rejected helper. Do not infer26 tests executed.",
+        "provenance": "Single approved CmsActivity sourceFiles hash update only;6 static contracts PASS and6 permission entries byte-identical reported. Other fingerprint/menu/role/viewCoverage proof untouched in public diff.",
+        "java_manual_validation": "NOT_RUN at delivery; no new Java result supplied. Existing natural CI now running, no final verdict.",
+        "writer_status": "Six-file6aa delivery remains frozen; same root slot may work only the newly granted shared-tool relocation and existing three require callers.",
+        "scope": "Source delivery receipt; C00 did not compile/test/trigger CI. f8 HTTP/Funds/39-selected PASS stays atf8, not inherited."
+      }
+    ]
   }
 }

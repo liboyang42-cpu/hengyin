@@ -1,4 +1,16 @@
-## 当前最后定向测试授权：BLOCK两处期望恢复400，出站签名夹具隔离
+## 当前最终共同修复：PR394固定a89a74，七文件冻结WAIT_CI
+
+[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已一次push固定 `a89a74c4077f0ee12369e5199446619b40f79695`，直接父提交 `6aa8c2c676c48ab1203c7156c85783ef4b57783a`。C00直接核读公开diff：精确七授权路径，52行新增／43行删除。新主包工具与6aa分包旧实现内容完全相同；旧路径只留单行forward，三caller七处引用恢复主包utils，单一实现；无app／配置／组件／策略变动。
+
+Community仅publishWith及必要导入隔离出站签名，canonical key解析thenCallRealMethod保真，原12个@Test体不变由验证者报告；ApiTopicPostReview仅两条BLOCK期望500→400，其他字节相同由验证者比对，公开patch无其他差异。无生产Java、权限、SQL、门禁或CI配置修改。
+
+固定a89交付报告：资源门禁2084引用／19合法异步／跨包0／互引0 PASS，71项JS全PASS且0失败／错误／跳过，行动账PASS4755且无diff，旧新require同一对象。C00仅核读源码和既有CI元数据，未执行这些检查；新Java交付时未手动运行，状态 **SOURCE_DELIVERED_FROZEN／WAIT_CI**，不继承旧源成绩。
+
+既有 [CI39437260043](https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260043)、[Funds39437260044](https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260044)、[selected39437260070](https://github.com/liboyang42-cpu/hengyin/actions/runs/39437260070)、[HTTP39437293832](https://github.com/liboyang42-cpu/hengyin/actions/runs/39437293832) 已在同固定源运行，最终结果待root汇总后**一次更新当前索引**。原唯一修复槽冻结停写，无新增writer；Cloud不编译／测试／触发CI，不为每个pending步骤反复更新文档。
+
+旧6aa完整Backend12696／2失败／1错误／628跳过及其余原19项回归通过保留为原源历史，不相加或移给a89；f8／更早通过与失败边界保留。整体最终验收尚未完成，真实微信／设备、支付／内容安全出站stub、持久迁移和生产边界不变；不合master、不部署、不执行迁移、不新增入口。精确来源和七路径见 `LONGRUN_REMAINING.json.independent_backend_acceptance.latest_frozen_repair`。
+
+## 已实施测试授权历史：BLOCK400与出站签名夹具
 
 固定6aa完整Backend报告仍有两类共3个失败／异常方法：ApiTopicPostReviewTest两处新BLOCK用例仍期望500，与恢复后的既有明确拒绝400冲突；CommunityPostAuditLevelTest合法key真实校验已通过，后续图像预览签名需要隔离出站夹具。未提供本轮新完整总数或F／E／跳过拆分，不推算。原其他四类（Journey、C03_21、C03_24、SaleReview）报告PASS。C00直接核到6aa Backend FAIL、Migration safety SUCCESS、Funds SUCCESS；自然CI整体未签收，不迁移执行，也不把单项元数据当新源验收。
 
@@ -6,7 +18,7 @@
 
 包迁移五路径补丁已在root工作区完成但尚未push：实现逐字相同、旧新require同一对象；资源门禁2084引用／19合法异步／跨包0／分包互引0及71项JS全PASS由验证者报告，**仅为未公开SHA补丁观察**，不归给6aa或未来源码，不修改测试／配置或豁免门禁。root获此授权后与当前两处测试夹具一次冻结；不新增writer或Cloud验证，最终新SHA尚待。旧f8／6aa成绩及失败留在各自源码，整体验收仍未完成。
 
-## 当前下一最小修复：同一举报工具移至主包，旧分包路径转接
+## 已实施包迁移授权历史：主包单实现与旧路径转接
 
 f8 Mini最终失败已由验证者定位为组件／资源路径门禁：三处新caller同步依赖 `pages/square` 分包下工具不合法，17项单测PASS不足以证明包依赖正确。C00只读核到app.json确实将pages/square注册为subpackageSquare；旧工具实现没有require／import依赖。无资源门禁豁免，不把此问题称为单测已绿即完成。
 
@@ -14,7 +26,7 @@ f8 Mini最终失败已由验证者定位为组件／资源路径门禁：三处�
 
 6aa已交六文件仍冻结，既有自然CI继续不取消／重跑；下一包依赖修复工作区已完成但尚无公开SHA，不继承旧PASS。root待这项固定后再接续必要HTTP／存储，Cloud不验证、不新增作者。精确路径及逐文件边界见 `LONGRUN_REMAINING.json.independent_backend_acceptance.shared_report_sheet_repair_authority`。
 
-## 当前固定源码：PR394的6aa8c2，六文件最小修复冻结待验
+## 先前固定6aa源码交付与当时验收历史
 
 [PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 最新固定源码 `6aa8c2c676c48ab1203c7156c85783ef4b57783a`，直接父提交 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1`。C00已只读核对公开diff：精确六文件，23行新增／5行删除；Controller仅两处blocked恢复400，C03_21／24接入既有真实安全夹具，24 rejected仅允许selectCmsTopicById(77L)一次再禁止其余交互，继续零写。Community图片改既有合法upload/32hex.jpg key，不要OSS凭据／不移除安全边界；SaleReview仅补同一既有身份保护链需要的chapter／node／activity成功insert ID。生产身份保护及其他合同不动。
 
