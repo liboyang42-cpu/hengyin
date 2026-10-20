@@ -1306,7 +1306,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             appealView.put("createdAt", appeal.getCreatedAt());
             appealView.put("handledAt", appeal.getHandledAt());
         }
-        AuditTask latest = tasks == null || tasks.isEmpty() ? null : tasks.get(0);
+        // 与 submitAppeal 同口径:跳过独立槽里未结的举报单(AUDIT-INT-5)
+        AuditTask latest = null;
+        if (tasks != null) for (AuditTask task : tasks) {
+            if (!task.isOpenReport()) {
+                latest = task;
+                break;
+            }
+        }
         java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
         result.put("bizType", bizType);
         result.put("bizId", bizId);

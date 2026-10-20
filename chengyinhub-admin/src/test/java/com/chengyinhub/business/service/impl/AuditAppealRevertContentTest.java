@@ -755,6 +755,22 @@ class AuditAppealRevertContentTest {
         assertFalse((Boolean) view.get("canAppeal"));
     }
 
+    /**
+     * AUDIT-INT-5 收尾:举报单在独立槽,新开的举报不改变「最近一次审核结论」。作者时间线的 canAppeal
+     * 必须与 submitAppeal 同口径(跳过未结举报单),否则页面说不能申诉、接口却能提交。
+     */
+    @Test
+    void timelineStillOffersAppealWhenOnlyAnOpenReportIsNewerThanTheRejection() {
+        when(activities.selectCmsActivityById(BIZ_ID)).thenReturn(activity(2L, 2));
+        AuditTask report = task(75L, AuditTask.STATUS_PENDING, "report");
+        AuditTask rejected = task(REJECTED_TASK, AuditTask.STATUS_REJECTED, "user_publish");
+        when(tasks.selectAuditTaskList(any(AuditTask.class))).thenReturn(java.util.Arrays.asList(report, rejected));
+
+        Map<String, Object> view = service.contentTimeline(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR);
+
+        assertTrue((Boolean) view.get("canAppeal"));
+    }
+
     // ───────────────────────── fixtures ─────────────────────────
 
     private void rejectedActivity() {
