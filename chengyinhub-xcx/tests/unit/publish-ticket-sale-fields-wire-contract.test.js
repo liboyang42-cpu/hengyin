@@ -22,7 +22,9 @@ global.getApp = () => ({
   tips: () => {},
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
-  getUserID: () => 0,
+  getUserID: () => 42,
+  getNickname: () => '登录作者',
+  getAvatar: () => '',
   getUserInfo: () => null,
   getToken: () => '',
   getAuthorization: () => 'token',
@@ -53,6 +55,8 @@ function makePage(modulePath) {
   require(modulePath);
   const inst = Object.assign({}, pageConfig);
   inst.data = JSON.parse(JSON.stringify(pageConfig.data));
+  inst.data.draftUuid = 'logged-in-test-draft';
+  inst.data.draftMemberId = 42;
   inst.setData = function (patch, cb) {
     Object.keys(patch).forEach((k) => {
       const parts = k.replace(/\[(\d+)\]/g, '.$1').split('.');

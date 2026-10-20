@@ -11,6 +11,8 @@ public class AuditReviewDTO {
     private Integer status;
     private String reasonCode;
     private String reasonText;
+    /** 可选：固定清单原因编码（见 AuditReasonCodes），清单外编码 400。 */
+    private java.util.List<String> reasonCodes;
     private String requestId;
     /** 仅由已鉴权 controller 覆盖写入，不信任请求体。 */
     private String actorRoleCode;
@@ -21,6 +23,8 @@ public class AuditReviewDTO {
     public void setStatus(Integer status) { this.status = status; }
     public String getReasonCode() { return reasonCode; }
     public void setReasonCode(String reasonCode) { this.reasonCode = reasonCode; }
+    public java.util.List<String> getReasonCodes() { return reasonCodes; }
+    public void setReasonCodes(java.util.List<String> reasonCodes) { this.reasonCodes = reasonCodes; }
     public String getReasonText() { return reasonText; }
     public void setReasonText(String reasonText) { this.reasonText = reasonText; }
     /** NF-01 新契约名；保留 reasonText 兼容既有管理端。 */

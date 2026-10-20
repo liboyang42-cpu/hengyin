@@ -41,6 +41,7 @@ function requestPhoto(data) {
 Page({
   data: {
     node: null, notFound: false, statusBarHeight: 20, regId: 0,
+    safetyRatingShow: false,
     // sheetTop 兜底 69px(常规机胶囊底+5):.mp-sheet 的 max-height 用它,不能让 calc 引用空值
     chrome: { actionTop: 28, actionRight: 12, contentTop: 76, sheetTop: 69 },
     heroImg: '', busy: false, feedback: '', degradedMessage: '',
@@ -229,6 +230,14 @@ Page({
   goBack() {
     wx.navigateBack({ delta: 1, fail: () => wx.reLaunch({ url: '/pages/play/index' }) })
   },
+
+  // BL-89 到访安全感受评价:只在已核销后可点,资格与重复评价由后端判定并在半屏内如实回显。
+  openSafetyRating() {
+    const node = this.data.node
+    if (!node || !node.done || !node.merchantId) return
+    this.setData({ safetyRatingShow: true })
+  },
+  closeSafetyRating() { this.setData({ safetyRatingShow: false }) },
 
   openMap() {
     const node = this.data.node

@@ -65,7 +65,8 @@ class TemplateMarketUseCountTest {
         request.setOriginalTemplateId(9001L);
 
         assertEquals(91L, service.publishTemplateWithTransaction(request, 7L, "member7"));
-        verify(libraryService).incrementUseNum(eq(9001L));
+        // AUDIT-G2-5:计数按「该会员首次采用」幂等 —— 把会员与新建行一起交给 SQL 判重。
+        verify(libraryService).incrementUseNumOnFirstAdoption(eq(9001L), eq(7L), eq(91L));
     }
 
     @Test
@@ -74,6 +75,6 @@ class TemplateMarketUseCountTest {
         request.setTitle("白手起家的玩法");
 
         assertEquals(91L, service.publishTemplateWithTransaction(request, 7L, "member7"));
-        verify(libraryService, never()).incrementUseNum(anyLong());
+        verify(libraryService, never()).incrementUseNumOnFirstAdoption(anyLong(), anyLong(), anyLong());
     }
 }

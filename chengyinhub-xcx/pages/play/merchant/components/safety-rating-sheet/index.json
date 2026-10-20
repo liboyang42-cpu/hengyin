@@ -1,0 +1,11 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-tabs": "/components/cy/tabs/index",
+    "cy-field": "/components/cy/field/index",
+    "cy-btn": "/components/cy/btn/index",
+    "cy-inline-error": "/components/cy/inline-error/index",
+    "cy-result-sheet": "/components/cy/result-sheet/index"
+  }
+}

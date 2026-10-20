@@ -13,7 +13,7 @@ function loadComponent() {
   global.Component = (o) => { captured = o }
   global.Behavior = (o) => o
   global.getApp = () => ({ globalData: {}, sendRequest: (o) => requests.push(o), tips: () => {} })
-  global.wx = { navigateTo: (o) => navigations.push(o.url), getStorageSync: () => '', setStorageSync: () => {} }
+  global.wx = { navigateTo: (o) => { navigations.push(o.url); if (o.complete) o.complete() }, getStorageSync: () => '', setStorageSync: () => {} }
   try { delete require.cache[COMPONENT]; require(COMPONENT) } finally {
     global.Component = prev.Component; global.Behavior = prev.Behavior; global.getApp = prev.getApp
   }

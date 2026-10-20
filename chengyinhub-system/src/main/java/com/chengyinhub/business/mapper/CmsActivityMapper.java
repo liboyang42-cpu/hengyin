@@ -116,4 +116,19 @@ public interface CmsActivityMapper
     /** 生效 club 合作单下仍无 topic+club 带队场次的资损告警差异。 */
     List<ClubSessionGapVO> selectClubOrderTopicsWithoutClubSession();
 
+    /**
+     * 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审(0/0/0)。
+     * decidedAt 非空时，决定之后被编辑过(update_time 更晚)的活动返回 0 行，视为内容已变化。
+     */
+    int reopenAuditDecision(@Param("id") Long id, @Param("fromStatus") Long fromStatus,
+                            @Param("fromCheckStatus") Integer fromCheckStatus,
+                            @Param("fromPublishStatus") Long fromPublishStatus,
+                            @Param("decidedAt") java.util.Date decidedAt);
+
+    /** 内容安全留置(AUDIT-INT-7,content_safety_hold):图片机审违规置 1,作者新提交经人工过审清 0。 */
+    int markContentSafetyHold(@Param("id") Long id);
+
+    int clearContentSafetyHold(@Param("id") Long id);
+
+    Integer selectContentSafetyHold(@Param("id") Long id);
 }

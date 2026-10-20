@@ -590,6 +590,40 @@ test('店铺装修即时保存锁重复，保持 payload，并留下失败或成
   assert.equal(h.page.data.coopSummary, '', '未知收费类型不得显示成免费承接')
 })
 
+test('BL-141 营业状态写后回读：一致才出回执，不一致或回读失败回滚并提示状态未同步', () => {
+  const h = loadPage('pages/merchant/decor/index.js')
+  h.page.data.loadState = 'ok'
+  h.page.data.m = { name: '店', businessStatus: 1 }
+  h.page.toggleBusiness({ detail: { value: false } })
+  assert.equal(h.requests[0].url, '/api/merchant/business-status/update')
+  h.requests[0].success({ code: 200, msg: '已打烊' })
+  assert.equal(h.requests[1].url, '/api/merchant/business-status')
+  assert.equal(h.requests[1].method, 'POST')
+  assert.equal(h.page.data.saveReceipt, '', '回读前不得宣称成功')
+  assert.equal(h.page.data.saving, true)
+  h.requests[1].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(h.page.data.m.businessStatus, 0)
+  assert.equal(h.page.data.saveReceipt, '营业状态已保存')
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[2].success({ code: 200 })
+  h.requests[3].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(h.page.data.m.businessStatus, 0, '回读不一致必须回滚开关')
+  assert.equal(h.page.data.saveReceipt, '')
+  assert.match(h.page.data.saveError, /状态未同步：当前仍为已打烊/)
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[4].success({ code: 200 })
+  h.requests[5].fail({ errMsg: 'request:fail timeout' })
+  assert.equal(h.page.data.m.businessStatus, 0)
+  assert.match(h.page.data.saveError, /状态未同步，请刷新后核对/)
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[6].success({ code: 500, msg: '营业状态参数错误' })
+  assert.equal(h.requests.length, 7, '写失败不发回读')
+  assert.equal(h.page.data.saveError, '营业状态参数错误')
+})
+
 test('店铺装修入口状态、即时回执及交互满足 88rpx 与 aria 契约', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/decor/index.wxml'), 'utf8')
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/decor/index.wxss'), 'utf8')

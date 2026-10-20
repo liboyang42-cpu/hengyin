@@ -62,6 +62,9 @@ public class ApiTemplateController extends BaseController {
     private ICmsTemplateLibraryService templateLibraryService;
 
     @Autowired
+    private com.chengyinhub.business.service.IAuditTaskService auditTaskService;
+
+    @Autowired
     private ISysCategoryService sysCategoryService;
 
 
@@ -617,6 +620,68 @@ public class ApiTemplateController extends BaseController {
     }
 
 
+    @Operation(summary = "举报模板广场记录(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/report")
+    @Parameters({
+            @Parameter(name = "id", description = "公共模版id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult libraryReport(String id, String reason) {
+        Long libraryId = Convert.toLong(id, 0L);
+        if (libraryId <= 0) return error("参数不合规");
+        Long reporterId = currentReporter();
+        if (reporterId == null) return error("请先登录");
+        // 与 /info 同一公开谓词:不公开的记录对外「不存在」,也不能借举报建单。
+        CmsTemplateLibrary row = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
+        if (row == null || !Integer.valueOf(0).equals(row.getDelFlag())
+                || !Long.valueOf(1L).equals(row.getStatus()) || !Long.valueOf(1L).equals(row.getPublishStatus())) {
+            return error("模版不存在");
+        }
+        return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, libraryId, reporterId, reason);
+    }
+
+    @Operation(summary = "举报公开的个人玩法(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/personal-report")
+    @Parameters({
+            @Parameter(name = "id", description = "个人玩法id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult personalTemplateReport(String id, String reason) {
+        Long templateId = Convert.toLong(id, 0L);
+        if (templateId <= 0) return error("参数不合规");
+        Long reporterId = currentReporter();
+        if (reporterId == null) return error("请先登录");
+        // 与 /myinfo 非本人可读的同一谓词:已审核、已上架、非草稿。
+        CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
+        if (template == null || !Integer.valueOf(0).equals(template.getDelFlag())
+                || !Integer.valueOf(1).equals(template.getDraftStatus())
+                || !Long.valueOf(1L).equals(template.getStatus()) || !Long.valueOf(1L).equals(template.getPublishStatus())) {
+            return error("模版不存在");
+        }
+        return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, templateId, reporterId, reason);
+    }
+
+    private Long currentReporter() {
+        try {
+            Long memberId = getAppUserId();
+            return memberId != null && memberId > 0 ? memberId : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private AjaxResult submitReport(String bizType, Long bizId, Long reporterId, String reason) {
+        try {
+            boolean recorded = auditTaskService.reportContentOnce(bizType, bizId, reporterId, reason);
+            return success(recorded ? "举报已提交，内容将进入审核" : "你已举报过该模版，我们会尽快处理");
+        } catch (IllegalArgumentException | ServiceException e) {
+            return error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("模版举报失败 bizType={} bizId={}", bizType, bizId, e);
+            return error("举报失败");
+        }
+    }
+
     @Operation(summary = "我的模版详情")
     @PostMapping("/myinfo")
     @Parameters({
@@ -646,6 +711,7 @@ public class ApiTemplateController extends BaseController {
             return error("模版不存在");
         } else {
             boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
+            cmsMemberTemplate.setCanEdit(isOwner);
             // 草稿(draftStatus=0)允许本人回填编辑,跳过"审核中/已下架"拦截
             boolean isDraft = cmsMemberTemplate.getDraftStatus() != null && cmsMemberTemplate.getDraftStatus() == 0;
             boolean isOwnerPending = isOwner
@@ -662,7 +728,7 @@ public class ApiTemplateController extends BaseController {
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
             } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {
-                return error("模版审核中");
+                return error(Long.valueOf(2L).equals(cmsMemberTemplate.getStatus()) ? "模版审核未通过" : "模版审核中");
             } else if (!isDraft && !isOwnerPending && cmsMemberTemplate.getPublishStatus() == 0) {
                 return error("模版已下架");
             } else {

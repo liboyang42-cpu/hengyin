@@ -102,7 +102,7 @@ function adoptLibraryTemplate(id, scope = '') {
   adoption.success({ code: 200, data: 9101 })
   const own = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
   assert.equal(own.data.scope, scope, '草稿回读必须和采用写入使用同一身份')
-  own.success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, originalTemplateId: id || 16 }) })
+  own.success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, canEdit: true, originalTemplateId: id || 16 }) })
   page.validateForm = () => true
   return page
 }
@@ -301,11 +301,137 @@ test('CU-M-68 本人草稿续编仍带原 id(不能把 R9-04 的续编改回新�
   page.onLoad({ id: '6029', scope: 'my' })
   const request = requests.filter((item) => item.url === '/api/template/myinfo')[0]
   assert.ok(request, 'scope=my 必须查个人草稿接口')
-  request.success({ code: '200', data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029 }) })
+  request.success({ code: '200', data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029, canEdit: true }) })
   page.validateForm = () => true
 
   const body = draftBody(page)
   assert.equal(body.id, 6029, '续编必须更新原草稿而不是另建一份')
+})
+
+test('新建首存后先回读本人权限，再次保存更新同一份未完整草稿', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({})
+  page.data.formData.title = '新建未完成草稿'
+  page.saveDraft()
+  const first = requests.filter(r => r.url === '/api/template/draft').at(-1)
+  assert.equal(JSON.parse(first.data).id, undefined)
+  page.data.formData.title = '继续补充草稿'
+  first.success({ code: 200, data: 9202 })
+  const readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  assert.ok(readback, '首存后必须从服务端确认本人编辑权限')
+  assert.equal(readback.data.id, 9202)
+  page.saveDraft()
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
+  readback.success({ code: 200, data: { id: 9202, title: '新建未完成草稿', canEdit: true } })
+  assert.equal(page.data.formData.title, '继续补充草稿', '权限回读不能覆盖首存期间继续输入的内容')
+  page.saveDraft()
+  const second = requests.filter(r => r.url === '/api/template/draft').at(-1)
+  assert.equal(JSON.parse(second.data).id, 9202)
+  assert.equal(JSON.parse(second.data).title, '继续补充草稿')
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 2)
+})
+
+test('主题内新建玩法首存回读新绑定 ID 后可继续编辑并原位二次保存', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({ from: 'fabu' })
+  page.data.formData.title = '主题内新玩法'
+  page._collectValidationErrors = () => ({})
+  page.publishGame()
+  const first = requests.filter(r => r.url === '/api/template/draft').at(-1)
+  assert.ok(first)
+  assert.equal(JSON.parse(first.data).id, undefined)
+  page.data.formData.title = '等待期间继续编辑'
+  first.success({ code: 200, data: 9203 })
+  assert.equal(page._boundDraftId, 9203)
+  const confirmation = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  assert.ok(confirmation, '新绑定草稿必须读回本人新 ID 和权限')
+  assert.equal(confirmation.data.id, 9203)
+  page.onCreationSuccessAction({ detail: { key: 'secondary' } })
+  assert.equal(page.data.creationSuccess.show, false)
+  page.publishGame()
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
+  confirmation.success({ code: 200, data: { id: 9203, title: '主题内新玩法', canEdit: true } })
+  assert.equal(page.data.formData.title, '等待期间继续编辑')
+  page.publishGame()
+  const second = requests.filter(r => r.url === '/api/template/draft').at(-1)
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 2)
+  assert.equal(JSON.parse(second.data).id, 9203)
+  assert.equal(JSON.parse(second.data).title, '等待期间继续编辑')
+  assert.equal(JSON.parse(second.data).isSync, 0)
+})
+
+test('新建草稿首存回读没有明确权限时仍拒绝二次写入', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({})
+  page.data.formData.title = '新建草稿'
+  page.saveDraft()
+  requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
+  requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+    .success({ code: 200, data: { id: 9202, title: '缺少权限字段' } })
+  page.saveDraft()
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
+  assert.equal(page._templateCanEdit, false)
+})
+
+test('新建草稿首存回读缺失或错 ID 时保持锁定，重试不覆盖未保存输入', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({})
+  page.data.formData.title = '新建草稿'
+  page.saveDraft()
+  requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
+  let readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  page.data.formData.title = '等待期间新增的内容'
+  page.saveDraft()
+  assert.equal(page.data.editorLoading, true, '响应丢失期间不得先解锁')
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
+  readback.fail({ msg: '超时' }); readback.complete()
+  page.retryGetData()
+  readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  readback.success({ code: 200, data: { id: 9999, title: '其他草稿', canEdit: true } })
+  assert.equal(page._templateCanEdit, false)
+  assert.equal(page.data.formData.title, '等待期间新增的内容')
+  page.saveDraft()
+  assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
+  page.retryGetData()
+  readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  readback.success({ code: 200, data: { id: 9202, title: '新建草稿', canEdit: true } })
+  assert.equal(page._templateCanEdit, true)
+  assert.equal(page.data.formData.title, '等待期间新增的内容')
+})
+
+test('新建草稿旧代际回读即使 ID 与权限正确也不能解锁', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({})
+  page.data.formData.title = '新建草稿'
+  page.saveDraft()
+  requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
+  const oldReadback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  page.getData(true)
+  oldReadback.success({ code: 200, data: { id: 9202, title: '旧响应', canEdit: true } })
+  oldReadback.complete()
+  assert.equal(page._templateCanEdit, false)
+  assert.equal(page.data.editorLoading, true)
+})
+
+test('新建草稿首存后的回读在换号或卸载后不能恢复编辑权限', () => {
+  for (const endSession of [
+    page => page.onUnload(),
+    () => { appStub.getUserID = () => 9005 },
+  ]) {
+    installGlobals(); requests = []
+    const page = loadPage(TEMP_PAGE)
+    page.onLoad({})
+    page.data.formData.title = '新建草稿'
+    page.saveDraft()
+    requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
+    const readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+    endSession(page)
+    const before = JSON.stringify(page.data)
+    readback.success({ code: 200, data: { id: 9202, title: '迟到回读', canEdit: true } })
+    readback.complete()
+    assert.equal(JSON.stringify(page.data), before)
+    assert.equal(page._templateCanEdit, false)
+  }
 })
 
 // 2026-09-23 用户裁决(#1137):编辑页试玩底部的「保存前摘要」整块删掉,只在保存失败时出失败说明。
@@ -333,9 +459,8 @@ test('未完整草稿可从编辑态直接保存，不依赖发布预览校验',
   assert.match(draftButton, /from !== 'citynode'/);
   assert.doesNotMatch(draftButton, /canOpenPreview/);
   const page = loadPage(TEMP_PAGE);
-  page.data.formData.title = '未完成草稿';
-  page.data.isMyScope = true;
-  page._templateId = 9101;
+  page.onLoad({ id: '9101', scope: 'my' });
+  requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { id: 9101, title: '未完成草稿', canEdit: true } });
   page.refreshPreviewState();
   assert.equal(page.data.canOpenPreview, false);
   page.saveDraft();
@@ -539,7 +664,7 @@ test('本人草稿发布保留会员模板 ID，不能被原草稿标题挡成�
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '6029', scope: 'my' })
   requests.find(item => item.url === '/api/template/myinfo').success({
-    code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029, originalTemplateId: 16, draftStatus: 0 })
+    code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029, canEdit: true, originalTemplateId: 16, draftStatus: 0 })
   })
   page.validateForm = () => true
   page.publishGame()
@@ -567,7 +692,7 @@ test('已发布本人模板编辑仍更新原 ID，新建不接受表单残留 I
     if (editing) {
       page.onLoad({ id: '6030', scope: 'my' })
       requests.find(item => item.url === '/api/template/myinfo').success({
-        code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6030, originalTemplateId: 16, draftStatus: 1 })
+        code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6030, canEdit: true, originalTemplateId: 16, draftStatus: 1 })
       })
     } else {
       page.onLoad({})
@@ -585,7 +710,7 @@ test('本人模板用于主题仍另存私有绑定草稿；已有绑定草稿�
     requests = []
     const page = loadPage(TEMP_PAGE)
     page.onLoad({ id: '6030', scope: 'my', from: 'fabu' })
-    requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: LIBRARY_TEMPLATE })
+    requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
     page._boundDraftId = boundId
     page.validateForm = () => true
     page.publishGame()
@@ -600,6 +725,7 @@ test('本人模板用于主题仍另存私有绑定草稿；已有绑定草稿�
 test('据点玩法继续使用专属提交路由，不把本人库 ID 带入节点模板', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '6030', scope: 'my', from: 'citynode' })
+  requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
   page.data.merchantAccess = { canManageProjects: true }
   page.validateForm = () => true
   page.publishGame()

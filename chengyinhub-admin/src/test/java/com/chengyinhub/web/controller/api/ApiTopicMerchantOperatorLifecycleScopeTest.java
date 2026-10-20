@@ -67,6 +67,7 @@ class ApiTopicMerchantOperatorLifecycleScopeTest {
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
         when(security.checkText(anyString(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
+        TopicContentSafetyTestFixtures.wire(controller, security);
     }
 
     private CmsTopic ownerTopic() {

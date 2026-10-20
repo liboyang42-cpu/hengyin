@@ -563,4 +563,3 @@ test('C7异常跳点不改player，停止后的已排队定位回调不再记轨
   page._realTick({ latitude: 31.2001, longitude: 121.5 })
   assert.deepEqual(page._track, [])
 })
-

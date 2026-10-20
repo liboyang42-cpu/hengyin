@@ -33,7 +33,7 @@
   <!-- 转台预载:每一帧先加载一遍,全部结束(成功或失败)才放行拖动。
        看不见但必须真去加载,所以藏法是透明 + 1rpx,不是 display:none。 -->
   <view class="sc__pre" wx:if="{{preload.length}}">
-    <image class="sc__pre-img" wx:for="{{preload}}" wx:key="*this" src="{{item}}" data-src="{{item}}"
+    <image class="sc__pre-img" wx:for="{{preload}}" wx:key="index" src="{{item}}" data-src="{{item}}"
            bindload="onPreload" binderror="onPreload" aria-hidden="true" />
   </view>
 

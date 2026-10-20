@@ -81,12 +81,14 @@
             <when test="bizType == 4">select id from ums_member where id = #{bizId} for update</when>
             <when test="bizType == 5">select id from club where id = #{bizId} for update</when>
             <when test="bizType == 6">select id from mms_merchant where id = #{bizId} for update</when>
+            <when test="bizType == 8">select id from official_event where id = #{bizId} for update</when>
             <when test="bizType == 9">select id from ums_creative_square where id = #{bizId} for update</when>
             <when test="bizType == 10">select id from ums_comment where id = #{bizId} for update</when>
             <when test="bizType == 11">select id from roam_stamp where id = #{bizId} for update</when>
             <when test="bizType == 12">select id from im_message where id = #{bizId} for update</when>
             <when test="bizType == 13">select id from cms_member_template where id = #{bizId} for update</when>
             <when test="bizType == 15">select id from roam_hangout where id = #{bizId} for update</when>
+            <when test="bizType == 17">select id from community_post where id = #{bizId} for update</when>
             <otherwise>select cast(null as signed)</otherwise>
         </choose>
     </select>

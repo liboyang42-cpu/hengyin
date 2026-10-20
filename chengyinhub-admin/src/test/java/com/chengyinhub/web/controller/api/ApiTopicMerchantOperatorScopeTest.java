@@ -58,6 +58,7 @@ class ApiTopicMerchantOperatorScopeTest {
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", contentSecurityService);
+        TopicContentSafetyTestFixtures.wire(controller, contentSecurityService);
         ReflectionTestUtils.setField(controller, "memberIdentityService", memberIdentityService);
         when(quotaService.checkCreate(anyLong(), anyString())).thenReturn(null);
         when(contentSecurityService.checkText(anyString(), any())).thenReturn(null);

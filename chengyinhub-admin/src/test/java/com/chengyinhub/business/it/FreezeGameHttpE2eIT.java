@@ -55,6 +55,7 @@ class FreezeGameHttpE2eIT {
     @Autowired private JdbcTemplate database;
     private final ObjectMapper json = new ObjectMapper();
     private final ArrayNode transcript = json.createArrayNode();
+    private final GenericGameplayHttpE2eIT.ReviewedMediaFixture mediaFixture = new GenericGameplayHttpE2eIT.ReviewedMediaFixture("freeze");
     private final ObjectNode evidence = json.createObjectNode();
     private static final String[] ITEMS = {"ration", "fuel", "power", "parts", "medical"};
     private static final String[] LETTERS = {"R", "F", "E", "P", "M"};
@@ -71,6 +72,8 @@ class FreezeGameHttpE2eIT {
     private final Map<String, String> questKeys = new LinkedHashMap<>();
 
     @BeforeAll void loadExistingPermissionFixture() throws Exception {
+        GenericGameplayHttpE2eIT.configureRequestSerialization(http, json);
+        GenericGameplayHttpE2eIT.assertContentSecurityFixture(context);
         for (String file : new String[]{"sql/migration_p1_rbac_permission_defaults.sql", "sql/migration_m1_permission_full.sql", "sql/migration_p1_rbac_permission_defaults.sql"})
             for (String statement : ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8))) {
                 String sql = statement.replaceAll("(?m)^\\s*--.*$", "").trim();
@@ -79,13 +82,15 @@ class FreezeGameHttpE2eIT {
     }
 
     @AfterAll void writeEvidence() throws Exception {
-        if (context != null) {
-            ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
-            executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+        try { mediaFixture.close(); } finally {
+            if (context != null) {
+                ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
+                executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+            }
+            Files.createDirectories(Paths.get("target/http-e2e"));
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
         }
-        Files.createDirectories(Paths.get("target/http-e2e"));
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
     }
 
     @Test @Order(1) void authorBuildsSavesReopensAndPublishesTheSevenActGame() throws Exception {
@@ -97,11 +102,12 @@ class FreezeGameHttpE2eIT {
             ObjectNode request = json.createObjectNode().put("title", row.path("title").asText()).put("validationMethod", row.path("validationMethod").asInt())
                     .put("isSync", 0).put("advancedConfigJson", config.toString());
             if (row.has("story")) {
+                JsonNode story = reviewedStoryImages(row.path("story"));
                 // 与小程序保存一致：线索段落（标签=本模板线索名）只进 storyJson，不进到达即读的 storyText
                 Set<String> clueNames = new HashSet<>(); config.path("clues").forEach(name -> clueNames.add(name.asText()));
                 StringBuilder text = new StringBuilder();
-                for (JsonNode beat : row.path("story")) if (!clueNames.contains(beat.path("tag").asText())) text.append(text.length() > 0 ? "\n" : "").append(beat.path("text").asText());
-                request.put("storyJson", row.path("story").toString()).put("storyText", text.toString());
+                for (JsonNode beat : story) if (!clueNames.contains(beat.path("tag").asText())) text.append(text.length() > 0 ? "\n" : "").append(beat.path("text").asText());
+                request.put("storyJson", story.toString()).put("storyText", text.toString());
             }
             long id = success(post("/api/template/draft", request, author)).asLong(); assertTrue(id > 0);
             JsonNode reread = success(form("/api/template/myinfo", id, author));
@@ -145,6 +151,7 @@ class FreezeGameHttpE2eIT {
             }
         }
         theme = (ObjectNode) json.readTree(read.path("themeRuntimeConfig").asText());
+        mediaFixture.restoreKnownItemImages(theme);
         assertFalse(theme.toString().contains("client:"), "回读不残留临时站点键");
         ArrayNode settings = theme.putArray("chapters");
         for (int c = 0; c < 7; c++) settings.addObject().put("index", c).put("hpCost", 0).put("luckCost", 0);
@@ -714,7 +721,11 @@ class FreezeGameHttpE2eIT {
         } else success(overflow);
         // 重连：队员用自己的登录重新读取，与队长视图同一份队伍状态；高级局重进不改变已完成结果
         JsonNode captainView = player(run, a), memberView = success(get("/api/game/session/view?activityId=" + run.activityId + "&perspective=PLAYER", a.member)).path("player");
-        for (String field : new String[]{"hp", "actions", "used", "contents", "clues"}) assertEquals(captainView.path(field), memberView.path(field), "重连后 " + field + " 一致");
+        assertEquals(captainView.path("hp"), memberView.path("hp"), "重连后 hp 一致");
+        assertEquals(captainView.path("actions"), memberView.path("actions"), "重连后 actions 一致");
+        assertEquals(captainView.path("used"), memberView.path("used"), "重连后 used 一致");
+        assertEquals(mediaFixture.canonicalReadView(captainView.path("contents")), mediaFixture.canonicalReadView(memberView.path("contents")), "重连后 contents 一致");
+        assertEquals(mediaFixture.canonicalReadView(captainView.path("clues")), mediaFixture.canonicalReadView(memberView.path("clues")), "重连后 clues 一致");
         int revision = success(get("/api/game/session/view?activityId=" + run.activityId + "&perspective=PLAYER", a.member)).path("revision").asInt();
         JsonNode reread = success(get("/api/play/advanced/state?sessionId=" + a1Session, a.member));
         assertTrue(reread.path("readyForBase").asBoolean(), reread.toString());
@@ -727,11 +738,33 @@ class FreezeGameHttpE2eIT {
         JsonNode response = cmd(run, run.t(0).captain, "PLAN_PROPOSE", json.createObjectNode().put("proposalKey", proposal).put("endingKey", plan));
         if (!expected) {
             // 证据未公开时方案不可提出；证据满足但物资不足时提案可存在，但无法足额出资
-            if (response.path("code").asInt() == 200) {
+            if (response.path("code").asInt() == 200 && "APPLIED".equals(response.path("data").path("outcome").asText())) {
+                success(response);
                 int[] need = need(end); int[] have = totals(run);
                 boolean enough = true; for (int k = 0; k < 5; k++) enough &= have[k] >= need[k];
                 assertFalse(enough, end + " 不应可执行");
                 success(cmd(run, run.t(0).captain, "PLAN_WITHDRAW", json.createObjectNode().put("proposalKey", proposal).put("version", proposalVersion(run, run.t(0), proposal))));
+            } else {
+                rejected(response);
+                JsonNode failure = response.path("data");
+                assertEquals("GAME_COOPERATION_UNAVAILABLE", failure.path("reasonCode").asText());
+                String requestId = run.activityId + "-" + run.label + "-plan_propose-" + run.request;
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE activity_id=? AND actor_member_id=?"
+                        + " AND request_id=? AND action='PLAN_PROPOSE' AND outcome='FAILED' AND reason_code='GAME_COOPERATION_UNAVAILABLE'",
+                        Integer.class, run.activityId, run.t(0).captainId, requestId));
+                if (response.path("code").asInt() == 200) {
+                    GenericGameplayHttpE2eIT.requireGameCommandReceipt(failure, "FAILED");
+                    assertEquals(run.activityId, failure.path("activityId").asLong());
+                    assertEquals(requestId, failure.path("requestId").asText());
+                    assertEquals("PLAN_PROPOSE", failure.path("action").asText());
+                    assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE id=? AND activity_id=?"
+                            + " AND actor_member_id=? AND request_id=? AND action='PLAN_PROPOSE' AND outcome='FAILED' AND reason_code='GAME_COOPERATION_UNAVAILABLE'",
+                            Integer.class, failure.path("receiptId").asLong(), run.activityId, run.t(0).captainId, requestId));
+                }
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_story_state WHERE game_session_id="
+                        + "(SELECT id FROM game_session WHERE activity_id=?) AND owner_type='WORLD'"
+                        + " AND JSON_CONTAINS_PATH(variables_json,'one',?)=0",
+                        Integer.class, run.activityId, "$.themeRuntime.cooperation.proposals." + proposal));
             }
             evidence.with("scenarios").with(run.label).with("feasible").put(end, false);
             return;
@@ -868,7 +901,7 @@ class FreezeGameHttpE2eIT {
         ArrayNode items = theme.putArray("items");
         String[][] defs = {{"ration", "口粮", "1"}, {"fuel", "燃料", "2"}, {"power", "电源", "1"}, {"parts", "维修件", "1"}, {"medical", "医疗包", "1"}};
         for (String[] d : defs) {
-            ObjectNode item = items.addObject().put("id", d[0]).put("kind", "ITEM").put("name", d[1]).put("image", "https://www.chengyinhub.com/favicon.ico").put("slotCost", Integer.parseInt(d[2]));
+            ObjectNode item = items.addObject().put("id", d[0]).put("kind", "ITEM").put("name", d[1]).put("image", mediaFixture.approvedImage(context, database, authorId)).put("slotCost", Integer.parseInt(d[2]));
             if ("ration".equals(d[0])) item.put("stat", "HP").put("delta", 3);
         }
         ObjectNode game = theme.putObject("gameplayRuntime").put("runtimeScope", "TEAM").put("worldMode", "WORLD_SHARED").put("allowTrade", true).put("votePolicy", "MAJORITY_ACCEPTANCE");
@@ -900,6 +933,29 @@ class FreezeGameHttpE2eIT {
         for (JsonNode q : game.path("quests")) if (q.path("nodeId").asLong() == nodeId) return q;
         fail("缺少任务 " + nodeId); return null;
     }
+    private JsonNode reviewedStoryImages(JsonNode original) {
+        String legacy = "https://www.chengyinhub.com/favicon.ico";
+        JsonNode story = original.deepCopy();
+        for (JsonNode beat : story) {
+            JsonNode images = beat.path("imgs");
+            if (images.isArray()) for (int i = 0; i < images.size(); i++)
+                if (legacy.equals(images.get(i).asText())) ((ArrayNode) images).set(i,
+                        json.getNodeFactory().textNode(mediaFixture.approvedImage(context, database, authorId)));
+        }
+        JsonNode restored = story.deepCopy();
+        assertEquals(original.size(), story.size());
+        for (int beat = 0; beat < original.size(); beat++) {
+            JsonNode before = original.get(beat).path("imgs"), after = story.get(beat).path("imgs");
+            assertEquals(before.size(), after.size());
+            for (int i = 0; i < before.size(); i++) if (legacy.equals(before.get(i).asText())) {
+                assertEquals(mediaFixture.approvedImage(context, database, authorId), after.get(i).asText());
+                ((ArrayNode) restored.get(beat).path("imgs")).set(i, before.get(i).deepCopy());
+            }
+        }
+        assertEquals(original, restored, "Only the exact legacy story image may change; all text, tags and array order remain");
+        return story;
+    }
+
     private ObjectNode resolveClues(ObjectNode config) throws Exception {
         Map<String, String> names = new LinkedHashMap<>();
         JsonNode resolved = replaceClues(config, names);
@@ -927,7 +983,8 @@ class FreezeGameHttpE2eIT {
     private String nextPhone() { return "1391" + String.format("%07d", (phoneBase + (++phones)) % 10000000); }
     private long memberId(String phone) { return database.queryForObject("SELECT id FROM ums_member WHERE phone=?", Long.class, phone); }
     private HttpHeaders loginHeaders(String phone, String nickname) {
-        UmsMember member = new UmsMember(); member.setPhone(phone); member.setNickname(nickname); member.setStatus(1L); member.setDelFlag(0); members.insertUmsMember(member);
+        UmsMember member = new UmsMember(); member.setPhone(phone); member.setNickname(nickname); member.setStatus(1L); member.setDelFlag(0); member.setWxOpenId("e2e-http-freeze-" + phone); members.insertUmsMember(member);
+        GenericGameplayHttpE2eIT.registerPublisherIdentity(context, database, member.getId());
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(), "club_leader", member.getId());
         MockHttpServletRequest request = new MockHttpServletRequest(); request.setRemoteAddr("127.0.0.1"); request.addHeader("User-Agent", "Freeze HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
@@ -947,8 +1004,8 @@ class FreezeGameHttpE2eIT {
         ResponseEntity<JsonNode> response = http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
         record("POST", path, json.createObjectNode().put("id", id), response); return response.getBody();
     }
-    private JsonNode success(JsonNode response) { assertEquals(200, response.path("code").asInt(), response.toString()); return response.path("data"); }
-    private void rejected(JsonNode response) { assertNotEquals(200, response.path("code").asInt(), response.toString()); }
+    private JsonNode success(JsonNode response) { return GenericGameplayHttpE2eIT.appliedResponseData(response); }
+    private void rejected(JsonNode response) { GenericGameplayHttpE2eIT.rejectedGameCommand(response); }
     private JsonNode persistedTopic(long id, String phase) throws Exception {
         Map<String, Object> row = database.queryForMap("SELECT theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?", id);
         ObjectNode values = json.createObjectNode().put("topicId", id).put("phase", phase);

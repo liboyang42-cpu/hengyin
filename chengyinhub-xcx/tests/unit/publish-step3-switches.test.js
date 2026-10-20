@@ -54,6 +54,8 @@ beforeEach(() => {
 function makePage() {
   const inst = Object.assign({}, pageConfig);
   inst.data = JSON.parse(JSON.stringify(pageConfig.data));
+  inst.data.draftUuid = 'logged-in-test-draft';
+  inst.data.draftMemberId = 7;
   inst.setData = function (patch, cb) {
     Object.keys(patch).forEach((k) => {
       const parts = k.replace(/\[(\d+)\]/g, '.$1').split('.');

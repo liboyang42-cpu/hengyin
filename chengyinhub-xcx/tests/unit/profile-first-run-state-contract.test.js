@@ -69,6 +69,7 @@ const app = {
     canUseCommunity: () => true, // Current-account server-open fixture.
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   getUserID: () => '42',
+  getAuthorization: () => 'Bearer unit-fixture',
   getUserRole: () => 'player',
   getUserType: () => 1,
   getPageSize: () => 8,
@@ -125,7 +126,8 @@ const metricReads = [
   ['loadGrowthBundle', n => [{ code: 200, data: { level: n, totalCheckins: n, totalMileage: n, streakDays: n } },
     { code: 200, data: { growth: { levelNo: n, expValue: n }, points: n } }]],
   ['loadThemes', n => [{ code: 200, data: [{ activityId: n, topicId: n, name: `theme-${n}`, total: n, doneCount: n }] }]],
-  ['loadPointsStat', n => [{ code: 200, data: { weekPoints: n, rankPercentage: `TOP${n}%`, userRank: 1, rankDelta: n } }]],
+  ['loadPointsStat', n => [{ code: 200, data: { weekPoints: n, rankPercentage: `TOP${n}%`, userRank: 1, rankDelta: n } },
+    weekExpResponse(n)]],
 ]
 
 function beginMetricRead(component, method) {
@@ -186,7 +188,12 @@ for (const [method, responses] of metricReads) {
       else componentDefinition.lifetimes.detached.call(component)
       const snapshot = structuredClone(component.data)
       await finishMetricRead(read, responses(2))
-      assert.deepEqual(component.data, snapshot)
+      if (end === 'cleared-identity') {
+        assert.equal(component.data.selfReadAccess, 'login')
+        assert.deepEqual(component.data.userInfo, {})
+        assert.equal(component.data.profilePoint, null)
+        for (const field of ['themeProgress', 'orderPreviewList', 'projectPreviewList']) assert.deepEqual(component.data[field], [])
+      } else assert.deepEqual(component.data, snapshot)
     } finally { app.getUserID = original }
   })
 
@@ -248,7 +255,8 @@ for (const end of ['cleared-identity', 'detached']) test(`订单预览在${end}�
     else componentDefinition.lifetimes.detached.call(component)
     requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
     await pending
-    assert.deepEqual(component.data.orderPreviewList.map(row => row.id), [99])
+    assert.deepEqual(component.data.orderPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = originalGetUserID }
 })
 
@@ -364,7 +372,8 @@ for (const end of ['cleared-identity', 'detached']) test(`项目预览回包：$
     else componentDefinition.lifetimes.detached.call(component)
     requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
     await pending
-    assert.deepEqual(component.data.projectPreviewList.map(row => row.id), [99])
+    assert.deepEqual(component.data.projectPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = original }
 })
 
@@ -416,7 +425,8 @@ for (const end of ['changed-member', 'same-member-refresh', 'cleared-identity', 
     else componentDefinition.lifetimes.detached.call(component)
     oldRequest.success({ code: 200, data: { projectSummary: { pending: 5, rejected: 4 } } })
     await old
-    assert.equal(component.data.projectPendingCount, 2)
+    assert.equal(component.data.projectPendingCount, end === 'cleared-identity' ? 0 : 2)
+    if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
   } finally { app.getUserID = original }
 })
 
@@ -447,6 +457,10 @@ test('项目待处理回包：销毁后不发新读取', async () => {
   await pending
   assert.equal(requests.length, 0)
 })
+
+function weekExpResponse(score = 0, memberId = app.getUserID()) {
+  return { code: 200, data: { metric: 'exp', period: 'week', list: [], me: { memberId, score, rank: null } } }
+}
 
 function respond(url, response) {
   const request = requests.find((item) => item.url === url)
@@ -524,6 +538,7 @@ function successSources(overrides) {
     center: { growth: { levelNo: 1, expValue: 0 }, points: 0 },
     completed: [],
     points: { weekPoints: 0, rankPercentage: 'TOP0%', rankDelta: 0 },
+    weekExp: 0,
   }, overrides)
   return {
     '/api/user/info': { code: 200, data: values.user },
@@ -531,6 +546,7 @@ function successSources(overrides) {
     '/api/growth/center': { code: 200, data: values.center },
     '/api/play/my-completed': { code: 200, data: values.completed },
     '/api/user/points/statistics': { code: 200, data: values.points },
+    '/api/growth/leaderboard': weekExpResponse(values.weekExp),
   }
 }
 
@@ -607,14 +623,33 @@ test('请求失败：参与判据这次没取到时进入错误态，不能降�
   assert.equal(component.data.profileMetricState, 'error')
 })
 
-test('HTTP401和历史鉴权码2保留登录失败原因，指标成功重读后清除', async () => {
+async function resumeWithNormalLogin(component) {
+  const saved = { login: app.reLogin, wx: global.wx, refresh: component.refreshAll, banner: component.loadBanner, merchant: component.syncMerchantView }
+  let logins = 0
+  app.reLogin = () => { logins++; return Promise.resolve({ ok: true }) }
+  global.wx = { hideTabBar() {}, setNavigationBarColor() {}, setBackgroundColor() {} }
+  component.refreshAll = () => Promise.resolve()
+  component.loadBanner = () => Promise.resolve()
+  component.syncMerchantView = () => {}
+  try {
+    await component.loginToReadProfile()
+    assert.equal(logins, 1)
+    assert.equal(component.data.selfReadAccess, '')
+  } finally {
+    app.reLogin = saved.login; global.wx = saved.wx
+    component.refreshAll = saved.refresh; component.loadBanner = saved.banner; component.syncMerchantView = saved.merchant
+  }
+}
+
+test('HTTP401和历史鉴权码2必须正常登录后才恢复指标读取', async () => {
   for (const code of [401, 2]) {
     const component = loadProfile()
     component.resetProfileMetricState()
     const pending = component.loadUserData()
     requests.find((r) => r.url === '/api/user/info').fail({ code: 500 }, code)
     await pending
-    assert.equal(component.data.profileMetricAuthError, true)
+    assert.equal(component.data.selfReadAccess, 'login')
+    await resumeWithNormalLogin(component)
     requests = []
     await loadMetricSources(component, successSources())
     assert.equal(component.data.profileMetricAuthError, false)
@@ -637,8 +672,13 @@ test('订单、项目、推文和勋章分别区分登录与网络失败，成�
       requests.find((r) => r.url === url).fail({ code: status }, status)
       await pending
       await flush()
-      assert.equal(component.data[section + 'Err'], true)
-      assert.equal(component.data[section + 'AuthError'], status === 401)
+      if (status === 401) {
+        assert.equal(component.data.selfReadAccess, 'login')
+        await resumeWithNormalLogin(component)
+      } else {
+        assert.equal(component.data[section + 'Err'], true)
+        assert.equal(component.data[section + 'AuthError'], false)
+      }
     }
     requests = []
     const pending = component[method]()
@@ -763,6 +803,7 @@ test('资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% �
     component.data.profilePoint = 50
     const pending = component.loadPointsStat()
     respond('/api/user/points/statistics', { code: 200, data: Object.assign({ weekPoints: 0, rankDelta: 3 }, rank) })
+    respond('/api/growth/leaderboard', weekExpResponse(0))
     await pending
     assert.deepEqual(component.data.rankDisplay, { no: '—', delta: '' })
     assert.equal(component.data.pointsStat.rankPercentage, rank.rankPercentage)
@@ -781,9 +822,10 @@ test('资料排名：真实 TOP20 和 TOP100 原样保留，旧契约缺 userRan
     const component = loadProfile()
     const pending = component.loadPointsStat()
     respond('/api/user/points/statistics', { code: 200, data: Object.assign({ weekPoints: 7, rankDelta: 2 }, rank) })
+    respond('/api/growth/leaderboard', weekExpResponse(13))
     await pending
     assert.deepEqual(component.data.rankDisplay, { no: rank.rankPercentage, delta: '上升 2' })
-    assert.equal(component.data.exploreStat.weekExp, 7)
+    assert.equal(component.data.exploreStat.weekExp, 13, '本周经验来自经验周榜，不是周积分')
   }
 })
 
@@ -793,6 +835,7 @@ test('资料排名：重复正常刷新稳定，网络或业务失败保留最�
     requests = []
     const pending = component.loadPointsStat()
     respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 9, rankPercentage: 'TOP20%', userRank: 1, rankDelta: 2 } })
+    respond('/api/growth/leaderboard', weekExpResponse(11))
     await pending
     assert.deepEqual(component.data.rankDisplay, { no: 'TOP20%', delta: '上升 2' })
   }
@@ -801,9 +844,105 @@ test('资料排名：重复正常刷新稳定，网络或业务失败保留最�
     requests = []
     const pending = component.loadPointsStat()
     respond('/api/user/points/statistics', response)
+    respond('/api/growth/leaderboard', weekExpResponse(11))
     await pending
     assert.deepEqual(component.data.rankDisplay, { no: 'TOP20%', delta: '上升 2' })
-    assert.equal(component.data.exploreStat.weekExp, 9)
+    assert.equal(component.data.exploreStat.weekExp, 11)
     assert.equal(component._profileMetricSourceStates.points, 'error')
   }
+})
+
+test('本周EXP：积分7与EXP13分别展示，累计积分50不改写', async () => {
+  const component = loadProfile()
+  component.data.profilePoint = 50
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', weekExpResponse(13))
+  await pending
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component.data.profilePoint, 50)
+  const request = requests.find(request => request.url === '/api/growth/leaderboard')
+  assert.equal(request.method, 'POST')
+  assert.deepEqual(request.data, { metric: 'exp', period: 'week', limit: 1 })
+})
+
+for (const [name, response] of [
+  ['网络失败', 'fail'],
+  ['业务错误', { code: 500 }],
+  ['缺少本人', { code: 200, data: { metric: 'exp', period: 'week', me: null } }],
+  ['错误身份', weekExpResponse(99, '43')],
+  ['错误指标', { code: 200, data: Object.assign({}, weekExpResponse(99).data, { metric: 'point' }) }],
+  ['错误周期', { code: 200, data: Object.assign({}, weekExpResponse(99).data, { period: 'total' }) }],
+  ['缺少分数', { code: 200, data: { metric: 'exp', period: 'week', me: { memberId: '42' } } }],
+  ['空分数', weekExpResponse(null)],
+  ['负分数', weekExpResponse(-1)],
+  ['非安全分数', weekExpResponse(Number.MAX_SAFE_INTEGER + 1)],
+  ['小数', weekExpResponse(1.5)],
+  ['字符串分数', weekExpResponse('13')],
+  ['布尔分数', weekExpResponse(false)],
+]) test(`本周EXP：${name}保留EXP快照且积分独立成功`, async () => {
+  const component = loadProfile()
+  component.data.exploreStat.weekExp = 13
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', response)
+  await pending
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component.data.rankDisplay.no, 'TOP20%')
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component._profileMetricSourceStates.points, 'error')
+  assert.equal(component.data.profileMetricAuthError, false)
+})
+
+test('本周EXP：经验周榜登录失效按本人读取守卫进入登录态，不保留旧积分或EXP', async () => {
+  const component = loadProfile()
+  component.data.exploreStat.weekExp = 13
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', { code: 401 })
+  await pending
+  assert.equal(component.data.selfReadAccess, 'login')
+  assert.notEqual(component.data.pointsStat && component.data.pointsStat.weekPoints, 7)
+})
+
+test('本周EXP：首次缺失进入指标错误态，不声称真实0', async () => {
+  const component = loadProfile()
+  const sources = successSources({ play: { level: 1, totalCheckins: 1, totalMileage: 0, streakDays: 0 } })
+  sources['/api/growth/leaderboard'] = { code: 200, data: { metric: 'exp', period: 'week', me: { memberId: '42' } } }
+  await loadMetricSources(component, sources)
+  assert.equal(component.data.profileMetricState, 'error')
+  assert.equal(component.data.pointsStat.weekPoints, 0)
+})
+
+test('本周EXP：真实0且无排名有效，不拿榜首或积分替代', async () => {
+  const component = loadProfile()
+  const reply = weekExpResponse()
+  reply.data.list = [{ memberId: '43', score: 99, rank: 1 }]
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', { code: 200, data: { weekPoints: 7, rankPercentage: 'TOP20%', userRank: 1 } })
+  respond('/api/growth/leaderboard', reply)
+  await pending
+  assert.equal(component.data.exploreStat.weekExp, 0)
+  assert.equal(component.data.pointsStat.weekPoints, 7)
+  assert.equal(component._profileMetricSourceStates.points, 'ready')
+})
+
+test('本周EXP：积分失败保留积分快照，EXP独立成功', async () => {
+  const component = loadProfile()
+  component.data.pointsStat = { weekPoints: 7, rankPercentage: 'TOP20%' }
+  const pending = component.loadPointsStat()
+  respond('/api/user/points/statistics', 'fail')
+  respond('/api/growth/leaderboard', weekExpResponse(13))
+  await pending
+  assert.deepEqual(component.data.pointsStat, { weekPoints: 7, rankPercentage: 'TOP20%' })
+  assert.equal(component.data.exploreStat.weekExp, 13)
+  assert.equal(component._profileMetricSourceStates.points, 'error')
+})
+
+test('本周EXP：他人视角不发本人指标请求', async () => {
+  const component = loadProfile()
+  component.data.isSelf = false
+  await component.loadPointsStat()
+  assert.equal(requests.length, 0)
 })

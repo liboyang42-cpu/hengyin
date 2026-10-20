@@ -143,3 +143,33 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
 .david_tk { height: auto; overflow: visible; }
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
+
+/* 昵称校验/推荐(N4):「换一批」「重新检查」是文字链,命中区用 min-height 撑到 88rpx(44px) */
+.profile-name-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--cy-space-4); }
+.profile-name-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 88rpx;
+  min-width: 88rpx;
+  justify-content: center;
+  color: var(--cy-accent);
+  font-size: var(--cy-type-body);
+}
+.profile-name-link.is-disabled { color: var(--cy-text-tertiary); }
+/* 推荐昵称:无描边胶囊,点选即填入;命中区 88rpx(44px) */
+.profile-name-suggest { display: flex; flex-direction: column; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.profile-name-suggest-title { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+/* 「换一批」与标题同一行靠右,不再单独占一行悬在推荐与「完成」之间;负外边距只收视觉高度,命中区仍是 88rpx */
+.profile-name-suggest-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.profile-name-suggest-head .profile-name-link { margin: calc(var(--cy-space-3) * -1) 0; font-size: var(--cy-font-label); }
+.profile-name-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
+.profile-name-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 88rpx;
+  padding: 0 var(--cy-space-4);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-comp-field-idle-bg);
+  color: var(--cy-text-title);
+  font-size: var(--cy-type-body);
+}

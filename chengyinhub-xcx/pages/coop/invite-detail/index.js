@@ -21,6 +21,7 @@ const modal = require('../../../utils/modal.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { decorate, STATUS_LABEL, parseInviteId, INVITE_ID_ERROR } = require('../../../utils/coop-invite-view.js');
+const { partnerMemberId, shapeCredit } = require('./credit-view.js');
 
 // 状态 → 顶部大字的语气。已接受是唯一的正向终态,其余终态一律中性,
 // 不用红色 —— 「已拒绝」是一个事实,不是错误。
@@ -65,6 +66,7 @@ Page({
     actionReceipt: '',
     actionError: '',
     depositActionVisible: false,
+    partnerCredit: null,           // BL-103 对方近 90 天履约摘要 {label,text},样本为 0 不展示
     projectActionVisible: false,
     // 供给申报勾选浮层(原在 pages/coop/list)。当前邀约 id 不进 data:wxml 不渲染它,提交时从 invite 取。
     showPerkPick: false,
@@ -94,7 +96,7 @@ Page({
     this.load();
   },
   onShow() {
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     const refresh = this._hidden || (this._detailIdentity != null && this._detailIdentity !== identityKey());
     this._hidden = false;
     if (refresh && this._inviteId) this.load();
@@ -214,8 +216,29 @@ Page({
       showPerkPick: false, perkTemplates: [], perkSaving: false, perkState: 'idle', perkErrorText: '',
       reviewSheetShow: false,
       myReviewStars: '',
+      partnerCredit: null,
     });
     if (status === 1 && !inv.legacyReadonly) this.loadMyReview(inv);
+    this.loadPartnerCredit(inv);
+  },
+
+  // BL-103:对方近 90 天履约信用摘要(只读)。读不到/样本为 0 就不展示,不影响详情页其余内容。
+  loadPartnerCredit(inv) {
+    const memberId = partnerMemberId(inv, this.data.box);
+    if (!memberId) return;
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/coop/credit', method: 'POST',
+      data: JSON.stringify({ memberId: memberId }), header: jsonHeader(),
+      success(res) {
+        const credit = res && String(res.code) === '200' ? shapeCredit(res.data) : null;
+        if (credit && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
+          that.setData({ partnerCredit: credit });
+        }
+      },
+      fail() {},
+    });
   },
 
   // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,
@@ -343,7 +366,7 @@ Page({
     const inv = this.data.invite;
     const scope = acceptedProjectScope(inv, this.data.box);
     const topicId = inv && parseInviteId(inv.topicId);
-    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !scope || !topicId) return;
+    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !scope || !topicId || this._navigating) return; // 跳转中不响应连点
     /* CU-M-92(走查第三轮,回到第一轮的建议):走 ?topicId= —— 身份由后端判,不再落浏览页。
        上一轮这里改的是 ?id=(浏览视图),理由是 /api/project/home 对「既不是发布者、也没有承接记录」
        的调用人直接拒(ProjectHomeReadServiceImpl),刚接受邀约的受邀方正是这种人。
@@ -351,7 +374,7 @@ Page({
        (顶部关系入口 + 他自己真有的点位/章节)。
        ⚠️ 邀约落的是整主题商务条款(coop_order),**不产生点位/章节** —— 那些要靠商家另外报名。
        所以这一跳给的是承接方的工具与条款,不是一屏凭空冒出来的站点。 */
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=' + scope });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=' + scope, complete: () => { this._navigating = false; } });
   },
 
   // 联系合作方:T19 已签约双方取/建 1:1 会话(后端 /api/coop/contact 复用 resolveToOwner+startSingle)

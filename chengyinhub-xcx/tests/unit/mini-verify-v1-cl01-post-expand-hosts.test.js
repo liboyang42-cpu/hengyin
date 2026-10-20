@@ -74,10 +74,8 @@ test('CL-01 详情页正文不夹行:square/detail 的 .post-text 没有 line-cl
   }
 });
 
-// DEFECT_FOUND(CL-01 附带):列表卡展开后用 white-space: pre-wrap 保留分段(post-card/index.wxss:148),
-// 而列表点进来的 square/detail 正文是 <view>{{info.contents}}</view>,.post-text 没有 pre-wrap ——
-// 多段帖子在详情页会被并成一段。修好后去掉 todo,本用例即成为回归。
-test('CL-01 详情页正文保留换行(与卡片展开态一致)', { todo: 'DEFECT_FOUND: pages/square/detail/index.wxss:587 .post-text 缺 white-space: pre-wrap' }, () => {
+// #282 已修复详情正文分段；继续以硬断言防止列表展开与详情展示再次不一致。
+test('CL-01 详情页正文保留换行(与卡片展开态一致)', () => {
   const css = read('pages/square/detail/index.wxss');
   const rules = css.match(/[^{}]*\.post-text\b[^{}]*\{[^}]*\}/g) || [];
   assert.ok(rules.some((rule) => /white-space:\s*pre-(wrap|line)/.test(rule)), '详情页正文要保留作者的分段');

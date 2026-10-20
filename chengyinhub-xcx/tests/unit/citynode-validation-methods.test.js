@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const nodeVm = require('../helpers/ui-sandbox-vm.js'); // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js');
 
 const read = (p) => fs.readFileSync(path.resolve(__dirname, '../../', p), 'utf8');
 // 注释里写「以到店定位为准」是在讲历史,不算数;只看真代码。
@@ -29,6 +30,7 @@ function mountPoiScene(node, overrides) {
     require(request) {
       if (request === '../../../../utils/response-shape.js') return require('../../utils/response-shape.js');
       if (request === '../../../../utils/validation-method-labels.js') return require('../../utils/validation-method-labels.js');
+      if (request === '../../../../utils/media-preview.js') return loadMediaPreview(wx);
       throw new Error(`unexpected require: ${request}`);
     },
     wx,

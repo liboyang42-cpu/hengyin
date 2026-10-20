@@ -130,6 +130,20 @@ class TopicCreateSaveDraftSideEffectTest {
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
         verify(topicMapper, never()).updateTopicDraftState(anyLong(), any());
+        // AUDIT-G2-4:免审直发要落 check_status=1(机审通过/免审),与专业版后审中的 0 区分开。
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).insertCmsTopic(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getCheckStatus(), "简易版直发 → check_status=1");
+    }
+
+    /** AUDIT-G2-4 对照:专业版发布后审中仍是 0,草稿不写 1。 */
+    @Test
+    void proAndDraftCreateDoNotClaimMachinePassed() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+        svc.createTopic(dto(1), 42L, "tester");
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).insertCmsTopic(cap.capture());
+        assertTrue(!Integer.valueOf(1).equals(cap.getValue().getCheckStatus()), "草稿不得写 check_status=1");
     }
 
     /**

@@ -510,7 +510,7 @@ export default {
         return scheduleOfficialEventV2(this.draft.event.id)
       }).then(res => {
         if (!res) return
-        this.$modal.msgSuccess('活动已进入已排期，后续状态由服务端生命周期推进')
+        this.$modal.msgSuccess('已提交平台审核，审核通过后进入排期')
         this.backToList()
       }).catch(() => {})
     },

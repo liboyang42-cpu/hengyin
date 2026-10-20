@@ -50,6 +50,7 @@ class OWN_C03_21Test {
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         when(quotaService.checkCreate(anyLong(), anyString())).thenReturn(null);
         when(contentSecurity.checkText(any(), any())).thenReturn(null);
+        com.chengyinhub.web.controller.api.TopicContentSafetyTestFixtures.wire(controller, contentSecurity);
     }
 
     /** 自由探索:绕开经典定向那段俱乐部门禁,直达 service 调用,让抛出的异常走到 catch。 */

@@ -15,7 +15,7 @@ global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   sendRequest: (p) => { sent.push(p); },
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'current-session',
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
 });
 global.wx = {

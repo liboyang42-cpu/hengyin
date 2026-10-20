@@ -64,7 +64,7 @@ class HangoutAuditLockMyBatisIT {
             st.execute("create table roam_hangout(id bigint primary key,member_id bigint,title varchar(100),description text,cover_url varchar(255),latitude decimal(10,6),longitude decimal(10,6),address_name varchar(100),start_at datetime,status int,conversation_id bigint,create_time datetime,update_time datetime,del_flag int default 0) engine=InnoDB");
             st.execute("create table im_conversation_member(id bigint auto_increment primary key,conversation_id bigint,member_id bigint,role int,unread_count int,last_read_msg_id bigint,muted int,deleted int,create_time datetime,unique(conversation_id,member_id)) engine=InnoDB");
             st.execute("create table audit_task(id bigint primary key,biz_type varchar(40),biz_id bigint,submitter_id bigint,source_type varchar(30),risk_level varchar(30),status int,current_assignee bigint,submitted_at datetime,deadline_at datetime,snapshot_json text,version int,create_by varchar(64),create_time datetime,update_by varchar(64),update_time datetime,remark varchar(255)) engine=InnoDB");
-            st.execute("create table audit_record(id bigint auto_increment primary key,task_id bigint,action varchar(40),operator_id bigint,reason_code varchar(40),reason_text varchar(255),snapshot_json text,reverted_record_id bigint,create_time datetime,index(task_id)) engine=InnoDB");
+            st.execute("create table audit_record(id bigint auto_increment primary key,task_id bigint,action varchar(40),operator_id bigint,reason_code varchar(40),reason_text varchar(255),snapshot_json text,reverted_record_id bigint,reason_codes_json json,create_time datetime,index(task_id)) engine=InnoDB");
         }
     }
 

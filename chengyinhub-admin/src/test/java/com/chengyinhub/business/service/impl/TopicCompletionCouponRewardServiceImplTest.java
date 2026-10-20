@@ -21,6 +21,7 @@ class TopicCompletionCouponRewardServiceImplTest
     private TopicCompletionCouponRewardServiceImpl service;
     private CmsTopicCompletionCouponRewardMapper rewardMapper;
     private ISmsCouponHistoryService couponHistoryService;
+    private SmsCouponMapper couponMapper;
     private SmsCoupon coupon;
 
     @BeforeEach
@@ -29,11 +30,12 @@ class TopicCompletionCouponRewardServiceImplTest
         service = new TopicCompletionCouponRewardServiceImpl();
         rewardMapper = mock(CmsTopicCompletionCouponRewardMapper.class);
         couponHistoryService = mock(ISmsCouponHistoryService.class);
-        SmsCouponMapper coupons = mock(SmsCouponMapper.class);
-        coupon = new SmsCoupon(); coupon.setId(5L);
-        when(coupons.selectSmsCouponById(5L)).thenReturn(coupon);
-        ReflectionTestUtils.setField(service, "smsCouponMapper", coupons);
+        couponMapper = mock(SmsCouponMapper.class);
+        coupon = new SmsCoupon();
+        coupon.setId(5L);
+        when(couponMapper.selectSmsCouponById(5L)).thenReturn(coupon);
         ReflectionTestUtils.setField(service, "rewardMapper", rewardMapper);
+        ReflectionTestUtils.setField(service, "smsCouponMapper", couponMapper);
         ReflectionTestUtils.setField(service, "smsCouponHistoryService", couponHistoryService);
     }
 
@@ -42,37 +44,52 @@ class TopicCompletionCouponRewardServiceImplTest
     {
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(1);
         when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(41L);
-        when(rewardMapper.bindHistoryId(21L,8L,5L,41L)).thenReturn(1);
+        when(rewardMapper.bindHistoryId(21L, 8L, 5L, 41L)).thenReturn(1);
 
         assertTrue(service.grantOnce(21L, 8L, 5L));
-        verify(couponHistoryService).grantCouponWithReceipt(8L, coupon);
-        verify(rewardMapper).bindHistoryId(21L,8L,5L,41L);
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(rewardMapper, couponHistoryService);
+        order.verify(rewardMapper).insertIgnore(21L, 8L, 5L);
+        order.verify(couponHistoryService).grantCouponWithReceipt(8L, coupon);
+        order.verify(rewardMapper).bindHistoryId(21L, 8L, 5L, 41L);
+        verify(couponHistoryService, never()).grantCouponById(8L, 5L);
     }
 
     @Test
     void duplicateCompletionDoesNotIssueAgain()
     {
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(0);
-
         assertFalse(service.grantOnce(21L, 8L, 5L));
         verify(couponHistoryService, never()).grantCouponWithReceipt(8L, coupon);
+        verify(rewardMapper, never()).bindHistoryId(
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong());
     }
 
     @Test
     void couponIssueFailureRaisesToRollbackIdempotencySlot()
     {
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(1);
-        when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(null);
+        for (Long invalid : new Long[] {null, 0L, -1L}) {
+            when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(invalid);
+            assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
+        }
+    }
 
-        assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
+    @Test
+    void receiptBindingMustAffectExactlyOneGrant()
+    {
+        when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(1);
+        when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(41L);
+        for (int rows : new int[] {0, 2}) {
+            when(rewardMapper.bindHistoryId(21L, 8L, 5L, 41L)).thenReturn(rows);
+            assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
+        }
     }
 
     @Test
     void disabledCouponSkipsIssueWithoutFailingCompletionOrClaimingSlot()
     {
-        // C-30:奖励券被平台手动失效 → 不发券、不抛(通关/终章核销+应付台账不回滚)、不占领取标记
         when(couponHistoryService.isCouponNotIssuable(5L)).thenReturn(true);
-
         assertFalse(service.grantOnce(21L, 8L, 5L));
         verify(rewardMapper, never()).insertIgnore(21L, 8L, 5L);
         verify(couponHistoryService, never()).grantCouponWithReceipt(8L, coupon);

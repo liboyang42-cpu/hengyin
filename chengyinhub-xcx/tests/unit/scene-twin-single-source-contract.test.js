@@ -89,7 +89,13 @@ function pageImplementsContentItself(route, readSource = read) {
   let js = ''
   try { wxml = readSource(`${base}.wxml`) } catch (e) { wxml = '' }
   try { js = readSource(`${base}.js`) } catch (e) { js = '' }
-  const rendersList = /wx:for=/.test(wxml)
+  // 登录换号时只重挂一个 profile 组件；这不是页面自绘业务列表。
+  const singletonProfileMount = base === 'pages/member/index/index'
+    && /profileMounts:\s*owner\s*&&\s*token\s*\?\s*\[\{\s*id:\s*this\._profileEpoch\s*\}\]\s*:\s*\[\]/.test(js)
+  const body = singletonProfileMount
+    ? wxml.replace(/<cy-profile\b(?=[^>]*\bwx:for="\{\{profileMounts\}\}")[^>]*\/>/g, '')
+    : wxml
+  const rendersList = /wx:for=/.test(body)
   const fetchesBusinessData = /url:\s*['"]\/api\//.test(js)
   return rendersList || fetchesBusinessData
 }
@@ -104,6 +110,21 @@ function unresolvedTwinSceneIds(readSource = read) {
     })
     .sort()
 }
+
+test('登录薄壳只重挂单个 profile；新增正文循环或业务数据挂载仍必须判红', () => {
+  const route = SCENES['share-invite'].route
+  const base = route.replace(/^\//, '')
+  assert.equal(pageImplementsContentItself(route), false)
+  const extraList = `${read(`${base}.wxml`)}<view wx:for="{{orders}}">{{item.id}}</view>`
+  const withList = relative => relative === `${base}.wxml` ? extraList : read(relative)
+  assert.equal(pageImplementsContentItself(route, withList), true)
+  assert.throws(() => assertTwinGate(withList), /未登记分叉: share-invite/)
+  const userRows = read(`${base}.js`).replace('[{ id: this._profileEpoch }]', '[{ id: this._profileEpoch, orders: this.data.orders }]')
+  assert.notEqual(userRows, read(`${base}.js`))
+  const withRows = relative => relative === `${base}.js` ? userRows : read(relative)
+  assert.equal(pageImplementsContentItself(route, withRows), true)
+  assert.throws(() => assertTwinGate(withRows), /未登记分叉: share-invite/)
+})
 
 function assertTwinGate(readSource = read) {
   const unresolved = unresolvedTwinSceneIds(readSource)

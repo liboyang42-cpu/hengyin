@@ -8,6 +8,7 @@ const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
 const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
+const mediaPreview = require('../../../../utils/media-preview.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -154,7 +155,7 @@ Component({
   },
   pageLifetimes: {
     show() {
-      this._hidden = false
+      this._hidden = false; this._navigating = false
       if (this.data.activityId && this._activityReadOwner !== this._activityReadIdentity()) this.load(this.data.activityId)
     },
     hide() { this._hidden = true },
@@ -174,7 +175,7 @@ Component({
     },
     goTopic() {
       const id = Number(this.data.info.topicId)
-      if (Number.isSafeInteger(id) && id > 0) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      if (Number.isSafeInteger(id) && id > 0 && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
     },
     load(id) {
       if (this._detached) return
@@ -361,7 +362,7 @@ Component({
     },
 
     openSignup() {
-      if (!this.data.canConfirmSignup) return
+      if (!this.data.canConfirmSignup || this._navigating) return
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
         return
@@ -395,7 +396,7 @@ Component({
         toast('该票种已截止报名')
         return
       }
-      wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}` })
+      this._navigating = true; wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}`, complete: () => { this._navigating = false } })
     },
 
     onCancelledAction() {
@@ -404,17 +405,17 @@ Component({
     },
 
     goPlay() {
-      wx.navigateTo({ url: '/subpackageMember/signup/index' })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false } })
     },
 
     goUserInfo(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}`, complete: () => { this._navigating = false } }) }
     },
 
     goTemplateDetail(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my`, complete: () => { this._navigating = false } }) }
     },
 
     openLocation() {
@@ -556,7 +557,7 @@ Component({
 
     previewCommentImage(event) {
       const current = event.currentTarget.dataset.src
-      if (current) wx.previewImage({ current, urls: this.data.uploadImages })
+      if (current) mediaPreview.open(this.data.uploadImages, current)
     },
 
     changeRating(event) {
@@ -617,7 +618,7 @@ Component({
     goGateClub() {
       const clubId = Number(this.data.gateClubId) || 0
       if (clubId > 0) {
-        wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId })
+        if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId, complete: () => { this._navigating = false } }) } // 跳转中不响应连点,免得叠两层俱乐部页
         return
       }
       this.close()

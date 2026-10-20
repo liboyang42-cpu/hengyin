@@ -1,0 +1,53 @@
+<view class="vrl-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <!-- BL-76:结构照 pages/merchant/aftercare(cy-nav-bar + cy-page-title 大标题 + chip 分段 + 按日分组行)。 -->
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="核销记录" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+            title="核销记录加载失败" sub="{{errorMessage}}"
+            retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+            title="当前岗位没有核销记录查看权限"
+            sub="请联系店主调整经营团队权限"
+            retry="" bind:back="onNavBack" auto-back custom-back />
+
+  <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell">
+    <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
+      active="{{bucket}}" bind:change="switchBucket" />
+    <cy-empty fill size="lg" kind="empty" title="{{bucket === 'VERIFIED' ? '还没有已核销记录' : '没有未核销记录'}}" />
+  </view>
+
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="vrl-scroll"
+               enhanced show-scrollbar="{{false}}">
+    <view class="vrl-shell">
+      <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
+        active="{{bucket}}" bind:change="switchBucket" />
+      <view class="fin-group vrl-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+        <view class="vrl-group-head">
+          <text class="vrl-group-label">{{group.label}}</text>
+          <text class="vrl-group-total">{{group.items.length || 0}} 条</text>
+        </view>
+        <view class="fin-card vrl-card">
+          <view class="fin-row vrl-row" wx:for="{{group.items}}" wx:key="id"
+                aria-label="{{item.nameText}}，{{item.statusText}}{{item.registrationText ? '，' + item.registrationText : ''}}">
+            <view class="vrl-avatar" aria-hidden="true"><cy-icon name="check" size="36" /></view>
+            <view class="fin-row__main">
+              <text class="fin-row__t1">{{item.nameText}}</text>
+              <view class="fin-row__t2">
+                <text wx:if="{{item.timeText}}">{{item.timeText}} ·</text>
+                <text class="vrl-status vrl-status--{{item.statusTone}}">{{item.statusText}}</text>
+                <text wx:if="{{item.methodText}}" class="vrl-status vrl-status--neutral">· {{item.methodText}}</text>
+              </view>
+              <text class="vrl-sub" wx:if="{{item.registrationText}}">{{item.registrationText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <text class="vrl-more">已经到底了</text>
+    </view>
+  </scroll-view>
+</view>

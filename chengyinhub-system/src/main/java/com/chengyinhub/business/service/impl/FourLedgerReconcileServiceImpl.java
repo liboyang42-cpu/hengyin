@@ -11,9 +11,13 @@ import com.chengyinhub.business.domain.LedgerDiscrepancy;
 import com.chengyinhub.business.domain.MerchantPayableBatch;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.WxTradeBillSnapshot;
+import com.chengyinhub.business.domain.WxBillImport;
 import com.chengyinhub.business.mapper.FourLedgerReconcileMapper;
 import com.chengyinhub.business.mapper.MerchantPayableBatchMapper;
 import com.chengyinhub.business.mapper.WxTradeBillSnapshotMapper;
+import com.chengyinhub.business.mapper.WxBillImportMapper;
+import com.chengyinhub.common.config.WxPayConfig;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.service.IFourLedgerReconcileService;
 import com.chengyinhub.business.service.IMerchantPayableService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -37,6 +41,12 @@ public class FourLedgerReconcileServiceImpl implements IFourLedgerReconcileServi
     private WxTradeBillSnapshotMapper wxTradeBillSnapshotMapper;
 
     @Autowired
+    private WxBillImportMapper wxBillImportMapper;
+
+    @Autowired
+    private WxPayConfig wxPayConfig;
+
+    @Autowired
     private IUmsMemberService umsMemberService;
 
     @Autowired
@@ -52,12 +62,22 @@ public class FourLedgerReconcileServiceImpl implements IFourLedgerReconcileServi
             return discrepancies;
         }
 
-        // ★账单未下载(P1-7前的常态)不是"对不上",不产出误报。
-        if (wxTradeBillSnapshotMapper.countByBillDate(billDate) <= 0) {
-            return discrepancies;
+        String merchantId = wxPayConfig.getMerchantId();
+        if (merchantId == null || merchantId.isBlank()) {
+            throw new ServiceException("微信商户未配置，账单待核实", 409);
+        }
+        java.time.ZoneId zone = java.time.ZoneId.of("Asia/Shanghai");
+        java.time.LocalDate billDay = billDate instanceof java.sql.Date sqlDate ? sqlDate.toLocalDate()
+                : java.time.Instant.ofEpochMilli(billDate.getTime()).atZone(zone).toLocalDate();
+        Date day = Date.from(billDay.atStartOfDay(zone).toInstant());
+        WxBillImport imported = wxBillImportMapper.selectImport(merchantId, "TRADE", day);
+        if (imported == null || !"SUCCESS".equals(imported.getStatus())
+                || imported.getRowCount() == null || imported.getRowCount() < 0
+                || imported.getSourceHash() == null || imported.getSourceHash().isBlank()) {
+            throw new ServiceException("交易账单尚未完整导入，待核实", 409);
         }
 
-        List<CmsRegistration> registrations = reconcileMapper.selectPaidWechatRegistrationsByBillDate(billDate);
+        List<CmsRegistration> registrations = reconcileMapper.selectPaidWechatRegistrationsByBillDate(day);
         for (CmsRegistration r : registrations) {
             BigDecimal expected = nz(r.getWechatPaymentAmount());
             BigDecimal actual = nz(wxTradeBillSnapshotMapper.sumAmountByOutTradeNoAndBizType(

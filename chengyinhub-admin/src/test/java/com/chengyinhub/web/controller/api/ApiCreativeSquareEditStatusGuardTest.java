@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.when;
  * 平台媒体审核把 status 置 2 之后,作者改一个字保存就把 2 覆盖回 1,而编辑 payload 不带
  * pics、图片不会二次送检 —— 违规图片原样重新公开。
  *
- * 本测试钉住三条:原 2 编辑后仍 2(不写 status 列)、原 1 编辑后不被写坏、文本违规仍置 2。
+ * 本测试钉住三条:原 2 编辑后仍 2(不写 status 列)、原 1 编辑后不被写坏、文本违规拒绝编辑(AUDIT-G3-3)。
  * 负控:把编辑分支改回无条件写 1,第一条断言必须真红。
  */
 class ApiCreativeSquareEditStatusGuardTest {
@@ -97,8 +98,12 @@ class ApiCreativeSquareEditStatusGuardTest {
         }
     }
 
+    /**
+     * AUDIT-G3-3 起口径调整:编辑提交的正文违规 → 拒绝编辑,新正文一个字都不落库,线上继续是审过的旧内容。
+     * (原口径是先把违规新正文写进线上帖子再置 2 下架,违规文本会公开一个往返。)
+     */
     @Test
-    void editWithViolatingTextStillMovesPostToHidden() {
+    void editWithViolatingTextIsRejectedBeforeReplacingLiveContent() {
         when(squareService.selectUmsCreativeSquareById(POST_ID)).thenReturn(post(1));
         when(contentSecurityService.checkText(any(), isNull())).thenReturn("内容违规");
 
@@ -106,9 +111,7 @@ class ApiCreativeSquareEditStatusGuardTest {
                 null, null, null, null, null, null, null, null, null);
 
         assertNotEquals(200, result.get(AjaxResult.CODE_TAG));
-        List<UmsCreativeSquare> updates = capturedUpdates();
-        UmsCreativeSquare last = updates.get(updates.size() - 1);
-        assertEquals(Integer.valueOf(2), last.getStatus(), "编辑提交的正文违规时必须置 2 下架");
+        verify(squareService, never()).updateUmsCreativeSquare(any());
     }
 
     private UmsCreativeSquare post(int status) {

@@ -117,6 +117,73 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 小队 =====
+  // ===== 主题状态键 =====
+  'topic.stateKey.delete': {
+    irreversible: true,
+    title: '删除状态键「{name}」?',
+    content: '只有没被节点或剧情配置引用的键才能删除;被引用时后台会拒绝并告诉你引用位置。',
+    consequences: [
+      { icon: 'list', text: '键的显示名和初始值会一起删除,之后需要重新注册' },
+      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这个状态键的配置' },
+    ],
+    confirmText: '删除状态键',
+    alt: null,
+    done: { title: '状态键已删除', text: '' },
+  },
+  // ===== AI 对话 =====
+  'ai.npc.chatData.delete': {
+    irreversible: true,
+    title: '清除我的对话记录?',
+    content: '会删除你与 AI 向导、店铺形象的全部对话记录,立即生效。',
+    consequences: [
+      { icon: 'trash', text: '范围是你账号下所有 AI 对话(漫游向导和店铺形象),不只是当前这一段' },
+      { icon: 'info', text: '不影响你的漫游足迹、邮票、订单等其他数据' },
+      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这些对话' },
+    ],
+    confirmText: '清除对话记录',
+    alt: null,
+    done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
+  },
+  // ===== 官方活动 V2 · 主办控制台(pages/activity/official-organizer)=====
+  // 口径对齐 OfficialEventV2ServiceImpl 的 schedule / pause / resume;「排期」对用户叫「发布活动」(用户决定 2026-10-15)。
+  'official.organizer.schedule': {
+    irreversible: true,
+    title: '发布「{name}」?',
+    content: '通过发布检查后对报名可见,按设定的报名与开始时间自动推进。',
+    consequences: [
+      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效,按报名/开始时间自动推进' },
+      { icon: 'info', text: '排期后活动详情对玩家可见;之后需要停下只能用暂停' },
+      { icon: 'warning', text: '此操作不可撤销,发布后无法退回草稿' },
+    ],
+    confirmText: '发布活动',
+    alt: null,
+    done: { title: '活动已发布', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.pause': {
+    irreversible: false,
+    title: '暂停「{name}」?',
+    content: '暂停后玩家侧显示活动已暂停,通知策略记为待执行。',
+    consequences: [
+      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约;原定结束时间不变' },
+      { icon: 'bell', text: '填写的通知策略不会自动群发,状态记为「待执行」,需要按策略另行通知' },
+      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口;到结束时间仍未恢复会直接转入待结算' },
+    ],
+    confirmText: '暂停活动',
+    alt: null,
+    done: { title: '活动已暂停', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.resume': {
+    irreversible: false,
+    title: '恢复「{name}」?',
+    content: '平台会先重新做发布检查,不通过会拒绝恢复并给出原因。',
+    consequences: [
+      { icon: 'check', text: '恢复后活动按当前时间回到对应阶段(已排期/报名中/进行中)' },
+      { icon: 'info', text: '如果活动已过结束时间,会转入待结算而不是恢复运行' },
+    ],
+    confirmText: '恢复活动',
+    alt: null,
+    done: { title: '活动已恢复', text: '已按平台最新记录刷新。' },
+  },
   'team.disband': {
     irreversible: true,
     title: '解散这支队伍?',
@@ -273,6 +340,20 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 权限(逻辑不在本次改动范围,只统一确认文案) =====
+  // N2 俱乐部自建勋章:服务端没有撤回颁发的接口,颁了就收不回 —— 按不可逆登记。
+  'club.badge.grant': {
+    irreversible: true,
+    title: '把「{name}」颁给 {member}?',
+    content: '颁发后对方会拿到这枚俱乐部勋章。',
+    consequences: [
+      { icon: 'star', text: '这枚勋章会写入对方的勋章记录' },
+      { icon: 'mtab-customers', text: '再次颁发同一枚勋章时，平台会提示对方是否已经拥有' },
+      { icon: 'warning', text: '此操作不可撤销，目前没有收回勋章的入口' },
+    ],
+    confirmText: '颁发勋章',
+    alt: null,
+    done: { title: '勋章已颁发', text: '' },
+  },
   'club.role.revoke': {
     irreversible: true,
     title: '撤销「{name}」?',
@@ -416,6 +497,18 @@ const DANGER_ACTIONS = {
     confirmText: '拉黑',
     alt: null,
     done: { title: '已拉黑', text: '你不会再收到对方消息。' },
+  },
+  'im.unblock': {
+    irreversible: false,
+    title: '解除拉黑?',
+    content: '',
+    consequences: [
+      { icon: 'info', text: '对方的新消息会重新送达' },
+      { icon: 'info', text: '对方不会收到解除提示' },
+    ],
+    confirmText: '解除拉黑',
+    alt: null,
+    done: { title: '已解除拉黑', text: '' },
   },
   'im.conversation.delete': {
     irreversible: false,
