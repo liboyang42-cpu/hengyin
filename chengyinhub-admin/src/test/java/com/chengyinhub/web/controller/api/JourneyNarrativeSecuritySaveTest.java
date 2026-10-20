@@ -208,6 +208,7 @@ class JourneyNarrativeSecuritySaveTest {
         ReflectionTestUtils.setField(controller, "memberIdentityService",
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
+        TopicContentSafetyTestFixtures.wire(controller, security);
         ReflectionTestUtils.setField(controller, "capabilityGuard", mock(ICapabilityGuard.class));
         ReflectionTestUtils.setField(controller, "merchantAccessService", mock(IMerchantAccessService.class));
     }
