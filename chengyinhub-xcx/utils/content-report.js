@@ -4,7 +4,7 @@
 // 这三个接口(#383)只收表单 id + reason(原因文字),不走社区 v1 的幂等举报单。
 const modal = require('./modal.js');
 const toast = require('./toast.js');
-const reportSheet = require('./community-report-sheet.js');
+const reportSheet = require('../pages/square/utils/community-report-sheet.js');
 
 // 网络失败:结束在途,页面还在才如实提示。
 function networkFailed(callbacks) {

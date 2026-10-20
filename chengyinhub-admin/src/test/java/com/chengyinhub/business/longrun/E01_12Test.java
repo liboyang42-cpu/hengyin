@@ -62,9 +62,23 @@ class E01_12Test {
         topic.setId(TOPIC);
         topic.setClubId(CLUB);
         topic.setDelFlag(0);
+        topic.setStatus(1);
+        topic.setUserStatus(1);
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        IContentSafetyGate gate = mock(IContentSafetyGate.class);
+        when(gate.decide(any())).thenReturn(
+                com.chengyinhub.business.domain.dto.SafetyDecision.hold("PRE_REVIEW", null));
+        com.chengyinhub.system.service.ISysConfigService config =
+                mock(com.chengyinhub.system.service.ISysConfigService.class);
+        when(config.selectConfigByKey(
+                com.chengyinhub.business.service.support.ActivityReviewPolicy.CONFIG_PRE_REVIEW_ALL))
+                .thenReturn("true");
+        com.chengyinhub.business.service.support.ActivityReviewPolicy policy =
+                new com.chengyinhub.business.service.support.ActivityReviewPolicy();
+        org.springframework.test.util.ReflectionTestUtils.setField(policy, "configService", config);
         ClubSessionServiceImpl realOpen = new ClubSessionServiceImpl(clubs, topics, activities,
-                tickets, mock(CoopOrderMapper.class), mock(SettlementDebtLedger.class));
+                tickets, mock(CoopOrderMapper.class), mock(SettlementDebtLedger.class),
+                gate, policy, mock(IAuditTaskService.class), mock(IUmsMemberService.class));
         IClubAccessService access = mock(IClubAccessService.class);
         when(access.require(eq(OWNER), eq(CLUB), isNull(), anyString())).thenReturn(
                 new ClubAccessContext(OWNER, CLUB, OWNER, null, Collections.singleton(ClubRoleCode.CLUB_OWNER)));
