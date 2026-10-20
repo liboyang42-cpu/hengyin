@@ -248,12 +248,9 @@ def main():
                              # ③ 一个账号一张票(ExploreAccountTicketGate),同一期要跑第二张票就得换人
                              (9009, "玩家二号", "13900000009")):
         merchant_owner = mid in (9002, 9005, 9006, 9007)
-        # 小程序登录必然带 openid;内容安全 msgSecCheck v2 缺 openid 会 fail-close(WxContentSecurityServiceImpl
-        # checkText),所以夹具会员也要有。值只在 cy_e2e_51 里,出站微信调用由 E2eWxContentSecurityStub 桩掉。
-        ex("INSERT INTO ums_member(id,nickname,phone,role,user_type,status,wx_open_id,create_time) "
-           "VALUES(%s,%s,%s,%s,%s,1,%s,NOW())",
-           (mid, nick, phone, "merchant" if merchant_owner else "player", 2 if merchant_owner else 1,
-            "e2e-openid-%d" % mid))
+        ex("INSERT INTO ums_member(id,nickname,phone,role,user_type,status,create_time) "
+           "VALUES(%s,%s,%s,%s,%s,1,NOW())",
+           (mid, nick, phone, "merchant" if merchant_owner else "player", 2 if merchant_owner else 1))
 
     print("[seed] 商家主体 + 俱乐部")
     ex("INSERT INTO sys_category(id,type,parent_id,category_name,level,sort_id,status,del_flag,create_time) "
