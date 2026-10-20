@@ -12,6 +12,11 @@ public interface RewardDropLogMapper {
                   @Param("nodeId") Long nodeId, @Param("activityId") Long activityId,
                   @Param("sceneKey") String sceneKey);
 
+    RewardDropLog selectById(@Param("id") Long id);
+
+    RewardDropLog selectByUk(@Param("memberId") Long memberId, @Param("topicId") Long topicId,
+            @Param("nodeId") Long nodeId, @Param("activityId") Long activityId, @Param("sceneKey") String sceneKey);
+
     /** 插入掉落流水(uk 冲突交由上层 catch DuplicateKey 兜底并发) */
     int insertRewardDropLog(RewardDropLog log);
 }

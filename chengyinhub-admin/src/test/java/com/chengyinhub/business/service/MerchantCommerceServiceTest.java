@@ -112,6 +112,18 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
+    void renewalAcceptsMysqlUpdatedRowCountWithoutRetryingGrant() {
+        OmsOrder pending = new OmsOrder(); pending.setId(8L); pending.setOrderSn("TPLTM_8");
+        pending.setMemberId(12L); pending.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        pending.setStatus(0L); pending.setPayAmount(new BigDecimal("19.90"));
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending);
+        when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
+        when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(2);
+        assertTrue(service.handlePaidOrder("TPLTM_8", true, 1990, "wx-tx-8"));
+        verify(subscriptionMapper).grantMerchantSubscription(any());
+    }
+
+    @Test
     void paidCommerceCallback_rejectsAmountMismatchBeforePaidCas() {
         OmsOrder pending = new OmsOrder();
         pending.setId(8L);

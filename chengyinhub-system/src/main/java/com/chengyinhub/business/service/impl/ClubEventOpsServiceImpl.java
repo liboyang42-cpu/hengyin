@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -54,6 +55,8 @@ import java.util.LinkedHashSet;
 @Service
 public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClubEventOpsServiceImpl.class);
+    private static final DateTimeFormatter ASSEMBLY_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT);
 
     private final IClubAccessService clubAccessService;
     private final ClubEventScheduleMaterializer scheduleMaterializer;
@@ -106,6 +109,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<ClubEventSeriesView> listSeries(Long actorMemberId, Long clubId) {
         requireActivityManage(actorMemberId, clubId);
         List<ClubEventSeries> rows = clubEventOpsMapper.selectActiveSeriesByClub(clubId);
@@ -113,12 +117,15 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         List<ClubEventSeriesView> result = new ArrayList<>();
         for (ClubEventSeries row : rows) {
             validateReadableSeries(row, clubId);
-            result.add(toSeriesView(row, java.util.Collections.<String>emptyList()));
+            List<ClubEventOccurrence> future = clubEventOpsMapper.selectFutureOccurrences(
+                    row.getId(), clubId, now());
+            result.add(toSeriesView(row, java.util.Collections.<String>emptyList(), future));
         }
         return result;
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ClubEventSeriesView getSeries(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);
@@ -136,10 +143,11 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             dates.add(row.getOccurrenceAt().toInstant()
                     .atZone(ZoneId.of("Asia/Shanghai")).toLocalDate().toString());
         }
-        return toSeriesView(series, dates);
+        return toSeriesView(series, dates, rows);
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<Map<String, Object>> listSeriesOccurrences(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);
@@ -149,7 +157,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         List<ClubEventOccurrenceRowVO> rows = clubEventOpsMapper.selectSeriesOccurrenceRows(seriesId, clubId);
         List<Map<String, Object>> out = new ArrayList<>();
         if (rows == null) return out;
-        long now = System.currentTimeMillis();
+        long now = now().getTime();
         for (ClubEventOccurrenceRowVO row : rows) {
             if (row == null || row.getOccurrenceAt() == null) continue;
             boolean cancelled = ClubEventOccurrence.STATUS_CANCELLED.equals(row.getStatus());
@@ -157,7 +165,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             Integer signup = row.getSignupCount();
             // ⚠️ 报名数算不出来时 editable 必须是 false:不知道有没有人报名就不能放开编辑。
             //    这条比「显示成 0」更要紧 —— 前者只是显示错,后者会让人真的改掉一场有人的活动。
-            boolean editable = !cancelled && !past && signup != null && signup == 0;
+            // 与 FUTURE_ONLY 写口共用同一事实判据：成功报名为 0 不代表没有候补、退款历史或结算。
+            boolean protectedHistory = !positive(row.getActivityId())
+                    || clubEventOpsMapper.countProtectedActivityHistory(row.getActivityId()) != 0;
+            boolean editable = !cancelled && !past && signup != null && signup == 0 && !protectedHistory;
 
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("occurrenceId", row.getOccurrenceId());
@@ -171,7 +182,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             item.put("lockReason", cancelled ? "本场已取消"
                     : (past ? "已结束"
                     : (signup == null ? "报名数待确认"
-                    : (signup > 0 ? "不可编辑" : null))));
+                    : (signup > 0 ? "不可编辑"
+                    : (protectedHistory ? "已有报名、候补或结算事实" : null)))));
             out.add(item);
         }
         return out;
@@ -201,14 +213,17 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
         String recurrenceType = request.getRecurrenceType() == null ? ""
                 : request.getRecurrenceType().trim().toUpperCase(Locale.ROOT);
-        List<LocalDate> dates = scheduleMaterializer.materialize(request, todayShanghai());
+        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
+                request.getClubId(), actorMemberId, requestId);
+        // 已有固定日期回执先核原完整指纹；跨上海日重发不能被“今天”挡在回执之前。
+        List<LocalDate> dates = replay != null && ("ONCE".equals(recurrenceType) || "CUSTOM_DATES".equals(recurrenceType))
+                ? scheduleMaterializer.normalizeFixedDatesForReplay(request)
+                : scheduleMaterializer.materialize(request, todayShanghai());
         // 5.9:集合时刻是场次退款钟的锚点,必须是系列入参的一部分;缺省拒在建系列之前。
         String startTime = requiredStartTime(request);
         String requestFingerprint = seriesFingerprint(actorMemberId, request.getClubId(), request.getTopicId(),
                 recurrenceType, dates, startTime, leadMemberId, capacity,
                 Boolean.TRUE.equals(request.getWaitlistEnabled()), offerMinutes);
-        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
-                request.getClubId(), actorMemberId, requestId);
         if (replay != null) {
             return exactSeriesReplay(replay, requestFingerprint);
         }
@@ -897,13 +912,15 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
     }
 
-    private ClubEventSeriesView toSeriesView(ClubEventSeries series, List<String> futureDates) {
+    private ClubEventSeriesView toSeriesView(ClubEventSeries series, List<String> futureDates,
+                                             List<ClubEventOccurrence> futureOccurrences) {
         ClubEventSeriesView view = new ClubEventSeriesView();
         view.setId(series.getId());
         view.setClubId(series.getClubId());
         view.setTopicId(series.getTopicId());
         view.setRecurrenceType(series.getRecurrenceType());
         view.setTimezone(series.getTimezone());
+        view.setStartTime(seriesStartTime(series.getId(), futureOccurrences));
         view.setDefaultLeadMemberId(series.getDefaultLeadMemberId());
         view.setDefaultCapacity(series.getDefaultCapacity());
         view.setWaitlistEnabled(series.getWaitlistEnabled());
@@ -912,6 +929,24 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         view.setVersion(series.getVersion());
         view.setFutureDates(futureDates);
         return view;
+    }
+
+    /** 系列未另存默认时刻；只从现有未来场次的上海时刻还原，空/混合时刻不能猜成 09:00。 */
+    private String seriesStartTime(Long seriesId, List<ClubEventOccurrence> occurrences) {
+        String shared = null;
+        if (occurrences == null) return null;
+        for (ClubEventOccurrence row : occurrences) {
+            if (row == null || !seriesId.equals(row.getSeriesId()) || !positive(row.getActivityId())
+                    || row.getOccurrenceAt() == null
+                    || !ClubEventOccurrence.STATUS_ACTIVE.equals(row.getStatus())) {
+                throw conflict("未来场次状态不完整");
+            }
+            String time = row.getOccurrenceAt().toInstant().atZone(ZoneId.of("Asia/Shanghai"))
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
+            if (shared != null && !shared.equals(time)) return null;
+            shared = time;
+        }
+        return shared;
     }
 
     private String safeUsername(String username, Long actorMemberId) {
@@ -950,7 +985,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     private Date assemblyMoment(LocalDate date, String startTime) {
-        LocalTime time = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"));
+        LocalTime time = LocalTime.parse(startTime, ASSEMBLY_TIME_FORMAT);
         return Date.from(LocalDateTime.of(date, time).atZone(ZoneId.of("Asia/Shanghai")).toInstant());
     }
 
@@ -959,7 +994,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String raw = request.getStartTime() == null ? "" : request.getStartTime().trim();
         if (raw.isEmpty()) throw badRequest("请选择集合时刻(HH:mm)");
         try {
-            LocalTime.parse(raw, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime.parse(raw, ASSEMBLY_TIME_FORMAT);
         } catch (java.time.DateTimeException malformed) {
             throw badRequest("集合时刻格式应为 HH:mm,实际:" + raw);
         }

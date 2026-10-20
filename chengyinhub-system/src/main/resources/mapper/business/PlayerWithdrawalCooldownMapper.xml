@@ -41,6 +41,12 @@
         where member_id = #{memberId} and cooldown_until &gt; CURRENT_TIMESTAMP(3)
     </select>
 
+    <select id="selectUnexpiredAmountsForUpdate" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+        select amount from player_withdrawal_cooldown
+        where member_id = #{memberId} and cooldown_until &gt; CURRENT_TIMESTAMP(3)
+        order by id for update
+    </select>
+
     <select id="selectByMember" resultMap="CooldownResult">
         select * from player_withdrawal_cooldown where member_id = #{memberId} order by id
     </select>

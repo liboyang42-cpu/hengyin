@@ -3,6 +3,7 @@ package com.chengyinhub.business.mapper;
 import com.chengyinhub.business.domain.GrowthBadge;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -19,6 +20,9 @@ public interface GrowthBadgeMapper {
     /** 按编码取徽章定义(颁发校验归属用)。 */
     GrowthBadge selectByCode(@Param("badgeCode") String badgeCode);
 
-    /** 所有启用中的徽章定义,按排序号升序(引擎侧规则装载用)。 */
+    /** 平台级启用中的徽章定义(club_id 为空),按排序号升序;俱乐部专属徽章不在此列。 */
     List<GrowthBadge> selectAllActive();
+
+    /** 启用中的俱乐部专属徽章定义里,编码在给定集合内的(个人墙只展示本人已获得的俱乐部徽章)。 */
+    List<GrowthBadge> selectActiveClubByCodes(@Param("codes") Collection<String> codes);
 }

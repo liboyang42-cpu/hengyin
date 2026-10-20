@@ -78,7 +78,7 @@ function readBackBusinessStatus(expected, success) {
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
-    imageEditor: null, discardVisible: false, brandImages: [],
+    imageEditor: null, discardVisible: false, backGuardOff: false, brandImages: [],
     categoryOptions: [], categoryDraft: [], categoryError: '',
     tagDraft: [], tagChoices: [],
     statusBarHeight: 20,
@@ -718,6 +718,18 @@ Page({
     else this.setData({'fieldSheet.show': false});
   },
   keepEditing() { this.setData({discardVisible: false}); },
+  // 物理返回守卫(见 wxml 尾部 page-container):先关最上层浮层(放弃确认 > 字段面板 > 图片编辑),不退出装修页
+  onNativeBackGuard() {
+    const d = this.data;
+    if (d.discardVisible) this.keepEditing();
+    else if (d.fieldSheet && d.fieldSheet.show) this.closeFieldSheet();
+    else if (d.imageEditor) this.closeImage();
+    const n = this.data;
+    if (n.imageEditor || (n.fieldSheet && n.fieldSheet.show) || n.discardVisible) {
+      this.setData({backGuardOff: true});
+      setTimeout(() => { if (!this._destroyed) this.setData({backGuardOff: false}); }, 50);
+    }
+  },
   discardField() {
     if(this.data.discardTarget === 'image') this.setData({discardVisible:false,saveError:'',imageEditor:null});
     else this.setData({discardVisible:false,saveError:'','fieldSheet.show':false});

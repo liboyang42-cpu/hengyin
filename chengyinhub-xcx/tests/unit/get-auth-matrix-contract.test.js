@@ -22,7 +22,7 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码71个GET调用点的显式权限清单（直接38 + req包装28 + 作者媒体包装5）。
+// 当前源码75个GET调用点的显式权限清单（直接42 + req包装28 + 作者媒体包装5）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
@@ -119,6 +119,12 @@ const MATRIX = [
   ['subpackageRoam/my-teams/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
   ['utils/features/exploration-anniversary.js', "url: '/api/exploration-anniversary'", 'required', 'member', 'self-member-history'],
   ['utils/features/monthly-recap-client.js', "url: '/api/monthly-recap'", 'required', 'member', 'self-member-history'],
+  // 2026-10-19 移植共享基线(W2):认领门店状态只读本人认领(ApiMerchantClaimController#status 按 getAppUserId);
+  //   主题状态键只读本人可编辑主题(ApiTopicStateKeyController 校验发布者);官方路线列表/详情走 /api/preset 已登录读(非 permitAll)。
+  ['pages/merchant/components/merchant-claim-sheet/index.js', "url: '/api/merchant/claims/status', method: 'GET'", 'required', 'member', 'self-account'],
+  ['pages/publish/components/topic-state-keys/index.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
+  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/event'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/tiles/page'", 'required', 'member', 'self-member-history'],
@@ -286,7 +292,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-13 注销申请结果未知时只读回查本人 /api/user/deregister/status,同端点同权限档,34→35。
   // 2026-10-14 漫游上线:我的队伍附近招募 + 那年今日 + 月度回顾三处 GET,35 → 38(权限档见 MATRIX 同日注释)。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线新增直接 GET 24 处(举报/纠错/原因表/触达/开通前置/审核回读/通知/安全感受/据点/主办控制台等,逐条已入 MATRIX),38 → 62。
-  assert.equal(directCount, 62, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-19 移植共享基线(W2):认领状态、主题状态键、官方路线列表/详情四处直接 GET,38 → 42(权限档见 MATRIX 同日注释)。
+  // 2026-10-20 合并 master(#396 移植共享基线)进 #293:两侧新增互不重叠,62 + 4 = 66。
+  assert.equal(directCount, 66, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   assert.equal(wrapperCount, 29, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');

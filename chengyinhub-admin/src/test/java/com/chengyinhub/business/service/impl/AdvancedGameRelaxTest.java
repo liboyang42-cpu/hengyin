@@ -102,6 +102,7 @@ class AdvancedGameRelaxTest {
             saved.setId(51L);
             return 1;
         });
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     private JsonNode startAndReadSnapshot() throws Exception {

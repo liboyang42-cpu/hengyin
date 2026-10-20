@@ -124,6 +124,7 @@
       <cy-skeleton class="cn-poster-state" wx:if="{{posterSheet.state === 'loading'}}" type="detail" />
       <image class="cn-poster-img cy-fade-in" wx:elif="{{posterSheet.state === 'ready' && posterSheet.qrcodeUrl}}" src="{{posterSheet.qrcodeUrl}}"
         mode="aspectFit" show-menu-by-longpress />
+      <cy-code-text wx:elif="{{posterSheet.state === 'ready' && posterSheet.codeText}}" code="{{posterSheet.codeText}}" />
       <cy-error load-failure class="cn-poster-state" wx:elif="{{posterSheet.state === 'error'}}" size="lg" title="打卡码加载失败"
         sub="{{posterSheet.errorText}}" retry="重新取码" bind:retry="retryPosterCode" />
       <block wx:if="{{posterSheet.state === 'ready'}}">

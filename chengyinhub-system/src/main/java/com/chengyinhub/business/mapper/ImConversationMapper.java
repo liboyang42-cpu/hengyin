@@ -15,6 +15,8 @@ public interface ImConversationMapper
     /** 发送消息/关闭会话的共同互斥点；必须在事务中调用。 */
     public ImConversation selectImConversationByIdForUpdate(Long id);
 
+    public ImConversation selectImConversationByIdForShare(Long id);
+
     public ImConversation selectByTypeAndBizKey(@Param("type") Integer type, @Param("bizKey") String bizKey);
 
     /** 按类型列出会话(按最后消息时间倒序) — 后台客服台用 */

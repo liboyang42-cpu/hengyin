@@ -84,6 +84,8 @@ public interface GameSessionRuntimeMapper {
 
     GameStoryState selectStoryState(@Param("sessionId") Long sessionId, @Param("ownerType") String ownerType,
                                     @Param("ownerId") Long ownerId);
+    GameStoryState selectStoryStateForUpdate(@Param("sessionId") Long sessionId, @Param("ownerType") String ownerType,
+                                             @Param("ownerId") Long ownerId);
     int insertStoryState(GameStoryState state);
     int updateStoryStateCas(GameStoryState state);
 

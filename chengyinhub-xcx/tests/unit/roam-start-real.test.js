@@ -10,6 +10,7 @@ const test = require('node:test');
 
 let pageConfig;
 global.getApp = () => ({
+  getUserID: () => '9',
   globalData: { user_id: 9, features: {} },
   isDevEnv: () => false,
   sendRequest() {},

@@ -62,16 +62,60 @@ Page({
    */
   onShow() {
     this.syncViewTheme();
+    if (this._syncFavoriteAccount()) { this.loadLikeData(); this._hasShown = true; return; }
     if (!this._hasShown) {
       this._hasShown = true;
       return;
     }
     // 返回页面后刷新数据；首展交给 onLoad，避免同一页并发两次 page=1。
+    // 在途列表期间返回:排队一次刷新,由当前请求 complete 出队(刷新归属本次返回,不记在列表 handler 名下)。
+    if (this.data.loading) {
+      this._favoriteShowRefresh = { owner: this._favoriteOwner, generation: this._favoriteGeneration, run: () => this.refreshData() };
+      return;
+    }
     this.refreshData();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() { this._favoriteShowRefresh = null; this._favoritesDisposed = true; this._favoriteGeneration = (this._favoriteGeneration || 0) + 1; merchantTheme.merchantPageRestore(); },
+
+  _favoriteMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  _syncFavoriteAccount() {
+    const member = this._favoriteMember();
+    if (this._favoriteOwner === undefined) { this._favoriteOwner = member; return false; }
+    if (this._favoriteOwner === member) return false;
+    this._favoriteOwner = member;
+    this._favoriteGeneration = (this._favoriteGeneration || 0) + 1;
+    this._unlikeRequests = Object.create(null); this._postUnlikeRequests = Object.create(null);
+    this._stopPullWithCurrent = false;
+    this._favoriteShowRefresh = null;
+    this._favoriteLoadedPages = Object.create(null);
+    this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) };
+    this._unlikePrompts = Object.create(null);
+    this.setData({ postList: [], ztList1: [], loading: false, refreshing: false, errorMsg: '', loginRequired: false,
+      hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
+    return true;
+  },
+  _isFavoriteResponseCurrent(owner, generation) {
+    return !this._favoritesDisposed && owner === this._favoriteMember()
+      && generation === this._favoriteGeneration;
+  },
+
+  _flushFavoriteShowRefresh() {
+    const pending = this._favoriteShowRefresh;
+    this._favoriteShowRefresh = null;
+    if (pending && this._isFavoriteResponseCurrent(pending.owner, pending.generation)) pending.run();
+  },
+
+  _recordFavoriteRemoval(type, id) {
+    this._favoriteRemovalVersion = (this._favoriteRemovalVersion || 0) + 1;
+    const removed = this._favoriteRemovals || (this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) });
+    removed[type][String(id)] = this._favoriteRemovalVersion;
+  },
+  _filterFavoriteRead(type, rows, version) {
+    const removed = this._favoriteRemovals && this._favoriteRemovals[type];
+    return removed ? rows.filter(row => !(removed[String(row.id)] > version)) : rows;
+  },
 
   syncViewTheme() {
     const isMerchantView = policy.isMerchantView({
@@ -88,6 +132,7 @@ Page({
    * 加载点赞数据
    */
   loadLikeData: function(fromPullDown) {
+    this._syncFavoriteAccount();
     const that = this;
     const stopPullAfterComplete = fromPullDown === true;
     if (that.data.loading) {
@@ -115,10 +160,20 @@ Page({
 
   getPostFavoriteList: function(stopPullAfterComplete) {
     const that = this;
-    const pageConfig = that.data.pageConfig;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const requestId = (this._favoriteListRequestId || 0) + 1;
+    this._favoriteListRequestId = requestId;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && requestId === that._favoriteListRequestId;
+    const removalVersion = that._favoriteRemovalVersion || 0;
+    const pageConfig = Object.assign({}, that.data.pageConfig);
+    const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
+    const previousPage = loadedPages.posts || Math.max(1, pageConfig.pageNum - 1);
     const hasOldContent = that.data.postList.length > 0;
     const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
+      that.setData({ pageConfig: { pageNum: previousPage, pageSize: pageConfig.pageSize } });
       that.setData({ refreshing: false, errorMsg: hasOldContent ? '' : message,
         loginRequired: !hasOldContent && isLoginRequired(app, res, statusCode) });
     };
@@ -134,22 +189,32 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
+        if (!isCurrent()) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
-          const rows = res.data.rows.map(function (row) {
+          const rows = that._filterFavoriteRead('posts', res.data.rows, removalVersion).map(function (row) {
             row.picList = row.pics ? String(row.pics).split(';').filter(Boolean) : [];
             return row;
           });
+          loadedPages.posts = pageConfig.pageNum;
           const postList = pageConfig.pageNum === 1 ? rows : that.data.postList.concat(rows);
           that.setData({ postList: postList, hasMorePosts: res.data.hasMore === true, errorMsg: '' });
         } else finishLoadError(res, '收藏帖文加载失败');
       },
-      fail: function (res, statusCode) { finishLoadError(res, '收藏帖文加载失败', statusCode); },
-      successStatusAbnormal: function (res, statusCode) { finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode); },
+      fail: function (res, statusCode) {
+        if (!isCurrent()) return;
+        finishLoadError(res, '收藏帖文加载失败', statusCode);
+      },
+      successStatusAbnormal: function (res, statusCode) {
+        if (!isCurrent()) return;
+        finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode);
+      },
       complete: function () {
+        if (!isCurrent()) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
         if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+        that._flushFavoriteShowRefresh();
       }
     });
   },
@@ -159,10 +224,20 @@ Page({
    */
   getTopicLikeList: function(stopPullAfterComplete) {
     const that = this;
-    const pageConfig = that.data.pageConfig;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const requestId = (this._favoriteListRequestId || 0) + 1;
+    this._favoriteListRequestId = requestId;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && requestId === that._favoriteListRequestId;
+    const removalVersion = that._favoriteRemovalVersion || 0;
+    const pageConfig = Object.assign({}, that.data.pageConfig);
+    const loadedPages = that._favoriteLoadedPages || (that._favoriteLoadedPages = Object.create(null));
+    const previousPage = loadedPages.topics || Math.max(1, pageConfig.pageNum - 1);
     const hasOldContent = that.data.ztList1.length > 0;
     const finishLoadError = function (res, fallback, statusCode) {
       const message = app.getRequestErrorMessage(res, fallback);
+      that.setData({ pageConfig: { pageNum: previousPage, pageSize: pageConfig.pageSize } });
       if (hasOldContent) {
         that.setData({
           refreshing: false,
@@ -187,23 +262,25 @@ Page({
         pageSize: pageConfig.pageSize
       },
       success: function (res) {
+        if (!isCurrent()) return;
         if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let list = res.data.rows;
+          let list = that._filterFavoriteRead('topics', res.data.rows, removalVersion);
           
           // 处理日期格式
           list = that.processListData(list);
+          loadedPages.topics = pageConfig.pageNum;
           
           // 如果是第一页，直接替换；否则追加
           if (pageConfig.pageNum === 1) {
             that.setData({ 
               ztList1: list,
-              hasMore1: list.length >= pageConfig.pageSize,
+              hasMore1: res.data.rows.length >= pageConfig.pageSize,
               errorMsg: '',
             });
           } else {
             that.setData({ 
               ztList1: [...that.data.ztList1, ...list],
-              hasMore1: list.length >= pageConfig.pageSize,
+              hasMore1: res.data.rows.length >= pageConfig.pageSize,
               errorMsg: '',
             });
           }
@@ -212,16 +289,20 @@ Page({
         }
       },
       fail: function (res, statusCode) {
+        if (!isCurrent()) return;
         finishLoadError(res, '喜欢列表加载失败', statusCode);
       },
       successStatusAbnormal: function (res, statusCode) {
+        if (!isCurrent()) return;
         finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode);
       },
       complete: function () {
+        if (!isCurrent()) return;
         const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
         that._stopPullWithCurrent = false;
         that.setData({ loading: false, refreshing: false });
         if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+        that._flushFavoriteShowRefresh();
       }
     });
   },
@@ -252,20 +333,36 @@ Page({
    */
   topicUnlike: function(e) {
     const that = this;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const id = e.currentTarget.dataset.id;
+    if (id == null || id === '') return;
     const requestKey = String(id);
     // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
     // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
     that._unlikeRequests = that._unlikeRequests || Object.create(null);
     if (that._unlikeRequests[requestKey]) return;
+    const prompts = that._unlikePrompts || (that._unlikePrompts = Object.create(null));
+    if (prompts[requestKey]) return;
+    const prompt = {};
+    prompts[requestKey] = prompt;
+    const finishPrompt = () => {
+      if (prompts[requestKey] !== prompt) return false;
+      delete prompts[requestKey];
+      return true;
+    };
 
     modal.show({
       title: '提示',
       content: '确定要取消点赞吗？',
       success: function (res) {
+        if (!finishPrompt() || !that._isFavoriteResponseCurrent(owner, generation)) return;
         if (res.confirm) {
           if (that._unlikeRequests[requestKey]) return;
-          that._unlikeRequests[requestKey] = true;
+          const request = {};
+          that._unlikeRequests[requestKey] = request;
+          const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+            && that._unlikeRequests[requestKey] === request;
           app.sendRequest({
             url: '/api/topic/like',
             method: "POST",
@@ -274,7 +371,9 @@ Page({
               type: 0 // 0表示取消点赞
             },
             success: function (res) {
+              if (!isCurrent()) return;
               if (res.code == "200") {
+                that._recordFavoriteRemoval('topics', requestKey);
                 toast.success('取消点赞成功');
                 
                 // 回包顺序可能与点击顺序不同，按 ID 删除避免旧 index 误删其他收藏。
@@ -285,25 +384,34 @@ Page({
               }
             },
             fail: function (res) {
+              if (!isCurrent()) return;
               toast('网络错误，请重试');
             },
             complete: function () {
+              if (!isCurrent()) return;
               delete that._unlikeRequests[requestKey];
             }
           });
         }
-      }
+      },
+      fail: finishPrompt,
+      complete: finishPrompt
     });
   },
 
   postUnlike: function(e) {
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
     const index = e.detail && e.detail.index;
     const item = this.data.postList[index];
     if (!item || !item.id) return;
     const requestKey = String(item.id);
     this._postUnlikeRequests = this._postUnlikeRequests || Object.create(null);
     if (this._postUnlikeRequests[requestKey]) return;
-    this._postUnlikeRequests[requestKey] = true;
+    const request = {};
+    this._postUnlikeRequests[requestKey] = request;
+    const isCurrent = () => this._isFavoriteResponseCurrent(owner, generation)
+      && this._postUnlikeRequests[requestKey] === request;
     community.request({
       hideLoading: true,
       silentError: true,
@@ -315,15 +423,23 @@ Page({
         request_id: 'bookmark-' + item.id + '-0-' + Date.now().toString(36)
       },
       success: (res) => {
+        if (!isCurrent()) return;
         if (!res || res.code != '200') {
           toast((res && res.msg) || '操作失败');
           return;
         }
+        this._recordFavoriteRemoval('posts', requestKey);
         const postList = this.data.postList.filter(post => String(post.id) !== requestKey);
         this.setData({ postList: postList });
       },
-      fail: () => toast('网络错误，请重试'),
-      complete: () => { delete this._postUnlikeRequests[requestKey]; }
+      fail: () => {
+        if (!isCurrent()) return;
+        toast('网络错误，请重试');
+      },
+      complete: () => {
+        if (!isCurrent()) return;
+        delete this._postUnlikeRequests[requestKey];
+      }
     });
   },
 
@@ -418,8 +534,7 @@ Page({
     if (!hasMore) return;
     
     // 加载下一页
-    pageConfig.pageNum += 1;
-    that.setData({ pageConfig });
+    that.setData({ pageConfig: { pageNum: pageConfig.pageNum + 1, pageSize: pageConfig.pageSize } });
     that.loadLikeData();
   },
 

@@ -31,6 +31,25 @@ public class WithdrawalFrozenAmountResolver {
         this.cooldownService = cooldownService;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.MerchantReferralBountyMapper bountyMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapper cooldownMapper;
+
+    /** Caller holds the member balance lock in its financial transaction. */
+    public Frozen resolveForWithdrawal(Long memberId) {
+        if (memberId == null) throw new IllegalArgumentException("member identity required");
+        return new Frozen(sum(bountyMapper.selectFrozenAmountsForUpdate(memberId, new java.util.Date())),
+                sum(cooldownMapper.selectUnexpiredAmountsForUpdate(memberId)));
+    }
+
+    private static BigDecimal sum(java.util.List<BigDecimal> amounts) {
+        if (amounts == null) throw new IllegalStateException("Frozen current read unavailable");
+        BigDecimal total = BigDecimal.ZERO;
+        for (BigDecimal amount : amounts) if (amount != null) total = total.add(amount);
+        return total;
+    }
+
     /** 该会员当前不可提现的冻结额分项，两项都 ≥0。 */
     public Frozen resolve(Long memberId) {
         if (memberId == null) {

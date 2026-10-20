@@ -314,9 +314,12 @@ public class MerchantPayableServiceImpl implements IMerchantPayableService {
             return false;
         }
         requireProgressionAllowed(batch);
-        if (MerchantPayableBatch.STATUS_CONFIRMED.equals(batch.getStatus())) {
-            MakerCheckerGuard.requireDistinct(batch.getConfirmedBy(), operator);
+        // The SQL transition also requires CONFIRMED. Do not let a PENDING read skip
+        // maker/checker validation and then succeed after a concurrent confirmation.
+        if (!MerchantPayableBatch.STATUS_CONFIRMED.equals(batch.getStatus())) {
+            return false;
         }
+        MakerCheckerGuard.requireDistinct(batch.getConfirmedBy(), operator);
         return batchMapper.markPaid(batchId, operator, payVoucherNo) > 0;
     }
 

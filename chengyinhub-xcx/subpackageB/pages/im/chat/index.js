@@ -365,16 +365,21 @@ Page({
       }
     });
     if (!ids.length) return;
+    // 迟到回包只回写发起时的同一账号/会话,换号后不把旧路线详情写进新视图。
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const current = () => that._isReadContextCurrent(conversationId, memberId);
     ids.forEach(function (id) {
       app.sendRequest({
         url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,
         data: { id: id },
         success(res) {
+          if (!current()) return;
           const d = (res && res.code == 200) ? res.data : null;
           // 拉不到/已下架 → 记 null,渲染层出降级态「该路线已下架」
           that.setData({ ['topicCache.' + id]: d || null });
         },
-        fail() { that.setData({ ['topicCache.' + id]: null }); },
+        fail() { if (current()) that.setData({ ['topicCache.' + id]: null }); },
       });
     });
   },

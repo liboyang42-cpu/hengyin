@@ -145,6 +145,7 @@ class ApiPlayHintUnlockTest {
         when(detailSvc.insertUmsMemberPointsDetail(any())).thenReturn(1);
         // 默认:该会员尚无 event_type=14 消费流水 = 未解锁过
         when(detailSvc.selectUmsMemberPointsDetailList(any())).thenReturn(Collections.emptyList());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @SuppressWarnings("unchecked")

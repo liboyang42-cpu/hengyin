@@ -214,6 +214,11 @@
     </view>
 
 
+    <!-- 主题状态键(仅编辑已有主题时可管理;草稿还没有 topicId,后端无处挂) -->
+    <topic-state-keys wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}"
+                      read-only="{{editScope === 'WHITELIST'}}" />
+    <view class="node-card" wx:else><text class="node-card__title">状态键</text><text style="font-size:24rpx;color:#6b7280">保存为主题后，才能在这里注册和管理状态键。</text></view>
+
     <!-- 「清空本地草稿」原先挂在创作页那条常驻提示条上,提示条 2026-08-11 下线后
          入口挪到这里 —— 它是"把这份草稿丢掉重来"的破坏性动作,本来也不该常驻在
          首屏第一眼的位置。 -->

@@ -59,6 +59,12 @@ class NodeTemplateOwnershipTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
+        // CORE OWN-C03-13：节点插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填自增 id。
+        java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(9000L);
+        when(nodeMapper.insertCmsTopicNode(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> {
+            ((com.chengyinhub.business.domain.CmsTopicNode) inv.getArgument(0)).setId(ids.incrementAndGet());
+            return 1;
+        });
     }
 
     private CmsMemberTemplate tpl(Long owner, Long status, Integer draftStatus) {

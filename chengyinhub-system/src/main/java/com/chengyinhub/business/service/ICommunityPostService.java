@@ -19,6 +19,10 @@ public interface ICommunityPostService {
     void withdrawLocation(Long memberId, Long postId, CommunityPostRequests.State request);
     void copyrightRemove(Long operatorUserId, Long postId, CommunityPostRequests.State request);
     Map<String, Object> detail(Long viewerId, Long postId);
+
+    /** Existing audit-read permission must be checked by the caller. Never substitutes newer content. */
+    Map<String, Object> auditMediaPreview(com.chengyinhub.business.domain.AuditTask task);
+    String auditSnapshotForRead(String snapshotJson);
     List<Map<String, Object>> revisions(Long viewerId, Long postId);
     List<Map<String, Object>> filterPublicCompletedReferences(Long memberId, List<Map<String, Object>> completed);
     List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit);

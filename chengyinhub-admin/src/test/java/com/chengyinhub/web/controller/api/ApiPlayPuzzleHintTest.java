@@ -120,6 +120,7 @@ class ApiPlayPuzzleHintTest
                 mock(com.chengyinhub.business.service.IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @SuppressWarnings("unchecked")

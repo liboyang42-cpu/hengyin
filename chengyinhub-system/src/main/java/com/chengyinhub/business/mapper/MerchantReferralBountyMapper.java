@@ -17,6 +17,12 @@ public interface MerchantReferralBountyMapper
     /** 按被推荐商家查(uk_merchant 保证至多一条)。 */
     MerchantReferralBounty selectByMerchantMemberId(Long merchantMemberId);
 
+    MerchantReferralBounty selectByMerchantMemberIdForUpdate(@Param("merchantMemberId") Long merchantMemberId);
+
+    List<java.math.BigDecimal> selectFrozenAmountsForUpdate(@Param("inviterMemberId") Long inviterMemberId, @Param("now") Date now);
+
+    List<Long> selectPaidIdsByInviterForUpdate(@Param("inviterMemberId") Long inviterMemberId);
+
     /**
      * 占位插入。依赖 uk_merchant 唯一键做幂等:并发/重复触发只有一方成功。
      *

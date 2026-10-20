@@ -1,5 +1,6 @@
 package com.chengyinhub.web.service;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -62,6 +63,7 @@ public class PreferencePlayService {
         return data;
     }
 
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public Map<String, Object> submit(Long memberId, Long topicId, Long actId, Long nodeId,
                                       CmsMemberTemplate template, PreferenceSubmitRequest request,

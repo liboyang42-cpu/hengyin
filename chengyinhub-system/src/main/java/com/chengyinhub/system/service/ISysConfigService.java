@@ -96,6 +96,9 @@ public interface ISysConfigService
      */
     public int updateFundsPolicyConfigByKey(String configKey, String configValue, String updateBy);
 
+    /** 资金政策专用当前锁读，绕过普通参数缓存；缺行返回空串。 */
+    public String selectFundsPolicyValueForUpdate(String configKey);
+
     /**
      * 批量删除参数信息
      * 

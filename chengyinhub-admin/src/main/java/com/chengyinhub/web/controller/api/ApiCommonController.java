@@ -13,6 +13,7 @@ import com.chengyinhub.common.enums.BusinessType;
 import com.chengyinhub.common.utils.DictUtils;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.file.FileUtils;
+import com.chengyinhub.common.utils.file.FileOssUploadUtils;
 import com.chengyinhub.system.domain.SysBanner;
 import com.chengyinhub.system.service.ISysConfigService;
 import com.chengyinhub.system.service.ISysDictDataService;
@@ -137,7 +138,8 @@ public class ApiCommonController extends BaseController {
                 ajax.put("url", jsonObject.get("url"));
             }
             if (communityMemberId != null) {
-                String objectKey = String.valueOf(jsonObject.get("url"));
+                String objectKey = FileOssUploadUtils.communityMediaObjectKey(jsonObject.getString("fileName"));
+                ajax.put("objectKey", objectKey);
                 long byteSize = jsonObject.getLongValue("byteSize");
                 ajax.put("byteSize", byteSize);
                 ajax.put("mimeType", StringUtils.defaultIfEmpty(file.getContentType(), "application/octet-stream"));

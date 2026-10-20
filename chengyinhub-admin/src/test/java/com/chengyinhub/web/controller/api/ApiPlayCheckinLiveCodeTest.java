@@ -53,6 +53,7 @@ class ApiPlayCheckinLiveCodeTest {
         ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @Test void sharedRouteScanOnlyRecordsArrivalAndNeverRunsPersonalAwardChain() {
@@ -66,6 +67,7 @@ class ApiPlayCheckinLiveCodeTest {
         CmsActivity activity=new CmsActivity();activity.setId(43L);activity.setTopicId(44L);activity.setStartDate(new Date(System.currentTimeMillis()-60000));activity.setEndDate(new Date(System.currentTimeMillis()+60000));when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
         CmsRegistration registration=new CmsRegistration();registration.setId(91L);when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
         com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);ReflectionTestUtils.setField(controller,"cmsRegistrationMapper",registrationMapper);
+        CurrentPlayControllerFixtures.delegate(registrationMapper, controller); // C包新使用资格走当前锁读
         when(registrationMapper.markFirstSuccessfulScan(any(),any(),any(),any(),any())).thenReturn(1);
         com.chengyinhub.business.domain.CmsTopic topic=new com.chengyinhub.business.domain.CmsTopic();topic.setId(44L);topic.setProductType(1);when(topics.selectCmsTopicById(44L)).thenReturn(topic);
         when(runtime.routeSessionStatus(43L)).thenReturn("RUNNING");when(routes.canPlay(any(),any(),any(),any(),any())).thenReturn(true);

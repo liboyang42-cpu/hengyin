@@ -101,6 +101,31 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(any(), any());
     }
 
+    /** #299:探店日开放商家承接时，未配玩法的站点等商家入驻供给；商家只能承接已上架主题，所以零玩法也可提交。 */
+    @Test
+    void freeExploreRecruitingChaptersMaySubmitWithoutGameplayButOtherShapesStillNeedOne() {
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
+        node.setTemplateId(null);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        chapter.setRecruitEnabled(1);
+
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        stubLockedRows();
+        service.applyDecision(10L, 7L, submission.getSnapshotJson(), true);
+        verify(templateMapper, never()).approveBundledDraft(any(), any());
+
+        // 负控:章节未开放承接 / 非自由定向 / 有站点落在未开放承接的章节，仍要求至少一个玩法。
+        chapter.setRecruitEnabled(0);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        chapter.setRecruitEnabled(1);
+        topic.setProductType(1);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        node.setChapterId(21L);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+    }
+
     @Test
     void storyGameWithoutLocationCanBeSubmittedAndReviewed() {
         CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
