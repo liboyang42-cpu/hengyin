@@ -79,7 +79,7 @@ class OmsTicketPublicCreationInvariantTest {
         request.setTickets(Collections.singletonList(ticket));
 
         ServiceException ex = assertThrows(ServiceException.class,
-                () -> service.publishActivity(request, 88L, "creator"));
+                () -> service.publishActivity(request, 88L, "creator", true));
 
         assertEquals(400, ex.getCode());
         verify(ticketMapper, never()).insertOmsTicket(any());
@@ -99,7 +99,7 @@ class OmsTicketPublicCreationInvariantTest {
         when(clubMapper.selectClubByIdForUpdate(73L)).thenReturn(null);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishActivity(request, 88L, "creator"));
+                () -> service.publishActivity(request, 88L, "creator", true));
 
         assertTrue(error.getMessage().contains("俱乐部已解散"),
                 "该红必须指认到发布活动的解散互斥闸，实际:" + error.getMessage());
@@ -122,7 +122,7 @@ class OmsTicketPublicCreationInvariantTest {
         when(clubMapper.selectClubByIdForUpdate(73L)).thenReturn(club);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishActivity(requestForClub(73L), 88L, "forger"));
+                () -> service.publishActivity(requestForClub(73L), 88L, "forger", true));
 
         assertEquals("只能向自己主理的俱乐部发布活动", error.getMessage());
         verify(activityMapper, never()).insertCmsActivity(any());
