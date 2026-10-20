@@ -92,6 +92,11 @@ class ApiCouponControllerMerchantAccessTest {
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
         ReflectionTestUtils.setField(controller, "umsMemberService", memberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
+        // 分级审核门禁默认放行(门禁分支见 CouponPublishReviewModeTest)
+        com.chengyinhub.business.service.IContentSafetyGate gate = mock(com.chengyinhub.business.service.IContentSafetyGate.class);
+        when(gate.decide(any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.pass());
+        ReflectionTestUtils.setField(controller, "contentSafetyGate", gate);
+        ReflectionTestUtils.setField(controller, "auditTaskService", mock(com.chengyinhub.business.service.IAuditTaskService.class));
 
         when(merchantAccessService.require(PRINCIPAL_MEMBER_ID, MerchantPermission.COUPON_MANAGE))
                 .thenReturn(access(MerchantRoleCode.MERCHANT_MARKETING));

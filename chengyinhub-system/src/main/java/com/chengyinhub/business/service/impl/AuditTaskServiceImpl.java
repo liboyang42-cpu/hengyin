@@ -159,6 +159,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.ICommunityPostService> communityPostServiceProvider;
 
+    /** 官方活动先审后发:服务提交审核单,过审反向回写 —— ObjectProvider 破环。 */
+    @Autowired
+    private ObjectProvider<com.chengyinhub.business.service.IOfficialEventService> officialEventServiceProvider;
+
+    @Autowired
+    private ObjectProvider<com.chengyinhub.business.service.ISmsCouponService> smsCouponServiceProvider;
+
     /** 附近的局:举报走本服务上报,处置反向调它 —— 同样用 ObjectProvider 破环。 */
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.IRoamHangoutService> roamHangoutServiceProvider;
@@ -1093,6 +1100,16 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 a.setReason(down ? reasonText : "");
                 a.setPublishStatus(down ? 0L : 1L);
                 cmsActivityMapper.updateCmsActivity(a);
+            } else if (AuditTask.BIZ_OFFICIAL_EVENT.equals(bizType)) {
+                // 官方活动先审后发:过审→上架/排期;驳回→保持不公开
+                officialEventServiceProvider.getObject().applyAuditDecision(bizId, up, reasonText, task.getSubmitterId());
+            } else if (AuditTask.BIZ_COUPON.equals(bizType)) {
+                // 优惠券先发后审抽检:确认违规→平台手动失效(status=3,停止新领取);无问题→不动
+                if (up) return;
+                com.chengyinhub.business.domain.SmsCoupon c = new com.chengyinhub.business.domain.SmsCoupon();
+                c.setId(bizId);
+                c.setStatus(3);
+                smsCouponServiceProvider.getObject().updateSmsCoupon(c);
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。
@@ -1141,6 +1158,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     || AuditTask.BIZ_TEMPLATE.equals(bizType)
                     || AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)
                     || AuditTask.BIZ_TOPIC.equals(bizType)
+                    || AuditTask.BIZ_OFFICIAL_EVENT.equals(bizType)
                     || AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType)
                     || AuditTask.BIZ_HANGOUT.equals(bizType)
                     || AuditTask.BIZ_TEAM.equals(bizType)) {
@@ -1151,6 +1169,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                                 : AuditTask.BIZ_COMMUNITY_POST_COMMENT.equals(bizType)
                                 ? "社区评论审核状态同步失败"
                                 : AuditTask.BIZ_TOPIC.equals(bizType) ? "主题审核状态同步失败"
+                                : AuditTask.BIZ_OFFICIAL_EVENT.equals(bizType) ? "官方活动审核状态同步失败"
                                 : AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType)
                                         ? "评价审核状态同步失败" : AuditTask.BIZ_HANGOUT.equals(bizType)
                                                 ? "组局处置失败，审核未提交，请重试" : AuditTask.BIZ_TEAM.equals(bizType)

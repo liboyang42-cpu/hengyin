@@ -9,10 +9,12 @@ import java.util.Map;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.EventSignup;
 import com.chengyinhub.business.domain.OfficialEvent;
 import com.chengyinhub.business.mapper.EventSignupMapper;
 import com.chengyinhub.business.mapper.OfficialEventMapper;
+import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.IOfficialEventService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
@@ -45,6 +47,8 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
     private OfficialSettlementHelper settlementHelper;
     @Autowired
     private IOfficialEventV2Service officialEventV2Service;
+    @Autowired
+    private IAuditTaskService auditTaskService;
 
     @Override
     public List<Map<String, Object>> listPublic(String city, Long memberId) {
@@ -198,6 +202,56 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
         }
         eventMapper.insertOfficialEvent(e);
         return e;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OfficialEvent submitForReview(OfficialEvent e, Long senderAccount) {
+        // 先审后发:请求体带的 status/control_state 一律不认,只能落待审;审核单与活动同事务,
+        // 建单失败整体回滚,不留「永远没人审」的待审活动。
+        if (e != null) {
+            e.setStatus(OfficialEvent.ST_DRAFT);
+            e.setControlState(OfficialEvent.CONTROL_PENDING_REVIEW);
+        }
+        OfficialEvent saved = publish(e, senderAccount);
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", AuditTask.BIZ_OFFICIAL_EVENT);
+        snap.put("bizId", saved.getId());
+        snap.put("contractVersion", saved.getContractVersion());
+        snap.put("title", saved.getTitle());
+        snap.put("subtitle", saved.getSubtitle());
+        snap.put("story", saved.getStory());
+        snap.put("coverImg", saved.getCoverImg());
+        snap.put("city", saved.getCity());
+        auditTaskService.submit(AuditTask.BIZ_OFFICIAL_EVENT, saved.getId(), senderAccount,
+                "user_publish", snap.toJSONString());
+        return saved;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId) {
+        OfficialEvent e = eventMapper.selectOfficialEventByIdForUpdate(eventId);
+        if (e == null) throw new ServiceException("官方活动不存在");
+        if (isV2(e)) {
+            officialEventV2Service.applyAuditDecision(eventId, approved, reason, submitterId);
+            return;
+        }
+        if (!isPendingReview(e)) {
+            throw new ServiceException("官方活动审核状态已变化，请刷新后重试");
+        }
+        OfficialEvent upd = new OfficialEvent();
+        upd.setId(eventId);
+        // 过审 → 按时间定状态上架;驳回 → 下线(详情/列表都不出)
+        upd.setStatus(approved ? computeStatusByTime(e) : OfficialEvent.ST_OFFLINE);
+        upd.setControlState("NORMAL");
+        upd.setUpdateTime(new Date());
+        eventMapper.updateOfficialEvent(upd);
+    }
+
+    private boolean isPendingReview(OfficialEvent e) {
+        return e.getStatus() != null && e.getStatus() == OfficialEvent.ST_DRAFT
+                && OfficialEvent.CONTROL_PENDING_REVIEW.equals(e.getControlState());
     }
 
     @Override
