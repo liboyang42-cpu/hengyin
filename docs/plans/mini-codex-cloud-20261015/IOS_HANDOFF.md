@@ -1,4 +1,26 @@
-## 当前单测试增量：PR394固定663729，a89九批存储证据分源签收
+## 当前工程收口：PR394固定663729，授权CI通过，未合并／未部署
+
+固定源码 `663729b8623fa63c2f1c2a0812ea2a287d70c4fc` 的代码整合与既有授权CI工程闭环，**SOURCE_READY；TEST_DEPLOYED未执行**。[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 仍为未合并草稿，原来源／三队和唯一修复槽冻结。C00直接核到 [CI39439276632 attempt2](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439276632)、[Funds39439278301](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439278301)、[Followup39439276885](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439276885)、[JAR39439466174](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439466174) 均SUCCESS。精确报告与工件由root独立核验；C00未执行编译／测试／触发CI。
+
+| 固定663的选择／门禁 | 最终报告（各轮独立，不相加去重） |
+| --- | --- |
+| Backend普通 | 12696报告／12068实际执行／628跳过／0失败／0错误 |
+| 既有MyBatis门禁 | 44类／293实际／0失败／错误／跳过 |
+| Funds | 62类／657实际／0失败／错误／跳过；依完成job逐类日志，无artifact |
+| Followup | 5类／39实际／0失败／错误／跳过；5份原XML逐类核 |
+| 小程序 | 11100报告／11095通过／0失败／2跳过／3TODO |
+| 资源门禁 | 2084路径／19合法异步／0跨分包 |
+| Admin build／E2E、Fast、Secret、两迁移门禁 | SUCCESS；SBOM按原规则SKIPPED |
+
+首次checkout卡5分钟自动取消保留为准备阶段历史，Java／Mini未启动，不是源码或业务失败；root仅重试Detect job及下游，未改CI／超时／规则。attempt2实际checkout `b206e768549ca0367e8e90743040e1984678e180` 与head663的tree均为 `987a5ca2c30a67ed05d2d01a113e5b78e2097a16`，C00也已只读核等，不把其他master变化混入结论。
+
+同头JAR工件12271659352，117760734 bytes，JAR SHA256 `9a5c6b60f953ca0526904746dcf739c8be63a1fd9bd26776d6144e5507d9d5ca`，root已核CRC／SOURCE_SHA／声明hash。与a89 JAR的614个ZIP载荷项中613项代码／资源／依赖hash相同，唯一差别为git.properties中的git.commit.id；第一次把metadata也要求全等导致的审计assert保留，属于比较条件修正，不是构建／业务失败。C00仅核工件manifest，未下载／部署JAR。
+
+**a89实跑不改源**：40类／40XML／169选择用例、0失败／错误／跳过及HTTP五链／13独立读回全ok仍归 `a89a74c4077f0ee12369e5199446619b40f79695`；HTTP工件12271962488的problems=[]／harnessdrift=[]、精确MySQL／Redis teardown=true已由root最终核清。a89→663除一个普通test外全源等值与JAR载荷证明独立保留，不冒充663重跑真库／HTTP。Extra74subset、core含4普通outer负控、券clawback一类4方法类级LEFTOVER／4scratch且精确容器removed=true均不抹掉；普通628skip也不冒充真库skip0。
+
+十四条迁移静态清单绑定663并通过；a89一次性HTTP建库schemaPASS／迁移阶段问题0，只是临时测试schema和静态门禁，**不是持久目标／生产迁移演练**。真实角色设备验收、真实微信／外部渠道（支付和内容安全出站stub）、持久目标迁移与旧JAR回滚仍独立未验；未合master、未部署、不执行生产迁移。旧95f／f8／6aa／a89失败、checkout取消及清理标记按原源保留。当前源码任务闭环，无新增作者／代码／测试／CI配置。唯一最终索引：`LONGRUN_REMAINING.json.independent_backend_acceptance.engineering_closure`。
+
+## 先前663单测试交付与当时待验记录（历史）
 
 [PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已固定 `663729b8623fa63c2f1c2a0812ea2a287d70c4fc`，直接父 `a89a74c4077f0ee12369e5199446619b40f79695`。C00直接核读公开diff：仅CommunityPostAuditLevelTest一个文件，3行新增／2行删除，只含SIGNED_IMAGE现有URL常量／stub返回／断言第三参；17／7／openid／一次调用／真实canonical parser及其他11方法保持。状态 **SOURCE_DELIVERED_FROZEN／WAIT_CI**，唯一修复槽冻结，无新增作者。
 

@@ -3091,7 +3091,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "663_TEST_ONLY_REPAIR_FROZEN_WAIT_CI_A89_STORAGE_SOURCE_BOUND",
+    "state": "CODE_INTEGRATION_AND_AUTHORIZED_CI_ENGINEERING_CLOSED_UNMERGED_UNDEPLOYED",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -3100,7 +3100,7 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc / TEST_ONLY_SOURCE_DELIVERED_FROZEN_WAIT_CI; actual storage/HTTP remains ata89",
+    "combined_candidate": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc / SOURCE_READY_ENGINEERING_CI_ACCEPTED; external acceptance separate, unmerged/undeployed",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -3119,7 +3119,7 @@
     "current_runs": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
       "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
-      "state": "IN_PROGRESS_NO_FINAL_RESULT"
+      "state": "AUTHORIZED_ENGINEERING_RUNS_SUCCESS_ATTEMPT2_CI"
     },
     "conflict_resolution": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -3206,8 +3206,8 @@
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_frozen_repair",
       "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
       "parent_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
-      "writer_status": "STOPPED_PENDING_FINAL_CI_FEEDBACK; same sole root combination repair slot frozen",
+      "state": "SOURCE_READY_ENGINEERING_CI_ACCEPTED_UNMERGED_UNDEPLOYED",
+      "writer_status": "STOPPED_ENGINEERING_CLOSED_SOURCE_LOCKS_RETAINED",
       "inherited_pass": false
     },
     "shared_report_sheet_repair_authority": {
@@ -3255,13 +3255,13 @@
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "base_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
+      "state": "SOURCE_DELIVERED_ENGINEERING_CI_ACCEPTED",
       "authorized_exact_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java"
       ],
       "scope": "Only SIGNED_IMAGE constant/existing signing stub return and one async assertion third argument; preserve canonical parser, exact identity/count and all other test assertions.",
       "new_source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
-      "writer_status": "STOPPED_PENDING_FINAL_CI_FEEDBACK; same sole root combination repair slot frozen"
+      "writer_status": "STOPPED_ENGINEERING_CLOSED_SOURCE_LOCKS_RETAINED"
     },
     "a89_current_validation": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_current_validation",
@@ -3286,6 +3286,23 @@
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_to_663_unchanged_source_proof",
       "only_changed_test": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java",
       "executed_storage_http_results_reassigned": false
+    },
+    "engineering_closure": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.engineering_closure",
+      "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+      "state": "CODE_INTEGRATION_AND_AUTHORIZED_CI_ENGINEERING_CLOSED_UNMERGED_UNDEPLOYED",
+      "CI39439276632_attempt2": "SUCCESS",
+      "execution_result_sources": [
+        "663 ordinary/MyBatis/Funds/Followup/jar",
+        "a89 storage40XML169 and HTTP5chains13readbacks"
+      ],
+      "not_accepted": [
+        "real-role acceptance on real devices",
+        "real WeChat/external channels; payment/content-security outbound stubs not external acceptance",
+        "persistent target migration and old-JAR rollback rehearsal",
+        "master merge and production deployment not performed"
+      ],
+      "no_master_merge_or_deployment": true
     }
   }
 }
