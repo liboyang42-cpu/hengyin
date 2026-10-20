@@ -6,6 +6,8 @@ import com.chengyinhub.business.domain.dto.ActivityCancelResult;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.PublicRegistrationSummaryVO;
 import com.chengyinhub.business.domain.vo.PublicTicketVO;
@@ -95,6 +97,15 @@ public class ApiActivityController extends BaseController {
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.ActivityReviewPolicy activityReviewPolicy;
+
+    @Autowired
+    private IAuditTaskService auditTaskService;
 
     @Autowired
     private IUmsMemberService umsMemberService;
@@ -784,6 +795,10 @@ public class ApiActivityController extends BaseController {
             if (publisher == null) {
                 return error("仅俱乐部主理人或商家可发布活动");
             }
+            // 分级审核资质闸:未通过入驻审核的商家不能发布(先审后发也不行)
+            if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
+                return error("商家未通过入驻审核，暂不能发布活动");
+            }
             String hostViolation = merchantHostViolation(publisher, request);
             if (hostViolation != null) {
                 return error(hostViolation);
@@ -795,13 +810,22 @@ public class ApiActivityController extends BaseController {
                 return error(quotaErr);
             }
 
-            // UGC 内容安全:校验活动名称/简介文本,命中违规直接拦截
+            // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
+            // 明确违规两种模式都拦;先审时门禁 HOLD → 落库待审并建 BIZ_ACTIVITY 审核单(活动尚未落库,门禁不建单)。
             String secOpenid = resolveOpenid(member_id);
-            String secText = IWxContentSecurityService.joinText(request.getName(), request.getDescription());
-            String secMsg = wxContentSecurityService.checkText(secText, secOpenid);
-            if (secMsg != null) {
-                return error(secMsg);
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
+            safety.setMemberId(publisher.ownerMemberId());
+            safety.setOpenid(secOpenid);
+            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setHasPrice(activityReviewPolicy.hasCharge(request));
+            safety.setHasSignup(true);
+            safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
+            SafetyDecision decision = contentSafetyGate.decide(safety);
+            if (decision == null || decision.isBlock()) {
+                return error("活动内容包含违规信息，请修改后重试");
             }
+            final boolean preReview = decision.isHold();
 
             String username = getAppUserName();
 
@@ -812,7 +836,10 @@ public class ApiActivityController extends BaseController {
             final String fUsername = username;
             Long activityId = quotaService.runWithCreateGuard(fOwnerMemberId,
                     com.chengyinhub.business.service.IQuotaService.TYPE_EVENT,
-                    () -> cmsActivityService.publishActivity(request, fOwnerMemberId, fUsername));
+                    () -> cmsActivityService.publishActivity(request, fOwnerMemberId, fUsername, preReview));
+            if (decision.isFlagged()) {
+                flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request.getName());
+            }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
             wxContentSecurityService.submitMediaCheck(
@@ -821,7 +848,7 @@ public class ApiActivityController extends BaseController {
                     StringUtils.isNotEmpty(request.getImgArr()) ? request.getImgArr() : request.getImgUrl(),
                     secOpenid);
 
-            return AjaxResult.success("活动发布成功，请等待审核", activityId);
+            return AjaxResult.success(preReview ? "活动发布成功，请等待审核" : "活动发布成功", activityId);
 
         } catch (ServiceException se) {
             // 配额上限/欠款/内容安全这类业务拒绝的文案本就是写给发布者看的,兜底 catch 会把它压成
@@ -938,6 +965,24 @@ public class ApiActivityController extends BaseController {
     }
 
     /** 内容安全送检需要发表者 openid:按 memberId 查会员;查不到返回空串(降级 scene 检测)。 */
+    /**
+     * 先发后审时机审没给出结论(要人工/审不了/缺 openid/检测关闭):活动照常上架,
+     * 在审核台留一张非阻断抽检单(source=post_review_flag,不改活动状态),驳回即走既有下架。
+     * best-effort:失败只记日志,不影响已上架的活动。
+     */
+    private void flagForSpotCheck(Long activityId, Long ownerMemberId, String reason, String name) {
+        logger.warn("活动先发后审打标待抽检 activityId={} reason={}", activityId, reason);
+        try {
+            String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
+                    + ",\"flagReason\":\"" + reason + "\""
+                    + ",\"name\":\"" + (name == null ? "" : name.replace("\"", "'")) + "\"}";
+            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
+                    ownerMemberId, "post_review_flag", snap);
+        } catch (Exception e) {
+            logger.error("活动抽检单提交失败 activityId={}", activityId, e);
+        }
+    }
+
     private String resolveOpenid(Long memberId) {
         try {
             UmsMember m = umsMemberService.selectUmsMemberById(memberId);
@@ -962,11 +1007,18 @@ public class ApiActivityController extends BaseController {
         private final Long ownerMemberId;
         private final Long actorMemberId;
         private final boolean merchant;
+        /** 商家主体已通过入驻审核(mms_merchant.status=1 等,真源是 MerchantAccessServiceImpl#isActiveMerchant) */
+        private final boolean merchantApproved;
 
         private ActivityPublisher(Long ownerMemberId, Long actorMemberId, boolean merchant) {
+            this(ownerMemberId, actorMemberId, merchant, false);
+        }
+
+        private ActivityPublisher(Long ownerMemberId, Long actorMemberId, boolean merchant, boolean merchantApproved) {
             this.ownerMemberId = ownerMemberId;
             this.actorMemberId = actorMemberId;
             this.merchant = merchant;
+            this.merchantApproved = merchantApproved;
         }
 
         Long ownerMemberId() {
@@ -980,6 +1032,14 @@ public class ApiActivityController extends BaseController {
         boolean isMerchant() {
             return merchant;
         }
+
+        boolean isMerchantApproved() {
+            return merchantApproved;
+        }
+
+        com.chengyinhub.business.service.support.ActivityReviewPolicy.Publisher reviewSubject() {
+            return new com.chengyinhub.business.service.support.ActivityReviewPolicy.Publisher(merchant, merchantApproved);
+        }
     }
 
     /**
@@ -991,9 +1051,11 @@ public class ApiActivityController extends BaseController {
      */
     private ActivityPublisher resolveActivityPublisher(Long principalMemberId, String scope) {
         if (MerchantOperationScope.isMerchant(scope)) {
-            Long ownerMemberId = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
-                    .getOwnerMemberId();
-            return new ActivityPublisher(ownerMemberId, principalMemberId, true);
+            com.chengyinhub.business.access.merchant.MerchantAccessContext context =
+                    merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
+            // require 只对通过入驻审核的商家行返回上下文;merchantId 为空即视为未审核
+            return new ActivityPublisher(context.getOwnerMemberId(), principalMemberId, true,
+                    context.getMerchantId() != null);
         }
         if (!isClubActivityPublisher(principalMemberId)) {
             return null;
