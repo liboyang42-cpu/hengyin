@@ -503,8 +503,8 @@ Page({
    * 而这是点进来才用的一段玩法,分包按需下载正合适。 */
   openCityStamp(e) {
     const place = (e && e.detail && e.detail.place) || this.data.currentAddress || '这一站';
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this._navigating = true; this.closeScene();
+    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   /* 原型 f-fun(查找附近好玩的)与 f-discover(发现商家)是同一条横滑白卡:
      数据就是地图上那批附近商家,不另拉一份接口 —— 地图上看得见的,卡上就看得见。
@@ -679,8 +679,8 @@ Page({
   openStampCamera() {
     // 集邮相机是原生能力页,它扛着幂等键与 pending 对账(离页也能续上),不并进浮层。
     // 2026-09-11 换掉的是那页的长相:拟物机身退场,里面也是原型那张取景卡。
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageP3/pages/stamp-camera/index/index' });
+    if (this._navigating) return; this._navigating = true; this.closeScene();
+    wx.navigateTo({ url: '/subpackageP3/pages/stamp-camera/index/index', complete: () => { this._navigating = false; } });
   },
   blockSceneTouch() {},
   /* 半屏本体吃掉冒泡,免得点正文把自己关了(原型的 .sheet 也不接压暗层那一层点击)。 */
@@ -5420,7 +5420,7 @@ Page({
      ⚠️ roam-discover 那件半屏没删 —— 游玩页仍在用它(那边原型没有对应屏)。 */
   openRoamDiscover() { this.openShopStrip(); },
   openRoamTasks() { this.openScene('roam-task-list'); },
-  openOfficialEvent(e) { wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.detail.id }); },
+  openOfficialEvent(e) { const id = e && e.detail && e.detail.id; if (!id || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id, complete: () => { this._navigating = false; } }); },
   openRoamCoupons() { this.openScene('game-coupon-wallet'); },
   openStampAlbum() { this.openScene('roam-stamp-album'); },
   /* ── BL-01 点位筛选(.psheet 半屏)──────────────────────────────────────────
@@ -5626,13 +5626,13 @@ Page({
     this._openEntryTeamById(team.teamId);
   },
   _openEntryTeamById(teamId) {
-    if (!teamId) return;
+    if (!teamId || this._navigating) return;
     const team = (this._entryTeams || []).find((row) => row && String(row.teamId) === String(teamId));
     let url = '/subpackageRoam/nearby/index?teamId=' + encodeURIComponent(teamId);
     if (team && team.latitude != null && team.latitude !== '' && team.longitude != null && team.longitude !== '') {
       url += '&lat=' + encodeURIComponent(team.latitude) + '&lng=' + encodeURIComponent(team.longitude) + '&radius=3000';
     }
-    wx.navigateTo({ url });
+    this._navigating = true; wx.navigateTo({ url, complete: () => { this._navigating = false; } });
   },
   openEntryRoamRules() { this.setData({ entrySheetView: 'rules' }); },
   _onEntryRegionChange(e) {
