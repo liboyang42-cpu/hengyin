@@ -715,6 +715,83 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         return cmsActivityMapper.updateCmsActivity(cmsActivity);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int insertCmsActivityByAdmin(CmsActivity cmsActivity, String username, boolean preReview, String flagReason)
+    {
+        // Gap 12·03 P0-5:审核态/发布态只认 ActivityReviewPolicy + 门禁的裁决,不认请求体;
+        // 删除、取消、结算、驳回原因等事实由各自专用流程写,新建时不能夹带。
+        cmsActivity.setId(null);
+        cmsActivity.setStatus(preReview ? 0L : 1L);
+        cmsActivity.setPublishStatus(preReview ? 0L : 1L);
+        cmsActivity.setCheckStatus(null);
+        cmsActivity.setReason(null);
+        cmsActivity.setDelFlag(0);
+        cmsActivity.setCancelTime(null);
+        cmsActivity.setCancelReason(null);
+        cmsActivity.setIsSettlement(null);
+        cmsActivity.setCreateBy(username);
+        cmsActivity.setCreateTime(DateUtils.getNowDate());
+        int rows = cmsActivityMapper.insertCmsActivity(cmsActivity);
+        if (rows <= 0) {
+            throw new ServiceException("创建活动失败");
+        }
+        Long activityId = cmsActivity.getId();
+        if (preReview) {
+            // 与主表同事务:建不出审核单就整单回滚,不留「待审却无单可审」的活动。
+            String snap = ActivityAuditSnapshot.of(activityId, cmsActivity, java.util.Collections.emptyList(), null);
+            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
+                    cmsActivity.getMemberId(), "user_publish", snap);
+        } else if (flagReason != null) {
+            flagActivityForSpotCheck(activityId, cmsActivity.getMemberId(), cmsActivity, flagReason);
+        }
+        return rows;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateCmsActivityByAdmin(CmsActivity editable, String username, boolean preReview, String flagReason)
+    {
+        if (editable == null || editable.getId() == null || editable.getId() < 1) {
+            throw new ServiceException("参数不合规");
+        }
+        CmsActivity before = cmsActivityMapper.selectCmsActivityById(editable.getId());
+        if (before == null) {
+            throw new ServiceException("活动不存在");
+        }
+        // 只写内容字段:审核态/发布态不在这条路上改(公开只能由审核台通过)。
+        editable.setStatus(null);
+        editable.setPublishStatus(null);
+        editable.setCheckStatus(null);
+        editable.setReason(null);
+        editable.setUpdateBy(username);
+        editable.setUpdateTime(DateUtils.getNowDate());
+        int rows = cmsActivityMapper.updateCmsActivity(editable);
+        if (rows <= 0) {
+            throw new ServiceException("更新失败");
+        }
+        CmsActivityPublishRequest view = new CmsActivityPublishRequest();
+        org.springframework.beans.BeanUtils.copyProperties(editable, view);
+        boolean resubmitted = resubmitForReviewIfNeeded(before, view, before.getMemberId(), preReview);
+        if (!resubmitted && flagReason != null) {
+            CmsActivity after = cmsActivityMapper.selectCmsActivityById(before.getId());
+            flagActivityForSpotCheck(before.getId(), before.getMemberId(), after == null ? before : after, flagReason);
+        }
+        return rows;
+    }
+
+    /** 先发后审门禁打标的非阻断抽检单(与 App 发布/编辑同一来源 post_review_flag);best-effort,不影响已上架。 */
+    private void flagActivityForSpotCheck(Long activityId, Long ownerMemberId, CmsActivity activity, String flagReason)
+    {
+        logger.warn("后台活动先发后审打标待抽检 activityId={} reason={}", activityId, flagReason);
+        try {
+            String snap = ActivityAuditSnapshot.of(activityId, activity, java.util.Collections.emptyList(), flagReason);
+            auditTaskService.submitOrRefreshActivity(activityId, ownerMemberId, "post_review_flag", snap);
+        } catch (Exception e) {
+            logger.error("后台活动抽检单提交失败 activityId={}", activityId, e);
+        }
+    }
+
     /**
      * 批量删除活动
      *
@@ -915,15 +992,15 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 与主表更新同事务 —— 审核单建不出来就整单回滚,不能留一场「待审却无单可审」的活动。
      * 已售时间/地点锁在控制器入口,早于本方法。
      */
-    private void resubmitForReviewIfNeeded(CmsActivity before, CmsActivityPublishRequest request,
-                                           Long memberId, boolean preReview) {
-        if (before == null) return;
+    private boolean resubmitForReviewIfNeeded(CmsActivity before, CmsActivityPublishRequest request,
+                                              Long memberId, boolean preReview) {
+        if (before == null) return false;
         // status 为空(库里不会出现)不当作待审/驳回,只按 preReview 判。
         Long status = before.getStatus();
         boolean changed = reviewableContentChanged(before, request);
         boolean rejected = Long.valueOf(2L).equals(status);
         boolean pending = Long.valueOf(0L).equals(status);
-        if (!rejected && !(pending && changed) && !(preReview && changed)) return;
+        if (!rejected && !(pending && changed) && !(preReview && changed)) return false;
         if (!pending) {
             CmsActivity back = new CmsActivity();
             back.setId(before.getId());
@@ -943,6 +1020,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         String snap = ActivityAuditSnapshot.of(before.getId(), after == null ? before : after,
                 omsTicketMapper.selectOmsTicketList(query), null);
         auditTaskService.submitOrRefreshActivity(before.getId(), memberId, "user_republish", snap);
+        return true;
     }
 
     /** 审核要重看的字段:名称/简介/封面/图集/时间/地点。未传(null)视为未改,与 updateCmsActivityByOwner 的动态 SQL 一致。 */
