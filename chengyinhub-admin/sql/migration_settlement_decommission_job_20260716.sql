@@ -22,7 +22,7 @@
 --
 -- 幂等:按 invoke_target 删,重复执行无副作用(第二次删 0 行)。
 -- 可逆:重新 insert 注册行即可恢复该行,但 bean 已删,恢复注册没有意义,除非同时回滚代码。
--- 风险:低。2026-07-16 对生产库(47.103.124.64/chengyinhubdb)只读实测,三条独立证据:
+-- 风险:低。2026-07-16 对生产库(<生产库主机>/chengyinhubdb)只读实测,三条独立证据:
 --   1) audit_sys_job.py:#101 autoSettlementTask.run(),cron='0 30 2 * * ?',status='1' 暂停中,
 --      remark='默认暂停' ⇒ 注册后从未启用。同次对账落差:未注册 0 / 悬空 0 / 重复 0。
 --   2) settlement_batch = 0 行、settlement_detail = 0 行 ⇒ 系统2 连批次都没生成过,无在途数据。

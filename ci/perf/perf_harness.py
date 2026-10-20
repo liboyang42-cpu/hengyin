@@ -8,6 +8,7 @@ It never opens a network connection in dry-run mode, which is the default.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -25,9 +26,14 @@ BLOCKED_HOSTS = {
     "chengyinhub.com",
     "www.chengyinhub.com",
     "api.chengyinhub.com",
-    "47.103.124.64",
-    "47.100.84.122",
 }
+# Production IPs are not written in plaintext (public repo): built-in SHA-256
+# denylist plus the comma-separated CHENGYIN_FORBIDDEN_DB_HOSTS environment variable.
+FORBIDDEN_HOSTS_ENV = "CHENGYIN_FORBIDDEN_DB_HOSTS"
+BLOCKED_HOST_SHA256 = frozenset({
+    "d8c695fe7dd5f6ffc048b72c96621f7e7d13d3ec23b76aab523514183e7474d9",  # production DB host
+    "ce1a8527392b68bab1ab6a91238a5e6909cbbb937b9eb077d1025499a59f03fe",  # production app server
+})
 EXPECTED_THRESHOLDS: dict[str, dict[str, Any]] = {
     "read": {"p95_ms": 300, "p99_ms": 800},
     "write_transaction": {"p95_ms": 800, "p99_ms": 2000},
@@ -101,6 +107,17 @@ def validate_threshold_manifest(path: Path) -> dict[str, Any]:
     return data
 
 
+def is_blocked_host(host: str, forbidden_sha256: frozenset[str] | None = None) -> bool:
+    if forbidden_sha256 is None:
+        forbidden_sha256 = BLOCKED_HOST_SHA256
+    if not host:
+        return False
+    denylist = {h.strip().lower().strip("[]") for h in os.environ.get(FORBIDDEN_HOSTS_ENV, "").split(",")}
+    if host in denylist:
+        return True
+    return hashlib.sha256(host.encode("utf-8")).hexdigest() in forbidden_sha256
+
+
 def base_url_from_env() -> str:
     raw = os.environ.get("PERF_BASE_URL", "").strip()
     if not raw:
@@ -109,7 +126,7 @@ def base_url_from_env() -> str:
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         fail("PERF_BASE_URL_INVALID", "must be an absolute http(s) URL")
     host = (parsed.hostname or "").lower().strip("[]")
-    if host in BLOCKED_HOSTS or host.endswith(".chengyinhub.com"):
+    if host in BLOCKED_HOSTS or host.endswith(".chengyinhub.com") or is_blocked_host(host):
         fail("PRODUCTION_TARGET_BLOCKED", host)
     return raw.rstrip("/")
 

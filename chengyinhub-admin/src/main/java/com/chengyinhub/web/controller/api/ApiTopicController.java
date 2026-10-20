@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.TopicChapterVO;
@@ -690,6 +691,8 @@ public class ApiTopicController extends BaseController {
             } else {
                 topicId = cmsTopicService.updateTopicByOwner(dto, memberId, getAppUserName());
             }
+        } catch (ChapterFlowClientUpgradeRequiredException e) {
+            return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, e.getMessage());
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
@@ -1521,6 +1524,8 @@ public class ApiTopicController extends BaseController {
 
                 CmsTopicNode cmsTopicNode = new CmsTopicNode();
                 cmsTopicNode.setChapterId(chapter.getId());
+                // 后台「隐藏」(status=0)的节点玩家侧不下发;站数口径(locationCount / nodeCount / play 节点)同为 status=1
+                cmsTopicNode.setStatus(1L);
                 List<CmsTopicNode> listCmsTopicNode = cmsTopicNodeService.selectCmsTopicNodeList(cmsTopicNode);
 
                 List<TopicNodeVO> nodeVOList = new ArrayList<>();

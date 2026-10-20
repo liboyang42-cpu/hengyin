@@ -52,9 +52,9 @@ test('CL-06 选择场次:每行念出集合时刻(月日 时:分)与场次名', 
   assert.deepEqual(rows.map((r) => r.whoText).sort(), ['后天场', '明天场']);
 });
 
-// DEFECT_FOUND(CL-06):openSessionPick 按 _topicActivities(=activityList 原序)出行,没有按集合时刻排序。
-// 修好后去掉 todo,本用例即成为回归。
-test('CL-06 选择场次:按集合时刻升序(与「接下来」同序)', { todo: 'DEFECT_FOUND: pages/club/topic-detail/index.js:701-710 openSessionPick 沿用 activityList 原序' }, () => {
+// 原 DEFECT_FOUND(CL-06):openSessionPick 按 _topicActivities(=activityList 原序)出行,没有按集合时刻排序。
+// 已修(openSessionPick 改为与「接下来」同源同序),本用例为回归。
+test('CL-06 选择场次:按集合时刻升序(与「接下来」同序)', () => {
   const page = loadPage();
   const rows = openPicker(page);
   assert.deepEqual(rows.map((r) => r.id), page.data.sessions.map((s) => s.id));

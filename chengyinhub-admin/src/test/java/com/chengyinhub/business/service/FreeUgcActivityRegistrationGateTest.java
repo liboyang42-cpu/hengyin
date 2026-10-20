@@ -306,7 +306,8 @@ class FreeUgcActivityRegistrationGateTest {
 
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> service.createSelfPlayPass(1L, TOPIC, "张三", "13800000000"));
-        assertTrue(error.getMessage().contains("SELLING"), error.getMessage());
+        // CL-37:仍被售卖闸拦下,但玩家文案是「尚未开售」,不露内部生命周期名。
+        assertEquals("该主题尚未开售，开售审核通过后才可报名", error.getMessage());
     }
 
     /** 负控:免费自玩下架 / 过截止都拒。 */
@@ -359,6 +360,7 @@ class FreeUgcActivityRegistrationGateTest {
 
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> service.quoteRegistration(2L, 1, TOPIC, 21L, null, 0));
-        assertTrue(error.getMessage().contains("SELLING"), error.getMessage());
+        // CL-37:仍被售卖闸拦下,但玩家文案是「尚未开售」,不露内部生命周期名。
+        assertEquals("该主题尚未开售，开售审核通过后才可报名", error.getMessage());
     }
 }
