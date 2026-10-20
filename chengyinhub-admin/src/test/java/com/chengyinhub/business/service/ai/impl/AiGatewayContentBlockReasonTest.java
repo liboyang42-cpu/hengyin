@@ -5,7 +5,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.chengyinhub.business.domain.UmsMember;
@@ -19,6 +19,8 @@ import com.chengyinhub.common.config.AiModelConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -41,9 +43,9 @@ class AiGatewayContentBlockReasonTest {
     @BeforeEach
     void setUp() {
         RedisTemplate<Object, Object> redis = mock(RedisTemplate.class);
-        ValueOperations<Object, Object> values = mock(ValueOperations.class);
-        when(redis.opsForValue()).thenReturn(values);
-        when(values.increment(anyString())).thenReturn(1L);
+        // 额度走预占脚本（reserve-then-refund），返回值即本次预占后的当日用量。
+        when(redis.execute(any(RedisScript.class), anyList(), anyInt(), anyInt(), anyInt())).thenReturn(1L);
+        when(redis.execute(any(RedisScript.class), anyList())).thenReturn(1L);
         security = mock(IWxContentSecurityService.class);
         IUmsMemberService members = mock(IUmsMemberService.class);
         UmsMember member = new UmsMember();
@@ -54,9 +56,10 @@ class AiGatewayContentBlockReasonTest {
         AiModelConfig config = new AiModelConfig();
         ReflectionTestUtils.setField(config, "dailyLimit", 20);
         ReflectionTestUtils.setField(config, "npcDailyLimit", 100);
-        ReflectionTestUtils.setField(config, "provider", "mock");
+        // 移植网关拒绝 mock 供应商（生产不接受 mock），替身按真实供应商名登记。
+        ReflectionTestUtils.setField(config, "provider", "deepseek");
         llm = mock(LlmClient.class);
-        when(llm.name()).thenReturn("mock");
+        when(llm.name()).thenReturn("deepseek");
         when(llm.chat(anyString(), anyString())).thenReturn("NPC 回答");
 
         service = new AiGatewayServiceImpl();

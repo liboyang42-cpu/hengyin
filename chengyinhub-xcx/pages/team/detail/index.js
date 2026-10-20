@@ -22,7 +22,9 @@ Page({
     error: '',
     errorKind: 'network',
     errorSub: '',
-    errorAction: '重新加载'
+    errorAction: '重新加载',
+    reportShow: false,
+    reportTeamId: ''
   },
 
   onLoad(options) {
@@ -40,6 +42,8 @@ Page({
   },
   onShow() { if (this.teamId) this.load(); },
   onPullDownRefresh() { this.load(true); },
+  openReport() { this.setData({ reportTeamId: this.teamId, reportShow: true }); },
+  closeReport() { this.setData({ reportShow: false }); },
 
   load(fromPull) {
     const that = this;

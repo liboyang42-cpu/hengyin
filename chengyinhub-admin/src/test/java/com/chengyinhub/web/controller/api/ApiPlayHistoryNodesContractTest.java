@@ -126,6 +126,7 @@ class ApiPlayHistoryNodesContractTest
                 arrival(MEMBER, DELISTED_ARRIVAL, 2000L),
                 done(MEMBER, ACTIVE_NODE, 3000L)));
         when(progressService.selectPlayerNodeProgressList(any())).thenAnswer(inv -> progressRows);
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private CmsTopicNode node(long id, String name, Long status, String fragment)

@@ -31,6 +31,7 @@ function loadPage() {
     '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
     '../utils/owner-action-guard.js': require('../../pages/club/utils/owner-action-guard.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/club-pinned-notice.js': require('../../pages/club/utils/club-pinned-notice.js'),
   }
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, PAGE), 'utf8'), {
     getApp: () => app,

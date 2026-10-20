@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 341
- *   按 priority 计全部行：P0 133 / P1 198 / P2 10
+ *   total 343
+ *   按 priority 计全部行：P0 133 / P1 200 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
- *   按域：A 53 / B 68 / C 56 / D 44 / E 27 / F 93
- *   按 control：setData 179 / identity+setData 117 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 193 / P2 2 = 319
+ *   按域：A 53 / B 70 / C 56 / D 44 / E 27 / F 93
+ *   按 control：setData 181 / identity+setData 117 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -262,6 +262,8 @@ const RAW = [
   ['B15', 'B15-play-story.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openStory({id,step})；关闭钮不遮胶囊'],
   ['B16', 'B16-play-finish.png', '/pages/play/index?mock=city', 'player', 'success', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openFinish()；需 buildMilestone(n) 才有里程碑轴'],
   ['B92', 'B92-official-organizer-console.png', '/pages/activity/official-organizer/index?id=7', 'merchant', 'normal', { phase: 'ready', refreshing: false, view: { title: '外滩夜行档案', statusText: '进行中', controlText: '正常运行', paused: false, pausedReason: '', resumeNote: '', stateKnown: true }, check: { known: true, pass: true, blockers: [], risks: [] }, avail: { schedule: { enabled: false, hint: '活动已发布，只有草稿需要发布' }, pause: { enabled: true, hint: '' }, resume: { enabled: false, hint: '活动未暂停' } }, busyAction: '', result: null }, undefined, { selector: '.oo-card', min: 3 }, 'setData', 'P1', '', 'CL4 主办控制台：发布/暂停两块齐全，暂停为预设+补充文字，置灰原因可见；真实主办身份须本地连测试服验'],
+  ['B90', 'B90-official-routes-content.png', '/subpackageRoam/official-routes/index', 'player', 'normal', { state: 'ready', routes: [{ id: '1', name: '老城慢行', city: '上海', cover: '', metaText: '上海 · 4 km · 1 小时 30 分' }] }, undefined, { selector: '.orl-card', min: 1 }, 'setData', 'P1', '', '官方线路列表：卡片展示名称与城市/距离/时长；加载/空/失败三态由 state 切换'],
+  ['B91', 'B91-official-route-content.png', '/subpackageRoam/official-route/index?id=1', 'player', 'normal', { state: 'ready', route: { name: '老城慢行', metaText: '上海 · 4 km', cover: '', nodes: [{ key: 'n1', order: 1, name: '第一站', address: '示例路 1 号', stayText: '20 分钟', lat: null, lng: null, img: '' }] } }, undefined, { selector: '.orr-node', min: 1 }, 'setData', 'P1', '', '官方线路详情：站点序号/地址/参考停留；无坐标站点不可点'],
   ['B17', 'B17-play-flight-cta.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P2',
     '被验对象已不在页面里:selectors 给它的锚点 .start-flight/.start-flight__ready 在 pages/play/index.wxml 里只剩一句注释,起飞过场那套 UI 已收编走;矩阵原注的「等 ≥3.4s」也没有任何 data 键可以直接注入 ⇒ 这一行永远拍成 B12 那张(2026-08-19 实测 B12≈B17 判同一屏)。altVerification:2026-08-20 起 cy-start-cta 组件本体连同 pages/play/index.js 顶部那段常量注释一并删除(全仓零引用),原来那个「两处对齐」的依据已不存在;开始入口的出场时序现在只剩 style/tokens.wxss 的 --cy-motion-flight-cycle 一处,属动画不属截图;玩法首屏由 B12 拍到。',
     '等 ≥3.4s（FLIGHT_CTA_DELAY_MS=3203）；漫游 GO 是有意例外'],
@@ -645,11 +647,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-19：Claude 小程序线移植到 master(用户批准冻结数值更新)补 9 条 P1 actionable:B92 主办控制台、C61 核销记录、C62 触达记录、
 // D90 积分明细、D91–D94 我的举报/举报进度/我的纠错/纠错进度(均 setData)、F102 俱乐部勋章(identity+setData);
 // total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
+// 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 const STATS = {
-  "total": 341,
+  "total": 343,
   "byPriority": {
     "P0": 133,
-    "P1": 198,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -659,21 +662,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 191,
+    "P1": 193,
     "P2": 2,
-    "total": 317
+    "total": 319
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 68,
+    "B": 70,
     "C": 56,
     "D": 44,
     "E": 27,
     "F": 93
   },
   "control": {
-    "setData": 179,
+    "setData": 181,
     "identity+setData": 117,
     "real-data": 38,
     "real-device": 7

@@ -120,6 +120,7 @@ class PlayKitPhotoCheckRuntimeTest {
         node.setTopicId(TOPIC_ID);
         node.setTemplateId(TEMPLATE_ID);
         when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(node);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @AfterEach

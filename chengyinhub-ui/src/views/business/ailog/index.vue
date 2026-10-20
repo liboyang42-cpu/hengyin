@@ -80,8 +80,8 @@
       </template>
       <template #tokens="{ row }">
         <div class="ailog-tokens">
-          <strong>{{ row.tokenEst || 0 }}</strong>
-          <span>入 {{ row.tokenIn || 0 }} / 出 {{ row.tokenOut || 0 }}</span>
+          <strong>{{ tokenText(row.tokenEst) }}</strong>
+          <span>入 {{ tokenText(row.tokenIn) }} / 出 {{ tokenText(row.tokenOut) }}</span>
         </div>
       </template>
       <template #safety="{ row }"><cy-status-tag :label="safetyText(row.safetyFlag)" :tone="safetyTone(row.safetyFlag)" /></template>
@@ -106,8 +106,8 @@
           <dd>{{ detail.bizType }} · {{ detail.provider }}</dd>
         </div>
         <div class="ailog-detail__item">
-          <dt>耗时 / Token</dt>
-          <dd>{{ detail.latencyMs }}ms · 入 {{ detail.tokenIn }} / 出 {{ detail.tokenOut }} / 合计 {{ detail.tokenEst }}</dd>
+          <dt>耗时 / Token（估算）</dt>
+          <dd>{{ detail.latencyMs }}ms · 入 {{ tokenText(detail.tokenIn) }} / 出 {{ tokenText(detail.tokenOut) }} / 合计 {{ tokenText(detail.tokenEst) }}</dd>
         </div>
         <div class="ailog-detail__item">
           <dt>安全</dt>
@@ -185,7 +185,7 @@ export default {
         { key: 'bizType', label: '场景', width: 128, prop: 'bizType', showOverflowTooltip: true },
         { key: 'provider', label: '模型', width: 110, prop: 'provider', showOverflowTooltip: true },
         { key: 'latencyMs', label: '耗时', width: 96, prop: 'latencyMs', formatter: row => `${row.latencyMs || 0}ms` },
-        { key: 'tokens', label: 'Token', width: 136 },
+        { key: 'tokens', label: 'Token（估算）', width: 136 },
         { key: 'safety', label: '安全', width: 110 },
         { key: 'traceId', label: 'traceId', minWidth: 210, prop: 'traceId', showOverflowTooltip: true },
         { key: 'createTime', label: '调用时间', width: 160, prop: 'createTime' },
@@ -221,6 +221,9 @@ export default {
     }
   },
   methods: {
+    tokenText(value) {
+      return value === null || value === undefined ? '未知' : String(value)
+    },
     ensureCanonicalRoute() {
       if (String(this.$route.path || '').replace(/\/+$/, '') !== '/risk/ai-log') {
         this.$router.replace({ name: 'riskAiLog', query: Object.assign({}, this.$route.query) })

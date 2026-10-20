@@ -292,6 +292,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id asc limit 200
     </select>
 
+    <select id="selectStalePayoutScanUpperBound" resultType="java.lang.Long">
+        select max(id) from refund_application
+        where del_flag = 0
+          and (payout_status = 0 or (payout_status in (5, 6) and status = 1))
+          and COALESCE(update_time, create_time) &lt; DATE_SUB(now(), INTERVAL #{minutes} MINUTE)
+    </select>
+
+    <select id="selectStalePayoutProcessingAfter" resultMap="RefundApplicationResult">
+        <include refid="selectRefundApplicationVo"/>
+        where del_flag = 0
+          and (payout_status = 0 or (payout_status in (5, 6) and status = 1))
+          and COALESCE(update_time, create_time) &lt; DATE_SUB(now(), INTERVAL #{minutes} MINUTE)
+          and id &gt; #{afterId} and id &lt;= #{maxId}
+        order by id asc limit #{limit}
+    </select>
+
     <!-- 期级 FINAL 的退款事实门：该期还有没落定的退款单就不许终结。
          owner_type=2 走活动壳经 cms_activity.topic_id 归期；owner_type=1 是旧主题票直接就是 topic_id。
          终态判据取 payout_status ∈ (1 原路确认到账, 4 人工双人复核完成)，其余(含 NULL)都算在途。 -->

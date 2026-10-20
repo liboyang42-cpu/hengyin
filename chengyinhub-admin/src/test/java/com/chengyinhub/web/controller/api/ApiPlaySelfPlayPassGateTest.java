@@ -140,4 +140,25 @@ class ApiPlaySelfPlayPassGateTest {
         assertEquals(200, r.get(AjaxResult.CODE_TAG));
         verify(nodeService).selectCmsTopicNodeList(any());
     }
+
+    /** 2026-10-14 用户已定：自玩通行证在本局内有效。已开局的本局中途到期，节点列表照常下发；未开局仍 402。 */
+    @Test
+    void expiredPassStillListsNodesOfARouteAlreadyStarted() {
+        CmsRegistration expired = pass(new Date(System.currentTimeMillis() - 60000L));
+        expired.setId(79L); expired.setPaymentStatus(0); expired.setPurchaseKind(2);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(expired));
+        com.chengyinhub.business.mapper.CmsRegistrationMapper mapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        when(mapper.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(expired));
+        when(mapper.selectCmsRegistrationByIdForUpdate(79L)).thenReturn(expired);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", mapper);
+        ReflectionTestUtils.setField(controller, "currentPlayActivityMapper", mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routes = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routes);
+
+        when(routes.hasRunningSession(MEMBER, TOPIC, 0L)).thenReturn(true);
+        assertEquals(200, controller.nodes(null, TOPIC).get(AjaxResult.CODE_TAG), "已开局：中途到期仍下发本局节点");
+
+        when(routes.hasRunningSession(MEMBER, TOPIC, 0L)).thenReturn(false);
+        assertEquals(402, controller.nodes(null, TOPIC).get(AjaxResult.CODE_TAG), "未开局：到期后回购票态 402");
+    }
 }

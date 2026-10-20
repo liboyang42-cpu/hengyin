@@ -109,7 +109,7 @@ const loadPage = (rel, options = {}) => {
     if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
     if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
-    if (request === '../../../utils/community-report-sheet.js') return require(path.join(ROOT, 'utils/community-report-sheet.js'))
+    if (request === '../utils/community-report-sheet.js') return require(path.join(ROOT, 'pages/square/utils/community-report-sheet.js'))
     // 性能批4 分页路径追加助手:纯函数无副作用,用真模块不用桩(同上 response-shape 先例)
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }

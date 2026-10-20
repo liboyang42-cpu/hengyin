@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 
-const pile = require('../../utils/object-pile.js')
+const pile = require('../../subpackageP3/utils/object-pile.js')
 
 const WORLD = { W: 390, floor: 600, cx: 195, cy: 330 }
 const drop = (n) => Array.from({ length: n }, (_, i) => pile.body({ id: i }, WORLD, { size: 40, seed: i + 1, fromTop: true }))

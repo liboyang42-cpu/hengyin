@@ -18,6 +18,9 @@ public interface SysConfigMapper
      */
     public SysConfig selectConfig(SysConfig config);
 
+    /** 仅资金政策专用入口的数据库当前读；调用者事务决定持锁时间。 */
+    public SysConfig selectFundsPolicyConfigForUpdate(String configKey);
+
     /**
      * 通过ID查询配置
      * 

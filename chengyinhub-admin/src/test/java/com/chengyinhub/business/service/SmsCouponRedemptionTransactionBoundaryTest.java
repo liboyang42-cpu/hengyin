@@ -80,7 +80,7 @@ class SmsCouponRedemptionTransactionBoundaryTest {
         ISettlementEntryService settlements = mock(ISettlementEntryService.class);
         BusinessAuditEventMapper audits = mock(BusinessAuditEventMapper.class);
 
-        when(histories.selectSmsCouponHistoryById(301L)).thenAnswer(call -> {
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenAnswer(call -> {
             SmsCouponHistory row = new SmsCouponHistory();
             row.setId(301L);
             row.setCouponId(30L);

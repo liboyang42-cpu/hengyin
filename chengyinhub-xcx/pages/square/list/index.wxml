@@ -32,7 +32,7 @@
           <view class="up-sub ep1" wx:if="{{item.sub}}">{{item.sub}}</view>
           <view class="up-foot" wx:if="{{item.avatars.length}}">
             <view class="up-avatar-stack">
-              <image class="up-avatar" wx:for="{{item.avatars}}" wx:for-item="avatar" wx:key="*this" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
+              <image class="up-avatar" wx:for="{{item.avatars}}" wx:for-item="avatar" wx:key="index" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />
               <text class="up-avatar-more" wx:if="{{item.avatarOverflow > 0}}">+{{item.avatarOverflow}}</text>
             </view>
             <text class="up-people">参与者</text>
@@ -60,7 +60,7 @@
 
       <view class="compose-body">
           <view class="pic-list flex " wx:if="{{picList.length>0}}">
-            <view class="li" wx:for="{{ picList }}" wx:key="*this">
+            <view class="li" wx:for="{{ picList }}" wx:key="index">
               <image lazy-load="true" src="{{item}}" mode="widthFix" />
               <view class="close">
                 <image lazy-load="true" catchtap="delPic" aria-role="button" aria-label="删除这张图片" data-inx="{{index}}" src="/pages/square/images/close3.png" mode="widthFix"  hover-class="cy-pressed" hover-stay-time="80"/>

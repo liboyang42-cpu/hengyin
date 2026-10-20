@@ -235,7 +235,8 @@ EXPECTED = {
     "PhotoReviewProgressMybatisIntegrationTest": 6,
     "SpoilerAccessMybatisIntegrationTest": 7,
     "SquareEditFollowMybatisIntegrationTest": 7,
-    "RoamSessionWriteMybatisIntegrationTest": 12,
+    # 2026-10-13 小程序底层C包移植到 master:12 → 15,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
+    "RoamSessionWriteMybatisIntegrationTest": 15,
     # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
     # +1: real cleanup task preserves favorite routes, non-location facts and reward dedupe across replay.
     "RoamLocationRetentionMySqlIT": 21,

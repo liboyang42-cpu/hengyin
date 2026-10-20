@@ -684,6 +684,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(*) from roam_poi where type = 2 and merchant_id = #{merchantId} and status = 1
     </select>
 
+    <select id="countActiveNodesByMerchantForUpdate" resultType="int" useCache="false" flushCache="true">
+        select count(*) from roam_poi where type = 2 and merchant_id = #{merchantId} and status = 1
+        for update
+    </select>
+
     <update id="setNodeStatusOwned">
         update roam_poi set status = #{status}
         where id = #{poiId} and merchant_id = #{merchantId} and type = 2

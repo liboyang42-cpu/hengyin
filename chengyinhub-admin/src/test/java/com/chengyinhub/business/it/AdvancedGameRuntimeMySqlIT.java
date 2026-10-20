@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayAttemptLog;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
@@ -201,11 +202,15 @@ class AdvancedGameRuntimeMySqlIT {
             CmsActivity activity = new CmsActivity(); activity.setTopicId(19L);
             CmsActivityMapper activities = mock(CmsActivityMapper.class);
             when(activities.selectCmsActivityById(9L)).thenReturn(activity);
+            when(activities.selectCmsActivityByIdForUpdate(9L)).thenReturn(activity); // A包当前资格按 activity→registration 锁读
             PlayTeamMapper teams = mock(PlayTeamMapper.class);
             when(teams.hasPaidRegistration(7L, 2, 9L)).thenReturn(1);
             CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
             ReflectionTestUtils.setField(target, "nodeMapper", nodes);
             ReflectionTestUtils.setField(target, "activityMapper", activities);
+            CmsRegistrationMapper currentRegistrations = mock(CmsRegistrationMapper.class);
+            com.chengyinhub.business.service.impl.CurrentRegistrationStubs.currentFromProbe(currentRegistrations);
+            ReflectionTestUtils.setField(target, "registrationMapper", currentRegistrations);
             ReflectionTestUtils.setField(target, "teamMapper", teams);
             ReflectionTestUtils.setField(target, "templateMapper", templates);
             ProxyFactory factory = new ProxyFactory(target);
@@ -318,11 +323,15 @@ class AdvancedGameRuntimeMySqlIT {
             CmsActivity activity = new CmsActivity(); activity.setTopicId(19L);
             CmsActivityMapper activities = mock(CmsActivityMapper.class);
             when(activities.selectCmsActivityById(9L)).thenReturn(activity);
+            when(activities.selectCmsActivityByIdForUpdate(9L)).thenReturn(activity); // A包当前资格按 activity→registration 锁读
             CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(39L);
             CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);
             when(templates.selectCmsMemberTemplateById(39L)).thenReturn(template);
             ReflectionTestUtils.setField(target, "nodeMapper", nodes);
             ReflectionTestUtils.setField(target, "activityMapper", activities);
+            CmsRegistrationMapper currentRegistrations = mock(CmsRegistrationMapper.class);
+            com.chengyinhub.business.service.impl.CurrentRegistrationStubs.currentFromProbe(currentRegistrations);
+            ReflectionTestUtils.setField(target, "registrationMapper", currentRegistrations);
             ReflectionTestUtils.setField(target, "templateMapper", templates);
             ProxyFactory factory = new ProxyFactory(target);
             factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source),

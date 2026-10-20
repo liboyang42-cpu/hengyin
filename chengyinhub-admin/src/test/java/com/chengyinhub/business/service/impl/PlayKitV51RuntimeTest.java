@@ -32,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -81,7 +83,9 @@ class PlayKitV51RuntimeTest {
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "activityMapper", activityMapper);
-        ReflectionTestUtils.setField(service, "registrationMapper", mock(CmsRegistrationMapper.class));
+        CmsRegistrationMapper registrations=mock(CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrations);
+        ReflectionTestUtils.setField(service, "registrationMapper", registrations);
         ReflectionTestUtils.setField(service, "teamMapper", teamMapper);
         ReflectionTestUtils.setField(service, "attemptMapper", attemptMapper);
         ReflectionTestUtils.setField(service, "weChatMiniSessionService", weChatMiniSessionService);
@@ -170,7 +174,7 @@ class PlayKitV51RuntimeTest {
         when(weChatMiniSessionService.miniAppId()).thenReturn(WeRunFixtures.APP_ID);
         when(weChatMiniSessionService.exchange(anyString()))
                 .thenReturn(new IWeChatMiniSessionService.WeChatMiniSession("openid-1", WeRunFixtures.sessionKey()));
-        lastCipher = WeRunFixtures.encryptSteps(steps);
+        lastCipher = WeRunFixtures.encryptSteps(steps,now.getTime()/1000L);
     }
 
     private String lastCipher;
@@ -209,6 +213,23 @@ class PlayKitV51RuntimeTest {
         assertEquals(10, kit.get("todaySteps"), "只认服务端解密出来的数");
         assertEquals(false, kit.get("reached"));
         assertEquals(0, view.get("score"));
+    }
+
+    @Test
+    void staleWeRunDayCannotEarnScoreOrWriteSession() {
+        GameRuntimeSession session=running(STEPS_CONFIG,"{}");arm(session);armWeRun(6200);
+        lastCipher=WeRunFixtures.encryptSteps(6200,now.getTime()/1000L-86400L);
+        assertThrows(IllegalArgumentException.class,()->act(session,"stale-day","SUBMIT_STEPS",
+                "code","js-code","encryptedData",lastCipher,"iv",WeRunFixtures.iv()));
+        verify(sessionMapper,never()).updateStateCas(any(GameRuntimeSession.class));
+    }
+
+    @Test
+    void futureWeRunTimestampCannotEarnScore() {
+        GameRuntimeSession session=running(STEPS_CONFIG,"{}");arm(session);armWeRun(6200);
+        lastCipher=WeRunFixtures.encryptSteps(6200,now.getTime()/1000L+60L);
+        assertThrows(IllegalArgumentException.class,()->act(session,"future-day","SUBMIT_STEPS",
+                "code","js-code","encryptedData",lastCipher,"iv",WeRunFixtures.iv()));
     }
 
     // ==================== 今日城市签 ====================

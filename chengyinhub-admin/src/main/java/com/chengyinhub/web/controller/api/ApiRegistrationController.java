@@ -12,6 +12,7 @@ import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.PurchaseKind;
+import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.page.TableDataInfo;
@@ -524,6 +525,17 @@ public class ApiRegistrationController extends BaseController {
 
 
 
+            if (Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())) {
+                CmsActivity currentActivity = registration.getCmsActivity();
+                if (!Integer.valueOf(2).equals(registration.getPaymentStatus())
+                        || !Integer.valueOf(2).equals(registration.getRegistrationStatus())
+                        || currentActivity == null || currentActivity.getCancelTime() != null
+                        || ExploreTicketUsePolicy.rejection(registration.getPurchaseKind(),
+                            currentActivity.getEndDate(), new Date()) != null) {
+                    registration.setQrcodeUrl(null);
+                    registration.setVerificationCode(null);
+                }
+            }
             attachOrganizer(registration);
             attachManualRefundInfo(registration);
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
@@ -1475,6 +1487,8 @@ public class ApiRegistrationController extends BaseController {
         if (act == null) {
             return ScanContext.fail(AjaxResult.error("活动不存在"));
         }
+        String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), act.getEndDate(), new Date());
+        if (rejection != null) return ScanContext.fail(AjaxResult.error(rejection));
         return ScanContext.ok(reg, act);
     }
 

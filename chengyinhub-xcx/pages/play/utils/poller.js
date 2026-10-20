@@ -4,10 +4,18 @@
 //  - run 返回 promise;reject 或 resolve(false) 记一次失败,间隔按 interval×2^n 退避并封顶 maxInterval
 //    (默认 4s→8s→10s);成功一次即回到 interval。
 //  - start()/stop() 幂等;stop 后在途的 run 回来也不会再排下一次。
+// 平台 timer 使用正的有符号 32 位毫秒值；越界不能依赖平台截断为短延迟。
+const MAX_TIMER_DELAY = 2147483647;
+function normalizeDelay(value, fallback) {
+  const numeric = (typeof value === 'number' || typeof value === 'string') ? Number(value) : NaN;
+  const delay = Number.isFinite(numeric) && numeric > 0 ? numeric : fallback;
+  return Math.min(MAX_TIMER_DELAY, Math.max(1, delay));
+}
+
 function createPoller(opts) {
   const run = opts.run;
-  const interval = opts.interval || 4000;
-  const maxInterval = Math.max(interval, opts.maxInterval || interval * 2.5);
+  const interval = normalizeDelay(opts.interval, 4000);
+  const maxInterval = Math.max(interval, normalizeDelay(opts.maxInterval, interval * 2.5));
   const setT = opts.setTimeout || setTimeout;
   const clearT = opts.clearTimeout || clearTimeout;
   let timer = null;

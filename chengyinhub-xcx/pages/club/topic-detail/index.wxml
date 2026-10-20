@@ -62,7 +62,7 @@
       </view>
 
       <view class="ctd-head__chips">
-        <view class="ctd-chip" wx:for="{{topic.chips}}" wx:key="*this"><text class="ctd-chip__txt">{{item}}</text></view>
+        <view class="ctd-chip" wx:for="{{topic.chips}}" wx:key="index"><text class="ctd-chip__txt">{{item}}</text></view>
       </view>
 
       <!-- ② 四圆钮:商家 · 成员 · 团码 · 更多(2026-09-08 改)

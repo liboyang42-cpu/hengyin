@@ -36,6 +36,7 @@ const {
 } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
+const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
@@ -45,8 +46,15 @@ const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
 const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
 
+const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
-  return bindPlayerRoamMemory(page, getApp(), wx);
+  const memory = bindPlayerRoamMemory(page, getApp(), wx);
+  if (page._roamCacheOwner !== memory.playerId || !page._roamCacheUnsubscribe) {
+    if (page._roamCacheUnsubscribe) page._roamCacheUnsubscribe();
+    page._roamCacheOwner = memory.playerId;
+    page._roamCacheUnsubscribe = onRoamCacheInvalidated(memory.playerId, () => page._discardRoamLocal());
+  }
+  return memory;
 }
 
 // P2 接真:标准 geohash 编码(7 字符 ≈153m 格),与后端 roam_fog_tile.geohash7 对齐,可互通
@@ -952,6 +960,8 @@ Page({
     if (this._cancelEndHold) this._cancelEndHold();
     if (this._shareUploadOperation) this._shareUploadOperation.abort();
     this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
+    this._roamCacheUnsubscribe = null;
   },
   onHide() {
     this._hidden = true;
@@ -1260,7 +1270,7 @@ Page({
     const current = this._roamReadScope();
     const memory = roamMemory(this);
     return syncRoamTileMemory({
-      memory,
+      memory, isCurrent: current,
       pageSize: 1000,
       fetchPage: (afterId, limit) => req('/api/roam/tiles/page', 'GET', {
         afterId: String(afterId), limit: String(limit),
@@ -1456,6 +1466,7 @@ Page({
     if (!this._localTiles) this._localTiles = {};
     if (!this._localTiles[key]) {
       this._localTiles[key] = 1;
+      this._tilesRevision = (this._tilesRevision || 0) + 1;
       this._tilesDirty = (this._tilesDirty || 0) + 1;
       this._scheduleTilePersist();
     }
@@ -1464,6 +1475,7 @@ Page({
     if (this._npc) {
       this._npc.dispatch({ type: 'UNIQUE_TILE_COUNT_CHANGED', count: this._sessionTileCount });
     }
+    this._roamRecoveryAbandoned = false;
     this._pendingTiles.push(key);
     this._ensureRoamRecovery();
     if (this._pendingTiles.length >= 50) { this._flushReveal(); return; }
@@ -1479,10 +1491,33 @@ Page({
   _persistTiles() {
     if (this._tilePersistTimer) { clearTimeout(this._tilePersistTimer); this._tilePersistTimer = null; }
     if (!this._tilesDirty) return;
-    this._tilesDirty = 0;
+    const revision = this._tilesRevision || 0;
+    const generation = this._roamWriteGeneration;
     try {
-      roamMemory(this).writeTiles(this._localTiles || {}, this._tileServerCursor || 0);
-    } catch (e) { /* noop */ }
+      const ok = roamMemory(this).writeTiles({ ...(this._localTiles || {}) }, this._tileServerCursor || 0);
+      if (ok && revision === (this._tilesRevision || 0) && generation === this._roamWriteGeneration) this._tilesDirty = 0;
+      return ok;
+    } catch (e) { return false; }
+  },
+
+  _discardRoamLocal() {
+    this._roamWriteGeneration = (this._roamWriteGeneration || 0) + 1;
+    this._recoveryKeyPromise = this._recoveryPromise = this._revealPromise = this._finishPromise = null;
+    if (this._revealTimer) clearTimeout(this._revealTimer);
+    if (this._tilePersistTimer) clearTimeout(this._tilePersistTimer);
+    this._revealTimer = this._tilePersistTimer = null;
+    this._pendingTiles = [];
+    if (!exactSessionId(this._roamSid)) this._clientSessionKey = '';
+    this._pois = (this._pois || []).filter(p => p.state !== 'done');
+    this._localTiles = {}; this._tileServerCursor = 0; this._tilesDirty = 0;
+    this._tilesRevision = (this._tilesRevision || 0) + 1;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
+    this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0;
+    this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
+    this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
+    this._finishRequested = false; this._revealInFlight = false;
+    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1504,7 +1539,8 @@ Page({
     this._presencePrivacyGeneration = (this._presencePrivacyGeneration || 0) + 1;
     this._runners = [];
     this.setData({ presenceVisible: false, runnerView: null, multiView: null });
-    this._pendingTiles = []; this._sessionTiles = {}; this._sessionTileCount = 0;
+    this._pendingTiles = []; this._roamRecoveryAbandoned = this._shopMedalFromServer = false;
+    this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
@@ -1546,6 +1582,7 @@ Page({
   },
 
   _saveRoamRecovery() {
+    if (this._roamRecoveryAbandoned) return true;
     if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页核对');
     const record = {
       clientSessionKey: this._clientSessionKey || '', sessionId: exactSessionId(this._roamSid),
@@ -1570,7 +1607,7 @@ Page({
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
       this._clientSessionKey = key;
       return this._saveRoamRecovery();
-    }).catch(error => this._recoveryFailure(error.message));
+    }).catch(error => generation === this._roamWriteGeneration && this._recoveryOwnerCurrent() ? this._recoveryFailure(error.message) : false);
     this._recoveryKeyPromise = pending;
     pending.then(() => { if (this._recoveryKeyPromise === pending) this._recoveryKeyPromise = null; });
     return pending;
@@ -1624,7 +1661,7 @@ Page({
         return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；待确认记录仍保留');
       if (fact.state !== 'NOT_FOUND') {
         const sid = exactSessionId(fact.sessionId);
-        if (!sid || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
+        if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid)) || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
           return this._recoveryFailure('漫游关联响应不完整，请重新核对');
         this._roamSid = sid;
       } else if (!this._clientSessionKey || exactSessionId(this._roamSid)) {
@@ -1636,6 +1673,8 @@ Page({
       }
       this.setData({ recoveryCanContinue: false });
       if (fact.state === 'FINISHED') {
+        this._stopReal(); this._stopClock();
+        this._finishRequested = true;
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
@@ -1694,8 +1733,9 @@ Page({
           this.setData({ roamSessionReady: true });
           if (this._npc) this._npc.setSessionId(this._roamSid);   // 埋点 bizId 只放 Long
         }
-        this._pendingTiles = this._pendingTiles.slice(batch.length);
-        if (!this._saveRoamRecovery()) return false; // 成功才出队,失败下轮重试
+        const beforeAck = this._pendingTiles;
+        this._pendingTiles = beforeAck.slice(batch.length);
+        if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; return false; } // 成功才出队,失败下轮重试
         if (this._pendingTiles.length >= 50 && !this._finishPromise) this._flushReveal();
         return true;
       } else if ((httpFail(res) || netFail(res)) && !requestSessionId) {
@@ -2497,7 +2537,7 @@ Page({
     if (this._runnersAt && now - this._runnersAt < RUNNERS_MS) return;
     this._runnersAt = now;
     const sid = this._roamSid;
-    req('/api/roam/nearby-runners', 'POST', { lat: p.lat, lng: p.lng, radius: 3000 },
+    req('/api/roam/nearby-runners', 'POST', { lat: p.lat, lng: p.lng, radius: ROAM_POI_RADIUS_M },
       { silentError: true }).then((res) => {
       if (!this.data.presenceVisible || String(this._roamSid) !== String(sid)) return;
       if (!res || res.code != '200') return;   // 拉不到就保持上一批,不清空 —— 闪掉再回来更难看
@@ -3695,7 +3735,8 @@ Page({
     const that = this;
     const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     const locationRevision = bgTracker.revision('roam');
-    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam');
+    const owner = String(getApp().getUserID() || '');
+    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
     this._realStarting = true;
     this._observeLocationRevocation();
     const abandon = () => {
@@ -3705,7 +3746,7 @@ Page({
     };
     const onOk = () => {
       if (!live()) return;
-      that._realStarting = false;
+      that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
       that.setData({ locErr: false });
@@ -3747,6 +3788,7 @@ Page({
     });
   },
   _stopReal() {
+    this._realAnchor = null;
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     this._realStarting = false;
@@ -3761,17 +3803,19 @@ Page({
     wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: false });
   },
   _realTick(loc) {
-    if (this._blocked()) { this._syncIdle(null); return; }
-    const p = { lat: loc.latitude, lng: loc.longitude };
-    if (loc.accuracy != null && loc.accuracy > 80) return;
-    // BL-02 静止提示只看定位点本身(下面 <3m 的漂移点会被丢),仅用于 HUD 展示
-    this._syncIdle(p, Date.now());
-    const prev = this._player;
-    const d = prev ? distM(prev, p) : 999;
-    if (prev && d < 3) return;
-    if (prev && d > 120) { this._player = p; return; }
-    this._player = p;
-    if (prev) { this._dist = (this._dist || 0) + d; this._track.push({ ...p }); }
+    if (!this._realOn || this._blocked()) { this._syncIdle(null); return; }
+    const now = Date.now();
+    const sample = acceptRoamLocation(loc, null, now);
+    if (!sample) return;
+    // BL-02 静止提示包含有效的 <3m 点，仅用于 HUD，不改变轨迹过滤。
+    this._syncIdle(sample.point, now);
+    const accepted = acceptRoamLocation(loc, this._realAnchor, now);
+    if (!accepted) return;
+    const prev = this._realAnchor;
+    const p = accepted.point;
+    this._realAnchor = p; this._player = p;
+    this._dist = (this._dist || 0) + accepted.distance;
+    this._track.push({ lat: p.lat, lng: p.lng });
     const last = this._reveals[this._reveals.length - 1];
     if (!last || distM(last, p) > 15) this._addReveal(p);
     this._applyMovePatch(p, prev);

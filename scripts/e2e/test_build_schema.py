@@ -205,6 +205,43 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             selected,
         )
 
+    def test_circle_business_seed_and_repair_skip_but_their_persistent_schema_replays(self):
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        paths = {
+            "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql":
+                "44c1e8d44b59b7e7f6fb921bfdbd15bbcce59927857325a8112d37f9457342a2",
+            "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql":
+                "68870b97f45e8da01e01dafe261efa73aeeef25f75918ab5d9fdceb9cc29836f",
+        }
+        for path, fingerprint in paths.items():
+            with self.subTest(path=path):
+                source = (build_schema.REPO / path).read_bytes()
+                self.assertEqual(fingerprint, policy["dataOnlyMigrations"][path])
+                self.assertEqual(fingerprint, build_schema.hashlib.sha256(source).hexdigest())
+                # Existing preflight permits DML/temporary helpers and rejects persistent DDL.
+                build_schema.validate_transaction_statements(build_schema.split_statements(source.decode("utf-8")))
+        selected = {item["path"] for item in build_schema.migrations_after_baseline(
+            build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])}
+        self.assertTrue(set(paths).isdisjoint(selected))
+        schema = "chengyinhub-admin/sql/migration_circle_theme_batch2_20260821.sql"
+        self.assertNotIn(schema, policy["dataOnlyMigrations"])
+        self.assertIn(schema, selected)
+
+    def test_data_only_policy_rejects_either_circle_seed_fingerprint_drift(self):
+        manifest = build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        for path in ("chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql",
+                     "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql"):
+            with self.subTest(path=path), tempfile.TemporaryDirectory() as tmp:
+                policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+                policy["dataOnlyMigrations"][path] = "0" * 64
+                stale = pathlib.Path(tmp) / "policy.json"
+                stale.write_text(json.dumps(policy), encoding="utf-8")
+                with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", stale):
+                    with self.assertRaisesRegex(RuntimeError, "data-only 指纹不一致"):
+                        build_schema.migrations_after_baseline(manifest["migrations"])
+
     def test_data_only_policy_rejects_stale_a8_fingerprint(self):
         policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
         path = "chengyinhub-admin/sql/migration_seed_merchant_game_a8_20260823.sql"

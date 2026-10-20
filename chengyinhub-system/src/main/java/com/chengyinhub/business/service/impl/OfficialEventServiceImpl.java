@@ -99,17 +99,18 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
     @Override
     @Transactional
     public String signup(Long eventId, Long memberId) {
-        OfficialEvent e = eventMapper.selectOfficialEventById(eventId);
+        // V1 与 V2 均锁原活动行，最后一个既有名额的计数/插入必须串行。
+        OfficialEvent e = eventMapper.selectOfficialEventByIdForUpdate(eventId);
         if (e == null) return "活动不存在";
         if (isV2(e)) return officialEventV2Service.signup(eventId, memberId);
         int st = e.getStatus() == null ? OfficialEvent.ST_DRAFT : e.getStatus();
         if (st == OfficialEvent.ST_DRAFT || st == OfficialEvent.ST_OFFLINE) return "活动未开放";
         if (st >= OfficialEvent.ST_ENDED) return "活动已结束";
         if (st == OfficialEvent.ST_SETTLING) return "活动已进入结算,报名截止";
-        // 报名上限(软校验;已报名者幂等放行)
+        // 原报名上限：持活动锁计数；已报名者仍幂等放行。
         if (e.getSignupLimit() != null && e.getSignupLimit() > 0) {
-            if (signupMapper.selectByEventAndMember(eventId, memberId) == null
-                    && signupMapper.countByEvent(eventId) >= e.getSignupLimit()) {
+            if (signupMapper.selectByEventAndMemberForUpdate(eventId, memberId) == null
+                    && signupMapper.countByEventForUpdate(eventId) >= e.getSignupLimit()) {
                 return "报名人数已满";
             }
         }
@@ -118,7 +119,10 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
         s.setMemberId(memberId);
         s.setStatus(EventSignup.ST_SIGNED);
         s.setProgress(0);
-        signupMapper.insertIgnore(s); // uk_event_member 幂等
+        if (signupMapper.insertIgnore(s) != 1
+                && signupMapper.selectByEventAndMemberForUpdate(eventId, memberId) == null) {
+            throw new IllegalStateException("官方活动报名写入失败");
+        }
         return null;
     }
 

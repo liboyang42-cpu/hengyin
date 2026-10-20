@@ -109,6 +109,11 @@ public class ViewCreativeSquareServiceImpl implements IViewCreativeSquareService
     }
 
     @Override
+    public Long selectMappedCommunityPostId(Long legacySquareId) {
+        return viewCreativeSquareMapper.selectMappedCommunityPostId(legacySquareId);
+    }
+
+    @Override
     public List<Long> selectCommunityBookmarkedPostIds(Long memberId, List<Long> postIds) {
         return viewCreativeSquareMapper.selectCommunityBookmarkedPostIds(memberId, postIds);
     }

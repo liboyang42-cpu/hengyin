@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper;
+import com.chengyinhub.business.mapper.SmsCouponMapper;
+import com.chengyinhub.business.domain.SmsCoupon;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,8 @@ class TopicCompletionCouponRewardServiceImplTest
     private TopicCompletionCouponRewardServiceImpl service;
     private CmsTopicCompletionCouponRewardMapper rewardMapper;
     private ISmsCouponHistoryService couponHistoryService;
-    private com.chengyinhub.business.mapper.SmsCouponMapper couponMapper;
-    private com.chengyinhub.business.domain.SmsCoupon coupon;
+    private SmsCouponMapper couponMapper;
+    private SmsCoupon coupon;
 
     @BeforeEach
     void setUp()
@@ -28,8 +30,8 @@ class TopicCompletionCouponRewardServiceImplTest
         service = new TopicCompletionCouponRewardServiceImpl();
         rewardMapper = mock(CmsTopicCompletionCouponRewardMapper.class);
         couponHistoryService = mock(ISmsCouponHistoryService.class);
-        couponMapper = mock(com.chengyinhub.business.mapper.SmsCouponMapper.class);
-        coupon = new com.chengyinhub.business.domain.SmsCoupon();
+        couponMapper = mock(SmsCouponMapper.class);
+        coupon = new SmsCoupon();
         coupon.setId(5L);
         when(couponMapper.selectSmsCouponById(5L)).thenReturn(coupon);
         ReflectionTestUtils.setField(service, "rewardMapper", rewardMapper);

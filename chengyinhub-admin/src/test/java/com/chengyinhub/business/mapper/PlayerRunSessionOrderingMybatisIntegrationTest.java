@@ -112,16 +112,18 @@ class PlayerRunSessionOrderingMybatisIntegrationTest {
         }
     }
 
-    @Test void sameSavedAtKeepsLastWriteBehavior() {
+    /** CORE OWN-C04-19 移植:同刻 ENDED 优先,同一 savedAt 的迟到暂停写不能把已结束的局复活。 */
+    @Test void sameSavedAtEndedWinsOverLatePause() {
         for (long activity : new long[] {27L, 0L}) {
             runs.upsertPaused(9L, activity, 31L, 5, 3000L);
             runs.markEnded(9L, activity, 31L, 3000L);
             assertEquals("ENDED", runs.selectScope(9L, activity, 31L).get("runState"));
             runs.upsertPaused(9L, activity, 31L, 7, 3000L);
             Map<String, Object> actual = runs.selectScope(9L, activity, 31L);
-            assertEquals("PAUSED", actual.get("runState"));
-            assertEquals(7, ((Number) actual.get("elapsedSeconds")).intValue());
+            assertEquals("ENDED", actual.get("runState"));
             assertEquals(3000L, ((Number) actual.get("savedAt")).longValue());
+            runs.upsertPaused(9L, activity, 31L, 9, 3001L);
+            assertEquals("PAUSED", runs.selectScope(9L, activity, 31L).get("runState"));
         }
     }
 

@@ -14,7 +14,11 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import com.chengyinhub.business.mapper.NpcChatRequestMapper;
+import com.chengyinhub.business.service.impl.NpcChatWriteService;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -73,9 +77,12 @@ class NpcChatUserDataMyBatisIT {
                 "com.mysql.cj.jdbc.Driver",
                 MybatisItDatabase.url("npc_chat_userdata"),
                 MybatisItDatabase.user(), MybatisItDatabase.password());
-        cfg.setEnvironment(new Environment("it", new JdbcTransactionFactory(), ds));
+        cfg.setEnvironment(new Environment("it", new SpringManagedTransactionFactory(), ds));
         try (InputStream in = Resources.getResourceAsStream("mapper/business/NpcChatLogMapper.xml")) {
             new XMLMapperBuilder(in, cfg, "mapper/business/NpcChatLogMapper.xml", cfg.getSqlFragments()).parse();
+        }
+        try (InputStream in = Resources.getResourceAsStream("mapper/business/NpcChatRequestMapper.xml")) {
+            new XMLMapperBuilder(in, cfg, "mapper/business/NpcChatRequestMapper.xml", cfg.getSqlFragments()).parse();
         }
         return new SqlSessionFactoryBuilder().build(cfg);
     }
@@ -87,6 +94,14 @@ class NpcChatUserDataMyBatisIT {
             Statement st = s.getConnection().createStatement();
             st.execute(CREATE_TABLE);
             st.execute("DELETE FROM npc_chat_log");
+            st.execute("CREATE TABLE IF NOT EXISTS ums_member (id BIGINT PRIMARY KEY) ENGINE=InnoDB");
+            st.execute("INSERT IGNORE INTO ums_member(id) VALUES (1),(2)");
+            java.nio.file.Path migration = java.nio.file.Paths.get("chengyinhub-admin/sql/migration_npc_chat_request_20260722.sql");
+            if (!java.nio.file.Files.exists(migration)) migration = java.nio.file.Paths.get("sql/migration_npc_chat_request_20260722.sql");
+            String ddl = new String(java.nio.file.Files.readAllBytes(migration), java.nio.charset.StandardCharsets.UTF_8);
+            int begin = ddl.indexOf("CREATE TABLE IF NOT EXISTS npc_chat_request");
+            st.execute(ddl.substring(begin, ddl.indexOf(';', begin)));
+            st.execute("DELETE FROM npc_chat_request");
             return s;
         } catch (Throwable t) {
             // ★ 2026-08-14:原本是 Assumptions.assumeTrue(false, ...) —— 库连不上就整套 skip,
@@ -163,6 +178,13 @@ class NpcChatUserDataMyBatisIT {
             NpcChatDataService svc = new NpcChatDataService();
             ReflectionTestUtils.setField(svc, "npcChatLogMapper", s.getMapper(NpcChatLogMapper.class));
             ReflectionTestUtils.setField(svc, "npcChatRetentionDays", 90);
+            // Commit fixture rows before the helper opens its independent short transaction.
+            s.commit();
+            SqlSessionTemplate template = new SqlSessionTemplate(factory());
+            javax.sql.DataSource source = template.getSqlSessionFactory().getConfiguration().getEnvironment().getDataSource();
+            NpcChatWriteService writes = new NpcChatWriteService(template.getMapper(NpcChatRequestMapper.class),
+                    template.getMapper(NpcChatLogMapper.class), new DataSourceTransactionManager(source));
+            ReflectionTestUtils.setField(svc, "npcChatWriteService", writes);
             ApiAiNpcController controller = spy(new ApiAiNpcController());
             ReflectionTestUtils.setField(controller, "npcChatDataService", svc);
             doReturn(1L).when(controller).getAppUserId(); // A 的登录态

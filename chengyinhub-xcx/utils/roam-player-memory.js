@@ -1,6 +1,7 @@
 'use strict'
 
 const { pruneSessions, THIRTY_DAYS } = require('./roam-location-retention.js')
+const { roamCacheEpoch, invalidateRoamCache } = require('./roam-cache-epoch.js')
 const PREFIX = 'roam_memory_v1'
 const PLAYER_MEMORY_KINDS = ['tiles', 'reveals', 'recovery', 'sessions']
 
@@ -51,6 +52,7 @@ function createPlayerRoamMemory(playerId, storage) {
 
   return {
     playerId: owner,
+    cacheEpoch() { return roamCacheEpoch(owner) },
     readTiles() {
       const state = read('tiles', null)
       if (!state || typeof state !== 'object' || Array.isArray(state)) {
@@ -82,11 +84,12 @@ function createPlayerRoamMemory(playerId, storage) {
         if (serverRetentionAt && Number(serverRetentionAt[tile]) > 0) retentionAt[tile] = Number(serverRetentionAt[tile])
         else if (!(tile in retentionAt)) retentionAt[tile] = previous.tiles && tile in previous.tiles ? 0 : Date.now()
       })
-      return write('tiles', {
-        tiles: values,
-        retentionAt,
-        serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0,
-      })
+      try {
+        const serialized = JSON.stringify({ tiles: values, retentionAt, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 })
+        if (!write('tiles', JSON.parse(serialized))) return false
+        const result = readResult('tiles')
+        return result.ok && JSON.stringify(result.value) === serialized
+      } catch (_) { return false }
     },
     readReveals() {
       const value = read('reveals', [])
@@ -144,6 +147,7 @@ function createPlayerRoamMemory(playerId, storage) {
        ⚠️ recovery 必须一起清:确认框写着「会清掉本次记录」,而原来不清它 ⇒ 清完再进漫游
        仍弹「已找回本次漫游记录」,用户看到的和刚做过的操作自相矛盾。 */
     clearLocal() {
+      invalidateRoamCache(owner)
       const done = [this.writeTiles({}, 0), this.writeReveals([]), this.writeSessions([]),
         this.writeRecovery(null)]
       return done.every(Boolean)

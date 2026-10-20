@@ -3,8 +3,8 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 145,
-    "scenes": 26,
+    "routes": 147,
+    "scenes": 27,
     "added": 0,
     "removed": 0
   },
@@ -1746,6 +1746,30 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageRoam/official-routes/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/official-route/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageTools/capsule/index",
       "pkg": "subpackageTools",
       "tabBar": false,
@@ -1947,6 +1971,11 @@
         "route": "subpackageRoam/poi-detail/index",
         "score": 13
       }
+    },
+    {
+      "component": "scene-roam-resume-bar",
+      "dir": "subpackageRoam/components/scene-roam-resume-bar",
+      "twin": null
     },
     {
       "component": "scene-roam-session",

@@ -47,6 +47,7 @@ function harness(relativePath, kind) {
     ? Object.assign({}, definition, definition.methods || {})
     : Object.assign({}, definition);
   vm.data = JSON.parse(JSON.stringify(definition.data || {}));
+  if (relativePath === 'subpackageB/pages/im/chat/index.js') vm.data.myId = app.getUserID();
   vm.setData = function (patch, callback) {
     Object.entries(patch).forEach(([key, value]) => setPath(this.data, key, value));
     if (callback) callback();

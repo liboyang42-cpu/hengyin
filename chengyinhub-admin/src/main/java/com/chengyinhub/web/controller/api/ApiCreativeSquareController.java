@@ -1071,6 +1071,9 @@ public class ApiCreativeSquareController extends BaseController {
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (postId <= 0 || (bookmark == null || (bookmark != 0 && bookmark != 1))) return error("参数不合规");
         if (StringUtils.isEmpty(request_id)) return error("缺少请求号");
+        Long mappedPostId = viewCreativeSquareService.selectMappedCommunityPostId(postId);
+        if (mappedPostId == null || mappedPostId <= 0) return error("旧帖尚无可信社区映射，无法收藏或取消收藏");
+        postId = mappedPostId;
         try {
             Map<String, Object> state;
             if (bookmark == 1) {

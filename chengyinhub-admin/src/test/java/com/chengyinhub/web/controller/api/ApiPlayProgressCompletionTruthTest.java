@@ -155,6 +155,8 @@ class ApiPlayProgressCompletionTruthTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        // 探店日票(EXPLORE_PASS)按已定规则缺结束时间暂禁新使用；本类不验到期，夹具给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsRegistration registration = new CmsRegistration();
@@ -198,6 +200,7 @@ class ApiPlayProgressCompletionTruthTest
         when(progressionService.onNodeDone(PLAYER)).thenReturn(Collections.emptyList());
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     @SuppressWarnings("unchecked")
@@ -557,7 +560,7 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION + 9);
         assertEquals(500, result.get("code"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
     }
 
     @Test
@@ -570,7 +573,7 @@ class ApiPlayProgressCompletionTruthTest
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("请先完成本章玩法"));
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> controller.checkin(String.valueOf(ACTIVITY), CODE, null));
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
     }
 
     @Test
@@ -584,7 +587,8 @@ class ApiPlayProgressCompletionTruthTest
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(current);
         assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
         assertEquals(first, current.getFirstSuccessfulScanAt());
-        verify(registrationMapper).selectCmsRegistrationByIdForUpdate(REGISTRATION);
+        // C包当前资格锁读一次 + 首扫 CAS 失败后按原ID回读当前行一次。
+        verify(registrationMapper, org.mockito.Mockito.times(2)).selectCmsRegistrationByIdForUpdate(REGISTRATION);
     }
 
     @Test
@@ -596,8 +600,10 @@ class ApiPlayProgressCompletionTruthTest
         when(registrationMapper.markFirstSuccessfulScan(anyLong(), anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(0);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(current);
-        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                () -> controller.checkin(String.valueOf(ACTIVITY), CODE, null));
+        // C包当前资格锁读在任何写入前即拒绝已取消的原报名(回错误回包而非事务中途抛错)，整笔不写。
+        org.junit.jupiter.api.Assertions.assertNotEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        verify(registrationMapper, org.mockito.Mockito.never())
+                .markFirstSuccessfulScan(anyLong(), anyLong(), anyLong(), anyLong(), any());
         assertEquals(new Date(1000L), current.getFirstSuccessfulScanAt());
     }
 
@@ -605,10 +611,10 @@ class ApiPlayProgressCompletionTruthTest
     void failedCodeAndGpsArrivalNeverMarkFirstSuccessfulScan() {
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
         assertEquals(500, controller.checkin(String.valueOf(ACTIVITY), "WRONG-CODE", null).get("code"));
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
         topic.setProductType(ProductType.FREE_EXPLORE);
         controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null);
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
     }
 
     @Test
@@ -617,16 +623,18 @@ class ApiPlayProgressCompletionTruthTest
         CmsRegistration expired = scanTicket(REGISTRATION + 1);
         expired.setOwnerType(1L);
         expired.setOwnerId(TOPIC);
+        expired.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS); // 自玩通行证真实品类(探索票属活动场次)
         expired.setExpiresAt(new Date(1000L));
         CmsRegistration active = scanTicket(REGISTRATION);
         active.setOwnerType(1L);
         active.setOwnerId(TOPIC);
+        active.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
         active.setExpiresAt(new Date(System.currentTimeMillis() + 86400000L));
         when(registrationService.selectCmsRegistrationList(any()))
                 .thenReturn(java.util.Arrays.asList(expired, active));
         when(proofService.markArrived(PLAYER, 0L, node)).thenReturn(new PlayerNodeProgress());
         assertEquals(402, controller.checkin(null, CODE, String.valueOf(TOPIC), null, null, expired.getId()).get("code"));
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
         assertEquals(200, controller.checkin(null, CODE, String.valueOf(TOPIC), null, null, active.getId()).get("code"));
         verify(registrationMapper).markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER), eq(1L), eq(TOPIC), any());
     }
@@ -644,7 +652,7 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION);
         assertEquals(500, result.get("code"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
-        org.mockito.Mockito.verifyNoInteractions(registrationMapper);
+        verifyOnlyEligibilityReads();
     }
 
     private CmsRegistration scanTicket(Long id) {
@@ -675,4 +683,12 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult pick=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"c",null,"pick-proof",3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
+    /** 失败/越权路径对订单只允许 C 包当前资格的两种读(列表、按原ID锁读)；任何写入或其他调用都判红。 */
+    private void verifyOnlyEligibilityReads() {
+        java.util.List<String> allowed = java.util.Arrays.asList("selectCmsRegistrationList", "selectCmsRegistrationByIdForUpdate");
+        for (org.mockito.invocation.Invocation call : org.mockito.Mockito.mockingDetails(registrationMapper).getInvocations()) {
+            org.junit.jupiter.api.Assertions.assertTrue(allowed.contains(call.getMethod().getName()),
+                    "订单 mapper 出现资格读以外的调用: " + call.getMethod().getName());
+        }
+    }
 }

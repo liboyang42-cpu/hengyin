@@ -43,6 +43,9 @@ public interface UmsMemberMapper
      */
     public java.math.BigDecimal selectBalanceForUpdate(Long id);
 
+    /** 当前锁读积分，绕过 RR 快照与 MyBatis 缓存；会员不存在或积分列为 null 返回 null。 */
+    public Long selectPointsForUpdate(Long id);
+
     /**
      * 锁定并原子确认会员仍启用；用于权限写入在锁后重新授权，避免前置查询的一级缓存被当成当前事实。
      *

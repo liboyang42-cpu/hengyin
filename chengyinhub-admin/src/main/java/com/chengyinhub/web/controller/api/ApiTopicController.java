@@ -57,6 +57,8 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -823,6 +825,7 @@ public class ApiTopicController extends BaseController {
     @Operation(summary = "编辑器回填:主题全量详情(仅创作者本人)")
     @PostMapping("/edit-detail")
     @Parameters({@Parameter(name = "id", description = "主题id")})
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult topicEditDetail(String id, String scope) {
         Long topicId = Convert.toLong(id, 0L);
         if (topicId < 1) {

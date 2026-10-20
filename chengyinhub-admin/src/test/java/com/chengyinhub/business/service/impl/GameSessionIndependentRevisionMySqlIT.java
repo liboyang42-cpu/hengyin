@@ -81,7 +81,11 @@ class GameSessionIndependentRevisionMySqlIT {
         ReflectionTestUtils.setField(target,"playTeamMapper",sql.getMapper(PlayTeamMapper.class));
         CmsActivityMapper activities=mock(CmsActivityMapper.class);
         when(activities.selectCmsActivityById(70L)).thenAnswer(call->{CmsActivity a=new CmsActivity();a.setId(70L);a.setTopicId(80L);a.setClubId(40L);a.setStatus(1L);a.setDelFlag(0);a.setStartDate(new Date(System.currentTimeMillis()-3600000));a.setEndDate(new Date(System.currentTimeMillis()+3600000));return a;});
+        when(activities.selectCmsActivityByIdForUpdate(70L)).thenAnswer(call->{CmsActivity a=new CmsActivity();a.setId(70L);a.setTopicId(80L);a.setClubId(40L);a.setStatus(1L);a.setDelFlag(0);a.setStartDate(new Date(System.currentTimeMillis()-3600000));a.setEndDate(new Date(System.currentTimeMillis()+3600000));return a;});
         ReflectionTestUtils.setField(target,"activityMapper",activities);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper currentRegistrations=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        CurrentRegistrationStubs.currentFromProbe(currentRegistrations); // A包当前资格锁读；归属与已付事实仍由真表 play_team/hasPaidRegistration 判定
+        ReflectionTestUtils.setField(target,"currentPlayRegistrationMapper",currentRegistrations);
         ICapabilityService capability=mock(ICapabilityService.class);
         when(capability.hasCapability(88L,MemberCapability.CAP_CLUB_LEADER)).thenReturn(true);
         ReflectionTestUtils.setField(target,"capabilityService",capability);

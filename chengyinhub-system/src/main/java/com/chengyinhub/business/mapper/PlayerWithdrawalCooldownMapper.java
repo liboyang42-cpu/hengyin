@@ -27,6 +27,8 @@ public interface PlayerWithdrawalCooldownMapper {
      */
     BigDecimal sumUnexpiredFrozenByMemberAtDbNow(@Param("memberId") Long memberId);
 
+    List<BigDecimal> selectUnexpiredAmountsForUpdate(@Param("memberId") Long memberId);
+
     List<PlayerWithdrawalCooldown> selectByMember(@Param("memberId") Long memberId);
 
     /**

@@ -71,7 +71,8 @@ class JourneyNarrativeSecuritySaveTest {
 
         AjaxResult result = controller.createTopic(dto);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // CORE OWN-C03-21/24：内容安全拒绝在任何写入前发生，业务码改为 400，与写入结果不确定的 500 区分。
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("journeyStory.call.opener"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
@@ -92,7 +93,8 @@ class JourneyNarrativeSecuritySaveTest {
 
         AjaxResult result = controller.updateTopic(dto);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // CORE OWN-C03-21/24：内容安全拒绝在任何写入前发生，业务码改为 400，与写入结果不确定的 500 区分。
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG))
                         .contains("journeyStory.ending.epilogues[].ally"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));

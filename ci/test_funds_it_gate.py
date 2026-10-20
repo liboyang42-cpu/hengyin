@@ -89,7 +89,7 @@ def all_required_clean(directory):
         ("PhotoReviewProgressMybatisIntegrationTest", 6),
         ("SpoilerAccessMybatisIntegrationTest", 7),
         ("SquareEditFollowMybatisIntegrationTest", 7),
-        ("RoamSessionWriteMybatisIntegrationTest", 12),
+        ("RoamSessionWriteMybatisIntegrationTest", 15),
         ("RoamLocationRetentionMySqlIT", 21),
         ("ComplaintPeriodWithdrawalGateMybatisIntegrationTest", 7),
         ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),

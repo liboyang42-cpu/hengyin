@@ -54,6 +54,9 @@ public class AuditWorkbenchController extends BaseController {
     private IAuditTaskService auditTaskService;
 
     @Autowired
+    private com.chengyinhub.business.service.ICommunityPostService communityPostService;
+
+    @Autowired
     private ITopicCommercialReviewService topicCommercialReviewService;
 
     @Autowired
@@ -86,7 +89,9 @@ public class AuditWorkbenchController extends BaseController {
     public TableDataInfo list(AuditTask auditTask) {
         startPage();
         List<AuditTask> list = auditTaskService.selectAuditTaskList(auditTask);
-        return getDataTable(list);
+        TableDataInfo data = getDataTable(list);
+        data.setRows(list.stream().map(this::auditTaskForRead).collect(java.util.stream.Collectors.toList()));
+        return data;
     }
 
     /** 认领待审单(协作提示,不阻止其他审核员处理);已被认领或已处理返回错误。 */
@@ -101,7 +106,7 @@ public class AuditWorkbenchController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
-        return success(auditTaskService.selectAuditTaskById(id));
+        return success(auditTaskForRead(auditTaskService.selectAuditTaskById(id)));
     }
 
     /**
@@ -125,8 +130,11 @@ public class AuditWorkbenchController extends BaseController {
             }
         }
         AjaxResult ajax = success();
-        ajax.put("task", task);
-        ajax.put("records", records);
+        ajax.put("task", auditTaskForRead(task));
+        ajax.put("records", auditRecordsForRead(task, records));
+        if (AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())) {
+            ajax.put("communityMediaPreview", communityPostService.auditMediaPreview(task));
+        }
         ajax.put("reportCount", reporters.size());
         AuditTaskDetailVO governance = auditTaskService.detail(id, getUserId(), SysUser.isAdmin(getUserId()));
         if (governance != null) {
@@ -145,6 +153,26 @@ public class AuditWorkbenchController extends BaseController {
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
+
+    private AuditTask auditTaskForRead(AuditTask task) {
+        if (task == null || !AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())) return task;
+        AuditTask copy = new AuditTask();
+        org.springframework.beans.BeanUtils.copyProperties(task, copy);
+        copy.setSnapshotJson(communityPostService.auditSnapshotForRead(task.getSnapshotJson()));
+        return copy;
+    }
+
+    private List<AuditRecord> auditRecordsForRead(AuditTask task, List<AuditRecord> records) {
+        if (!AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())) return records;
+        List<AuditRecord> copies = new java.util.ArrayList<>();
+        for (AuditRecord record : records) {
+            AuditRecord copy = new AuditRecord();
+            org.springframework.beans.BeanUtils.copyProperties(record, copy);
+            copy.setSnapshotJson(communityPostService.auditSnapshotForRead(record.getSnapshotJson()));
+            copies.add(copy);
+        }
+        return copies;
+    }
 
     /**
      * R12:把旅程新叙事的可读文本追加进审核详情(只追加,不改原有字段)。

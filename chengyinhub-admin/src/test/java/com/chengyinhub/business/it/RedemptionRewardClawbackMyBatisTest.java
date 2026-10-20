@@ -94,7 +94,7 @@ class RedemptionRewardClawbackMyBatisTest {
             assertEquals(2, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=41"), "未使用的通关券作废");
             assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=40"),
                     "同模板、同一分钟先发的节点券不是通关券,不许误作废");
-            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=42"), "领取时间为空来源不明,不认");
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=42"), "非持久原回执,不认");
             String audit = text(c, "SELECT after_json FROM business_audit_event WHERE action='REDEMPTION_REWARD_CLAWBACK'");
             assertTrue(audit.contains("\"shortfall\": 3") || audit.contains("\"shortfall\":3"), audit);
             assertTrue(audit.contains("VOIDED"), audit);
@@ -261,7 +261,6 @@ class RedemptionRewardClawbackMyBatisTest {
         com.chengyinhub.business.service.ICmsPointsSettingService settings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
         when(settings.selectCmsPointsSettingList(any())).thenReturn(java.util.Collections.singletonList(rule));
         com.chengyinhub.business.service.IUmsMemberService memberService = mock(com.chengyinhub.business.service.IUmsMemberService.class);
-        when(memberService.selectUmsMemberById(anyLong())).thenAnswer(i -> members.selectUmsMemberById(i.getArgument(0)));
         when(memberService.addPoints(anyLong(), anyInt())).thenAnswer(i -> members.addPoints(i.getArgument(0), i.getArgument(1)) == 1);
         com.chengyinhub.business.service.IUmsMemberPointsDetailService detailService = mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class);
         when(detailService.selectUmsMemberPointsDetailList(any())).thenAnswer(i -> details.selectUmsMemberPointsDetailList(i.getArgument(0)));
@@ -269,6 +268,7 @@ class RedemptionRewardClawbackMyBatisTest {
         com.chengyinhub.business.service.impl.PointsAwardServiceImpl points = new com.chengyinhub.business.service.impl.PointsAwardServiceImpl();
         ReflectionTestUtils.setField(points, "cmsPointsSettingService", settings);
         ReflectionTestUtils.setField(points, "umsMemberService", memberService);
+        ReflectionTestUtils.setField(points, "umsMemberMapper", members);
         ReflectionTestUtils.setField(points, "umsMemberPointsDetailService", detailService);
         ReflectionTestUtils.setField(points, "umsMemberPointsDetailMapper", details);
 

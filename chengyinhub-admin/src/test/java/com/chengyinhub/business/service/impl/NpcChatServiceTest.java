@@ -85,7 +85,28 @@ class NpcChatServiceTest {
 
         when(memoryBuilder.buildRoam(any(RoamSession.class))).thenReturn("[漫游进度] 本次已探索 25 个唯一格子。");
         when(roamMapper.selectSessionById(SESSION_ID)).thenReturn(activeSession(USER_ONE));
-        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(1);
+        // Unit orchestration uses real write-service code over mapper doubles; MySQL IT proves locking.
+        java.util.Map<String, NpcChatRequest> rows = new java.util.HashMap<>();
+        when(npcChatRequestMapper.lockChatUser(anyLong())).thenAnswer(inv -> inv.getArgument(0));
+        when(npcChatRequestMapper.insertNpcChatRequest(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            NpcChatRequest row = inv.getArgument(0);
+            rows.put(row.getUserId() + ":" + row.getRequestId(), copyRequest(row));
+            return 1;
+        });
+        when(npcChatRequestMapper.selectByUserAndRequestId(anyLong(), anyString())).thenAnswer(inv -> {
+            NpcChatRequest row = rows.get(inv.getArgument(0) + ":" + inv.getArgument(1));
+            return row == null ? null : copyRequest(row);
+        });
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            NpcChatRequest row = inv.getArgument(0);
+            rows.put(row.getUserId() + ":" + row.getRequestId(), copyRequest(row));
+            return 1;
+        });
+        when(npcChatLogMapper.insertNpcChatLog(any())).thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager transactions =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenAnswer(inv -> new org.springframework.transaction.support.SimpleTransactionStatus());
+        NpcChatWriteService writes = new NpcChatWriteService(npcChatRequestMapper, npcChatLogMapper, transactions);
         when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class))).thenReturn(1);
         doReturn(leaseHeartbeat).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class),
                 eq(5000L), eq(5000L), eq(TimeUnit.MILLISECONDS));
@@ -106,10 +127,16 @@ class NpcChatServiceTest {
         ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
         ReflectionTestUtils.setField(service, "memoryBuilder", memoryBuilder);
         ReflectionTestUtils.setField(service, "merchantFactsBuilder", merchantNpcFactsBuilder);
-        ReflectionTestUtils.setField(service, "npcChatLogMapper", npcChatLogMapper);
+        ReflectionTestUtils.setField(service, "npcChatWriteService", writes);
         ReflectionTestUtils.setField(service, "npcChatRequestMapper", npcChatRequestMapper);
         ReflectionTestUtils.setField(service, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(service, "scheduledExecutorService", scheduledExecutorService);
+    }
+
+    private static NpcChatRequest copyRequest(NpcChatRequest request) {
+        NpcChatRequest copy = new NpcChatRequest();
+        org.springframework.beans.BeanUtils.copyProperties(request, copy);
+        return copy;
     }
 
     @Test
@@ -444,7 +471,11 @@ class NpcChatServiceTest {
     }
     @Test
     void leaseLostBeforeProviderDoesNotStartGateway() {
-        when(npcChatRequestMapper.renewLease(anyLong(),anyString(),anyString(),any(Date.class))).thenReturn(0);
+        when(npcChatRequestMapper.renewLease(anyLong(),anyString(),anyString(),any(Date.class))).thenAnswer(inv -> {
+            // Preserve the original unavailable-state case: the persistent row cannot be read.
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("lost-before-provider"))).thenReturn(null);
+            return 0;
+        });
         NpcChatResp result=service.chat(req("lost-before-provider","hi"),USER_ONE);
         assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
         verify(aiGatewayService,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
@@ -456,11 +487,36 @@ class NpcChatServiceTest {
     void oldWorkerCannotReturnOrSynthesizeItsUnsavedResult() {
         when(aiGatewayService.generate(anyLong(),anyString(),anyString(),anyString(),anyString()))
                 .thenReturn(new AiGatewayResult("trace","旧答案","real",0));
-        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(0);
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("lost-after-provider"))).thenReturn(null);
+            return 0;
+        });
         NpcChatResp result=service.chat(req("lost-after-provider","hi"),USER_ONE);
-        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertEquals("UNKNOWN",result.getSafetyDecision());
+        assertTrue(!result.isRetryable());
         assertTrue(!"旧答案".equals(result.getSafeText()));
+        verify(npcChatLogMapper, never()).insertNpcChatLog(any());
         verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void revokedLeaseReturnsPersistentDeletionTombstoneInsteadOfWorkerAnswer() {
+        String id = requestId("deleted-in-flight");
+        NpcChatRequest erased = terminal("deleted-in-flight", USER_ONE, "PROCESSING", "UNKNOWN",
+                "REQUEST_OUTCOME_UNKNOWN", false, null);
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString())).thenAnswer(inv -> {
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, id)).thenReturn(erased);
+            when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(0);
+            return new AiGatewayResult("trace", "已删除的旧答案", "fixture", 0);
+        });
+        NpcChatResp result = service.chat(req("deleted-in-flight", "hi"), USER_ONE);
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", result.getErrorCode());
+        assertEquals(false, result.isRetryable());
+        assertTrue(!"已删除的旧答案".equals(result.getSafeText()));
+        verify(npcChatLogMapper, never()).insertNpcChatLog(any());
+        service.chat(req("deleted-in-flight", "hi"), USER_ONE);
+        verify(aiGatewayService, times(1)).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test void storedShopAnswerKeepsOriginalNodeAndDoesNotCallProvider() {

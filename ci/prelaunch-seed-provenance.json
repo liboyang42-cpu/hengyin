@@ -131,7 +131,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementController.java": "49db0fa78dae08c95d1b50000d70827f40aa690b92bb607fabd9e8b2482559a7",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantLeadController.java": "ed746fe8681a529f9804afa5cad5db161e0afdbd877b31e4533c9ffddf14d881",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRoamAiContentController.java": "c960616831923a9a4948dee0f51bf78cce2fe35c7ead130575d66c4d410180f3",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": "9c5ccd4fafb7859d2f0aa2d70faf66d41f8f980acdbab61a39c0d9b896eb44e8",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": "66927cbcd408bf84e47b1b74203dfae30e47c5f2ebd4638070b9c82c7df76ff1",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java": "074e57ab66df7c9ab00e564a92eda2cf6246a1a0dd1a90baccf11718baf53bc6",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantPayableBatchController.java": "38a276a82ab4ce9e3c608146984c9a2c99520ed57590cda0f98a83d3a9dbac74",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java": "73801ec1958327b9531dd0a1b62811d35343651bb6abb8381009ccfa4e7aa9dd",

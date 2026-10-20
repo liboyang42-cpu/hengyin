@@ -37,7 +37,7 @@ class PersonalGameplayRuntimeServiceTest {
         for(long id:Arrays.asList(11L,12L)) {CmsTopicNode n=new CmsTopicNode();n.setId(id);n.setTopicId(10L);n.setStatus(1L);n.setMerchantMemberId(30L);n.setTemplateId(id);list.add(n);when(nodes.selectCmsTopicNodeById(id)).thenReturn(n);CmsMemberTemplate t=new CmsMemberTemplate();t.setId(id);t.setAdvancedConfigJson("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"答案\",\"answerText\":\"正确\"}}");tpl.add(t);}
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(list);when(templates.selectCmsMemberTemplateByIds(any())).thenReturn(tpl);
         topic.setPublishedRouteGraphJson(service.freezePublication(topic,null));
-        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(new CmsRegistration()));
+        CurrentRegistrationStubs.currentFromProbe(registrations);
         when(arrival.hasArrived(anyLong(),anyLong(),anyLong())).thenReturn(true);
         when(mapper.selectByOwner(0L,10L,7L,"default")).thenAnswer(i->session);when(mapper.selectCurrentByOwner(0L,10L,7L)).thenAnswer(i->session);
         when(mapper.selectAccessibleById(anyLong(),eq(7L))).thenAnswer(i->session!=null && i.getArgument(0).equals(session.getId())?session:null);

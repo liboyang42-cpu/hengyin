@@ -106,6 +106,8 @@
         </swiper>
       </view>
 
+      <cy-roam-resume-bar />
+
       <!-- 继续探索：由服务端进行中的游戏会话(优先)或 /registration/my-joined 的真实报名记录驱动，空时不占首屏。 -->
       <view class="v3-continue" wx:if="{{continueExplore}}" bindtap="goContinueExplore" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{continueExplore.cover}}" class="v3-continue-cover" src="{{continueExplore.cover}}" mode="aspectFill" />

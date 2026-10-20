@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitlistOrderBridge {
     private static final Logger logger = LoggerFactory.getLogger(ClubWaitlistServiceImpl.class);
     private final ClubEventOpsMapper mapper;
+    private final long[] maintenanceCursors = new long[4];
     private final OmsTicketMapper ticketMapper;
     private final IClubParticipationGuard participationGuard;
     private final ClubWaitlistTokenCodec tokenCodec;
@@ -69,6 +70,14 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         }
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
+        Date now = new Date();
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) {
+            throw conflict("活动未上架或已结束，不能加入候补");
+        }
+        Date signupDeadline = ticket.getSignupDeadline() != null ? ticket.getSignupDeadline() : ticket.getStartTime();
+        if (signupDeadline != null && !signupDeadline.after(now)) {
+            throw conflict("票种报名已截止，不能加入候补");
+        }
         long remaining = ticket.getRemainingInventory() == null ? -1L : ticket.getRemainingInventory();
         if (remaining < 0) throw conflict("票库存状态未知");
         if (remaining > 0) throw conflict("当前仍有名额，请直接报名");
@@ -78,7 +87,6 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         if (mapper.selectActiveWaitlist(memberId, activityId, ticketId) != null) {
             throw conflict("你已在该票种候补队列中");
         }
-        Date now = new Date();
         ClubWaitlistEntry entry = new ClubWaitlistEntry();
         entry.setClubId(policy.getClubId());
         entry.setActivityId(activityId);
@@ -149,7 +157,9 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         // myStatus 自身在事务内；这里沿用统一 series -> club -> ticket -> waitlist 锁序，
         // 成功则真实释放 hold，CAS 竞争失败也会重读并在响应层去掉付款能力。
         expireOffered(entry.getId(), now);
-        ClubWaitlistEntry refreshed = mapper.selectLatestWaitlist(memberId, activityId, ticketId);
+        // 普通 latest 读可能仍在 myStatus 的 RR 旧快照中，把并发已 CLAIMED 的 offer
+        // 再读成 OFFERED 并误标 EXPIRED。沿前面的锁序当前读同一 offer，保留真实终态。
+        ClubWaitlistEntry refreshed = mapper.selectWaitlistByIdForUpdate(entry.getId());
         if (refreshed == null) {
             entry.setState(ClubWaitlistEntry.EXPIRED);
             entry.setOfferToken(null);
@@ -230,6 +240,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private boolean promoteNextLocked(ClubEventSeries policy, Long lockedOwnerMemberId,
                                       Long activityId, Long ticketId, Date now) {
         if (!Boolean.TRUE.equals(policy.getWaitlistEnabled())) return false;
+        // 只拦新 hold；下架/结束后旧 offer 的取消与释放仍必须提交。前序 policy 已锁同一 activity。
+        if (!activityId.equals(mapper.selectPromotableActivityForUpdate(activityId, policy.getClubId(), now))) return false;
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);
         if (ticket.getRemainingInventory() == null || ticket.getRemainingInventory() <= 0) return false;
@@ -339,43 +351,50 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     }
 
     @Override
-    public int maintain(Date now) {
+    public synchronized int maintain(Date now) {
         if (now == null) throw badRequest("维护时间不能为空");
+        Long maxId = mapper.selectWaitlistMaintenanceMaxId();
+        if (maxId == null) { java.util.Arrays.fill(maintenanceCursors, 0L); return 0; }
         int changed = 0;
-        for (Long entryId : safe(mapper.selectExpiredOfferedIds(now, 100))) {
-            try {
-                if (maintenanceRequiresNew(() -> expireOffered(entryId, now))) changed++;
-            } catch (Exception poison) {
-                logger.error("候补维护单项失败，已隔离并继续: kind=EXPIRE_OFFERED entryId={}",
-                        entryId, poison);
+        for (int kind = 0; kind < 4; kind++) {
+            int scanned = 0;
+            boolean reachedEnd = false;
+            while (scanned < 500) {
+                List<java.util.Map<String, Object>> page;
+                try {
+                    page = mapper.selectWaitlistMaintenancePage(kind, now, maintenanceCursors[kind],
+                            maxId, Math.min(100, 500 - scanned));
+                } catch (Exception pageFailure) {
+                    logger.error("候补维护页读取失败，保留游标并继续其他域: kind={}", kind, pageFailure);
+                    break;
+                }
+                if (page == null || page.isEmpty()) { reachedEnd = true; break; }
+                for (java.util.Map<String, Object> row : page) {
+                    Long scanId = scopedId(row, "scanId");
+                    if (scanId == null || scanId <= maintenanceCursors[kind] || scanId > maxId) {
+                        throw new IllegalStateException("候补维护游标页异常");
+                    }
+                    scanned++;
+                    try {
+                        final int action = kind;
+                        Long targetId = kind == 3 ? null : scopedId(row, "targetId");
+                        Long activityId = kind == 3 ? scopedId(row, "activityId") : null;
+                        Long ticketId = kind == 3 ? scopedId(row, "ticketId") : null;
+                        if (maintenanceRequiresNew(() -> {
+                            if (action == 0) return expireOffered(targetId, now);
+                            if (action == 1) return convertClaimedByRegistration(targetId);
+                            if (action == 2) return expireClaimedTerminal(targetId, now);
+                            return promoteNext(activityId, ticketId, now);
+                        })) changed++;
+                    } catch (Exception poison) {
+                        logger.error("候补维护单项失败，已隔离并继续: kind={} scanId={}", kind, scanId, poison);
+                    } finally {
+                        maintenanceCursors[kind] = scanId;
+                    }
+                }
+                if (maintenanceCursors[kind] >= maxId) { reachedEnd = true; break; }
             }
-        }
-        for (Long registrationId : safe(mapper.selectClaimedPaidRegistrationIds(100))) {
-            try {
-                if (maintenanceRequiresNew(() -> convertClaimedByRegistration(registrationId))) changed++;
-            } catch (Exception poison) {
-                logger.error("候补维护单项失败，已隔离并继续: kind=CONVERT_CLAIMED registrationId={}",
-                        registrationId, poison);
-            }
-        }
-        for (Long registrationId : safe(mapper.selectClaimedTerminalRegistrationIds(100))) {
-            try {
-                if (maintenanceRequiresNew(() -> expireClaimedTerminal(registrationId, now))) changed++;
-            } catch (Exception poison) {
-                logger.error("候补维护单项失败，已隔离并继续: kind=EXPIRE_CLAIMED registrationId={}",
-                        registrationId, poison);
-            }
-        }
-        List<java.util.Map<String, Object>> promotable = mapper.selectPromotableWaitlistScopes(now, 100);
-        if (promotable != null) for (java.util.Map<String, Object> scope : promotable) {
-            Long activityId = scopedId(scope, "activityId");
-            Long ticketId = scopedId(scope, "ticketId");
-            try {
-                if (maintenanceRequiresNew(() -> promoteNext(activityId, ticketId, now))) changed++;
-            } catch (Exception poison) {
-                logger.error("候补维护单项失败，已隔离并继续: kind=PROMOTE activityId={}, ticketId={}",
-                        activityId, ticketId, poison);
-            }
+            if (reachedEnd) maintenanceCursors[kind] = 0L;
         }
         return changed;
     }

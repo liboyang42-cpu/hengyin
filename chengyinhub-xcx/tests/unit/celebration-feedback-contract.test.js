@@ -203,6 +203,10 @@ test('游玩模板徽章、成长徽章与漫游徽章都触发共享彩旗反�
 
   const roamMedal = loadPage(ROAM_PAGE)
   roamMedal._shopBadgeCfg = { name: '三店连亮' }
+  // 2026-10-13 C包:三店章只在后端结算回执确认 DELIVERED 后弹(ApiRoamController finish 的 shopMedal.code + badgeDelivery)。
+  roamMedal._applyRoamFinishResult({ totalXp: 0, shopMedal: { name: '三店连亮', code: 'ROAM_SHOP_STREAK' },
+    badgeDelivery: [{ badgeCode: 'ROAM_SHOP_STREAK', sourceId: 1, state: 'DELIVERED' }] }, true)
+  roamMedal.data.celebrationEvent = ''
   roamMedal._popMedal()
   assertCelebrates(roamMedal, 'medal-earned')
 })
@@ -225,7 +229,9 @@ test('漫游结算后端确认的新徽章也触发共享彩旗反馈', async ()
   page.data.finish = {}
 
   const settling = page._postRoamFinish(1200)
-  requests[0].success({ code: 200, data: { totalXp: 0, medal: '漫游新章', shopMedal: { name: '三店连亮' } } })
+  requests[0].success({ code: 200, data: { totalXp: 0, medal: '漫游新章', shopMedal: { name: '三店连亮', code: 'ROAM_SHOP_STREAK' },
+    badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', sourceId: 88, state: 'DELIVERED' },
+      { badgeCode: 'ROAM_SHOP_STREAK', sourceId: 88, state: 'DELIVERED' }] } })
 
   assert.equal(await settling, true)
   assertCelebrates(page, 'medal-earned')

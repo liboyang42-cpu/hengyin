@@ -127,6 +127,16 @@ function loadDetail() {
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
+        // 移植分支的俱乐部详情多引的模块（置顶公告、合作回跳、发布者权限、通用弹层/提示）：按真实模块接入。
+        '../../../utils/coop-invite-return.js': require('../../utils/coop-invite-return.js'),
+        '../../../utils/coop-publisher-access.js': require('../../utils/coop-publisher-access.js'),
+        '../../../utils/display-text.js': require('../../utils/display-text.js'),
+        '../../../utils/loading.js': require('../../utils/loading.js'),
+        '../../../utils/modal.js': require('../../utils/modal.js'),
+        '../../../utils/roleGuard.js': require('../../utils/roleGuard.js'),
+        '../../../utils/subscribe.js': require('../../utils/subscribe.js'),
+        '../../../utils/toast.js': require('../../utils/toast.js'),
+        '../utils/club-pinned-notice.js': require('../../pages/club/utils/club-pinned-notice.js'),
       }
       if (modules[request]) return modules[request]
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
