@@ -5172,7 +5172,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "COMBINED95F_FAILURES_EXACT_FIVE_PATH_SINGLE_REPAIR_SLOT_AUTHORIZED",
+    "state": "COMBINED95F_COMPILE_BLOCKER_LOCATED_REPAIR_IN_PROGRESS_FINAL_SHA_PENDING",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -5258,7 +5258,7 @@
     "latest_failure_observations": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_failure_observations",
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
-      "state": "BACKEND_FIXTURE_FAST_RECEIPTS_MIGRATION_PR_BODY_LOCATED_HTTP_CAUSE_PENDING"
+      "state": "BACKEND_FUNDS_HTTP_SAME_TEST_COMPILE_BLOCKER_ACTUAL_JAVA0_HTTP_CHAINS_NOT_RUN"
     },
     "integration_repair_path_grants": {
       "chengyinhub-xcx/utils/content-report.js": {
@@ -5303,6 +5303,12 @@
         "original_source_owner_and_lock": "Retained/frozen; branch-scoped integration repair only",
         "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_authority"
       }
+    },
+    "integration_repair_progress": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_progress",
+      "state": "REPORTED_LOCAL_PATCH_IN_PROGRESS_FINAL_PUBLIC_SHA_PENDING",
+      "final_source_sha": "NOT_DELIVERED",
+      "results_inherited_to95f_or_future_source": false
     }
   }
 }

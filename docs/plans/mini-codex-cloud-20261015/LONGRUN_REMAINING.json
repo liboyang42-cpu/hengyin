@@ -2642,7 +2642,7 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "COMBINED95F_FAILURES_EXACT_FIVE_PATH_SINGLE_REPAIR_SLOT_AUTHORIZED",
+    "state": "COMBINED95F_COMPILE_BLOCKER_LOCATED_REPAIR_IN_PROGRESS_FINAL_SHA_PENDING",
     "creation_or_candidate_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
     "port_source": {
       "pr": 386,
@@ -2728,8 +2728,8 @@
       "existing_source_results_inherited": false,
       "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
-      "real_storage": "PENDING_NO_RESULT_REPORTED",
-      "real_http": "RUN39432014261_COMPLETED_FAILURE_ROOT_CAUSE_PENDING"
+      "real_storage": "FUNDS39431906479_FAILURE_AT_TEST_COMPILE; ACTUAL_JAVA_BUSINESS_TESTS0; NO_STORAGE_ACCEPTANCE",
+      "real_http": "RUN39432014261_FAILURE_AT_TEST_COMPILE; ALL_FIVE_CHAINS_MISSING_NOT_RUN"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -2921,9 +2921,19 @@
         "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
         "status": "completed",
         "conclusion": "failure",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261"
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261",
+        "failure_phase": "testCompile",
+        "root_cause_record": "backend_compile_failure",
+        "actual_java_business_tests": 0,
+        "chains": {
+          "platform": "MISSING/NOT_RUN",
+          "merchant_club": "MISSING/NOT_RUN",
+          "sale_close": "MISSING/NOT_RUN",
+          "player": "MISSING/NOT_RUN",
+          "finance": "MISSING/NOT_RUN"
+        }
       },
-      "failure_root_causes": "Backend testCompile constructor fixture, Fast missing reviewed receipts and Migration PR-body classification reported as above; HTTP precise cause remains pending. No assertion failure or wider production/gate defect inferred.",
+      "failure_root_causes": "Backend, Funds39431906479 and HTTP39432014261 share E01_12Test six-vs-ten-argument constructor testCompile failure; production modules compiled, actual Java business tests0 and all five HTTP chains MISSING/NOT_RUN. Fast receipts and Migration PR-body classification are separately reported; no business-chain assertion failure.",
       "workflow_metadata_scope": "Current workflow conclusions are metadata only; source-specific test counts/artifacts still require separate acceptance.",
       "funds_workflow": {
         "run_id": 39431906479,
@@ -2931,7 +2941,10 @@
         "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
         "status": "completed",
         "conclusion": "failure",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479"
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479",
+        "failure_phase": "testCompile",
+        "root_cause_record": "backend_compile_failure",
+        "actual_java_business_tests": 0
       },
       "backend_compile_failure": {
         "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -2945,7 +2958,8 @@
         "evidence_scope": "Compiler diagnosis reported by integration writer; C00 read the six-argument fixture but did not compile."
       },
       "fast_gate_diagnosis": "Reported #387 silentError registrations missing: content-report.js4 sites and myproject2. Each site requires actual error-handling review before an append-only truthful receipt; no baseline/rule change.",
-      "migration_gate_diagnosis": "Reported PR body lacks formal impact classification③; migration ledger14 and dependency order PASS. Root may correct PR description; no SQL/migration-executor edits or migration execution."
+      "migration_gate_diagnosis": "Reported PR body lacks formal impact classification③; migration ledger14 and dependency order PASS. Root may correct PR description; no SQL/migration-executor edits or migration execution.",
+      "diagnosis_evidence_scope": "Integration writer reports both job logs individually checked; C00 registers that diagnosis without downloading job logs or executing validation."
     },
     "current_runs_history": [
       {
@@ -2969,6 +2983,21 @@
         ],
         "scope": "Prior in-progress metadata at95f; does not override newer failure observations."
       }
-    ]
+    ],
+    "integration_repair_progress": {
+      "state": "REPORTED_LOCAL_PATCH_IN_PROGRESS_NOT_PUBLIC_FROZEN_SOURCE",
+      "final_source_sha": "NOT_DELIVERED",
+      "require_references": "Seven references corrected to the existing dynamic report tool, reported.",
+      "fixture": "E01_12Test valid listed-topic fixture and ten dependencies; pre_review_all=true and gate explicitly HOLD; all three methods/assertions retained, reported.",
+      "silent_receipts": "Six sites reviewed for explicit toast/error state/single-use locks and registered with named reasons; frozen baseline72 unchanged, reported.",
+      "reported_local_checks": {
+        "javascript_actual_tests_pass": 17,
+        "scope": "Report/appeal/old popup selected checks; source not yet frozen, no result attached to95f or any future SHA.",
+        "silent_gate": "PASS_REPORTED_UNFROZEN_PATCH"
+      },
+      "pr_description": "Formal impact classification③ and ledger order added, reported; no SQL changes.",
+      "remaining_source_work": "Rebuild existing action ledger for changed require resolution before final source freeze.",
+      "C00_execution": "NONE; no compile/test/CI/source edit, no new writer or scope."
+    }
   }
 }
