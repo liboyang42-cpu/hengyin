@@ -306,8 +306,8 @@ Page({
   },
 
   goAftercare() {
-    if (!this.data.merchantAccess.canReadAftercare) return;
-    wx.navigateTo({ url: '/pages/merchant/aftercare/index' });
+    if (!this.data.merchantAccess.canReadAftercare || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
   },
 
   goVerifyRecords() {
@@ -761,13 +761,13 @@ Page({
   },
 
   goApplicationProgress() {
-    wx.navigateTo({ url: '/pages/merchant/apply/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/apply/index', complete: () => { this._navigating = false; } });
   },
 
   // 竞猜待答:待办汇总里的 pendingPredict 只报条数,明细与「还剩几天」在待答页。
   goPredictInbox() {
-    if (!this.data.merchantAccess.canManageProjects) return;
-    wx.navigateTo({ url: '/pages/merchant/predict/index' });
+    if (!this.data.merchantAccess.canManageProjects || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } });
   },
 
   loadPrerequisites(dataEpoch = this._dataEpoch || 0) {
@@ -1081,7 +1081,7 @@ Page({
   // 「我的消息」是收入到账/核销流水,按类型去各自明细;「全部」与未知类型落核销记录(同时有待结算/已入账)。
   goEvent(e) {
     const type = e && e.currentTarget && e.currentTarget.dataset.type;
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions'), complete: () => { this._navigating = false; } });
   },
 
   goSearch() {
@@ -1265,11 +1265,11 @@ Page({
   },
 
   goFinance() {
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement', complete: () => { this._navigating = false; } });
   },
 
   goBrandManage() {
-    wx.navigateTo({ url: '/pages/merchant/decor/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
   // 「我的合作」进入商家关系页；订单由独立主入口承接。
@@ -1277,7 +1277,7 @@ Page({
   // 原来 reLaunch 到 pages/merchant/relation —— 那页标题是「合作」、内容是「找新的合作对象」,
   // 名不副实;合作仍从底部 tab「合作」进,这里不再重复给一个入口。
   goCustomers() {
-    wx.navigateTo({ url: '/pages/merchant/customer/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/customer/index', complete: () => { this._navigating = false; } });
   },
 
   // 商家承接档案(B2B 撮合):声明可承接能力,供达人发现对接
@@ -1306,12 +1306,12 @@ Page({
   goProjectMessages(e) {
     const ds = e && e.currentTarget && e.currentTarget.dataset || {};
     const route = normalizeMerchantFinanceRoute({ view: 'messages', ownerType: ds.ownertype, ownerId: ds.ownerid });
-    if (!route) return;
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId });
+    if (!route || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId, complete: () => { this._navigating = false; } });
   },
 
   goPublishedProjects() {
-    wx.navigateTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
 
