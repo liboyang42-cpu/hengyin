@@ -121,7 +121,7 @@ class ApiTopicPostReviewTest {
     void riskyText_isRefused() {
         AjaxResult result = controller.createTopic(createDto("违规主题名"));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("主题内容包含违规信息"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
@@ -185,7 +185,7 @@ class ApiTopicPostReviewTest {
 
         AjaxResult result = controller.updateTopic(dto);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("journeyStory.call.opener"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(security, never()).checkText(contains("正常主题名"), any());

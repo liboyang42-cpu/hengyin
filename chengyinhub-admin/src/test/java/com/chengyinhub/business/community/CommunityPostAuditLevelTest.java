@@ -13,6 +13,8 @@ import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.impl.CommunityPostServiceImpl;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.file.FileOssUploadUtils;
+import org.mockito.MockedStatic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
@@ -32,6 +34,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -204,7 +207,12 @@ class CommunityPostAuditLevelTest {
         CommunityPostRequests.State state = new CommunityPostRequests.State();
         state.setExpectedVersion(3);
         state.setRequestId("publish-request-1");
-        service.publish(9L, null, 7L, state);
+        try (MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class)) {
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(IMAGE)).thenCallRealMethod();
+            storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(IMAGE))
+                    .thenReturn("https://cdn.example/community/image.jpg");
+            service.publish(9L, null, 7L, state);
+        }
     }
 
     private static CommunityPost post(String lifecycle, int version) {

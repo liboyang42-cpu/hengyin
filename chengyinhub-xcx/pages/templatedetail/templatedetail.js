@@ -232,7 +232,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../square/utils/community-report-sheet.js').cancel(this);
+    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -471,8 +471,8 @@ Page({
     this.setData({ moreShow: false });
     require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
   },
-  onReportReasonSelect(e) { require('../square/utils/community-report-sheet.js').select(this, e); },
-  onReportReasonCancel() { require('../square/utils/community-report-sheet.js').cancel(this); },
+  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({

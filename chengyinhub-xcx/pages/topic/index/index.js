@@ -344,7 +344,7 @@ Page({
    */
   onUnload() {
     this._unloaded = true;
-    if (this._reportReasonSelection) require('../../square/utils/community-report-sheet.js').cancel(this);
+    if (this._reportReasonSelection) require('../../../utils/community-report-sheet.js').cancel(this);
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
@@ -1915,8 +1915,8 @@ Page({
     if (!this.data.canReport) return;
     require('../../../utils/content-report.js').reportTopic(this, app, this.data.id);
   },
-  onReportReasonSelect(e) { require('../../square/utils/community-report-sheet.js').select(this, e); },
-  onReportReasonCancel() { require('../../square/utils/community-report-sheet.js').cancel(this); },
+  onReportReasonSelect(e) { require('../../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../../utils/community-report-sheet.js').cancel(this); },
 
   /**
    * 用户点击右上角分享
