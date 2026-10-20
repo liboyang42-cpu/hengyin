@@ -625,6 +625,89 @@ class AuditAppealRevertContentTest {
         verify(activities).clearContentSafetyHold(BIZ_ID);
     }
 
+    /**
+     * AUDIT-INT-4(#383 × #384):举报成立下架模板时,先把下架前的公开态记进举报单快照(preTakedown),
+     * 申诉成立按它原样恢复:原来上架的回到上架,原来没上架的保持不上架;申诉能成立,不再恒 409。
+     */
+    @Test
+    void upheldTemplateReportRecordsPreTakedownStateBeforeTakingDown() throws Exception {
+        CmsMemberTemplate listed = template(1L, 1, 1L);
+        listed.setReason("");
+        CmsTemplateLibrary projection = library(1L, 1L);
+        projection.setId(601L);
+        projection.setMemberTemplateId(BIZ_ID);
+        AuditTask report = task(APPEAL_TASK, AuditTask.STATUS_PENDING, "report");
+        report.setBizType(AuditTask.BIZ_TEMPLATE);
+        report.setSnapshotJson("{\"bizType\":\"TEMPLATE\",\"bizId\":501,\"reason\":\"侵权\"}");
+        when(tasks.selectAuditTaskById(APPEAL_TASK)).thenReturn(report);
+        when(tasks.selectAuditTaskByIdForUpdate(APPEAL_TASK)).thenReturn(report);
+        when(templates.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(BIZ_ID)))
+                .thenReturn(Collections.singletonList(listed));
+        when(templates.selectCmsMemberTemplateById(BIZ_ID)).thenReturn(listed);
+        when(libraries.selectByMemberTemplateForUpdate(BIZ_ID)).thenReturn(Collections.singletonList(projection));
+        when(templates.takeDownReported(eq(BIZ_ID), any())).thenReturn(1);
+        when(tasks.updateTaskSnapshot(eq(APPEAL_TASK), any())).thenReturn(1);
+        reviewCasSucceeds(AuditTask.STATUS_REJECTED);
+        AuditReviewDTO decision = decide(AuditTask.STATUS_REJECTED, "侵权成立");
+        decision.setExpectedVersion(VERSION);
+
+        assertEquals(1, service.review(APPEAL_TASK, REVIEWER, decision));
+
+        ArgumentCaptor<String> snapshot = ArgumentCaptor.forClass(String.class);
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(tasks, templates);
+        order.verify(tasks).updateTaskSnapshot(eq(APPEAL_TASK), snapshot.capture());
+        order.verify(templates).takeDownReported(eq(BIZ_ID), any());
+        com.fasterxml.jackson.databind.JsonNode pre = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(snapshot.getValue()).path("preTakedown");
+        assertEquals("侵权", new com.fasterxml.jackson.databind.ObjectMapper().readTree(snapshot.getValue())
+                .path("reason").asText(), "举报证据不丢");
+        assertEquals(1, pre.path("template").path("status").asInt());
+        assertEquals(1, pre.path("template").path("publishStatus").asInt());
+        assertEquals(601L, pre.path("libraries").get(0).path("id").asLong());
+        assertEquals(1, pre.path("libraries").get(0).path("publishStatus").asInt());
+    }
+
+    @Test
+    void acceptedAppealOnReportTakedownRestoresTheListedState() {
+        acceptReportTakedownAppeal(1L);
+
+        verify(templates).restoreReportTakedown(BIZ_ID, AUTHOR, 1L, 1, 1L, "");
+        verify(libraries).restoreReportTakedown(601L, 1L, 1L, "");
+        verify(templates, never()).reopenAuditDecision(any(), any(), any(), any(), any());
+        verify(templates, never()).applyAuditDecision(any(), any());
+        verify(appeals).finishAppeal(eq(3L), eq(AuditAppeal.STATE_ACCEPTED), eq(REVIEWER), any(Date.class));
+    }
+
+    @Test
+    void acceptedAppealOnReportTakedownKeepsAnUnlistedTemplateUnlisted() {
+        acceptReportTakedownAppeal(0L);
+
+        verify(templates).restoreReportTakedown(BIZ_ID, AUTHOR, 1L, 1, 0L, "");
+    }
+
+    private void acceptReportTakedownAppeal(Long prePublishStatus) {
+        CmsMemberTemplate takenDown = template(2L, 2, 0L);
+        String snapshot = "{\"bizType\":\"TEMPLATE\",\"bizId\":501,\"reason\":\"侵权\",\"preTakedown\":"
+                + "{\"template\":{\"status\":1,\"checkStatus\":1,\"publishStatus\":" + prePublishStatus
+                + ",\"reason\":\"\"},\"libraries\":[{\"id\":601,\"status\":1,\"publishStatus\":1,\"reason\":\"\"}]}}";
+        AuditTask appealTask = task(APPEAL_TASK, AuditTask.STATUS_PENDING, AuditTaskServiceImpl.SOURCE_APPEAL);
+        appealTask.setBizType(AuditTask.BIZ_TEMPLATE);
+        appealTask.setSnapshotJson(snapshot);
+        when(tasks.selectAuditTaskById(APPEAL_TASK)).thenReturn(appealTask);
+        when(tasks.selectAuditTaskByIdForUpdate(APPEAL_TASK)).thenReturn(appealTask);
+        when(appeals.selectByTaskIdForUpdate(APPEAL_TASK)).thenReturn(appeal(AuditTask.BIZ_TEMPLATE));
+        when(templates.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(BIZ_ID)))
+                .thenReturn(Collections.singletonList(takenDown));
+        when(templates.restoreReportTakedown(any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(libraries.restoreReportTakedown(any(), any(), any(), any())).thenReturn(1);
+        reviewCasSucceeds(AuditTask.STATUS_APPROVED);
+        when(appeals.finishAppeal(any(), any(), any(), any())).thenReturn(1);
+        AuditReviewDTO decision = decide(AuditTask.STATUS_APPROVED, null);
+        decision.setExpectedVersion(VERSION);
+
+        assertEquals(1, service.review(APPEAL_TASK, REVIEWER, decision));
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test

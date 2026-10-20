@@ -96,6 +96,8 @@ class TopicTemplateReportTest {
                 return 1;
             });
             when(taskMapper.updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any())).thenReturn(1);
+            // AUDIT-INT-4:举报成立下架前把下架前状态并入举报单快照
+            when(taskMapper.updateTaskSnapshot(anyLong(), anyString())).thenReturn(1);
         }
 
         @Test

@@ -745,19 +745,30 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 && !com.chengyinhub.business.domain.AuditAppeal.STATE_REVIEWING.equals(appeal.getState())) {
             throw governanceError(ERROR_APPEAL_STALE, "申诉已处理，请刷新后重试", HttpStatus.CONFLICT);
         }
+        // AUDIT-INT-4:申诉的是模板/广场举报下架(快照带 preTakedown)= 按下架前记录的公开态原样恢复,
+        // 不走「回待审 + 通过」(那会把原本未上架的也上架,且举报快照与模板快照比对恒不等)。
+        com.fasterxml.jackson.databind.JsonNode reportTakedown = appealAccepted && templateLock != null
+                ? preTakedownState(task.getSnapshotJson()) : null;
         if (appealAccepted) {
             requireNoContentSafetyHold(task.getBizType(), task.getBizId(),
                     "内容图片未通过内容安全检测，申诉不能恢复，请作者更换图片后重新提交审核");
-            // 申诉成立：先把内容从驳回/下架态 CAS 回待审，再走下面既有的通过路径恢复；内容已变化则整单回滚。
-            if (!reopenContent(task, AuditTask.STATUS_REJECTED, null)) {
-                throw governanceError(ERROR_APPEAL_STALE, "内容已变化，申诉无法按原内容恢复，请重新提交审核",
-                        HttpStatus.CONFLICT);
+            if (reportTakedown != null) {
+                if (!restoreReportTakedown(task, templateLock, reportTakedown)) {
+                    throw governanceError(ERROR_APPEAL_STALE, "内容已变化，申诉无法按原内容恢复，请重新提交审核",
+                            HttpStatus.CONFLICT);
+                }
+            } else {
+                // 申诉成立：先把内容从驳回/下架态 CAS 回待审，再走下面既有的通过路径恢复；内容已变化则整单回滚。
+                if (!reopenContent(task, AuditTask.STATUS_REJECTED, null)) {
+                    throw governanceError(ERROR_APPEAL_STALE, "内容已变化，申诉无法按原内容恢复，请重新提交审核",
+                            HttpStatus.CONFLICT);
+                }
+                if (templateLock != null) templateLock = lockTemplateReview(task);
             }
-            if (templateLock != null) templateLock = lockTemplateReview(task);
         }
         // 申诉驳回/升级不改内容(维持原处理)，此时内容不在待审态，不做待审快照比对。
         // 举报单裁决的是「已公开内容是否违规」,不是作者提交的待审版本:不走待审快照/配置复核。
-        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType())
+        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType()) && reportTakedown == null
                 && (appeal == null || appealAccepted)) {
             assertTemplateReviewCurrent(templateLock, request);
         }
@@ -800,7 +811,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         // 审核决定 → 内容软封/恢复(REJECT=确认违规下架,APPROVE=举报无效恢复)
         notifyReviewResult(task, request);
         // 申诉驳回 = 维持原驳回/下架，内容不动；申诉成立复用既有通过路径恢复。
-        if (appeal == null || appealAccepted) applyModeration(task, request.getStatus(), request.getReasonText());
+        if (appeal == null || (appealAccepted && reportTakedown == null)) {
+            applyModeration(task, request.getStatus(), request.getReasonText());
+        }
         if (appeal != null && isTerminalDecision(request.getStatus())
                 && auditAppealMapper.finishAppeal(appeal.getId(), appealAccepted
                         ? com.chengyinhub.business.domain.AuditAppeal.STATE_ACCEPTED
@@ -1597,6 +1610,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
                 // AUDIT-G2-2:个人玩法举报。不成立不动;成立 = 下架个人玩法及其广场投影(可由作者修改重提)。
                 if (up) return;
+                recordPreTakedownState(task);
                 if (templateMapper.takeDownReported(bizId, reasonText) != 1) {
                     logger.warn("举报成立但个人玩法已不在公开态,跳过下架 templateId={}", bizId);
                 }
@@ -1604,6 +1618,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
                 // AUDIT-G2-2:模板广场举报。不成立不动;成立 = 只下架这条广场记录,不动作者的个人玩法。
                 if (up) return;
+                recordPreTakedownState(task);
                 if (libraryMapper.takeDownReported(bizId, reasonText) != 1) {
                     logger.warn("举报成立但模板广场记录已不在公开态,跳过下架 libraryId={}", bizId);
                 }
@@ -1927,6 +1942,105 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     null);
         }
         // APPROVE 的既有内容审核路径只恢复/保持可见；撤回到待审不应反向下架。
+    }
+
+    /**
+     * AUDIT-INT-4:举报成立下架模板/广场条目前,把下架前的公开态并入举报单快照(preTakedown)。
+     * 只记会被 takeDownReported 动到的行(status=1);申诉单复制这份快照,申诉成立据此原样恢复。
+     */
+    private void recordPreTakedownState(AuditTask task) {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode pre = json.createObjectNode();
+        com.fasterxml.jackson.databind.node.ArrayNode libraries = pre.putArray("libraries");
+        if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(task.getBizId());
+            if (template == null || !Long.valueOf(1L).equals(template.getStatus())) return;
+            com.fasterxml.jackson.databind.node.ObjectNode row = pre.putObject("template");
+            row.put("status", template.getStatus());
+            row.put("checkStatus", template.getCheckStatus());
+            row.put("publishStatus", template.getPublishStatus());
+            row.put("reason", template.getReason() == null ? "" : template.getReason());
+            List<CmsTemplateLibrary> projections = libraryMapper.selectByMemberTemplateForUpdate(task.getBizId());
+            if (projections != null) for (CmsTemplateLibrary projection : projections) {
+                if (Integer.valueOf(0).equals(projection.getDelFlag()) && Long.valueOf(1L).equals(projection.getStatus())) {
+                    libraries.add(libraryState(json, projection));
+                }
+            }
+        } else {
+            CmsTemplateLibrary library = libraryMapper.selectCmsTemplateLibraryById(task.getBizId());
+            if (library == null || !Long.valueOf(1L).equals(library.getStatus())) return;
+            libraries.add(libraryState(json, library));
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot;
+        try {
+            com.fasterxml.jackson.databind.JsonNode parsed = task.getSnapshotJson() == null ? null
+                    : json.readTree(task.getSnapshotJson());
+            if (parsed instanceof com.fasterxml.jackson.databind.node.ObjectNode) {
+                snapshot = (com.fasterxml.jackson.databind.node.ObjectNode) parsed;
+            } else {
+                snapshot = json.createObjectNode();
+                if (task.getSnapshotJson() != null) snapshot.put("_raw", task.getSnapshotJson());
+            }
+            snapshot.set("preTakedown", pre);
+            String merged = json.writeValueAsString(snapshot);
+            if (auditTaskMapper.updateTaskSnapshot(task.getId(), merged) != 1) {
+                throw new ServiceException("举报下架前状态保存失败");
+            }
+            task.setSnapshotJson(merged);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new ServiceException("举报下架前状态序列化失败");
+        }
+    }
+
+    private static com.fasterxml.jackson.databind.node.ObjectNode libraryState(
+            com.fasterxml.jackson.databind.ObjectMapper json, CmsTemplateLibrary library) {
+        com.fasterxml.jackson.databind.node.ObjectNode row = json.createObjectNode();
+        row.put("id", library.getId());
+        row.put("status", library.getStatus());
+        row.put("publishStatus", library.getPublishStatus());
+        row.put("reason", library.getReason() == null ? "" : library.getReason());
+        return row;
+    }
+
+    /** 快照里的举报下架前状态(AUDIT-INT-4);普通驳回的申诉没有它。 */
+    private static com.fasterxml.jackson.databind.JsonNode preTakedownState(String snapshotJson) {
+        if (snapshotJson == null) return null;
+        try {
+            com.fasterxml.jackson.databind.JsonNode pre = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(snapshotJson).path("preTakedown");
+            return pre.isObject() ? pre : null;
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 举报下架申诉成立:从举报下架态原样恢复到 preTakedown(原来上架的回到上架,未上架的保持未上架)。
+     * 主体行必须仍停在举报下架态,否则视为内容已变化返回 false;随个人玩法一起下架的广场投影尽量恢复。
+     */
+    private boolean restoreReportTakedown(AuditTask task, TemplateReviewLock lock,
+                                          com.fasterxml.jackson.databind.JsonNode pre) {
+        if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+            com.fasterxml.jackson.databind.JsonNode row = pre.path("template");
+            if (!row.isObject() || lock.template == null || lock.template.getMemberId() == null) return false;
+            if (templateMapper.restoreReportTakedown(task.getBizId(), lock.template.getMemberId(),
+                    row.path("status").asLong(), row.path("checkStatus").asInt(),
+                    row.path("publishStatus").asLong(), row.path("reason").asText("")) != 1) {
+                return false;
+            }
+            for (com.fasterxml.jackson.databind.JsonNode library : pre.path("libraries")) {
+                libraryMapper.restoreReportTakedown(library.path("id").asLong(), library.path("status").asLong(),
+                        library.path("publishStatus").asLong(), library.path("reason").asText(""));
+            }
+            return true;
+        }
+        for (com.fasterxml.jackson.databind.JsonNode library : pre.path("libraries")) {
+            if (library.path("id").asLong() == task.getBizId()) {
+                return libraryMapper.restoreReportTakedown(task.getBizId(), library.path("status").asLong(),
+                        library.path("publishStatus").asLong(), library.path("reason").asText("")) == 1;
+            }
+        }
+        return false;
     }
 
     /** AUDIT-INT-7:图片内容安全留置中的活动/主题,申诉与撤销都不能把它恢复,只能换图后重新人审。 */

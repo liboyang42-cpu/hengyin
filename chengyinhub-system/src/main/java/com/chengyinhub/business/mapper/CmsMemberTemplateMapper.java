@@ -97,4 +97,9 @@ public interface CmsMemberTemplateMapper
     int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
                             @Param("fromStatus") Long fromStatus, @Param("fromCheckStatus") Integer fromCheckStatus,
                             @Param("fromPublishStatus") Long fromPublishStatus);
+
+    /** 举报下架申诉成立(AUDIT-INT-4):从举报下架态(2/2/0)原样恢复到下架前记录的状态。 */
+    int restoreReportTakedown(@Param("id") Long id, @Param("ownerId") Long ownerId, @Param("status") Long status,
+                              @Param("checkStatus") Integer checkStatus, @Param("publishStatus") Long publishStatus,
+                              @Param("reason") String reason);
 }
