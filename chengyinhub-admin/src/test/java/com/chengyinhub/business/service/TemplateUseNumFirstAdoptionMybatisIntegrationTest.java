@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TemplateUseNumFirstAdoptionMybatisIT {
+class TemplateUseNumFirstAdoptionMybatisIntegrationTest {
 
     private String database;
     private JdbcTemplate admin;
