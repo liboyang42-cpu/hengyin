@@ -306,6 +306,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new IllegalArgumentException("审核参数不完整");
         }
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(bizType, bizId);
+        if (open != null && SOURCE_APPEAL.equals(open.getSourceType()) && !SOURCE_APPEAL.equals(sourceType)) {
+            // AUDIT-INT-6:作者修改重提被驳回的内容 = 放弃申诉,改走新一轮审核。
+            withdrawAppeal(open, APPEAL_WITHDRAWN_BY_EDIT);
+            open = null;
+        }
         if (open != null) {
             requireRefreshableTask(open, sourceType);
             if (auditTaskMapper.refreshOpenAuditSnapshot(open.getId(), bizType, refreshedSource(open, sourceType),
@@ -356,12 +361,61 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public boolean lockOpenTopicBundleTask(Long topicId) {
         if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("主题ID不能为空");
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TOPIC, topicId);
+        if (open != null && SOURCE_APPEAL.equals(open.getSourceType())) {
+            // AUDIT-INT-6:编辑被驳回的主题 = 放弃申诉;申诉单不是组合审核,不锁编辑。
+            withdrawAppeal(open, APPEAL_WITHDRAWN_BY_EDIT);
+            return false;
+        }
         // 先发后审的抽检单(post_review_flag)不是组合审核:不锁编辑、不挡简易版;
         // 若之后提交组合审核,由 submitOrRefresh 把这张单原地升级为 topic_bundle_v2。
         if (open != null && (SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())
                 || TopicContentSafetyHold.SOURCE_RELIST.equals(open.getSourceType()))) return false;
         if (open != null) requireRefreshableTask(open, "topic_bundle_v2");
         return open != null;
+    }
+
+    /** 作者修改被申诉内容时给作者的说明(系统消息)。 */
+    static final String APPEAL_WITHDRAWN_BY_EDIT = "你修改了被驳回的内容，原申诉已自动撤回，修改后的内容将重新审核";
+
+    /**
+     * 撤回一张未结申诉单:任务 CAS 撤销(status=4) + 申诉记录 WITHDRAWN + CANCEL 时间线 + 通知作者。
+     * 与调用方同事务;任务已被并发处理则 409,不静默吞掉。
+     */
+    private void withdrawAppeal(AuditTask appealTask, String reasonText) {
+        if (auditTaskMapper.cancelOpenAuditTaskCas(appealTask.getId(), appealTask.getVersion()) != 1) {
+            throw governanceError(ERROR_APPEAL_STALE, "申诉状态已变化，请刷新后重试", HttpStatus.CONFLICT);
+        }
+        Date now = DateUtils.getNowDate();
+        auditAppealMapper.withdrawByTask(appealTask.getId(), now);
+        AuditRecord cancelled = new AuditRecord();
+        cancelled.setTaskId(appealTask.getId());
+        cancelled.setAction("CANCEL");
+        cancelled.setOperatorId(appealTask.getSubmitterId());
+        cancelled.setReasonCode("APPEAL_WITHDRAWN");
+        cancelled.setReasonText(reasonText);
+        cancelled.setSnapshotJson(appealTask.getSnapshotJson());
+        cancelled.setCreateTime(now);
+        if (auditRecordMapper.insertAuditRecord(cancelled) != 1) {
+            throw new ServiceException("申诉撤回记录保存失败", HttpStatus.ERROR);
+        }
+        Long author = appealTask.getSubmitterId();
+        if (author == null || author <= 0L) return;
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("taskId", appealTask.getId());
+        result.put("bizType", appealTask.getBizType());
+        result.put("bizId", appealTask.getBizId());
+        result.put("outcome", "申诉已撤回");
+        result.put("reason", reasonText);
+        java.util.Map<String, Object> card = new java.util.LinkedHashMap<>();
+        card.put("title", "申诉已撤回");
+        card.put("sub", reasonText);
+        card.put("result", result);
+        try {
+            imServiceProvider.getObject().sendSystem(author, ImMessage.MSG_CARD, "申诉已撤回",
+                    new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(card));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new ServiceException("申诉撤回通知序列化失败");
+        }
     }
 
     /** 先发后审打标的非阻断抽检单来源(活动 / 主题共用) */

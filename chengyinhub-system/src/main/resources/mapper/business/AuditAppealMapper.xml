@@ -51,4 +51,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         set state = #{state}, handled_by = #{handledBy}, handled_at = #{handledAt}
         where id = #{id} and state in ('SUBMITTED', 'REVIEWING')
     </update>
+
+    <update id="withdrawByTask">
+        update audit_appeal
+        set state = 'WITHDRAWN', handled_at = #{handledAt}
+        where task_id = #{taskId} and state in ('SUBMITTED', 'REVIEWING')
+    </update>
 </mapper>

@@ -511,6 +511,46 @@ class AuditAppealRevertContentTest {
                 service.revert(REJECTED_TASK, REVIEWER, true, revertRequest()).getStatus());
     }
 
+    /**
+     * AUDIT-INT-6(#381 × #384):被驳回的活动有未结申诉时作者修改重提 —— 作者选择改内容即放弃申诉:
+     * 申诉审核单撤销、申诉记录置 WITHDRAWN、通知作者,编辑照常建新审核单,不再整单回滚报通用错误。
+     */
+    @Test
+    void authorEditWhileAppealOpenWithdrawsAppealAndContinues() {
+        AuditTask appealTask = task(APPEAL_TASK, AuditTask.STATUS_PENDING, AuditTaskServiceImpl.SOURCE_APPEAL);
+        when(tasks.selectOpenAuditTaskForUpdate(AuditTask.BIZ_ACTIVITY, BIZ_ID)).thenReturn(appealTask);
+        when(tasks.cancelOpenAuditTaskCas(APPEAL_TASK, VERSION)).thenReturn(1);
+        when(appeals.withdrawByTask(eq(APPEAL_TASK), any(Date.class))).thenReturn(1);
+        when(tasks.insertAuditTask(any(AuditTask.class))).thenAnswer(inv -> {
+            ((AuditTask) inv.getArgument(0)).setId(72L);
+            return 1;
+        });
+
+        Long taskId = service.submitOrRefreshActivity(BIZ_ID, AUTHOR, "user_republish", "{\"bizType\":\"ACTIVITY\"}");
+
+        assertEquals(Long.valueOf(72L), taskId);
+        verify(tasks).cancelOpenAuditTaskCas(APPEAL_TASK, VERSION);
+        verify(appeals).withdrawByTask(eq(APPEAL_TASK), any(Date.class));
+        verify(im).sendSystem(eq(AUTHOR), any(), eq("申诉已撤回"), contains("申诉已自动撤回"));
+        ArgumentCaptor<AuditTask> created = ArgumentCaptor.forClass(AuditTask.class);
+        verify(tasks).insertAuditTask(created.capture());
+        assertEquals("user_republish", created.getValue().getSourceType());
+    }
+
+    @Test
+    void topicEditLockWithdrawsOpenAppealInsteadOfThrowing() {
+        AuditTask appealTask = task(APPEAL_TASK, AuditTask.STATUS_PENDING, AuditTaskServiceImpl.SOURCE_APPEAL);
+        appealTask.setBizType(AuditTask.BIZ_TOPIC);
+        when(tasks.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TOPIC, BIZ_ID)).thenReturn(appealTask);
+        when(tasks.cancelOpenAuditTaskCas(APPEAL_TASK, VERSION)).thenReturn(1);
+        when(appeals.withdrawByTask(eq(APPEAL_TASK), any(Date.class))).thenReturn(1);
+
+        assertFalse(service.lockOpenTopicBundleTask(BIZ_ID));
+
+        verify(appeals).withdrawByTask(eq(APPEAL_TASK), any(Date.class));
+        verify(im).sendSystem(eq(AUTHOR), any(), eq("申诉已撤回"), contains("申诉已自动撤回"));
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test

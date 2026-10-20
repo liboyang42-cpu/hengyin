@@ -14,6 +14,8 @@ public class AuditAppeal implements Serializable {
     public static final String STATE_REVIEWING = "REVIEWING";
     public static final String STATE_ACCEPTED = "ACCEPTED";
     public static final String STATE_REJECTED = "REJECTED";
+    /** 作者修改了被申诉的内容(或内容安全已另行下架),申诉自动撤回;终态,不再进入裁决。 */
+    public static final String STATE_WITHDRAWN = "WITHDRAWN";
 
     private Long id;
     private String bizType;

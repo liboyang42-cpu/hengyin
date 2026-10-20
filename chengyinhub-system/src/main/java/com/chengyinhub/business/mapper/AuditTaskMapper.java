@@ -50,6 +50,9 @@ public interface AuditTaskMapper {
 
     AuditTask selectOpenAuditTaskForUpdate(@Param("bizType") String bizType, @Param("bizId") Long bizId);
 
+    /** 按版本 CAS 撤销一张未结审核单(status → 4);用于作者改内容时撤回申诉单。 */
+    int cancelOpenAuditTaskCas(@Param("id") Long id, @Param("version") Integer version);
+
     int refreshOpenAuditSnapshot(@Param("id") Long id,
                                  @Param("bizType") String bizType,
                                  @Param("sourceType") String sourceType,

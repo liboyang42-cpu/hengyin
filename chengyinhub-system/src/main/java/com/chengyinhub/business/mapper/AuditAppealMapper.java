@@ -20,4 +20,7 @@ public interface AuditAppealMapper {
     /** 申诉裁决：仅未结（SUBMITTED/REVIEWING）可落终态。 */
     int finishAppeal(@Param("id") Long id, @Param("state") String state,
                      @Param("handledBy") Long handledBy, @Param("handledAt") Date handledAt);
+
+    /** 申诉撤回：该审核单对应的未结申诉（SUBMITTED/REVIEWING）→ WITHDRAWN。 */
+    int withdrawByTask(@Param("taskId") Long taskId, @Param("handledAt") Date handledAt);
 }
