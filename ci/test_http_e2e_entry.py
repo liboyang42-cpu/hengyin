@@ -20,6 +20,40 @@ EXPECTED = {'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
             'FreezeReuseThemeHttpE2eIT': 2}
 PACKAGE = 'com.chengyinhub.business.it.'
 FIXED_HTTP_MESSAGE_SOURCES = {
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java': {
+        '该玩法不属于当前共享局': 'ADVANCED_SHARED_SCOPE_MISMATCH',
+        '该玩法不属于当前任务实例': 'ADVANCED_TASK_INSTANCE_MISMATCH',
+        '共享玩法权威版本缺失，请重新建立玩法实例': 'ADVANCED_AUTHORITY_MISSING',
+        '共享玩法权威版本缺失': 'ADVANCED_AUTHORITY_MISSING',
+        '状态已更新，请刷新后重试': 'ADVANCED_STATE_CONFLICT',
+        '本局未开启相册提交': 'ALBUM_SUBMISSION_DISABLED',
+        '相册需提交1至20张照片': 'ALBUM_PHOTO_COUNT_INVALID',
+        '相册照片地址不合法': 'ALBUM_PHOTO_ADDRESS_INVALID',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java': {
+        '本局未启用可信检定尝试': 'CHECK_TRUSTED_ATTEMPT_DISABLED',
+        '本次检定已提交': 'CHECK_ALREADY_SUBMITTED',
+        '请先掷骰': 'CHECK_ROLL_REQUIRED',
+        '幸运值不足': 'CHECK_LUCK_INSUFFICIENT',
+        '检定难度档位无效': 'CHECK_TIER_INVALID',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java': {
+        '本局权威版本已更新，请刷新': 'GAME_AUTHORITY_CONFLICT',
+        '本局权威版本已更新': 'GAME_AUTHORITY_CONFLICT',
+        '本局暂停或由人工账本接管，当前只能读取': 'GAME_RUN_PAUSED_OR_MANUAL',
+        '本队已完成最后章节，资产与回执可继续查看': 'GAME_ROUTE_FINISHED',
+        '仅本场现有队长可消耗队伍物资': 'GAME_RESOURCE_CAPTAIN_REQUIRED',
+        '检定不属于当前实例': 'GAME_CHECK_INSTANCE_MISMATCH',
+        '检定未启用结果规则': 'GAME_CHECK_OUTCOME_RULES_MISSING',
+        '本局已更新': 'GAME_STATE_CONFLICT',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java': {
+        '本局已更新，请刷新': 'GAME_STATE_CONFLICT',
+        'Outcome does not belong to the current attempt': 'GAME_OUTCOME_ATTEMPT_MISMATCH',
+    },
+    'chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java': {
+        '系统繁忙，请稍后重试': 'SYSTEM_BUSY_MASKED',
+    },
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java': {
         '媒体来源未经审核，请重新上传': 'MEDIA_SOURCE_UNREVIEWED',
         '媒体不属于当前账号，请重新上传': 'MEDIA_FOREIGN_OWNER',
@@ -39,6 +73,7 @@ FIXED_HTTP_MESSAGE_SOURCES = {
         '当前身份不可创建主题': 'THEME_ROLE_FORBIDDEN',
     },
     'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java': {
+        '主题发布失败，请稍后重试': 'TOPIC_PUBLISH_FAILED',
         '主题不存在或无权查看': 'THEME_OWNER_OR_MISSING',
         '无权编辑该主题': 'THEME_OWNER_FORBIDDEN',
         '无权操作该主题': 'THEME_OWNER_FORBIDDEN',
@@ -304,7 +339,7 @@ def cli():
                                                errorNodeCount=sum(len(case.findall('error')) for case in cases),
                                                retryNodeCount=sum(len(case.findall(tag)) for case in cases
                                                                   for tag in ('rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')))
-                                methods, codes, case_categories = [], set(), {}
+                                methods, codes, case_categories, case_frames = [], set(), {}, {}
                                 for case in cases:
                                     errors = case.findall('failure') + case.findall('error')
                                     method = case.get('name', '')
@@ -316,21 +351,23 @@ def cli():
                                             text = error.get('message', '') + '\n' + (error.text or '')
                                             categories.update(fixed_http_failure_categories(text))
                                             codes.update(int(code) for code in re.findall(r'"code"\s*:\s*([1-5][0-9]{2}|601)(?=\s*[,}])', text))
-                                        if 'sourceFrame' not in failure:
-                                            for error in errors:
-                                                frames = []
-                                                for filename, line in re.findall(r'\bat com\.chengyinhub\.[A-Za-z0-9_.$]+\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([0-9]{1,7})\)', error.text or ''):
-                                                    if filename in source_lines and 1 <= int(line) <= source_lines[filename]:
-                                                        frame = filename + ':' + str(int(line))
-                                                        if frame not in frames:
-                                                            frames.append(frame)
-                                                        if len(frames) == 2:
-                                                            break
-                                                if frames:
+                                        for error in errors:
+                                            frames = []
+                                            for filename, line in re.findall(r'\bat com\.chengyinhub\.[A-Za-z0-9_.$]+\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([0-9]{1,7})\)', error.text or ''):
+                                                if filename in source_lines and 1 <= int(line) <= source_lines[filename]:
+                                                    frame = filename + ':' + str(int(line))
+                                                    if frame not in frames:
+                                                        frames.append(frame)
+                                                    if len(frames) == 2:
+                                                        break
+                                            if frames:
+                                                case_frames.setdefault(known_cases[method], frames)
+                                                if 'sourceFrame' not in failure:
                                                     failure['sourceFrame'] = frames[0]
                                                     if len(frames) == 2:
                                                         failure['callerFrame'] = frames[1]
-                                                    break
+                                                break
+                                failure['caseSourceFrames'] = dict(sorted(case_frames.items()))
                                 failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
                                 failure['responseCodes'] = sorted(codes)
                                 failure['caseMessageCategories'] = {case: sorted(categories) for case, categories in sorted(case_categories.items())}
@@ -588,7 +625,7 @@ class FailureDiagnosticTest(unittest.TestCase):
                     self.assertEqual(['UNKNOWN'], result)
                     self.assertNotIn(marker, json.dumps(result))
                 count += 1
-        self.assertEqual(16, count)
+        self.assertEqual(41, count)
         self.assertEqual(['PUBLISHER_IDENTITY_MISSING'],
                          fixed_http_failure_categories('{"msg":"请先登记实名信息(姓名与身份证号),再发布"}'))
 
@@ -686,6 +723,7 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 25, 'failures': 1,
                               'errors': 0, 'skipped': 0, 'failedMethods': [known_method],
                               'sourceFrame': 'GenericGameplayHttpE2eIT.java:123', 'callerFrame': 'GenericGameplayHttpE2eIT.java:124',
+                              'caseSourceFrames': {known_method: ['GenericGameplayHttpE2eIT.java:123', 'GenericGameplayHttpE2eIT.java:124']},
                               'testcaseCount': 25, 'uniqueMethodCount': 25, 'failureNodeCount': 1,
                               'errorNodeCount': 0, 'retryNodeCount': 0, 'responseCodes': [403, 500],
                               'messageCategories': ['UNKNOWN'], 'caseMessageCategories': {known_method: ['UNKNOWN']}}, failure)
@@ -702,6 +740,38 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertEqual([parameter], json.loads((public / 'xml-failure.json').read_text())['failedMethods'])
             self.assertEqual({parameter: ['MEDIA_SOURCE_UNREVIEWED']}, json.loads((public / 'xml-failure.json').read_text())['caseMessageCategories'])
             self.assertNotIn(marker, (public / 'xml-failure.json').read_text() + run.stderr)
+            multi = ET.fromstring(ET.tostring(xml))
+            multi.set('failures', '3')
+            parameter_case = next(case for case in multi.findall('testcase') if case.get('name') == parameter)
+            ET.SubElement(parameter_case, 'failure', message='{"msg":"系统繁忙，请稍后重试"}').text = (
+                marker + '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.helper(GenericGameplayHttpE2eIT.java:125)'
+                '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.caller(GenericGameplayHttpE2eIT.java:126)'
+                '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.third(GenericGameplayHttpE2eIT.java:127)')
+            other_method = next(name for name in known_cases if name not in (known_method, parameter))
+            other_case = next(case for case in multi.findall('testcase') if case.get('name') == other_method)
+            ET.SubElement(other_case, 'failure', message='{"msg":"主题发布失败，请稍后重试"}').text = (
+                marker + '\n at com.chengyinhub.external.Secret.method(Secret.java:1)'
+                '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:9999999)')
+            ET.ElementTree(multi).write(path)
+            run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            safe = json.loads((public / 'xml-failure.json').read_text())
+            self.assertEqual({known_method: ['GenericGameplayHttpE2eIT.java:123', 'GenericGameplayHttpE2eIT.java:124'],
+                              parameter: ['GenericGameplayHttpE2eIT.java:125', 'GenericGameplayHttpE2eIT.java:126']},
+                             safe['caseSourceFrames'])
+            self.assertEqual('GenericGameplayHttpE2eIT.java:123', safe['sourceFrame'])
+            self.assertEqual('GenericGameplayHttpE2eIT.java:124', safe['callerFrame'])
+            self.assertEqual(['SYSTEM_BUSY_MASKED'], safe['caseMessageCategories'][parameter])
+            self.assertEqual(['TOPIC_PUBLISH_FAILED'], safe['caseMessageCategories'][other_method])
+            self.assertNotIn(marker, json.dumps(safe) + run.stdout + run.stderr)
+            unknown = ET.fromstring(ET.tostring(multi))
+            next(case for case in unknown.findall('testcase') if case.get('name') == parameter).set('name', marker)
+            ET.ElementTree(unknown).write(path)
+            run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            safe = json.loads((public / 'xml-failure.json').read_text())
+            self.assertNotIn(parameter, safe['caseSourceFrames'])
+            self.assertNotIn(marker, json.dumps(safe) + run.stdout + run.stderr)
             for mutation in ('nonNumericCount', 'unknownMethod', 'outsideFrame', 'unknownSuite', 'duplicateCase'):
                 bad = ET.fromstring(ET.tostring(xml))
                 error = bad.find('testcase/failure'); error.set('type', marker); error.set('message', marker)
@@ -724,6 +794,7 @@ class FailureDiagnosticTest(unittest.TestCase):
                 if mutation in ('unknownMethod', 'outsideFrame'):
                     self.assertNotIn('sourceFrame', json.loads(safe))
                     self.assertNotIn('callerFrame', json.loads(safe))
+                    self.assertEqual({}, json.loads(safe)['caseSourceFrames'])
                 if mutation == 'duplicateCase':
                     self.assertEqual(26, json.loads(safe)['testcaseCount'])
                     self.assertEqual(25, json.loads(safe)['uniqueMethodCount'])

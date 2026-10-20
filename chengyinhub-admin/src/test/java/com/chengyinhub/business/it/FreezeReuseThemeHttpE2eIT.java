@@ -50,6 +50,7 @@ class FreezeReuseThemeHttpE2eIT {
     @Autowired private JdbcTemplate database;
     private final ObjectMapper json = new ObjectMapper();
     private final ArrayNode transcript = json.createArrayNode();
+    private final GenericGameplayHttpE2eIT.ReviewedMediaFixture mediaFixture = new GenericGameplayHttpE2eIT.ReviewedMediaFixture("reuse");
     private final ObjectNode evidence = json.createObjectNode();
     private static final String[] ITEMS = {"water", "diesel", "battery", "spare", "kit"};
     private static final String STAMINA = "counter.stamina";
@@ -73,13 +74,15 @@ class FreezeReuseThemeHttpE2eIT {
     }
 
     @AfterAll void writeEvidence() throws Exception {
-        if (context != null) {
-            ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
-            executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+        try { mediaFixture.close(); } finally {
+            if (context != null) {
+                ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
+                executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+            }
+            Files.createDirectories(Paths.get("target/http-e2e"));
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/reuse-transcript.json").toFile(), transcript);
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/reuse-evidence.json").toFile(), evidence);
         }
-        Files.createDirectories(Paths.get("target/http-e2e"));
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/reuse-transcript.json").toFile(), transcript);
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/reuse-evidence.json").toFile(), evidence);
     }
 
     @Test @Order(1) void authorReusesEightTemplatesInAnIndependentThreeChapterTheme() throws Exception {
@@ -136,6 +139,7 @@ class FreezeReuseThemeHttpE2eIT {
                 ((ObjectNode) chapters.get(c).path("nodes").get(n)).put("id", nodes.get(layout.get(c).path("nodes").get(n).path(0).asText())).remove("clientNodeKey");
         }
         theme = (ObjectNode) json.readTree(read.path("themeRuntimeConfig").asText());
+        mediaFixture.restoreKnownItemImages(theme);
         assertFalse(theme.toString().contains("client:"));
         ArrayNode settings = theme.putArray("chapters");
         for (int c = 0; c < 3; c++) {
@@ -434,7 +438,7 @@ class FreezeReuseThemeHttpE2eIT {
         ObjectNode theme = json.createObjectNode().put("schemaVersion", 1).put("capacity", 40).put("hpName", "生命").put("actionName", "巡检次数").put("actionLimit", 8);
         ArrayNode items = theme.putArray("items");
         String[] names = {"淡水", "柴油", "电池", "零件", "药箱"};
-        for (int i = 0; i < ITEMS.length; i++) items.addObject().put("id", ITEMS[i]).put("kind", "ITEM").put("name", names[i]).put("image", "https://example.com/harbor.png").put("slotCost", 1);
+        for (int i = 0; i < ITEMS.length; i++) items.addObject().put("id", ITEMS[i]).put("kind", "ITEM").put("name", names[i]).put("image", mediaFixture.approvedImage(context, database, authorId)).put("slotCost", 1);
         ObjectNode game = theme.putObject("gameplayRuntime").put("runtimeScope", "TEAM").put("worldMode", "WORLD_SHARED").put("allowTrade", true).put("votePolicy", "MAJORITY");
         game.putObject("survival").put("zeroHpPolicy", "BLOCK_HP_COST").put("actionLimitPolicy", "BLOCK_OVERFLOW");
         return theme;

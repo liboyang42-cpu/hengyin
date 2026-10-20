@@ -55,6 +55,7 @@ class FreezeGameHttpE2eIT {
     @Autowired private JdbcTemplate database;
     private final ObjectMapper json = new ObjectMapper();
     private final ArrayNode transcript = json.createArrayNode();
+    private final GenericGameplayHttpE2eIT.ReviewedMediaFixture mediaFixture = new GenericGameplayHttpE2eIT.ReviewedMediaFixture("freeze");
     private final ObjectNode evidence = json.createObjectNode();
     private static final String[] ITEMS = {"ration", "fuel", "power", "parts", "medical"};
     private static final String[] LETTERS = {"R", "F", "E", "P", "M"};
@@ -80,13 +81,15 @@ class FreezeGameHttpE2eIT {
     }
 
     @AfterAll void writeEvidence() throws Exception {
-        if (context != null) {
-            ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
-            executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+        try { mediaFixture.close(); } finally {
+            if (context != null) {
+                ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
+                executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+            }
+            Files.createDirectories(Paths.get("target/http-e2e"));
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
         }
-        Files.createDirectories(Paths.get("target/http-e2e"));
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
     }
 
     @Test @Order(1) void authorBuildsSavesReopensAndPublishesTheSevenActGame() throws Exception {
@@ -146,6 +149,7 @@ class FreezeGameHttpE2eIT {
             }
         }
         theme = (ObjectNode) json.readTree(read.path("themeRuntimeConfig").asText());
+        mediaFixture.restoreKnownItemImages(theme);
         assertFalse(theme.toString().contains("client:"), "回读不残留临时站点键");
         ArrayNode settings = theme.putArray("chapters");
         for (int c = 0; c < 7; c++) settings.addObject().put("index", c).put("hpCost", 0).put("luckCost", 0);
@@ -869,7 +873,7 @@ class FreezeGameHttpE2eIT {
         ArrayNode items = theme.putArray("items");
         String[][] defs = {{"ration", "口粮", "1"}, {"fuel", "燃料", "2"}, {"power", "电源", "1"}, {"parts", "维修件", "1"}, {"medical", "医疗包", "1"}};
         for (String[] d : defs) {
-            ObjectNode item = items.addObject().put("id", d[0]).put("kind", "ITEM").put("name", d[1]).put("image", "https://www.chengyinhub.com/favicon.ico").put("slotCost", Integer.parseInt(d[2]));
+            ObjectNode item = items.addObject().put("id", d[0]).put("kind", "ITEM").put("name", d[1]).put("image", mediaFixture.approvedImage(context, database, authorId)).put("slotCost", Integer.parseInt(d[2]));
             if ("ration".equals(d[0])) item.put("stat", "HP").put("delta", 3);
         }
         ObjectNode game = theme.putObject("gameplayRuntime").put("runtimeScope", "TEAM").put("worldMode", "WORLD_SHARED").put("allowTrade", true).put("votePolicy", "MAJORITY_ACCEPTANCE");
