@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4714,
+  "controlCount": 4715,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -983606,7 +983606,7 @@
         "handler": "reportTemplate",
         "line": 286,
         "selectorHint": ".xb-sheet-item",
-        "visibleCondition": "{{ reportKind }}",
+        "visibleCondition": "{{ reportKind === 'template' }}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -983619,79 +983619,103 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write",
         "state"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/template/personal-report",
-          "/api/template/report",
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
-        "primaryApis": [
-          "/api/template/personal-report",
-          "/api/template/report",
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/template/personal-report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/capabilities",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/template/report",
-          "/api/topic/report"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:463"
+        "staticSource": "pages/templatedetail/templatedetail.js:464"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:287:bindtap:closeMore:14",
+      "id": "pages/templatedetail/templatedetail.wxml:287:bindtap:reportPersonalTemplate:14",
+      "route": "pages/templatedetail/templatedetail",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/templatedetail/templatedetail.wxml",
+        "js": "pages/templatedetail/templatedetail.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "reportPersonalTemplate",
+        "line": 287,
+        "selectorHint": ".xb-sheet-item",
+        "visibleCondition": "{{ reportKind === 'personalTemplate' }}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/templatedetail.js:469"
+      }
+    },
+    {
+      "id": "pages/templatedetail/templatedetail.wxml:288:bindtap:closeMore:15",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983714,7 +983738,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeMore",
-        "line": 287,
+        "line": 288,
         "selectorHint": ".xb-sheet-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983758,7 +983782,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:292:bind:cancel:onReportReasonCancel:16",
+      "id": "pages/templatedetail/templatedetail.wxml:293:bind:cancel:onReportReasonCancel:17",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983781,7 +983805,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReportReasonCancel",
-        "line": 292,
+        "line": 293,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983822,11 +983846,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:475"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:292:bind:select:onReportReasonSelect:15",
+      "id": "pages/templatedetail/templatedetail.wxml:293:bind:select:onReportReasonSelect:16",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983849,7 +983873,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReportReasonSelect",
-        "line": 292,
+        "line": 293,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983890,11 +983914,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:468"
+        "staticSource": "pages/templatedetail/templatedetail.js:474"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:297:bind:close:closePop:17",
+      "id": "pages/templatedetail/templatedetail.wxml:298:bind:close:closePop:18",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983917,7 +983941,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePop",
-        "line": 297,
+        "line": 298,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983957,11 +983981,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:471"
+        "staticSource": "pages/templatedetail/templatedetail.js:477"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:306:bindinput:onInputAnswer:18",
+      "id": "pages/templatedetail/templatedetail.wxml:307:bindinput:onInputAnswer:19",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983984,7 +984008,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInputAnswer",
-        "line": 306,
+        "line": 307,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984024,11 +984048,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:499"
+        "staticSource": "pages/templatedetail/templatedetail.js:505"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:309:bind:disabledtap:onPreviewDisabledTap:20",
+      "id": "pages/templatedetail/templatedetail.wxml:310:bind:disabledtap:onPreviewDisabledTap:21",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984051,7 +984075,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 309,
+        "line": 310,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -984092,11 +984116,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:512"
+        "staticSource": "pages/templatedetail/templatedetail.js:518"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:309:bindtap:completePreview:19",
+      "id": "pages/templatedetail/templatedetail.wxml:310:bindtap:completePreview:20",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984119,7 +984143,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 309,
+        "line": 310,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -984159,11 +984183,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:506"
+        "staticSource": "pages/templatedetail/templatedetail.js:512"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:317:bindtap:onSelectOption:21",
+      "id": "pages/templatedetail/templatedetail.wxml:318:bindtap:onSelectOption:22",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984186,7 +984210,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 317,
+        "line": 318,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionA }}",
         "disabledCondition": null,
@@ -984226,11 +984250,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:491"
+        "staticSource": "pages/templatedetail/templatedetail.js:497"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:319:bindtap:onSelectOption:22",
+      "id": "pages/templatedetail/templatedetail.wxml:320:bindtap:onSelectOption:23",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984253,7 +984277,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 319,
+        "line": 320,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionB }}",
         "disabledCondition": null,
@@ -984293,11 +984317,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:491"
+        "staticSource": "pages/templatedetail/templatedetail.js:497"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:321:bindtap:onSelectOption:23",
+      "id": "pages/templatedetail/templatedetail.wxml:322:bindtap:onSelectOption:24",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984320,7 +984344,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 321,
+        "line": 322,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionC }}",
         "disabledCondition": null,
@@ -984360,11 +984384,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:491"
+        "staticSource": "pages/templatedetail/templatedetail.js:497"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:323:bindtap:onSelectOption:24",
+      "id": "pages/templatedetail/templatedetail.wxml:324:bindtap:onSelectOption:25",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984387,7 +984411,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 323,
+        "line": 324,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionD }}",
         "disabledCondition": null,
@@ -984427,11 +984451,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:491"
+        "staticSource": "pages/templatedetail/templatedetail.js:497"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:325:bind:disabledtap:onPreviewDisabledTap:26",
+      "id": "pages/templatedetail/templatedetail.wxml:326:bind:disabledtap:onPreviewDisabledTap:27",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984454,7 +984478,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 325,
+        "line": 326,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -984495,11 +984519,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:512"
+        "staticSource": "pages/templatedetail/templatedetail.js:518"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:325:bindtap:completePreview:25",
+      "id": "pages/templatedetail/templatedetail.wxml:326:bindtap:completePreview:26",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984522,7 +984546,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 325,
+        "line": 326,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -984562,7 +984586,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:506"
+        "staticSource": "pages/templatedetail/templatedetail.js:512"
       }
     },
     {
@@ -984651,7 +984675,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:516"
+        "staticSource": "pages/templatedetail/templatedetail.js:522"
       }
     },
     {
@@ -995656,7 +995680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:849"
+        "staticSource": "pages/topic/index/index.js:847"
       }
     },
     {
@@ -995698,74 +995722,33 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "other",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "other",
       "effectClasses": [
-        "write"
+        "other"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/template/personal-report",
-          "/api/template/report",
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
-        "primaryApis": [
-          "/api/template/personal-report",
-          "/api/template/report",
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/template/personal-report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/capabilities",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/template/report",
-          "/api/topic/report"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1916"
+        "staticSource": "pages/topic/index/index.js:1914"
       }
     },
     {
@@ -995878,7 +995861,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:821"
+        "staticSource": "pages/topic/index/index.js:819"
       }
     },
     {
@@ -995948,7 +995931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:711"
+        "staticSource": "pages/topic/index/index.js:709"
       }
     },
     {
@@ -996015,7 +995998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:403"
+        "staticSource": "pages/topic/index/index.js:401"
       }
     },
     {
@@ -996092,7 +996075,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:453"
+        "staticSource": "pages/topic/index/index.js:451"
       }
     },
     {
@@ -996251,7 +996234,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:360"
+        "staticSource": "pages/topic/index/index.js:358"
       }
     },
     {
@@ -996321,7 +996304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:446"
+        "staticSource": "pages/topic/index/index.js:444"
       }
     },
     {
@@ -996391,7 +996374,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:718"
+        "staticSource": "pages/topic/index/index.js:716"
       }
     },
     {
@@ -996473,7 +996456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:778"
+        "staticSource": "pages/topic/index/index.js:776"
       }
     },
     {
@@ -996582,7 +996565,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1793"
+        "staticSource": "pages/topic/index/index.js:1791"
       }
     },
     {
@@ -996653,7 +996636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:581"
+        "staticSource": "pages/topic/index/index.js:579"
       }
     },
     {
@@ -996720,7 +996703,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1351"
+        "staticSource": "pages/topic/index/index.js:1349"
       }
     },
     {
@@ -996787,7 +996770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1351"
+        "staticSource": "pages/topic/index/index.js:1349"
       }
     },
     {
@@ -996857,7 +996840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:476"
+        "staticSource": "pages/topic/index/index.js:474"
       }
     },
     {
@@ -996927,7 +996910,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:767"
+        "staticSource": "pages/topic/index/index.js:765"
       }
     },
     {
@@ -997009,7 +996992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:778"
+        "staticSource": "pages/topic/index/index.js:776"
       }
     },
     {
@@ -997091,7 +997074,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1021"
+        "staticSource": "pages/topic/index/index.js:1019"
       }
     },
     {
@@ -997173,7 +997156,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:778"
+        "staticSource": "pages/topic/index/index.js:776"
       }
     },
     {
@@ -997243,7 +997226,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1346"
+        "staticSource": "pages/topic/index/index.js:1344"
       }
     },
     {
@@ -997311,7 +997294,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1671"
+        "staticSource": "pages/topic/index/index.js:1669"
       }
     },
     {
@@ -997381,7 +997364,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:718"
+        "staticSource": "pages/topic/index/index.js:716"
       }
     },
     {
@@ -997451,7 +997434,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:711"
+        "staticSource": "pages/topic/index/index.js:709"
       }
     },
     {
@@ -997521,7 +997504,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:446"
+        "staticSource": "pages/topic/index/index.js:444"
       }
     },
     {
@@ -997603,7 +997586,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1021"
+        "staticSource": "pages/topic/index/index.js:1019"
       }
     },
     {
@@ -997673,7 +997656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1092"
+        "staticSource": "pages/topic/index/index.js:1090"
       }
     },
     {
@@ -997740,7 +997723,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:403"
+        "staticSource": "pages/topic/index/index.js:401"
       }
     },
     {
@@ -997810,7 +997793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:718"
+        "staticSource": "pages/topic/index/index.js:716"
       }
     },
     {
@@ -997887,7 +997870,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:453"
+        "staticSource": "pages/topic/index/index.js:451"
       }
     },
     {
@@ -997954,7 +997937,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1358"
+        "staticSource": "pages/topic/index/index.js:1356"
       }
     },
     {
@@ -998021,7 +998004,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1405"
+        "staticSource": "pages/topic/index/index.js:1403"
       }
     },
     {
@@ -998088,7 +998071,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1554"
+        "staticSource": "pages/topic/index/index.js:1552"
       }
     },
     {
@@ -998165,7 +998148,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1393"
+        "staticSource": "pages/topic/index/index.js:1391"
       }
     },
     {
@@ -998232,7 +998215,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1383"
+        "staticSource": "pages/topic/index/index.js:1381"
       }
     },
     {
@@ -998299,7 +998282,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:603"
+        "staticSource": "pages/topic/index/index.js:601"
       }
     },
     {
@@ -998367,7 +998350,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:596"
+        "staticSource": "pages/topic/index/index.js:594"
       }
     },
     {
@@ -998434,7 +998417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:485"
+        "staticSource": "pages/topic/index/index.js:483"
       }
     },
     {
@@ -998555,7 +998538,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1369"
+        "staticSource": "pages/topic/index/index.js:1367"
       }
     },
     {
@@ -998673,7 +998656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:723"
+        "staticSource": "pages/topic/index/index.js:721"
       }
     },
     {
@@ -998740,7 +998723,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1048"
+        "staticSource": "pages/topic/index/index.js:1046"
       }
     },
     {
@@ -998882,7 +998865,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1055"
+        "staticSource": "pages/topic/index/index.js:1053"
       }
     },
     {
@@ -998949,7 +998932,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1042"
+        "staticSource": "pages/topic/index/index.js:1040"
       }
     },
     {
@@ -999091,7 +999074,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1055"
+        "staticSource": "pages/topic/index/index.js:1053"
       }
     },
     {
@@ -999158,7 +999141,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:872"
+        "staticSource": "pages/topic/index/index.js:870"
       }
     },
     {
@@ -999272,7 +999255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:874"
+        "staticSource": "pages/topic/index/index.js:872"
       }
     },
     {
@@ -999340,7 +999323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1921"
+        "staticSource": "pages/topic/index/index.js:1919"
       }
     },
     {
@@ -999408,7 +999391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1920"
+        "staticSource": "pages/topic/index/index.js:1918"
       }
     },
     {
@@ -999475,7 +999458,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:805"
+        "staticSource": "pages/topic/index/index.js:803"
       }
     },
     {
@@ -999547,7 +999530,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:808"
+        "staticSource": "pages/topic/index/index.js:806"
       }
     },
     {
@@ -999635,7 +999618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1304"
+        "staticSource": "pages/topic/index/index.js:1302"
       }
     },
     {
@@ -999723,7 +999706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1317"
+        "staticSource": "pages/topic/index/index.js:1315"
       }
     },
     {
@@ -999794,7 +999777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1339"
+        "staticSource": "pages/topic/index/index.js:1337"
       }
     },
     {
@@ -1000193,7 +1000176,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:88"
+        "staticSource": "pages/topic/index/index.js:86"
       }
     },
     {
@@ -1000577,7 +1000560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:412"
+        "staticSource": "pages/topic/index/index.js:410"
       }
     },
     {
@@ -1000644,7 +1000627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:412"
+        "staticSource": "pages/topic/index/index.js:410"
       }
     },
     {
@@ -1000714,7 +1000697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:711"
+        "staticSource": "pages/topic/index/index.js:709"
       }
     },
     {
@@ -1013116,6 +1013099,7 @@
         "apis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
           "/api/project/my",
@@ -1013127,6 +1013111,7 @@
         "primaryApis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/project/my",
           "/api/template/my-list",
@@ -1013147,6 +1013132,12 @@
           {
             "url": "/api/activity/update_publish_status",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1013272,6 +1013263,7 @@
         "apis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
           "/api/project/my",
@@ -1013283,6 +1013275,7 @@
         "primaryApis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/project/my",
           "/api/template/my-list",
@@ -1013303,6 +1013296,12 @@
           {
             "url": "/api/activity/update_publish_status",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1013428,6 +1013427,7 @@
         "apis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
           "/api/project/my",
@@ -1013439,6 +1013439,7 @@
         "primaryApis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/project/my",
           "/api/template/my-list",
@@ -1013459,6 +1013460,12 @@
           {
             "url": "/api/activity/update_publish_status",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1013584,6 +1013591,7 @@
         "apis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
           "/api/project/my",
@@ -1013595,6 +1013603,7 @@
         "primaryApis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/project/my",
           "/api/template/my-list",
@@ -1013615,6 +1013624,12 @@
           {
             "url": "/api/activity/update_publish_status",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1013682,7 +1013697,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:146:bindtap:onOpsAudit:17",
+      "id": "subpackageA/pages/myproject/index.wxml:146:bindtap:onOpsPick:17",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1013700,11 +1013715,11 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": null,
+      "confirmationMode": "cy-danger-confirm",
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "onOpsAudit",
+        "handler": "onOpsPick",
         "line": 146,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{opsSheet.canAudit}}",
@@ -1013720,35 +1013735,62 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
+        "navigation",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/coop/list/index?tab=received",
+          "pages/privacy/index",
+          "pages/publish/activity/index?id="
         ],
         "apis": [
+          "/api/activity/cancel_preview",
+          "/api/activity/update_publish_status",
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
-          "/api/role/info"
+          "/api/project/my",
+          "/api/role/info",
+          "/api/template/my-list",
+          "/api/topic/cancel_preview",
+          "/api/topic/update_user_status"
         ],
         "primaryApis": [
+          "/api/activity/cancel_preview",
+          "/api/activity/update_publish_status",
           "/api/audit/timeline",
-          "/api/config/features"
+          "/api/config/features",
+          "/api/project/my",
+          "/api/template/my-list",
+          "/api/topic/cancel_preview",
+          "/api/topic/update_user_status"
         ],
         "auxiliaryApis": [
           "/api/login/code",
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/activity/cancel_preview",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/activity/update_publish_status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/audit/timeline",
             "method": "GET",
@@ -1013768,26 +1013810,54 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/my-list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/cancel_preview",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/update_user_status",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/activity/update_publish_status"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:539"
+        "staticSource": "subpackageA/pages/myproject/index.js:344"
       }
     },
     {
@@ -1013849,6 +1013919,7 @@
         "apis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
           "/api/project/my",
@@ -1013860,6 +1013931,7 @@
         "primaryApis": [
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
+          "/api/audit/timeline",
           "/api/config/features",
           "/api/project/my",
           "/api/template/my-list",
@@ -1013880,6 +1013952,12 @@
           {
             "url": "/api/activity/update_publish_status",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },

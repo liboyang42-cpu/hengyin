@@ -23,8 +23,6 @@ const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
-const contentReport = require('../../../utils/content-report.js');
-const reportSheet = require('../../../utils/community-report-sheet.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -346,7 +344,7 @@ Page({
    */
   onUnload() {
     this._unloaded = true;
-    reportSheet.cancel(this);
+    if (this._reportReasonSelection) require('../../../utils/community-report-sheet.js').cancel(this);
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
@@ -1915,10 +1913,10 @@ Page({
   // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
   reportTopic() {
     if (!this.data.canReport) return;
-    contentReport.reportTopic(this, app, this.data.id);
+    require('../../../utils/content-report.js').reportTopic(this, app, this.data.id);
   },
-  onReportReasonSelect(e) { reportSheet.select(this, e); },
-  onReportReasonCancel() { reportSheet.cancel(this); },
+  onReportReasonSelect(e) { require('../../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../../utils/community-report-sheet.js').cancel(this); },
 
   /**
    * 用户点击右上角分享
