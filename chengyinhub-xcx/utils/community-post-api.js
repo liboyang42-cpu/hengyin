@@ -7,13 +7,13 @@ function requestId() { return 'mini-community-' + Date.now() + '-' + Math.random
 function value(row, camel, snake) { return row[camel] !== undefined ? row[camel] : row[snake]; }
 function normalizePost(bundle) {
   if (!bundle || !bundle.post || !bundle.post.id) throw new Error('帖文响应不完整');
-  const post = bundle.post;
+  const post = bundle.post, media = mediaRows(bundle.media || []);
   const row = Object.assign({}, post, {
     memberId: post.authorId, memberNickname: post.authorNickname, memberAvatar: post.authorAvatar,
     contents: decodeDisplayText(post.body), isLiked: post.viewerLiked, isBookmarked: post.viewerBookmarked,
     isFollowTheUser: bundle.viewerFollowing === true ? 1 : bundle.viewerFollowing === false ? 0 : undefined,
     status: post.lifecycle === 'PUBLISHED' ? 1 : post.lifecycle === 'DRAFT' || post.lifecycle === 'CHECKING' ? 0 : post.lifecycle,
-    pics: (bundle.media || []).map(m => value(m, 'derivedObjectKey', 'derived_object_key') || value(m, 'objectKey', 'object_key')).filter(Boolean).join(';'),
+    pics: media.map(m => m.url).filter(Boolean).join(';'), media,
     lifecycleLabel: LIFECYCLE_LABELS[post.lifecycle] || ''
   });
   // Author-only exact grid remains in the edit response, never in card setData.
@@ -100,7 +100,7 @@ function createClient(app, wxApi) {
   }
   async function publish(form, task, options) {
     const bundle = await require('./community-submit-progress.js')({ app, wxApi, task, form, options,
-      call, modal, requestId, uploads });
+      call, modal, requestId, uploads, previousPost: posts[form.id] });
     const row = normalizePost(bundle); posts[row.id] = row;
     return row;
   }
@@ -278,5 +278,9 @@ function createClient(app, wxApi) {
     return { abort() {} };
   }
   return { request: send, normalizePost, normalizeComment, captureUpload };
+}
+function mediaRows(rows) {
+  return rows.map(m => ({ id: m.id,
+    url: value(m, 'derivedObjectKey', 'derived_object_key') || value(m, 'objectKey', 'object_key') }));
 }
 module.exports = { createClient, normalizePost, normalizeComment, requestId };
