@@ -55,6 +55,31 @@ class ClubApplyStateMapperSqlTest {
         assertTrue(sql.endsWith("order by create_time desc, id desc"), sql);
     }
 
+    @Test
+    void nameHoldersAreOnlyPendingOrLiveUndeletedClubsOfOtherOwnersOrRows() {
+        java.util.Map<String, Object> create = new java.util.HashMap<>();
+        create.put("name", "夜跑团");
+        create.put("memberId", 900L);
+        create.put("excludeClubId", null);
+        String sql = holdersSql(create);
+        assertTrue(sql.contains("where del_flag = 0 and status in (0, 1) and trim(name) = ?"), sql);
+        assertTrue(sql.contains("and member_id != ?"), sql);
+        assertFalse(sql.contains("and id != ?"), sql);
+
+        java.util.Map<String, Object> rename = new java.util.HashMap<>();
+        rename.put("name", "夜跑团");
+        rename.put("memberId", null);
+        rename.put("excludeClubId", 12L);
+        String renameSql = holdersSql(rename);
+        assertTrue(renameSql.contains("and id != ?"), renameSql);
+        assertFalse(renameSql.contains("member_id"), renameSql);
+    }
+
+    private String holdersSql(java.util.Map<String, Object> params) {
+        return configuration.getMappedStatement(NS + "countClubsHoldingName").getBoundSql(params)
+                .getSql().replaceAll("\\s+", " ").trim().toLowerCase();
+    }
+
     private Club status(Long status, String reason) {
         Club club = new Club();
         club.setId(12L);

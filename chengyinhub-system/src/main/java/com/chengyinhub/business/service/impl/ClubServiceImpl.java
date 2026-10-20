@@ -99,6 +99,7 @@ public class ClubServiceImpl implements IClubService
     @Override
     public int insertClub(Club club)
     {
+        requireNameFree(club.getName() == null ? null : club.getName().trim(), null, null);
         club.setCreateTime(DateUtils.getNowDate());
         return clubMapper.insertClub(club);
     }
@@ -287,6 +288,8 @@ public class ClubServiceImpl implements IClubService
             club.setCaseImages(replay.getCaseImages());
             return counted;
         }
+        // 俱乐部名称全站唯一(用户 2026-10-20 决定):别的主理人待审或在营的俱乐部占着同名就拒绝;本人同名已在上面按重放处理
+        requireNameFree(name, memberId, null);
         if (counted >= maxOwnedClubs)
         {
             throw new ServiceException("每位主理人最多创建" + maxOwnedClubs + "个俱乐部", HttpStatus.CONFLICT);
@@ -318,9 +321,30 @@ public class ClubServiceImpl implements IClubService
         return current == null || candidate.getId() > current.getId() ? candidate : current;
     }
 
+    /** 俱乐部名称全站唯一(用户 2026-10-20 决定):待审或在营、未删除的俱乐部占用名称,被驳回和已解散的不占。 */
+    private void requireNameFree(String name, Long ownerToSkip, Long clubToSkip)
+    {
+        if (name == null || name.isEmpty()) return;
+        if (clubMapper.countClubsHoldingName(name, ownerToSkip, clubToSkip) > 0)
+        {
+            throw new ServiceException("俱乐部名称已被使用，请换一个", HttpStatus.CONFLICT);
+        }
+    }
+
+    /** 改名才查重:名称没变(包括历史上已经重名的俱乐部)照常保存。 */
+    private void requireRenameFree(Club club)
+    {
+        if (club == null || club.getId() == null || club.getName() == null) return;
+        String name = club.getName().trim();
+        Club current = clubMapper.selectClubById(club.getId());
+        if (current != null && current.getName() != null && name.equals(current.getName().trim())) return;
+        requireNameFree(name, null, club.getId());
+    }
+
     @Override
     public int updateClub(Club club)
     {
+        requireRenameFree(club);
         club.setUpdateTime(DateUtils.getNowDate());
         return clubMapper.updateClub(club);
     }

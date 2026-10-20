@@ -120,6 +120,14 @@
         </foreach>
     </select>
 
+    <!-- 俱乐部名称全站唯一(用户 2026-10-20 决定):待审(0)或在营(1)、未删除的俱乐部占用名称;被驳回(2)与已解散/删除(del_flag=2)的不占 -->
+    <select id="countClubsHoldingName" resultType="int">
+        select count(*) from club
+        where del_flag = 0 and status in (0, 1) and trim(name) = #{name}
+        <if test="memberId != null"> and member_id != #{memberId}</if>
+        <if test="excludeClubId != null"> and id != #{excludeClubId}</if>
+    </select>
+
     <insert id="insertClub" parameterType="Club" useGeneratedKeys="true" keyProperty="id">
         insert into club
         <trim prefix="(" suffix=")" suffixOverrides=",">
