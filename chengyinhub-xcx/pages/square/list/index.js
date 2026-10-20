@@ -622,10 +622,10 @@ Page({
     }
   },
 
-  goUserInfo(id) {
+  goUserInfo(id) { if (!id || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
       url: '/pages/userinfo/userinfo?userId=' + id,
-      fail: () => toast('打不开这个主页'),
+      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -648,11 +648,11 @@ Page({
   // 关联(roam/index.js data_id/data_type 留空),所以这里【不存在】跳 roam 的分支,不写死分支。
   goPlay: function (e) {
     const item = this.data.list[feedIndexFromEvent(e)];
-    if (!item || !item.dataId) return;
+    if (!item || !item.dataId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     const query = String(item.dataType) === '1'
       ? ('activityId=' + item.dataId)
       : ('topicId=' + item.dataId);
-    wx.navigateTo({ url: '/pages/play/index?' + query });
+    wx.navigateTo({ url: '/pages/play/index?' + query, complete: () => { this._navigating = false; } });
   },
 
   // 「看详情」:两种关联类型后端都回填了 sportTopicId(活动取其所属 topicId、主题即自身),
@@ -664,7 +664,7 @@ Page({
     const item = this.data.list[index];
     if (!item) return;
     if (!item.sportTopicId) return this.jumpDetail(e);
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + item.sportTopicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + item.sportTopicId, complete: () => { this._navigating = false; } });
   },
 
   // 只有后端明确回填 isTopicTemplate=true 才允许改编；普通主题仍走“看详情”。
@@ -679,17 +679,17 @@ Page({
   jumpDetail: function (e) {
     const index = feedIndexFromEvent(e);
     const activity = this.data.list[index];
-    // 传递活动数据到详情页
+    if (!activity || !activity.id || this._navigating) return; this._navigating = true; // 传递活动数据到详情页;跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/square/detail/index?id=' + activity.id
+      url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; }
     });
   },
   jumpDetail2: function (e) {
     const index = feedIndexFromEvent(e);
     const activity = this.data.list[index];
-    // 传递活动数据到详情页
+    if (!activity || !activity.id || this._navigating) return; this._navigating = true; // 传递活动数据到详情页;跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/square/detail/index?comment=1&id=' + activity.id
+      url: '/pages/square/detail/index?comment=1&id=' + activity.id, complete: () => { this._navigating = false; }
     });
   },
   
