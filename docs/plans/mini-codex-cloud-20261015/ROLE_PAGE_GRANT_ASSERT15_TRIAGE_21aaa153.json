@@ -1,0 +1,79 @@
+{
+  "source_sha": "21aaa1536cec8a9baa0f7b0494c2597bf5e09243",
+  "state": "USER_APPROVED_EXACT_CORRECTION_ORIGINAL_SOURCE_OWNER_ACK_SOURCE_PENDING",
+  "prior_engineering_closure": {
+    "control_sha": "837b0255debc8a0b9800b389de42b39e02d8a459",
+    "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+    "changed": false
+  },
+  "failure_evidence": {
+    "mysql": "8.0.45",
+    "fresh_schema": {
+      "sql_errors": 0,
+      "tables": 378,
+      "statement15_scalar_true": 0,
+      "classification": "DATA_ASSERT"
+    },
+    "fresh_and_old_readback": "Both isolated test databases retained operator payout and finance verify but also held finance payout and operator verify after the page-grant migration. Those crossed additions violate the existing 20260816 exclusive split.",
+    "legal_old_grants": "cy_operator business:clubpayee:payout and cy_finance business:clubpayee:verify are intentional legal existing grants; operator payout is not itself a new unauthorized grant.",
+    "producer": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_club_payee.sql",
+    "regression_producer": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+    "root_reported_order": {
+      "payee": 457,
+      "page_grant": 467
+    },
+    "evidence_files": [
+      "evidence/fresh-role-assert-readback.tsv",
+      "fresh-builder.log"
+    ],
+    "boundary": "Root supplied actual readbacks; C00 did not access databases. Keep original red21aaa evidence; zero SQL errors is not a full migration PASS."
+  },
+  "approval": {
+    "decision": "User explicitly approved the limited source correction and isolated regression; no further approval pending for this exact scope.",
+    "plan_sha256": "cb6647ec129356a9c3004d23034919b6b7420a3b23d30609d20aa14913bd0eff",
+    "one_use_protected_file": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+    "original_sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
+    "approved_candidate_sha256": "1df695567871dc154a03cddd2ebe9495ddb60346dc2279db44a17558fe6504af",
+    "after_commit": "Restore the protected-file guard after this exact one-use edit. No other historical migration exception."
+  },
+  "exclusive_grant": {
+    "owner": "Existing PR392 source owner only",
+    "public_pr": "https://github.com/liboyang42-cpu/hengyin/pull/392",
+    "branch": "feature/audit-final-reconcile-20261020",
+    "observed_public_head_before_repair": "033e626d1cc505cab65af1ab60076482e31b4cb4",
+    "author_ack": "Actual existing source-owner acceptance of the exact limited correction and isolated regression was read; source delivery is not assumed.",
+    "state": "APPROVED_ACKNOWLEDGED_SINGLE_EXISTING_WRITER",
+    "paths": [
+      "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubCorporatePayeeMybatisIntegrationTest.java",
+      "ci/funds_it_gate.py",
+      "ci/test_funds_it_gate.py"
+    ],
+    "test_scope": "Targeted positive/negative MySQL regression for retained legal grants, forbidden crossed additions, existing anomalous grants failing closed without deletion, configured-role preservation and rerun behavior under the approved plan. Preserve existing business assertions.",
+    "count_scope": "Only the actual ClubCorporatePayeeMybatisIntegrationTest method count and necessary matching existing gate fixture/expected counts. No class removal, skip, threshold weakening, runner or workflow changes.",
+    "test_existing_count_observed": 11,
+    "C00_and_root_source_write": false,
+    "other_source_files": "Read-only; no new author, forward migration, role policy, permission reassignment or broader production source expansion."
+  },
+  "runtime_rehearsal_current": {
+    "owner": "Existing local validation coordinator",
+    "reported_delta": "Same task database366 to378 tables;18 exact delta migrations passed, retained original role failure separately.",
+    "database_restore": "After full backup, restored366 tables and9 members; full data SHA256 equal; global settings and other database counts unchanged.",
+    "restored_full_data_sha256": "fd68f2c9757884e6035d7a37b1f20fd46a251372823f7b89dafbcfd449404f5f",
+    "java_admission": "Existing2560 admission refused; actual Java execution0.",
+    "old_jar_rollback": "NOT_RUN; database snapshot restore is not old JAR compatibility acceptance.",
+    "approved_correction_regression": "PENDING_NEW_FROZEN_SOURCE_AND_ACTUAL_ISOLATED_REPORT"
+  },
+  "delivery_required": {
+    "frozen_source_sha": null,
+    "parent_sha": null,
+    "precise_changed_paths": "Required from source owner after push; compare exact protected SQL hash and keep old failure history.",
+    "regression_results": "NOT_RUN_BY_C00; source-owner/validation evidence must retain exact source and gate counts."
+  },
+  "restrictions": [
+    "Preserve every legal old grant; old anomalies fail closed without deletion.",
+    "No production database, master merge, deployment or production migration.",
+    "C00 only edits global documentation; source and CI remain with the existing PR392 source owner.",
+    "Do not assign a second writer or publish private coordination details."
+  ]
+}

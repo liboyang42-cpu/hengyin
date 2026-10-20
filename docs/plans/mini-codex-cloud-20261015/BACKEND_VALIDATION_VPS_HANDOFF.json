@@ -3304,5 +3304,15 @@
       ],
       "no_master_merge_or_deployment": true
     }
+  },
+  "role_page_grant_migration_rehearsal": {
+    "state": "USER_APPROVED_EXACT_CORRECTION_ORIGINAL_SOURCE_OWNER_ACK_SOURCE_PENDING",
+    "packet": "ROLE_PAGE_GRANT_ASSERT15_TRIAGE_21aaa153.json",
+    "source_owner": "Existing PR392 source owner only",
+    "source_sha_before_repair": "21aaa1536cec8a9baa0f7b0494c2597bf5e09243",
+    "new_frozen_source_sha": null,
+    "approval": "EXACT_HASH_ONE_USE_APPROVED",
+    "current_validation": "Original role DATA_ASSERT retained; approved repair regression pending; snapshot restorePASS/Java0/oldJAR_NOT_RUN",
+    "prior_837_engineering_closure_unchanged": true
   }
 }

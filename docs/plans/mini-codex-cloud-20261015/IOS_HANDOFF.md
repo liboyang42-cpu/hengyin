@@ -1,3 +1,11 @@
+## 当前独立迁移演练：限定修正已批准，由PR392原作者独占执行
+
+固定 `21aaa1536cec8a9baa0f7b0494c2597bf5e09243` 的新／旧隔离库读回确认：20261013补页迁移产生了finance payout与operator verify的交叉授权，破坏20260816既有互斥。旧operator payout与finance verify本身是合法授权，必须保留；原statement15 DATA_ASSERT红证据保留，不能以结构执行0 SQL错误判整体通过。
+
+真人已批准一次受控修正：仅该受保护SQL的SHA256 `1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e` → `1df695567871dc154a03cddd2ebe9495ddb60346dc2279db44a17558fe6504af`，以及必要专属回归／既有计数和隔离测试。由[PR392](https://github.com/liboyang42-cpu/hengyin/pull/392)现有源码作者独占，已实际接收批准；C00和验证协调者不另写源码，不新派作者。保合法旧grant，旧异常只fail-closed不删除；提交后恢复保护。精确四路径／批准摘要／测试交接见 `ROLE_PAGE_GRANT_ASSERT15_TRIAGE_21aaa153.json`。尚未取得本修复完整frozen SHA，回归待实际新源，未签通过。
+
+验证方另已报告：同一本任务库18条严格delta从366至378表通过，完整备份后恢复366表／9member，全量data SHA256一致，global和他库counts不变。这是数据库快照恢复，不是旧JAR回滚验收；Java2560准入仍拒／实际0。无生产、合并、部署；原837b0255工程闭环及分源证据保持原样，以下663收口为此前独立候选记录。
+
 ## 当前工程收口：PR394固定663729，授权CI通过，未合并／未部署
 
 固定源码 `663729b8623fa63c2f1c2a0812ea2a287d70c4fc` 的代码整合与既有授权CI工程闭环，**SOURCE_READY；TEST_DEPLOYED未执行**。[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 仍为未合并草稿，原来源／三队和唯一修复槽冻结。C00直接核到 [CI39439276632 attempt2](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439276632)、[Funds39439278301](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439278301)、[Followup39439276885](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439276885)、[JAR39439466174](https://github.com/liboyang42-cpu/hengyin/actions/runs/39439466174) 均SUCCESS。精确报告与工件由root独立核验；C00未执行编译／测试／触发CI。
