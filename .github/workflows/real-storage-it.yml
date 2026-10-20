@@ -34,6 +34,10 @@ on:
           - extra-storage
           - port-f3-growth
           - port-f3-evidence
+          - port-e04-07-coupon
+          - port-community-e02
+          - port-b05-visibility
+          - port-extra-storage
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false

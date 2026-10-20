@@ -3272,7 +3272,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(themeStoryService==null || !state.getThemeRuntime().has("result"))return;
         String raw=NodeJourneySnapshot.journeyStory(session.getConfigSnapshotJson());
         if(raw==null || raw.trim().isEmpty())return;
-        Map<String,Object> story=themeStoryService.freezeEnding(session.getTopicId(),raw,state);
+        Map<String,Object> story=themeStoryService.freezeEnding(session.getTopicId(),raw,state,session);
         ObjectNode result=(ObjectNode)state.getThemeRuntime().get("result");
         result.set("story",JSON.valueToTree(story));
         if(!themeConfig(session).path("endings").isArray() || themeConfig(session).path("endings").isEmpty()) {

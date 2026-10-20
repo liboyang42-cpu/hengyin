@@ -570,10 +570,12 @@ class CommunityPostMapperMyBatisTest {
     void activityReferenceProjectsOnlyItsCurrentPublicTopicAndPreservesLegacySnapshot() throws Exception {
         DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
         jdbc.execute("create table community_post_reference(id bigint primary key,post_id bigint,reference_type varchar(24),reference_id bigint,snapshot_json varchar(255),privacy_snapshot varchar(32),invalidated_at timestamp)");
-        jdbc.execute("create table cms_activity(id bigint primary key,topic_id bigint,del_flag int)");
+        // EXTRA E02-03 的下架/取消活动隐藏读 publish_status/cancel_time；本用例活动均为上架未取消。
+        jdbc.execute("create table cms_activity(id bigint primary key,topic_id bigint,del_flag int,"
+                + "publish_status int default 1,cancel_time timestamp)");
         jdbc.execute("create table cms_topic(id bigint primary key,status int,user_status int,del_flag int,is_template int)");
         jdbc.update("insert into cms_topic values (900,1,1,0,0),(901,0,1,0,0),(902,1,0,0,0),(903,1,1,1,0),(904,1,1,0,1)");
-        jdbc.update("insert into cms_activity values (70,900,0),(71,null,0),(72,901,0),(73,902,0),(74,903,0),(75,904,0),(76,900,1)");
+        jdbc.update("insert into cms_activity(id,topic_id,del_flag) values (70,900,0),(71,null,0),(72,901,0),(73,902,0),(74,903,0),(75,904,0),(76,900,1)");
         jdbc.update("insert into community_post_reference(id,post_id,reference_type,reference_id,snapshot_json) values (1,56,'ACTIVITY',70,'{\"legacy\":true}'),(2,56,'ACTIVITY',71,'{}'),(3,56,'ACTIVITY',72,'{}'),(4,56,'ACTIVITY',73,'{}'),(5,56,'ACTIVITY',74,'{}'),(6,56,'ACTIVITY',75,'{}'),(7,56,'ACTIVITY',76,'{}')");
         try (SqlSession session = factory(ds).openSession(true)) {
             List<Map<String, Object>> refs = session.getMapper(CommunityPostMapper.class).selectReferences(56L);

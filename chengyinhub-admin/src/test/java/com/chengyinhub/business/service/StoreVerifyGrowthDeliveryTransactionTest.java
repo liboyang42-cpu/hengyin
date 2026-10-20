@@ -127,6 +127,8 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         activity.setId(400L);
         activity.setTopicId(300L);
         activity.setDelFlag(0);
+        // 按章核销先过探索票到期闸(PR #18 A包)；本类验章节权限与成长入队，给未到期的场次结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activities.selectCmsActivityByIdForUpdate(400L)).thenReturn(activity);
         ReflectionTestUtils.setField(registrationTarget, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(registrationTarget, "cmsRegistrationScanMapper", scanMapper);
@@ -187,8 +189,10 @@ class StoreVerifyGrowthDeliveryTransactionTest {
         when(perkLedgerService.resolveRedeemableChapters(501L, 300L, 77L))
                 .thenReturn(Collections.<Long>emptyList());
 
-        db.update("UPDATE cms_registration SET owner_type=2,owner_id=400 WHERE id=501");
+        // 原订单须是探索票(purchase_kind=3)才过按章核销的票种闸，才能走到本用例要验的章节权限拒绝。
+        db.update("UPDATE cms_registration SET owner_type=2,owner_id=400,purchase_kind=3 WHERE id=501");
         CmsRegistration explore = registration();
+        explore.setPurchaseKind(3);
         explore.setOwnerType(2L);
         explore.setOwnerId(400L);
         explore.setRegistrationStatus(2);

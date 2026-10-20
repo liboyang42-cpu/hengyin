@@ -60,7 +60,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (merchantId == null ? !clubActor : merchantId <= 0 || !merchantActor) {
             throw new IllegalArgumentException("优惠券核销作用域与操作者角色不匹配");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 固定本事务核销的当前历史身份，防后台编辑关联后沿旧模板校验权限/记账。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
             return RedemptionResult.NOT_FOUND;
         }
@@ -130,6 +131,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         }
 
         settlementEntryService.recordCouponVerification(history, coupon);
+        // 延续 history→coupon 锁序；当前模板已失效时零行抛错，连同历史CAS和事务内结算全部回滚。
         if (smsCouponMapper.incrementUseCount(coupon.getId()) != 1) {
             throw new IllegalStateException("优惠券核销计数更新失败");
         }
@@ -184,7 +186,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (reason == null || reason.trim().isEmpty()) {
             throw new IllegalArgumentException("撤销原因不能为空");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 先锁当前历史关联，避免后台并发编辑coupon_id后仍回退旧模板；沿用history→coupon锁序。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null) {
             throw new IllegalStateException("核销记录不存在");
         }
@@ -401,6 +404,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertSmsCouponHistory(SmsCouponHistory smsCouponHistory)
     {
         smsCouponHistory.setCreateTime(DateUtils.getNowDate());
