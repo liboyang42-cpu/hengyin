@@ -767,7 +767,7 @@ Page({
   },
 
   goSettlement() {
-    wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + (this._clubId || '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + (this._clubId || ''), complete: () => { this._navigating = false; } });
   },
 
   // roles 每次刷新都要重算候选 —— 服务端把某人的确认状态改回 PENDING 时,
@@ -955,7 +955,7 @@ Page({
       ? ('activityId=' + this._directorActivityId)
       : (this._topicId ? ('topicId=' + this._topicId) : '');
     if (!q) { this.notReady('出示团码'); return; }
-    wx.navigateTo({ url: '/pages/club/group-code/index?' + q });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/group-code/index?' + q, complete: () => { this._navigating = false; } });
   },
 
   /* ——— Figma J8 退出与暂停规则 ———
