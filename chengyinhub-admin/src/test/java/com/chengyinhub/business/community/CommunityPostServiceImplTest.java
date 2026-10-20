@@ -7,6 +7,7 @@ import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
 import com.chengyinhub.business.service.CommunityTrustService;
@@ -19,6 +20,7 @@ import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.util.Collections;
@@ -380,6 +382,55 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Integer.valueOf(401), error.getCode());
         verify(mapper, never()).selectFeed(any());
+    }
+
+    /** 分级审核 P0:推文发布必须显式先审后发(PRE_REVIEW),不能吃到门禁入参的 POST_REVIEW 默认值。 */
+    @Test
+    void publishAsksGateForPreReviewSoCommunityPostBehaviourIsUnchanged() {
+        CommunityPost post = draft(7L, 9L, 3);
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(post);
+        when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("ID", 5L));
+        when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        when(mapper.selectMedia(7L)).thenReturn(Collections.emptyList());
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.hold("TEXT_REVIEW", 1L));
+        when(mapper.transitionCas(eq(7L), eq("DRAFT"), eq("CHECKING"), eq(3), any(), any(), anyInt(), anyInt(), anyInt(), any()))
+                .thenReturn(1);
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 4));
+        when(mapper.selectReferences(7L)).thenReturn(Collections.emptyList());
+
+        service.publish(9L, null, 7L, state(3));
+
+        ArgumentCaptor<PublishSafetyRequest> captor = ArgumentCaptor.forClass(PublishSafetyRequest.class);
+        verify(safetyGate).decide(captor.capture());
+        assertEquals(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name(), captor.getValue().getReviewMode());
+    }
+
+    /** 分级审核 P0:推文回复同样显式 PRE_REVIEW。 */
+    @Test
+    void commentAsksGateForPreReviewSoCommentBehaviourIsUnchanged() {
+        CommunityPost post = draft(7L, 11L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-mode-1");
+        request.setBody("普通回复");
+        Map<String, Object> inserted = new HashMap<>();
+        inserted.put("id", 17L);
+        inserted.put("post_id", 7L);
+        inserted.put("author_id", 9L);
+        inserted.put("body", "普通回复");
+        inserted.put("author_approval_state", "VISIBLE");
+        inserted.put("lifecycle", "CHECKING");
+        when(mapper.selectCommentByAuthorRequest(9L, "comment-mode-1")).thenReturn(null, inserted);
+        when(mapper.insertComment(eq(7L), eq(9L), eq(null), eq(null), eq(null), anyString(),
+                eq("普通回复"), eq("CHECKING"), eq("VISIBLE"), any())).thenReturn(1);
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.block("POLICY"));
+
+        assertThrows(ServiceException.class, () -> service.comment(9L, 7L, request));
+
+        ArgumentCaptor<PublishSafetyRequest> captor = ArgumentCaptor.forClass(PublishSafetyRequest.class);
+        verify(safetyGate).decide(captor.capture());
+        assertEquals(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name(), captor.getValue().getReviewMode());
     }
 
     @Test
