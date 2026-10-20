@@ -262,7 +262,7 @@ Page({
   onEmptyCta() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) return;
     const tab = this.data.activeTab;
-    if (tab === 'dm') { wx.navigateTo({ url: '/pages/square/list/index' }); }
+    if (tab === 'dm' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
   },
 
   fmtPreview(c) {
