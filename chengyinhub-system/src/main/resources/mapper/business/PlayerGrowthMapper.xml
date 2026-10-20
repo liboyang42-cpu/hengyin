@@ -19,6 +19,19 @@
         from player_growth where member_id = #{memberId} limit 1
     </select>
 
+    <insert id="ensureGrowthRow">
+        insert into player_growth
+            (member_id, level, total_checkins, total_mileage, streak_days, create_time, update_time)
+        values (#{memberId}, 1, 0, 0, 0, #{now}, #{now})
+        on duplicate key update member_id = member_id
+    </insert>
+
+    <select id="selectByMemberForUpdate" parameterType="Long" resultMap="PlayerGrowthResult"
+            useCache="false" flushCache="true">
+        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, update_time, create_time
+        from player_growth where member_id = #{memberId} limit 1 for update
+    </select>
+
     <select id="selectLevelsByMemberIds" resultMap="PlayerGrowthResult">
         select member_id, level
         from player_growth

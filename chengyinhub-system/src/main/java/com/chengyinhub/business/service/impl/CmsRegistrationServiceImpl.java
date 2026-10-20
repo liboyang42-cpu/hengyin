@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Objects;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.mapper.*;
@@ -3134,6 +3135,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                               Long chapterId, Long topicId, Long merchantOwnerMemberId,
@@ -3143,6 +3145,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                                Long chapterId, Long topicId, Long merchantOwnerMemberId,

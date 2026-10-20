@@ -32,6 +32,8 @@ on:
           - b05-visibility
           - f3-growth
           - extra-storage
+          - port-f3-growth
+          - port-f3-evidence
           - port-e04-07-coupon
           - port-community-e02
           - port-b05-visibility

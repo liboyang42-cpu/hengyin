@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.badge.BadgeRule;
 import com.chengyinhub.business.badge.RuleEvaluator;
@@ -99,13 +100,15 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<PlayerBadge> onNodeDone(Long memberId)
     {
         PlayerGrowth g = ensureGrowth(memberId);
+        Date checkinTime = currentCheckinTime();
         int checkins = nz(g.getTotalCheckins()) + 1;
 
         // 连续打卡
-        LocalDate today = LocalDate.now();
+        LocalDate today = toLocalDate(checkinTime);
         LocalDate last = toLocalDate(g.getLastCheckinDate());
         int streak;
         if (last == null) streak = 1;
@@ -113,12 +116,14 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         else if (last.plusDays(1).isEqual(today)) streak = nz(g.getStreakDays()) + 1;
         else streak = 1;
 
-        g.setTotalCheckins(checkins);
-        g.setStreakDays(streak);
-        g.setLastCheckinDate(new Date());
-        g.setLevel(levelFor(checkins));
-        g.setUpdateTime(new Date());
-        playerGrowthMapper.updatePlayerGrowth(g);
+        PlayerGrowth changes = new PlayerGrowth();
+        changes.setMemberId(memberId);
+        changes.setTotalCheckins(checkins);
+        changes.setStreakDays(streak);
+        changes.setLastCheckinDate(checkinTime);
+        changes.setLevel(levelFor(checkins));
+        changes.setUpdateTime(checkinTime);
+        playerGrowthMapper.updatePlayerGrowth(changes);
 
         List<PlayerBadge> newly = new ArrayList<>();
         awardByThreshold(newly, memberId, "FIRST_STEP", 1, 0L, checkins);
@@ -128,23 +133,28 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<PlayerBadge> onTopicComplete(Long memberId, Long topicId)
     {
         List<PlayerBadge> newly = new ArrayList<>();
         Long sourceId = topicId == null ? 0L : topicId;
+        PlayerGrowth g = ensureGrowth(memberId);
 
         // 幂等:已通关过该主题(已有 TOPIC_CLEAR 徽章)则里程不再叠加、徽章不再发。
         // 否则重复 checkin/answer/arrive 触发的 completed 会无限累加 totalMileage,污染 MILE_50/排行榜。
+        // 实际调用者 grantOnce 先用 TOPIC_FINISH_<topic> 唯一事实裁定首次通关。
+        // 此处保持普通读:RR 下对缺失徽章加 gap lock 会与外层先插通关事实的锁序相反。
         if (playerBadgeMapper.selectOne(memberId, "TOPIC_CLEAR", sourceId) != null) {
             return newly;
         }
 
-        PlayerGrowth g = ensureGrowth(memberId);
         BigDecimal mileage = sumChapterMileage(topicId);
         BigDecimal total = nz(g.getTotalMileage()).add(mileage);
-        g.setTotalMileage(total);
-        g.setUpdateTime(new Date());
-        playerGrowthMapper.updatePlayerGrowth(g);
+        PlayerGrowth changes = new PlayerGrowth();
+        changes.setMemberId(memberId);
+        changes.setTotalMileage(total);
+        changes.setUpdateTime(new Date());
+        playerGrowthMapper.updatePlayerGrowth(changes);
 
         awardByThreshold(newly, memberId, "TOPIC_CLEAR", 2, sourceId, 1L);
         awardByThreshold(newly, memberId, "MILE_50", 3, 0L, total.longValue());
@@ -154,20 +164,19 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
 
     // ===== helpers =====
 
-    /** 取成长行,无则建一行并返回 */
+    /**
+     * 写入口专用:先用 uk_member 原子建行/取得行锁,再当前读。
+     * 不先锁读缺失行,避免两个首次请求同时持有 gap lock 后争抢 INSERT。
+     * REQUIRED 事务延续调用者已有锁,本地锁序为成长行 → 成长徽章写入;普通读 API 不走这里。
+     * 上游可能已有积分会员锁或 TOPIC_FINISH 事实锁,本方法不改变上游锁序/重试策略。
+     */
     private PlayerGrowth ensureGrowth(Long memberId)
     {
-        PlayerGrowth g = playerGrowthMapper.selectByMember(memberId);
-        if (g != null) return g;
-        g = new PlayerGrowth();
-        g.setMemberId(memberId);
-        g.setLevel(1);
-        g.setTotalCheckins(0);
-        g.setTotalMileage(BigDecimal.ZERO);
-        g.setStreakDays(0);
-        g.setCreateTime(new Date());
-        g.setUpdateTime(new Date());
-        playerGrowthMapper.insertPlayerGrowth(g);
+        playerGrowthMapper.ensureGrowthRow(memberId, new Date());
+        PlayerGrowth g = playerGrowthMapper.selectByMemberForUpdate(memberId);
+        if (g == null) {
+            throw new IllegalStateException("玩家成长行建行后回读失败 memberId=" + memberId);
+        }
         return g;
     }
 
@@ -222,6 +231,9 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         }
         return sum;
     }
+
+    /** 锁读后采样一次,使连续天数与持久化打卡日期在跨午夜时仍取同一时点。 */
+    protected Date currentCheckinTime() { return new Date(); }
 
     private int levelFor(int checkins) { return checkins / 5 + 1; }
 
