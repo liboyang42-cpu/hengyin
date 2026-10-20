@@ -56,7 +56,13 @@ REDIS_HOST, REDIS_PORT, REDIS_DB = "127.0.0.1", 6379, 9
 APP_BASE = "http://127.0.0.1:8099"
 APP_READY_LINE = "Started RuoYiApplication"
 FAULT_MARKER = "e2e 注入"
-STUBS = ("E2eWechatPayStub", "E2eFaultInjectionFilter")
+STUBS = ("E2eWechatPayStub", "E2eFaultInjectionFilter", "E2eWxContentSecurityStub")
+CONTENT_SECURITY_STUB = "E2eWxContentSecurityStub"
+CONTENT_SECURITY_GATE = "EXTERNAL_GATE: content security stubbed"
+# 内容安全桩只许改写两次出站调用;回调验签、nonce、结论落地必须走真实实现。
+CONTENT_SECURITY_REAL_METHODS = ("processMediaCheckCallback", "verifyMediaCheckCallback", "handleMediaCheckResult",
+                                 "tryAcquireCallbackNonce", "releaseCallbackNonce", "submitMediaCheck",
+                                 "submitMediaCheckOne", "isEnabled")
 CHAIN_TIMEOUT_SECONDS = 900
 APP_READY_SECONDS = 300
 PLAYER_MEMBER = 9009
@@ -64,7 +70,9 @@ PROBE_PHONE = "13900000004"
 DEFAULT_FAULT_PROBE_PATH = "/api/play/checkin"
 NOT_COVERED = [
     "external WeChat Pay channel (stubbed at the channel layer only; callback path is real)",
-    "WeChat content security, SMS, AI providers and other external services",
+    CONTENT_SECURITY_GATE + " (WeChat msg_sec_check / media_check_async calls only; "
+    "callback verification, nonce and business side are real)",
+    "SMS, AI providers and other external services",
     "device / WeChat DevTools / real-phone behaviour",
     "integrated cross-branch candidate unless SOURCE_SHA is that candidate",
     "production data, persistent-database migration execution, merge or deployment",
@@ -240,6 +248,26 @@ def harness_files(directory):
         path = root / name
         found[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
     return found
+
+
+def stub_problems(directory):
+    """桩必须齐全且贴着自己的口径;缺桩或越权改写真实回调路径一律让 explode 变红。"""
+    root = Path(directory) / "scripts" / "e2e"
+    problems = []
+    for name in STUBS:
+        if not (root / ("%s.java.stub" % name)).is_file():
+            problems.append("缺桩 %s.java.stub" % name)
+    source = root / ("%s.java.stub" % CONTENT_SECURITY_STUB)
+    if source.is_file():
+        text = source.read_text(encoding="utf-8")
+        if CONTENT_SECURITY_GATE not in text:
+            problems.append("内容安全桩缺少口径标签 %r" % CONTENT_SECURITY_GATE)
+        if "extends WxContentSecurityServiceImpl" not in text:
+            problems.append("内容安全桩必须继承真实 WxContentSecurityServiceImpl")
+        for method in CONTENT_SECURITY_REAL_METHODS:
+            if re.search(r"(?:public|protected)[^;{}=]*\b%s\s*\(" % method, text):
+                problems.append("内容安全桩不得改写真实路径 %s" % method)
+    return problems
 
 
 # ---------------------------------------------------------------- 回执
@@ -763,6 +791,9 @@ def cmd_explode(args, environ):
         raise GateError("不是 Spring Boot fat jar（缺 BOOT-INF/classes 或 lib）")
     stub_src = Path(args.work) / "stub-src" / "com" / "chengyinhub" / "e2e"
     stub_src.mkdir(parents=True, exist_ok=True)
+    missing = stub_problems(args.gate)
+    if missing:
+        raise GateError("桩检查失败: %s" % "; ".join(missing))
     stubs = {}
     for name in STUBS:
         source = Path(args.gate) / "scripts" / "e2e" / ("%s.java.stub" % name)
