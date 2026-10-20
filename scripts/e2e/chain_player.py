@@ -41,10 +41,10 @@ def main(tid):
     step("俱乐部:开【应用眼里的今天】这一场 —— 活动时间闸按 cms_activity 起止判")
     # ⚠️ 时区:MySQL 会话是 UTC、应用 JVM 是 GMT+8,ClubSession.dayBoundary 按 JVM 算。
     #   直接拿 MySQL 的 NOW() 日期去开团会开成昨天,当场「活动已结束」。这里取 JVM 那侧的今天。
-    #   开团要求集合时间晚于当前(ClubSessionServiceImpl 5.9 拍板)，而场次 start_date=集合时刻：
-    #   取 JVM 侧「现在 + 2 分钟」(HH:mm 向下取整后仍在未来)，开团后等到场次真正开始再往下走。
-    today, session_time = q("SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 8 HOUR) + INTERVAL 2 MINUTE, '%%Y-%%m-%%d'), "
-                            "DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 8 HOUR) + INTERVAL 2 MINUTE, '%%H:%%i')")[0]
+    #   开团要求集合时间晚于当前(ClubSessionServiceImpl 5.9 拍板)，场次 start_date=集合时刻，
+    #   开始后不再收报名、开始前不能游玩 ⇒ 取 JVM 侧「现在 + 3 分钟」，集合前报名支付，到点后再到店。
+    today, session_time = q("SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 8 HOUR) + INTERVAL 3 MINUTE, '%%Y-%%m-%%d'), "
+                            "DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 8 HOUR) + INTERVAL 3 MINUTE, '%%H:%%i')")[0]
     r = http("POST", "/api/club/open-session", token=etok,
              json_body={"clubId": EXEC_CLUB_ID, "topicId": tid,
                         "sessionDate": today, "sessionTime": session_time})
@@ -53,13 +53,6 @@ def main(tid):
     if not act:
         print("   ✗ 开团失败,链路在此中断"); return 1
     readback("今天这场", "SELECT id,start_date,end_date FROM cms_activity WHERE id=%s", (act,))
-    for _ in range(40):
-        if q("SELECT DATE_ADD(NOW(), INTERVAL 8 HOUR) >= start_date FROM cms_activity WHERE id=%s", (act,))[0][0]:
-            break
-        time.sleep(5)
-    else:
-        print("   ✗ 场次 200 秒内未到集合时间,链路在此中断"); return 1
-    show("场次已开始", "JVM 时钟已过集合时间")
 
     step("玩家:报名信息单独同意 → 报价 → 建单")
     show("consents", (http("POST", "/api/compliance/consents", token=ptok, json_body={
@@ -101,6 +94,15 @@ def main(tid):
     except RuntimeError as exc:
         print("   ✗ %s" % exc)
         return 1
+
+    step("等到集合时间:场次开始后才可到店游玩(报名已在集合前完成)")
+    for _ in range(60):
+        if q("SELECT DATE_ADD(NOW(), INTERVAL 8 HOUR) >= start_date FROM cms_activity WHERE id=%s", (act,))[0][0]:
+            break
+        time.sleep(5)
+    else:
+        print("   ✗ 场次 300 秒内未到集合时间,链路在此中断"); return 1
+    show("场次已开始", "JVM 时钟已过集合时间")
 
     step("四店:玩家到店扫码打卡 → 商家扫玩家动态码核销")
     nodes = q("SELECT id,chapter_id,checkin_code,merchant_member_id FROM cms_topic_node "
