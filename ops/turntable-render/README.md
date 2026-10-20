@@ -27,7 +27,7 @@ GLB → 24 帧 300×396 WebP。由后端 `objectCardGenTask` 以子进程调用,
 ## 同步
 
 ```bash
-scp -i ~/.ssh/chengyin_deploy render.js package.json package-lock.json root@47.103.124.64:/www/wwwroot/turntable-render/
+scp -i ~/.ssh/chengyin_deploy render.js package.json package-lock.json root@<生产库主机>:/www/wwwroot/turntable-render/
 ssh ... 'cd /www/wwwroot/turntable-render && npm ci --omit=dev'
 ```
 
