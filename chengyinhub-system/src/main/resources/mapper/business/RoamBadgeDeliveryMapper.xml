@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamBadgeDeliveryMapper">
+    <insert id="prepare">
+        insert into roam_badge_delivery(member_id, session_id, badge_code, source_id, source_type,
+            badge_name, icon_url, obtain_time, state)
+        values(#{badge.memberId}, #{sessionId}, #{badge.badgeCode}, #{badge.sourceId}, #{badge.sourceType},
+            #{badge.badgeName}, #{badge.iconUrl}, #{badge.obtainTime}, 'DUE')
+        on duplicate key update id = id
+    </insert>
+    <select id="selectForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select id, member_id as memberId, session_id as sessionId, badge_code as badgeCode,
+               source_id as sourceId, source_type as sourceType, badge_name as badgeName,
+               icon_url as iconUrl, obtain_time as obtainTime, state
+        from roam_badge_delivery
+        where member_id = #{memberId} and session_id = #{sessionId} and badge_code = #{badgeCode} and source_id = #{sourceId}
+        for update
+    </select>
+    <update id="complete">
+        update roam_badge_delivery set state = 'DELIVERED', delivered_at = now()
+        where id = #{id} and member_id = #{memberId} and state = 'DUE'
+    </update>
+    <select id="readStatus" resultType="java.util.HashMap" useCache="false">
+        select badge_code as badgeCode, source_id as sourceId, state from roam_badge_delivery
+        where member_id = #{memberId} and session_id = #{sessionId} order by id asc
+    </select>
+    <select id="highWaterMark" resultType="java.lang.Long" useCache="false">
+        select coalesce(max(id), 0) from roam_badge_delivery where state = 'DUE'
+    </select>
+    <select id="scanPending" resultType="java.util.HashMap" useCache="false">
+        select id, member_id as memberId, session_id as sessionId, badge_code as badgeCode, source_id as sourceId
+        from roam_badge_delivery where id &gt; #{afterId} and id &lt;= #{throughId} and state = 'DUE'
+        order by id asc limit #{limit}
+    </select>
+    <insert id="ensureCursor">
+        insert into roam_badge_reconcile_cursor(id, after_id, through_id) values(1,0,0) on duplicate key update id = id
+    </insert>
+    <select id="selectCursorForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select after_id as afterId, through_id as throughId from roam_badge_reconcile_cursor where id = 1 for update
+    </select>
+    <update id="beginRound">
+        update roam_badge_reconcile_cursor set after_id = 0, through_id = #{throughId} where id = 1 and through_id = 0
+    </update>
+    <update id="advanceCursor">
+        update roam_badge_reconcile_cursor set after_id = #{afterId}
+        where id = 1 and after_id = #{expectedAfter} and through_id = #{throughId}
+    </update>
+    <update id="completeRound">
+        update roam_badge_reconcile_cursor set after_id = 0, through_id = 0
+        where id = 1 and after_id = #{expectedAfter} and through_id = #{throughId}
+    </update>
+</mapper>

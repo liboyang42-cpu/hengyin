@@ -184,14 +184,21 @@ final class GameSessionLedgerMySqlFixture {
         ReflectionTestUtils.setField(target, "runtimeMapper", mapper);
         ReflectionTestUtils.setField(target, "playTeamMapper", sql.getMapper(PlayTeamMapper.class));
         CmsActivityMapper activities = mock(CmsActivityMapper.class);
-        when(activities.selectCmsActivityById(ACTIVITY)).thenAnswer(call -> {
+        org.mockito.stubbing.Answer<CmsActivity> activity = call -> {
             CmsActivity a = new CmsActivity();
             a.setId(ACTIVITY); a.setTopicId(TOPIC); a.setClubId(CLUB); a.setStatus(1L); a.setDelFlag(0);
             a.setStartDate(new Date(System.currentTimeMillis() - 3600000));
             a.setEndDate(new Date(System.currentTimeMillis() + 3600000));
             return a;
-        });
+        };
+        when(activities.selectCmsActivityById(ACTIVITY)).thenAnswer(activity);
+        // 移植分支 A包当前资格先锁读活动行(CurrentPlayRegistration)，同 GameSessionIndependentRevisionMySqlIT。
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenAnswer(activity);
         ReflectionTestUtils.setField(target, "activityMapper", activities);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper currentRegistrations =
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        CurrentRegistrationStubs.currentFromProbe(currentRegistrations); // 归属与已付事实仍由真表 play_team/hasPaidRegistration 判定
+        ReflectionTestUtils.setField(target, "currentPlayRegistrationMapper", currentRegistrations);
         ICapabilityService capability = mock(ICapabilityService.class);
         when(capability.hasCapability(DIRECTOR, MemberCapability.CAP_CLUB_LEADER)).thenReturn(true);
         ReflectionTestUtils.setField(target, "capabilityService", capability);

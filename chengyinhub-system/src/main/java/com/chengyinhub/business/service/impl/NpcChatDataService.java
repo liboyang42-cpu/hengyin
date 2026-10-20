@@ -35,6 +35,9 @@ public class NpcChatDataService
     @Autowired
     private NpcChatLogMapper npcChatLogMapper;
 
+    @Autowired
+    private NpcChatWriteService npcChatWriteService;
+
     /**
      * 导出当前用户在 npc_chat_log 里的全部记录(可读 JSON,按登录用户归属过滤)。
      */
@@ -58,7 +61,7 @@ public class NpcChatDataService
      */
     public int deleteForUser(Long userId)
     {
-        int deleted = npcChatLogMapper.deleteNpcChatLogsByUserId(userId);
+        int deleted = npcChatWriteService.deleteForUser(userId);
         log.info("[npc/chat-data] 用户 {} 主动删除聊天记录 {} 条", userId, deleted);
         return deleted;
     }

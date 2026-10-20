@@ -155,8 +155,10 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         epoch = System.currentTimeMillis() / 1000 * 1000;
         jdbc.update("INSERT INTO club(id,member_id,name,status,del_flag) VALUES(7,999,'waitlist-test',1,0)");
         jdbc.update("INSERT INTO club_member(id,club_id,member_id,role,status,del_flag) VALUES(1,7,9,0,1,0)");
-        jdbc.update("INSERT INTO cms_activity(id,member_id,name,status,publish_status,del_flag,club_id) "
-                + "VALUES(20,999,'waitlist-activity',1,1,0,7)");
+        // The new offer preflight delegates to production XML: provide actual activity facts, not a true stub.
+        jdbc.update("INSERT INTO cms_activity(id,member_id,name,status,publish_status,del_flag,club_id,start_date,end_date) "
+                + "VALUES(20,999,'waitlist-activity',1,1,0,7,?,?)",
+                new Timestamp(epoch + 172_800_000L), new Timestamp(epoch + 259_200_000L));
         jdbc.update("INSERT INTO oms_ticket(id,owner_type,owner_id,total_inventory,remaining_inventory,del_flag) VALUES(97,2,20,1,1,0)");
         jdbc.update("INSERT INTO club_event_waitlist(id,club_id,activity_id,ticket_id,member_id,state,joined_at,version) VALUES(61,7,20,97,9,'WAITING',NOW(),0)");
     }

@@ -68,12 +68,35 @@ class ExploreIssueCodeGateTest {
         r.setOwnerType(2L);
         r.setOwnerId(ACTIVITY);
         r.setRegistrationStatus(2);
+        r.setPaymentStatus(2);
         r.setVerificationStatus(verificationStatus);
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(r);
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setDelFlag(0);
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+    }
+
+    @Test
+    void exploreAtEndCannotIssueNewCodeAndMissingEndCanRecover() {
+        givenRegistration(0);
+        CmsRegistration current = regSvc.selectCmsRegistrationById(REG);
+        current.setPurchaseKind(3);
+        CmsActivity activity = activitySvc.selectCmsActivityById(ACTIVITY);
+        activity.setEndDate(null);
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        activity.setEndDate(new java.util.Date(1));
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
+        assertEquals(200, controller.issueDynCode(REG).get("code"));
+    }
+
+    @Test
+    void oldSuccessfulStatusWithoutPaidCurrentStateCannotIssue() {
+        givenRegistration(0);
+        regSvc.selectCmsRegistrationById(REG).setPaymentStatus(4);
+        assertEquals(500, controller.issueDynCode(REG).get("code"));
+        org.mockito.Mockito.verify(perkSvc, org.mockito.Mockito.never()).isTicketFullyConsumed(0, REG);
     }
 
     /**

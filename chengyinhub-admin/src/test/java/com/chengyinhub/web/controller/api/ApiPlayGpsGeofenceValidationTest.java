@@ -132,6 +132,8 @@ class ApiPlayGpsGeofenceValidationTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        // 探店日票(EXPLORE_PASS)按已定规则缺结束时间暂禁新使用；本类验 GPS 围栏，夹具给未到期的结束时间。
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsRegistration registration = new CmsRegistration();
@@ -168,6 +170,7 @@ class ApiPlayGpsGeofenceValidationTest
         when(progressionService.onNodeDone(PLAYER)).thenReturn(Collections.emptyList());
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private AjaxResult arrive(String longitude, String latitude)
@@ -272,6 +275,57 @@ class ApiPlayGpsGeofenceValidationTest
         assertNotEquals(200, result.get("code"));
         assertEquals("还没到这一站附近", result.get("msg"));
         verifyNoProgressAndNoReward();
+    }
+
+    private AjaxResult arriveWithAccuracy(String accuracy)
+    {
+        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, NODE_LAT, null, null, null, accuracy);
+    }
+
+    @Test
+    void blankAccuracyIsAllowedForLegacyClients()
+    {
+        assertEquals(200, arriveWithAccuracy(null).get("code"));
+        assertEquals(200, arriveWithAccuracy("  ").get("code"));
+    }
+
+    @Test
+    void accuracyWithinLimitStillAdvances()
+    {
+        assertEquals(200, arriveWithAccuracy("30").get("code"));
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void accuracyAboveLimitIsRejectedBeforeDistanceCheckWithoutProgressOrReward()
+    {
+        AjaxResult result = arriveWithAccuracy("81");
+
+        assertNotEquals(200, result.get("code"));
+        assertEquals("定位精度不足，请到开阔处或扫码完成", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void invalidAccuracyIsRejectedAsInvalidLocation()
+    {
+        for (String bad : new String[] { "NaN", "Infinity", "-1", "abc" }) {
+            AjaxResult result = arriveWithAccuracy(bad);
+            assertNotEquals(200, result.get("code"), "非法精度不得通过:" + bad);
+            assertEquals("定位无效", result.get("msg"));
+        }
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void accuracyIsIgnoredWhenNodeHasNoCoordinate()
+    {
+        node.setLongitude(null);
+        node.setLatitude(null);
+
+        assertEquals(200, controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
     }
 
     private void stubGpsValidationNode()

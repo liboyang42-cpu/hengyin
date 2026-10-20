@@ -68,7 +68,10 @@ class LegacyChoiceCompletionRollbackAcceptanceTest {
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(service, "activityMapper", activityMapper);
-        ReflectionTestUtils.setField(service, "registrationMapper", mock(CmsRegistrationMapper.class));
+        // 移植分支 A包当前资格按 activity→registration 锁读当前行(CurrentPlayRegistration)，夹具同 PersonalGameplayRuntimeServiceTest。
+        CmsRegistrationMapper currentRegistrations = mock(CmsRegistrationMapper.class);
+        CurrentRegistrationStubs.currentFromProbe(currentRegistrations);
+        ReflectionTestUtils.setField(service, "registrationMapper", currentRegistrations);
         ReflectionTestUtils.setField(service, "teamMapper", teamMapper);
         ReflectionTestUtils.setField(service, "attemptMapper", mock(PlayAttemptLogMapper.class));
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(NOW));
@@ -81,6 +84,7 @@ class LegacyChoiceCompletionRollbackAcceptanceTest {
         activity.setId(ACTIVITY); activity.setTopicId(TOPIC); activity.setProductType(1);
         activity.setStartDate(new Date(NOW - 60_000)); activity.setEndDate(new Date(NOW + 3_600_000));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
         when(teamMapper.hasPaidRegistration(MEMBER, 2, ACTIVITY)).thenReturn(1);
 
         GameRuntimeSession s = new GameRuntimeSession();

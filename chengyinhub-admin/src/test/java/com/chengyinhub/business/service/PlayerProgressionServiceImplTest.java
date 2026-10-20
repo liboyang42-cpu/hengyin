@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.badge.RuleEvaluator;
+import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.GrowthBadge;
 import com.chengyinhub.business.domain.PlayerBadge;
 import com.chengyinhub.business.domain.PlayerGrowth;
@@ -11,7 +12,13 @@ import com.chengyinhub.business.service.impl.PlayerProgressionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.mockito.ArgumentCaptor;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +30,7 @@ class PlayerProgressionServiceImplTest {
     private PlayerGrowthMapper growthMapper;
     private PlayerBadgeMapper badgeMapper;
     private GrowthBadgeMapper defMapper;
+    private ICmsTopicChapterService chapters;
     private PlayerProgressionServiceImpl svc;
 
     private GrowthBadge def(String code, String name, String ruleJson) {
@@ -37,10 +45,12 @@ class PlayerProgressionServiceImplTest {
         growthMapper = mock(PlayerGrowthMapper.class);
         badgeMapper = mock(PlayerBadgeMapper.class);
         defMapper = mock(GrowthBadgeMapper.class);
+        chapters = mock(ICmsTopicChapterService.class);
         svc = new PlayerProgressionServiceImpl();
         ReflectionTestUtils.setField(svc, "playerGrowthMapper", growthMapper);
         ReflectionTestUtils.setField(svc, "playerBadgeMapper", badgeMapper);
         ReflectionTestUtils.setField(svc, "growthBadgeMapper", defMapper);
+        ReflectionTestUtils.setField(svc, "cmsTopicChapterService", chapters);
         ReflectionTestUtils.setField(svc, "ruleEvaluator", new RuleEvaluator());
         when(defMapper.selectByCode("FIRST_STEP"))
             .thenReturn(def("FIRST_STEP", "初次启程", "{\"aggregate\":\"exists\",\"threshold\":1}"));
@@ -48,7 +58,7 @@ class PlayerProgressionServiceImplTest {
 
     @Test
     void firstNodeDone_awardsFirstStep_withNameFromDef() {
-        when(growthMapper.selectByMember(1L)).thenReturn(null); // 新用户,checkins=1
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(growthRow(1L, 1)); // 新用户,checkins=1
         List<PlayerBadge> newly = svc.onNodeDone(1L);
         assertTrue(newly.stream().anyMatch(b -> "FIRST_STEP".equals(b.getBadgeCode())));
         assertEquals("初次启程", newly.stream()
@@ -60,7 +70,7 @@ class PlayerProgressionServiceImplTest {
     void secondNodeDone_doesNotReAwardFirstStep() {
         PlayerGrowth g = new PlayerGrowth();
         g.setMemberId(1L); g.setTotalCheckins(5);
-        when(growthMapper.selectByMember(1L)).thenReturn(g);
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(g);
         when(badgeMapper.selectOne(eq(1L), eq("FIRST_STEP"), anyLong())).thenReturn(new PlayerBadge());
         List<PlayerBadge> newly = svc.onNodeDone(1L);
         assertTrue(newly.stream().noneMatch(b -> "FIRST_STEP".equals(b.getBadgeCode())));
@@ -85,5 +95,238 @@ class PlayerProgressionServiceImplTest {
         assertTrue(svc.levelsByMemberIds(null).isEmpty());
         assertTrue(svc.levelsByMemberIds(java.util.Arrays.asList(null, 0L, -1L)).isEmpty(),
                 "非法 id 不进 IN 查询");
+    }
+
+    @Test
+    void nodeUpdateKeepsMileageOutOfWritebackAndPreservesLevelRule() {
+        PlayerGrowth row = growthRow(1L, 1);
+        row.setTotalCheckins(4);
+        row.setTotalMileage(new BigDecimal("27.50"));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        PlayerGrowth change = writtenGrowth();
+        assertEquals(5, change.getTotalCheckins());
+        assertEquals(2, change.getLevel(), "等级仍按 checkins / 5 + 1");
+        assertEquals(1, change.getStreakDays());
+        assertNotNull(change.getLastCheckinDate());
+        assertNull(change.getTotalMileage(), "节点写入不得回写读到的旧里程");
+        verify(growthMapper).ensureGrowthRow(eq(1L), any(Date.class));
+        verify(growthMapper, never()).selectByMember(anyLong());
+        verify(growthMapper, never()).insertPlayerGrowth(any());
+    }
+
+    @Test
+    void sameDayCheckinStillCountsEachCallWithoutExtendingStreak() {
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(8);
+        row.setStreakDays(3);
+        row.setLastCheckinDate(day(LocalDate.now()));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        PlayerGrowth change = writtenGrowth();
+        assertEquals(9, change.getTotalCheckins());
+        assertEquals(3, change.getStreakDays());
+        assertEquals(2, change.getLevel());
+    }
+
+    @Test
+    void yesterdayCheckinExtendsExistingStreak() {
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(LocalDate.now().minusDays(1)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        assertEquals(7, writtenGrowth().getStreakDays());
+        assertEquals(3, writtenGrowth().getLevel());
+    }
+
+    @Test
+    void interruptedCheckinResetsStreakUsingExistingLocalDateRule() {
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(LocalDate.now().minusDays(2)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        assertEquals(1, writtenGrowth().getStreakDays());
+    }
+
+    @Test
+    void topicUpdateWritesOnlyMileageAndKeepsDataDrivenBadges() {
+        PlayerGrowth row = growthRow(1L, 4);
+        row.setTotalCheckins(17);
+        row.setStreakDays(3);
+        row.setLastCheckinDate(day(LocalDate.now()));
+        row.setTotalMileage(new BigDecimal("9.75"));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+        CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setTotalMileage(new BigDecimal("1.25"));
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
+        when(defMapper.selectByCode("TOPIC_CLEAR"))
+                .thenReturn(def("TOPIC_CLEAR", "主题通关", "{\"threshold\":1}"));
+        when(defMapper.selectByCode("MILE_10"))
+                .thenReturn(def("MILE_10", "十公里", "{\"threshold\":10}"));
+
+        List<PlayerBadge> newly = svc.onTopicComplete(1L, 20L);
+
+        PlayerGrowth change = writtenGrowth();
+        assertEquals(new BigDecimal("11.00"), change.getTotalMileage());
+        assertNull(change.getTotalCheckins());
+        assertNull(change.getLevel());
+        assertNull(change.getStreakDays());
+        assertNull(change.getLastCheckinDate());
+        assertTrue(newly.stream().anyMatch(b -> "TOPIC_CLEAR".equals(b.getBadgeCode()) && b.getSourceId().equals(20L)));
+        assertTrue(newly.stream().anyMatch(b -> "MILE_10".equals(b.getBadgeCode())));
+    }
+
+    @Test
+    void existingTopicClearSkipsMileageAndBadgesAfterGrowthLock() {
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(growthRow(1L, 1));
+        when(badgeMapper.selectOne(1L, "TOPIC_CLEAR", 20L)).thenReturn(new PlayerBadge());
+
+        assertTrue(svc.onTopicComplete(1L, 20L).isEmpty());
+
+        org.mockito.InOrder order = inOrder(growthMapper, badgeMapper);
+        order.verify(growthMapper).ensureGrowthRow(eq(1L), any(Date.class));
+        order.verify(growthMapper).selectByMemberForUpdate(1L);
+        order.verify(badgeMapper).selectOne(1L, "TOPIC_CLEAR", 20L);
+        verify(growthMapper, never()).updatePlayerGrowth(any());
+        verifyNoInteractions(chapters, defMapper);
+        verify(badgeMapper, never()).insertPlayerBadge(any());
+    }
+
+    @Test
+    void missingTopicClearDefinitionDoesNotInventIdempotencyMarker() {
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(growthRow(1L, 1));
+        CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setTotalMileage(BigDecimal.ONE);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
+
+        assertTrue(svc.onTopicComplete(1L, 20L).isEmpty());
+
+        assertEquals(BigDecimal.ONE, writtenGrowth().getTotalMileage());
+        verify(badgeMapper, never()).insertPlayerBadge(any());
+    }
+
+    @Test
+    void failedCurrentReadDoesNotReturnAnUnpersistedGrowthRow() {
+        assertThrows(IllegalStateException.class, () -> svc.onNodeDone(1L));
+        verify(growthMapper, never()).updatePlayerGrowth(any());
+        verifyNoInteractions(badgeMapper);
+    }
+
+    @Test
+    void getGrowthRemainsAnOrdinaryReadWithoutCreatingRows() {
+        PlayerGrowth row = svc.getGrowth(1L);
+        assertEquals(1, row.getLevel());
+        assertEquals(0, row.getTotalCheckins());
+        assertEquals(BigDecimal.ZERO, row.getTotalMileage());
+        verify(growthMapper).selectByMember(1L);
+        verify(growthMapper, never()).ensureGrowthRow(anyLong(), any());
+        verify(growthMapper, never()).selectByMemberForUpdate(anyLong());
+    }
+
+    @Test
+    void midnightSampleKeepsStreakAndStoredCheckinDateOnTheSameDay() {
+        LocalDate checkinDay = LocalDate.of(2030, 1, 15);
+        Date beforeMidnight = Date.from(checkinDay.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        Date afterMidnight = day(checkinDay.plusDays(1));
+        TimedProgressionService timed = useCheckinTimes(beforeMidnight, afterMidnight);
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(checkinDay.minusDays(1)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+
+        svc.onNodeDone(1L);
+
+        PlayerGrowth change = writtenGrowth();
+        assertEquals(7, change.getStreakDays());
+        assertEquals(beforeMidnight, change.getLastCheckinDate(), "打卡日期必须与用于计算连续天数的日期一致");
+        assertEquals(beforeMidnight, change.getUpdateTime());
+        assertEquals(10, change.getTotalCheckins());
+        assertEquals(3, change.getLevel());
+        assertEquals(1, timed.samplesTaken, "同一次打卡不应在午夜后再次取时");
+    }
+
+    @Test
+    void checkinsAcrossMidnightExtendStreakOnBothConsecutiveDays() {
+        LocalDate checkinDay = LocalDate.of(2030, 1, 15);
+        Date beforeMidnight = Date.from(checkinDay.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        Date afterMidnight = day(checkinDay.plusDays(1));
+        TimedProgressionService timed = useCheckinTimes(beforeMidnight, afterMidnight);
+        PlayerGrowth row = growthRow(1L, 2);
+        row.setTotalCheckins(9);
+        row.setStreakDays(6);
+        row.setLastCheckinDate(day(checkinDay.minusDays(1)));
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(row);
+        doAnswer(call -> {
+            PlayerGrowth change = call.getArgument(0);
+            row.setTotalCheckins(change.getTotalCheckins());
+            row.setStreakDays(change.getStreakDays());
+            row.setLastCheckinDate(change.getLastCheckinDate());
+            row.setLevel(change.getLevel());
+            row.setUpdateTime(change.getUpdateTime());
+            return 1;
+        }).when(growthMapper).updatePlayerGrowth(any(PlayerGrowth.class));
+
+        svc.onNodeDone(1L);
+        assertEquals(7, row.getStreakDays());
+        assertEquals(beforeMidnight, row.getLastCheckinDate());
+
+        svc.onNodeDone(1L);
+
+        assertEquals(8, row.getStreakDays(), "午夜后的有效打卡应延续一天,不能误判为前次同日");
+        assertEquals(afterMidnight, row.getLastCheckinDate());
+        assertEquals(afterMidnight, row.getUpdateTime());
+        assertEquals(11, row.getTotalCheckins(), "两次有效调用均计次");
+        assertEquals(3, row.getLevel());
+        assertEquals(2, timed.samplesTaken);
+        verify(growthMapper, times(2)).updatePlayerGrowth(any(PlayerGrowth.class));
+    }
+
+    private TimedProgressionService useCheckinTimes(Date... samples) {
+        TimedProgressionService timed = new TimedProgressionService(samples);
+        ReflectionTestUtils.setField(timed, "playerGrowthMapper", growthMapper);
+        ReflectionTestUtils.setField(timed, "playerBadgeMapper", badgeMapper);
+        ReflectionTestUtils.setField(timed, "growthBadgeMapper", defMapper);
+        ReflectionTestUtils.setField(timed, "cmsTopicChapterService", chapters);
+        ReflectionTestUtils.setField(timed, "ruleEvaluator", new RuleEvaluator());
+        svc = timed;
+        return timed;
+    }
+
+    private static class TimedProgressionService extends PlayerProgressionServiceImpl {
+        private final Date[] samples;
+        private int samplesTaken;
+
+        private TimedProgressionService(Date... samples) {
+            this.samples = samples;
+        }
+
+        @Override
+        protected Date currentCheckinTime() {
+            assertTrue(samplesTaken < samples.length, "没有为额外取时配置样本");
+            return samples[samplesTaken++];
+        }
+    }
+
+    private PlayerGrowth writtenGrowth() {
+        ArgumentCaptor<PlayerGrowth> changes = ArgumentCaptor.forClass(PlayerGrowth.class);
+        verify(growthMapper).updatePlayerGrowth(changes.capture());
+        return changes.getValue();
+    }
+
+    private Date day(LocalDate date) {
+        return Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 }

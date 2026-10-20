@@ -193,6 +193,9 @@ class ClubWaitlistPromotionMembershipRaceTransactionTest {
     private ClubEventOpsMapper dataBackedMapper() {
         ClubEventOpsMapper mapper = mock(ClubEventOpsMapper.class);
         when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(policy());
+        // This fixture fixes an open activity; its real H2 scope remains membership/offer transaction races.
+        when(mapper.selectPromotableActivityForUpdate(org.mockito.ArgumentMatchers.eq(ACTIVITY),
+                org.mockito.ArgumentMatchers.eq(CLUB), org.mockito.ArgumentMatchers.any(Date.class))).thenReturn(ACTIVITY);
         when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET)).thenAnswer(call -> {
             List<ClubWaitlistEntry> rows = jdbc.query(
                     "select id,club_id,activity_id,ticket_id,member_id,state,joined_at,"

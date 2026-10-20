@@ -117,6 +117,12 @@ class TopicJourneyStorySaveTest {
             ((CmsTopicChapter) invocation.getArgument(0)).setId(NEW_CHAPTER);
             return 1;
         }).when(chapterMapper).insertCmsTopicChapter(any(CmsTopicChapter.class));
+        // CORE OWN-C03-13：重建节点插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(9000L);
+        doAnswer(invocation -> {
+            ((com.chengyinhub.business.domain.CmsTopicNode) invocation.getArgument(0)).setId(nodeIds.incrementAndGet());
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any(com.chengyinhub.business.domain.CmsTopicNode.class));
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
     }
 

@@ -204,6 +204,8 @@ class FundIdempotencyConcurrencyTest {
         when(cooldownService.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
+        ReflectionTestUtils.setField(service, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {

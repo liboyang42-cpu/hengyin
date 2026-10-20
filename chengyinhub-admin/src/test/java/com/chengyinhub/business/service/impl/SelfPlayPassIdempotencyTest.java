@@ -197,7 +197,7 @@ class SelfPlayPassIdempotencyTest {
         member.setDelFlag(0);
         member.setPoint(0L);
         when(fixture.memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
-        when(fixture.registrationMapper.insertCmsRegistration(any(CmsRegistration.class))).thenReturn(1);
+        when(fixture.registrationMapper.insertCmsRegistration(any(CmsRegistration.class))).thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(9007L); return 1; });
 
         fixture.service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(fixture.service, "cmsRegistrationMapper", fixture.registrationMapper);
