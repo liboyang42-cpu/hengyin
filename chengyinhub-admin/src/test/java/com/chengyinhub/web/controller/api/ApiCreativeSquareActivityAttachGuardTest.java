@@ -55,6 +55,8 @@ class ApiCreativeSquareActivityAttachGuardTest {
         ReflectionTestUtils.setField(controller, "umsCreativeSquareService", squareService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", mock(IWxContentSecurityService.class));
+        // 生产默认 legacy-writes-enabled=true;不打开的话发帖路径会先被旧入口闸(426)短路,挂活动闸根本走不到。
+        ReflectionTestUtils.setField(controller, "legacyCommunityWritesEnabled", true);
     }
 
     @Test
@@ -102,6 +104,7 @@ class ApiCreativeSquareActivityAttachGuardTest {
                 String.valueOf(ACTIVITY), "1", null);
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("只能关联自己主办或报名过的活动", result.get(AjaxResult.MSG_TAG));
         verify(squareService, never()).insertUmsCreativeSquare(any(UmsCreativeSquare.class));
         verify(squareService, never()).updateUmsCreativeSquare(any(UmsCreativeSquare.class));
     }
