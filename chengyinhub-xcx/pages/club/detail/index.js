@@ -1051,14 +1051,14 @@ Page({
     }
     if (!tools.length) return;
     if (tools.length === 1) {
-      wx.navigateTo({ url: tools[0].route });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: tools[0].route, complete: () => { this._navigating = false; } });
       return;
     }
     this.openChoiceSheet(
       '本场工具',
       '',
       tools.map(function (item) { return { key: item.route, label: item.label }; }),
-      function (item) { wx.navigateTo({ url: item.key }); }
+      (item) => { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: item.key, complete: () => { this._navigating = false; } }); }
     );
   },
 
@@ -2511,19 +2511,19 @@ Page({
     const index = e.detail && e.detail.index;
     const post = this.data.posts[index];
     if (!post || !post.sportTopicId) return this.onToggleComments(e);
-    wx.navigateTo({ url: '/pages/play/index?topicId=' + post.sportTopicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/play/index?topicId=' + post.sportTopicId, complete: () => { this._navigating = false; } });
   },
 
   onPostReference(e) {
     const index = e.detail && e.detail.index;
     const post = this.data.posts[index];
     if (!post || !post.sportTopicId) return this.onToggleComments(e);
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + post.sportTopicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + post.sportTopicId, complete: () => { this._navigating = false; } });
   },
 
   onPostUser(e) {
     const memberId = e.detail && e.detail.memberId;
-    if (memberId) wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId });
+    if (!memberId || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { this._navigating = false; } });
   },
 
   // 评论治理:删除(作者/群主/管理员)+ 举报
@@ -2595,8 +2595,8 @@ Page({
     const club = this.data.club;
     const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
     const enabled = dataset.gameModuleEnabled === true || dataset.gameModuleEnabled === 'true';
-    if (!club || !this.canGovern(club) || !dataset.topicId || !enabled) return;
-    const that = this;
+    if (!club || !this.canGovern(club) || !dataset.topicId || !enabled || this._directorLoading) return;
+    const that = this; this._directorLoading = true;
     app.sendRequest({
       url: '/api/topic/info-to-user',
       method: 'POST',
@@ -2616,7 +2616,7 @@ Page({
         that._directorTopicId = dataset.topicId;
         that.setData({ directorActivityPickerShow: true, directorActivityOptions: activities });
       },
-      fail() { cyToast('网络异常，请稍后重试'); },
+      fail() { cyToast('网络异常，请稍后重试'); }, complete() { that._directorLoading = false; },
     });
   },
 
@@ -2626,12 +2626,12 @@ Page({
   // /api/topic/info-to-user 本来就是按主题问的,调用点手里一直有它,只是以前没往下传。
   navigateGameDirectorActivity(activityId, topicId) {
     const club = this.data.club;
-    if (!club || !this.canGovern(club) || !activityId) return;
-    const clubId = club.id || this.data.clubId;
+    if (!club || !this.canGovern(club) || !activityId || this._navigating) return;
+    const clubId = club.id || this.data.clubId; this._navigating = true;
     wx.navigateTo({
       url: '/pages/club/topic-detail/index?topicId=' + encodeURIComponent(topicId || '')
         + '&clubId=' + encodeURIComponent(clubId || '')
-        + '&activityId=' + encodeURIComponent(activityId),
+        + '&activityId=' + encodeURIComponent(activityId), complete: () => { this._navigating = false; },
     });
   },
 
