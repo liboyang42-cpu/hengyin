@@ -1484,7 +1484,7 @@ Component({
       if (app.tips) app.tips('用户不存在');
       return;
     }
-    community.request({
+    if (that._navigating) return; that._navigating = true; community.request({ // 请求在途/跳转中不响应连点
       url: '/api/im/start',
       method: 'POST',
       hideLoading: true,
@@ -1495,15 +1495,15 @@ Component({
           wx.navigateTo({
             url: '/subpackageB/pages/im/chat/index?conversationId=' + res.data.conversationId +
               '&name=' + encodeURIComponent(ui.nickname || '') +
-              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1'
+              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1', complete: function () { that._navigating = false; }
           });
           return;
         }
-        if (app.tips) app.tips((res && res.msg) || '无法发起会话');
+        that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话');
       },
       fail: function () {
-        if (app.tips) app.tips('网络异常，请重试');
-      }
+        that._navigating = false; if (app.tips) app.tips('网络异常，请重试');
+      }, successStatusAbnormal: function (res) { that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话'); }
     });
   },
 
@@ -1964,8 +1964,8 @@ Component({
   // 的通用表单,只有昵称+邮箱,pages/gerenziliao 那 390 行的头像/介绍/标签全没了。
   // 2026-08-20 用户定:商家视角个人资料与店铺装修合并,编辑头像/资料一律进店铺装修。
   goUserInfo: function () {
-    if (this.data.isMerchantView) { wx.navigateTo({ url: '/pages/merchant/decor/index' }); return; }
-    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
+    if (this.data.isMerchantView) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); return; }
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
