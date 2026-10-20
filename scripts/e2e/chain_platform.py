@@ -71,6 +71,10 @@ def main():
     chapters = [{"name": "第%d章 %s" % (i + 1, n),
                  "description": "本章一店(%s):进店按规则完成一次到店体验" % n,
                  "schemaVersion": 1, "required": 1,
+                 # #299(owner 2026-10-20):探店日章节建期即开放商家承接(同发布向导的章节招商开关)，
+                 # 站点玩法由入驻商家提供，因此零玩法也能提交上架；条款与 chain_merchant_club 后台复设同值。
+                 "recruitEnabled": 1, "categoryId": 4001, "termsMode": "PERK", "perkMinValue": 30,
+                 "maxMerchant": 1, "allowedValidationMethods": "QR", "maxNodeXp": 50,
                  "blocks": [
                      {"type": "text", "content": "本章一店(%s):进店按规则完成一次到店体验" % n},
                      {"type": "node", "nodeIndex": 0}],
