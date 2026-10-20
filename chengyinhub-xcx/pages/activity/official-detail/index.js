@@ -440,7 +440,7 @@ Page({
     const binding = mission && mission.binding;
     const topicId = binding && binding.bindingType === 'THEME' ? Number(binding.sourceRefId) : 0;
     if (!Number.isSafeInteger(topicId) || topicId <= 0) return false;
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId });
+    if (this._navigating) return true; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId, complete: () => { this._navigating = false; } });
     return true;
   },
 
