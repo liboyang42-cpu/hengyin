@@ -461,6 +461,32 @@ class AuditAppealRevertContentTest {
         verify(tasks, never()).revertAuditTaskDecisionCas(any(), any(), any(), any(), any());
     }
 
+    /**
+     * AUDIT-INT-2(#383 × #384):举报单裁决的是「已公开内容是否违规」,不是作者提交的待审版本。
+     * reopenContent 一律写回 0/0/0 待审,而举报单「不成立」走 applyModeration 早退不动内容
+     * ⇒ 撤销后再判一次,在架主题就永久停在 status=0。举报单(含内容安全复核上架单)不开放撤销。
+     */
+    @Test
+    void reportDecisionsAreNotRevertable() {
+        for (Integer status : Arrays.asList(AuditTask.STATUS_APPROVED, AuditTask.STATUS_REJECTED)) {
+            for (String source : Arrays.asList("report", "content_safety_relist")) {
+                AuditTask task = task(REJECTED_TASK, status, source);
+                task.setBizType(AuditTask.BIZ_TOPIC);
+                revertable(task, AuditTask.STATUS_APPROVED.equals(status)
+                        ? AuditRecord.ACTION_APPROVE : AuditRecord.ACTION_REJECT, 60L);
+                when(activities.selectActiveActivityIdsByTopicId(BIZ_ID)).thenReturn(Collections.emptyList());
+                when(topics.reopenAuditDecision(any(), any(), any(), any())).thenReturn(1);
+
+                ServiceException error = assertThrows(ServiceException.class,
+                        () -> service.revert(REJECTED_TASK, REVIEWER, true, revertRequest()), source + "/" + status);
+
+                assertEquals(AuditTaskServiceImpl.ERROR_REVERT_TYPE, error.getDetailMessage(), source + "/" + status);
+            }
+        }
+        verify(topics, never()).reopenAuditDecision(any(), any(), any(), any());
+        verify(tasks, never()).revertAuditTaskDecisionCas(any(), any(), any(), any(), any());
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test
