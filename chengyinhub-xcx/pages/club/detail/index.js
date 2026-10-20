@@ -559,6 +559,8 @@ Page({
     clubStatsError: '',
     detailLoaded: false,
     notFound: false,
+    // SC-CL-SHARE:服务端明确拒绝(不存在/已解散/仅成员可见)时的原因;非空 = 显式失效态 + 返回,不再与网络失败同落 notFound 留白
+    clubGoneText: '',
     // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍留白(notFound)
     loginRequired: false,
     // E-09(2026-09-16):三处「失败渲染成空」的状态位。有错误文案 = 显示错误态+重试,不显示空态。
@@ -1962,7 +1964,8 @@ Page({
           canSeeMembers: canSee,
           canUseManageTab: immediateCanUseManageTab,
           detailLoaded: true,
-          notFound: !club,
+          notFound: false,
+          clubGoneText: club ? '' : ((String(res && res.code) !== '200' && res && res.msg) || '俱乐部不存在或已解散'),
           loginRequired: false,
           activeTab: initialTab,
           clubTabs: that.tabsForClub(club, immediateCanUseManageTab),

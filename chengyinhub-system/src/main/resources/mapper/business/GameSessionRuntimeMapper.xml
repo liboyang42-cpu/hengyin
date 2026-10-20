@@ -772,6 +772,13 @@
            and owner_id=#{ownerId} limit 1
     </select>
 
+    <select id="selectStoryStateForUpdate" resultMap="GameStoryResult" useCache="false" flushCache="true">
+        select id, game_session_id, owner_type, owner_id, variables_json, applied_choices_json,
+               ending_code, status, revision, create_time, update_time
+          from game_story_state where game_session_id=#{sessionId} and owner_type=#{ownerType}
+           and owner_id=#{ownerId} limit 1 for update
+    </select>
+
     <insert id="insertStoryState" parameterType="com.chengyinhub.business.domain.GameStoryState"
             useGeneratedKeys="true" keyProperty="id">
         insert ignore into game_story_state
@@ -821,6 +828,11 @@
         update game_command_receipt set game_session_id=#{gameSessionId}, outcome=#{outcome},
                reason_code=#{reasonCode}, revision=#{revision}, result_json=#{resultJson}, update_time=#{updateTime}
          where id=#{id} and outcome='PENDING' and request_hash=#{requestHash}
+    </update>
+
+    <update id="updateAppliedReceiptResult" parameterType="com.chengyinhub.business.domain.GameCommandReceipt">
+        update game_command_receipt set result_json=#{resultJson}, update_time=#{updateTime}
+         where id=#{id} and outcome='APPLIED' and request_hash=#{requestHash}
     </update>
 
     <insert id="insertSubmission" parameterType="com.chengyinhub.business.domain.GameTaskSubmission"
@@ -957,6 +969,17 @@
         select id, broadcast_id, member_id, status, message_id, error_code, create_time, update_time
           from game_broadcast_delivery where broadcast_id=#{broadcastId} and status='PENDING' order by id
     </select>
+
+    <select id="selectBroadcast" resultMap="GameBroadcastResult">
+        select id, game_session_id, activity_id, sender_member_id, target_type, target_id,
+               role_code, content, status, create_time, update_time
+          from game_broadcast where id=#{id}
+    </select>
+
+    <update id="resetFailedDeliveries">
+        update game_broadcast_delivery set status='PENDING', error_code=null, update_time=#{now}
+         where broadcast_id=#{broadcastId} and status='FAILED'
+    </update>
 
     <update id="markDelivery">
         update game_broadcast_delivery set status=#{status}, message_id=#{messageId}, error_code=#{errorCode},

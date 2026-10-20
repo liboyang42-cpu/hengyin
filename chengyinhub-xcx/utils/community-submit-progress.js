@@ -7,6 +7,16 @@ module.exports = async function submitProgress(env) {
   const { wxApi, task, call, modal, requestId, uploads } = env;
   const owner = task.owner, scope = 'square:wire:' + (env.options.intentScope || (env.form.id ? 'edit:' + env.form.id : 'create'));
   const input = clone(env.form); delete input.request_id;
+  const selectedMediaIds = form => {
+    const post = env.previousPost, selected = {};
+    if (!form.id || !post || String(post.id) !== String(form.id) || String(post.memberId) !== owner || !Array.isArray(post.media)) return selected;
+    for (const path of String(form.pics || '').split(';').filter(Boolean)) {
+      const matches = post.media.filter(m => m.url === path && /^[1-9][0-9]*$/.test(String(m.id)));
+      if (matches.length > 1) throw { code: 409, msg: '图片身份无法唯一确认，请刷新后重试' };
+      if (matches.length === 1) selected[path] = matches[0].id;
+    }
+    return selected;
+  };
   let ctx, freshPartial = false, wasUnknown = false, unknownPhase = null, failedWritePhase = null, attemptWrote = false;
   const check = () => {
     if (task.aborted || !task.isCurrent()) throw { code: 499, msg: '操作已取消' };
@@ -75,7 +85,7 @@ module.exports = async function submitProgress(env) {
         check();
         const captures = Object.assign({}, ctx.captures);
         for (const path of String(input.pics || '').split(';').filter(Boolean)) if (uploads[path]) captures[path] = clone(uploads[path]);
-        save({ input: ctx.draftId ? Object.assign({}, input, { id: ctx.draftId }) : input, captures,
+        save({ input: ctx.draftId ? Object.assign({}, input, { id: ctx.draftId }) : input, captures, mediaSelections: selectedMediaIds(input),
           createBody: null, patchBody: null, beforeEffect: null, publishBody: null, guideline: null, acked: false,
           retryPublishAfterEdit: !!ctx.draftId, createWasSent: !!ctx.draftId, status: 'prepared', writePhase: null, rejectionCode: null });
       } else if (JSON.stringify(comparisonInput) !== JSON.stringify(input)) {
@@ -91,7 +101,7 @@ module.exports = async function submitProgress(env) {
       for (const path of String(input.pics || '').split(';').filter(Boolean)) {
         if (uploads[path]) captures[path] = clone(uploads[path]);
       }
-      save({ input, captures, registrations: {}, wireKey: env.form.request_id || ctx.key, createdAsNew: !input.id, status: 'prepared' });
+      save({ input, captures, registrations: {}, mediaSelections: selectedMediaIds(input), wireKey: env.form.request_id || ctx.key, createdAsNew: !input.id, status: 'prepared' });
       freshPartial = false;
     }
     const form = ctx.input;
@@ -124,12 +134,15 @@ module.exports = async function submitProgress(env) {
       const paths = form.pics === undefined && previous ? null : String(form.pics || '').split(';').filter(Boolean);
       if (paths === null) previous.media.forEach(m => mediaIds.push(m.id));
       else for (const path of paths) {
-        const existing = previous && previous.media.find(m => (field(m, 'derivedObjectKey', 'derived_object_key') || field(m, 'objectKey', 'object_key')) === path);
+        const selectedId = ctx.mediaSelections && ctx.mediaSelections[path];
+        const existing = previous && previous.media.find(m => selectedId !== undefined ? String(m.id) === String(selectedId)
+          : (field(m, 'derivedObjectKey', 'derived_object_key') || field(m, 'objectKey', 'object_key')) === path);
         if (existing) { mediaIds.push(existing.id); continue; }
+        if (selectedId !== undefined) throw { code: 409, msg: '原图片已变化，未重新绑定，请刷新后核对' };
         if (!ctx.registrations[path]) {
           const receipt = ctx.captures[path];
           if (!receipt) throw { code: 409, msg: '图片上传状态无法确认，请先到我的推文查看发布结果，再重新选择图片' };
-          const media = await write('media', '/media/register', 'POST', { uploadRequestId: receipt.uploadRequestId, mediaType: 'IMAGE', objectKey: receipt.url,
+          const media = await write('media', '/media/register', 'POST', { uploadRequestId: receipt.uploadRequestId, mediaType: 'IMAGE', objectKey: receipt.objectKey || receipt.url,
             uploadReceipt: receipt.uploadReceipt, mimeType: receipt.mimeType, byteSize: receipt.byteSize }, task);
           if (!media || !media.id) throw { code: 502, msg: '媒体登记未确认' };
           save({ registrations: Object.assign({}, ctx.registrations, { [path]: media.id }), status: 'prepared', writePhase: null });

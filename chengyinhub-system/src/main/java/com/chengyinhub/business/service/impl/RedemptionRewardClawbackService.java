@@ -150,8 +150,9 @@ public class RedemptionRewardClawbackService {
             throw new IllegalStateException("积分发放行冲回标记失败 id=" + grant.getId());
         }
         long requested = grant.getChangePoints();
-        com.chengyinhub.business.domain.UmsMember member = umsMemberMapper.selectUmsMemberById(memberId);
-        long before = member == null || member.getPoint() == null ? 0L : Math.max(0L, member.getPoint());
+        // 外层撤销可能已建立RR快照；持会员锁后仍须当前读，不能用普通读记旧余额流水。
+        Long currentPoints = umsMemberMapper.selectPointsForUpdate(memberId);
+        long before = currentPoints == null ? 0L : Math.max(0L, currentPoints);
         long deducted = Math.min(requested, before);
         if (deducted > 0 && umsMemberMapper.deductPoints(memberId, (int) deducted) != 1) {
             throw new IllegalStateException("冲回积分扣减失败 memberId=" + memberId);
@@ -266,10 +267,17 @@ public class RedemptionRewardClawbackService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("couponId", couponId);
         Long historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
-        SmsCouponHistory history = historyId == null ? null
-                : smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
-        if (history == null) {
-            out.put("result", "NOT_FOUND");
+        if (historyId == null || historyId <= 0) {
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+            return out;
+        }
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
+        if (history == null || !historyId.equals(history.getId()) || !memberId.equals(history.getMemberId())
+                || !couponId.equals(history.getCouponId())
+                || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
+            // 原身份缺失时仅审计，不猜其他券，不删除原日志或写券补发标记。
+            // 返回结果而非异常，让其他已授权积分/经验冲正沿原事务继续。
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
             return out;
         }
         out.put("historyId", history.getId());

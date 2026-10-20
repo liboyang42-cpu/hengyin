@@ -151,6 +151,11 @@ class CopyTopicCopyTypeNpeTest {
         node.setTemplateId(77L);   // ←「游戏」:节点挂的 CmsMemberTemplate
         node.setXpValue(50);       // ← M7 停靠节点探索值
         when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        // CORE OWN-C03-13：复制写入节点后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        doAnswer(inv -> {
+            ((CmsTopicNode) inv.getArgument(0)).setId(41L);
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
 
         Map<String, Object> params = new HashMap<>();
         params.put("memberId", MEMBER);

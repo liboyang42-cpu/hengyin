@@ -64,6 +64,11 @@ class CmsTopicPublishDraftTest {
         cmsMemberTemplateMapper = mock(CmsMemberTemplateMapper.class);
         themeStateKeyMapper = mock(ThemeStateKeyMapper.class);
         cmsActivityMapper = mock(CmsActivityMapper.class);
+        // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        org.mockito.Mockito.lenient().when(cmsActivityMapper.insertCmsActivity(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> {
+            ((com.chengyinhub.business.domain.CmsActivity) inv.getArgument(0)).setId(880001L);
+            return 1;
+        });
         topicBundleReviewService = mock(TopicBundleReviewService.class);
         topicCommercialReviewService = mock(ITopicCommercialReviewService.class);
         svc = new CmsTopicServiceImpl();

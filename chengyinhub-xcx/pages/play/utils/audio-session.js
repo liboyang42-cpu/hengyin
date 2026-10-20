@@ -10,7 +10,9 @@ function createAudioSession(wxApi) {
   const entries = new Map();   // ctx -> { kind, wasPlaying, interrupted }
   const awake = new Set();
   let hooked = false;
-  let keepOn = false;
+  let desiredKeepOn = false;
+  let confirmedKeepOn = false;
+  let keepRequest = null;
 
   const isPlaying = (ctx) => ctx.paused === false;
 
@@ -42,6 +44,9 @@ function createAudioSession(wxApi) {
 
   function register(ctx, opts) {
     if (!ctx) return ctx;
+    // Registering the same live context is idempotent. Only unregister ends
+    // its identity; duplicate registration must retain pending resume state.
+    if (entries.has(ctx)) return ctx;
     hook();
     entries.set(ctx, { kind: (opts && opts.kind) || 'audio', wasPlaying: false, interrupted: false });
     return ctx;
@@ -51,10 +56,25 @@ function createAudioSession(wxApi) {
   function resumeAll() { entries.forEach((ent, ctx) => { if (ent.wasPlaying) resumeEntry(ctx, ent); }); }
 
   function apply(on) {
-    if (on === keepOn) return;
+    desiredKeepOn = on;
     if (typeof api.setKeepScreenOn !== 'function') return;
-    keepOn = on;
-    try { api.setKeepScreenOn({ keepScreenOn: on, fail() {} }); } catch (e) {}
+    if (keepRequest && keepRequest.on === desiredKeepOn) return;
+    if (!keepRequest && confirmedKeepOn === desiredKeepOn) return;
+    // An opposite request supersedes the old one immediately: releasing the
+    // final owner must still request off while an earlier on is pending.
+    const request = { on: desiredKeepOn };
+    keepRequest = request;
+    const finish = (ok) => {
+      if (keepRequest !== request) return;
+      keepRequest = null;
+      // Failure leaves the platform state unknown. A later owner operation
+      // may retry; this callback never starts an automatic retry loop.
+      confirmedKeepOn = ok ? request.on : null;
+    };
+    try {
+      api.setKeepScreenOn({ keepScreenOn: request.on,
+        success() { finish(true); }, fail() { finish(false); } });
+    } catch (e) { finish(false); }
   }
   function keepAwake(owner, on) {
     if (owner == null) return;

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.service.support.TopicRouteSessionScope;
 
 import com.chengyinhub.business.domain.CmsActivity;
@@ -263,11 +264,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId,
                                           Integer expectedVersion) {
         Scope scope = requireScope(memberId, topicId, activityId,true);
-        TopicRouteSession session = routeMapper.selectByOwner(scope.activityId, topicId, memberId, DEFAULT_INSTANCE);
+        TopicRouteSession session = currentSession(memberId, topicId, scope.activityId);
         JsonNode opening = openingSnapshot(session);
         if (opening == null || chapterId == null || chapterId != opening.path("chapterId").asLong()) {
             throw new IllegalArgumentException("开局流程不匹配");
@@ -792,6 +794,19 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 return false;
             }
         }
+        if (TopicRouteState.LINEAR.equals(mode) && journeySession != null) {
+            Map<Long, String> frozen = readEngineState(journeySession.getStateJson()).getNodeStates();
+            if (frozen != null && !frozen.isEmpty()) {
+                boolean belongs = false;
+                for (CmsTopicNode node : linearSessionNodes(journeySession, nodes)) {
+                    if (nodeId.equals(node.getId())) { belongs = true; break; }
+                    if (!completed.contains(node.getId())) return false;
+                }
+                if (!belongs) return false;
+                Long prerequisite = requested.getUnlockAfterNodeId();
+                return prerequisite == null || prerequisite <= 0 || completed.contains(prerequisite);
+            }
+        }
         return accessPolicy.evaluate(mode, requested, nodes, completed, routeState).isAllowed();
     }
 
@@ -1016,7 +1031,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(readOnly = true)
     public Map<String, Integer> vitals(Long memberId, Long topicId, Long activityId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return null;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return null;
         final TopicRouteEngine.State state;
         try {
@@ -1032,7 +1047,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public boolean conditionsPass(Long memberId, Long topicId, Long activityId, JsonNode conditions) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || conditions == null || !conditions.isArray() || conditions.size() == 0) return false;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return false;
         try {
             return engine.conditionsPass(conditions, readEngineState(session.getStateJson()));
@@ -1045,7 +1060,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(readOnly = true)
     public java.util.Set<String> tags(Long memberId, Long topicId, Long activityId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return java.util.Collections.emptySet();
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return java.util.Collections.emptySet();
         try {
             return new java.util.LinkedHashSet<String>(readEngineState(session.getStateJson()).getTags());
@@ -1084,6 +1099,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的数值规则:冻结快照优先;老局快照没有该键时才查实时主题列。 */
     private JourneyRules sessionRules(TopicRouteSession session) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.JOURNEY_RULES_KEY)
+                && snapshot.get(NodeJourneySnapshot.JOURNEY_RULES_KEY).isNull()) {
+            throw new IllegalStateException("旅程数值规则不可用");
+        }
         String frozen = NodeJourneySnapshot.journeyRules(
                 session == null ? null : session.getConfigSnapshotJson());
         if (frozen != null) return JourneyRules.parse(frozen);
@@ -1118,7 +1142,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 || nodeId == null || nodeId <= 0L) {
             return null;
         }
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null || !memberId.equals(session.getMemberId())) return null;
         return NodeJourneySnapshot.answer(session.getConfigSnapshotJson(), nodeId);
     }
@@ -1798,11 +1822,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         } catch (IllegalArgumentException unusableRules) {
             throw new IllegalStateException("旅程数值规则不可用", unusableRules);
         }
-        String story = topic == null ? null : topic.getJourneyStoryJson();
+        ObjectNode themeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(
+                topic.getPublishedThemeRuntimeConfigJson());
+        ObjectNode selectedTheme = themeConfig == null ? null
+                : com.chengyinhub.business.service.support.ThemeRuntimeConfig.freeze(themeConfig, sceneIndex, clock.millis());
+        String story = selectedTheme != null && selectedTheme.has("journeyStory")
+                ? selectedTheme.get("journeyStory").toString() : topic.getJourneyStoryJson();
         root.put(NodeJourneySnapshot.JOURNEY_STORY_KEY, story == null ? "" : story.trim());
         root.put("topicCompleteRule", topic == null ? null : topic.getCompleteRuleJson());
         Long openingId = JourneyStory.openingChapterId(story);
-        freezeThoughtChapters(root, topic, liveNodes, openingId);
+        freezeThoughtChapters(root, topic, liveNodes, openingId, story);
         if (openingId != null) {
             CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
             List<CmsTopicChapter> chapters = cmsTopicChapterMapper == null ? null
@@ -1820,9 +1849,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             frozen.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(opening, liveNodes)));
         }
         freezeNodeAnswers(root.putObject(NodeJourneySnapshot.NODE_ANSWERS_KEY), liveNodes, templatesById);
-        com.fasterxml.jackson.databind.node.ObjectNode themeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(topic.getPublishedThemeRuntimeConfigJson());
-        if (themeConfig != null) {
-            ObjectNode frozen = com.chengyinhub.business.service.support.ThemeRuntimeConfig.freeze(themeConfig, sceneIndex, clock.millis());
+        if (selectedTheme != null) {
+            ObjectNode frozen = selectedTheme;
             for(JsonNode ch:frozen.path("chapters")) {
                 int index=ch.path("index").asInt();JsonNode binding=JSON.createObjectNode().path("missing");
                 for(JsonNode candidate:root.path("thoughtChapters"))if(candidate.path("authorIndex").asInt(-1)==index)binding=candidate;
@@ -1832,7 +1860,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             ArrayNode legacy=frozen.putArray("legacyMedals");
             if(topic.getFinishMedalImg()!=null && !topic.getFinishMedalImg().trim().isEmpty()){ObjectNode medal=legacy.addObject();medal.put("id","legacy_finish");medal.put("kind","MEDAL");medal.put("name",topic.getFinishMedalName()==null?"通关勋章":topic.getFinishMedalName());medal.put("image",topic.getFinishMedalImg());medal.put("legacySource","FINISH");}
             for(CmsTopicNode node:liveNodes){CmsMemberTemplate tpl=templatesById.get(node.getTemplateId());if(tpl==null || tpl.getMedalImg()==null || tpl.getMedalImg().trim().isEmpty())continue;ObjectNode medal=legacy.addObject();medal.put("id","legacy_node_"+node.getId());medal.put("kind","MEDAL");medal.put("name",tpl.getMedalName()==null?"节点奖牌":tpl.getMedalName());medal.put("image",tpl.getMedalImg());medal.put("legacySource","NODE_RANK");medal.put("nodeId",node.getId());}
-            if (frozen.has("journeyStory")) root.put(NodeJourneySnapshot.JOURNEY_STORY_KEY, frozen.get("journeyStory").toString());
             root.set("themeConfig", frozen);applySceneNodes(root,frozen);
             root.set("themeConfig",mergeFrozenTemplateRules(root,frozen,templateIds,finalChapter(topic,runtimeChapters(topic.getId()))));
             freezeClueContent(root,liveNodes,templatesById);
@@ -1890,7 +1917,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 : GameplayTemplateRules.merge(definition,declarations,acts,templateIds,story,finalChapter);
     }
 
-    private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId) {
+    private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId,
+                                      String effectiveStory) {
         com.fasterxml.jackson.databind.node.ArrayNode frozen = root.putArray("thoughtChapters");
         // 独立保留结局正文；不加入玩家推进章节列表，读侧仅投影已选结局。
         ObjectNode endingChapters = root.putObject("endingChapters");
@@ -1901,7 +1929,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(rows);
         chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId, Comparator.nullsLast(Long::compareTo))
                 .thenComparing(CmsTopicChapter::getId, Comparator.nullsLast(Long::compareTo)));
-        Set<Long> endingIds = JourneyStory.endingChapterIds(topic.getJourneyStoryJson());
+        Set<Long> endingIds = new LinkedHashSet<Long>(JourneyStory.endingChapterIds(topic.getJourneyStoryJson()));
+        endingIds.addAll(JourneyStory.endingChapterIds(effectiveStory));
         Set<Long> requiredBefore = new LinkedHashSet<Long>();
         int authorIndex=-1;
         for (CmsTopicChapter chapter : chapters) {
@@ -1998,6 +2027,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的数值规则:优先读建局冻结值;老局快照没有该键时回退实时主题配置。 */
     private JourneyRules journeyRules(TopicRouteSession session, CmsTopic topic) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.JOURNEY_RULES_KEY)
+                && snapshot.get(NodeJourneySnapshot.JOURNEY_RULES_KEY).isNull()) {
+            throw new IllegalStateException("旅程数值规则不可用");
+        }
         String frozen = NodeJourneySnapshot.journeyRules(
                 session == null ? null : session.getConfigSnapshotJson());
         return frozen == null ? journeyRules(topic) : JourneyRules.parse(frozen);
@@ -2132,6 +2170,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                     : toLinearView(session, scope, liveNodes), session);
         }
         List<CmsTopicNode> liveNodes = nodes(scope.topic.getId());
+        if (!branchOpening) liveNodes = linearSessionNodes(session, liveNodes);
         Set<Long> liveNodeIds = new LinkedHashSet<Long>();
         for (CmsTopicNode liveNode : liveNodes) liveNodeIds.add(liveNode.getId());
         if (!liveNodeIds.contains(outcome.getNodeId())) throw new IllegalStateException("节点当前不可用");
@@ -2144,6 +2183,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         JsonNode blockConfig = nodeBlockConfig(session, completedNode);
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
+        if (!branchOpening && (state.getNodeStates() == null || state.getNodeStates().isEmpty())) {
+            Map<Long, String> fallbackStates = new LinkedHashMap<Long, String>();
+            for (CmsTopicNode node : liveNodes) {
+                String status = state.getCompletedNodeIds().contains(node.getId()) ? TopicRouteState.COMPLETED
+                        : node.getId().equals(state.getCurrentNodeId()) ? TopicRouteState.PLAYABLE
+                        : TopicRouteState.DISCOVERED_LOCKED;
+                fallbackStates.put(node.getId(), status);
+            }
+            state.setNodeStates(fallbackStates);
+        }
         JsonNode requires = blockConfig == null ? null : blockConfig.get("requires");
         if (requires != null && requires.isArray() && requires.size() > 0
                 && !engine.conditionsPass(requires, state)) {
@@ -2183,7 +2232,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         syncTheme(session, state, "node:" + routeActionId, JourneyStatLinks.Reason.TEMPLATE_EFFECT);
         themeEngine.signal(themeConfig(session), state, rules, "NODE", outcome.getNodeId(), "", "", 0, "node:" + outcome.getNodeId());
-        session.setStateJson(writeSettled(session, state));
+        String settledState = writeSettled(session, state);
+        if (!branchOpening && "ACTIVE".equals(state.getStatus()) && state.getCurrentNodeId() != null) {
+            state.getNodeStates().put(state.getCurrentNodeId(), TopicRouteState.PLAYABLE);
+            settledState = write(state);
+        }
+        session.setStateJson(settledState);
         session.setStatus(statusOf(state));
         keepOpeningRunning(session, state);
         session.setCurrentNodeId(state.getCurrentNodeId()); session.setRecommendedNodeId(state.getRecommendedNodeId());
@@ -2199,6 +2253,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new IllegalStateException("路线动作回执保存失败");
         }
         return view;
+    }
+
+    /** Existing linear state already records the initial node universe and insertion order. */
+    private List<CmsTopicNode> linearSessionNodes(TopicRouteSession session, List<CmsTopicNode> liveNodes) {
+        Map<Long, String> frozen = readEngineState(session.getStateJson()).getNodeStates();
+        if (frozen == null || frozen.isEmpty()) return liveNodes; // Pre-snapshot compatibility.
+        Map<Long, CmsTopicNode> available = new LinkedHashMap<Long, CmsTopicNode>();
+        for (CmsTopicNode node : liveNodes) available.put(node.getId(), node);
+        List<CmsTopicNode> ordered = new ArrayList<CmsTopicNode>();
+        for (Long id : frozen.keySet()) if (available.containsKey(id)) ordered.add(available.get(id));
+        return ordered;
     }
 
     private TopicRouteState linearState(Scope scope) {
@@ -2226,7 +2291,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 供 requires/effects 的幂等写入走同一套 CAS。
      */
     private TopicRouteState toLinearView(TopicRouteSession session, Scope scope, List<CmsTopicNode> liveNodes) {
-        TopicRouteState view = linearState(scope, liveNodes);
+        TopicRouteState view = linearState(scope, linearSessionNodes(session, liveNodes));
         if (themeConfig(session).isObject() || validator.readTree(session.getConfigSnapshotJson()).path("runtimeSnapshotVersion").asInt() == 1) {
             TopicRouteEngine.State stored = readEngineState(session.getStateJson());
             view.setStatus(stored.getStatus()); view.setCurrentNodeId(stored.getCurrentNodeId()); view.setRecommendedNodeId(stored.getRecommendedNodeId());
@@ -2295,6 +2360,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 本局适用的节点块配置:优先读建局冻结块;老局快照没有该键时回退实时模板配置。 */
     private JsonNode nodeBlockConfig(TopicRouteSession session, CmsTopicNode node) {
+        JsonNode snapshot = null;
+        if (session != null && session.getConfigSnapshotJson() != null) {
+            try { snapshot = JSON.readTree(session.getConfigSnapshotJson()); }
+            catch (Exception unusableSnapshot) { /* Preserve legacy whole-snapshot fallback. */ }
+        }
+        if (snapshot != null && snapshot.has(NodeJourneySnapshot.NODE_JOURNEY_KEY)) {
+            JsonNode blocks = snapshot.get(NodeJourneySnapshot.NODE_JOURNEY_KEY);
+            if (!blocks.isObject()) throw new IllegalStateException("节点玩法配置不可用");
+            JsonNode block = node == null || node.getId() == null ? null : blocks.get(String.valueOf(node.getId()));
+            if (block != null && !block.isObject()) throw new IllegalStateException("节点玩法配置不可用");
+        }
         JsonNode frozen = NodeJourneySnapshot.block(
                 session == null ? null : session.getConfigSnapshotJson(),
                 node == null ? null : node.getId());
@@ -2570,9 +2646,13 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordMistake(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        recordMistake(memberId, topicId, activityId, nodeId, null);
+    }
+
+    private void recordMistake(Long memberId, Long topicId, Long activityId, Long nodeId, TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -2639,33 +2719,55 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordPassed(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, boolean passed) {
+        recordPassed(memberId, topicId, activityId, nodeId, actionId, passed, null);
+    }
+
+    private void recordPassed(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, boolean passed, TopicRouteSession targetSession) {
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
         receipt.put("nodeId", nodeId); receipt.put("passed", passed);
         recordFact(memberId, topicId, activityId, nodeId, actionId, "passed:", "PASSED",
-                SYS_PASSED_PREFIX, Integer.valueOf(passed ? 1 : 0), receipt);
+                SYS_PASSED_PREFIX, Integer.valueOf(passed ? 1 : 0), receipt, targetSession);
     }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordOutcome(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, int outcome) {
+        recordOutcome(memberId, topicId, activityId, nodeId, actionId, outcome, null);
+    }
+
+    private void recordOutcome(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, int outcome, TopicRouteSession targetSession) {
         if (outcome <= 0) return;   // 序号从 1 起;0 / 负数 = 调用方没算出结果,不写
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
         receipt.put("nodeId", nodeId); receipt.put("outcome", outcome);
         recordFact(memberId, topicId, activityId, nodeId, actionId, "outcome:", "OUTCOME",
-                SYS_OUTCOME_PREFIX, Integer.valueOf(outcome), receipt);
+                SYS_OUTCOME_PREFIX, Integer.valueOf(outcome), receipt, targetSession);
     }
 
     /**
      * 玩法事实写本局(recordPassed / recordOutcome 共用):gate、外来节点、幂等、CAS 一处实现。
      * 两者只差写哪个 sys 键、动作 id 前缀和回执 —— 各抄一份的话,改一边的闸另一边就漏了。
      */
+    /** Internal composite results retain the verified instance; legacy public fact methods keep their scope. */
+    private TopicRouteSession factSession(Long memberId, Long topicId, Long activityId,
+                                          TopicRouteSession targetSession) {
+        if (targetSession == null) return TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = routeMapper.selectAccessibleById(targetSession.getId(), memberId);
+        if (session == null || !memberId.equals(session.getMemberId()) || !topicId.equals(session.getTopicId())
+                || !java.util.Objects.equals(targetSession.getActivityId(), session.getActivityId())
+                || !java.util.Objects.equals(targetSession.getPlayInstanceId(), session.getPlayInstanceId())) {
+            throw new ServiceException("本局已更新，请刷新", 409);
+        }
+        return session;
+    }
+
     private void recordFact(Long memberId, Long topicId, Long activityId, Long nodeId, String actionId, String actionPrefix,
-                            String outcomeCode, String varPrefix, Integer value, Map<String, Object> receipt) {
+                            String outcomeCode, String varPrefix, Integer value, Map<String, Object> receipt,
+                            TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
         String key = actionId == null ? "" : actionId.trim();
         if (key.isEmpty()) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -2719,12 +2821,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void recordChoice(Long memberId, Long topicId, Long activityId, Long nodeId, String stepOrKit, String optionId) {
+        recordChoice(memberId, topicId, activityId, nodeId, stepOrKit, optionId, null);
+    }
+
+    private void recordChoice(Long memberId, Long topicId, Long activityId, Long nodeId, String stepOrKit, String optionId, TopicRouteSession targetSession) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
                 || nodeId == null || nodeId <= 0L) return;
         // stepOrKit 是分支步骤 id 或玩法段名,两种都由下面的配置查找定夺,这里不预筛。
         String kit = stepOrKit == null ? "" : stepOrKit.trim();
         if (kit.isEmpty()) return;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = factSession(memberId, topicId, activityId, targetSession);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务事实桥",409);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return;
@@ -2879,6 +2985,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         String qid = questionId == null ? "" : questionId.trim();
         if (!NARRATIVE_ID.matcher(qid).matches()) throw new IllegalArgumentException("questionId 无效");
         TopicRouteSession session = requireCheckSession(memberId, topicId, activityId);
+        String actionId = "ask:" + nodeId + ":" + qid;
+        if (actionId.length() > 96) throw new IllegalArgumentException("questionId 过长");
+        Map<String, Object> replayed = replayJourneyAction(session, memberId, actionId);
+        if (replayed != null) return replayed;
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalStateException("节点不存在");
         if (shopDayProofService == null
@@ -2887,10 +2997,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         JsonNode question = findQuestion(nodeBlockConfig(session, node), qid);
         if (question == null) throw new IllegalStateException("这一站没有这个问题");
-        String actionId = "ask:" + nodeId + ":" + qid;
-        if (actionId.length() > 96) throw new IllegalArgumentException("questionId 过长");
-        Map<String, Object> replayed = replayJourneyAction(session, memberId, actionId);
-        if (replayed != null) return replayed;
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
         state.getVariables().put(SYS_ASKED_PREFIX + nodeId + "." + qid, 1);
         Map<String, Object> receipt = new LinkedHashMap<String, Object>();
@@ -2989,17 +3095,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (routeMapper.updateStateCas(session) != 1) {
             throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
         }
+        // 结算可能授予数值道具；首次返回与原 actionId 重放都使用最终已写状态。
+        putVitals(receipt, session, state);
         if (!sessionRules(session).getStatLinks().isEmpty()) {
-            putVitals(receipt, session, state);
             receipt.put("statLinkEvents", themeEngine.view(themeConfig(session),state,sessionRules(session)).path("statLinkEvents"));
-            if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) throw new IllegalStateException("旅程联动回执保存失败");
         }
         Map<String, Object> encounter = encounterView(session, nodeId);
-        if (encounter != null) {
-            receipt.put("encounter", encounter);
-            if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
-                throw new IllegalStateException("旅程动作回执保存失败");
-            }
+        if (encounter != null) receipt.put("encounter", encounter);
+        if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
+            throw new IllegalStateException("旅程动作回执保存失败");
         }
         return receipt;
     }
@@ -3050,7 +3154,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) {
             throw new IllegalArgumentException("参数有误");
         }
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null) throw new IllegalStateException("本局尚未开始");
         requireScope(memberId, topicId, session.getActivityId(),true);
         if (genericPlayer(session)) throw new ServiceException("通用个人局请使用任务动作", 409);
@@ -3139,14 +3243,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
         }
         session.setVersion(nextVersion);
+        // 只读最终结算值，避免回填回执时再次修改已经持久化的状态。
+        JourneyRules settledRules = sessionRules(session);
+        receipt.setHp(hpOf(state, settledRules));
+        receipt.setLuck(luckOf(state, settledRules));
+        receipt.setExhausted(isExhausted(state));
         Map<String, Object> encounter = encounterView(session, nodeId);
         if (encounter != null) receipt.setEncounter(encounter);
-        boolean linked = !sessionRules(session).getStatLinks().isEmpty();
-        if (linked) applyVitals(state, sessionRules(session), receipt);
-        if (encounter != null || linked) {
-            if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
-                throw new IllegalStateException("检定回执保存失败");
-            }
+        if (routeMapper.updateActionResponse(action.getId(), write(receipt)) != 1) {
+            throw new IllegalStateException("检定回执保存失败");
         }
         return receipt;
     }
@@ -3182,7 +3287,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public boolean conditionPasses(Long memberId, Long topicId, Long activityId, JsonNode condition) {
         if (condition == null || condition.isNull()) return false;
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return false;
-        TopicRouteSession session = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
         if (session == null
                 || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return false;
         return conditionPasses(condition, readEngineState(session.getStateJson()));
@@ -3270,7 +3375,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(themeStoryService==null || !state.getThemeRuntime().has("result"))return;
         String raw=NodeJourneySnapshot.journeyStory(session.getConfigSnapshotJson());
         if(raw==null || raw.trim().isEmpty())return;
-        Map<String,Object> story=themeStoryService.freezeEnding(session.getTopicId(),raw,state);
+        Map<String,Object> story=themeStoryService.freezeEnding(session.getTopicId(),raw,state,session);
         ObjectNode result=(ObjectNode)state.getThemeRuntime().get("result");
         result.set("story",JSON.valueToTree(story));
         if(!themeConfig(session).path("endings").isArray() || themeConfig(session).path("endings").isEmpty()) {
@@ -3371,7 +3476,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
     private void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices,JsonNode decision,String attemptId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(session==null || !instance.equals(genericPlayer(session)?gameplayInstance(memberId,topicId,activityId,nodeId):session.getPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
+        if(session==null || instance==null || !instance.equals(genericPlayer(session)?gameplayInstance(memberId,topicId,activityId,nodeId):session.getPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
         JourneyRules rules = sessionRules(session);
         if (decision!=null && !genericPlayer(session))throw new ServiceException("Outcome settlement requires a generic player session",409);
         if (genericPlayer(session)) {
@@ -3453,10 +3558,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             commitJourneyAction(session, nodeId, event, "CHOICE", receipt, state);
             return;
         }
-        if(mistake) recordMistake(memberId,topicId,activityId,nodeId);
-        if(passed!=null) recordPassed(memberId,topicId,activityId,nodeId,actionId,passed);
-        if(outcome>0) recordOutcome(memberId,topicId,activityId,nodeId,actionId,outcome);
-        for(String[] choice:choices) recordChoice(memberId,topicId,activityId,nodeId,choice[0],choice[1]);
+        if(mistake) recordMistake(memberId,topicId,activityId,nodeId,session);
+        if(passed!=null) recordPassed(memberId,topicId,activityId,nodeId,actionId,passed,session);
+        if(outcome>0) recordOutcome(memberId,topicId,activityId,nodeId,actionId,outcome,session);
+        for(String[] choice:choices) recordChoice(memberId,topicId,activityId,nodeId,choice[0],choice[1],session);
     }
     @Override public JsonNode publishedR5NodeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {
         JsonNode frozen=sharedSnapshot(memberId,topicId,activityId,nodeId);
@@ -3548,6 +3653,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (session == null || !member.equals(session.getMemberId())) return null;
         return session.getStatus() == null || Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())
                 ? session : null;
+    }
+
+    /** Resolve old omitted-activity requests by their original unique scope, then select that scope's current run. */
+    private TopicRouteSession currentScopedSession(Long memberId, Long topicId, Long activityId) {
+        return TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);
     }
 
     private TopicRouteSession currentSession(Long member, Long topic, Long activity) {

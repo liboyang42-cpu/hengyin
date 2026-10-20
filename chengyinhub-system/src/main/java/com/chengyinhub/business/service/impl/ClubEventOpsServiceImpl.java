@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -54,6 +55,8 @@ import java.util.LinkedHashSet;
 @Service
 public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClubEventOpsServiceImpl.class);
+    private static final DateTimeFormatter ASSEMBLY_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT);
 
     private final IClubAccessService clubAccessService;
     private final ClubEventScheduleMaterializer scheduleMaterializer;
@@ -106,6 +109,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<ClubEventSeriesView> listSeries(Long actorMemberId, Long clubId) {
         requireActivityManage(actorMemberId, clubId);
         List<ClubEventSeries> rows = clubEventOpsMapper.selectActiveSeriesByClub(clubId);
@@ -121,6 +125,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ClubEventSeriesView getSeries(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);
@@ -142,6 +147,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<Map<String, Object>> listSeriesOccurrences(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);
@@ -207,14 +213,17 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
         String recurrenceType = request.getRecurrenceType() == null ? ""
                 : request.getRecurrenceType().trim().toUpperCase(Locale.ROOT);
-        List<LocalDate> dates = scheduleMaterializer.materialize(request, todayShanghai());
+        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
+                request.getClubId(), actorMemberId, requestId);
+        // 已有固定日期回执先核原完整指纹；跨上海日重发不能被“今天”挡在回执之前。
+        List<LocalDate> dates = replay != null && ("ONCE".equals(recurrenceType) || "CUSTOM_DATES".equals(recurrenceType))
+                ? scheduleMaterializer.normalizeFixedDatesForReplay(request)
+                : scheduleMaterializer.materialize(request, todayShanghai());
         // 5.9:集合时刻是场次退款钟的锚点,必须是系列入参的一部分;缺省拒在建系列之前。
         String startTime = requiredStartTime(request);
         String requestFingerprint = seriesFingerprint(actorMemberId, request.getClubId(), request.getTopicId(),
                 recurrenceType, dates, startTime, leadMemberId, capacity,
                 Boolean.TRUE.equals(request.getWaitlistEnabled()), offerMinutes);
-        ClubEventSeries replay = clubEventOpsMapper.selectSeriesByRequest(
-                request.getClubId(), actorMemberId, requestId);
         if (replay != null) {
             return exactSeriesReplay(replay, requestFingerprint);
         }
@@ -976,7 +985,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     private Date assemblyMoment(LocalDate date, String startTime) {
-        LocalTime time = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm"));
+        LocalTime time = LocalTime.parse(startTime, ASSEMBLY_TIME_FORMAT);
         return Date.from(LocalDateTime.of(date, time).atZone(ZoneId.of("Asia/Shanghai")).toInstant());
     }
 
@@ -985,7 +994,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String raw = request.getStartTime() == null ? "" : request.getStartTime().trim();
         if (raw.isEmpty()) throw badRequest("请选择集合时刻(HH:mm)");
         try {
-            LocalTime.parse(raw, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime.parse(raw, ASSEMBLY_TIME_FORMAT);
         } catch (java.time.DateTimeException malformed) {
             throw badRequest("集合时刻格式应为 HH:mm,实际:" + raw);
         }

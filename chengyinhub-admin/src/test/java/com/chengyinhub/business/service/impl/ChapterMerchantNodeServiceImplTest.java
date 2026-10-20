@@ -714,6 +714,13 @@ class ChapterMerchantNodeServiceImplTest {
             context.registerBean(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                     () -> (com.chengyinhub.business.service.support.TopicSupplyReviewService)
                             ReflectionTestUtils.getField(service, "supplyReviewService"));
+            // SC-EXIT-REPLACE-LOCKED:补位获准通知玩家所需的既有通知依赖
+            context.registerBean(com.chengyinhub.business.mapper.RegistrationEntitlementMapper.class,
+                    () -> mock(com.chengyinhub.business.mapper.RegistrationEntitlementMapper.class));
+            context.registerBean(com.chengyinhub.business.service.support.CommittedBusinessNotice.class,
+                    () -> mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+            context.registerBean(com.chengyinhub.business.service.INotifyService.class,
+                    () -> mock(com.chengyinhub.business.service.INotifyService.class));
             context.register(ChapterMerchantNodeServiceImpl.class);
             context.refresh();
             context.getBean(ChapterMerchantNodeServiceImpl.class).submit(ME, CHAPTER, draft());

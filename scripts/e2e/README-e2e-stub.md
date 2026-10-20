@@ -39,3 +39,16 @@ java -De2e.fail.path=/api/play/checkin ... org.springframework.boot.loader.JarLa
 - 打开后 `POST /api/play/checkin` → **HTTP 500** `{"code":500,"msg":"e2e 注入:打卡服务异常"}`;
 - 同时 `GET /api/play/nodes` 仍 **200**(控制组,证明注入范围没有外溢);
 - 撤掉属性重启后同一端点回到 **200**(负控)。
+
+---
+
+# ★桩:内容安全外部通道(EXTERNAL_GATE: content security stubbed)
+
+`E2eWxContentSecurityStub.java.stub` 继承真实 `WxContentSecurityServiceImpl`,只改写两次对微信的出站调用:
+文本 `msg_sec_check`(`checkText`)与图片 `media_check_async`(`checkMediaAsync`)。验收机没有小程序 AppSecret,这一层无解。
+
+**它没有桩掉的**:总开关与 openid 必填等入口闸、送检后的 inbox 登记与 trace 映射、回调验签、时间窗、
+nonce 防重放、回调结论落地,全部是真实代码。`ci/chain_acceptance.py` 的 `stub_problems` 在 explode 前检查:
+缺桩、缺口径标签、不再继承真实实现、或改写了回调/nonce 等真实路径,都直接 fail-closed。
+
+负控:文本含 `E2E-SEC-REJECT` 时按微信 87014 的真实文案拒绝。报告口径:**内容安全通道本身没验**。

@@ -86,7 +86,12 @@ function loadPage(source) {
 
 const NO_SESSION = { status: 1, isOwner: 1, name: '还没有场次的主题', activityList: [] }
 const ONE_SESSION = { status: 1, isOwner: 1, name: 't', activityList: [{ id: 702, name: '第一场' }] }
-const TWO_SESSIONS = { status: 1, isOwner: 1, name: 't', activityList: [{ id: 701, name: '一场' }, { id: 702, name: '二场' }] }
+// CL-06:选场半屏与「接下来」同源(F-W5-08 只留未取消、未过期的场次),候选场次须带未来集合时刻。
+const FUTURE = (days) => new Date(Date.now() + days * 86400000 + 8 * 3600000).toISOString().slice(0, 10)
+const TWO_SESSIONS = { status: 1, isOwner: 1, name: 't', activityList: [
+  { id: 701, name: '一场', startDate: FUTURE(1) + ' 09:00:00', endDate: FUTURE(1) + ' 23:59:00' },
+  { id: 702, name: '二场', startDate: FUTURE(2) + ' 09:00:00', endDate: FUTURE(2) + ' 23:59:00' },
+] }
 
 test('没场次:主键是真动作「去开场」,点它进场次管理;不再弹「还没有场次」的 toast', () => {
   const { page, navigations, toasts } = loadPage()

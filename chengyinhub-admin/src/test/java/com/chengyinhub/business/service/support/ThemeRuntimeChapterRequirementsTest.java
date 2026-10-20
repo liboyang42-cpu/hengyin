@@ -120,4 +120,29 @@ class ThemeRuntimeChapterRequirementsTest {
         chapter(config).remove("exclusiveGroups"); chapter(config).putArray("extraNodes").addObject().put("nodeId", 3).put("slot", "shared");
         assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.remapNodes(config.toString(), Collections.singletonMap(1L, 11L)));
     }
+
+    /** 复制成新草稿后,章节规则引用同请求新建站点(client:<key>):只在存站点这一步接受,落库前换成真实编号,共用额度关系不变。 */
+    @Test void clientNodeRefsInChapterRulesAreRemappedOnNodeSave() throws Exception {
+        ObjectNode config = config();
+        chapter(config).set("exclusiveGroups", json.readTree("[[\"client:a\",11]]"));
+        chapter(config).set("extraNodes", json.readTree("[{\"nodeId\":\"client:b\",\"slot\":\"shared\"},{\"nodeId\":12,\"slot\":\"shared\"}]"));
+        String raw = config.toString();
+        // 非存站点路径照旧只收正整数
+        assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parseDraft(raw));
+        assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parse(raw));
+        assertNotNull(ThemeRuntimeConfig.parseForNodeSave(raw));
+        // 落库前的中间态不含 client 引用(不足两站的互斥组整组去掉),能被普通解析接受
+        JsonNode interim = json.readTree(ThemeRuntimeConfig.withoutClientBindings(raw));
+        assertFalse(chapter((ObjectNode) interim).has("exclusiveGroups"));
+        assertEquals("[{\"nodeId\":12,\"slot\":\"shared\"}]", chapter((ObjectNode) interim).path("extraNodes").toString());
+        assertNotNull(ThemeRuntimeConfig.parseDraft(interim.toString()));
+        Map<Long, Long> nodes = new LinkedHashMap<>(); nodes.put(11L, 911L); nodes.put(12L, 912L);
+        Map<String, Long> created = new LinkedHashMap<>(); created.put("a", 901L); created.put("b", 902L);
+        JsonNode saved = json.readTree(ThemeRuntimeConfig.remapForNodeSave(raw, nodes, Collections.emptyMap(), created));
+        assertEquals("[[901,911]]", chapter((ObjectNode) saved).path("exclusiveGroups").toString());
+        assertEquals("[{\"nodeId\":902,\"slot\":\"shared\"},{\"nodeId\":912,\"slot\":\"shared\"}]", chapter((ObjectNode) saved).path("extraNodes").toString());
+        // 引用了本次没有新建的 client 键:拒绝,不静默改指别的站点
+        Map<String, Long> missing = new LinkedHashMap<>(); missing.put("a", 901L);
+        assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.remapForNodeSave(raw, nodes, Collections.emptyMap(), missing));
+    }
 }

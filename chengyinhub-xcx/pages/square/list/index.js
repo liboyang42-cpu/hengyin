@@ -184,14 +184,14 @@ Page({
           toast(res.msg || '操作失败');
           return;
         }
-        let newlist = that.data.list
-        let currentItem = newlist[index]
-        
-        currentItem = Object.assign({}, currentItem, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
+        // 赞/取消赞在途时列表可能已重拉换序:按 id 找回此刻位置,帖子已不在列表就丢弃回包,不按旧下标串写到别的帖子
+        let newlist = that.data.list || []
+        let currentIndex = newlist.findIndex(row => row && String(row.id) === requestKey)
+        let currentItem = Object.assign({}, newlist[currentIndex], { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
 
         // 更新列表数据
-        const key = `list[${index}]`;
-        that.setData({
+        const key = `list[${currentIndex}]`;
+        if (currentIndex >= 0) that.setData({
           [key]: currentItem
         });
         analytics.track('content_like', {

@@ -4,6 +4,8 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -93,6 +96,26 @@ class TopicUpdateByOwnerTest {
         xpBudgetService = mock(IXpBudgetService.class);
         auditTaskService = mock(IAuditTaskService.class);
         omsTicketService = mock(IOmsTicketService.class);
+
+        // Mapper 成功插入须返回 1 并回填生成 ID；null 是 Mockito 重 stub 的占位调用。
+        AtomicLong chapterIds = new AtomicLong(801L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsTopicChapter chapter = invocation.getArgument(0);
+            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
+            return 1;
+        }).when(chapterMapper).insertCmsTopicChapter(any());
+        AtomicLong nodeIds = new AtomicLong(901L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsTopicNode node = invocation.getArgument(0);
+            if (node != null) node.setId(nodeIds.getAndIncrement());
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
+        AtomicLong activityIds = new AtomicLong(1001L);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CmsActivity activity = invocation.getArgument(0);
+            if (activity != null) activity.setId(activityIds.getAndIncrement());
+            return 1;
+        }).when(activityMapper).insertCmsActivity(any());
 
         svc = new CmsTopicServiceImpl();
 
@@ -844,6 +867,76 @@ class TopicUpdateByOwnerTest {
         assertTrue(graph.getValue().contains("\"terminalNodeIds\":[102]"), graph.getValue());
         assertTrue(graph.getValue().contains("\"fromNodeId\":101"), graph.getValue());
         assertTrue(graph.getValue().contains("\"toNodeId\":102"), graph.getValue());
+    }
+
+    /**
+     * SC-UI-DATE-COUNT:后台「隐藏」(status=0)的节点经作者整体替换保存后仍是隐藏。
+     * 重建会物理删节点再插回;原来插回一律写 status=1 ⇒ 作者重存一次就把后台隐藏的节点放回玩家侧。
+     * 按 NodeDTO.id(编辑器回传的既有节点 id)对回旧行:旧行隐藏 ⇒ 新行仍隐藏;可见旧行与新节点照旧是 1。
+     */
+    @Test
+    void fullRebuild_keepsBackOfficeHiddenNodeHidden_andLeavesVisibleAndNewNodesVisible() {
+        stubExisting(topic(0, daysFromNow(3)), 1);
+        java.util.Map<Long, com.chengyinhub.business.domain.CmsTopicNode> table = new java.util.LinkedHashMap<>();
+        table.put(11L, storedNode(11L, 1L));
+        table.put(12L, storedNode(12L, 0L));
+        java.util.function.Supplier<java.util.List<com.chengyinhub.business.domain.CmsTopicNode>> rows =
+                () -> new ArrayList<>(table.values());
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> rows.get());
+        when(nodeMapper.selectByTopicForUpdate(TOPIC)).thenAnswer(call -> rows.get());
+        when(nodeMapper.deleteCmsTopicNodeById(anyLong())).thenAnswer(call -> table.remove((Long) call.getArgument(0)) == null ? 0 : 1);
+        final long[] nextId = {101L};
+        when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode n = call.getArgument(0);
+            n.setId(nextId[0]++);
+            table.put(n.getId(), n);
+            return 1;
+        });
+        when(nodeMapper.updateCmsTopicNode(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode patch = call.getArgument(0);
+            com.chengyinhub.business.domain.CmsTopicNode row = table.get(patch.getId());
+            if (row == null) return 0;
+            if (patch.getStatus() != null) row.setStatus(patch.getStatus());
+            return 1;
+        });
+        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
+        ReflectionTestUtils.setField(svc, "distanceCalculatorUtils",
+                mock(com.chengyinhub.common.utils.DistanceCalculatorUtils.class));
+
+        TopicUpdateDTO dto = fullDto();
+        java.util.List<NodeDTO> nodes = dto.getChapters().get(0).getNodes();
+        nodes.get(0).setId(11L);
+        nodes.add(nodeDto(12L, "隐藏站"));
+        nodes.add(nodeDto(null, "新站"));
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+        svc.updateTopicByOwner(dto, ME, "me");
+
+        java.util.Map<String, Long> statusByName = new java.util.LinkedHashMap<>();
+        for (com.chengyinhub.business.domain.CmsTopicNode n : table.values()) statusByName.put(n.getName(), n.getStatus());
+        java.util.Map<String, Long> expected = new java.util.LinkedHashMap<>();
+        expected.put("第一站", 1L);
+        expected.put("隐藏站", 0L);
+        expected.put("新站", 1L);
+        assertEquals(expected, statusByName, "作者重存不能把后台隐藏的节点放回;可见节点与新节点照旧上架");
+    }
+
+    private static com.chengyinhub.business.domain.CmsTopicNode storedNode(Long id, Long status) {
+        com.chengyinhub.business.domain.CmsTopicNode n = new com.chengyinhub.business.domain.CmsTopicNode();
+        n.setId(id);
+        n.setTopicId(TOPIC);
+        n.setStatus(status);
+        return n;
+    }
+
+    private static NodeDTO nodeDto(Long id, String name) {
+        NodeDTO n = new NodeDTO();
+        n.setId(id);
+        n.setName(name);
+        n.setAddress("外滩");
+        n.setNodeTime(30);
+        return n;
     }
 
     // ---------- D1:整体替换契约 —— 局部 body 不许静默清空子结构 ----------

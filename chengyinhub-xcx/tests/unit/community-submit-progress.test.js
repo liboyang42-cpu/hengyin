@@ -211,3 +211,76 @@ test('a first explicit CREATE400 permits corrected input without treating a know
   assert.equal(h.state.bundle,null);assert.equal((await h.request({...form,contents:'创建前已修正文案'})).code,200);
   assert.equal(h.calls.some(c=>c.url.endsWith('/drafts')),false);
 });
+
+function ownerMediaDraft(h, media) {
+  h.state.bundle=h.bundle({body:'原文',audience:'PRIVATE',commentPolicy:'EVERYONE',postType:'MOMENT',locationPrecision:'NONE',mediaIds:media.map(m=>m.id),references:[]});
+  h.state.bundle.media=copy(media);
+}
+function readOwnerPost(h) {
+  return new Promise(resolve=>h.client.request({url:'/api/creativesquare/info',data:{id:70},success:resolve,fail:resolve}));
+}
+test('an owner edit preserves the selected media ID when a fresh authorized read renews its URL', async () => {
+  const h=harness();const oldUrl='https://owned.example/upload/photo.png?Expires=old';
+  ownerMediaDraft(h,[{id:12,derived_object_key:oldUrl}]);
+  assert.equal((await readOwnerPost(h)).code,200);
+  h.state.bundle.media[0].derived_object_key='https://owned.example/upload/photo.png?Expires=new';
+  const result=await h.request({id:70,contents:'只改正文',pics:oldUrl});
+  assert.equal(result.code,200);
+  assert.deepEqual(h.calls.find(c=>c.method==='PATCH').data.mediaIds,[12]);
+  assert.equal(h.calls.some(c=>c.url.endsWith('/media/register')),false);
+});
+test('renewed image URLs do not reattach a removed selection or change the selected media order', async () => {
+  const h=harness();const oldOne='https://owned.example/one.png?old',oldTwo='https://owned.example/two.png?old';
+  ownerMediaDraft(h,[{id:12,derived_object_key:oldOne},{id:13,derived_object_key:oldTwo}]);
+  await readOwnerPost(h);
+  h.state.bundle.media.forEach(m=>{m.derived_object_key+='-renewed';});
+  assert.equal((await h.request({id:70,contents:'保留第二张',pics:oldTwo})).code,200);
+  assert.deepEqual(h.calls.find(c=>c.method==='PATCH').data.mediaIds,[13]);
+  assert.equal(h.calls.some(c=>c.url.endsWith('/media/register')),false);
+});
+test('cold unknown edit recovery retains original media IDs and never PATCHes again after URL renewal', async () => {
+  const a=harness({loseResponse:'PATCH /api/v1/community/posts/70'}),oldUrl='https://owned.example/image.png?old';
+  ownerMediaDraft(a,[{id:12,derived_object_key:oldUrl}]);await readOwnerPost(a);
+  a.state.bundle.media[0].derived_object_key='https://owned.example/image.png?fresh';
+  const input={id:70,contents:'原编辑内容',pics:oldUrl};
+  assert.equal((await a.request(input)).transportFailure,true);
+  const original=copy(a.calls.find(c=>c.method==='PATCH').data);
+  assert.deepEqual([...a.store.values()][0].mediaSelections,{[oldUrl]:12});
+  a.state.bundle.media[0].derived_object_key='https://owned.example/image.png?newer';
+  const b=harness({},a);assert.equal((await b.request(input)).code,200);
+  assert.deepEqual(b.calls.map(c=>c.method),['GET']);
+  assert.deepEqual(original.mediaIds,[12]);assert.equal(b.store.size,0);
+});
+test('a cached media ID removed by the authoritative read fails closed without registration or PATCH', async () => {
+  const h=harness(),oldUrl='https://owned.example/deleted.png?old';
+  ownerMediaDraft(h,[{id:12,derived_object_key:oldUrl}]);await readOwnerPost(h);
+  h.state.bundle.media=[];
+  const result=await h.request({id:70,contents:'保留旧图的修改',pics:oldUrl});
+  assert.equal(result.code,409);assert.match(result.msg,/原图片已变化/);
+  assert.equal(h.calls.some(c=>c.method==='PATCH'||c.url.endsWith('/media/register')),false);
+});
+test('an old URL with no known media ID cannot be guessed into a renewed attachment', async () => {
+  const h=harness();ownerMediaDraft(h,[{id:12,derived_object_key:'https://owned.example/photo.png?new'}]);
+  const result=await h.request({id:70,contents:'不能猜测归属',pics:'https://owned.example/photo.png?old'});
+  assert.equal(result.code,409);
+  assert.equal(h.calls.some(c=>c.method==='PATCH'||c.url.endsWith('/media/register')),false);
+});
+test('changing accounts cannot use the previous actor media selections', async () => {
+  const h=harness(),oldUrl='https://owned.example/private.png?old';
+  ownerMediaDraft(h,[{id:12,derived_object_key:oldUrl}]);await readOwnerPost(h);h.owner('990015');
+  assert.notEqual((await h.request({id:70,contents:'换号不能编辑旧图',pics:oldUrl})).code,200);
+  assert.equal(h.calls.some(c=>c.method==='PATCH'||c.url.endsWith('/media/register')),false);
+});
+for (const stable of [true,false]) test('unknown media registration reuses exact '+(stable?'canonical key':'legacy URL')+' receipt wire after cold recovery', async () => {
+  const a=harness({loseResponse:'POST /api/v1/community/media/register'}),url='https://owned.example/upload/image.png?original';
+  const receipt={url,uploadReceipt:'original-owner-bound-receipt',mimeType:'image/png',byteSize:106};
+  if(stable)receipt.objectKey='upload/0123456789abcdef0123456789abcdef.png';
+  a.client.captureUpload(receipt);const input={...form,pics:url};
+  assert.equal((await a.request(input)).transportFailure,true);
+  const original=copy(a.calls.find(c=>c.url.endsWith('/media/register')).data);
+  assert.equal(original.objectKey,stable?receipt.objectKey:url);
+  const b=harness({},a);assert.equal((await b.request(input)).code,200);
+  const replay=b.calls.find(c=>c.url.endsWith('/media/register'));
+  assert.deepEqual(replay.data,original);assert.deepEqual(b.calls.find(c=>c.url.endsWith('/posts')&&c.method==='POST').data.mediaIds,[12]);
+  assert.equal(b.calls.some(c=>/uploadOSS/.test(c.url)),false);
+});

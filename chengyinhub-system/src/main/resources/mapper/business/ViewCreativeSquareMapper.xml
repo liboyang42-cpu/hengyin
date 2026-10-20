@@ -33,6 +33,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="likeCount"    column="like_count"    />
     </resultMap>
 
+    <!-- IDs/request strings alone are client-forgeable; require the server-only migration marker too. -->
+    <sql id="trustedLegacyCommunityMapping">
+        mapped.id = legacy.id AND mapped.author_id = legacy.member_id
+        AND mapped.client_request_id = CONCAT('legacy-square-', legacy.id)
+        AND JSON_TYPE(mapped.safety_labels_json) = 'ARRAY'
+        AND JSON_CONTAINS(mapped.safety_labels_json, '&quot;LEGACY_MIGRATED&quot;') = 1
+    </sql>
+
+    <select id="selectMappedCommunityPostId" resultType="long">
+        SELECT mapped.id FROM ums_creative_square legacy
+        JOIN community_post mapped ON mapped.id = legacy.id
+        WHERE legacy.id = #{legacySquareId}
+          AND <include refid="trustedLegacyCommunityMapping"/>
+    </select>
+
     <sql id="selectViewCreativeSquareVo">
         select id, member_id, contents, pics, file_url, address, longitude, latitude, data_id, data_type, like_num, nolike_num, status, is_crowdfunding, del_flag, create_by, create_time, update_by, update_time, member_nickname, member_avatar, member_user_type, member_level_id, comment_count, no_like_count, like_count from view_creative_square vcs
     </sql>
@@ -71,7 +86,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="favoriteOnly != null and favoriteOnly">
                 and exists (
                     select 1 from community_post_member_action bookmark
-                    where bookmark.post_id = vcs.id
+                    JOIN community_post mapped ON mapped.id = bookmark.post_id
+                    JOIN ums_creative_square legacy ON legacy.id = vcs.id
+                    where bookmark.post_id = mapped.id
+                      AND <include refid="trustedLegacyCommunityMapping"/>
                       and bookmark.member_id = #{viewerMemberId}
                       and bookmark.action_type = 'BOOKMARK'
                 )
@@ -127,13 +145,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectCommunityBookmarkedPostIds" resultType="long">
-        select post_id
-        from community_post_member_action
-        where member_id = #{memberId}
-          and action_type = 'BOOKMARK'
+        select legacy.id
+        from community_post_member_action bookmark
+        JOIN community_post mapped ON mapped.id = bookmark.post_id
+        JOIN ums_creative_square legacy ON legacy.id = mapped.id
+        where bookmark.member_id = #{memberId}
+          and bookmark.action_type = 'BOOKMARK'
+          AND <include refid="trustedLegacyCommunityMapping"/>
         <choose>
             <when test="postIds != null and postIds.size() > 0">
-                and post_id in <foreach collection="postIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+                and legacy.id in <foreach collection="postIds" item="id" open="(" separator="," close=")">#{id}</foreach>
             </when>
             <otherwise> and 1 = 0 </otherwise>
         </choose>

@@ -386,7 +386,8 @@ public class ApiClubController extends BaseController {
         Map<String, Object> d = new HashMap<>();
         d.put("clubId", club.getId());
         d.put("clubCount", clubCount);
-        return AjaxResult.success("已创建", d);
+        d.put("status", club.getStatus());
+        return AjaxResult.success(Long.valueOf(0L).equals(club.getStatus()) ? "已重新提交,等待审核" : "已创建", d);
     }
 
     /** 列表/详情统一补齐入会方式与主理人展示信息。 */
@@ -434,6 +435,10 @@ public class ApiClubController extends BaseController {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body == null) return error("请填写主理人资料");
+        // 与小程序 canNext 同一组必填:前端可被绕过,服务端缺一项就拒,不建档、不发角色
+        if (StringUtils.isBlank(body.getLeaderName())) return error("请填写主理人姓名");
+        if (StringUtils.isBlank(body.getPhone())) return error("请填写联系电话");
+        if (StringUtils.isBlank(body.getExperience())) return error("请选择组织经验");
         // F-L5C-02:主理人名展示在俱乐部列表/详情,身份与经历给成员看,写入前送检。
         String leaderRisk = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(
                 body.getLeaderName(), body.getIdentity(), body.getCoFounders(), body.getExperience()), openidOf(memberId));
@@ -462,8 +467,8 @@ public class ApiClubController extends BaseController {
     public AjaxResult myApply() {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        Club club = clubService.selectClubByMemberId(memberId);
-        return AjaxResult.success(club);
+        List<Club> clubs = clubService.selectClubsByMemberId(memberId);   // 最新的一条在前
+        return AjaxResult.success(clubs == null || clubs.isEmpty() ? null : clubs.get(0));
     }
 
     @Operation(summary = "更新我的俱乐部资料(白名单字段)")

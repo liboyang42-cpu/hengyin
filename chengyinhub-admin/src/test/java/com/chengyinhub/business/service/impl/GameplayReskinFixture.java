@@ -74,6 +74,9 @@ public class GameplayReskinFixture {
         ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",chapterMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",nodeMapper);
         ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",templateMapper);
+        // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        CmsActivityMapper shellActivities=(CmsActivityMapper)ReflectionTestUtils.getField(publisher,"cmsActivityMapper");
+        when(shellActivities.insertCmsActivity(any())).thenAnswer(i->{((com.chengyinhub.business.domain.CmsActivity)i.getArgument(0)).setId(880001L);return 1;});
         OmsTicketMapper freeTickets = mock(OmsTicketMapper.class);
         MerchantChapterOfferMapper noOffers = mock(MerchantChapterOfferMapper.class);
         when(freeTickets.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
