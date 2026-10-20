@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * CL-35 / F-L3-02 · F-R2F-05：章节承接的拒绝与撤回都要发通知给对方——
- * 主办驳回申请(带原因)→商家；商家拒绝邀请→主办；主办撤回待接受邀请→商家。
+ * 主办驳回申请(带原因)→商家；商家拒绝邀请→主办；主办撤回待接受邀请→商家；商家撤回自己的申请→主办。
  */
 class ChapterRejectRevokeNoticeV2Test {
 
@@ -78,6 +78,7 @@ class ChapterRejectRevokeNoticeV2Test {
         topic.setUserStatus(1);
         topic.setLifecycle(1);
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
         when(applicationMapper.updateAudit(any(), any(), any(), any(), any())).thenReturn(1);
     }
 
@@ -142,6 +143,35 @@ class ChapterRejectRevokeNoticeV2Test {
 
         assertThrows(IllegalStateException.class, () -> service.revokeInvite(APPLICATION, PUBLISHER));
         assertThrows(IllegalStateException.class, () -> service.revokeInvite(APPLICATION, MERCHANT));
+        verify(committedNotice, never()).sendAfterCommit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void merchantWithdrawingOwnApplicationNotifiesPublisherOnce() {
+        MerchantChapterApplication application = pending(MerchantChapterApplication.SOURCE_APPLY);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(application);
+        when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(1);
+
+        assertEquals(Integer.valueOf(2), service.withdraw(APPLICATION, MERCHANT).getDelFlag());
+        // 幂等重放(行已 del_flag=2)不重复通知
+        service.withdraw(APPLICATION, MERCHANT);
+
+        verify(applicationMapper, times(1)).withdrawPending(APPLICATION, MERCHANT);
+        verify(committedNotice, times(1)).sendAfterCommit(eq(PUBLISHER), eq("章节申请已撤回"),
+                eq("商家已撤回章节承接申请"), eq("chapter-application-withdraw"), eq(APPLICATION));
+        verify(committedNotice, never()).sendAfterCommit(eq(MERCHANT), any(), any(), any(), any());
+    }
+
+    @Test
+    void lostWithdrawRaceSendsNoNotice() {
+        MerchantChapterApplication application = pending(MerchantChapterApplication.SOURCE_APPLY);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(application);
+        when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(0);
+        MerchantChapterApplication alreadyWithdrawn = pending(MerchantChapterApplication.SOURCE_APPLY);
+        alreadyWithdrawn.setDelFlag(2);
+        when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(alreadyWithdrawn);
+
+        assertEquals(Integer.valueOf(2), service.withdraw(APPLICATION, MERCHANT).getDelFlag());
         verify(committedNotice, never()).sendAfterCommit(any(), any(), any(), any(), any());
     }
 }

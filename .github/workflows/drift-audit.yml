@@ -242,6 +242,9 @@ jobs:
         env:
           ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
           ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          # 2026-10-19:ci/run_migration.py 不再内置生产库主机地址(公开仓),未设置即退出。
+          # 应用与库同机,隧道目标就是上面读进程 environ 的同一台机器。
+          CHENGYIN_DB_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
         run: |
           set -euo pipefail
           # DB 密码不做成 GitHub secret:沿用 ci/preflight-h8-schema.sh 的既有手法 ——

@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,9 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 真实 MyBatis + H2 回归：试点窗口的核心分母不受帖文后续状态变化影响。
- * DATE_ADD/interval 使用显式 H2 方言适配，不能代替真实 MySQL 对生产 XML 的验证。
+ * 两参 TIMESTAMP(date, time) 使用显式 H2 方言适配，不能代替真实 MySQL 对生产 XML 的验证。
  */
 public class BizFunnelDailyMapperMyBatisTest {
+    private static final String DAY_END = "23:59:59";
+
     @Test
     void pilotDenominatorSurvivesHideDeleteAndAuthorErasure() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
@@ -89,8 +92,8 @@ public class BizFunnelDailyMapperMyBatisTest {
     }
 
     private static void createSchema(JdbcTemplate jdbc) {
-        jdbc.execute("create alias DATE_ADD for \""
-                + BizFunnelDailyMapperMyBatisTest.class.getName() + ".dateAdd\"");
+        jdbc.execute("create alias FUNNEL_DAY_END for \""
+                + BizFunnelDailyMapperMyBatisTest.class.getName() + ".dayEnd\"");
         jdbc.execute("create table biz_event_log("
                 + "id bigint auto_increment primary key, event_name varchar(80), biz_type varchar(40),"
                 + "biz_id bigint, member_id bigint, occurred_at timestamp)");
@@ -98,12 +101,12 @@ public class BizFunnelDailyMapperMyBatisTest {
                 + "id bigint primary key, author_id bigint, lifecycle varchar(20))");
     }
 
-    /** H2 没有 MySQL DATE_ADD；测试别名只补足本查询用到的 DAY 间隔。 */
-    public static Date dateAdd(Date date, String interval) {
-        if (!"INTERVAL '1' DAY".equalsIgnoreCase(interval)) {
-            throw new IllegalArgumentException("unsupported interval: " + interval);
+    /** H2 没有 MySQL 两参 TIMESTAMP(date, time)；测试别名只补足本查询用到的当日最后一秒。 */
+    public static Timestamp dayEnd(Date date, String time) {
+        if (!DAY_END.equals(time)) {
+            throw new IllegalArgumentException("unsupported time: " + time);
         }
-        return Date.valueOf(date.toLocalDate().plusDays(1));
+        return Timestamp.valueOf(date.toLocalDate().atTime(LocalTime.parse(time)));
     }
 
     private static void insertPost(JdbcTemplate jdbc, long id, long authorId, String lifecycle) {
@@ -131,13 +134,13 @@ public class BizFunnelDailyMapperMyBatisTest {
             if (input == null) {
                 throw new IllegalStateException("missing " + resource);
             }
-            // H2 2.x requires quoted ANSI interval literals even in MySQL mode.
-            // Keep production MySQL XML unchanged; this existing dialect fixture also supplies DATE_ADD above.
+            // H2 has no two-argument TIMESTAMP(date, time); route it to the FUNNEL_DAY_END alias above.
+            // Keep production MySQL XML unchanged.
             String mysqlXml = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(2, mysqlXml.split("interval 1 day", -1).length - 1,
-                    "Review this narrow H2 grammar adapter if the production interval expressions change");
-            String h2Xml = mysqlXml.replace("interval 1 day", "interval '1' day");
-            assertTrue(h2Xml.contains("date_add(cast(#{endDate} as date), interval '1' day)"));
+            assertEquals(2, mysqlXml.split("timestamp\\(cast\\(", -1).length - 1,
+                    "Review this narrow H2 grammar adapter if the production end-bound expressions change");
+            String h2Xml = mysqlXml.replace("timestamp(cast(", "funnel_day_end(cast(");
+            assertTrue(h2Xml.contains("funnel_day_end(cast(#{endDate} as date), '" + DAY_END + "')"));
             new XMLMapperBuilder(new StringReader(h2Xml), configuration, resource,
                     configuration.getSqlFragments()).parse();
         }

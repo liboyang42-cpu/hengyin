@@ -163,7 +163,9 @@ def _open_ssh_tunnel(remote_host, remote_port):
 
 # 显式声明「目标就是本机」的唯一写法。
 # ⚠️ 空字符串 / 未设置**不算**这个意思 —— 它多半来自上一次 IT 清理不干净,
-#    所以仍然 fail-closed 到受控的生产 SSH 目标(见 connect 里那段注释)。
+#    所以仍然 fail-closed:直接退出,绝不回落到本机 MySQL(见 connect 里那段注释)。
+#    2026-10-19:本仓公开,生产主机地址不再写进源码 —— 未设置时不再默认打到生产库主机,
+#    而是要求显式设置 CHENGYIN_DB_SSH_HOST(生产库主机,或上面的本机 token)。
 #    2026-08-19 加这一档,是因为 ci/test_tandianri_mysql_integration.py 要在一台
 #    **真的本机 scratch MySQL** 上跑:它自己也 fail-closed 只接受 127.0.0.1,
 #    而 yml 里的 host 也恒是 127.0.0.1 ⇒ 不给一个显式出口,这条 IT 在任何机器上都跑不了
@@ -177,7 +179,8 @@ def resolve_ssh_host(raw):
     if value.lower() in _EXPLICIT_LOCAL_TOKENS:
         return ""
     if not value:
-        return "47.103.124.64"
+        sys.exit("CHENGYIN_DB_SSH_HOST 未设置:请显式设置为生产库主机(隧道目标),"
+                 "或设为 local 声明目标就是本机。未设置不会回落到本机 MySQL。")
     return value
 
 
@@ -190,7 +193,7 @@ def connect(config_path):
     # 但对**本机**来说 127.0.0.1 是我自己的回环,不是生产库 —— 直连分支会连到本地的空气。
     # 所以这里显式给出隧道要打到哪台机器;要改机器就设 CHENGYIN_DB_SSH_HOST。
     # 空字符串不是「显式选择本机」；它常来自前一次 IT 清理不完整。
-    # fail closed 到受控的生产 SSH 目标，绝不允许回落到操作者本机 MySQL。
+    # fail closed(直接退出)，绝不允许回落到操作者本机 MySQL。
     ssh_host = resolve_ssh_host(os.environ.get("CHENGYIN_DB_SSH_HOST"))
     if host in _LOCAL_HOSTS and not ssh_host:
         print("CHENGYIN_DB_SSH_HOST 显式声明目标就是本机,不开隧道")
