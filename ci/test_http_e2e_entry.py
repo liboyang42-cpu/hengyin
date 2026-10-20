@@ -124,6 +124,51 @@ def safe_diagnostic(report_path, stage, exit_code, java_exit):
     return result
 
 
+def safe_maven_failure(log_path):
+    result = {'category': 'unknown'}
+    try:
+        with log_path.open('rb') as stream:
+            stream.seek(0, 2)
+            stream.seek(max(0, stream.tell() - 1024 * 1024))
+            text = stream.read().decode('utf-8', errors='replace')
+    except OSError:
+        return result
+    text = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', text)
+    allowed_help = {'DependencyResolutionException', 'PluginResolutionException', 'MojoExecutionException',
+                    'MojoFailureException', 'LifecycleExecutionException', 'ProjectBuildingException',
+                    'ModelBuildingException', 'NoPluginFoundForPrefixException'}
+    help_types = re.findall(r'/display/MAVEN/([A-Za-z]+Exception)\b', text)
+    for name in reversed(help_types):
+        if name in allowed_help:
+            result['helpException'] = name
+            break
+    plugins = {'org.apache.maven.plugins': {'maven-compiler-plugin', 'maven-surefire-plugin',
+               'maven-resources-plugin', 'maven-clean-plugin', 'maven-jar-plugin', 'maven-install-plugin',
+               'maven-dependency-plugin', 'maven-enforcer-plugin'},
+               'org.springframework.boot': {'spring-boot-maven-plugin'},
+               'org.jacoco': {'jacoco-maven-plugin'}}
+    matches = re.findall(r'Failed to execute goal ([a-z][a-z0-9_.]{0,99}):([a-z][a-z0-9-]{0,79}):([0-9][A-Za-z0-9_.-]{0,39}):([A-Za-z][A-Za-z0-9-]{0,39})(?=\s|$)', text)
+    for group, artifact, version, goal in reversed(matches):
+        if artifact in plugins.get(group, set()):
+            result['plugin'] = group + ':' + artifact
+            if goal in {'test', 'compile', 'testCompile', 'resources', 'testResources', 'clean', 'jar',
+                        'repackage', 'install', 'check', 'prepare-agent', 'report', 'enforce', 'properties',
+                        'copy-dependencies', 'resolve'}:
+                result['goal'] = goal
+            break
+    if 'offline mode' in text and ('Cannot access ' in text or 'has not been downloaded' in text):
+        result['category'] = 'offline-resolution'
+    elif any(marker in text for marker in ('Failed to load ApplicationContext', 'Error occurred in starting fork',
+                                          'The forked VM terminated without properly saying goodbye',
+                                          'Could not find or load main class')):
+        result['category'] = 'startup'
+    elif result.get('plugin', '').endswith(':maven-compiler-plugin') or 'COMPILATION ERROR' in text:
+        result['category'] = 'compile'
+    elif 'There are test failures.' in text:
+        result['category'] = 'test'
+    return result
+
+
 def cli():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='command', required=True)
@@ -157,7 +202,47 @@ def cli():
                            fixtureReportSha256=hashlib.sha256(fixture_path.read_bytes()).hexdigest())
             for n in names:
                 original = a.reports / ('TEST-' + PACKAGE + n + '.xml')
-                safe = verified_xml(original, n)
+                try:
+                    safe = verified_xml(original, n)
+                except (OSError, ValueError, ET.ParseError):
+                    # Exact expected suite only; never expose failure text, properties or streams.
+                    failure = {'class': n, 'state': 'MISSING'}
+                    if original.exists():
+                        failure['state'] = 'INVALID'
+                        try:
+                            failed = ET.parse(original).getroot()
+                            if failed.tag == 'testsuite' and failed.get('name') == PACKAGE + n:
+                                failure['state'] = 'FAILED_VERIFICATION'
+                                for key in ('tests', 'failures', 'errors', 'skipped'):
+                                    value = failed.get(key, '')
+                                    if re.fullmatch(r'[0-9]{1,6}', value):
+                                        failure[key] = int(value)
+                                source_dir = ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it'
+                                source = (source_dir / (n + '.java')).read_text()
+                                known_methods = set(re.findall(r'\bvoid\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(', source))
+                                source_lines = {name + '.java': len((source_dir / (name + '.java')).read_text().splitlines())
+                                                for name in EXPECTED}
+                                methods = []
+                                for case in failed.findall('testcase'):
+                                    errors = case.findall('failure') + case.findall('error')
+                                    method = case.get('name', '')
+                                    if (errors and case.get('classname') == PACKAGE + n and
+                                            method in known_methods):
+                                        methods.append(method)
+                                        if 'sourceFrame' not in failure:
+                                            for error in errors:
+                                                for filename, line in re.findall(r'\bat com\.chengyinhub\.[A-Za-z0-9_.$]+\(([A-Za-z_$][A-Za-z0-9_$]*\.java):([0-9]{1,7})\)', error.text or ''):
+                                                    if filename in source_lines and 1 <= int(line) <= source_lines[filename]:
+                                                        failure['sourceFrame'] = filename + ':' + str(int(line))
+                                                        break
+                                                if 'sourceFrame' in failure:
+                                                    break
+                                failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
+                        except (OSError, ET.ParseError):
+                            pass
+                    (a.output / 'xml-failure.json').write_text(json.dumps(failure, sort_keys=True) + '\n')
+                    print('HTTP_FIXTURE_XML_DIAGNOSTIC ' + json.dumps(failure, sort_keys=True), file=sys.stderr)
+                    raise ValueError('HTTP test XML verification failed; see safe diagnostic') from None
                 raw = original.read_bytes()
                 receipt['originalXml'][n] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
                 ET.ElementTree(safe).write(a.output / ('TEST-' + PACKAGE + n + '.xml'), encoding='utf-8', xml_declaration=True)
@@ -176,6 +261,8 @@ def cli():
             diagnostic = safe_diagnostic(pathlib.Path(os.environ.get('CHENGYIN_HTTP_E2E_SCHEMA_REPORT', '')),
                                          os.environ.get('CHENGYIN_HTTP_E2E_STAGE', ''),
                                          int(original) if re.fullmatch(r'[0-9]{1,3}', original) else None, a.java_exit)
+            if diagnostic['stage'] == 'xml-verify' and a.java_exit != 0:
+                diagnostic['mavenFailure'] = safe_maven_failure(a.output.parent / 'run.log')
             (a.output / 'diagnostic.json').write_text(json.dumps(diagnostic, sort_keys=True) + '\n')
             print('HTTP_FIXTURE_DIAGNOSTIC ' + json.dumps(diagnostic, sort_keys=True), file=sys.stderr)
         validate_final(receipt)
@@ -341,6 +428,114 @@ class ManualRouterTest(unittest.TestCase):
 
 
 class FailureDiagnosticTest(unittest.TestCase):
+    def test_standard_maven_help_plugin_and_sensitive_message_projection(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        with tempfile.TemporaryDirectory() as d:
+            log = pathlib.Path(d) / 'run.log'
+            standard = ('[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test '
+                        '(default-test) on project example: ' + marker + '\n'
+                        '[ERROR] Cannot access central (https://' + marker + ') in offline mode\n'
+                        '[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException')
+            log.write_text('\x1b[31m' + standard + '\x1b[0m')
+            self.assertEqual({'category': 'offline-resolution', 'helpException': 'PluginResolutionException',
+                              'plugin': 'org.apache.maven.plugins:maven-surefire-plugin', 'goal': 'test'},
+                             safe_maven_failure(log))
+            for message, category in [('COMPILATION ERROR', 'compile'), ('There are test failures.', 'test'),
+                                      ('Failed to load ApplicationContext', 'startup'), (marker, 'unknown')]:
+                log.write_text(message + '\n' + marker)
+                self.assertEqual({'category': category}, safe_maven_failure(log))
+            log.write_text('[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:testCompile (x)\n'
+                           '[Help 1] https://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException')
+            self.assertEqual({'category': 'compile', 'helpException': 'MojoFailureException',
+                              'plugin': 'org.apache.maven.plugins:maven-compiler-plugin', 'goal': 'testCompile'},
+                             safe_maven_failure(log))
+            log.write_text('[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:1-' + marker + ':' + marker + ' (x)\n'
+                           'http://cwiki.apache.org/confluence/display/MAVEN/' + marker + 'Exception\n'
+                           'password=' + marker + ' -DargLine=' + marker + ' <system-out>' + marker)
+            self.assertNotIn(marker, json.dumps(safe_maven_failure(log)))
+            self.assertNotIn('goal', safe_maven_failure(log))
+            log.unlink()
+            self.assertEqual({'category': 'unknown'}, safe_maven_failure(log))
+
+    def test_hosted_online_vps_offline_and_existing_finalize_maven_failure(self):
+        shell = (TOOLS / 'generic-gameplay-http-e2e.sh').read_text()
+        mode = 'MAVEN_MODE=(-o)\n' + shell.split('MAVEN_MODE=(-o)\n', 1)[1].split('# pom appends', 1)[0]
+        for profile, expected in [('vps', '-o'), ('github-hosted', '-B')]:
+            run = subprocess.run(['/bin/bash', '-c', mode + '\nprintf "%s" "${MAVEN_MODE[*]}"'],
+                                 env={'PROFILE': profile}, text=True, capture_output=True, timeout=5)
+            self.assertEqual(0, run.returncode); self.assertEqual(expected, run.stdout)
+        self.assertIn('mvn "${MAVEN_MODE[@]}" -q', shell)
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); public = root / 'public'; schema = root / 'schema.json'
+            schema.write_text('{"mode":"SUCCEEDED"}')
+            (root / 'run.log').write_text('Cannot access central in offline mode\n'
+                                         '[Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException')
+            env = dict(os.environ, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema),
+                       CHENGYIN_HTTP_E2E_STAGE='xml-verify', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
+                                  '--output', str(public), '--java-exit', '1',
+                                  '--mysql-clean', 'true', '--redis-clean', 'true'],
+                                 env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            self.assertEqual({'category': 'offline-resolution', 'helpException': 'PluginResolutionException'},
+                             json.loads((public / 'diagnostic.json').read_text())['mavenFailure'])
+            self.assertEqual('FAIL', json.loads((public / 'receipt.json').read_text())['state'])
+
+    def test_failed_expected_xml_exposes_counts_method_and_source_line_only(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        simple = 'GenericGameplayHttpE2eIT'
+        source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
+        known_method = re.findall(r'\bvoid\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(', source)[0]
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); reports = root / 'reports'; reports.mkdir(); public = root / 'public'
+            schema = root / 'schema.json'; database = 'cy_e2e_w1_http_123_456'
+            files = [{'path': 'fixture_' + str(i)} for i in range(101)]
+            schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': database, 'files': files,
+                                          'completed': [f['path'] for f in files]}))
+            xml = ET.Element('testsuite', name=PACKAGE + simple, tests='14', failures='1', errors='0', skipped='0')
+            props = ET.SubElement(xml, 'properties'); ET.SubElement(props, 'property', name='password', value=marker)
+            ET.SubElement(xml, 'system-out').text = marker
+            for i in range(14):
+                case = ET.SubElement(xml, 'testcase', classname=PACKAGE + simple, name=known_method if i == 0 else 'case' + str(i))
+                if i == 0:
+                    ET.SubElement(case, 'failure', message=marker).text = marker + '\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:123)\n'
+            path = reports / ('TEST-' + PACKAGE + simple + '.xml'); ET.ElementTree(xml).write(path)
+            env = dict(os.environ, SOURCE_SHA='a' * 40, CHENGYIN_HTTP_E2E_PROFILE='github-hosted',
+                       CHENGYIN_HTTP_E2E_DATABASE=database, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(schema))
+            args = [sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'verify', '--classes', simple,
+                    '--reports', str(reports), '--output', str(public)]
+            run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            failure = json.loads((public / 'xml-failure.json').read_text())
+            self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 14, 'failures': 1,
+                              'errors': 0, 'skipped': 0, 'failedMethods': [known_method],
+                              'sourceFrame': 'GenericGameplayHttpE2eIT.java:123'}, failure)
+            self.assertNotIn(marker, json.dumps(failure) + run.stdout + run.stderr)
+            self.assertFalse((public / path.name).exists())
+            for mutation in ('nonNumericCount', 'unknownMethod', 'outsideFrame', 'unknownSuite'):
+                bad = ET.fromstring(ET.tostring(xml))
+                error = bad.find('testcase/failure'); error.set('type', marker); error.set('message', marker)
+                if mutation == 'nonNumericCount':
+                    bad.set('tests', marker)
+                elif mutation == 'unknownMethod':
+                    bad.find('testcase').set('name', marker)
+                elif mutation == 'outsideFrame':
+                    error.text = marker + '\n at com.chengyinhub.' + marker + '.method(' + marker + '.java:1)\n at com.chengyinhub.business.it.GenericGameplayHttpE2eIT.method(GenericGameplayHttpE2eIT.java:9999999)\n'
+                else:
+                    bad.set('name', marker)
+                ET.ElementTree(bad).write(path)
+                run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+                self.assertNotEqual(0, run.returncode)
+                safe = (public / 'xml-failure.json').read_text()
+                self.assertNotIn(marker, safe + run.stdout + run.stderr)
+                self.assertIn('HTTP test XML verification failed; see safe diagnostic', run.stderr)
+                if mutation in ('unknownMethod', 'outsideFrame'):
+                    self.assertNotIn('sourceFrame', json.loads(safe))
+            path.unlink()
+            run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            self.assertEqual({'class': simple, 'state': 'MISSING'}, json.loads((public / 'xml-failure.json').read_text()))
+
     def test_schema_exception_metadata_never_exports_sql_stderr_or_messages(self):
         spec = importlib.util.spec_from_file_location('diagnostic_schema', TOOLS / 'generic-gameplay-fresh-schema.py')
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)

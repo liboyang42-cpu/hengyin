@@ -144,8 +144,10 @@ CHENGYIN_HTTP_E2E_STAGE=java-tmp
 mkdir -p "${TMPDIR:-/tmp}/javatmp"
 CHENGYIN_HTTP_E2E_STAGE=java-tests
 JAVA_STATUS=0
+MAVEN_MODE=(-o)
+if [[ "$PROFILE" == github-hosted ]]; then MAVEN_MODE=(-B); fi
 # pom appends its existing Mockito startup javaagent to argLine.
-SERVER_ADDRESS=127.0.0.1 mvn -o -q -pl chengyinhub-admin -am test "-DargLine=$JVM_FLAGS -Djava.io.tmpdir=${TMPDIR:-/tmp}/javatmp -Djava.awt.headless=true" "-Dtest=$CHENGYIN_HTTP_E2E_TESTS" \
+SERVER_ADDRESS=127.0.0.1 mvn "${MAVEN_MODE[@]}" -q -pl chengyinhub-admin -am test "-DargLine=$JVM_FLAGS -Djava.io.tmpdir=${TMPDIR:-/tmp}/javatmp -Djava.awt.headless=true" "-Dtest=$CHENGYIN_HTTP_E2E_TESTS" \
   -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false > "$OUT/run.log" 2>&1 || JAVA_STATUS=$?
 CHENGYIN_HTTP_E2E_STAGE=xml-verify
 python3 ci/test_http_e2e_entry.py verify --classes "$CHENGYIN_HTTP_E2E_TESTS" --reports chengyinhub-admin/target/surefire-reports --output "$PUBLIC"
