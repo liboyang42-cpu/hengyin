@@ -426,6 +426,26 @@ def query(sql, args=()):
         connection.close()
 
 
+def execute(sql, args=()):
+    connection = connect()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(sql, args)
+        count = cursor.rowcount
+        connection.commit()
+        cursor.close()
+        return count
+    finally:
+        connection.close()
+
+
+# 小程序会员登录必然带 openid;内容安全 msgSecCheck v2 缺 openid 会 fail-close(WxContentSecurityServiceImpl
+# checkText)。候选的 seed_fixtures.py 指纹被 prelaunch-seed-provenance 钉住,所以由门禁在建库后补,只写 cy_e2e_51
+# 的九个夹具会员;出站微信调用由 E2eWxContentSecurityStub 桩掉。
+FIXTURE_OPENID_SQL = ("UPDATE ums_member SET wx_open_id=CONCAT('e2e-openid-', id) "
+                      "WHERE id BETWEEN 9001 AND 9009 AND (wx_open_id IS NULL OR wx_open_id='')")
+
+
 def jsonable(rows):
     return [[value if isinstance(value, (int, str, type(None))) else str(value) for value in row] for row in rows]
 
@@ -880,10 +900,13 @@ def cmd_schema(args, environ):
         problems.append("seed_fixtures 退出码 %s" % seed_code)
     readback = {}
     if not problems:
+        readback["fixture_openid_bound"] = execute(FIXTURE_OPENID_SQL)
         expected = {
             "tables": ("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (SCHEMA,), None),
             "sys_user": ("SELECT COUNT(*) FROM sys_user WHERE del_flag='0'", (), None),
             "ums_member_fixture": ("SELECT COUNT(*) FROM ums_member WHERE id BETWEEN 9001 AND 9009", (), 9),
+            "ums_member_openid": ("SELECT COUNT(*) FROM ums_member WHERE id BETWEEN 9001 AND 9009 "
+                                  "AND wx_open_id LIKE %s", ("e2e-openid-%",), 9),
             "mms_merchant_fixture": ("SELECT COUNT(*) FROM mms_merchant WHERE id BETWEEN 8001 AND 8005", (), 5),
             "club_fixture": ("SELECT COUNT(*) FROM club WHERE id IN (7001,7002)", (), 2),
             "captcha_disabled": ("SELECT COUNT(*) FROM sys_config WHERE config_key='sys.account.captchaEnabled' "
