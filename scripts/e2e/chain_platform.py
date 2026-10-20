@@ -73,8 +73,9 @@ def main():
                  "schemaVersion": 1, "required": 1,
                  # #299(owner 2026-10-20):探店日章节建期即开放商家承接(同发布向导的章节招商开关)，
                  # 站点玩法由入驻商家提供，因此零玩法也能提交上架；条款与 chain_merchant_club 后台复设同值。
+                 # 核验方式/探索值上限由 chain_merchant_club 走后台 supply-terms 设置(建期接口不收 QR 写法)。
                  "recruitEnabled": 1, "categoryId": 4001, "termsMode": "PERK", "perkMinValue": 30,
-                 "maxMerchant": 1, "allowedValidationMethods": "QR", "maxNodeXp": 50,
+                 "maxMerchant": 1,
                  "blocks": [
                      {"type": "text", "content": "本章一店(%s):进店按规则完成一次到店体验" % n},
                      {"type": "node", "nodeIndex": 0}],
