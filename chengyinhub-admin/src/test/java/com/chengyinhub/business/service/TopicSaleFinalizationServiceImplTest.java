@@ -502,6 +502,7 @@ class TopicSaleFinalizationServiceImplTest {
     @Test
     void clubSessionsOnDifferentDatesUseTheirOwnActivityWindowsWhenFinalizing() {
         CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
         OmsTicket source = validTicket();
         CmsActivity first = new CmsActivity();
@@ -580,6 +581,7 @@ class TopicSaleFinalizationServiceImplTest {
 
     private void assertProjectionTimeMismatch(boolean clubSession, String field) {
         CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
         OmsTicket source = validTicket();
         CmsActivity activity = new CmsActivity();

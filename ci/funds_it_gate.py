@@ -237,7 +237,8 @@ EXPECTED = {
     "SquareEditFollowMybatisIntegrationTest": 7,
     "RoamSessionWriteMybatisIntegrationTest": 12,
     # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
-    "RoamLocationRetentionMySqlIT": 20,
+    # +1: real cleanup task preserves favorite routes, non-location facts and reward dedupe across replay.
+    "RoamLocationRetentionMySqlIT": 21,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
