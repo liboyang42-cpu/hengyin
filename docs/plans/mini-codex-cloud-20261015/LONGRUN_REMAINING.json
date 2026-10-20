@@ -2642,8 +2642,8 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "COMBINED95F_COMPILE_BLOCKER_LOCATED_REPAIR_IN_PROGRESS_FINAL_SHA_PENDING",
-    "creation_or_candidate_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+    "state": "F8_REPAIR_SOURCE_FROZEN_WAIT_CI_NO_INHERITED_ACCEPTANCE",
+    "creation_or_candidate_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
     "port_source": {
       "pr": 386,
       "branch": "integrate/master-port-20261019",
@@ -2724,12 +2724,12 @@
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
     "validation": {
-      "combined_candidate": "NOT_ACCEPTED; targeted module failure and red check metadata observed, exact-path source repair pending",
+      "combined_candidate": "WAIT_CI; fixedf8 repair delivered, no combined backend/storage/HTTP verdict yet",
       "existing_source_results_inherited": false,
       "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
-      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
-      "real_storage": "FUNDS39431906479_FAILURE_AT_TEST_COMPILE; ACTUAL_JAVA_BUSINESS_TESTS0; NO_STORAGE_ACCEPTANCE",
-      "real_http": "RUN39432014261_FAILURE_AT_TEST_COMPILE; ALL_FIVE_CHAINS_MISSING_NOT_RUN"
+      "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "real_storage": "NEW_FIXED_SOURCE_PENDING_CI_ARTIFACT_ACCEPTANCE",
+      "real_http": "NEW_FIXED_SOURCE_STARTING_NO_RUN_OR_RESULT_REPORTED"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -2823,20 +2823,20 @@
     ],
     "current_runs": [
       {
-        "run_id": 39431906431,
+        "run_id": 39433312461,
         "name": "GitHub CI",
-        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
         "status": "in_progress",
         "conclusion": null,
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431"
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461"
       },
       {
-        "run_id": 39431906479,
+        "run_id": 39433312735,
         "name": "Funds MySQL IT",
-        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
-        "status": "completed",
-        "conclusion": "failure",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479"
+        "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735"
       }
     ],
     "conflict_resolution": {
@@ -2852,7 +2852,7 @@
     "integration_repair_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "AUTHORIZED_EXACT_FIVE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
       "authorized_exact_paths": [
         "chengyinhub-xcx/utils/content-report.js",
@@ -2884,12 +2884,13 @@
       "original_source_ownership": "Original source authors and source-branch locks retained/frozen; this grant is confined to the independently owned combination branch.",
       "test_file_write_authorized": true,
       "other_paths_write_authorized": false,
-      "new_source_sha": "NOT_DELIVERED",
+      "new_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
       "test_write_scope": "Only E01_12Test fixture adaptation; all methods and assertions retained, no other test edits.",
       "supplemental_exact_path_scopes": {
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java": "Fixture only: adapt the existing six-argument ClubSessionServiceImpl construction to its current ten dependencies, following existing ClubSessionServiceImplTest, with explicit safety/review outcomes. Retain every method and business assertion; no production constructor overload, review bypass or dependency change.",
         "ci/silent-error-allowlist.txt": "Append only individually reviewed named silentError receipts for content-report.js four sites and existing myproject review timeline/appeal two sites, with truthful error-handling reasons and exact counts. Confirm error ownership for every site first; if unhandled, no invented exemption. Do not change frozen baseline, gate/rules/CI or request/permission policy."
-      }
+      },
+      "writer_status": "STOPPED_PENDING_CI_OR_VERIFIER_FEEDBACK; same sole local integration repair writer, no new author"
     },
     "latest_failure_observations": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -2959,7 +2960,18 @@
       },
       "fast_gate_diagnosis": "Reported #387 silentError registrations missing: content-report.js4 sites and myproject2. Each site requires actual error-handling review before an append-only truthful receipt; no baseline/rule change.",
       "migration_gate_diagnosis": "Reported PR body lacks formal impact classification③; migration ledger14 and dependency order PASS. Root may correct PR description; no SQL/migration-executor edits or migration execution.",
-      "diagnosis_evidence_scope": "Integration writer reports both job logs individually checked; C00 registers that diagnosis without downloading job logs or executing validation."
+      "diagnosis_evidence_scope": "Integration writer reports both job logs individually checked; C00 registers that diagnosis without downloading job logs or executing validation.",
+      "historical_for_current_candidate": true,
+      "source_boundary": "All these failures belong to95f; preserve unchanged after f8 delivery, no failures or passes transferred.",
+      "reported_full_js_result": {
+        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "actual_total": 11100,
+        "passed": 11090,
+        "failed": 5,
+        "skipped": 2,
+        "todo": 3,
+        "scope": "Original95f reported suite history, not a result atf8; no C00 execution."
+      }
     },
     "current_runs_history": [
       {
@@ -2982,22 +2994,65 @@
           }
         ],
         "scope": "Prior in-progress metadata at95f; does not override newer failure observations."
+      },
+      {
+        "runs": [
+          {
+            "run_id": 39431906431,
+            "name": "GitHub CI",
+            "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+            "status": "in_progress",
+            "conclusion": null,
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431"
+          },
+          {
+            "run_id": 39431906479,
+            "name": "Funds MySQL IT",
+            "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+            "status": "completed",
+            "conclusion": "failure",
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479"
+          }
+        ],
+        "scope": "Old95f source metadata, preserved; not current f8 result."
       }
     ],
     "integration_repair_progress": {
-      "state": "REPORTED_LOCAL_PATCH_IN_PROGRESS_NOT_PUBLIC_FROZEN_SOURCE",
-      "final_source_sha": "NOT_DELIVERED",
-      "require_references": "Seven references corrected to the existing dynamic report tool, reported.",
-      "fixture": "E01_12Test valid listed-topic fixture and ten dependencies; pre_review_all=true and gate explicitly HOLD; all three methods/assertions retained, reported.",
-      "silent_receipts": "Six sites reviewed for explicit toast/error state/single-use locks and registered with named reasons; frozen baseline72 unchanged, reported.",
-      "reported_local_checks": {
-        "javascript_actual_tests_pass": 17,
-        "scope": "Report/appeal/old popup selected checks; source not yet frozen, no result attached to95f or any future SHA.",
-        "silent_gate": "PASS_REPORTED_UNFROZEN_PATCH"
+      "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "parent_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
+      "exact_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java",
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/utils/content-report.js",
+        "ci/silent-error-allowlist.txt"
+      ],
+      "diff_stats": {
+        "total": 32,
+        "additions": 24,
+        "deletions": 8
       },
-      "pr_description": "Formal impact classification③ and ledger order added, reported; no SQL changes.",
-      "remaining_source_work": "Rebuild existing action ledger for changed require resolution before final source freeze.",
-      "C00_execution": "NONE; no compile/test/CI/source edit, no new writer or scope."
+      "public_diff_review": "C00 directly read commit parent and five-path patch: seven require fixes, constructor setUp only, two added reviewed allowlist lines; no production Java/SQL/CI/module addition.",
+      "fixture_contract": "Legal topic status/userStatus and10 dependencies, real policy pre_review_all=true, explicit gate HOLD. Three methods and later assertions unchanged (integration writer byte comparison reported; public diff confines fixture edits to setUp).",
+      "reported_local_validation": {
+        "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "javascript_actual_pass": 17,
+        "failures": 0,
+        "skipped": 0,
+        "silent_gate": "PASS",
+        "action_ledger": "Rebuilt4755, byte-identical to95f reported; no ledger file in actual commit diff.",
+        "migration_static": "PASS after formal PR-body classification③ and full read-only sql checkout;14 migration dependency order PASS.",
+        "scope": "Integration-writer evidence only; C00 did not run these checks. New source-local results, not inherited from95f."
+      },
+      "preparation_observation": {
+        "initial_issue": "Local ryTask SQL registration lookup used a sparse checkout lacking root sql.",
+        "resolution": "Existing root sql checked out read-only, static check then PASS reported.",
+        "classification": "Preparation scope issue, not business failure or new SQL source."
+      },
+      "writer_status": "STOPPED_PENDING_CI_OR_VERIFIER_FEEDBACK; same sole local integration repair writer, no new author",
+      "http_new_run": "Starting at exactf8 per integration writer; no run ID or verdict registered",
+      "no_result_inheritance": true
     }
   }
 }

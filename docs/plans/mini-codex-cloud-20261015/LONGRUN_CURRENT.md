@@ -1,18 +1,14 @@
-## 当前组合修复：95f038已定位缺口，root五路径单修复槽
+## 当前固定修复：PR394的f8fe6a，源码冻结WAIT_CI
 
-固定组合 `95f038ae57ac38d35d532a07fbd82375c74d887f` 的既有#387定向测试报告5项MODULE_NOT_FOUND。C00只读核到三文件共七个require指向不存在的utils下举报模块；既有动态举报工具为 `chengyinhub-xcx/pages/square/utils/community-report-sheet.js`，导出open/select/cancel。
+[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已更新固定源码 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1`，直接父提交为 `95f038ae57ac38d35d532a07fbd82375c74d887f`。C00直接核读公开diff：仅授权五路径，24行新增／8行删除；七处require复用既有举报工具，E01_12仅改setUp的合法上架主题／10参依赖／真实policy预审配置true和显式HOLD，allowlist仅新增4+2实名理由，冻结72不变。3方法及后续断言逐字未变由集成写者比对报告；公开差异未触及这些方法。未新增工具、生产Java、SQL或CI配置。
 
-仅登记本地root在 `codex/final-backend-acceptance-20261020` 同一修复槽修改 `chengyinhub-xcx/utils/content-report.js`、`chengyinhub-xcx/pages/topic/index/index.js`、`chengyinhub-xcx/pages/templatedetail/templatedetail.js` 的require路径，复用该既有工具；不复制／新增模块、不改旧工具、UI、策略、权限或测试，保留原来源冻结与锁。新修复SHA尚未交付；无需新增Cloud作者。精确授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.integration_repair_authority`。
+集成写者报告固定新源17项JS全PASS／0失败／0跳过、silent门禁PASS；既有行动账重建4755且与95f逐字不变，实际commit未包含行动账差异。迁移静态与14迁移依赖顺序报告PASS；先前一次ryTask缺SQL登记源于稀疏checkout缺根sql目录，补齐只读目录后通过，属于准备范围问题，不是业务失败或新增SQL。以上仅签收该源报告，C00未执行检查，不从旧源继承。
 
-固定95f的Fast gate／Migration safety gate已观察到FAIL，Funds39431906479亦已COMPLETED／FAILURE；[HTTP39432014261](https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261) 现已COMPLETED／FAILURE。逐job日志已由集成写者确认：HTTP与Funds均被同一E01_12六参／10参构造testCompile错误阻塞，生产模块编译成功、Java业务测试实际0项，HTTP五链均MISSING／NOT_RUN，不是业务链断言失败。Fast／Migration另按下述已定位原因处理，不归到require缺口，也不扩大源码权。当前组合未验收，不继承旧源成绩；原运行保留，不取消或重复触发。Cloud仅更新文档，未执行构建、测试、CI或源码修改。
+固定f8的既有 [CI39433312461](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461)、[Funds39433312735](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735) 当前核读IN_PROGRESS，状态 **WAIT_CI**；新HTTP报告正在同固定源启动，尚无run ID或结果登记。root唯一修复槽停写待反馈，原来源／三队冻结，不派其他作者。旧95f的JS11100项（11090通过／5失败／2跳过／3TODO）、构造testCompile失败、Java业务实际0和HTTP五链MISSING／NOT_RUN均保留历史，不移给f8。
 
-同一root修复槽另追加两条精确路径：`chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java` 仅按现有ClubSessionServiceImplTest适配10参依赖及明确审核结果，保全部方法／断言，不改生产或新增绕审核重载；`ci/silent-error-allowlist.txt` 仅在逐处确认错误承接后，为content-report四处及myproject审核时间线／申诉两处追加实名理由和准确计数，不改冻结基线、门禁或CI规则。无真实错误承接就不能虚构豁免。
+最终组合后端／真库／HTTP尚未验收，旧41f83真库及8bc728 HTTP／CI不继承；支付／内容安全出站stub、真实微信／设备、持久迁移与生产边界保持。不合master、不部署、不执行生产迁移、不新增入口或修改212／CI／网络；Cloud仅控制文档，不运行验证。当前精确交付与运行索引见 `LONGRUN_REMAINING.json.independent_backend_acceptance`。
 
-Backend报告为6生产模块编译通过、testCompile仅上述一处构造错误、测试未执行；不能称断言失败。Migration gate报告缺PR正文正式“影响分类③”，14迁移台账／依赖顺序通过，root仅补PR正文，不改SQL或执行器。以上根因为集成写者提供；C00未编译或测试。HTTP与Funds同一构造夹具根因现已明确，旧95f失败及实际0项记录保留。
-
-root报告授权范围补丁已完成七处引用修正；E01_12仅补合法上架主题与10参依赖，pre_review_all=true且安全门禁显式HOLD，保留3方法／全部断言；六处silentError已逐处核承接后登记，冻结72不变。举报／申诉／旧弹层17项JS检查及silent门禁报告通过，PR正文已补正式分类③和台账顺序。上述补丁**尚未交最终公开SHA**，只能记为未冻结本地观察，不归给旧95f或未来候选；现正重建require解析变化影响的既有行动账。C00不派其他作者、不运行验证，等待最终冻结SHA。
-
-## 独立组合源码交付：PR394固定95f038，五处冲突解决，验收未完成
+## 先前组合95f源码交付与失败历史：不作为f8验收
 
 [草稿PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已公开，固定组合源码 `95f038ae57ac38d35d532a07fbd82375c74d887f`，分支 `codex/final-backend-acceptance-20261020`；base为master但未合并，本轮不合master。来源顺序为 port `b548cdc4d098defb5c4857c793897ca79668d579` → #391 `8bc728ad99d0c748698c5210343e6f4ec782e894` → #385 `b19200a3ad6fc19319665fe5b81ad6161fd9dac7` → #388 `f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a` → #390 `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a` → #387 `0f8d1796983b3a0300462e818efba3f02aa6d2d3`。#388／#390预演及合并均报告无冲突，无新增路径授权。
 
