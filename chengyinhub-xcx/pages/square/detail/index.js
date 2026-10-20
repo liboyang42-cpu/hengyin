@@ -161,17 +161,17 @@ Page({
     if (key === 'follow') { this.followClick(); }   // 复用既有关注链路,不另造一条
   },
 
-  goUserInfo() {
+  goUserInfo() { const info = this.data.info || {}; if (!info.memberId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/userinfo/userinfo?userId=' + this.data.info.memberId,
-      fail: () => toast('打不开这个主页'),
+      url: '/pages/userinfo/userinfo?userId=' + info.memberId,
+      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
   // 关联活动回跳:点 route-map 下方链接 → 主题详情(报告 §3.3)
   goSportTopic() {
     const tid = this.data.info && this.data.info.sportTopicId;
-    if (tid) wx.navigateTo({ url: '/pages/topic/index/index?id=' + tid });
+    if (tid && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + tid, complete: () => { this._navigating = false; } }); } // 跳转中不响应连点
   },
 
   goRemixTemplate() {
@@ -186,11 +186,11 @@ Page({
   // 且漫游发帖刻意不挂关联,所以这里【不存在】跳 roam 的分支。与 square/list 的 goPlay 同一判据。
   goPlay() {
     const info = this.data.info || {};
-    if (!info.dataId) return;
+    if (!info.dataId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     const query = String(info.dataType) === '1'
       ? ('activityId=' + info.dataId)
       : ('topicId=' + info.dataId);
-    wx.navigateTo({ url: '/pages/play/index?' + query });
+    wx.navigateTo({ url: '/pages/play/index?' + query, complete: () => { this._navigating = false; } });
   },
 
   // 添加评论（回车发送）
@@ -1256,7 +1256,7 @@ Page({
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow() {
+  onShow() { this._navigating = false; // 跳转中保护兜底清锁
     const feedVersion = (app.globalData && app.globalData.squareListDirtyVersion) || 0;
     if (this.data.id && !this._unloaded && !this.data.composeShow) {
       if (feedVersion > (this._communityFeedVersion || 0)) this.getData();
