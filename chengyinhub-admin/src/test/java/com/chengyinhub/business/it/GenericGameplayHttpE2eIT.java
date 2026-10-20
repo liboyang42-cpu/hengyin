@@ -209,6 +209,81 @@ class GenericGameplayHttpE2eIT {
         }
     }
 
+    static JsonNode requireGameCommandReceipt(JsonNode receipt, String outcome) {
+        assertTrue(receipt.isObject(), "Game command receipt required");
+        for (String id : new String[]{"receiptId", "activityId"})
+            assertTrue(receipt.path(id).isIntegralNumber() && receipt.path(id).canConvertToLong() && receipt.path(id).asLong() > 0, "Positive command receipt identity required");
+        assertTrue(receipt.path("requestId").isTextual() && !receipt.path("requestId").asText().trim().isEmpty()
+                && receipt.path("requestId").asText().length() <= 64, "Command request identity required");
+        assertTrue(receipt.path("action").isTextual() && receipt.path("action").asText().matches("[A-Z][A-Z0-9_]{0,63}"), "Command action required");
+        assertEquals(outcome, receipt.path("outcome").asText(), receipt.toString());
+        assertTrue(receipt.path("revision").isIntegralNumber() && receipt.path("revision").canConvertToInt() && receipt.path("revision").asInt(-1) >= 0, "Command revision required");
+        assertTrue(receipt.path("replayed").isBoolean() && receipt.path("result").isObject(), "Complete command receipt required");
+        if ("FAILED".equals(outcome))
+            assertTrue(receipt.path("reasonCode").isTextual() && receipt.path("reasonCode").asText().matches("GAME_[A-Z0-9_]+"), "Game failure reason required");
+        return receipt;
+    }
+
+    static JsonNode appliedResponseData(JsonNode response) {
+        assertEquals(200, response.path("code").asInt(), response.toString());
+        JsonNode data = response.path("data");
+        if (data.isObject() && (data.has("receiptId") || (data.has("requestId") && data.has("action") && data.has("outcome"))))
+            requireGameCommandReceipt(data, "APPLIED");
+        return data;
+    }
+
+    static void rejectedGameCommand(JsonNode response) {
+        assertTrue(response.path("code").isIntegralNumber() && response.path("code").canConvertToInt(), "Ajax command response required");
+        JsonNode data = response.path("data");
+        if (response.path("code").asInt() == 200) requireGameCommandReceipt(data, "FAILED");
+        else assertTrue(data.path("reasonCode").isTextual() && data.path("reasonCode").asText().matches("GAME_[A-Z0-9_]+"),
+                "A technical error without a game reason is not a verified command rejection");
+    }
+
+    static void configureRequestSerialization(TestRestTemplate client, com.fasterxml.jackson.databind.ObjectMapper plainJson) throws java.io.IOException {
+        java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> original =
+                new java.util.ArrayList<>(client.getRestTemplate().getMessageConverters());
+        java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> replacements = new java.util.ArrayList<>();
+        java.util.Map<org.springframework.http.converter.json.MappingJackson2HttpMessageConverter,
+                com.fasterxml.jackson.databind.ObjectMapper> unchanged = new java.util.IdentityHashMap<>();
+        for (org.springframework.http.converter.HttpMessageConverter<?> converter : original) {
+            if (converter instanceof org.springframework.http.converter.json.MappingJackson2HttpMessageConverter) {
+                org.springframework.http.converter.json.MappingJackson2HttpMessageConverter prior =
+                        (org.springframework.http.converter.json.MappingJackson2HttpMessageConverter) converter;
+                unchanged.put(prior, prior.getObjectMapper());
+                assertNotSame(prior.getObjectMapper(), plainJson);
+                org.springframework.http.converter.json.MappingJackson2HttpMessageConverter isolated =
+                        new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(plainJson);
+                assertNotSame(prior, isolated);
+                ObjectNode request = plainJson.createObjectNode().put("image", "media-asset:1");
+                request.putArray("imageUrls").add("/profile/lc-owned-1.png").add("media-asset:1");
+                org.springframework.mock.http.MockHttpOutputMessage wire = new org.springframework.mock.http.MockHttpOutputMessage();
+                isolated.write(request, org.springframework.http.MediaType.APPLICATION_JSON, wire);
+                assertEquals(request, plainJson.readTree(wire.getBodyAsBytes()), "Client request media values must reach the wire unchanged");
+                replacements.add(isolated);
+            } else replacements.add(converter);
+        }
+        assertFalse(unchanged.isEmpty(), "Expected Jackson2 client converter");
+        client.getRestTemplate().setMessageConverters(replacements);
+        unchanged.forEach((converter, mapper) -> assertSame(mapper, converter.getObjectMapper(), "Server-shared converter must remain untouched"));
+        assertEquals(replacements, client.getRestTemplate().getMessageConverters());
+        ObjectNode receipt = plainJson.createObjectNode().put("receiptId", 1).put("activityId", 1).put("requestId", "fixture-contract")
+                .put("action", "QUEST_RESOLVE").put("outcome", "APPLIED").put("revision", 1).put("replayed", false);
+        receipt.putObject("result");
+        ObjectNode response = plainJson.createObjectNode().put("code", 200); response.set("data", receipt);
+        assertSame(receipt, appliedResponseData(response));
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(response));
+        ObjectNode failed = response.deepCopy();
+        ((ObjectNode) failed.path("data")).put("outcome", "FAILED").put("reasonCode", "GAME_TASK_COST_UNAVAILABLE");
+        rejectedGameCommand(failed);
+        assertThrows(AssertionError.class, () -> appliedResponseData(failed));
+        ObjectNode incomplete = response.deepCopy(); ((ObjectNode) incomplete.path("data")).remove("receiptId");
+        assertThrows(AssertionError.class, () -> appliedResponseData(incomplete));
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(plainJson.createObjectNode().put("code", 500)));
+        ObjectNode noReceipt = plainJson.createObjectNode().put("code", 200); noReceipt.putObject("data");
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(noReceipt));
+    }
+
     static void assertFixtureMapperColumns(Statement statement) throws SQLException {
         try(ResultSet columns=statement.executeQuery("SELECT withdraw_reason, withdraw_required, replacement_of_offer_id FROM merchant_chapter_offer WHERE 1=0")) {
             assertEquals(3,columns.getMetaData().getColumnCount(),"商家供给 Mapper 列必须存在于本地夹具");
@@ -358,6 +433,7 @@ class GenericGameplayHttpE2eIT {
     }
 
     @org.junit.jupiter.api.BeforeAll void loadExistingPermissionFixture() throws Exception {
+        configureRequestSerialization(http, json);
         assertContentSecurityFixture(context);
         // Fresh-schema skips migration data; reuse its existing role defaults for local author capabilities.
         for(String file:new String[]{"sql/migration_p1_rbac_permission_defaults.sql","sql/migration_m1_permission_full.sql","sql/migration_p1_rbac_permission_defaults.sql"})
@@ -831,7 +907,9 @@ class GenericGameplayHttpE2eIT {
     }
     private Lifecycle teamLifecycle(ObjectNode config) throws Exception {
         Lifecycle s=lifecycle(config,"BLOCK_HP_COST","counter.energy","TEAM",true);
-        long club=success(post("/api/club/apply",json.createObjectNode().put("name","LC真实本地主理团").put("leaderName","LC主理人"),s.headers)).path("clubId").asLong();assertTrue(club>0);
+        String clubName="LC真实本地主理团"+s.memberId;
+        long club=success(post("/api/club/apply",json.createObjectNode().put("name",clubName).put("leaderName","LC主理人"),s.headers)).path("clubId").asLong();assertTrue(club>0);
+        assertEquals(1,database.queryForObject("SELECT COUNT(*) FROM club WHERE id=? AND member_id=? AND name=? AND del_flag=0",Integer.class,club,s.memberId,clubName));
         // Existing local activity/paid/scope fixtures; topic publication and all runtime state/actions use HTTP.
         database.update("INSERT INTO cms_activity(member_id,topic_id,club_id,name,status,publish_status,del_flag,start_date,end_date) VALUES(?,?,?,'LC隔离场次',1,1,0,?,?)",s.memberId,s.topicId,club,new java.sql.Timestamp(System.currentTimeMillis()-3600000),new java.sql.Timestamp(System.currentTimeMillis()+3600000));
         long activity=database.queryForObject("SELECT id FROM cms_activity WHERE topic_id=? AND name='LC隔离场次' ORDER BY id DESC LIMIT 1",Long.class,s.topicId);
@@ -951,7 +1029,7 @@ class GenericGameplayHttpE2eIT {
         ResponseEntity<JsonNode> response=http.exchange(path,org.springframework.http.HttpMethod.POST,new org.springframework.http.HttpEntity<>(body,headers),JsonNode.class);
         record("POST",path,json.createObjectNode().put("id",id),response);return response.getBody();
     }
-    private JsonNode success(JsonNode response) {assertEquals(200,response.path("code").asInt(),response.toString());return response.path("data");}
+    private JsonNode success(JsonNode response) {return appliedResponseData(response);}
     private void rejected(JsonNode response) {assertNotEquals(200,response.path("code").asInt(),response.toString());}
     private JsonNode persistedTopic(long id,String phase) throws Exception {
         java.util.Map<String,Object> row=database.queryForMap("SELECT id,member_id,is_template,journey_rules_json,journey_story_json,theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?",id);

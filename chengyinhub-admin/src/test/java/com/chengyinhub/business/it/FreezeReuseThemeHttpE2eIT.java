@@ -65,6 +65,7 @@ class FreezeReuseThemeHttpE2eIT {
     private final Map<String, String> questKeys = new LinkedHashMap<>();
 
     @BeforeAll void loadExistingPermissionFixture() throws Exception {
+        GenericGameplayHttpE2eIT.configureRequestSerialization(http, json);
         GenericGameplayHttpE2eIT.assertContentSecurityFixture(context);
         for (String file : new String[]{"sql/migration_p1_rbac_permission_defaults.sql", "sql/migration_m1_permission_full.sql", "sql/migration_p1_rbac_permission_defaults.sql"})
             for (String statement : ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8))) {
@@ -393,6 +394,13 @@ class FreezeReuseThemeHttpE2eIT {
         int diesel = count(player(run, user), "diesel");
         JsonNode refused = cmd(run, user.captain, "QUEST_RESOLVE", target.deepCopy());
         rejected(refused); evidence.with("negative").set("arrivalRefusal", refused);
+        JsonNode failure = GenericGameplayHttpE2eIT.requireGameCommandReceipt(refused.path("data"), "FAILED");
+        assertEquals("GAME_TASK_COST_UNAVAILABLE", failure.path("reasonCode").asText());
+        assertEquals("QUEST_RESOLVE", failure.path("action").asText());
+        assertEquals(run.activityId, failure.path("activityId").asLong());
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE id=? AND request_id=? AND activity_id=?"
+                + " AND action='QUEST_RESOLVE' AND outcome='FAILED' AND reason_code='GAME_TASK_COST_UNAVAILABLE'",
+                Integer.class, failure.path("receiptId").asLong(), failure.path("requestId").asText(), run.activityId));
         for (int i = 0; i < 3; i++) assertEquals(stamina[i], stamina(run, run.t(i)), "未全部到达时不结算");
         assertEquals(diesel, count(player(run, user), "diesel"));
         for (Team team : run.teams) if (team != user) arrive(run, team, target.deepCopy());
@@ -517,8 +525,8 @@ class FreezeReuseThemeHttpE2eIT {
         ResponseEntity<JsonNode> response = http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
         record("POST", path, json.createObjectNode().put("id", id), response); return response.getBody();
     }
-    private JsonNode success(JsonNode response) { assertEquals(200, response.path("code").asInt(), response.toString()); return response.path("data"); }
-    private void rejected(JsonNode response) { assertNotEquals(200, response.path("code").asInt(), response.toString()); }
+    private JsonNode success(JsonNode response) { return GenericGameplayHttpE2eIT.appliedResponseData(response); }
+    private void rejected(JsonNode response) { GenericGameplayHttpE2eIT.rejectedGameCommand(response); }
     private JsonNode persistedTopic(long id, String phase) throws Exception {
         Map<String, Object> row = database.queryForMap("SELECT theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?", id);
         ObjectNode values = json.createObjectNode().put("topicId", id).put("phase", phase);

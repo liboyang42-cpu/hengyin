@@ -72,6 +72,7 @@ class FreezeGameHttpE2eIT {
     private final Map<String, String> questKeys = new LinkedHashMap<>();
 
     @BeforeAll void loadExistingPermissionFixture() throws Exception {
+        GenericGameplayHttpE2eIT.configureRequestSerialization(http, json);
         GenericGameplayHttpE2eIT.assertContentSecurityFixture(context);
         for (String file : new String[]{"sql/migration_p1_rbac_permission_defaults.sql", "sql/migration_m1_permission_full.sql", "sql/migration_p1_rbac_permission_defaults.sql"})
             for (String statement : ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8))) {
@@ -101,11 +102,12 @@ class FreezeGameHttpE2eIT {
             ObjectNode request = json.createObjectNode().put("title", row.path("title").asText()).put("validationMethod", row.path("validationMethod").asInt())
                     .put("isSync", 0).put("advancedConfigJson", config.toString());
             if (row.has("story")) {
+                JsonNode story = reviewedStoryImages(row.path("story"));
                 // 与小程序保存一致：线索段落（标签=本模板线索名）只进 storyJson，不进到达即读的 storyText
                 Set<String> clueNames = new HashSet<>(); config.path("clues").forEach(name -> clueNames.add(name.asText()));
                 StringBuilder text = new StringBuilder();
-                for (JsonNode beat : row.path("story")) if (!clueNames.contains(beat.path("tag").asText())) text.append(text.length() > 0 ? "\n" : "").append(beat.path("text").asText());
-                request.put("storyJson", row.path("story").toString()).put("storyText", text.toString());
+                for (JsonNode beat : story) if (!clueNames.contains(beat.path("tag").asText())) text.append(text.length() > 0 ? "\n" : "").append(beat.path("text").asText());
+                request.put("storyJson", story.toString()).put("storyText", text.toString());
             }
             long id = success(post("/api/template/draft", request, author)).asLong(); assertTrue(id > 0);
             JsonNode reread = success(form("/api/template/myinfo", id, author));
@@ -905,6 +907,29 @@ class FreezeGameHttpE2eIT {
         for (JsonNode q : game.path("quests")) if (q.path("nodeId").asLong() == nodeId) return q;
         fail("缺少任务 " + nodeId); return null;
     }
+    private JsonNode reviewedStoryImages(JsonNode original) {
+        String legacy = "https://www.chengyinhub.com/favicon.ico";
+        JsonNode story = original.deepCopy();
+        for (JsonNode beat : story) {
+            JsonNode images = beat.path("imgs");
+            if (images.isArray()) for (int i = 0; i < images.size(); i++)
+                if (legacy.equals(images.get(i).asText())) ((ArrayNode) images).set(i,
+                        json.getNodeFactory().textNode(mediaFixture.approvedImage(context, database, authorId)));
+        }
+        JsonNode restored = story.deepCopy();
+        assertEquals(original.size(), story.size());
+        for (int beat = 0; beat < original.size(); beat++) {
+            JsonNode before = original.get(beat).path("imgs"), after = story.get(beat).path("imgs");
+            assertEquals(before.size(), after.size());
+            for (int i = 0; i < before.size(); i++) if (legacy.equals(before.get(i).asText())) {
+                assertEquals(mediaFixture.approvedImage(context, database, authorId), after.get(i).asText());
+                ((ArrayNode) restored.get(beat).path("imgs")).set(i, before.get(i).deepCopy());
+            }
+        }
+        assertEquals(original, restored, "Only the exact legacy story image may change; all text, tags and array order remain");
+        return story;
+    }
+
     private ObjectNode resolveClues(ObjectNode config) throws Exception {
         Map<String, String> names = new LinkedHashMap<>();
         JsonNode resolved = replaceClues(config, names);
@@ -953,8 +978,8 @@ class FreezeGameHttpE2eIT {
         ResponseEntity<JsonNode> response = http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
         record("POST", path, json.createObjectNode().put("id", id), response); return response.getBody();
     }
-    private JsonNode success(JsonNode response) { assertEquals(200, response.path("code").asInt(), response.toString()); return response.path("data"); }
-    private void rejected(JsonNode response) { assertNotEquals(200, response.path("code").asInt(), response.toString()); }
+    private JsonNode success(JsonNode response) { return GenericGameplayHttpE2eIT.appliedResponseData(response); }
+    private void rejected(JsonNode response) { GenericGameplayHttpE2eIT.rejectedGameCommand(response); }
     private JsonNode persistedTopic(long id, String phase) throws Exception {
         Map<String, Object> row = database.queryForMap("SELECT theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?", id);
         ObjectNode values = json.createObjectNode().put("topicId", id).put("phase", phase);
