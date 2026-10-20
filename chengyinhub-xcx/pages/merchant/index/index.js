@@ -302,7 +302,7 @@ Page({
   },
 
   goManageCoupon() {
-    wx.navigateTo({ url: '/subpackageMember/coupon/coupon?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon/coupon?scope=MERCHANT', complete: () => { this._navigating = false; } }); // 跳转中不响应连点,免得叠两层券管理页
   },
 
   goAftercare() {
@@ -1289,8 +1289,8 @@ Page({
   // 主题只按主题 ID 进入项目主页，主办/承办能力由后端 /home 投影决定。
   goHostProject(e) {
     const topicId = Number(e.currentTarget.dataset.topicid);
-    if (!Number.isSafeInteger(topicId) || topicId <= 0) return;
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT' });
+    if (!Number.isSafeInteger(topicId) || topicId <= 0 || this._navigating) return; // 跳转中不响应连点,免得叠两层项目页
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   openProjectCard(e) {
