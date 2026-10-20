@@ -60,6 +60,8 @@ public interface ICommunityPostService {
     Long enforceReportedTarget(Long operatorUserId, Long reportCaseId, String targetType, Long targetId,
                                CommunityPostRequests.Enforcement request);
     void reviewAppeal(Long operatorUserId, Long appealId, CommunityPostRequests.AppealReview request);
+    /** 审核员认领/打开申诉：SUBMITTED → REVIEWING(按 expectedVersion CAS)；本人重复打开幂等。 */
+    Map<String, Object> claimAppeal(Long operatorUserId, Long appealId, Integer expectedVersion);
     List<Map<String, Object>> enforcements(Long postId);
     Map<String, Object> appeals(String status, Long cursor, Integer limit);
     void applyAuditDecision(Long postId, boolean approved);

@@ -125,7 +125,7 @@ class CommunityPostRejectionAppealTest {
         service.appeal(AUTHOR, appeal);
 
         verify(mapper).insertAppeal(eq(31L), eq(AUTHOR), eq("内容并不违规，请复核"), anyString(),
-                eq("appeal-rejection-1"), any());
+                eq("appeal-rejection-1"), any(), any());
     }
 
     @Test
