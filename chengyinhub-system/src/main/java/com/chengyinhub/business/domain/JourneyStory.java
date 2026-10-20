@@ -45,6 +45,85 @@ public class JourneyStory {
     }
 
     /**
+     * 仅重映射既有剧情条件中的节点引用；使用原始树保留未知字段与作者顺序。
+     * 调用方须先处理来源剧情，再重建结局章；不得把新旧 ID 混合后重复映射。
+     */
+    public static String remapNodeIds(String rawJson, java.util.Map<Long, Long> nodeOldToNew) {
+        if (rawJson == null || rawJson.trim().isEmpty()) return rawJson;
+        try {
+            JsonNode root = MAPPER.readTree(rawJson);
+            if (root == null || !root.isObject()) throw new IllegalArgumentException("主题剧情必须是对象");
+            boolean changed = false;
+            JsonNode stages = root.path("stages");
+            if (stages.isArray()) for (JsonNode stage : stages) {
+                JsonNode changes = stage.path("end").path("changed");
+                if (changes.isArray()) for (JsonNode change : changes)
+                    changed |= remapNodeCondition(change.path("when"), nodeOldToNew);
+            }
+            JsonNode ending = root.path("ending");
+            if (ending.isObject()) {
+                JsonNode disposition = ending.get("dispositionNodeId");
+                if (disposition != null && !disposition.isNull()) {
+                    if (!disposition.isIntegralNumber() || !disposition.canConvertToLong() || disposition.asLong() <= 0L)
+                        throw new IllegalArgumentException("结局配置 ending.dispositionNodeId 必须是正整数");
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) ending).put("dispositionNodeId",
+                            mappedNodeId(disposition.asLong(), nodeOldToNew));
+                    changed = true;
+                }
+                for (String field : new String[]{"endings", "badges"}) {
+                    JsonNode rows = ending.path(field);
+                    if (rows.isArray()) for (JsonNode row : rows) {
+                        JsonNode conditions = row.path("when");
+                        if (conditions.isArray()) for (JsonNode condition : conditions)
+                            changed |= remapNodeCondition(condition, nodeOldToNew);
+                    }
+                }
+                JsonNode exhibits = ending.path("exhibits");
+                if (exhibits.isArray()) for (JsonNode exhibit : exhibits)
+                    changed |= remapNodeCondition(exhibit.path("when"), nodeOldToNew);
+            }
+            return changed ? MAPPER.writeValueAsString(root) : rawJson;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("主题剧情节点引用无法重映射", e);
+        }
+    }
+
+    private static boolean remapNodeCondition(JsonNode condition, java.util.Map<Long, Long> nodeOldToNew) {
+        if (condition == null || !condition.isObject()) return false;
+        com.fasterxml.jackson.databind.node.ObjectNode object = (com.fasterxml.jackson.databind.node.ObjectNode) condition;
+        if ("NODE_COMPLETED".equals(condition.path("op").asText())) {
+            // 沿用现有 validator/结局章 helper 的 asLong 正值语义，不在此收紧旧输入类型。
+            object.put("nodeId", mappedNodeId(condition.path("nodeId").asLong(0L), nodeOldToNew));
+            return true;
+        }
+        JsonNode variable = condition.get("var");
+        if (variable == null || !variable.isTextual()) return false;
+        String name = variable.asText();
+        boolean asked = name.startsWith("sys.asked.");
+        if (!asked && !name.startsWith("sys.outcome.") && !name.startsWith("sys.mistakes.")
+                && !name.startsWith("sys.passed.")) return false;
+        java.util.regex.Matcher reference = java.util.regex.Pattern.compile(asked
+                ? "^sys\\.(asked)\\.([1-9][0-9]*)\\.([A-Za-z0-9_-]{1,32})$"
+                : "^sys\\.(outcome|mistakes|passed)\\.([1-9][0-9]*)$").matcher(name);
+        if (!reference.matches()) throw new IllegalArgumentException("剧情条件系统节点引用不合法");
+        final long source;
+        try { source = Long.parseLong(reference.group(2)); }
+        catch (NumberFormatException invalid) { throw new IllegalArgumentException("剧情条件系统节点引用不合法", invalid); }
+        object.put("var", "sys." + reference.group(1) + "." + mappedNodeId(source, nodeOldToNew)
+                + (asked ? "." + reference.group(3) : ""));
+        return true;
+    }
+
+    private static long mappedNodeId(long source, java.util.Map<Long, Long> nodeOldToNew) {
+        Long mapped = nodeOldToNew == null ? null : nodeOldToNew.get(source);
+        if (source <= 0L || mapped == null || mapped <= 0L)
+            throw new IllegalArgumentException("剧情引用的站点不在本次提交里或映射不合法:nodeId=" + source);
+        return mapped;
+    }
+
+    /**
      * 章节 id 重映射:章节在编辑重建 / 复制 / 重开一期后都会换新 id,剧情 stages[].chapterId
      * 必须跟着 old→new 走。映射缺项 = 剧情引用了本次提交里不存在的章节,fail-closed。
      */
@@ -189,11 +268,7 @@ public class JourneyStory {
                 com.fasterxml.jackson.databind.node.ArrayNode when = item.putArray("when");
                 for (JsonNode cond : chapter.ending.path("when")) {
                     JsonNode copy = cond.deepCopy();
-                    if ("NODE_COMPLETED".equals(cond.path("op").asText()) && copy instanceof com.fasterxml.jackson.databind.node.ObjectNode) {
-                        Long mapped = nodeOldToNew == null ? null : nodeOldToNew.get(cond.path("nodeId").asLong());
-                        if (mapped == null) throw new IllegalArgumentException("结局条件「到过某站」引用的站点不在本次提交里");
-                        ((com.fasterxml.jackson.databind.node.ObjectNode) copy).put("nodeId", mapped);
-                    }
+                    remapNodeCondition(copy, nodeOldToNew);
                     when.add(copy);
                 }
             }

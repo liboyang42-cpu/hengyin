@@ -8,7 +8,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.mapper.*;
@@ -21,6 +23,7 @@ import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -875,7 +878,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
         r.setCreateBy(memberId.toString());
         r.setCreateTime(new Date());
-        cmsRegistrationMapper.insertCmsRegistration(r);
+        if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
+            throw new IllegalStateException("自玩报名原订单写入失败");
+        }
         return r;
     }
 
@@ -1799,10 +1804,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         try {
             lifecycle = TopicLifecycleState.fromCode(topic.getLifecycle());
         } catch (IllegalArgumentException ex) {
-            throw new RuntimeException("主题生命周期未知或缺失,暂不可售票", ex);
+            // CL-37:与 assertCommercialSaleOpen 同口径,未知生命周期 fail-closed 按未开售拦截,不露内部状态名。
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名", ex);
         }
         if (!lifecycle.isDirectSaleOpen()) {
-            throw new RuntimeException("该主题当前不在 SELLING,暂不可售票");
+            if (lifecycle.isSaleStarted()) {
+                throw new RuntimeException("报名已结束，本主题已停止售卖");
+            }
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
         }
         assertExploreSellable(topic);
 
@@ -2003,12 +2012,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * @return
      */
     @Override
-    //@Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String generateVerificationQrcode(Long registrationId) {
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (registration == null) {
             throw new RuntimeException("报名记录不存在");
         }
+
+        registration = requireCurrentUsableRegistration(registration);
 
         // 如果已经生成过二维码，直接返回
         if (registration.getQrcodeUrl() != null && !registration.getQrcodeUrl().isEmpty()) {
@@ -2031,6 +2042,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         String qrcodeUrl = qrcodeService.generateQrcode(qrcodeContent, 300, 300);
 
+        if (StringUtils.isBlank(qrcodeUrl)) throw new IllegalStateException("核销二维码生成结果为空");
         registration.setQrcodeUrl(qrcodeUrl);
         //registration.setUpdateBy(SecurityUtils.getUsername());
         registration.setUpdateTime(new Date());
@@ -2581,6 +2593,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public Long getExpiredUnpaidScanUpperBound(Date now) {
+        return cmsRegistrationMapper.selectExpiredUnpaidMaxId(now);
+    }
+
+    @Override
+    public List<Long> listExpiredUnpaidIdsAfter(Date now, long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectExpiredUnpaidIdsAfter(now, afterId, maxId,
+                Math.max(1, Math.min(200, limit)));
+    }
+
+    @Override
     public List<Long> listExpiredPayingIds(long afterId) {
         return cmsRegistrationMapper.selectExpiredPayingIds(new Date(), afterId);
     }
@@ -2588,6 +2611,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public List<Long> listPaidMissingQrcodeIds() {
         return cmsRegistrationMapper.selectPaidMissingQrcodeIds();
+    }
+
+    @Override
+    public Long getPaidMissingQrcodeScanUpperBound() {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeMaxId();
+    }
+
+    @Override
+    public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeIdsAfter(afterId, maxId,
+                Math.max(1, Math.min(100, limit)));
     }
 
     /**
@@ -2991,6 +3025,37 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return true;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot) {
+        if (snapshot == null || snapshot.getId() == null) {
+            throw new IllegalStateException("报名记录不存在");
+        }
+        CmsActivity activity = null;
+        if (Long.valueOf(2L).equals(snapshot.getOwnerType())) {
+            // 与活动取消相同 activity→registration 锁序；不持旧快照核销。
+            activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(snapshot.getOwnerId());
+            if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
+                throw new IllegalStateException("活动不存在");
+            }
+            if (activity.getCancelTime() != null) throw new IllegalStateException("活动已取消，无法使用");
+        }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(snapshot.getId());
+        if (current == null || !Objects.equals(snapshot.getMemberId(), current.getMemberId())
+                || !Objects.equals(snapshot.getOwnerType(), current.getOwnerType())
+                || !Objects.equals(snapshot.getOwnerId(), current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请重新获取订单");
+        }
+        if (!Integer.valueOf(2).equals(current.getPaymentStatus())
+                || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
+            throw new IllegalStateException("订单未完成支付或已退款，无法使用");
+        }
+        String rejection = ExploreTicketUsePolicy.rejection(current.getPurchaseKind(),
+                activity == null ? null : activity.getEndDate(), new Date());
+        if (rejection != null) throw new IllegalStateException(rejection);
+        return current;
+    }
+
     private CmsActivity assertActivityRedeemable(CmsRegistration registration) {
         if (!Long.valueOf(2L).equals(registration.getOwnerType())) return null;
         // 与取消共用 activity→registration 锁序，避免核销继续使用取消前的快照。
@@ -3074,6 +3139,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                               Long chapterId, Long topicId, Long merchantOwnerMemberId,
@@ -3083,6 +3149,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                                Long chapterId, Long topicId, Long merchantOwnerMemberId,
@@ -3109,6 +3176,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("订单与当前活动或路线不一致，无法核销");
         }
         registration = current;
+        // A包：按章核销同样拒绝非探索票与已到期场次探索票(master 已先校验 ownerType=2 再锁活动)。
+        if (!Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())) {
+            throw new IllegalStateException("探索票或路线归属已变化，请重新扫码");
+        }
+        String useRejection = ExploreTicketUsePolicy.rejection(registration.getPurchaseKind(), activity.getEndDate(), new Date());
+        if (useRejection != null) throw new IllegalStateException(useRejection);
         if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
             throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
         }

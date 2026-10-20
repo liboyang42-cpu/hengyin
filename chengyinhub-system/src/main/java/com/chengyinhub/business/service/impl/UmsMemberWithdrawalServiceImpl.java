@@ -175,6 +175,9 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
      * @param username 用户昵称
      * @return
      */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService balanceAdmissionService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username){
@@ -258,10 +261,12 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
         }
 
         // 唯一键 winner 才扣余额；同事务后续失败会回滚 claim 与余额。
-        int rows = umsMemberMapper.deductWithdrawableBalance(memberId, request.getWithdrawalAmount(), frozen);
-        if(rows <= 0){
-            throw new RuntimeException("扣除用户余额失败");
+        com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService.Admission admission =
+                balanceAdmissionService.debitBank(memberId, request.getWithdrawalAmount());
+        if (!admission.deducted) {
+            throw new RuntimeException(admission.frozen.rejectionMessage());
         }
+        balance = admission.before;
 
 
         //插入扣除用户余额变动明细
@@ -367,11 +372,8 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("withdrawal amount is invalid");
         }
-        UmsMember member = umsMemberMapper.selectUmsMemberById(withdrawal.getMemberId());
-        if (member == null) {
-            throw new RuntimeException("用户不存在");
-        }
-        BigDecimal currentBalance = member.getBalance() == null ? BigDecimal.ZERO : member.getBalance();
+        BigDecimal currentBalance = umsMemberMapper.selectBalanceForUpdate(withdrawal.getMemberId());
+        if (currentBalance == null) throw new RuntimeException("用户不存在");
         int refundRows = umsMemberMapper.addBalance(withdrawal.getMemberId(), amount);
         if (refundRows <= 0) {
             throw new RuntimeException("退回用户余额失败");

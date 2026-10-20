@@ -52,7 +52,7 @@ public final class ThemeRuntimeConfig {
             }
             TemplateResourceSlots.validateBindings(config, allowClientKeys);
             GameplayRuntimeConfig.validate(config, items, draft);
-            chapters(config, items); grants(config, items); events(config, items); endings(config, items); card(config.path("card"));
+            chapters(config, items, allowClientKeys); grants(config, items); events(config, items); endings(config, items); card(config.path("card"));
             Set<String> scenes = new HashSet<>();
             for (JsonNode scene : rows(config, "scenes", 50)) {
                 fields(scene, set("id", "name", "grants", "events", "endings", "journeyStory", "nodeConfigs"));
@@ -92,12 +92,56 @@ public final class ThemeRuntimeConfig {
             Iterator<String> keys = scene.path("nodeConfigs").fieldNames();
             while (keys.hasNext()) if (keys.next().startsWith("client:")) keys.remove();
         }
+        // 章节规则里引用同请求新建站点的 client:<key>:落库前的中间态先去掉(不足两站的互斥组整组去掉),
+        // 站点建好后 remapForNodeSave 按原请求换成真实编号整段写回。
+        for (JsonNode chapter : config.path("chapters")) {
+            if (chapter.has("exclusiveGroups")) {
+                com.fasterxml.jackson.databind.node.ArrayNode kept = JSON.createArrayNode();
+                for (JsonNode group : chapter.path("exclusiveGroups")) {
+                    com.fasterxml.jackson.databind.node.ArrayNode ids = JSON.createArrayNode();
+                    for (JsonNode id : group) if (!clientNodeRef(id)) ids.add(id);
+                    if (ids.size() >= 2) kept.add(ids);
+                }
+                if (kept.size() > 0) ((ObjectNode) chapter).set("exclusiveGroups", kept); else ((ObjectNode) chapter).remove("exclusiveGroups");
+            }
+            if (chapter.has("extraNodes")) {
+                com.fasterxml.jackson.databind.node.ArrayNode kept = JSON.createArrayNode();
+                for (JsonNode row : chapter.path("extraNodes")) if (!clientNodeRef(row.path("nodeId"))) kept.add(row);
+                if (kept.size() > 0) ((ObjectNode) chapter).set("extraNodes", kept); else ((ObjectNode) chapter).remove("extraNodes");
+            }
+        }
         return config.toString();
+    }
+    /** 按原请求把章节互斥组/额外节点整段换成真实编号:client:<key> 走本次新建,数字编号走旧→新。 */
+    private static void remapChapterRefs(ObjectNode source, ObjectNode result, Map<Long, Long> nodes, Map<String, Long> createdClients) {
+        for (int i = 0; i < source.path("chapters").size() && i < result.path("chapters").size(); i++) {
+            JsonNode from = source.path("chapters").get(i);
+            ObjectNode to = (ObjectNode) result.path("chapters").get(i);
+            java.util.function.Function<JsonNode, Long> target = ref -> {
+                Long mapped = clientNodeRef(ref) ? createdClients.get(ref.asText().substring(7)) : nodes.get(ref.asLong());
+                if (mapped == null || mapped <= 0L) fail("章节规则节点没有对应目标：" + ref.asText());
+                return mapped;
+            };
+            if (from.has("exclusiveGroups")) {
+                com.fasterxml.jackson.databind.node.ArrayNode groups = JSON.createArrayNode();
+                for (JsonNode group : from.path("exclusiveGroups")) {
+                    com.fasterxml.jackson.databind.node.ArrayNode ids = groups.addArray();
+                    for (JsonNode id : group) ids.add(target.apply(id));
+                }
+                to.set("exclusiveGroups", groups);
+            }
+            if (from.has("extraNodes")) {
+                com.fasterxml.jackson.databind.node.ArrayNode rows = JSON.createArrayNode();
+                for (JsonNode row : from.path("extraNodes")) rows.addObject().put("nodeId", target.apply(row.path("nodeId"))).put("slot", row.path("slot").asText());
+                to.set("extraNodes", rows);
+            }
+        }
     }
     public static String remapForNodeSave(String raw, Map<Long, Long> nodes, Map<Long, Long> chapters, Map<String, Long> createdClients) {
         ObjectNode source = parseForNodeSave(raw);
         if (source == null) return raw == null ? null : "";
         ObjectNode result = parseDraft(remapAll(withoutClientBindings(raw), nodes, chapters, null));
+        remapChapterRefs(source, result, nodes, createdClients);
         source.path("templateBindings").fields().forEachRemaining(entry -> {
             if (!entry.getKey().startsWith("client:")) return;
             Long target = createdClients.get(entry.getKey().substring(7));
@@ -138,14 +182,14 @@ public final class ThemeRuntimeConfig {
         frozen.remove("scenes");
         return frozen;
     }
-    private static void chapters(JsonNode root, Set<String> items) {
+    private static void chapters(JsonNode root, Set<String> items, boolean allowClientKeys) {
         Set<Integer> indexes=new HashSet<>();
         for(JsonNode ch:rows(root,"chapters",200)) {
             fields(ch,set("index","hpCost","luckCost","statCosts","grants","eggs","completion","exclusiveGroups","extraNodes")); integer(ch,"index",0,199);
             if(!indexes.add(ch.path("index").asInt()))fail("章节配置重复");
             integer(ch,"hpCost",0,999);integer(ch,"luckCost",0,999);
             statCosts(ch);
-            chapterRequirements(ch);
+            chapterRequirements(ch, allowClientKeys);
             Set<String> granted=new HashSet<>();
             for(JsonNode g:rows(ch,"grants",200)) {fields(g,set("itemId","quantity","timing"));ref(g,"itemId",items);integer(g,"quantity",1,99);enumeration(g,"timing","START","END");if(!granted.add(g.path("itemId").asText()))fail("章节物资重复");}
             Set<String> eggs=new HashSet<>();
@@ -155,7 +199,18 @@ public final class ThemeRuntimeConfig {
             }
         }
     }
-    private static void chapterRequirements(JsonNode chapter) {
+    /** 同请求新建站点的引用(client:<clientNodeKey>),只在存站点那一步允许,落库前由 remapForNodeSave 换成真实编号。 */
+    private static boolean clientNodeRef(JsonNode value) {
+        if (value == null || !value.isTextual()) return false;
+        String text = value.asText();
+        return text.startsWith("client:") && text.length() > 7 && text.length() <= 71 && text.substring(7).equals(text.substring(7).trim());
+    }
+    private static String nodeRefKey(JsonNode value, boolean allowClientKeys, String label, String what) {
+        if (allowClientKeys && clientNodeRef(value)) return value.asText();
+        if (!value.isIntegralNumber() || !value.canConvertToLong() || value.asLong() < 1) fail(label + " " + what + " ID 须为正整数");
+        return String.valueOf(value.asLong());
+    }
+    private static void chapterRequirements(JsonNode chapter, boolean allowClientKeys) {
         String label = "章节 index=" + chapter.path("index").asInt();
         if (chapter.has("completion")) {
             JsonNode completion = chapter.get("completion");
@@ -168,26 +223,26 @@ public final class ThemeRuntimeConfig {
                 if (!completion.path("overflowSlot").isTextual() || !completion.path("overflowSlot").asText().matches("[a-z][a-z0-9_]{0,31}")) fail(label + " overflowSlot 额外任务槽键不合法");
             }
         }
-        Set<Long> grouped = new HashSet<>();
+        Set<String> grouped = new HashSet<>();
         if (chapter.has("exclusiveGroups")) {
             JsonNode groups = chapter.get("exclusiveGroups");
             if (!groups.isArray() || groups.size() > 20) fail(label + " exclusiveGroups 须为不超过20组的数组");
             for (JsonNode group : groups) {
                 if (!group.isArray() || group.size() < 2) fail(label + " 互斥组至少包含2个节点");
                 for (JsonNode nodeId : group) {
-                    if (!nodeId.isIntegralNumber() || !nodeId.canConvertToLong() || nodeId.asLong() < 1) fail(label + " 互斥组节点 ID 须为正整数");
-                    if (!grouped.add(nodeId.asLong())) fail(label + " 互斥组节点重复：" + nodeId.asLong());
+                    String key = nodeRefKey(nodeId, allowClientKeys, label, "互斥组节点");
+                    if (!grouped.add(key)) fail(label + " 互斥组节点重复：" + key);
                 }
             }
         }
-        Set<Long> extra = new HashSet<>();
+        Set<String> extra = new HashSet<>();
         if (chapter.has("extraNodes")) {
             JsonNode nodes = chapter.get("extraNodes");
             if (!nodes.isArray()) fail(label + " extraNodes 须为数组");
             for (JsonNode node : nodes) {
-                fields(node, set("nodeId", "slot")); integer(node, "nodeId", 1, Long.MAX_VALUE);
+                fields(node, set("nodeId", "slot"));
+                String nodeId = nodeRefKey(node.path("nodeId"), allowClientKeys, label, "额外节点");
                 if (!node.path("slot").isTextual() || !node.path("slot").asText().matches("[a-z][a-z0-9_]{0,31}")) fail(label + " 额外任务槽键不合法");
-                long nodeId = node.path("nodeId").asLong();
                 if (!extra.add(nodeId)) fail(label + " 额外节点重复：" + nodeId);
                 if (grouped.contains(nodeId)) fail(label + " 节点不能同时属于互斥组和额外节点：" + nodeId);
             }
@@ -331,6 +386,20 @@ public final class ThemeRuntimeConfig {
         ObjectNode n = parseDraft(raw); if (n == null) return raw==null?null:""; remap(n, map); return n.toString();
     }
     private static void remap(JsonNode n, Map<Long, Long> map) {
+        Set<JsonNode> stories = Collections.newSetFromMap(new IdentityHashMap<JsonNode, Boolean>());
+        for (JsonNode scene : n.path("scenes")) if (scene.has("journeyStory")) {
+            String mapped = com.chengyinhub.business.domain.JourneyStory.remapNodeIds(
+                    scene.get("journeyStory").toString(), map);
+            try {
+                JsonNode story = JSON.readTree(mapped);
+                ((ObjectNode) scene).set("journeyStory", story);
+                stories.add(story);
+            } catch (Exception ex) { throw new IllegalArgumentException("场景剧情节点复制失败", ex); }
+        }
+        remapRuntime(n, map, stories);
+    }
+    private static void remapRuntime(JsonNode n, Map<Long, Long> map, Set<JsonNode> stories) {
+        if (stories.contains(n)) return;
         if (n.isObject()) {
             if(n.has("var") && n.path("var").asText().matches("sys\\.(asked|passed|outcome|mistakes|damage)\\.[0-9]+(?:\\..+)?")) {String[] parts=n.path("var").asText().split("\\.",4);Long target=map.get(Long.valueOf(parts[2]));if(target==null)fail("复制时条件节点没有对应目标");((ObjectNode)n).put("var",parts[0]+"."+parts[1]+"."+target+(parts.length==4?"."+parts[3]:""));}
             if(n.has("operationNodeId")){Long target=map.get(n.path("operationNodeId").asLong());if(target==null)fail("复制时方案操作节点没有对应目标");((ObjectNode)n).put("operationNodeId",target);}
@@ -363,8 +432,8 @@ public final class ThemeRuntimeConfig {
                 });
                 ((ObjectNode)n).set("templateBindings", renamed);
             }
-            n.fields().forEachRemaining(entry -> { if (!"templateBindings".equals(entry.getKey())) remap(entry.getValue(), map); });
-        } else if (n.isArray()) n.forEach(child -> remap(child, map));
+            n.fields().forEachRemaining(entry -> { if (!"templateBindings".equals(entry.getKey())) remapRuntime(entry.getValue(), map, stories); });
+        } else if (n.isArray()) n.forEach(child -> remapRuntime(child, map, stories));
     }
     public static void assertItemReferences(JsonNode content,ObjectNode config) {
         assertItemReferences(content, config, Collections.emptyMap());

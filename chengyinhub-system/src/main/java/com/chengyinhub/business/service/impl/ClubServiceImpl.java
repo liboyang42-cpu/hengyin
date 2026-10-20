@@ -99,6 +99,7 @@ public class ClubServiceImpl implements IClubService
     @Override
     public int insertClub(Club club)
     {
+        requireNameFree(club.getName() == null ? null : club.getName().trim(), null, null);
         club.setCreateTime(DateUtils.getNowDate());
         return clubMapper.insertClub(club);
     }
@@ -260,21 +261,90 @@ public class ClubServiceImpl implements IClubService
         {
             throw new ServiceException("俱乐部配额状态暂不可确认", HttpStatus.CONFLICT);
         }
-        if (ownedClubIds.size() >= maxOwnedClubs)
+        // 行已在上面 FOR UPDATE 锁住,这里只读它们的状态/名称
+        List<Club> ownedRows = ownedClubIds.isEmpty() ? java.util.Collections.emptyList()
+                : clubMapper.selectClubsByIds(ownedClubIds);
+        Club pending = null, sameName = null, rejected = null;
+        int rejectedCount = 0;
+        String name = club.getName() == null ? null : club.getName().trim();
+        for (Club row : ownedRows == null ? java.util.Collections.<Club>emptyList() : ownedRows)
+        {
+            if (row == null || row.getId() == null || !ownedClubIds.contains(row.getId())) continue;
+            long status = row.getStatus() == null ? -1L : row.getStatus();
+            if (status == 0L) pending = newer(pending, row);
+            else if (status == 2L) { rejected = newer(rejected, row); rejectedCount++; }
+            else if (status == 1L && name != null && row.getName() != null && name.equals(row.getName().trim()))
+                sameName = newer(sameName, row);
+        }
+        // 幂等重放:已有待审申请,或同名俱乐部刚建好(网络重试),原样返回那一条,不再新建
+        Club replay = pending != null ? pending : sameName;
+        int counted = ownedClubIds.size() - rejectedCount;   // 被驳回的不占配额
+        if (replay != null)
+        {
+            club.setId(replay.getId());
+            club.setStatus(replay.getStatus());
+            club.setLogo(replay.getLogo());
+            club.setCover(replay.getCover());
+            club.setCaseImages(replay.getCaseImages());
+            return counted;
+        }
+        // 俱乐部名称全站唯一(用户 2026-10-20 决定):别的主理人待审或在营的俱乐部占着同名就拒绝;本人同名已在上面按重放处理
+        requireNameFree(name, memberId, null);
+        if (counted >= maxOwnedClubs)
         {
             throw new ServiceException("每位主理人最多创建" + maxOwnedClubs + "个俱乐部", HttpStatus.CONFLICT);
+        }
+        if (rejected != null)
+        {
+            // 驳回后重新提交:改回同一行为待审并清掉驳回原因,不复制第二个俱乐部
+            club.setId(rejected.getId());
+            club.setStatus(0L);
+            club.setRejectReason(null);
+            club.setMemberCount(null);
+            club.setUpdateTime(DateUtils.getNowDate());
+            if (clubMapper.updateClub(club) != 1)
+            {
+                throw new ServiceException("俱乐部重新提交失败，请重试", HttpStatus.CONFLICT);
+            }
+            return counted + 1;
         }
         club.setCreateTime(DateUtils.getNowDate());
         if (clubMapper.insertClub(club) != 1)
         {
             throw new ServiceException("俱乐部创建失败，请重试", HttpStatus.CONFLICT);
         }
-        return ownedClubIds.size() + 1;
+        return counted + 1;
+    }
+
+    private static Club newer(Club current, Club candidate)
+    {
+        return current == null || candidate.getId() > current.getId() ? candidate : current;
+    }
+
+    /** 俱乐部名称全站唯一(用户 2026-10-20 决定):待审或在营、未删除的俱乐部占用名称,被驳回和已解散的不占。 */
+    private void requireNameFree(String name, Long ownerToSkip, Long clubToSkip)
+    {
+        if (name == null || name.isEmpty()) return;
+        if (clubMapper.countClubsHoldingName(name, ownerToSkip, clubToSkip) > 0)
+        {
+            throw new ServiceException("俱乐部名称已被使用，请换一个", HttpStatus.CONFLICT);
+        }
+    }
+
+    /** 改名才查重:名称没变(包括历史上已经重名的俱乐部)照常保存。 */
+    private void requireRenameFree(Club club)
+    {
+        if (club == null || club.getId() == null || club.getName() == null) return;
+        String name = club.getName().trim();
+        Club current = clubMapper.selectClubById(club.getId());
+        if (current != null && current.getName() != null && name.equals(current.getName().trim())) return;
+        requireNameFree(name, null, club.getId());
     }
 
     @Override
     public int updateClub(Club club)
     {
+        requireRenameFree(club);
         club.setUpdateTime(DateUtils.getNowDate());
         return clubMapper.updateClub(club);
     }

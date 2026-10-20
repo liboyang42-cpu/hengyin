@@ -116,5 +116,47 @@ class AppMediaPublicationGuardTest {
             assertThrows(ServiceException.class,()->guard.requireMedia(9L,reference,true));
         }
     }
+    @Test void publishingRefusesAbsoluteExternalLinkInNonMediaField() {
+        for (String link : new String[]{"https://evil.example/landing", "HTTP://evil.example", " https://evil.example ",
+                "看这里 https://evil.example/x", "https:\\\\evil.example"}) {
+            CmsMemberTemplate template = new CmsMemberTemplate();
+            template.setAdvancedConfigJson("{\"navigation\":{\"url\":" + quote(link) + "}}");
+            ServiceException error = assertThrows(ServiceException.class, () -> guard.requireTemplate(9L, template, true), link);
+            assertTrue(error.getMessage().contains("暂不支持外部链接"), link);
+        }
+        verifyNoInteractions(assets);
+    }
+    @Test void publishingRefusesProtocolRelativeLinkInNonMediaField() {
+        CmsTopic topic = new CmsTopic();
+        topic.setThemeRuntimeConfigJson("{\"entry\":{\"link\":\"//evil.example/landing\"}}");
+        ServiceException error = assertThrows(ServiceException.class, () -> guard.requireTopic(9L, topic, true));
+        assertTrue(error.getMessage().contains("暂不支持外部链接"));
+        assertThrows(ServiceException.class, () -> guard.requireJson(9L, "{\"blocks\":[{\"type\":\"text\",\"text\":\"\\\\\\\\evil.example\"}]}", true));
+    }
+    @Test void publishingKeepsInternalRoutesAndPlainTextThatMentionsADomain() {
+        String config = "{\"navigation\":{\"url\":\"/pages/topic/detail?id=3\"},\"tip\":\"关注 chengyinhub.com 获取更多\","
+                + "\"blocks\":[{\"type\":\"text\",\"text\":\"第 1/2 站：老街\"}],\"mode\":\"switchTab\"}";
+        CmsMemberTemplate template = new CmsMemberTemplate(); template.setAdvancedConfigJson(config);
+        guard.requireTemplate(9L, template, true);
+        assertEquals(config, template.getAdvancedConfigJson());
+        verifyNoInteractions(assets);
+    }
+    @Test void publishingStillResolvesMediaReferencesInsteadOfRefusingThemAsLinks() throws Exception {
+        mediaState("APPROVED");
+        String source = "{\"A\":{\"img\":\"https://owned/" + IMAGE_KEY + "\",\"audio\":\"https://owned/" + AUDIO_KEY + "\"},"
+                + "\"album\":{\"images\":[{\"url\":\"https://owned/" + IMAGE_KEY + "\"}]},\"cover\":\"/images/a.png\"}";
+        String result = guard.requireJson(9L, source, true);
+        com.fasterxml.jackson.databind.JsonNode tree = new ObjectMapper().readTree(result);
+        assertEquals("media-asset:7", tree.path("A").path("img").asText());
+        assertEquals("media-asset:8", tree.path("A").path("audio").asText());
+        assertEquals("media-asset:7", tree.path("album").path("images").path(0).path("url").asText());
+        assertEquals("/images/a.png", tree.path("cover").asText());
+        mediaState("HOLD");
+        ServiceException held = assertThrows(ServiceException.class, () -> guard.requireJson(9L, source, true));
+        assertFalse(held.getMessage().contains("暂不支持外部链接"));
+    }
+    private static String quote(String text) {
+        try { return new ObjectMapper().writeValueAsString(text); } catch (Exception e) { throw new IllegalStateException(e); }
+    }
 
 }

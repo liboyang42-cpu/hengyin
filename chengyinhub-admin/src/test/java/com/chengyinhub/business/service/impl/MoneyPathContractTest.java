@@ -200,7 +200,7 @@ class MoneyPathContractTest {
         member.setStatus(1L);
         member.setDelFlag(0);
         when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
-        when(regMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any())).thenReturn(1);
+        when(regMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any())).thenAnswer(i -> { ((com.chengyinhub.business.domain.CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         CmsRegistrationServiceImpl service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);

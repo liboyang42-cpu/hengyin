@@ -56,7 +56,7 @@
 
 ## 8. 环境 / 调试 / 配置
 - `utils/config.js`(baseUrl/baseImgUrl 正式域名)
-- `utils/mockData.js`(仅 dev,被 isDevEnv 网住)
+- `pages/club/utils/mockData.js`(仅 dev,被 isDevEnv 网住;2026-10-19 从主包 utils/ 移入 pages/club 分包)
 - app.js:50 注释掉的 `siteBaseUrl: 'http://localhost:8080'` 死行(P3 候选)
 - `project.config.json`/`project.private.config.json`:只读,不提交
 

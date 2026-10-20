@@ -336,6 +336,7 @@ Page({
     }
     if (this.data.list.length > 0) {
       this.setData({  errorMsg: '' });
+      toast('刷新失败，请重试');   // 保留旧列表,非阻塞提示刷新没成功
       return;
     }
     this.setData({ errorMsg: message });

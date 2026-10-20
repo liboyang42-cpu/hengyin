@@ -40,6 +40,11 @@ function harness(noBackground) {
   }
   if (noBackground) wx.startLocationUpdateBackground = undefined
   h.consent = createConsentClient({ getUserID: app.getUserID, sendRequest(request) {
+    // SC-PRIV-03:撤回结果未知时 consent-client 会先回读 latest;服务端最新仍是旧的同意(与 record-failed 回执的 latest 一致)
+    if (request.url === '/api/compliance/consents/latest') {
+      request.success({ code: 200, data: { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } })
+      return
+    }
     h.recordRequest = { url: request.url, method: request.method, body: JSON.parse(request.data) }
     if (h.rejectRecord) { request.fail(); return }
     h.recordEcho = { ...h.recordRequest.body, docVersion: 'unit-version' }
@@ -56,11 +61,12 @@ function harness(noBackground) {
   const revoke = h.tracker.revoke
   h.tracker.revoke = key => { h.revokedOrder = ++h.order; revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
-  const context = { wx, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) } }
+  const context = { wx, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) }, playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
-  for (const name of ['requestPlayLocation', 'watchLocation']) {
+  // 2026-10-19 移植基线 1ab1fcb8:定位回调先记精度提示(_noteLocAccuracy),一并取真源方法
+  for (const name of ['requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
     h.play[name] = vm.runInNewContext('({' + playSource.slice(start, end + 4).trim() + '})', context)[name]
   }

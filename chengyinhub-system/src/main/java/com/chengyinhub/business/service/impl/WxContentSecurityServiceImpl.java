@@ -108,6 +108,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     private RoamHangoutMapper roamHangoutMapper;
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> imServiceProvider;
+    // 模板封面/勋章图(BIZ_TYPE_TEMPLATE):bizId = cms_member_template.id;公开读路径只读 cms_template_library 投影
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsMemberTemplateMapper cmsMemberTemplateMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsTemplateLibraryMapper cmsTemplateLibraryMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.AuditTaskMapper auditTaskMapper;
 
     @Autowired
     private RoamStampMapper roamStampMapper;
@@ -737,6 +744,46 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 imServiceProvider.getObject().closeHangoutGroup(bizId);   // 隐藏即关群,逻辑只在 IImService 一份
                 return confirmMutation(affected, "附近的局封面违规已自动隐藏", bizId);
             }
+            else if (bizType == BIZ_TYPE_TEMPLATE)
+            {
+                // bizId 是会员模板 id;列表/详情/首页/分类都只读模板库投影(status=1 且 publish_status=1)。
+                // 下架 = 投影 publish_status=0 + status=2:作者不能直接再上架,必须重新提交广场人审;
+                // 在途的广场审核单一并撤销,免得人审通过把违规图放回去。
+                if (cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId) == null)
+                {
+                    return false;
+                }
+                int affected = 0;
+                for (com.chengyinhub.business.domain.CmsTemplateLibrary row
+                        : cmsTemplateLibraryMapper.selectByMemberTemplateForUpdate(bizId))
+                {
+                    if (!Integer.valueOf(0).equals(row.getDelFlag()))
+                    {
+                        continue;
+                    }
+                    auditTaskMapper.cancelOpenTemplateTasks(
+                            com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
+                    if (Long.valueOf(0L).equals(row.getPublishStatus()) && Long.valueOf(2L).equals(row.getStatus()))
+                    {
+                        continue;
+                    }
+                    com.chengyinhub.business.domain.CmsTemplateLibrary t =
+                            new com.chengyinhub.business.domain.CmsTemplateLibrary();
+                    t.setId(row.getId());
+                    t.setPublishStatus(0L);
+                    t.setStatus(2L);
+                    t.setReason("模板图片违规已自动下架");
+                    t.setUpdateTime(new java.util.Date());
+                    if (cmsTemplateLibraryMapper.updateCmsTemplateLibrary(t) != 1)
+                    {
+                        return confirmMutation(0, "模板图片违规已自动下架", bizId);
+                    }
+                    affected++;
+                }
+                return affected > 0
+                        ? confirmMutation(affected, "模板图片违规已自动下架", bizId)
+                        : confirmAlreadyApplied("模板图片违规已自动下架", bizId);
+            }
             else
             {
                 // 其它业务类型(如据点模板/官方活动,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
@@ -901,6 +948,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_IM_MESSAGE:
                 ImMessage message = imMessageMapper.selectImMessageById(id);
                 return message != null && containsMediaHash(hash, message.getContent());
+            case BIZ_TYPE_TEMPLATE:
+                com.chengyinhub.business.domain.CmsMemberTemplate template =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(id);
+                return template != null && containsMediaHash(hash, template.getImgUrl(), template.getMedalImg());
+            case BIZ_TYPE_HANGOUT:
+                com.chengyinhub.business.domain.RoamHangout hangout = roamHangoutMapper.selectById(id, 0L);
+                return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());
             default:
                 return false;
         }

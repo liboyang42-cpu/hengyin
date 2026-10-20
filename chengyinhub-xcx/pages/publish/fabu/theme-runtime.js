@@ -8,6 +8,7 @@ const PURPOSES = ['展示', '生命值', '幸运值'];
 const EFFECTS = ['使用时', '获得时一次', '持有期间', '持有期间减耗'];
 const TIMINGS = ['不自动发放', '章节开始', '章节结束'];
 const copy = value => JSON.parse(JSON.stringify(value));
+const OWN = '__own'; // 额度选项里的「单独额度」:新建一个只给本站/本章用的任务槽
 function config(raw) {
   const c = raw ? (typeof raw === 'string' ? JSON.parse(raw) : copy(raw)) : {};
   return Object.assign({ schemaVersion: 1, capacity: 6, allowDiscard: true, items: [], chapters: [], grants: [], events: [] }, c);
@@ -78,7 +79,10 @@ const data = {
   runtimeZeroHpPolicies: [], runtimeZeroHpPolicyKeys: [], runtimeZeroHpPolicyIndex: -1,
   runtimeChallengeError: '', runtimeChallengeHint: '',
   runtimeChallengeNodes: [], runtimeChallengeNodeIndex: -1, runtimeAlternativeNodes: [], runtimeZeroChallenge: { restoreTo: 1, limit: 3 },
-  runtimeRewardOpen: false, subtitleEditing: false, runtimeBingoIndex: 0, runtimeCompletionIndex: -1, runtimeChapterCosts: { hpCost: 0, luckCost: 0 },
+  runtimeRewardOpen: false, subtitleEditing: false, runtimeBingoIndex: 0, runtimeCompletionIndex: -1,
+  storyNodeRoles: {}, storyRoleOptions: [],
+  runtimeOverflowOptions: [], runtimeOverflowLabel: '不允许',
+  runtimeChapterCostRows: [], runtimeChapterCostOptions: [],
   runtimeChapterRules: { index: 0, completionType: 'ALL', quantity: '', overflowSlot: '', groups: [], extraNodes: [], nodes: [], slots: [] },
   runtimeChapterRation: { enabled: false, actKey: '', rationKey: '', itemIndex: -1, itemLabel: '请选择', quantity: '1', fallback: '0', values: [], valueIndex: 0, items: [], reason: '' },
 };
@@ -105,7 +109,6 @@ const methods = {
     if (Array.isArray(c.items)) c.items.forEach(i => { if (i.stat || i.statKey) i.delta = Number(i.delta); });
     return JSON.stringify(c);
   },
-  _runtimeCosts(index) { return chapter(this._runtimeConfig(), index); },
   _prependRuntimeChapter() { const c = this._runtimeConfig(); const added = c.chapters.find(ch => ch.index === this.data.formData.chapters.length); c.chapters.forEach(ch => { ch.index = ch === added ? 0 : ch.index + 1; }); this._saveRuntime(c); if (this._syncStructureChapters) this._syncStructureChapters(); /* structure */ },
   _removeRuntimeChapter(index) { const c = this._runtimeConfig(); c.chapters = c.chapters.filter(ch => ch.index !== index).map(ch => Object.assign(ch, { index: ch.index > index ? ch.index - 1 : ch.index })); this._saveRuntime(c); if (this._syncStructureChapters) this._syncStructureChapters(this.data.formData.chapters.filter((_, i) => i !== index)); /* structure */ },
   _runtimeChapterIndex() { return this.data.popChapterAction == 0 ? this.data.formData.chapters.length : this.data.popChapterIndex; },
@@ -118,6 +121,8 @@ const methods = {
   _chapterRuleIssue(index, row) {
     if (!row || (!row.completion && !row.exclusiveGroups && !row.extraNodes)) return '';
     const nodes = this._chapterSavedNodes(index), ids = new Set(nodes.map(node => node.id));
+    // 复制出的草稿:规则引用同请求新建站点的 client:<key>,首次保存时由服务端换成真实编号
+    (((this.data.formData.chapters || [])[index] || {}).nodes || []).forEach(node => { if (!(Number(node.id) > 0) && node.clientNodeKey) ids.add('client:' + node.clientNodeKey); });
     const extra = row.extraNodes || [], groups = row.exclusiveGroups || [];
     const used = new Set();
     for (const item of extra) {
@@ -159,6 +164,50 @@ const methods = {
       nodes, slots,
     } });
     this._openChapterRation(index);
+    this._openChapterCosts(index);
+    this._refreshOverflowOptions();
+  },
+  /* 章末数值消耗(通用):本章结束时扣的生命/幸运/自定义数值,对应 chapters[].hpCost / luckCost / statCosts。
+     运行端在章末结算时照此扣除(ThemeRuntimeEngine.chapterEnd),所以存量非零消耗必须看得见、改得了。 */
+  _openChapterCosts(index) {
+    const c = this._runtimeConfig(), row = c.chapters.find(ch => ch.index === index) || {};
+    const options = purposeOptions(c, initial.parse(this.data.formData.journeyRules)).filter(o => o.key);
+    const labelOf = key => (options.find(o => o.key === key) || {}).label;
+    const rows = [];
+    if (Number(row.hpCost) > 0) rows.push({ key: 'HP', label: labelOf('HP') || (c.hpName || '生命值'), amount: String(row.hpCost), inactive: !labelOf('HP') });
+    if (Number(row.luckCost) > 0) rows.push({ key: 'LUCK', label: labelOf('LUCK') || (c.luckName || '幸运值'), amount: String(row.luckCost), inactive: !labelOf('LUCK') });
+    (row.statCosts || []).forEach(cost => rows.push({ key: cost.statKey, label: labelOf(cost.statKey) || cost.statKey, amount: String(cost.amount), inactive: !labelOf(cost.statKey) }));
+    this.setData({ runtimeChapterCostRows: rows, runtimeChapterCostOptions: options.filter(o => !rows.some(r => r.key === o.key)) });
+  },
+  addChapterCost(e) {
+    const option = this.data.runtimeChapterCostOptions[Number(e.detail.value)];
+    if (!option) return;
+    const rows = this.data.runtimeChapterCostRows.concat({ key: option.key, label: option.label, amount: '1', inactive: false });
+    this.setData({ runtimeChapterCostRows: rows, runtimeChapterCostOptions: this.data.runtimeChapterCostOptions.filter(o => o.key !== option.key) });
+  },
+  onChapterCostAmount(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const rows = copy(this.data.runtimeChapterCostRows);
+    if (!rows[index]) return;
+    rows[index].amount = e.detail.value;
+    this.setData({ runtimeChapterCostRows: rows });
+  },
+  removeChapterCost(e) {
+    const rows = this.data.runtimeChapterCostRows.slice(), removed = rows.splice(Number(e.currentTarget.dataset.index), 1)[0];
+    if (!removed) return;
+    const options = removed.inactive ? this.data.runtimeChapterCostOptions : this.data.runtimeChapterCostOptions.concat({ key: removed.key, label: removed.label });
+    this.setData({ runtimeChapterCostRows: rows, runtimeChapterCostOptions: options });
+  },
+  _chapterCostsPatch() {
+    const patch = { hpCost: 0, luckCost: 0, statCosts: [] };
+    for (const row of this.data.runtimeChapterCostRows || []) {
+      const amount = Number(row.amount);
+      if (!Number.isInteger(amount) || amount < 0 || amount > 999) return { error: '「' + row.label + '」消耗须为 0 到 999 的整数' };
+      if (row.key === 'HP') patch.hpCost = amount;
+      else if (row.key === 'LUCK') patch.luckCost = amount;
+      else if (amount > 0) patch.statCosts.push({ statKey: row.key, amount });
+    }
+    return { patch };
   },
   /* 章末配给：本章（幕）结束时每队/每人按配置消耗一次物品，没有物品时扣对应数值。
      写入既有 gameplayRuntime.survival.rations（按本章任务的 actKey），运行端按幕结算一次。 */
@@ -225,10 +274,45 @@ const methods = {
     if (JSON.stringify(survival.rations || []) !== before) this._saveRuntime(c);
     return true;
   },
-  onChapterCompletion(e) { this.setData({ 'runtimeChapterRules.completionType': e.currentTarget.dataset.type }); },
+  _saveChapterCosts(index, patch) {
+    const c = this._runtimeConfig(), existing = c.chapters.find(ch => ch.index === index);
+    const had = !!existing && (Number(existing.hpCost) > 0 || Number(existing.luckCost) > 0 || (existing.statCosts || []).length > 0);
+    if (!had && !patch.hpCost && !patch.luckCost && !patch.statCosts.length) return;
+    const row = chapter(c, index);
+    row.hpCost = patch.hpCost; row.luckCost = patch.luckCost;
+    if (patch.statCosts.length) row.statCosts = patch.statCosts; else delete row.statCosts;
+    this._saveRuntime(c);
+  },
+  // 「全部完成」开关:开 = 全部完成(默认);关 = 至少完成填写的站数
+  onChapterCompleteAll(e) {
+    const all = !!e.detail.value;
+    this.setData({ 'runtimeChapterRules.completionType': all ? 'ALL' : 'ANY_N', 'runtimeChapterRules.overflowSlot': all ? '' : this.data.runtimeChapterRules.overflowSlot });
+    this._refreshOverflowOptions();
+  },
   onChapterQuantity(e) { this.setData({ 'runtimeChapterRules.quantity': e.detail.value }); },
-  onChapterOverflowSlot(e) { this.setData({ 'runtimeChapterRules.overflowSlot': e.detail.value }); },
-  reuseChapterOverflowSlot(e) { this.setData({ 'runtimeChapterRules.overflowSlot': e.currentTarget.dataset.slot }); },
+  /* 超出数量后补做一站要占哪份额度:不允许 / 单独额度 / 与其他站点或章节共用的既有额度。
+     额度 = 任务槽(slot):同名即同一份,每个进度(队伍或个人)每份只能用一次 —— 由作者选,不写死成某一个。 */
+  onChapterOverflowPick(e) {
+    const option = this.data.runtimeOverflowOptions[Number(e.detail.value)];
+    if (!option) return;
+    const current = this.data.runtimeChapterRules.overflowSlot;
+    let slot = option.value;
+    if (slot === OWN) {
+      const mine = current && (this._allowances().find(a => a.slot === current) || { members: [] }).members.length <= 1;
+      slot = mine ? current : this._uniqueSlot('overflow_' + (this.data.runtimeChapterRules.index + 1));
+    }
+    this.setData({ 'runtimeChapterRules.overflowSlot': slot });
+    this._refreshOverflowOptions();
+  },
+  _refreshOverflowOptions() {
+    const draft = this.data.runtimeChapterRules, scope = this._allowanceScope();
+    const others = this._allowances().filter(a => !(a.overflowChapters.length === 1 && a.overflowChapters[0] === draft.index && !a.nodes.length));
+    const options = [{ label: '不允许', value: '' }, { label: '单独额度（' + scope + '一次）', value: OWN }]
+      .concat(others.map(a => ({ label: '与「' + a.members.join('、') + '」共用（' + scope + '共一次）', value: a.slot })));
+    const current = draft.overflowSlot;
+    const shared = current && others.find(a => a.slot === current);
+    this.setData({ runtimeOverflowOptions: options, runtimeOverflowLabel: !current ? '不允许' : shared ? '与「' + shared.members.join('、') + '」共用' : '单独额度（' + scope + '一次）' });
+  },
   addChapterExclusiveGroup() {
     if (this.data.runtimeChapterRules.nodes.length < 2) { toast('请先保存本章至少 2 个站点'); return; }
     const groups = this.data.runtimeChapterRules.groups.slice();
@@ -248,37 +332,76 @@ const methods = {
     const groups = this.data.runtimeChapterRules.groups.slice(); groups.splice(Number(e.currentTarget.dataset.index), 1);
     this.setData({ 'runtimeChapterRules.groups': groups });
   },
-  addChapterExtraNode() {
-    const nodes = this.data.runtimeChapterRules.nodes;
-    if (!nodes.length) { toast('请先保存本章站点，再配置额外节点'); return; }
-    const extraNodes = this.data.runtimeChapterRules.extraNodes.concat({ nodeId: nodes[0].id, nodeIndex: 0, nodeName: nodes[0].name, slot: '' });
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  /* 额度(任务槽 slot):extraNodes[].slot 与 completion.overflowSlot 同名即同一份额度,运行端按进度
+     (队伍局 = 每队,个人局 = 每人)记「已用」,每份只能用一次(GameplayTaskEngine extraSlots)。
+     这里只按已存的槽名归组展示,不改名、不合并 —— 存量关系原样保留。 */
+  _allowanceScope(c) {
+    const scope = (((c || this._runtimeConfig()).gameplayRuntime) || {}).runtimeScope;
+    return scope === 'PLAYER' ? '每人' : scope === 'TEAM' ? '每队' : '每局';
   },
-  onChapterExtraNode(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    const nodeIndex = Number(e.detail.value), node = this.data.runtimeChapterRules.nodes[nodeIndex];
-    if (!extraNodes[index] || !node) return;
-    extraNodes[index].nodeId = node.id; extraNodes[index].nodeIndex = nodeIndex; extraNodes[index].nodeName = node.name;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  _allowances(c) {
+    c = c || this._runtimeConfig();
+    const names = {};
+    (this.data.formData.chapters || []).forEach(ch => (ch.nodes || []).forEach(node => {
+      if (Number(node.id) > 0) names[String(Number(node.id))] = node.name;
+      if (node.clientNodeKey) names['client:' + node.clientNodeKey] = node.name;
+    }));
+    const map = new Map();
+    const at = slot => { if (!map.has(slot)) map.set(slot, { slot, members: [], nodes: [], overflowChapters: [] }); return map.get(slot); };
+    (c.chapters || []).slice().sort((x, y) => x.index - y.index).forEach(ch => {
+      (ch.extraNodes || []).forEach(item => { const a = at(item.slot); a.nodes.push(String(item.nodeId)); a.members.push(names[String(item.nodeId)] || '已删除站点'); });
+      if (ch.completion && ch.completion.overflowSlot) { const a = at(ch.completion.overflowSlot); a.overflowChapters.push(ch.index); a.members.push('第' + (ch.index + 1) + '章补做'); }
+    });
+    return Array.from(map.values());
   },
-  onChapterExtraSlot(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    if (!extraNodes[index]) return;
-    extraNodes[index].slot = e.detail.value;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  _uniqueSlot(base) {
+    const used = new Set(this._allowances().map(a => a.slot).concat(this.data.runtimeChapterRules.overflowSlot || []));
+    let slot = base.slice(0, 28), n = 2;
+    while (used.has(slot)) slot = base.slice(0, 28) + '_' + (n++);
+    return slot;
   },
-  reuseChapterExtraSlot(e) {
-    const extraNodes = copy(this.data.runtimeChapterRules.extraNodes), index = Number(e.currentTarget.dataset.index);
-    if (!extraNodes[index]) return;
-    extraNodes[index].slot = e.currentTarget.dataset.slot;
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  // 故事流站点块上的计入方式:计入完成 / 单独额度 / 与既有额度共用(2026-10-12 用户定:额外站点在故事流里标)
+  _storyRolePatch(c) {
+    c = c || this._runtimeConfig();
+    const scope = this._allowanceScope(c), allowances = this._allowances(c), roles = {};
+    allowances.forEach(a => a.nodes.forEach(id => {
+      roles[id] = a.members.length > 1 ? '额外 · 与' + (a.members.length - 1) + '处共用（' + scope + '共一次）' : '额外 · ' + scope + '一次';
+    }));
+    const options = [{ label: '计入完成', value: '' }, { label: '额外站点 · 单独额度（' + scope + '一次）', value: OWN }]
+      .concat(allowances.map(a => ({ label: '额外站点 · 与「' + a.members.join('、') + '」共用（' + scope + '共一次）', value: a.slot })));
+    return { storyNodeRoles: roles, storyRoleOptions: options };
   },
-  removeChapterExtraNode(e) {
-    const extraNodes = this.data.runtimeChapterRules.extraNodes.slice(); extraNodes.splice(Number(e.currentTarget.dataset.index), 1);
-    this.setData({ 'runtimeChapterRules.extraNodes': extraNodes });
+  _storyNodeRoles(c) { return this._storyRolePatch(c).storyNodeRoles; },
+  onStoryNodeRole(e) {
+    const nodeId = Number(e.currentTarget.dataset.nodeid), option = this.data.storyRoleOptions[Number(e.detail.value)];
+    const index = (this.data.formData.chapters || []).findIndex(ch => (ch.nodes || []).some(node => Number(node.id) === nodeId));
+    if (!(nodeId > 0) || index < 0) { toast('先保存草稿，再设置额外站点'); return; }
+    if (!option) return;
+    const c = this._runtimeConfig(), hadExtra = !!(c.chapters.find(ch => ch.index === index) || {}).extraNodes, row = chapter(c, index);
+    const current = (row.extraNodes || []).find(item => item.nodeId === nodeId);
+    const next = (row.extraNodes || []).filter(item => item.nodeId !== nodeId);
+    if (option.value === OWN) {
+      const mine = current && (this._allowances(c).find(a => a.slot === current.slot) || { members: [] }).members.length <= 1;
+      next.push({ nodeId, slot: mine ? current.slot : this._uniqueSlot('extra_' + nodeId) });
+    } else if (option.value) next.push({ nodeId, slot: option.value });
+    const completion = row.completion && row.completion.type === 'ANY_N' ? row.completion : null;
+    const issue = this._chapterRuleIssue(index, { completion, exclusiveGroups: row.exclusiveGroups || [], extraNodes: next });
+    if (issue) { toast(issue); return; }
+    if (next.length) row.extraNodes = next;
+    else {
+      delete row.extraNodes;
+      // 已编译过额外标记的章节恢复默认:写显式 ALL 才能清掉(与 _saveChapterRules 同口径)
+      if (hadExtra && !row.completion) row.completion = { type: 'ALL' };
+    }
+    this._saveRuntime(c);
+    const rolePatch = this._storyRolePatch(c);
+    this.setData({ storyNodeRoles: rolePatch.storyNodeRoles, storyRoleOptions: rolePatch.storyRoleOptions });
   },
   _saveChapterRules() {
+    const costs = this._chapterCostsPatch();
+    if (costs.error) { toast(costs.error); return false; }
     if (!this._saveChapterRation()) return false;
+    this._saveChapterCosts(this.data.runtimeChapterRules.index, costs.patch);
     const draft = this.data.runtimeChapterRules, index = draft.index;
     const completion = draft.completionType === 'ANY_N' ? { type: 'ANY_N', quantity: Number(draft.quantity) } : null;
     if (completion && String(draft.overflowSlot || '').trim()) completion.overflowSlot = String(draft.overflowSlot).trim();
@@ -573,7 +696,6 @@ const methods = {
     this._saveRuntime(c); this._refreshRuntimeEditor(c);
   },
   removeRuntimeEggReward(e) { const c = this._runtimeConfig(), d = e.currentTarget.dataset; chapter(c, this.data.runtimeEditor.index).eggs[Number(d.index)].rewards.splice(Number(d.reward), 1); this._saveRuntime(c); this._refreshRuntimeEditor(c); },
-  onRuntimeChapterCost(e) { const c = this._runtimeConfig(); chapter(c, this._runtimeChapterIndex())[e.currentTarget.dataset.field] = Number(e.detail.value); this._saveRuntime(c); this.setData({ runtimeChapterCosts: chapter(c, this._runtimeChapterIndex()) }); },
   onRuntimeCompletionItem(e) {
     const c = this._runtimeConfig(), id = c.items[Number(e.detail.value)].id;
     c.grants = c.grants.filter(g => g.id !== 'completion_material');

@@ -1,6 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const archive = require('../../utils/life-archive.js')
+const archive = require('../../pages/play/utils/life-archive.js')
 
 const nodes = [
   { name: '上海城市规划展示馆', done: true, lat: 31.23, lng: 121.47 },

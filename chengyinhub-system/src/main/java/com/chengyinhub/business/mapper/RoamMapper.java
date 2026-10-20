@@ -308,6 +308,7 @@ public interface RoamMapper {
     int updateMerchantPoiTags(@Param("merchantId") Long merchantId, @Param("tags") String tags);
     /** 在架据点数(status=1),配额校验用。 */
     int countActiveNodesByMerchant(@Param("merchantId") Long merchantId);
+    int countActiveNodesByMerchantForUpdate(@Param("merchantId") Long merchantId);
     /** 上/下线自有据点(where id + merchant_id + type=2);applicant 不算 owner。 */
     int setNodeStatusOwned(@Param("poiId") Long poiId, @Param("merchantId") Long merchantId, @Param("status") Integer status);
 

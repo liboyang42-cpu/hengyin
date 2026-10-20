@@ -252,6 +252,22 @@
           )
     </select>
 
+    <select id="hasCurrentNpcRegistration" resultType="int" useCache="false" flushCache="true">
+        select count(1)
+        from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id and a.del_flag = 0
+        where r.member_id = #{memberId}
+          and r.payment_status = 2
+          and r.registration_status = 2
+          and (
+            (r.owner_type = 1 and r.owner_id = #{topicId}
+                and (r.expires_at is null or r.expires_at &gt; now()))
+            or (r.owner_type = 2 and a.topic_id = #{topicId}
+                and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3
+                    or (a.cancel_time is null and a.end_date is not null and a.end_date &gt; now())))
+          )
+    </select>
+
     <select id="selectMyTeams" resultMap="PlayTeamResult">
         select t.id, t.owner_type, t.owner_id, t.leader_member_id, t.invite_code, t.title, t.join_mode,
                t.max_members, t.joined_count, t.status, t.expire_time, t.create_time, t.update_time

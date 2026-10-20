@@ -42,6 +42,7 @@ def all_required_clean(directory):
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
     write_report(directory, "ExploreAllianceRedeemRealDbIT", 4)
+    write_report(directory, "ExploreScanReplayRealDbIT", 4)
     write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 16)
     write_report(directory, "ShopDayOneTicketMySqlIT", 5)
     write_report(directory, "TandianriBatch3FundsMybatisIntegrationTest", 18)
@@ -87,7 +88,7 @@ def all_required_clean(directory):
         ("PhotoReviewProgressMybatisIntegrationTest", 6),
         ("SpoilerAccessMybatisIntegrationTest", 7),
         ("SquareEditFollowMybatisIntegrationTest", 7),
-        ("RoamSessionWriteMybatisIntegrationTest", 12),
+        ("RoamSessionWriteMybatisIntegrationTest", 15),
         ("RoamLocationRetentionMySqlIT", 21),
         ("ComplaintPeriodWithdrawalGateMybatisIntegrationTest", 7),
         ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),

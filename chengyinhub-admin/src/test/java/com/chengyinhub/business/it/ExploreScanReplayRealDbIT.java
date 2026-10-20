@@ -46,8 +46,9 @@ class ExploreScanReplayRealDbIT {
         try(SqlSession s=factory.openSession(true);Statement st=s.getConnection().createStatement()) {
             st.execute("CREATE TABLE IF NOT EXISTS activity_cancel_manual_refund_case(id BIGINT PRIMARY KEY AUTO_INCREMENT,activity_id BIGINT,topic_id BIGINT,parent_order_no VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin,payer_member_id BIGINT,payer_registration_id BIGINT,case_type VARCHAR(32),status VARCHAR(48),verified_registration_ids_json JSON,unverified_registration_ids_json JSON) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
             st.execute("INSERT INTO cms_topic(id,name,product_type) VALUES("+TOPIC+",'replay IT',2)");
-            st.execute("INSERT INTO cms_activity(id,member_id,name,topic_id,del_flag) VALUES("+ACT+",9904031,'replay IT',"+TOPIC+",0)");
-            st.execute("INSERT INTO cms_registration(id,registration_no,member_id,owner_type,owner_id,ticket_id,ticket_price,original_amount,payable_amount,total_amount,pay_expire_time,payment_status,registration_status,verification_status) VALUES("+REG+",'REPLAY-IT',9904032,2,"+ACT+",9904033,39,39,39,39,NOW()+INTERVAL 1 DAY,2,2,0)");
+            // 移植分支按章核销只认探索票(purchase_kind=3)且场次须有结束时间(ExploreTicketUsePolicy)，夹具按真实探索票落库。
+            st.execute("INSERT INTO cms_activity(id,member_id,name,topic_id,del_flag,end_date) VALUES("+ACT+",9904031,'replay IT',"+TOPIC+",0,NOW()+INTERVAL 30 DAY)");
+            st.execute("INSERT INTO cms_registration(id,registration_no,member_id,owner_type,owner_id,ticket_id,ticket_price,original_amount,payable_amount,total_amount,pay_expire_time,payment_status,registration_status,verification_status,purchase_kind) VALUES("+REG+",'REPLAY-IT',9904032,2,"+ACT+",9904033,39,39,39,39,NOW()+INTERVAL 1 DAY,2,2,0,3)");
             for(long chapter:new long[]{CH1,CH2}) {
                 st.execute("INSERT INTO cms_topic_chapter(id,topic_id,name,sort_id,required,terms_mode,recruit_enabled,max_merchant,category_id) VALUES("+chapter+","+TOPIC+",'IT chapter',1,1,'PERK',1,1,18)");
                 st.execute("INSERT INTO merchant_chapter_offer(topic_id,chapter_id,merchant_id,perk_id,terms_mode,quota_total,quota_used,status) VALUES("+TOPIC+","+chapter+","+MERCHANT+",9904034,'PERK',10,0,1)");

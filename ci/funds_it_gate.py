@@ -135,6 +135,9 @@ EXPECTED = {
     # 现在:由 gate 脚本点名跑,库不可达改为硬失败,再由本门禁回读 skipped=0。
     "ExploreAllianceMvpRealDbIT": 5,
     "ExploreAllianceRedeemRealDbIT": 4,
+    # 2026-10-19 并入:F-L3-08 按章核销重放的并发证明(SC-SCAN-RACE,4 条 @Test)。
+    # 它和上面两套用同一个 ExploreItDatabase,但从未被点名 ⇒ 任何 CI 都没在真库上跑过它。
+    "ExploreScanReplayRealDbIT": 4,
     # 2026-09-16 提现闸(用户硬规则「等所有玩家都退不了才可提现」):14 → 16,+2 = 活动/主题结算选单
     # 在仍有已付未退未核销、退款截止未到的票时不入选(活动结束早于集合 / 自由定向票期长于主题)。
     "TandianriBatch0FundsMybatisIntegrationTest": 16,
@@ -230,7 +233,8 @@ EXPECTED = {
     "PhotoReviewProgressMybatisIntegrationTest": 6,
     "SpoilerAccessMybatisIntegrationTest": 7,
     "SquareEditFollowMybatisIntegrationTest": 7,
-    "RoamSessionWriteMybatisIntegrationTest": 12,
+    # 2026-10-13 小程序底层C包移植到 master:12 → 15,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
+    "RoamSessionWriteMybatisIntegrationTest": 15,
     # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
     "RoamLocationRetentionMySqlIT": 21,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
@@ -292,6 +296,9 @@ SOURCE_FILES = {
     "ExploreAllianceRedeemRealDbIT":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
         "ExploreAllianceRedeemRealDbIT.java",
+    "ExploreScanReplayRealDbIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
+        "ExploreScanReplayRealDbIT.java",
     "TandianriBatch0FundsMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "TandianriBatch0FundsMybatisIntegrationTest.java",

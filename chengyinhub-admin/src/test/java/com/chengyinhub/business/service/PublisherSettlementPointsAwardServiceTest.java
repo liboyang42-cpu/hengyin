@@ -1,9 +1,9 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsPointsSetting;
-import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UmsMemberPointsDetail;
 import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.service.impl.PointsAwardServiceImpl;
 import com.chengyinhub.common.exception.ServiceException;
@@ -31,6 +31,7 @@ class PublisherSettlementPointsAwardServiceTest {
 
     private CmsPointsSettingMapper pointsSettingMapper;
     private IUmsMemberService memberService;
+    private UmsMemberMapper members;
     private UmsMemberPointsDetailMapper pointsDetailMapper;
     private PointsAwardServiceImpl service;
 
@@ -38,10 +39,12 @@ class PublisherSettlementPointsAwardServiceTest {
     void setUp() {
         pointsSettingMapper = mock(CmsPointsSettingMapper.class);
         memberService = mock(IUmsMemberService.class);
+        members = mock(UmsMemberMapper.class);
         pointsDetailMapper = mock(UmsMemberPointsDetailMapper.class);
         service = new PointsAwardServiceImpl();
         ReflectionTestUtils.setField(service, "cmsPointsSettingMapper", pointsSettingMapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
+        ReflectionTestUtils.setField(service, "umsMemberMapper", members);
         ReflectionTestUtils.setField(service, "umsMemberPointsDetailMapper", pointsDetailMapper);
     }
 
@@ -51,10 +54,7 @@ class PublisherSettlementPointsAwardServiceTest {
         when(pointsSettingMapper.selectPublisherSettlementRules(15L))
                 .thenReturn(Collections.singletonList(rule));
         when(memberService.lockMemberById(9L)).thenReturn(9L);
-        UmsMember member = new UmsMember();
-        member.setId(9L);
-        member.setPoint(40L);
-        when(memberService.selectUmsMemberById(9L)).thenReturn(member);
+        when(members.selectPointsForUpdate(9L)).thenReturn(40L);
         when(pointsDetailMapper.insertPublisherSettlementPointsDetail(any())).thenReturn(1);
         when(memberService.addPoints(9L, 100)).thenReturn(true);
 
@@ -71,10 +71,27 @@ class PublisherSettlementPointsAwardServiceTest {
         assertEquals(200L, detail.getValue().getPublisherSettlementTopicId());
         assertEquals(40L, detail.getValue().getCurrentPoints());
         assertEquals(140L, detail.getValue().getAfterPoints());
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(memberService, members, pointsDetailMapper);
+        order.verify(memberService).lockMemberById(9L);
+        order.verify(members).selectPointsForUpdate(9L);
+        order.verify(pointsDetailMapper).insertPublisherSettlementPointsDetail(any());
         // 路由锁：H8 必须走自己那条带 4 个快照列的专用语句，不许退回通用业务键写入口
         // （通用那条已经不引用新列，退回去会让 publisher_settlement_topic_id 永远为 NULL，
         //   ORDER 1/2 建的全局唯一键当场变成空索引）。
         verify(pointsDetailMapper, never()).insertUmsMemberPointsDetailWithBusinessKey(any());
+    }
+
+    @Test
+    void publisherCurrentReadWithMissingOrNullPointRejectsBeforeWritingLedger() {
+        when(pointsSettingMapper.selectPublisherSettlementRules(15L))
+                .thenReturn(Collections.singletonList(rule(15L, 7L, "100")));
+        when(memberService.lockMemberById(9L)).thenReturn(9L);
+        when(members.selectPointsForUpdate(9L)).thenReturn(null);
+
+        assertThrows(ServiceException.class, () -> service.awardPublisherSettlement(9L, 200L));
+
+        verify(pointsDetailMapper, never()).insertPublisherSettlementPointsDetail(any());
+        verify(memberService, never()).addPoints(any(), anyInt());
     }
 
     @Test
@@ -84,10 +101,7 @@ class PublisherSettlementPointsAwardServiceTest {
         when(pointsSettingMapper.selectPublisherSettlementRules(15L))
                 .thenReturn(Collections.singletonList(rule(15L, 7L, "100")));
         when(memberService.lockMemberById(9L)).thenReturn(9L);
-        UmsMember member = new UmsMember();
-        member.setId(9L);
-        member.setPoint(0L);
-        when(memberService.selectUmsMemberById(9L)).thenReturn(member);
+        when(members.selectPointsForUpdate(9L)).thenReturn(0L);
         when(pointsDetailMapper.insertPublisherSettlementPointsDetail(any())).thenReturn(1);
         when(memberService.addPoints(9L, 100)).thenReturn(true);
 
@@ -114,10 +128,7 @@ class PublisherSettlementPointsAwardServiceTest {
         when(pointsSettingMapper.selectPublisherSettlementRules(15L))
                 .thenReturn(Collections.singletonList(rule(15L, 8L, "120")));
         when(memberService.lockMemberById(9L)).thenReturn(9L);
-        UmsMember member = new UmsMember();
-        member.setId(9L);
-        member.setPoint(140L);
-        when(memberService.selectUmsMemberById(9L)).thenReturn(member);
+        when(members.selectPointsForUpdate(9L)).thenReturn(140L);
         when(pointsDetailMapper.insertPublisherSettlementPointsDetail(any()))
                 .thenThrow(new DuplicateKeyException("duplicate"));
         UmsMemberPointsDetail existing = new UmsMemberPointsDetail();
@@ -138,10 +149,7 @@ class PublisherSettlementPointsAwardServiceTest {
         when(pointsSettingMapper.selectPublisherSettlementRules(15L))
                 .thenReturn(Collections.singletonList(rule(15L, 8L, "100")));
         when(memberService.lockMemberById(9L)).thenReturn(9L);
-        UmsMember member = new UmsMember();
-        member.setId(9L);
-        member.setPoint(0L);
-        when(memberService.selectUmsMemberById(9L)).thenReturn(member);
+        when(members.selectPointsForUpdate(9L)).thenReturn(0L);
         when(pointsDetailMapper.insertPublisherSettlementPointsDetail(any()))
                 .thenThrow(new DuplicateKeyException("uk_publisher_settlement_topic"));
         UmsMemberPointsDetail existing = new UmsMemberPointsDetail();
@@ -161,10 +169,7 @@ class PublisherSettlementPointsAwardServiceTest {
         when(pointsSettingMapper.selectPublisherSettlementRules(15L))
                 .thenReturn(Collections.singletonList(rule(15L, 1L, "100")));
         when(memberService.lockMemberById(9L)).thenReturn(9L);
-        UmsMember member = new UmsMember();
-        member.setId(9L);
-        member.setPoint(0L);
-        when(memberService.selectUmsMemberById(9L)).thenReturn(member);
+        when(members.selectPointsForUpdate(9L)).thenReturn(0L);
         when(pointsDetailMapper.insertPublisherSettlementPointsDetail(any()))
                 .thenThrow(new DuplicateKeyException("other unique"));
 

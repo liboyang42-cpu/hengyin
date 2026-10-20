@@ -97,6 +97,10 @@ class WithdrawalStateMachineServiceTest {
         UmsMemberWithdrawalServiceImpl service = new UmsMemberWithdrawalServiceImpl();
         ReflectionTestUtils.setField(service, "umsMemberWithdrawalMapper", withdrawalMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
+        org.mockito.Mockito.doAnswer(i -> {
+            UmsMember member = memberMapper.selectUmsMemberById(i.getArgument(0));
+            return member == null ? null : (member.getBalance() == null ? BigDecimal.ZERO : member.getBalance());
+        }).when(memberMapper).selectBalanceForUpdate(org.mockito.ArgumentMatchers.anyLong());
         ReflectionTestUtils.setField(service, "umsMemberBalanceDetailMapper", detailMapper);
         return service;
     }

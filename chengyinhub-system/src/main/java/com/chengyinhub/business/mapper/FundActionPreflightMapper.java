@@ -8,6 +8,7 @@ import java.util.Date;
 public interface FundActionPreflightMapper {
     int insert(FundActionPreflight row);
     FundActionPreflight selectById(@Param("id") Long id);
+    FundActionPreflight selectOwnedByIdForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
     FundActionPreflight selectByIntent(@Param("memberId") Long memberId,
                                        @Param("actionType") String actionType,
                                        @Param("requestId") String requestId);

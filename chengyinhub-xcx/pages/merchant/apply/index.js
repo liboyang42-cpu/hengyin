@@ -62,6 +62,7 @@ Page({
     everSettled: false,   // 读到过一次申请状态后,回页复检失败留原页给「重新检查」,不把半填的表单踢走
     // intro = 四步之前的开场屏(Figma M0);ready 后先落这里,按下 CTA 才进第一步
     introMode: true,
+    claimShow: false,
     morphing: false,
     morph: null,
     morphRun: false,
@@ -331,6 +332,10 @@ Page({
   },
 
   endMorph() { wizardMorph.endIntroMorph(this); },
+
+  // C3:认领已有门店(sheet 在 components/merchant-claim-sheet,状态与提交都在组件内)
+  openClaim() { this.setData({ claimShow: true }); },
+  closeClaim() { this.setData({ claimShow: false }); },
 
   onBack() {
     if (this.data.submitting) return;

@@ -208,6 +208,9 @@ class ApiPlayDelistedCompletedRetryContractTest
         when(routeActivityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(routeActivity);
         when(routeRegistrationMapper.selectCmsRegistrationList(any()))
                 .thenReturn(Collections.singletonList(registration));
+        // C包路线新使用按 activity→registration 当前锁读(CurrentPlayRegistration)；锁读回同一原行。
+        when(routeActivityMapper.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(routeActivity);
+        when(routeRegistrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(registration);
         when(routeMapper.selectByOwner(anyLong(), anyLong(), anyLong(), anyString())).thenReturn(null);
         when(routeNodeMapper.selectCmsTopicNodeById(NODE)).thenReturn(node);
         // 真实 nodes() 口径:只有 status=1 的活节点进集合;下架节点查不到(注 0=下架)
@@ -233,6 +236,7 @@ class ApiPlayDelistedCompletedRetryContractTest
                 .thenReturn(new TopicCompletionAwardVO());
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         mockProgressRows(true);
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     /**

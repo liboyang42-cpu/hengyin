@@ -91,6 +91,9 @@ class GameSessionRuntimeServiceImplTest {
         when(runtimeMapper.selectSessionByActivityForUpdate(anyLong()))
                 .thenAnswer(call -> runtimeMapper.selectSessionByActivity(call.getArgument(0)));
         activityMapper = mock(CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper registrations=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrations);
+        ReflectionTestUtils.setField(service,"currentPlayRegistrationMapper",registrations);
         topicMapper = mock(CmsTopicMapper.class);
         clubMemberService = mock(IClubMemberService.class);
         capabilityService = mock(com.chengyinhub.business.service.ICapabilityService.class);
@@ -113,7 +116,7 @@ class GameSessionRuntimeServiceImplTest {
         verifiedPhotos.clear();
         usePhotoVerifier((url, memberId) -> verifiedPhotos.add(url + "|" + memberId));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activeActivity());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(configuredTopic());
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(configuredTopic());
         when(runtimeMapper.insertPlayerNodeOutcome(any())).thenReturn(1);
         when(runtimeMapper.selectRole(SESSION, PLAYER)).thenReturn(role("DETECTIVE", "侦探"));
     }
@@ -782,7 +785,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnmappedOrMerchantlessRuntimeStation() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(runtimeConfigJson());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
         when(runtimeMapper.insertSession(any())).thenAnswer(invocation -> {
@@ -806,7 +809,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(choiceConfigJson().replace("\"id\":\"ASK_CLERK\"",
                 "\"id\":\"FOLLOW_NOTE\""));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1373,6 +1376,8 @@ class GameSessionRuntimeServiceImplTest {
         recorded.setId(206L);
         recorded.setStatus("RECORDED");
         when(runtimeMapper.selectActiveSubmission(SESSION, PLAYER, NODE, "CLOCK_PHOTO")).thenReturn(recorded);
+        // Existing submission has no outcome fixture: recovering that new fact requires one successful CAS.
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any())).thenReturn(1);
         usePhotoVerifier((url, memberId) -> {
             throw new IllegalStateException("存储故障不应影响已记录的提交");
         });
@@ -1677,7 +1682,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnsupportedTaskInputType() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("BUTTON"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1696,7 +1701,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("TEXT").replace("\"verificationRequired\":true",
                 "\"verificationRequired\":false"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
 
         GameSessionException missingHash = assertThrows(GameSessionException.class, () -> service.command(
                 GameActorContext.club(PLAYER), command("prepare-missing-hash", 0, "PREPARE",
@@ -1797,7 +1802,8 @@ class GameSessionRuntimeServiceImplTest {
         GameSession current = runningSession(3);
         current.setStatus(GameSession.PREPARING);
         current.setModuleConfigSnapshotJson(runtimeConfigJson());
-        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(initial, current);
+        // master 的 command() 先加锁读会话（rev 2）；角色插入撞键后再按当前读取到并发胜者的 rev 3。
+        when(runtimeMapper.selectSessionByActivityForUpdate(ACTIVITY)).thenReturn(initial, current);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.isActiveTeamMember(ACTIVITY, TEAM, PLAYER)).thenReturn(1);
         GameTeamRoleAssignment winner = role("DETECTIVE", "侦探");
@@ -1966,17 +1972,19 @@ class GameSessionRuntimeServiceImplTest {
 
     /** F-L3-01:站点已被另一终端恢复时,后到的恢复返回当前站点而不是冲突;且不再要求全局 revision 精确相等。 */
     @Test
-    void clubResumeOfAlreadyActiveStationIsIdempotentWithStaleRevision() {
+    void clubResumeOfAlreadyActiveStationIsANoOpWithStaleRevision() {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
         stubReceiptPersistence("resume-already-active");
 
-        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.command(
+        // SC-CITY-RESUME-RACE:旧 revision 也不报「版本过期」,而是明确的无变化结果,且不落 APPLIED
+        GameSessionException noop = assertThrows(GameSessionException.class, () -> service.command(
                 GameActorContext.club(DIRECTOR),
-                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap()));
+                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap())));
 
-        assertEquals("APPLIED", receipt.getOutcome());
+        assertEquals("GAME_STATION_ALREADY_ACTIVE", noop.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
         verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
         verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }
@@ -2531,7 +2539,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "{\"op\":\"INC\",\"var\":\"trust\",\"value\":2}", "{\"op\":\"ADD\",\"var\":\"trust\",\"value\":2}"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -2563,7 +2571,7 @@ class GameSessionRuntimeServiceImplTest {
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "\"conditions\":[{\"var\":\"trust\",\"op\":\"GTE\",\"value\":2},"
                         + "{\"op\":\"HAS_TAG\",\"value\":\"tag.hurried\"}]", "\"conditions\":[]"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -3363,7 +3371,7 @@ class GameSessionRuntimeServiceImplTest {
         com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
         ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
         when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":5001,\"terminalNodeIds\":[5001],\"journeyRules\":{\"schemaVersion\":1}}");
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         assertTrue(service.isGameSessionEnabled(topic));
         topic.setGameModuleConfigJson("{broken");
         assertFalse(service.isGameSessionEnabled(topic));

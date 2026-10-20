@@ -196,6 +196,8 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageRoam/nearby/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/report.html:106` | KEEP |
 | `subpackageRoam/citystamp/index` | 否 | `chengyinhub-xcx/components/cy/proto-cam/index.js:1` | KEEP |
 | `subpackageRoam/my-teams/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:743` | KEEP |
+| `subpackageRoam/official-routes/index` | 否 | 入口待拍板(见 nav-route-exists 孤儿页豁免,2026-10-19 移植基线 366b846f) | KEEP |
+| `subpackageRoam/official-route/index` | 否 | `chengyinhub-xcx/subpackageRoam/official-routes/index.js:32` | KEEP |
 | `subpackageTools/capsule/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:721` | KEEP |
 | `subpackageTools/monthly-recap/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:739` | KEEP |
 | `subpackageTools/exploration-goals/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:720` | KEEP |

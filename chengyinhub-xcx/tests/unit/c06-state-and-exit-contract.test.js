@@ -63,9 +63,10 @@ function loadPage(rel, hostOverrides, transform) {
     getAvatar: () => '',
     sendRequest: (options) => { requests.push(options) },
   }, (hostOverrides && hostOverrides.app) || {})
+  const storage = new Map()
   global.wx = Object.assign({
-    getStorageSync: () => '',
-    setStorageSync() {},
+    getStorageSync: key => storage.get(key) || '',
+    setStorageSync(key, value) { storage.set(key, value) },
     getWindowInfo: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, screenHeight: 812, safeArea: { bottom: 800 } }),
     getMenuButtonBoundingClientRect: () => ({ left: 300 }),

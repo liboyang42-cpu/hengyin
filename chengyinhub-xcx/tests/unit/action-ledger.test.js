@@ -565,9 +565,11 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
   // B93 saveDraft added two real variants (+2 tap); approved growth bindings have zero net tap change.
   // 2026-10-13 注销阻断卡「我已处理，重新检查」+1 tap,1968 → 1969(重建实测)。
-  // 2026-10-15 首页自动定位设置新增开启/关闭两个实际控件，1969 → 1971。
-  // 2026-10-17 双方源码正常重建：local tap 2024、local event-contract 2333、全部事件合同 2401、总控件 4719。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2024)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-20 W8(#311)并入移植分支:W8 自身 +2 tap 叠加于移植基线 2030,按重建实测 2032。
+  // 2026-10-17 合并漫游上线(我的队伍、地图列表、漫游记录工具行、5 个工具页;删拍照开局与入口地图重试)按重建实测 1969 → 2022。
+  // 2026-10-19 移植共享基线(认领半屏、置顶公告、文本码、举报队伍、状态键、官方线路、继续漫游条等)按 audit:actions:update 重建实测 2022 → 2034。
+  // 2026-10-20 R5 尾段(#327,owner 批准):章节弹层按 Figma J3 重排 -6 tap(两段完成要求、额外节点/任务位),故事流计数方式标记 +1 等,按重建实测 2034 → 2030(与移植基线合并后实测)。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2032)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -784,7 +786,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // Three real login/permission component actions became visible; tap count stays unchanged.
   // 四个章节确认合同替换原合并事件，点击分母不变，事件合同净增三项。
   // 2026-10-13 三处玩法支持范围读取失败改 load-failure 留白,其 bind:action 重试不可见 -3,2307 → 2304(重建实测)。
-  const homeCitySettled = ledger.controls.find((item) => item.id === 'pages/index/index.wxml:308:bind:settled:onPrivacyGateSettled:25')
+  // 2026-10-20 W8(#311)并入移植分支:W8 自身事件合同 +11(台账全量)/+10(local)叠加于移植基线 2416/2347,按重建实测 2427/2357。
+  const homeCitySettled = ledger.controls.find((item) => item.id === 'pages/index/index.wxml:310:bind:settled:onPrivacyGateSettled:25')
   assert.ok(homeCitySettled, '首页原地同意后的真实定位流程必须留在台账中')
   assert.equal(homeCitySettled.interactionMode, 'event-contract')
   assert.equal(homeCitySettled.actionClass, 'external')
@@ -799,9 +802,9 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   assert.equal(galleryLogin[0].interactionMode, 'event-contract')
   assert.equal(galleryLogin[0].actionClass, 'read')
   assert.deepEqual(galleryLogin[0].targets.writeApis, [])
-  assert.equal(ledger.controls.filter((item) => item.interactionMode === 'event-contract').length, 2401)
+  assert.equal(ledger.controls.filter((item) => item.interactionMode === 'event-contract').length, 2427)
   // 首页原地同意后接回真实定位，唯一该事件从 local 转为 external；控件与事件总数不减。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2333)  /* 图库新增1个真实登录组件事件。 */  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2357)  /* 图库新增1个真实登录组件事件。 */  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1544,12 +1547,11 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-13 注销重新检查 +1;三处玩法支持范围读取失败改 load-failure 留白,其重试不可见 -3;4632 → 4630(重建实测)。
   // 2026-10-15 首页自动定位设置新增开启/关闭两个实际控件，4632 → 4634。
   // 2026-10-15 PR10 复查:七处登录引导「登录」(俱乐部/主题/活动/票夹/私信/收藏×2)、口碑缺参「返回」、modal-host 多行原因输入 +9;4632 → 4641(重建实测)。
-  // 2026-10-15 合并后按完整冻结源一次重建：上游 +9 事件合同与首页 +2 tap 并存，总数 4643，local tap 1971、事件合同 2315。
-  // F-W1-12 真实游客验收补项目登录与投诉登录/重试，正常重建 4643 → 4646。
-  // 券夹补登录与无权限重试两个实际 CTA，正常重建 4646 → 4648。
-  // 官方活动我的/我的模板补实际登录与无权限提示，正常重建 4648 → 4651。
-  // 本人主页壳与组件分别新增真实登录/重试CTA，正常重建4651→4653；tap分母不变。
-  assert.equal(ledger.controlCount, 4719) // 图库新增1个真实登录CTA，点击分母不变。
+  // 2026-10-20 W8(#311)并入移植分支:W8 自身 +13 控件叠加于移植基线 4743,按重建实测 4756。
+  // 2026-10-17 合并漫游上线同批控件(含组件事件合同)按重建实测 4641 → 4706。
+  // 2026-10-19 移植共享基线同批控件按重建实测 4706 → 4746。
+  // 2026-10-20 R5 尾段(#327,owner 批准)章节弹层重排,按重建实测 4746 → 4743(与移植基线合并后实测)。
+  assert.equal(ledger.controlCount, 4756) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

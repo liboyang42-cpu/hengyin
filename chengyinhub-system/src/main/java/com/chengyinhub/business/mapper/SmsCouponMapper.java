@@ -88,7 +88,10 @@ public interface SmsCouponMapper
     /** 正常发券原子占库存：同时校验当前停发状态、可发放期及原有限量/不限量规则。 */
     public int tryIncrementIssuableReceiveCount(Long id);
 
-    /** 核销时 use_count +1（原子） */
+    /**
+     * 核销时当前行状态非失效(3)才 use_count +1；停发(4)/NULL兼容原可核销定义。
+     * 调用方须与历史CAS/结算同事务，0行必须拒绝并回滚，不能当成功或吞异常。
+     */
     public int incrementUseCount(Long id);
 
     /** 撤销核销时 use_count -1（原子,use_count>0 守卫防冲成负数） */

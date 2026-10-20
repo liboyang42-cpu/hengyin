@@ -19,7 +19,8 @@ function mount(owner = '', token = '') {
   global.getApp = () => app
   global.Page = value => { definition = value }
   global.wx = { getAccountInfoSync: () => ({ miniProgram: { envVersion: 'release' } }),
-    setNavigationBarColor() {}, setBackgroundColor() {}, stopPullDownRefresh() {} }
+    // master V6b(#325)：有内容时刷新失败给非阻塞 toast，桩上补 showToast。
+    setNavigationBarColor() {}, setBackgroundColor() {}, stopPullDownRefresh() {}, showToast() {} }
   delete require.cache[require.resolve(modulePath)]; require(modulePath)
   const page = Object.assign({}, definition, { data: structuredClone(definition.data),
     setData(value, done) { Object.assign(this.data, value); if (done) done.call(this) } })

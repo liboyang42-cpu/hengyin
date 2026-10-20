@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 332
- *   按 priority 计全部行：P0 133 / P1 189 / P2 10
+ *   total 334
+ *   按 priority 计全部行：P0 133 / P1 191 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 182 / P2 2 = 308
- *   按域：A 53 / B 67 / C 54 / D 39 / E 27 / F 86
- *   按 control：setData 171 / identity+setData 116 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 184 / P2 2 = 310
+ *   按域：A 53 / B 69 / C 54 / D 39 / E 27 / F 86
+ *   按 control：setData 173 / identity+setData 116 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -261,6 +261,8 @@ const RAW = [
   ['B14', 'B14-play-journal.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openJournal() 后等 ≥2.5s；opacity 不衰减到 0'],
   ['B15', 'B15-play-story.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openStory({id,step})；关闭钮不遮胶囊'],
   ['B16', 'B16-play-finish.png', '/pages/play/index?mock=city', 'player', 'success', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openFinish()；需 buildMilestone(n) 才有里程碑轴'],
+  ['B90', 'B90-official-routes-content.png', '/subpackageRoam/official-routes/index', 'player', 'normal', { state: 'ready', routes: [{ id: '1', name: '老城慢行', city: '上海', cover: '', metaText: '上海 · 4 km · 1 小时 30 分' }] }, undefined, { selector: '.orl-card', min: 1 }, 'setData', 'P1', '', '官方线路列表：卡片展示名称与城市/距离/时长；加载/空/失败三态由 state 切换'],
+  ['B91', 'B91-official-route-content.png', '/subpackageRoam/official-route/index?id=1', 'player', 'normal', { state: 'ready', route: { name: '老城慢行', metaText: '上海 · 4 km', cover: '', nodes: [{ key: 'n1', order: 1, name: '第一站', address: '示例路 1 号', stayText: '20 分钟', lat: null, lng: null, img: '' }] } }, undefined, { selector: '.orr-node', min: 1 }, 'setData', 'P1', '', '官方线路详情：站点序号/地址/参考停留；无坐标站点不可点'],
   ['B17', 'B17-play-flight-cta.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P2',
     '被验对象已不在页面里:selectors 给它的锚点 .start-flight/.start-flight__ready 在 pages/play/index.wxml 里只剩一句注释,起飞过场那套 UI 已收编走;矩阵原注的「等 ≥3.4s」也没有任何 data 键可以直接注入 ⇒ 这一行永远拍成 B12 那张(2026-08-19 实测 B12≈B17 判同一屏)。altVerification:2026-08-20 起 cy-start-cta 组件本体连同 pages/play/index.js 顶部那段常量注释一并删除(全仓零引用),原来那个「两处对齐」的依据已不存在;开始入口的出场时序现在只剩 style/tokens.wxss 的 --cy-motion-flight-cycle 一处,属动画不属截图;玩法首屏由 B12 拍到。',
     '等 ≥3.4s（FLIGHT_CTA_DELAY_MS=3203）；漫游 GO 是有意例外'],
@@ -633,11 +635,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
 // total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
+// 2026-10-19 移植共享基线 366b846f/f49092b0:官方线路列表/详情补 B90/B91 两条 P1 setData 行(积分明细 D90 归 claude/mini-ui-on-master-20261019);
+// total 332→334、P1 189→191、actionable P1 182→184 / total 308→310、B 67→69、setData 171→173。
 const STATS = {
-  "total": 332,
+  "total": 334,
   "byPriority": {
     "P0": 133,
-    "P1": 189,
+    "P1": 191,
     "P2": 10
   },
   "blockedByPriority": {
@@ -647,21 +651,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 182,
+    "P1": 184,
     "P2": 2,
-    "total": 308
+    "total": 310
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 67,
+    "B": 69,
     "C": 54,
     "D": 39,
     "E": 27,
     "F": 92
   },
   "control": {
-    "setData": 171,
+    "setData": 173,
     "identity+setData": 116,
     "real-data": 38,
     "real-device": 7

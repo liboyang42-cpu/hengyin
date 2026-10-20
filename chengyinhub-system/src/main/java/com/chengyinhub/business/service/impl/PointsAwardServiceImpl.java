@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.domain.CmsPointsSetting;
-import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UmsMemberPointsDetail;
 import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.service.ICmsPointsSettingService;
 import com.chengyinhub.business.service.IPointsAwardService;
@@ -33,6 +33,9 @@ public class PointsAwardServiceImpl implements IPointsAwardService
 
     @Autowired
     private IUmsMemberService umsMemberService;
+
+    @Autowired
+    private UmsMemberMapper umsMemberMapper;
 
     @Autowired
     private IUmsMemberPointsDetailService umsMemberPointsDetailService;
@@ -82,8 +85,12 @@ public class PointsAwardServiceImpl implements IPointsAwardService
             return 0;
         }
 
-        UmsMember member = umsMemberService.selectUmsMemberById(memberId);
-        long before = (member != null && member.getPoint() != null) ? member.getPoint() : 0L;
+        // 余额 UPDATE 本来就有行锁；提前做当前锁读，让流水快照与该次真实余额变更同序。
+        // 普通 select 即使放到 lockMemberById 后，仍可能命中外层事务的 RR 快照/一级缓存。
+        Long before = umsMemberMapper.selectPointsForUpdate(memberId);
+        if (before == null) {
+            throw new ServiceException("积分会员不存在或余额为空，memberId=" + memberId);
+        }
 
         umsMemberService.addPoints(memberId, points);
 
@@ -126,11 +133,10 @@ public class PointsAwardServiceImpl implements IPointsAwardService
         if (umsMemberService.lockMemberById(memberId) == null) {
             throw new ServiceException("作品结算积分会员不存在，memberId=" + memberId);
         }
-        UmsMember member = umsMemberService.selectUmsMemberById(memberId);
-        if (member == null) {
+        Long before = umsMemberMapper.selectPointsForUpdate(memberId);
+        if (before == null) {
             throw new ServiceException("作品结算积分会员回读失败，memberId=" + memberId);
         }
-        long before = member.getPoint() == null ? 0L : member.getPoint();
         UmsMemberPointsDetail detail = new UmsMemberPointsDetail();
         detail.setMemberId(memberId);
         detail.setCurrentPoints(before);

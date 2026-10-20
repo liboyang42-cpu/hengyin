@@ -16658,5 +16658,50 @@
   "data": null,
   "dropped": [],
   "switchKeys": []
+ },
+ "B90": {
+  "data": {
+   "state": "ready",
+   "routes": [
+    {
+     "id": "1",
+     "name": "老城慢行",
+     "city": "上海",
+     "cover": "",
+     "metaText": "上海 · 4 km · 1 小时 30 分"
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "routes"
+  ]
+ },
+ "B91": {
+  "data": {
+   "state": "ready",
+   "route": {
+    "name": "老城慢行",
+    "metaText": "上海 · 4 km",
+    "cover": "",
+    "nodes": [
+     {
+      "key": "n1",
+      "order": 1,
+      "name": "第一站",
+      "address": "示例路 1 号",
+      "stayText": "20 分钟",
+      "lat": null,
+      "lng": null,
+      "img": ""
+     }
+    ]
+   }
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state"
+  ]
  }
 }

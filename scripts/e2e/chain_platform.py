@@ -71,6 +71,11 @@ def main():
     chapters = [{"name": "第%d章 %s" % (i + 1, n),
                  "description": "本章一店(%s):进店按规则完成一次到店体验" % n,
                  "schemaVersion": 1, "required": 1,
+                 # #299(owner 2026-10-20):探店日章节建期即开放商家承接(同发布向导的章节招商开关)，
+                 # 站点玩法由入驻商家提供，因此零玩法也能提交上架；条款与 chain_merchant_club 后台复设同值。
+                 # 核验方式/探索值上限由 chain_merchant_club 走后台 supply-terms 设置(建期接口不收 QR 写法)。
+                 "recruitEnabled": 1, "categoryId": 4001, "termsMode": "PERK", "perkMinValue": 30,
+                 "maxMerchant": 1,
                  "blocks": [
                      {"type": "text", "content": "本章一店(%s):进店按规则完成一次到店体验" % n},
                      {"type": "node", "nodeIndex": 0}],
@@ -94,7 +99,10 @@ def main():
     dto.update(fixture_topic_image_fields())
     r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
     show("POST /api/topic/v2/create", json.dumps(r, ensure_ascii=False)[:220])
-    tid = r.get("data") if isinstance(r.get("data"), int) else (r.get("topicId") or (r.get("data") or {}).get("id") if isinstance(r.get("data"), dict) else None)
+    # V2 建期回包是审核结果对象 {"topicId":..,"reviewState":..};旧接口回 int 或 {"id":..}。
+    data = r.get("data")
+    tid = data if isinstance(data, int) else (
+        (data.get("topicId") or data.get("id")) if isinstance(data, dict) else r.get("topicId"))
     if not tid:
         # ⚠️ 不按名字去库里捡「最近一条同名主题」当结果:建期失败时那会捡到上一轮的旧主题,
         #    后面每一步都在旧数据上跑出一串漂亮的绿 —— 假绿。建不出来就当场停。

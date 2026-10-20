@@ -1,0 +1,4 @@
+<view wx:if="{{code}}" class="ct">
+  <text class="ct__code" selectable bindlongpress="onCopy" aria-label="验证码 {{code}}，长按复制">{{code}}</text>
+  <text class="ct__hint">{{hint}}</text>
+</view>

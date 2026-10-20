@@ -25,6 +25,7 @@ import com.chengyinhub.common.constant.ProductType;
 import com.github.pagehelper.PageHelper;
 import com.chengyinhub.common.config.WxPayConfig;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import com.chengyinhub.common.core.redis.RedisCache;
@@ -81,7 +82,7 @@ public class ApiCreativeSquareController extends BaseController {
     private boolean legacyCommunityWritesEnabled;
 
     private AjaxResult legacyWriteDisabled() {
-        return error("广场发布已升级，请更新客户端后重试");
+        return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, "广场发布已升级，请更新客户端后重试");
     }
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
     @Autowired
@@ -1021,6 +1022,9 @@ public class ApiCreativeSquareController extends BaseController {
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (postId <= 0 || (bookmark == null || (bookmark != 0 && bookmark != 1))) return error("参数不合规");
         if (StringUtils.isEmpty(request_id)) return error("缺少请求号");
+        Long mappedPostId = viewCreativeSquareService.selectMappedCommunityPostId(postId);
+        if (mappedPostId == null || mappedPostId <= 0) return error("旧帖尚无可信社区映射，无法收藏或取消收藏");
+        postId = mappedPostId;
         try {
             Map<String, Object> state;
             if (bookmark == 1) {

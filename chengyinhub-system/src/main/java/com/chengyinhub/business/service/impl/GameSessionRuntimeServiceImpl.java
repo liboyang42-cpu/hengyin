@@ -64,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
@@ -156,6 +157,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private com.chengyinhub.business.service.ICapabilityService capabilityService;
     @Autowired
     private PlayTeamMapper playTeamMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper currentPlayRegistrationMapper;
     @Autowired
     private IPlayerNodeProgressService playerNodeProgressService;
     @Autowired
@@ -2502,7 +2506,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
-    @Transactional(rollbackFor=Exception.class)
+    @Transactional(rollbackFor=Exception.class, isolation = Isolation.REPEATABLE_READ)
     public GameSessionView view(GameActorContext actor, Long activityId) {
         requireActor(actor);
         CmsActivity activity = requireActivity(activityId, false);
@@ -2526,6 +2530,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> exportRecap(GameActorContext actor, Long activityId) {
         requireActor(actor);
         if (!"CLUB".equals(actor.getPerspective())) {
@@ -2551,7 +2556,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     public GameCommandReceiptView command(GameActorContext actor, GameSessionCommand command) {
         requireActor(actor);
         validateCommand(command);
-        command.setAction(command.getAction().trim().toUpperCase());
+        command.setAction(command.getAction().trim().toUpperCase(Locale.ROOT));
         String requestHash = requestHash(command);
         command.setRequestHash(requestHash);
 
@@ -2561,7 +2566,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameSession lockedSession = preparing ? null : runtimeMapper.selectSessionByActivityForUpdate(command.getActivityId());
         GameCommandReceipt existing = runtimeMapper.selectReceipt(command.getActivityId(), actor.getMemberId(),
                 command.getRequestId());
-        if (existing != null) { authorizeSharedReceipt(actor, existing); return replay(existing, requestHash); }
+        if (existing != null) {
+            authorizeSharedReceipt(actor, existing);
+            return replayOrResendFailedBroadcast(actor, command, existing, requestHash, lockedSession);
+        }
 
         CmsActivity activity = requireActivity(command.getActivityId(), !RUN_CONTROL_ACTIONS.contains(command.getAction()) && !"MANUAL_SIGN".equals(command.getAction()));
         GameSession session = preparing ? runtimeMapper.selectSessionByActivity(command.getActivityId()) : lockedSession;
@@ -2698,7 +2706,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     private ActionResult prepare(GameActorContext actor, CmsActivity activity) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(activity.getTopicId());
+        // Serialize configuration and INSERT ... SELECT node capture with content replacement.
+        CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(activity.getTopicId());
         String configJson = topic == null ? null : topic.getGameModuleConfigJson();
         boolean route = isRouteTopic(topic);
         JsonNode config;
@@ -2723,7 +2732,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         session.setCreateTime(now);
         session.setUpdateTime(now);
         if (runtimeMapper.insertSession(session) != 1) {
-            GameSession concurrent = runtimeMapper.selectSessionByActivity(activity.getId());
+            GameSession concurrent = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (concurrent == null) throw error("GAME_STATE_CONFLICT", "游戏准备失败");
             return result(concurrent, singleton("prepared", false));
         }
@@ -2800,7 +2809,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         List<Map<String, Object>> appliedAssignments = new ArrayList<>();
         Set<Long> seenMembers = new HashSet<>();
         boolean changed = false;
-        boolean concurrentAssignmentObserved = false;
         for (Object item : (List<?>) raw) {
             if (!(item instanceof Map)) throw error("GAME_BAD_REQUEST", "角色分配格式不正确");
             Map<String, Object> assignmentMap = (Map<String, Object>) item;
@@ -2837,7 +2845,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     throw error("GAME_STATE_CONFLICT", "角色分配失败");
                 }
                 unchanged = true;
-                concurrentAssignmentObserved = true;
             }
             changed |= !unchanged;
             Map<String, Object> applied = new LinkedHashMap<>();
@@ -2849,8 +2856,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (changed) {
             String next = readinessStatus(session);
             bumpSession(session, next, session.getCurrentChapterId(), actor.getMemberId(), clock.now());
-        } else if (concurrentAssignmentObserved) {
-            GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+        } else {
+            GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
             if (current != null) session = current;
         }
         Map<String, Object> data = new LinkedHashMap<>();
@@ -2984,7 +2991,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private ActionResult stationPause(GameActorContext actor, GameSession session, GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireMerchantStation(actor, session, command.getNodeId());
-        if (GameStationRun.PAUSED.equals(station.getStatus())) return result(session, singleton("station", stationView(station, sessionConfig(session))));
+        if (GameStationRun.PAUSED.equals(station.getStatus())) throw stationAlreadyPaused();
         if (!GameStationRun.ACTIVE.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能暂停");
         String reasonCode = upper(command.getPayload().get("reasonCode"));
         if (StringUtils.isBlank(reasonCode)) throw error("GAME_BAD_REQUEST", "请选择暂停原因");
@@ -3039,9 +3046,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private ActionResult clubStationPause(GameActorContext actor, GameSession session, GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireSessionStation(session, command.getNodeId());
-        if (GameStationRun.PAUSED.equals(station.getStatus())) {
-            return result(session, singleton("station", stationView(station, sessionConfig(session))));
-        }
+        if (GameStationRun.PAUSED.equals(station.getStatus())) throw stationAlreadyPaused();
         if (!GameStationRun.ACTIVE.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能暂停");
         String reasonCode = upper(command.getPayload().get("reasonCode"));
         if (StringUtils.isBlank(reasonCode)) throw error("GAME_BAD_REQUEST", "请选择暂停原因");
@@ -3069,8 +3074,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireSessionStation(session, command.getNodeId());
         if (GameStationRun.ACTIVE.equals(station.getStatus())) {
-            // 与暂停同口径:已被另一终端恢复时返回当前站点,而不是让后到的一方看到「待核对/版本过期」
-            return result(session, singleton("station", stationView(station, sessionConfig(session))));
+            // 与暂停同口径:已被另一终端恢复时给明确的「无变化」,而不是让后到的一方看到「待核对/版本过期」
+            throw stationAlreadyActive();
         }
         if (!GameStationRun.PAUSED.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能恢复");
         Date now = evaluationTime();
@@ -3129,9 +3134,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                        GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         GameStationRun station = requireMerchantStation(actor, session, command.getNodeId());
-        if (GameStationRun.ACTIVE.equals(station.getStatus())) {
-            return result(session, singleton("station", stationView(station, sessionConfig(session))));
-        }
+        if (GameStationRun.ACTIVE.equals(station.getStatus())) throw stationAlreadyActive();
         if (!GameStationRun.PAUSED.equals(station.getStatus())) throw error("GAME_STATE_CONFLICT", "站点当前不能恢复");
         Date now = evaluationTime();
         requireActivityServiceWindow(activity, now);
@@ -3144,6 +3147,19 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         station.setFallbackPlanVersion(null);
         transitionStation(actor, session, station, GameStationRun.PAUSED, GameStationRun.ACTIVE);
         return result(session, singleton("station", stationView(station, sessionConfig(session))));
+    }
+
+    /*
+     * SC-CITY-RESUME-RACE:两台终端同时暂停/恢复时,后到的那次什么都没改。它不能落 APPLIED 回执 ——
+     * 复盘的 pauseEventCount / merchantPauseEvents 按 APPLIED 计数,会把一次迁移记成两次事故。
+     * 抛出后整条命令回滚,控制器按原因码记一张 FAILED 回执,且不再写第二条 sys_oper_log。
+     */
+    private GameSessionException stationAlreadyPaused() {
+        return error(GameSessionException.STATION_ALREADY_PAUSED, "站点已暂停，无需重复操作");
+    }
+
+    private GameSessionException stationAlreadyActive() {
+        return error(GameSessionException.STATION_ALREADY_ACTIVE, "站点已在接待，无需重复恢复");
     }
 
     private void transitionStation(GameActorContext actor, GameSession session, GameStationRun station,
@@ -3208,9 +3224,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             story.setStatus("VARIABLES_UPDATED");
         }
         if (runtimeMapper.updateStoryStateCas(story) != 1) {
-            GameStoryState concurrent = runtimeMapper.selectStoryState(session.getId(), "TEAM", player.teamId);
+            GameStoryState concurrent = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", player.teamId);
             if (concurrent != null && containsText(readArray(concurrent.getAppliedChoicesJson()), choiceId)) {
-                GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
+                GameSession current = runtimeMapper.selectSessionByActivityForUpdate(activity.getId());
                 return result(current == null ? session : current,
                         choiceResult(choiceId, true, findEnding(config, concurrent.getEndingCode())));
             }
@@ -3290,7 +3306,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameTaskSubmission active = runtimeMapper.selectActiveSubmission(session.getId(), actor.getMemberId(),
                 station.getNodeId(), taskCode);
         if (active != null) {
-            GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+            GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                     actor.getMemberId(), active, taskConfig, receiptId);
             return result(session, submissionResult(active, outcome, true));
         }
@@ -3315,7 +3331,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                     station.getNodeId(), taskCode);
             if (active != null) {
                 GameSession current = runtimeMapper.selectSessionByActivity(activity.getId());
-                GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, player.teamId,
+                GamePlayerNodeOutcome outcome = recoverSubmissionOutcome(session, station, player.teamId,
                         actor.getMemberId(), active, taskConfig, receiptId);
                 return result(current == null ? session : current, submissionResult(active, outcome, true));
             }
@@ -3428,19 +3444,63 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             throw error("GAME_BROADCAST_NO_RECIPIENT", "广播范围内没有可送达玩家");
         }
         int reached = dispatchBroadcast(broadcast);
-        int failed = runtimeMapper.countBroadcastDeliveries(broadcast.getId(), "FAILED");
-        int pending = runtimeMapper.countBroadcastDeliveries(broadcast.getId(), "PENDING");
-        String finalStatus = pending > 0 || (reached > 0 && failed > 0) ? "PARTIAL"
-                : failed > 0 ? "FAILED" : "SENT";
-        if (runtimeMapper.updateBroadcastStatus(broadcast.getId(), "SENDING", finalStatus, clock.now()) != 1) {
-            throw error("GAME_STATE_CONFLICT", "广播终态记录失败");
-        }
-        broadcast.setStatus(finalStatus);
+        int failed = settleBroadcast(broadcast, reached);
         bumpSession(session, session.getStatus(), session.getCurrentChapterId(), actor.getMemberId(), clock.now());
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("broadcastId", broadcast.getId());
         data.put("reachedCount", reached);
+        data.put("failedCount", failed);
         return result(session, data);
+    }
+
+    /** 按投递行写广播终态(CAS 自当前状态),返回仍失败的投递数。 */
+    private int settleBroadcast(GameBroadcast broadcast, int reached) {
+        int failed = runtimeMapper.countBroadcastDeliveries(broadcast.getId(), "FAILED");
+        int pending = runtimeMapper.countBroadcastDeliveries(broadcast.getId(), "PENDING");
+        String finalStatus = pending > 0 || (reached > 0 && failed > 0) ? "PARTIAL"
+                : failed > 0 ? "FAILED" : "SENT";
+        if (runtimeMapper.updateBroadcastStatus(broadcast.getId(), broadcast.getStatus(), finalStatus, clock.now()) != 1) {
+            throw error("GAME_STATE_CONFLICT", "广播终态记录失败");
+        }
+        broadcast.setStatus(finalStatus);
+        return failed;
+    }
+
+    /**
+     * SC-CITY-BROADCAST-TARGET:同一 requestId 重试导演台广播 = 只补发这条广播里 FAILED 的投递。
+     * 已 REACHED 的成员不会再收到;回执改写为补发后的送达状态。没有失败投递、场次已不在
+     * READY/RUNNING、或不是已生效的广播时,照旧只回放原回执。在 game_session 行锁内执行,
+     * 投递行从 FAILED 置回 PENDING 再由 markDelivery 按 PENDING CAS 落定,同一行不会被并发补发两次。
+     */
+    private GameCommandReceiptView replayOrResendFailedBroadcast(GameActorContext actor, GameSessionCommand command,
+                                                                 GameCommandReceipt existing, String requestHash,
+                                                                 GameSession session) {
+        GameCommandReceiptView replayed = replay(existing, requestHash);
+        if (!"BROADCAST".equals(existing.getAction()) || !"APPLIED".equals(existing.getOutcome()) || session == null
+                || !(GameSession.READY.equals(session.getStatus()) || GameSession.RUNNING.equals(session.getStatus()))) {
+            return replayed;
+        }
+        Map<String, Object> data = readMap(existing.getResultJson());
+        Long broadcastId = positiveLong(data.get("broadcastId"));
+        GameBroadcast broadcast = broadcastId == null ? null : runtimeMapper.selectBroadcast(broadcastId);
+        if (broadcast == null || !session.getId().equals(broadcast.getGameSessionId())
+                || runtimeMapper.countBroadcastDeliveries(broadcastId, "FAILED") < 1) {
+            return replayed;
+        }
+        preauthorize(actor, requireActivity(command.getActivityId(), true), session, command);
+        runtimeMapper.resetFailedDeliveries(broadcastId, clock.now());
+        dispatchBroadcast(broadcast);
+        int reached = runtimeMapper.countBroadcastDeliveries(broadcastId, "REACHED");
+        int failed = settleBroadcast(broadcast, reached);
+        data.put("reachedCount", reached);
+        data.put("failedCount", failed);
+        data.put("broadcastStatus", broadcast.getStatus());
+        existing.setResultJson(writeJson(data));
+        existing.setUpdateTime(clock.now());
+        if (runtimeMapper.updateAppliedReceiptResult(existing) != 1) {
+            throw error("GAME_STATE_CONFLICT", "广播补发回执落库失败");
+        }
+        return toReceiptView(existing, false);
     }
 
     private int dispatchBroadcast(GameBroadcast broadcast) {
@@ -4031,6 +4091,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (!"PLAYER".equals(actor.getPerspective()) || session == null) {
                 throw error("GAME_FORBIDDEN_SCOPE", "仅本场玩家可执行该操作");
             }
+            com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,
+                    currentPlayRegistrationMapper,actor.getMemberId(),2L,activity.getId(),null,clock.now(),true);
             requirePlayer(actor, activity);
             if (!"CONFIRM_ROLE".equals(action)) requireConfirmedRoleForUpdate(session, actor.getMemberId());
             if (!"CONFIRM_ROLE".equals(action) && command.getNodeId() != null) {
@@ -4882,16 +4944,38 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         state.setCreateTime(clock.now());
         state.setUpdateTime(clock.now());
         if (runtimeMapper.insertStoryState(state) != 1) {
-            state = runtimeMapper.selectStoryState(session.getId(), "TEAM", teamId);
+            state = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", teamId);
             if (state == null) throw error("GAME_STATE_CONFLICT", "剧情状态创建失败");
         }
         return state;
+    }
+
+    private static final class OutcomeChanges { private boolean added; }
+
+    private GamePlayerNodeOutcome recoverSubmissionOutcome(GameSession session, GameStationRun station,
+                                                            Long teamId, Long memberId,
+                                                            GameTaskSubmission submission, JsonNode taskConfig,
+                                                            Long receiptId) {
+        OutcomeChanges changes = new OutcomeChanges();
+        GamePlayerNodeOutcome outcome = outcomeForSubmission(session, station, teamId, memberId,
+                submission, taskConfig, receiptId, changes);
+        if (changes.added) {
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+        }
+        return outcome;
     }
 
     private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
                                                        Long teamId, Long memberId,
                                                        GameTaskSubmission submission, JsonNode taskConfig,
                                                        Long receiptId) {
+        return outcomeForSubmission(session, station, teamId, memberId, submission, taskConfig, receiptId, null);
+    }
+
+    private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,
+                                                       Long teamId, Long memberId,
+                                                       GameTaskSubmission submission, JsonNode taskConfig,
+                                                       Long receiptId, OutcomeChanges changes) {
         if (submission == null || "PENDING".equals(submission.getStatus())
                 || "REJECTED".equals(submission.getStatus())) {
             return null;
@@ -4908,8 +4992,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             return null;
         }
         GamePlayerNodeOutcome outcome = ensureOutcome(session, station, teamId, memberId,
-                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null);
-        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId);
+                GamePlayerNodeOutcome.COMPLETED, source, submission.getId(), receiptId, null, null, changes);
+        ensureFallbackSourceOutcomes(session, station, teamId, memberId, receiptId, changes);
         return outcome;
     }
 
@@ -4917,6 +5001,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                                                 Long memberId, String status, String completionSource,
                                                 Long submissionId, Long receiptId, String planCode,
                                                 Integer planVersion) {
+        return ensureOutcome(session, station, teamId, memberId, status, completionSource,
+                submissionId, receiptId, planCode, planVersion, null);
+    }
+
+    private GamePlayerNodeOutcome ensureOutcome(GameSession session, GameStationRun station, Long teamId,
+                                                Long memberId, String status, String completionSource,
+                                                Long submissionId, Long receiptId, String planCode,
+                                                Integer planVersion, OutcomeChanges changes) {
         GamePlayerNodeOutcome existing = runtimeMapper.selectPlayerNodeOutcome(
                 session.getId(), memberId, station.getNodeId());
         if (existing != null) return existing;
@@ -4941,11 +5033,17 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (existing == null) throw error("GAME_STATE_CONFLICT", "节点完成结果落库失败");
             return existing;
         }
+        if (changes != null) changes.added = true;
         return outcome;
     }
 
     private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
                                               Long teamId, Long memberId, Long receiptId) {
+        ensureFallbackSourceOutcomes(session, completedTarget, teamId, memberId, receiptId, null);
+    }
+
+    private void ensureFallbackSourceOutcomes(GameSession session, GameStationRun completedTarget,
+                                              Long teamId, Long memberId, Long receiptId, OutcomeChanges changes) {
         JsonNode config = sessionConfig(session);
         for (GameStationRun source : safe(runtimeMapper.selectStations(session.getId()))) {
             if (source == null || !session.getId().equals(source.getGameSessionId())
@@ -4958,7 +5056,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             }
             ensureOutcome(session, source, teamId, memberId,
                     GamePlayerNodeOutcome.FALLBACK_COMPLETED, "FALLBACK_PLAN", null, receiptId,
-                    source.getFallbackPlanCode(), source.getFallbackPlanVersion());
+                    source.getFallbackPlanCode(), source.getFallbackPlanVersion(), changes);
         }
     }
 
@@ -5449,7 +5547,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         canonical.put("activityId", command.getActivityId());
         canonical.put("nodeId", command.getNodeId());
         canonical.put("expectedRevision", command.getExpectedRevision());
-        canonical.put("action", command.getAction().trim().toUpperCase());
+        canonical.put("action", command.getAction().trim().toUpperCase(Locale.ROOT));
         if (command.getAuthorityEpoch() != null) canonical.put("authorityEpoch", command.getAuthorityEpoch());
         canonical.put("payload", command.getPayload());
         try {

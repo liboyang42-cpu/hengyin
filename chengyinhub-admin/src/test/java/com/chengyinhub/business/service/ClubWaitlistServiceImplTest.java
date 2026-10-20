@@ -54,6 +54,7 @@ class ClubWaitlistServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(ClubEventOpsMapper.class);
+        when(mapper.selectWaitlistMaintenanceMaxId()).thenReturn(100L);
         ticketMapper = mock(OmsTicketMapper.class);
         participationGuard = mock(IClubParticipationGuard.class);
         tokenCodec = new ClubWaitlistTokenCodec("waitlist-test-secret");
@@ -63,6 +64,7 @@ class ClubWaitlistServiceImplTest {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(policy(true));
         when(mapper.isActiveParticipant(CLUB, MEMBER)).thenReturn(1);
         when(mapper.selectClubOwnerForUpdate(CLUB)).thenReturn(999L);
+        when(mapper.selectPromotableActivityForUpdate(eq(ACTIVITY), eq(CLUB), any(Date.class))).thenReturn(ACTIVITY);
         when(mapper.selectActiveClubMemberForUpdate(CLUB, MEMBER)).thenReturn(MEMBER);
         when(mapper.countActiveRegistration(MEMBER, ACTIVITY, TICKET)).thenReturn(0);
         when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(invocation -> {
@@ -74,6 +76,11 @@ class ClubWaitlistServiceImplTest {
             return 1;
         });
         when(mapper.insertOutbox(anyLong(), any(Date.class))).thenReturn(1);
+    }
+
+    private java.util.List<Map<String, Object>> maintenanceTarget(long scanId, long targetId) {
+        Map<String, Object> row = new HashMap<>(); row.put("scanId", scanId); row.put("targetId", targetId);
+        return Collections.singletonList(row);
     }
 
     @Test
@@ -304,9 +311,7 @@ class ClubWaitlistServiceImplTest {
     void claimedTerminalOrderIsExpiredAndPromotedWithoutSecondInventoryRestore() {
         ClubWaitlistEntry claimed = entry(61L, ClubWaitlistEntry.CLAIMED, 2, NOW);
         claimed.setRegistrationId(71L);
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
+        when(mapper.selectWaitlistMaintenancePage(2, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.selectWaitlistByRegistration(71L)).thenReturn(claimed);
         when(mapper.selectWaitlistByRegistrationForUpdate(71L)).thenReturn(claimed);
         when(mapper.expireClaimedTerminalCas(71L)).thenReturn(1);
@@ -325,10 +330,7 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceCountsOnlyAnActualClaimedToConvertedCas() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(1);
 
         assertEquals(1, service.maintain(NOW));
@@ -338,10 +340,7 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceDoesNotReportSuccessAfterCallbackWonTheCasRace() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(0);
 
         assertEquals(0, service.maintain(NOW));
@@ -351,13 +350,11 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void maintenancePromotesWaitingQueueAfterNormalOrderRestoredInventory() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
         Map<String, Object> scope = new HashMap<>();
+        scope.put("scanId", 61L);
         scope.put("activityId", ACTIVITY);
         scope.put("ticketId", TICKET);
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.singletonList(scope));
+        when(mapper.selectWaitlistMaintenancePage(3, NOW, 0L, 100L, 100)).thenReturn(Collections.singletonList(scope));
         when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
         when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET))
                 .thenReturn(entry(61L, ClubWaitlistEntry.WAITING, 0, null));

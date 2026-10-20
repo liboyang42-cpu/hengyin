@@ -84,10 +84,18 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual([], rs.validate_registry(registry()))
 
     def test_batch_totals_match_the_remaining_receipt(self):
-        # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+3；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 11；
-        # port-prelaunch-69：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
-        expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 8, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 11, "extra-storage": 71, "port-prelaunch-69": 35}
+        # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+4；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
+        # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
+        # 漏斗最大年份修复 4（含 TIMESTAMPADD 负控，master）。
+        # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
+        # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
+        expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 9, "community-e02": 14,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 76,
+                    "port-e04-07-coupon": 9, "port-community-e02": 14, "port-b05-visibility": 3,
+                    "port-extra-storage": 76,
+                    "port-core-funds": 27, "port-ai-quota": 22,
+                    "port-f3-growth": 12, "port-f3-evidence": 4,
+                    "funnel-max-date": 4, "port-prelaunch-69": 35}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -517,6 +525,15 @@ class RunFlowTest(unittest.TestCase):
         self.assertEqual("PASS", receipt["verdict"])
         self.assertEqual(5, receipt["executed"]["tests"])
         self.assertEqual("UNKNOWN", receipt["cleanup"]["status"])
+
+    def test_surefire_version_reads_maven_39_lines_for_the_target_module(self):
+        log = ("[INFO] --- surefire:3.5.2:test (default-test) @ chengyinhub-common ---\n"
+               "[INFO] --- surefire:3.6.0:test (default-test) @ chengyinhub-system ---\n")
+        self.assertEqual("3.6.0", rs.surefire_version(log, "chengyinhub-system"))
+        self.assertEqual("3.5.2", rs.surefire_version(log, "chengyinhub-common"))
+        legacy = "[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ chengyinhub-system ---\n"
+        self.assertEqual("3.0.0-M5", rs.surefire_version(legacy, "chengyinhub-system"))
+        self.assertIsNone(rs.surefire_version("[INFO] --- compiler:3.8.1:testCompile (default) @ x ---\n", "x"))
 
     def test_refuses_to_run_after_failed_precheck(self):
         rs.fail_receipt(self.out, "precheck", ["count drift"])
