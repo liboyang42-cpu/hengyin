@@ -370,7 +370,7 @@ Page({
       return;
     }
     if (this.data.emptyAction === 'go-coop') {
-      wx.navigateTo({ url: '/pages/merchant/coop-center/index' });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/coop-center/index', complete: () => { this._navigating = false; } });
       return;
     }
     this.load();
