@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuditReportLaneMyBatisTest {
 
     private static final String LANE_MIGRATION = "chengyinhub-admin/sql/migration_audit_report_lane_20261020.sql";
+    private static final String LANE_VERIFY = "chengyinhub-admin/sql/migration_audit_report_lane_verify_20261020.sql";
 
     @Test
     void reportLaneMigrationSplitsOpenSlotsOnExistingRowsAndIsRerunnable() throws Exception {
@@ -59,6 +60,8 @@ class AuditReportLaneMyBatisTest {
             assertEquals(1, number(c, "SELECT open_guard FROM audit_task WHERE id=1"), "改前举报与审核共用槽");
 
             applyMigration(c, LANE_MIGRATION);
+            applyMigration(c, LANE_VERIFY);
+            applyMigration(c, LANE_VERIFY);
             assertEquals(2, number(c, "SELECT open_guard FROM audit_task WHERE id=1"), "存量未结举报单重算进举报槽");
             assertEquals(1, number(c, "SELECT open_guard FROM audit_task WHERE id=2"));
             assertEquals(0, number(c, "SELECT COUNT(*) FROM audit_task WHERE id=3 AND open_guard IS NOT NULL"));
@@ -147,6 +150,73 @@ class AuditReportLaneMyBatisTest {
             assertEquals(0, activities.clearContentSafetyHold(51L));
             assertEquals(1, topics.updateReviewFlag(50L, 1));
             assertEquals(1, number(c, "SELECT review_flag FROM cms_topic WHERE id=50"));
+        }
+    }
+
+    @Test
+    void reportLaneVerificationAcceptsEmptyCorrectTableAndIsReadOnlyAndRerunnable() throws Exception {
+        try (SqlSession session = openSession("audit_lane_v_empty")) {
+            Connection c = session.getConnection();
+            exec(c, "DROP TABLE IF EXISTS audit_task", ddl(read("sql/base_schema_20260818.sql"), "audit_task"));
+            applyMigration(c, LANE_MIGRATION);
+            String before = text(c, "SELECT generation_expression FROM information_schema.columns"
+                    + " WHERE table_schema=DATABASE() AND table_name='audit_task' AND column_name='open_guard'");
+            applyMigration(c, LANE_VERIFY);
+            applyMigration(c, LANE_VERIFY);
+            assertEquals(before, text(c, "SELECT generation_expression FROM information_schema.columns"
+                    + " WHERE table_schema=DATABASE() AND table_name='audit_task' AND column_name='open_guard'"));
+            assertEquals(0, number(c, "SELECT COUNT(*) FROM audit_task"));
+        }
+    }
+
+    @Test
+    void reportLaneVerificationRejectsAllNullExpressionOnEmptyTable() throws Exception {
+        try (SqlSession session = openSession("audit_lane_v_null_empty")) {
+            Connection c = session.getConnection();
+            exec(c, "DROP TABLE IF EXISTS audit_task", ddl(read("sql/base_schema_20260818.sql"), "audit_task"),
+                    "ALTER TABLE audit_task MODIFY COLUMN open_guard TINYINT GENERATED ALWAYS AS"
+                            + " (CASE WHEN source_type='report' THEN NULL ELSE NULL END) STORED");
+            applyMigration(c, LANE_MIGRATION); // 旧断言会误过；新增校验必须在空表上也拒绝。
+            assertThrows(AssertionError.class, () -> applyMigration(c, LANE_VERIFY));
+        }
+    }
+
+    @Test
+    void reportLaneVerificationRejectsAllNullExpressionWithExistingRows() throws Exception {
+        try (SqlSession session = openSession("audit_lane_v_null_rows")) {
+            Connection c = session.getConnection();
+            exec(c, "DROP TABLE IF EXISTS audit_task", ddl(read("sql/base_schema_20260818.sql"), "audit_task"),
+                    "INSERT INTO audit_task(id,biz_type,biz_id,source_type,status,submitted_at,version) VALUES"
+                            + " (1,'TOPIC',10,'report',0,NOW(),0),(2,'ACTIVITY',11,'user_publish',3,NOW(),0),"
+                            + " (3,'TOPIC',12,'report',1,NOW(),0)",
+                    "ALTER TABLE audit_task MODIFY COLUMN open_guard TINYINT GENERATED ALWAYS AS"
+                            + " (CASE WHEN source_type='report' THEN NULL ELSE NULL END) STORED");
+            applyMigration(c, LANE_MIGRATION); // NULL <> 1/2 是 UNKNOWN，旧校验漏掉这三行。
+            assertThrows(AssertionError.class, () -> applyMigration(c, LANE_VERIFY));
+            assertEquals(3, number(c, "SELECT COUNT(*) FROM audit_task"), "校验失败不删除数据");
+        }
+    }
+
+    @Test
+    void reportLaneVerificationRejectsWrongScopeAndLiteralWhitespaceOnEmptyTable() throws Exception {
+        try (SqlSession session = openSession("audit_lane_v_bad_shape")) {
+            Connection c = session.getConnection();
+            exec(c, "DROP TABLE IF EXISTS audit_task", ddl(read("sql/base_schema_20260818.sql"), "audit_task"),
+                    "ALTER TABLE audit_task ADD COLUMN `sta tus` TINYINT NULL");
+            String[] wrong = {
+                    "CASE WHEN status IN (0,3) THEN CASE WHEN source_type='report' THEN 2 ELSE 1 END ELSE NULL END",
+                    "CASE WHEN status IN (0,3) THEN CASE WHEN source_type='re port'"
+                            + " AND biz_type IN ('TOPIC','TEMPLATE','TEMPLATE_LIBRARY','ACTIVITY')"
+                            + " THEN 2 ELSE 1 END ELSE NULL END",
+                    "CASE WHEN `sta tus` IN (0,3) THEN CASE WHEN source_type='report'"
+                            + " AND biz_type IN ('TOPIC','TEMPLATE','TEMPLATE_LIBRARY','ACTIVITY')"
+                            + " THEN 2 ELSE 1 END ELSE NULL END"
+            };
+            for (String expression : wrong) {
+                exec(c, "ALTER TABLE audit_task MODIFY COLUMN open_guard TINYINT GENERATED ALWAYS AS ("
+                        + expression + ") STORED");
+                assertThrows(AssertionError.class, () -> applyMigration(c, LANE_VERIFY), expression);
+            }
         }
     }
 

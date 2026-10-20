@@ -977,7 +977,7 @@
     <select id="selectMemberEnforcements" resultType="map">
       SELECT e.id,e.post_id,e.target_member_id,e.enforcement_type,e.rule_code,e.guideline_version_id,
              e.reason_code,e.previous_lifecycle,e.starts_at,e.ends_at,e.status,e.version,e.create_time,
-             a.id appeal_id,a.status appeal_status,a.decision_reason,a.reviewed_at
+             a.id appeal_id,a.status appeal_status,a.decision_reason,a.reviewed_at,a.due_at appeal_due_at
       FROM community_post_enforcement e
       LEFT JOIN community_post p ON p.id=e.post_id
       LEFT JOIN community_post_appeal a ON a.enforcement_id=e.id AND a.appellant_member_id=#{memberId}
@@ -987,13 +987,21 @@
     </select>
     <insert id="insertAppeal">
       INSERT INTO community_post_appeal(enforcement_id,appellant_member_id,reason,evidence_asset_ids_json,request_id,
-        status,create_time,update_time)
-      VALUES(#{enforcementId},#{appellantMemberId},#{reason},#{evidenceJson},#{requestId},'SUBMITTED',#{now},#{now})
+        status,due_at,create_time,update_time)
+      VALUES(#{enforcementId},#{appellantMemberId},#{reason},#{evidenceJson},#{requestId},'SUBMITTED',#{dueAt},#{now},#{now})
     </insert>
+    <update id="claimAppealCas">
+      UPDATE community_post_appeal SET status='REVIEWING',reviewer_user_id=#{reviewerUserId},update_time=#{now},
+        version=version+1
+      WHERE id=#{id} AND status='SUBMITTED' AND version=#{expectedVersion}
+    </update>
+    <select id="selectReportCaseFirstResponseMinutes" resultType="java.lang.Integer">
+      SELECT first_response_minutes_snapshot FROM community_report_case WHERE id=#{reportCaseId}
+    </select>
     <select id="selectAppeal" resultType="map">SELECT * FROM community_post_appeal WHERE id=#{id}</select>
     <select id="selectAppeals" resultType="map">
       SELECT a.id,a.enforcement_id,a.appellant_member_id,a.reason,a.evidence_asset_ids_json,a.status,
-             a.reviewer_user_id,a.reviewed_at,a.decision_reason,a.version,a.create_time,e.post_id,e.enforcement_type,
+             a.reviewer_user_id,a.reviewed_at,a.decision_reason,a.version,a.due_at,a.create_time,e.post_id,e.enforcement_type,
              e.rule_code,e.reason_code,e.evidence_snapshot_json,e.guideline_version_id,
              g.content_json guideline_content_json
       FROM community_post_appeal a JOIN community_post_enforcement e ON e.id=a.enforcement_id

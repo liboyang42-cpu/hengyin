@@ -145,6 +145,46 @@ class CommunityPostMapperMyBatisTest {
         }
     }
 
+    /** FOLLOWUP-C-2:申诉落 due_at;审核员认领把 SUBMITTED 按版本 CAS 成 REVIEWING,只成功一次;REVIEWING 仍可结案。 */
+    @Test
+    void appealStoresDueAtAndClaimMovesSubmittedToReviewingOnce() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_enforcement(id,post_id,target_member_id,enforcement_type,rule_code,guideline_version_id,reason_code,status,version,create_time) values (1,1,null,'HIDE_POST','R1',1,'reason','ACTIVE',0,now())");
+        java.util.Date now = new java.util.Date(1_800_000_000_000L);
+        java.util.Date due = new java.util.Date(now.getTime() + 15 * 60_000L);
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.insertAppeal(1L, 11L, "请复核", "[]", "appeal-due-1", due, now));
+            Long id = jdbc.queryForObject("select id from community_post_appeal where request_id='appeal-due-1'", Long.class);
+            Map<String, Object> row = mapper.selectAppeal(id);
+            assertEquals("SUBMITTED", value(row, "status"));
+            assertEquals(due.getTime(), ((java.util.Date) value(row, "due_at")).getTime());
+
+            assertEquals(1, mapper.claimAppealCas(id, 7L, 0, now));
+            assertEquals(0, mapper.claimAppealCas(id, 8L, 1, now), "已在复核中:他人不能再认领");
+            assertEquals(0, mapper.claimAppealCas(id, 8L, 0, now), "旧版本号不能认领");
+            row = mapper.selectAppeal(id);
+            assertEquals("REVIEWING", value(row, "status"));
+            assertEquals(7L, ((Number) value(row, "reviewer_user_id")).longValue());
+            assertEquals(1, ((Number) value(row, "version")).intValue());
+
+            List<Map<String, Object>> mine = mapper.selectMemberEnforcements(11L, null, 20);
+            assertEquals("REVIEWING", value(mine.get(0), "appeal_status"));
+            assertEquals(due.getTime(), ((java.util.Date) value(mine.get(0), "appeal_due_at")).getTime());
+
+            assertEquals(1, mapper.reviewAppealCas(id, "UPHELD", "维持原处理", 7L, 1, now));
+            assertEquals("UPHELD", value(mapper.selectAppeal(id), "status"));
+        }
+    }
+
+    private static Object value(Map<String, Object> row, String key) {
+        return row.containsKey(key) ? row.get(key) : row.get(key.toUpperCase(java.util.Locale.ROOT));
+    }
+
     @Test
     void commentFollowingProjectionUsesCurrentViewerAndActualAuthor() throws Exception {
         DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
@@ -592,7 +632,7 @@ class CommunityPostMapperMyBatisTest {
         jdbc.execute("create table community_featured_entry(post_id bigint,collection_code varchar(64),starts_at timestamp,ends_at timestamp)");
         jdbc.execute("create table community_search_document(document_type varchar(16),document_id bigint,visibility_state varchar(16),search_text varchar(255))");
         jdbc.execute("create table community_post_enforcement(id bigint primary key,post_id bigint,target_member_id bigint,enforcement_type varchar(32),rule_code varchar(64),guideline_version_id bigint,reason_code varchar(64),previous_lifecycle varchar(16),evidence_snapshot_json varchar(255),operator_user_id bigint,starts_at timestamp,ends_at timestamp,status varchar(16),version int,create_time timestamp,update_time timestamp,report_case_id bigint,comment_id bigint,constraint chk_community_enforcement_target check (post_id is not null or target_member_id is not null))");
-        jdbc.execute("create table community_post_appeal(id bigint primary key,enforcement_id bigint,appellant_member_id bigint,request_id varchar(96) not null,reason varchar(255),evidence_asset_ids_json varchar(255),status varchar(16),decision_reason varchar(255),reviewed_at timestamp,create_time timestamp,update_time timestamp,unique(appellant_member_id,request_id))");
+        jdbc.execute("create table community_post_appeal(id bigint auto_increment primary key,enforcement_id bigint,appellant_member_id bigint,request_id varchar(96) not null,reason varchar(255),evidence_asset_ids_json varchar(255),status varchar(16),reviewer_user_id bigint,version int default 0,due_at timestamp,decision_reason varchar(255),reviewed_at timestamp,create_time timestamp,update_time timestamp,unique(appellant_member_id,request_id))");
         jdbc.execute("create table community_post_comment(id bigint primary key,post_id bigint,author_id bigint,root_id bigint,parent_id bigint,replied_to_member_id bigint,body varchar(100),lifecycle varchar(16),author_approval_state varchar(16),version int,like_count int,create_time timestamp)");
         jdbc.execute("create table community_post_comment_action(comment_id bigint,member_id bigint,action_type varchar(32),request_id varchar(96),create_time timestamp)");
         jdbc.execute("create table community_notification(id bigint auto_increment primary key,recipient_member_id bigint,event_id varchar(36),post_id bigint,comment_id bigint,actor_member_id bigint,notification_type varchar(32),aggregate_key varchar(128),actor_count int,payload_json varchar(255),read_at timestamp,create_time timestamp,update_time timestamp,unique(recipient_member_id,event_id),unique(recipient_member_id,notification_type,aggregate_key))");

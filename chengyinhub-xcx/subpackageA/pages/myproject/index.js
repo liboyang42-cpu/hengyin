@@ -319,7 +319,7 @@ Page({
   onCardLong(e) {
     const item = e.currentTarget.dataset.item;
     if (!item) return;
-    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel) return;
+    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel && !item._canAudit) return;
     this.setData({
       opsSheet: {
         show: true,
@@ -331,7 +331,7 @@ Page({
         canDelete: !!item._canDelete,
         canViewApplies: !!item._canViewApplies,
         canEdit: !!item._canEdit,
-        canCancel: !!item._canCancel,
+        canCancel: !!item._canCancel, canAudit: !!item._canAudit, state: item.state,
         toggleLabel: item._toggleLabel || '下架',
       }
     });
@@ -342,7 +342,7 @@ Page({
   },
 
   onOpsPick(e) {
-    const k = e.currentTarget.dataset.k;
+    const k = e.currentTarget.dataset.k; if (k === 'audit') return this.onOpsAudit();
     const p = this.data.opsSheet;
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };
@@ -517,7 +517,7 @@ Page({
         if (res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (t) {
             const view = marketView(t);
-            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass) });
+            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass), _audit: auditTimeline.templateTarget(t) });
           });
           that.setData({ tplList: rows, tplLoaded: true });
         } else {
@@ -533,6 +533,92 @@ Page({
   },
 
   retryTemplates() { this.loadTemplates(); },
+
+  // ===== FOLLOWUP-A-2:审核记录 / 申诉 =====
+  // 长按面板的「审核记录」行:面板里只存了这张卡的 id / biz / state,按同一判据还原审核对象
+  onOpsAudit() {
+    const p = this.data.opsSheet;
+    this.setData({ 'opsSheet.show': false });
+    this.openAudit(auditTimeline.projectTarget({ id: p.id, bizType: p.biz, state: p.state }), p.title);
+  },
+
+  tplAudit(e) {
+    const ds = e.currentTarget.dataset;
+    this.openAudit(ds.biz && ds.bizid ? { bizType: ds.biz, bizId: String(ds.bizid) } : null, ds.title);
+  },
+
+  openAudit(target, title) {
+    if (!target) return;
+    this.setData({ auditSheet: { show: true, loading: true, error: '', title: title || '', bizType: target.bizType,
+      bizId: target.bizId, rows: [], appealText: '', canAppeal: false } });
+    this.loadAudit();
+  },
+
+  loadAudit() {
+    const that = this;
+    const sheet = this.data.auditSheet;
+    const current = currentRead(this);
+    const same = () => current() && that.data.auditSheet.show
+      && that.data.auditSheet.bizType === sheet.bizType && that.data.auditSheet.bizId === sheet.bizId;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/audit/timeline', method: 'GET',
+      data: { bizType: sheet.bizType, bizId: sheet.bizId },
+      success(res) {
+        if (!same()) return;
+        if (res && res.code == '200' && res.data) {
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '',
+            rows: auditTimeline.timelineRows(res.data), appealText: auditTimeline.appealText(res.data),
+            canAppeal: res.data.canAppeal === true }) });
+        } else {
+          const msg = app.getRequestErrorMessage(res, '审核记录加载失败');
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: msg, canAppeal: false }) });
+          toast(msg);
+        }
+      },
+      fail() {
+        if (!same()) return;
+        that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '网络异常，请重试', canAppeal: false }) });
+        toast('网络异常，请重试');
+      }
+    });
+  },
+
+  closeAuditSheet() {
+    this.setData({ auditSheet: Object.assign({}, this.data.auditSheet, { show: false }) });
+  },
+
+  appealAudit() {
+    const sheet = this.data.auditSheet;
+    if (!sheet.show || !sheet.canAppeal || this._appealing) return;
+    const that = this;
+    const current = currentRead(this);
+    modal.show({
+      title: '申诉', editable: true, multiline: true, confirmText: '提交申诉',
+      placeholderText: '写清你认为处理有误的理由（500 字内），每条内容只能申诉一次',
+      validate: auditTimeline.validateReason,
+      success(r) {
+        if (!r.confirm || !current() || that._appealing) return;
+        if (auditTimeline.validateReason(r.content)) { toast(auditTimeline.validateReason(r.content)); return; }
+        that._appealing = true;
+        app.sendRequest({
+          hideLoading: true, silentError: true, url: '/api/audit/appeal', method: 'POST',
+          header: { 'content-type': 'application/json' },
+          data: JSON.stringify({ bizType: sheet.bizType, bizId: Number(sheet.bizId), reason: String(r.content).trim() }),
+          success(res) {
+            that._appealing = false;
+            if (!current()) return;
+            if (res && res.code == '200') {
+              toast('申诉已提交');
+              if (that.data.auditSheet.show && that.data.auditSheet.bizId === sheet.bizId) that.loadAudit();
+            } else {
+              toast(app.getRequestErrorMessage(res, '申诉失败'));
+            }
+          },
+          fail() { that._appealing = false; if (current()) toast('网络异常，请重试'); }
+        });
+      }
+    });
+  },
 
   tplTap(e) {
     const id = e.currentTarget.dataset.id;
@@ -761,6 +847,8 @@ function decorate(p) {
     _canDelete: merchantActivity ? false : canDelete,
     _canEdit: canEdit,
     _canCancel: canCancel,
+    // FOLLOWUP-A-2:未通过 / 已下架的主题、活动给「审核记录」(含申诉)
+    _canAudit: !!auditTimeline.projectTarget(p),
     _sold: sold,
     _showAccept: showAccept, _acceptAccented: acceptAccented, _canViewApplies: canViewApplies,
     _showPendingVerify: showPendingVerify, _pendingVerifyText: showPendingVerify ? ('待核销 ' + pendingVerify) : '',
@@ -780,3 +868,8 @@ function decorate(p) {
     _dot: PENDING_RANK[p.state] != null
   });
 }
+
+// FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
+// 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
+const modal = require('../../../utils/modal.js');
+const auditTimeline = require('../../../utils/audit-timeline.js');

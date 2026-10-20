@@ -175,7 +175,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
 
         // msgSecCheck v2 的 openid 必填:为空微信必判 40003(invalid openid)。当场 fail-close,
         // 别把调用方 bug 伪装成「服务繁忙,请稍后重试」——重试永远不会通,用户还会以为再试就好。
-        if (StringUtils.isEmpty(openid))
+        if (StringUtils.isBlank(openid))
         {
             log.error("[内容安全] 文本检测缺少 openid(v2 必填,微信必判 40003),fail-close 拦截");
             return MSG_UNAVAILABLE;
@@ -282,7 +282,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkMediaAsync(String mediaUrl, String openid)
     {
-        if (!isEnabled() || StringUtils.isEmpty(mediaUrl))
+        if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
             return null;
         }
@@ -634,6 +634,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 // [6-09] 内容安全自动下架 = 不公开:同步帖跟着收起,违规图片不能继续在广场露出。
                 cmsTopicService.syncCreativeSquarePostVisibility(bizId, false);
+                notifyImageTakedown(current.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, bizId,
+                        com.chengyinhub.business.service.support.SystemNoticeCard.item("主题", current.getName()));
                 return confirmMutation(affected, "主题图片违规已自动下架", bizId);
             }
             else if (bizType == BIZ_TYPE_ACTIVITY)
@@ -660,10 +662,14 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                             ? confirmAlreadyApplied("活动图片违规已自动下架", bizId)
                             : confirmMutation(affected, "活动图片违规已自动下架", bizId);
                 }
+                notifyImageTakedown(current.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, bizId,
+                        com.chengyinhub.business.service.support.SystemNoticeCard.item("活动", current.getName()));
                 return confirmMutation(affected, "活动图片违规已自动下架", bizId);
             }
             else if (bizType == BIZ_TYPE_CLUB_POST)
             {
+                // 软删 SQL 不带 del_flag 条件(驱动按 found rows 计数,已删也回 1),先读下架前状态判断本次是否真正下架。
+                ClubPost before = clubPostService.selectClubPostByIdForUpdate(bizId);
                 int affected = clubPostService.deleteClubPostById(bizId); // del_flag=2 软下架(可逆)
                 if (affected <= 0)
                 {
@@ -671,6 +677,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     return observed != null && Integer.valueOf(2).equals(observed.getDelFlag())
                             ? confirmAlreadyApplied("俱乐部动态图片违规已自动下架", bizId)
                             : confirmMutation(affected, "俱乐部动态图片违规已自动下架", bizId);
+                }
+                if (before != null && !Integer.valueOf(2).equals(before.getDelFlag()))
+                {
+                    notifyImageTakedown(before.getAuthorMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_CLUB_POST, bizId,
+                            com.chengyinhub.business.service.support.SystemNoticeCard.item("俱乐部动态", before.getContent()));
                 }
                 return confirmMutation(affected, "俱乐部动态图片违规已自动下架", bizId);
             }
@@ -728,6 +739,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                             ? confirmAlreadyApplied("广场帖图片违规已自动下架", bizId)
                             : confirmMutation(affected, "广场帖图片违规已自动下架", bizId);
                 }
+                notifyImageTakedown(current.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_SQUARE, bizId,
+                        com.chengyinhub.business.service.support.SystemNoticeCard.item("广场帖", current.getContents()));
                 return confirmMutation(affected, "广场帖图片违规已自动下架", bizId);
             }
             else if (bizType == BIZ_TYPE_COMMENT)
@@ -774,7 +787,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 // bizId 是会员模板 id;列表/详情/首页/分类都只读模板库投影(status=1 且 publish_status=1)。
                 // 下架 = 投影 publish_status=0 + status=2:作者不能直接再上架,必须重新提交广场人审;
                 // 在途的广场审核单一并撤销,免得人审通过把违规图放回去。
-                if (cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId) == null)
+                com.chengyinhub.business.domain.CmsMemberTemplate template =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId);
+                if (template == null)
                 {
                     return false;
                 }
@@ -808,6 +823,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     }
                     affected++;
                 }
+                if (affected > 0)
+                {
+                    notifyImageTakedown(template.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, bizId,
+                            com.chengyinhub.business.service.support.SystemNoticeCard.item("玩法模板", template.getTitle()));
+                }
                 return affected > 0
                         ? confirmMutation(affected, "模板图片违规已自动下架", bizId)
                         : confirmAlreadyApplied("模板图片违规已自动下架", bizId);
@@ -840,7 +860,15 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 offline.setId(bizId);
                 offline.setStatus(com.chengyinhub.business.domain.OfficialEvent.ST_OFFLINE);
                 offline.setUpdateTime(new java.util.Date());
-                return confirmMutation(officialEventMapper.updateOfficialEvent(offline), "官方活动封面违规已自动下线", bizId);
+                int affected = officialEventMapper.updateOfficialEvent(offline);
+                // 只有 V2 UMS_MEMBER 身份域的发布者是小程序会员;后台账号创建的不按裸 sender_account 猜会员。
+                if (affected > 0 && com.chengyinhub.business.domain.OfficialEventParty.IDENTITY_UMS_MEMBER
+                        .equals(current.getCreatorIdentitySource()))
+                {
+                    notifyImageTakedown(current.getSenderAccount(), com.chengyinhub.business.domain.AuditTask.BIZ_OFFICIAL_EVENT, bizId,
+                            com.chengyinhub.business.service.support.SystemNoticeCard.item("官方活动", current.getTitle()));
+                }
+                return confirmMutation(affected, "官方活动封面违规已自动下线", bizId);
             }
             else
             {
@@ -854,6 +882,35 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             log.error("[内容安全] 处理图片检测结果异常: mapping={}, exceptionType={}",
                     mapping, e.getClass().getSimpleName());
             return false;
+        }
+    }
+
+    /**
+     * 图片违规下架后告诉作者是哪一条、为什么。只在本次回调真正把内容从公开态下架时调用(已下架的重复回调走
+     * confirmAlreadyApplied 不通知);回调收件箱同事务置 DONE,同一 trace 重放不会再进来 —— 每次下架只通知一次。
+     * 走嵌套事务 + 只告警:通知失败不能挡住违规内容下架。
+     */
+    private void notifyImageTakedown(Long memberId, String bizType, Long bizId, String item)
+    {
+        if (memberId == null || memberId <= 0 || imServiceProvider == null)
+        {
+            return;
+        }
+        try
+        {
+            com.chengyinhub.business.service.IImService im = imServiceProvider.getIfAvailable();
+            if (im == null)
+            {
+                return;
+            }
+            im.sendSystemInNestedTransaction(memberId, ImMessage.MSG_CARD,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(bizType, bizId, item));
+        }
+        catch (RuntimeException e)
+        {
+            log.error("[内容安全] 图片违规下架通知发送失败: bizType={}, bizId={}, exceptionType={}",
+                    bizType, bizId, e.getClass().getSimpleName());
         }
     }
 

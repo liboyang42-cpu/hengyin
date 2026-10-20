@@ -25,6 +25,8 @@ public class AuditRecord extends BaseEntity {
     private String reasonText;
     private String snapshotJson;
     private Long revertedRecordId;
+    /** 固定清单原因编码(JSON 数组)，见 AuditReasonCodes；对外只暴露 reasonCodes / reasonLabels。 */
+    private String reasonCodesJson;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -42,6 +44,15 @@ public class AuditRecord extends BaseEntity {
     public void setSnapshotJson(String snapshotJson) { this.snapshotJson = snapshotJson; }
     public Long getRevertedRecordId() { return revertedRecordId; }
     public void setRevertedRecordId(Long revertedRecordId) { this.revertedRecordId = revertedRecordId; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getReasonCodesJson() { return reasonCodesJson; }
+    public void setReasonCodesJson(String reasonCodesJson) { this.reasonCodesJson = reasonCodesJson; }
+    public java.util.List<String> getReasonCodes() {
+        return com.chengyinhub.business.service.support.AuditReasonCodes.fromJson(reasonCodesJson);
+    }
+    public java.util.List<String> getReasonLabels() {
+        return com.chengyinhub.business.service.support.AuditReasonCodes.labels(getReasonCodes());
+    }
 
     /** NF-01 对外契约别名；历史 null 不补造文案，空串也不折叠成 null。 */
     public String getReason() { return reasonText; }

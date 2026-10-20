@@ -109,6 +109,7 @@
         <view class="mp-ops">
           <view wx:if="{{item._canSubmitMarket}}" class="mp-op mp-op-toggle" catchtap="tplSubmitMarket" data-id="{{item.id}}" aria-role="button" aria-label="提交广场审核" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">提交广场</view>
           <view wx:if="{{item._canToggleMarket}}" class="mp-op mp-op-toggle" catchtap="tplToggle" data-id="{{item.id}}" data-target="{{item._marketPublishTarget}}" aria-role="button" aria-label="{{item._marketActionText}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{item._marketActionText}}</view>
+          <view wx:if="{{item._audit}}" class="mp-op mp-op-toggle" catchtap="tplAudit" data-biz="{{item._audit.bizType}}" data-bizid="{{item._audit.bizId}}" data-title="{{item.title}}" aria-role="button" aria-label="查看{{item.title}}的审核记录" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">审核记录</view>
           <view class="mp-op mp-op-del" catchtap="tplDelete" data-id="{{item.id}}" data-title="{{item.title}}" data-pub="{{item.marketPublishStatus}}" aria-role="button" aria-label="删除{{item.title}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">删除</view>
         </view>
       </view>
@@ -142,10 +143,44 @@
       <text class="mp-ops-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text>
       <text class="mp-ops-sub">已有人买票会走退款，报名作废</text>
     </view>
+    <view class="mp-ops-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="mp-ops-label">审核记录</text>
+      <text class="mp-ops-sub">看平台每次的处理结果和原因，可以时发起申诉</text>
+    </view>
     <view class="mp-ops-row mp-ops-row--danger" wx:if="{{opsSheet.canDelete}}" bindtap="onOpsPick" data-k="delete" hover-class="cy-pressed" hover-stay-time="80">
       <text class="mp-ops-label">删除</text>
       <text class="mp-ops-sub">不可撤销，内容无法找回</text>
     </view>
+  </view>
+</cy-sheet>
+
+<!-- FOLLOWUP-A-2:审核记录(GET /api/audit/timeline)。行样式沿用上面长按面板;申诉只在回包 canAppeal 时出现 -->
+<cy-sheet show="{{auditSheet.show}}" title="审核记录" bind:close="closeAuditSheet">
+  <view class="mp-ops-sheet">
+    <view class="mp-ops-row" wx:if="{{auditSheet.loading}}" aria-role="status" aria-live="polite">
+      <text class="mp-ops-sub">正在读取审核记录…</text>
+    </view>
+    <view class="mp-ops-row" wx:elif="{{auditSheet.error}}" bindtap="loadAudit" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="mp-ops-label">{{auditSheet.error}}</text>
+      <text class="mp-ops-sub">点这里重试</text>
+    </view>
+    <block wx:else>
+      <view class="mp-ops-row" wx:if="{{!auditSheet.rows.length}}">
+        <text class="mp-ops-sub">暂无平台处理记录</text>
+      </view>
+      <view class="mp-ops-row" wx:for="{{auditSheet.rows}}" wx:key="key">
+        <text class="mp-ops-label">{{item.label}}</text>
+        <text class="mp-ops-sub" wx:if="{{item.sub}}">{{item.sub}}</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.appealText}}">
+        <text class="mp-ops-label">申诉</text>
+        <text class="mp-ops-sub">{{auditSheet.appealText}}</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="mp-ops-label">申诉</text>
+        <text class="mp-ops-sub">对这次处理有异议，提交给平台复核（每条内容一次）</text>
+      </view>
+    </block>
   </view>
 </cy-sheet>
 
