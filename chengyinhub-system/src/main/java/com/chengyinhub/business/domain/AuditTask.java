@@ -31,7 +31,13 @@ public class AuditTask extends BaseEntity {
     public static final String BIZ_HANGOUT = "HANGOUT";
     /** 地图附近的公开队伍(play_team.join_mode=2);REJECT=确认违规改回邀请制并使待审申请失效,APPROVE=不动。 */
     public static final String BIZ_TEAM = "TEAM";
-    /** M0-6 先审后发 bizType;审核通过(APPROVE)→status=1(上架),驳回(REJECT)→status=2 */
+    /**
+     * 主题内容审核 bizType。2026-10-20 起主题创建/编辑「先发后审」:专业版发布即上架(status=1),
+     * 同时挂一张 topic_bundle_v2 后审单;简易版机审通过直发(check_status=1),机审存疑才挂 post_review_flag 抽检单;
+     * 内容安全图片回调下架的主题(check_status=2 且 status≠2)作者不能自助上架,须过本类审核单(content_safety_relist)。
+     * 审核通过(APPROVE)→check_status=1,首次发布进 Beta;驳回(REJECT)→status=2/check_status=2 并下架。
+     * 开售另由 BIZ_TOPIC_SALE_REVIEW「先审后售」。
+     */
     public static final String BIZ_TOPIC = "TOPIC";
     /** H3 商业主题两阶段审核；bizType 分相保证同一主题可同时拥有独立阶段历史。 */
     public static final String BIZ_TOPIC_PROJECT_REVIEW = "TOPIC_PROJECT_REVIEW";

@@ -74,6 +74,9 @@ public interface CmsMemberTemplateMapper
 
     int applyAuditDecision(@Param("row") CmsMemberTemplate row, @Param("ownerId") Long ownerId);
 
+    /** AUDIT-G2-2:举报成立下架已公开的个人玩法(只动公开中的行,幂等) */
+    int takeDownReported(@Param("id") Long id, @Param("reason") String reason);
+
     /**
      * 删除我的模板
      * 

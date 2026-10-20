@@ -159,9 +159,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         // 模板市场热度:从库模板起草而来的发布(originalTemplateId=库模板 id,publish/temp 链路)
         // 给来源库模板 use_num +1。历史数据里该 id 若不指向库行,UPDATE 命中 0 行,无副作用。
         // ⚠️ 只在新建时计数:同一份模板改一次加一次,热度就成了"谁改得勤"而不是"谁被采用得多"。
+        // AUDIT-G2-5:且按会员首次采用幂等 —— 同一会员从同一库模板反复新建(含删了再建)只算一次。
         if (!editing && memberTemplate.getOriginalTemplateId() != null
                 && memberTemplate.getOriginalTemplateId() > 0) {
-            templateLibraryService.incrementUseNum(memberTemplate.getOriginalTemplateId());
+            templateLibraryService.incrementUseNumOnFirstAdoption(
+                    memberTemplate.getOriginalTemplateId(), memberId, memberTemplate.getId());
         }
 
         // 个人玩法先独立审核；模板广场只能在个人过审后走 market-submit。

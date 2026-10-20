@@ -348,7 +348,7 @@ class TemplateEditOwnershipTest {
         service.publishTemplateWithTransaction(request, OWNER, "商家甲");
 
         // 改一次加一次热度,榜单就变成「谁改得勤」而不是「谁被采用得多」
-        verify(templateLibraryService, never()).incrementUseNum(anyLong());
+        verify(templateLibraryService, never()).incrementUseNumOnFirstAdoption(anyLong(), anyLong(), anyLong());
     }
 
     @Test
@@ -361,7 +361,7 @@ class TemplateEditOwnershipTest {
 
         verify(memberTemplateService).insertCmsMemberTemplate(any());
         verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
-        verify(templateLibraryService).incrementUseNum(9001L);
+        verify(templateLibraryService).incrementUseNumOnFirstAdoption(org.mockito.ArgumentMatchers.eq(9001L), org.mockito.ArgumentMatchers.eq(OWNER), any());
     }
 
     @Test

@@ -1183,6 +1183,17 @@ public class ApiTopicController extends BaseController {
         }
         Integer casExpected = expected != null ? expected : current;
         int target = casExpected == 1 ? 0 : 1;
+        // AUDIT-G2-1:内容安全图片回调下架的主题(留置中)不能由作者直接翻回上架 ——
+        // 改为提交人工复核,复核通过由审核台恢复在架。下架方向不受影响。
+        if (target == 1 && com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(cmsTopic)) {
+            try {
+                cmsTopicService.requestContentSafetyRelistReview(cid, cmsTopic.getMemberId());
+            } catch (Exception e) {
+                logger.error("内容安全下架主题复核单提交失败 topicId={}", cid, e);
+                return error("主题因图片未通过内容安全检测已被下架，复核申请提交失败，请稍后重试");
+            }
+            return error(com.chengyinhub.business.util.TopicContentSafetyHold.RELIST_REFUSED);
+        }
 
         // 上架额度:目标为上架(0→1)时,锁会员 → 复查在架数 → 置上架,三步同事务原子完成,防并发绕过上限
         //(排除自身保证重复上架幂等);超限时 guard 抛 ServiceException,由全局异常处理转 error 文案。
@@ -1205,6 +1216,47 @@ public class ApiTopicController extends BaseController {
         }
         int rows = cmsTopicService.casUserStatus(fCid, fExpected, 0);
         return rows > 0 ? success("下架成功") : error("下架失败，主题状态已变化，请刷新后重试");
+    }
+
+    @Operation(summary = "举报主题(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/report")
+    @Parameters({
+            @Parameter(name = "id", description = "主题id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult topicReport(String id, String reason) {
+        Long cid = Convert.toLong(id, 0L);
+        if (cid < 1) {
+            return error("参数不合规");
+        }
+        Long memberId = 0L;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            logger.warn("topicReport 获取用户ID异常", e);
+        }
+        if (memberId == null || memberId <= 0) {
+            return error("请先登录");
+        }
+        // 只开放公开可见的主题:草稿/下架/驳回的主题不对外,也不能借举报给它们建审核单。
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
+        if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
+                || !Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())
+                || Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(cid))) {
+            return error("主题不存在");
+        }
+        try {
+            boolean recorded = auditTaskService.reportContentOnce(
+                    com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, cid, memberId, reason);
+            return success(recorded ? "举报已提交，内容将进入审核" : "你已举报过该主题，我们会尽快处理");
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        } catch (ServiceException e) {
+            return error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("主题举报失败 topicId={}", cid, e);
+            return error("举报失败");
+        }
     }
 
     @Operation(summary = "移交主题给俱乐部承接(复制一份新草稿挂该俱乐部,原主题下架;发起人保留所有权)")

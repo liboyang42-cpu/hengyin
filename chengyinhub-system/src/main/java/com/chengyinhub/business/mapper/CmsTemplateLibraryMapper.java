@@ -66,13 +66,23 @@ public interface CmsTemplateLibraryMapper
 
     int applyAuditDecision(@Param("row") CmsTemplateLibrary row, @Param("ownerId") Long ownerId);
 
+    /** AUDIT-G2-2:举报成立下架这条广场记录(只动公开中的行) */
+    int takeDownReported(@Param("id") Long id, @Param("reason") String reason);
+
+    /** AUDIT-G2-2:个人玩法举报成立时,连同其仍公开的广场投影一起下架 */
+    int takeDownReportedByMemberTemplate(@Param("memberTemplateId") Long memberTemplateId, @Param("reason") String reason);
+
     /**
-     * 模板市场热度:被采用一次 use_num +1(单条原子 UPDATE,避免读改写竞态)
+     * 模板市场热度:会员首次采用该库模板时 use_num +1(单条原子 UPDATE,避免读改写竞态)。
+     * 该会员已有其它出自本库模板的个人玩法(含已删除)时命中 0 行,不重复计数。
      *
-     * @param id 模板库主键
+     * @param libraryId 模板库主键
+     * @param memberId 采用者
+     * @param memberTemplateId 本次新建的个人玩法(判重时排除自身)
      * @return 结果
      */
-    public int incrementUseNum(Long id);
+    public int incrementUseNumOnFirstAdoption(@Param("libraryId") Long libraryId, @Param("memberId") Long memberId,
+                                              @Param("memberTemplateId") Long memberTemplateId);
 
     /**
      * 删除模板库

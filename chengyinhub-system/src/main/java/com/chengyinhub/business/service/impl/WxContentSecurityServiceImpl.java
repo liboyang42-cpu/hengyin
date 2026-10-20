@@ -39,6 +39,7 @@ import com.chengyinhub.business.mapper.RoamStampMapper;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.util.TopicContentSafetyHold;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IWxContentCallbackInboxService;
 import com.chengyinhub.common.config.WxPayConfig;
@@ -600,18 +601,25 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 {
                     return false;
                 }
-                if (Integer.valueOf(0).equals(current.getUserStatus()))
+                if (topicTakedownApplied(current))
                 {
                     return confirmAlreadyApplied("主题图片违规已自动下架", bizId);
                 }
                 CmsTopic t = new CmsTopic();
                 t.setId(bizId);
                 t.setUserStatus(0); // 0=下架
+                // AUDIT-G2-1:记下「为什么下架」(check_status=2 + 固定原因),作者不能再自助翻回上架,
+                // 须人工复核通过才解除(见 TopicContentSafetyHold)。人工已驳回(status=2)的不改写其驳回原因。
+                if (!Integer.valueOf(2).equals(current.getStatus()))
+                {
+                    t.setCheckStatus(2);
+                    t.setReason(TopicContentSafetyHold.REASON);
+                }
                 int affected = cmsTopicService.updateCmsTopic(t);
                 if (affected <= 0)
                 {
                     CmsTopic observed = cmsTopicService.selectCmsTopicById(bizId);
-                    return observed != null && Integer.valueOf(0).equals(observed.getUserStatus())
+                    return topicTakedownApplied(observed)
                             ? confirmAlreadyApplied("主题图片违规已自动下架", bizId)
                             : confirmMutation(affected, "主题图片违规已自动下架", bizId);
                 }
@@ -844,6 +852,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
         log.warn("[内容安全] {}: id={}", action, bizId);
         return true;
+    }
+
+    /** 已下架且已留置(或已被人工驳回)= 本次违规结论已落地 */
+    private static boolean topicTakedownApplied(CmsTopic topic)
+    {
+        return topic != null && Integer.valueOf(0).equals(topic.getUserStatus())
+                && (TopicContentSafetyHold.isHeld(topic) || Integer.valueOf(2).equals(topic.getStatus()));
     }
 
     private boolean confirmAlreadyApplied(String action, Long bizId)

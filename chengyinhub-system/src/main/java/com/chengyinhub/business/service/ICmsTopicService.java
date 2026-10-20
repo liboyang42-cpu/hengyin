@@ -134,6 +134,14 @@ public interface ICmsTopicService
      */
     void syncCreativeSquarePostVisibility(Long topicId, boolean visible);
 
+    /**
+     * AUDIT-G2-1:内容安全下架留置中的主题申请重新上架 —— 不直接上架,只确保有一张 BIZ_TOPIC 人工复核单
+     * (已有未结 BIZ_TOPIC 单则复用,否则新建 source=content_safety_relist)。过审才解除留置并恢复在架。
+     *
+     * @return 复核单 id
+     */
+    Long requestContentSafetyRelistReview(Long topicId, Long submitterId);
+
     public int insertCmsTopic(CmsTopic cmsTopic);
 
     /**

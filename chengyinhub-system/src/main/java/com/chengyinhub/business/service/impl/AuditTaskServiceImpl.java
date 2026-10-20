@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.util.TopicContentSafetyHold;
 
 import com.chengyinhub.business.domain.AuditRecord;
 import com.chengyinhub.business.domain.AuditTask;
@@ -343,7 +344,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TOPIC, topicId);
         // 先发后审的抽检单(post_review_flag)不是组合审核:不锁编辑、不挡简易版;
         // 若之后提交组合审核,由 submitOrRefresh 把这张单原地升级为 topic_bundle_v2。
-        if (open != null && SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())) return false;
+        if (open != null && (SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())
+                || TopicContentSafetyHold.SOURCE_RELIST.equals(open.getSourceType()))) return false;
         if (open != null) requireRefreshableTask(open, "topic_bundle_v2");
         return open != null;
     }
@@ -354,7 +356,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private void requireRefreshableTask(AuditTask task, String sourceType) {
         boolean legacyTopicTask = "topic_bundle_v2".equals(sourceType)
                 && ("user_publish".equals(task.getSourceType()) || "user_republish".equals(task.getSourceType())
-                        || SOURCE_POST_REVIEW_FLAG.equals(task.getSourceType()));
+                        || SOURCE_POST_REVIEW_FLAG.equals(task.getSourceType())
+                        || TopicContentSafetyHold.SOURCE_RELIST.equals(task.getSourceType()));
         boolean activityContentTask = AuditTask.BIZ_ACTIVITY.equals(task.getBizType())
                 && ACTIVITY_CONTENT_SOURCES.contains(sourceType)
                 && ACTIVITY_CONTENT_SOURCES.contains(task.getSourceType());
@@ -417,6 +420,30 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new ServiceException("举报记录保存失败，请重试");
         }
         return taskId;
+    }
+
+    /** 用户端举报原因长度上限(与广场举报同口径) */
+    private static final int MAX_REPORT_REASON_LENGTH = 64;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reportContentOnce(String bizType, Long bizId, Long reporterId, String reasonText) {
+        String reason = reasonText == null ? "" : reasonText.trim();
+        if (reason.isEmpty() || reason.length() > MAX_REPORT_REASON_LENGTH) {
+            throw new IllegalArgumentException("请选择举报原因");
+        }
+        Long open = findOpenTaskId(bizType, bizId);
+        if (open != null && reporterId != null) {
+            AuditRecord query = new AuditRecord();
+            query.setTaskId(open);
+            query.setAction("REPORT");
+            List<AuditRecord> reported = auditRecordMapper.selectAuditRecordList(query);
+            if (reported != null) for (AuditRecord record : reported) {
+                if (reporterId.equals(record.getOperatorId())) return false;
+            }
+        }
+        reportContent(bizType, bizId, reporterId, reason);
+        return true;
     }
 
     @Override
@@ -521,6 +548,29 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             }
             snap.put("content", content);
         }
+        if (AuditTask.BIZ_TOPIC.equals(bizType) || AuditTask.BIZ_TEMPLATE.equals(bizType)
+                || AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+            // 举报时的公开面留证:作者事后改名换图,审核员仍能看到被举报的那一版。
+            java.util.Map<String, Object> content = new java.util.LinkedHashMap<>();
+            Object[] row = null;
+            if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+                CmsTopic topic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(bizId);
+                if (topic != null) row = new Object[] {topic.getMemberId(), topic.getName(), topic.getImgUrl()};
+            } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                CmsMemberTemplate template = templateMapper == null ? null : templateMapper.selectCmsMemberTemplateById(bizId);
+                if (template != null) row = new Object[] {template.getMemberId(), template.getTitle(), template.getImgUrl()};
+            } else {
+                CmsTemplateLibrary library = libraryMapper == null ? null : libraryMapper.selectCmsTemplateLibraryById(bizId);
+                if (library != null) row = new Object[] {library.getMemberId(), library.getTitle(), library.getImgUrl()};
+            }
+            content.put("available", row != null);
+            if (row != null) {
+                content.put("memberId", row[0]);
+                content.put("title", row[1]);
+                content.put("imgUrl", row[2]);
+            }
+            snap.put("content", content);
+        }
         if (AuditTask.BIZ_TEAM.equals(bizType)) {
             // 只取审核需要的公开信息;邀请码是入队凭证,绝不进快照。
             java.util.Map<String, Object> content = new java.util.LinkedHashMap<>();
@@ -609,7 +659,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
-        if (templateLock != null) assertTemplateReviewCurrent(templateLock, request);
+        // 举报单裁决的是「已公开内容是否违规」,不是作者提交的待审版本:不走待审快照/配置复核。
+        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType())) {
+            assertTemplateReviewCurrent(templateLock, request);
+        }
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -705,6 +758,36 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         if (current == null || !TemplateAuditSnapshot.matches(task.getSnapshotJson(), current)) {
             throw new ServiceException("提交内容已变化，请重新提交审核", HttpStatus.CONFLICT);
+        }
+        if (AuditTask.STATUS_APPROVED.equals(request.getStatus())) {
+            requireTemplateConfigStillValid(task, template, locked.projections);
+        }
+    }
+
+    /**
+     * AUDIT-G2-6:过审前对落库配置重跑 schema 校验器。快照一致只说明「内容没被改」,
+     * 不说明它在今天的校验规则下仍可玩(规则升级/审核期间旁路写入都会让它失效);
+     * 失效就 409 打回,作者修正后重新提交。驳回不受影响。
+     */
+    private void requireTemplateConfigStillValid(AuditTask task, CmsMemberTemplate template,
+                                                 java.util.List<CmsTemplateLibrary> projections) {
+        try {
+            if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+                com.chengyinhub.business.service.support.TemplateConfigRevalidation.requireValid(
+                        template.getValidationMethod(), template.getSensorType(), template.getSensorConfig(),
+                        template.getAdvancedConfigJson());
+                return;
+            }
+            for (CmsTemplateLibrary row : projections) {
+                if (task.getBizId().equals(row.getId())) {
+                    com.chengyinhub.business.service.support.TemplateConfigRevalidation.requireValid(
+                            row.getValidationMethod(), row.getSensorType(), row.getSensorConfig(),
+                            row.getAdvancedConfigJson());
+                }
+            }
+        } catch (IllegalArgumentException invalid) {
+            throw new ServiceException("模板配置校验未通过：" + invalid.getMessage()
+                    + "，请作者修改后重新提交审核", HttpStatus.CONFLICT);
         }
     }
 
@@ -1083,11 +1166,17 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
                 imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+                // AUDIT-G2-2:举报不成立 = 内容维持原状(不重发、不进 Beta);留置中的主题例外,过审即人工复核通过。
+                if (up && SOURCE_REPORT.equals(task.getSourceType())
+                        && !TopicContentSafetyHold.isHeld(cmsTopicMapper.selectCmsTopicById(bizId))) {
+                    return;
+                }
                 if (up) mediaPublicationGuard.requireTopicPublication(bizId);
                 if (isTopicBundle(task)) {
                     topicBundleReviewService.applyDecision(bizId, task.getSubmitterId(), task.getSnapshotJson(), up);
                 }
-                // M0-6 先审后发:过审(APPROVE)→上架(status=1/userStatus=1);驳回(REJECT)→status=2
+                // 主题先发后审(2026-10-20):这里是发布之后的人工结论。驳回(REJECT)→status=2 并下架;
+                // 过审(APPROVE)→check_status=1,首发进 Beta,在架态按下方规则保持/恢复。
                 if (down) {
                     CmsTopic t = new CmsTopic();
                     t.setId(bizId);
@@ -1116,8 +1205,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     String onlineErr = quotaErr != null ? quotaErr : supplyErr;
                     boolean alreadyPublished = exist != null && Integer.valueOf(1).equals(exist.getStatus())
                             && exist.getPublishedConfigVersion() != null && exist.getPublishedConfigVersion() > 0L;
+                    // AUDIT-G2-1:内容安全下架留置中的主题,人工过审即解除留置并恢复在架(作者此前被拒的自助上架)。
+                    boolean releasingHold = TopicContentSafetyHold.isHeld(exist);
                     boolean online = onlineErr == null
-                            && (!alreadyPublished || Integer.valueOf(1).equals(exist.getUserStatus()));
+                            && (!alreadyPublished || Integer.valueOf(1).equals(exist.getUserStatus()) || releasingHold);
                     if (onlineErr != null) {
                         // 配额满:审核结论照旧生效,但不自动上架;主人稍后走自助上架(同一把锁)
                         logger.warn("审核过审但未自动上架 topicId={} memberId={}: {}", bizId, ownerId, onlineErr);
@@ -1164,6 +1255,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 c.setId(bizId);
                 c.setStatus(3);
                 smsCouponServiceProvider.getObject().updateSmsCoupon(c);
+            } else if (AuditTask.BIZ_TEMPLATE.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
+                // AUDIT-G2-2:个人玩法举报。不成立不动;成立 = 下架个人玩法及其广场投影(可由作者修改重提)。
+                if (up) return;
+                if (templateMapper.takeDownReported(bizId, reasonText) != 1) {
+                    logger.warn("举报成立但个人玩法已不在公开态,跳过下架 templateId={}", bizId);
+                }
+                libraryMapper.takeDownReportedByMemberTemplate(bizId, reasonText);
+            } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
+                // AUDIT-G2-2:模板广场举报。不成立不动;成立 = 只下架这条广场记录,不动作者的个人玩法。
+                if (up) return;
+                if (libraryMapper.takeDownReported(bizId, reasonText) != 1) {
+                    logger.warn("举报成立但模板广场记录已不在公开态,跳过下架 libraryId={}", bizId);
+                }
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。

@@ -219,6 +219,8 @@ EXPECTED = {
     "ClubWaitlistTokenMybatisIntegrationTest": 7,
     "CmsMemberTemplateAudioPatchMybatisIntegrationTest": 9,
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest": 9,
+    # 2026-10-20 AUDIT-G2-5:模板市场 use_num 按会员首次采用计数(同人重复/删了再建不涨、他人首次 +1)。
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest": 3,
     # 2026-09-17 3-11 修复 +3 条(对象存不存在都不发分 / 未参与者不发分 / 主题认其下活动已核销票),14 → 17。
     # 2026-09-18 RV-p3 F3:+1 会员隔离用例(别人的已支付票不能给评价人换分),17 → 18。
     "ContentInteractionMybatisIntegrationTest": 18,
@@ -381,6 +383,9 @@ SOURCE_FILES = {
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CmsTemplateLibraryAudioPatchMybatisIntegrationTest.java",
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
+        "TemplateUseNumFirstAdoptionMybatisIntegrationTest.java",
     "ContentInteractionMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "ContentInteractionMybatisIntegrationTest.java",

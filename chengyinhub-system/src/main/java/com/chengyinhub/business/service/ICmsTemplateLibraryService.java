@@ -53,12 +53,14 @@ public interface ICmsTemplateLibraryService
     public int updateCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
 
     /**
-     * 模板市场热度:库模板被「从模板起草→发布」引用一次 use_num +1(原子自增)。
+     * 模板市场热度:会员首次「从模板起草→发布」引用该库模板时 use_num +1(原子自增,按会员幂等)。
      *
-     * @param id 模板库主键
-     * @return 结果
+     * @param libraryId 模板库主键
+     * @param memberId 采用者
+     * @param memberTemplateId 本次新建的个人玩法
+     * @return 结果(0 = 该会员此前已采用过,不重复计数)
      */
-    public int incrementUseNum(Long id);
+    public int incrementUseNumOnFirstAdoption(Long libraryId, Long memberId, Long memberTemplateId);
 
     /**
      * 批量删除模板库

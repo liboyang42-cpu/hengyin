@@ -78,6 +78,7 @@ def all_required_clean(directory):
         ("ClubWaitlistTokenMybatisIntegrationTest", 7),
         ("CmsMemberTemplateAudioPatchMybatisIntegrationTest", 9),
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),
+        ("TemplateUseNumFirstAdoptionMybatisIntegrationTest", 3),
         ("ContentInteractionMybatisIntegrationTest", 18),
         ("CreativeSquarePublishIdempotencyMybatisIntegrationTest", 7),
         ("FollowConcurrencyMybatisIntegrationTest", 4),
