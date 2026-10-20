@@ -2642,13 +2642,13 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "AUTHORIZED_FIVE_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
-    "creation_or_candidate_sha": "NOT_REPORTED",
+    "state": "COMBINED_SOURCE_FROZEN_CI_IN_PROGRESS_ACCEPTANCE_PENDING",
+    "creation_or_candidate_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
     "port_source": {
       "pr": 386,
       "branch": "integrate/master-port-20261019",
       "recorded_integration_sha": "b548cdc4d098defb5c4857c793897ca79668d579",
-      "source_role": "Exact integration preview starting source; final combination remains unreported and NOT_RUN."
+      "source_role": "Fixed port starting source for the delivered independent combination; old-source results not inherited."
     },
     "source_prs": [
       {
@@ -2702,7 +2702,7 @@
     "conflict_write_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "AUTHORIZED_FIVE_EXACT_CONFLICT_PATHS",
+      "state": "APPLIED_TO_FROZEN_COMBINED_SOURCE_NO_SCOPE_EXPANSION",
       "authorized_exact_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -2724,9 +2724,12 @@
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
     "validation": {
-      "combined_candidate": "NOT_RUN",
+      "combined_candidate": "CI_IN_PROGRESS_ACCEPTANCE_PENDING",
       "existing_source_results_inherited": false,
-      "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution."
+      "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
+      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "real_storage": "PENDING_NO_RESULT_REPORTED",
+      "real_http": "PENDING_NO_RESULT_REPORTED"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -2754,7 +2757,7 @@
             "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
             "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
           ],
-          "resolution": "Integration writer reports both conflicts resolved preserving both source contracts; no test result inferred."
+          "resolution": "Reported resolved at95f038ae57ac38d35d532a07fbd82375c74d887f within the exact granted paths; combined acceptance pending."
         },
         {
           "pr": 387,
@@ -2765,15 +2768,86 @@
             "chengyinhub-xcx/tests/unit/action-ledger.test.js",
             "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
           ],
-          "resolution": "AUTHORIZED_NOT_REPORTED_COMPLETE"
+          "resolution": "Reported resolved at95f038ae57ac38d35d532a07fbd82375c74d887f within the exact granted paths; combined acceptance pending."
+        },
+        {
+          "pr": 388,
+          "source_sha": "f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a",
+          "result": "CLEAN_PREVIEW_AND_MERGE_REPORTED",
+          "additional_conflict_paths": []
+        },
+        {
+          "pr": 390,
+          "source_sha": "9e8c870c7b748b3f25e3ca3bbb970609bc9a137a",
+          "result": "CLEAN_PREVIEW_AND_MERGE_REPORTED",
+          "additional_conflict_paths": []
         }
       ],
-      "remaining_prs": [
-        388,
-        390
-      ],
-      "remaining_preview": "#388/#390 NOT_REPORTED; no additional conflict paths authorized",
-      "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior result inherited"
+      "remaining_prs": [],
+      "remaining_preview": "All five PR sources previewed/integrated; #388/#390 clean, no additional conflict paths.",
+      "combined_candidate": "95f038ae57ac38d35d532a07fbd82375c74d887f / ACCEPTANCE_PENDING; original preview steps retained, actual integration order recorded separately."
+    },
+    "combined_pr": {
+      "number": 394,
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/394",
+      "draft": true,
+      "base": "master",
+      "state": "OPEN_NOT_MERGED",
+      "base_master_is_not_merge_authorization": true
+    },
+    "source_integration_order": [
+      {
+        "source": "port",
+        "source_sha": "b548cdc4d098defb5c4857c793897ca79668d579"
+      },
+      {
+        "pr": 391,
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894"
+      },
+      {
+        "pr": 385,
+        "source_sha": "b19200a3ad6fc19319665fe5b81ad6161fd9dac7"
+      },
+      {
+        "pr": 388,
+        "source_sha": "f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a"
+      },
+      {
+        "pr": 390,
+        "source_sha": "9e8c870c7b748b3f25e3ca3bbb970609bc9a137a"
+      },
+      {
+        "pr": 387,
+        "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3"
+      }
+    ],
+    "current_runs": [
+      {
+        "run_id": 39431906431,
+        "name": "GitHub CI",
+        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431"
+      },
+      {
+        "run_id": 39431906479,
+        "name": "Funds MySQL IT",
+        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479"
+      }
+    ],
+    "conflict_resolution": {
+      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "SOURCE_DELIVERED_FIVE_GRANTED_CONFLICTS_RESOLVED_PENDING_COMBINED_ACCEPTANCE",
+      "grant_control_sha": "1e62861bbf8317c10d607c2abf74150c29350c32",
+      "reported_by_integration_writer": true,
+      "controller": "Retains TopicTextSafety changed-text gate and operator/subject separation.",
+      "service": "Retains omitted configuration/node relationships plus before/after sale-term comparison and refresh.",
+      "mini_program": "Existing generator rebuilt action ledger from final WXML:4755; all77 GET matrix entries retained,29 GET negative controls reported passed. No UI/auth-policy/CI-configuration edits reported.",
+      "evidence_scope": "Source delivery and integration-writer observations; C00 only read PR/run metadata, did not run generator or tests. These observations are not combined backend/storage/HTTP acceptance."
     }
   }
 }

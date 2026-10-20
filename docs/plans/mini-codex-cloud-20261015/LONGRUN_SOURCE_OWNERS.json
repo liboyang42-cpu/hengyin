@@ -73,9 +73,10 @@
       "independent_acceptance_conflict_grant": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
-        "state": "AUTHORIZED_CONFLICT_RESOLUTION_ONLY",
+        "state": "SOURCE_DELIVERED_FROZEN_CONFLICT_RESOLUTION_COMPLETE",
         "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
-        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer"
+        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer",
+        "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
@@ -109,9 +110,10 @@
       "independent_acceptance_conflict_grant": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
-        "state": "AUTHORIZED_CONFLICT_RESOLUTION_ONLY",
+        "state": "SOURCE_DELIVERED_FROZEN_CONFLICT_RESOLUTION_COMPLETE",
         "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
-        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer"
+        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer",
+        "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java": {
@@ -5170,7 +5172,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "AUTHORIZED_FIVE_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
+    "state": "COMBINED_SOURCE_FROZEN_CI_IN_PROGRESS_ACCEPTANCE_PENDING",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -5179,7 +5181,7 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior source results inherited",
+    "combined_candidate": "95f038ae57ac38d35d532a07fbd82375c74d887f / CI_IN_PROGRESS_ACCEPTANCE_PENDING; no prior source results inherited",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -5187,30 +5189,55 @@
       "chengyinhub-xcx/scripts/uiaudit/action-ledger.json": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
-        "state": "AUTHORIZED_EXISTING_CONFLICT_RESOLUTION_ONLY",
+        "state": "SOURCE_DELIVERED_FROZEN_CONFLICT_RESOLUTION_COMPLETE",
         "source_pr": 387,
         "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3",
         "scope": "Existing ledger/assertions/GET-auth allowlist only; no UI/request/permission-policy change. Original source attribution retained.",
-        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority"
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
+        "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       },
       "chengyinhub-xcx/tests/unit/action-ledger.test.js": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
-        "state": "AUTHORIZED_EXISTING_CONFLICT_RESOLUTION_ONLY",
+        "state": "SOURCE_DELIVERED_FROZEN_CONFLICT_RESOLUTION_COMPLETE",
         "source_pr": 387,
         "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3",
         "scope": "Existing ledger/assertions/GET-auth allowlist only; no UI/request/permission-policy change. Original source attribution retained.",
-        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority"
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
+        "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       },
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js": {
         "writer": "local root coordinator only",
         "target_branch": "codex/final-backend-acceptance-20261020",
-        "state": "AUTHORIZED_EXISTING_CONFLICT_RESOLUTION_ONLY",
+        "state": "SOURCE_DELIVERED_FROZEN_CONFLICT_RESOLUTION_COMPLETE",
         "source_pr": 387,
         "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3",
         "scope": "Existing ledger/assertions/GET-auth allowlist only; no UI/request/permission-policy change. Original source attribution retained.",
-        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority"
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
+        "frozen_combined_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f"
       }
+    },
+    "creation_or_candidate_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+    "combined_pr": {
+      "number": 394,
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/394",
+      "draft": true,
+      "base": "master",
+      "state": "OPEN_NOT_MERGED",
+      "base_master_is_not_merge_authorization": true
+    },
+    "source_integration_order": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.source_integration_order"
+    },
+    "current_runs": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
+      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "IN_PROGRESS_NO_VERDICT"
+    },
+    "conflict_resolution": {
+      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "SOURCE_DELIVERED_FIVE_GRANTED_CONFLICTS_RESOLVED_PENDING_COMBINED_ACCEPTANCE",
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_resolution"
     }
   }
 }

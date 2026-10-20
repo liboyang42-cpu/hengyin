@@ -1,10 +1,12 @@
-## 当前独立整合授权：本地root单写者，先预演再登记冲突
+## 当前独立组合：PR394固定95f038，五处冲突解决，验收PENDING
 
-用户已明确允许“独立整合与现有CI验收”：范围为移植分支 `integrate/master-port-20261019` 与 #385、#387、#388、#390、#391，在 `codex/final-backend-acceptance-20261020` 独立分支处理。本地root为唯一集成写者；只读merge-tree预演已确认：`b548cdc4d098defb5c4857c793897ca79668d579` 合 #391 `8bc728ad99d0c748698c5210343e6f4ec782e894` 无冲突，再合 #385 `b19200a3ad6fc19319665fe5b81ad6161fd9dac7` 恰有两处冲突。C00仅授权该分支解决 `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java`、`chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java`，保留两边合同与校验，原来源及锁不变。上述两处已由集成写者报告保留双方合同解决；#387 `0f8d1796983b3a0300462e818efba3f02aa6d2d3` 的只读预演另有三处实际冲突，现仅追加授权 `chengyinhub-xcx/scripts/uiaudit/action-ledger.json`、`chengyinhub-xcx/tests/unit/action-ledger.test.js`、`chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js`，合并已有行动账、双方断言及GET鉴权白名单，不改产品UI／请求策略／权限语义，不删测试求绿。#388／#390预演、新冲突或其他必要回归路径仍须另列；组合候选尚未报告／NOT_RUN。三队源码及原归属保持冻结，C00仅维护控制文档，不派新作者、不编译测试或触发CI。
+[草稿PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已公开，固定组合源码 `95f038ae57ac38d35d532a07fbd82375c74d887f`，分支 `codex/final-backend-acceptance-20261020`；base为master但未合并，本轮不合master。来源顺序为 port `b548cdc4d098defb5c4857c793897ca79668d579` → #391 `8bc728ad99d0c748698c5210343e6f4ec782e894` → #385 `b19200a3ad6fc19319665fe5b81ad6161fd9dac7` → #388 `f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a` → #390 `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a` → #387 `0f8d1796983b3a0300462e818efba3f02aa6d2d3`。#388／#390预演及合并均报告无冲突，无新增路径授权。
 
-固定 `8bc728ad99d0c748698c5210343e6f4ec782e894` 的 Backend tests、Funds MySQL IT、Mini program static checks 已直接核读为 **COMPLETED/SUCCESS**；此前pending读数保留为历史。该源五链HTTP PASS与九批41f83真库存储仍分源，均不继承到尚未运行的最终组合。
+集成写者已按控制提交 `1e62861bbf8317c10d607c2abf74150c29350c32` 解决五处已授权冲突：Controller保留文本安全门禁及操作者／主体隔离，Service兼保省略配置／节点关系与开售条款前后比较／刷新；行动账由既有生成器按最终WXML重建4755，GET矩阵77项全保，29项GET负控报告通过。以上为源码交付及集成写者观察，C00未执行生成器或测试；不改UI、鉴权策略或CI配置，不据此签收组合后端／真库／HTTP验收。
 
-GitHub当前另显示 #391 已由外部合入master，合并提交 `a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18`；这是既成外部状态，不是本轮执行或新增授权。本轮独立整合仍不合master、不部署、不执行生产迁移、不新增入口或修改212／CI／网络。精确来源与授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance`；真实微信／设备、出站stub边界、持久迁移与最终组合未验边界保持。
+固定95f038的既有 [GitHub CI39431906431](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431)、[Funds39431906479](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479) 本次核读均IN_PROGRESS，组合结果 **PENDING**；后续真库／HTTP尚无结果登记。41f83九批真库与8bc728五链HTTP及其单源CI均不继承到此组合。原来源和三队源码保持冻结，本地root为唯一集成写者；Cloud仅登记文档，不新增写者、不编译测试或触发CI。
+
+用户已授权独立整合与现有CI验收；不部署、不执行生产迁移、不新增入口，不修改212／CI／网络。真实微信／设备、出站stub边界、持久迁移及生产未验边界保持。精确来源、冲突及当前证据见 `LONGRUN_REMAINING.json.independent_backend_acceptance`。#391外部已合master的既成事实保留，不构成本轮合master授权。
 
 ## 当前HTTP闭环：固定8bc728五链PASS，出站stub与最终验收边界保留
 
