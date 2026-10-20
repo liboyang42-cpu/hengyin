@@ -401,8 +401,8 @@ Page({
   },
 
   goCreate() {
-    wx.navigateTo({ url: '/pages/publish/fabu/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   onEmptyCta() {
@@ -424,8 +424,8 @@ Page({
       toast('已有人买票，不能再改这场活动');
       return;
     }
-    wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 确认框必须写明「将给 N 位已付款玩家全额退款」(9-18 拍板)。N 问后端预览接口,拿不到就不弹、不发取消。
@@ -472,8 +472,8 @@ Page({
 
   // P0-4:收到的申请(俱乐部申请/商家承接报名)统一在协作列表「收到的」处理,候选池页已下线
   goReceivedApplies() {
-    wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 上/下架切换(按 bizType 派发,单接口翻转)
