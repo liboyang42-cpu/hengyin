@@ -64,8 +64,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id desc limit 1 for update
     </select>
 
-    <select id="selectAuditTaskList" parameterType="AuditTask" resultMap="AuditTaskResult">
-        <include refid="selectAuditTaskVo"/>
+    <sql id="auditTaskListWhere">
         <where>
             <if test="bizType != null and bizType != ''"> and biz_type = #{bizType}</if>
             <if test="bizId != null"> and biz_id = #{bizId}</if>
@@ -73,7 +72,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null"> and status = #{status}</if>
             <if test="riskLevel != null and riskLevel != ''"> and risk_level = #{riskLevel}</if>
         </where>
+    </sql>
+
+    <!-- 内部"取最新一单"语义(get(0)=最新),供开售/立项状态源、供给作废等读取,勿改排序 -->
+    <select id="selectAuditTaskList" parameterType="AuditTask" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        <include refid="auditTaskListWhere"/>
         order by submitted_at desc, id desc
+    </select>
+
+    <!-- 工作台队列:最紧急(deadline 最早)在前,无 deadline 的历史单垫底;id 兜底保证分页稳定 -->
+    <select id="selectAuditTaskQueue" parameterType="AuditTask" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        <include refid="auditTaskListWhere"/>
+        order by deadline_at is null, deadline_at asc, submitted_at asc, id asc
     </select>
 
     <insert id="insertAuditTask" parameterType="AuditTask" useGeneratedKeys="true" keyProperty="id">
@@ -121,6 +133,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
           and status = #{expectedStatus}
           and version = #{version}
+    </update>
+
+    <!-- 认领:仅未被认领的待审单可认领,条件更新防并发双认领 -->
+    <update id="claimAuditTask">
+        update audit_task
+        set current_assignee = #{assignee},
+            update_time = #{updateTime}
+        where id = #{id}
+          and current_assignee is null
+          and status = 0
     </update>
 
     <update id="revertAuditTaskDecisionCas">
