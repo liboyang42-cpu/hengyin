@@ -181,6 +181,7 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-09-18 C8-05 取�
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-24 CU-C-68 本站运营资格探测(probeStationOperable):开抽屉时预探一次 /api/game/session/merchant/entries,只看本商家有没有本站入口。探不到≠没资格,所以失败不弹 toast(弹了会盖在抽屉上且说不清是哪一件事),改为把「本站运营」那组置灰 + stationOpsErrorText 落到抽屉里一行可重试的说明(project-host wxml 消费)
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：业务失败和网络失败均显式 toast，complete/fail 释放单次提交锁；关闭通道 toast 避免重复提示，myproject-toggle-cas-guard 覆盖重复点击及失败恢复。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 5  # 2026-10-11 上下架、取消活动/主题、删除项目/模板五处：当前页面的业务与网络失败由 toast 或确认组件 failed 显式展示，离开或换账号后丢弃旧结果；关闭通道 toast 防止旧回包污染新页面，myproject-merchant-publish-entry 覆盖成功、业务失败、网络失败和返回恢复。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 FOLLOWUP-A-2 审核记录读取 / 申诉提交：读取失败落审核记录面板内错误行(可点重试)并 toast，申诉业务与网络失败显式 toast；离开或换账号后丢弃旧结果，通用 toast 会双弹。followup-a2-audit-appeal-timeline 覆盖成功、业务失败与网络失败。
 
 # 2026-09-30 会员分包组件迁移：按实际路径重新核对，旧路径冻结收据保留，不增加冻结额度。
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。
@@ -197,3 +198,4 @@ chengyinhub-xcx/pages/publish/fabu/index.js 8  # edit-detail按作者/seq恢复�
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处
+chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 FOLLOWUP-A-1 主题 / 模板广场 / 个人玩法举报：举报原因读取与三处举报提交的业务失败、网络失败都显式 toast(原因不可用 / 后端 msg / 网络异常)，页面卸载或换账号后丢弃旧结果；通用 toast 会双弹。followup-a1-content-report-entries 覆盖成功、业务失败、网络失败与原因不可用。
