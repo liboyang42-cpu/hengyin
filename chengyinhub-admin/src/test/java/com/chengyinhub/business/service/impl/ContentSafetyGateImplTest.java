@@ -50,9 +50,10 @@ class ContentSafetyGateImplTest {
         return r;
     }
 
-    /** 不设模式 = 入参默认值(POST_REVIEW) */
+    /** 先发后审请求:显式 POST_REVIEW(入参默认值已是 PRE_REVIEW,见 PublishSafetyRequestDefaultModeTest) */
     private PublishSafetyRequest postReq(String text) {
         PublishSafetyRequest r = new PublishSafetyRequest();
+        r.setReviewMode(PublishSafetyRequest.ReviewMode.POST_REVIEW.name());
         r.setContentType("SQUARE");
         r.setContentId(1L);
         r.setMemberId(100L);
@@ -161,8 +162,9 @@ class ContentSafetyGateImplTest {
     // ==================== 2026-10-20 分级审核:POST_REVIEW / PRE_REVIEW / EXEMPT ====================
 
     @Test
-    void defaultReviewModeIsPostReview() {
-        assertEquals("POST_REVIEW", new PublishSafetyRequest().getReviewMode());
+    void defaultReviewModeIsPreReview() {
+        // AUDIT-INT-10:初值与门禁对空值/脏值的兜底一致,未设置 = 先审后发
+        assertEquals("PRE_REVIEW", new PublishSafetyRequest().getReviewMode());
     }
 
     @Test
