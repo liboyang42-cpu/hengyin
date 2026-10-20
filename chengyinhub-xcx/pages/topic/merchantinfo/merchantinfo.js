@@ -1024,8 +1024,8 @@ Page({
   },
 
   goMerchantCategory() {
-    this.setData({ topicShow: false });
-    wx.navigateTo({ url: '/pages/merchant/decor/index' });
+    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层装修页
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
   topicClose() {
@@ -1141,9 +1141,9 @@ Page({
 
 
   goCreateTemplate() {
-    this.setData({ topicShow: false });
+    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层模板编辑页
     // 与 chapter-node-form 的「去创建玩法」同一条路,两处不能分家
-    wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT' });
+    this._navigating = true; wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   goSettlement() {
