@@ -721,7 +721,11 @@ class FreezeGameHttpE2eIT {
         } else success(overflow);
         // 重连：队员用自己的登录重新读取，与队长视图同一份队伍状态；高级局重进不改变已完成结果
         JsonNode captainView = player(run, a), memberView = success(get("/api/game/session/view?activityId=" + run.activityId + "&perspective=PLAYER", a.member)).path("player");
-        for (String field : new String[]{"hp", "actions", "used", "contents", "clues"}) assertEquals(captainView.path(field), memberView.path(field), "重连后 " + field + " 一致");
+        assertEquals(captainView.path("hp"), memberView.path("hp"), "重连后 hp 一致");
+        assertEquals(captainView.path("actions"), memberView.path("actions"), "重连后 actions 一致");
+        assertEquals(captainView.path("used"), memberView.path("used"), "重连后 used 一致");
+        assertEquals(mediaFixture.canonicalReadView(captainView.path("contents")), mediaFixture.canonicalReadView(memberView.path("contents")), "重连后 contents 一致");
+        assertEquals(mediaFixture.canonicalReadView(captainView.path("clues")), mediaFixture.canonicalReadView(memberView.path("clues")), "重连后 clues 一致");
         int revision = success(get("/api/game/session/view?activityId=" + run.activityId + "&perspective=PLAYER", a.member)).path("revision").asInt();
         JsonNode reread = success(get("/api/play/advanced/state?sessionId=" + a1Session, a.member));
         assertTrue(reread.path("readyForBase").asBoolean(), reread.toString());

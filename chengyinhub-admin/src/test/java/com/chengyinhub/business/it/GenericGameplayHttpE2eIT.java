@@ -157,7 +157,10 @@ class GenericGameplayHttpE2eIT {
                 assertEquals(1, notificationCount(database, memberId, taskId));
                 assertEquals(reference, guard.requireMedia(memberId, reference, true));
                 byKey.put(key, reference);
-                assertEquals(reference, knownReference(assets.approvedUrl(id))); byOwner.put(memberId, reference);
+                String signed = assets.approvedUrl(id);
+                assertEquals(reference, knownReference(signed));
+                assertReadViewCanonicalContract(signed, key, reference);
+                byOwner.put(memberId, reference);
                 evidence.addObject().put("assetId", id).put("auditTaskId", taskId).put("pngBytes", bytes.length).put("localPngSha256", digest)
                         .put("auditState", "APPROVED").put("ossUploadDownload", "NOT_RUN").put("providerReview", "NOT_RUN");
                 return reference;
@@ -181,14 +184,62 @@ class GenericGameplayHttpE2eIT {
             assertTrue(byKey.containsKey(key), "Only this fixture's known object may be restored");
             java.util.Map<String, String> query = new java.util.HashMap<>();
             assertNotNull(uri.getRawQuery());
-            for (String entry : uri.getRawQuery().split("&")) {
+            for (String entry : uri.getRawQuery().split("&", -1)) {
                 String[] pair = entry.split("=", 2); assertEquals(2, pair.length);
                 assertNull(query.put(pair[0], pair[1]), "Duplicate offline signature field");
             }
             assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("Expires", "OSSAccessKeyId", "Signature")), query.keySet());
-            assertTrue(ACCESS_ID.equals(query.get("OSSAccessKeyId")) && query.get("Expires").matches("[0-9]+")
-                    && !query.get("Signature").isEmpty(), "Offline signature shape required");
+            assertTrue(ACCESS_ID.equals(query.get("OSSAccessKeyId")) && query.get("Expires").matches("[1-9][0-9]{0,11}"),
+                    "Offline public signature shape required");
+            long expires = Long.parseLong(query.get("Expires")), now = java.time.Instant.now().getEpochSecond();
+            assertTrue(expires >= now + 9L * 365 * 24 * 60 * 60 && expires <= now + 11L * 365 * 24 * 60 * 60,
+                    "Short owner/reviewer preview must not become a stable public reference");
+            String signature = java.net.URLDecoder.decode(query.get("Signature"), java.nio.charset.StandardCharsets.UTF_8);
+            assertEquals(20, java.util.Base64.getDecoder().decode(signature).length, "OSS V1 signature shape required");
+            assertEquals(query.get("Signature"), java.net.URLEncoder.encode(signature, java.nio.charset.StandardCharsets.UTF_8),
+                    "Canonical encoded signature required");
             return byKey.get(key);
+        }
+
+        JsonNode canonicalReadView(JsonNode view) {
+            JsonNode copy = view.deepCopy();
+            if (copy.isTextual() && copy.asText().startsWith(ENDPOINT + "/" + BUCKET + "/"))
+                return new com.fasterxml.jackson.databind.node.TextNode(knownReference(copy.asText()));
+            if (copy.isArray()) for (int i = 0; i < copy.size(); i++)
+                ((ArrayNode) copy).set(i, canonicalReadView(copy.get(i)));
+            if (copy.isObject()) copy.fields().forEachRemaining(field ->
+                    ((ObjectNode) copy).set(field.getKey(), canonicalReadView(field.getValue())));
+            return copy;
+        }
+
+        private void assertReadViewCanonicalContract(String first, String key, String reference) {
+            com.aliyun.oss.OSSClient signer = new com.aliyun.oss.OSSClient(ENDPOINT, ACCESS_ID, "offline-http-e2e-not-a-secret");
+            String second, preview;
+            try {
+                com.aliyun.oss.model.GeneratePresignedUrlRequest request = new com.aliyun.oss.model.GeneratePresignedUrlRequest(BUCKET, key);
+                request.setExpiration(new java.util.Date(System.currentTimeMillis() + 10L * 365 * 24 * 60 * 60 * 1000 + 2000));
+                second = signer.generatePresignedUrl(request).toString();
+                request.setExpiration(new java.util.Date(System.currentTimeMillis() + 300000));
+                preview = signer.generatePresignedUrl(request).toString();
+            } finally { signer.shutdown(); }
+            assertNotEquals(first, second);
+            ObjectNode original = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                    .put("text", "fixture-text").put("scope", "TEAM").put("nodeId", 123).put("quantity", 2).put("image", first);
+            original.putArray("order").add("first").add("second");
+            ObjectNode snapshot = original.deepCopy(), expected = original.deepCopy().put("image", reference);
+            assertEquals(expected, canonicalReadView(original));
+            assertEquals(expected, canonicalReadView(original.deepCopy().put("image", second)));
+            assertEquals(snapshot, original, "Read view canonicalization must not mutate the response");
+            assertNotEquals(expected, canonicalReadView(original.deepCopy().put("text", "different")));
+            ObjectNode reordered = original.deepCopy(); reordered.putArray("order").add("second").add("first");
+            assertNotEquals(expected, canonicalReadView(reordered));
+            String foreign = first.replace(ENDPOINT, "http://127.0.0.2:9");
+            assertNotEquals(expected, canonicalReadView(original.deepCopy().put("image", foreign)));
+            assertEquals(foreign, canonicalReadView(original.deepCopy().put("image", foreign)).path("image").asText());
+            for (String refused : new String[]{first.replace(key, "upload/00000000000000000000000000000000.png"),
+                    first + "&Expires=1", first + "&", first.replace("OSSAccessKeyId=" + ACCESS_ID, "OSSAccessKeyId=foreign"),
+                    first.replaceFirst("Signature=[^&]+", "Signature=AAAA"), preview})
+                assertThrows(AssertionError.class, () -> canonicalReadView(original.deepCopy().put("image", refused)));
         }
 
         void restoreKnownItemImages(ObjectNode config) {
