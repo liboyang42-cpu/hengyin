@@ -189,6 +189,27 @@ class GenericGameplayHttpE2eIT {
         assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, real.checkText("HTTP fixture", " "));
     }
 
+    static void registerPublisherIdentity(ConfigurableApplicationContext application, JdbcTemplate database, Long memberId) {
+        com.chengyinhub.business.service.impl.MemberIdentityService identities =
+                application.getBean(com.chengyinhub.business.service.impl.MemberIdentityService.class);
+        assertEquals(com.chengyinhub.business.service.impl.MemberIdentityService.MSG_NOT_REGISTERED,
+                identities.checkRegistered(memberId));
+        assertFalse(identities.isRegistered(memberId));
+        // Public synthetic ID from MemberIdentityServiceTest; this is registration, not real-person verification.
+        identities.register(memberId, "测试主理人", "110105199003070017", true,
+                com.chengyinhub.business.service.impl.MemberIdentityService.SOURCE_TOPIC_PUBLISH, "127.0.0.1");
+        assertNull(identities.checkRegistered(memberId));
+        assertTrue(identities.isRegistered(memberId));
+        identities.register(memberId, "测试主理人", "110105199003070017", true,
+                com.chengyinhub.business.service.impl.MemberIdentityService.SOURCE_TOPIC_PUBLISH, "127.0.0.1");
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM ums_member_identity WHERE member_id=?", Integer.class, memberId));
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM consent_record WHERE member_id=? AND doc_type='publisher_identity'", Integer.class, memberId));
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM consent_record WHERE member_id=? AND doc_type='publisher_identity'"
+                + " AND doc_version='v1' AND scene='topic_publish' AND event_type='AGREE'"
+                + " AND scope_type IS NULL AND scope_id IS NULL AND request_id REGEXP '^[0-9a-f]{32}$'"
+                + " AND occurred_at IS NOT NULL AND create_time IS NOT NULL", Integer.class, memberId));
+    }
+
     @org.junit.jupiter.api.BeforeAll void loadExistingPermissionFixture() throws Exception {
         assertContentSecurityFixture(context);
         // Fresh-schema skips migration data; reuse its existing role defaults for local author capabilities.
@@ -216,6 +237,7 @@ class GenericGameplayHttpE2eIT {
         assertNotEquals(200, anonymous.getBody().path("code").asInt());
         UmsMember author = new UmsMember();author.setPhone("13800000001");author.setNickname("本地测试作者");
         author.setStatus(1L);author.setDelFlag(0);author.setWxOpenId("e2e-http-generic-13800000001");members.insertUmsMember(author);
+        registerPublisherIdentity(context, database, author.getId());
         MockHttpServletRequest issuance = new MockHttpServletRequest();issuance.setRemoteAddr("127.0.0.1");
         issuance.addHeader("User-Agent", "Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(issuance));
@@ -720,6 +742,7 @@ class GenericGameplayHttpE2eIT {
     }
     private org.springframework.http.HttpHeaders loginHeaders(String phone,String nickname) {
         UmsMember member=new UmsMember();member.setPhone(phone);member.setNickname(nickname);member.setStatus(1L);member.setDelFlag(0);member.setWxOpenId("e2e-http-generic-"+phone);members.insertUmsMember(member);
+        registerPublisherIdentity(context, database, member.getId());
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(),"club_leader",member.getId());
         MockHttpServletRequest request=new MockHttpServletRequest();request.setRemoteAddr("127.0.0.1");request.addHeader("User-Agent","Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));

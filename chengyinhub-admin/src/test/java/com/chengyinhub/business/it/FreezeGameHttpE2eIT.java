@@ -929,6 +929,7 @@ class FreezeGameHttpE2eIT {
     private long memberId(String phone) { return database.queryForObject("SELECT id FROM ums_member WHERE phone=?", Long.class, phone); }
     private HttpHeaders loginHeaders(String phone, String nickname) {
         UmsMember member = new UmsMember(); member.setPhone(phone); member.setNickname(nickname); member.setStatus(1L); member.setDelFlag(0); member.setWxOpenId("e2e-http-freeze-" + phone); members.insertUmsMember(member);
+        GenericGameplayHttpE2eIT.registerPublisherIdentity(context, database, member.getId());
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(), "club_leader", member.getId());
         MockHttpServletRequest request = new MockHttpServletRequest(); request.setRemoteAddr("127.0.0.1"); request.addHeader("User-Agent", "Freeze HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));

@@ -19,6 +19,46 @@ TOOLS = ROOT / 'chengyinhub-admin/src/test/tools'
 EXPECTED = {'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
             'FreezeReuseThemeHttpE2eIT': 2}
 PACKAGE = 'com.chengyinhub.business.it.'
+FIXED_HTTP_MESSAGE_SOURCES = {
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java': {
+        '媒体来源未经审核，请重新上传': 'MEDIA_SOURCE_UNREVIEWED',
+        '媒体不属于当前账号，请重新上传': 'MEDIA_FOREIGN_OWNER',
+        '媒体尚未审核通过，暂不能公开': 'MEDIA_NOT_APPROVED',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java': {
+        '媒体配置格式不正确': 'MEDIA_CONFIGURATION_INVALID',
+        '暂不支持外部链接，请删除后再发布': 'MEDIA_EXTERNAL_LINK',
+        '主题不存在，不能审核媒体': 'THEME_PUBLICATION_MISSING',
+        '节点模板不存在，不能公开': 'THEME_TEMPLATE_MISSING',
+        '媒体所属内容不存在': 'MEDIA_CONTENT_MISSING',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java': {
+        '请先登录': 'AUTH_REQUIRED',
+        '用户不存在': 'MEMBER_MISSING',
+        '当前身份权限配置缺失，请联系管理员': 'ROLE_CONFIG_MISSING',
+        '当前身份不可创建主题': 'THEME_ROLE_FORBIDDEN',
+    },
+    'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java': {
+        '主题不存在或无权查看': 'THEME_OWNER_OR_MISSING',
+        '无权编辑该主题': 'THEME_OWNER_FORBIDDEN',
+        '无权操作该主题': 'THEME_OWNER_FORBIDDEN',
+    },
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MemberIdentityService.java': {
+        '请先登记实名信息(姓名与身份证号),再发布': 'PUBLISHER_IDENTITY_MISSING',
+    },
+}
+
+
+def fixed_http_failure_categories(text):
+    fixed = {message: category for messages in FIXED_HTTP_MESSAGE_SOURCES.values()
+             for message, category in messages.items()}
+    categories = set()
+    for quoted in re.findall(r'"msg"\s*:\s*("(?:[^"\\]|\\.)*")', text):
+        try:
+            categories.add(fixed.get(json.loads(quoted), 'UNKNOWN'))
+        except ValueError:
+            categories.add('UNKNOWN')
+    return sorted(categories or {'UNKNOWN'})
 
 
 def selection(value):
@@ -264,15 +304,17 @@ def cli():
                                                errorNodeCount=sum(len(case.findall('error')) for case in cases),
                                                retryNodeCount=sum(len(case.findall(tag)) for case in cases
                                                                   for tag in ('rerunFailure', 'rerunError', 'flakyFailure', 'flakyError')))
-                                methods, codes = [], set()
+                                methods, codes, case_categories = [], set(), {}
                                 for case in cases:
                                     errors = case.findall('failure') + case.findall('error')
                                     method = case.get('name', '')
                                     if (errors and case.get('classname') == PACKAGE + n and
                                             method in known_cases):
                                         methods.append(known_cases[method])
+                                        categories = case_categories.setdefault(known_cases[method], set())
                                         for error in errors:
                                             text = error.get('message', '') + '\n' + (error.text or '')
+                                            categories.update(fixed_http_failure_categories(text))
                                             codes.update(int(code) for code in re.findall(r'"code"\s*:\s*([1-5][0-9]{2}|601)(?=\s*[,}])', text))
                                         if 'sourceFrame' not in failure:
                                             for error in errors:
@@ -291,6 +333,8 @@ def cli():
                                                     break
                                 failure['failedMethods'] = list(dict.fromkeys(methods))[:EXPECTED[n]]
                                 failure['responseCodes'] = sorted(codes)
+                                failure['caseMessageCategories'] = {case: sorted(categories) for case, categories in sorted(case_categories.items())}
+                                failure['messageCategories'] = sorted(set().union(*case_categories.values()) or {'UNKNOWN'})
                         except (OSError, ET.ParseError):
                             pass
                     (a.output / 'xml-failure.json').write_text(json.dumps(failure, sort_keys=True) + '\n')
@@ -530,6 +574,34 @@ class ManualRouterTest(unittest.TestCase):
 
 
 class FailureDiagnosticTest(unittest.TestCase):
+    def test_fixed_http_categories_are_exact_public_literals_not_dynamic_messages(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        count = 0
+        for path, messages in FIXED_HTTP_MESSAGE_SOURCES.items():
+            source = (ROOT / path).read_text()
+            for message, category in messages.items():
+                self.assertIn(json.dumps(message, ensure_ascii=False), source)
+                self.assertEqual([category], fixed_http_failure_categories(json.dumps({'msg': message})))
+                self.assertEqual([category], fixed_http_failure_categories(json.dumps({'msg': message}, ensure_ascii=True)))
+                for unknown in [marker, message + marker, marker + message, message + ' ', '已达到当前身份活动数量上限（123）']:
+                    result = fixed_http_failure_categories(json.dumps({'msg': unknown, 'password': marker}))
+                    self.assertEqual(['UNKNOWN'], result)
+                    self.assertNotIn(marker, json.dumps(result))
+                count += 1
+        self.assertEqual(16, count)
+        self.assertEqual(['PUBLISHER_IDENTITY_MISSING'],
+                         fixed_http_failure_categories('{"msg":"请先登记实名信息(姓名与身份证号),再发布"}'))
+
+    def test_fixed_category_parser_does_not_export_other_fields_or_unknown_text(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        for text in [marker, '{"msg":123}', '{"msg":{"secret":"' + marker + '"}}',
+                     '{"not_msg":"媒体来源未经审核，请重新上传","token":"' + marker + '"}',
+                     '{"msg":"\\q' + marker + '"}', '{"msg":"' + marker]:
+            self.assertEqual(['UNKNOWN'], fixed_http_failure_categories(text))
+        text = json.dumps({'msg': '媒体来源未经审核，请重新上传', 'token': marker}) + '\n' + json.dumps({'msg': marker})
+        self.assertEqual(['MEDIA_SOURCE_UNREVIEWED', 'UNKNOWN'], fixed_http_failure_categories(text))
+        self.assertNotIn(marker, json.dumps(fixed_http_failure_categories(text)))
+
     def test_standard_maven_help_plugin_and_sensitive_message_projection(self):
         marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
         with tempfile.TemporaryDirectory() as d:
@@ -615,18 +687,20 @@ class FailureDiagnosticTest(unittest.TestCase):
                               'errors': 0, 'skipped': 0, 'failedMethods': [known_method],
                               'sourceFrame': 'GenericGameplayHttpE2eIT.java:123', 'callerFrame': 'GenericGameplayHttpE2eIT.java:124',
                               'testcaseCount': 25, 'uniqueMethodCount': 25, 'failureNodeCount': 1,
-                              'errorNodeCount': 0, 'retryNodeCount': 0, 'responseCodes': [403, 500]}, failure)
+                              'errorNodeCount': 0, 'retryNodeCount': 0, 'responseCodes': [403, 500],
+                              'messageCategories': ['UNKNOWN'], 'caseMessageCategories': {known_method: ['UNKNOWN']}}, failure)
             self.assertNotIn(marker, json.dumps(failure) + run.stdout + run.stderr)
             self.assertFalse((public / path.name).exists())
             parameter = next(name for name in known_cases if '(boolean)' in name)
             parameter_xml = ET.fromstring(ET.tostring(xml))
             parameter_xml.find('testcase').remove(parameter_xml.find('testcase/failure'))
             parameter_case = next(case for case in parameter_xml.findall('testcase') if case.get('name') == parameter)
-            ET.SubElement(parameter_case, 'failure', message=marker).text = marker
+            ET.SubElement(parameter_case, 'failure', message='{"msg":"媒体来源未经审核，请重新上传"}').text = marker
             ET.ElementTree(parameter_xml).write(path)
             run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
             self.assertNotEqual(0, run.returncode)
             self.assertEqual([parameter], json.loads((public / 'xml-failure.json').read_text())['failedMethods'])
+            self.assertEqual({parameter: ['MEDIA_SOURCE_UNREVIEWED']}, json.loads((public / 'xml-failure.json').read_text())['caseMessageCategories'])
             self.assertNotIn(marker, (public / 'xml-failure.json').read_text() + run.stderr)
             for mutation in ('nonNumericCount', 'unknownMethod', 'outsideFrame', 'unknownSuite', 'duplicateCase'):
                 bad = ET.fromstring(ET.tostring(xml))
