@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.mapper.CmsTopicCompletionCouponRewardMapper;
+import com.chengyinhub.business.mapper.SmsCouponMapper;
+import com.chengyinhub.business.domain.SmsCoupon;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ class TopicCompletionCouponRewardServiceImplTest
     private TopicCompletionCouponRewardServiceImpl service;
     private CmsTopicCompletionCouponRewardMapper rewardMapper;
     private ISmsCouponHistoryService couponHistoryService;
+    private SmsCoupon coupon;
 
     @BeforeEach
     void setUp()
@@ -26,6 +29,10 @@ class TopicCompletionCouponRewardServiceImplTest
         service = new TopicCompletionCouponRewardServiceImpl();
         rewardMapper = mock(CmsTopicCompletionCouponRewardMapper.class);
         couponHistoryService = mock(ISmsCouponHistoryService.class);
+        SmsCouponMapper coupons = mock(SmsCouponMapper.class);
+        coupon = new SmsCoupon(); coupon.setId(5L);
+        when(coupons.selectSmsCouponById(5L)).thenReturn(coupon);
+        ReflectionTestUtils.setField(service, "smsCouponMapper", coupons);
         ReflectionTestUtils.setField(service, "rewardMapper", rewardMapper);
         ReflectionTestUtils.setField(service, "smsCouponHistoryService", couponHistoryService);
     }
@@ -34,10 +41,12 @@ class TopicCompletionCouponRewardServiceImplTest
     void grantsCouponOnlyAfterFirstIdempotencySlot()
     {
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(1);
-        when(couponHistoryService.grantCouponById(8L, 5L)).thenReturn(true);
+        when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(41L);
+        when(rewardMapper.bindHistoryId(21L,8L,5L,41L)).thenReturn(1);
 
         assertTrue(service.grantOnce(21L, 8L, 5L));
-        verify(couponHistoryService).grantCouponById(8L, 5L);
+        verify(couponHistoryService).grantCouponWithReceipt(8L, coupon);
+        verify(rewardMapper).bindHistoryId(21L,8L,5L,41L);
     }
 
     @Test
@@ -46,14 +55,14 @@ class TopicCompletionCouponRewardServiceImplTest
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(0);
 
         assertFalse(service.grantOnce(21L, 8L, 5L));
-        verify(couponHistoryService, never()).grantCouponById(8L, 5L);
+        verify(couponHistoryService, never()).grantCouponWithReceipt(8L, coupon);
     }
 
     @Test
     void couponIssueFailureRaisesToRollbackIdempotencySlot()
     {
         when(rewardMapper.insertIgnore(21L, 8L, 5L)).thenReturn(1);
-        when(couponHistoryService.grantCouponById(8L, 5L)).thenReturn(false);
+        when(couponHistoryService.grantCouponWithReceipt(8L, coupon)).thenReturn(null);
 
         assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
     }
@@ -66,6 +75,6 @@ class TopicCompletionCouponRewardServiceImplTest
 
         assertFalse(service.grantOnce(21L, 8L, 5L));
         verify(rewardMapper, never()).insertIgnore(21L, 8L, 5L);
-        verify(couponHistoryService, never()).grantCouponById(8L, 5L);
+        verify(couponHistoryService, never()).grantCouponWithReceipt(8L, coupon);
     }
 }

@@ -75,7 +75,7 @@ class SmsCouponReverseTest {
     /** RED:撤销后券态、核销计数、待结算分成、不可变审计四类事实全部按序回滚/落账。 */
     @Test
     void reverse_rollsBackUseStatusCountPendingSettlementAndWritesAudit() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(usedHistory());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(usedHistory());
         when(coupons.selectSmsCouponById(30L)).thenReturn(merchantCoupon());
         when(histories.reverseUsedCoupon(eq(301L), any())).thenReturn(1);
         when(coupons.decrementUseCount(30L)).thenReturn(1);
@@ -112,7 +112,7 @@ class SmsCouponReverseTest {
     /** RED:第二次撤销被 CAS 挡下 —— 计数/分成/审计都只有一次,不得二次回滚。 */
     @Test
     void reverse_secondCallBlockedByCas_noDoubleRollback() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(usedHistory());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(usedHistory());
         when(coupons.selectSmsCouponById(30L)).thenReturn(merchantCoupon());
         when(histories.reverseUsedCoupon(eq(301L), any())).thenReturn(1, 0);
         when(coupons.decrementUseCount(30L)).thenReturn(1);
@@ -130,7 +130,7 @@ class SmsCouponReverseTest {
     /** RED:审计写不进去,整次撤销抛错(由同事务注解回滚) —— 宁可撤不成,不许撤了查不出谁撤的。 */
     @Test
     void reverse_auditWriteFailure_rollsBack() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(usedHistory());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(usedHistory());
         when(coupons.selectSmsCouponById(30L)).thenReturn(merchantCoupon());
         when(histories.reverseUsedCoupon(eq(301L), any())).thenReturn(1);
         when(coupons.decrementUseCount(30L)).thenReturn(1);
@@ -167,7 +167,7 @@ class SmsCouponReverseTest {
         SmsCoupon clubCoupon = merchantCoupon();
         clubCoupon.setScopeType(null);
         clubCoupon.setMerchantId(null);
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(usedHistory());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(usedHistory());
         when(coupons.selectSmsCouponById(30L)).thenReturn(clubCoupon);
         when(histories.reverseUsedCoupon(eq(301L), any())).thenReturn(1);
         when(coupons.decrementUseCount(30L)).thenReturn(1);
@@ -185,7 +185,7 @@ class SmsCouponReverseTest {
     /** 券计数与流水失配(0 行)时响亮抛错,不允许静默留一条对不上的账。 */
     @Test
     void reverse_countDecrementZeroRowsThrows() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(usedHistory());
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(usedHistory());
         when(coupons.selectSmsCouponById(30L)).thenReturn(merchantCoupon());
         when(histories.reverseUsedCoupon(eq(301L), any())).thenReturn(1);
         when(coupons.decrementUseCount(30L)).thenReturn(0);
