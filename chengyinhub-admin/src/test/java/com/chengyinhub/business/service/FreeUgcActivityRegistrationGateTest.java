@@ -232,12 +232,13 @@ class FreeUgcActivityRegistrationGateTest {
 
     /**
      * R19-PENDINGSHELL 复现陪测:pro 主题内容审核未过(status=0/userStatus=0),但商业审核已先行通过
-     * (lifecycle=SELLING)。合同二售卖闸只读 lifecycle 与售卖时间,【不读主题 status】—— 只要自办活动壳
-     * 公开(status=1/publishStatus=1),下单就能过闸走到用户校验(证据:错误文案是「用户不存在」而非闸拒)。
-     * ⇒ 「壳只在过审后存在」是这条链路的唯一防线,见 {@link TopicPendingReviewSelfHostShellTest}。
+     * (lifecycle=SELLING)。合同二售卖闸只读 lifecycle 与售卖时间,不读主题 status;此前只要自办活动壳
+     * 公开(status=1/publishStatus=1),下单就能过闸走到用户校验(错误文案是「用户不存在」)。
+     * 「壳只在过审后存在」({@link TopicPendingReviewSelfHostShellTest})曾是唯一防线,主题事后被驳回/下架时失效。
+     * AUDIT-G1-1 起 validateAndGetActivity 自己核父主题在架 ⇒ 这里必须被拒。
      */
     @Test
-    void pendingContentReviewSellingTopic_publicShellOrderGateDoesNotReadTopicStatus() {
+    void pendingContentReviewSellingTopic_publicShellOrderIsRefusedByParentTopicGate() {
         givenTopic(3, 0, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
         // 主题内容审核未过:status=0 待审、user_status=0 未上架(公开主题列表/主题详情都不可见)
         lastTopic.setStatus(0);
@@ -255,8 +256,8 @@ class FreeUgcActivityRegistrationGateTest {
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Arrays.asList(ticket(TICKET, new BigDecimal("10"))));
 
-        assertEquals("用户不存在", register().getMessage(),
-                "待审主题的公开壳在报名闸眼里与已过审主题无异(闸不读 status)");
+        assertEquals("主题活动已下架", register().getMessage(),
+                "父主题未在架(待审/下架)时,公开壳也不能接新单");
     }
 
     /**
