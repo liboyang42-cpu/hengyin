@@ -125,7 +125,7 @@ function stationGroup(page) {
 test('CU-C-64:去招商/去找俱乐部带的是主题名(info.name),不是不存在的 info.topicName', () => {
   beforeEach();
   const page = makePage({ topicId: 990030, info: { name: '隔离主题' } });
-  page.goInviteMerchant();
+  page.goInviteMerchant(); navigations[0].complete(); // BL-255:跳转中保护,complete 后才放第二跳
   page.goInviteClub();
   assert.equal(navigations.length, 2);
   assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=990030&topicName=/);
