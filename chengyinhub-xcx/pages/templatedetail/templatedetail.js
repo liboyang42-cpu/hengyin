@@ -232,7 +232,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true;
+    this._disposed = true; this._unloaded = true; reportSheet.cancel(this);
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -331,7 +331,7 @@ Page({
     that._detailRequestToken = token;
     if (that._detailContext && that._detailContext !== context) {
       that.applyDetailPayload({});
-      that.setData({ moreShow: false });
+      that.setData({ moreShow: false, reportKind: '' });
       that.closePop();
     }
     that._detailContext = context;
@@ -350,6 +350,7 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
+          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, app.getUserID()) });
         } else {
           that.setData({
             loadError: true,
@@ -458,6 +459,15 @@ Page({
     this.setData({ moreShow: false });
   },
 
+  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)
+  reportTemplate() {
+    if (!this.data.reportKind) return;
+    this.setData({ moreShow: false });
+    contentReport.report(this, app, this.data.reportKind, this.data.id);
+  },
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
+
   closePop() {
     this.setData({
       popDavid: false,
@@ -534,3 +544,19 @@ Page({
     };
   }
 });
+
+// FOLLOWUP-A-1 的依赖放在文件尾:上方 U4-DYNAMIC 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
+// 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
+const contentReport = require('../../utils/content-report.js');
+const reportSheet = require('../../utils/community-report-sheet.js');
+
+// FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
+// library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。
+function reportKindOf(info, scope, me) {
+  info = info || {};
+  if (!(Number(info.id) > 0) || Number(info.delFlag || 0) !== 0) return '';
+  if (me && String(info.memberId || '') === String(me)) return '';
+  if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
+  if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
+  return 'template';
+}
