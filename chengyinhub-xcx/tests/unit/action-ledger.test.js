@@ -566,7 +566,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // B93 saveDraft added two real variants (+2 tap); approved growth bindings have zero net tap change.
   // 2026-10-13 注销阻断卡「我已处理，重新检查」+1 tap,1968 → 1969(重建实测)。
   // 2026-10-17 合并漫游上线(我的队伍、地图列表、漫游记录工具行、5 个工具页;删拍照开局与入口地图重试)按重建实测 1969 → 2022。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2022)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-20 R5 尾段(#327,owner 批准):章节弹层按 Figma J3 重排 -6 tap(两段完成要求、额外节点/任务位),故事流计数方式标记 +1 等,按重建实测 2022 → 2018。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2018)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1527,7 +1528,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-13 注销重新检查 +1;三处玩法支持范围读取失败改 load-failure 留白,其重试不可见 -3;4632 → 4630(重建实测)。
   // 2026-10-15 PR10 复查:七处登录引导「登录」(俱乐部/主题/活动/票夹/私信/收藏×2)、口碑缺参「返回」、modal-host 多行原因输入 +9;4632 → 4641(重建实测)。
   // 2026-10-17 合并漫游上线同批控件(含组件事件合同)按重建实测 4641 → 4706。
-  assert.equal(ledger.controlCount, 4706) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
+  // 2026-10-20 R5 尾段(#327,owner 批准)章节弹层重排,按重建实测 4706 → 4703。
+  assert.equal(ledger.controlCount, 4703) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
