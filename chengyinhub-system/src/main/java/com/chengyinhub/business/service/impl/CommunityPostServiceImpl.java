@@ -70,6 +70,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private final CommunityTrustService communityTrustService;
     private final ICommunityMediaReceiptService mediaReceiptService;
     private ObjectProvider<IWxContentSecurityService> wxContentSecurityProvider;
+    private ObjectProvider<com.chengyinhub.business.service.IImService> imServiceProvider;
+    /** 申诉处理时限：与举报首响 SLA 同口径，标准 24 小时；紧急原因(CommunityReportPolicy)15 分钟。 */
+    private static final long APPEAL_STANDARD_DUE_MINUTES = 24 * 60L;
 
     public CommunityPostServiceImpl(CommunityPostMapper mapper, CommunityPostLifecyclePolicy policy,
                                     IContentSafetyGate safetyGate, IAuditTaskService auditTaskService,
@@ -87,6 +90,12 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Autowired(required = false)
     public void setWxContentSecurityProvider(ObjectProvider<IWxContentSecurityService> wxContentSecurityProvider) {
         this.wxContentSecurityProvider = wxContentSecurityProvider;
+    }
+
+    /** 系统消息(作者能在小程序系统会话里看到的通道)；ImServiceImpl 间接依赖本服务，ObjectProvider 懒取破环。 */
+    @Autowired(required = false)
+    public void setImServiceProvider(ObjectProvider<com.chengyinhub.business.service.IImService> imServiceProvider) {
+        this.imServiceProvider = imServiceProvider;
     }
 
     @Override
@@ -1241,7 +1250,25 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Long auditTaskId = auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId,
                 post.getAuthorId(), "HIGH", json(snapshot));
         outbox(postId, "POST_MEDIA_RISKY_HIDDEN", payload("auditTaskId", auditTaskId), now);
+        // 只在本次真正从公开态隐藏时通知；已隐藏/待审/终态的重复回调在上面早返回，不重复通知。
+        notifyImageTakedown(post);
         return true;
+    }
+
+    private void notifyImageTakedown(CommunityPost post) {
+        com.chengyinhub.business.service.IImService im = imServiceProvider == null ? null : imServiceProvider.getIfAvailable();
+        if (im == null || !positive(post.getAuthorId())) return;
+        try {
+            im.sendSystemInNestedTransaction(post.getAuthorId(), com.chengyinhub.business.domain.ImMessage.MSG_CARD,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(AuditTask.BIZ_COMMUNITY_POST,
+                            post.getId(), com.chengyinhub.business.service.support.SystemNoticeCard.item(
+                                    "帖文", blank(post.getTitle()) ? post.getBody() : post.getTitle())));
+        } catch (RuntimeException e) {
+            // 通知失败不挡下架：违规图先收起，通知缺失只告警。
+            log.error("[社区帖文] 图片违规下架通知发送失败: postId={}, exceptionType={}",
+                    post.getId(), e.getClass().getSimpleName());
+        }
     }
 
     @Override
