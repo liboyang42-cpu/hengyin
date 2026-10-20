@@ -22,7 +22,7 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码75个GET调用点的显式权限清单（直接42 + req包装28 + 作者媒体包装5）。
+// 当前源码77个GET调用点的显式权限清单（直接44 + req包装28 + 作者媒体包装5）。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
@@ -133,6 +133,10 @@ const MATRIX = [
   // 2026-09-17 商家营销同意入口(拍板第 40 条 A):与设置页同一端点、同一权限档 ——
   //   GET 只读本人可管理的商家行,失败即不出现(fail-closed),账号身份由后端 principal 定。
   ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
+  // 2026-10-20 FOLLOWUP-A-1:主题/玩法举报先读平台举报原因,与动态举报同一端点(默认认证,无个人态)。
+  ['utils/content-report.js', "url: '/api/v1/community/capabilities'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-10-20 FOLLOWUP-A-2:作者本人内容的审核时间线,ApiAuditController.timeline 按内容 owner 校验。
+  ['subpackageA/pages/myproject/index.js', "url: '/api/audit/timeline'", 'required', 'author', 'self-publisher'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -260,7 +264,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-13 注销申请结果未知时只读回查本人 /api/user/deregister/status,同端点同权限档,34→35。
   // 2026-10-14 漫游上线:我的队伍附近招募 + 那年今日 + 月度回顾三处 GET,35 → 38(权限档见 MATRIX 同日注释)。
   // 2026-10-19 移植共享基线(W2):认领状态、主题状态键、官方路线列表/详情四处直接 GET,38 → 42(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 42, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 审核补充保留举报原因与作者审核时间线两处 GET，合并后 42 → 44。
+  assert.equal(directCount, 44, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   assert.equal(wrapperCount, 28, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
