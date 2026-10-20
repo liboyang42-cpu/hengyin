@@ -48,7 +48,7 @@ Component({
     },
   lifetimes: {
     attached() {
-      this._skipInitialShow = true;
+      this._skipInitialShow = true; this._detailDisposed = false; this._detailGeneration = (this._detailGeneration || 0) + 1;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
       if (!id) {
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
@@ -62,7 +62,7 @@ Component({
       this._applyRecordId(id)
     },
     detached() {
-      if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) this._verificationWorkflow.destroy();
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
@@ -201,16 +201,23 @@ Component({
     // 获取数据
     getData: function () {
       const that = this;
+      if (that._detailDisposed) return;
+      const generation = that._detailGeneration;
+      const member = app.getUserID && app.getUserID();
+      const id = that.data.id;
       const requestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._detailRequestEpoch = requestEpoch;
+      const isCurrent = () => !that._detailDisposed && generation === that._detailGeneration
+        && requestEpoch === that._detailRequestEpoch
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
       app.sendRequest({
         hideLoading: true,
         silentError: true,
         url: '/api/registration/info',
-        data: { id: that.data.id },
+        data: { id },
         method: "POST",
         success: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
             const info = res.data;
 
@@ -232,7 +239,7 @@ Component({
           }
         },
         fail: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           const fallback = '网络异常，请重试';
           const msg = app.getRequestErrorMessage
             ? app.getRequestErrorMessage(res, fallback)

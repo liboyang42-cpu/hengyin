@@ -103,6 +103,7 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._detached = false
       this.setData({ canDiscoverRoutes: canReachDiscoverRoutes() })
       this._initWorkflow()
       this.getList()
@@ -110,6 +111,8 @@ Component({
     detached() {
       this._detached = true
       this._listRequestId = (this._listRequestId || 0) + 1
+      this._listFetchInFlight = 0
+      this.setData({ loading: false })
       if (this._workflow) this._workflow.destroy()
     },
   },
@@ -117,6 +120,7 @@ Component({
     // 首次 attached/show single-flight；支付/退款回来后的后续 show 从第一页替换刷新。
     show() {
       this._hidden = false
+      if (this._detached) return
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
       // 返回页刷新保留已确认列表；失败时给非阻断提示，不把订单替换成整屏错误。
       this.setData({ page_no: 1, nodata: false, errorMsg: '' })

@@ -99,8 +99,10 @@ test('取消成功本地摘行;失败不摘行且锁释放', () => {
 test('负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用例真红', () => {
   const source = read();
   const broken = source
-    .replace("    if (that._unlikeRequests[requestKey]) return;\n\n    modal.show({", '    modal.show({')
-    .replace("          if (that._unlikeRequests[requestKey]) return;\n          that._unlikeRequests[requestKey] = true;\n", '');
+    // E05-07 起锁是按请求身份的对象(stale complete 不能释放新锁),并加了同 id 确认框去重;负控把三处闸一起摘掉。
+    .replace("    if (that._unlikeRequests[requestKey]) return;\n    const prompts", '    const prompts')
+    .replace("    if (prompts[requestKey]) return;\n", '')
+    .replace("          if (that._unlikeRequests[requestKey]) return;\n          const request = {};\n", '          const request = {};\n');
   assert.notEqual(broken, source, '负控锚点失效:锁未命中');
 
   const { page, requests, modals } = loadPage(broken);

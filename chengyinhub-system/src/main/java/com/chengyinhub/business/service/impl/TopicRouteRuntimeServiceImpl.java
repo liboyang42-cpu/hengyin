@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.service.support.TopicRouteSessionScope;
 
 import com.chengyinhub.business.domain.CmsActivity;
@@ -263,6 +264,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId,
                                           Integer expectedVersion) {
