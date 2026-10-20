@@ -1823,7 +1823,7 @@
       "coupon_cleanup": "一类(4实际PASS)的类级cleanup=LEFTOVER；精确MySQL容器removed=true",
       "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
       "later_nine_batch_inherited": false,
-      "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 observed IN_PROGRESS, PENDING_ARTIFACT_REVIEW; prior39427075967@79813e4d519999ec104ce78e4515d5bf71b30896 FAIL(player), finance NOT_RUN; earlier39423292504 failure retained",
+      "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 PASS: five chains and all terminal readbacks; declared outbound stubs; previous a9/798 failures retained; final cross-branch/real device/payment not covered",
       "business_source_frozen": true,
       "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
     }
@@ -2279,56 +2279,126 @@
       "reason": "NpcChatService production changed after41f83; later Backend/Funds SUCCESS is a separate result, not a repeat of nine Real Storage batches."
     },
     "http_chain": {
-      "run_id": 39427075967,
-      "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
-      "state": "FAIL",
-      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967",
-      "observed_run_conclusion": "failure",
-      "record_scope": "LATEST_REVIEWED_HTTP_FAILURE_AT_EXACT_SOURCE",
+      "run_id": 39427671750,
+      "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+      "state": "PASS",
+      "verdict": "PASS",
+      "problems": [],
+      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
+      "artifact": {
+        "id": 12265809908,
+        "name": "chain-acceptance-39427671750-a1",
+        "digest": "sha256:624223f47a596fbc96bb4b0d98212e38ad65c233949165a97086566756b890c1"
+      },
+      "observed_workflow_status": "completed",
+      "observed_run_conclusion": "success",
       "stages": {
         "platform": "PASS",
         "merchant_club": "PASS",
         "sale_close": "PASS",
-        "player": "FAIL",
-        "finance": "NOT_RUN"
+        "player": "PASS",
+        "finance": "PASS"
       },
-      "failure_detail": "Player script waited until the session had begun before attempting registration; registration then failed. Sale projection now passed in this run; do not reuse the older a9 END_TIME failure as this run cause.",
-      "review_scope": "Stage details registered from the existing artifact review; C00 directly read run metadata and exact798-to8bc script delta, without re-executing tests/CI.",
+      "terminal_readbacks_all_ok": {
+        "platform": true,
+        "merchant_club": true,
+        "sale_close": true,
+        "player": true,
+        "finance": true
+      },
+      "player_readbacks": {
+        "unique_player_order": true,
+        "callback_transaction_identity_verified": true,
+        "four_entitlements_each_redeemed_once": true,
+        "active_redemptions": 4,
+        "unique_badge": true
+      },
+      "finance_readbacks": {
+        "unique_FINAL_funds_snapshot": true,
+        "batch_status": "PAID",
+        "payment_confirmation_identity_separated": true
+      },
+      "not_covered": {
+        "payment_outbound": "STUB",
+        "content_security_outbound": "STUB",
+        "real_wechat": "NOT_COVERED",
+        "real_devices": "NOT_COVERED",
+        "final_audit_cross_branch_candidate": "NOT_COVERED",
+        "persistent_migration": "NOT_COVERED",
+        "production": "NOT_COVERED"
+      },
+      "review_scope": "Existing artifact summary verdict/problems/stages/terminal readbacks independently checked. C00 directly read exact run metadata and artifact manifest/digest; did not download/reparse summary bytes, rerun tests or trigger CI.",
       "previous_reviewed_failure": {
-        "run_id": 39423292504,
-        "source_sha": "a9c97205871e57c1b53ca40f27405152ce67171d",
+        "run_id": 39427075967,
+        "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
         "state": "FAIL",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967",
         "observed_run_conclusion": "failure",
-        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39423292504",
-        "repair_scope": "Existing external PR391 source delivered; no local repair source grant or duplicate implementation.",
-        "record_scope": "LAST_REVIEWED_FAILURE_PRESERVED",
-        "failure_detail": {
+        "record_scope": "LATEST_REVIEWED_HTTP_FAILURE_AT_EXACT_SOURCE",
+        "stages": {
           "platform": "PASS",
           "merchant_club": "PASS",
-          "sale_submit": "HTTP200/taskId3",
-          "review": "body500/SALE_TICKET_PROJECTION_MISMATCH_END_TIME",
-          "lifecycle": "PRICING",
-          "snapshots": 0,
-          "classification": "Existing club-session COPY/finalization time contract mismatch; not old QR or a fixture-only failure."
+          "sale_close": "PASS",
+          "player": "FAIL",
+          "finance": "NOT_RUN"
+        },
+        "failure_detail": "Player script waited until the session had begun before attempting registration; registration then failed. Sale projection now passed in this run; do not reuse the older a9 END_TIME failure as this run cause.",
+        "review_scope": "Stage details registered from the existing artifact review; C00 directly read run metadata and exact798-to8bc script delta, without re-executing tests/CI.",
+        "previous_reviewed_failure": {
+          "run_id": 39423292504,
+          "source_sha": "a9c97205871e57c1b53ca40f27405152ce67171d",
+          "state": "FAIL",
+          "observed_run_conclusion": "failure",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39423292504",
+          "repair_scope": "Existing external PR391 source delivered; no local repair source grant or duplicate implementation.",
+          "record_scope": "LAST_REVIEWED_FAILURE_PRESERVED",
+          "failure_detail": {
+            "platform": "PASS",
+            "merchant_club": "PASS",
+            "sale_submit": "HTTP200/taskId3",
+            "review": "body500/SALE_TICKET_PROJECTION_MISMATCH_END_TIME",
+            "lifecycle": "PRICING",
+            "snapshots": 0,
+            "classification": "Existing club-session COPY/finalization time contract mismatch; not old QR or a fixture-only failure."
+          },
+          "next_external_candidate": {
+            "pr": 391,
+            "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
+            "http_run_id": 39427075967,
+            "state": "PENDING_INDEPENDENT_EVIDENCE_REVIEW"
+          }
         },
         "next_external_candidate": {
           "pr": 391,
-          "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
-          "http_run_id": 39427075967,
-          "state": "PENDING_INDEPENDENT_EVIDENCE_REVIEW"
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "http_run_id": 39427671750,
+          "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
+          "observed_workflow_status": "in_progress",
+          "observed_workflow_conclusion": null,
+          "state": "PENDING_INDEPENDENT_EVIDENCE_REVIEW",
+          "change": "Only scripts/e2e/chain_player.py changed after79813e: register/pay before waiting for session start; waiting then precedes gameplay. No result inherited from prior HTTP source."
+        },
+        "repair_scope": "Existing external PR391 author already pushed8bc728; local repair grant remains absent, no duplicate source line."
+      },
+      "source_checks_at_read": [
+        {
+          "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+        },
+        {
+          "name": "Backend tests",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
         }
-      },
-      "next_external_candidate": {
-        "pr": 391,
-        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-        "http_run_id": 39427671750,
-        "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
-        "observed_workflow_status": "in_progress",
-        "observed_workflow_conclusion": null,
-        "state": "PENDING_INDEPENDENT_EVIDENCE_REVIEW",
-        "change": "Only scripts/e2e/chain_player.py changed after79813e: register/pay before waiting for session start; waiting then precedes gameplay. No result inherited from prior HTTP source."
-      },
-      "repair_scope": "Existing external PR391 author already pushed8bc728; local repair grant remains absent, no duplicate source line."
+      ],
+      "pr391_state_at_read": "OPEN; final Backend/Funds checks still pending, use final PR head checks",
+      "source_boundary": "Only exact8bc728 HTTP evidence; nine Real Storage batches remain at41f83. No result summed with or inherited across source SHAs.",
+      "local_repair_grant": "NONE; existing external author boundary retained"
     },
     "not_accepted": [
       "real WeChat/payment/device/business acceptance",
@@ -2337,14 +2407,26 @@
       "production deployment"
     ],
     "source_boundary": "Three-team business source remains frozen. PR385/387/388/389/390/391 are external source deliveries; no C00 local repair grant, source edits or transfers. Nine batch evidence does not cover their later sources.",
-    "history_rule": "Prior NOT_RUN, entry-gap, compile-only, ENOSPC and NO_EXISTING_EVIDENCE observations remain historical at their recorded original SHAs. These covered classes did run in the existing Real Storage workflow at41f83; do not continue describing the current entry as nonexistent or these classes as never executed."
+    "history_rule": "Prior NOT_RUN, entry-gap, compile-only, ENOSPC and NO_EXISTING_EVIDENCE observations remain historical at their recorded original SHAs. These covered classes did run in the existing Real Storage workflow at41f83; do not continue describing the current entry as nonexistent or these classes as never executed.",
+    "raw_surefire_receipt_crosscheck": {
+      "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+      "class_artifacts_checked": 41,
+      "raw_surefire_xml_checked": 41,
+      "per_artifact_tests_equal_receipt": true,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "distinct_class_or_test_total": null,
+      "scope": "Existing nine-batch class artifacts checked against their own receipts. E04_13Test overlap remains; this is not41 distinct classes or a deduplicated test total.",
+      "evidence_review": "Independent download and raw XML/receipt comparison; no new execution and no C00 claim to reparse raw XML."
+    }
   },
   "external_current_source_deliveries": {
     "sale_projection": {
       "pr": 391,
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
       "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-      "state": "EXTERNAL_SOURCE_DELIVERED_HTTP_RUN_PENDING_REVIEW",
+      "state": "EXTERNAL_SOURCE_HTTP_FIVE_CHAINS_PASS_FINAL_ACCEPTANCE_NOT_COVERED",
       "branch": "claude/sale-ticket-projection-endtime-20261020",
       "exact_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
@@ -2352,10 +2434,10 @@
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
         "scripts/e2e/chain_player.py"
       ],
-      "scope": "Existing external author delivered shared projected start/end logic used by copy/sync and sale review; PR states non-time fields and non-club strict template times retained. Source receipt only, not independent acceptance.",
+      "scope": "Existing source aligns COPY/sync and sale time projections, preserves non-time/non-club constraints; exact8bc728 HTTP five-chain evidence accepted within declared stubs. Final cross-branch, real providers/devices and persistent migration remain unaccepted.",
       "existing_http_run": 39427671750,
       "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
-      "http_evidence_review": "Observed run in_progress at8bc728; pending artifact/acceptance review, no PASS claimed or inherited.",
+      "http_evidence_review": "Existing artifact12265809908 summary PASS/problems[]; five chains allPASS and each terminal_readbacks allok, only exact8bc728 under declared outbound stubs.",
       "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389.",
       "previous_source_delivery": {
         "pr": 391,
@@ -2388,7 +2470,41 @@
         "sale_close": "PASS",
         "player": "FAIL_SCRIPT_WAIT_BEFORE_REGISTRATION",
         "finance": "NOT_RUN"
-      }
+      },
+      "http_pass_record": {
+        "run_id": 39427671750,
+        "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+        "artifact_id": 12265809908,
+        "state": "PASS_FIVE_CHAINS_EXACT_SOURCE_WITH_DECLARED_STUBS",
+        "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain",
+        "final_cross_branch_acceptance": "NOT_COVERED",
+        "backend_and_funds_checks": "AT_READ_IN_PROGRESS; use final PR head checks, no overall CI success inferred"
+      },
+      "not_covered": {
+        "payment_outbound": "STUB",
+        "content_security_outbound": "STUB",
+        "real_wechat": "NOT_COVERED",
+        "real_devices": "NOT_COVERED",
+        "final_audit_cross_branch_candidate": "NOT_COVERED",
+        "persistent_migration": "NOT_COVERED",
+        "production": "NOT_COVERED"
+      },
+      "source_checks_at_read": [
+        {
+          "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+        },
+        {
+          "name": "Backend tests",
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+        }
+      ]
     },
     "product_followup": {
       "pr": 390,

@@ -1333,7 +1333,7 @@
     "coupon_cleanup": "一类(4实际PASS)的类级cleanup=LEFTOVER；精确MySQL容器removed=true",
     "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
     "later_nine_batch_inherited": false,
-    "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 observed IN_PROGRESS, PENDING_ARTIFACT_REVIEW; prior39427075967@79813e4d519999ec104ce78e4515d5bf71b30896 FAIL(player), finance NOT_RUN; earlier39423292504 failure retained",
+    "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 PASS: five chains and all terminal readbacks; declared outbound stubs; previous a9/798 failures retained; final cross-branch/real device/payment not covered",
     "business_source_frozen": true,
     "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
   },

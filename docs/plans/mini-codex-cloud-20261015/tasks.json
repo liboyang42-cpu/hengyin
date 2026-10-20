@@ -3119,7 +3119,7 @@
       "coupon_cleanup": "一类(4实际PASS)的类级cleanup=LEFTOVER；精确MySQL容器removed=true",
       "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
       "later_nine_batch_inherited": false,
-      "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 observed IN_PROGRESS, PENDING_ARTIFACT_REVIEW; prior39427075967@79813e4d519999ec104ce78e4515d5bf71b30896 FAIL(player), finance NOT_RUN; earlier39423292504 failure retained",
+      "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 PASS: five chains and all terminal readbacks; declared outbound stubs; previous a9/798 failures retained; final cross-branch/real device/payment not covered",
       "business_source_frozen": true,
       "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
     },
@@ -3128,7 +3128,7 @@
         "pr": 391,
         "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
         "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
-        "state": "EXTERNAL_SOURCE_DELIVERED_HTTP_RUN_PENDING_REVIEW",
+        "state": "EXTERNAL_SOURCE_HTTP_FIVE_CHAINS_PASS_FINAL_ACCEPTANCE_NOT_COVERED",
         "branch": "claude/sale-ticket-projection-endtime-20261020",
         "exact_paths": [
           "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
@@ -3136,10 +3136,10 @@
           "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
           "scripts/e2e/chain_player.py"
         ],
-        "scope": "Existing external author delivered shared projected start/end logic used by copy/sync and sale review; PR states non-time fields and non-club strict template times retained. Source receipt only, not independent acceptance.",
+        "scope": "Existing source aligns COPY/sync and sale time projections, preserves non-time/non-club constraints; exact8bc728 HTTP five-chain evidence accepted within declared stubs. Final cross-branch, real providers/devices and persistent migration remain unaccepted.",
         "existing_http_run": 39427671750,
         "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
-        "http_evidence_review": "Observed run in_progress at8bc728; pending artifact/acceptance review, no PASS claimed or inherited.",
+        "http_evidence_review": "Existing artifact12265809908 summary PASS/problems[]; five chains allPASS and each terminal_readbacks allok, only exact8bc728 under declared outbound stubs.",
         "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389.",
         "previous_source_delivery": {
           "pr": 391,
@@ -3172,7 +3172,41 @@
           "sale_close": "PASS",
           "player": "FAIL_SCRIPT_WAIT_BEFORE_REGISTRATION",
           "finance": "NOT_RUN"
-        }
+        },
+        "http_pass_record": {
+          "run_id": 39427671750,
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "artifact_id": 12265809908,
+          "state": "PASS_FIVE_CHAINS_EXACT_SOURCE_WITH_DECLARED_STUBS",
+          "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain",
+          "final_cross_branch_acceptance": "NOT_COVERED",
+          "backend_and_funds_checks": "AT_READ_IN_PROGRESS; use final PR head checks, no overall CI success inferred"
+        },
+        "not_covered": {
+          "payment_outbound": "STUB",
+          "content_security_outbound": "STUB",
+          "real_wechat": "NOT_COVERED",
+          "real_devices": "NOT_COVERED",
+          "final_audit_cross_branch_candidate": "NOT_COVERED",
+          "persistent_migration": "NOT_COVERED",
+          "production": "NOT_COVERED"
+        },
+        "source_checks_at_read": [
+          {
+            "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "in_progress",
+            "conclusion": null,
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680288/job/118647056917"
+          },
+          {
+            "name": "Backend tests",
+            "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+            "status": "in_progress",
+            "conclusion": null,
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427680237/job/118644784936"
+          }
+        ]
       },
       "product_followup": {
         "pr": 390,
@@ -3185,6 +3219,15 @@
       "public_review_scope": "C00 read public PR390/391 metadata and exact PR391 changed paths. No code edit, compilation/test/CI invocation, merge, deployment or migration execution.",
       "new_local_repair_authorization": "NONE; existing external delivery retained, no local writer or new team",
       "nine_batch_boundary": "Existing nine Real Storage PASS batches remain tied to41f83e65797edd5c17511ea609659f9a55de8767 only; not inherited by391,390 or later source."
+    },
+    "current_fixed_source_http_pass": {
+      "run_id": 39427671750,
+      "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+      "artifact_id": 12265809908,
+      "state": "PASS_FIVE_CHAINS_EXACT_SOURCE_WITH_DECLARED_STUBS",
+      "record": "LONGRUN_REMAINING.json#current_real_storage_evidence.http_chain",
+      "final_cross_branch_acceptance": "NOT_COVERED",
+      "backend_and_funds_checks": "AT_READ_IN_PROGRESS; use final PR head checks, no overall CI success inferred"
     }
   },
   "followup_lanes": [
