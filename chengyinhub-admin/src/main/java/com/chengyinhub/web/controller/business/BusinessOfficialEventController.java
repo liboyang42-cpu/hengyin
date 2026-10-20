@@ -173,7 +173,7 @@ public class BusinessOfficialEventController extends BaseController {
         Long officialMemberId = resolveV2OfficialMember();
         if (officialMemberId == null) return error(V2_OPERATOR_UNAUTHORIZED);
         String err = officialEventV2Service.schedule(id, officialMemberId);
-        return err == null ? success("活动已进入已排期") : error(err);
+        return err == null ? success("已提交审核，审核通过后进入排期") : error(err);
     }
 
     @PreAuthorize("@ss.hasPermi('business:officialevent:list')")
