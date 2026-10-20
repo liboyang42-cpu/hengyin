@@ -99,7 +99,10 @@ def main():
     dto.update(fixture_topic_image_fields())
     r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
     show("POST /api/topic/v2/create", json.dumps(r, ensure_ascii=False)[:220])
-    tid = r.get("data") if isinstance(r.get("data"), int) else (r.get("topicId") or (r.get("data") or {}).get("id") if isinstance(r.get("data"), dict) else None)
+    # V2 建期回包是审核结果对象 {"topicId":..,"reviewState":..};旧接口回 int 或 {"id":..}。
+    data = r.get("data")
+    tid = data if isinstance(data, int) else (
+        (data.get("topicId") or data.get("id")) if isinstance(data, dict) else r.get("topicId"))
     if not tid:
         # ⚠️ 不按名字去库里捡「最近一条同名主题」当结果:建期失败时那会捡到上一轮的旧主题,
         #    后面每一步都在旧数据上跑出一串漂亮的绿 —— 假绿。建不出来就当场停。
