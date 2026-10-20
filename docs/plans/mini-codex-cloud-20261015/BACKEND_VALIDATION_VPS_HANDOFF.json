@@ -2941,5 +2941,19 @@
     "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
     "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
     "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  },
+  "current_real_storage_validation": {
+    "record": "LONGRUN_REMAINING.json#current_real_storage_evidence",
+    "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+    "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+    "batch_count": 9,
+    "deduplicated_total": null,
+    "per_batch_counts_only": true,
+    "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
+    "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+    "later_nine_batch_inherited": false,
+    "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+    "business_source_frozen": true,
+    "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
   }
 }

@@ -249,5 +249,20 @@
     "failed_source_repair": "At most one original-author repair lane; remaining independent authorized tasks continue if real READY exists.",
     "new_frozen_sha": "NONE_NO_NEW_SOURCE",
     "authority": "Keep existing entry; no network/CI/manual trigger, new entry, migration execution, merge or deployment."
-  }
+  },
+  "current_validation_update": {
+    "record": "LONGRUN_REMAINING.json#current_real_storage_evidence",
+    "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+    "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+    "batch_count": 9,
+    "deduplicated_total": null,
+    "per_batch_counts_only": true,
+    "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
+    "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+    "later_nine_batch_inherited": false,
+    "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+    "business_source_frozen": true,
+    "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
+  },
+  "historical_record_scope": "Original CORE/EXTRA/F3 candidate inventories, counts, NOT_RUN and F3 evidence queries below are preserved as earlier source-specific history. Current existing-workflow execution at41f83 is separate; not transferred to old or later source."
 }

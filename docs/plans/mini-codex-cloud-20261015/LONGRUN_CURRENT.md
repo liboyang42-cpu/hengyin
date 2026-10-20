@@ -1,3 +1,27 @@
+## 当前验证更新：九批真实存储通过，仅限固定41f83候选
+
+既有 GitHub Real Storage IT 的九批结果均为 **PASS**，固定源码 `41f83e65797edd5c17511ea609659f9a55de8767`。逐批 summary/receipts 已独立核读；本次直接核读运行元数据、工件目录及后续源码/CI边界，没有重新编译、测试或触发CI。完整当前记录见 [LONGRUN_REMAINING.current_real_storage_evidence](LONGRUN_REMAINING.json)。
+
+| 既有运行 | 该批实际项数 | 结果 |
+|---|---:|---|
+| [port-core-funds](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411121962) | 27 | PASS |
+| [port-ai-quota](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411125954) | 22 | PASS |
+| [port-f3-growth](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411129899) | 12 | PASS |
+| [port-f3-evidence](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411134054) | 4 | PASS |
+| [port-e04-07-coupon](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411138417) | 9 | PASS |
+| [port-community-e02](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411144116) | 14 | PASS |
+| [port-b05-visibility](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411148566) | 3 | PASS |
+| [port-extra-storage](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411153383) | 76 | PASS |
+| [funnel-max-date](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411158792) | 4 | PASS |
+
+不将九批相加为去重总数：E04_13Test跨批重复。旧注册source匹配false不等于未执行，真实执行候选为41f83。券冲正批次有4项cleanup=LEFTOVER，同时精确MySQL容器teardown removed=true，两层事实均保留。原NOT_RUN、无入口、编译实际0及取证疑点只保留为原SHA/当时条件历史；当前不得据此说上述类从未实跑或该既有入口不存在。
+
+后续 `41e04e061a66f7a028467de431d3bada1c4dcd6e` Backend/Funds检查SUCCESS，PR386已合到移植分支 `b548cdc4d098defb5c4857c793897ca79668d579`；期间有NpcChatService生产变更，**九批成绩不继承到后续源码**。[HTTP链39423292504](https://github.com/liboyang42-cpu/hengyin/actions/runs/39423292504) 在 `a9c97205871e57c1b53ca40f27405152ce67171d` 仍FAIL，沿现有原作者处理；不另派源码线。真实微信/支付/设备、持久迁移及最终组合验收仍未完成。
+
+本组三队现有业务源码和文件归属保持冻结。PR385/387/388/389不属本组写权，不抢改；本次仅更新现有全局账和跨端索引，没有入口/212/CI/网络修改、生产迁移执行、合并或部署。
+
+## 先前记录（保留原候选与当时入口条件，以本节当前证据为准）
+
 ## 本轮三队真实未完成项与公开证据
 
 [紧凑执行回执](THREE_TEAM_REMAINING_RECEIPT_20261018.json)：CORE已确认未交源码0；保留8类23项真实MySQL及补充AI存储、独立B05的实库/运行时验收缺口，38项反证与NPC/photo两项NO_SOURCE_CHANGE不再派工。EXTRA E02-13据公开PR231 `b0dc1019f9d2485dc8ea8ca74184eb6728e4474a`原owner已实现、控制候选未整合；E04源码已交，剩2类8项真库与迁移未验，不重做原实现。F3原范围没有已确认遗漏；28普通PASS、d592仅编译、11真库NOT_RUN分开。

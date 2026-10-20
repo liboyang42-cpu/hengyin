@@ -1,6 +1,6 @@
 {
   "protocol": "CY-EXISTING-REAL-STORAGE-ENTRY-MAP-20261015",
-  "status": "SOURCE_MAPPING_ONLY_NOT_EXECUTED",
+  "status": "CURRENT_EXECUTION_EXISTS_AT_41F83_OLDER_MAPS_ARE_HISTORY",
   "current_candidate_shas": {
     "CORE": {
       "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
@@ -1322,5 +1322,20 @@
     "manual_ci_trigger_or_repeat": false,
     "changes_to_212_ci_or_network": false,
     "no_new_work_or_rerun_task": true
-  }
+  },
+  "current_executed_validation": {
+    "record": "LONGRUN_REMAINING.json#current_real_storage_evidence",
+    "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+    "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+    "batch_count": 9,
+    "deduplicated_total": null,
+    "per_batch_counts_only": true,
+    "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
+    "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+    "later_nine_batch_inherited": false,
+    "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+    "business_source_frozen": true,
+    "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
+  },
+  "legacy_fields_scope": "core, extra_third, future_e02_25, current_candidate_shas and authorization/effective-decision observations retain their original recorded source/time. They do not establish current workflow absence; existing real-storage-it.yml executed nine batches at41f83."
 }

@@ -66,8 +66,8 @@
         "fresh_selected_classes": 3,
         "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
       },
-      "real_storage_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; both candidates compiled only. Prior cache ENOSPC resolved, not a current blocker.",
-      "policy": "Keep existing entry; no further retry, Cloud substitute, old ordinary rerun, new source/test/CI/migration changes or invented remaining bugs."
+      "real_storage_status": "Nine existing Real Storage batches PASS at exact41f83e65797edd5c17511ea609659f9a55de8767. Original candidate compile/NOT_RUN rows remain historical, no inherited pass at later41e04e.",
+      "policy": "No source edit, new writer, test/compile/CI execution or entry/network/212 change by C00; preserve existing results and exact source boundaries."
     }
   },
   "blocked_records": [
@@ -1812,7 +1812,21 @@
     "production_or_architecture_confirmed_READY": 0,
     "core_remaining": "Two prior policy holds resolved by human: both NO_SOURCE_CHANGE. No confirmed actionable undelivered production/architecture work; no new audit/filler task.",
     "completed_E01_E03_E02": "60 and4 exactordinaryPASS; realstorage/HTTPnotaccepted",
-    "fixtures_delivered_unverified": 4
+    "fixtures_delivered_unverified": 4,
+    "current_real_storage_validation": {
+      "record": "LONGRUN_REMAINING.json#current_real_storage_evidence",
+      "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+      "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+      "batch_count": 9,
+      "deduplicated_total": null,
+      "per_batch_counts_only": true,
+      "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
+      "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+      "later_nine_batch_inherited": false,
+      "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+      "business_source_frozen": true,
+      "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
+    }
   },
   "core_b05_fixture_source_delivery": {
     "id": "CORE_B05_FIXTURE_ACTIVITY_PREREQUISITE",
@@ -2084,5 +2098,199 @@
     "EXTRA_source_ready": 0,
     "F3_source_ready": 0,
     "new_source_sha": null
+  },
+  "current_real_storage_evidence": {
+    "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+    "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+    "workflow_path": ".github/workflows/real-storage-it.yml",
+    "batch_count": 9,
+    "batches": [
+      {
+        "suite": "port-core-funds",
+        "run_id": 39411121962,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 27,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411121962",
+        "summary_artifact": {
+          "id": 12258764645,
+          "name": "rs-summary-port-core-funds-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12258764645"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-ai-quota",
+        "run_id": 39411125954,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 22,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411125954",
+        "summary_artifact": {
+          "id": 12258899580,
+          "name": "rs-summary-port-ai-quota-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12258899580"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-f3-growth",
+        "run_id": 39411129899,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 12,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411129899",
+        "summary_artifact": {
+          "id": 12259516951,
+          "name": "rs-summary-port-f3-growth-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12259516951"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-f3-evidence",
+        "run_id": 39411134054,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 4,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411134054",
+        "summary_artifact": {
+          "id": 12258404832,
+          "name": "rs-summary-port-f3-evidence-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12258404832"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-e04-07-coupon",
+        "run_id": 39411138417,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 9,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411138417",
+        "summary_artifact": {
+          "id": 12258519839,
+          "name": "rs-summary-port-e04-07-coupon-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12258519839"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-community-e02",
+        "run_id": 39411144116,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 14,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411144116",
+        "summary_artifact": {
+          "id": 12259347351,
+          "name": "rs-summary-port-community-e02-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12259347351"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-b05-visibility",
+        "run_id": 39411148566,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 3,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411148566",
+        "summary_artifact": {
+          "id": 12258439718,
+          "name": "rs-summary-port-b05-visibility-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12258439718"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "port-extra-storage",
+        "run_id": 39411153383,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 76,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411153383",
+        "summary_artifact": {
+          "id": 12259212723,
+          "name": "rs-summary-port-extra-storage-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12259212723"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      },
+      {
+        "suite": "funnel-max-date",
+        "run_id": 39411158792,
+        "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+        "status": "completed",
+        "conclusion": "success",
+        "reported_actual_tests": 4,
+        "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39411158792",
+        "summary_artifact": {
+          "id": 12259089390,
+          "name": "rs-summary-funnel-max-date-41f83e65797e-a1",
+          "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/actions/artifacts/12259089390"
+        },
+        "count_evidence": "Existing summary/receipts independently reviewed in the evidence handoff; C00 directly read run metadata and artifact manifest, did not reparse artifact bytes."
+      }
+    ],
+    "unique_test_total": null,
+    "count_rule": "Do not add batch counts as a deduplicated total; E04_13Test occurs in both port-core-funds and port-extra-storage. Per-batch reported counts are exact at41f83 only.",
+    "source_matching": "Old registration source-match false does not mean unexecuted. Actual run head and reviewed receipts identify41f83; results are not moved to later candidates.",
+    "coupon_cleanup_boundary": {
+      "suite": "port-e04-07-coupon",
+      "test_result": "PASS",
+      "cases_reporting_cleanup_LEFTOVER": 4,
+      "exact_mysql_container_removed": true,
+      "interpretation": "Preserve LEFTOVER as the case-level cleanup result; exact container teardown removed=true is separate evidence, not a claim that every case reported clean."
+    },
+    "evidence_review_scope": "C00 directly read GitHub run metadata, artifact manifests, later check runs, PR386 and the production-path comparison. Per-batch actual counts and cleanup boundaries registered from independently reviewed existing summary/receipts. Artifact bytes were not downloaded or reparsed by C00; no tests, compilation or CI execution initiated here.",
+    "later_candidate": {
+      "source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+      "backend_and_funds_checks": [
+        {
+          "name": "Backend tests",
+          "head_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+          "conclusion": "success",
+          "html_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39419896261/job/118618112522"
+        },
+        {
+          "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+          "head_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+          "conclusion": "success",
+          "html_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39419915597/job/118618099802"
+        }
+      ],
+      "pr386_merged": true,
+      "port_branch_merge_sha": "b548cdc4d098defb5c4857c793897ca79668d579",
+      "production_delta_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java"
+      ],
+      "nine_batch_result_inherited": false,
+      "reason": "NpcChatService production changed after41f83; later Backend/Funds SUCCESS is a separate result, not a repeat of nine Real Storage batches."
+    },
+    "http_chain": {
+      "run_id": 39423292504,
+      "source_sha": "a9c97205871e57c1b53ca40f27405152ce67171d",
+      "state": "FAIL",
+      "observed_run_conclusion": "failure",
+      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39423292504",
+      "repair_scope": "Existing external original author; no C00 source claim or new grant."
+    },
+    "not_accepted": [
+      "real WeChat/payment/device/business acceptance",
+      "persistent migration execution",
+      "final combined candidate acceptance",
+      "production deployment"
+    ],
+    "source_boundary": "Existing three-team business source remains frozen. PR385/387/388/389 and their active authors are outside this team grant; no source edits, new writers or transfers.",
+    "history_rule": "Prior NOT_RUN, entry-gap, compile-only, ENOSPC and NO_EXISTING_EVIDENCE observations remain historical at their recorded original SHAs. These covered classes did run in the existing Real Storage workflow at41f83; do not continue describing the current entry as nonexistent or these classes as never executed."
   }
 }
