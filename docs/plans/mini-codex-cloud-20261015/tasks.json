@@ -3258,7 +3258,7 @@
       "authorization": "User approved independent integration and existing CI acceptance.",
       "integration_writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "6AA_SOURCE_FROZEN_MAIN_PACKAGE_DEPENDENCY_REPAIR_AUTHORIZED_WAIT_CI",
+      "state": "6AA_BACKEND_TWO_CLASSES_REMAIN_SINGLE_TEST_GRANT_NEXT_PATCH_PENDING",
       "authorized_exact_conflict_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -3267,7 +3267,7 @@
         "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
       ],
       "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-      "combined_candidate": "6aa8c2c676c48ab1203c7156c85783ef4b57783a / SOURCE_DELIVERED_FROZEN_WAIT_CI; f8 results source-bound only",
+      "combined_candidate": "6aa8c2c676c48ab1203c7156c85783ef4b57783a / BACKEND_FAIL_REMAINING_TWO_CLASSES; NEXT_PATCH_NOT_DELIVERED",
       "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
       "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
       "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -3393,6 +3393,25 @@
           "chengyinhub-xcx/pages/templatedetail/templatedetail.js"
         ],
         "scope": "Identical main-package implementation move, one old-path forwarding export, seven original main-utils references; no second implementation or UI/policy/test/gate/config edit."
+      },
+      "post_review_test_repair_authority": {
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.post_review_test_repair_authority",
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "base_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "state": "AUTHORIZED_SINGLE_TEST_TWO_STATUS_ASSERTIONS_SOURCE_NOT_DELIVERED",
+        "additional_exact_paths": [
+          "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicPostReviewTest.java"
+        ],
+        "scope": "Two BLOCK code assertions500 to400 only; preserve messages/no-write checks and true-exception500. Existing Community fixture continuation only outbound-signing helper stub with real key parser.",
+        "new_source_sha": "NOT_DELIVERED"
+      },
+      "six_aa_remaining_validation": {
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.six_aa_remaining_validation",
+        "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+        "state": "BACKEND_STILL_FAIL_TWO_CLASSES_THREE_PROBLEM_METHODS_REPORTED",
+        "next_patch_public_sha": "NOT_DELIVERED",
+        "provisional71JS_resourcePASS_inherited": false
       }
     }
   },

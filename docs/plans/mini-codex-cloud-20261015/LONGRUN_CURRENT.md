@@ -1,10 +1,18 @@
+## 当前最后定向测试授权：BLOCK两处期望恢复400，出站签名夹具隔离
+
+固定6aa完整Backend报告仍有两类共3个失败／异常方法：ApiTopicPostReviewTest两处新BLOCK用例仍期望500，与恢复后的既有明确拒绝400冲突；CommunityPostAuditLevelTest合法key真实校验已通过，后续图像预览签名需要隔离出站夹具。未提供本轮新完整总数或F／E／跳过拆分，不推算。原其他四类（Journey、C03_21、C03_24、SaleReview）报告PASS。C00直接核到6aa Backend FAIL、Migration safety SUCCESS、Funds SUCCESS；自然CI整体未签收，不迁移执行，也不把单项元数据当新源验收。
+
+本地root同一修复槽仅新增 `chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicPostReviewTest.java` 两条代码期望写权：既有124／188行500→400，保BLOCK文案及无写校验，不改其他方法／断言，真实异常仍500。C00已只读核到这两条assert；不新增生产修改。既有CommunityPostAuditLevelTest写权仅在publishWith内沿现有MockedStatic模式stub出站generateCommunityMediaPresignedUrl；合法key的communityMediaObjectKey仍thenCallRealMethod，所有@Test体／业务断言不动，无OSS凭据／联网／安全边界降级，并正常关闭静态夹具作用域。精确边界见 `LONGRUN_REMAINING.json.independent_backend_acceptance.post_review_test_repair_authority`。
+
+包迁移五路径补丁已在root工作区完成但尚未push：实现逐字相同、旧新require同一对象；资源门禁2084引用／19合法异步／跨包0／分包互引0及71项JS全PASS由验证者报告，**仅为未公开SHA补丁观察**，不归给6aa或未来源码，不修改测试／配置或豁免门禁。root获此授权后与当前两处测试夹具一次冻结；不新增writer或Cloud验证，最终新SHA尚待。旧f8／6aa成绩及失败留在各自源码，整体验收仍未完成。
+
 ## 当前下一最小修复：同一举报工具移至主包，旧分包路径转接
 
 f8 Mini最终失败已由验证者定位为组件／资源路径门禁：三处新caller同步依赖 `pages/square` 分包下工具不合法，17项单测PASS不足以证明包依赖正确。C00只读核到app.json确实将pages/square注册为subpackageSquare；旧工具实现没有require／import依赖。无资源门禁豁免，不把此问题称为单测已绿即完成。
 
 仅追加本地root同一组合分支／唯一修复槽的两条写权：`chengyinhub-xcx/utils/community-report-sheet.js` 承接6aa旧实现逐字不变；`chengyinhub-xcx/pages/square/utils/community-report-sheet.js` 仅留 `module.exports = require('../../../utils/community-report-sheet.js');` 转接。实现只有一份，保square原caller和测试路径；沿原三caller授权只将七处require改回各自主包utils相对路径。不改app.json／分包注册／组件配置／页面交互／权限／测试／门禁，不复制两套实现或增加新行为。该精确迁移取代先前禁止新主包模块的限制，仅为既有调用兼容，不扩域。
 
-6aa已交六文件仍冻结，既有自然CI继续不取消／重跑；下一包依赖修复尚无公开SHA，不继承旧PASS。root待这项固定后再接续必要HTTP／存储，Cloud不验证、不新增作者。精确路径及逐文件边界见 `LONGRUN_REMAINING.json.independent_backend_acceptance.shared_report_sheet_repair_authority`。
+6aa已交六文件仍冻结，既有自然CI继续不取消／重跑；下一包依赖修复工作区已完成但尚无公开SHA，不继承旧PASS。root待这项固定后再接续必要HTTP／存储，Cloud不验证、不新增作者。精确路径及逐文件边界见 `LONGRUN_REMAINING.json.independent_backend_acceptance.shared_report_sheet_repair_authority`。
 
 ## 当前固定源码：PR394的6aa8c2，六文件最小修复冻结待验
 
