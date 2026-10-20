@@ -511,4 +511,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </choose>
         group by owner_id
     </select>
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_activity set status = 0, check_status = 0, publish_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus} and publish_status = #{fromPublishStatus}
+          <if test="decidedAt != null">and (update_time is null or update_time &lt;= #{decidedAt})</if>
+    </update>
+
 </mapper>

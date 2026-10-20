@@ -220,4 +220,12 @@ public interface CmsTopicMapper
                                   @Param("clubCoopOpen") Integer clubCoopOpen,
                                   @Param("clubPinned") Integer clubPinned,
                                   @Param("clubMemberOnly") Integer clubMemberOnly);
+
+    /**
+     * 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审未上架(status=0/check_status=0/user_status=0)。
+     * configVersion 非空时(主题包快照)，提交后又改过配置的主题返回 0 行。
+     */
+    int reopenAuditDecision(@Param("id") Long id, @Param("fromStatus") Integer fromStatus,
+                            @Param("fromCheckStatus") Integer fromCheckStatus,
+                            @Param("configVersion") Long configVersion);
 }

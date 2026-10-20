@@ -89,4 +89,9 @@ public interface CmsTemplateLibraryMapper
      * @return 结果
      */
     public int deleteCmsTemplateLibraryByIds(Long[] ids);
+
+    /** 审核撤销/申诉复核：把模板广场审核决定写下的状态 CAS 回待审(0/0)。 */
+    int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
+                            @Param("memberTemplateId") Long memberTemplateId,
+                            @Param("fromStatus") Long fromStatus, @Param("fromPublishStatus") Long fromPublishStatus);
 }

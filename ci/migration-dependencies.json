@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "audit_appeal_20261020": ["p3_platform_foundation", "audit_open_task_guard_20260721"],
     "community_legacy_comment_like_counts_20261015": ["community_post_platform_20260909"],
     "wechat_identity_unique_20261013": [],
     "20261012_member_password_width": [],
