@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "dependencies": {
     "community_legacy_comment_like_counts_20261015": ["community_post_platform_20260909"],
+    "club_name_unique_20261020": [],
     "wechat_identity_unique_20261013": [],
     "20261012_member_password_width": [],
     "20261013_drop_member_pii_backup_tables": [],
