@@ -618,7 +618,7 @@ Component({
     goGateClub() {
       const clubId = Number(this.data.gateClubId) || 0
       if (clubId > 0) {
-        wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId })
+        if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId, complete: () => { this._navigating = false } }) } // 跳转中不响应连点,免得叠两层俱乐部页
         return
       }
       this.close()
