@@ -353,7 +353,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -937,7 +937,7 @@ Page({
   goTemplateDetail(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my', complete: () => { this._navigating = false; } });
   },
 
   /** 「我承接的」是个入口,不是一坨字:点进去看这条路线长什么样、我这站在第几位。 */
@@ -1194,7 +1194,7 @@ Page({
       `chapterName=${encodeURIComponent(String(this.data.selectedChapterText || ''))}`,
       `nodeName=${encodeURIComponent(String((node && node.name) || ''))}`,
     ].join('&');
-    wx.navigateTo({ url: `/pages/topic/merchantapply/index?${params}` });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: `/pages/topic/merchantapply/index?${params}`, complete: () => { this._navigating = false; } });
   },
 
   /* 按 id 在 chaptersList 里找那一站。找不到就返回 null —— 名字宁可不写,不编。 */

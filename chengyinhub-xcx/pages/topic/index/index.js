@@ -304,7 +304,7 @@ Page({
    */
   onShow() {
     const reducedMotion = readReducedMotion();
-    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); this._navigating = false; // 返回时兜底清跳转锁
     const that = this;
     
     // 重新获取所有位置信息
@@ -432,7 +432,7 @@ Page({
   
   goTemplateDetail(e) {
     let id = e.currentTarget.dataset.id;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my',
     })
   },
@@ -461,7 +461,7 @@ Page({
   },
   
   goPoint() {
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageP3/pages/growthcenter/index/index',
     })
   },
@@ -569,7 +569,7 @@ Page({
     const { kind, id } = e.currentTarget.dataset;
     const targetId = Number(id) || 0;
     if (!targetId) return;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: kind === 'club'
         ? '/pages/club/detail/index?id=' + targetId
         : '/pages/userinfo/userinfo?userId=' + targetId,
@@ -761,7 +761,7 @@ Page({
     const lc = this.data.info && this.data.info.lifecycle;
     if (![1, 2, 7].includes(Number(lc))) return false;
     if (lc == 2 && this.data.info && this.data.info.isOwner == 1) {
-      wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id });
+      if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id, complete: () => { this._navigating = false; } }); }
       return true;
     }
     toast(lc == 7 ? '该主题立项待审,暂未开售' : (lc == 1 ? '该主题招募中,暂未开售' : '该主题定价中,暂未开售'));
@@ -1090,7 +1090,7 @@ Page({
   },
 
   goMyOrders() {
-    wx.navigateTo({ url: '/subpackageMember/order/order' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } });
   },
 
   // /api/registration/create 的 realName/phone 是 @NotBlank(RegistrationRequest.java:37,42)。
@@ -1344,7 +1344,7 @@ Page({
   // 票夹的 focusId 是 registrationId(signup/index.js:118),这里手上只有 topicId,传过去永远定位不到;
   // 老实打开路线票 tab,让用户在票夹里点那张票进 play。
   goJoinedPlay() {
-    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0', complete: () => { this._navigating = false; } });
   },
 
   //投票弹框打开
