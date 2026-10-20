@@ -13,8 +13,10 @@ import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.impl.CommunityPostServiceImpl;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.file.FileOssUploadUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.Collections;
@@ -32,6 +34,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +44,9 @@ import static org.mockito.Mockito.when;
  * 以及图片异步机审命中风险时复用帖文生命周期 HIDE(带乐观版本)。
  */
 class CommunityPostAuditLevelTest {
-    private static final String IMAGE = "https://cdn.example/community/image.jpg";
+    private static final String KEY = "upload/0123456789abcdef0123456789abcdef.jpg";
+    private static final String PREVIEW =
+            "https://private-test.oss-cn-shanghai.aliyuncs.com/" + KEY + "?Expires=300&Signature=short";
 
     private CommunityPostMapper mapper;
     private IContentSafetyGate safetyGate;
@@ -102,14 +107,20 @@ class CommunityPostAuditLevelTest {
         verify(mapper, never()).updateAuditMarks(anyLong(), any(), any(), any(), any());
     }
 
+    /** 私有桶:微信拉短时预签名 URL,inbox 按稳定对象 key 登记(预签名每次都不同,按 URL 登记回调永远对不上)。 */
     @Test
-    void directPublishWithImagesSubmitsThemForAsyncCheckAsCommunityPost() {
+    void directPublishWithImagesSendsPresignedUrlButRegistersStableObjectKey() {
         Map<String, Object> media = new HashMap<>();
-        media.put("derived_object_key", IMAGE);
+        media.put("derived_object_key", KEY);
 
-        publishWith(SafetyDecision.pass(), Collections.singletonList(media));
+        try (MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class)) {
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(KEY)).thenReturn(KEY);
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(PREVIEW)).thenReturn(KEY);
+            storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(KEY)).thenReturn(PREVIEW);
+            publishWith(SafetyDecision.pass(), Collections.singletonList(media));
+        }
 
-        verify(wx).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, 7L, IMAGE, "openid-9");
+        verify(wx).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, 7L, PREVIEW, KEY, "openid-9");
     }
 
     @Test
@@ -188,12 +199,19 @@ class CommunityPostAuditLevelTest {
     }
 
     @Test
-    void activeMediaUrlsAreTheDerivedKeysSubmittedForCheck() {
-        Map<String, Object> media = new HashMap<>();
-        media.put("derived_object_key", IMAGE);
-        when(mapper.selectMediaForSafety(7L)).thenReturn(Collections.singletonList(media));
+    void activeMediaKeysAreStableObjectKeysAndSkipForeignMedia() {
+        Map<String, Object> ours = new HashMap<>();
+        ours.put("derived_object_key", KEY);
+        Map<String, Object> foreign = new HashMap<>();
+        foreign.put("derived_object_key", "https://cdn.example/legacy.jpg");
+        when(mapper.selectMediaForSafety(7L)).thenReturn(java.util.Arrays.asList(ours, foreign));
 
-        assertEquals(Collections.singletonList(IMAGE), service.activeMediaUrls(7L));
+        try (MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class)) {
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(KEY)).thenReturn(KEY);
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey("https://cdn.example/legacy.jpg"))
+                    .thenThrow(new IllegalArgumentException("社区媒体来源无效"));
+            assertEquals(Collections.singletonList(KEY), service.activeMediaKeys(7L));
+        }
     }
 
     private void publishWith(SafetyDecision decision, java.util.List<Map<String, Object>> media) {

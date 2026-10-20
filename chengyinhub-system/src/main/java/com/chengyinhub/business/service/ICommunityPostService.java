@@ -61,7 +61,7 @@ public interface ICommunityPostService {
     void applyCommentAuditDecision(Long commentId, boolean approved);
     /** 帖文图片异步机审命中风险:按生命周期 HIDE(隐藏待复核)并建人工复核单;已隐藏/待审/已终态视为已落地。 */
     boolean applyRiskyMediaResult(Long postId);
-    /** 帖文当前 ACTIVE 媒体地址,供图片回调核对「仍是当初送检的那张」。 */
-    List<String> activeMediaUrls(Long postId);
+    /** 帖文当前 ACTIVE 媒体的 OSS 对象 key(稳定身份,不是会过期的预签名 URL),供图片回调核对「仍是当初送检的那张」。 */
+    List<String> activeMediaKeys(Long postId);
     Map<String, Integer> runMaintenance(Integer limit);
 }
