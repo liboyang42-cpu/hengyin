@@ -1023663,9 +1023663,44 @@
         "js": "pages/roam/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/roam/share/revoke",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "clear-local-failed": [],
+        "duplicate-trigger": [
+          {
+            "urlTemplate": "/api/roam/share/revoke",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/roam/share/revoke",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success"
+        ],
+        "error": [
+          "error"
+        ],
+        "timeout": [
+          "timeout"
+        ],
+        "clear-local-failed": [],
+        "duplicate-trigger": [
+          "success",
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1023691,26 +1023726,44 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
-        "primaryApis": [],
+        "apis": [
+          "/api/roam/share/revoke"
+        ],
+        "primaryApis": [
+          "/api/roam/share/revoke"
+        ],
         "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
+        "apiContracts": [
+          {
+            "url": "/api/roam/share/revoke",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/roam/share/revoke"
+        ]
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "clear-local-failed",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -1063265,26 +1063318,52 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
-        "primaryApis": [],
+        "apis": [
+          "/api/template/report",
+          "/api/v1/community/capabilities"
+        ],
+        "primaryApis": [
+          "/api/template/report",
+          "/api/v1/community/capabilities"
+        ],
         "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
+        "apiContracts": [
+          {
+            "url": "/api/template/report",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/capabilities",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/template/report"
+        ]
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -1063332,26 +1063411,50 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
-        "primaryApis": [],
+        "apis": [
+          "/api/template/personal-report",
+          "/api/v1/community/capabilities"
+        ],
+        "primaryApis": [
+          "/api/template/personal-report",
+          "/api/v1/community/capabilities"
+        ],
         "auxiliaryApis": [],
-        "apiContracts": [],
+        "apiContracts": [
+          {
+            "url": "/api/template/personal-report",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/capabilities",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -1075777,31 +1075880,15 @@
       "targets": {
         "routes": [],
         "apis": [
-          "/api/template/personal-report",
-          "/api/template/report",
           "/api/topic/report",
           "/api/v1/community/capabilities"
         ],
         "primaryApis": [
-          "/api/template/personal-report",
-          "/api/template/report",
           "/api/topic/report",
           "/api/v1/community/capabilities"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/template/personal-report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/topic/report",
             "method": "POST",
@@ -1075816,7 +1075903,6 @@
           }
         ],
         "writeApis": [
-          "/api/template/report",
           "/api/topic/report"
         ]
       },
@@ -1078914,12 +1079000,6 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/merchant/crm/marketing-consents",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
@@ -1079119,12 +1079199,6 @@
           {
             "url": "/api/merchant/crm/marketing-consents",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/marketing-consents",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1117832,12 +1117906,6 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/merchant/crm/marketing-consents",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/registration/cancel",
             "method": "POST",
             "auth": "authenticated",
@@ -1118271,12 +1118339,6 @@
           {
             "url": "/api/merchant/crm/marketing-consents",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/marketing-consents",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
