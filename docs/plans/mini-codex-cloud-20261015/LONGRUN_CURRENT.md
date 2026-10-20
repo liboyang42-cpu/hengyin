@@ -1,10 +1,10 @@
-## 外部新源码交付待验：PR391与PR390
+## 当前外部交付：PR391脚本后续提交待验，未新增本地写权
 
-[PR391](https://github.com/liboyang42-cpu/hengyin/pull/391) 已交固定源码 `79813e4d519999ec104ce78e4515d5bf71b30896`，修复合法俱乐部场次COPY与开售票投影时间口径不一致；[既有HTTP运行39427075967](https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967) 待独立证据签收，不据此预报通过。原 `39423292504@a9c97205871e57c1b53ca40f27405152ce67171d` 失败保留：sale-submit200/taskId3，review body500/SALE_TICKET_PROJECTION_MISMATCH_END_TIME，PRICING/快照0；platform与merchant_club已通过。这不是旧QR或单纯缺夹具。精确外部交付路径见 `LONGRUN_REMAINING.json` 的 `external_current_source_deliveries`。
+[PR391](https://github.com/liboyang42-cpu/hengyin/pull/391) 的 `79813e4d519999ec104ce78e4515d5bf71b30896` 已在[既有HTTP运行39427075967](https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967)取得 platform、merchant_club、sale_close 三PASS；player因脚本在报名之前等待至开场而FAIL，finance **NOT_RUN**。这不是旧a9的SALE_TICKET_PROJECTION_MISMATCH_END_TIME；原a9失败历史仍保留。
 
-[PR390](https://github.com/liboyang42-cpu/hengyin/pull/390) 三项产品跟进源码已交于 `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a`，状态为外部源码交付、最终验收待完成；不再列待实现，不继承作者其他测试或迁移结果。
+现有外部作者已交 `8bc728ad99d0c748698c5210343e6f4ec782e894`，相对79813e仅改 `scripts/e2e/chain_player.py`，将等待移到报名支付之后、游玩之前。[既有运行39427671750](https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750)本次核读元数据为IN_PROGRESS，后续证据待签收；不预报PASS或继承旧SHA结果。没有新增本地grant、源码修复线、测试或CI执行，保留现有外部作者边界。
 
-上述路径保留现有外部作者边界，未新增本地源码grant、修复线或团队，不改PR389、不重复实现/测试/CI。九批真实存储结果仍只属于41f83，旧NOT_RUN与失败历史保留，后续SHA及真实微信/支付/设备/持久迁移/最终组合验收不继承。
+[PR390](https://github.com/liboyang42-cpu/hengyin/pull/390) 三项产品跟进源码已交于 `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a`，最终验收待完成。九批真实存储仍仅属于41f83，不相加为去重总数，不继承到PR390/391或后续源；真实微信/支付/设备/持久迁移/最终组合仍未验收。
 
 ## 当前验证更新：九批真实存储通过，仅限固定41f83候选
 
@@ -22,7 +22,7 @@
 | [port-extra-storage](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411153383) | 76 | PASS |
 | [funnel-max-date](https://github.com/liboyang42-cpu/hengyin/actions/runs/39411158792) | 4 | PASS |
 
-不将九批相加为去重总数：E04_13Test跨批重复。旧注册source匹配false不等于未执行，真实执行候选为41f83。券冲正批次有4项cleanup=LEFTOVER，同时精确MySQL容器teardown removed=true，两层事实均保留。原NOT_RUN、无入口、编译实际0及取证疑点只保留为原SHA/当时条件历史；当前不得据此说上述类从未实跑或该既有入口不存在。
+不将九批相加为去重总数：E04_13Test跨批重复。旧注册source匹配false不等于未执行，真实执行候选为41f83。券冲正批次中RedemptionRewardClawbackMyBatisTest一类(4实际PASS)的类级cleanup=LEFTOVER；精确MySQL容器removed=true。未推定四条testcase各有cleanup回执。原NOT_RUN、无入口、编译实际0及取证疑点只保留为原SHA/当时条件历史；当前不得据此说上述类从未实跑或该既有入口不存在。
 
 后续 `41e04e061a66f7a028467de431d3bada1c4dcd6e` Backend/Funds检查SUCCESS，PR386已合到移植分支 `b548cdc4d098defb5c4857c793897ca79668d579`；期间有NpcChatService生产变更，**九批成绩不继承到后续源码**。[HTTP链39423292504](https://github.com/liboyang42-cpu/hengyin/actions/runs/39423292504) 在 `a9c97205871e57c1b53ca40f27405152ce67171d` 仍FAIL；外部PR391已交修复源码，后续运行待证据签收，不新增重复源码线。真实微信/支付/设备、持久迁移及最终组合验收仍未完成。
 

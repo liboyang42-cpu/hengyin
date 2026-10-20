@@ -5034,8 +5034,8 @@
     "sale_projection": {
       "pr": 391,
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
-      "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
-      "state": "EXTERNAL_SOURCE_DELIVERED_PENDING_VERIFICATION",
+      "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+      "state": "EXTERNAL_SOURCE_DELIVERED_HTTP_RUN_PENDING_REVIEW",
       "branch": "claude/sale-ticket-projection-endtime-20261020",
       "exact_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
@@ -5044,10 +5044,42 @@
         "scripts/e2e/chain_player.py"
       ],
       "scope": "Existing external author delivered shared projected start/end logic used by copy/sync and sale review; PR states non-time fields and non-club strict template times retained. Source receipt only, not independent acceptance.",
-      "existing_http_run": 39427075967,
-      "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967",
-      "http_evidence_review": "PENDING; no run result inferred, no ordinary tests or CI triggered by C00.",
-      "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389."
+      "existing_http_run": 39427671750,
+      "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427671750",
+      "http_evidence_review": "Observed run in_progress at8bc728; pending artifact/acceptance review, no PASS claimed or inherited.",
+      "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389.",
+      "previous_source_delivery": {
+        "pr": 391,
+        "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
+        "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
+        "state": "EXTERNAL_SOURCE_DELIVERED_PENDING_VERIFICATION",
+        "branch": "claude/sale-ticket-projection-endtime-20261020",
+        "exact_paths": [
+          "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+          "scripts/e2e/chain_player.py"
+        ],
+        "scope": "Existing external author delivered shared projected start/end logic used by copy/sync and sale review; PR states non-time fields and non-club strict template times retained. Source receipt only, not independent acceptance.",
+        "existing_http_run": 39427075967,
+        "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967",
+        "http_evidence_review": "PENDING; no run result inferred, no ordinary tests or CI triggered by C00.",
+        "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389."
+      },
+      "source_delta_from_previous": {
+        "parent_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
+        "exact_path": "scripts/e2e/chain_player.py",
+        "summary": "Wait for session start after registration/payment, before gameplay; comparison shows one script file changed."
+      },
+      "previous_http_result": {
+        "run_id": 39427075967,
+        "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
+        "platform": "PASS",
+        "merchant_club": "PASS",
+        "sale_close": "PASS",
+        "player": "FAIL_SCRIPT_WAIT_BEFORE_REGISTRATION",
+        "finance": "NOT_RUN"
+      }
     },
     "product_followup": {
       "pr": 390,
