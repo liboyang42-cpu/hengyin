@@ -6,12 +6,11 @@
     <!-- 待决策态(pendingAuthorization)是强制同意闸,不给退出叉号;
          撤回态(else)才允许通过 cy-sheet 关闭按钮退出。 -->
     <block wx:if="{{pendingAuthorization}}">
-      <text class="privacy-lead">我们只在你使用相关功能时处理必要信息，用于提供漫游、打卡和附近推荐等服务。</text>
+      <text class="privacy-lead">我们只在你使用相关功能时处理必要信息。</text>
       <checkbox-group class="privacy-check" bindchange="toggleService"><label class="privacy-check-row"><checkbox class="privacy-checkbox" value="service" checked="{{serviceAgreed}}"/><text>我已阅读并同意</text><view class="privacy-doc" catchtap="openService" aria-role="button" aria-label="阅读用户服务协议" hover-class="cy-pressed" hover-stay-time="80">《用户服务协议》</view><view class="privacy-doc" catchtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">《隐私保护指引》</view></label></checkbox-group>
     </block>
     <block wx:else>
-      <text class="privacy-body">定位只在你漫游或游玩时使用，结束即停止；照片、文字和录音只在你单独同意后才会交给第三方模型处理。</text>
-      <view class="privacy-link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《用户隐私保护指引》</view>
+      <view class="privacy-link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《隐私保护指引》</view>
     </block>
     <cy-inline-error class="privacy-error" wx:if="{{submitError}}" kind="network" title="{{submitError}}" sub="你的选择还没有被记录，页面内容不会丢失。" action="重试" bind:action="retrySubmit" />
     <block wx:if="{{pendingAuthorization}}">
@@ -24,38 +23,46 @@
       </view>
     </block>
     <block wx:else>
-      <text class="privacy-setting-title">我的待审媒体</text>
-      <text class="privacy-setting-body">待审或未通过的媒体仅你可见，可预览、查询状态或重新提审。</text>
-      <text wx:if="{{mediaAccessDenied}}" class="privacy-setting-body">当前账号暂不能读取本人媒体，请刷新重试</text>
-      <cy-btn wx:if="{{mediaAuthRequired}}" variant="secondary" bindtap="onMediaLogin">登录查看本人媒体</cy-btn>
-      <cy-btn wx:else variant="secondary" loading="{{mediaLoading}}" disabled="{{mediaLoading || !!mediaBusyId}}" aria-disabled="{{mediaLoading || !!mediaBusyId}}" bindtap="loadOwnMedia">刷新媒体状态</cy-btn>
-      <cy-inline-error wx:if="{{mediaError}}" title="{{mediaError}}" action="刷新" bind:action="loadOwnMedia" />
-      <text wx:if="{{!mediaAuthRequired && !mediaLoading && !mediaError && !mediaRows.length}}" class="privacy-setting-body">暂无已上传媒体</text>
-      <cy-card wx:for="{{mediaRows}}" wx:key="assetId" class="privacy-media-row">
-        <text>{{item.typeLabel}} #{{item.assetId}} · {{item.stateLabel}}</text>
-        <text wx:if="{{item.reviewReason}}" class="privacy-setting-body">{{item.reviewReason}}</text>
-        <view class="privacy-actions">
-          <cy-btn variant="secondary" size="sm" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="previewOwnMedia">本人预览</cy-btn>
-          <cy-btn variant="secondary" size="sm" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="checkOwnMedia">查询状态</cy-btn>
+      <!-- 设置态只留一张分组列表:每行标题 + 右侧一个动作;待审媒体点开才展开 -->
+      <view class="privacy-list">
+        <view class="privacy-row">
+          <text class="privacy-row__title">附近的人位置分享</text>
+          <cy-btn variant="secondary" size="sm" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" bindtap="disablePresenceSharing">关闭</cy-btn>
         </view>
-        <cy-btn wx:if="{{item.reviewState === 'REJECTED' || item.reviewState === 'UNAVAILABLE'}}" variant="secondary" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="retryOwnMedia">重新提审</cy-btn>
-        <cy-btn wx:if="{{item.reviewState === 'APPROVED'}}" variant="secondary" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="copyApprovedMedia">复制已审链接</cy-btn>
-      </cy-card>
-      <cy-btn wx:if="{{mediaHasMore}}" variant="secondary" loading="{{mediaLoading}}" disabled="{{mediaLoading || !!mediaBusyId}}" aria-disabled="{{mediaLoading || !!mediaBusyId}}" bindtap="loadOlderMedia">加载更早媒体</cy-btn>
-      <view wx:if="{{mediaPreviewUrl}}" class="privacy-media-preview">
-        <image wx:if="{{mediaPreviewType === 'IMAGE'}}" src="{{mediaPreviewUrl}}" mode="widthFix" binderror="mediaPreviewFailed" />
-        <audio wx:elif="{{mediaPreviewType === 'AUDIO'}}" src="{{mediaPreviewUrl}}" controls="{{true}}" binderror="mediaPreviewFailed" />
-        <cy-media-model-preview id="authorMediaModel" wx:elif="{{mediaPreviewType === 'MODEL3D'}}" src="{{mediaPreviewUrl}}" bind:error="mediaPreviewFailed" />
-        <cy-btn wx:if="{{mediaPreviewType === 'MODEL3D'}}" variant="secondary" bindtap="rotateMediaModel">转动模型</cy-btn>
-        <cy-btn variant="secondary" bindtap="closeMediaPreview">关闭本人预览</cy-btn>
+        <view class="privacy-row">
+          <text class="privacy-row__title">漫游定位</text>
+          <cy-btn variant="secondary" size="sm" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" bindtap="withdrawRoamLocationConsent">撤回</cy-btn>
+        </view>
+        <view class="privacy-row" bindtap="toggleMediaPanel" aria-role="button" aria-label="{{mediaOpen ? '收起我的待审媒体' : '查看我的待审媒体'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="privacy-row__title">我的待审媒体</text>
+          <text class="privacy-row__more">{{mediaOpen ? '收起' : '查看'}}</text>
+        </view>
       </view>
-      <text class="privacy-setting-title">附近的人位置分享</text>
-      <text class="privacy-setting-body">关闭后立即停止向其他用户展示位置，不影响自己的定位和轨迹。</text>
-      <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="privacy-action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>
-      <text class="privacy-setting-title">漫游定位</text>
-      <text class="privacy-setting-body">撤回后，漫游不会继续读取实时位置或记录新的轨迹。</text>
-      <!-- ghost(玻璃底)在这张卡上几乎与卡面同色,看着像禁用态;撤回是可点的真动作 ⇒ 收到 secondary(描边) -->
-      <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="privacy-action" bindtap="withdrawRoamLocationConsent">撤回漫游定位同意</cy-btn>
+      <view wx:if="{{mediaOpen}}" class="privacy-media">
+        <text wx:if="{{mediaAccessDenied}}" class="privacy-setting-body">当前账号暂不能读取本人媒体，请刷新重试</text>
+        <cy-btn wx:if="{{mediaAuthRequired}}" variant="secondary" bindtap="onMediaLogin">登录查看本人媒体</cy-btn>
+        <cy-btn wx:else variant="secondary" loading="{{mediaLoading}}" disabled="{{mediaLoading || !!mediaBusyId}}" aria-disabled="{{mediaLoading || !!mediaBusyId}}" bindtap="loadOwnMedia">刷新媒体状态</cy-btn>
+        <cy-inline-error wx:if="{{mediaError}}" title="{{mediaError}}" action="刷新" bind:action="loadOwnMedia" />
+        <text wx:if="{{!mediaAuthRequired && !mediaLoading && !mediaError && !mediaRows.length}}" class="privacy-setting-body">暂无已上传媒体</text>
+        <cy-card wx:for="{{mediaRows}}" wx:key="assetId" class="privacy-media-row">
+          <text>{{item.typeLabel}} #{{item.assetId}} · {{item.stateLabel}}</text>
+          <text wx:if="{{item.reviewReason}}" class="privacy-setting-body">{{item.reviewReason}}</text>
+          <view class="privacy-actions">
+            <cy-btn variant="secondary" size="sm" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="previewOwnMedia">本人预览</cy-btn>
+            <cy-btn variant="secondary" size="sm" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="checkOwnMedia">查询状态</cy-btn>
+          </view>
+          <cy-btn wx:if="{{item.reviewState === 'REJECTED' || item.reviewState === 'UNAVAILABLE'}}" variant="secondary" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="retryOwnMedia">重新提审</cy-btn>
+          <cy-btn wx:if="{{item.reviewState === 'APPROVED'}}" variant="secondary" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="copyApprovedMedia">复制已审链接</cy-btn>
+        </cy-card>
+        <cy-btn wx:if="{{mediaHasMore}}" variant="secondary" loading="{{mediaLoading}}" disabled="{{mediaLoading || !!mediaBusyId}}" aria-disabled="{{mediaLoading || !!mediaBusyId}}" bindtap="loadOlderMedia">加载更早媒体</cy-btn>
+        <view wx:if="{{mediaPreviewUrl}}" class="privacy-media-preview">
+          <image wx:if="{{mediaPreviewType === 'IMAGE'}}" src="{{mediaPreviewUrl}}" mode="widthFix" binderror="mediaPreviewFailed" />
+          <audio wx:elif="{{mediaPreviewType === 'AUDIO'}}" src="{{mediaPreviewUrl}}" controls="{{true}}" binderror="mediaPreviewFailed" />
+          <cy-media-model-preview id="authorMediaModel" wx:elif="{{mediaPreviewType === 'MODEL3D'}}" src="{{mediaPreviewUrl}}" bind:error="mediaPreviewFailed" />
+          <cy-btn wx:if="{{mediaPreviewType === 'MODEL3D'}}" variant="secondary" bindtap="rotateMediaModel">转动模型</cy-btn>
+          <cy-btn variant="secondary" bindtap="closeMediaPreview">关闭本人预览</cy-btn>
+        </view>
+      </view>
     </block>
   </view>
 </cy-sheet>

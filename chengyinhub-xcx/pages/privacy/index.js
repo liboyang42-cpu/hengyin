@@ -9,7 +9,7 @@ Page({
     submitting: false,
     mediaRows: [],
     mediaLoading: false,
-    mediaHasMore: false,
+    mediaHasMore: false, mediaOpen: false, // 设置态「我的待审媒体」默认收起
     mediaBusyId: '',
     mediaError: '',
     mediaAuthRequired: false,
@@ -206,7 +206,7 @@ Page({
     const viewer = this.selectComponent('#authorMediaModel');
     if (viewer && typeof viewer.rotate === 'function') viewer.rotate();
   },
-  closeMediaPreview() { this.setData({ mediaPreviewUrl: '', mediaPreviewType: '' }); },
+  closeMediaPreview() { this.setData({ mediaPreviewUrl: '', mediaPreviewType: '' }); }, toggleMediaPanel() { this.setData({ mediaOpen: !this.data.mediaOpen }); },
   copyApprovedMedia(event) {
     const row = this.ownMediaFromEvent(event);
     if (!row || row.reviewState !== 'APPROVED' || this.data.mediaBusyId) return;

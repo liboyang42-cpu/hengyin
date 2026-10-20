@@ -12,12 +12,10 @@ page { background: var(--cy-color-bg-page); }
 .privacy-check-row { display: flex; align-items: center; white-space: nowrap; font-size: var(--cy-font-caption); color: var(--cy-text-body); }
 .privacy-checkbox { transform: scale(.8); margin-right: var(--cy-space-1); }
 .privacy-doc { color: var(--cy-text-title); text-decoration: underline; }
-.privacy-body { display: block; color: var(--cy-text-body); font-size: var(--cy-font-body); line-height: var(--cy-leading-loose); }
 /* 城瘾无全站链接色 token(全局规范 §1.3):原来是一个自造的淡紫链接色,收回 title 色,
    可点性由《书名号》+ 下划线表达 */
 .privacy-link { margin-top: var(--cy-space-3-5); color: var(--cy-text-title); font-size: var(--cy-font-body); text-decoration: underline; }
 .privacy-error { display: block; margin-top: var(--cy-space-3); }
-.privacy-setting-title { display: block; margin-top: var(--cy-space-5); font-size: var(--cy-font-title); font-weight: 600; }
 .privacy-setting-body { display: block; margin-top: var(--cy-space-1-5); color: var(--cy-text-body); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); }
 /* 两颗并排：不同意在左、同意在右。原来是上下堆叠(各自 display:block + margin-top)。
    同意钮给 flex:1.4 —— 它是主动作，比"暂不同意"宽一些，视觉上分出主次。 */
@@ -32,3 +30,11 @@ button.privacy-agree::after { border: 0; }
 .privacy-media-preview { margin-top: var(--cy-space-3); }
 .privacy-media-preview image { width: 100%; }
 .privacy-media-preview cy-media-model-preview { display: block; width: 100%; height: 480rpx; }
+
+/* 设置态:一张分组列表(Revolut 式),每行标题 + 右侧一个动作 */
+.privacy-list { margin-top: var(--cy-space-4); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-comp-card-bg); }
+.privacy-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); min-height: 112rpx; }
+.privacy-row + .privacy-row { border-top: 1rpx solid var(--cy-color-border-subtle); }
+.privacy-row__title { flex: 1; min-width: 0; color: var(--cy-text-title); font-size: var(--cy-font-body); }
+.privacy-row__more { color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
+.privacy-media { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }

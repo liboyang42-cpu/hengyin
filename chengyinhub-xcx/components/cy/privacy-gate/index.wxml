@@ -9,7 +9,7 @@
   mask-closable="{{false}}"
 >
   <view class="pg">
-    <text class="pg__lead">我们只在你使用相关功能时处理必要信息，用于提供漫游、打卡和附近推荐等服务。</text>
+    <text class="pg__lead">我们只在你使用相关功能时处理必要信息。</text>
     <checkbox-group class="pg-check" bindchange="toggleService"><label class="pg-check-row"><checkbox class="pg-checkbox" value="service" checked="{{serviceAgreed}}"/><text>我已阅读并同意</text><view class="pg-doc" catchtap="openService" aria-role="button" aria-label="阅读用户服务协议" hover-class="cy-pressed" hover-stay-time="80">《用户服务协议》</view><view class="pg-doc" catchtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">《隐私保护指引》</view></label></checkbox-group>
     <!-- 微信强制:同意必须是原生 button open-type,不能收编 cy-btn。
          2026-09-18 对齐 pages/privacy 已定方案:两颗并排,不同意在左(secondary 描边)、同意在右;
