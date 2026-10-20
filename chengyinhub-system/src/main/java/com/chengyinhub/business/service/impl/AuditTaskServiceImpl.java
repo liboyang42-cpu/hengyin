@@ -40,6 +40,7 @@ import com.chengyinhub.common.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
@@ -83,6 +84,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private static final long REPORT_RATE_LIMIT_WINDOW_SECONDS = 3600L;
     /** 举报限频阈值:窗口内新建举报单达到此数即拒绝后续举报。 */
     private static final int REPORT_RATE_LIMIT_MAX = 20;
+
+    /**
+     * 新建审核单的处理时限(小时),deadline_at = submitted_at + 时限;仅作用于新单,存量行不回填。
+     * 商业立项/开售审核恒标 HIGH,按主题类 48h 计,不走高风险 4h。
+     */
+    @Value("${chengyin.audit.deadline-hours.high-risk:4}")
+    private int highRiskDeadlineHours = 4;
+    @Value("${chengyin.audit.deadline-hours.community:24}")
+    private int communityDeadlineHours = 24;
+    @Value("${chengyin.audit.deadline-hours.activity-topic:48}")
+    private int activityTopicDeadlineHours = 48;
+    @Value("${chengyin.audit.deadline-hours.default:24}")
+    private int defaultDeadlineHours = 24;
 
     @Autowired
     private AuditTaskMapper auditTaskMapper;
@@ -173,6 +187,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         task.setRiskLevel("NORMAL");
         task.setStatus(AuditTask.STATUS_PENDING);
         task.setSubmittedAt(DateUtils.getNowDate());
+        task.setDeadlineAt(deadlineAt(task.getBizType(), task.getRiskLevel(), task.getSubmittedAt()));
         task.setSnapshotJson(snapshotJson);
         task.setVersion(0);
         task.setCreateTime(DateUtils.getNowDate());
@@ -203,6 +218,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         task.setRiskLevel("HIGH");
         task.setStatus(AuditTask.STATUS_PENDING);
         task.setSubmittedAt(DateUtils.getNowDate());
+        task.setDeadlineAt(deadlineAt(task.getBizType(), task.getRiskLevel(), task.getSubmittedAt()));
         task.setSnapshotJson(snapshotJson);
         task.setVersion(0);
         task.setCreateTime(DateUtils.getNowDate());
@@ -271,6 +287,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         task.setRiskLevel("NORMAL");
         task.setStatus(AuditTask.STATUS_PENDING);
         task.setSubmittedAt(DateUtils.getNowDate());
+        task.setDeadlineAt(deadlineAt(task.getBizType(), task.getRiskLevel(), task.getSubmittedAt()));
         task.setSnapshotJson(snapshotJson);
         task.setVersion(0);
         task.setCreateTime(DateUtils.getNowDate());
@@ -392,6 +409,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         task.setRiskLevel(riskLevel != null ? riskLevel : "NORMAL");
         task.setStatus(AuditTask.STATUS_PENDING);
         task.setSubmittedAt(DateUtils.getNowDate());
+        task.setDeadlineAt(deadlineAt(task.getBizType(), task.getRiskLevel(), task.getSubmittedAt()));
         task.setSnapshotJson(snapshotJson);
         task.setVersion(0);
         task.setCreateTime(DateUtils.getNowDate());
@@ -1166,9 +1184,47 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return auditTaskMapper.selectAuditTaskById(id);
     }
 
+    /** 工作台列表:按处理时限排队(最紧急在前,无 deadline 的历史单垫底)。 */
     @Override
     public List<AuditTask> selectAuditTaskList(AuditTask auditTask) {
-        return auditTaskMapper.selectAuditTaskList(auditTask);
+        return auditTaskMapper.selectAuditTaskQueue(auditTask);
+    }
+
+    /**
+     * 认领待审单。认领只是协作提示,不是锁:review() 不校验 current_assignee,
+     * 其他有 business:audit:review 权限的审核员仍可直接处理已认领单(保持既有行为,
+     * 避免认领人离岗时单子无法流转);处理后 current_assignee 改写为实际处理人。
+     */
+    @Override
+    public void claim(Long taskId, Long operatorId) {
+        if (taskId == null || operatorId == null) {
+            throw new IllegalArgumentException("认领参数不完整");
+        }
+        if (auditTaskMapper.claimAuditTask(taskId, operatorId, DateUtils.getNowDate()) != 1) {
+            throw new ServiceException("该任务已被认领或已处理");
+        }
+    }
+
+    /** 新单处理时限:submittedAt + slaHours(bizType, riskLevel)。 */
+    Date deadlineAt(String bizType, String riskLevel, Date submittedAt) {
+        return submittedAt == null ? null
+                : new Date(submittedAt.getTime() + slaHours(bizType, riskLevel) * 3600_000L);
+    }
+
+    int slaHours(String bizType, String riskLevel) {
+        if (AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(bizType) || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(bizType)) {
+            return activityTopicDeadlineHours;
+        }
+        if ("HIGH".equals(riskLevel)) {
+            return highRiskDeadlineHours;
+        }
+        if (AuditTask.BIZ_ACTIVITY.equals(bizType) || AuditTask.BIZ_TOPIC.equals(bizType)) {
+            return activityTopicDeadlineHours;
+        }
+        if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType) || AuditTask.BIZ_SQUARE.equals(bizType)) {
+            return communityDeadlineHours;
+        }
+        return defaultDeadlineHours;
     }
 
     private void appendDecisionAudit(AuditTask task, Long operatorId, AuditReviewDTO request,

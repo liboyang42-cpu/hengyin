@@ -50,4 +50,7 @@ public interface IAuditTaskService {
     AuditTask selectAuditTaskById(Long id);
 
     List<AuditTask> selectAuditTaskList(AuditTask auditTask);
+
+    /** 认领待审单(仅未被认领的 status=0 单);已被认领或已处理抛 ServiceException。 */
+    void claim(Long taskId, Long operatorId);
 }
