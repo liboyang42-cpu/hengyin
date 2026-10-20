@@ -984,8 +984,10 @@ public class ApiTopicController extends BaseController {
             q.setBizId(topicId);
             java.util.List<com.chengyinhub.business.domain.AuditTask> tasks = auditTaskService.selectAuditTaskList(q);
             if (tasks != null) for (com.chengyinhub.business.domain.AuditTask t : tasks) {
-                if (com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(t.getStatus())
-                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(t.getStatus())) {
+                // AUDIT-INT-5:开着的举报单不顶替抽检单(两者各占一个开放槽)
+                if ((com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(t.getStatus())
+                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(t.getStatus()))
+                        && !t.isOpenReport()) {
                     return;
                 }
             }

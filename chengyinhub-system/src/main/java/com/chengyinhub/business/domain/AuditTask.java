@@ -16,6 +16,27 @@ public class AuditTask extends BaseEntity {
     public static final Integer STATUS_ESCALATED = 3;
     public static final Integer STATUS_CANCELLED = 4;
 
+    /** 举报单来源。 */
+    public static final String SOURCE_REPORT = "report";
+
+    /**
+     * AUDIT-INT-5:这几类内容的举报单有独立开放槽(open_guard=2),与内容审核单(open_guard=1)可并存;
+     * 须与 migration_audit_report_lane_20261020.sql 的生成列表达式一致。其余类型举报仍与审核单共用一个槽。
+     */
+    public static final java.util.Set<String> REPORT_LANE_BIZ_TYPES =
+            java.util.Set.of("TOPIC", "TEMPLATE", "TEMPLATE_LIBRARY", "ACTIVITY");
+
+    /** 是否进举报独立槽的来源/类型组合。 */
+    public static boolean isReportLane(String bizType, String sourceType) {
+        return SOURCE_REPORT.equals(sourceType) && REPORT_LANE_BIZ_TYPES.contains(bizType);
+    }
+
+    /** 独立槽里未结(待审/升级)的举报单 —— 不属于内容审核槽,不挡作者编辑/重提、也不吸收内容审核。 */
+    public boolean isOpenReport() {
+        return isReportLane(getBizType(), getSourceType())
+                && (STATUS_PENDING.equals(getStatus()) || STATUS_ESCALATED.equals(getStatus()));
+    }
+
     /** 内容举报 bizType(对齐既有 submit 约定·大写);软封口径:SQUARE/COMMENT 用 status(下2/复1),CLUB_POST(_COMMENT) 用 del_flag(下2/复0),IM 用 status(BLOCKED/NORMAL) */
     public static final String BIZ_MEDIA_ASSET = "MEDIA_ASSET";
     public static final String BIZ_SQUARE = "SQUARE";

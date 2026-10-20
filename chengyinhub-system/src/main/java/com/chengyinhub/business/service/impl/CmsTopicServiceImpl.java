@@ -4465,8 +4465,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         query.setBizId(topicId);
         List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
         if (tasks != null) for (AuditTask task : tasks) {
-            if (AuditTask.STATUS_PENDING.equals(task.getStatus())
-                    || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) {
+            // AUDIT-INT-5:举报单在独立槽,不能顶替复核上架单(举报不成立会顺手解除留置)。
+            if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
+                    || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) {
                 return task.getId();
             }
         }

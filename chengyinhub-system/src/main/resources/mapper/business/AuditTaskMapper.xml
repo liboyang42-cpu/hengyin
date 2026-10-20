@@ -58,9 +58,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and version = #{version} and status in (0, 3)
           and biz_type in ('TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW')
     </update>
+    <!-- 内容审核槽(open_guard=1)的未结单;举报单在独立槽(open_guard=2),不在此返回(AUDIT-INT-5) -->
     <select id="selectOpenAuditTaskForUpdate" resultMap="AuditTaskResult">
         <include refid="selectAuditTaskVo"/>
         where biz_type = #{bizType} and biz_id = #{bizId} and status in (0, 3)
+          and not (source_type &lt;=&gt; 'report' and biz_type in ('TOPIC', 'TEMPLATE', 'TEMPLATE_LIBRARY', 'ACTIVITY'))
         order by id desc limit 1 for update
     </select>
 
@@ -174,12 +176,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and version = #{version} and status in (0, 3)
     </update>
 
-    <!-- 申诉单不在此撤销(AUDIT-INT-9):调用方先经 IAuditTaskService#withdrawOpenAppeal 以 WITHDRAWN 结案并通知作者 -->
+    <!-- 申诉单不在此撤销(AUDIT-INT-9):调用方先经 IAuditTaskService#withdrawOpenAppeal 以 WITHDRAWN 结案并通知作者;
+         举报单裁决的是已公开内容,作者改/撤模板不能顺手撤掉别人的举报(AUDIT-INT-5) -->
     <update id="cancelOpenTemplateTasks">
         update audit_task set status = 4, version = version + 1, update_time = now()
         where biz_type = #{bizType} and biz_type in ('TEMPLATE', 'TEMPLATE_LIBRARY')
           and biz_id = #{bizId} and status in (0, 3)
-          and (source_type is null or source_type &lt;&gt; 'appeal')
+          and (source_type is null or source_type not in ('appeal', 'report'))
     </update>
 
     <update id="refreshOpenAuditSnapshot">

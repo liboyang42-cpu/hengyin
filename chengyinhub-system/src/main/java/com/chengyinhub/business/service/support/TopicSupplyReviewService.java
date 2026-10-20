@@ -37,7 +37,11 @@ public class TopicSupplyReviewService {
     public boolean invalidate(Long topicId, Long actorId) {
         List<AuditTask> open = tasks.selectTopicPublicationTasksForUpdate(topicId);
         if (open == null || open.isEmpty()) return false;
+        boolean cancelled = false;
         for (AuditTask task : open) {
+            // AUDIT-INT-5:举报单裁决已公开内容,不随发布审核作废
+            if (task.isOpenReport()) continue;
+            cancelled = true;
             if (tasks.cancelTopicPublicationTaskCas(task.getId(), task.getVersion()) != 1)
                 throw new IllegalStateException("旧审核版本作废失败，请刷新后重试");
             AuditRecord record = new AuditRecord();
@@ -46,7 +50,7 @@ public class TopicSupplyReviewService {
             record.setSnapshotJson(task.getSnapshotJson()); record.setCreateTime(DateUtils.getNowDate());
             if (records.insertAuditRecord(record) != 1) throw new IllegalStateException("供给变更审核记录保存失败");
         }
-        return true;
+        return cancelled;
     }
 
     public AuditTask cancelledReview(Long topicId, String bizType) {

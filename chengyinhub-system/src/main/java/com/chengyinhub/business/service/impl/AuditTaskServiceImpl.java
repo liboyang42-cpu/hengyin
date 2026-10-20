@@ -477,7 +477,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Transactional(rollbackFor = Exception.class)
     public Long reportContent(String bizType, Long bizId, Long reporterId, String reasonText) {
         String snapshot = buildReportSnapshot(bizType, bizId, reasonText);
-        // 幂等:同一内容的多次举报汇聚到同一张未结审核单,避免刷单顶爆工作台;
+        // 幂等:同一内容的多次举报汇聚到同一张未结举报单(独立开放槽,不并进内容审核单),避免刷单顶爆工作台;
         // 但每次举报仍 append 一条 AuditRecord(action=REPORT)留痕 → 举报数=REPORT 记录数、处置记录=记录历史,免迁移。
         Long taskId = findOrCreateOpenTask(bizType, bizId, reporterId, SOURCE_REPORT, "NORMAL", snapshot);
         if (AuditTask.BIZ_HANGOUT.equals(bizType) || AuditTask.BIZ_TEAM.equals(bizType)) {
@@ -511,7 +511,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (reason.isEmpty() || reason.length() > MAX_REPORT_REASON_LENGTH) {
             throw new IllegalArgumentException("请选择举报原因");
         }
-        Long open = findOpenTaskId(bizType, bizId);
+        Long open = findOpenTaskId(bizType, bizId, true);
         if (open != null && reporterId != null) {
             AuditRecord query = new AuditRecord();
             query.setTaskId(open);
@@ -538,7 +538,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
      */
     private Long findOrCreateOpenTask(String bizType, Long bizId, Long submitterId,
                                       String sourceType, String riskLevel, String snapshotJson) {
-        Long open = findOpenTaskId(bizType, bizId);
+        boolean reportLane = SOURCE_REPORT.equals(sourceType);
+        Long open = findOpenTaskId(bizType, bizId, reportLane);
         if (open != null) {
             return open;
         }
@@ -562,7 +563,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         try {
             auditTaskMapper.insertAuditTask(task);
         } catch (org.springframework.dao.DuplicateKeyException dup) {
-            Long again = findOpenTaskId(bizType, bizId);
+            Long again = findOpenTaskId(bizType, bizId, reportLane);
             if (again != null) {
                 return again;
             }
@@ -586,14 +587,25 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
     }
 
-    /** 返回同 bizType+bizId 的未结(PENDING/ESCALATED)审核单 id,无则 null。 */
+    /** 返回同 bizType+bizId 内容审核槽的未结(PENDING/ESCALATED)审核单 id,无则 null;举报单不算。 */
     private Long findOpenTaskId(String bizType, Long bizId) {
+        return findOpenTaskId(bizType, bizId, false);
+    }
+
+    /**
+     * AUDIT-INT-5:主题/玩法/模板广场/活动的举报单与内容审核单各占一个开放槽(open_guard 2 / 1),
+     * 互不复用、互不吸收。reportLane=true 只找未结举报单,false 只找内容审核槽的未结单。
+     * 其余类型(帖子/评论/组局等)仍一个槽,举报照旧汇入已开着的单。
+     */
+    private Long findOpenTaskId(String bizType, Long bizId, boolean reportLane) {
+        boolean split = AuditTask.REPORT_LANE_BIZ_TYPES.contains(bizType);
         AuditTask q = new AuditTask();
         q.setBizType(bizType);
         q.setBizId(bizId);
         for (AuditTask existing : auditTaskMapper.selectAuditTaskList(q)) {
-            if (AuditTask.STATUS_PENDING.equals(existing.getStatus())
-                    || AuditTask.STATUS_ESCALATED.equals(existing.getStatus())) {
+            if ((AuditTask.STATUS_PENDING.equals(existing.getStatus())
+                    || AuditTask.STATUS_ESCALATED.equals(existing.getStatus()))
+                    && (!split || SOURCE_REPORT.equals(existing.getSourceType()) == reportLane)) {
                 return existing.getId();
             }
         }
@@ -1179,7 +1191,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (auditAppealMapper.selectByBizMember(bizType, bizId, memberId) != null) {
             throw governanceError(ERROR_APPEAL_DUPLICATE, "该内容已申诉过，每条内容只能申诉一次", HttpStatus.CONFLICT);
         }
-        AuditTask rejected = latestTask(bizType, bizId);
+        AuditTask rejected = latestContentTask(bizType, bizId);
         if (rejected == null || !AuditTask.STATUS_REJECTED.equals(rejected.getStatus()) || !content.down) {
             throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "只能对被驳回或下架的内容申诉", HttpStatus.CONFLICT);
         }
@@ -1266,8 +1278,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean open = false;
         if (tasks != null) {
             for (AuditTask task : tasks) {
-                if (AuditTask.STATUS_PENDING.equals(task.getStatus())
-                        || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) open = true;
+                if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
+                        || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) open = true;
                 AuditTask safe = applicantTask(task);
                 if (!memberId.equals(task.getSubmitterId())) safe.setSubmitterId(null);
                 List<AuditRecord> timeline = applicantTimeline(listAuditRecords(task.getId()));
@@ -1512,9 +1524,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
                 imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
-                // AUDIT-G2-2:举报不成立 = 内容维持原状(不重发、不进 Beta);留置中的主题例外,过审即人工复核通过。
-                if (up && SOURCE_REPORT.equals(task.getSourceType())
-                        && !TopicContentSafetyHold.isHeld(cmsTopicMapper.selectCmsTopicById(bizId))) {
+                // AUDIT-G2-2:举报不成立 = 内容维持原状(不重发、不进 Beta)。
+                // AUDIT-INT-5:举报单已在独立槽,不再与复核上架单合并 ⇒ 举报不成立也不能解除内容安全留置
+                // (留置只由内容审核槽的复核单解除,审核员在那张单上看的才是被机审扣下的图)。
+                if (up && SOURCE_REPORT.equals(task.getSourceType())) {
                     return;
                 }
                 if (up) mediaPublicationGuard.requireTopicPublication(bizId);
@@ -2187,6 +2200,18 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     approved ? 1L : 2L, approved ? 1L : 0L) == 1;
         }
         return false;
+    }
+
+    /** 同内容最新一张审核单,跳过独立槽里未结的举报单(AUDIT-INT-5:新举报不改变「最近一次审核结论」)。 */
+    private AuditTask latestContentTask(String bizType, Long bizId) {
+        AuditTask query = new AuditTask();
+        query.setBizType(bizType);
+        query.setBizId(bizId);
+        List<AuditTask> tasks = auditTaskMapper.selectAuditTaskList(query);
+        if (tasks != null) for (AuditTask task : tasks) {
+            if (!task.isOpenReport()) return task;
+        }
+        return null;
     }
 
     /** 同内容最新一张审核单(selectAuditTaskList 的 get(0) = 最新)。 */
