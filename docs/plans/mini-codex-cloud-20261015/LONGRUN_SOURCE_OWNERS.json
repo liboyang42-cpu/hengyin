@@ -69,7 +69,14 @@
       "latest_task": "OWN-C03-14",
       "source_base_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
       "exact_scope": "SplitA only: explicit nonempty collaboratorIds containing null or <=0 cannot satisfy existing edit-detail caller positive-ID shape. Existing draft restore preserves such list and save sends it unchanged. Validate before any aggregate write in create and FULL update; fail entire write with existing IllegalArgumentException/default AjaxResult500 path and short safe message, do not silently filter/clear attribution. Keep omitted list/[]/existing omission guard and WHITELIST behavior. Preserve repeated positive IDs and order; no membership/permission/invitation/DDL rule.",
-      "actual_writer": 0
+      "actual_writer": 0,
+      "independent_acceptance_conflict_grant": {
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "state": "AUTHORIZED_CONFLICT_RESOLUTION_ONLY",
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
+        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer"
+      }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicCreateDTO.java": {
       "owner": "CORE/C03",
@@ -98,7 +105,14 @@
       "previous_worker": "feature_points_rules_sol",
       "transfer_record": "E01_19_SOURCE_CLAIM.json",
       "writer_status": "STOPPED_AFTER_DELIVERY",
-      "verification": "ORDINARY10_PASS_LOCAL_REPORTED_PUBLIC_REPORT_PENDING"
+      "verification": "ORDINARY10_PASS_LOCAL_REPORTED_PUBLIC_REPORT_PENDING",
+      "independent_acceptance_conflict_grant": {
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "state": "AUTHORIZED_CONFLICT_RESOLUTION_ONLY",
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_write_authority",
+        "original_source_owner_and_lock": "Retained, original source frozen; no new Cloud writer"
+      }
     },
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java": {
       "owner": "CORE/C04",
@@ -5156,10 +5170,15 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "AUTHORIZED_MERGE_PREVIEW_PENDING_EXACT_CONFLICT_LIST",
-    "authorized_exact_conflict_paths": [],
+    "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
+    "authorized_exact_conflict_paths": [
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+    ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
     "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior source results inherited",
-    "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task."
+    "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
+    "conflict_scope": "Only actual #385 conflicts, preserve both source contracts/validation; no regression write grant or broader domain permission.",
+    "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview"
   }
 }

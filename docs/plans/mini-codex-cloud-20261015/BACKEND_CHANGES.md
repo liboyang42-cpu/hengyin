@@ -1,6 +1,6 @@
 ## 当前独立整合授权：本地root单写者，先预演再登记冲突
 
-用户已明确允许“独立整合与现有CI验收”：范围为移植分支 `integrate/master-port-20261019` 与 #385、#387、#388、#390、#391，在 `codex/final-backend-acceptance-20261020` 独立分支处理。本地root为唯一集成写者；先固定各公开来源SHA并预演合并，实际冲突路径交C00逐项登记后处理。当前未报告组合候选SHA或冲突路径，不授予笼统源码写权。三队源码及原归属保持冻结，C00仅维护控制文档，不派新作者、不编译测试或触发CI。
+用户已明确允许“独立整合与现有CI验收”：范围为移植分支 `integrate/master-port-20261019` 与 #385、#387、#388、#390、#391，在 `codex/final-backend-acceptance-20261020` 独立分支处理。本地root为唯一集成写者；只读merge-tree预演已确认：`b548cdc4d098defb5c4857c793897ca79668d579` 合 #391 `8bc728ad99d0c748698c5210343e6f4ec782e894` 无冲突，再合 #385 `b19200a3ad6fc19319665fe5b81ad6161fd9dac7` 恰有两处冲突。C00仅授权该分支解决 `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java`、`chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java`，保留两边合同与校验，原来源及锁不变。#387／#388／#390后续预演、新冲突或必要回归文件须另列；当前不授予回归文件或其他域写权，组合候选尚未报告／NOT_RUN。三队源码及原归属保持冻结，C00仅维护控制文档，不派新作者、不编译测试或触发CI。
 
 固定 `8bc728ad99d0c748698c5210343e6f4ec782e894` 的 Backend tests、Funds MySQL IT、Mini program static checks 已直接核读为 **COMPLETED/SUCCESS**；此前pending读数保留为历史。该源五链HTTP PASS与九批41f83真库存储仍分源，均不继承到尚未运行的最终组合。
 

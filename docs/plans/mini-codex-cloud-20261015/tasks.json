@@ -3258,11 +3258,16 @@
       "authorization": "User approved independent integration and existing CI acceptance.",
       "integration_writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "AUTHORIZED_MERGE_PREVIEW_PENDING_EXACT_CONFLICT_LIST",
-      "authorized_exact_conflict_paths": [],
+      "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
+      "authorized_exact_conflict_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
       "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
       "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior source results inherited",
-      "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task."
+      "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
+      "conflict_scope": "Only actual #385 conflicts, preserve both source contracts/validation; no regression write grant or broader domain permission.",
+      "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview"
     }
   },
   "followup_lanes": [

@@ -2642,13 +2642,13 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "AUTHORIZED_MERGE_PREVIEW_PENDING_EXACT_CONFLICT_LIST",
+    "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
     "creation_or_candidate_sha": "NOT_REPORTED",
     "port_source": {
       "pr": 386,
       "branch": "integrate/master-port-20261019",
       "recorded_integration_sha": "b548cdc4d098defb5c4857c793897ca79668d579",
-      "source_role": "Previously recorded port candidate; root must freeze actual integration starting SHA separately."
+      "source_role": "Exact integration preview starting source; final combination remains unreported and NOT_RUN."
     },
     "source_prs": [
       {
@@ -2700,9 +2700,19 @@
     ],
     "sequence": "Local writer freezes actual public source SHAs and previews merges first; reports actual conflicts for C00 exact-path registration before editing conflict resolutions.",
     "conflict_write_authority": {
-      "state": "PENDING_ACTUAL_PREVIEW",
-      "authorized_exact_paths": [],
-      "blanket_source_write_grant": false
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS",
+      "authorized_exact_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
+      "scope": "Resolve only actual #385 merge conflicts while preserving both sources existing contracts and validation. No independent feature or policy change.",
+      "blanket_source_write_grant": false,
+      "regression_file_write_authorized": false,
+      "additional_paths": "List actual new conflicts or required regression paths for separate C00 registration before editing.",
+      "original_source_ownership": "Retained; three-team sources stay frozen. This branch-scoped integration grant creates no Cloud writer and does not transfer original development ownership.",
+      "excluded": "No master write, deployment, production migration, new entry, network/212/CI change, Cloud build/test/CI execution."
     },
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
@@ -2719,6 +2729,33 @@
       "network/212/CI configuration changes",
       "new Cloud team"
     ],
-    "external_merge_observation": "PR391 was externally merged to master at a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18; this observation neither performs nor authorizes a master merge by this integration task."
+    "external_merge_observation": "PR391 was externally merged to master at a6ec8bbdadd88ac4fb83bdab6f78e3a976ea3f18; this observation neither performs nor authorizes a master merge by this integration task.",
+    "merge_preview": {
+      "method": "Read-only merge-tree preview reported by integration writer; C00 did not execute merge or build.",
+      "base_sha": "b548cdc4d098defb5c4857c793897ca79668d579",
+      "steps": [
+        {
+          "pr": 391,
+          "source_sha": "8bc728ad99d0c748698c5210343e6f4ec782e894",
+          "result": "CLEAN"
+        },
+        {
+          "pr": 385,
+          "source_sha": "b19200a3ad6fc19319665fe5b81ad6161fd9dac7",
+          "result": "EXACTLY_TWO_CONFLICTS",
+          "conflict_paths": [
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+          ]
+        }
+      ],
+      "remaining_prs": [
+        387,
+        388,
+        390
+      ],
+      "remaining_preview": "NOT_REPORTED; no additional conflict paths authorized",
+      "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior result inherited"
+    }
   }
 }
