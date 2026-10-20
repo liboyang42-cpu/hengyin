@@ -93,6 +93,10 @@ class RoamSessionWriteMybatisIntegrationTest {
                 + "del_flag INT, create_time DATETIME(3), UNIQUE KEY(member_id,badge_code,source_id)) ENGINE=InnoDB");
         db.execute("CREATE TABLE member_growth(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT UNIQUE, level_no INT,"
                 + "exp_value INT, last_active_time DATETIME, create_time DATETIME, update_time DATETIME) ENGINE=InnoDB");
+        // GrowthServiceImpl.addExp 同事务写经验获得明细；建表取自原迁移(回填段依赖本 IT 不建的 growth_mission_progress，不执行)。
+        String earnedDdl = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "sql/migration_member_exp_earned_20261011.sql")), java.nio.charset.StandardCharsets.UTF_8);
+        db.execute(withoutLineComments(earnedDdl).split(";")[0]);
         db.execute("CREATE TABLE roam_fog_tile(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, session_id BIGINT,"
                 + "geohash7 VARCHAR(12), revealed_at DATETIME, UNIQUE KEY(member_id,geohash7)) ENGINE=InnoDB");
         db.execute("CREATE TABLE roam_poi_found(id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, poi_id BIGINT,"
@@ -120,6 +124,7 @@ class RoamSessionWriteMybatisIntegrationTest {
         db.update("DELETE FROM roam_poi_reward_log");
         db.update("DELETE FROM roam_session_record_archive");
         db.update("DELETE FROM member_growth");
+        db.update("DELETE FROM member_exp_earned");
         db.update("DELETE FROM roam_badge_delivery");
         db.update("DELETE FROM roam_badge_reconcile_cursor");
         db.update("DELETE FROM player_badge");
