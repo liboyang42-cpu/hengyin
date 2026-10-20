@@ -92,4 +92,9 @@ public interface CmsMemberTemplateMapper
      * @return 结果
      */
     public int deleteCmsMemberTemplateByIds(Long[] ids);
+
+    /** 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审(0/0/0)，与 applyAuditDecision 的待审前置对称。 */
+    int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
+                            @Param("fromStatus") Long fromStatus, @Param("fromCheckStatus") Integer fromCheckStatus,
+                            @Param("fromPublishStatus") Long fromPublishStatus);
 }

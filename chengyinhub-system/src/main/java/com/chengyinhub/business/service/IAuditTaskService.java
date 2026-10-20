@@ -68,4 +68,11 @@ public interface IAuditTaskService {
 
     /** 认领待审单(仅未被认领的 status=0 单);已被认领或已处理抛 ServiceException。 */
     void claim(Long taskId, Long operatorId);
+
+    /** 作者对自己被驳回/下架的活动、主题、玩法、模板广场条目申诉；每内容每人一次，生成 source=appeal 审核任务。 */
+    com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+                                                             String reason, String evidenceJson);
+
+    /** 作者只读：自己内容的审核轮次与时间线、申诉状态、是否可申诉。非作者抛 403。 */
+    java.util.Map<String, Object> contentTimeline(String bizType, Long bizId, Long memberId);
 }

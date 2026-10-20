@@ -75,6 +75,17 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public static final String ERROR_REVERT_EXPIRED = "REVERT_EXPIRED";
     public static final String ERROR_REVIEW_KEY_REUSED = "AUDIT_REVIEW_IDEMPOTENCY_KEY_REUSED";
     public static final String ERROR_REVIEW_FORBIDDEN = "AUDIT_REVIEW_REPLAY_FORBIDDEN";
+    public static final String ERROR_APPEAL_BAD_REQUEST = "APPEAL_BAD_REQUEST";
+    public static final String ERROR_APPEAL_FORBIDDEN = "APPEAL_FORBIDDEN";
+    public static final String ERROR_APPEAL_NOT_ELIGIBLE = "APPEAL_NOT_ELIGIBLE";
+    public static final String ERROR_APPEAL_DUPLICATE = "APPEAL_DUPLICATE";
+    public static final String ERROR_APPEAL_STALE = "APPEAL_STALE";
+    /** 作者申诉生成的审核任务来源；裁决 ACCEPTED 走既有通过路径恢复内容。 */
+    public static final String SOURCE_APPEAL = "appeal";
+    private static final int MAX_APPEAL_REASON_LENGTH = 500;
+    private static final int MAX_APPEAL_EVIDENCE_LENGTH = 4000;
+    /** 申诉无紧急举报原因时的处理时限，与举报标准首响 24h 同口径。 */
+    private static final long APPEAL_STANDARD_DUE_MINUTES = 24 * 60L;
     private static final int MAX_REASON_LENGTH = 200;
 
     private static final Logger logger = LoggerFactory.getLogger(AuditTaskServiceImpl.class);
@@ -114,6 +125,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Autowired
     private AuditRecordMapper auditRecordMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.AuditAppealMapper auditAppealMapper;
 
     /** 审批写路径必须与不可变审计同事务提交；组件缺失时应用启动失败。 */
     @Autowired
@@ -637,6 +651,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         TemplateReviewLock templateLock = isTemplateTask(task) ? lockTemplateReview(task) : null;
         if (templateLock != null) task = templateLock.task;
+        com.chengyinhub.business.domain.AuditAppeal appeal = SOURCE_APPEAL.equals(task.getSourceType())
+                ? lockAppeal(task) : null;
+        boolean appealAccepted = appeal != null && AuditTask.STATUS_APPROVED.equals(request.getStatus());
         boolean versionedReview = templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
         if (versionedReview && request.getExpectedVersion() == null) {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
@@ -659,8 +676,22 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
+        if (appeal != null && !com.chengyinhub.business.domain.AuditAppeal.STATE_SUBMITTED.equals(appeal.getState())
+                && !com.chengyinhub.business.domain.AuditAppeal.STATE_REVIEWING.equals(appeal.getState())) {
+            throw governanceError(ERROR_APPEAL_STALE, "申诉已处理，请刷新后重试", HttpStatus.CONFLICT);
+        }
+        if (appealAccepted) {
+            // 申诉成立：先把内容从驳回/下架态 CAS 回待审，再走下面既有的通过路径恢复；内容已变化则整单回滚。
+            if (!reopenContent(task, AuditTask.STATUS_REJECTED, null)) {
+                throw governanceError(ERROR_APPEAL_STALE, "内容已变化，申诉无法按原内容恢复，请重新提交审核",
+                        HttpStatus.CONFLICT);
+            }
+            if (templateLock != null) templateLock = lockTemplateReview(task);
+        }
+        // 申诉驳回/升级不改内容(维持原处理)，此时内容不在待审态，不做待审快照比对。
         // 举报单裁决的是「已公开内容是否违规」,不是作者提交的待审版本:不走待审快照/配置复核。
-        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType())) {
+        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType())
+                && (appeal == null || appealAccepted)) {
             assertTemplateReviewCurrent(templateLock, request);
         }
         Date now = DateUtils.getNowDate();
@@ -701,7 +732,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
         // 审核决定 → 内容软封/恢复(REJECT=确认违规下架,APPROVE=举报无效恢复)
         notifyReviewResult(task, request);
-        applyModeration(task, request.getStatus(), request.getReasonText());
+        // 申诉驳回 = 维持原驳回/下架，内容不动；申诉成立复用既有通过路径恢复。
+        if (appeal == null || appealAccepted) applyModeration(task, request.getStatus(), request.getReasonText());
+        if (appeal != null && isTerminalDecision(request.getStatus())
+                && auditAppealMapper.finishAppeal(appeal.getId(), appealAccepted
+                        ? com.chengyinhub.business.domain.AuditAppeal.STATE_ACCEPTED
+                        : com.chengyinhub.business.domain.AuditAppeal.STATE_REJECTED, operatorId, now) != 1) {
+            throw governanceError(ERROR_APPEAL_STALE, "申诉状态已变化，请刷新后重试", HttpStatus.CONFLICT);
+        }
         appendDecisionAudit(task, operatorId, request, record, now);
         return rows;
     }
@@ -822,9 +860,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         } else if (task.getSubmitterId() != null && (SOURCE_REPORT.equals(task.getSourceType()) || !report)) {
             reporters.add(task.getSubmitterId());
         }
+        boolean appeal = !report && SOURCE_APPEAL.equals(task.getSourceType());
         java.util.Map<Long, String> recipients = new java.util.LinkedHashMap<>();
         for (Long reporter : reporters) {
             recipients.put(reporter, report ? (upheld ? "举报已处理" : "举报处理完成")
+                    : appeal ? (upheld ? "申诉未通过" : "申诉已通过")
                     : (upheld ? "审核未通过" : "审核通过"));
         }
         if (report && upheld && AuditTask.BIZ_HANGOUT.equals(task.getBizType())) {
@@ -844,6 +884,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         String outcome = report ? (upheld ? (AuditTask.BIZ_HANGOUT.equals(task.getBizType())
                 ? "举报成立，组局聊天已关闭" : "举报成立，已按规则处理") : (AuditTask.BIZ_HANGOUT.equals(task.getBizType())
                         ? "本次举报不成立，既有处理不变" : "你举报的内容未发现违规"))
+                : appeal ? (upheld ? "你的申诉未通过，原处理维持" : "你的申诉成立，内容已恢复")
                 : (upheld ? "你提交的内容未通过审核" : "你提交的内容已通过审核");
         String reason = request.getReasonText() == null || request.getReasonText().isEmpty()
                 ? outcome : request.getReasonText();
@@ -933,7 +974,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 && !AuditTask.STATUS_REJECTED.equals(task.getStatus())) {
             throw governanceError(ERROR_REVERT_STATE, "当前审核状态不可撤销", HttpStatus.CONFLICT);
         }
-        if (!isRevertSupported(task.getBizType(), task.getStatus())) {
+        if (!isRevertSupported(task)) {
             throw governanceError(ERROR_REVERT_TYPE, "该审批类型或决定方向没有安全 CAS 补偿", HttpStatus.CONFLICT);
         }
         AuditRecord decision = latestDecision(task.getId(), task.getStatus());
@@ -951,6 +992,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         Date now = Date.from(nowInstant);
         Date cutoff = Date.from(nowInstant.minus(REVERT_WINDOW_MINUTES, ChronoUnit.MINUTES));
+        // 与审核/编辑共用 模板 → 投影 → 审核任务 的锁顺序，再做任务 CAS。
+        if (isTemplateTask(task)) lockTemplateReview(task);
         if (auditTaskMapper.revertAuditTaskDecisionCas(taskId, task.getStatus(), task.getVersion(), cutoff, now) != 1) {
             replay = auditMapper.selectByDomainActionRequestForUpdate(
                     "PLATFORM", taskId, "AUDIT_DECISION_REVERTED", requestId);
@@ -968,7 +1011,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw governanceError(ERROR_REVERT_STALE, "审核状态已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
 
-        reverseDecisionEffects(task);
+        reverseDecisionEffects(task, decision);
         AuditRecord reverse = new AuditRecord();
         reverse.setTaskId(taskId);
         reverse.setAction(AuditRecord.ACTION_REVERT);
@@ -1023,8 +1066,230 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         detail.setRevertDeadline(deadline);
         detail.setServerTime(now);
         detail.setCanRevert(actorAllowed && withinWindow && isTerminalDecision(task.getStatus())
-                && isRevertSupported(task.getBizType(), task.getStatus()));
+                && isRevertSupported(task));
         return detail;
+    }
+
+    /**
+     * 作者对自己被驳回/下架的内容申诉(每内容每人一次)。申诉生成一张 source=appeal 的审核任务进入工作台队列，
+     * 快照沿用被驳回的那一单，裁决成立时既有通过路径按同一份快照做内容 CAS。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+                                                                    String reason, String evidenceJson) {
+        if (!isContentDecisionType(bizType) || bizId == null || bizId <= 0L || memberId == null || memberId <= 0L) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉参数不完整", HttpStatus.BAD_REQUEST);
+        }
+        String normalizedReason = reason == null ? null : reason.trim();
+        if (normalizedReason == null || normalizedReason.isEmpty()) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉理由不能为空", HttpStatus.BAD_REQUEST);
+        }
+        if (normalizedReason.length() > MAX_APPEAL_REASON_LENGTH) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉理由不能超过 500 字", HttpStatus.BAD_REQUEST);
+        }
+        String evidence = normalizeEvidence(evidenceJson);
+        ContentState content = contentState(bizType, bizId);
+        if (content == null || content.deleted) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "内容不存在", HttpStatus.NOT_FOUND);
+        }
+        if (!memberId.equals(content.ownerId)) {
+            throw governanceError(ERROR_APPEAL_FORBIDDEN, "只有内容作者可以申诉", HttpStatus.FORBIDDEN);
+        }
+        if (auditAppealMapper.selectByBizMember(bizType, bizId, memberId) != null) {
+            throw governanceError(ERROR_APPEAL_DUPLICATE, "该内容已申诉过，每条内容只能申诉一次", HttpStatus.CONFLICT);
+        }
+        AuditTask rejected = latestTask(bizType, bizId);
+        if (rejected == null || !AuditTask.STATUS_REJECTED.equals(rejected.getStatus()) || !content.down) {
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "只能对被驳回或下架的内容申诉", HttpStatus.CONFLICT);
+        }
+
+        Date now = Date.from(clock.instant());
+        Date dueAt = appealDueAt(rejected, now);
+        AuditTask task = new AuditTask();
+        task.setBizType(bizType);
+        task.setBizId(bizId);
+        task.setSubmitterId(memberId);
+        task.setSourceType(SOURCE_APPEAL);
+        task.setRiskLevel("NORMAL");
+        task.setStatus(AuditTask.STATUS_PENDING);
+        task.setSubmittedAt(now);
+        task.setDeadlineAt(dueAt);
+        task.setSnapshotJson(rejected.getSnapshotJson());
+        task.setVersion(0);
+        task.setCreateTime(now);
+        try {
+            auditTaskMapper.insertAuditTask(task);
+        } catch (org.springframework.dao.DuplicateKeyException open) {
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "该内容已有待处理的审核，请稍后再试", HttpStatus.CONFLICT);
+        }
+
+        com.chengyinhub.business.domain.AuditAppeal appeal = new com.chengyinhub.business.domain.AuditAppeal();
+        appeal.setBizType(bizType);
+        appeal.setBizId(bizId);
+        appeal.setTaskId(task.getId());
+        appeal.setMemberId(memberId);
+        appeal.setReason(normalizedReason);
+        appeal.setEvidenceJson(evidence);
+        appeal.setState(com.chengyinhub.business.domain.AuditAppeal.STATE_SUBMITTED);
+        appeal.setDueAt(dueAt);
+        appeal.setCreatedAt(now);
+        try {
+            if (auditAppealMapper.insertAuditAppeal(appeal) != 1) {
+                throw new ServiceException("申诉保存失败，请重试", HttpStatus.ERROR);
+            }
+        } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+            throw governanceError(ERROR_APPEAL_DUPLICATE, "该内容已申诉过，每条内容只能申诉一次", HttpStatus.CONFLICT);
+        }
+
+        AuditRecord submitted = new AuditRecord();
+        submitted.setTaskId(task.getId());
+        submitted.setAction(AuditRecord.ACTION_SUBMIT);
+        submitted.setOperatorId(memberId);
+        submitted.setReasonCode("APPEAL");
+        submitted.setReasonText(normalizedReason);
+        java.util.Map<String, Object> evidenceSnapshot = new java.util.LinkedHashMap<>();
+        evidenceSnapshot.put("appealId", appeal.getId());
+        evidenceSnapshot.put("appealOfTaskId", rejected.getId());
+        evidenceSnapshot.put("evidence", evidence);
+        try {
+            submitted.setSnapshotJson(new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(evidenceSnapshot));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new ServiceException("申诉记录序列化失败", HttpStatus.ERROR);
+        }
+        submitted.setCreateTime(now);
+        if (auditRecordMapper.insertAuditRecord(submitted) != 1) {
+            throw new ServiceException("申诉记录保存失败，请重试", HttpStatus.ERROR);
+        }
+        return appeal;
+    }
+
+    /**
+     * 作者只读：自己内容的全部审核轮次与时间线(复用 applicantTimeline，剔除举报记录)，
+     * 非作者本人的提交人/操作人 ID 一律置空，不暴露举报人与审核员身份。
+     */
+    @Override
+    public java.util.Map<String, Object> contentTimeline(String bizType, Long bizId, Long memberId) {
+        if (!isContentDecisionType(bizType) || bizId == null || bizId <= 0L || memberId == null || memberId <= 0L) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "参数不完整", HttpStatus.BAD_REQUEST);
+        }
+        ContentState content = contentState(bizType, bizId);
+        if (content == null) throw new ServiceException("内容不存在", HttpStatus.NOT_FOUND);
+        if (!memberId.equals(content.ownerId)) throw new ServiceException("无权查看该内容的审核记录", HttpStatus.FORBIDDEN);
+        AuditTask query = new AuditTask();
+        query.setBizType(bizType);
+        query.setBizId(bizId);
+        List<AuditTask> tasks = auditTaskMapper.selectAuditTaskList(query);
+        List<java.util.Map<String, Object>> rounds = new ArrayList<>();
+        boolean open = false;
+        if (tasks != null) {
+            for (AuditTask task : tasks) {
+                if (AuditTask.STATUS_PENDING.equals(task.getStatus())
+                        || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) open = true;
+                AuditTask safe = applicantTask(task);
+                if (!memberId.equals(task.getSubmitterId())) safe.setSubmitterId(null);
+                List<AuditRecord> timeline = applicantTimeline(listAuditRecords(task.getId()));
+                for (AuditRecord item : timeline) {
+                    if (!memberId.equals(item.getOperatorId())) item.setOperatorId(null);
+                }
+                java.util.Map<String, Object> round = new java.util.LinkedHashMap<>();
+                round.put("task", safe);
+                round.put("kind", SOURCE_APPEAL.equals(task.getSourceType()) ? "APPEAL"
+                        : SOURCE_REPORT.equals(task.getSourceType()) ? "REPORT" : "SUBMIT");
+                round.put("timeline", timeline);
+                rounds.add(round);
+            }
+        }
+        com.chengyinhub.business.domain.AuditAppeal appeal = auditAppealMapper.selectByBizMember(bizType, bizId, memberId);
+        java.util.Map<String, Object> appealView = null;
+        if (appeal != null) {
+            appealView = new java.util.LinkedHashMap<>();
+            appealView.put("id", appeal.getId());
+            appealView.put("taskId", appeal.getTaskId());
+            appealView.put("state", appeal.getState());
+            appealView.put("reason", appeal.getReason());
+            appealView.put("dueAt", appeal.getDueAt());
+            appealView.put("createdAt", appeal.getCreatedAt());
+            appealView.put("handledAt", appeal.getHandledAt());
+        }
+        AuditTask latest = tasks == null || tasks.isEmpty() ? null : tasks.get(0);
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("bizType", bizType);
+        result.put("bizId", bizId);
+        result.put("rounds", rounds);
+        result.put("appeal", appealView);
+        result.put("canAppeal", appeal == null && !open && !content.deleted && content.down
+                && latest != null && AuditTask.STATUS_REJECTED.equals(latest.getStatus()));
+        return result;
+    }
+
+    /** 申诉处理时限：被驳回那一单的举报/驳回原因命中紧急举报原因走 15 分钟，否则 24 小时(举报 SLA 同口径)。 */
+    private Date appealDueAt(AuditTask rejected, Date now) {
+        long minutes = APPEAL_STANDARD_DUE_MINUTES;
+        List<AuditRecord> records = listAuditRecords(rejected.getId());
+        if (records != null) {
+            for (AuditRecord record : records) {
+                if (!AuditRecord.ACTION_REPORT.equals(record.getAction())
+                        && !AuditRecord.ACTION_REJECT.equals(record.getAction())) continue;
+                com.chengyinhub.business.service.support.CommunityReportPolicy.Reason reason =
+                        record.getReasonCode() == null ? null
+                                : com.chengyinhub.business.service.support.CommunityReportPolicy.find(record.getReasonCode());
+                if (reason != null) minutes = Math.min(minutes, reason.getFirstResponseMinutes());
+            }
+        }
+        return new Date(now.getTime() + minutes * 60_000L);
+    }
+
+    private String normalizeEvidence(String evidenceJson) {
+        if (evidenceJson == null || evidenceJson.trim().isEmpty() || "null".equals(evidenceJson.trim())) return null;
+        if (evidenceJson.length() > MAX_APPEAL_EVIDENCE_LENGTH) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "补充材料过长", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode node =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(evidenceJson);
+            if (node == null || !(node.isObject() || node.isArray())) throw new IllegalArgumentException();
+            return node.toString();
+        } catch (Exception e) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "补充材料格式不正确", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /** 申诉/时间线所需的内容归属与当前是否处于驳回/下架态(status=2)。 */
+    private static final class ContentState {
+        private final Long ownerId;
+        private final boolean down;
+        private final boolean deleted;
+
+        private ContentState(Long ownerId, Number status, Integer delFlag) {
+            this.ownerId = ownerId;
+            this.down = status != null && status.longValue() == 2L;
+            this.deleted = delFlag != null && delFlag != 0;
+        }
+    }
+
+    private ContentState contentState(String bizType, Long bizId) {
+        if (AuditTask.BIZ_ACTIVITY.equals(bizType)) {
+            CmsActivity activity = cmsActivityMapper.selectCmsActivityById(bizId);
+            return activity == null ? null
+                    : new ContentState(activity.getMemberId(), activity.getStatus(), activity.getDelFlag());
+        }
+        if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+            CmsTopic topic = cmsTopicMapper.selectCmsTopicById(bizId);
+            return topic == null ? null : new ContentState(topic.getMemberId(), topic.getStatus(), topic.getDelFlag());
+        }
+        if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(bizId);
+            return template == null ? null
+                    : new ContentState(template.getMemberId(), template.getStatus(), template.getDelFlag());
+        }
+        if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+            CmsTemplateLibrary library = libraryMapper.selectCmsTemplateLibraryById(bizId);
+            return library == null ? null
+                    : new ContentState(library.getMemberId(), library.getStatus(), library.getDelFlag());
+        }
+        return null;
     }
 
     private void applyCommercialReviewLifecycle(AuditTask task, Integer decision) {
@@ -1341,8 +1606,24 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     }
 
     private boolean isTopicBundle(AuditTask task) {
-        return task != null && AuditTask.BIZ_TOPIC.equals(task.getBizType())
-                && "topic_bundle_v2".equals(task.getSourceType());
+        if (task == null || !AuditTask.BIZ_TOPIC.equals(task.getBizType())) return false;
+        if ("topic_bundle_v2".equals(task.getSourceType())) return true;
+        // 申诉单沿用被驳回任务的快照：原单是主题包则按主题包复核(同一份快照、同一套内容 CAS)。
+        return SOURCE_APPEAL.equals(task.getSourceType()) && topicBundleSnapshot(task.getSnapshotJson()) != null;
+    }
+
+    /** 主题包 v2 快照(schemaVersion=2 且 bizType=TOPIC)，其他快照返回 null。 */
+    private static com.fasterxml.jackson.databind.JsonNode topicBundleSnapshot(String snapshotJson) {
+        if (snapshotJson == null || snapshotJson.isEmpty()) return null;
+        try {
+            com.fasterxml.jackson.databind.JsonNode root =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(snapshotJson);
+            return root != null && root.path("schemaVersion").asInt() == 2
+                    && AuditTask.BIZ_TOPIC.equals(root.path("bizType").asText())
+                    && root.path("topic").isObject() ? root : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -1362,12 +1643,18 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
      * 避免认领人离岗时单子无法流转);处理后 current_assignee 改写为实际处理人。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void claim(Long taskId, Long operatorId) {
         if (taskId == null || operatorId == null) {
             throw new IllegalArgumentException("认领参数不完整");
         }
         if (auditTaskMapper.claimAuditTask(taskId, operatorId, DateUtils.getNowDate()) != 1) {
             throw new ServiceException("该任务已被认领或已处理");
+        }
+        // 申诉审核单被认领 = 申诉进入复核中(SUBMITTED → REVIEWING)，作者时间线可见。
+        AuditTask claimed = auditTaskMapper.selectAuditTaskById(taskId);
+        if (claimed != null && SOURCE_APPEAL.equals(claimed.getSourceType())) {
+            auditAppealMapper.markReviewing(taskId);
         }
     }
 
@@ -1549,7 +1836,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return null;
     }
 
-    private void reverseDecisionEffects(AuditTask task) {
+    private void reverseDecisionEffects(AuditTask task, AuditRecord decision) {
+        if (isContentDecisionType(task.getBizType())) {
+            reverseContentDecision(task, decision);
+            return;
+        }
         if (AuditTask.STATUS_REJECTED.equals(task.getStatus())
                 && AuditTask.BIZ_MERCHANT_REVIEW.equals(task.getBizType())) {
             String targetStatus = SOURCE_REPORT.equals(task.getSourceType())
@@ -1568,10 +1859,142 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return AuditTask.STATUS_APPROVED.equals(status) || AuditTask.STATUS_REJECTED.equals(status);
     }
 
-    private boolean isRevertSupported(String bizType, Integer status) {
-        // 仅开放具备领域行锁 + version CAS 的补偿路径；其余类型在补齐目标状态 CAS 前 fail closed。
-        return AuditTask.BIZ_MERCHANT_REVIEW.equals(bizType)
-                && AuditTask.STATUS_REJECTED.equals(status);
+    private boolean isRevertSupported(AuditTask task) {
+        // 仅开放具备领域行锁 + 目标状态 CAS 的补偿路径；其余类型在补齐目标状态 CAS 前 fail closed。
+        if (task == null) return false;
+        if (AuditTask.BIZ_MERCHANT_REVIEW.equals(task.getBizType())) {
+            return AuditTask.STATUS_REJECTED.equals(task.getStatus());
+        }
+        // 申诉裁决的真源是申诉单(每内容每人一次)，撤销会让申诉单与内容状态分叉，不开放。
+        return isContentDecisionType(task.getBizType()) && isTerminalDecision(task.getStatus())
+                && !SOURCE_APPEAL.equals(task.getSourceType());
+    }
+
+    /** 审核决定直接落在内容状态列上、可做目标状态 CAS 的内容类型(撤销与申诉共用)。 */
+    private static boolean isContentDecisionType(String bizType) {
+        return AuditTask.BIZ_ACTIVITY.equals(bizType) || AuditTask.BIZ_TOPIC.equals(bizType)
+                || AuditTask.BIZ_TEMPLATE.equals(bizType) || AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType);
+    }
+
+    /**
+     * 撤销内容类审核决定：内容必须仍停在该决定写下的状态、且之后没有新一轮审核，才 CAS 回待审；
+     * 否则抛 409 让 revert() 事务连同任务 CAS 一起回滚。
+     */
+    private void reverseContentDecision(AuditTask task, AuditRecord decision) {
+        AuditTask latest = latestTask(task.getBizType(), task.getBizId());
+        if (latest == null || !task.getId().equals(latest.getId())) {
+            throw governanceError(ERROR_REVERT_STALE, "内容已进入新一轮审核，不能撤销", HttpStatus.CONFLICT);
+        }
+        if (AuditTask.STATUS_APPROVED.equals(task.getStatus())) requireApprovalReversible(task);
+        if (!reopenContent(task, task.getStatus(), decision)) {
+            throw governanceError(ERROR_REVERT_STALE, "内容状态已变化，不能撤销", HttpStatus.CONFLICT);
+        }
+    }
+
+    /** 通过决定已产生无法 CAS 回收的下游事实时拒绝撤销，交给下架流程处理。 */
+    private void requireApprovalReversible(AuditTask task) {
+        Long bizId = task.getBizId();
+        if (AuditTask.BIZ_TOPIC.equals(task.getBizType())) {
+            List<Long> shells = cmsActivityMapper.selectActiveActivityIdsByTopicId(bizId);
+            if (shells != null && !shells.isEmpty()) {
+                throw governanceError(ERROR_REVERT_STATE, "主题过审后已生成可售活动，不能撤销通过，请走下架流程",
+                        HttpStatus.CONFLICT);
+            }
+            com.fasterxml.jackson.databind.JsonNode bundle = isTopicBundle(task)
+                    ? topicBundleSnapshot(task.getSnapshotJson()) : null;
+            if (bundle != null) {
+                for (com.fasterxml.jackson.databind.JsonNode template : bundle.path("bundledTemplates")) {
+                    if (template.path("bundledDraft").asBoolean(false)) {
+                        throw governanceError(ERROR_REVERT_STATE, "过审已同时发布随主题玩法，不能撤销通过，请走下架流程",
+                                HttpStatus.CONFLICT);
+                    }
+                }
+            }
+        } else if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+            List<CmsTemplateLibrary> projections = libraryMapper.selectByMemberTemplateForUpdate(bizId);
+            if (projections != null) {
+                for (CmsTemplateLibrary row : projections) {
+                    if (Integer.valueOf(0).equals(row.getDelFlag()) && Long.valueOf(1L).equals(row.getStatus())) {
+                        throw governanceError(ERROR_REVERT_STATE, "该玩法已在模板广场上架，不能撤销通过，请先处理模板广场条目",
+                                HttpStatus.CONFLICT);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 把内容从审核决定写下的状态 CAS 回待审(撤销与申诉成立共用)。返回 false = 内容已变化。
+     * decision 非空(撤销)时，活动额外要求决定后未被编辑；主题包按快照 configVersion、玩法/模板广场按审核快照比对。
+     */
+    private boolean reopenContent(AuditTask task, Integer decidedStatus, AuditRecord decision) {
+        boolean approved = AuditTask.STATUS_APPROVED.equals(decidedStatus);
+        String bizType = task.getBizType();
+        Long bizId = task.getBizId();
+        if (AuditTask.BIZ_ACTIVITY.equals(bizType)) {
+            return cmsActivityMapper.reopenAuditDecision(bizId, approved ? 1L : 2L, approved ? 1 : 2,
+                    approved ? 1L : 0L, decision == null ? null : decision.getCreateTime()) == 1;
+        }
+        if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+            com.fasterxml.jackson.databind.JsonNode bundle = isTopicBundle(task)
+                    ? topicBundleSnapshot(task.getSnapshotJson()) : null;
+            com.fasterxml.jackson.databind.JsonNode version = bundle == null ? null
+                    : bundle.path("topic").path("configVersion");
+            Long configVersion = version != null && version.isIntegralNumber() ? version.longValue() : null;
+            if (cmsTopicMapper.reopenAuditDecision(bizId, approved ? 1 : 2, approved ? 1 : 2, configVersion) != 1) {
+                return false;
+            }
+            // 撤销通过 = 回到待审不公开：同步帖一起收起(驳回态本就已收起)。
+            if (approved) cmsTopicServiceProvider.getObject().syncCreativeSquarePostVisibility(bizId, false);
+            return true;
+        }
+        if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+            List<CmsMemberTemplate> rows = templateMapper.selectCmsMemberTemplateByIdsForUpdate(
+                    Collections.singletonList(bizId));
+            CmsMemberTemplate template = rows == null || rows.isEmpty() ? null : rows.get(0);
+            if (template == null || template.getMemberId() == null || !TemplateAuditSnapshot.matches(
+                    task.getSnapshotJson(), TemplateAuditSnapshot.personal(template))) {
+                return false;
+            }
+            return templateMapper.reopenAuditDecision(bizId, template.getMemberId(), approved ? 1L : 2L,
+                    approved ? 1 : 2, approved ? 1L : 0L) == 1;
+        }
+        if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+            CmsTemplateLibrary hint = libraryMapper.selectCmsTemplateLibraryById(bizId);
+            if (hint == null || hint.getMemberTemplateId() == null) return false;
+            templateMapper.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(hint.getMemberTemplateId()));
+            CmsTemplateLibrary row = null;
+            List<CmsTemplateLibrary> projections = libraryMapper.selectByMemberTemplateForUpdate(hint.getMemberTemplateId());
+            if (projections != null) {
+                for (CmsTemplateLibrary projection : projections) {
+                    if (bizId.equals(projection.getId())) row = projection;
+                }
+            }
+            if (row == null || row.getMemberId() == null
+                    || !TemplateAuditSnapshot.matches(task.getSnapshotJson(), TemplateAuditSnapshot.market(row))) {
+                return false;
+            }
+            return libraryMapper.reopenAuditDecision(bizId, row.getMemberId(), row.getMemberTemplateId(),
+                    approved ? 1L : 2L, approved ? 1L : 0L) == 1;
+        }
+        return false;
+    }
+
+    /** 同内容最新一张审核单(selectAuditTaskList 的 get(0) = 最新)。 */
+    private AuditTask latestTask(String bizType, Long bizId) {
+        AuditTask query = new AuditTask();
+        query.setBizType(bizType);
+        query.setBizId(bizId);
+        List<AuditTask> tasks = auditTaskMapper.selectAuditTaskList(query);
+        return tasks == null || tasks.isEmpty() ? null : tasks.get(0);
+    }
+
+    private com.chengyinhub.business.domain.AuditAppeal lockAppeal(AuditTask task) {
+        com.chengyinhub.business.domain.AuditAppeal appeal = auditAppealMapper.selectByTaskIdForUpdate(task.getId());
+        if (appeal == null || !task.getBizType().equals(appeal.getBizType()) || !task.getBizId().equals(appeal.getBizId())) {
+            throw governanceError(ERROR_APPEAL_STALE, "申诉单不存在或与审核任务不一致", HttpStatus.CONFLICT);
+        }
+        return appeal;
     }
 
     private String requireStableKey(String value) {

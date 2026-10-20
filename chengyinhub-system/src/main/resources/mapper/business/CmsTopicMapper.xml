@@ -1268,4 +1268,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select journey_story_json from cms_topic where id = #{id}
     </select>
 
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_topic set status = 0, check_status = 0, user_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus}
+          <if test="configVersion != null">and config_version = #{configVersion}</if>
+    </update>
+
 </mapper>
