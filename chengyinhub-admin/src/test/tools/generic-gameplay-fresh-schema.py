@@ -82,7 +82,7 @@ def build_plan():
     dependencies = json.loads((ROOT / 'ci/migration-dependencies.json').read_text())['dependencies']
     ordered = _ordered_migrations(migrations, dependencies)
     files = [plan_file(ROOT / record['path']) for record in [baseline['baseSchema'], policy['baselineSeed']]]
-    files.append(plan_file(ROOT / 'sql/quartz.sql'))
+    # The frozen baseline already contains all 11 Quartz tables and their foreign keys.
     for m in ordered:
         if m['path'] not in included:
             files.append(plan_file(ROOT / m['path'], True, m['path'] in policy['dataOnlyMigrations']))

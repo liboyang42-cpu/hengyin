@@ -241,6 +241,34 @@ class HttpReceiptTest(unittest.TestCase):
             with self.assertRaises(ValueError):summarize(paths,'b'*40)
 
 
+    def test_existing_baseline_quartz_tables_and_foreign_keys_are_not_replayed(self):
+        spec = importlib.util.spec_from_file_location('quartz_schema', TOOLS / 'generic-gameplay-fresh-schema.py')
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        plan = module.build_plan()
+        self.assertNotIn('sql/quartz.sql', [f['path'] for f in plan['files']])
+        baseline = next(f for f in plan['files'] if f['path'] == 'sql/base_schema_20260818.sql')
+        tables = {'qrtz_blob_triggers', 'qrtz_calendars', 'qrtz_cron_triggers', 'qrtz_fired_triggers',
+                  'qrtz_job_details', 'qrtz_locks', 'qrtz_paused_trigger_grps', 'qrtz_scheduler_state',
+                  'qrtz_simple_triggers', 'qrtz_simprop_triggers', 'qrtz_triggers'}
+        def definitions(files):
+            rows = []
+            for file in files:
+                for sql in file['apply']:
+                    match = re.match(r'(?is)^CREATE TABLE [`]?([A-Za-z0-9_]+)[`]?(?:\s|\()', sql)
+                    if match and match.group(1).lower() in tables:
+                        rows.append((match.group(1).lower(), sql))
+            return rows
+        original = dict(definitions([baseline]))
+        self.assertEqual(tables, set(original))
+        replayed = definitions(plan['files'])
+        self.assertEqual(11, len(replayed))
+        self.assertEqual(tables, {name for name, _ in replayed})
+        for child, parent in [('qrtz_blob_triggers', 'qrtz_triggers'), ('qrtz_cron_triggers', 'qrtz_triggers'),
+                              ('qrtz_simple_triggers', 'qrtz_triggers'), ('qrtz_simprop_triggers', 'qrtz_triggers'),
+                              ('qrtz_triggers', 'qrtz_job_details')]:
+            self.assertIn('FOREIGN KEY', original[child])
+            self.assertRegex(original[child], r'(?is)REFERENCES [`]?' + parent + r'[`]?\s*\(')
+
     def test_owned_cleanup_is_required_and_old_fixture_sql_contract_unchanged(self):
         shell=(TOOLS/'generic-gameplay-http-e2e.sh').read_text()
         self.assertIn("r.get('database')==os.environ['CHENGYIN_HTTP_E2E_DATABASE']",shell)
