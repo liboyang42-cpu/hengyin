@@ -68,6 +68,21 @@ class TopicSaleReviewDecouplingTest {
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
+        doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter chapter = call.getArgument(0);
+            chapter.setId(801L);
+            return 1;
+        }).when(chapterMapper).insertCmsTopicChapter(any());
+        doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode node = call.getArgument(0);
+            node.setId(901L);
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
+        doAnswer(call -> {
+            CmsActivity activity = call.getArgument(0);
+            activity.setId(1001L);
+            return 1;
+        }).when(activityMapper).insertCmsActivity(any());
         auditTaskService = mock(IAuditTaskService.class);
         canonicalMutationService = mock(ITopicSaleCanonicalMutationService.class);
         commercialReviewService = mock(ITopicCommercialReviewService.class);

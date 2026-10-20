@@ -517,7 +517,7 @@ public class ApiTopicController extends BaseController {
             TopicTextSafety.Verdict textVerdict = TopicTextSafety.check(contentSafetyGate, memberId, openid, null,
                     secText, topicReviewTexts(dto, chapterFlowV2));
             if (textVerdict.isBlocked()) {
-                return error(textVerdict.getBlockMessage());
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
             }
 
             // 首次存草稿带请求意图键:同一账号同一键已建过 → 直接回那份草稿(丢回包后的重试);在途 → 请稍后。
@@ -736,7 +736,7 @@ public class ApiTopicController extends BaseController {
         TopicTextSafety.Verdict textVerdict = TopicTextSafety.check(contentSafetyGate, memberId, openid, dto.getId(),
                 secText, storyTexts);
         if (textVerdict.isBlocked()) {
-            return error(textVerdict.getBlockMessage());
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
         String previousRuntime=ownPrevious?previousTopic.getThemeRuntimeConfigJson():null;

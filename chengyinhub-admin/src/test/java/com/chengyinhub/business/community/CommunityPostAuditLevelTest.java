@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
  * 以及图片异步机审命中风险时复用帖文生命周期 HIDE(带乐观版本)。
  */
 class CommunityPostAuditLevelTest {
-    private static final String IMAGE = "https://cdn.example/community/image.jpg";
+    private static final String IMAGE = "upload/0123456789abcdef0123456789abcdef.jpg";
 
     private CommunityPostMapper mapper;
     private IContentSafetyGate safetyGate;
