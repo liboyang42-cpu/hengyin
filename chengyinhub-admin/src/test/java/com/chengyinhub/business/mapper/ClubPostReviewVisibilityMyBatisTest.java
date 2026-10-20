@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>他人读路径：selectClubPostList(/api/club/post/list，标注「公开」)、
  * selectFeedByClubIds(/api/club/feed 聚合流)。
  *
- * <p>驳回(risky 回调)已证明隐藏；待审 / 送检失败 / 回调永不到达在当前代码里对他人可见——
- * 下面 *_DEFECT_CL39 用例把这一现状钉住作为 DEFECT_FOUND 证据(不改产品代码)，修复后应翻转断言。
+ * <p>驳回(risky 回调)已证明隐藏；待审 / 送检失败 / 回调永不到达对他人可见。用户 2026-10-20 决定动态类内容
+ * 「一般先发后审」：先公开、驳回后下架，所以这是预期行为，下面的 publishFirst 用例把它钉住。
  */
 class ClubPostReviewVisibilityMyBatisTest {
     private static final long CLUB = 7L;
@@ -61,7 +61,7 @@ class ClubPostReviewVisibilityMyBatisTest {
     }
 
     @Test
-    void pendingFailedAndNeverCalledBackMediaPostsAreVisibleToOtherMembers_DEFECT_CL39() throws Exception {
+    void publishFirstPolicyShowsPendingFailedAndUnansweredMediaPostsToOtherMembers() throws Exception {
         DriverManagerDataSource ds = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         seed(jdbc);
@@ -69,14 +69,14 @@ class ClubPostReviewVisibilityMyBatisTest {
             ClubPostMapper mapper = session.getMapper(ClubPostMapper.class);
             ClubPost q = new ClubPost();
             q.setClubId(CLUB);
-            // 读侧无 viewer 参数：作者与他人得到同一结果，审核未完成的图片已公开。
+            // 先发后审：审核未完成的动态与图片对所有人可见，驳回回调到达后才下架。
             assertEquals(List.of(NEVER_CALLED_BACK, APPROVED, FAILED, PENDING), ids(mapper.selectClubPostList(q)),
-                    "DEFECT_FOUND CL-39: club page lists posts whose media review is pending/failed/never answered");
+                    "publish-first: club page lists posts whose media review is pending/failed/never answered");
             assertEquals(List.of(NEVER_CALLED_BACK, APPROVED, FAILED, PENDING),
                     ids(mapper.selectFeedByClubIds(List.of(CLUB), 50)),
-                    "DEFECT_FOUND CL-39: aggregate feed lists posts whose media review is pending/failed/never answered");
+                    "publish-first: aggregate feed lists posts whose media review is pending/failed/never answered");
             assertEquals("https://cdn.example/pending.jpg", mapper.selectClubPostById(PENDING).getImages(),
-                    "the unreviewed image URL is projected to every viewer");
+                    "publish-first: the image is shown before its review comes back");
         }
     }
 
