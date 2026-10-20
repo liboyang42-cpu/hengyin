@@ -80,6 +80,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     /** 举报来源类型(仅此来源受 submitterId 限频;auto_gate/user_publish 不限)。 */
     private static final String SOURCE_REPORT = "report";
+    private static final String SOURCE_AUTO_GATE = "auto_gate";
     /** 举报限频时间窗(秒):同一提交人此窗口内新建举报单计数。 */
     private static final long REPORT_RATE_LIMIT_WINDOW_SECONDS = 3600L;
     /** 举报限频阈值:窗口内新建举报单达到此数即拒绝后续举报。 */
@@ -374,7 +375,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long submitSafetyHold(String bizType, Long bizId, Long submitterId, String riskLevel, String snapshotJson) {
-        Long taskId = findOrCreateOpenTask(bizType, bizId, submitterId, "auto_gate", riskLevel, snapshotJson);
+        Long taskId = findOrCreateOpenTask(bizType, bizId, submitterId, SOURCE_AUTO_GATE, riskLevel, snapshotJson);
         if (AuditTask.BIZ_COMMUNITY_POST.equals(bizType) && "EDIT_REVIEW".equals(riskLevel)) {
             AuditTask task = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
             if (task == null || !bizType.equals(task.getBizType()) || !bizId.equals(task.getBizId())) {
@@ -1033,6 +1034,16 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 // ponytail: 先读后写,与主题下架并发时仍可能写回 1;要闭合再改成 where status<>3 的 CAS。
                 UmsCreativeSquare cur = up ? umsCreativeSquareService.selectUmsCreativeSquareById(bizId) : null;
                 boolean topicHidden = cur != null && Integer.valueOf(3).equals(cur.getStatus());
+                // AUDIT-G3-4:「举报不成立」只说明这条举报无效,不能顺手把内容安全下架(文本 BLOCK / 图片回调
+                // status=2,或审核驳回 check_status=2)的帖子放回公开。只有门禁送审的安全复核单(auto_gate)
+                // 才是针对内容本身的人工复核,通过时可以恢复。
+                boolean safetyTakenDown = cur != null && (Integer.valueOf(2).equals(cur.getStatus())
+                        || Integer.valueOf(2).equals(cur.getCheckStatus()));
+                if (up && safetyTakenDown && !SOURCE_AUTO_GATE.equals(task.getSourceType())) {
+                    logger.info("举报不成立但帖子已被内容安全下架,保持下架 bizId={} status={} checkStatus={}",
+                            bizId, cur.getStatus(), cur.getCheckStatus());
+                    return;
+                }
                 s.setStatus(down ? Integer.valueOf(2) : (topicHidden ? null : Integer.valueOf(1)));
                 s.setCheckStatus(down ? 2 : 1);
                 umsCreativeSquareService.updateUmsCreativeSquare(s);

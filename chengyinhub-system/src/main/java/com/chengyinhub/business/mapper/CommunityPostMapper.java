@@ -255,6 +255,8 @@ public interface CommunityPostMapper {
                           @Param("operatorUserId") Long operatorUserId, @Param("startsAt") Date startsAt,
                           @Param("endsAt") Date endsAt, @Param("requestId") String requestId,
                           @Param("now") Date now);
+    int linkEnforcement(@Param("id") Long id, @Param("reportCaseId") Long reportCaseId,
+                        @Param("commentId") Long commentId);
     Map<String, Object> selectEnforcement(Long id);
     Map<String, Object> selectEnforcementByRequest(@Param("operatorUserId") Long operatorUserId,
                                                     @Param("requestId") String requestId);

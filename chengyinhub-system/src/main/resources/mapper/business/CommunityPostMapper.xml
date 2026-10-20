@@ -959,6 +959,10 @@
       VALUES(#{postId},#{targetMemberId},#{enforcementType},#{ruleCode},#{guidelineVersionId},#{reasonCode},#{previousLifecycle},
         #{evidenceJson},#{operatorUserId},#{startsAt},#{endsAt},'ACTIVE',#{requestId},0,#{now},#{now})
     </insert>
+    <update id="linkEnforcement">
+      UPDATE community_post_enforcement SET report_case_id=#{reportCaseId},comment_id=#{commentId}
+      WHERE id=#{id} AND report_case_id IS NULL AND comment_id IS NULL
+    </update>
     <select id="selectEnforcement" resultType="map">SELECT * FROM community_post_enforcement WHERE id=#{id}</select>
     <select id="selectEnforcementByRequest" resultType="map">
       SELECT * FROM community_post_enforcement WHERE operator_user_id=#{operatorUserId} AND request_id=#{requestId}
@@ -1041,7 +1045,9 @@
     </update>
     <update id="reconcilePostEnforcementCas">
       UPDATE community_post SET lifecycle=#{lifecycle},recommendation_eligible=#{recommendationEligible},
-        search_eligible=#{searchEligible},interaction_enabled=#{interactionEnabled},update_time=#{now},version=version+1
+        search_eligible=#{searchEligible},interaction_enabled=#{interactionEnabled},
+        published_at=CASE WHEN #{lifecycle}='PUBLISHED' THEN COALESCE(published_at,#{now}) ELSE published_at END,
+        update_time=#{now},version=version+1
       WHERE id=#{postId} AND version=#{expectedVersion} AND lifecycle!='DELETED'
     </update>
     <select id="selectNotifications" resultType="map">
