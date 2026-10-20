@@ -1333,7 +1333,7 @@
     "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
     "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
     "later_nine_batch_inherited": false,
-    "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+    "current_http_chain": "39427075967@79813e4d519999ec104ce78e4515d5bf71b30896 PENDING_EVIDENCE_REVIEW; prior39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL retained",
     "business_source_frozen": true,
     "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
   },

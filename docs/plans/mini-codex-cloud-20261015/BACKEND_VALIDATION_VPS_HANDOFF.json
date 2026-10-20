@@ -2952,8 +2952,39 @@
     "coupon_cleanup": "4 cases LEFTOVER; exact MySQL container removed=true; both facts retained",
     "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
     "later_nine_batch_inherited": false,
-    "current_http_chain": "39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL",
+    "current_http_chain": "39427075967@79813e4d519999ec104ce78e4515d5bf71b30896 PENDING_EVIDENCE_REVIEW; prior39423292504@a9c97205871e57c1b53ca40f27405152ce67171d FAIL retained",
     "business_source_frozen": true,
     "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
+  },
+  "external_current_source_deliveries": {
+    "sale_projection": {
+      "pr": 391,
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/391",
+      "source_sha": "79813e4d519999ec104ce78e4515d5bf71b30896",
+      "state": "EXTERNAL_SOURCE_DELIVERED_PENDING_VERIFICATION",
+      "branch": "claude/sale-ticket-projection-endtime-20261020",
+      "exact_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+        "scripts/e2e/chain_player.py"
+      ],
+      "scope": "Existing external author delivered shared projected start/end logic used by copy/sync and sale review; PR states non-time fields and non-club strict template times retained. Source receipt only, not independent acceptance.",
+      "existing_http_run": 39427075967,
+      "http_run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39427075967",
+      "http_evidence_review": "PENDING; no run result inferred, no ordinary tests or CI triggered by C00.",
+      "source_boundary": "Held by existing external author. No local/root grant or duplicate repair line is created; do not edit PR391 paths or PR389."
+    },
+    "product_followup": {
+      "pr": 390,
+      "url": "https://github.com/liboyang42-cpu/hengyin/pull/390",
+      "source_sha": "9e8c870c7b748b3f25e3ca3bbb970609bc9a137a",
+      "state": "EXTERNAL_SOURCE_DELIVERED_PENDING_FINAL_ACCEPTANCE",
+      "scope": "Three audit product followups already have public source; do not describe them as awaiting implementation. External author tests/migration rehearsal claims are not inherited by the three-team candidate or final acceptance.",
+      "no_local_source_grant": true
+    },
+    "public_review_scope": "C00 read public PR390/391 metadata and exact PR391 changed paths. No code edit, compilation/test/CI invocation, merge, deployment or migration execution.",
+    "new_local_repair_authorization": "NONE; existing external delivery retained, no local writer or new team",
+    "nine_batch_boundary": "Existing nine Real Storage PASS batches remain tied to41f83e65797edd5c17511ea609659f9a55de8767 only; not inherited by391,390 or later source."
   }
 }
