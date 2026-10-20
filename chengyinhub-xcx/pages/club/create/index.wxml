@@ -25,7 +25,7 @@
     sub="每位主理人最多创建 2 个俱乐部" primary="管理我的俱乐部" secondary="返回上一页"
     bind:primary="goManageClub" bind:secondary="onClose" />
   <cy-empty class="cc-state" wx:elif="{{submitState === 'success'}}" kind="success" size="lg" fill
-    title="俱乐部已创建" sub="{{submissionReceipt.name}} · {{submissionReceipt.city}}"
+    title="{{submissionPending ? '已重新提交，等待审核' : '俱乐部已创建'}}" sub="{{submissionReceipt.name}} · {{submissionReceipt.city}}"
     cta="进入俱乐部管理" bind:cta="goCreatedClub" />
 
   <!-- ===== 开场屏(四步之前,Figma G0) ===== -->
