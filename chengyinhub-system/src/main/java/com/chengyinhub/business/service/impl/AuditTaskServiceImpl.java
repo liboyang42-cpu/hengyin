@@ -247,6 +247,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 "template_market", snapshotJson);
     }
 
+    /** 活动内容类审核来源:同一场活动这几类单互相刷新,不并存(开放任务唯一约束)。 */
+    private static final java.util.Set<String> ACTIVITY_CONTENT_SOURCES =
+            java.util.Set.of("user_publish", "user_republish", "post_review_flag", "auto_gate");
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long submitOrRefreshActivity(Long activityId, Long submitterId, String sourceType, String snapshotJson) {
+        if (!ACTIVITY_CONTENT_SOURCES.contains(sourceType)) {
+            throw new IllegalArgumentException("活动审核来源非法");
+        }
+        return submitOrRefresh(AuditTask.BIZ_ACTIVITY, activityId, submitterId, sourceType, snapshotJson);
+    }
+
     private Long submitOrRefresh(String bizType, Long bizId, Long submitterId,
                                  String sourceType, String snapshotJson) {
         if (bizId == null || bizId <= 0L || submitterId == null || submitterId <= 0L
@@ -256,7 +269,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(bizType, bizId);
         if (open != null) {
             requireRefreshableTask(open, sourceType);
-            if (auditTaskMapper.refreshOpenAuditSnapshot(open.getId(), bizType, sourceType,
+            if (auditTaskMapper.refreshOpenAuditSnapshot(open.getId(), bizType, refreshedSource(open, sourceType),
                     snapshotJson, submitterId, DateUtils.getNowDate()) != 1) {
                 throw new IllegalStateException("待审任务快照刷新失败");
             }
@@ -280,7 +293,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             AuditTask concurrent = auditTaskMapper.selectOpenAuditTaskForUpdate(bizType, bizId);
             if (concurrent == null) throw duplicate;
             requireRefreshableTask(concurrent, sourceType);
-            if (auditTaskMapper.refreshOpenAuditSnapshot(concurrent.getId(), bizType, sourceType,
+            if (auditTaskMapper.refreshOpenAuditSnapshot(concurrent.getId(), bizType, refreshedSource(concurrent, sourceType),
                     snapshotJson, submitterId, DateUtils.getNowDate()) != 1) {
                 throw duplicate;
             }
@@ -310,9 +323,21 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private void requireRefreshableTask(AuditTask task, String sourceType) {
         boolean legacyTopicTask = "topic_bundle_v2".equals(sourceType)
                 && ("user_publish".equals(task.getSourceType()) || "user_republish".equals(task.getSourceType()));
-        if (!sourceType.equals(task.getSourceType()) && !legacyTopicTask) {
+        boolean activityContentTask = AuditTask.BIZ_ACTIVITY.equals(task.getBizType())
+                && ACTIVITY_CONTENT_SOURCES.contains(sourceType)
+                && ACTIVITY_CONTENT_SOURCES.contains(task.getSourceType());
+        if (!sourceType.equals(task.getSourceType()) && !legacyTopicTask && !activityContentTask) {
             throw new IllegalStateException("存在其他开放审核任务，请先处理后再提交");
         }
+    }
+
+    /** 抽检打标只刷新快照,不把已开着的先审/重提阻断单降级成非阻断的抽检单。 */
+    private static String refreshedSource(AuditTask open, String sourceType) {
+        if ("post_review_flag".equals(sourceType) && AuditTask.BIZ_ACTIVITY.equals(open.getBizType())
+                && open.getSourceType() != null && !"post_review_flag".equals(open.getSourceType())) {
+            return open.getSourceType();
+        }
+        return sourceType;
     }
 
     @Override

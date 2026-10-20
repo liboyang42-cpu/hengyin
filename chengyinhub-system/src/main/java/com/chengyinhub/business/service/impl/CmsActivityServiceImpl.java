@@ -9,6 +9,7 @@ import java.util.Map;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ActivitySettlementDTO;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
+import com.chengyinhub.business.service.support.ActivityAuditSnapshot;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.mapper.CmsCollaboratorsMapper;
@@ -806,17 +807,6 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         Long activityId = activity.getId();
 
-        // 先审后发的活动建审核任务(best-effort,失败不阻断);先发后审不建阻断单
-        if (preReview) {
-            try {
-                String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
-                        + ",\"name\":\"" + (activity.getName() == null ? "" : activity.getName().replace("\"", "'")) + "\"}";
-                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
-            } catch (Exception ignore) {
-                logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
-            }
-        }
-
         //3. 处理合作者
         if (request.getCollaborators() != null && !request.getCollaborators().isEmpty()) {
             for (Long collaboratorId : request.getCollaborators()) {
@@ -830,6 +820,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
 
         //4. 处理票务
+        List<OmsTicket> insertedTickets = new java.util.ArrayList<>();
         if (request.getTickets() != null && !request.getTickets().isEmpty()) {
             for (ActivityTicketRequest ticketRequest : request.getTickets()) {
                 OmsTicket ticket = new OmsTicket();
@@ -854,6 +845,18 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 OmsTicketWriteValidator.validateTicketWindowWithinActivity(ticket.getStartTime(),
                         ticket.getEndTime(), activity.getStartDate(), activity.getEndDate());
                 omsTicketMapper.insertOmsTicket(ticket);
+                insertedTickets.add(ticket);
+            }
+        }
+
+        // 先审后发的活动建审核任务(best-effort,失败不阻断);先发后审不建阻断单。
+        // 放在票务之后:快照要带票价(AUDIT-G1-5),审核员才看得到自己批的是什么。
+        if (preReview) {
+            try {
+                String snap = ActivityAuditSnapshot.of(activityId, activity, insertedTickets, null);
+                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
+            } catch (Exception ignore) {
+                logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
             }
         }
 
@@ -862,7 +865,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username) {
+    public int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username,
+                                     boolean preReview) {
         if (request == null || request.getId() == null || request.getId() < 1
                 || memberId == null || memberId <= 0) {
             throw new ServiceException("参数不合规");
@@ -889,7 +893,74 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (rows <= 0) {
             throw new ServiceException("更新失败");
         }
+        resubmitForReviewIfNeeded(currentForCollect, request, memberId, preReview);
         return rows;
+    }
+
+    /**
+     * AUDIT-G1-2:编辑后的审核回路。
+     * <ul>
+     *   <li>已驳回(status=2)⇒ 改完即重提:回待审(status=0/publish_status=0),刷新审核单;</li>
+     *   <li>待审中(status=0)改了内容 ⇒ 仍待审,刷新审核单快照;</li>
+     *   <li>先审(PRE_REVIEW)下改了名称/简介/图片/时间/地点 ⇒ 已上架的也退回待审。</li>
+     * </ul>
+     * 用 submitOrRefresh 而不是 submit:后者撞开放任务唯一约束(先审单/抽检单还开着时)。
+     * 与主表更新同事务 —— 审核单建不出来就整单回滚,不能留一场「待审却无单可审」的活动。
+     * 已售时间/地点锁在控制器入口,早于本方法。
+     */
+    private void resubmitForReviewIfNeeded(CmsActivity before, CmsActivityPublishRequest request,
+                                           Long memberId, boolean preReview) {
+        if (before == null) return;
+        // status 为空(库里不会出现)不当作待审/驳回,只按 preReview 判。
+        Long status = before.getStatus();
+        boolean changed = reviewableContentChanged(before, request);
+        boolean rejected = Long.valueOf(2L).equals(status);
+        boolean pending = Long.valueOf(0L).equals(status);
+        if (!rejected && !(pending && changed) && !(preReview && changed)) return;
+        if (!pending) {
+            CmsActivity back = new CmsActivity();
+            back.setId(before.getId());
+            back.setStatus(0L);
+            back.setPublishStatus(0L);
+            back.setCheckStatus(0);
+            back.setReason("");
+            if (cmsActivityMapper.updateCmsActivity(back) != 1) {
+                throw new ServiceException("活动审核状态保存失败");
+            }
+        }
+        CmsActivity after = cmsActivityMapper.selectCmsActivityById(before.getId());
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(2L);
+        query.setOwnerId(before.getId());
+        query.setDelFlag(0);
+        String snap = ActivityAuditSnapshot.of(before.getId(), after == null ? before : after,
+                omsTicketMapper.selectOmsTicketList(query), null);
+        auditTaskService.submitOrRefreshActivity(before.getId(), memberId, "user_republish", snap);
+    }
+
+    /** 审核要重看的字段:名称/简介/封面/图集/时间/地点。未传(null)视为未改,与 updateCmsActivityByOwner 的动态 SQL 一致。 */
+    private static boolean reviewableContentChanged(CmsActivity before, CmsActivityPublishRequest request) {
+        return changed(before.getName(), request.getName())
+                || changed(before.getDescription(), request.getDescription())
+                || changed(before.getImgUrl(), request.getImgUrl())
+                || changed(before.getImgArr(), request.getImgArr())
+                || changedSecond(before.getStartDate(), request.getStartDate())
+                || changedSecond(before.getEndDate(), request.getEndDate())
+                || changed(before.getAddressName(), request.getAddressName())
+                || changed(before.getAddress(), request.getAddress())
+                || request.getLongitude() != null
+                        && !com.chengyinhub.common.utils.CoordinateUtils.sameCoordinate(before.getLongitude(), request.getLongitude())
+                || request.getLatitude() != null
+                        && !com.chengyinhub.common.utils.CoordinateUtils.sameCoordinate(before.getLatitude(), request.getLatitude());
+    }
+
+    private static boolean changed(String before, String requested) {
+        return requested != null && !requested.equals(before);
+    }
+
+    private static boolean changedSecond(Date before, Date requested) {
+        if (requested == null) return false;
+        return before == null || before.getTime() / 1000L != requested.getTime() / 1000L;
     }
 
     /**

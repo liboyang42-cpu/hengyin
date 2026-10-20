@@ -838,7 +838,7 @@ public class ApiActivityController extends BaseController {
                     com.chengyinhub.business.service.IQuotaService.TYPE_EVENT,
                     () -> cmsActivityService.publishActivity(request, fOwnerMemberId, fUsername, preReview));
             if (decision.isFlagged()) {
-                flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request.getName());
+                flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request, false);
             }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
@@ -914,16 +914,45 @@ public class ApiActivityController extends BaseController {
                 return error("活动已售出，" + lockedChange + "不能修改；文字、图片、音频仍可改");
             }
         }
-        // F-L5C-02:改文案与 /publish 同一道内容安全闸,不能先发干净文本再改成违规内容。
-        String secMsg = wxContentSecurityService.checkText(
-                IWxContentSecurityService.joinText(request.getName(), request.getDescription()), resolveOpenid(memberId));
-        if (secMsg != null) {
-            return error(secMsg);
+        // F-L5C-02 / AUDIT-G1-2:改文案与 /publish 同一道统一门禁 + 同一套分级(ActivityReviewPolicy),
+        // 不能先发干净文本再改成违规内容。明确违规两种模式都拒;先审模式下改了内容即退回待审(见 service)。
+        final boolean preReview;
+        final SafetyDecision decision;
+        try {
+            CmsActivityPublishRequest policyView = request;
+            if (request.getCategoryIds() == null) {
+                // 编辑页不一定回带类目:按库里的类目判高风险,不能因为没传就降成先发后审。
+                policyView = new CmsActivityPublishRequest();
+                org.springframework.beans.BeanUtils.copyProperties(request, policyView);
+                policyView.setCategoryIds(exist.getCategoryIds());
+            }
+            PublishSafetyRequest.ReviewMode mode =
+                    activityReviewPolicy.modeOf(policyView, publisher.reviewSubject());
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
+            safety.setMemberId(publisher.ownerMemberId());
+            safety.setOpenid(resolveOpenid(memberId));
+            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setHasPrice(activityReviewPolicy.hasCharge(request));
+            safety.setHasSignup(true);
+            safety.setReviewMode(mode.name());
+            decision = contentSafetyGate.decide(safety);
+            if (decision == null || decision.isBlock()) {
+                return error("活动内容包含违规信息，请修改后重试");
+            }
+            preReview = mode == PublishSafetyRequest.ReviewMode.PRE_REVIEW
+                    || decision.isHold();
+        } catch (Exception e) {
+            logger.error("活动编辑内容安全裁决失败: activityId={}", cid, e);
+            return error("系统繁忙，请稍后重试");
         }
 
         try {
             // SQL 的 where 带 member_id,传主体才写得动自家活动(员工只是操作人)。
-            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName());
+            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), preReview);
+            if (decision.isFlagged() && !preReview) {
+                flagForSpotCheck(cid, publisher.ownerMemberId(), decision.getFlagReason(), request, true);
+            }
             return success("活动已更新");
         } catch (ServiceException se) {
             return error(se.getMessage());
@@ -970,14 +999,20 @@ public class ApiActivityController extends BaseController {
      * 在审核台留一张非阻断抽检单(source=post_review_flag,不改活动状态),驳回即走既有下架。
      * best-effort:失败只记日志,不影响已上架的活动。
      */
-    private void flagForSpotCheck(Long activityId, Long ownerMemberId, String reason, String name) {
+    private void flagForSpotCheck(Long activityId, Long ownerMemberId, String reason,
+                                  CmsActivityPublishRequest request, boolean edit) {
         logger.warn("活动先发后审打标待抽检 activityId={} reason={}", activityId, reason);
         try {
-            String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
-                    + ",\"flagReason\":\"" + reason + "\""
-                    + ",\"name\":\"" + (name == null ? "" : name.replace("\"", "'")) + "\"}";
-            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
-                    ownerMemberId, "post_review_flag", snap);
+            // AUDIT-G1-5:快照带简介/图片/票价/俱乐部/主办会员,不只是 name。
+            String snap = com.chengyinhub.business.service.support.ActivityAuditSnapshot.of(
+                    activityId, request, ownerMemberId, reason);
+            if (edit) {
+                // 编辑时可能已有开放单(发布时的抽检单等):刷新而不是再插一张撞唯一约束。
+                auditTaskService.submitOrRefreshActivity(activityId, ownerMemberId, "post_review_flag", snap);
+            } else {
+                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
+                        ownerMemberId, "post_review_flag", snap);
+            }
         } catch (Exception e) {
             logger.error("活动抽检单提交失败 activityId={}", activityId, e);
         }

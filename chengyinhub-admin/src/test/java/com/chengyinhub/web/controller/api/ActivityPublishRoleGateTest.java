@@ -376,7 +376,7 @@ class ActivityPublishRoleGateTest
         exist.setMemberId(MERCHANT_OWNER_ID);
         exist.setDelFlag(0);
         when(cmsActivityService.selectCmsActivityById(9L)).thenReturn(exist);
-        when(cmsActivityService.updateActivityByOwner(any(), eq(MERCHANT_OWNER_ID), anyString())).thenReturn(1);
+        when(cmsActivityService.updateActivityByOwner(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean())).thenReturn(1);
 
         CmsActivityPublishRequest request = merchantRequest();
         request.setId(9L);
@@ -384,8 +384,8 @@ class ActivityPublishRoleGateTest
         AjaxResult result = controller.update(request);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).updateActivityByOwner(any(), eq(MERCHANT_OWNER_ID), anyString());
-        verify(cmsActivityService, never()).updateActivityByOwner(any(), eq(MEMBER_ID), anyString());
+        verify(cmsActivityService).updateActivityByOwner(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean());
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), anyBoolean());
     }
 
     /** 归属仍要真校验:商家 scope 改别人的活动 = 越权,拒。 */
@@ -406,7 +406,7 @@ class ActivityPublishRoleGateTest
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("无权操作该活动", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString(), anyBoolean());
     }
 
     /** 承办场次(中标别人主题生成的那场)在商家域只读:改、上架、删都归主题主办方。 */
@@ -423,7 +423,7 @@ class ActivityPublishRoleGateTest
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("这场是承办场次，需由主题主办方处理", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString(), anyBoolean());
     }
 
     @Test
@@ -475,7 +475,7 @@ class ActivityPublishRoleGateTest
             assertEquals(500, result.get(AjaxResult.CODE_TAG));
             assertEquals("俱乐部活动需由俱乐部主理人处理", result.get(AjaxResult.MSG_TAG));
         }
-        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString());
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString(), anyBoolean());
         verify(cmsActivityService, never()).updateCmsActivity(any());
     }
 
