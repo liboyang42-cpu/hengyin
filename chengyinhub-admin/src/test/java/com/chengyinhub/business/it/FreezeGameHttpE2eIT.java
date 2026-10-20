@@ -734,11 +734,33 @@ class FreezeGameHttpE2eIT {
         JsonNode response = cmd(run, run.t(0).captain, "PLAN_PROPOSE", json.createObjectNode().put("proposalKey", proposal).put("endingKey", plan));
         if (!expected) {
             // 证据未公开时方案不可提出；证据满足但物资不足时提案可存在，但无法足额出资
-            if (response.path("code").asInt() == 200) {
+            if (response.path("code").asInt() == 200 && "APPLIED".equals(response.path("data").path("outcome").asText())) {
+                success(response);
                 int[] need = need(end); int[] have = totals(run);
                 boolean enough = true; for (int k = 0; k < 5; k++) enough &= have[k] >= need[k];
                 assertFalse(enough, end + " 不应可执行");
                 success(cmd(run, run.t(0).captain, "PLAN_WITHDRAW", json.createObjectNode().put("proposalKey", proposal).put("version", proposalVersion(run, run.t(0), proposal))));
+            } else {
+                rejected(response);
+                JsonNode failure = response.path("data");
+                assertEquals("GAME_COOPERATION_UNAVAILABLE", failure.path("reasonCode").asText());
+                String requestId = run.activityId + "-" + run.label + "-plan_propose-" + run.request;
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE activity_id=? AND actor_member_id=?"
+                        + " AND request_id=? AND action='PLAN_PROPOSE' AND outcome='FAILED' AND reason_code='GAME_COOPERATION_UNAVAILABLE'",
+                        Integer.class, run.activityId, run.t(0).captainId, requestId));
+                if (response.path("code").asInt() == 200) {
+                    GenericGameplayHttpE2eIT.requireGameCommandReceipt(failure, "FAILED");
+                    assertEquals(run.activityId, failure.path("activityId").asLong());
+                    assertEquals(requestId, failure.path("requestId").asText());
+                    assertEquals("PLAN_PROPOSE", failure.path("action").asText());
+                    assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE id=? AND activity_id=?"
+                            + " AND actor_member_id=? AND request_id=? AND action='PLAN_PROPOSE' AND outcome='FAILED' AND reason_code='GAME_COOPERATION_UNAVAILABLE'",
+                            Integer.class, failure.path("receiptId").asLong(), run.activityId, run.t(0).captainId, requestId));
+                }
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM game_story_state WHERE game_session_id="
+                        + "(SELECT id FROM game_session WHERE activity_id=?) AND owner_type='WORLD'"
+                        + " AND JSON_CONTAINS_PATH(variables_json,'one',?)=0",
+                        Integer.class, run.activityId, "$.themeRuntime.cooperation.proposals." + proposal));
             }
             evidence.with("scenarios").with(run.label).with("feasible").put(end, false);
             return;
