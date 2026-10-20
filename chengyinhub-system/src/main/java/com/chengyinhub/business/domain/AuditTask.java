@@ -37,6 +37,10 @@ public class AuditTask extends BaseEntity {
     public static final String BIZ_TOPIC_PROJECT_REVIEW = "TOPIC_PROJECT_REVIEW";
     public static final String BIZ_TOPIC_SALE_REVIEW = "TOPIC_SALE_REVIEW";
     public static final String BIZ_ACTIVITY = "ACTIVITY";
+    /** 官方活动先审后发(2026-10-20 分级审核);bizId 指向 official_event.id。APPROVE=上架(V1 按时间定状态/V2 进已排期),REJECT=保持不公开 */
+    public static final String BIZ_OFFICIAL_EVENT = "OFFICIAL_EVENT";
+    /** 商家优惠券先发后审抽检单(source=post_review_flag);bizId 指向 sms_coupon.id。REJECT=平台手动失效(status=3),APPROVE=不动 */
+    public static final String BIZ_COUPON = "COUPON";
     /** 玩法模板先审后发；bizId 指向 cms_member_template.id，模板库记录是其同步投影。 */
     public static final String BIZ_TEMPLATE = "TEMPLATE";
     /** 模板广场独立审核；bizId 指向 cms_template_library.id，不回写个人玩法。 */
