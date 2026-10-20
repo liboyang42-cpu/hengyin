@@ -2642,7 +2642,7 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "F8_REPAIR_SOURCE_FROZEN_WAIT_CI_NO_INHERITED_ACCEPTANCE",
+    "state": "F8_COMPILE_BLOCKER_CLEARED_PROVENANCE_SINGLE_ENTRY_REPAIR_AUTHORIZED_ACCEPTANCE_PENDING",
     "creation_or_candidate_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
     "port_source": {
       "pr": 386,
@@ -2724,12 +2724,12 @@
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
     "validation": {
-      "combined_candidate": "WAIT_CI; fixedf8 repair delivered, no combined backend/storage/HTTP verdict yet",
+      "combined_candidate": "PARTIAL_PROGRESS; f8 compile blocker cleared, provenance contract failure, final acceptance pending",
       "existing_source_results_inherited": false,
       "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
       "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "real_storage": "NEW_FIXED_SOURCE_PENDING_CI_ARTIFACT_ACCEPTANCE",
-      "real_http": "NEW_FIXED_SOURCE_STARTING_NO_RUN_OR_RESULT_REPORTED"
+      "real_storage": "EXISTING_F8_FUNDS_IN_PROGRESS; NO_FINAL_ARTIFACT_ACCEPTANCE",
+      "real_http": "RUN39433391973_IN_PROGRESS_REACHED_REAL_CHAINS_REPORTED; NO_FINAL_RESULT"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -3050,9 +3050,97 @@
         "resolution": "Existing root sql checked out read-only, static check then PASS reported.",
         "classification": "Preparation scope issue, not business failure or new SQL source."
       },
-      "writer_status": "STOPPED_PENDING_CI_OR_VERIFIER_FEEDBACK; same sole local integration repair writer, no new author",
-      "http_new_run": "Starting at exactf8 per integration writer; no run ID or verdict registered",
+      "writer_status": "Previous five-path repair frozen; same local slot may edit only the new single provenance grant, no source-wide permission.",
+      "http_new_run": "Existing exactf8 run39433391973 now registered IN_PROGRESS; no final verdict.",
       "no_result_inheritance": true
+    },
+    "seed_provenance_repair_authority": {
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "repair_slot": "Existing single local integration repair slot; no new writer",
+      "state": "AUTHORIZED_SINGLE_PROVENANCE_FILE_SOURCE_NOT_DELIVERED",
+      "base_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "authorized_exact_paths": [
+        "ci/prelaunch-seed-provenance.json"
+      ],
+      "scope": "Only sourceFiles fingerprint for the already reviewed #388 CmsActivityController.java and necessary provenance explanation; inspect sourceFiles/viewCoverage and actual permission source before edit. No blanket fingerprint refresh.",
+      "source_file_key": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+      "old_sha256": "62e65e5a05ed6b39afba5b224c073bb8ee2ce8a91d632d7e8b0915a304d6e3ac",
+      "allowed_current_sha256": "0ac7044d7d65aef23006fdccd33c2527193c8d8ee309a4208f5f5509fddc0821",
+      "source_pr": 388,
+      "source_pr_sha": "f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a",
+      "C00_evidence": "Read f8 manifest and exact controller atf8 and#388; controller bytes equal and SHA256 computed from read source matches allowed hash. No gate/test/build executed.",
+      "must_retain": [
+        "all other sourceFiles entries",
+        "viewCoverage entries and permission proof",
+        "menuRows",
+        "roleRows and role-field precedence",
+        "functionRows",
+        "directoryRows",
+        "original seed fixture fingerprint",
+        "scratch readback",
+        "permissions",
+        "SQL",
+        "tests",
+        "gate logic",
+        "CI configuration"
+      ],
+      "unexpected_mismatch": "Report exact additional source/contract mismatch for separate registration; do not update it under this single-entry grant.",
+      "original_source_ownership": "Original sources/locks and teams remain frozen. Same local combination writer only; no original-branch transfer.",
+      "test_file_write_authorized": false,
+      "production_write_authorized": false,
+      "new_source_sha": "NOT_DELIVERED"
+    },
+    "f8_validation_progress": {
+      "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "state": "PARTIAL_PROGRESS_NOT_COMBINED_ACCEPTANCE",
+      "reported_existing_job_steps": {
+        "HTTP_build_jar": "PASS",
+        "HTTP_execution": "REACHED_REAL_HTTP_CHAINS",
+        "selected_backend_suite": "39-selected suite SUCCESS reported; no actual method count inferred.",
+        "compile_blocker": "E01_12 old constructor error cleared",
+        "migration_safety_script_and14_dependency_order_and_PR_declaration": "PASS_REPORTED"
+      },
+      "source_bound_failure": {
+        "gate": "ci/test_prelaunch_business_seeds.py",
+        "cause": "Provenance sourceFiles controller hash stale after integrated #388 source.",
+        "source_file": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+        "stored_sha256": "62e65e5a05ed6b39afba5b224c073bb8ee2ce8a91d632d7e8b0915a304d6e3ac",
+        "current_sha256": "0ac7044d7d65aef23006fdccd33c2527193c8d8ee309a4208f5f5509fddc0821",
+        "new_source_sha": "NOT_DELIVERED"
+      },
+      "check_metadata_at_read": [
+        {
+          "name": "Migration safety gate",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461/job/118664209682"
+        },
+        {
+          "name": "Backend tests",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461/job/118664209431"
+        },
+        {
+          "name": "Real-HTTP chains",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433391973/job/118663999009"
+        },
+        {
+          "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735/job/118663854205"
+        }
+      ],
+      "scope": "Job-step progress and detailed gate cause from integration writer; C00 directly read check metadata and source fingerprint only. Backend/Funds/HTTP final results pending, old95f failure remains history.",
+      "no_rerun_or_cancellation": "Existing runs continue, no C00 CI/test execution or cancellation."
     }
   }
 }

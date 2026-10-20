@@ -3258,7 +3258,7 @@
       "authorization": "User approved independent integration and existing CI acceptance.",
       "integration_writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "F8_REPAIR_SOURCE_FROZEN_WAIT_CI_NO_INHERITED_ACCEPTANCE",
+      "state": "F8_COMPILE_BLOCKER_CLEARED_PROVENANCE_SINGLE_ENTRY_REPAIR_AUTHORIZED_ACCEPTANCE_PENDING",
       "authorized_exact_conflict_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
         "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -3324,6 +3324,22 @@
         "parent_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
         "writer_status": "STOPPED_PENDING_CI_OR_VERIFIER_FEEDBACK; same sole local integration repair writer, no new author",
         "results_inherited": false
+      },
+      "seed_provenance_repair_authority": {
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.seed_provenance_repair_authority",
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "base_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "state": "AUTHORIZED_SINGLE_PROVENANCE_FILE_SOURCE_NOT_DELIVERED",
+        "authorized_exact_paths": [
+          "ci/prelaunch-seed-provenance.json"
+        ],
+        "scope": "Only #388 CmsActivityController.java sourceFiles hash and necessary provenance explanation; other fingerprints/viewCoverage/menu/role/permission/SQL/tests/gates retained."
+      },
+      "f8_validation_progress": {
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.f8_validation_progress",
+        "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "state": "PARTIAL_PROGRESS_PROVENANCE_REPAIR_FINAL_ACCEPTANCE_PENDING"
       }
     }
   },
