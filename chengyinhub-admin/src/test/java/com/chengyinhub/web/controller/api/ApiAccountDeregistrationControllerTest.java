@@ -103,6 +103,18 @@ class ApiAccountDeregistrationControllerTest {
         verify(f.deregistrationService).apply(1001L);
         verifyNoSms(f);
     }
+    // CL-29 / F-W1-09: a whitespace-only phone is "not bound" (precheck reports WECHAT for it),
+    // so apply must take the WeChat confirmation path instead of an SMS check that can never pass.
+    @Test void blankPhoneIsTreatedAsUnboundAndUsesWechatConfirmation() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        f.member.setPhone("   "); f.member.setWxOpenId("owner-seven");
+        when(f.wechat.verify(1001L, "owner-seven", "fresh", "198.51.100.20")).thenReturn(true);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("198.51.100.20");
+        assertEquals(HttpStatus.SUCCESS, f.controller.apply(null, "fresh", "request-1", request).get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService).apply(1001L);
+        verifyNoSms(f);
+    }
     @Test void mismatchedWechatAndMissingCodeDoNotSubmitAndBoundPhoneCannotBypassSms() {
         Fixture f = new Fixture(consent("v2.0", "AGREE"));
         HttpServletRequest request = mock(HttpServletRequest.class);

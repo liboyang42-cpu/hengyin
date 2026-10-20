@@ -561,6 +561,9 @@ class HttpUtilsSecurityTest
     @Test
     void successfulResponsesReturnTheirConnectionToTheJdkKeepAlivePool()
     {
+        // 本用例只验连接复用，不验超时；放宽 @BeforeEach 的 150/450ms，免得负载高的 runner 上偶发读超时。
+        System.setProperty(READ_TIMEOUT_PROPERTY, "5000");
+        System.setProperty(TOTAL_TIMEOUT_PROPERTY, "10000");
         List<Integer> remotePorts = new CopyOnWriteArrayList<>();
         HttpServer server = server(exchange -> {
             remotePorts.add(exchange.getRemoteAddress().getPort());
