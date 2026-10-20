@@ -43,6 +43,7 @@ class OWN_C03_24Test {
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", contentSecurity);
+        com.chengyinhub.web.controller.api.TopicContentSafetyTestFixtures.wire(controller, contentSecurity);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", mock(IMerchantAccessService.class));
         // RUN-52 发布者实名:本用例测的是「业务闸文案能不能原样透到用户面前」,实名闸在这里放行
@@ -64,7 +65,10 @@ class OWN_C03_24Test {
 
     private void rejected(AjaxResult result) {
         assertEquals(400, result.get(AjaxResult.CODE_TAG));
-        org.mockito.Mockito.verifyNoInteractions(topicService);
+        // AUDIT-P1:编辑前会只读已保存版本(判定哪些文本改过才送检),所以这里钉「拒绝前零写入」而不是零交互。
+        org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).updateTopicByOwner(any(), anyLong(), anyString());
+        org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).updateTopicByOwnerV2WithReview(any(), anyLong(), anyString());
+        org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).updateTopicByOwnerV2(any(), anyLong(), anyString());
     }
     @Test void titleRejectionIsKnownBeforeWrite() {
         when(contentSecurity.checkText(any(), any())).thenReturn("内容包含违规信息");

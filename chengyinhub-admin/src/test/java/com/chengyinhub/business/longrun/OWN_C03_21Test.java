@@ -42,6 +42,7 @@ class OWN_C03_21Test {
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", contentSecurity);
+        com.chengyinhub.web.controller.api.TopicContentSafetyTestFixtures.wire(controller, contentSecurity);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", mock(IMerchantAccessService.class));
         // RUN-52 发布者实名:本用例测的是「业务闸文案能不能原样透到用户面前」,实名闸在这里放行

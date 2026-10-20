@@ -71,6 +71,25 @@ class TopicSaleReviewDecouplingTest {
         auditTaskService = mock(IAuditTaskService.class);
         canonicalMutationService = mock(ITopicSaleCanonicalMutationService.class);
         commercialReviewService = mock(ITopicCommercialReviewService.class);
+        // Mapper 成功插入须返回 1 并回填生成 ID(与 TopicUpdateByOwnerTest 同夹具)
+        java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(801L);
+        doAnswer(invocation -> {
+            com.chengyinhub.business.domain.CmsTopicChapter chapter = invocation.getArgument(0);
+            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
+            return 1;
+        }).when(chapterMapper).insertCmsTopicChapter(any());
+        java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(901L);
+        doAnswer(invocation -> {
+            com.chengyinhub.business.domain.CmsTopicNode node = invocation.getArgument(0);
+            if (node != null) node.setId(nodeIds.getAndIncrement());
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
+        java.util.concurrent.atomic.AtomicLong activityIds = new java.util.concurrent.atomic.AtomicLong(1001L);
+        doAnswer(invocation -> {
+            CmsActivity activity = invocation.getArgument(0);
+            if (activity != null) activity.setId(activityIds.getAndIncrement());
+            return 1;
+        }).when(activityMapper).insertCmsActivity(any());
 
         svc = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(svc, "supplyReviewService", mock(
