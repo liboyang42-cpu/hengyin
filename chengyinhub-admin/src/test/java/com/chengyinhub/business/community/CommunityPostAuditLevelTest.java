@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
  */
 class CommunityPostAuditLevelTest {
     private static final String IMAGE = "upload/0123456789abcdef0123456789abcdef.jpg";
+    private static final String SIGNED_IMAGE = "https://cdn.example/community/image.jpg";
 
     private CommunityPostMapper mapper;
     private IContentSafetyGate safetyGate;
@@ -112,7 +113,7 @@ class CommunityPostAuditLevelTest {
 
         publishWith(SafetyDecision.pass(), Collections.singletonList(media));
 
-        verify(wx).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, 7L, IMAGE, "openid-9");
+        verify(wx).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, 7L, SIGNED_IMAGE, "openid-9");
     }
 
     @Test
@@ -210,7 +211,7 @@ class CommunityPostAuditLevelTest {
         try (MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class)) {
             storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(IMAGE)).thenCallRealMethod();
             storage.when(() -> FileOssUploadUtils.generateCommunityMediaPresignedUrl(IMAGE))
-                    .thenReturn("https://cdn.example/community/image.jpg");
+                    .thenReturn(SIGNED_IMAGE);
             service.publish(9L, null, 7L, state);
         }
     }
