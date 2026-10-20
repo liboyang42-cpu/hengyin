@@ -237,7 +237,13 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
             officialEventV2Service.applyAuditDecision(eventId, approved, reason, submitterId);
             return;
         }
-        if (!isPendingReview(e)) {
+        if (isCoverTakenDownDuringReview(e)) {
+            // 审核期间封面机审违规已自动下线(WxContentSecurityServiceImpl, AUDIT-G1-4):只能驳回结案,
+            // 不能人工通过把违规封面放出去;否则审核单通过/驳回都抛错,永远关不掉。
+            if (approved) {
+                throw new ServiceException("官方活动封面内容安全违规已自动下线，只能驳回，请主办方更换封面后重新提交");
+            }
+        } else if (!isPendingReview(e)) {
             throw new ServiceException("官方活动审核状态已变化，请刷新后重试");
         }
         OfficialEvent upd = new OfficialEvent();
@@ -247,6 +253,11 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
         upd.setControlState("NORMAL");
         upd.setUpdateTime(new Date());
         eventMapper.updateOfficialEvent(upd);
+    }
+
+    private boolean isCoverTakenDownDuringReview(OfficialEvent e) {
+        return e.getStatus() != null && e.getStatus() == OfficialEvent.ST_OFFLINE
+                && OfficialEvent.CONTROL_PENDING_REVIEW.equals(e.getControlState());
     }
 
     private boolean isPendingReview(OfficialEvent e) {
