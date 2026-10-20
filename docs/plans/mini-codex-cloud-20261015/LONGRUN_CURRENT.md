@@ -1,3 +1,13 @@
+## 当前605：完整fresh SQL通过，POST_DEPLOY／旧JAR仍未运行
+
+[PR392固定6054b634785fc8af8c2deba44d40e3aab96ae4c2](https://github.com/liboyang42-cpu/hengyin/commit/6054b634785fc8af8c2deba44d40e3aab96ae4c2)，直接父033e626d1cc505cab65af1ab60076482e31b4cb4。C00已读公开源码并核SQL SHA256为 `0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead`：真人另行批准了原候选1df69556的单行NULL修正；原作者回执已消费一次授权并恢复正常保护。四路径源码交付冻结、原owner锁保留；既有测试计数11→14不等于14项已经执行。
+
+验证协调者实际报告：完整fresh485台账／205pre／378表，基线seed＋migration问题0、6／6seed负控通过；每次run_file强制schema_only=False，DATA_ASSERT观察0且未抑制，builder0／client0／无OOM。新库独立读回仅finance verify／operator payout，相反两项0；旧库双持异常完整保留不删。精确自有client已确认清理，212守卫／预算、global及他库counts保持。原始文件为 `evidence/fresh605-{result.json,builder.log,client-run.json}` 和 `evidence/role-two-way605-readback.tsv`，实际报告由验证者提供；C00未运行SQL／Java或审阅这些原始数据库工件。
+
+**仅当前605 SQL通过**，不继承21的HTTP／JAR／18delta成绩。原21快照／4报告／首次role-both原文件保留，新旧读回分文件。3项POST_DEPLOY需候选bean＋health仍NOT_RUN，Java实际0，旧JAR实际运行仍NOT_RUN；数据库restore PASS不能代替旧JAR。#397三路径已由验证者核size／hash并纳入605，未merge397或master；无生产／部署。精确分层见 `ROLE_PAGE_GRANT_ASSERT15_TRIAGE_21aaa153.json.runtime_rehearsal_current.fresh605`，此前837工程闭环不变。
+
+## 先前限定批准与待交付记录（历史）
+
 ## 当前独立迁移演练：限定修正已批准，由PR392原作者独占执行
 
 固定 `21aaa1536cec8a9baa0f7b0494c2597bf5e09243` 的新／旧隔离库读回确认：20261013补页迁移产生了finance payout与operator verify的交叉授权，破坏20260816既有互斥。旧operator payout与finance verify本身是合法授权，必须保留；原statement15 DATA_ASSERT红证据保留，不能以结构执行0 SQL错误判整体通过。
