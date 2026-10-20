@@ -2803,6 +2803,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public void markReviewFlag(Long topicId, boolean flagged) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.updateReviewFlag(topicId, flagged ? 1 : 0);
+    }
+
+    @Override
     public int graduateBeta(Long topicId) {
         // 竞态安全:仅当前确在 Beta 期(beta_flag=1)才清,重复点击/并发只成功一次
         return cmsTopicMapper.graduateBetaIfBeta(topicId);

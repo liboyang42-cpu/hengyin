@@ -1491,6 +1491,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     if (cmsTopicMapper.updateCmsTopic(t) != 1) {
                         throw new ServiceException("主题审核状态保存失败");
                     }
+                    // AUDIT-INT-8:人工过审 = 抽检通过,清掉先发后审打标的抽检池标记(#377 review_flag)。
+                    cmsTopicMapper.updateReviewFlag(bizId, 0);
                     // LINEAR 同样依赖 published_config_version 作为“已发布”事实；图虽为 null，
                     // 仍必须经统一发布口递增版本，否则审核通过后新局会被判“路线尚未发布”。
                     if (!alreadyPublished) cmsTopicServiceProvider.getObject().publishApprovedRouteSnapshot(bizId);

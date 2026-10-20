@@ -122,6 +122,9 @@ public interface CmsTopicMapper
     /** 供给、候选或商家状态变化后使旧城市复核失效；NULL 必须用专用 SQL 显式写入。 */
     int clearCircleReviewedAt(@Param("id") Long id, @Param("updateTime") Date updateTime);
 
+    /** 抽检池标记(#377 cms_topic.review_flag):1=先发后审放行但待抽检,0=抽检已通过/未打标。 */
+    public int updateReviewFlag(@Param("id") Long id, @Param("reviewFlag") int reviewFlag);
+
     /** 上下架 CAS：只有当前值等于 expected 才翻转，禁止陈旧请求覆盖新状态(NULL 按 0 处理)。 */
     public int casUserStatus(@Param("id") Long id,
                              @Param("expected") Integer expected,

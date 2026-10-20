@@ -977,6 +977,8 @@ public class ApiTopicController extends BaseController {
         try {
             Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
             if (isDraft != null && isDraft == 1) return;
+            // AUDIT-INT-8:放行但进入抽检池(#377 cms_topic.review_flag);抽检通过由审核台清 0。
+            cmsTopicService.markReviewFlag(topicId, true);
             com.chengyinhub.business.domain.AuditTask q = new com.chengyinhub.business.domain.AuditTask();
             q.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC);
             q.setBizId(topicId);

@@ -102,6 +102,21 @@ class ApiTopicPostReviewTest {
                 contains("TEXT_REVIEW"));
     }
 
+    /** AUDIT-INT-8:打标的同时把 cms_topic.review_flag 置 1(#377 的列此前无写入方)。 */
+    @Test
+    void flaggedPublishMarksTopicReviewFlag() {
+        controller.createTopic(createDto("待复核的主题名"));
+
+        verify(topicService).markReviewFlag(TOPIC, true);
+    }
+
+    @Test
+    void cleanPublishLeavesReviewFlagAlone() {
+        controller.createTopic(createDto("正常主题名"));
+
+        verify(topicService, never()).markReviewFlag(anyLong(), org.mockito.ArgumentMatchers.anyBoolean());
+    }
+
     @Test
     void riskyText_isRefused() {
         AjaxResult result = controller.createTopic(createDto("违规主题名"));
