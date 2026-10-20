@@ -89,7 +89,7 @@ def all_required_clean(directory):
         ("SpoilerAccessMybatisIntegrationTest", 7),
         ("SquareEditFollowMybatisIntegrationTest", 7),
         ("RoamSessionWriteMybatisIntegrationTest", 12),
-        ("RoamLocationRetentionMySqlIT", 20),
+        ("RoamLocationRetentionMySqlIT", 21),
         ("ComplaintPeriodWithdrawalGateMybatisIntegrationTest", 7),
         ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
@@ -145,10 +145,10 @@ class FundsItGateTest(unittest.TestCase):
         short = "RoamLocationRetentionMySqlIT"
         for defect, counts, expected in (
             ("missing", None, "无 surefire 报告"),
-            ("skipped", dict(tests=20, skipped=1), "skipped"),
-            ("error", dict(tests=20, errors=1), "errors"),
-            ("failure", dict(tests=20, failures=1), "failures"),
-            ("short", dict(tests=19), "实跑用例"),
+            ("skipped", dict(tests=21, skipped=1), "skipped"),
+            ("error", dict(tests=21, errors=1), "errors"),
+            ("failure", dict(tests=21, failures=1), "failures"),
+            ("short", dict(tests=20), "实跑用例"),
         ):
             with self.subTest(defect=defect):
                 all_required_clean(self.dir)
@@ -227,9 +227,11 @@ class FundsItExpectedCountTest(unittest.TestCase):
 
     def test_roam_retention_suite_is_registered_with_exact_source_count_and_execution_selector(self):
         short = "RoamLocationRetentionMySqlIT"
-        self.assertEqual(20, funds_it_gate.EXPECTED[short])
+        self.assertEqual(21, funds_it_gate.EXPECTED[short])
         source = _REPO_ROOT / funds_it_gate.SOURCE_FILES[short]
-        self.assertEqual(20, funds_it_gate.count_test_methods(source.read_text(encoding="utf-8")))
+        source_text = source.read_text(encoding="utf-8")
+        self.assertEqual(21, funds_it_gate.count_test_methods(source_text))
+        self.assertIn("void realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay()", source_text)
         import re
         selector = re.search(r"-Dtest=([^\s]+)", _GATE_SCRIPT.read_text(encoding="utf-8")).group(1).split(",")
         self.assertEqual(1, selector.count(short))
