@@ -13,12 +13,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="reasonText" column="reason_text" />
         <result property="snapshotJson" column="snapshot_json" />
         <result property="revertedRecordId" column="reverted_record_id" />
+        <result property="reasonCodesJson" column="reason_codes_json" />
         <result property="createTime" column="create_time" />
     </resultMap>
 
     <select id="selectAuditRecordList" parameterType="AuditRecord" resultMap="AuditRecordResult">
         select id, task_id, action, operator_id, reason_code, reason_text, snapshot_json,
-               reverted_record_id, create_time
+               reverted_record_id, reason_codes_json, create_time
         from audit_record
         <where>
             <if test="taskId != null"> and task_id = #{taskId}</if>
@@ -42,6 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="reasonText != null">reason_text,</if>
             <if test="snapshotJson != null">snapshot_json,</if>
             <if test="revertedRecordId != null">reverted_record_id,</if>
+            <if test="reasonCodesJson != null">reason_codes_json,</if>
             <if test="createTime != null">create_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -52,6 +54,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="reasonText != null">#{reasonText},</if>
             <if test="snapshotJson != null">#{snapshotJson},</if>
             <if test="revertedRecordId != null">#{revertedRecordId},</if>
+            <if test="reasonCodesJson != null">#{reasonCodesJson},</if>
             <if test="createTime != null">#{createTime},</if>
         </trim>
     </insert>

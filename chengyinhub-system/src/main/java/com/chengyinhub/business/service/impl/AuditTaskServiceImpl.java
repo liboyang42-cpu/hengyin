@@ -698,6 +698,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         } else if (request.getReasonText() != null) {
             request.setReasonText(trimReason(request.getReasonText()));
         }
+        // 固定清单原因编码：清单外一律 400(IllegalArgumentException)，不落任何状态。
+        request.setReasonCodes(com.chengyinhub.business.service.support.AuditReasonCodes.normalize(request.getReasonCodes()));
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
@@ -812,6 +814,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         record.setOperatorId(operatorId);
         record.setReasonCode(request.getReasonCode());
         record.setReasonText(request.getReasonText());
+        record.setReasonCodesJson(com.chengyinhub.business.service.support.AuditReasonCodes.toJson(request.getReasonCodes()));
         record.setSnapshotJson(task.getSnapshotJson());
         record.setCreateTime(now);
         if (auditRecordMapper.insertAuditRecord(record) != 1) {
@@ -980,6 +983,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 : (upheld ? "你提交的内容未通过审核" : "你提交的内容已通过审核");
         String reason = request.getReasonText() == null || request.getReasonText().isEmpty()
                 ? outcome : request.getReasonText();
+        // 驳回/举报成立通知带上固定清单原因的中文标签(见 AuditReasonCodes)，自由文本照旧附后。
+        List<String> reasonCodes = upheld && request.getReasonCodes() != null
+                ? request.getReasonCodes() : java.util.Collections.<String>emptyList();
+        List<String> reasonLabels = com.chengyinhub.business.service.support.AuditReasonCodes.labels(reasonCodes);
+        String reasonLine = reasonLabels.isEmpty() ? reason : String.join("、", reasonLabels) + "；" + reason;
         for (java.util.Map.Entry<Long, String> recipient : recipients.entrySet()) {
             if (recipient.getKey() == null || recipient.getKey() <= 0) continue;
             java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
@@ -988,10 +996,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             result.put("bizId", task.getBizId());
             result.put("outcome", outcome);
             result.put("reason", reason);
+            if (!reasonCodes.isEmpty()) {
+                result.put("reasonCodes", reasonCodes);
+                result.put("reasonLabels", reasonLabels);
+            }
             result.put("followUp", "本通知保留处理结果；如有异议，请通过客服提供审核任务编号补充材料。");
             java.util.Map<String, Object> card = new java.util.LinkedHashMap<>();
             card.put("title", recipient.getValue());
-            card.put("sub", outcome + "。原因：" + reason);
+            card.put("sub", outcome + "。原因：" + reasonLine);
             card.put("result", result);
             String json;
             try {
@@ -1336,6 +1348,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                         record.getReasonCode() == null ? null
                                 : com.chengyinhub.business.service.support.CommunityReportPolicy.find(record.getReasonCode());
                 if (reason != null) minutes = Math.min(minutes, reason.getFirstResponseMinutes());
+                // 驳回时勾选的固定清单编码与举报原因同名同义(如 MINOR_SAFETY)，同样参与紧急判定。
+                for (String code : record.getReasonCodes()) {
+                    reason = com.chengyinhub.business.service.support.CommunityReportPolicy.find(code);
+                    if (reason != null) minutes = Math.min(minutes, reason.getFirstResponseMinutes());
+                }
             }
         }
         return new Date(now.getTime() + minutes * 60_000L);
@@ -1916,6 +1933,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             item.setAction(record.getAction());
             item.setOperatorId(record.getOperatorId());
             item.setReasonText(record.getReasonText());
+            item.setReasonCodesJson(record.getReasonCodesJson());
             item.setRevertedRecordId(record.getRevertedRecordId());
             item.setCreateTime(record.getCreateTime());
             safe.add(item);
