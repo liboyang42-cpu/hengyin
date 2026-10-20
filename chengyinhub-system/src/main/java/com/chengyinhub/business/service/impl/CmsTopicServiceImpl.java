@@ -4551,6 +4551,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                                      Long memberId, String username, boolean chapterFlowV2, boolean draft) {
         Long topicId = exist.getId();
         preserveOmittedAuthorConfig(exist, dto);
+        // 2026-10-20 分级审核:写前记下开售条款指纹,重建后只有价格/条款变了才重置开售审核。
+        java.util.Map<String, Object> saleTermsBefore = saleTerms(exist);
         // 9-15 拍板:写前记下「已发布免费主题」,整包重建后复核;变商业即抛出,整个事务回滚。
         boolean conversionProtected = commercialTopicPolicy.isConversionProtected(exist);
         // 招募截止会把主题送进 RECRUITING(商业轨道),之后不再受保护 ⇒ 同样算转商业。
@@ -4740,7 +4742,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!draft) mediaPublicationGuard.requireTopicPublication(topicId);
 
         // 版本必须先递增，再创建新审核快照；否则本次编辑刚提交的任务会立刻被判为旧批准。
-        invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        // 2026-10-20 分级审核:开售审核与内容审核解耦 —— 只有价格/条款(TopicSaleTerms)变化才递增版本
+        // (= 重置开售审核);只改故事/名称/简介时版本不动,待审的开售审核单原地刷新快照,不丢进度。
+        if (com.chengyinhub.business.service.support.TopicSaleTerms.changed(saleTermsBefore,
+                saleTerms(cmsTopicMapper.selectCmsTopicById(topicId)))) {
+            invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        } else {
+            refreshPendingSaleReview(topicId, memberId);
+        }
 
         // R18-DRAFT:草稿保存不得触发任何审核 —— 起草稿只是存内容。这里原来按「带 recruitDeadline
         // 即送立项审」走,对草稿等于一次保存就把主题推进 RECRUITING(商业轨道);草稿要等作者点发布
@@ -4821,6 +4830,40 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto.getProductType() == null && !hasTicketMode && ProductType.isValid(exist.getProductType())) {
             dto.setProductType(exist.getProductType());
         }
+    }
+
+    /** 开售条款指纹;任何读不到/算不出的情况返回 null,由 {@code TopicSaleTerms.changed} 当作已变化。 */
+    private java.util.Map<String, Object> saleTerms(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || commercialTopicPolicy == null) return null;
+        com.chengyinhub.business.service.support.CommercialTopicPolicy.Evaluation evaluation =
+                commercialTopicPolicy.evaluate(topic.getId());
+        if (evaluation == null) return null;
+        return com.chengyinhub.business.service.support.TopicSaleTerms.of(
+                commercialTopicPolicy.saleParameters(topic, evaluation));
+    }
+
+    /**
+     * 条款没变时,待审(PENDING/ESCALATED)的开售审核单用最新内容刷新快照(同一张单,不重排队),
+     * 审核员通过时看到并冻结的就是当前内容。没有待审开售单、或不在 PRICING,什么都不做。
+     */
+    private void refreshPendingSaleReview(Long topicId, Long memberId) {
+        if (topicCommercialReviewService == null || auditTaskService == null) return;
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (current == null || !Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(current.getLifecycle())) {
+            return;
+        }
+        AuditTask query = new AuditTask();
+        query.setBizType(AuditTask.BIZ_TOPIC_SALE_REVIEW);
+        query.setBizId(topicId);
+        List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
+        boolean open = false;
+        if (tasks != null) for (AuditTask task : tasks) {
+            if (AuditTask.STATUS_PENDING.equals(task.getStatus()) || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) {
+                open = true;
+                break;
+            }
+        }
+        if (open) topicCommercialReviewService.submitSaleReview(topicId, memberId);
     }
 
     private void invalidateApprovedCanonical(Long topicId, String mutation) {
