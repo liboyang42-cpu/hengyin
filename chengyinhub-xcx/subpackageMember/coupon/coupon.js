@@ -104,7 +104,7 @@ Page({
    */
   onShow() {
     this._visible = true;
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     var that = this
     that.getList()
     that.loadSummary()
@@ -263,7 +263,7 @@ Page({
     });
   },
   GoAdd: function () {
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageMember/couponInfo/couponInfo'
         + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '')
     });

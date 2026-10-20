@@ -79,8 +79,8 @@ Page({
   },
   goInfo(e){
     const index = e.currentTarget.dataset.index;
-    const item = this.data.list[index];
-    wx.navigateTo({
+    const item = this.data.list[index]; if (!item || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/pages/templatedetail/templatedetail?id=' + item.id + '&scope=my' +
         (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : ''),
     })
@@ -338,7 +338,7 @@ Page({
    */
   onShow() {
     const isMerchant = this.data.operationScope === 'MERCHANT' || policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
-    this.setData({ isMerchant: isMerchant });
+    this.setData({ isMerchant: isMerchant }); this._navigating = false;
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
     // 页面显示时刷新数据，确保数据最新
