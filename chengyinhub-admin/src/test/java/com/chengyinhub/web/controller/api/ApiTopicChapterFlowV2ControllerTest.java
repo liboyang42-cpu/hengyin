@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.dto.ChapterBlockDTO;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.TopicUpdateDTO;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -96,6 +97,32 @@ class ApiTopicChapterFlowV2ControllerTest
         assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("nodeIndex 越界"),
                 "A4 必须把具体下标闸文案返回给客户端");
+    }
+
+    /** F-L6-09：blocks 已物化的主题拒绝旧版保存 → 426 走小程序「版本需更新」，文案不变。 */
+    @Test
+    void legacySaveOfMaterializedFlowAsksOldClientToUpgrade()
+    {
+        when(topicService.updateTopicByOwner(any(), anyLong(), anyString()))
+                .thenThrow(new ChapterFlowClientUpgradeRequiredException("请更新小程序后编辑该主题"));
+
+        AjaxResult result = controller.updateTopic(new TopicUpdateDTO());
+
+        assertEquals(HttpStatus.UPGRADE_REQUIRED, result.get(AjaxResult.CODE_TAG));
+        assertEquals("请更新小程序后编辑该主题", result.get(AjaxResult.MSG_TAG));
+    }
+
+    /** 负控：旧版保存接口上的普通章节流契约错误仍是 400，不被升级成 426。 */
+    @Test
+    void legacySaveOrdinaryChapterFlowErrorStaysBadRequest()
+    {
+        when(topicService.updateTopicByOwner(any(), anyLong(), anyString()))
+                .thenThrow(new ChapterFlowValidationException("扫码到达和 GPS 到达请添加为地点"));
+
+        AjaxResult result = controller.updateTopic(new TopicUpdateDTO());
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
+        assertEquals("扫码到达和 GPS 到达请添加为地点", result.get(AjaxResult.MSG_TAG));
     }
 
     @Test

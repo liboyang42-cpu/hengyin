@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.ClubQualityDecision;
 import com.chengyinhub.business.service.IClubEditionCompensationService;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,7 +110,8 @@ class ApiClubCompensationControllerTest {
     void theRetiredReportEndpointRefusesReadablyAndNeverReachesTheService() {
         Map<String, Object> result = controller.reportHours(hoursBody(CLUB));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // F-L6-09：只有旧客户端还会打这个地址 → 426 走小程序统一的「版本需更新」分支，文案不变。
+        assertEquals(HttpStatus.UPGRADE_REQUIRED, result.get(AjaxResult.CODE_TAG));
         assertEquals("工时自报已下线，本期结算不再需要填写工时", result.get(AjaxResult.MSG_TAG),
                 "旧版本小程序拿到的必须是一句人话，不是 500 白屏");
         verifyNoInteractions(compensationService);

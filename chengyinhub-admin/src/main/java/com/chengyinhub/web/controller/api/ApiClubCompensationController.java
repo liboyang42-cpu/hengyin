@@ -7,6 +7,7 @@ import com.chengyinhub.business.service.IClubEditionCompensationService;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +65,7 @@ public class ApiClubCompensationController extends BaseController {
      */
     @PostMapping("/hours/report")
     public AjaxResult reportHours(@RequestBody Map<String, Object> body) {
-        return error("工时自报已下线，本期结算不再需要填写工时");
+        return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, "工时自报已下线，本期结算不再需要填写工时");
     }
 
     /**

@@ -84,9 +84,9 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual([], rs.validate_registry(registry()))
 
     def test_batch_totals_match_the_remaining_receipt(self):
-        # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+3；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
+        # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+3；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）；漏斗最大年份修复 4（含 TIMESTAMPADD 负控）。
         expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 8, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 71}
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 71, "funnel-max-date": 4}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

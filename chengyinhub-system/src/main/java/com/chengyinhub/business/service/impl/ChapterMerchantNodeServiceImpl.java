@@ -46,6 +46,12 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     private CmsTopicChapterMapper chapterMapper;
     @Autowired
     private CmsTopicMapper topicMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.RegistrationEntitlementMapper registrationEntitlementMapper;
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
+    @Autowired
+    private com.chengyinhub.business.service.INotifyService notifyService;
 
     public ChapterMerchantNodeServiceImpl(ICmsTopicNodeService nodeService,
                                           ICmsTopicChapterService chapterService,
@@ -301,9 +307,13 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
                 }
                 assertWithinTerms(termsOf(confirmed, chapterService.selectCmsTopicChapterById(node.getChapterId())),
                         requireOwnTemplate(node.getTemplateId(), node.getMerchantMemberId()), node);
-                if (Integer.valueOf(0).equals(confirmed.getStatus())
-                        && offerMapper.approveReplacement(confirmed.getId(), confirmed.getMerchantId()) != 1) {
-                    throw new IllegalStateException("补位供给已过期或状态变化，请重新确认");
+                if (Integer.valueOf(0).equals(confirmed.getStatus())) {
+                    if (offerMapper.approveReplacement(confirmed.getId(), confirmed.getMerchantId()) != 1) {
+                        throw new IllegalStateException("补位供给已过期或状态变化，请重新确认");
+                    }
+                    // SC-EXIT-REPLACE-LOCKED:补位供给 0→1 只发生一次,玩家通知挂在这次状态迁移上;
+                    // 重放审核走不到这里(点位已非待审 / 供给已生效),不会重复通知。口径与退出通知一致。
+                    notifyPlayersOfReplacement(topic, node.getChapterId(), confirmed.getId());
                 }
             }
         }
@@ -317,6 +327,21 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         node.setUpdateTime(new Date());
         nodeService.updateCmsTopicNode(node);
         return node;
+    }
+
+    private void notifyPlayersOfReplacement(CmsTopic topic, Long chapterId, Long replacementOfferId) {
+        if (businessNotice == null) return;
+        businessNotice.executeAfterCommit("chapter-supply-replace-players", replacementOfferId, () -> {
+            List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
+            boolean delivered = true;
+            if (affected != null) for (Long playerId : new java.util.LinkedHashSet<>(affected)) {
+                if (playerId != null && playerId > 0 && !playerId.equals(topic.getMemberId())) {
+                    delivered = notifyService.notifyOfficialBroadcast(playerId, "已购章节供给有变化",
+                            "主题「" + topic.getName() + "」有待核销章节已由新商家补位，请在出发前查看最新点位，如有疑问请联系主办方。") && delivered;
+                }
+            }
+            return delivered;
+        });
     }
 
     @Override
