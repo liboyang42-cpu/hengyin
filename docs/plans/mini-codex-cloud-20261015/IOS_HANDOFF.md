@@ -1,4 +1,12 @@
-## 当前最终共同修复：PR394固定a89a74，七文件冻结WAIT_CI
+## 当前唯一剩余夹具：既有私有媒体出站签名URL合同已核定
+
+固定 `a89a74c4077f0ee12369e5199446619b40f79695` 完整Backend报告12696项／1失败／0错误／628跳过，仅CommunityPostAuditLevelTest的directPublishWithImages用例仍期待原IMAGE key；其余原失败报告已闭环。不是OSS凭据问题：C00只读核到publish先mediaForRead并真实校验canonical key，再把临时签名URL放入mediaUrls供微信异步审核。既有CommunityPrivateMediaContractTest／CommunityAuditMediaPreviewTest源码也保签名投影、存储key不变及签名失败无长URL降级合同；未执行这些回归。
+
+仅授权本地root同一修复槽修改 `chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java`：新增沿现有stub URL的SIGNED_IMAGE常量，签名stub返回该常量，唯一异步提交断言第三参IMAGE→SIGNED_IMAGE。类型17／帖文7／openid-9／精确一次调用不变，不改anyString或verify计数；canonical key解析仍thenCallRealMethod，其他11方法／所有其他业务断言保持。生产、权限／媒体政策、测试门禁、凭据／网络均不动。精确合同与授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.signed_image_contract_review` 及 `signed_image_assertion_repair_authority`。
+
+同a89的HTTP工作流已SUCCESS且五链报告通过，Funds检查亦SUCCESS；首波多个真库batch成功、余项继续由root跟进，未提供本轮完整batch回执，不签整体完成。C00只读当前元数据，不从旧源继承，也不把未来metadata／test-only SHA称为全部业务复跑。下一单测试修复尚无公开SHA，其余源码／三队保持冻结，无新增writer或Cloud测试；整体最终验收待剩余结果集中签收。
+
+## a89共同修复交付与当时WAIT_CI历史
 
 [PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已一次push固定 `a89a74c4077f0ee12369e5199446619b40f79695`，直接父提交 `6aa8c2c676c48ab1203c7156c85783ef4b57783a`。C00直接核读公开diff：精确七授权路径，52行新增／43行删除。新主包工具与6aa分包旧实现内容完全相同；旧路径只留单行forward，三caller七处引用恢复主包utils，单一实现；无app／配置／组件／策略变动。
 

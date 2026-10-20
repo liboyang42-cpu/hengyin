@@ -3091,7 +3091,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "A89_COMMON_REPAIR_FROZEN_WAIT_CI_NO_INHERITED_ACCEPTANCE",
+    "state": "A89_BACKEND_ONE_FIXTURE_FAIL_SIGNED_URL_CONTRACT_CONFIRMED_REPAIR_AUTHORIZED",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -3100,7 +3100,7 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "a89a74c4077f0ee12369e5199446619b40f79695 / SOURCE_DELIVERED_FROZEN_WAIT_CI; no old-source result inherited",
+    "combined_candidate": "a89a74c4077f0ee12369e5199446619b40f79695 / ONE_FIXTURE_FAILURE_REMAINS_OVERALL_NOT_ACCEPTED",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -3119,7 +3119,7 @@
     "current_runs": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
       "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
-      "state": "IN_PROGRESS_NO_FINAL_VERDICT"
+      "state": "A89_HTTP_FUNDS_SUCCESS_BACKEND_FAILURE_OTHER_RESULTS_PENDING"
     },
     "conflict_resolution": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -3249,6 +3249,25 @@
       "next_patch_public_sha": "NOT_DELIVERED",
       "provisional71JS_resourcePASS_inherited": false,
       "historical_for_current_candidate": true
+    },
+    "signed_image_assertion_repair_authority": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.signed_image_assertion_repair_authority",
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "base_source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "state": "AUTHORIZED_SINGLE_TEST_SIGNED_URL_FIXTURE_ASSERTION_SOURCE_NOT_DELIVERED",
+      "authorized_exact_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java"
+      ],
+      "scope": "Only SIGNED_IMAGE constant/existing signing stub return and one async assertion third argument; preserve canonical parser, exact identity/count and all other test assertions.",
+      "new_source_sha": "NOT_DELIVERED"
+    },
+    "a89_current_validation": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.a89_current_validation",
+      "source_sha": "a89a74c4077f0ee12369e5199446619b40f79695",
+      "state": "BACKEND_ONE_FIXTURE_FAILURE_HTTP_FUNDS_SUCCESS_OVERALL_NOT_ACCEPTED",
+      "backend": "12696 reported/1F0E628Skipped; no storage skipped0 claim",
+      "new_source_result_inherited": false
     }
   }
 }
