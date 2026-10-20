@@ -5,6 +5,7 @@ import com.chengyinhub.common.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.chengyinhub.business.mapper.ClubMapper;
@@ -101,7 +102,7 @@ public class ClubServiceImpl implements IClubService
     {
         requireNameFree(club.getName() == null ? null : club.getName().trim(), null, null);
         club.setCreateTime(DateUtils.getNowDate());
-        return clubMapper.insertClub(club);
+        return holdingName(() -> clubMapper.insertClub(club));
     }
 
     @Override
@@ -302,14 +303,14 @@ public class ClubServiceImpl implements IClubService
             club.setRejectReason(null);
             club.setMemberCount(null);
             club.setUpdateTime(DateUtils.getNowDate());
-            if (clubMapper.updateClub(club) != 1)
+            if (holdingName(() -> clubMapper.updateClub(club)) != 1)
             {
                 throw new ServiceException("俱乐部重新提交失败，请重试", HttpStatus.CONFLICT);
             }
             return counted + 1;
         }
         club.setCreateTime(DateUtils.getNowDate());
-        if (clubMapper.insertClub(club) != 1)
+        if (holdingName(() -> clubMapper.insertClub(club)) != 1)
         {
             throw new ServiceException("俱乐部创建失败，请重试", HttpStatus.CONFLICT);
         }
@@ -327,8 +328,37 @@ public class ClubServiceImpl implements IClubService
         if (name == null || name.isEmpty()) return;
         if (clubMapper.countClubsHoldingName(name, ownerToSkip, clubToSkip) > 0)
         {
-            throw new ServiceException("俱乐部名称已被使用，请换一个", HttpStatus.CONFLICT);
+            throw new ServiceException(NAME_TAKEN, HttpStatus.CONFLICT);
         }
+    }
+
+    private static final String NAME_TAKEN = "俱乐部名称已被使用，请换一个";
+    private static final String HOLDING_NAME_INDEX = "uk_club_holding_name";
+
+    /**
+     * 两位主理人同一时刻抢同一个新名称时,上面的 count 都看不到对方,由库里的 uk_club_holding_name 兜底。
+     * 只把这个索引的冲突翻译成同一句 409;别的唯一键冲突照常抛出。
+     */
+    private static int holdingName(java.util.function.IntSupplier write)
+    {
+        try
+        {
+            return write.getAsInt();
+        }
+        catch (DuplicateKeyException e)
+        {
+            if (isHoldingNameConflict(e)) throw new ServiceException(NAME_TAKEN, HttpStatus.CONFLICT);
+            throw e;
+        }
+    }
+
+    static boolean isHoldingNameConflict(DuplicateKeyException e)
+    {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause())
+        {
+            if (t.getMessage() != null && t.getMessage().contains(HOLDING_NAME_INDEX)) return true;
+        }
+        return false;
     }
 
     /** 改名才查重:名称没变(包括历史上已经重名的俱乐部)照常保存。 */
@@ -346,7 +376,7 @@ public class ClubServiceImpl implements IClubService
     {
         requireRenameFree(club);
         club.setUpdateTime(DateUtils.getNowDate());
-        return clubMapper.updateClub(club);
+        return holdingName(() -> clubMapper.updateClub(club));
     }
 
     @Override
@@ -526,7 +556,7 @@ public class ClubServiceImpl implements IClubService
             }
         }
         club.setUpdateTime(DateUtils.getNowDate());
-        if (clubMapper.updateClub(club) != 1)
+        if (holdingName(() -> clubMapper.updateClub(club)) != 1)
         {
             throw new IllegalStateException("俱乐部资料保存失败，请重试");
         }
