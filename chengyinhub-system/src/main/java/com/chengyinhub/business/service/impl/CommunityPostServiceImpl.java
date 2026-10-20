@@ -238,6 +238,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         safetySnapshot.put("post", current);
         safetySnapshot.put("media", media);
         safety.setSnapshot(json(safetySnapshot));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
         SafetyDecision safetyDecision = safetyGate.decide(safety);
         if (safetyDecision == null || safetyDecision.isBlock()) {
             throw error("内容未通过安全检查，请修改后重试", 400);
@@ -561,6 +562,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         safety.setText(request.getBody().trim());
         safety.setMediaUrls(Collections.<String>emptyList());
         safety.setSnapshot(json(inserted));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
         SafetyDecision decision = safetyGate.decide(safety);
         if (decision == null || decision.isBlock()) throw error("回复未通过安全检查，请修改后重试", 400);
         String lifecycle = decision.isPass() ? "PUBLISHED" : "CHECKING";
