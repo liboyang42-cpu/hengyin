@@ -107,7 +107,15 @@ class CommunityPostAuditLevelTest {
         Map<String, Object> media = new HashMap<>();
         media.put("derived_object_key", IMAGE);
 
-        publishWith(SafetyDecision.pass(), Collections.singletonList(media));
+        String key = "upload/0123456789abcdef0123456789abcdef.jpg";
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> storage =
+                     org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.communityMediaObjectKey(IMAGE))
+                    .thenReturn(key);
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateCommunityMediaPresignedUrl(key))
+                    .thenReturn(IMAGE);
+            publishWith(SafetyDecision.pass(), Collections.singletonList(media));
+        }
 
         verify(wx).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, 7L, IMAGE, "openid-9");
     }

@@ -65,6 +65,18 @@ class TopicSaleReviewDecouplingTest {
         topicMapper = mock(CmsTopicMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(100L);
+        java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(200L);
+        when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call -> {
+            ((com.chengyinhub.business.domain.CmsTopicChapter) call.getArgument(0))
+                    .setId(chapterIds.incrementAndGet());
+            return 1;
+        });
+        when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call -> {
+            ((com.chengyinhub.business.domain.CmsTopicNode) call.getArgument(0))
+                    .setId(nodeIds.incrementAndGet());
+            return 1;
+        });
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
