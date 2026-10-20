@@ -67,7 +67,7 @@
       <view class="sec-label">主理人身份处理</view>
       <cy-card class="apply-card club-transfer-card">
         <view class="club-transfer-title">商家账号生效前，须完成俱乐部移交</view>
-        <view class="club-transfer-sub">申请可以先提交审核。以下是当前账号名下全部未删除俱乐部；只有已生效俱乐部可进入治理页移交。</view>
+        <view class="club-transfer-sub">只有已生效的俱乐部可以进入治理页移交。</view>
         <view class="club-transfer-row" wx:for="{{ownedClubs}}" wx:key="id">
           <view class="club-transfer-copy">
             <view class="club-transfer-name">{{item.name}}</view>
@@ -249,7 +249,7 @@
             aria-label="商家入驻申请已提交，{{submissionReceipt.name}}，正在等待审核">
         <view class="succ-icon" aria-hidden="true"><cy-icon name="check" size="64" /></view>
         <view class="succ-tit">你的申请已提交</view>
-      <view class="succ-desc">我们会在 1-3 个工作日内完成审核。审核通过且身份条件满足后，商家账号才会生效；审核期间不影响正常使用。</view>
+      <view class="succ-desc">我们会在 1-3 个工作日内完成审核，通过后商家账号生效。</view>
       </view>
       <cy-card class="apply-card receipt-card">
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{submissionReceipt.name || '—'}}</text></view>

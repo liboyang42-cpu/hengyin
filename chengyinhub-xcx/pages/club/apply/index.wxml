@@ -176,7 +176,7 @@
       <view class="st-row">
         <view class="st-badge ok">已生效</view>
       </view>
-      <view class="st-desc">你已成为俱乐部主理人,身份立即生效。L1-L5 等级由平台后台稍后评定,不影响你现在创建与运营俱乐部。</view>
+      <view class="st-desc">你已成为俱乐部主理人，身份立即生效。</view>
       <view class="st-kv" wx:if="{{submissionReceipt && submissionReceipt.leaderName}}"><text class="k">主理人</text><text class="v">{{submissionReceipt.leaderName}}</text></view>
       <view class="st-kv"><text class="k">可建俱乐部</text><text class="v">最多 2 个</text></view>
     </view>

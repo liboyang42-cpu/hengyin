@@ -107,7 +107,7 @@ test('SC-PRIV-05 路由页:连点同意只一趟、提交中拒绝无效、成�
   assert.equal(h.app.getUsageConsent().granted(), true);
 });
 
-test('SC-PRIV-05 进入弹窗点「同意并继续」即同意两份文件:无需勾选,一次提交即结算并返回', async () => {
+test('SC-PRIV-05 未勾选服务协议导致提交失败:调用方不结算,页面留错误;勾选后重试只结算一次', async () => {
   const h = harness();
   h.pages.push({ route: 'pages/legacy/no-gate' });
   const caller = h.caller();
@@ -115,11 +115,16 @@ test('SC-PRIV-05 进入弹窗点「同意并继续」即同意两份文件:无�
   const page = load(h, 'pages/privacy/index.js', 'page');
   h.pages.push(page); page.onLoad();
   page.agreePrivacy({ detail: { buttonId: 'p1' } });
-  page.agreePrivacy({ detail: { buttonId: 'p1' } });
+  await settle();
+  assert.deepEqual(caller, []);
+  assert.equal(page.data.failedAction, 'agree'); assert.ok(page.data.submitError);
+  assert.equal(page.data.submitting, false); assert.equal(h.requests.length, 0); assert.equal(h.backs, 0);
+  page.data.serviceAgreed = true;
+  page.retrySubmit();
+  page.retrySubmit();
   await settle(); h.replyOk(); await settle(); h.replyOk(); await settle();
   assert.deepEqual(caller, [{ event: 'agree', buttonId: 'p1' }]);
   assert.equal(h.requests.length, 2); assert.equal(h.backs, 1);
-  assert.equal(page.data.submitError, '');
 });
 
 test('SC-PRIV-05 DEFECT(记录现状):留痕失败前调用方已被结算 agree;补传重试复用同一幂等号、不再结算', async () => {

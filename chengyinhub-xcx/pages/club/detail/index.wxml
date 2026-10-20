@@ -485,7 +485,7 @@
           </view>
           <!-- CU-C-51:「项目」只数本团自办主题(不含承接来的项目),两个「人次」数的是节点游玩人数
                而不是报名人数 —— 不写清范围就会跟下方项目卡上的「N 人报名」当成同一回事。 -->
-          <view class="club-stats-note">仅统计本俱乐部自办项目，不含承接来的项目；游玩人次 = 到过节点的去重玩家，完成率 = 完成人次 ÷ 游玩人次。</view>
+          <view class="club-stats-note">仅统计本俱乐部自办项目。</view>
           <view class="club-stats-topics" wx:if="{{clubStats.topics.length}}">
             <view class="club-stats-topic" wx:for="{{clubStats.topics}}" wx:key="topicId">
               <text class="club-stats-topic-name">{{item.name}}</text>
