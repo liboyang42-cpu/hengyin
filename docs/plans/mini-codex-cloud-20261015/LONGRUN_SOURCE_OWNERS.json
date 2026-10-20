@@ -5172,7 +5172,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "COMBINED_SOURCE_FROZEN_CI_IN_PROGRESS_ACCEPTANCE_PENDING",
+    "state": "COMBINED95F_FAILURE_OBSERVED_EXACT_REQUIRE_REPAIR_AUTHORIZED",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -5181,7 +5181,7 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "95f038ae57ac38d35d532a07fbd82375c74d887f / CI_IN_PROGRESS_ACCEPTANCE_PENDING; no prior source results inherited",
+    "combined_candidate": "95f038ae57ac38d35d532a07fbd82375c74d887f / NOT_ACCEPTED; exact require repair authorized, no new source delivered",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
@@ -5230,14 +5230,58 @@
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.source_integration_order"
     },
     "current_runs": {
-      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_failure_observations",
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
-      "state": "IN_PROGRESS_NO_VERDICT"
+      "state": "FAILURES_OBSERVED_NOT_ACCEPTED"
     },
     "conflict_resolution": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
       "state": "SOURCE_DELIVERED_FIVE_GRANTED_CONFLICTS_RESOLVED_PENDING_COMBINED_ACCEPTANCE",
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.conflict_resolution"
+    },
+    "integration_repair_authority": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_authority",
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "AUTHORIZED_EXACT_REQUIRE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+      "authorized_exact_paths": [
+        "chengyinhub-xcx/utils/content-report.js",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js"
+      ],
+      "test_file_write_authorized": false
+    },
+    "latest_failure_observations": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_failure_observations",
+      "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+      "state": "FAST_MIGRATION_FUNDS_HTTP_FAILURE_ROOT_CAUSES_PENDING"
+    },
+    "integration_repair_path_grants": {
+      "chengyinhub-xcx/utils/content-report.js": {
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "state": "AUTHORIZED_EXACT_REQUIRE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+        "scope": "Require path correction to existing tool only; original source owner/locks preserved. No UI, policy, test or tool-module edit.",
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_authority"
+      },
+      "chengyinhub-xcx/pages/topic/index/index.js": {
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "state": "AUTHORIZED_EXACT_REQUIRE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+        "scope": "Require path correction to existing tool only; original source owner/locks preserved. No UI, policy, test or tool-module edit.",
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_authority"
+      },
+      "chengyinhub-xcx/pages/templatedetail/templatedetail.js": {
+        "writer": "local root coordinator only",
+        "target_branch": "codex/final-backend-acceptance-20261020",
+        "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "state": "AUTHORIZED_EXACT_REQUIRE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+        "scope": "Require path correction to existing tool only; original source owner/locks preserved. No UI, policy, test or tool-module edit.",
+        "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.integration_repair_authority"
+      }
     }
   }
 }

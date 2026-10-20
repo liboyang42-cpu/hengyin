@@ -1,10 +1,18 @@
-## 当前独立组合：PR394固定95f038，五处冲突解决，验收PENDING
+## 当前组合修复：95f038引用缺口，root三路径最小修复授权
+
+固定组合 `95f038ae57ac38d35d532a07fbd82375c74d887f` 的既有#387定向测试报告5项MODULE_NOT_FOUND。C00只读核到三文件共七个require指向不存在的utils下举报模块；既有动态举报工具为 `chengyinhub-xcx/pages/square/utils/community-report-sheet.js`，导出open/select/cancel。
+
+仅登记本地root在 `codex/final-backend-acceptance-20261020` 同一修复槽修改 `chengyinhub-xcx/utils/content-report.js`、`chengyinhub-xcx/pages/topic/index/index.js`、`chengyinhub-xcx/pages/templatedetail/templatedetail.js` 的require路径，复用该既有工具；不复制／新增模块、不改旧工具、UI、策略、权限或测试，保留原来源冻结与锁。新修复SHA尚未交付；无需新增Cloud作者。精确授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.integration_repair_authority`。
+
+固定95f的Fast gate／Migration safety gate已观察到FAIL，Funds39431906479亦已COMPLETED／FAILURE；[HTTP39432014261](https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261) 现已COMPLETED／FAILURE。这些失败的精确根因待日志核清，不据红灯归到此引用修复或扩大源码权。当前组合未验收，不继承旧源成绩；原运行保留，不取消或重复触发。Cloud仅更新文档，未执行构建、测试、CI或源码修改。
+
+## 独立组合源码交付：PR394固定95f038，五处冲突解决，验收未完成
 
 [草稿PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已公开，固定组合源码 `95f038ae57ac38d35d532a07fbd82375c74d887f`，分支 `codex/final-backend-acceptance-20261020`；base为master但未合并，本轮不合master。来源顺序为 port `b548cdc4d098defb5c4857c793897ca79668d579` → #391 `8bc728ad99d0c748698c5210343e6f4ec782e894` → #385 `b19200a3ad6fc19319665fe5b81ad6161fd9dac7` → #388 `f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a` → #390 `9e8c870c7b748b3f25e3ca3bbb970609bc9a137a` → #387 `0f8d1796983b3a0300462e818efba3f02aa6d2d3`。#388／#390预演及合并均报告无冲突，无新增路径授权。
 
 集成写者已按控制提交 `1e62861bbf8317c10d607c2abf74150c29350c32` 解决五处已授权冲突：Controller保留文本安全门禁及操作者／主体隔离，Service兼保省略配置／节点关系与开售条款前后比较／刷新；行动账由既有生成器按最终WXML重建4755，GET矩阵77项全保，29项GET负控报告通过。以上为源码交付及集成写者观察，C00未执行生成器或测试；不改UI、鉴权策略或CI配置，不据此签收组合后端／真库／HTTP验收。
 
-固定95f038的既有 [GitHub CI39431906431](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431)、[Funds39431906479](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479) 本次核读均IN_PROGRESS，组合结果 **PENDING**；后续真库／HTTP尚无结果登记。41f83九批真库与8bc728五链HTTP及其单源CI均不继承到此组合。原来源和三队源码保持冻结，本地root为唯一集成写者；Cloud仅登记文档，不新增写者、不编译测试或触发CI。
+固定95f038的既有 [GitHub CI39431906431](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906431)、[Funds39431906479](https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479) 先前核读为IN_PROGRESS，现已观察到Fast／Migration safety失败；组合HTTP39432014261也已FAIL，根因待精确日志。组合未验收，不将旧pending视为当前结果；真库最终证据仍待签收。41f83九批真库与8bc728五链HTTP及其单源CI均不继承到此组合。原来源和三队源码保持冻结，本地root为唯一集成写者；Cloud仅登记文档，不新增写者、不编译测试或触发CI。
 
 用户已授权独立整合与现有CI验收；不部署、不执行生产迁移、不新增入口，不修改212／CI／网络。真实微信／设备、出站stub边界、持久迁移及生产未验边界保持。精确来源、冲突及当前证据见 `LONGRUN_REMAINING.json.independent_backend_acceptance`。#391外部已合master的既成事实保留，不构成本轮合master授权。
 
