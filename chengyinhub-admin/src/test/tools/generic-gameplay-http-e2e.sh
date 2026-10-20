@@ -76,6 +76,7 @@ PY
 TEMP_DIR=$(mktemp -d)
 REDIS_PID=''
 JAVA_STATUS=98
+export CHENGYIN_HTTP_E2E_STAGE=schema
 mysql_owned() {
   MYSQL_PWD="${CHENGYIN_MYBATIS_IT_PASSWORD:-}" mysql --no-defaults --protocol=TCP --host=127.0.0.1 \
     --port="$CHENGYIN_MYBATIS_IT_PORT" --user="${CHENGYIN_MYBATIS_IT_USER:-root}" --batch --skip-column-names "$@"
@@ -116,7 +117,8 @@ with socket.socket() as probe:
 PY
   then REDIS_CLEAN=true; fi
   rm -rf "$TEMP_DIR"
-  python3 ci/test_http_e2e_entry.py finalize --output "$PUBLIC" --java-exit "$JAVA_STATUS" --mysql-clean "$MYSQL_CLEAN" --redis-clean "$REDIS_CLEAN"
+  if [[ "$ORIGINAL" == 0 && ( "$MYSQL_CLEAN" != true || "$REDIS_CLEAN" != true ) ]]; then CHENGYIN_HTTP_E2E_STAGE=cleanup; fi
+  CHENGYIN_HTTP_E2E_ORIGINAL_EXIT="$ORIGINAL" python3 ci/test_http_e2e_entry.py finalize --output "$PUBLIC" --java-exit "$JAVA_STATUS" --mysql-clean "$MYSQL_CLEAN" --redis-clean "$REDIS_CLEAN"
   VERIFIED=$?
   if [[ "$ORIGINAL" != 0 || "$VERIFIED" != 0 ]]; then exit 2; fi
   exit 0
@@ -126,9 +128,11 @@ trap 'exit 130' INT TERM
 python3 chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py \
   --profile "$PROFILE" --execute --port "$CHENGYIN_MYBATIS_IT_PORT" --user "${CHENGYIN_MYBATIS_IT_USER:-root}" \
   --database "$CHENGYIN_HTTP_E2E_DATABASE" --report "$CHENGYIN_HTTP_E2E_SCHEMA_REPORT" > "$OUT/fresh-schema.log" 2>&1
+CHENGYIN_HTTP_E2E_STAGE=redis-start
 redis-server --bind 127.0.0.1 --port "$CHENGYIN_HTTP_E2E_REDIS_PORT" --protected-mode yes \
   --save '' --appendonly no --dir "$TEMP_DIR" > "$TEMP_DIR/redis.log" 2>&1 &
 REDIS_PID=$!
+CHENGYIN_HTTP_E2E_STAGE=redis-ready
 READY=0
 for ATTEMPT in {1..50}; do
   kill -0 "$REDIS_PID" 2>/dev/null || { echo 'Private Redis process failed.' >&2; exit 2; }
@@ -136,10 +140,13 @@ for ATTEMPT in {1..50}; do
   sleep 0.1
 done
 [[ "$READY" == 1 ]] || { echo 'Private Redis not ready.' >&2; exit 2; }
+CHENGYIN_HTTP_E2E_STAGE=java-tmp
 mkdir -p "${TMPDIR:-/tmp}/javatmp"
+CHENGYIN_HTTP_E2E_STAGE=java-tests
 JAVA_STATUS=0
 # pom appends its existing Mockito startup javaagent to argLine.
 SERVER_ADDRESS=127.0.0.1 mvn -o -q -pl chengyinhub-admin -am test "-DargLine=$JVM_FLAGS -Djava.io.tmpdir=${TMPDIR:-/tmp}/javatmp -Djava.awt.headless=true" "-Dtest=$CHENGYIN_HTTP_E2E_TESTS" \
   -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false > "$OUT/run.log" 2>&1 || JAVA_STATUS=$?
+CHENGYIN_HTTP_E2E_STAGE=xml-verify
 python3 ci/test_http_e2e_entry.py verify --classes "$CHENGYIN_HTTP_E2E_TESTS" --reports chengyinhub-admin/target/surefire-reports --output "$PUBLIC"
 [[ "$JAVA_STATUS" == 0 ]]

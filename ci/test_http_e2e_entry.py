@@ -86,6 +86,44 @@ def summarize(paths, source):
             'cleanupAllVerified': True, 'businessAccepted': False, 'migrationAccepted': False}
 
 
+def safe_diagnostic(report_path, stage, exit_code, java_exit):
+    # Project only reviewed metadata. Raw SQL/stderr/messages and environment never leave the runner.
+    stages = {'schema', 'redis-start', 'redis-ready', 'java-tmp', 'java-tests', 'xml-verify', 'cleanup'}
+    result = {'stage': stage if stage in stages else 'unknown',
+              'exitCode': exit_code if type(exit_code) is int and 0 <= exit_code <= 255 else None,
+              'javaExit': java_exit if type(java_exit) is int and 0 <= java_exit <= 255 else None}
+    try:
+        report = json.loads(report_path.read_text())
+    except (OSError, ValueError):
+        result['reportState'] = 'UNAVAILABLE'
+        return result
+    if not isinstance(report, dict):
+        result['reportState'] = 'INVALID'
+        return result
+    result['reportState'] = report.get('mode') if report.get('mode') in ('DRY_RUN', 'PLANNING', 'EXECUTING', 'FAILED', 'SUCCEEDED') else 'INVALID'
+    failure = report.get('failureDiagnostic')
+    if not isinstance(failure, dict):
+        return result
+    if failure.get('phase') in ('plan-build', 'mysql-version', 'schema-absence', 'schema-create', 'schema-apply'):
+        result['phase'] = failure['phase']
+    if failure.get('exceptionType') in ('CalledProcessError', 'TimeoutExpired', 'ValueError', 'OSError', 'FileNotFoundError', 'PermissionError', 'JSONDecodeError', 'Exception'):
+        result['exceptionType'] = failure['exceptionType']
+    for key, maximum in [('mysqlErrorCode', 99999), ('mysqlLine', 10000000)]:
+        value = failure.get(key)
+        if type(value) is int and 1 <= value <= maximum:
+            result[key] = value
+    file = failure.get('file')
+    files = report.get('files')
+    if (isinstance(files, list) and isinstance(file, str) and
+            re.fullmatch(r'(?:sql/|chengyinhub-admin/sql/)[A-Za-z0-9_./-]+\.sql', file) and
+            '..' not in pathlib.PurePosixPath(file).parts):
+        matching = [(i, f) for i, f in enumerate(files, 1) if isinstance(f, dict) and f.get('path') == file]
+        if len(matching) == 1:
+            index, item = matching[0]
+            result.update(file=file, fileIndex=index)
+    return result
+
+
 def cli():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='command', required=True)
@@ -133,6 +171,13 @@ def cli():
         receipt['state'] = 'PASS' if (a.java_exit == 0 and receipt.get('xmlVerified') is True and
                                      all(receipt['cleanup'].values())) else 'FAIL'
         dest.write_text(json.dumps(receipt, indent=2) + '\n')
+        if receipt['state'] != 'PASS':
+            original = os.environ.get('CHENGYIN_HTTP_E2E_ORIGINAL_EXIT', '')
+            diagnostic = safe_diagnostic(pathlib.Path(os.environ.get('CHENGYIN_HTTP_E2E_SCHEMA_REPORT', '')),
+                                         os.environ.get('CHENGYIN_HTTP_E2E_STAGE', ''),
+                                         int(original) if re.fullmatch(r'[0-9]{1,3}', original) else None, a.java_exit)
+            (a.output / 'diagnostic.json').write_text(json.dumps(diagnostic, sort_keys=True) + '\n')
+            print('HTTP_FIXTURE_DIAGNOSTIC ' + json.dumps(diagnostic, sort_keys=True), file=sys.stderr)
         validate_final(receipt)
 
 
@@ -265,6 +310,89 @@ class ManualRouterTest(unittest.TestCase):
         for parent, child in mutations:
             with self.assertRaises(AssertionError):
                 contract(parent, child)
+
+
+class FailureDiagnosticTest(unittest.TestCase):
+    def test_schema_exception_metadata_never_exports_sql_stderr_or_messages(self):
+        spec = importlib.util.spec_from_file_location('diagnostic_schema', TOOLS / 'generic-gameplay-fresh-schema.py')
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        plan = {'currentPhase': 'schema-apply', 'currentFile': 'sql/migration_example.sql',
+                'files': [{'path': 'sql/base_schema.sql', 'apply': [marker]},
+                          {'path': 'sql/migration_example.sql', 'apply': [marker]}]}
+        error = subprocess.CalledProcessError(1, [marker], stderr='ERROR 1054 (42S22) at line 9: ' + marker)
+        metadata = module.safe_failure_diagnostic(error, plan)
+        self.assertEqual({'exceptionType': 'CalledProcessError', 'phase': 'schema-apply',
+                          'file': 'sql/migration_example.sql', 'fileIndex': 2,
+                          'mysqlErrorCode': 1054, 'mysqlLine': 9}, metadata)
+        self.assertNotIn(marker, json.dumps(metadata))
+        for stderr in ['ERROR 1064 (42000) at line 1: ' + marker, 'ERROR 1064 at line 1: ' + marker]:
+            plan['currentFile'] = plan['files'][1]['path'] = 'chengyinhub-admin/sql/migration_example.sql'
+            actual = module.safe_failure_diagnostic(subprocess.CalledProcessError(1, [marker], stderr=stderr), plan)
+            self.assertEqual(1064, actual['mysqlErrorCode']); self.assertEqual(1, actual['mysqlLine'])
+            self.assertEqual('chengyinhub-admin/sql/migration_example.sql', actual['file'])
+            self.assertNotIn(marker, json.dumps(actual))
+        plan['currentFile'] = plan['files'][1]['path'] = 'sql/migration_example.sql'
+        self.assertEqual({'exceptionType': 'ValueError', 'phase': 'schema-apply',
+                          'file': 'sql/migration_example.sql', 'fileIndex': 2},
+                         module.safe_failure_diagnostic(ValueError(marker), plan))
+        auth = module.safe_failure_diagnostic(subprocess.CalledProcessError(1, [marker], stderr='ERROR 1045 (28000): ' + marker),
+                                              {'currentPhase': 'mysql-version', 'files': []})
+        self.assertEqual({'exceptionType': 'CalledProcessError', 'phase': 'mysql-version', 'mysqlErrorCode': 1045}, auth)
+
+    def test_projection_rejects_untrusted_metadata_and_missing_report(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        with tempfile.TemporaryDirectory() as d:
+            path = pathlib.Path(d) / 'schema.json'
+            report = {'mode': 'FAILED', 'files': [{'path': 'sql/migration_example.sql', 'apply': [marker]}],
+                      'failureDiagnostic': {'exceptionType': 'CalledProcessError', 'phase': 'schema-apply',
+                                            'file': 'sql/migration_example.sql', 'fileIndex': 999,
+                                            'mysqlErrorCode': 1054, 'mysqlLine': 9, 'stderr': marker},
+                      'sql': marker, 'password': marker}
+            path.write_text(json.dumps(report))
+            result = safe_diagnostic(path, 'schema', 1, 98)
+            self.assertEqual(1, result['fileIndex'])
+            self.assertEqual(1054, result['mysqlErrorCode'])
+            self.assertNotIn(marker, json.dumps(result))
+            report['files'][0]['path'] = report['failureDiagnostic']['file'] = 'chengyinhub-admin/sql/migration_example.sql'
+            path.write_text(json.dumps(report))
+            self.assertEqual('chengyinhub-admin/sql/migration_example.sql', safe_diagnostic(path, 'schema', 1, 98)['file'])
+            for wrong in ['sql/../migration_example.sql', '/sql/migration_example.sql', 'other/migration_example.sql', 'sql/not_in_plan.sql']:
+                report['failureDiagnostic']['file'] = wrong; path.write_text(json.dumps(report))
+                self.assertNotIn('file', safe_diagnostic(path, 'schema', 1, 98))
+            report['failureDiagnostic'].update(exceptionType=marker, phase=marker, file='../' + marker,
+                                               mysqlErrorCode=True, mysqlLine=marker)
+            path.write_text(json.dumps(report))
+            result = safe_diagnostic(path, marker, 999, -1)
+            self.assertEqual({'stage': 'unknown', 'exitCode': None, 'javaExit': None, 'reportState': 'FAILED'}, result)
+            path.unlink()
+            self.assertEqual('UNAVAILABLE', safe_diagnostic(path, 'schema', 1, 98)['reportState'])
+
+    def test_existing_finalize_prints_safe_primary_failure_before_refusing_receipt(self):
+        marker = 'SYNTHETIC_PRIVATE_NEVER_PUBLISH'
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d); report = root / 'schema.json'; public = root / 'public'
+            report.write_text(json.dumps({'mode': 'FAILED', 'files': [],
+                                         'failureDiagnostic': {'exceptionType': 'ValueError', 'phase': 'schema-create'},
+                                         'message': marker}))
+            env = dict(os.environ, CHENGYIN_HTTP_E2E_SCHEMA_REPORT=str(report),
+                       CHENGYIN_HTTP_E2E_STAGE='schema', CHENGYIN_HTTP_E2E_ORIGINAL_EXIT='1')
+            run = subprocess.run([sys.executable, str(ROOT / 'ci/test_http_e2e_entry.py'), 'finalize',
+                                  '--output', str(public), '--java-exit', '98',
+                                  '--mysql-clean', 'true', '--redis-clean', 'true'],
+                                 env=env, text=True, capture_output=True, timeout=10)
+            self.assertNotEqual(0, run.returncode)
+            self.assertIn('HTTP_FIXTURE_DIAGNOSTIC', run.stderr)
+            self.assertLess(run.stderr.index('HTTP_FIXTURE_DIAGNOSTIC'), run.stderr.index('Traceback'))
+            self.assertNotIn(marker, run.stderr + run.stdout + (public / 'diagnostic.json').read_text())
+            self.assertEqual('FAIL', json.loads((public / 'receipt.json').read_text())['state'])
+            self.assertEqual(98, json.loads((public / 'diagnostic.json').read_text())['javaExit'])
+        shell = (TOOLS / 'generic-gameplay-http-e2e.sh').read_text()
+        self.assertIn('CHENGYIN_HTTP_E2E_ORIGINAL_EXIT="$ORIGINAL" python3 ci/test_http_e2e_entry.py finalize', shell)
+        for stage in ('schema', 'redis-start', 'redis-ready', 'java-tmp', 'java-tests', 'xml-verify', 'cleanup'):
+            self.assertIn('CHENGYIN_HTTP_E2E_STAGE=' + stage, shell)
+        self.assertIn('> "$OUT/fresh-schema.log" 2>&1', shell)
+        self.assertIn('> "$OUT/run.log" 2>&1', shell)
 
 
 class ProfileTest(unittest.TestCase):
