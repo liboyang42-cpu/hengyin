@@ -79,6 +79,14 @@ def main(tid):
     atok = admin_token()
     etok, _ = app_token(EXEC_CLUB_PHONE)
 
+    step("执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)")
+    status = http("POST", "/api/publisher/identity/status", token=etok, json_body={})
+    if not ((status.get("data") or {}).get("registered")):
+        status = http("POST", "/api/publisher/identity", token=etok, json_body={
+            "realName": "测试执行主理人", "idCard": "110101199001010031",
+            "consent": True, "source": "topic_publish"})
+    show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
+
     step("俱乐部开团:一天一场,开 4 场(POST /api/club/open-session)")
     # ★ 这就是任务书里「俱乐部接手主题 → 定 4 个场次」的真实入口。
     #   ClubSessionServiceImpl.open 要求该俱乐部对本主题有【生效合作单】,然后建 cms_activity
