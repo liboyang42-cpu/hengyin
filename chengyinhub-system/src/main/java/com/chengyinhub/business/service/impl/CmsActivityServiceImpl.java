@@ -540,6 +540,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     @Override
+    public void markContentSafetyHold(Long id)
+    {
+        if (id == null || id <= 0L) return;
+        cmsActivityMapper.markContentSafetyHold(id);
+    }
+
+    @Override
     public CmsActivity selectPublicCmsActivityById(Long id)
     {
         return cmsActivityMapper.selectPublicCmsActivityById(id);

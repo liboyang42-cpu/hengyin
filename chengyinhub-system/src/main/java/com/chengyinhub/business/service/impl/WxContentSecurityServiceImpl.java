@@ -608,6 +608,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 {
                     return false;
                 }
+                // AUDIT-INT-7:无论是否已下架/已被人工驳回都落留置标记,申诉/撤销不能凭它恢复违规图。
+                cmsTopicService.markContentSafetyHold(bizId);
                 if (topicTakedownApplied(current))
                 {
                     return confirmAlreadyApplied("主题图片违规已自动下架", bizId);
@@ -641,6 +643,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 {
                     return false;
                 }
+                // AUDIT-INT-7:已下架/已驳回的活动也落留置标记,申诉成立或撤销驳回不能把违规图放回去。
+                cmsActivityService.markContentSafetyHold(bizId);
                 if (Long.valueOf(0L).equals(current.getPublishStatus()))
                 {
                     return confirmAlreadyApplied("活动图片违规已自动下架", bizId);

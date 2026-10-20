@@ -80,6 +80,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public static final String ERROR_APPEAL_NOT_ELIGIBLE = "APPEAL_NOT_ELIGIBLE";
     public static final String ERROR_APPEAL_DUPLICATE = "APPEAL_DUPLICATE";
     public static final String ERROR_APPEAL_STALE = "APPEAL_STALE";
+    public static final String ERROR_CONTENT_SAFETY_HOLD = "CONTENT_SAFETY_HOLD";
     /** 作者申诉生成的审核任务来源；裁决 ACCEPTED 走既有通过路径恢复内容。 */
     public static final String SOURCE_APPEAL = "appeal";
     private static final int MAX_APPEAL_REASON_LENGTH = 500;
@@ -745,6 +746,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw governanceError(ERROR_APPEAL_STALE, "申诉已处理，请刷新后重试", HttpStatus.CONFLICT);
         }
         if (appealAccepted) {
+            requireNoContentSafetyHold(task.getBizType(), task.getBizId(),
+                    "内容图片未通过内容安全检测，申诉不能恢复，请作者更换图片后重新提交审核");
             // 申诉成立：先把内容从驳回/下架态 CAS 回待审，再走下面既有的通过路径恢复；内容已变化则整单回滚。
             if (!reopenContent(task, AuditTask.STATUS_REJECTED, null)) {
                 throw governanceError(ERROR_APPEAL_STALE, "内容已变化，申诉无法按原内容恢复，请重新提交审核",
@@ -1167,6 +1170,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (rejected == null || !AuditTask.STATUS_REJECTED.equals(rejected.getStatus()) || !content.down) {
             throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "只能对被驳回或下架的内容申诉", HttpStatus.CONFLICT);
         }
+        requireNoContentSafetyHold(bizType, bizId, "内容图片未通过内容安全检测，不能申诉恢复，请更换图片后重新提交审核");
 
         Date now = Date.from(clock.instant());
         Date dueAt = appealDueAt(rejected, now);
@@ -1557,6 +1561,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     }
                     // AUDIT-INT-8:人工过审 = 抽检通过,清掉先发后审打标的抽检池标记(#377 review_flag)。
                     cmsTopicMapper.updateReviewFlag(bizId, 0);
+                    // AUDIT-INT-7:人工审过作者重新提交的版本,解除图片内容安全留置(申诉/撤销到不了这里)。
+                    cmsTopicMapper.clearContentSafetyHold(bizId);
                     // LINEAR 同样依赖 published_config_version 作为“已发布”事实；图虽为 null，
                     // 仍必须经统一发布口递增版本，否则审核通过后新局会被判“路线尚未发布”。
                     if (!alreadyPublished) cmsTopicServiceProvider.getObject().publishApprovedRouteSnapshot(bizId);
@@ -1576,6 +1582,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 a.setReason(down ? reasonText : "");
                 a.setPublishStatus(down ? 0L : 1L);
                 cmsActivityMapper.updateCmsActivity(a);
+                // AUDIT-INT-7:人工审过作者重新提交的版本,解除图片内容安全留置(申诉/撤销到不了这里)。
+                if (up) cmsActivityMapper.clearContentSafetyHold(bizId);
             } else if (AuditTask.BIZ_OFFICIAL_EVENT.equals(bizType)) {
                 // 官方活动先审后发:过审→上架/排期;驳回→保持不公开
                 officialEventServiceProvider.getObject().applyAuditDecision(bizId, up, reasonText, task.getSubmitterId());
@@ -1921,6 +1929,15 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         // APPROVE 的既有内容审核路径只恢复/保持可见；撤回到待审不应反向下架。
     }
 
+    /** AUDIT-INT-7:图片内容安全留置中的活动/主题,申诉与撤销都不能把它恢复,只能换图后重新人审。 */
+    private void requireNoContentSafetyHold(String bizType, Long bizId, String message) {
+        Integer hold = AuditTask.BIZ_ACTIVITY.equals(bizType) ? cmsActivityMapper.selectContentSafetyHold(bizId)
+                : AuditTask.BIZ_TOPIC.equals(bizType) ? cmsTopicMapper.selectContentSafetyHold(bizId) : null;
+        if (Integer.valueOf(1).equals(hold)) {
+            throw governanceError(ERROR_CONTENT_SAFETY_HOLD, message, HttpStatus.CONFLICT);
+        }
+    }
+
     private boolean isTerminalDecision(Integer status) {
         return AuditTask.STATUS_APPROVED.equals(status) || AuditTask.STATUS_REJECTED.equals(status);
     }
@@ -1961,6 +1978,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (latest == null || !task.getId().equals(latest.getId())) {
             throw governanceError(ERROR_REVERT_STALE, "内容已进入新一轮审核，不能撤销", HttpStatus.CONFLICT);
         }
+        requireNoContentSafetyHold(task.getBizType(), task.getBizId(),
+                "内容图片未通过内容安全检测，不能撤销恢复，请作者更换图片后重新提交审核");
         if (AuditTask.STATUS_APPROVED.equals(task.getStatus())) requireApprovalReversible(task);
         if (!reopenContent(task, task.getStatus(), decision)) {
             throw governanceError(ERROR_REVERT_STALE, "内容状态已变化，不能撤销", HttpStatus.CONFLICT);

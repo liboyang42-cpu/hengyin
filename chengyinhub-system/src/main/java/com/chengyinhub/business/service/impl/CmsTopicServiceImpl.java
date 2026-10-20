@@ -2803,6 +2803,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public void markContentSafetyHold(Long topicId) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.markContentSafetyHold(topicId);
+    }
+
+    @Override
     public void markReviewFlag(Long topicId, boolean flagged) {
         if (topicId == null || topicId <= 0L) return;
         cmsTopicMapper.updateReviewFlag(topicId, flagged ? 1 : 0);

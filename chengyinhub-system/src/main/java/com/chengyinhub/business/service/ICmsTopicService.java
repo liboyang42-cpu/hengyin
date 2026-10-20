@@ -306,6 +306,9 @@ public interface ICmsTopicService
     /** 先发后审打标/抽检通过:写 cms_topic.review_flag(1=进入抽检池,0=已通过)。 */
     public void markReviewFlag(Long topicId, boolean flagged);
 
+    /** 图片内容安全违规留置(AUDIT-INT-7):置 cms_topic.content_safety_hold=1,不改人工驳回原因。 */
+    public void markContentSafetyHold(Long topicId);
+
     /** B3 发布草稿:竞态安全(仅当前确为草稿才发)清 is_draft,按 publishMode 直发/提审;非草稿返 false */
     public boolean publishDraft(Long id);
     boolean publishDraft(Long id, Long expectedOwnerId);

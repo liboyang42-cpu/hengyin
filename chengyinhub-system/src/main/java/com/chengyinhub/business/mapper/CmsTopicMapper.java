@@ -231,4 +231,11 @@ public interface CmsTopicMapper
     int reopenAuditDecision(@Param("id") Long id, @Param("fromStatus") Integer fromStatus,
                             @Param("fromCheckStatus") Integer fromCheckStatus,
                             @Param("configVersion") Long configVersion);
+
+    /** 内容安全留置(AUDIT-INT-7,content_safety_hold):图片机审违规置 1,作者新提交经人工过审清 0。 */
+    int markContentSafetyHold(@Param("id") Long id);
+
+    int clearContentSafetyHold(@Param("id") Long id);
+
+    Integer selectContentSafetyHold(@Param("id") Long id);
 }

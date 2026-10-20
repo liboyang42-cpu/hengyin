@@ -570,6 +570,61 @@ class AuditAppealRevertContentTest {
         verify(tasks, never()).cancelOpenAuditTaskCas(eq(73L), any());
     }
 
+    /**
+     * AUDIT-INT-7:内容安全留置(content_safety_hold=1)的内容,申诉不能成立恢复、不能撤销恢复,也不能提交申诉;
+     * 作者必须换图重新提交,由人工审核新版本(通过时清留置)。
+     */
+    @Test
+    void acceptedAppealCannotRepublishContentUnderSafetyHold() {
+        openAppealTask(AuditTask.BIZ_ACTIVITY);
+        when(activities.selectContentSafetyHold(BIZ_ID)).thenReturn(1);
+        when(activities.reopenAuditDecision(any(), any(), any(), any(), any())).thenReturn(1);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.review(APPEAL_TASK, REVIEWER, decide(AuditTask.STATUS_APPROVED, null)));
+
+        assertEquals(AuditTaskServiceImpl.ERROR_CONTENT_SAFETY_HOLD, error.getDetailMessage());
+        verify(activities, never()).reopenAuditDecision(any(), any(), any(), any(), any());
+        verify(activities, never()).updateCmsActivity(any());
+    }
+
+    @Test
+    void revertCannotReopenContentUnderSafetyHold() {
+        revertableDecision(AuditTask.BIZ_TOPIC, AuditTask.STATUS_REJECTED, 60L);
+        when(topics.selectContentSafetyHold(BIZ_ID)).thenReturn(1);
+        when(topics.reopenAuditDecision(any(), any(), any(), any())).thenReturn(1);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.revert(REJECTED_TASK, REVIEWER, true, revertRequest()));
+
+        assertEquals(AuditTaskServiceImpl.ERROR_CONTENT_SAFETY_HOLD, error.getDetailMessage());
+        verify(topics, never()).reopenAuditDecision(any(), any(), any(), any());
+    }
+
+    @Test
+    void appealIsRefusedUpFrontForContentUnderSafetyHold() {
+        rejectedActivity();
+        when(activities.selectContentSafetyHold(BIZ_ID)).thenReturn(1);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "我没违规", null));
+
+        assertEquals(AuditTaskServiceImpl.ERROR_CONTENT_SAFETY_HOLD, error.getDetailMessage());
+        verify(appeals, never()).insertAuditAppeal(any());
+    }
+
+    @Test
+    void humanApprovalOfAFreshSubmissionClearsSafetyHold() {
+        AuditTask resubmitted = task(74L, AuditTask.STATUS_PENDING, "user_republish");
+        when(tasks.selectAuditTaskById(74L)).thenReturn(resubmitted);
+        when(tasks.updateAuditTaskReviewCas(eq(74L), eq(AuditTask.STATUS_PENDING), eq(AuditTask.STATUS_APPROVED),
+                eq(REVIEWER), eq(VERSION), any(Date.class))).thenReturn(1);
+
+        assertEquals(1, service.review(74L, REVIEWER, decide(AuditTask.STATUS_APPROVED, null)));
+
+        verify(activities).clearContentSafetyHold(BIZ_ID);
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test

@@ -524,4 +524,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           <if test="decidedAt != null">and (update_time is null or update_time &lt;= #{decidedAt})</if>
     </update>
 
+    <!-- AUDIT-INT-7:内容安全留置标记,独立语句,不进通用 resultMap/动态更新 -->
+    <update id="markContentSafetyHold">
+        update cms_activity set content_safety_hold = 1 where id = #{id}
+    </update>
+    <update id="clearContentSafetyHold">
+        update cms_activity set content_safety_hold = 0 where id = #{id} and content_safety_hold = 1
+    </update>
+    <select id="selectContentSafetyHold" resultType="java.lang.Integer">
+        select content_safety_hold from cms_activity where id = #{id}
+    </select>
+
 </mapper>

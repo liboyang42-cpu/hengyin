@@ -83,6 +83,9 @@ public interface ICmsActivityService
 
     public CmsActivity selectCmsActivityById(Long id);
 
+    /** 图片内容安全违规留置(AUDIT-INT-7):置 cms_activity.content_safety_hold=1。 */
+    public void markContentSafetyHold(Long id);
+
     /** 查询对普通用户公开可见的活动；隐藏状态统一返回 null。 */
     CmsActivity selectPublicCmsActivityById(Long id);
 
