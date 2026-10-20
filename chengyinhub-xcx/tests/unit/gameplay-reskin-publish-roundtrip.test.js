@@ -134,12 +134,21 @@ for (const skin of fixture.themes) {
     const serverRuntime = structuredClone(runtime);
     serverRuntime.templateBindings = Object.fromEntries(Object.entries(serverRuntime.templateBindings).map(([key, value]) => [keyMap.get(key), value]));
     for (const scene of serverRuntime.scenes || []) if (scene.nodeConfigs) scene.nodeConfigs = Object.fromEntries(Object.entries(scene.nodeConfigs).map(([key, value]) => [keyMap.get(key), value]));
+    for (const ch of serverRuntime.chapters || []) {
+      if (ch.exclusiveGroups) ch.exclusiveGroups = ch.exclusiveGroups.map(group => group.map(ref => keyMap.get(ref)));
+      if (ch.extraNodes) ch.extraNodes = ch.extraNodes.map(item => Object.assign({}, item, { nodeId: keyMap.get(item.nodeId) }));
+    }
     backendCopies.push({ name: skin.name, runtime: serverRuntime, journeyRules: JSON.parse(before.journeyRules),
       chapters: next.data.formData.chapters.map(ch => ({ name: ch.name, nodes: ch.nodes.map(node => ({ name: node.name, templateId: node.templateId, clientNodeKey: keyMap.get('client:' + node.clientNodeKey).slice(7) })) })), templates: skin.templates });
     assert.deepEqual(runtime.gameplayRuntime.acts, original.gameplayRuntime.acts.map(act => ({ ...act, questKeys: [] })));
     assert.deepEqual(runtime.gameplayRuntime.quests, []);
     assert.deepEqual(runtime.chapters.map(ch => ch.completion), original.chapters.map(ch => ch.completion));
-    assert.ok(runtime.chapters.every(ch => !Object.hasOwn(ch, 'exclusiveGroups') && !Object.hasOwn(ch, 'extraNodes')));
+    // 2026-10-12:互斥组与额外站点(共用额度关系)按位置换成副本站点的 client 引用保留,不再整段丢弃
+    const idToClient = new Map(page.data.formData.chapters.flatMap(ch => ch.nodes).map((node, index) =>
+      [String(node.id), 'client:' + next.data.formData.chapters.flatMap(ch => ch.nodes)[index].clientNodeKey]));
+    assert.deepEqual(runtime.chapters.map(ch => [ch.exclusiveGroups || null, ch.extraNodes || null]),
+      original.chapters.map(ch => [ch.exclusiveGroups ? ch.exclusiveGroups.map(group => group.map(id => idToClient.get(String(id)))) : null,
+        ch.extraNodes ? ch.extraNodes.map(item => Object.assign({}, item, { nodeId: idToClient.get(String(item.nodeId)) })) : null]));
     const survival = Object.assign({}, original.gameplayRuntime.survival);
     delete survival.zeroHpPolicy;
     delete survival.zeroChallenge;
@@ -154,7 +163,7 @@ for (const skin of fixture.themes) {
     }
     assert.ok(Object.keys(runtime.templateBindings).every(key => key.startsWith('client:')));
     assert.equal(modals.length, 1);
-    assert.equal(modals[0].content, '复制后需要重新选择：第4章互斥选项、第6章额外节点、通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用站点）、归零挑战需重新选择挑战站点');
+    assert.equal(modals[0].content, '复制后需要重新选择：通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用站点）、归零挑战需重新选择挑战站点');
     assert.deepEqual(JSON.parse(page._runtimePayload()), original, '源主题编辑配置保持原值');
     assert.equal(next.data.formData.journeyStory, copied.formData.journeyStory);
     assert.equal(next.data.formData.completeRuleJson, copied.formData.completeRuleJson);

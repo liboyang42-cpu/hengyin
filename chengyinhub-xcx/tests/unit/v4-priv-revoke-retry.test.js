@@ -35,8 +35,11 @@ function harness() {
   h.sheet.setData = (patch) => Object.assign(h.sheet.data, patch);
   h.sheet.triggerEvent = () => {};
   h.revokes = () => h.requests.filter(r => r.url === '/api/compliance/consents');
+  h.readbacks = () => h.requests.filter(r => r.url === '/api/compliance/consents/latest');
   return h;
 }
+// 服务端最新一条仍是同意(撤回没落库)
+const notRevoked = { code: 200, data: { requestId: 'consent-old-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } };
 function okRow(req) {
   const body = JSON.parse(req.data);
   return { code: 200, data: { requestId: body.requestId, docType: body.docType, scene: body.scene,
@@ -51,7 +54,11 @@ test('SC-PRIV-03 超时/HTTP500/业务失败/回包丢失都不提示撤回成�
   assert.equal(h.sheet.data.submitting, true);
   h.sheet.withdrawRoamLocationConsent(); // 在途连点不重复发
   assert.equal(h.revokes().length, 1);
-  await settle(40);
+  await settle(30);
+  // 超时 = 结果未知:先回读,回读显示未撤回才告诉用户失败
+  assert.equal(h.readbacks().length, 1);
+  h.readbacks().at(-1).success(notRevoked);
+  await settle();
   assert.equal(h.sheet.data.submitting, false, '超时必须释放提交态,否则无法重试');
   assert.deepEqual(h.toasts, ['撤回记录失败，请检查网络后重试']);
 
@@ -72,6 +79,10 @@ test('SC-PRIV-03 超时/HTTP500/业务失败/回包丢失都不提示撤回成�
   h.sheet.withdrawRoamLocationConsent();
   const lost = h.revokes().at(-1);
   lost.fail({ errMsg: 'request:fail' });
+  await settle();
+  // HTTP500 / 业务失败 / 回执不符都是明确失败,不回读;只有回包丢失这次回读
+  assert.equal(h.readbacks().length, 2);
+  h.readbacks().at(-1).success(notRevoked);
   await settle();
 
   assert.equal(h.toasts.includes(SUCCESS_TOAST), false, '任何失败都不得提示撤回成功');
@@ -96,24 +107,50 @@ test('SC-PRIV-03 超时/HTTP500/业务失败/回包丢失都不提示撤回成�
   assert.equal(h.toasts.filter(t => t === SUCCESS_TOAST).length, 1);
 });
 
-test('SC-PRIV-03 DEFECT(记录现状):结果未知(超时/回包丢失)时没有先读服务端状态,直接提示失败', async () => {
+test('SC-PRIV-03 结果未知(超时/回包丢失)且回读显示仍未撤回:提示失败、可重试', async () => {
   const h = harness();
   h.sheet.withdrawRoamLocationConsent();
   h.revokes().at(-1).fail({ errMsg: 'request:fail' }); // 服务端可能已撤回
   await settle();
+  assert.equal(h.readbacks().length, 1, '结果未知必须先回读服务端');
+  assert.deepEqual(h.toasts, [], '回读返回前不得提前下结论');
+  assert.equal(h.sheet.data.submitting, true);
+  h.readbacks().at(-1).fail({ errMsg: 'request:fail' }); // 回读本身也失败 → 失败
+  await settle();
   h.sheet.withdrawRoamLocationConsent();
-  await settle(40); // 超时
-  // 现状:只有写请求,从未调用 /api/compliance/consents/latest 回读,用户被告知「撤回记录失败」
-  assert.deepEqual(h.requests.map(r => r.url), ['/api/compliance/consents', '/api/compliance/consents']);
+  await settle(30); // 超时
+  h.readbacks().at(-1).success(notRevoked);
+  await settle();
   assert.deepEqual(h.toasts, ['撤回记录失败，请检查网络后重试', '撤回记录失败，请检查网络后重试']);
-});
-
-test('SC-PRIV-03 期望:结果未知时先回读服务端最新状态,再决定提示成功或失败', {
-  todo: 'privacy-sheet/index.js:55-71 与 consent-client.js:93-95,123-125 在超时/fail 时直接 reject,未回读 /api/compliance/consents/latest',
-}, async () => {
-  const h = harness();
+  assert.equal(h.sheet.data.submitting, false);
+  // 回读也超时:同样按失败,不挂起
   h.sheet.withdrawRoamLocationConsent();
   h.revokes().at(-1).fail({ errMsg: 'request:fail' });
+  await settle(40);
+  assert.equal(h.toasts.length, 3);
+  assert.equal(h.toasts.includes(SUCCESS_TOAST), false);
+  assert.equal(h.sheet.data.submitting, false);
+});
+
+test('SC-PRIV-03 期望:结果未知时先回读服务端最新状态,再决定提示成功或失败', async () => {
+  const h = harness();
+  h.sheet.withdrawRoamLocationConsent();
+  const revoke = h.revokes().at(-1);
+  revoke.fail({ errMsg: 'request:fail' });
   await settle();
   assert.ok(h.requests.some(r => r.url === '/api/compliance/consents/latest'));
+  const read = h.readbacks().at(-1);
+  assert.deepEqual(JSON.parse(read.data), { docType: 'privacy_policy', scene: 'roam_location' });
+  // 服务端已落库:最新一条就是本次撤回
+  read.success(okRow(revoke));
+  await settle();
+  assert.deepEqual(h.toasts, [SUCCESS_TOAST]);
+  assert.equal(h.sheet.data.submitting, false);
+  assert.equal(h.storage.size, 0, '回读确认撤回后清掉待重试幂等号');
+  // 业务失败(有回包)不回读,立即失败
+  h.sheet.withdrawRoamLocationConsent();
+  h.revokes().at(-1).success({ code: 500, msg: '服务繁忙' });
+  await settle();
+  assert.equal(h.readbacks().length, 1);
+  assert.equal(h.toasts.at(-1), '撤回记录失败，请检查网络后重试');
 });

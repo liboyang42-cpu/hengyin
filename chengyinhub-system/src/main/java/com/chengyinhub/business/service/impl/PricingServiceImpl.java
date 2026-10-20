@@ -292,9 +292,13 @@ public class PricingServiceImpl implements IPricingService {
         PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRate());
         r.setSubType(subType);
         r.setLineup(lineup);
-        // CU-M-32:与 confirmPrice 同一判据(lifecycle==2),前端据此事先置灰「确认终价并开售」。
+        // CU-M-32:与 confirmPrice 同一判据(lifecycle==2 + 自由探索必选章生效供给),前端据此事先置灰
+        // 「确认终价并开售」,并给出与 confirmPrice 拒绝时完全相同的原话。
         CmsTopic lifecycleRow = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicLifecycleById(topicId);
-        r.setCanConfirm(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() == 2);
+        String blockReason = lifecycleRow == null ? LIFECYCLE_BLOCK_REASON : lifecycleBlockReason(lifecycleRow);
+        if (blockReason == null) blockReason = supplyBlockReason(cmsTopicMapper.selectProductTypeById(topicId), topicId);
+        r.setCanConfirm(blockReason == null);
+        r.setConfirmBlockReason(blockReason);
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
                 ? null : pricingReferenceMapper.selectCityReference(topicId, subType);
         if (reference != null && reference.get("referencePrice") != null) {
@@ -309,6 +313,23 @@ public class PricingServiceImpl implements IPricingService {
         return r;
     }
 
+    private static final String LIFECYCLE_BLOCK_REASON = "主题未在定价阶段,不能确认终价";
+
+    /** 锁价闸①:只有定价阶段(lifecycle==2)能确认终价。previewTopic 的 canConfirm 与 confirmPrice 共用。 */
+    private static String lifecycleBlockReason(CmsTopic topic) {
+        return topic.getLifecycle() == null || topic.getLifecycle() != 2 ? LIFECYCLE_BLOCK_REASON : null;
+    }
+
+    /** 锁价闸②(SC-FREE-PRICE):自由探索主题每个必选章至少 1 家生效供给(纯内容探索除外)。preview/confirm 共用。 */
+    private String supplyBlockReason(Integer productType, Long topicId) {
+        if (ProductType.FREE_EXPLORE == (productType == null ? -1 : productType)
+                && !(pureContentExploreService != null && pureContentExploreService.isPureContent(topicId))
+                && offerMapper.countRequiredChaptersWithoutLiveOffer(topicId) > 0) {
+            return "每个必选章至少需要 1 家生效商家供给,暂不能锁价开售";
+        }
+        return null;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
@@ -317,15 +338,11 @@ public class PricingServiceImpl implements IPricingService {
         // 期间无并发 acceptInvite 挤入新分成单,消除锁价快照与结算阵容不一致的悬空窗。
         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null) throw new IllegalStateException("主题不存在");
-        if (topic.getLifecycle() == null || topic.getLifecycle() != 2) {
-            throw new IllegalStateException("主题未在定价阶段,不能确认终价");
-        }
+        String lifecycleBlock = lifecycleBlockReason(topic);
+        if (lifecycleBlock != null) throw new IllegalStateException(lifecycleBlock);
         if (guidedPrice == null && selfPrice == null) throw new IllegalStateException("请至少填写一种票价");
-        if (ProductType.FREE_EXPLORE == (topic.getProductType() == null ? -1 : topic.getProductType())
-                && !(pureContentExploreService != null && pureContentExploreService.isPureContent(topicId))
-                && offerMapper.countRequiredChaptersWithoutLiveOffer(topicId) > 0) {
-            throw new IllegalStateException("每个必选章至少需要 1 家生效商家供给,暂不能锁价开售");
-        }
+        String supplyBlock = supplyBlockReason(topic.getProductType(), topicId);
+        if (supplyBlock != null) throw new IllegalStateException(supplyBlock);
 
         // 校验各票价 ≥ 各自底价(guided 摊带队成本,self 不摊)
         if (guidedPrice != null) {

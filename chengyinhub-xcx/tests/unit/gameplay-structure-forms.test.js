@@ -147,10 +147,10 @@ test('删除章节幕可选调用生存引用清理接口，显示中文重选�
 
 test('章节完成要求更新对应幕，字段错误定位当前站点或章节而非错误的结局表单', () => {
   const built = fixture.build(), p = fixture.page(); p.data.formData.themeRuntimeConfig = JSON.stringify(built.runtime);
-  p._openChapterRules(0); p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p._openChapterRules(0); p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '2' } }); assert.equal(p._saveChapterRules(), true);
   assert.deepEqual(p._runtimeConfig().gameplayRuntime.acts[0].completionRule, { type: 'ANY_N', quantity: 2 });
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ALL' } } }); p._saveChapterRules();
+  p.onChapterCompleteAll({ detail: { value: true } }); p._saveChapterRules();
   assert.deepEqual(p._runtimeConfig().gameplayRuntime.acts[0].completionRule, { type: 'ALL' });
   let target; p.showEditChapter = e => { target = ['chapter', e.currentTarget.dataset.index]; };
   p._locateStructureIssue('acts'); assert.deepEqual(target, ['chapter', 0]);

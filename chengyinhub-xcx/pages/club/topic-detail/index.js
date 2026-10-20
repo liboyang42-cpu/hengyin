@@ -306,6 +306,8 @@ Page({
 
   // 记下失败再出错误态:详情可能晚到,applyDetail 不能把这次失败盖成「加载成功的普通成员视图」。
   failManageStats() {
+    // 已展示过内容(onShow 后台刷新)时失败:保留旧统计与已加载内容,只给非阻塞提示;首屏失败照旧整页错误。
+    if (this._manageStats && this._lastRaw && this.data.loaded && !this.data.loadError) { toast('刷新失败，请重试'); return; }
     this._manageStatsFailed = true;
     this.setData({ loaded: true, loadError: true });
   },
@@ -333,10 +335,10 @@ Page({
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
         if (!current()) return;
-        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); return; }
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); return; }
         that.applyDetail(res.data);
       },
-      fail() { if (current() && !that._lastRaw) that.setData({ loaded: true, loadError: true }); },
+      fail() { if (!current()) return; if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); },
     });
   },
 
@@ -703,14 +705,17 @@ Page({
     this.openSessionPick();
   },
 
+  // CL-06:行与「接下来」同源(buildSessions 已按 F-W5-08 去掉取消/已过/自办壳并按集合时刻升序),
+  // 不再按 activityList 原序(后端 create_time desc)出行,也不再把被滤掉的场次显示成「时间待定」。
   openSessionPick() {
-    const sessions = this.data.sessions || [];
-    const rows = (this._topicActivities || []).map(function (item) {
-      const row = sessions.filter(function (s) { return String(s.id) === String(item.id); })[0] || {};
+    const ids = (this._topicActivities || []).map(function (item) { return String(item.id); });
+    const rows = (this.data.sessions || []).filter(function (s) {
+      return ids.indexOf(String(s.id)) >= 0;
+    }).map(function (s) {
       return {
-        id: item.id,
-        whenText: row.whenText || '时间待定',
-        whoText: row.whoText || '',
+        id: s.id,
+        whenText: s.whenText || '时间待定',
+        whoText: s.whoText || '',
       };
     });
     if (!rows.length) { this.goEventOps(); return; }

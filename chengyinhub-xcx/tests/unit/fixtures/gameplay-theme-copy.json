@@ -79,7 +79,14 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "exclusiveGroups": [
+            [
+              "client:copy_7",
+              "client:copy_8",
+              "client:copy_9"
+            ]
+          ]
         },
         {
           "index": 4,
@@ -95,7 +102,13 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "extraNodes": [
+            {
+              "nodeId": "client:copy_12",
+              "slot": "mobile"
+            }
+          ]
         },
         {
           "index": 6,
@@ -836,7 +849,14 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "exclusiveGroups": [
+            [
+              "client:copy_7",
+              "client:copy_8",
+              "client:copy_9"
+            ]
+          ]
         },
         {
           "index": 4,
@@ -852,7 +872,13 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "extraNodes": [
+            {
+              "nodeId": "client:copy_12",
+              "slot": "mobile"
+            }
+          ]
         },
         {
           "index": 6,
@@ -1593,7 +1619,14 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "exclusiveGroups": [
+            [
+              "client:copy_7",
+              "client:copy_8",
+              "client:copy_9"
+            ]
+          ]
         },
         {
           "index": 4,
@@ -1609,7 +1642,13 @@
           "luckCost": 0,
           "completion": {
             "type": "ALL"
-          }
+          },
+          "extraNodes": [
+            {
+              "nodeId": "client:copy_12",
+              "slot": "mobile"
+            }
+          ]
         },
         {
           "index": 6,

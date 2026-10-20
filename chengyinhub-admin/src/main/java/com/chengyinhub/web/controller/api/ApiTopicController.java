@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.TopicChapterVO;
@@ -79,6 +80,10 @@ import com.chengyinhub.common.enums.LimitType;
 public class ApiTopicController extends BaseController {
     @Value("${community.post.legacy-writes-enabled:true}")
     private boolean legacyCommunityWritesEnabled;
+
+    /** 首次存草稿的请求意图键 → 已建草稿号(丢回包后的重试据此找回,不重复建题)。 */
+    @Autowired
+    private com.chengyinhub.common.core.redis.RedisCache redisCache;
 
     @Autowired
     private ClubCoopWindowPolicy clubCoopWindowPolicy;
@@ -399,6 +404,7 @@ public class ApiTopicController extends BaseController {
         Long principalMemberId = null;
         Long memberId = null;
         Long topicId = null;
+        String draftRequestKey = null;
         try {
             // principal 是实际操作者；memberId 是主题发布主体。商家员工代办时两者不能混为一人。
             principalMemberId = getAppUserId();
@@ -516,6 +522,16 @@ public class ApiTopicController extends BaseController {
                 }
             }
 
+            // 首次存草稿带请求意图键:同一账号同一键已建过 → 直接回那份草稿(丢回包后的重试);在途 → 请稍后。
+            // 键在全部校验之后、真正建题之前才占,校验失败不留痕。
+            if (saveDraft) {
+                draftRequestKey = draftRequestKey(memberId, dto.getRequestId());
+                if (draftRequestKey != null) {
+                    AjaxResult recovered = claimDraftRequest(draftRequestKey, memberId);
+                    if (recovered != null) return recovered; // 已建过(找回)或同键在途;都不是本次占的,不释放
+                }
+            }
+
             String username = getAppUserName();
             // simple 免审直发会立即占在架额度:锁会员 → 复查在架数 → 建题,同事务原子,防并发绕过 maxThemes。
             // 超限时 guard 抛 ServiceException,由外层 catch 统一转 error 文案。草稿/专业版不占额度,直接建题。
@@ -533,6 +549,11 @@ public class ApiTopicController extends BaseController {
                         ? quotaService.runWithThemeOnlineGuard(memberId, null,
                             () -> cmsTopicService.createTopic(dto, fMemberId, fUsername))
                         : cmsTopicService.createTopic(dto, memberId, username);
+            }
+            // 建题已提交:立刻把意图键落成主题号 —— 之后的送检/同步即便抛错也不能释放它,否则重试会再建一份
+            if (draftRequestKey != null) {
+                redisCache.setCacheObject(draftRequestKey, topicId, DRAFT_REQUEST_DAYS, java.util.concurrent.TimeUnit.DAYS);
+                draftRequestKey = null;
             }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
@@ -576,8 +597,10 @@ public class ApiTopicController extends BaseController {
                                     ? "已提交审核" : "主题发布成功",
                     v2Result == null ? topicId : v2Result);
         } catch (ChapterFlowValidationException e) {
+            releaseDraftRequest(draftRequestKey);
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (ServiceException | IllegalStateException | IllegalArgumentException e) {
+            releaseDraftRequest(draftRequestKey);
             // 业务闸抛的中文短句原样透出(仍过 UserSafeMessage 掩码,业务异常类型也可能裹着 SQL 片段)。
             // 这些失败是用户自己能改的:「只有俱乐部主理人可以开放商家招商」「仅城市定向主题可开启邀请
             // 俱乐部带队」「在架额度已满」压成通用句 = 真人在后台点一次失败一次,只能找人翻服务器日志。
@@ -585,8 +608,54 @@ public class ApiTopicController extends BaseController {
             logger.warn("主题发布被业务闸拒绝: memberId={}, topicId={}, reason={}", memberId, topicId, e.getMessage());
             return AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
         } catch (Exception e) {
+            releaseDraftRequest(draftRequestKey);
             logger.warn("主题发布失败: memberId={}, topicId={}, chapterId=未生成或未知", memberId, topicId, e);
             return AjaxResult.error(TOPIC_CREATE_GENERIC_MSG);
+        }
+    }
+
+    private static final String DRAFT_REQUEST_PENDING = "PENDING";
+    private static final int DRAFT_REQUEST_DAYS = 7;
+
+    static String draftRequestKey(Long memberId, String requestId) {
+        if (memberId == null || memberId <= 0 || requestId == null) return null;
+        String rid = requestId.trim();
+        return rid.matches("[A-Za-z0-9_-]{16,64}") ? "topic:draft-request:" + memberId + ":" + rid : null;
+    }
+
+    /**
+     * 占用首次存草稿的意图键。返回 null = 已占到,继续建题;
+     * 返回 success(recovered) = 这个键已建过且仍是本人的未删除主题(丢回包后的重试);返回 error = 同键请求在途。
+     * 已建主题被删除时释放旧键,当作新的一次建题。
+     */
+    private AjaxResult claimDraftRequest(String key, Long memberId) {
+        Object prior = redisCache.getCacheObject(key);
+        if (prior != null && !DRAFT_REQUEST_PENDING.equals(String.valueOf(prior))) {
+            Long priorId = Convert.toLong(prior, 0L);
+            CmsTopic existing = priorId > 0 ? cmsTopicService.selectCmsTopicById(priorId) : null;
+            if (existing != null && OwnershipUtils.isOwner(existing.getMemberId(), memberId)
+                    && (existing.getDelFlag() == null || existing.getDelFlag() != 2)) {
+                java.util.Map<String, Object> data = new java.util.HashMap<>();
+                data.put("topicId", priorId);
+                data.put("recovered", Boolean.TRUE);
+                data.put("isDraft", Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(priorId)));
+                return AjaxResult.success("草稿已保存", data);
+            }
+            redisCache.deleteObject(key);
+        }
+        if (!Boolean.TRUE.equals(redisCache.setIfAbsent(key, DRAFT_REQUEST_PENDING, 10, java.util.concurrent.TimeUnit.MINUTES))) {
+            return error("草稿保存结果确认中，请稍后重试");
+        }
+        return null;
+    }
+
+    private void releaseDraftRequest(String key) {
+        if (key == null) return;
+        try {
+            Object current = redisCache.getCacheObject(key);
+            if (DRAFT_REQUEST_PENDING.equals(String.valueOf(current))) redisCache.deleteObject(key);
+        } catch (Exception ignored) {
+            // 释放失败只会让该键在 10 分钟后自然过期
         }
     }
 
@@ -690,6 +759,8 @@ public class ApiTopicController extends BaseController {
             } else {
                 topicId = cmsTopicService.updateTopicByOwner(dto, memberId, getAppUserName());
             }
+        } catch (ChapterFlowClientUpgradeRequiredException e) {
+            return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, e.getMessage());
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
@@ -1521,6 +1592,8 @@ public class ApiTopicController extends BaseController {
 
                 CmsTopicNode cmsTopicNode = new CmsTopicNode();
                 cmsTopicNode.setChapterId(chapter.getId());
+                // 后台「隐藏」(status=0)的节点玩家侧不下发;站数口径(locationCount / nodeCount / play 节点)同为 status=1
+                cmsTopicNode.setStatus(1L);
                 List<CmsTopicNode> listCmsTopicNode = cmsTopicNodeService.selectCmsTopicNodeList(cmsTopicNode);
 
                 List<TopicNodeVO> nodeVOList = new ArrayList<>();

@@ -284,3 +284,28 @@ test('成功回执快照负控：恢复读取活表单后必须判红', () => {
       '回执不得读取请求在途期间被改写的活表单')
   }, /回执不得读取请求在途期间被改写的活表单/)
 })
+
+test('V5a SC-CL-APPROVE：被驳回的俱乐部不占两家名额，重新提交成功回执写明等待审核', () => {
+  const h = loadPage()
+  h.page.onLoad()
+  h.setSnapshot(true)
+  h.setClubLeader(true)
+  h.roleCallbacks[0]({ role: 'club', permission: { canCreateClub: true } })
+  h.requests[0].success({ code: 200, data: { owned: [{ id: 11, status: 1 }, { id: 12, status: 2 }] } })
+  assert.equal(h.page.data.bootstrapState, 'ready', '一家在营 + 一家被驳回 → 仍可重新提交')
+
+  Object.assign(h.page.data, { step: 4, canNext: true, clubType: '兴趣社群', name: '夜行俱乐部', city: '上海' })
+  h.page.submit()
+  h.requests.at(-1).success({ code: 200, msg: '已重新提交,等待审核', data: { clubId: 12, status: 0 } })
+  assert.equal(h.page.data.submitState, 'success')
+  assert.equal(h.page.data.submissionPending, true)
+  assert.match(WXML, /submissionPending \? '已重新提交，等待审核' : '俱乐部已创建'/)
+
+  const fresh = loadPage()
+  fresh.page.onLoad()
+  fresh.setSnapshot(true)
+  fresh.setClubLeader(true)
+  fresh.roleCallbacks[0]({ role: 'club', permission: { canCreateClub: true } })
+  fresh.requests[0].success({ code: 200, data: { owned: [{ id: 11, status: 1 }, { id: 13, status: 1 }, { id: 12, status: 2 }] } })
+  assert.equal(fresh.page.data.bootstrapState, 'limit', '两家在营时被驳回的那家不能让名额变多')
+})

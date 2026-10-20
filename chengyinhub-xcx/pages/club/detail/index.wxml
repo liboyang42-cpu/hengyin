@@ -25,6 +25,8 @@
   <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
   <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" fill size="lg"
     title="登录后查看俱乐部" sub="登录后可查看俱乐部的主题、动态和成员" cta="登录" bind:cta="onLoginRetry" />
+  <!-- SC-CL-SHARE:失效/无效分享链接(服务端明确拒绝)给出原因;返回走导航栏常驻返回(goBack,分享直达时回发现页),不再加第二个出口 -->
+  <cy-error wx:elif="{{clubGoneText}}" fill size="lg" title="{{clubGoneText}}" sub="链接已失效，可点左上角返回" retry="" />
 
   <cy-skeleton wx:elif="{{!detailLoaded}}" type="detail" loading-label="正在加载俱乐部详情" />
 
