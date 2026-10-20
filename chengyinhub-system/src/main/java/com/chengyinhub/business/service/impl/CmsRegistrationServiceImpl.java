@@ -1199,6 +1199,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
     }
 
+    private static boolean isLiveParentTopic(CmsTopic topic) {
+        return topic != null
+                && Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus())
+                && Integer.valueOf(0).equals(topic.getDelFlag());
+    }
+
     /**
      * 验证并获取活动信息
      */
@@ -1231,6 +1238,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 && (memberId == null || memberId <= 0
                     || clubMemberMapper.selectByClubAndMember(activity.getClubId(), memberId) == null)) {
             throw new ServiceException("请先加入俱乐部再报名", HttpStatus.FORBIDDEN);
+        }
+
+        // AUDIT-G1-1:父主题被驳回/作者下架/违规下架/仍待审时,其场次不再接新单(已有订单不动)。
+        // 口径与公开列表的 livePublicParentTopic 一致:status=1 · user_status=1 · del_flag=0。
+        // 此前「壳只在过审后存在」是唯一防线;主题事后下架不回写壳,这里补上第二道。
+        if (activity.getTopicId() != null && activity.getTopicId() > 0
+                && !isLiveParentTopic(cmsTopicMapper.selectCmsTopicById(activity.getTopicId()))) {
+            throw new RuntimeException("主题活动已下架");
         }
 
         return activity;

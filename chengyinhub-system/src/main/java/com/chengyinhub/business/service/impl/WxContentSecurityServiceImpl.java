@@ -141,6 +141,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.OfficialEventMapper officialEventMapper;
+
     @Override
     public boolean isEnabled()
     {
@@ -797,9 +800,29 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 return applied;
             }
+            else if (bizType == BIZ_TYPE_OFFICIAL_EVENT)
+            {
+                // AUDIT-G1-4:官方活动封面违规 ⇒ 下线(ST_OFFLINE,与审核台驳回同一终态,详情/列表都不出)。
+                // 行锁在 WxContentCallbackMutationService(lockBusinessTarget),封面已换则 isCurrent 判 stale 不进这里。
+                // 只改状态,不删数据、不动已有报名/订单。
+                com.chengyinhub.business.domain.OfficialEvent current = officialEventMapper.selectOfficialEventById(bizId);
+                if (current == null)
+                {
+                    return false;
+                }
+                if (Integer.valueOf(com.chengyinhub.business.domain.OfficialEvent.ST_OFFLINE).equals(current.getStatus()))
+                {
+                    return confirmAlreadyApplied("官方活动封面违规已自动下线", bizId);
+                }
+                com.chengyinhub.business.domain.OfficialEvent offline = new com.chengyinhub.business.domain.OfficialEvent();
+                offline.setId(bizId);
+                offline.setStatus(com.chengyinhub.business.domain.OfficialEvent.ST_OFFLINE);
+                offline.setUpdateTime(new java.util.Date());
+                return confirmMutation(officialEventMapper.updateOfficialEvent(offline), "官方活动封面违规已自动下线", bizId);
+            }
             else
             {
-                // 其它业务类型(如据点模板/官方活动,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
+                // 其它业务类型(如据点模板,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
                 log.error("[内容安全] 图片违规但该业务类型无自动下架处理,需人工核查下架: bizType={}, bizId={}", bizType, bizId);
                 return false;
             }
@@ -971,6 +994,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_COMMUNITY_POST:
                 return containsMediaHash(hash,
                         communityPostServiceProvider.getObject().activeMediaUrls(id).toArray(new String[0]));
+            case BIZ_TYPE_OFFICIAL_EVENT:
+                // 官方活动只送检封面(ApiOfficialEventController 发布口)。
+                com.chengyinhub.business.domain.OfficialEvent event = officialEventMapper.selectOfficialEventById(id);
+                return event != null && containsMediaHash(hash, event.getCoverImg());
             default:
                 return false;
         }

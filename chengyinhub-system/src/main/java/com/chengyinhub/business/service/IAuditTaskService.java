@@ -26,6 +26,13 @@ public interface IAuditTaskService {
 
     Long submitOrRefreshTemplateLibrary(Long libraryId, Long submitterId, String snapshotJson);
 
+    /**
+     * 活动编辑重提 / 抽检打标:锁定并刷新唯一开放 BIZ_ACTIVITY 内容审核单,没有则新建。
+     * 活动的内容类来源(user_publish / user_republish / post_review_flag / auto_gate)互相可刷新;
+     * 举报单等其他来源仍拒绝。post_review_flag 不会把已开着的阻断单降级成抽检单。
+     */
+    Long submitOrRefreshActivity(Long activityId, Long submitterId, String sourceType, String snapshotJson);
+
     /** V2 编辑事务在写主题前统一先锁开放审核任务，保持审核与重提锁序一致。 */
     boolean lockOpenTopicBundleTask(Long topicId);
 

@@ -29,7 +29,8 @@ public class WxContentCallbackMutationService
         {
             return false;
         }
-        if (row.getBizType() != null && (row.getBizType() == 7 || row.getBizType() == 8))
+        // 7=据点互动模板仍无自动处置,走人工;8=官方活动已有下线分支(AUDIT-G1-4),照常锁行 + 当前媒体校验。
+        if (row.getBizType() != null && row.getBizType() == 7)
         {
             return markManualReview(claim, risky, ERROR_UNSUPPORTED_AUTO_MUTATION);
         }
