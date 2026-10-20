@@ -22,6 +22,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdvancedGamePublicProjectionTest {
 
     @Test
+    void themeItemConditionsAreValidatedThenRemovedFromPublicProjection() throws Exception {
+        String raw = "{\"schemaVersion\":1,\"requires\":[{\"op\":\"ITEM_HELD\",\"itemId\":\"secret_key\",\"quantity\":2}],"
+                + "\"check\":{\"enabled\":true,\"checkId\":\"door\",\"tier\":\"easy\","
+                + "\"advantageIf\":[{\"op\":\"ITEM_ACQUIRED\",\"itemId\":\"hidden_medal\",\"quantity\":1}]}}";
+        String normalized = new AdvancedGameConfigValidator().validateAndNormalize(raw);
+        assertTrue(normalized.contains("secret_key"));
+        assertTrue(normalized.contains("hidden_medal"));
+        String safe = AdvancedGamePublicProjection.safeConfigJson(normalized);
+        assertNotNull(safe);
+        assertTrue(safe.contains("\"checkId\":\"door\""));
+        for (String hidden : new String[] {"secret_key", "hidden_medal", "ITEM_HELD", "ITEM_ACQUIRED", "itemId", "quantity", "requires", "advantageIf"}) {
+            assertFalse(safe.contains(hidden), hidden + " leaked: " + safe);
+        }
+    }
+
+    @Test
+    void malformedThemeConditionsCannotBecomeNormalizedPublicContent() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new AdvancedGameConfigValidator().validateAndNormalize(
+                        "{\"schemaVersion\":1,\"requires\":[{\"op\":\"ITEM_HELD\",\"itemId\":\"food\",\"quantity\":-1}]}"));
+        assertNull(AdvancedGamePublicProjection.safeConfigJson("{\"requires\":["));
+    }
+
+    @Test
     void profileProjectionExposesMandatoryQuestionsWithoutRevealingEffects() throws Exception {
         String raw = "{\"schemaVersion\":1,\"profile\":{\"enabled\":true,"
                 + "\"avatar\":{\"enabled\":true,\"required\":false},\"questions\":["

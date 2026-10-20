@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.*;
 
 class PreferencePlayServiceTest {
 
@@ -32,7 +34,16 @@ class PreferencePlayServiceTest {
         IPlayerTopicTagService tags = mock(IPlayerTopicTagService.class);
         ReflectionTestUtils.setField(service, "attemptMapper", attempts);
         ReflectionTestUtils.setField(service, "tagService", tags);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(runtime.playInstances(anyList())).thenAnswer(call -> {
+            java.util.List<com.chengyinhub.business.domain.TopicRouteSession> scopes=call.getArgument(0);
+            assertEquals(1,scopes.size());com.chengyinhub.business.domain.TopicRouteSession scope=scopes.get(0);
+            assertEquals(Long.valueOf(7),scope.getMemberId());assertEquals(Long.valueOf(9),scope.getTopicId());assertEquals(Long.valueOf(10),scope.getActivityId());
+            return Collections.singletonMap(com.chengyinhub.business.service.ITopicRouteRuntimeService.sessionKey(7L,9L,10L),"default");
+        });
+        ReflectionTestUtils.setField(service,"routeRuntimeService",runtime);
         PlayAttemptLog existing = new PlayAttemptLog();
+        existing.setMemberId(7L);existing.setTopicId(9L);existing.setActivityId(10L);existing.setNodeId(11L);existing.setAttemptType(6);existing.setResult(1);existing.setIdempotencyKey("preference:7:9:10:11");
         existing.setResultJson("{\"evaluation\":{\"resultCode\":\"compact\"},"
                 + "\"progress\":{\"completed\":true,\"xp\":12},\"availableTagValues\":[\"compact\"]}");
         when(attempts.selectByIdempotencyKey("preference:7:9:10:11")).thenReturn(existing);
@@ -47,6 +58,8 @@ class PreferencePlayServiceTest {
         Map<String, Object> progress = (Map<String, Object>) data.get("progress");
         assertEquals(Boolean.TRUE, progress.get("completed"));
         assertEquals(12, progress.get("xp"));
+        verify(runtime,never()).beginOriginalNodeAward(anyLong(),anyLong(),anyLong(),anyLong(),anyString());
+        verify(runtime,never()).playInstance(anyLong(),anyLong(),anyLong());
     }
 
     @Test

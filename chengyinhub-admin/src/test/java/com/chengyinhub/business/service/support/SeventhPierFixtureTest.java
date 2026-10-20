@@ -366,11 +366,11 @@ class SeventhPierFixtureTest {
         session.setConfigSnapshotJson(stationNineSnapshot());
         stored[0] = session;
 
-        TopicRouteRuntimeServiceImpl runtime = new TopicRouteRuntimeServiceImpl(
+        TopicRouteRuntimeServiceImpl runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(
                 sessionMapper, topicMapper, nodeMapper, mock(CmsMemberTemplateMapper.class),
                 mock(PlayerNodeProgressMapper.class), mock(CmsActivityMapper.class), registrationMapper,
                 mock(PlayerActivityRoleMapper.class), mock(IShopDayProofService.class),
-                () -> 12345L, () -> 10, java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                () -> 12345L, () -> 10, java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), mock(CmsMemberTemplateMapper.class));
         runtime.recordChoice(memberId, TOPIC_ID, 5009L, "ask_linzhou", optionId);
 
         JsonNode state = objectMapper.readTree(session.getStateJson());

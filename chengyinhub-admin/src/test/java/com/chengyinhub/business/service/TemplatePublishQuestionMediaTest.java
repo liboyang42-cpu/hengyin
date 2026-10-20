@@ -5,6 +5,9 @@ import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
 import com.chengyinhub.business.service.impl.TemplatePublishServiceImpl;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import com.chengyinhub.business.service.support.LegacyCmsUnitGuardFixture;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,6 +31,10 @@ import com.chengyinhub.business.service.ICapabilityGuard;
  */
 class TemplatePublishQuestionMediaTest
 {
+    private LegacyCmsUnitGuardFixture provenance;
+    @BeforeEach void ordinaryLegacySource() throws Exception { provenance = new LegacyCmsUnitGuardFixture(91L); }
+    @AfterEach void closeLegacySource() { if (provenance != null) provenance.close(); }
+
     private final AtomicReference<CmsMemberTemplate> memberRow = new AtomicReference<>();
     private final AtomicReference<CmsTemplateLibrary> libraryRow = new AtomicReference<>();
 
@@ -40,6 +47,7 @@ class TemplatePublishQuestionMediaTest
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
+        ReflectionTestUtils.setField(service, "legacyCmsMutationGuard", provenance.mutationGuard);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
         ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));
@@ -457,5 +465,27 @@ class TemplatePublishQuestionMediaTest
                     && xml.contains("preference_json = NULL"),
                     resource + " 必须在 VM6 切到普通题型时清掉旧配置");
         }
+    }
+
+    @Test
+    void missingMutationGuardCannotSubmitOrdinaryMediaToMarket() {
+        TemplatePublishServiceImpl service = service();
+        service.publishTemplateWithTransaction(request(), 7L, "member7");
+        CmsMemberTemplate member = memberRow.get();
+        member.setDraftStatus(1); member.setStatus(1L); member.setCheckStatus(1); member.setPublishStatus(1L);
+        ReflectionTestUtils.setField(service, "legacyCmsMutationGuard", null);
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.submitTemplateToMarket(member.getId(), 7L, "member7"));
+        assertEquals("模板暂不可提交广场", error.getMessage());
+        assertNull(libraryRow.get());
+    }
+
+    @Test
+    void markerNullButSidecarPresentCannotCopyQuestionMediaToMarket() {
+        provenance.addSidecar(91L);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> publishAndSubmitMarket(request()));
+        assertNotNull(memberRow.get());
+        assertNull(memberRow.get().getW18ProvenanceKind());
+        assertNull(libraryRow.get());
     }
 }

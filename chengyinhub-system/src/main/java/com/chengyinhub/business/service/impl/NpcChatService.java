@@ -27,10 +27,14 @@ import com.chengyinhub.business.domain.vo.ai.NpcChatResp;
 import com.chengyinhub.business.mapper.NpcChatRequestMapper;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
+import com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory;
 import com.chengyinhub.business.service.ai.AiGatewayResult;
 import com.chengyinhub.business.service.ai.AiGatewayService;
 import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.business.service.ai.VoiceCloneClient;
+import com.chengyinhub.business.service.ai.npc.ScopedNpcChatService;
+import com.chengyinhub.business.service.ai.npc.ScopedNpcReply;
+import com.chengyinhub.business.service.ai.npc.ScopedNpcRequest;
 import com.chengyinhub.common.utils.uuid.IdUtils;
 
 /**
@@ -75,6 +79,9 @@ public class NpcChatService
     private NpcProfileMapper npcProfileMapper;
 
     @Autowired
+    private MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
+
+    @Autowired
     private NpcMemoryBuilder memoryBuilder;
 
     @Autowired
@@ -91,6 +98,17 @@ public class NpcChatService
 
     @Resource(name = "scheduledExecutorService")
     private ScheduledExecutorService scheduledExecutorService;
+
+    @Autowired
+    private ScopedNpcChatService scopedNpcChatService;
+
+    /** Explicit internal opt-in. Existing controllers stay on their unchanged legacy entrypoints.
+     * The caller supplies its authenticated member, never a merchant member ID or client authority. */
+    public ScopedNpcReply chatScoped(
+            ScopedNpcRequest request, Long authenticatedMemberId)
+    {
+        return scopedNpcChatService.chat(authenticatedMemberId, request);
+    }
 
     public NpcChatResp chat(NpcChatReq req, Long userId)
     {
@@ -176,17 +194,18 @@ public class NpcChatService
      *
      * <p>调用方必须先校验玩家确实持有这家店所属主题的有效通行证 —— 本方法不做归属校验,
      * 它只保证「同一个 requestId 不会二次调用模型」。
+     * merchantMemberId 来自已校验节点，不是 mms_merchant.id；取人设前由目录精确转换。
      */
     public NpcChatResp chatWithShop(String requestId, Long userId, Long nodeId,
-                                    Long merchantId, String shopMemory, String rawMessage)
+                                    Long merchantMemberId, String shopMemory, String rawMessage)
     {
         if (nodeId != null && nodeId > MAX_CHAT_ENTITY_ID)
         {
             return response(requestId, NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_REQUEST", null,
                     false, true, SAFE_INVALID_REQUEST);
         }
-        return chatWithMerchantTarget(requestId, userId, nodeId, merchantId,
-                profile -> shopMemory, "npc_shop_chat", rawMessage);
+        return chatWithMerchantTarget(requestId, userId, nodeId, merchantMemberId,
+                this::findMerchantProfileForMember, profile -> shopMemory, "npc_shop_chat", rawMessage);
     }
 
     /** 店铺主页对话；使用负数空间的下半区，避免与按节点对话的会话键碰撞。 */
@@ -200,13 +219,13 @@ public class NpcChatService
         }
         long syntheticNodeId = MAX_CHAT_ENTITY_ID + merchantId;
         return chatWithMerchantTarget(requestId, userId, syntheticNodeId, merchantId,
-                profile -> merchantFactsBuilder.build(profile, merchantId),
+                this::findAvailableMerchantProfile, profile -> merchantFactsBuilder.build(profile, merchantId),
                 "merchant_npc_chat", normalizedMessage(req));
     }
 
     private NpcChatResp chatWithMerchantTarget(String requestId, Long userId, Long nodeId,
-                                                Long merchantId, Function<NpcProfile, String> memory,
-                                                String bizType, String rawMessage)
+                                                Long merchantIdentity, Function<Long, NpcProfile> profileLookup,
+                                                Function<NpcProfile, String> memory, String bizType, String rawMessage)
     {
         String rid = requestId == null ? null : requestId.trim();
         if (userId == null)
@@ -215,7 +234,7 @@ public class NpcChatService
                     false, true, "请重新登录后再试。");
         }
         if (!nonBlank(rid) || rid.length() > REQUEST_ID_MAX || !UUID_PATTERN.matcher(rid).matches()
-                || nodeId == null || nodeId <= 0 || merchantId == null || merchantId <= 0)
+                || nodeId == null || nodeId <= 0 || merchantIdentity == null || merchantIdentity <= 0)
         {
             return response(rid, NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_REQUEST", null,
                     false, true, SAFE_INVALID_REQUEST);
@@ -246,7 +265,7 @@ public class NpcChatService
                     false, SAFE_INVALID_REQUEST));
         }
 
-        NpcProfile profile = findMerchantProfile(merchantId);
+        NpcProfile profile = profileLookup.apply(merchantIdentity);
         if (profile == null || !nonBlank(profile.getPersona()))
         {
             // 商家没配人设就别硬答:比让全局 NPC 冒充店主可信
@@ -275,6 +294,35 @@ public class NpcChatService
         }
 
         return generateAndFinish(processing, profile, memory, bizType, message);
+    }
+
+    private NpcProfile findAvailableMerchantProfile(Long merchantId)
+    {
+        try
+        {
+            Long availableId = merchantNpcIdentityDirectory.availableMerchantId(merchantId);
+            return availableId == null ? null : findMerchantProfile(availableId);
+        }
+        catch (Exception e)
+        {
+            log.warn("[NpcChat] merchant row lookup failed merchantId={}", merchantId, e);
+            return null;
+        }
+    }
+
+    /** Only node-backed callers supply member IDs; directory failures keep the existing failed-chat boundary. */
+    private NpcProfile findMerchantProfileForMember(Long merchantMemberId)
+    {
+        try
+        {
+            Long merchantId = merchantNpcIdentityDirectory.availableMerchantIdForMember(merchantMemberId);
+            return merchantId == null ? null : findMerchantProfile(merchantId);
+        }
+        catch (Exception e)
+        {
+            log.warn("[NpcChat] merchant identity lookup failed memberId={}", merchantMemberId, e);
+            return null;
+        }
     }
 
     /** 门店分身(scope_type=2 挂 merchantId)。取不到只让这条对话降级,不回落到全局 NPC。 */

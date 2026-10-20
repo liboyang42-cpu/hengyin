@@ -563,4 +563,84 @@ class TopicPublishCheckServiceTest {
         key.setKeyType(keyType);
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(key));
     }
+
+    @Test
+    void runtimeOnlyUnregisteredRootAndSceneKeysAreReportedWithoutRegistration() {
+        CmsTopic topic = branchTopic();
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"events\":[{\"id\":\"root\",\"content\":\"x\",\"effects\":[{\"var\":\"counter.root\",\"op\":\"INC\",\"value\":1}]}],"
+                + "\"currentScene\":\"first\",\"scenes\":[{\"id\":\"first\",\"name\":\"首景\"},{\"id\":\"later\",\"name\":\"后景\",\"events\":[{\"id\":\"event\",\"content\":\"x\",\"when\":[{\"var\":\"clue.later\",\"op\":\"EQ\",\"value\":1}]}]}]}");
+        List<PublishCheckIssue> issues = service.check(topic);
+        assertEquals(2, issues.size());
+        for (PublishCheckIssue issue : issues) {
+            assertEquals(TopicPublishCheckService.CODE_STATE_KEY_UNREGISTERED, issue.getCode());
+            assertEquals("error", issue.getLevel()); assertNull(issue.getNodeId());
+            assertTrue(issue.getMessage().contains("主题运行配置"));
+        }
+        org.mockito.Mockito.verify(keyMapper).selectByTopicId(TOPIC_ID);
+        org.mockito.Mockito.verifyNoMoreInteractions(keyMapper);
+        stubRegistered("counter.root", "clue.later");
+        assertTrue(service.check(topic).isEmpty());
+    }
+
+    @Test
+    void malformedRuntimeConfigUsesDistinctPublishCheckCodeAndDoesNotMasqueradeAsJourneyRules() {
+        CmsTopic topic = branchTopic(); topic.setThemeRuntimeConfigJson("{bad");
+        List<PublishCheckIssue> issues = service.check(topic);
+        assertEquals(1, issues.size()); assertEquals("THEME_RUNTIME_INVALID", issues.get(0).getCode());
+        assertEquals("error", issues.get(0).getLevel()); assertNull(issues.get(0).getNodeId());
+        assertTrue(issues.get(0).getMessage().startsWith("主题运行配置不合法:"));
+    }
+
+    @Test
+    void runtimeSystemFactsNeedNoRegistryAndEmptyRuntimeKeepsExistingChecks() {
+        CmsTopic topic = branchTopic();
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"events\":[{\"id\":\"event\",\"content\":\"x\",\"when\":[{\"var\":\"sys.hp\",\"op\":\"GT\",\"value\":0}]}]}");
+        assertTrue(service.check(topic).isEmpty());
+        for (String raw : Arrays.asList(null, "", "{\"schemaVersion\":1}")) {
+            topic.setThemeRuntimeConfigJson(raw); assertTrue(service.check(topic).isEmpty());
+        }
+    }
+
+    @Test
+    void actualRuntimeTagAndThoughtVarShapesFailClosedBeforeRegistrationExemptions() {
+        for (String key : Arrays.asList("tag.choice", "thought.idea.done")) {
+            CmsTopic topic = branchTopic();
+            topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"events\":[{\"id\":\"event\",\"content\":\"x\",\"when\":[{\"var\":\"" + key + "\",\"op\":\"EQ\",\"value\":1}]}]}");
+            List<PublishCheckIssue> issues = service.check(topic);
+            assertEquals(1, issues.size()); assertEquals("THEME_RUNTIME_INVALID", issues.get(0).getCode());
+        }
+    }
+
+    @Test
+    void runtimeCollectorContractDoesNotInheritTagOrThoughtRegistrationExemptions() {
+        // Focused issue-layer regression: these sets are the collector contract, not a schema-valid event fixture.
+        TopicStateKeyRefService collector = mock(TopicStateKeyRefService.class);
+        TopicStateKeyRefService.RefCollection refs = new TopicStateKeyRefService.RefCollection();
+        refs.getThemeRuntimeKeys().addAll(Arrays.asList("tag.only_runtime", "thought.idea.done"));
+        refs.getStoryKeys().add("thought.idea.done");
+        CmsTopic topic = branchTopic();
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"thoughts\":[{\"key\":\"idea\",\"name\":\"想法\",\"need\":1}]}");
+        when(collector.collect(topic)).thenReturn(refs);
+        TopicPublishCheckService check = new TopicPublishCheckService(nodeMapper, templateMapper, new ThemeStateKeyService(keyMapper), collector, bundleService);
+        List<PublishCheckIssue> issues = check.check(topic);
+        assertEquals(2, issues.size());
+        assertTrue(issues.stream().allMatch(issue -> TopicPublishCheckService.CODE_STATE_KEY_UNREGISTERED.equals(issue.getCode())));
+        stubRegistered("tag.only_runtime", "thought.idea.done"); assertTrue(check.check(topic).isEmpty());
+    }
+
+    @Test
+    void existingAutoTagSourcesAndStoryThoughtExemptionsRemainUnchanged() {
+        TopicStateKeyRefService collector = mock(TopicStateKeyRefService.class);
+        TopicStateKeyRefService.RefCollection refs = new TopicStateKeyRefService.RefCollection();
+        refs.getThemeRuntimeKeys().add("tag.shared"); refs.getChapterKeys().add("tag.shared");
+        refs.getStoryKeys().addAll(Arrays.asList("tag.story_only", "thought.idea.done"));
+        CmsTopic topic = branchTopic();
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"thoughts\":[{\"key\":\"idea\",\"name\":\"想法\",\"need\":1}]}");
+        when(collector.collect(topic)).thenReturn(refs);
+        TopicPublishCheckService check = new TopicPublishCheckService(nodeMapper, templateMapper, new ThemeStateKeyService(keyMapper), collector, bundleService);
+        assertTrue(check.check(topic).isEmpty());
+        org.mockito.Mockito.verify(keyMapper).selectByTopicId(TOPIC_ID);
+        org.mockito.Mockito.verifyNoMoreInteractions(keyMapper);
+    }
+
 }

@@ -2,6 +2,14 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.TopicRouteSession;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl;
+import com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl;
+import com.chengyinhub.business.service.support.ThemeRuntimeFeaturePolicy;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
 import com.chengyinhub.business.service.impl.ShopDayProofServiceImpl;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -22,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 /**
  * B5 体验层的<b>跨接口时序</b>：扫码进店 → 答对游戏 → 拍现场凭证。
@@ -57,6 +68,7 @@ class ShopDayGameThenPhotoH2Test {
             "create table player_node_progress ("
                     + "id bigint primary key auto_increment,"
                     + "member_id bigint not null,"
+                    + "play_instance_id varchar(64) not null default 'default',"
                     + "activity_id bigint,"
                     + "topic_id bigint,"
                     + "node_id bigint not null,"
@@ -70,11 +82,14 @@ class ShopDayGameThenPhotoH2Test {
                     + "completion_mode varchar(16),"
                     + "del_flag tinyint not null default 0,"
                     + "create_time datetime,"
-                    + "constraint uk_progress unique (member_id, activity_id, topic_id, node_id))";
+                    + "constraint uk_progress unique (member_id, activity_id, topic_id, node_id, play_instance_id))";
 
     private JdbcTemplate jdbc;
     private PlayerNodeProgressMapper mapper;
     private IShopDayProofService service;
+    private ShopDayProofServiceImpl shopTarget;
+    private ShopDayH2RuntimeFixture shopRuntime;
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -86,19 +101,26 @@ class ShopDayGameThenPhotoH2Test {
 
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute(DDL);
-        jdbc.execute("create table topic_route_session(id bigint primary key,activity_id bigint,topic_id bigint,member_id bigint,play_instance_id varchar(64))");
-        jdbc.execute("alter table player_node_progress add column play_instance_id varchar(64) default 'default'");
+        jdbc.execute(ShopDayH2RuntimeFixture.DDL_ROUTE);
+        jdbc.execute(PlayerNodeArrivalSharingH2Test.DDL_NODE);
+        jdbc.update("insert into cms_topic_node(id,topic_id,status) values(?,?,1)", NODE, TOPIC);
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
-        factory.setMapperLocations(new ClassPathResource("mapper/business/PlayerNodeProgressMapper.xml"));
+        factory.setMapperLocations(new ClassPathResource("mapper/business/PlayerNodeProgressMapper.xml"),
+                new ClassPathResource("mapper/business/CmsTopicNodeMapper.xml"),
+                new ClassPathResource("mapper/business/TopicRouteSessionMapper.xml"));
         SqlSessionFactory sqlSessionFactory = factory.getObject();
         mapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(PlayerNodeProgressMapper.class);
 
         ShopDayProofServiceImpl target = new ShopDayProofServiceImpl();
         ReflectionTestUtils.setField(target, "playerNodeProgressMapper", mapper);
-        service = target;
+        nodeMapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(target, "cmsTopicNodeMapper", nodeMapper);
+        shopTarget = target;
+        shopRuntime = new ShopDayH2RuntimeFixture(dataSource, sqlSessionFactory, nodeMapper, mapper);
+        service = shopRuntime.service(target);
     }
 
     /**
@@ -233,6 +255,416 @@ class ShopDayGameThenPhotoH2Test {
         assertEquals(1, countRows());
         assertEquals(first.getId(), replay.getId());
         assertNotNull(replay.getCheckinTime());
+    }
+
+    /** Real MyBatis/H2 instance predicates; no SQL JSON helpers or current-session inference. */
+    @Test
+    void explicitProgressReadsIsolateReplaysAndLegacyReadsStayDefault() {
+        Long original = progress("default", 0).getId();
+        Long old = progress("theme-old", 0).getId();
+        Long current = progress("theme-current", 0).getId();
+        jdbc.update("insert into topic_route_session(id,activity_id,topic_id,member_id,play_instance_id) values (999, ?, ?, ?, 'unrelated-latest')",
+                ACTIVITY, TOPIC, MEMBER);
+
+        assertEquals(original, mapper.selectPlayerNodeProgressList(progressProbe()).get(0).getId());
+        assertEquals(old, mapper.selectPlayerNodeProgressListForInstance(progressProbe(), "theme-old").get(0).getId());
+        assertEquals(current, mapper.selectPlayerNodeProgressListForInstance(progressProbe(), "theme-current").get(0).getId());
+        assertTrue(mapper.selectPlayerNodeProgressListForInstance(progressProbe(), null).isEmpty());
+        PlayerNodeProgress otherOwner = progressProbe(); otherOwner.setMemberId(MEMBER + 1);
+        assertTrue(mapper.selectPlayerNodeProgressListForInstance(otherOwner, "theme-current").isEmpty());
+        PlayerNodeProgress otherActivity = progressProbe(); otherActivity.setActivityId(ACTIVITY + 1);
+        assertTrue(mapper.selectPlayerNodeProgressListForInstance(otherActivity, "theme-current").isEmpty());
+        PlayerNodeProgress otherTopic = progressProbe(); otherTopic.setTopicId(TOPIC + 1);
+        assertTrue(mapper.selectPlayerNodeProgressListForInstance(otherTopic, "theme-current").isEmpty());
+    }
+
+    @Test
+    void gameCompletionUsesExactlyOneExplicitInstanceAndPreservesConditionalUniqueness() {
+        Long original = progress("default", 0).getId();
+        Long old = progress("theme-old", 0).getId();
+        Long current = progress("theme-current", 0).getId();
+        assertEquals(0, mapper.markShopDayGameDoneForInstance(MEMBER, ACTIVITY, TOPIC + 1, NODE, "theme-current"));
+        assertEquals(0, mapper.markShopDayGameDoneForInstance(MEMBER, ACTIVITY, TOPIC, NODE, null));
+        assertEquals(1, mapper.markShopDayGameDoneForInstance(MEMBER, ACTIVITY, TOPIC, NODE, "theme-current"));
+        assertEquals(0, mapper.markShopDayGameDoneForInstance(MEMBER, ACTIVITY, TOPIC, NODE, "theme-current"));
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(old).getStatus());
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(original).getStatus());
+        assertEquals(Integer.valueOf(1), mapper.selectPlayerNodeProgressById(current).getStatus());
+        assertEquals(1, mapper.markShopDayGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(old).getStatus());
+    }
+
+    @Test
+    void photoSqlRequiresTheExactOwnerScopeAndInstance() {
+        Long current = progress("theme-current", 0).getId();
+        assertEquals(0, mapper.markPhotoMachineApproved(current));
+        assertEquals(0, mapper.markPhotoMachineApprovedForInstance(current, MEMBER + 1, ACTIVITY, TOPIC, "theme-current"));
+        assertEquals(0, mapper.markPhotoMachineApprovedForInstance(current, MEMBER, ACTIVITY + 1, TOPIC, "theme-current"));
+        assertEquals(0, mapper.markPhotoMachineApprovedForInstance(current, MEMBER, ACTIVITY, TOPIC + 1, "theme-current"));
+        assertEquals(0, mapper.markPhotoMachineApprovedForInstance(current, MEMBER, ACTIVITY, TOPIC, "theme-old"));
+        assertEquals(1, mapper.markPhotoMachineApprovedForInstance(current, MEMBER, ACTIVITY, TOPIC, "theme-current"));
+        assertEquals(0, mapper.markPhotoMachineApprovedForInstance(current, MEMBER, ACTIVITY, TOPIC, "theme-current"));
+    }
+
+    @Test
+    void progressServiceUsesRuntimeAuthorityForReadsAndRejectsClientInstances() {
+        progress("default", 0); progress("theme-old", 0);
+        Long current = progress("theme-current", 0).getId();
+        PlayerNodeProgressServiceImpl target = progressService(runtime("theme-current"));
+        assertEquals(current, target.selectPlayerNodeProgressList(progressProbe()).get(0).getId());
+        PlayerNodeProgress forged = progressProbe(); forged.setPlayInstanceId("theme-old");
+        assertThrows(ServiceException.class, () -> target.selectPlayerNodeProgressList(forged));
+        assertThrows(ServiceException.class, () -> target.insertPlayerNodeProgress(forged));
+        assertEquals(3, countRows());
+    }
+
+    @Test
+    void photoServiceRejectsHistoricalRowsBeforeWritingAndApprovesCurrentOnlyOnce() {
+        Long old = progress("theme-old", 0).getId();
+        Long current = progress("theme-current", 0).getId();
+        ITopicRouteRuntimeService runtime = runtime("theme-current");
+        PlayerNodeProgressServiceImpl target = progressService(runtime);
+        assertThrows(ServiceException.class, () -> target.markPhotoMachineApproved(old));
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(old).getStatus());
+        assertEquals(1, target.markPhotoMachineApproved(current));
+        assertEquals(0, target.markPhotoMachineApproved(current));
+        verify(runtime, org.mockito.Mockito.times(2)).assertCurrentPlayInstance(MEMBER, TOPIC, ACTIVITY, "theme-current");
+    }
+
+    @Test
+    void aReplayBetweenInstanceReadAndWriteIsRejectedBeforeInsertOrApproval() {
+        Long current = progress("theme-current", 0).getId();
+        ITopicRouteRuntimeService runtime = runtime("theme-current");
+        when(runtime.assertCurrentPlayInstance(MEMBER, TOPIC, ACTIVITY, "theme-current"))
+                .thenThrow(new ServiceException("本局已更新，请刷新", 409));
+        PlayerNodeProgressServiceImpl target = progressService(runtime);
+        PlayerNodeProgress next = progressProbe(); next.setNodeId(NODE + 1); next.setStatus(1);
+        assertThrows(ServiceException.class, () -> target.insertPlayerNodeProgress(next));
+        assertThrows(ServiceException.class, () -> target.markPhotoMachineApproved(current));
+        assertEquals(1, countRows());
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(current).getStatus());
+    }
+
+    @Test
+    void publishedUnstartedThemeCannotUseProgressWhenDisabledOrEnabled() {
+        Long rowId = progress("default", 0).getId();
+        TopicRouteSessionMapper sessions = mock(TopicRouteSessionMapper.class);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC);
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1}");
+        when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        TopicRouteRuntimeServiceImpl runtime = new TopicRouteRuntimeServiceImpl(sessions, topics, null, null, null, null);
+        PlayerNodeProgressServiceImpl target = progressService(runtime);
+        for (boolean enabled : new boolean[] { false, true }) {
+            ThemeRuntimeFeaturePolicy policy = new ThemeRuntimeFeaturePolicy();
+            ReflectionTestUtils.setField(policy, "enabled", enabled);
+            ReflectionTestUtils.setField(runtime, "themeRuntimePolicy", policy);
+            assertThrows(ServiceException.class, () -> target.selectPlayerNodeProgressList(progressProbe()));
+            assertThrows(ServiceException.class, () -> target.insertPlayerNodeProgress(progressProbe()));
+            assertThrows(ServiceException.class, () -> target.markPhotoMachineApproved(rowId));
+            assertEquals(1, countRows());
+            assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(rowId).getStatus());
+        }
+    }
+
+    @Test
+    void legacyRuntimeAuthorityIgnoresAnUnconfiguredNewerInstance() {
+        Long original = progress("default", 0).getId(); progress("unrelated-latest", 0);
+        TopicRouteSessionMapper sessions = mock(TopicRouteSessionMapper.class);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        TopicRouteSession legacy = routeSession(11L, "default", "{}");
+        TopicRouteSession newer = routeSession(12L, "unrelated-latest", "{}");
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default")).thenReturn(legacy);
+        when(sessions.selectCurrentByOwner(ACTIVITY, TOPIC, MEMBER)).thenReturn(newer);
+        TopicRouteRuntimeServiceImpl runtime = new TopicRouteRuntimeServiceImpl(sessions, topics, null, null, null, null);
+        assertEquals(original, progressService(runtime).selectPlayerNodeProgressList(progressProbe()).get(0).getId());
+    }
+
+    @Test
+    void missingRuntimeNeverAcceptsAnExplicitThemeInstance() {
+        PlayerNodeProgress row = progressProbe(); row.setPlayInstanceId("theme-current");
+        PlayerNodeProgressServiceImpl target = progressService(null);
+        assertThrows(ServiceException.class, () -> target.selectPlayerNodeProgressList(row));
+        assertThrows(ServiceException.class, () -> target.insertPlayerNodeProgress(row));
+        assertEquals(0, countRows());
+    }
+
+    @Test
+    void shopDayReplayNeverReusesDefaultOrPreviousArrivalGameOrPhoto() {
+        PlayerNodeProgress original = service.markArrived(MEMBER, ACTIVITY, node());
+        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+        service.submitPhoto(MEMBER, ACTIVITY, NODE, "https://img/default.jpg");
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-old");
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertThrows(IllegalStateException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+        PlayerNodeProgress old = service.markArrived(MEMBER, ACTIVITY, node());
+        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+        service.submitPhoto(MEMBER, ACTIVITY, NODE, "https://img/old.jpg");
+        shopRuntime.theme(2L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertThrows(IllegalStateException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+        PlayerNodeProgress current = service.markArrived(MEMBER, ACTIVITY, node());
+        assertEquals("theme-current", current.getPlayInstanceId());
+        assertEquals(Integer.valueOf(0), current.getStatus());
+        assertNull(current.getPicUrl());
+        assertTrue(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertEquals(PROOF, service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF).getPicUrl());
+        assertEquals(current.getId(), service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF).getId());
+        assertThrows(IllegalStateException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, "https://img/new.jpg"));
+        assertEquals(3, countRows());
+        assertEquals("https://img/default.jpg", mapper.selectPlayerNodeProgressById(original.getId()).getPicUrl());
+        assertEquals("https://img/old.jpg", mapper.selectPlayerNodeProgressById(old.getId()).getPicUrl());
+        assertEquals(Integer.valueOf(1), mapper.selectPlayerNodeProgressById(current.getId()).getStatus());
+    }
+
+    @Test
+    void shopDayAuthoritativeNodeRejectsTopicMismatchAndMissingNode() {
+        CmsTopicNode forged = node(); forged.setTopicId(TOPIC + 1);
+        assertThrows(IllegalArgumentException.class, () -> service.markArrived(MEMBER, ACTIVITY, forged));
+        assertThrows(IllegalArgumentException.class, () -> service.markGameDone(MEMBER, ACTIVITY, TOPIC + 1, NODE));
+        assertThrows(IllegalArgumentException.class, () -> service.hasArrived(MEMBER, ACTIVITY, NODE + 1));
+        assertThrows(IllegalArgumentException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE + 1, PROOF));
+        assertEquals(0, countRows());
+        assertEquals(0, shopRuntime.guardCalls);
+    }
+
+    @Test
+    void unstartedConfiguredThemeAndDisabledFrozenThemeFailBeforeAnyProgressWrite() {
+        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC);
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1}");
+        when(shopRuntime.topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        for (boolean enabled : new boolean[] { false, true }) {
+            ReflectionTestUtils.setField(shopRuntime.policy, "enabled", enabled);
+            assertShopDayBlocked();
+            assertEquals(0, countRows());
+        }
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        ReflectionTestUtils.setField(shopRuntime.policy, "enabled", false);
+        assertShopDayBlocked();
+        assertEquals(0, countRows());
+    }
+
+    @Test
+    void lateReplayGuardStopsArrivalCompletionAndPhotoWithinTheRealTransaction() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-old");
+        PlayerNodeProgress old = service.markArrived(MEMBER, ACTIVITY, node());
+        shopRuntime.beforeGuard = () -> shopRuntime.theme(2L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        // Replay is inserted after playInstance, before the real locking route guard; rollback removes the fixture insert too.
+        assertThrows(ServiceException.class, () -> service.markArrived(MEMBER, ACTIVITY, node()));
+        assertThrows(ServiceException.class, () -> service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertThrows(ServiceException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+        assertEquals(1, countRows());
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(old.getId()).getStatus());
+        assertNull(mapper.selectPlayerNodeProgressById(old.getId()).getPicUrl());
+        assertEquals(1, jdbc.queryForObject("select count(*) from topic_route_session", Integer.class));
+    }
+
+    @Test
+    void scopedPhotoSqlRejectsEveryWrongScopeAndPreservesEvidenceAndStatus() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        Long id = service.markArrived(MEMBER, ACTIVITY, node()).getId();
+        assertEquals(0, mapper.updateShopDayPhoto(id, PROOF), "legacy API is default-only");
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id + 1, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER + 1, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY + 1, TOPIC, NODE, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC + 1, NODE, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE + 1, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-old", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, null, PROOF));
+        jdbc.update("update player_node_progress set status=2 where id=?", id);
+        assertThrows(IllegalStateException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        jdbc.update("update player_node_progress set status=1,del_flag=1 where id=?", id);
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        jdbc.update("update player_node_progress set del_flag=0,checkin_time=null where id=?", id);
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        jdbc.update("update player_node_progress set checkin_time=current_timestamp where id=?", id);
+        assertEquals(1, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", PROOF));
+        assertEquals(0, mapper.updateShopDayPhotoForInstance(id, MEMBER, ACTIVITY, TOPIC, NODE, "theme-current", "https://img/replacement.jpg"));
+        assertEquals(PROOF, mapper.selectPlayerNodeProgressById(id).getPicUrl());
+        assertEquals(Integer.valueOf(1), mapper.selectPlayerNodeProgressById(id).getStatus());
+    }
+
+    @Test
+    void nonThemeRuntimeKeepsDefaultEvenWithANewerUnconfiguredSession() {
+        PlayerNodeProgress original = service.markArrived(MEMBER, ACTIVITY, node());
+        jdbc.update("insert into topic_route_session(id,activity_id,topic_id,member_id,play_instance_id,config_snapshot_json)"
+                + " values(1,?,?,?,'unrelated-latest','{}')", ACTIVITY, TOPIC, MEMBER);
+        assertEquals(original.getId(), service.markArrived(MEMBER, ACTIVITY, node()).getId());
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertTrue(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertEquals("default", service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF).getPlayInstanceId());
+        assertEquals(1, countRows());
+    }
+
+    @Test
+    void duplicateArrivalOnlyReadsBackTheExactInstance() {
+        PlayerNodeProgress original = service.markArrived(MEMBER, ACTIVITY, node());
+        // Deliberately retain a pre-migration uniqueness shape: another instance must not satisfy this duplicate.
+        jdbc.execute("alter table player_node_progress add constraint old_unique unique(member_id,activity_id,topic_id,node_id)");
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        assertThrows(org.springframework.dao.DuplicateKeyException.class, () -> service.markArrived(MEMBER, ACTIVITY, node()));
+        assertEquals(1, countRows());
+        assertEquals("default", mapper.selectPlayerNodeProgressById(original.getId()).getPlayInstanceId());
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, NODE));
+    }
+
+    @Test
+    void duplicateArrivalRaceUsesRealUniqueKeyAndSameInstanceReadback() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        java.util.concurrent.atomic.AtomicBoolean inserted = new java.util.concurrent.atomic.AtomicBoolean();
+        PlayerNodeProgressMapper racedMapper = (PlayerNodeProgressMapper) java.lang.reflect.Proxy.newProxyInstance(
+                PlayerNodeProgressMapper.class.getClassLoader(), new Class<?>[] { PlayerNodeProgressMapper.class },
+                (proxy, method, args) -> {
+                    if ("insertPlayerNodeProgress".equals(method.getName()) && inserted.compareAndSet(false, true)) {
+                        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newSingleThreadExecutor();
+                        try {
+                            pool.submit(() -> jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time)"
+                                    + " values(?,?,?,?,?,0,current_timestamp)", MEMBER, ACTIVITY, TOPIC, NODE, "theme-current"))
+                                    .get(5, java.util.concurrent.TimeUnit.SECONDS);
+                        } finally { pool.shutdownNow(); }
+                    }
+                    try { return method.invoke(mapper, args); }
+                    catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
+                });
+        ReflectionTestUtils.setField(shopTarget, "playerNodeProgressMapper", racedMapper);
+        PlayerNodeProgress result = service.markArrived(MEMBER, ACTIVITY, node());
+        assertEquals("theme-current", result.getPlayInstanceId());
+        assertNotNull(result.getId());
+        assertEquals(1, countRows());
+        assertTrue(service.hasArrived(MEMBER, ACTIVITY, NODE));
+    }
+
+    @Test
+    void routeRowLockSurvivesTheGuardUntilShopDayTransactionCommits() throws Exception {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        java.util.concurrent.CountDownLatch guarded = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch continueWrite = new java.util.concurrent.CountDownLatch(1);
+        shopRuntime.afterGuard = () -> {
+            guarded.countDown();
+            try { assertTrue(continueWrite.await(5, java.util.concurrent.TimeUnit.SECONDS)); }
+            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IllegalStateException(interrupted); }
+        };
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newSingleThreadExecutor();
+        java.util.concurrent.Future<PlayerNodeProgress> write = pool.submit(() -> service.markArrived(MEMBER, ACTIVITY, node()));
+        try {
+            assertTrue(guarded.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            try (java.sql.Connection connection = shopRuntime.dataSource.getConnection(); java.sql.Statement statement = connection.createStatement()) {
+                statement.execute("set lock_timeout 100");
+                assertThrows(java.sql.SQLException.class, () -> statement.executeUpdate("update topic_route_session set version=version+1 where id=1"));
+            }
+            assertEquals(0, countRows(), "the service has not yet written progress");
+            continueWrite.countDown();
+            assertEquals("theme-current", write.get(5, java.util.concurrent.TimeUnit.SECONDS).getPlayInstanceId());
+            assertEquals(1, jdbc.update("update topic_route_session set version=version+1 where id=1"));
+            assertEquals(1, countRows());
+        } finally { continueWrite.countDown(); pool.shutdownNow(); }
+    }
+
+    @Test
+    void samePhotoWinningAConcurrentConditionalUpdateIsAnIdempotentSuccess() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        PlayerNodeProgress arrival = service.markArrived(MEMBER, ACTIVITY, node());
+        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+        photoRace(PROOF);
+        PlayerNodeProgress result = service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF);
+        assertEquals(arrival.getId(), result.getId());
+        assertEquals(PROOF, result.getPicUrl());
+        assertEquals(Integer.valueOf(1), result.getStatus());
+        assertEquals(1, countRows());
+    }
+
+    @Test
+    void differentPhotoWinningAConcurrentConditionalUpdateIsNeverOverwritten() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-current");
+        PlayerNodeProgress arrival = service.markArrived(MEMBER, ACTIVITY, node());
+        photoRace("https://img/winner.jpg");
+        assertThrows(IllegalStateException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+        assertEquals("https://img/winner.jpg", mapper.selectPlayerNodeProgressById(arrival.getId()).getPicUrl());
+        assertEquals(Integer.valueOf(0), mapper.selectPlayerNodeProgressById(arrival.getId()).getStatus());
+    }
+
+    @Test
+    void replayCommittedDuringArrivalReadCannotReuseTheHistoricalAnswer() {
+        shopRuntime.theme(1L, MEMBER, ACTIVITY, TOPIC, "theme-old");
+        service.markArrived(MEMBER, ACTIVITY, node());
+        java.util.concurrent.atomic.AtomicBoolean switched = new java.util.concurrent.atomic.AtomicBoolean();
+        PlayerNodeProgressMapper raced = (PlayerNodeProgressMapper) java.lang.reflect.Proxy.newProxyInstance(
+                PlayerNodeProgressMapper.class.getClassLoader(), new Class<?>[] { PlayerNodeProgressMapper.class },
+                (proxy, method, args) -> {
+                    try {
+                        Object result = method.invoke(mapper, args);
+                        if ("selectPlayerNodeProgressListForInstance".equals(method.getName()) && switched.compareAndSet(false, true)) {
+                            separately(() -> shopRuntime.theme(2L, MEMBER, ACTIVITY, TOPIC, "theme-current"));
+                        }
+                        return result;
+                    } catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
+                });
+        ReflectionTestUtils.setField(shopTarget, "playerNodeProgressMapper", raced);
+        assertThrows(ServiceException.class, () -> service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertFalse(service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertEquals(1, countRows());
+    }
+
+    private void photoRace(String winningPhoto) {
+        java.util.concurrent.atomic.AtomicBoolean written = new java.util.concurrent.atomic.AtomicBoolean();
+        PlayerNodeProgressMapper raced = (PlayerNodeProgressMapper) java.lang.reflect.Proxy.newProxyInstance(
+                PlayerNodeProgressMapper.class.getClassLoader(), new Class<?>[] { PlayerNodeProgressMapper.class },
+                (proxy, method, args) -> {
+                    if ("updateShopDayPhotoForInstance".equals(method.getName()) && written.compareAndSet(false, true)) {
+                        separately(() -> assertEquals(1, mapper.updateShopDayPhotoForInstance((Long) args[0], MEMBER,
+                                ACTIVITY, TOPIC, NODE, "theme-current", winningPhoto)));
+                    }
+                    try { return method.invoke(mapper, args); }
+                    catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
+                });
+        ReflectionTestUtils.setField(shopTarget, "playerNodeProgressMapper", raced);
+    }
+
+    private void separately(Runnable write) throws Exception {
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newSingleThreadExecutor();
+        try { pool.submit(write).get(5, java.util.concurrent.TimeUnit.SECONDS); }
+        finally { pool.shutdownNow(); }
+    }
+
+    private void assertShopDayBlocked() {
+        assertThrows(ServiceException.class, () -> service.markArrived(MEMBER, ACTIVITY, node()));
+        assertThrows(ServiceException.class, () -> service.hasArrived(MEMBER, ACTIVITY, NODE));
+        assertThrows(ServiceException.class, () -> service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE));
+        assertThrows(ServiceException.class, () -> service.submitPhoto(MEMBER, ACTIVITY, NODE, PROOF));
+    }
+
+    private ITopicRouteRuntimeService runtime(String instance) {
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        when(runtime.playInstance(MEMBER, TOPIC, ACTIVITY)).thenReturn(instance);
+        when(runtime.assertCurrentPlayInstance(MEMBER, TOPIC, ACTIVITY, instance)).thenReturn(!"default".equals(instance));
+        return runtime;
+    }
+
+    private PlayerNodeProgressServiceImpl progressService(ITopicRouteRuntimeService runtime) {
+        PlayerNodeProgressServiceImpl target = new PlayerNodeProgressServiceImpl();
+        ReflectionTestUtils.setField(target, "playerNodeProgressMapper", mapper);
+        ReflectionTestUtils.setField(target, "routeRuntimeService", runtime);
+        return target;
+    }
+
+    private PlayerNodeProgress progressProbe() {
+        PlayerNodeProgress p = new PlayerNodeProgress(); p.setMemberId(MEMBER); p.setActivityId(ACTIVITY);
+        p.setTopicId(TOPIC); p.setNodeId(NODE); return p;
+    }
+
+    private PlayerNodeProgress progress(String instance, int status) {
+        PlayerNodeProgress p = progressProbe(); p.setPlayInstanceId(instance); p.setStatus(status); p.setDelFlag(0);
+        assertEquals(1, mapper.insertPlayerNodeProgress(p)); return p;
+    }
+
+    private TopicRouteSession routeSession(long id, String instance, String snapshot) {
+        TopicRouteSession s = new TopicRouteSession(); s.setId(id); s.setMemberId(MEMBER);
+        s.setTopicId(TOPIC); s.setActivityId(ACTIVITY); s.setPlayInstanceId(instance);
+        s.setConfigSnapshotJson(snapshot); return s;
     }
 
     private static CmsTopicNode node() {

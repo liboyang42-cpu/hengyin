@@ -58,6 +58,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class TopicRouteRuntimeServiceImplTest {
@@ -78,9 +79,9 @@ class TopicRouteRuntimeServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        runtime = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
+        runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
                 progressMapper, activityMapper, registrationMapper, roleMapper, () -> 12345L,
-                Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), templateMapper);
         ReflectionTestUtils.setField(runtime, "playEncounterService", encounterService);
         when(encounterService.resolve(anyLong(), anyLong(), anyLong(), anyLong())).thenReturn(null);
         ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", cmsTopicChapterMapper);
@@ -431,6 +432,31 @@ class TopicRouteRuntimeServiceImplTest {
                 () -> runtime.canPlay(7L, 10L, 9L, 1L));
         assertTrue(error.getMessage().contains("团码"));
         verify(routeMapper, never()).insertSession(any());
+    }
+
+    @Test
+    void protectedReaderDenialStopsNewSessionBeforeSnapshotPersistence() {
+        CmsTopicNode bound = node(1L, 1L); bound.setTemplateId(101L);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Arrays.asList(bound, node(2L, 2L)));
+        com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader rejecting =
+                mock(com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader.class);
+        ReflectionTestUtils.setField(runtime, "legacyTemplateBodyReader", rejecting);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class, () -> runtime.state(7L, 10L, 0L));
+        verify(routeMapper, never()).insertSession(any(TopicRouteSession.class));
+        verifyNoInteractions(templateMapper);
+    }
+
+    @Test
+    void protectedReaderFailureStopsNewSessionWithoutRawFallback() {
+        CmsTopicNode bound = node(1L, 1L); bound.setTemplateId(101L);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Arrays.asList(bound, node(2L, 2L)));
+        com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader failing =
+                mock(com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader.class);
+        when(failing.findLegacy(101L)).thenThrow(new org.springframework.dao.DataAccessResourceFailureException("unavailable"));
+        ReflectionTestUtils.setField(runtime, "legacyTemplateBodyReader", failing);
+        assertThrows(org.springframework.dao.DataAccessResourceFailureException.class, () -> runtime.state(7L, 10L, 0L));
+        verify(routeMapper, never()).insertSession(any(TopicRouteSession.class));
+        verifyNoInteractions(templateMapper);
     }
 
     @Test
@@ -1481,8 +1507,11 @@ class TopicRouteRuntimeServiceImplTest {
         scope.setMemberId(7L); scope.setTopicId(10L); scope.setActivityId(44L);
         TopicRouteSession session = new TopicRouteSession();
         session.setMemberId(7L); session.setTopicId(10L); session.setActivityId(44L);
+        session.setId(101L);
+        session.setPlayInstanceId("default");
+        session.setConfigSnapshotJson("{}");
         session.setStatus(TopicRouteSession.STATUS_COMPLETED);
-        when(routeMapper.selectByOwners(Collections.singletonList(scope)))
+        when(routeMapper.selectCurrentCandidatesByOwners(Collections.singletonList(scope)))
                 .thenReturn(Collections.singletonList(session));
 
         Map<String, Integer> statuses = runtime.sessionStatuses(Collections.singletonList(scope));
@@ -1880,7 +1909,7 @@ class TopicRouteRuntimeServiceImplTest {
 
     /**
      * 热路径模板查询:无本局的线性旅程主题,建局判定与建局冻结共用同一次模板查询 ——
-     * 同一次 state 调用只查一次;已有本局时再 state / canPlay 一次都不查。
+     * 同一次 state 每唯一ID只调用reader一次(生产每ID锁+正文至多2条SQL);已有本局不查。
      */
     @Test
     void journeyTemplateLookupRunsAtMostOncePerRequest() {
@@ -1895,13 +1924,13 @@ class TopicRouteRuntimeServiceImplTest {
         TopicRouteState opened = runtime.state(7L, 10L, 0L);
 
         assertEquals(99L, opened.getSessionId());
-        verify(templateMapper, times(1)).selectCmsMemberTemplateByIds(any());
+        verify(((com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader) ReflectionTestUtils.getField(runtime, "legacyTemplateBodyReader")), times(1)).findLegacy(101L);
 
-        clearInvocations(templateMapper);
+        clearInvocations(templateMapper, ((com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader) ReflectionTestUtils.getField(runtime, "legacyTemplateBodyReader")));
         runtime.state(7L, 10L, 0L);
         runtime.canPlay(7L, 10L, 0L, 2L);
 
-        verify(templateMapper, never()).selectCmsMemberTemplateByIds(any());
+        verify(((com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader) ReflectionTestUtils.getField(runtime, "legacyTemplateBodyReader")), never()).findLegacy(anyLong());
     }
 
     /** canPlay 自己开局的调用链同样只查一次模板:判定与冻结不得各查一次。 */
@@ -1916,7 +1945,7 @@ class TopicRouteRuntimeServiceImplTest {
 
         runtime.canPlay(7L, 10L, 0L, 1L);
 
-        verify(templateMapper, times(1)).selectCmsMemberTemplateByIds(any());
+        verify(((com.chengyinhub.business.service.support.LegacyCmsTemplateBodyReader) ReflectionTestUtils.getField(runtime, "legacyTemplateBodyReader")), times(1)).findLegacy(101L);
     }
 
     /** 已有本局的线性主题:创作者清空模板旅程段后,本局仍按快照走,不退回无局线性读模型。 */
@@ -2137,9 +2166,9 @@ class TopicRouteRuntimeServiceImplTest {
     }
 
     private TopicRouteRuntimeServiceImpl policyRuntime() {
-        TopicRouteRuntimeServiceImpl policy = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper,
+        TopicRouteRuntimeServiceImpl policy = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper,
                 templateMapper, progressMapper, activityMapper, registrationMapper, roleMapper, () -> 12345L,
-                Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), templateMapper);
         org.springframework.test.util.ReflectionTestUtils.setField(policy, "cmsTopicChapterMapper",
                 cmsTopicChapterMapper);
         return policy;

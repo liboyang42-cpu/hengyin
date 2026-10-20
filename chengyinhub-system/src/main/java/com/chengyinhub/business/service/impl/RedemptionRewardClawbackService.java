@@ -59,6 +59,9 @@ public class RedemptionRewardClawbackService {
     @Autowired private CmsTopicCompletionCouponRewardMapper completionCouponRewardMapper;
     @Autowired private SmsCouponHistoryMapper smsCouponHistoryMapper;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
+    @Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("topicCompletionCouponHistoryResolver")
+    private com.chengyinhub.business.service.coupon.TopicCompletionCouponHistoryResolving completionCouponReceipts;
 
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void clawback(Redemption r, CmsRegistration registration, boolean registrationNoLongerVerified,
@@ -266,6 +269,7 @@ public class RedemptionRewardClawbackService {
         if (couponId == null) return null;
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("couponId", couponId);
+<<<<<<< port
         Long historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
         if (historyId == null || historyId <= 0) {
             out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
@@ -278,6 +282,17 @@ public class RedemptionRewardClawbackService {
             // 原身份缺失时仅审计，不猜其他券，不删除原日志或写券补发标记。
             // 返回结果而非异常，让其他已授权积分/经验冲正沿原事务继续。
             out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+=======
+        // New protocol requires the exact original history, including failures. Only a
+        // proven unmarked/unlinked legacy slot retains the existing time-window path.
+        if (completionCouponReceipts == null) throw new IllegalStateException("Completion receipt history guard is unavailable");
+        Long historyId = completionCouponReceipts.currentHistoryForClawback(topicId, memberId, couponId);
+        if (historyId == null) historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
+        SmsCouponHistory history = historyId == null ? null
+                : smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
+        if (history == null) {
+            out.put("result", "NOT_FOUND");
+>>>>>>> questify
             return out;
         }
         out.put("historyId", history.getId());

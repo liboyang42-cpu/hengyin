@@ -136,12 +136,13 @@ class CityNodePendingVisibilityMySqlIT {
             statement.execute("CREATE TABLE cms_member_template (id BIGINT PRIMARY KEY, title VARCHAR(128), "
                     + "interaction_type INT, validation_method INT, coupon_id BIGINT, question_name VARCHAR(255), "
                     + "question_a VARCHAR(255), question_b VARCHAR(255), question_c VARCHAR(255), "
-                    + "question_d VARCHAR(255)) ENGINE=InnoDB");
+                    + "question_d VARCHAR(255), w18_provenance_kind VARCHAR(32)) ENGINE=InnoDB");
+            statement.execute("CREATE TABLE w18_cms_template_provenance(template_id BIGINT PRIMARY KEY) ENGINE=InnoDB");
             statement.execute("CREATE TABLE roam_poi_reward_log (poi_id BIGINT NOT NULL, member_id BIGINT NOT NULL, "
                     + "coupon_id BIGINT, status INT NOT NULL) ENGINE=InnoDB");
 
             statement.execute("INSERT INTO mms_merchant VALUES (801,'城瘾咖啡馆','logo.png','某路 1 号','13800000000')");
-            statement.execute("INSERT INTO cms_member_template VALUES (901,'拍下钟面',1,5,0,'问题','A','B','C','D')");
+            statement.execute("INSERT INTO cms_member_template VALUES (901,'拍下钟面',1,5,0,'问题','A','B','C','D',NULL)");
             statement.execute("INSERT INTO roam_poi VALUES "
                     // ① 待审投放(未上线,application_type=1)
                     + "(11,'待审投放',2,31.1,121.1,80,'待审内容','310000',0,0,1,801,NULL,901,1,'','',0),"

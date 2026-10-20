@@ -43,6 +43,9 @@ class TemplateMedalStyleCopyAndBindingContractTest
         capabilityGuard = mock(ICapabilityGuard.class);
         service = new TemplatePublishServiceImpl();
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
+        // This fixture models an ordinary legacy row; provenance rejection has dedicated tests.
+        ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(id -> 0));
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         com.chengyinhub.business.mapper.CmsMemberTemplateMapper lockedMembers = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", lockedMembers);

@@ -74,6 +74,12 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
@@ -114,6 +120,12 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
@@ -209,6 +221,12 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
         CmsTopic topic = new CmsTopic();
         topic.setId(10L); topic.setStatus(1); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH");
@@ -283,6 +301,12 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
 
         CmsTopicNode preferenceNode = node(1L, 101L);
         CmsTopicNode advancedNode = node(2L, 102L);

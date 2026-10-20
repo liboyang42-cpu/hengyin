@@ -521,7 +521,8 @@ class CartSettlementTransactionalH2Test {
             return service;
         }
 
-        private static final String DDL =
+        // Shared schema fixture only; MySQL reuse explicitly translates H2-only DDL syntax.
+        static final String DDL =
                 "create table if not exists pms_product (id bigint primary key, merchant_id bigint, product_name varchar(255), pic varchar(255), album_pics varchar(255), publish_status bigint, sort_id bigint, price decimal(19,2), original_price decimal(19,2), stock bigint, unit varchar(32), weight double, detail_html clob, product_attr clob, del_flag varchar(2), create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp);" +
                 "create table if not exists pms_sku (id bigint primary key, sku_snapshot_id bigint, product_id bigint, out_sku_id varchar(255), sku_name varchar(255), sku_name_ar varchar(255), price decimal(19,2), weight double, original_price decimal(19,2), pic varchar(255), stock bigint, sp_data varchar(255), create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp);" +
                 "create table if not exists ums_member (id bigint primary key, user_type varchar(32), role varchar(255), phone varchar(255), password varchar(255), level_id bigint, name varchar(255), wechat varchar(255), status varchar(32), invite_user_id bigint, login_ip varchar(64), login_time timestamp, nickname varchar(255), avatar varchar(255), sex varchar(32), wx_open_id varchar(255), app_open_id varchar(255), union_id varchar(255), apple_id varchar(255), area_id bigint, birthday timestamp, mark varchar(255), tag_ids varchar(255), case_pics varchar(255), case_introducton varchar(255), website varchar(255), work_address varchar(255), introduction varchar(255), balance decimal(19,2), point bigint, del_flag varchar(2), create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp);" +

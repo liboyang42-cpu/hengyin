@@ -5,13 +5,19 @@ import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
 import com.chengyinhub.business.service.IShopDayProofService;
+import com.chengyinhub.business.service.ITopicRouteRuntimeService;
+import com.chengyinhub.common.exception.ServiceException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ShopDayProofServiceImpl implements IShopDayProofService {
@@ -24,6 +30,10 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
 
     @Autowired
     private CmsTopicNodeMapper cmsTopicNodeMapper;
+
+    @Autowired
+    @Lazy
+    private ITopicRouteRuntimeService routeRuntimeService;
 
     /**
      * R16-ARRIVE 方案 b:本人真实到店(扫店内码/GPS 到点)成功后,把到店记录**追加**给
@@ -38,42 +48,29 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
      * 动态码的单次消费语义在调用方,不在此处。
      */
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public PlayerNodeProgress markArrived(Long memberId, Long activityId, CmsTopicNode node) {
-        PlayerNodeProgress probe = probe(memberId, activityId, node.getId());
-        List<PlayerNodeProgress> existing = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);
-        if (existing != null && !existing.isEmpty()) {
-            PlayerNodeProgress row = existing.get(0);
-            if (row.getCheckinTime() != null) {
-                shareArrivalWithSiblings(memberId, activityId, node, row.getCheckinTime());
-            }
-            return row;
+        if (node == null) throw new IllegalArgumentException("节点参数有误");
+        CmsTopicNode storedNode = requireNode(node.getId());
+        if (!Objects.equals(storedNode.getTopicId(), node.getTopicId())) {
+            throw new IllegalArgumentException("节点不属于该主题");
         }
-
-        PlayerNodeProgress progress = probe(memberId, activityId, node.getId());
-        progress.setTopicId(node.getTopicId());
-        progress.setStatus(0);
-        progress.setCheckinTime(new Date());
-        progress.setDelFlag(0);
-        progress.setCreateTime(progress.getCheckinTime());
-        try {
-            if (playerNodeProgressMapper.insertPlayerNodeProgress(progress) != 1) {
-                throw new IllegalStateException("到店记录写入失败");
-            }
-            shareArrivalWithSiblings(memberId, activityId, node, progress.getCheckinTime());
-            return progress;
-        } catch (DuplicateKeyException duplicate) {
-            List<PlayerNodeProgress> raced = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);
-            if (raced == null || raced.isEmpty()) throw duplicate;
-            return raced.get(0);
+        PlayerNodeProgress scope = scope(memberId, activityId, storedNode, true);
+        PlayerNodeProgress row = findProgress(scope);
+        if (row == null) {
+            scope.setStatus(0);
+            scope.setCheckinTime(new Date());
+            scope.setDelFlag(0);
+            scope.setCreateTime(scope.getCheckinTime());
+            row = insertArrival(scope);
         }
+        if (row.getCheckinTime() != null) shareArrivalWithSiblings(scope, storedNode, row.getCheckinTime());
+        return row;
     }
 
-    /** 为同章节同地点的兄弟节点补写到店行;已存在(含并发写入)一律跳过,不覆盖任何既有事实。 */
-    private void shareArrivalWithSiblings(Long memberId, Long activityId, CmsTopicNode node, Date checkinTime) {
-        if (cmsTopicNodeMapper == null || node == null
-                || node.getTopicId() == null || node.getChapterId() == null) {
-            return;
-        }
+    /** The source and every sibling retain one server-selected instance and one transaction. */
+    private void shareArrivalWithSiblings(PlayerNodeProgress scope, CmsTopicNode node, Date checkinTime) {
+        if (node.getChapterId() == null) return;
         CmsTopicNode siblingProbe = new CmsTopicNode();
         siblingProbe.setTopicId(node.getTopicId());
         siblingProbe.setChapterId(node.getChapterId());
@@ -81,27 +78,45 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         if (siblings == null || siblings.isEmpty()) return;
         for (CmsTopicNode sibling : siblings) {
             if (sibling == null || sibling.getId() == null || sibling.getId().equals(node.getId())) continue;
-            if (!samePlace(node, sibling)) continue;
-            if (hasProgressRow(memberId, activityId, sibling.getId())) continue;
-
-            PlayerNodeProgress row = probe(memberId, activityId, sibling.getId());
-            row.setTopicId(node.getTopicId());
+            if (!Objects.equals(node.getTopicId(), sibling.getTopicId())
+                    || !Objects.equals(node.getChapterId(), sibling.getChapterId())
+                    || !samePlace(node, sibling)) continue;
+            PlayerNodeProgress row = probe(scope.getMemberId(), scope.getActivityId(),
+                    scope.getTopicId(), sibling.getId(), scope.getPlayInstanceId());
+            if (hasSiblingProgressIncludingDeleted(row)) continue;
             row.setStatus(0);
             row.setCheckinTime(checkinTime);
             row.setDelFlag(0);
             row.setCreateTime(checkinTime);
             try {
-                playerNodeProgressMapper.insertPlayerNodeProgress(row);
-            } catch (DuplicateKeyException raced) {
-                // 并发下同一兄弟节点已被写入:保留那一行,不覆盖
+                insertArrival(row);
+            } catch (DuplicateKeyException duplicate) {
+                // A concurrently created/deleted exact sibling row is still evidence to preserve.
+                if (!hasSiblingProgressIncludingDeleted(row)) throw duplicate;
             }
         }
     }
 
-    private boolean hasProgressRow(Long memberId, Long activityId, Long nodeId) {
-        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(
-                probe(memberId, activityId, nodeId));
-        return rows != null && !rows.isEmpty();
+    private boolean hasSiblingProgressIncludingDeleted(PlayerNodeProgress scope) {
+        int count = playerNodeProgressMapper.countPlayerNodeProgressForInstanceIncludingDeleted(
+                scope.getMemberId(), scope.getActivityId(), scope.getTopicId(), scope.getNodeId(), scope.getPlayInstanceId());
+        if (count < 0 || count > 1) throw new IllegalStateException("到店记录不唯一");
+        return count == 1;
+    }
+
+    private PlayerNodeProgress insertArrival(PlayerNodeProgress row) {
+        try {
+            if (playerNodeProgressMapper.insertPlayerNodeProgress(row) != 1) {
+                throw new IllegalStateException("到店记录写入失败");
+            }
+            return row;
+        } catch (DuplicateKeyException duplicate) {
+            // Only a readable row of this exact owner/node/instance can satisfy a raced insert.
+            // Unrelated constraints, hidden rows and sibling failures must abort the whole transaction.
+            PlayerNodeProgress raced = findProgress(row);
+            if (raced == null) throw duplicate;
+            return raced;
+        }
     }
 
     /**
@@ -151,25 +166,37 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public boolean hasArrived(Long memberId, Long activityId, Long nodeId) {
-        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(
-                probe(memberId, activityId, nodeId));
-        return rows != null && !rows.isEmpty() && rows.get(0).getCheckinTime() != null;
+        PlayerNodeProgress scope = scope(memberId, activityId, requireNode(nodeId), false);
+        PlayerNodeProgress row = findProgress(scope);
+        // Recheck after the uncached progress read before returning an arrival fact.
+        if (!scope.getPlayInstanceId().equals(routeRuntimeService.playInstance(
+                memberId, scope.getTopicId(), scope.getActivityId()))) {
+            throw new ServiceException("本局已更新，请刷新", 409);
+        }
+        return row != null && row.getCheckinTime() != null;
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) {
-        return playerNodeProgressMapper.markShopDayGameDone(memberId, activityId, topicId, nodeId) > 0;
+        CmsTopicNode node = requireNode(nodeId);
+        if (!Objects.equals(topicId, node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
+        PlayerNodeProgress scope = scope(memberId, activityId, node, true);
+        return playerNodeProgressMapper.markShopDayGameDoneForInstance(memberId, scope.getActivityId(),
+                node.getTopicId(), nodeId, scope.getPlayInstanceId()) > 0;
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public PlayerNodeProgress submitPhoto(Long memberId, Long activityId, Long nodeId, String picUrl) {
-        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(
-                probe(memberId, activityId, nodeId));
-        if (rows == null || rows.isEmpty() || rows.get(0).getCheckinTime() == null) {
+        if (StringUtils.isBlank(picUrl)) throw new IllegalArgumentException("到店照片不能为空");
+        PlayerNodeProgress scope = scope(memberId, activityId, requireNode(nodeId), true);
+        PlayerNodeProgress row = findProgress(scope);
+        if (row == null || row.getCheckinTime() == null) {
             throw new IllegalStateException("请先扫码确认到店");
         }
-        PlayerNodeProgress row = rows.get(0);
         // ★status 在探店日(mode2)上承载的是「游戏答完没有」，不是「节点通关没有」——
         //   B5 收窄裁决把这一列复用给了 markShopDayGameDone(0→1)。所以 0 与 1 都是
         //   合法的拍照起点：0 = 扫码进店没配游戏 / 还没答，1 = 刚答完游戏。
@@ -186,14 +213,14 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
             if (row.getPicUrl().equals(picUrl)) return row;
             throw new IllegalStateException("到店照片已提交，不能覆盖原始凭证");
         }
-        if (playerNodeProgressMapper.updateShopDayPhoto(row.getId(), picUrl) != 1) {
-            List<PlayerNodeProgress> readback = playerNodeProgressMapper.selectPlayerNodeProgressList(
-                    probe(memberId, activityId, nodeId));
-            if (readback == null || readback.isEmpty() || !isPhotoWritableStatus(readback.get(0).getStatus())
-                    || !picUrl.equals(readback.get(0).getPicUrl())) {
+        if (playerNodeProgressMapper.updateShopDayPhotoForInstance(row.getId(), memberId, scope.getActivityId(),
+                scope.getTopicId(), nodeId, scope.getPlayInstanceId(), picUrl) != 1) {
+            PlayerNodeProgress readback = findProgress(scope);
+            if (readback == null || readback.getCheckinTime() == null || !isPhotoWritableStatus(readback.getStatus())
+                    || !picUrl.equals(readback.getPicUrl())) {
                 throw new IllegalStateException("到店照片写入失败");
             }
-            return readback.get(0);
+            return readback;
         }
         row.setPicUrl(picUrl);
         row.setReviewStatus(0);
@@ -205,7 +232,7 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     /**
      * 可写入到店凭证的状态：0（已进店、游戏未答或无游戏）与 1（游戏已答）。
      *
-     * <p>与 {@code PlayerNodeProgressMapper.updateShopDayPhoto} 的
+     * <p>与 {@code PlayerNodeProgressMapper.updateShopDayPhotoForInstance} 的
      * {@code and status in (0, 1)} 是<b>同一个判据的两层表达</b>，必须一起改；
      * 只改一层就是 Java 放行、SQL 命中 0 行，或者反过来。
      */
@@ -213,11 +240,53 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         return status != null && (status == 0 || status == 1);
     }
 
-    private PlayerNodeProgress probe(Long memberId, Long activityId, Long nodeId) {
+    private CmsTopicNode requireNode(Long nodeId) {
+        if (nodeId == null || nodeId <= 0) throw new IllegalArgumentException("节点参数有误");
+        CmsTopicNode node = cmsTopicNodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null || !nodeId.equals(node.getId()) || node.getTopicId() == null || node.getTopicId() <= 0) {
+            throw new IllegalArgumentException("节点不存在或不属于有效主题");
+        }
+        return node;
+    }
+
+    private PlayerNodeProgress scope(Long memberId, Long activityId, CmsTopicNode node, boolean write) {
+        Long activity = activityId == null ? 0L : activityId;
+        if (memberId == null || memberId <= 0 || activity < 0) throw new IllegalArgumentException("场次参数有误");
+        if (routeRuntimeService == null) throw new ServiceException("路线运行时不可用");
+        String instance = routeRuntimeService.playInstance(memberId, node.getTopicId(), activity);
+        if (StringUtils.isBlank(instance)) throw new ServiceException("本局不可读取，请刷新", 409);
+        if (write) {
+            // The route row lock stays held until this service transaction commits or rolls back.
+            boolean theme = routeRuntimeService.assertCurrentPlayInstance(memberId, node.getTopicId(), activity, instance);
+            if (!"default".equals(instance) && !theme) throw new ServiceException("本局不可读取，请刷新", 409);
+        }
+        return probe(memberId, activity, node.getTopicId(), node.getId(), instance);
+    }
+
+    private PlayerNodeProgress findProgress(PlayerNodeProgress scope) {
+        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressListForInstance(
+                scope, scope.getPlayInstanceId());
+        if (rows == null) throw new IllegalStateException("到店记录不可读取");
+        if (rows.isEmpty()) return null;
+        PlayerNodeProgress row = rows.get(0);
+        if (rows.size() != 1 || row == null || !Objects.equals(scope.getMemberId(), row.getMemberId())
+                || !Objects.equals(scope.getActivityId(), row.getActivityId())
+                || !Objects.equals(scope.getTopicId(), row.getTopicId())
+                || !Objects.equals(scope.getNodeId(), row.getNodeId())
+                || !Objects.equals(scope.getPlayInstanceId(), row.getPlayInstanceId())
+                || !Integer.valueOf(0).equals(row.getDelFlag())) {
+            throw new IllegalStateException("到店记录归属不一致");
+        }
+        return row;
+    }
+
+    private PlayerNodeProgress probe(Long memberId, Long activityId, Long topicId, Long nodeId, String instance) {
         PlayerNodeProgress p = new PlayerNodeProgress();
         p.setMemberId(memberId);
         p.setActivityId(activityId);
+        p.setTopicId(topicId);
         p.setNodeId(nodeId);
+        p.setPlayInstanceId(instance);
         return p;
     }
 }

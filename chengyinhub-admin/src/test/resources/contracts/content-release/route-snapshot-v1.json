@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "startNodeId": 1,
+  "terminalNodeIds": [3],
+  "variables": {"clues": 1},
+  "edges": [
+    {"id": "middle", "fromNodeId": 1, "toNodeId": 2,
+      "trigger": {"type": "CHOICE", "outcomeCode": "COMPLETED"}},
+    {"id": "finish", "fromNodeId": 2, "toNodeId": 3,
+      "trigger": {"type": "CHOICE", "outcomeCode": "COMPLETED"}}
+  ],
+  "nodeJourney": {"1": {"playables": {"qa": true}, "requires": [], "effects": []}},
+  "nodeAnswers": {
+    "1": {"validationMethod": 2, "questionAnswer": "Café", "answerReveal": "SECRET_ENDING"},
+    "2": {}, "3": {}
+  },
+  "journeyRules": null,
+  "journeyStory": "",
+  "topicCompleteRule": null,
+  "thoughtChapters": [
+    {"chapterId": 10, "opening": false, "nodeIds": [1, 2, 3], "requiredBefore": [], "blocks": []}
+  ],
+  "stateKeys": []
+}

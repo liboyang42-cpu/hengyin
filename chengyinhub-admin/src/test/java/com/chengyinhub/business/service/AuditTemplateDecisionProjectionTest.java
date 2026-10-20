@@ -9,6 +9,8 @@ import com.chengyinhub.business.mapper.AuditTaskMapper;
 import com.chengyinhub.business.service.impl.AuditTaskServiceImpl;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import com.chengyinhub.business.service.support.LegacyCmsUnitGuardFixture;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 /** 统一审核结论必须同步到模板真源与模板库投影。 */
 class AuditTemplateDecisionProjectionTest {
+    private LegacyCmsUnitGuardFixture provenance;
+    @AfterEach void closeLegacySource() { if (provenance != null) provenance.close(); }
     private AuditTaskServiceImpl service;
     private AuditTaskMapper taskMapper;
     private ICmsMemberTemplateService memberService;
@@ -38,7 +42,8 @@ class AuditTemplateDecisionProjectionTest {
     private AuditTask task;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        provenance = new LegacyCmsUnitGuardFixture(91L);
         taskMapper = mock(AuditTaskMapper.class);
         memberService = mock(ICmsMemberTemplateService.class);
         libraryService = mock(ICmsTemplateLibraryService.class);
@@ -46,6 +51,7 @@ class AuditTemplateDecisionProjectionTest {
         com.chengyinhub.business.mapper.BusinessAuditEventMapper auditMapper =
                 mock(com.chengyinhub.business.mapper.BusinessAuditEventMapper.class);
         service = new AuditTaskServiceImpl();
+        ReflectionTestUtils.setField(service, "legacyTemplateApprovalBoundary", provenance.approvalBoundary);
         ReflectionTestUtils.setField(service, "auditTaskMapper", taskMapper);
         ReflectionTestUtils.setField(service, "auditRecordMapper", recordMapper);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", auditMapper);
@@ -223,5 +229,26 @@ class AuditTemplateDecisionProjectionTest {
         ArgumentCaptor<CmsTemplateLibrary> captor = ArgumentCaptor.forClass(CmsTemplateLibrary.class);
         verify(libraryMapper).applyAuditDecision(captor.capture(), org.mockito.ArgumentMatchers.eq(7L));
         return captor.getValue();
+    }
+
+    @Test
+    void missingApprovalGuardRejectsBeforeTaskDecisionOrProjectionWrite() {
+        ReflectionTestUtils.setField(service, "legacyTemplateApprovalBoundary", null);
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0); decision.setStatus(AuditTask.STATUS_APPROVED);
+        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.review(3L, 8L, decision));
+        assertEquals("LEGACY_TEMPLATE_APPROVAL_GUARD_UNAVAILABLE", error.getMessage());
+        verify(taskMapper, never()).updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any());
+        verify(templateMapper, never()).applyAuditDecision(any(), anyLong());
+        verify(libraryMapper, never()).applyAuditDecision(any(), anyLong());
+    }
+
+    @Test
+    void markerNullButSidecarPresentCannotPassGenericApproval() {
+        provenance.addSidecar(91L);
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0); decision.setStatus(AuditTask.STATUS_APPROVED);
+        assertThrows(ServiceException.class, () -> service.review(3L, 8L, decision));
+        verify(taskMapper, never()).updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any());
+        verify(templateMapper, never()).applyAuditDecision(any(), anyLong());
+        verify(libraryMapper, never()).applyAuditDecision(any(), anyLong());
     }
 }

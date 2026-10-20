@@ -254,4 +254,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update sms_coupon set status = 4, update_time = now()
         where id = #{id} and member_id = #{ownerMemberId} and del_flag = 0 and status in (0, 1)
     </update>
+    <select id="selectMerchantCommandCurrent" resultMap="SmsCouponResult">
+        select * from sms_coupon where id = #{id} and member_id = #{ownerMemberId}
+          and scope_type = 1 and merchant_id = #{merchantId} for update
+    </select>
+    <update id="stopIssuingMerchantCommand">
+        update sms_coupon set status = 4, update_time = now()
+        where id = #{id} and member_id = #{ownerMemberId} and scope_type = 1
+          and merchant_id = #{merchantId} and del_flag = 0 and status in (0, 1)
+    </update>
 </mapper>

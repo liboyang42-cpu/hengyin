@@ -21,6 +21,7 @@ public interface PlayTeamMapper {
     PlayTeamMember selectEarliestOtherActiveMember(@Param("teamId") Long teamId,
                                                     @Param("memberId") Long memberId);
     List<PlayTeamMember> selectActiveMembers(Long teamId);
+    List<PlayTeamMember> selectActiveMembersForUpdate(@Param("teamId") Long teamId);
     int countActiveMembers(Long teamId);
     int reserveSlot(Long teamId);
     int releaseSlot(Long teamId);

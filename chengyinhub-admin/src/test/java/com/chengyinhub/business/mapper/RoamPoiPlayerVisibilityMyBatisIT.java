@@ -53,6 +53,10 @@ class RoamPoiPlayerVisibilityMyBatisIT {
             "DROP TABLE IF EXISTS roam_poi_found",
             "DROP TABLE IF EXISTS npc_profile",
             "DROP TABLE IF EXISTS roam_poi",
+            "DROP TABLE IF EXISTS w18_cms_template_provenance",
+            "DROP TABLE IF EXISTS cms_member_template",
+            "CREATE TABLE cms_member_template(id BIGINT PRIMARY KEY, w18_provenance_kind VARCHAR(32))",
+            "CREATE TABLE w18_cms_template_provenance(template_id BIGINT PRIMARY KEY)",
             "CREATE TABLE roam_poi (id BIGINT PRIMARY KEY, name VARCHAR(100), type INT,"
                     + " lat DECIMAL(12,7), lng DECIMAL(12,7), radius_m INT, address VARCHAR(100), description TEXT,"
                     + " xp INT, coupon_template_id BIGINT, city_code VARCHAR(30), status INT, audit_status INT,"
@@ -154,8 +158,8 @@ class RoamPoiPlayerVisibilityMyBatisIT {
                 assertTrue(mapper.selectPlayerPoisByIds(Arrays.asList(6L)).isEmpty(), "status=0 不得被发现/打卡");
                 assertFalse(foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER)).containsKey(6L));
             } finally {
-                // 只回放前 4 条(全是 DROP;4 之后是 CREATE —— 反向跑 CREATE 会撞 1050)
-                for (int i = 3; i >= 0; i--) statement.execute(FIXTURE_DDL[i]);
+                // Replay only the six DROP statements, sidecar before its template source.
+                for (int i = 0; i < 6; i++) statement.execute(FIXTURE_DDL[i]);
             }
         }
     }

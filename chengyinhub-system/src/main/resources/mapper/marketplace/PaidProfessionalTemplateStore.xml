@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidProfessionalTemplateStore">
+  <resultMap id="template" type="com.chengyinhub.business.domain.CmsMemberTemplate">
+    <result property="id" column="id"/>
+    <result property="originalTemplateId" column="original_template_id"/>
+    <result property="memberId" column="member_id"/>
+    <result property="categoryId" column="category_id"/>
+    <result property="title" column="title"/>
+    <result property="description" column="description"/>
+    <result property="imgUrl" column="img_url"/>
+    <result property="players" column="players"/>
+    <result property="usageLocation" column="usage_location"/>
+    <result property="requiredMaterials" column="required_materials"/>
+    <result property="duration" column="duration"/>
+    <result property="difficulty" column="difficulty"/>
+    <result property="isSync" column="is_sync"/>
+    <result property="ruleInstructions" column="rule_instructions"/>
+    <result property="merchantGuide" column="merchant_guide"/>
+    <result property="validationMethod" column="validation_method"/>
+    <result property="sensorType" column="sensor_type"/>
+    <result property="sensorConfig" column="sensor_config"/>
+    <result property="questionName" column="question_name"/>
+    <result property="questionAnswer" column="question_answer"/>
+    <result property="feedbackText" column="feedback_text"/>
+    <result property="couponId" column="coupon_id"/>
+    <result property="medalImg" column="medal_img"/>
+    <result property="medalName" column="medal_name"/>
+    <result property="medalStyle" column="medal_style"/>
+    <result property="rewardRulesJson" column="reward_rules_json"/>
+    <result property="xpValue" column="xp_value"/>
+    <result property="storyText" column="story_text"/>
+    <result property="storyImg" column="story_img"/>
+    <result property="storyJson" column="story_json"/>
+    <result property="hint1" column="hint1"/>
+    <result property="hint2" column="hint2"/>
+    <result property="answerReveal" column="answer_reveal"/>
+    <result property="photoRequireDesc" column="photo_require_desc"/>
+    <result property="photoReview" column="photo_review"/>
+    <result property="audioUrl" column="audio_url"/>
+    <result property="audioDuration" column="audio_duration"/>
+    <result property="draftStatus" column="draft_status"/>
+    <result property="questionA" column="question_a"/>
+    <result property="questionB" column="question_b"/>
+    <result property="questionC" column="question_c"/>
+    <result property="questionD" column="question_d"/>
+    <result property="correctAnswer" column="correct_answer"/>
+    <result property="questionImg" column="question_img"/>
+    <result property="questionAudio" column="question_audio"/>
+    <result property="questionOptionMediaJson" column="question_option_media_json"/>
+    <result property="preferenceJson" column="preference_json"/>
+    <result property="advancedConfigJson" column="advanced_config_json"/>
+    <result property="activityCategoryids" column="activity_categoryids"/>
+    <result property="status" column="status"/>
+    <result property="publishStatus" column="publish_status"/>
+    <result property="reason" column="reason"/>
+    <result property="delFlag" column="del_flag"/>
+    <result property="rating" column="rating"/>
+    <result property="useNum" column="use_num"/>
+    <result property="checkStatus" column="check_status"/>
+    <result property="interactionType" column="interaction_type"/>
+    <result property="merchantNodeEnabled" column="merchant_node_enabled"/>
+    <result property="nodeSubmitStatus" column="node_submit_status"/>
+    <result property="createBy" column="create_by"/>
+    <result property="createTime" column="create_time"/>
+    <result property="updateBy" column="update_by"/>
+    <result property="updateTime" column="update_time"/>
+  </resultMap>
+  <resultMap id="provenance" type="com.chengyinhub.business.marketplace.paid.PaidProfessionalProvenanceRow">
+    <result property="templateId" column="template_id"/>
+    <result property="schemaVersion" column="schema_version"/>
+    <result property="ownerMemberId" column="owner_member_id"/>
+    <result property="requestKey" column="request_key"/>
+    <result property="commandHash" column="command_hash"/>
+    <result property="bindingKey" column="binding_key"/>
+    <result property="sourceKind" column="source_kind"/>
+    <result property="ownedDraftId" column="owned_draft_id"/>
+    <result property="ownedDraftRevision" column="owned_draft_revision"/>
+    <result property="installationRequestId" column="installation_request_id"/>
+    <result property="licenseId" column="license_id"/>
+    <result property="moduleId" column="module_id"/>
+    <result property="purchasedVersionId" column="purchased_version_id"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="componentHash" column="component_hash"/>
+    <result property="termsHash" column="terms_hash"/>
+    <result property="originalTargetDraftId" column="original_target_draft_id"/>
+    <result property="originalTargetRevision" column="original_target_revision"/>
+    <result property="originalTargetPayloadHash" column="original_target_payload_hash"/>
+    <result property="confirmedDraftRevision" column="confirmed_draft_revision"/>
+    <result property="confirmedDraftPayloadHash" column="confirmed_draft_payload_hash"/>
+    <result property="targetTopicId" column="target_topic_id"/>
+    <result property="confirmedMode" column="confirmed_mode"/>
+    <result property="contentRoleId" column="content_role_id"/>
+    <result property="routeConfigVersion" column="route_config_version"/>
+    <result property="ownerModeFingerprint" column="owner_mode_fingerprint"/>
+    <result property="templateContentHash" column="template_content_hash"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <select id="findRequest" resultMap="provenance" useCache="false" flushCache="true">
+    SELECT template_id,schema_version,owner_member_id,request_key,command_hash,binding_key,source_kind,owned_draft_id,owned_draft_revision,installation_request_id,license_id,module_id,purchased_version_id,content_hash,component_hash,terms_hash,original_target_draft_id,original_target_revision,original_target_payload_hash,confirmed_draft_revision,confirmed_draft_payload_hash,target_topic_id,confirmed_mode,content_role_id,route_config_version,owner_mode_fingerprint,template_content_hash,created_at FROM w18_cms_template_provenance WHERE request_key=#{key} FOR UPDATE
+  </select>
+  <select id="findBinding" resultMap="provenance" useCache="false" flushCache="true">
+    SELECT template_id,schema_version,owner_member_id,request_key,command_hash,binding_key,source_kind,owned_draft_id,owned_draft_revision,installation_request_id,license_id,module_id,purchased_version_id,content_hash,component_hash,terms_hash,original_target_draft_id,original_target_revision,original_target_payload_hash,confirmed_draft_revision,confirmed_draft_payload_hash,target_topic_id,confirmed_mode,content_role_id,route_config_version,owner_mode_fingerprint,template_content_hash,created_at FROM w18_cms_template_provenance WHERE binding_key=#{key} FOR UPDATE
+  </select>
+  <insert id="insertMarkedTemplate" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    INSERT INTO cms_member_template (original_template_id,member_id,category_id,title,description,img_url,players,usage_location,required_materials,duration,difficulty,is_sync,rule_instructions,merchant_guide,validation_method,sensor_type,sensor_config,question_name,question_answer,feedback_text,coupon_id,medal_img,medal_name,medal_style,reward_rules_json,xp_value,story_text,story_img,story_json,hint1,hint2,answer_reveal,photo_require_desc,photo_review,audio_url,audio_duration,draft_status,question_a,question_b,question_c,question_d,correct_answer,question_img,question_audio,question_option_media_json,preference_json,advanced_config_json,activity_categoryids,status,publish_status,reason,del_flag,rating,use_num,check_status,interaction_type,merchant_node_enabled,node_submit_status,create_by,create_time,update_by,update_time,w18_provenance_kind)
+    VALUES (#{originalTemplateId},#{memberId},#{categoryId},#{title},#{description},#{imgUrl},#{players},#{usageLocation},#{requiredMaterials},#{duration},#{difficulty},#{isSync},#{ruleInstructions},#{merchantGuide},#{validationMethod},#{sensorType},#{sensorConfig},#{questionName},#{questionAnswer},#{feedbackText},#{couponId},#{medalImg},#{medalName},#{medalStyle},#{rewardRulesJson},#{xpValue},#{storyText},#{storyImg},#{storyJson},#{hint1},#{hint2},#{answerReveal},#{photoRequireDesc},#{photoReview},#{audioUrl},#{audioDuration},#{draftStatus},#{questionA},#{questionB},#{questionC},#{questionD},#{correctAnswer},#{questionImg},#{questionAudio},#{questionOptionMediaJson},#{preferenceJson},#{advancedConfigJson},#{activityCategoryids},#{status},#{publishStatus},#{reason},#{delFlag},#{rating},#{useNum},#{checkStatus},#{interactionType},#{merchantNodeEnabled},#{nodeSubmitStatus},#{createBy},#{createTime},#{updateBy},#{updateTime},'W18_MANAGED')
+  </insert>
+  <select id="lockTemplateGuard" resultType="com.chengyinhub.business.marketplace.paid.PaidProfessionalTemplateStore$TemplateGuard" useCache="false" flushCache="true">
+    SELECT w18_provenance_kind AS marker,(COALESCE(CHAR_LENGTH(title),0) + COALESCE(CHAR_LENGTH(description),0) + COALESCE(CHAR_LENGTH(img_url),0) + COALESCE(CHAR_LENGTH(players),0) + COALESCE(CHAR_LENGTH(usage_location),0) + COALESCE(CHAR_LENGTH(required_materials),0) + COALESCE(CHAR_LENGTH(difficulty),0) + COALESCE(CHAR_LENGTH(rule_instructions),0) + COALESCE(CHAR_LENGTH(merchant_guide),0) + COALESCE(CHAR_LENGTH(sensor_type),0) + COALESCE(CHAR_LENGTH(sensor_config),0) + COALESCE(CHAR_LENGTH(question_name),0) + COALESCE(CHAR_LENGTH(question_answer),0) + COALESCE(CHAR_LENGTH(feedback_text),0) + COALESCE(CHAR_LENGTH(medal_img),0) + COALESCE(CHAR_LENGTH(medal_name),0) + COALESCE(CHAR_LENGTH(medal_style),0) + COALESCE(CHAR_LENGTH(reward_rules_json),0) + COALESCE(CHAR_LENGTH(story_text),0) + COALESCE(CHAR_LENGTH(story_img),0) + COALESCE(CHAR_LENGTH(story_json),0) + COALESCE(CHAR_LENGTH(hint1),0) + COALESCE(CHAR_LENGTH(hint2),0) + COALESCE(CHAR_LENGTH(answer_reveal),0) + COALESCE(CHAR_LENGTH(photo_require_desc),0) + COALESCE(CHAR_LENGTH(audio_url),0) + COALESCE(CHAR_LENGTH(question_a),0) + COALESCE(CHAR_LENGTH(question_b),0) + COALESCE(CHAR_LENGTH(question_c),0) + COALESCE(CHAR_LENGTH(question_d),0) + COALESCE(CHAR_LENGTH(correct_answer),0) + COALESCE(CHAR_LENGTH(question_img),0) + COALESCE(CHAR_LENGTH(question_audio),0) + COALESCE(CHAR_LENGTH(question_option_media_json),0) + COALESCE(CHAR_LENGTH(preference_json),0) + COALESCE(CHAR_LENGTH(advanced_config_json),0) + COALESCE(CHAR_LENGTH(activity_categoryids),0) + COALESCE(CHAR_LENGTH(reason),0) + COALESCE(CHAR_LENGTH(rating),0) + COALESCE(CHAR_LENGTH(interaction_type),0) + COALESCE(CHAR_LENGTH(create_by),0) + COALESCE(CHAR_LENGTH(update_by),0)) AS characters FROM cms_member_template WHERE id=#{id} AND member_id=#{actor} FOR UPDATE
+  </select>
+  <select id="readTemplate" resultMap="template" useCache="false" flushCache="true">
+    SELECT id,original_template_id,member_id,category_id,title,description,img_url,players,usage_location,required_materials,duration,difficulty,is_sync,rule_instructions,merchant_guide,validation_method,sensor_type,sensor_config,question_name,question_answer,feedback_text,coupon_id,medal_img,medal_name,medal_style,reward_rules_json,xp_value,story_text,story_img,story_json,hint1,hint2,answer_reveal,photo_require_desc,photo_review,audio_url,audio_duration,draft_status,question_a,question_b,question_c,question_d,correct_answer,question_img,question_audio,question_option_media_json,preference_json,advanced_config_json,activity_categoryids,status,publish_status,reason,del_flag,rating,use_num,check_status,interaction_type,merchant_node_enabled,node_submit_status,create_by,create_time,update_by,update_time FROM cms_member_template WHERE id=#{id} AND member_id=#{actor}
+  </select>
+  <insert id="insertProvenance">
+    INSERT INTO w18_cms_template_provenance (template_id,schema_version,owner_member_id,request_key,command_hash,binding_key,source_kind,owned_draft_id,owned_draft_revision,installation_request_id,license_id,module_id,purchased_version_id,content_hash,component_hash,terms_hash,original_target_draft_id,original_target_revision,original_target_payload_hash,confirmed_draft_revision,confirmed_draft_payload_hash,target_topic_id,confirmed_mode,content_role_id,route_config_version,owner_mode_fingerprint,template_content_hash,created_at)
+    VALUES (#{templateId},#{schemaVersion},#{ownerMemberId},#{requestKey},#{commandHash},#{bindingKey},#{sourceKind},#{ownedDraftId},#{ownedDraftRevision},#{installationRequestId},#{licenseId},#{moduleId},#{purchasedVersionId},#{contentHash},#{componentHash},#{termsHash},#{originalTargetDraftId},#{originalTargetRevision},#{originalTargetPayloadHash},#{confirmedDraftRevision},#{confirmedDraftPayloadHash},#{targetTopicId},#{confirmedMode},#{contentRoleId},#{routeConfigVersion},#{ownerModeFingerprint},#{templateContentHash},#{createdAt})
+  </insert>
+</mapper>

@@ -74,6 +74,19 @@ public class ApiAdvancedPlayController extends BaseController {
         }
     }
 
+    @Operation(summary = "读取本机提醒使用的权威开放时段")
+    @GetMapping("/time-window")
+    public AjaxResult timeWindow(String activityId, String topicId, String nodeId) {
+        try {
+            return success(runtimeService.timeWindow(getAppUserId(), Convert.toLong(activityId, 0L),
+                    Convert.toLong(topicId, 0L), Convert.toLong(nodeId, 0L)));
+        } catch (ServiceException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
     @Operation(summary = "高级玩法排行榜")
     @GetMapping("/leaderboard")
     public AjaxResult leaderboard(String activityId, String topicId, String nodeId) {

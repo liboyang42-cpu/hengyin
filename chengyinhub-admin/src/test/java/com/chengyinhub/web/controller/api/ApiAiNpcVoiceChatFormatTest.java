@@ -57,6 +57,8 @@ class ApiAiNpcVoiceChatFormatTest
         node.setId(21L);
         node.setTopicId(31L);
         node.setMerchantMemberId(41L);
+        node.setStatus(1L);
+        node.setNodeAuditStatus(1);
         ICmsTopicNodeService nodeService = mock(ICmsTopicNodeService.class);
         when(nodeService.selectCmsTopicNodeById(21L)).thenReturn(node);
 
@@ -72,6 +74,9 @@ class ApiAiNpcVoiceChatFormatTest
         when(npcChatService.chatWithShop(anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString()))
                 .thenReturn(response);
 
+        com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory directory = mock(com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory.class);
+        when(directory.availableMerchantIdForMember(41L)).thenReturn(410L);
+        ReflectionTestUtils.setField(controller, "merchantNpcIdentityDirectory", directory);
         ReflectionTestUtils.setField(controller, "npcFeatureFlags", featureFlags);
         ReflectionTestUtils.setField(controller, "speechToTextService", speechToTextService);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);

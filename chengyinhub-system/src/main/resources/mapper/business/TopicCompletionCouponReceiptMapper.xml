@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicCompletionCouponReceiptMapper">
+    <select id="lockLog" resultType="java.lang.Long">
+        select id from cms_topic_completion_coupon_reward_log
+        where topic_id=#{topic} and member_id=#{member} and coupon_id=#{coupon} for update
+    </select>
+    <select id="lockDefinition" resultMap="com.chengyinhub.business.mapper.SmsCouponMapper.SmsCouponResult">
+        <include refid="com.chengyinhub.business.mapper.SmsCouponMapper.selectSmsCouponVo"/>
+        where id=#{id} for update
+    </select>
+    <!-- Only the exact original grant return value can establish this association. -->
+    <insert id="appendExactHistory">
+        insert into cms_topic_completion_coupon_receipt
+            (grant_log_id,topic_id,member_id,coupon_id,history_id,granted_at)
+        select l.id,l.topic_id,l.member_id,l.coupon_id,h.id,h.get_time
+        from cms_topic_completion_coupon_reward_log l
+        join sms_coupon_history h on h.id=#{history} and h.member_id=l.member_id and h.coupon_id=l.coupon_id
+        where l.id=#{log} and l.topic_id=#{topic} and l.member_id=#{member} and l.coupon_id=#{coupon}
+            and h.get_type=0 and h.use_status=0 and h.get_time is not null and coalesce(h.del_flag,0)=0
+    </insert>
+    <resultMap id="Receipt" type="com.chengyinhub.business.mapper.TopicCompletionCouponReceiptMapper$Row">
+        <id property="logId" column="grant_log_id"/><result property="topicId" column="topic_id"/>
+        <result property="memberId" column="member_id"/><result property="couponId" column="coupon_id"/>
+        <result property="historyId" column="history_id"/><result property="grantedAt" column="granted_at"/>
+        <result property="validFrom" column="start_time"/><result property="validUntil" column="end_time"/>
+        <result property="useStatus" column="use_status"/><result property="usedAt" column="use_time"/>
+    </resultMap>
+    <sql id="ownedFacts">
+        select r.grant_log_id,r.topic_id,r.member_id,r.coupon_id,r.history_id,r.granted_at,
+            h.start_time,h.end_time,h.use_status,h.use_time
+        from cms_topic_completion_coupon_receipt r
+        join sms_coupon_history h on h.id=r.history_id and h.member_id=r.member_id and h.coupon_id=r.coupon_id
+        where r.member_id=#{member} and h.member_id=#{member} and coalesce(h.del_flag,0)=0
+    </sql>
+    <select id="owned" resultMap="Receipt">
+        <include refid="ownedFacts"/> and r.grant_log_id=#{log}
+    </select>
+    <select id="ownedPage" resultMap="Receipt">
+        <include refid="ownedFacts"/>
+        <if test="cursor != null">and r.grant_log_id &gt; #{cursor}</if>
+        order by r.grant_log_id asc limit #{limit}
+    </select>
+    <update id="markExpectedReceipt">
+        update cms_topic_completion_coupon_reward_log l set receipt_contract_version=1
+        where l.id=#{log} and l.topic_id=#{topic} and l.member_id=#{member} and l.coupon_id=#{coupon}
+            and l.receipt_contract_version is null
+            and exists(select 1 from cms_topic_completion_coupon_receipt r where r.grant_log_id=l.id
+                and r.topic_id=l.topic_id and r.member_id=l.member_id and r.coupon_id=l.coupon_id and r.history_id=#{history})
+    </update>
+    <resultMap id="CurrentLink" type="com.chengyinhub.business.mapper.TopicCompletionCouponReceiptMapper$CurrentLink">
+        <id property="logId" column="log_id"/><result property="topicId" column="topic_id"/><result property="memberId" column="member_id"/>
+        <result property="couponId" column="coupon_id"/><result property="receiptVersion" column="receipt_contract_version"/>
+        <result property="receiptLogId" column="receipt_log_id"/><result property="receiptTopicId" column="receipt_topic_id"/>
+        <result property="receiptMemberId" column="receipt_member_id"/><result property="receiptCouponId" column="receipt_coupon_id"/>
+        <result property="historyId" column="history_id"/><result property="grantedAt" column="granted_at"/>
+    </resultMap>
+    <select id="lockCurrentLink" resultMap="CurrentLink">
+        select l.id as log_id,l.topic_id,l.member_id,l.coupon_id,l.receipt_contract_version,
+            r.grant_log_id as receipt_log_id,r.topic_id as receipt_topic_id,r.member_id as receipt_member_id,
+            r.coupon_id as receipt_coupon_id,r.history_id,r.granted_at
+        from cms_topic_completion_coupon_reward_log l
+        left join cms_topic_completion_coupon_receipt r on r.grant_log_id=l.id
+        where l.topic_id=#{topic} and l.member_id=#{member} and l.coupon_id=#{coupon} for update
+    </select>
+    <select id="lockLinkedHistory" resultMap="com.chengyinhub.business.mapper.SmsCouponHistoryMapper.SmsCouponHistoryResult">
+        <include refid="com.chengyinhub.business.mapper.SmsCouponHistoryMapper.selectSmsCouponHistoryVo"/>
+        where id=#{id} for update
+    </select>
+</mapper>

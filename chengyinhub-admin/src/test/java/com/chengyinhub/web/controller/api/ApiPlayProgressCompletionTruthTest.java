@@ -373,6 +373,9 @@ class ApiPlayProgressCompletionTruthTest
                 mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
         ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
         when(runtime.canPlay(PLAYER, TOPIC, ACTIVITY, NODE, null)).thenReturn(true);
+        when(runtime.playInstance(PLAYER, TOPIC, ACTIVITY)).thenReturn("default");
+        when(runtime.beginOriginalNodeAward(PLAYER, TOPIC, ACTIVITY, NODE, "default")).thenReturn(
+                new com.chengyinhub.business.service.ITopicRouteRuntimeService.NodeAwardPermit(PLAYER, TOPIC, ACTIVITY, NODE, "default", true));
         com.chengyinhub.business.domain.route.TopicRouteState state =
                 new com.chengyinhub.business.domain.route.TopicRouteState();
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
@@ -381,6 +384,28 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.FALSE, ((Map<?, ?>) result.get("data")).get("completed"));
+        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void mismatchedOriginalAwardPermitCannotPersistOrAwardOpeningCompletion()
+    {
+        topic.setProductType(ProductType.ORIENTEERING);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
+        when(runtime.canPlay(PLAYER, TOPIC, ACTIVITY, NODE, null)).thenReturn(true);
+        when(runtime.playInstance(PLAYER, TOPIC, ACTIVITY)).thenReturn("default");
+        for (int mismatch = 0; mismatch < 3; mismatch++) {
+            when(runtime.beginOriginalNodeAward(PLAYER, TOPIC, ACTIVITY, NODE, "default")).thenReturn(
+                    new com.chengyinhub.business.service.ITopicRouteRuntimeService.NodeAwardPermit(
+                            mismatch == 0 ? PLAYER + 1 : PLAYER, TOPIC, ACTIVITY,
+                            mismatch == 1 ? NODE + 1 : NODE, mismatch == 2 ? "theme-first:" + TOPIC + ":" + ACTIVITY : "default", true));
+            org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null));
+        }
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(progressionService, never()).onNodeDone(anyLong());
         verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
     }
 

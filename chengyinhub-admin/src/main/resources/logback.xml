@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Payload redaction only inside private-home boundaries; other loggers retain their levels. -->
+    <turboFilter class="com.chengyinhub.framework.privacy.PrivateHomeLogFilter" />
     <!-- 日志存放路径 -->
 	<property name="log.path" value="/home/ruoyi/logs" />
     <!-- 日志输出格式 -->
@@ -83,18 +85,21 @@
 	<!-- Spring日志级别控制  -->
 	<logger name="org.springframework" level="warn" />
 
-	<root level="info">
-		<appender-ref ref="console" />
-	</root>
-	
-	<!--系统操作日志-->
-    <root level="info">
+    <!-- Every producer is guarded before the actual sink (and before any future AsyncAppender). -->
+    <appender name="private-home-root" class="com.chengyinhub.framework.privacy.PrivateHomeLogAppender">
+        <appender-ref ref="console" />
         <appender-ref ref="file_info" />
         <appender-ref ref="file_error" />
+    </appender>
+    <appender name="private-home-user" class="com.chengyinhub.framework.privacy.PrivateHomeLogAppender">
+        <appender-ref ref="sys-user" />
+    </appender>
+    <root level="info">
+        <appender-ref ref="private-home-root" />
     </root>
-	
+
 	<!--系统用户操作日志-->
     <logger name="sys-user" level="info">
-        <appender-ref ref="sys-user"/>
+        <appender-ref ref="private-home-user"/>
     </logger>
 </configuration> 

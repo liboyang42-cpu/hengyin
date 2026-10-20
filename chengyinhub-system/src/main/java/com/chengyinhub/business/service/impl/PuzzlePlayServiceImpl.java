@@ -10,11 +10,13 @@ import com.chengyinhub.business.mapper.PlayerNodeProgressMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.IPuzzlePlayService;
+import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.util.PuzzleScorePolicy;
 import com.chengyinhub.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +33,8 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     private final PlayAttemptLogMapper attemptLogMapper;
     private final PlayerNodeProgressMapper progressMapper;
     private final UmsMemberMapper memberMapper;
+    @Autowired
+    private ITopicRouteRuntimeService routeRuntimeService;
 
     public PuzzlePlayServiceImpl(ICmsMemberTemplateService templateService, PlayAttemptLogMapper attemptLogMapper,
             PlayerNodeProgressMapper progressMapper, UmsMemberMapper memberMapper)
@@ -172,13 +176,19 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     @Override
     public void recordReveal(Long memberId, Long topicId, Long nodeId, Long activityId)
     {
+        if (routeRuntimeService == null) throw new IllegalStateException("路线运行时不可用");
+        String instance = routeRuntimeService.playInstance(memberId, topicId, activityId);
+        if (instance == null || instance.trim().isEmpty()) throw new IllegalStateException("本局不可读取");
+        boolean theme = routeRuntimeService.assertCurrentPlayInstance(memberId, topicId, activityId, instance);
+        if (!"default".equals(instance) && !theme) throw new IllegalStateException("本局不可读取");
         lockMember(memberId);
         PlayerNodeProgress probe = new PlayerNodeProgress();
         probe.setMemberId(memberId);
         probe.setTopicId(topicId);
         probe.setNodeId(nodeId);
         probe.setActivityId(activityId);
-        List<PlayerNodeProgress> existing = progressMapper.selectPlayerNodeProgressList(probe);
+        List<PlayerNodeProgress> existing = progressMapper.selectPlayerNodeProgressListForInstance(probe, instance);
+        if (existing == null) throw new IllegalStateException("本局进度不可读取");
         // R10-09 收尾:只有 status==1 正式完成才是「该节点已完成」;mode2 到店/凭证 status=0 行
         // 只是到达事实,不能挡玩家在到店后揭示答案(揭示记录本身只落 PlayAttemptLog)。
         // 已揭示完成的行按既有幂等合同直接返回,不重复落 abandon 流水。

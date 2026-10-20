@@ -16,8 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.spring.boot4.autoconfigure.DruidDataSourceBuilder;
 import com.alibaba.druid.spring.boot4.autoconfigure.properties.DruidStatProperties;
+import com.chengyinhub.framework.privacy.PrivateHomeDruidDataSource;
 import com.alibaba.druid.util.Utils;
 import com.chengyinhub.common.enums.DataSourceType;
 import com.chengyinhub.common.utils.spring.SpringUtils;
@@ -36,7 +36,7 @@ public class DruidConfig
     @ConfigurationProperties("spring.datasource.druid.master")
     public DataSource masterDataSource(DruidProperties druidProperties)
     {
-        DruidDataSource dataSource = DruidDataSourceBuilder.create().build();
+        DruidDataSource dataSource = new PrivateHomeDruidDataSource();
         return druidProperties.dataSource(dataSource);
     }
 
@@ -45,7 +45,7 @@ public class DruidConfig
     @ConditionalOnProperty(prefix = "spring.datasource.druid.slave", name = "enabled", havingValue = "true")
     public DataSource slaveDataSource(DruidProperties druidProperties)
     {
-        DruidDataSource dataSource = DruidDataSourceBuilder.create().build();
+        DruidDataSource dataSource = new PrivateHomeDruidDataSource();
         return druidProperties.dataSource(dataSource);
     }
 

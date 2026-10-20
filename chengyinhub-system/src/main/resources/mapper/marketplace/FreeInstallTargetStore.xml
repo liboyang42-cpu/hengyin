@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.free.store.FreeInstallTargetStore">
+  <select id="lockDraft" resultType="com.chengyinhub.business.marketplace.free.store.FreeInstallTargetRow" useCache="false" flushCache="true">
+    SELECT id,owner_member_id AS ownerMemberId,business_type AS businessType,status,version,payload_hash AS payloadHash
+    FROM content_draft WHERE id=#{id} AND owner_member_id=#{buyer} FOR UPDATE
+  </select>
+  <select id="lockScope" resultType="com.chengyinhub.business.marketplace.free.store.FreeInstallTargetRow" useCache="false" flushCache="true">
+    SELECT draft_id AS id,owner_member_id AS ownerMemberId,draft_version AS version,payload_hash AS payloadHash,region
+    FROM w18_content_draft_install_scope WHERE draft_id=#{id} AND draft_version=#{version} FOR UPDATE
+  </select>
+  <insert id="insertScope">
+    INSERT INTO w18_content_draft_install_scope(draft_id,draft_version,owner_member_id,payload_hash,region)
+    VALUES(#{id},#{version},#{ownerMemberId},#{payloadHash},#{region})
+  </insert>
+  <select id="consumedThemes" resultType="long" useCache="false" flushCache="true">
+    SELECT DISTINCT s.scope_id FROM w18_module_install_scope s
+    JOIN w18_module_install_reservation r ON r.reservation_key=s.reservation_key
+    JOIN w18_module_install_usage u ON u.reservation_key=r.reservation_key
+    WHERE r.license_id=#{claimId} AND r.buyer_kind='INDIVIDUAL' AND r.buyer_id=#{buyer}
+      AND r.state='CONSUMED' AND s.scope_kind='THEME' ORDER BY s.scope_id
+  </select>
+</mapper>

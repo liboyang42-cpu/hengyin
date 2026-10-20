@@ -80,9 +80,9 @@ class JourneyRuntimeActionsTest {
 
     @BeforeEach
     void setUp() {
-        runtime = new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
+        runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
                 progressMapper, activityMapper, registrationMapper, roleMapper, shopDayProofService,
-                () -> 12345L, () -> 10, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                () -> 12345L, () -> 10, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), templateMapper);
         ReflectionTestUtils.setField(runtime, "playEncounterService", encounterService);
         when(encounterService.resolve(anyLong(), anyLong(), anyLong(), anyLong())).thenReturn(null);
         ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", cmsTopicChapterMapper);

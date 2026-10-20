@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CouponTermsSnapshotMapper">
+    <resultMap id="Recorded" type="com.chengyinhub.business.mapper.CouponTermsSnapshotMapper$Row">
+        <id property="historyId" column="history_id"/>
+        <result property="couponId" column="coupon_id"/>
+        <result property="issuerMemberId" column="issuer_member_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="actorMemberId" column="actor_member_id"/>
+        <result property="beneficiaryMemberId" column="beneficiary_member_id"/>
+        <result property="recordedAt" column="recorded_at"/>
+        <result property="nonce" column="nonce"/>
+        <result property="sourceReceiptId" column="source_receipt_id"/>
+        <result property="intentDigest" column="intent_digest"/>
+        <result property="termsJson" column="terms_json"/>
+        <result property="termsDigest" column="terms_digest"/>
+    </resultMap>
+    <select id="lockDefinition" resultMap="com.chengyinhub.business.mapper.SmsCouponMapper.SmsCouponResult">
+        <include refid="com.chengyinhub.business.mapper.SmsCouponMapper.selectSmsCouponVo"/>
+        where id = #{couponId} and member_id = #{issuer} and merchant_id = #{merchant}
+          and scope_type = 1 and del_flag = 0 for update
+    </select>
+    <select id="byNonce" resultMap="Recorded">
+        select * from sms_coupon_terms_snapshot where issuer_member_id = #{issuer} and nonce = #{nonce}
+    </select>
+    <select id="bySource" resultMap="Recorded">
+        select * from sms_coupon_terms_snapshot where source_receipt_id = #{receipt}
+          and beneficiary_member_id = #{beneficiary} and coupon_id = #{couponId}
+    </select>
+    <select id="ownedHistory" resultMap="com.chengyinhub.business.mapper.SmsCouponHistoryMapper.SmsCouponHistoryResult">
+        <include refid="com.chengyinhub.business.mapper.SmsCouponHistoryMapper.selectSmsCouponHistoryVo"/>
+        where id = #{historyId} and member_id = #{beneficiary} and ifnull(del_flag, 0) = 0
+    </select>
+    <select id="ownedSnapshot" resultMap="Recorded">
+        select s.* from sms_coupon_terms_snapshot s inner join sms_coupon_history h on h.id = s.history_id
+        where h.id = #{historyId} and h.member_id = #{beneficiary} and s.beneficiary_member_id = #{beneficiary}
+          and ifnull(h.del_flag, 0) = 0
+    </select>
+    <insert id="insert" parameterType="com.chengyinhub.business.mapper.CouponTermsSnapshotMapper$Row">
+        insert into sms_coupon_terms_snapshot
+          (history_id, coupon_id, issuer_member_id, merchant_id, actor_member_id, beneficiary_member_id,
+           nonce, source_receipt_id, intent_digest, terms_json, terms_digest, recorded_at)
+        values (#{historyId}, #{couponId}, #{issuerMemberId}, #{merchantId}, #{actorMemberId}, #{beneficiaryMemberId},
+           #{nonce}, #{sourceReceiptId}, #{intentDigest}, #{termsJson}, #{termsDigest}, #{recordedAt})
+    </insert>
+</mapper>

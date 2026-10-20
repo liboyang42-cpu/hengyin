@@ -19,6 +19,9 @@ public interface IAdvancedGameRuntimeService {
 
     Map<String, Object> state(Long memberId, Long sessionId);
 
+    /** Read-only pre-start schedule; retains the same pass, node and session access checks as start. */
+    Map<String, Object> timeWindow(Long memberId, Long activityId, Long topicId, Long nodeId);
+
     List<Map<String, Object>> leaderboard(Long memberId, Long activityId, Long topicId, Long nodeId);
 
     /** 完成节点门禁，并返回终点声明的稳定 outcomeCode；无分支玩法时返回 null。 */

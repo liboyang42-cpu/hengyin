@@ -43,6 +43,9 @@ class PuzzlePlayServiceImplTest
         progressMapper = mock(PlayerNodeProgressMapper.class);
         memberMapper = mock(UmsMemberMapper.class);
         service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(runtime.playInstance(10L,20L,0L)).thenReturn("default");
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"routeRuntimeService",runtime);
         node = new CmsTopicNode();
         node.setId(30L);
         node.setTemplateId(40L);
@@ -87,7 +90,7 @@ class PuzzlePlayServiceImplTest
     {
         PlayerNodeProgress progress = new PlayerNodeProgress();
         progress.setCompletionMode(PuzzleScorePolicy.COMPLETION_REVEALED);
-        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+        when(progressMapper.selectPlayerNodeProgressListForInstance(any(PlayerNodeProgress.class), org.mockito.ArgumentMatchers.eq("default")))
                 .thenReturn(Collections.singletonList(progress));
 
         service.recordReveal(10L, 20L, 30L, 0L);

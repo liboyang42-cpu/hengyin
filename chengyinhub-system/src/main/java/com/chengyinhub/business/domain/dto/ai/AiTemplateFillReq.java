@@ -6,6 +6,15 @@ package com.chengyinhub.business.domain.dto.ai;
  */
 public class AiTemplateFillReq
 {
+    /** Optional canonical-store authoring path. Legacy callers remain unchanged. */
+    private MerchantAuthoringFactsReference merchantFacts;
+    private MerchantAuthoringConstraints merchantConstraints;
+
+    public MerchantAuthoringFactsReference getMerchantFacts() { return merchantFacts; }
+    public void setMerchantFacts(MerchantAuthoringFactsReference value) { merchantFacts = value; }
+    public MerchantAuthoringConstraints getMerchantConstraints() { return merchantConstraints; }
+    public void setMerchantConstraints(MerchantAuthoringConstraints value) { merchantConstraints = value; }
+
     /** 店名(必填) */
     private String shopName;
     /** 品类(咖啡店/酒吧/书店…) */

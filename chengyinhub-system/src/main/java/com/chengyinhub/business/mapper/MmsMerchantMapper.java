@@ -23,6 +23,9 @@ public interface MmsMerchantMapper
      */
     public MmsMerchant selectMmsMerchantById(Long id);
 
+    /** Minimal server-owned identity for the closed scoped-NPC path; no business/contact fields. */
+    MmsMerchant selectNpcScopeOwnerById(@Param("id") Long id);
+
     public MmsMerchant selectMmsMerchantByMemberId(Long id);
 
     /** 调配/合作写入的事务内状态门禁，与停用更新共用商家行锁。 */

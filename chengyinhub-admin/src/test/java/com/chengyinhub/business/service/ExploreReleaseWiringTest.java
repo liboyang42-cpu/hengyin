@@ -7,6 +7,7 @@ import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.PurchaseKind;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -70,6 +71,7 @@ class ExploreReleaseWiringTest {
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedgerService);
         when(ticketMapper.restoreInventory(anyLong(), anyLong())).thenReturn(1);
+        service = RegistrationLifecycleFixture.transactional(service);
     }
 
     /** 未支付单:payment_status=0(待支付),registration_status=1 */
@@ -88,12 +90,29 @@ class ExploreReleaseWiringTest {
         return r;
     }
 
+    private void givenExpiryWinner() {
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> stored =
+                new java.util.concurrent.atomic.AtomicReference<>(unpaid());
+        when(registrationMapper.selectCmsRegistrationById(REG)).thenAnswer(inv -> stored.get());
+        when(registrationMapper.closeExpired(eq(REG), anyString(), eq(4))).thenAnswer(inv -> {
+            // Production closeExpired writes payment=3/status=4 and DB NOW.
+            stored.set(RegistrationLifecycleFixture.persisted(stored.get(), 3, 4, new java.util.Date()));
+            return 1;
+        });
+    }
+
     // ------------------------------------------------- cancelRegistration(玩家主动取消未支付单)
 
     @Test
     void cancelUnpaid_releasesEntitlements() {
         when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(unpaid());
-        when(registrationMapper.cancelUnpaidIfActive(REG, MEMBER, "张三")).thenReturn(1);
+        java.util.concurrent.atomic.AtomicReference<CmsRegistration> stored =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(inv -> stored.get());
+        when(registrationMapper.cancelUnpaidIfActive(REG, MEMBER, "张三")).thenAnswer(inv -> {
+            stored.set(RegistrationLifecycleFixture.persisted(unpaid(), 3, 3, new java.util.Date()));
+            return 1;
+        });
 
         assertTrue(service.cancelRegistration(REG, MEMBER, "张三"));
 
@@ -107,7 +126,8 @@ class ExploreReleaseWiringTest {
         when(registrationMapper.cancelUnpaidIfActive(REG, MEMBER, "张三")).thenReturn(0);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(unpaid());
 
-        assertThrows(RuntimeException.class, () -> service.cancelRegistration(REG, MEMBER, "张三"));
+        RuntimeException error = assertThrows(RuntimeException.class, () -> service.cancelRegistration(REG, MEMBER, "张三"));
+        org.junit.jupiter.api.Assertions.assertEquals("该报名状态已变化,无法取消", error.getMessage());
 
         verify(perkLedgerService, never()).releaseOnRefund(anyLong(), anyString());
     }
@@ -138,8 +158,7 @@ class ExploreReleaseWiringTest {
 
     @Test
     void closeExpired_releasesEntitlements() {
-        when(registrationMapper.closeExpired(org.mockito.ArgumentMatchers.eq(REG), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(4))).thenReturn(1);
-        when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(unpaid());
+        givenExpiryWinner();
 
         assertTrue(service.closeExpiredOne(REG));
 
@@ -162,8 +181,7 @@ class ExploreReleaseWiringTest {
     /** reason 用常量而非散落的字面量:5 处调用拼错了不报错,只是账上多一种没人认识的 reason。 */
     @Test
     void releaseReason_usesConstant_notLiteral() {
-        when(registrationMapper.closeExpired(org.mockito.ArgumentMatchers.eq(REG), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(4))).thenReturn(1);
-        when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(unpaid());
+        givenExpiryWinner();
 
         service.closeExpiredOne(REG);
 

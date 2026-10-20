@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.support.RegistrationLifecycleFixture;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.RefundApplication;
@@ -58,10 +59,14 @@ class WholeOrderRefundTest {
     private CmsTopicMapper topicMapper;
     private OmsTicketMapper ticketMapper;
     private IRefundService refundService;
+    private java.util.Map<Long, CmsRegistration> persistedRows;
 
     private TeamGroupServiceImpl newService() {
         refundPayoutService = mock(IRefundPayoutService.class);
         regMapper = mock(CmsRegistrationMapper.class);
+        persistedRows = new java.util.concurrent.ConcurrentHashMap<>();
+        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
+                .thenAnswer(inv -> persistedRows.get(inv.getArgument(0, Long.class)));
         topicMapper = mock(CmsTopicMapper.class);
         ticketMapper = mock(OmsTicketMapper.class);
         refundService = mock(IRefundService.class);
@@ -75,7 +80,13 @@ class WholeOrderRefundTest {
         ticket.setEndTime(new Date(System.currentTimeMillis() + 8L * 24 * 3600 * 1000));
         when(ticketMapper.selectOmsTicketById(TICKET_ID)).thenReturn(ticket);
         when(ticketMapper.restoreInventory(eq(TICKET_ID), any(Long.class))).thenReturn(1);
-        when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenReturn(1);
+        when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class))).thenAnswer(inv -> {
+            Long id = inv.getArgument(0, Long.class);
+            CmsRegistration source = persistedRows.get(id);
+            if (source == null) return 0;
+            persistedRows.put(id, RegistrationLifecycleFixture.persisted(source, 4, 3, inv.getArgument(2, Date.class)));
+            return 1;
+        });
         CmsTopic topic = new CmsTopic();
         topic.setId(9L);
         when(topicMapper.selectCmsTopicById(9L)).thenReturn(topic);
@@ -99,7 +110,7 @@ class WholeOrderRefundTest {
         // 「按哪一单、以什么金额建退款单,以及打款被触发几次」;
         // 「拿退款单去调微信、out_trade_no=registrationNo」由 RefundPayoutServiceTest 覆盖。
         ReflectionTestUtils.setField(service, "refundPayoutService", refundPayoutService);
-        return service;
+        return RegistrationLifecycleFixture.transactional(service);
     }
 
     /** 捕获建单参数:整单退的不变式(退首单、退汇总额)现在体现在退款单上。 */
@@ -118,11 +129,13 @@ class WholeOrderRefundTest {
         r.setOwnerType(1L);
         r.setOwnerId(9L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
         r.setVerificationStatus(0);
         r.setPointUsed(0L);
         r.setOrderNum(1L);
         r.setPayableAmount(new BigDecimal(payable));
         r.setWechatPaymentAmount(new BigDecimal(wxAmount));
+        persistedRows.put(id, r);
         return r;
     }
 
@@ -403,6 +416,8 @@ class WholeOrderRefundTest {
             Long id = inv.getArgument(0, Long.class);
             if (!claimed.add(id)) return 0;
             byId.get(id).setPaymentStatus(4);
+            byId.get(id).setRegistrationStatus(3);
+            byId.get(id).setUpdateTime(inv.getArgument(2, Date.class));
             return 1;
         });
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {

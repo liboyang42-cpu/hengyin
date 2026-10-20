@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ThemeTeamRunMapper">
+  <resultMap id="Run" type="com.chengyinhub.business.domain.ThemeTeamRun">
+    <id property="id" column="id"/><result property="teamId" column="team_id"/>
+    <result property="activityId" column="activity_id"/><result property="topicId" column="topic_id"/>
+    <result property="previousRunId" column="previous_run_id"/><result property="sourceSessionId" column="source_session_id"/>
+    <result property="requestKey" column="request_key"/><result property="requestDigest" column="request_digest"/>
+    <result property="playInstanceId" column="play_instance_id"/><result property="generation" column="generation"/>
+    <result property="configVersion" column="config_version"/><result property="configSnapshotJson" column="config_snapshot_json"/>
+    <result property="createTime" column="create_time"/>
+  </resultMap>
+  <resultMap id="Member" type="com.chengyinhub.business.domain.ThemeTeamRun$Member">
+    <id property="runId" column="run_id"/><id property="memberId" column="member_id"/>
+    <result property="previousSessionId" column="previous_session_id"/><result property="sessionId" column="session_id"/>
+  </resultMap>
+  <sql id="columns">r.id,r.team_id,r.activity_id,r.topic_id,r.previous_run_id,r.source_session_id,r.request_key,r.request_digest,r.play_instance_id,r.generation,r.config_version,r.config_snapshot_json,r.create_time</sql>
+  <select id="selectByRequestForUpdate" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} and r.request_key=#{requestKey} for update</select>
+  <select id="selectById" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.id=#{id}</select>
+  <select id="selectByIdForUpdate" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.id=#{id} for update</select>
+  <select id="selectCurrentByTeam" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} order by r.generation desc limit 1</select>
+  <select id="selectCurrentByTeamForUpdate" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} order by r.generation desc limit 1 for update</select>
+  <select id="selectBySourceForUpdate" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} and r.source_session_id=#{sourceSessionId} for update</select>
+  <select id="selectByPreviousRunForUpdate" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} and r.previous_run_id=#{previousRunId} for update</select>
+  <select id="selectBySessionId" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r join theme_team_run_member m on m.run_id=r.id where m.session_id=#{sessionId} and m.member_id=#{memberId}</select>
+  <select id="selectByCurrentMember" resultMap="Run" useCache="false" flushCache="true">
+    select <include refid="columns"/> from theme_team_run r
+    join theme_team_run_member m on m.run_id=r.id
+    join topic_route_session s on s.id=m.session_id and s.member_id=m.member_id
+    where s.member_id=#{memberId} and s.activity_id=#{activityId} and s.topic_id=#{topicId}
+      and s.id=(select max(c.id) from topic_route_session c where c.member_id=#{memberId} and c.activity_id=#{activityId} and c.topic_id=#{topicId})
+  </select>
+  <select id="selectByInstance" resultMap="Run" useCache="false" flushCache="true">select <include refid="columns"/> from theme_team_run r where r.team_id=#{teamId} and r.activity_id=#{activityId} and r.topic_id=#{topicId} and r.play_instance_id=#{playInstanceId}</select>
+  <select id="selectMembersForUpdate" resultMap="Member" useCache="false" flushCache="true">select run_id,member_id,previous_session_id,session_id from theme_team_run_member where run_id=#{runId} order by member_id for update</select>
+  <select id="selectMembers" resultMap="Member" useCache="false" flushCache="true">select run_id,member_id,previous_session_id,session_id from theme_team_run_member where run_id=#{runId} order by member_id</select>
+  <insert id="insertRun" useGeneratedKeys="true" keyProperty="id">insert into theme_team_run(team_id,activity_id,topic_id,previous_run_id,source_session_id,request_key,request_digest,play_instance_id,generation,config_version,config_snapshot_json,create_time) values(#{teamId},#{activityId},#{topicId},#{previousRunId,jdbcType=BIGINT},#{sourceSessionId,jdbcType=BIGINT},#{requestKey},#{requestDigest},#{playInstanceId,jdbcType=VARCHAR},#{generation},#{configVersion},#{configSnapshotJson},#{createTime})</insert>
+  <update id="assignPlayInstance">update theme_team_run set play_instance_id=#{playInstanceId} where id=#{id} and play_instance_id is null</update>
+  <insert id="insertMember">
+    insert into theme_team_run_member(run_id,member_id,previous_session_id,session_id)
+    select r.id,#{memberId},#{previousSessionId,jdbcType=BIGINT},n.id from theme_team_run r
+    join topic_route_session n on n.id=#{sessionId} and n.member_id=#{memberId} and n.activity_id=r.activity_id and n.topic_id=r.topic_id and n.play_instance_id=r.play_instance_id
+    left join topic_route_session p on p.id=#{previousSessionId,jdbcType=BIGINT}
+    where r.id=#{runId} and r.play_instance_id is not null
+      and (#{previousSessionId,jdbcType=BIGINT} is null or (p.member_id=#{memberId} and p.activity_id=r.activity_id and p.topic_id=r.topic_id))
+  </insert>
+</mapper>

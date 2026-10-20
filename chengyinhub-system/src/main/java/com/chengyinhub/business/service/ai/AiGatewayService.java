@@ -22,6 +22,11 @@ public interface AiGatewayService
     AiGatewayResult generate(Long memberId, String role, String bizType,
                               String systemPrompt, String userPrompt);
 
+    /** Server-generated correlation ID, shared with scoped authorization/replay audit, including failures.
+     * This does not authenticate the caller or authorize a scope. All ordinary gateway checks still run. */
+    AiGatewayResult generateWithTrace(String traceId, Long memberId, String role, String bizType,
+                                     String systemPrompt, String userPrompt);
+
     /**
      * 查询某会员在指定场景所属额度池当日的剩余次数。
      *

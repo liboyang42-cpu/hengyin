@@ -45,6 +45,8 @@ public class AiSceneRouter
         //  ② 漏注册的代价见下面 FALLBACK 那段注释 —— 生产静默返回假文案、全链零信号。
         m.put("merchant_npc_chat",     "deepseek");
         m.put("npc_shop_chat",         "deepseek");
+        m.put("scoped_store_npc",      "deepseek");
+        m.put("scoped_theme_npc",      "deepseek");
         m.put("npc_event",             "cache");
         ROUTES = Collections.unmodifiableMap(m);
     }

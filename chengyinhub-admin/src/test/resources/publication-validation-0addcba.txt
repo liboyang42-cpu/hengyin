@@ -1,0 +1,270 @@
+config[0]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[0]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[0]/assertJourneyStoryReferences
+OK
+[]
+config[0]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[0]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[1]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[1]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[1]/assertJourneyStoryReferences
+OK
+[]
+config[1]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[1]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[2]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:节点「A」的玩法配置无法解析,主题发布失败:高级玩法配置不是合法 JSON
+[nodes:10:1, template:101, chapters:10]
+config[2]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[2]/assertJourneyStoryReferences
+OK
+[]
+config[2]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[2]/assertBlockSysVarReferences
+java.lang.IllegalArgumentException:高级玩法配置不是合法 JSON
+[nodes:10:1, templates:[101]]
+config[3]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[3]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[3]/assertJourneyStoryReferences
+OK
+[]
+config[3]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[3]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[4]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[4]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[4]/assertJourneyStoryReferences
+OK
+[]
+config[4]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10, nodes:10:1, npcs:4:1, npcs:2:8]
+config[4]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[5]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[5]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[5]/assertJourneyStoryReferences
+OK
+[]
+config[5]/assertBlockNarrativeNpcReferences
+com.chengyinhub.common.exception.ServiceException:null:主题发布失败:节点叙事的 npcId 不属于本主题可用 NPC → [npcId=99(节点:A,段:enter,节点:A,段:outcome)]
+[nodes:10:1, templates:[101], chapters:10, nodes:10:1, npcs:4:1, npcs:2:8]
+config[5]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[6]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:主题发布失败:以下状态键未注册 → [clue.page(节点:A)]
+[nodes:10:1, template:101, chapters:10, keys:10]
+config[6]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[6]/assertJourneyStoryReferences
+OK
+[]
+config[6]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[6]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[7]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[7]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[7]/assertJourneyStoryReferences
+OK
+[]
+config[7]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[7]/assertBlockSysVarReferences
+com.chengyinhub.common.exception.ServiceException:null:主题发布失败:块配置引用的系统变量节点不属于本主题 → [nodeId=99(节点:A)]
+[nodes:10:1, templates:[101]]
+config[8]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[8]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[8]/assertJourneyStoryReferences
+OK
+[]
+config[8]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[8]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+config[9]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+config[9]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+config[9]/assertJourneyStoryReferences
+OK
+[]
+config[9]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+config[9]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[0]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+story[0]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[0]/assertJourneyStoryReferences
+OK
+[]
+story[0]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[0]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[1]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:主题剧情配置无法解析,主题发布失败:主题剧情配置版本不支持
+[nodes:10:1, template:101, chapters:10]
+story[1]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[1]/assertJourneyStoryReferences
+com.chengyinhub.common.exception.ServiceException:null:主题的剧情配置引用无效,主题发布失败:主题剧情配置版本不支持
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[1]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[1]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[2]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:主题剧情配置无法解析,主题发布失败:主题剧情配置不是合法 JSON
+[nodes:10:1, template:101, chapters:10]
+story[2]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[2]/assertJourneyStoryReferences
+com.chengyinhub.common.exception.ServiceException:null:主题的剧情配置引用无效,主题发布失败:主题剧情配置不是合法 JSON
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[2]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[2]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[3]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:主题剧情配置无法解析,主题发布失败:主题剧情配置必须是对象
+[nodes:10:1, template:101, chapters:10]
+story[3]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[3]/assertJourneyStoryReferences
+com.chengyinhub.common.exception.ServiceException:null:主题的剧情配置引用无效,主题发布失败:主题剧情配置必须是对象
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[3]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[3]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[4]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+story[4]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[4]/assertJourneyStoryReferences
+OK
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[4]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[4]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[5]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+story[5]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[5]/assertJourneyStoryReferences
+com.chengyinhub.common.exception.ServiceException:null:主题的剧情配置引用无效,主题发布失败:剧情配置引用的 NPC 本主题不可用:npcId=99
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[5]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[5]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[6]/assertStateKeysRegistered
+OK
+[nodes:10:1, template:101, chapters:10]
+story[6]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[6]/assertJourneyStoryReferences
+com.chengyinhub.common.exception.ServiceException:null:主题的剧情配置引用无效,主题发布失败:剧情阶段引用的章节不属于本主题:chapterId=99
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[6]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[6]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]
+story[7]/assertStateKeysRegistered
+com.chengyinhub.common.exception.ServiceException:null:主题发布失败:以下状态键未注册 → [clue.page(来源:主题剧情配置)]
+[nodes:10:1, template:101, chapters:10, keys:10]
+story[7]/assertThoughtRefsResolvable
+OK
+[chapters:10]
+story[7]/assertJourneyStoryReferences
+OK
+[chapters:10, nodes:10:1, templates:[101], nodes:10:1, npcs:4:1, npcs:2:8]
+story[7]/assertBlockNarrativeNpcReferences
+OK
+[nodes:10:1, templates:[101], chapters:10]
+story[7]/assertBlockSysVarReferences
+OK
+[nodes:10:1, templates:[101]]

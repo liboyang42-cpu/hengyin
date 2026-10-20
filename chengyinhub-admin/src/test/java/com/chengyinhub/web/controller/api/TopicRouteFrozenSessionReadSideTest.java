@@ -73,9 +73,16 @@ class TopicRouteFrozenSessionReadSideTest {
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
 
         ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
-        when(runtime.sessionStatuses(any())).thenReturn(Collections.singletonMap(
-                ITopicRouteRuntimeService.sessionKey(MEMBER, TOPIC, ACTIVITY),
-                TopicRouteSession.STATUS_COMPLETED));
+        when(runtime.currentSessionFacts(any())).thenAnswer(call -> {
+            List<TopicRouteSession> scopes = call.getArgument(0);
+            assertEquals(1, scopes.size());
+            assertEquals(Long.valueOf(MEMBER), scopes.get(0).getMemberId());
+            assertEquals(Long.valueOf(TOPIC), scopes.get(0).getTopicId());
+            assertEquals(Long.valueOf(ACTIVITY), scopes.get(0).getActivityId());
+            assertEquals("default", scopes.get(0).getPlayInstanceId());
+            return Collections.singletonMap(ITopicRouteRuntimeService.sessionKey(MEMBER, TOPIC, ACTIVITY),
+                    new ITopicRouteRuntimeService.CurrentSessionFact(TopicRouteSession.STATUS_COMPLETED, "default", false));
+        });
         ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
 
         AjaxResult result = controller.myCompleted();
@@ -149,6 +156,7 @@ class TopicRouteFrozenSessionReadSideTest {
         progress.setActivityId(activityId);
         progress.setTopicId(topicId);
         progress.setNodeId(nodeId);
+        progress.setPlayInstanceId("default");
         progress.setStatus(1); // 正式完成事实(status=0 是 mode2 到店凭证,不算完成)
         return progress;
     }

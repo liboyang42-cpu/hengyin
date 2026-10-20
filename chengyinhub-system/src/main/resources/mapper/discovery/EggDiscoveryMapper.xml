@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.discovery.EggDiscoveryMapper">
+  <!-- Insert then current locking read serializes first-use races without resetting frozen bindings. -->
+  <insert id="insertScope">
+    INSERT INTO w14_egg_evaluation_scope(evaluation_key,member_id,scope_kind,owner_id,release_id,
+      occurrence_id,definition_id,definition_version,definition_fingerprint,status,evidence_level,revision)
+    VALUES(#{evaluationKey},#{memberId},#{scopeKind},#{ownerId},#{releaseId},#{occurrenceId},
+      #{definitionId},#{definitionVersion},#{definitionFingerprint},'ACTIVE','ISOLATED_EVALUATION',1)
+    ON DUPLICATE KEY UPDATE evaluation_key=evaluation_key
+  </insert>
+  <select id="lockScope" resultType="com.chengyinhub.business.discovery.EggDiscoveryRows$ScopeRow">
+    SELECT evaluation_key AS evaluationKey,member_id AS memberId,scope_kind AS scopeKind,owner_id AS ownerId,
+      release_id AS releaseId,occurrence_id AS occurrenceId,definition_id AS definitionId,
+      definition_version AS definitionVersion,definition_fingerprint AS definitionFingerprint,status,
+      evidence_level AS evidenceLevel,revision
+    FROM w14_egg_evaluation_scope WHERE evaluation_key=#{evaluationKey} AND member_id=#{memberId} FOR UPDATE
+  </select>
+  <!-- Must be a current read under MySQL RR after waiting on the scope lock. -->
+  <select id="lockReceipt" resultType="com.chengyinhub.business.discovery.EggDiscoveryRows$ReceiptRow">
+    SELECT evaluation_key AS evaluationKey,member_id AS memberId,receipt_id AS receiptId,
+      definition_fingerprint AS definitionFingerprint,discovered_at AS discoveredAt,
+      history_hashes AS historyHashes,evidence_level AS evidenceLevel
+    FROM w14_egg_evaluation_receipt WHERE evaluation_key=#{evaluationKey} AND member_id=#{memberId} FOR UPDATE
+  </select>
+  <insert id="insertReceipt">
+    INSERT INTO w14_egg_evaluation_receipt(evaluation_key,member_id,receipt_id,definition_fingerprint,
+      discovered_at,history_hashes,evidence_level)
+    VALUES(#{evaluationKey},#{memberId},#{receiptId},#{definitionFingerprint},#{discoveredAt},
+      #{historyHashes},'ISOLATED_EVALUATION')
+  </insert>
+  <update id="revoke">
+    UPDATE w14_egg_evaluation_scope SET status='REVOKED', revision=revision+1
+    WHERE evaluation_key=#{evaluationKey} AND member_id=#{memberId} AND revision=#{revision}
+      AND status='ACTIVE' AND evidence_level='ISOLATED_EVALUATION'
+  </update>
+  <!-- Intentionally dedicated evaluation outbox, never the live reward/audit event bus. -->
+  <insert id="insertOutbox">
+    INSERT INTO w14_egg_evaluation_outbox(event_id,evaluation_key,revision,event_type,evidence_level,recorded_at)
+    VALUES(#{eventId},#{evaluationKey},#{revision},#{eventType},'ISOLATED_EVALUATION',#{recordedAt})
+  </insert>
+</mapper>

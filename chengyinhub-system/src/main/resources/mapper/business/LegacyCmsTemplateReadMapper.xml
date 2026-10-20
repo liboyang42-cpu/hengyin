@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.LegacyCmsTemplateReadMapper">
+    <!-- One locking read observes both provenance signals. Any marker or sidecar blocks.
+         Current managed writers create new rows atomically, never adopt legacy rows.
+         Any future existing-row provenance mutation must lock this same canonical row.
+         Missing canonical rows return null; schema/query failures must never imply legacy. -->
+    <select id="selectCanonicalStateForUpdate" resultType="java.lang.Integer" useCache="false" flushCache="true">
+        select case when template.w18_provenance_kind is not null
+            or exists (
+                select 1 from w18_cms_template_provenance provenance
+                where provenance.template_id = template.id
+            ) then 1 else 0 end
+        from cms_member_template template
+        where template.id = #{templateId}
+        for update
+    </select>
+    <!-- Predicate and complete body projection share one statement snapshot, including read-only
+         callers. Never split this into a guard query followed by an unfiltered body query. -->
+    <select id="selectLegacySnapshotById"
+            resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult"
+            useCache="false" flushCache="true">
+        <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/>
+        where cms_member_template.id = #{templateId}
+          and cms_member_template.w18_provenance_kind is null
+          and not exists (
+              select 1 from w18_cms_template_provenance provenance
+              where provenance.template_id = cms_member_template.id
+          )
+    </select>
+</mapper>

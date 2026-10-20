@@ -77,8 +77,22 @@
         select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
                action, target_type, target_id, relation_id, before_json, after_json,
                reason, request_id, create_time
-        from business_audit_event
+        from business_audit_event e
         <where>
+            <!-- Reserved NPC events never enter generic logs, including cursor/limit+1 accounting.
+                 Ledger writes and internal exact-request replay queries remain unchanged. -->
+            (e.target_type is null or e.target_type != 'MERCHANT_NPC_KNOWLEDGE_DRAFT')
+            and (e.action is null or e.action not in ('NPC_KNOWLEDGE_DRAFT_SAVE', 'NPC_KNOWLEDGE_DRAFT_SUBMIT'))
+            and not exists (
+                select 1 from audit_task npc
+                where (npc.biz_type = 'MERCHANT_NPC_KNOWLEDGE_DRAFT'
+                    or npc.source_type = 'merchant_npc_public_facts_draft_v1')
+                  and ((e.target_type = 'AUDIT_TASK' and e.target_id = npc.id)
+                    or (e.domain_type = 'PLATFORM' and e.domain_id = npc.id
+                        and e.action in ('AUDIT_DECISION_APPROVE', 'AUDIT_DECISION_REJECT',
+                            'AUDIT_DECISION_ESCALATE', 'AUDIT_DECISION_CANCEL',
+                            'AUDIT_DECISION_REVIEW', 'AUDIT_DECISION_REVERTED')))
+            )
             <if test="domainType != null and domainType != ''">and domain_type = #{domainType}</if>
             <if test="domainId != null">and domain_id = #{domainId}</if>
             <if test="actorId != null">and actor_member_id = #{actorId}</if>

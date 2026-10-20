@@ -36,6 +36,9 @@ public interface NpcProfileMapper
      */
     NpcProfile selectMerchantNpcById(@Param("id") Long id);
 
+    /** Minimal identity only; raw persona/knowledge cannot be read through the scoped-NPC directory. */
+    NpcProfile selectMerchantNpcScopeIdentity(@Param("id") Long id);
+
     /**
      * 新增门店分身。
      * ⚠️ 不写 active_slot —— migration_npc_governance_v1.sql 的 uk_active_scope(scope_type,scope_id,active_slot)

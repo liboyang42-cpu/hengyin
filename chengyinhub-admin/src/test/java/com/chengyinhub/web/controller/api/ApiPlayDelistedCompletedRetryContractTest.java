@@ -99,6 +99,10 @@ class ApiPlayDelistedCompletedRetryContractTest
     private CmsMemberTemplate template;
     private CmsTopicNodeMapper routeNodeMapper;
     private PlayerNodeProgressMapper routeProgressMapper;
+    private ApiPlayProgressController unproxiedController;
+    private TopicRouteRuntimeServiceImpl runtime;
+    private org.springframework.jdbc.datasource.DataSourceTransactionManager transactions;
+    private boolean completedFixture;
 
     @BeforeEach
     void setUp()
@@ -219,9 +223,20 @@ class ApiPlayDelistedCompletedRetryContractTest
             return Long.valueOf(1L).equals(probe.getStatus())
                     ? Collections.emptyList() : Collections.singletonList(node);
         });
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService",
+        runtime = com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(
                 new TopicRouteRuntimeServiceImpl(routeMapper, routeTopicMapper, routeNodeMapper,
-                        routeProgressMapper, routeActivityMapper, routeRegistrationMapper));
+                        routeProgressMapper, routeActivityMapper, routeRegistrationMapper), null);
+        com.chengyinhub.business.mapper.UmsMemberMapper members = mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        when(members.lockMemberById(PLAYER)).thenReturn(PLAYER);
+        ReflectionTestUtils.setField(runtime, "originalAwardMemberMapper", members);
+        when(routeProgressMapper.selectOriginalNodeAwardEvidence(PLAYER, ACTIVITY, TOPIC, NODE)).thenAnswer(invocation -> {
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("legacyCompleted", completedFixture);
+            evidence.put("dropConsumed", false); evidence.put("couponConsumed", false);
+            return evidence;
+        });
+        when(routeProgressMapper.selectOriginalInstanceAwardSessions(PLAYER, ACTIVITY, NODE)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
 
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC);
@@ -237,6 +252,15 @@ class ApiPlayDelistedCompletedRetryContractTest
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         mockProgressRows(true);
         CurrentPlayControllerFixtures.install(controller);
+        unproxiedController = controller;
+        transactions = new org.springframework.jdbc.datasource.DataSourceTransactionManager(
+                new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                        "jdbc:h2:mem:delisted-" + java.util.UUID.randomUUID(), "sa", ""));
+        org.springframework.aop.framework.ProxyFactory proxy = new org.springframework.aop.framework.ProxyFactory(controller);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        controller = (ApiPlayProgressController) proxy.getProxy();
     }
 
     /**
@@ -247,8 +271,12 @@ class ApiPlayDelistedCompletedRetryContractTest
      */
     private void mockProgressRows(boolean completed)
     {
+        completedFixture = completed;
         Answer<List<PlayerNodeProgress>> rows = invocation -> {
             PlayerNodeProgress probe = invocation.getArgument(0);
+            if (probe == null || !PLAYER.equals(probe.getMemberId()) || !TOPIC.equals(probe.getTopicId())
+                    || !ACTIVITY.equals(probe.getActivityId())
+                    || (probe.getNodeId() != null && !NODE.equals(probe.getNodeId()))) return Collections.emptyList();
             if (probe.getNodeId() != null) {
                 if (!completed) return Collections.emptyList();
                 PlayerNodeProgress row = new PlayerNodeProgress();
@@ -257,10 +285,13 @@ class ApiPlayDelistedCompletedRetryContractTest
                 row.setActivityId(probe.getActivityId());
                 row.setTopicId(TOPIC);
                 row.setNodeId(NODE);
+                row.setPlayInstanceId("default");
                 row.setStatus(1);
                 return Collections.singletonList(row);
             }
             PlayerNodeProgress done = new PlayerNodeProgress();
+            done.setMemberId(PLAYER); done.setTopicId(TOPIC); done.setActivityId(ACTIVITY);
+            done.setNodeId(NODE); done.setPlayInstanceId("default");
             done.setStatus(1);
             return Collections.singletonList(done);
         };
@@ -275,7 +306,8 @@ class ApiPlayDelistedCompletedRetryContractTest
 
     private AjaxResult checkin()
     {
-        return controller.checkin(String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null);
+        // Call the mapped overload: the compatibility overload self-invokes and is not an HTTP entry.
+        return controller.checkin(String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null, null);
     }
 
     private AjaxResult answer()
@@ -319,6 +351,8 @@ class ApiPlayDelistedCompletedRetryContractTest
         assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
         assertEquals("该节点已打卡", result.get("msg"));
         verify(progressService, times(1)).insertPlayerNodeProgress(any());
+        verify(routeProgressMapper).selectOriginalNodeAwardEvidence(PLAYER, ACTIVITY, TOPIC, NODE);
+        verify((IPlayerProgressionService) ReflectionTestUtils.getField(controller, "playerProgressionService"), never()).onNodeDone(PLAYER);
     }
 
     @Test
@@ -470,6 +504,8 @@ class ApiPlayDelistedCompletedRetryContractTest
     {
         doAnswer(invocation -> {
             PlayerNodeProgress probe = invocation.getArgument(0);
+            if (probe == null || !PLAYER.equals(probe.getMemberId()) || !TOPIC.equals(probe.getTopicId())
+                    || !ACTIVITY.equals(probe.getActivityId())) return Collections.emptyList();
             if (probe.getNodeId() != null) {
                 PlayerNodeProgress voucher = new PlayerNodeProgress();
                 voucher.setId(9002L);
@@ -477,6 +513,7 @@ class ApiPlayDelistedCompletedRetryContractTest
                 voucher.setActivityId(probe.getActivityId());
                 voucher.setTopicId(TOPIC);
                 voucher.setNodeId(NODE);
+                voucher.setPlayInstanceId("default");
                 voucher.setStatus(0);
                 return Collections.singletonList(voucher);
             }
@@ -509,6 +546,25 @@ class ApiPlayDelistedCompletedRetryContractTest
 
         assertEquals(500, result.get("code"));
         assertEquals("该地点尚未解锁", result.get("msg"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void oldDefaultWithoutRouteRemainsReadableButCompletionRequiresRealRc() {
+        assertEquals("default", runtime.playInstance(PLAYER, TOPIC, ACTIVITY));
+        IllegalStateException failure = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> unproxiedController.checkin(String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null, null));
+        assertEquals("节点奖励必须在原始读已提交事务内判定", failure.getMessage());
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
+    @Test
+    void mappedRetryDoesNotReplaceAnExistingRepeatableReadTransaction() {
+        org.springframework.transaction.support.TransactionTemplate rr = new org.springframework.transaction.support.TransactionTemplate(transactions);
+        rr.setIsolationLevel(java.sql.Connection.TRANSACTION_REPEATABLE_READ);
+        IllegalStateException failure = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> rr.execute(status -> checkin()));
+        assertEquals("节点奖励必须在原始读已提交事务内判定", failure.getMessage());
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 }

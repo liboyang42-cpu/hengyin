@@ -15,7 +15,7 @@ import static org.mockito.Mockito.*;
 
 class PublicTopicStationCountTest {
     @Test
-    void publicCardsUseCurrentVisibleNodesInsteadOfSavedSnapshot() throws Exception {
+    void publicCardsUseCurrentVisibleNodesInsteadOfSavedSnapshot() {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -28,16 +28,31 @@ class PublicTopicStationCountTest {
         CmsTopic topic = new CmsTopic();
         topic.setId(42L);
         topic.setLocationCount(1L);
+        topic.setTemplateCount(99L);
         when(topics.selectPublicCmsTopicList(any())).thenReturn(Collections.singletonList(topic));
-        CmsTopic currentCount = new CmsTopic();
-        currentCount.setId(42L);
-        currentCount.setLocationCount(2L);
-        currentCount.setTemplateCount(0L);
-        when(topics.selectPublicNodeCountsByTopicIds(any())).thenReturn(Collections.singletonList(currentCount));
+        CmsTopic currentCounts = new CmsTopic();
+        currentCounts.setId(42L);
+        currentCounts.setLocationCount(2L);
+        currentCounts.setTemplateCount(1L);
+        when(topics.selectPublicNodeCountsByTopicIds(Collections.singletonList(42L)))
+                .thenReturn(Collections.singletonList(currentCounts));
 
         assertEquals(Long.valueOf(2L), service.selectPublicCmsTopicList(new CmsTopic()).get(0).getLocationCount());
+        assertEquals(Long.valueOf(1L), topic.getTemplateCount());
+        // The current service sends only the exact topic IDs to the visibility-filtered batch query.
         verify(topics).selectPublicNodeCountsByTopicIds(Collections.singletonList(42L));
+        verifyNoInteractions(nodes); // Do not regress to one node query per public card.
+
+        when(topics.selectPublicNodeCountsByTopicIds(Collections.singletonList(42L)))
+                .thenReturn(Collections.emptyList());
+        assertEquals(Long.valueOf(0L), service.selectPublicCmsTopicList(new CmsTopic()).get(0).getLocationCount());
+        assertEquals(Long.valueOf(0L), topic.getTemplateCount());
+        verify(topics, times(2)).selectPublicNodeCountsByTopicIds(Collections.singletonList(42L));
         verifyNoInteractions(nodes);
+    }
+
+    @Test
+    void publicCountsSqlRetainsVisibilityAndWithdrawnOfferFilters() throws Exception {
         String mapper = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
                 "../chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml")),
                 java.nio.charset.StandardCharsets.UTF_8);
@@ -49,8 +64,5 @@ class PublicTopicStationCountTest {
                 && batchSql.contains("withdrawn.withdraw_reason")
                 && !batchSql.contains("#{merchantMemberId}"),
                 "批量计数仍须取公开可见节点，不受商家本人身份限制，并排除已撤回供给");
-
-        when(topics.selectPublicNodeCountsByTopicIds(any())).thenReturn(Collections.emptyList());
-        assertEquals(Long.valueOf(0L), service.selectPublicCmsTopicList(new CmsTopic()).get(0).getLocationCount());
     }
 }

@@ -448,9 +448,9 @@ class JourneyChoiceEffectsTest {
     // ==================== helpers ====================
 
     private TopicRouteRuntimeServiceImpl runtime(java.util.function.IntSupplier d20) {
-        return new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
+        return com.chengyinhub.business.service.support.SyntheticLegacyRuntimeReader.attach(new TopicRouteRuntimeServiceImpl(routeMapper, topicMapper, nodeMapper, templateMapper,
                 progressMapper, activityMapper, registrationMapper, roleMapper, shopDayProofService,
-                () -> 12345L, d20, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
+                () -> 12345L, d20, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN), templateMapper);
     }
 
     private JsonNode state() throws Exception {

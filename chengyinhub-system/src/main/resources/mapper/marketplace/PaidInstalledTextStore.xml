@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidInstalledTextStore">
+  <select id="lockOwned" resultType="com.chengyinhub.business.marketplace.paid.PaidInstalledTextStore$OwnedRow" useCache="false" flushCache="true">
+    SELECT d.id,d.reservation_key AS reservationKey,d.buyer_kind AS buyerKind,d.buyer_id AS buyerId,
+      d.target_draft_id AS targetDraftId,d.target_revision AS targetRevision,d.revision,d.state,
+      d.review_status AS reviewStatus,d.publish_status AS publishStatus,d.is_sync AS isSync,
+      LENGTH(d.source_content) AS sourceLength,LENGTH(d.terms_document) AS termsLength,
+      CHAR_LENGTH(d.frozen_rights) AS rightsCharacterCount,
+      CASE WHEN LENGTH(d.source_content)&lt;=262144 THEN d.source_content ELSE NULL END AS sourceContent,CASE WHEN LENGTH(d.terms_document)&lt;=65535 THEN d.terms_document ELSE NULL END AS termsDocument,
+      CASE WHEN CHAR_LENGTH(d.frozen_rights)&lt;=65536 THEN d.frozen_rights ELSE NULL END AS rightsJson,d.installed_by AS installedBy,d.installed_at AS installedAt,
+      u.owned_draft_id AS usageOwnedDraftId,u.reservation_key AS usageReservationKey,u.committed_at AS committedAt
+    FROM w18_module_owned_draft d JOIN w18_module_install_usage u ON u.owned_draft_id=d.id AND u.reservation_key=d.reservation_key
+    WHERE d.id=#{owned} AND d.buyer_kind='INDIVIDUAL' AND d.buyer_id=#{actor} AND d.reservation_key=#{reservation}
+    FOR UPDATE
+  </select>
+  <select id="lockComponents" resultType="com.chengyinhub.business.marketplace.paid.PaidInstalledTextStore$ComponentRow" useCache="false" flushCache="true">
+    SELECT draft_id AS draftId,local_key AS localKey,component_kind AS componentKind,schema_version AS schemaVersion,
+      CHAR_LENGTH(content_json) AS contentCharacterCount,CASE WHEN CHAR_LENGTH(content_json)&lt;=266240 THEN content_json ELSE NULL END AS contentJson
+    FROM w18_module_draft_component WHERE draft_id=#{owned} ORDER BY local_key LIMIT 2 FOR UPDATE
+  </select>
+</mapper>

@@ -59,6 +59,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     private static final Long SYSTEM_OPERATOR = 0L;
 
     @Autowired
+    private com.chengyinhub.business.mapper.BusinessAuditEventMapper registrationLifecycleAuditMapper;
+
+    @Autowired
     private OmsTicketMapper omsTicketMapper;
 
     /** [P0-15] ③ 退款释放权益容量。 */
@@ -757,6 +760,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     }
                     throw new ServiceException("报名支付状态已变化，请刷新后重试", HttpStatus.CONFLICT);
                 }
+                captureRegistrationState(registration.getId(), "ORGANIZER_CANCELLED");
                 restoreInventory(registration);
                 returnPoints(registration);
                 releasePerks(registration);
@@ -1286,6 +1290,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             }
             if (cmsRegistrationMapper.claimRegistrationRefunded(
                     m.getId(), "auto-refund", new Date()) == 1) {
+                captureRegistrationState(m.getId(), "REFUND_INVALIDATED");
                 claimed.add(m);
                 continue;
             }
@@ -1443,6 +1448,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             return;
         }
         if (!hasCash) {
+            captureRegistrationState(r.getId(), "REFUND_INVALIDATED");
             firstReviewPointsClawback.onRegistrationRefunded(r);   // FX-10:现金路由 markRegistrationRefunded 收回
         }
         // 外部打款不可回滚，先通过库存上限闸，避免“钱已退、库存校验才失败”。
@@ -1485,6 +1491,16 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             cmsRegistrationMapper.updateCmsRegistration(st);
         }
         // 这里只完成取消受理；到账通知由退款 SUCCESS 或人工复核终态提交后发送。
+    }
+
+    private void captureRegistrationState(Long id, String reason) {
+        CmsRegistration persisted = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id);
+        if (persisted == null) throw new IllegalStateException("Registration lifecycle row missing after mutation");
+        com.chengyinhub.business.service.support.RegistrationLifecycleAudit.append(
+                registrationLifecycleAuditMapper,
+                com.chengyinhub.business.service.support.RegistrationLifecycleAudit.changed(
+                        persisted.getId(), persisted.getMemberId(), persisted.getPaymentStatus(),
+                        persisted.getRegistrationStatus(), persisted.getUpdateTime(), new Date(), reason, persisted.getPaymentTime()));
     }
 
     /** 微信退款不能发生在本地可回滚事务内，防止后续一笔库存回补失败而本地回滚、钱已退。 */

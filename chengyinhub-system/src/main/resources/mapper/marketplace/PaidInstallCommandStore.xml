@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.PaidInstallCommandStore">
+  <sql id="columns">command_key AS commandKey,command_hash AS commandHash,buyer_member_id AS buyerMemberId,request_id AS requestId,core_request_id AS coreRequestId,license_id AS licenseId,module_id AS moduleId,version_id AS versionId,content_hash AS contentHash,terms_hash AS termsHash,target_draft_id AS targetDraftId,target_revision AS targetRevision,business_type AS businessType,target_payload_hash AS targetPayloadHash,planning_region AS planningRegion,commercial_use AS commercialUse,offer_version AS offerVersion,requested_until AS requestedUntil,created_at AS createdAt</sql>
+  <select id="history" resultType="com.chengyinhub.business.marketplace.paid.PaidInstallCommandStore$Row" useCache="false" flushCache="true">
+    SELECT <include refid="columns"/> FROM w18_paid_install_command WHERE buyer_member_id=#{actor} AND license_id=#{license}
+    <if test="before != null">AND command_key &lt; #{before}</if> ORDER BY command_key DESC LIMIT 51
+  </select>
+  <select id="find" resultType="com.chengyinhub.business.marketplace.paid.PaidInstallCommandStore$Row" useCache="false" flushCache="true">
+    SELECT <include refid="columns"/> FROM w18_paid_install_command WHERE command_key=#{key} AND buyer_member_id=#{actor}
+  </select>
+  <select id="lock" resultType="com.chengyinhub.business.marketplace.paid.PaidInstallCommandStore$Row" useCache="false" flushCache="true">
+    SELECT <include refid="columns"/> FROM w18_paid_install_command WHERE command_key=#{key} AND buyer_member_id=#{actor} FOR UPDATE
+  </select>
+  <insert id="insert">INSERT INTO w18_paid_install_command(command_key,command_hash,buyer_member_id,request_id,core_request_id,license_id,module_id,version_id,content_hash,terms_hash,target_draft_id,target_revision,business_type,target_payload_hash,planning_region,commercial_use,offer_version,requested_until,created_at) VALUES(#{commandKey},#{commandHash},#{buyerMemberId},#{requestId},#{coreRequestId},#{licenseId},#{moduleId},#{versionId},#{contentHash},#{termsHash},#{targetDraftId},#{targetRevision},#{businessType},#{targetPayloadHash},#{planningRegion},#{commercialUse},#{offerVersion},#{requestedUntil},#{createdAt})</insert>
+  <select id="targets" resultType="com.chengyinhub.business.marketplace.free.store.FreeInstallTargetRow" useCache="false" flushCache="true">
+    SELECT id,owner_member_id AS ownerMemberId,business_type AS businessType,status,version,payload_hash AS payloadHash
+    FROM content_draft WHERE owner_member_id=#{actor} AND status='DRAFT' AND business_type IN ('TOPIC','ACTIVITY')
+    <if test="before != null">AND id &lt; #{before}</if> ORDER BY id DESC LIMIT 51
+  </select>
+  <select id="progress" resultType="com.chengyinhub.business.marketplace.paid.PaidInstallCommandStore$Progress" useCache="false" flushCache="true">
+    SELECT r.state,r.license_id AS licenseId,r.module_id AS moduleId,r.version_id AS versionId,r.content_hash AS contentHash,
+      r.terms_hash AS termsHash,r.offer_version AS offerVersion,r.draft_id AS targetDraftId,r.draft_revision AS targetRevision,
+      r.actor_id AS actorId,r.expires_at AS expiresAt,d.id AS ownedDraftId,d.installed_at AS installedAt,u.owned_draft_id AS usageDraftId,u.committed_at AS committedAt
+    FROM w18_module_install_reservation r
+    LEFT JOIN w18_module_owned_draft d ON d.reservation_key=r.reservation_key AND d.buyer_kind=r.buyer_kind AND d.buyer_id=r.buyer_id
+      AND d.target_draft_id=r.draft_id AND d.target_revision=r.draft_revision
+    LEFT JOIN w18_module_install_usage u ON u.reservation_key=r.reservation_key AND u.owned_draft_id=d.id
+    WHERE r.buyer_kind='INDIVIDUAL' AND r.buyer_id=#{actor} AND r.request_id=#{request} LIMIT 2
+  </select>
+</mapper>

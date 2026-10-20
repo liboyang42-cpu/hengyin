@@ -40,7 +40,15 @@ import java.util.function.Function;
 /** validationMethod=6 的求值、幂等持久化、标签和完局聚合业务。 */
 @Service
 public class PreferencePlayService {
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = new ObjectMapper()
+            .enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+            .enable(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
+    private static final String RECEIPT_SCOPE = "_serverPreferenceScope";
+    /** Server-only completion adapter. Preparation must take team/game barriers before member;
+     * apply reuses that exact prepared attempt. Existing receipt reads never call either method. */
+    public interface CompletionFunction extends Function<String, Map<String, Object>> {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService.NodeAwardPermit prepare();
+    }
     private final PreferenceResultEvaluator evaluator = new PreferenceResultEvaluator();
 
     @Autowired private com.chengyinhub.business.mapper.PlayAttemptLogMapper attemptMapper;
@@ -50,6 +58,7 @@ public class PreferencePlayService {
     @Autowired private ICmsTopicService topicService;
     @Autowired private ICmsRegistrationService registrationService;
     @Autowired private IPerkLedgerService perkLedgerService;
+    @Autowired private com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntimeService;
 
     public Map<String, Object> load(Long memberId, Long topicId, Long nodeId, CmsMemberTemplate template) {
         ObjectNode config = evaluator.validate(template.getPreferenceJson());
@@ -68,12 +77,68 @@ public class PreferencePlayService {
     public Map<String, Object> submit(Long memberId, Long topicId, Long actId, Long nodeId,
                                       CmsMemberTemplate template, PreferenceSubmitRequest request,
                                       Function<String, Map<String, Object>> progressFunction) {
-        String idempotencyKey = "preference:" + memberId + ":" + topicId + ":" + actId + ":" + nodeId;
+        if (routeRuntimeService == null) throw new IllegalStateException("偏好本局范围不可读取");
+        // This bounded batch interface is read-only even when joining this RC transaction.
+        // playInstance() intentionally takes route/team write guards in an active transaction,
+        // so it cannot be used for this receipt preflight before Advanced preparation.
+        com.chengyinhub.business.domain.TopicRouteSession scope = new com.chengyinhub.business.domain.TopicRouteSession();
+        scope.setMemberId(memberId); scope.setTopicId(topicId); scope.setActivityId(actId);
+        String scopeKey = com.chengyinhub.business.service.ITopicRouteRuntimeService.sessionKey(memberId, topicId, actId);
+        Map<String, String> instances = routeRuntimeService.playInstances(java.util.Collections.singletonList(scope));
+        String instance = instances == null ? null : instances.get(scopeKey);
+        if (instances == null || instances.size() != 1 || instance == null || instance.trim().isEmpty())
+            throw new IllegalStateException("偏好本局范围不可读取");
+        String idempotencyKey = preferenceKey(memberId, topicId, actId, nodeId, instance);
         PlayAttemptLog existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
-        if (existing != null) return existingData(existing, memberId, topicId, nodeId, template);
+        // Preserve legitimate old default receipts without re-running a now-retired/incomplete
+        // advanced game. existingData still verifies owner, scope, origin metadata and currentness.
+        if (existing != null) return existingData(existing, memberId, topicId, actId, nodeId, instance, idempotencyKey, template);
 
-        PreferenceResultEvaluator.Evaluation evaluation;
-        if (StringUtils.isNotBlank(request.getReuseTagCode())) {
+
+        boolean reuseConfirmedTag = StringUtils.isNotBlank(request.getReuseTagCode());
+        // Choices are immutable request data and can produce a read-only tiebreak response.
+        // Confirmed tags are mutable shared facts: never cache them across game/member waits.
+        PreferenceResultEvaluator.Evaluation evaluation = reuseConfirmedTag ? null
+                : evaluator.evaluate(template.getPreferenceJson(), request.getChoices());
+        if (evaluation != null && evaluation.isNeedsTiebreak()) {
+            Map<String, Object> data = new LinkedHashMap<String, Object>();
+            data.put("needsTiebreak", true);
+            data.put("tiebreak", evaluation.getTiebreak());
+            data.put("choices", evaluation.getChoices());
+            // Pure evaluation may overlap a final submit/replay on another device. Refresh the
+            // exact read-only scope (also clears the mapper cache) and prefer a committed receipt.
+            Map<String, String> refreshed = routeRuntimeService.playInstances(java.util.Collections.singletonList(scope));
+            if (refreshed == null || refreshed.size() != 1 || !instance.equals(refreshed.get(scopeKey)))
+                throw new IllegalStateException("偏好本局范围已更新");
+            existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
+            if (existing != null) return existingData(existing, memberId, topicId, actId, nodeId, instance, idempotencyKey, template);
+            routeRuntimeService.assertCurrentPlayInstance(memberId, topicId, actId, instance);
+            return data;
+        }
+
+        // Only a final preference result is completion intent. A tiebreak response above is
+        // read-only and must not require or complete an advanced game, nor acquire the award barrier.
+        if (!(progressFunction instanceof CompletionFunction))
+            throw new IllegalStateException("偏好完成准备器不可用");
+        com.chengyinhub.business.service.ITopicRouteRuntimeService.NodeAwardPermit prepared =
+                ((CompletionFunction) progressFunction).prepare();
+        if (prepared == null || !prepared.matches(memberId, topicId, actId, nodeId, instance))
+            throw new IllegalStateException("偏好完成准备范围不正确");
+        // Preparation already holds team -> route -> game -> member. Recheck the service's own
+        // actual RC barrier/permit; its uncached current query also flushes a preflight null receipt.
+        com.chengyinhub.business.service.ITopicRouteRuntimeService.NodeAwardPermit permit =
+                routeRuntimeService.beginOriginalNodeAward(memberId, topicId, actId, nodeId, instance);
+        if (permit == null || !permit.matches(memberId, topicId, actId, nodeId, instance)
+                || prepared.isEligible() != permit.isEligible())
+            throw new IllegalStateException("偏好本局范围不可读取");
+        existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
+        if (existing != null) return existingData(existing, memberId, topicId, actId, nodeId, instance, idempotencyKey, template);
+
+        if (reuseConfirmedTag) {
+            // Preserve the original late-read boundary. The actual RC/member check above flushes
+            // MyBatis cache; a revoke committed during preparation must be visible here.
+            // Existing tag writers do not share this member lock; this is not a new global
+            // atomic revoke/consume protocol and does not change their persistence semantics.
             List<PlayerTopicTag> confirmed = tagService.confirmedForConsumer(memberId, topicId,
                     evaluator.consumedTagCodes(template.getPreferenceJson()));
             PlayerTopicTag inherited = null;
@@ -83,21 +148,13 @@ public class PreferencePlayService {
             if (inherited == null) throw new IllegalArgumentException("该标签未确认，请现场完成替代题");
             evaluation = evaluator.evaluateInherited(template.getPreferenceJson(),
                     inherited.getTagCode(), inherited.getTagValue());
-        } else {
-            evaluation = evaluator.evaluate(template.getPreferenceJson(), request.getChoices());
-        }
-        if (evaluation.isNeedsTiebreak()) {
-            Map<String, Object> data = new LinkedHashMap<String, Object>();
-            data.put("needsTiebreak", true);
-            data.put("tiebreak", evaluation.getTiebreak());
-            data.put("choices", evaluation.getChoices());
-            return data;
         }
 
         Map<String, Object> stored = new LinkedHashMap<String, Object>();
         stored.put("evaluation", evaluation);
         stored.put("choices", request.getChoices());
         stored.put("nodeId", nodeId);
+        stored.put(RECEIPT_SCOPE, receiptScope(memberId, topicId, actId, nodeId, instance, idempotencyKey));
         stored.put("progress", progressFunction.apply(evaluation.getResultCode()));
         Set<String> availableValues = resultCodes(template.getPreferenceJson());
         if (StringUtils.isNotBlank(evaluation.getTagCode())) stored.put("availableTagValues", availableValues);
@@ -113,11 +170,11 @@ public class PreferencePlayService {
         attempt.setIdempotencyKey(idempotencyKey);
         attempt.setCreatedAt(new Date());
         try {
-            attemptMapper.insertPlayAttemptLog(attempt);
+            if (attemptMapper.insertPlayAttemptLog(attempt) != 1) throw new IllegalStateException("偏好结果保存失败");
         } catch (DuplicateKeyException e) {
             existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
             if (existing == null) throw e;
-            return existingData(existing, memberId, topicId, nodeId, template);
+            return existingData(existing, memberId, topicId, actId, nodeId, instance, idempotencyKey, template);
         }
 
         PlayerTopicTag pendingTag = null;
@@ -128,6 +185,8 @@ public class PreferencePlayService {
         stored.put("pendingTag", pendingTag);
         stored.put("tagDisclosure", disclosure(template.getPreferenceJson()));
         stored.put("firstTime", true);
+        routeRuntimeService.assertCurrentPlayInstance(memberId, topicId, actId, instance);
+        stored.remove(RECEIPT_SCOPE);
         return stored;
     }
 
@@ -225,12 +284,24 @@ public class PreferencePlayService {
     }
 
     private Map<String, Object> existingData(PlayAttemptLog existing, Long memberId, Long topicId,
-                                             Long nodeId, CmsMemberTemplate template) {
+            Long actId, Long nodeId, String instance, String key, CmsMemberTemplate template) {
+        if (!java.util.Objects.equals(memberId, existing.getMemberId())
+                || !java.util.Objects.equals(topicId, existing.getTopicId())
+                || !java.util.Objects.equals(actId, existing.getActivityId())
+                || !java.util.Objects.equals(nodeId, existing.getNodeId())
+                || !Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(existing.getAttemptType())
+                || !Integer.valueOf(1).equals(existing.getResult())
+                || !key.equals(existing.getIdempotencyKey())) throw new IllegalStateException("偏好结果范围不可读取");
         Map<String, Object> data;
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> parsed = JSON.convertValue(JSON.readTree(existing.getResultJson()), Map.class);
             data = new LinkedHashMap<String, Object>(parsed);
+            JsonNode storedScope = JSON.valueToTree(data.get(RECEIPT_SCOPE));
+            if ((data.containsKey(RECEIPT_SCOPE) || !"default".equals(instance))
+                    && !JSON.readTree(JSON.writeValueAsString(receiptScope(memberId, topicId, actId, nodeId, instance, key))).equals(storedScope))
+                throw new IllegalStateException("偏好结果本局证据不可读取");
+            data.remove(RECEIPT_SCOPE);
         } catch (Exception e) {
             throw new IllegalStateException("已存偏好结果不可解析", e);
         }
@@ -238,7 +309,26 @@ public class PreferencePlayService {
         data.put("pendingTag", pending == null || pending.isEmpty() ? null : pending.get(0));
         data.put("tagDisclosure", disclosure(template.getPreferenceJson()));
         data.put("firstTime", false);
+        routeRuntimeService.assertCurrentPlayInstance(memberId, topicId, actId, instance);
         return data;
+    }
+
+    private String preferenceKey(Long member, Long topic, Long activity, Long node, String instance) {
+        if ("default".equals(instance)) return "preference:" + member + ":" + topic + ":" + activity + ":" + node;
+        try {
+            String canonical = JSON.writeValueAsString(java.util.Arrays.asList("preference-receipt-v1", member, topic, activity, node, instance));
+            byte[] hash = java.security.MessageDigest.getInstance("SHA-256").digest(canonical.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder key = new StringBuilder("pref-v1:");
+            // Bounded to 64 characters, within the existing VARCHAR(128) receipt column.
+            for (int i = 0; i < 28; i++) key.append(String.format("%02x", hash[i] & 0xff));
+            return key.toString();
+        } catch (Exception impossible) { throw new IllegalStateException("偏好本局标识不可生成", impossible); }
+    }
+
+    private Map<String,Object> receiptScope(Long member, Long topic, Long activity, Long node, String instance, String key) {
+        Map<String,Object> scope = new LinkedHashMap<>();scope.put("schemaVersion",1);
+        scope.put("memberId",member);scope.put("topicId",topic);scope.put("activityId",activity);
+        scope.put("nodeId",node);scope.put("playInstanceId",instance);scope.put("idempotencyKey",key);return scope;
     }
 
     private JsonNode disclosure(String preferenceJson) {

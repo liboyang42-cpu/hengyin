@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.marketplace.paid.store.PaidLicenseStore">
+    <!-- Existing OMS is the only order/payment truth. These reads never select customer PII. -->
+    <select id="lockOrder" resultType="com.chengyinhub.business.marketplace.paid.store.PaidOrderRow" useCache="false" flushCache="true">
+        select id,member_id memberId,mms_merchant_id merchantId,status,pay_type payType,aftersale_status aftersaleStatus,
+          product_quantity productQuantity,order_sn orderSn,biz_type bizType,payment_transaction_id transactionId,
+          del_flag delFlag,entitlement_days entitlementDays,entitlement_max_usage entitlementMaxUsage,
+          pay_amount payAmount,order_total_amount orderTotalAmount,product_total_amount productTotalAmount,
+          delivery_fee deliveryFee,tax_fee taxFee,points_amount pointsAmount,coupon_amount couponAmount,payment_time paymentTime
+        from oms_order where order_sn=#{number} and biz_type='workshop_module_v1' for update
+    </select>
+    <select id="lockLines" resultType="com.chengyinhub.business.marketplace.paid.store.PaidLineRow" useCache="false" flushCache="true">
+        select id,order_id orderId,product_id productId,sku_id skuId,quantity,aftersale_order_id aftersaleOrderId,
+          aftersale_status aftersaleStatus,price from oms_order_item where order_id=#{orderId} order by id for update
+    </select>
+    <select id="lockSnapshot" resultType="com.chengyinhub.business.marketplace.paid.store.PaidSnapshotRow" useCache="false" flushCache="true">
+        select order_line_id orderLineId,order_id orderId,buyer_member_id buyerMemberId,product_id productId,sku_id skuId,
+          amount_minor amountMinor,currency,provider_app_id providerAppId,provider_merchant_id providerMerchantId,
+          snapshot_json snapshotJson,snapshot_hash snapshotHash,state,source_content sourceContent,terms_document termsDocument,frozen_at frozenAt
+        from w18_paid_order_line_snapshot where order_line_id=#{lineId} for update
+    </select>
+    <select id="lockLicense" resultType="com.chengyinhub.business.marketplace.paid.store.PaidLicenseRow" useCache="false" flushCache="true">
+        select license_id licenseId,order_line_id orderLineId,order_id orderId,buyer_member_id buyerMemberId,
+          provider_transaction_id providerTransactionId,source_event_id sourceEventId,snapshot_hash snapshotHash,state,
+          paid_at paidAt,issued_at issuedAt from w18_paid_license where order_line_id=#{lineId} for update
+    </select>
+    <select id="ownedOrderNumber" resultType="string" useCache="false" flushCache="true">
+        select o.order_sn from w18_paid_license l join oms_order o on o.id=l.order_id and o.member_id=l.buyer_member_id
+        where l.license_id=#{licenseId} and l.buyer_member_id=#{actor} and o.biz_type='workshop_module_v1' and o.del_flag=0
+    </select>
+    <select id="findActiveBuyer" resultType="long" useCache="false" flushCache="true">
+        select id from ums_member where id=#{actor} and status=1 and del_flag=0
+    </select>
+    <select id="activeBuyer" resultType="long" useCache="false" flushCache="true">
+        select id from ums_member where id=#{actor} and status=1 and del_flag=0 for update
+    </select>
+    <update id="markPaid">
+        update oms_order set status=1,pay_type=1,payment_transaction_id=#{transactionId},payment_time=#{paidAt},update_time=now()
+        where id=#{orderId} and biz_type='workshop_module_v1' and status=0 and pay_type=0 and payment_time is null
+          and payment_transaction_id is null and del_flag=0 and aftersale_status=1
+    </update>
+    <insert id="insertLicense">
+        insert into w18_paid_license(license_id,order_line_id,order_id,buyer_member_id,provider_transaction_id,source_event_id,
+          snapshot_hash,state,paid_at,issued_at)
+        values(#{licenseId},#{orderLineId},#{orderId},#{buyerMemberId},#{providerTransactionId},#{sourceEventId},
+          #{snapshotHash},#{state},#{paidAt},#{issuedAt})
+    </insert>
+</mapper>

@@ -18,6 +18,12 @@
 
     <dependencies>
 
+        <!-- App Attest wire decoding; version follows the existing Jackson BOM (Apache-2.0). -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-cbor</artifactId>
+        </dependency>
+
         <!-- 通用工具-->
         <dependency>
             <groupId>com.chengyinhub</groupId>

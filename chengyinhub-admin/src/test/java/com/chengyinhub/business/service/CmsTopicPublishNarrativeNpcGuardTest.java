@@ -66,6 +66,12 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        // Existing content/owner fixtures represent legacy rows; provenance negatives have their own suite.
+        com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper legacyProvenance = org.mockito.Mockito.mock(
+                com.chengyinhub.business.mapper.LegacyCmsProvenanceMapper.class);
+        org.mockito.Mockito.when(legacyProvenance.selectLegacyBlockState(org.mockito.ArgumentMatchers.anyLong())).thenReturn(0);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "legacyCmsProvenanceGuard",
+                new com.chengyinhub.business.service.support.LegacyCmsProvenanceGuard(legacyProvenance));
         ReflectionTestUtils.setField(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
         ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);

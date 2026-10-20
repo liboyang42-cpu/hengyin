@@ -37,6 +37,7 @@ public class TopicPublishCheckService {
     public static final String CODE_JOURNEY_STORY_INVALID = "JOURNEY_STORY_INVALID";
     /** R22-SEC S14:章节故事流 blocks 解析失败(与节点块同样是发布期会拦的错)。 */
     public static final String CODE_CHAPTER_BLOCKS_INVALID = "CHAPTER_BLOCKS_INVALID";
+    public static final String CODE_THEME_RUNTIME_INVALID = "THEME_RUNTIME_INVALID";
     public static final String CODE_LINEAR_JOURNEY_SESSION = "LINEAR_JOURNEY_SESSION";
 
     private final CmsTopicNodeMapper cmsTopicNodeMapper;
@@ -84,6 +85,9 @@ public class TopicPublishCheckService {
             } else if (TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind())) {
                 issues.add(PublishCheckIssue.error(CODE_JOURNEY_STORY_INVALID, null,
                         "主题剧情配置不合法:" + error.getMessage()));
+            } else if (TopicStateKeyRefService.KIND_THEME_RUNTIME.equals(error.getKind())) {
+                issues.add(PublishCheckIssue.error(CODE_THEME_RUNTIME_INVALID, null,
+                        "主题运行配置不合法:" + error.getMessage()));
             } else if (TopicStateKeyRefService.KIND_CHAPTER_BLOCKS.equals(error.getKind())) {
                 issues.add(PublishCheckIssue.error(CODE_CHAPTER_BLOCKS_INVALID, null,
                         "章节故事流配置不合法:" + error.getMessage()));
@@ -167,10 +171,15 @@ public class TopicPublishCheckService {
         for (Map.Entry<String, Set<String>> entry : refs.positionsByKey().entrySet()) {
             // tag.* 在正式发布时自动注册(CmsTopicServiceImpl#autoRegisterOptionTags),试检查不再报它
             // 数值规则的力竭标记不在自动注册之列(它有语义,要作者显式登记),仍要报
+            boolean runtimeReference = refs.getThemeRuntimeKeys().contains(entry.getKey());
+            // Runtime references are not inputs to the existing automatic option-tag registration.
+            boolean existingAutoTagSource = firstNodeByKey.containsKey(entry.getKey())
+                    || refs.getStoryKeys().contains(entry.getKey()) || refs.getChapterKeys().contains(entry.getKey());
             if (registered.contains(entry.getKey())
-                    || (entry.getKey().startsWith("tag.") && !entry.getKey().equals(refs.getExhaustTag()))
+                    || (entry.getKey().startsWith("tag.") && !entry.getKey().equals(refs.getExhaustTag())
+                    && (!runtimeReference || existingAutoTagSource))
                     // 普通节点集合混合了读写引用，不豁免；仅故事/章节条件可读本主题念头完成标签。
-                    || (!firstNodeByKey.containsKey(entry.getKey()) && !entry.getKey().equals(refs.getExhaustTag())
+                    || (!runtimeReference && !firstNodeByKey.containsKey(entry.getKey()) && !entry.getKey().equals(refs.getExhaustTag())
                     && thoughtDoneTags.contains(entry.getKey()))) {
                 continue;
             }

@@ -39,6 +39,14 @@
         order by id desc
     </select>
     <select id="countRuns" resultType="int">select count(*) from topic_route_session where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId}</select>
+    <select id="selectCurrentByOwnerForUpdate" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId} order by id desc limit 1 for update
+    </select>
+    <select id="selectByOwnerForUpdate" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session
+        where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId} and play_instance_id=#{playInstanceId} limit 1 for update
+    </select>
     <select id="selectCurrentByOwner" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session
         where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId} order by id desc limit 1
@@ -58,10 +66,10 @@
         where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId}
           and play_instance_id=#{playInstanceId} limit 1
     </select>
-    <!-- 最多两行即可判断旧请求能否唯一定位默认实例。 -->
+    <!-- 最多两行即可判断未传场次的请求能否唯一定位本人的主题局。 -->
     <select id="selectMemberTopicSessions" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session
-        where member_id = #{memberId} and topic_id = #{topicId} and play_instance_id = 'default'
+        where member_id = #{memberId} and topic_id = #{topicId}
         order by id limit 2
     </select>
     <select id="selectAccessibleByIdForUpdate" resultMap="RouteSession">
@@ -70,9 +78,24 @@
     <select id="selectAccessibleById" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1
     </select>
+    <!-- At most default + latest per exact scope; Java owns theme-vs-legacy selection. -->
+    <select id="selectCurrentCandidatesByOwners" resultMap="RouteSession" flushCache="true" useCache="false">
+        select <include refid="sessionColumns"/> from topic_route_session r
+        where (r.play_instance_id='default' or r.id=(select max(newer.id) from topic_route_session newer
+            where newer.activity_id=r.activity_id and newer.topic_id=r.topic_id and newer.member_id=r.member_id))
+        <choose>
+            <when test="scopes != null and scopes.size() > 0">
+                and <foreach collection="scopes" item="scope" open="(" separator=" or " close=")">
+                    (r.activity_id=#{scope.activityId} and r.topic_id=#{scope.topicId} and r.member_id=#{scope.memberId})
+                </foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        order by r.member_id,r.topic_id,r.activity_id,r.id
+    </select>
     <select id="selectByOwners" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session
-        where id in (select max(id) from topic_route_session group by activity_id,topic_id,member_id)
+        where play_instance_id='default'
         <choose>
             <when test="scopes != null and scopes.size() > 0">
                 and <foreach collection="scopes" item="scope" open="(" separator=" or " close=")">
