@@ -269,10 +269,12 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         if (activities == null || activities.isEmpty()) {
             throw new IllegalStateException("SALE_TICKET_PROJECTION_MISSING");
         }
-        List<OmsTicket> source = new ArrayList<OmsTicket>(topicTickets);
-        source.sort(Comparator.comparing(this::ticketProjectionKey));
         for (CmsActivity activity : activities) {
             if (activity == null) throw new IllegalStateException("SALE_TICKET_PROJECTION_MISSING");
+            // 期望投影按复制同一口径算场次窗口：俱乐部开团用本场时间，其余沿用主题票时间。
+            List<OmsTicket> source = new ArrayList<OmsTicket>();
+            for (OmsTicket ticket : topicTickets) source.add(expectedProjection(ticket, activity));
+            source.sort(Comparator.comparing(this::ticketProjectionKey));
             OmsTicket activityQuery = new OmsTicket();
             activityQuery.setOwnerType(2L);
             activityQuery.setOwnerId(activity.getId());
@@ -284,6 +286,14 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
             projected.sort(Comparator.comparing(this::ticketProjectionKey));
             for (int i = 0; i < source.size(); i++) assertTicketProjection(source.get(i), projected.get(i));
         }
+    }
+
+    private static OmsTicket expectedProjection(OmsTicket source, CmsActivity activity) {
+        OmsTicket expected = new OmsTicket();
+        org.springframework.beans.BeanUtils.copyProperties(source, expected);
+        expected.setStartTime(OmsTicketServiceImpl.projectedStartTime(source, activity));
+        expected.setEndTime(OmsTicketServiceImpl.projectedEndTime(source, activity));
+        return expected;
     }
 
     private String ticketProjectionKey(OmsTicket ticket) {
