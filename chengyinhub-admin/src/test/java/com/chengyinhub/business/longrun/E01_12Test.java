@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.dto.ClubEventSeriesRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
@@ -18,6 +19,9 @@ import com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl;
 import com.chengyinhub.business.service.impl.ClubEventScheduleMaterializer;
 import com.chengyinhub.business.service.impl.ClubSessionServiceImpl;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.business.service.support.ActivityReviewPolicy;
+import com.chengyinhub.system.service.ISysConfigService;
+import org.springframework.test.util.ReflectionTestUtils;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,9 +66,16 @@ class E01_12Test {
         topic.setId(TOPIC);
         topic.setClubId(CLUB);
         topic.setDelFlag(0);
+        topic.setStatus(1);
+        topic.setUserStatus(1);
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        IContentSafetyGate gate = mock(IContentSafetyGate.class);
+        when(gate.decide(any())).thenReturn(SafetyDecision.pass());
+        ActivityReviewPolicy policy = new ActivityReviewPolicy();
+        ReflectionTestUtils.setField(policy, "configService", mock(ISysConfigService.class));
         ClubSessionServiceImpl realOpen = new ClubSessionServiceImpl(clubs, topics, activities,
-                tickets, mock(CoopOrderMapper.class), mock(SettlementDebtLedger.class));
+                tickets, mock(CoopOrderMapper.class), mock(SettlementDebtLedger.class),
+                gate, policy, mock(IAuditTaskService.class), mock(IUmsMemberService.class));
         IClubAccessService access = mock(IClubAccessService.class);
         when(access.require(eq(OWNER), eq(CLUB), isNull(), anyString())).thenReturn(
                 new ClubAccessContext(OWNER, CLUB, OWNER, null, Collections.singleton(ClubRoleCode.CLUB_OWNER)));
