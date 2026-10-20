@@ -1101187,7 +1101187,128 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:109:catchtap:onCardTap:8",
+      "id": "subpackageB/pages/im/chat/index.wxml:100:bindtap:onCardTap:7",
+      "route": "subpackageB/pages/im/chat/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageB/pages/im/chat/index.wxml",
+        "js": "subpackageB/pages/im/chat/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-card",
+        "event": "bindtap",
+        "handler": "onCardTap",
+        "line": 100,
+        "selectorHint": ".card",
+        "visibleCondition": "{{item.msgType == 3}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.card.title || '查看卡片详情'}}",
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/audit/{param}/detail",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/official/broadcast/{param}/click",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/audit/{param}/detail",
+          "/api/config/features",
+          "/api/official/broadcast/{param}/click"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/audit/{param}/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/broadcast/{param}/click",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/official/broadcast/{param}/click"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/chat/index.js:842"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/chat/index.wxml:110:catchtap:onCardTap:8",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101210,7 +1101331,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardTap",
-        "line": 109,
+        "line": 110,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101308,7 +1101429,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:115:catchtap:onCardBtn:9",
+      "id": "subpackageB/pages/im/chat/index.wxml:116:catchtap:onCardBtn:9",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101331,7 +1101452,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardBtn",
-        "line": 115,
+        "line": 116,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101376,7 +1101497,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:118:catchtap:onCardTap:10",
+      "id": "subpackageB/pages/im/chat/index.wxml:119:catchtap:onCardTap:10",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101399,7 +1101520,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardTap",
-        "line": 118,
+        "line": 119,
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101497,7 +1101618,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:132:catchtap:onResend:11",
+      "id": "subpackageB/pages/im/chat/index.wxml:133:catchtap:onResend:11",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101520,7 +1101641,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 132,
+        "line": 133,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1101614,7 +1101735,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:150:catchtap:onResend:12",
+      "id": "subpackageB/pages/im/chat/index.wxml:151:catchtap:onResend:12",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101637,7 +1101758,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 150,
+        "line": 151,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1101731,7 +1101852,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:171:bindtap:onPlus:13",
+      "id": "subpackageB/pages/im/chat/index.wxml:172:bindtap:onPlus:13",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101754,7 +1101875,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlus",
-        "line": 171,
+        "line": 172,
         "selectorHint": ".plus",
         "visibleCondition": "{{!disabled}}",
         "disabledCondition": null,
@@ -1101798,7 +1101919,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:174:bindconfirm:onSend:15",
+      "id": "subpackageB/pages/im/chat/index.wxml:175:bindconfirm:onSend:15",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101821,7 +1101942,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 174,
+        "line": 175,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1101915,7 +1102036,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:174:bindinput:onInput:14",
+      "id": "subpackageB/pages/im/chat/index.wxml:175:bindinput:onInput:14",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1101938,7 +1102059,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 174,
+        "line": 175,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1101982,7 +1102103,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:175:bindtap:onSend:16",
+      "id": "subpackageB/pages/im/chat/index.wxml:176:bindtap:onSend:16",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102005,7 +1102126,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 175,
+        "line": 176,
         "selectorHint": ".send-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102099,7 +1102220,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:185:bind:close:closeReviewResult:17",
+      "id": "subpackageB/pages/im/chat/index.wxml:186:bind:close:closeReviewResult:17",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102122,7 +1102243,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeReviewResult",
-        "line": 185,
+        "line": 186,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102166,7 +1102287,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:194:bind:action:retryReviewDetail:18",
+      "id": "subpackageB/pages/im/chat/index.wxml:195:bind:action:retryReviewDetail:18",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102189,7 +1102310,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryReviewDetail",
-        "line": 194,
+        "line": 195,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{reviewDetail && reviewDetail.state === 'error'}}",
         "disabledCondition": null,
@@ -1102275,7 +1102396,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:203:bind:close:closeRoutePicker:19",
+      "id": "subpackageB/pages/im/chat/index.wxml:204:bind:close:closeRoutePicker:19",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102298,7 +1102419,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRoutePicker",
-        "line": 203,
+        "line": 204,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102342,7 +1102463,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:204:bind:input:onRouteSearch:20",
+      "id": "subpackageB/pages/im/chat/index.wxml:205:bind:input:onRouteSearch:20",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102365,7 +1102486,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onRouteSearch",
-        "line": 204,
+        "line": 205,
         "selectorHint": "cy-search[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102451,7 +1102572,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:211:bindtap:onRoutePick:22",
+      "id": "subpackageB/pages/im/chat/index.wxml:212:bindtap:onRoutePick:22",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102474,7 +1102595,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRoutePick",
-        "line": 211,
+        "line": 212,
         "selectorHint": ".route-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102568,7 +1102689,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:222:bind:cancel:onPlusCancel:24",
+      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:cancel:onPlusCancel:24",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102591,7 +1102712,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onPlusCancel",
-        "line": 222,
+        "line": 223,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102635,7 +1102756,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:222:bind:select:onPlusSelect:23",
+      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:select:onPlusSelect:23",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102665,7 +1102786,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onPlusSelect",
-        "line": 222,
+        "line": 223,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102807,7 +1102928,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:224:bind:cancel:onMoreCancel:26",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:cancel:onMoreCancel:26",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102830,7 +1102951,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onMoreCancel",
-        "line": 224,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102874,7 +1102995,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:224:bind:select:onMoreSelect:25:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102905,7 +1103026,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 224,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1102963,7 +1103084,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:224:bind:select:onMoreSelect:25:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1102994,7 +1103115,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 224,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103038,7 +1103159,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:224:bind:select:onMoreSelect:25:variant:report",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:report",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103069,7 +1103190,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 224,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103132,7 +1103253,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:224:bind:select:onMoreSelect:25:variant:unblock",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:unblock",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103185,7 +1103306,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 224,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103276,7 +1103397,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:close:onReportClose:27",
+      "id": "subpackageB/pages/im/chat/index.wxml:226:bind:close:onReportClose:27",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103299,7 +1103420,7 @@
         "tag": "cy-report-sheet",
         "event": "bind:close",
         "handler": "onReportClose",
-        "line": 225,
+        "line": 226,
         "selectorHint": "cy-report-sheet[bind:close]",
         "visibleCondition": "{{!readOnly}}",
         "disabledCondition": null,
@@ -1103343,7 +1103464,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:227:bind:settled:onPrivacyGateSettled:28",
+      "id": "subpackageB/pages/im/chat/index.wxml:228:bind:settled:onPrivacyGateSettled:28",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103366,7 +1103487,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 227,
+        "line": 228,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103410,7 +1103531,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:cancel:onDangerCancel:30",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:cancel:onDangerCancel:30",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103433,7 +1103554,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 229,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103478,7 +1103599,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:confirm:onDangerConfirm:29:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103513,7 +1103634,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 229,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103579,7 +1103700,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:confirm:onDangerConfirm:29:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103614,7 +1103735,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 229,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103680,7 +1103801,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:done:onDangerCancel:31",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:done:onDangerCancel:31",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103703,7 +1103824,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 229,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1103748,7 +1103869,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:27:bindtap:loadMore:2",
+      "id": "subpackageB/pages/im/chat/index.wxml:28:bindtap:loadMore:2",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103771,7 +1103892,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 27,
+        "line": 28,
         "selectorHint": ".load-more",
         "visibleCondition": "{{hasMore}}",
         "disabledCondition": null,
@@ -1103865,7 +1103986,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:32:bind:cta:returnToMessageList:3",
+      "id": "subpackageB/pages/im/chat/index.wxml:33:bind:cta:returnToMessageList:3",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103888,7 +1104009,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "returnToMessageList",
-        "line": 32,
+        "line": 33,
         "selectorHint": ".chat-empty",
         "visibleCondition": "{{loadState === 'closed'}}",
         "disabledCondition": null,
@@ -1103935,7 +1104056,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:48:catchtap:onLocationTap:5",
+      "id": "subpackageB/pages/im/chat/index.wxml:49:catchtap:onLocationTap:5",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1103958,7 +1104079,7 @@
         "tag": "cy-card",
         "event": "catchtap",
         "handler": "onLocationTap",
-        "line": 48,
+        "line": 49,
         "selectorHint": ".rcard",
         "visibleCondition": "{{item.card.cardType === 'location'}}",
         "disabledCondition": null,
@@ -1104012,7 +1104133,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:62:catchtap:onRouteTap:6",
+      "id": "subpackageB/pages/im/chat/index.wxml:63:catchtap:onRouteTap:6",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1104035,7 +1104156,7 @@
         "tag": "cy-card",
         "event": "catchtap",
         "handler": "onRouteTap",
-        "line": 62,
+        "line": 63,
         "selectorHint": ".rcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1104157,127 +1104278,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageB/pages/im/chat/index.js:619"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/chat/index.wxml:99:bindtap:onCardTap:7",
-      "route": "subpackageB/pages/im/chat/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/chat/index.wxml",
-        "js": "subpackageB/pages/im/chat/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-card",
-        "event": "bindtap",
-        "handler": "onCardTap",
-        "line": 99,
-        "selectorHint": ".card",
-        "visibleCondition": "{{item.msgType == 3}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item.card.title || '查看卡片详情'}}",
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/audit/{param}/detail",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/official/broadcast/{param}/click",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/audit/{param}/detail",
-          "/api/config/features",
-          "/api/official/broadcast/{param}/click"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/audit/{param}/detail",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/official/broadcast/{param}/click",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/official/broadcast/{param}/click"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:842"
       }
     },
     {

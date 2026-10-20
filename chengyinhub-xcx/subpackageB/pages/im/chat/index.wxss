@@ -46,6 +46,7 @@ page { background: var(--cy-bg-page); }
 
 /* 消息流 */
 .msgs { position: fixed; left: 0; right: 0; }
+.msgs-top { height: var(--cy-space-3); } /* 第一条消息与顶部会话栏之间留一档,不再贴着 */
 .load-more { min-height: 88rpx; display: flex; align-items: center; justify-content: center; padding: 0; color: var(--cy-color-status-info); font-size: var(--cy-font-label); }
 .load-more-error { display: block; margin: var(--cy-space-2) var(--cy-page-x); }
 .time-div { text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-label); margin: 24rpx 0 var(--cy-space-1-5); }

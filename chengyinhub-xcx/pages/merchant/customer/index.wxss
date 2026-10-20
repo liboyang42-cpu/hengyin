@@ -10,7 +10,7 @@
 }
 
 .cu-head {
-  padding: 0 var(--cy-page-x);
+  padding: 0 0;
 }
 
 /* Figma 23:195：导航只负责返回；页面标题与真实客户总数独立成 Hero。 */

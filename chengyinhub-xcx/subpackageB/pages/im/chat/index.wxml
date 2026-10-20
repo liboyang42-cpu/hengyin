@@ -20,6 +20,7 @@
   <scroll-view class="msgs" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{toView}}" scroll-with-animation
                style="top: {{headerH + heroH}}px; bottom: {{inputH}}px;">
+    <view class="msgs-top" aria-hidden="true"></view>
     <cy-inline-error load-failure wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
                      title="更早消息没有加载" sub="{{loadMoreError}}" action="重试"
                      bind:action="retryLoadMore" />

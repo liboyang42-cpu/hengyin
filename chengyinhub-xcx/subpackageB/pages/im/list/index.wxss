@@ -33,7 +33,7 @@ page { background: var(--cy-bg-page); }
    按钮全出血参照)——若 .body 两侧都留白,.conv-actions 的 right:0 只能到「留白内侧」,到不了真边缘。 */
 .body {
   width: 100%;
-  padding: 0 0 0 var(--cy-page-x);
+  padding: 0; /* 2026-10-20 左页边距改由 .conv 自己承担:行底色左右对称铺满,左滑按钮仍顶到右边缘 */
   box-sizing: border-box;
 }
 
@@ -46,13 +46,13 @@ page { background: var(--cy-bg-page); }
   /* 行内 padding:上下从 var(--cy-legacy-22) 提到 32rpx(=var(--cy-space-4),8rpx 网格对齐)替代原分隔线的视觉分组作用;
      右侧新增 var(--cy-page-x),补回 .body 不再兜底的右页边距(见 .body 注释),左侧仍由 .body 左 padding
      承担,净视觉位置与改前一致。 */
-  padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-4) 0;
+  padding: var(--cy-space-4) var(--cy-page-x);
   background: var(--cy-bg-card);
   transition: transform var(--cy-motion-standard) var(--cy-ease);
 }
 .conv.is-dragging { transition: none; } /* 拖拽中关掉缓动,避免每帧 setData 被补间追手指(P1-2) */
 .conv.is-sys {
-  padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-4) 0;
+  padding: var(--cy-space-4) var(--cy-page-x);
 }
 .avatar { flex-shrink: 0; margin-right: var(--cy-legacy-22); }
 /* 头像直径 92rpx→112rpx:量自 Airbnb 210.png 头像整体(照片+人像圆图叠加)外框宽 168px=56pt=112rpx;
@@ -141,8 +141,8 @@ page { background: var(--cy-bg-page); }
 }
 
 /* 系统 tab「举报进度」:与系统会话行同一视觉(铃铛圆头像 + 标题/时间 + 副行),左右走页边距。 */
-.report-notices { display: flex; flex-direction: column; padding: 0 0 0 var(--cy-page-x); }
-.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-4) 0; background: var(--cy-bg-card); }
+.report-notices { display: flex; flex-direction: column; padding: 0; }
+.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) var(--cy-page-x); background: var(--cy-bg-card); }
 .report-notice .sys-avatar { flex-shrink: 0; }
 .report-notice__body { flex: 1; min-width: 0; overflow: hidden; }
 .report-notice__top { display: flex; align-items: baseline; min-width: 0; gap: var(--cy-space-2); }

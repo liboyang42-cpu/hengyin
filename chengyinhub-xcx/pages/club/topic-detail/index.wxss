@@ -231,7 +231,7 @@
 .ctd-chrome-clear { padding-top: var(--cy-safe-top); }
 
 /* ——— Figma J4 主题设置 / J3 招商台(两张弹层共用行样式)——— */
-.tset { padding: 8rpx var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom)); }
+.tset { padding: 8rpx 0 24rpx; /* cy-scene-sheet 正文已带页边距与底部安全区 */ }
 .tset-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16rpx; padding: 8rpx 0 16rpx; }
 .tset-name { font-size: var(--cy-font-subtitle); font-weight: 700; }
 .tset-stage { color: var(--cy-color-status-success); font-size: var(--cy-font-caption); }

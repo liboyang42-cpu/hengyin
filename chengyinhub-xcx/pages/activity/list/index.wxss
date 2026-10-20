@@ -8,10 +8,10 @@
 
 /* 筛选头吸顶(top 由 wxml 内联 = 状态栏+导航高):等价旧版滚动区外的常驻 search/tabs */
 .oe-screen{position:sticky;z-index:10;background:var(--cy-color-bg-page);padding:var(--cy-space-2) var(--cy-page-x) 0;}
-.oe-summary-row{display:flex;align-items:center;justify-content:space-between;gap:var(--cy-space-2);}
+.oe-summary-row{display:flex;align-items:center;justify-content:space-between;gap:var(--cy-space-2);margin-bottom:var(--cy-space-1);}
 /* 右侧次级管理入口成组:「我发布的」与「邀约」同一视觉语汇,不再各自为政。
    gap 收到 space-1:管理入口自带 space-2 横向内距,两者相加 ≈ 原来的 space-3 视觉间距。 */
-.oe-row-links{flex:0 0 auto;display:flex;align-items:center;gap:var(--cy-space-1);}
+.oe-row-links{flex:0 0 auto;display:flex;align-items:center;gap:var(--cy-space-1);margin-right:calc(var(--cy-space-2) * -1);} /* 链接自带 space-2 命中内距:负外边距让文字贴回页边距,命中区不变 */
 .oe-inbox-link{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:var(--cy-space-1);
   box-sizing:border-box;min-height:88rpx;min-width:88rpx;padding:0 var(--cy-space-2);
   font-size:var(--cy-type-caption);color:var(--cy-color-text-primary);}
@@ -24,7 +24,7 @@
   font-size:var(--cy-type-caption);color:var(--cy-color-text-primary);}
 .oe-tabs{padding:var(--cy-space-3) 0 var(--cy-space-2);}
 /* tab 走 cy-tabs 组件 variant=chip(ccc 标准落在既有组件里,不新造样式) */
-.oe-summary{font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary);padding:0 0 var(--cy-space-2);}
+.oe-summary{font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary);} /* 与右侧链接同一行垂直居中 */
 .oe-sync{display:block;padding:var(--cy-space-2) var(--cy-page-x) 0;color:var(--cy-color-text-secondary);font-size:var(--cy-type-caption);}
 
 .oe-list{padding:var(--cy-space-2) var(--cy-page-x) 0;}
