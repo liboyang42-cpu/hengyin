@@ -399,6 +399,45 @@ class CommunityPostMapperMyBatisTest {
                 (rs, row) -> java.util.Arrays.asList(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getInt(4))));
     }
 
+    /** AUDIT-G3-5/6:处置行回指举报单/评论只写一次;已关联的行不会被另一个举报改写。 */
+    @Test
+    void linkEnforcementWritesReportAndCommentOnce() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        jdbc.update("insert into community_post_enforcement(id,post_id,target_member_id,enforcement_type,rule_code,guideline_version_id,reason_code,evidence_snapshot_json,status,version,create_time,update_time) values (5,null,12,'REMOVE','R5',1,'reason','{}','ACTIVE',0,now(),now())");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.linkEnforcement(5L, 88L, 55L));
+            assertEquals(0, mapper.linkEnforcement(5L, 99L, null));
+            assertEquals(Long.valueOf(55L), mapper.selectEnforcement(5L).get("comment_id"));
+        }
+        assertEquals(java.util.Arrays.asList(88L, 55L), jdbc.queryForObject(
+                "select report_case_id,comment_id from community_post_enforcement where id=5",
+                (rs, row) -> java.util.Arrays.asList(rs.getLong(1), rs.getLong(2))));
+    }
+
+    /** AUDIT-G3-1:待审被驳回的帖子申诉撤销后恢复 PUBLISHED,补上 published_at;已有的发布时间不被改写。 */
+    @Test
+    void reconcileToPublishedFillsMissingPublishedAtOnly() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "REMOVED", "PUBLIC", "SH", 0, 0, "never published");
+        post(jdbc, 2, 11, "REMOVED", "PUBLIC", "SH", 0, 0, "published before");
+        jdbc.update("update community_post set published_at=null where id=1");
+        jdbc.update("update community_post set published_at=timestamp '2026-01-01 00:00:00' where id=2");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.reconcilePostEnforcementCas(1L, 0, "PUBLISHED", 1, 1, 1, new java.util.Date()));
+            assertEquals(1, mapper.reconcilePostEnforcementCas(2L, 0, "PUBLISHED", 1, 1, 1, new java.util.Date()));
+        }
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from community_post where id=1 and published_at is not null", Integer.class));
+        assertEquals("2026-01-01", jdbc.queryForObject(
+                "select cast(cast(published_at as date) as varchar) from community_post where id=2", String.class));
+    }
+
     @Test
     void checkingEditRetainsOwnerVersionAndRemovedDeletedGuards() throws Exception {
         DriverManagerDataSource ds = dataSource();
@@ -552,7 +591,7 @@ class CommunityPostMapperMyBatisTest {
         jdbc.execute("create table community_post_topic(post_id bigint,topic_code varchar(64))");
         jdbc.execute("create table community_featured_entry(post_id bigint,collection_code varchar(64),starts_at timestamp,ends_at timestamp)");
         jdbc.execute("create table community_search_document(document_type varchar(16),document_id bigint,visibility_state varchar(16),search_text varchar(255))");
-        jdbc.execute("create table community_post_enforcement(id bigint primary key,post_id bigint,target_member_id bigint,enforcement_type varchar(32),rule_code varchar(64),guideline_version_id bigint,reason_code varchar(64),previous_lifecycle varchar(16),evidence_snapshot_json varchar(255),operator_user_id bigint,starts_at timestamp,ends_at timestamp,status varchar(16),version int,create_time timestamp,update_time timestamp,constraint chk_community_enforcement_target check (post_id is not null or target_member_id is not null))");
+        jdbc.execute("create table community_post_enforcement(id bigint primary key,post_id bigint,target_member_id bigint,enforcement_type varchar(32),rule_code varchar(64),guideline_version_id bigint,reason_code varchar(64),previous_lifecycle varchar(16),evidence_snapshot_json varchar(255),operator_user_id bigint,starts_at timestamp,ends_at timestamp,status varchar(16),version int,create_time timestamp,update_time timestamp,report_case_id bigint,comment_id bigint,constraint chk_community_enforcement_target check (post_id is not null or target_member_id is not null))");
         jdbc.execute("create table community_post_appeal(id bigint primary key,enforcement_id bigint,appellant_member_id bigint,request_id varchar(96) not null,reason varchar(255),evidence_asset_ids_json varchar(255),status varchar(16),decision_reason varchar(255),reviewed_at timestamp,create_time timestamp,update_time timestamp,unique(appellant_member_id,request_id))");
         jdbc.execute("create table community_post_comment(id bigint primary key,post_id bigint,author_id bigint,root_id bigint,parent_id bigint,replied_to_member_id bigint,body varchar(100),lifecycle varchar(16),author_approval_state varchar(16),version int,like_count int,create_time timestamp)");
         jdbc.execute("create table community_post_comment_action(comment_id bigint,member_id bigint,action_type varchar(32),request_id varchar(96),create_time timestamp)");
