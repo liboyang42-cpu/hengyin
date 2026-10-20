@@ -1097,6 +1097,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and coalesce(user_status, 0) = #{expected} and del_flag = 0
         <if test="target == 1">
             and status = 1 and is_draft = 0
+            <!-- AUDIT-G2-1:内容安全下架留置(check_status=2)中不得自助上架,须人工复核 -->
+            and coalesce(check_status, 0) &lt;&gt; 2
         </if>
     </update>
 

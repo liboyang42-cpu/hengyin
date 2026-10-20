@@ -223,6 +223,49 @@ class CmsTopicPublishDraftTest {
                 eq(2L), nullable(String.class), any(java.util.Date.class));
     }
 
+    // ---------- AUDIT-G2-1:内容安全下架留置中的主题,发布/重发都不得直接回到在架 ----------
+
+    @Test
+    void heldDraftSimple_staysOfflineAndRequestsHumanReview() {
+        when(cmsTopicMapper.clearDraftIfDraft(1L)).thenReturn(1);
+        when(cmsTopicMapper.publishRouteSnapshot(eq(1L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(1L); t.setPublishMode("simple"); t.setMemberId(100L);
+        t.setName("夜跑"); t.setImgUrl("media-asset:901");
+        t.setStatus(0); t.setUserStatus(0); t.setCheckStatus(2);
+        t.setReason(com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+        when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+
+        svc.publishDraft(1L);
+
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicMapper, org.mockito.Mockito.atLeast(0)).updateCmsTopic(cap.capture());
+        for (CmsTopic patch : cap.getAllValues()) {
+            assertTrue(!Integer.valueOf(1).equals(patch.getUserStatus()), "留置中不得上架");
+            assertTrue(patch.getCheckStatus() == null || patch.getCheckStatus() == 2, "留置只能由人工复核清掉");
+        }
+        verify(auditTaskService).submit(eq("TOPIC"), eq(1L), eq(100L),
+                eq(com.chengyinhub.business.util.TopicContentSafetyHold.SOURCE_RELIST), anyString());
+    }
+
+    @Test
+    void heldDraftPro_keepsBundleReviewButDoesNotGoOnline() {
+        when(cmsTopicMapper.clearDraftIfDraft(2L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(2L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+        t.setStatus(1); t.setUserStatus(0); t.setCheckStatus(2);
+        when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(t);
+        com.chengyinhub.business.domain.AuditTask open = new com.chengyinhub.business.domain.AuditTask();
+        open.setId(901L); open.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+        when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
+
+        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result = svc.publishDraftWithReview(2L);
+
+        verify(auditTaskService).submitOrRefreshTopicBundle(eq(2L), eq(100L), anyString());
+        verify(cmsTopicMapper, never()).updateCmsTopic(any());
+        assertTrue(!result.isPublished(), "留置中:组合审核照提,但不报「已发布」");
+    }
+
     @Test
     void directPublicationStillEnforcesOnlineQuota() {
         when(cmsTopicMapper.clearDraftIfDraft(2L)).thenReturn(1);

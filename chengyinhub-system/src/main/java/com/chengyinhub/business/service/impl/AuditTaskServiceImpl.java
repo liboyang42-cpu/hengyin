@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.util.TopicContentSafetyHold;
 
 import com.chengyinhub.business.domain.AuditRecord;
 import com.chengyinhub.business.domain.AuditTask;
@@ -305,7 +306,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         AuditTask open = auditTaskMapper.selectOpenAuditTaskForUpdate(AuditTask.BIZ_TOPIC, topicId);
         // 先发后审的抽检单(post_review_flag)不是组合审核:不锁编辑、不挡简易版;
         // 若之后提交组合审核,由 submitOrRefresh 把这张单原地升级为 topic_bundle_v2。
-        if (open != null && SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())) return false;
+        if (open != null && (SOURCE_POST_REVIEW_FLAG.equals(open.getSourceType())
+                || TopicContentSafetyHold.SOURCE_RELIST.equals(open.getSourceType()))) return false;
         if (open != null) requireRefreshableTask(open, "topic_bundle_v2");
         return open != null;
     }
@@ -316,7 +318,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private void requireRefreshableTask(AuditTask task, String sourceType) {
         boolean legacyTopicTask = "topic_bundle_v2".equals(sourceType)
                 && ("user_publish".equals(task.getSourceType()) || "user_republish".equals(task.getSourceType())
-                        || SOURCE_POST_REVIEW_FLAG.equals(task.getSourceType()));
+                        || SOURCE_POST_REVIEW_FLAG.equals(task.getSourceType())
+                        || TopicContentSafetyHold.SOURCE_RELIST.equals(task.getSourceType()));
         if (!sourceType.equals(task.getSourceType()) && !legacyTopicTask) {
             throw new IllegalStateException("存在其他开放审核任务，请先处理后再提交");
         }
@@ -1086,8 +1089,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     String onlineErr = quotaErr != null ? quotaErr : supplyErr;
                     boolean alreadyPublished = exist != null && Integer.valueOf(1).equals(exist.getStatus())
                             && exist.getPublishedConfigVersion() != null && exist.getPublishedConfigVersion() > 0L;
+                    // AUDIT-G2-1:内容安全下架留置中的主题,人工过审即解除留置并恢复在架(作者此前被拒的自助上架)。
+                    boolean releasingHold = TopicContentSafetyHold.isHeld(exist);
                     boolean online = onlineErr == null
-                            && (!alreadyPublished || Integer.valueOf(1).equals(exist.getUserStatus()));
+                            && (!alreadyPublished || Integer.valueOf(1).equals(exist.getUserStatus()) || releasingHold);
                     if (onlineErr != null) {
                         // 配额满:审核结论照旧生效,但不自动上架;主人稍后走自助上架(同一把锁)
                         logger.warn("审核过审但未自动上架 topicId={} memberId={}: {}", bizId, ownerId, onlineErr);

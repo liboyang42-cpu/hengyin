@@ -1115,6 +1115,17 @@ public class ApiTopicController extends BaseController {
         }
         Integer casExpected = expected != null ? expected : current;
         int target = casExpected == 1 ? 0 : 1;
+        // AUDIT-G2-1:内容安全图片回调下架的主题(留置中)不能由作者直接翻回上架 ——
+        // 改为提交人工复核,复核通过由审核台恢复在架。下架方向不受影响。
+        if (target == 1 && com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(cmsTopic)) {
+            try {
+                cmsTopicService.requestContentSafetyRelistReview(cid, cmsTopic.getMemberId());
+            } catch (Exception e) {
+                logger.error("内容安全下架主题复核单提交失败 topicId={}", cid, e);
+                return error("主题因图片未通过内容安全检测已被下架，复核申请提交失败，请稍后重试");
+            }
+            return error(com.chengyinhub.business.util.TopicContentSafetyHold.RELIST_REFUSED);
+        }
 
         // 上架额度:目标为上架(0→1)时,锁会员 → 复查在架数 → 置上架,三步同事务原子完成,防并发绕过上限
         //(排除自身保证重复上架幂等);超限时 guard 抛 ServiceException,由全局异常处理转 error 文案。
