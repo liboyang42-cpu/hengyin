@@ -18,6 +18,7 @@ import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
 import com.chengyinhub.business.domain.dto.TopicSettlementDTO;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
@@ -5258,7 +5259,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         query.setTopicId(topicId);
         for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(query))) {
             if (chapter.getBlocksJson() != null && !chapter.getBlocksJson().trim().isEmpty()) {
-                throw new ChapterFlowValidationException("请更新小程序后编辑该主题");
+                throw new ChapterFlowClientUpgradeRequiredException("请更新小程序后编辑该主题");
             }
         }
     }
