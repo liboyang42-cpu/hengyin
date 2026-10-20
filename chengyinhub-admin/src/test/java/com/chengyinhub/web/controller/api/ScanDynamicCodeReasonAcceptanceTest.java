@@ -164,6 +164,8 @@ class ScanDynamicCodeReasonAcceptanceTest {
         CmsActivity act = new CmsActivity();
         act.setId(ACTIVITY);
         act.setTopicId(TOPIC);
+        // 移植分支探索票须有场次结束时间(ExploreTicketUsePolicy)，否则在核销前就被拒。
+        act.setEndDate(new java.util.Date(System.currentTimeMillis() + 30L * 24 * 3600 * 1000));
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(act);
         when(regSvc.redeemExploreChapterAndRecord(eq(reg), eq(CHAPTER), eq(TOPIC), eq(MERCHANT), eq(MERCHANT), any()))
                 .thenThrow(new IllegalStateException("该章节不可由您核销"));

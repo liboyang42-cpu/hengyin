@@ -94,6 +94,8 @@ class ExploreChapterScanReplayChapterNameTest {
         CmsActivity act = new CmsActivity();
         act.setId(ACTIVITY);
         act.setTopicId(TOPIC);
+        // 移植分支探索票须有场次结束时间(ExploreTicketUsePolicy)，否则在核销前就被拒。
+        act.setEndDate(new java.util.Date(System.currentTimeMillis() + 30L * 24 * 3600 * 1000));
         when(activitySvc.selectCmsActivityById(ACTIVITY)).thenReturn(act);
     }
 
