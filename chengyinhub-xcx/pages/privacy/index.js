@@ -17,7 +17,7 @@ Page({
     mediaPreviewUrl: '',
     mediaPreviewType: '',
 
-    serviceAgreed: false,
+    // 进入弹窗不再单独勾选服务协议:点「同意并继续」即同意一句话里的两份文件。
     showServiceSheet: false,
     submitError: '',
     failedAction: '',
@@ -251,7 +251,7 @@ Page({
     });
   },
 
-  toggleService(event) { this.setData({ serviceAgreed: !!event.detail.value.length }); },
+  // toggleService 已撤(勾选框随弹窗简化移除)。
   openService() { this.setData({ showServiceSheet: true }); },
   closeService() { this.setData({ showServiceSheet: false }); },
   openPrivacyContract() {
@@ -267,7 +267,7 @@ Page({
     this._lastPrivacyButtonId = event && event.detail && event.detail.buttonId;
     this.data.failedAction = '';
     this.setData({ submitting: true, submitError: '' });
-    app.agreeUsageConsent(event, this.data.serviceAgreed).then(() => {
+    app.agreeUsageConsent(event, true).then(() => {
       wx.navigateBack({
         fail() { wx.switchTab({ url: '/pages/index/index' }); },
       });

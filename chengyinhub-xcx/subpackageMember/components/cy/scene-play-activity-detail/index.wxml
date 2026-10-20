@@ -13,7 +13,7 @@
   <view class="cy-fade-in" wx:elif="{{state === 'ready'}}">
     <view class="activity-hero">
       <image wx:if="{{info.imgUrl}}" class="activity-hero__image" src="{{info.imgUrl}}" mode="aspectFill" />
-      <view wx:else class="activity-hero__fallback"><cy-icon name="image" size="48" /><text>封面待确认</text></view>
+      <view wx:else class="activity-hero__fallback"></view>
       <view class="activity-hero__shade"></view>
       <view class="activity-hero__copy">
         <cy-badge type="status" variant="{{statusVariant}}" label="{{statusText}}" />

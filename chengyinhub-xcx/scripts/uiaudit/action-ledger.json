@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4892,
+  "controlCount": 4891,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -244316,7 +244316,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:13:bindtap:openPrivacyContract:0",
+      "id": "components/cy/privacy-gate/index.wxml:12:bindtap:openPrivacyContract:1",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -244614,8 +244614,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPrivacyContract",
-        "line": 13,
-        "selectorHint": ".pg__link",
+        "line": 12,
+        "selectorHint": ".pg__lead-link",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "查看用户隐私保护指引",
@@ -244668,7 +244668,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:17:bindtap:openService:1",
+      "id": "components/cy/privacy-gate/index.wxml:12:bindtap:openService:0",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -244963,8 +244963,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openService",
-        "line": 17,
-        "selectorHint": "view[bindtap]",
+        "line": 12,
+        "selectorHint": ".pg__lead-link",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "阅读用户服务协议",
@@ -245007,346 +245007,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:18:bindchange:toggleService:2",
-      "route": "component:components/cy/privacy-gate/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/group-code/index",
-        "pages/coop/nearby/index",
-        "pages/index/index",
-        "pages/member/index/index",
-        "pages/merchant/apply/index",
-        "pages/merchant/citynode/create/index",
-        "pages/merchant/citynode/index",
-        "pages/merchant/decor/ai-npc/index",
-        "pages/merchant/decor/index",
-        "pages/merchant/game-node/index",
-        "pages/merchant/index/index",
-        "pages/play/index",
-        "pages/play/merchant/index",
-        "pages/publish/fabu/index",
-        "pages/roam/index",
-        "pages/searchmap/index",
-        "pages/shezhi/shezhi",
-        "pages/topic/merchantinfo/merchantinfo",
-        "pages/userinfo/userinfo",
-        "subpackageB/pages/im/chat/index",
-        "subpackageMember/mycanyu/mycanyu",
-        "subpackageMember/mycanyuinfo/mycanyuinfo",
-        "subpackageP3/pages/stamp-camera/index/index",
-        "subpackageRoam/citystamp/index",
-        "subpackageRoam/my-teams/index",
-        "subpackageRoam/session/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/group-code/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/coop/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/create/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/ai-npc/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/game-node/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/fabu/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/searchmap/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageB/pages/im/chat/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyu/mycanyu",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageP3/pages/stamp-camera/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/citystamp/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/my-teams/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/session/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/privacy-gate/index.wxml",
-        "js": "components/cy/privacy-gate/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "checkbox-group",
-        "event": "bindchange",
-        "handler": "toggleService",
-        "line": 18,
-        "selectorHint": "checkbox-group[bindchange]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:25"
-      }
-    },
-    {
-      "id": "components/cy/privacy-gate/index.wxml:20:bindtap:disagreePrivacy:3",
+      "id": "components/cy/privacy-gate/index.wxml:17:bindtap:disagreePrivacy:2",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -245641,7 +245302,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "disagreePrivacy",
-        "line": 20,
+        "line": 17,
         "selectorHint": ".pg__action",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -245719,7 +245380,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:21:bindagreeprivacyauthorization:agreePrivacy:4",
+      "id": "components/cy/privacy-gate/index.wxml:18:bindagreeprivacyauthorization:agreePrivacy:3",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -246014,16 +245675,16 @@
         "tag": "button",
         "event": "bindagreeprivacyauthorization",
         "handler": "agreePrivacy",
-        "line": 21,
+        "line": 18,
         "selectorHint": ".pg__agree",
         "visibleCondition": null,
-        "disabledCondition": "{{submitting || !serviceAgreed}}",
+        "disabledCondition": "{{submitting}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting || !serviceAgreed}}",
+        "ariaDisabledExpression": "{{submitting}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -246100,7 +245761,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:26:bind:close:closeService:5",
+      "id": "components/cy/privacy-gate/index.wxml:23:bind:close:closeService:4",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -246395,7 +246056,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeService",
-        "line": 26,
+        "line": 23,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730751,7 +730412,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1011:catchtap:onClubAiAdopt:139",
+      "id": "pages/club/detail/index.wxml:1009:catchtap:onClubAiAdopt:139",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730774,7 +730435,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiAdopt",
-        "line": 1011,
+        "line": 1009,
         "selectorHint": ".ai-plan-adopt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730822,7 +730483,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1019:bind:close:onCloseGroupCode:140",
+      "id": "pages/club/detail/index.wxml:1017:bind:close:onCloseGroupCode:140",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730845,7 +730506,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 1019,
+        "line": 1017,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730889,7 +730550,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1021:bindtap:onGroupCodeSelectActivity:141",
+      "id": "pages/club/detail/index.wxml:1019:bindtap:onGroupCodeSelectActivity:141",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730912,7 +730573,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onGroupCodeSelectActivity",
-        "line": 1021,
+        "line": 1019,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731001,7 +730662,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1025:bind:close:closeDirectorActivityPicker:142",
+      "id": "pages/club/detail/index.wxml:1023:bind:close:closeDirectorActivityPicker:142",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731024,7 +730685,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeDirectorActivityPicker",
-        "line": 1025,
+        "line": 1023,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731068,7 +730729,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1028:bindtap:onDirectorActivitySelect:143",
+      "id": "pages/club/detail/index.wxml:1026:bindtap:onDirectorActivitySelect:143",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731091,7 +730752,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onDirectorActivitySelect",
-        "line": 1028,
+        "line": 1026,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731139,7 +730800,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1032:bind:close:closeChoiceSheet:144",
+      "id": "pages/club/detail/index.wxml:1030:bind:close:closeChoiceSheet:144",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731162,7 +730823,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeChoiceSheet",
-        "line": 1032,
+        "line": 1030,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731206,7 +730867,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1035:bindtap:onChoiceSheetSelect:145",
+      "id": "pages/club/detail/index.wxml:1033:bindtap:onChoiceSheetSelect:145",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731229,7 +730890,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChoiceSheetSelect",
-        "line": 1035,
+        "line": 1033,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731273,7 +730934,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1051:bind:close:onCloseGroupCode:146",
+      "id": "pages/club/detail/index.wxml:1049:bind:close:onCloseGroupCode:146",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731296,7 +730957,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 1051,
+        "line": 1049,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -731340,7 +731001,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1052:bind:retry:onGroupCodeRetry:147",
+      "id": "pages/club/detail/index.wxml:1050:bind:retry:onGroupCodeRetry:147",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731363,7 +731024,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "onGroupCodeRetry",
-        "line": 1052,
+        "line": 1050,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -731460,7 +731121,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1063:bind:afterleave:onSceneNativeBackGuard:148",
+      "id": "pages/club/detail/index.wxml:1061:bind:afterleave:onSceneNativeBackGuard:148",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731483,7 +731144,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onSceneNativeBackGuard",
-        "line": 1063,
+        "line": 1061,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731527,7 +731188,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1065:catchtouchmove:blockSceneTouch:149",
+      "id": "pages/club/detail/index.wxml:1063:catchtouchmove:blockSceneTouch:149",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731550,7 +731211,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1065,
+        "line": 1063,
         "selectorHint": ".club-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'club-edit'}}",
         "disabledCondition": null,
@@ -731595,7 +731256,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1066:bind:back:requestSceneClose:151",
+      "id": "pages/club/detail/index.wxml:1064:bind:back:requestSceneClose:151",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731618,7 +731279,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "requestSceneClose",
-        "line": 1066,
+        "line": 1064,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731662,7 +731323,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1066:bind:requestclose:requestSceneClose:150",
+      "id": "pages/club/detail/index.wxml:1064:bind:requestclose:requestSceneClose:150",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731685,7 +731346,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 1066,
+        "line": 1064,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731729,7 +731390,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:back:closeScene:152",
+      "id": "pages/club/detail/index.wxml:1065:bind:back:closeScene:152",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731752,7 +731413,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 1067,
+        "line": 1065,
         "selectorHint": "cy-scene-club-edit[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731796,7 +731457,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:dirtychange:onSceneDirtyChange:156",
+      "id": "pages/club/detail/index.wxml:1065:bind:dirtychange:onSceneDirtyChange:156",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731819,7 +731480,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 1067,
+        "line": 1065,
         "selectorHint": "cy-scene-club-edit[bind:dirtychange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731863,7 +731524,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:dissolved:onClubDissolved:154",
+      "id": "pages/club/detail/index.wxml:1065:bind:dissolved:onClubDissolved:154",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731886,7 +731547,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:dissolved",
         "handler": "onClubDissolved",
-        "line": 1067,
+        "line": 1065,
         "selectorHint": "cy-scene-club-edit[bind:dissolved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731934,7 +731595,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:saved:onClubEdited:153",
+      "id": "pages/club/detail/index.wxml:1065:bind:saved:onClubEdited:153",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731957,7 +731618,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:saved",
         "handler": "onClubEdited",
-        "line": 1067,
+        "line": 1065,
         "selectorHint": "cy-scene-club-edit[bind:saved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732075,7 +731736,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:transferowner:goClubGovernance:155",
+      "id": "pages/club/detail/index.wxml:1065:bind:transferowner:goClubGovernance:155",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732098,7 +731759,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:transferowner",
         "handler": "goClubGovernance",
-        "line": 1067,
+        "line": 1065,
         "selectorHint": "cy-scene-club-edit[bind:transferowner]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732146,7 +731807,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:cancel:cancelSceneDiscard:158",
+      "id": "pages/club/detail/index.wxml:1068:bind:cancel:cancelSceneDiscard:158",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732169,7 +731830,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 1070,
+        "line": 1068,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732213,7 +731874,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:confirm:confirmSceneDiscard:157",
+      "id": "pages/club/detail/index.wxml:1068:bind:confirm:confirmSceneDiscard:157",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732236,7 +731897,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 1070,
+        "line": 1068,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732280,7 +731941,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1075:bind:settled:onPrivacyGateSettled:159",
+      "id": "pages/club/detail/index.wxml:1073:bind:settled:onPrivacyGateSettled:159",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732303,7 +731964,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 1075,
+        "line": 1073,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732347,7 +732008,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1078:bind:confirm:onConfirmDeletePost:160",
+      "id": "pages/club/detail/index.wxml:1076:bind:confirm:onConfirmDeletePost:160",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732370,7 +732031,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeletePost",
-        "line": 1078,
+        "line": 1076,
         "selectorHint": "#dcPost",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732467,7 +732128,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1079:bind:confirm:onConfirmDeleteComment:161",
+      "id": "pages/club/detail/index.wxml:1077:bind:confirm:onConfirmDeleteComment:161",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732490,7 +732151,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteComment",
-        "line": 1079,
+        "line": 1077,
         "selectorHint": "#dcComment",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732595,7 +732256,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1080:bind:alt:onQuitAlt:163",
+      "id": "pages/club/detail/index.wxml:1078:bind:alt:onQuitAlt:163",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732618,7 +732279,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onQuitAlt",
-        "line": 1080,
+        "line": 1078,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732663,7 +732324,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1080:bind:confirm:onConfirmQuit:162",
+      "id": "pages/club/detail/index.wxml:1078:bind:confirm:onConfirmQuit:162",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732686,7 +732347,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 1080,
+        "line": 1078,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732815,7 +732476,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1081:bind:confirm:onConfirmRemoveMember:164",
+      "id": "pages/club/detail/index.wxml:1079:bind:confirm:onConfirmRemoveMember:164",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732838,7 +732499,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmRemoveMember",
-        "line": 1081,
+        "line": 1079,
         "selectorHint": "#dcMember",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732965,7 +732626,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1084:bindtap:goClubCoop:165",
+      "id": "pages/club/detail/index.wxml:1082:bindtap:goClubCoop:165",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732988,7 +732649,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goClubCoop",
-        "line": 1084,
+        "line": 1082,
         "selectorHint": ".join-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733043,7 +732704,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1085:bind:close:closeCoopInvite:166",
+      "id": "pages/club/detail/index.wxml:1083:bind:close:closeCoopInvite:166",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -733066,7 +732727,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:close",
         "handler": "closeCoopInvite",
-        "line": 1085,
+        "line": 1083,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733110,7 +732771,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1085:bind:sent:onCoopInviteSent:167",
+      "id": "pages/club/detail/index.wxml:1083:bind:sent:onCoopInviteSent:167",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -733133,7 +732794,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:sent",
         "handler": "onCoopInviteSent",
-        "line": 1085,
+        "line": 1083,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -925210,7 +924871,87 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:10:bind:action:retrySubmit:2",
+      "id": "pages/privacy/index.wxml:13:bindtap:openPrivacyContract:3",
+      "route": "pages/privacy/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/privacy/index.wxml",
+        "js": "pages/privacy/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "openPrivacyContract",
+        "denied": "openPrivacyContract"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openPrivacyContract",
+        "line": 13,
+        "selectorHint": ".privacy-link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看用户隐私保护指引",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "openPrivacyContract"
+      ],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/privacy/index.js:257"
+      }
+    },
+    {
+      "id": "pages/privacy/index.wxml:15:bind:action:retrySubmit:4",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925236,7 +924977,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retrySubmit",
-        "line": 10,
+        "line": 15,
         "selectorHint": ".privacy-error",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -925339,141 +925080,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:15:bindtap:openService:3",
-      "route": "pages/privacy/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/privacy/index.wxml",
-        "js": "pages/privacy/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openService",
-        "line": 15,
-        "selectorHint": "view[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "阅读用户服务协议",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/privacy/index.js:255"
-      }
-    },
-    {
-      "id": "pages/privacy/index.wxml:16:bindchange:toggleService:4",
-      "route": "pages/privacy/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/privacy/index.wxml",
-        "js": "pages/privacy/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "checkbox-group",
-        "event": "bindchange",
-        "handler": "toggleService",
-        "line": 16,
-        "selectorHint": "checkbox-group[bindchange]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/privacy/index.js:254"
-      }
-    },
-    {
-      "id": "pages/privacy/index.wxml:18:bindtap:disagreePrivacy:5",
+      "id": "pages/privacy/index.wxml:21:bindtap:disagreePrivacy:5",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925496,7 +925103,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "disagreePrivacy",
-        "line": 18,
+        "line": 21,
         "selectorHint": ".privacy-action",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -925576,7 +925183,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:19:bindagreeprivacyauthorization:agreePrivacy:6",
+      "id": "pages/privacy/index.wxml:22:bindagreeprivacyauthorization:agreePrivacy:6",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925599,16 +925206,16 @@
         "tag": "button",
         "event": "bindagreeprivacyauthorization",
         "handler": "agreePrivacy",
-        "line": 19,
+        "line": 22,
         "selectorHint": ".privacy-agree",
         "visibleCondition": null,
-        "disabledCondition": "{{submitting || !serviceAgreed}}",
+        "disabledCondition": "{{submitting}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting || !serviceAgreed}}",
+        "ariaDisabledExpression": "{{submitting}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -925687,7 +925294,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:26:bindtap:onMediaLogin:7",
+      "id": "pages/privacy/index.wxml:29:bindtap:onMediaLogin:7",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925710,7 +925317,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onMediaLogin",
-        "line": 26,
+        "line": 29,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{mediaAuthRequired}}",
         "disabledCondition": null,
@@ -925796,7 +925403,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:27:bindtap:loadOwnMedia:8",
+      "id": "pages/privacy/index.wxml:30:bindtap:loadOwnMedia:8",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925819,7 +925426,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "loadOwnMedia",
-        "line": 27,
+        "line": 30,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{mediaLoading || !!mediaBusyId}}",
@@ -925905,7 +925512,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:28:bind:action:loadOwnMedia:9",
+      "id": "pages/privacy/index.wxml:31:bind:action:loadOwnMedia:9",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -925928,7 +925535,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadOwnMedia",
-        "line": 28,
+        "line": 31,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{mediaError}}",
         "disabledCondition": null,
@@ -926014,7 +925621,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:34:bindtap:previewOwnMedia:10",
+      "id": "pages/privacy/index.wxml:37:bindtap:previewOwnMedia:10",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926037,7 +925644,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "previewOwnMedia",
-        "line": 34,
+        "line": 37,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!!mediaBusyId}}",
@@ -926123,7 +925730,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:35:bindtap:checkOwnMedia:11",
+      "id": "pages/privacy/index.wxml:38:bindtap:checkOwnMedia:11",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926146,7 +925753,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "checkOwnMedia",
-        "line": 35,
+        "line": 38,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!!mediaBusyId}}",
@@ -926240,7 +925847,77 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:37:bindtap:retryOwnMedia:12",
+      "id": "pages/privacy/index.wxml:4:bind:close:onClose:0",
+      "route": "pages/privacy/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/privacy/index.wxml",
+        "js": "pages/privacy/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "onClose",
+        "line": 4,
+        "selectorHint": ".theme-dark",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/shezhi/shezhi"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/privacy/index.js:248"
+      }
+    },
+    {
+      "id": "pages/privacy/index.wxml:40:bindtap:retryOwnMedia:12",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926263,7 +925940,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "retryOwnMedia",
-        "line": 37,
+        "line": 40,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{item.reviewState === 'REJECTED' || item.reviewState === 'UNAVAILABLE'}}",
         "disabledCondition": "{{!!mediaBusyId}}",
@@ -926357,7 +926034,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:38:bindtap:copyApprovedMedia:13",
+      "id": "pages/privacy/index.wxml:41:bindtap:copyApprovedMedia:13",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926380,7 +926057,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "copyApprovedMedia",
-        "line": 38,
+        "line": 41,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{item.reviewState === 'APPROVED'}}",
         "disabledCondition": "{{!!mediaBusyId}}",
@@ -926473,77 +926150,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:4:bind:close:onClose:0",
-      "route": "pages/privacy/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/privacy/index.wxml",
-        "js": "pages/privacy/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "onClose",
-        "line": 4,
-        "selectorHint": ".theme-dark",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/shezhi/shezhi"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/privacy/index.js:248"
-      }
-    },
-    {
-      "id": "pages/privacy/index.wxml:40:bindtap:loadOlderMedia:14",
+      "id": "pages/privacy/index.wxml:43:bindtap:loadOlderMedia:14",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926566,7 +926173,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "loadOlderMedia",
-        "line": 40,
+        "line": 43,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{mediaHasMore}}",
         "disabledCondition": "{{mediaLoading || !!mediaBusyId}}",
@@ -926652,7 +926259,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:42:binderror:mediaPreviewFailed:15",
+      "id": "pages/privacy/index.wxml:45:binderror:mediaPreviewFailed:15",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926675,7 +926282,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "mediaPreviewFailed",
-        "line": 42,
+        "line": 45,
         "selectorHint": "image[binderror]",
         "visibleCondition": "{{mediaPreviewType === 'IMAGE'}}",
         "disabledCondition": null,
@@ -926719,7 +926326,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:43:binderror:mediaPreviewFailed:16",
+      "id": "pages/privacy/index.wxml:46:binderror:mediaPreviewFailed:16",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926742,7 +926349,7 @@
         "tag": "audio",
         "event": "binderror",
         "handler": "mediaPreviewFailed",
-        "line": 43,
+        "line": 46,
         "selectorHint": "audio[binderror]",
         "visibleCondition": "{{mediaPreviewType === 'AUDIO'}}",
         "disabledCondition": null,
@@ -926786,7 +926393,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:44:bind:error:mediaPreviewFailed:17",
+      "id": "pages/privacy/index.wxml:47:bind:error:mediaPreviewFailed:17",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926809,7 +926416,7 @@
         "tag": "cy-media-model-preview",
         "event": "bind:error",
         "handler": "mediaPreviewFailed",
-        "line": 44,
+        "line": 47,
         "selectorHint": "#authorMediaModel",
         "visibleCondition": "{{mediaPreviewType === 'MODEL3D'}}",
         "disabledCondition": null,
@@ -926853,7 +926460,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:45:bindtap:rotateMediaModel:18",
+      "id": "pages/privacy/index.wxml:48:bindtap:rotateMediaModel:18",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926876,7 +926483,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "rotateMediaModel",
-        "line": 45,
+        "line": 48,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{mediaPreviewType === 'MODEL3D'}}",
         "disabledCondition": null,
@@ -926921,7 +926528,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:46:bindtap:closeMediaPreview:19",
+      "id": "pages/privacy/index.wxml:49:bindtap:closeMediaPreview:19",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -926944,7 +926551,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeMediaPreview",
-        "line": 46,
+        "line": 49,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -926988,7 +926595,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:50:bindtap:disablePresenceSharing:20",
+      "id": "pages/privacy/index.wxml:53:bindtap:disablePresenceSharing:20",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -927011,7 +926618,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "disablePresenceSharing",
-        "line": 50,
+        "line": 53,
         "selectorHint": ".privacy-action",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -927070,7 +926677,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:54:bindtap:withdrawRoamLocationConsent:21",
+      "id": "pages/privacy/index.wxml:57:bindtap:withdrawRoamLocationConsent:21",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -927238,7 +926845,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "withdrawRoamLocationConsent",
-        "line": 54,
+        "line": 57,
         "selectorHint": ".privacy-action",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -927340,7 +926947,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:62:bind:close:closeService:22",
+      "id": "pages/privacy/index.wxml:65:bind:close:closeService:22",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -927363,7 +926970,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeService",
-        "line": 62,
+        "line": 65,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -927407,7 +927014,7 @@
       }
     },
     {
-      "id": "pages/privacy/index.wxml:9:bindtap:openPrivacyContract:1",
+      "id": "pages/privacy/index.wxml:9:bindtap:openPrivacyContract:2",
       "route": "pages/privacy/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -927434,7 +927041,7 @@
         "event": "bindtap",
         "handler": "openPrivacyContract",
         "line": 9,
-        "selectorHint": ".privacy-link",
+        "selectorHint": ".privacy-lead-link",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "查看用户隐私保护指引",
@@ -927484,6 +927091,73 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/privacy/index.js:257"
+      }
+    },
+    {
+      "id": "pages/privacy/index.wxml:9:bindtap:openService:1",
+      "route": "pages/privacy/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/privacy/index.wxml",
+        "js": "pages/privacy/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openService",
+        "line": 9,
+        "selectorHint": ".privacy-lead-link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "阅读用户服务协议",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/privacy/index.js:255"
       }
     },
     {
@@ -1100683,7 +1100357,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:15:bindtap:onExportData:1",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:13:bindtap:onExportData:1",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1100736,7 +1100410,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onExportData",
-        "line": 15,
+        "line": 13,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1100822,7 +1100496,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:16:bindtap:onAskClearData:2",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:14:bindtap:onAskClearData:2",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1100875,7 +1100549,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onAskClearData",
-        "line": 16,
+        "line": 14,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1100921,7 +1100595,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:24:bindtap:onCloseExport:3",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:22:bindtap:onCloseExport:3",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1100974,7 +1100648,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onCloseExport",
-        "line": 24,
+        "line": 22,
         "selectorHint": ".npc-chat__clear",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101018,7 +1100692,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:27:bind:action:onExportData:4",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:25:bind:action:onExportData:4",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101071,7 +1100745,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onExportData",
-        "line": 27,
+        "line": 25,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{exportState === 'error'}}",
         "disabledCondition": null,
@@ -1101157,7 +1100831,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:32:bindtap:onCopyExport:5",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:30:bindtap:onCopyExport:5",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101210,7 +1100884,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCopyExport",
-        "line": 32,
+        "line": 30,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101264,7 +1100938,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:55:bindtap:onRetrySend:6",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:53:bindtap:onRetrySend:6",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101317,7 +1100991,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRetrySend",
-        "line": 55,
+        "line": 53,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": "{{retryAvailable && !exportState}}",
         "disabledCondition": null,
@@ -1101426,7 +1101100,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:59:bindconfirm:onSend:8",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:57:bindconfirm:onSend:8",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101479,7 +1101153,7 @@
         "tag": "textarea",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 59,
+        "line": 57,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101588,7 +1101262,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:59:bindinput:onInput:7",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:57:bindinput:onInput:7",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101641,7 +1101315,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 59,
+        "line": 57,
         "selectorHint": ".npc-chat__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101685,7 +1101359,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:62:bindtap:onSend:9",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:60:bindtap:onSend:9",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101738,7 +1101412,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 62,
+        "line": 60,
         "selectorHint": ".npc-chat__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1101847,7 +1101521,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/npc-chat/index.wxml:65:bind:confirm:onConfirmClearData:10",
+      "id": "subpackageMember/components/cy/npc-chat/index.wxml:63:bind:confirm:onConfirmClearData:10",
       "route": "component:subpackageMember/components/cy/npc-chat/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1101900,7 +1101574,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmClearData",
-        "line": 65,
+        "line": 63,
         "selectorHint": "#npc-dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132832,7 +1132506,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:11"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:16"
       }
     },
     {
@@ -1132902,7 +1132576,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:11"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:16"
       }
     },
     {
@@ -1132972,7 +1132646,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:11"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:16"
       }
     },
     {

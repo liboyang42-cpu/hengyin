@@ -604,7 +604,6 @@ page { background: var(--cy-bg-page); }
 .ai-plan-node-addr { margin-top: var(--cy-legacy-4); font-size: var(--cy-font-caption); color: var(--club-text-muted); }
 .ai-plan-risk, .ai-plan-msug { margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--club-text-muted); line-height: 1.6; }
 .ai-plan-promo { margin-top: var(--cy-space-1-5); padding: var(--cy-space-2-5); border-radius: var(--cy-radius-md); background: var(--club-surface); font-size: var(--cy-font-caption); color: var(--club-text); line-height: 1.7; }
-.ai-plan-source { margin-top: var(--cy-space-3); font-size: var(--cy-font-caption); color: var(--club-text-muted); }
 .ai-plan-adopt { margin-top: var(--cy-space-2); text-align: center; padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 700; }
 .ai-plan-adopt-note { margin-top: var(--cy-space-1-5); text-align: center; font-size: var(--cy-font-caption); color: var(--club-text-muted); }
 

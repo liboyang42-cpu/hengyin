@@ -3711,7 +3711,7 @@ Page({
       that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
-      cyToast('真实定位已开启');
+      // 不再弹「真实定位已开启」:计时与定位点已说明,toast 会压住暂停键。
     };
     // 主动开启后允许后台定位，结束行程即停止；用途必须先向玩家说明。
     // 后台定位:漫游是边走边点亮,玩家锁屏塞兜是常态;前台版一锁屏就断,轨迹丢段。

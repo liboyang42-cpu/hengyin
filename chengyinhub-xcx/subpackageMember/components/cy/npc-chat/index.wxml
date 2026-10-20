@@ -9,8 +9,6 @@
 <cy-sheet variant="full" show="{{show}}" title="{{scope === 'merchant' ? (npcName || '店铺形象') : '漫游 AI 向导'}}" bind:close="onSheetClose">
   <view class="npc-chat">
     <view class="npc-chat__notice">
-      <cy-icon name="info" size="24" />
-      <text class="npc-chat__notice-text">{{scope === 'merchant' ? '由 AI 生成，仅基于这家店提供的信息回答' : '由 AI 生成，仅基于本次漫游进度回答'}}</text>
       <!-- 导出(只读,不落本地存储)按现有「清除」链接的样式加在它前面;「清除」位置与样式保持原状(用户决定:不改现有 UI) -->
       <text class="npc-chat__clear" bindtap="onExportData" aria-role="button" aria-label="导出我的对话记录" hover-class="cy-pressed" hover-stay-time="80">导出我的对话记录</text>
       <text class="npc-chat__clear" bindtap="onAskClearData" aria-role="button" aria-label="清除我的对话记录" hover-class="cy-pressed" hover-stay-time="80">清除我的对话记录</text>

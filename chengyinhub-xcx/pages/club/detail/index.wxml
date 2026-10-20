@@ -1006,8 +1006,6 @@
           </block>
         </view>
 
-        <!-- 合规:AI 生成内容来源标注 -->
-        <view class="ai-plan-source">AI 生成内容,请核对后再发布</view>
         <view class="ai-plan-adopt" catchtap="onClubAiAdopt" hover-class="cy-pressed" hover-stay-time="80">用这个方案去发布</view>
         <view class="ai-plan-adopt-note">采用后仍需手动补齐封面图和活动分类才能发布。</view>
       </block>
