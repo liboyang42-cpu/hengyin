@@ -89,9 +89,9 @@ class RegistryContractTest(unittest.TestCase):
         # 漏斗最大年份修复 4（含 TIMESTAMPADD 负控，master）。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 76,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 89,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 76,
+                    "port-extra-storage": 89,
                     "port-core-funds": 27, "port-ai-quota": 22,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4}
@@ -99,6 +99,23 @@ class RegistryContractTest(unittest.TestCase):
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
         self.assertEqual(expected, totals)
+
+    def test_existing_gated_asset_capacity_and_im_suites_have_matching_extra_routes(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest": (7, "CHENGYIN_FUNDS_MYSQL_IT"),
+            "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest": (2, "CHENGYIN_FUNDS_MYSQL_IT"),
+            "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest": (4, "CHENGYIN_IM_FOUNDATION_B_MYSQL_IT"),
+        }
+        for fqcn, (tests, gate) in expected.items():
+            with self.subTest(fqcn=fqcn):
+                self.assertEqual({"tests": tests, "storage": ["mysql"], "gates": {gate: "1"},
+                                  "database_base": "cyit"}, reg["classes"][fqcn])
+                for batch in ("extra-storage", "port-extra-storage"):
+                    self.assertEqual(1, reg["batches"][batch]["classes"].count(fqcn))
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual([], facts["nested"])
 
     def test_negative_controls(self):
         mutations = {

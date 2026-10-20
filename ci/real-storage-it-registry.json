@@ -98,7 +98,10 @@
         "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
         "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
         "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
-        "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
+        "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
+        "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
+        "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest",
+        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest"
       ]
     },
     "port-core-funds": {
@@ -173,7 +176,7 @@
     "port-extra-storage": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
       "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
-      "note": "Master-side port of extra-storage, same 20 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions.",
+      "note": "Master-side port of extra-storage, same 23 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions; the three gated asset/capacity/IM suites use the same current-source registration as extra-storage.",
       "classes": [
         "com.chengyinhub.business.longrun.E01_06Test",
         "com.chengyinhub.business.longrun.E01_09Test",
@@ -194,7 +197,10 @@
         "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
         "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
         "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
-        "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT"
+        "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
+        "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
+        "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest",
+        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest"
       ]
     },
     "funnel-max-date": {
@@ -415,6 +421,24 @@
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "note": "Asserts the server version is exactly 8.0.45."
+    },
+    "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest": {
+      "tests": 7,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest": {
+      "tests": 2,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest": {
+      "tests": 4,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_IM_FOUNDATION_B_MYSQL_IT": "1"},
+      "database_base": "cyit"
     },
     "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
       "tests": 4,
