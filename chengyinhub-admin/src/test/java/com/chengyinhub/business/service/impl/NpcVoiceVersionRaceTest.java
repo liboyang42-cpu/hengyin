@@ -115,7 +115,7 @@ class NpcVoiceVersionRaceTest {
 
         void enroll() {enroll(SAMPLE);}
         void enroll(String sample) {
-            if (!merchant) { node.voiceEnroll(88L, 31L, sample); return; }
+            if (!merchant) { node.voiceEnroll(88L, 88L, 31L, sample); return; }
             NpcProfile body = new NpcProfile(); body.setVoiceSample(sample); body.setVoiceConsent(true);
             requireSuccess(controller.npcVoiceEnroll(body));
         }

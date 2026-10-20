@@ -125,7 +125,7 @@ function loadProfile(profileSource) {
   let definition
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => '42', getUserRole: () => 'merchant', getUserType: () => 2,
+    getUserID: () => '42', getAuthorization: () => 'Bearer existing-member-fixture', getUserRole: () => 'merchant', getUserType: () => 2,
     isDevEnv: () => false, setUserRole() {},
     sendRequest(options) { requests.push(options) },
     tips(message) { tips.push(message) },

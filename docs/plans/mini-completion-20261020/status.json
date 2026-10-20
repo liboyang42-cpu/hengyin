@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "candidateBase": "df891d787bd4d9331ed322a1bd6ce7cc510d1977",
+  "branch": "codex/mini-completion-20261020",
+  "scope": [
+    "PR293 mini UI integration",
+    "PR308 C01/C02 semantic port and missing runtime dependencies",
+    "PR69 consent, media owner, bills, refund facts, deregistration, runtime alarm and exact scheduler allowlist",
+    "club sale ticket projection follows actual activity window",
+    "existing list/profile/template caller login and ownership contracts"
+  ],
+  "productionTouched": false,
+  "backendLocalBuildRun": false,
+  "devtoolsUsed": false,
+  "externalProviderCalls": false,
+  "verification": {
+    "javascriptScope": "PASS: 660 production JS, zero unresolved identifiers",
+    "componentPaths": "PASS: 2176 references",
+    "uiIntegrity": "PASS with mutation self-tests; no new exemption; U4 debt 129 to 127",
+    "draftIndependentPeer": "6/6",
+    "java": "PENDING_GITHUB_HOSTED_CI",
+    "fullNode": {
+      "tests": 12104,
+      "pass": 12099,
+      "fail": 0,
+      "skipped": 2,
+      "todo": 3,
+      "receipt": "local full-node-sealed; Mini Program source at 9225b380d4247425dceb3384123ff723b4599f09"
+    }
+  },
+  "migrations": [
+    {
+      "file": "migration_20261015_wx_bill_ingestion.sql",
+      "purpose": "separate imported bill facts; no automatic balance adjustment"
+    },
+    {
+      "file": "migration_20261015_retention_job_missing_registration.sql",
+      "purpose": "register missing retention tasks paused"
+    },
+    {
+      "file": "migration_20261017_job_dictionary_missing_seed.sql",
+      "purpose": "fill missing scheduler dictionary values"
+    }
+  ],
+  "notAccepted": [
+    "same candidate combined with audit PR385/387/388/390",
+    "normal-role UI and cross-role readbacks",
+    "iOS/Android location, camera, weak network and long-running performance",
+    "12 replacement assets real upload and moderation receipts",
+    "real WeChat payment/refund and provider notification closure",
+    "production migration, configuration, key revocation and release"
+  ]
+}

@@ -25,6 +25,7 @@ function loadDetail() {
     require(request) {
       const modules = {
         '../../../utils/motion.js': require('../../utils/motion.js'),
+        '../../../utils/media-preview.js': require('../../utils/media-preview.js'),  // 本线俱乐部详情图片预览(#293)
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': require('../../utils/datetime'),
@@ -49,7 +50,7 @@ function loadDetail() {
     },
     Set, Date, JSON,
     wx: {
-      navigateTo(o) { navigations.push(o.url) }, showToast() {}, showModal() {}, showShareMenu() {},
+      navigateTo(o) { navigations.push(o.url); if (o.complete) o.complete() }, showToast() {}, showModal() {}, showShareMenu() {},
       setStorageSync() {}, getStorageSync() { return '' }, pageScrollTo() {},
     },
   }, { filename: 'pages/club/detail/index.js' })

@@ -84,6 +84,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/activity/official-detail/index` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:159` | KEEP |
 | `pages/activity/official-inbox/index` | 否 | `chengyinhub-xcx/pages/activity/list/index.js:226` | KEEP |
 | `pages/activity/official-mine/index` | 否 | `chengyinhub-xcx/pages/activity/list/index.js:223` | KEEP |
+| `pages/activity/official-organizer/index` | 否 | `chengyinhub-xcx/pages/activity/official-detail/index.js:275` | KEEP |
 | `subpackageA/pages/myproject/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:1252` | KEEP |
 | `subpackageA/pages/infomation/infomation` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:129` | KEEP |
 | `subpackageA/pages/infomationdetail/infomationdetail` | 否 | `chengyinhub-xcx/utils/scene-registry.js:71` | KEEP |
@@ -106,6 +107,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/publish/templateadd/templateadd` | 否 | `chengyinhub-xcx/pages/publish/template-intro/index.js:114` | KEEP |
 | `pages/publish/template-intro/index` | 否 | `chengyinhub-xcx/components/cy/publish-sheet/index.js:84` | KEEP |
 | `pages/club/apply/index` | 否 | `chengyinhub-xcx/pages/club/create/index.js:184` | KEEP |
+| `pages/club/badges/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2377` | KEEP |
 | `pages/club/create/index` | 否 | `chengyinhub-xcx/pages/club/apply/index.js:370` | KEEP |
 | `pages/club/customer-detail/index` | 否 | `chengyinhub-xcx/pages/club/customers/index.js:109` | KEEP |
 | `pages/club/customers/index` | 否 | `chengyinhub-xcx/pages/club/customer-detail/index.js:72` | KEEP |
@@ -152,6 +154,8 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/merchant/customer/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:257` | KEEP |
 | `pages/merchant/game-node/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:291` | KEEP |
 | `pages/merchant/customer/detail/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:278` | KEEP |
+| `pages/merchant/verify-records/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:315` | KEEP |
+| `pages/merchant/crm-campaigns/index` | 否 | `chengyinhub-xcx/pages/merchant/customer/index.js:915` | KEEP |
 | `pages/merchant/team/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:305` | KEEP |
 | `pages/coop/list/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:818` | KEEP |
 | `pages/coop/invite-detail/index` | 否 | `chengyinhub-xcx/pages/coop/list/index.js:728` | KEEP |
@@ -186,6 +190,11 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/mytemplate/mytemplate` | 否 | `chengyinhub-xcx/pages/publish/temp/index.js:3203` | KEEP |
 | `subpackageMember/order/order` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:1069` | KEEP |
 | `subpackageMember/orderinfo/orderinfo` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:1036` | KEEP |
+| `subpackageMember/points-history/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1386` | KEEP |
+| `subpackageMember/report-mine/index` | 否 | `` | KEEP |
+| `subpackageMember/report-detail/index` | 否 | `` | KEEP |
+| `subpackageMember/correction-mine/index` | 否 | `` | KEEP |
+| `subpackageMember/correction-detail/index` | 否 | `` | KEEP |
 | `subpackageMember/signup/index` | 否 | `chengyinhub-xcx/pages/play/index.js:2876` | KEEP |
 | `subpackageMember/tixian/tixian` | 否 | `chengyinhub-xcx/utils/scene-registry.js:63` | KEEP |
 | `subpackageMember/tixianjilu/tixianjilu` | 否 | `chengyinhub-xcx/pages/coop/withdraw/records/index.js:7` | KEEP |

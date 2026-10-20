@@ -4,7 +4,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar overlay tint="dark" custom-back bind:back="backToOrderList" />
+  <cy-nav-bar overlay scrolled="{{navScrolled}}" tint="light" custom-back bind:back="backToOrderList" />
   <cy-page-title title="订单详情" safe-top="{{false}}"
     style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;" />
   <cy-scene-member-order-detail id="orderDetail" order-id="{{id}}" bind:back="backToOrderList" bind:close="backToOrderList" />

@@ -10,7 +10,7 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 // variant="full" 用于长表单、详情和连续多步任务，白名单如下;
 // 新增任何 full 调用都必须先过这份契约(即:先来改这个白名单,说清为什么不能半屏)。
 const FULL_VARIANT_WHITELIST = new Set([
-  'components/cy/npc-chat/index.wxml', // 长表单或详情，使用导航下方完整阅读区
+  'subpackageMember/components/cy/npc-chat/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/club/detail/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/coop/invite-detail/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/deregister/index.wxml', // 长表单或详情，使用导航下方完整阅读区

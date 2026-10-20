@@ -18,7 +18,7 @@ function loadPage(answer) {
   global.getCurrentPages = () => []
   global.getApp = () => ({
     getRequestErrorMessage: (response, fallback) => (response && (response.msg || response.errMsg)) || fallback,
-    getUserRole: () => 'user', getUserType: () => 'user', getUserID: () => 9,
+    getUserRole: () => 'user', getUserType: () => 'user', getUserID: () => 9, getAuthorization: () => 'fixture-session',
     sendRequest: (options) => requests.push(options),
   })
   global.Page = (config) => { definition = config }

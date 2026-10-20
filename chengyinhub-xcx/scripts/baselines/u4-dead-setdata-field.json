@@ -4,7 +4,7 @@
   "count": 323,
   "entries": [
     "components/cy/category-sheet/index.js::selectedIds::A2",
-    "components/cy/npc-chat/index.js::state::A2",
+    "subpackageMember/components/cy/npc-chat/index.js::state::A2",
     "subpackageMember/components/cy/profile/index.js::exploreValue::A1",
     "subpackageMember/components/cy/profile/index.js::hasMore::A2",
     "subpackageMember/components/cy/profile/index.js::identityCard::A2",

@@ -1,0 +1,2 @@
+.srs { padding: 0 0 var(--cy-space-4); /* cy-sheet 面板已带页边距 */ display: flex; flex-direction: column; gap: var(--cy-space-3); }
+.srs-intro, .srs-loading { display: block; font-size: var(--cy-font-label); line-height: 1.6; color: var(--cy-text-secondary); }

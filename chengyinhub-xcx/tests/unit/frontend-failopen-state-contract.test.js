@@ -65,7 +65,7 @@ test('R4 我的项目:业务、网络与畸形200失败不得进入真空态', (
     ['malformed-200', (request) => request.success({ code: '200', data: { rows: {} } })],
   ];
   for (const [name, reply] of scenarios) {
-    const { page, requests } = mountPage('subpackageA/pages/myproject/index.js');
+    const { page, requests } = mountPage('subpackageA/pages/myproject/index.js', { getAuthorization: () => 'current-session' });
     page.data.list = [{ id: 99, title: '旧项目' }];
     page.loadProjects();
     assert.equal(page.data.projectState, 'loading', `${name} 前必须先进 loading`);
@@ -75,7 +75,7 @@ test('R4 我的项目:业务、网络与畸形200失败不得进入真空态', (
     assert.ok(page.data.projectErrorMsg);
   }
 
-  const valid = mountPage('subpackageA/pages/myproject/index.js');
+  const valid = mountPage('subpackageA/pages/myproject/index.js', { getAuthorization: () => 'current-session' });
   valid.page.loadProjects();
   valid.requests[0].success({ code: '200', data: { rows: [], total: 0 } });
   assert.equal(valid.page.data.projectState, 'ready');

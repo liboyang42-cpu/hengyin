@@ -476,7 +476,9 @@ test('正文走真实高级玩法入口，内嵌完成继续调用权威收尾�
   page._storyTop = 500
   let arrived
   page.arrive = id => { arrived = id }
-  page.selectComponent = () => ({ continueBase: () => page.onAdvancedReady({ detail: { nodeId: 51 } }) })
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame = { continueBase: () => page.onAdvancedReady({ detail: { nodeId: 51 } }) }
+  page.selectComponent = () => advancedGame
   page.continueStoryGame()
   assert.equal(arrived, 51)
   assert.equal(page.data.playKit.show, false, '权威收尾后必须关闭旧玩法结果层')
@@ -512,10 +514,12 @@ test('快速打字提交等待开始请求确认，不被高级玩法在途锁�
   page.data.advancedPlay = { show: true }
   const actions = []
   let confirmStart
-  page.selectComponent = () => ({ action(name) {
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame = { action(name) {
     actions.push(name)
     return name === 'START_CHALLENGE' ? new Promise(resolve => { confirmStart = resolve }) : Promise.resolve(true)
-  } })
+  } }
+  page.selectComponent = () => advancedGame
   page._submitPlayKitAction('start', {})
   page._submitPlayKitAction('submit', { text: 'hello world', elapsedMs: 2000 })
   assert.deepEqual(actions, ['START_CHALLENGE'])

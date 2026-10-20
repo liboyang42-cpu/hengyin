@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const COMPONENT_PATH = require.resolve('../../components/cy/npc-chat/index.js');
+const COMPONENT_PATH = require.resolve('../../subpackageMember/components/cy/npc-chat/index.js');
 let definition;
 let activeApp;
 

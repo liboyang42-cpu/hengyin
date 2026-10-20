@@ -47,13 +47,12 @@ function assertContract(overrides = {}) {
   assert.doesNotMatch(projectWxml, /catchtap="(goCandidates|toggleStatus|deleteItem)"/,
     '候选池 / 上下架 / 删除不能回到卡面上')
   assert.match(projectWxml, /bindlongpress="onCardLong"/, '长按是这三个动作唯一的入口,不能丢')
-  // 2026-10-20 FOLLOWUP-A-2:长按面板加「审核记录」行(5 → 6);审核记录面板复用 .mp-ops-row 行样式,
-  //   但它是另一张 cy-sheet,只数长按面板自己的行。
+  // 长按面板同时保留审核记录与另存为模板；另一张审核 cy-sheet 不计入操作行。
   const opsStart = projectWxml.indexOf('<cy-sheet show="{{opsSheet.show}}"')
   assert.notEqual(opsStart, -1, '长按操作面板必须存在')
   const opsSheet = projectWxml.slice(opsStart, projectWxml.indexOf('</cy-sheet>', opsStart))
   const sheetRows = [...opsSheet.matchAll(/<view\b[^>]*class="mp-ops-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
-  assert.equal(sheetRows.length, 6, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 审核记录 / 删除')
+  assert.equal(sheetRows.length, 7, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 审核记录 / 另存为模板 / 删除')
   for (const row of sheetRows) assert.match(row, /bindtap="onOpsPick"/)
   assert.match(rule(projectWxss, '.mp-ops-row'), /min-height:\s*var\(--cy-btn-h\)/)
 }

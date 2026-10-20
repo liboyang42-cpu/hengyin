@@ -24,7 +24,8 @@ test('商家更多菜单不再用预约文案跳转核销台账', () => {
   assert.ok(onMoreMatch, '必须能定位到更多菜单分发逻辑');
   const onMore = onMoreMatch[0];
 
-  assert.deepEqual(menuActions, ['messages', 'aftercare', 'coupon', 'brand']);
+  // BL-76:「核销记录」是独立只读页(/api/merchant/verification-records),不是预约入口,也不跳 ledger。
+  assert.deepEqual(menuActions, ['messages', 'aftercare', 'verifyRecords', 'coupon', 'brand']);
   assert.doesNotMatch(menu, /预约|预订|booking|appointment/i);
   assert.doesNotMatch(onMore, /预约|预订|booking|appointment/i);
   // 2026-09-22 M-07:「我的消息」核销流水点开去核销记录是正当入口,但只许挂在 goEvent 上、不许带预约口吻。
@@ -47,7 +48,7 @@ test('M-07:更多里的协作邀请 = 合作中心铃铛页;「我的消息」�
   const coopCenter = read('pages/merchant/coop-center/index.js');
 
   assert.match(coopCenter, /goInbox\(\)\s*\{\s*wx\.navigateTo\(\{ url: '\/pages\/coop\/list\/index' \}\)/, '铃铛页是协作邀请真源');
-  assert.match(js, /goMessages\(\)\s*\{\s*wx\.navigateTo\(\{ url: '\/pages\/coop\/list\/index' \}\)/, '更多→协作邀请必须与铃铛同页');
+  assert.match(js, /goMessages\(\)\s*\{\s*if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/pages\/coop\/list\/index', complete: /, '更多→协作邀请必须与铃铛同页(带跳转中保护)');
   assert.match(wxml, /<view class="rv-more-item" wx:if="\{\{merchantAccess\.canManageCoop\}\}" bindtap="onMoreItem" data-action="messages" aria-role="button" aria-label="打开协作邀请"[\s\S]*?<text class="rv-more-label">协作邀请<\/text>/);
   // CU-M-150:这一页只有「收到的 / 我发出的」协作记录,入口不得再自称覆盖全部消息。
   assert.doesNotMatch(wxml, /<text class="rv-more-label">消息中心<\/text>/, '「消息中心」留给真正的消息聚合,否则商家找一般消息会走错');

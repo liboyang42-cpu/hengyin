@@ -18,7 +18,8 @@ function loadRoamPage(sessions, options) {
   const config = options || {}
   const storage = config.storage || { 'roam_memory_v1:101:sessions': sessions }
   const wxMock = { getStorageSync: key => storage[key] }
-  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101' }
+  // 切到护照 tab 时页面还会读可参与的漫游官方活动(BL-41,失败静默);夹具只记录不回包
+  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101', sendRequest() {} }
   const previous = { Page: global.Page, getApp: global.getApp, getCurrentPages: global.getCurrentPages, wx: global.wx }
   try {
     global.Page = config => { definition = config }
@@ -128,7 +129,7 @@ test('护照只统计当前玩家的漫游记录，不认领旧共享缓存或�
 test('三个首页卡分别开始漫游、打开地图和直接打开我的队伍', () => {
   const { page, wxMock } = loadRoamPage([])
   const navigations = []
-  wxMock.navigateTo = options => navigations.push(options.url)
+  wxMock.navigateTo = options => { navigations.push(options.url); if (options.complete) options.complete() } // 入口有跳转中保护,桩回调 complete 才放下一跳
   let starts = 0
   page.goStart = () => { starts += 1 }
   const oldWx = global.wx

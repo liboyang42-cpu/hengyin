@@ -1,0 +1,176 @@
+{
+  "baseline": "d83a7d7a5be34961fb07a582000af9b408a8dfa2",
+  "moves": [
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:571",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:658",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:982",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1088",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/pages/index/index.js:1019",
+      "to": "chengyinhub-xcx/pages/index/index.js:1041",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageA/pages/myproject/index.js:505",
+      "to": "chengyinhub-xcx/subpackageA/pages/myproject/index.js:569",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1847",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1987",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1287",
+      "to": "chengyinhub-xcx/pages/index/index.js:1309",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1394",
+      "to": "chengyinhub-xcx/pages/index/index.js:1416",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/play/index.js:1518",
+      "to": "chengyinhub-xcx/pages/play/index.js:1614",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1038",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1145",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1178",
+      "to": "chengyinhub-xcx/pages/index/index.js:1200",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:732",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:742",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:901",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:994",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:2531",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:2681",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:3589",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:3741",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:3970",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:4122",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:4991",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5185",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5249",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5444",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5900",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6100",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5910",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6110",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5963",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6163",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:8061",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:8355",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6304",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6504",
+      "exactLine": true
+    },
+    {
+      "section": "u5Silent",
+      "from": "chengyinhub-xcx/pages/play/index.js:6691",
+      "to": "chengyinhub-xcx/pages/play/index.js:7649",
+      "exactLine": true
+    }
+  ],
+  "removedDebt": [
+    "chengyinhub-xcx/pages/publish/fabu/index.js#inlineEdit",
+    "chengyinhub-xcx/pages/index/index.js#locationInfo"
+  ],
+  "newExemptions": 0,
+  "ratchetU4Field": {
+    "before": 129,
+    "after": 127
+  },
+  "actionLedger": {
+    "before": {
+      "controls": 4888,
+      "tap": 2088,
+      "eventContract": 2435
+    },
+    "after": {
+      "controls": 4894,
+      "tap": 2090,
+      "eventContract": 2438
+    },
+    "addedControls": [
+      "home city location enable",
+      "home city location disable",
+      "member login recovery",
+      "myproject login recovery",
+      "profile login recovery",
+      "mytemplate retry"
+    ],
+    "classificationChanges": [
+      "home privacy settled: state to external",
+      "voice touch end/cancel: state to other"
+    ]
+  }
+}

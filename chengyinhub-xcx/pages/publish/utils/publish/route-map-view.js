@@ -16,6 +16,7 @@
 //   this.setData(patch)              → return { markerMap, patch }
 
 const proEditorPolicy = require('../../../../utils/publish/pro-editor-policy.js');
+const lastLocation = require('../../../../utils/location/last-location.js');
 
 const ROUTE_COLORS = ['#1A1A1A', '#155DFC', '#12B886', '#0CA5A5', '#F59F00', '#E64980'];
 const MAP_PIN = '/pages/publish/images/map-pin.png';
@@ -23,7 +24,12 @@ const START_COLOR = '#12B886'; // 起点
 const END_COLOR = '#FA5252';   // 终点
 const DRAFT_COLOR = '#ADB5BD'; // 草稿(未配游戏)
 const SELECTED_COLOR = '#1A1A1A'; // 列表↔地图联动选中态(去紫,与 route-map/topic 同值)
-const MAP_DEFAULT_CENTER = { longitude: 121.4737, latitude: 31.2304 }; // 上海人民广场兜底
+// BL-23:兜底不再写死城市坐标 —— 无有效节点时取「上次成功定位 → 固定坐标」(utils/location/last-location.js)
+const MAP_DEFAULT_CENTER = { longitude: lastLocation.FIXED.longitude, latitude: lastLocation.FIXED.latitude };
+function fallbackCenter() {
+  const fb = lastLocation.resolve();
+  return { longitude: fb.longitude, latitude: fb.latitude };
+}
 
 /**
  * @param {object} state 页面显式传入的数据切片,模块本身不碰 this.data
@@ -193,16 +199,17 @@ function buildRouteMapView(state) {
       allPoints.push({ latitude: draftLat, longitude: draftLng });
     }
 
+    const fallback = allPoints.length ? null : fallbackCenter();
     const patch = {
       mapMarkers: markers,
       mapPolyline: polyline,
       // 空 include-points 会让腾讯 SDK fitBounds 崩溃,无有效节点时兜底给中心点
-      mapInclude: allPoints.length ? allPoints : [MAP_DEFAULT_CENTER],
+      mapInclude: allPoints.length ? allPoints : [fallback],
       hasRoute: allPoints.length > 0
     };
     // 有选中节点时,镜头已由 selectNode 显式定位,勿覆盖中心;否则回到首点/兜底
     if (!selectedLid) {
-      patch.mapCenter = allPoints[0] || MAP_DEFAULT_CENTER;
+      patch.mapCenter = allPoints[0] || fallback;
     }
     return { markerMap: markerMap, patch: patch };
 }

@@ -711,6 +711,7 @@ public class ApiTemplateController extends BaseController {
             return error("模版不存在");
         } else {
             boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
+            cmsMemberTemplate.setCanEdit(isOwner);
             // 草稿(draftStatus=0)允许本人回填编辑,跳过"审核中/已下架"拦截
             boolean isDraft = cmsMemberTemplate.getDraftStatus() != null && cmsMemberTemplate.getDraftStatus() == 0;
             boolean isOwnerPending = isOwner
@@ -727,7 +728,7 @@ public class ApiTemplateController extends BaseController {
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
             } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {
-                return error("模版审核中");
+                return error(Long.valueOf(2L).equals(cmsMemberTemplate.getStatus()) ? "模版审核未通过" : "模版审核中");
             } else if (!isDraft && !isOwnerPending && cmsMemberTemplate.getPublishStatus() == 0) {
                 return error("模版已下架");
             } else {

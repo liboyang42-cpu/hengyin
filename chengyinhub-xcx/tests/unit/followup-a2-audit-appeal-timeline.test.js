@@ -160,6 +160,27 @@ test('FOLLOWUP-A-2 timeline 读失败 / 申诉被拒 / 网络失败都如实 toa
   assert.deepEqual(h.toasts, ['网络异常，请重试']);
 });
 
+test('清理旧账号状态时收起审核面板，迟到的时间线与申诉回包不能恢复旧记录', () => {
+  h.page.openAudit({ bizType: 'TOPIC', bizId: '31' }, '老城夜巡');
+  h.requests[0].success(timeline());
+  h.page.appealAudit();
+  h.modals[0].success({ confirm: true, content: '申诉理由' });
+  const appeal = h.requests[1];
+  h.page.loadAudit();
+  const staleTimeline = h.requests[2];
+  h.page.resetPrivateState(true);
+  assert.equal(h.page.data.auditSheet.show, false);
+  assert.deepEqual(h.page.data.auditSheet.rows, []);
+  assert.equal(h.page.data.auditSheet.canAppeal, false);
+  staleTimeline.success(timeline());
+  staleTimeline.fail({ errMsg: 'request:fail' });
+  appeal.success({ code: 200 });
+  assert.equal(h.page.data.auditSheet.show, false);
+  assert.deepEqual(h.page.data.auditSheet.rows, []);
+  assert.equal(h.requests.length, 3, '旧申诉结果不能触发新账号的时间线读取');
+  assert.deepEqual(h.toasts, []);
+});
+
 test('FOLLOWUP-A-2 玩法卡:个人审核未通过 → TEMPLATE;广场驳回 / 下架 → TEMPLATE_LIBRARY;正常玩法不出入口', () => {
   const at = require(path.join(ROOT, 'utils/audit-timeline.js'));
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 2 }), { bizType: 'TEMPLATE', bizId: '4' });

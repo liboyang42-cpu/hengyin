@@ -26,6 +26,13 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 
 // 完整路由盘点：总数断言只能防止数量漂移，逐路由集合才能防止两个页面互换后仍然假绿。
 const EXPECTED_NAV_ROUTES = [
+  // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页,均为 cy-nav-bar + cy-page-title 标准二级页
+  'pages/merchant/crm-campaigns/index',
+  'subpackageMember/correction-detail/index',
+  'subpackageMember/correction-mine/index',
+  'subpackageMember/points-history/index',
+  'subpackageMember/report-detail/index',
+  'subpackageMember/report-mine/index',
   // 2026-10-14 漫游上线 +6:cy-nav-bar plain + cy-page-title 标准二级页(队伍工具、费用均摊、随机开局已撤下)
   'subpackageRoam/my-teams/index',
   'subpackageTools/anniversary/index',
@@ -52,6 +59,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/activity/detail/index', 'pages/activity/baoming/baoming', 'pages/activity/list/index',
   'pages/activity/official-detail/index', 'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index',
+  // 2026-10-15 CL4:主办控制台,custom 导航 + cy-nav-bar + cy-page-title 标准二级页
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/myproject/index', 'subpackageA/pages/infomation/infomation',
   'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
@@ -65,6 +74,7 @@ const EXPECTED_NAV_ROUTES = [
   'pages/club/topic-detail/index',
   'pages/club/topic-story/index',
   'pages/club/group-code/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/index/index', 'pages/topic/merchantinfo/merchantinfo',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
@@ -79,6 +89,7 @@ const EXPECTED_NAV_ROUTES = [
   // 标题由 cy-page-title 持有(所以也进 page-title 盘点)。标题仍然只出现一次。
   'pages/merchant/coop-center/index', 'pages/merchant/customer/index', 'pages/merchant/game-node/index',
   'pages/merchant/aftercare/index', 'pages/merchant/aftercare/detail/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/customer/detail/index', 'pages/merchant/reviews/index', 'pages/merchant/team/index',
   'pages/merchant/predict/index',
   'pages/merchant/marketing/ai-insight/index',
@@ -94,6 +105,13 @@ const EXPECTED_NAV_ROUTES = [
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
+  // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页使用共享 cy-page-title 大标题
+  'pages/merchant/crm-campaigns/index',
+  'subpackageMember/correction-detail/index',
+  'subpackageMember/correction-mine/index',
+  'subpackageMember/points-history/index',
+  'subpackageMember/report-detail/index',
+  'subpackageMember/report-mine/index',
   // 2026-10-14 漫游上线 +6:cy-nav-bar plain + cy-page-title 标准二级页(队伍工具、费用均摊、随机开局已撤下)
   'subpackageRoam/my-teams/index',
   'subpackageTools/anniversary/index',
@@ -120,6 +138,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageRoam/session/index',
   'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index', 'subpackageA/pages/myproject/index',
+  'pages/activity/official-organizer/index',
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
   'subpackageP3/pages/growthcenter/index/index',
@@ -127,6 +146,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/publish/activity/index',
   'pages/publish/templateadd/templateadd',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
+  'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/pricing/index',
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-08-30 用户裁决：这 5 个任务页使用「返回独立行 + L1 大标题」。
@@ -134,6 +154,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/merchant/citynode/index', 'pages/merchant/aftercare/detail/index', 'pages/merchant/team/index',
   // 2026-09-17 用户裁决:退款售后列表照 Revolut Business 316-318,改为返回 + 左对齐 L1 大标题。
   'pages/merchant/aftercare/index',
+  'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
   // 其余商家页继续使用居中 nav 标题，仍只保留在 nav inventory。
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',
@@ -261,8 +282,9 @@ function assertTitleInventory(readSource = read) {
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131;custom 同步 131(按实测重取)。 */
   /* 2026-10-14 +6:漫游上线 —— 我的队伍与 subpackageTools 5 个工具页,
      均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 ⇒ 130+6 = 136;custom 同步 136。 */
-  assert.equal(rows.length, 136, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 136)
+  /* 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) +9:俱乐部勋章、核销记录、触达记录、主办控制台、积分明细、我的举报、举报进度、我的纠错、纠错进度,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 136+9 = 145;custom 同步 145。 */
+  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 145)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

@@ -89,6 +89,8 @@ Page({
     perks: [],
     perkTypes: PERK_TYPES,
     formVisible: false,
+    discardVisible: false,
+    backGuardOff: false,
     saving: false,
     saveReadbackPending: false,
     saveErrorKind: '',
@@ -117,6 +119,7 @@ Page({
   onShow() { merchantTheme.merchantPageShow && merchantTheme.merchantPageShow(); },
   onHide() { merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._destroyed = true;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
     this._saveEpoch = (this._saveEpoch || 0) + 1;
     this._deleteEpoch = (this._deleteEpoch || 0) + 1;
@@ -195,6 +198,17 @@ Page({
     this.setData({formVisible:false});
   },
   keepForm(){this.setData({discardVisible:false});},
+  // BL-17 物理返回守卫(见 wxml 尾部 page-container,照 decor 主页):先关最上层(放弃确认 > 编辑表单),不退出权益页
+  onNativeBackGuard() {
+    const d = this.data;
+    if (d.discardVisible) this.keepForm();
+    else if (d.formVisible) this.closeForm();
+    const n = this.data;
+    if (n.formVisible || n.discardVisible) {
+      this.setData({backGuardOff: true});
+      setTimeout(() => { if (!this._destroyed) this.setData({backGuardOff: false}); }, 50);
+    }
+  },
   discardForm(){this.setData({form:JSON.parse(this._formAtOpen),discardVisible:false,formVisible:false});this.refreshSaveState();},
   onTypeChange(e) { this.pickType({currentTarget:{dataset:{value:e.detail.value}}}); },
   pickType(e) {
