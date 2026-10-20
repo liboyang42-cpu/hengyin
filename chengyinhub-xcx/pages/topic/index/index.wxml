@@ -108,10 +108,6 @@
         <view wx:if="{{info.isOwner==1}}" class="topic-transfer-entry" style="margin-top:16rpx;">
           <cy-btn variant="secondary" size="sm" bindtap="onTransferToClub">移交给俱乐部承接</cy-btn>
         </view>
-        <!-- FOLLOWUP-A-1:别人公开的主题才给举报,与上面作者入口同一容器 / 同一按钮 -->
-        <view wx:if="{{canReport}}" class="topic-transfer-entry" style="margin-top:16rpx;">
-          <cy-btn variant="secondary" size="sm" bindtap="reportTopic">举报</cy-btn>
-        </view>
       </view>
     </view>
     <!-- Beta 试玩期:玩家照常可玩,只是明说「还在试玩、欢迎提意见」;作者本人另见转正入口。
@@ -301,6 +297,9 @@
           </scroll-view>
         </view>
 
+        <!-- FOLLOWUP-A-1:别人公开的主题才给举报。2026-10-20 owner 看截图后从封面叠层挪到评价区上方(详情页末尾那格会被底栏挡住):
+             叠在头图上与 CU-C-111 同病(封面装饰被盖住),也不该和「立即报名」一样大;沿用上面「我的游玩记录」那一行的样式。 -->
+        <view wx:if="{{canReport}}" class="topic-audio topic-report-entry" bindtap="reportTopic" aria-role="button" aria-label="举报这个主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="flag" size="36" /><text>举报这个主题</text><cy-icon name="chevron-right" size="28" /></view>
         <view class="det6">
           <view class="wp">
             <view class="row1 flex-cb">

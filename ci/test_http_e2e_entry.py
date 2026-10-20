@@ -222,6 +222,51 @@ class HttpReceiptTest(unittest.TestCase):
 
 
 
+class ManualRouterTest(unittest.TestCase):
+    def test_registered_jar_manual_router_defaults_to_jar_and_calls_same_commit_http_only_on_opt_in(self):
+        caller = (ROOT / '.github/workflows/backend-jar.yml').read_text()
+        callee = (ROOT / '.github/workflows/gameplay-http-e2e.yml').read_text()
+
+        def contract(parent, child):
+            self.assertRegex(parent, r'run_http_fixtures:\n        description:[^\n]+\n        required: false\n        type: boolean\n        default: false')
+            self.assertRegex(child, r'  workflow_call:\n    inputs:\n      source_sha:\n        description:[^\n]+\n        required: true\n        type: string')
+            jar = parent.split('\n  jar:\n', 1)[1].split('\n  http-fixtures:\n', 1)[0]
+            http = parent.split('\n  http-fixtures:\n', 1)[1]
+            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures\n", jar)
+            self.assertIn("    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures\n", http)
+            self.assertIn('    uses: ./.github/workflows/gameplay-http-e2e.yml\n', http)
+            self.assertIn('    with:\n      source_sha: ${{ inputs.source_sha }}\n', http)
+            self.assertNotIn('runs-on:', http); self.assertNotIn('steps:', http)
+            self.assertNotIn('mvn ', http)
+            self.assertEqual(1, parent.count('run: mvn -B -q -DskipTests package'))
+            self.assertIn('  workflow_dispatch:', parent); self.assertIn('  workflow_dispatch:', child)
+            for workflow in [parent, child]:
+                self.assertIn('contents: read', workflow)
+                self.assertNotRegex(workflow, r'(?m)^\s+(?:push|pull_request|schedule|secrets):')
+                self.assertNotIn('secrets.', workflow)
+            parent_group = re.search(r'(?m)^  group: (.+)$', parent).group(1)
+            child_group = re.search(r'(?m)^  group: (.+)$', child).group(1)
+            self.assertNotEqual(parent_group, child_group, 'Caller cannot hold the callee concurrency group')
+
+        contract(caller, callee)
+        mutations = [
+            (caller.replace('default: false', 'default: true'), callee),
+            (caller.replace('&& !inputs.run_http_fixtures', ''), callee),
+            (caller.replace(" && inputs.run_http_fixtures\n", "\n"), callee),
+            (caller.replace('uses: ./.github/workflows/gameplay-http-e2e.yml',
+                            'uses: liboyang42-cpu/hengyin/.github/workflows/gameplay-http-e2e.yml@master'), callee),
+            (caller.replace('    with:\n      source_sha:', '    secrets: inherit\n    with:\n      source_sha:'), callee),
+            (caller.replace('  workflow_dispatch:', '  push:'), callee),
+            (caller.replace('  group: backend-jar-', '  group: gameplay-http-'), callee),
+            (caller, callee.replace('  workflow_call:', '  unused_call:')),
+            (caller, callee.replace('  workflow_call:\n    inputs:\n      source_sha:\n        description: Reviewed full40-character public candidate SHA\n        required: true\n        type: string',
+                                   '  workflow_call:\n    inputs:\n      source_sha:\n        description: Reviewed full40-character public candidate SHA\n        required: true\n        type: boolean')),
+        ]
+        for parent, child in mutations:
+            with self.assertRaises(AssertionError):
+                contract(parent, child)
+
+
 class ProfileTest(unittest.TestCase):
     def test_schema_guard_honest_hosted_or_original_vps_only(self):
         spec=importlib.util.spec_from_file_location('http_schema',TOOLS/'generic-gameplay-fresh-schema.py'); module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)

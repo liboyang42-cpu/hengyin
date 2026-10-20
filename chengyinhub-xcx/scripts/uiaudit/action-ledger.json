@@ -51442,24 +51442,6 @@
           "segments": [
             {
               "selector": "cy-btn",
-              "index": 20
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 21
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
               "index": 3
             }
           ]
@@ -1082723,99 +1082705,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:113:bindtap:reportTopic:13",
-      "route": "pages/topic/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/topic/index/index.wxml",
-        "js": "pages/topic/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "reportTopic",
-        "line": 113,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
-        "primaryApis": [
-          "/api/topic/report",
-          "/api/v1/community/capabilities"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/topic/report",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/capabilities",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/topic/report"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1927"
-      }
-    },
-    {
-      "id": "pages/topic/index/index.wxml:127:bindtap:onGraduateBeta:14",
+      "id": "pages/topic/index/index.wxml:123:bindtap:onGraduateBeta:13",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1082838,7 +1082728,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onGraduateBeta",
-        "line": 127,
+        "line": 123,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1082998,7 +1082888,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:155:bind:change:switchTab:15",
+      "id": "pages/topic/index/index.wxml:151:bind:change:switchTab:14",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083021,7 +1082911,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchTab",
-        "line": 155,
+        "line": 151,
         "selectorHint": ".tab2",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083065,7 +1082955,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:170:bindtap:goLocation:16",
+      "id": "pages/topic/index/index.wxml:166:bindtap:goLocation:15",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083088,7 +1082978,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goLocation",
-        "line": 170,
+        "line": 166,
         "selectorHint": ".venue-card",
         "visibleCondition": "{{info.venue}}",
         "disabledCondition": null,
@@ -1083142,7 +1083032,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:182:bindtap:openThemeHistory:17",
+      "id": "pages/topic/index/index.wxml:178:bindtap:openThemeHistory:16",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083165,7 +1083055,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openThemeHistory",
-        "line": 182,
+        "line": 178,
         "selectorHint": ".topic-audio",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083224,7 +1083114,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:184:bindtap:toggleTopicAudio:18",
+      "id": "pages/topic/index/index.wxml:180:bindtap:toggleTopicAudio:17",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083247,7 +1083137,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleTopicAudio",
-        "line": 184,
+        "line": 180,
         "selectorHint": ".topic-audio",
         "visibleCondition": "{{info.audioUrl}}",
         "disabledCondition": null,
@@ -1083301,7 +1083191,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:210:bindtap:goTemplateDetail:19",
+      "id": "pages/topic/index/index.wxml:206:bindtap:goTemplateDetail:18",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083324,7 +1083214,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTemplateDetail",
-        "line": 210,
+        "line": 206,
         "selectorHint": ".li",
         "visibleCondition": "{{ node.cmsMemberTemplate }}",
         "disabledCondition": null,
@@ -1083441,7 +1083331,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:267:bindtap:bmClick:20",
+      "id": "pages/topic/index/index.wxml:263:bindtap:bmClick:19",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083464,7 +1083354,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "bmClick",
-        "line": 267,
+        "line": 263,
         "selectorHint": ".sess",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083632,7 +1083522,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:294:bindtap:onLineupTap:21",
+      "id": "pages/topic/index/index.wxml:290:bindtap:onLineupTap:20",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083655,7 +1083545,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onLineupTap",
-        "line": 294,
+        "line": 290,
         "selectorHint": ".lineup-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083703,7 +1083593,99 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:326:bindtap:voteClick:22",
+      "id": "pages/topic/index/index.wxml:302:bindtap:reportTopic:21",
+      "route": "pages/topic/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/topic/index/index.wxml",
+        "js": "pages/topic/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "reportTopic",
+        "line": 302,
+        "selectorHint": ".topic-audio",
+        "visibleCondition": "{{canReport}}",
+        "disabledCondition": null,
+        "ariaLabel": "举报这个主题",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/topic/report",
+          "/api/v1/community/capabilities"
+        ],
+        "primaryApis": [
+          "/api/topic/report",
+          "/api/v1/community/capabilities"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/topic/report",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/v1/community/capabilities",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/topic/report"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/index/index.js:1927"
+      }
+    },
+    {
+      "id": "pages/topic/index/index.wxml:325:bindtap:voteClick:22",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083726,7 +1083708,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "voteClick",
-        "line": 326,
+        "line": 325,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083770,7 +1083752,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:335:bindtap:voteClick:23",
+      "id": "pages/topic/index/index.wxml:334:bindtap:voteClick:23",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083793,7 +1083775,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "voteClick",
-        "line": 335,
+        "line": 334,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083837,7 +1083819,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:356:bindtap:goPoint:24",
+      "id": "pages/topic/index/index.wxml:355:bindtap:goPoint:24",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083860,7 +1083842,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goPoint",
-        "line": 356,
+        "line": 355,
         "selectorHint": ".det7",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083907,7 +1083889,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:378:bindtap:lockedTip:25",
+      "id": "pages/topic/index/index.wxml:377:bindtap:lockedTip:25",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1083930,7 +1083912,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "lockedTip",
-        "line": 378,
+        "line": 377,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1083977,7 +1083959,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:382:bindtap:bmClick:26",
+      "id": "pages/topic/index/index.wxml:381:bindtap:bmClick:26",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084000,7 +1083982,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "bmClick",
-        "line": 382,
+        "line": 381,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084059,7 +1084041,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:383:bindtap:selfPlayBuy:27",
+      "id": "pages/topic/index/index.wxml:382:bindtap:selfPlayBuy:27",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084082,7 +1084064,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "selfPlayBuy",
-        "line": 383,
+        "line": 382,
         "selectorHint": "#topic-self-play-buy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084141,7 +1084123,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:388:bindtap:bmClick:28",
+      "id": "pages/topic/index/index.wxml:387:bindtap:bmClick:28",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084164,7 +1084146,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "bmClick",
-        "line": 388,
+        "line": 387,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084223,7 +1084205,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:394:bindtap:goJoinedPlay:29",
+      "id": "pages/topic/index/index.wxml:393:bindtap:goJoinedPlay:29",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084246,7 +1084228,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goJoinedPlay",
-        "line": 394,
+        "line": 393,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084293,7 +1084275,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:421:bindmarkertap:onNodeTap:30",
+      "id": "pages/topic/index/index.wxml:420:bindmarkertap:onNodeTap:30",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084316,7 +1084298,7 @@
         "tag": "map",
         "event": "bindmarkertap",
         "handler": "onNodeTap",
-        "line": 421,
+        "line": 420,
         "selectorHint": "#routeMap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084361,7 +1084343,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:427:bind:cta:goTopicList:31",
+      "id": "pages/topic/index/index.wxml:426:bind:cta:goTopicList:31",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084384,7 +1084366,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goTopicList",
-        "line": 427,
+        "line": 426,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{activeTab == '1' && !info.chaptersList.length}}",
         "disabledCondition": null,
@@ -1084501,7 +1084483,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:467:bindtap:goTemplateDetail:32",
+      "id": "pages/topic/index/index.wxml:466:bindtap:goTemplateDetail:32",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084524,7 +1084506,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTemplateDetail",
-        "line": 467,
+        "line": 466,
         "selectorHint": ".node-card-cover",
         "visibleCondition": "{{node.cmsMemberTemplate.imgUrl || node.imgUrl}}",
         "disabledCondition": null,
@@ -1084571,7 +1084553,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:497:bindtap:selfPlayBuy:33",
+      "id": "pages/topic/index/index.wxml:496:bindtap:selfPlayBuy:33",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084594,7 +1084576,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "selfPlayBuy",
-        "line": 497,
+        "line": 496,
         "selectorHint": ".topic-story-paywall__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084653,7 +1084635,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:498:bindtap:goMyOrders:34",
+      "id": "pages/topic/index/index.wxml:497:bindtap:goMyOrders:34",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084676,7 +1084658,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMyOrders",
-        "line": 498,
+        "line": 497,
         "selectorHint": ".topic-story-paywall__orders",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084790,7 +1084772,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:508:bind:cta:goTopicList:35",
+      "id": "pages/topic/index/index.wxml:507:bind:cta:goTopicList:35",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084813,7 +1084795,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goTopicList",
-        "line": 508,
+        "line": 507,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{activeTab == '2' && !info.chaptersList.length}}",
         "disabledCondition": null,
@@ -1084860,7 +1084842,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:534:bindtap:goLocation:36",
+      "id": "pages/topic/index/index.wxml:533:bindtap:goLocation:36",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084883,7 +1084865,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goLocation",
-        "line": 534,
+        "line": 533,
         "selectorHint": ".item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084937,7 +1084919,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:577:bind:close:voteClose:37",
+      "id": "pages/topic/index/index.wxml:576:bind:close:voteClose:37",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084960,7 +1084942,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "voteClose",
-        "line": 577,
+        "line": 576,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085004,7 +1084986,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:582:bindtap:changePic:38",
+      "id": "pages/topic/index/index.wxml:581:bindtap:changePic:38",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085027,7 +1085009,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "changePic",
-        "line": 582,
+        "line": 581,
         "selectorHint": ".image-item-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085071,7 +1085053,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:589:bindinput:onCommentInput:39",
+      "id": "pages/topic/index/index.wxml:588:bindinput:onCommentInput:39",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085094,7 +1085076,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onCommentInput",
-        "line": 589,
+        "line": 588,
         "selectorHint": "textarea[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085138,7 +1085120,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:594:bindtap:previewImage:40",
+      "id": "pages/topic/index/index.wxml:593:bindtap:previewImage:40",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085161,7 +1085143,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewImage",
-        "line": 594,
+        "line": 593,
         "selectorHint": "image[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085215,7 +1085197,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:595:bindtap:deleteImage:41",
+      "id": "pages/topic/index/index.wxml:594:bindtap:deleteImage:41",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085238,7 +1085220,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "deleteImage",
-        "line": 595,
+        "line": 594,
         "selectorHint": ".delete-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085484,7 +1085466,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:602:bindtap:upLoadImg:42",
+      "id": "pages/topic/index/index.wxml:601:bindtap:upLoadImg:42",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085510,7 +1085492,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "upLoadImg",
-        "line": 602,
+        "line": 601,
         "selectorHint": ".item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085605,7 +1085587,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:612:bindtap:submitComment:43",
+      "id": "pages/topic/index/index.wxml:611:bindtap:submitComment:43",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085628,7 +1085610,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitComment",
-        "line": 612,
+        "line": 611,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitComment}}",
@@ -1085723,7 +1085705,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:622:bind:cancel:onSelfPlayCancel:45",
+      "id": "pages/topic/index/index.wxml:621:bind:cancel:onSelfPlayCancel:45",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085746,7 +1085728,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "onSelfPlayCancel",
-        "line": 622,
+        "line": 621,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085790,7 +1085772,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:622:bind:confirm:onSelfPlayConfirm:44",
+      "id": "pages/topic/index/index.wxml:621:bind:confirm:onSelfPlayConfirm:44",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085815,7 +1085797,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "onSelfPlayConfirm",
-        "line": 622,
+        "line": 621,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085926,7 +1085908,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:626:bind:change:onSelfPlayConsentChange:46",
+      "id": "pages/topic/index/index.wxml:625:bind:change:onSelfPlayConsentChange:46",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085949,7 +1085931,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onSelfPlayConsentChange",
-        "line": 626,
+        "line": 625,
         "selectorHint": ".topic-selfplay__consent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1085993,7 +1085975,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:630:bindtap:onSelfPlayConfirm:47",
+      "id": "pages/topic/index/index.wxml:629:bindtap:onSelfPlayConfirm:47",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086018,7 +1086000,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onSelfPlayConfirm",
-        "line": 630,
+        "line": 629,
         "selectorHint": ".topic-selfplay__err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086129,7 +1086111,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:636:bind:cancel:onClubSheetCancel:49",
+      "id": "pages/topic/index/index.wxml:635:bind:cancel:onClubSheetCancel:49",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086152,7 +1086134,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onClubSheetCancel",
-        "line": 636,
+        "line": 635,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086196,7 +1086178,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:636:bind:select:onClubSheetSelect:48",
+      "id": "pages/topic/index/index.wxml:635:bind:select:onClubSheetSelect:48",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086219,7 +1086201,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onClubSheetSelect",
-        "line": 636,
+        "line": 635,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086310,7 +1086292,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:638:bind:cancel:onReportReasonCancel:51",
+      "id": "pages/topic/index/index.wxml:637:bind:cancel:onReportReasonCancel:51",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086333,7 +1086315,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReportReasonCancel",
-        "line": 638,
+        "line": 637,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086378,7 +1086360,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:638:bind:select:onReportReasonSelect:50",
+      "id": "pages/topic/index/index.wxml:637:bind:select:onReportReasonSelect:50",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086401,7 +1086383,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReportReasonSelect",
-        "line": 638,
+        "line": 637,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086446,7 +1086428,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:645:bind:close:closeSessionPicker:52",
+      "id": "pages/topic/index/index.wxml:644:bind:close:closeSessionPicker:52",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086469,7 +1086451,7 @@
         "tag": "cy-session-picker",
         "event": "bind:close",
         "handler": "closeSessionPicker",
-        "line": 645,
+        "line": 644,
         "selectorHint": "cy-session-picker[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086513,7 +1086495,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:646:bind:confirm:onSessionPicked:53",
+      "id": "pages/topic/index/index.wxml:645:bind:confirm:onSessionPicked:53",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086536,7 +1086518,7 @@
         "tag": "cy-session-picker",
         "event": "bind:confirm",
         "handler": "onSessionPicked",
-        "line": 646,
+        "line": 645,
         "selectorHint": "cy-session-picker[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086585,7 +1086567,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:655:bind:consentchange:onResultConsentChange:54",
+      "id": "pages/topic/index/index.wxml:654:bind:consentchange:onResultConsentChange:54",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086608,7 +1086590,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentchange",
         "handler": "onResultConsentChange",
-        "line": 655,
+        "line": 654,
         "selectorHint": "cy-result-sheet[bind:consentchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086673,7 +1086655,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:655:bind:consentretry:onResultConsentRetry:55",
+      "id": "pages/topic/index/index.wxml:654:bind:consentretry:onResultConsentRetry:55",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086696,7 +1086678,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentretry",
         "handler": "onResultConsentRetry",
-        "line": 655,
+        "line": 654,
         "selectorHint": "cy-result-sheet[bind:consentretry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086761,7 +1086743,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:656:bind:close:onResultSheetClose:56",
+      "id": "pages/topic/index/index.wxml:655:bind:close:onResultSheetClose:56",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086784,7 +1086766,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 656,
+        "line": 655,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086832,7 +1086814,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:checkreplay:checkThemeReplay:62",
+      "id": "pages/topic/index/index.wxml:657:bind:checkreplay:checkThemeReplay:62",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086855,7 +1086837,7 @@
         "tag": "cy-theme-records",
         "event": "bind:checkreplay",
         "handler": "checkThemeReplay",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:checkreplay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086925,7 +1086907,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:closecard:closeThemeResultCard:60",
+      "id": "pages/topic/index/index.wxml:657:bind:closecard:closeThemeResultCard:60",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086948,7 +1086930,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closecard",
         "handler": "closeThemeResultCard",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:closecard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1086992,7 +1086974,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:closehistory:closeThemeHistory:57",
+      "id": "pages/topic/index/index.wxml:657:bind:closehistory:closeThemeHistory:57",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087015,7 +1086997,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closehistory",
         "handler": "closeThemeHistory",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:closehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1087059,7 +1087041,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:morehistory:loadMoreThemeHistory:58",
+      "id": "pages/topic/index/index.wxml:657:bind:morehistory:loadMoreThemeHistory:58",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087082,7 +1087064,7 @@
         "tag": "cy-theme-records",
         "event": "bind:morehistory",
         "handler": "loadMoreThemeHistory",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:morehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1087141,7 +1087123,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:opencard:openThemeRecordCard:59",
+      "id": "pages/topic/index/index.wxml:657:bind:opencard:openThemeRecordCard:59",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087164,7 +1087146,7 @@
         "tag": "cy-theme-records",
         "event": "bind:opencard",
         "handler": "openThemeRecordCard",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:opencard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1087231,7 +1087213,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:replay:replayThemeSession:61:variant:theme-replay",
+      "id": "pages/topic/index/index.wxml:657:bind:replay:replayThemeSession:61:variant:theme-replay",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087366,7 +1087348,7 @@
         "tag": "cy-theme-records",
         "event": "bind:replay",
         "handler": "replayThemeSession",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:replay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1087458,7 +1087440,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:658:bind:retrycard:retryThemeResultCard:63",
+      "id": "pages/topic/index/index.wxml:657:bind:retrycard:retryThemeResultCard:63",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087481,7 +1087463,7 @@
         "tag": "cy-theme-records",
         "event": "bind:retrycard",
         "handler": "retryThemeResultCard",
-        "line": 658,
+        "line": 657,
         "selectorHint": "cy-theme-records[bind:retrycard]",
         "visibleCondition": null,
         "disabledCondition": null,

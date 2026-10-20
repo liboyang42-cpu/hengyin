@@ -8,6 +8,12 @@ on:
         description: Reviewed full40-character public candidate SHA
         required: true
         type: string
+  workflow_call:
+    inputs:
+      source_sha:
+        description: Reviewed full40-character public candidate SHA
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -15,6 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   http:
+    # A reusable call retains the caller's workflow_dispatch event context.
     if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 45

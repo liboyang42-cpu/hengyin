@@ -13,6 +13,11 @@ on:
         description: 要构建的完整 40 位 commit SHA（须已推到本仓库）
         required: true
         type: string
+      run_http_fixtures:
+        description: 仅运行同提交的隔离 HTTP 验收，不重复构建 JAR
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,7 +29,7 @@ concurrency:
 jobs:
   jar:
     name: Build backend jar
-    if: github.repository == 'liboyang42-cpu/hengyin'
+    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -62,3 +67,9 @@ jobs:
           path: out/
           retention-days: 1
           if-no-files-found: error
+  http-fixtures:
+    name: Run isolated HTTP fixtures
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures
+    uses: ./.github/workflows/gameplay-http-e2e.yml
+    with:
+      source_sha: ${{ inputs.source_sha }}

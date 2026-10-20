@@ -152,7 +152,7 @@ EXPECTED = {
     # test_expected_counts_match_source_files 会拿 SOURCE_FILES 现数来比,加一条不改这里当场红。
     # 2026-08-16 R3:+1 = thePayeeVerifyAndPayoutPermissionsLandOnTwoDifferentRoles
     # (把 remark 里那句「与审核权限互斥分派」做成可回读的事实)。
-    "ClubCorporatePayeeMybatisIntegrationTest": 11,
+    "ClubCorporatePayeeMybatisIntegrationTest": 14,
     # 2026-08-16 R4:18 → 21,+3 = 已决质量行必须带 reason 的 DB CHECK、
     # business:clubextra:approve 真授到 cy_operator、business:topic:query 真授到两个资金角色。
     "ClubEditionCompensationMybatisIntegrationTest": 21,
