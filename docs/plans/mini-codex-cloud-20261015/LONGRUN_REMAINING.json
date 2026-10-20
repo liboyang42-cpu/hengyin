@@ -2642,7 +2642,7 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "F8_COMPILE_BLOCKER_CLEARED_PROVENANCE_SINGLE_ENTRY_REPAIR_AUTHORIZED_ACCEPTANCE_PENDING",
+    "state": "F8_HTTP_FUNDS_PASS_BACKEND_FAIL_EXACT_SINGLE_SLOT_REPAIR_AUTHORIZED",
     "creation_or_candidate_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
     "port_source": {
       "pr": 386,
@@ -2724,12 +2724,12 @@
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
     "validation": {
-      "combined_candidate": "PARTIAL_PROGRESS; f8 compile blocker cleared, provenance contract failure, final acceptance pending",
+      "combined_candidate": "NOT_ACCEPTED; exactf8 HTTP/Funds PASS but full Backend FAIL and provenance repair pending",
       "existing_source_results_inherited": false,
       "permitted_channel": "Existing approved CI only for the authorized independent integration; no new entry or repeated CI execution.",
       "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "real_storage": "EXISTING_F8_FUNDS_IN_PROGRESS; NO_FINAL_ARTIFACT_ACCEPTANCE",
-      "real_http": "RUN39433391973_IN_PROGRESS_REACHED_REAL_CHAINS_REPORTED; NO_FINAL_RESULT"
+      "real_storage": "FUNDS_PASS_AT_EXACT_F8_RUN39433312735_ONLY; NOT_A_FULL_COMBINATION_ACCEPTANCE",
+      "real_http": "PASS_AT_EXACT_F8_RUN39433391973_ONLY"
     },
     "prohibited": [
       "merge independent acceptance work into master",
@@ -2834,9 +2834,17 @@
         "run_id": 39433312735,
         "name": "Funds MySQL IT",
         "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-        "status": "in_progress",
-        "conclusion": null,
+        "status": "completed",
+        "conclusion": "success",
         "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735"
+      },
+      {
+        "run_id": 39433391973,
+        "name": "Chain Acceptance (manual)",
+        "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433391973"
       }
     ],
     "conflict_resolution": {
@@ -3015,6 +3023,27 @@
           }
         ],
         "scope": "Old95f source metadata, preserved; not current f8 result."
+      },
+      {
+        "runs": [
+          {
+            "run_id": 39433312461,
+            "name": "GitHub CI",
+            "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+            "status": "in_progress",
+            "conclusion": null,
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461"
+          },
+          {
+            "run_id": 39433312735,
+            "name": "Funds MySQL IT",
+            "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+            "status": "in_progress",
+            "conclusion": null,
+            "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735"
+          }
+        ],
+        "scope": "Earlierf8 pending metadata, replaced by actual current metadata without changing source."
       }
     ],
     "integration_repair_progress": {
@@ -3093,7 +3122,7 @@
     },
     "f8_validation_progress": {
       "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "state": "PARTIAL_PROGRESS_NOT_COMBINED_ACCEPTANCE",
+      "state": "EARLIER_JOB_STEP_PROGRESS_SUPERSEDED_BY_F8_CURRENT_VALIDATION",
       "reported_existing_job_steps": {
         "HTTP_build_jar": "PASS",
         "HTTP_execution": "REACHED_REAL_HTTP_CHAINS",
@@ -3141,6 +3170,131 @@
       ],
       "scope": "Job-step progress and detailed gate cause from integration writer; C00 directly read check metadata and source fingerprint only. Backend/Funds/HTTP final results pending, old95f failure remains history.",
       "no_rerun_or_cancellation": "Existing runs continue, no C00 CI/test execution or cancellation."
+    },
+    "backend_fixture_repair_authority": {
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "repair_slot": "Same single local integration repair slot; no new Cloud author",
+      "state": "AUTHORIZED_EXACT_FOUR_TEST_FIXTURES_AND_EXISTING_CONTROLLER_400_REPAIR",
+      "base_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "additional_test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java"
+      ],
+      "test_path_scopes": {
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java": "Wire the existing TopicContentSafetyTestFixtures real safety gate into the ported fixture; preserve all methods and business assertions.",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java": "Wire the existing real gate fixture; only where #385 legitimately reads the original topic, replace zero-interactions with exact once selectCmsTopicById for that expected identity and forbid every write/all remaining interactions. Retain methods, uncertain-write semantics and all other assertions; no blanket relaxation.",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostAuditLevelTest.java": "Replace the old external image fixture with the existing canonical media fixture/environment convention only; no new OSS environment, network, production fallback or media-policy change.",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java": "Stub successful chapter/node inserts to generate valid identities as required by existing production guards. Preserve methods/business assertions and production identity protection."
+      },
+      "existing_controller_authority": {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+        "original_grant": "1e62861bbf8317c10d607c2abf74150c29350c32",
+        "reactivated_scope": "Only two blocked textVerdict returns: restore AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage()) at create/update, retaining new TopicTextSafety gate and operator/subject separation. No service or other production changes.",
+        "read_source_lines": [
+          520,
+          739
+        ]
+      },
+      "constraints": "No removed/skipped tests or changed method counts; do not change expected400 to500; no weakened write-negative controls, production overloads, new dependencies, SQL, policies, gates, CI or validation entry.",
+      "original_source_ownership": "Original authors/source-branch locks retained/frozen. Root alone repairs the independent combination branch, no new source-domain assignment.",
+      "new_source_sha": "NOT_DELIVERED",
+      "read_only_test_class": "JourneyNarrativeSecuritySaveTest; no write authority granted"
+    },
+    "f8_current_validation": {
+      "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "state": "PARTIAL_HTTP_AND_FUNDS_PASS_FULL_BACKEND_FAIL_NOT_ACCEPTED",
+      "backend": {
+        "check": "FAILURE",
+        "reported_tests": 12696,
+        "failures": 7,
+        "errors": 7,
+        "skipped": 628,
+        "counts_scope": "Existing Backend report supplied by integration writer, includes skipped IT; not a real-storage skipped0 run and not12696 executed business methods. C00 read failed check metadata, not raw XML.",
+        "failed_classes": [
+          {
+            "class": "JourneyNarrativeSecuritySaveTest",
+            "failures": 2,
+            "errors": 0
+          },
+          {
+            "class": "OWN_C03_21Test",
+            "failures": 4,
+            "errors": 0
+          },
+          {
+            "class": "OWN_C03_24Test",
+            "failures": 1,
+            "errors": 4
+          },
+          {
+            "class": "CommunityPostAuditLevelTest",
+            "failures": 0,
+            "errors": 1
+          },
+          {
+            "class": "TopicSaleReviewDecouplingTest",
+            "failures": 0,
+            "errors": 2
+          }
+        ]
+      },
+      "http": {
+        "run_id": 39433391973,
+        "artifact_id": 12268773420,
+        "artifact_digest": "sha256:b50a7b8231ae0decb6ee812e68170af4f5b311e0b6e2a11f880ddc56e98de791",
+        "verdict": "PASS",
+        "problems": [],
+        "harnessdrift": [],
+        "chains": {
+          "platform": "PASS",
+          "merchant_club": "PASS",
+          "sale_close": "PASS",
+          "player": "PASS",
+          "finance": "PASS"
+        },
+        "scope": "Integration verifier checked artifact summary; C00 read run/check SUCCESS and artifact manifest/digest only, did not reparse summary or execute. Declared outbound payment/content-safety stubs and real-device/production exclusions retained."
+      },
+      "funds": {
+        "run_id": 39433312735,
+        "state": "PASS",
+        "scope": "Existing fixedf8 Funds check/workflow SUCCESS and full PASS reported; no extra class/method count or raw receipt validation inferred."
+      },
+      "source_boundary": "Only exactf8; no inheritance into the forthcoming fixture/controller/provenance repair SHA.95f and all older failures retained.",
+      "current_check_metadata": [
+        {
+          "name": "Migration safety gate",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461/job/118664209682"
+        },
+        {
+          "name": "Backend tests",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461/job/118664209431"
+        },
+        {
+          "name": "Real-HTTP chains",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433391973/job/118663999009"
+        },
+        {
+          "name": "Funds MySQL IT (50/9/30, skipped=0, fail-closed)",
+          "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735/job/118663854205"
+        }
+      ],
+      "provenance_progress": "Previously granted one CmsActivity sourceFiles hash edited locally, uncommitted;6 static contracts reported PASS at unfrozen patch, not final-source acceptance.",
+      "C00_execution": "NONE; no compiler/test/CI invocation or business source edits"
     }
   }
 }

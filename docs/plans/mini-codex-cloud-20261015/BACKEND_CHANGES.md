@@ -1,22 +1,22 @@
-## 当前定向授权：f8已解除构造编译阻塞，仅修单条来源指纹
+## 当前f8验收分层：HTTP／Funds通过，完整Backend失败，单槽定向修复
 
-固定 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1` 的HTTP Build jar报告PASS，已进入真实HTTP链；39-selected后端套件步骤报告SUCCESS，不推定测试方法数或整套Backend最终通过。迁移安全脚本本身／14迁移依赖／PR声明报告通过；后续 `ci/test_prelaunch_business_seeds.py` 暴露单条旧来源指纹。旧95f编译失败和五链未运行保留为历史，不再称f8仍受旧构造错误阻塞。
+固定 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1` 的完整Backend报告12696项，7失败／7错误／628跳过；包含关闭的IT，不能称真库skip0或12696项业务全执行。失败仅5类：JourneyNarrativeSecuritySaveTest(2F)、OWN_C03_21Test(4F)、OWN_C03_24Test(1F4E)、CommunityPostAuditLevelTest(1E)、TopicSaleReviewDecouplingTest(2E)。C00直接核到Backend检查FAIL；精确数量与诊断由集成验证者提供。
 
-C00直接只读核到：`ci/prelaunch-seed-provenance.json.sourceFiles` 的 `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java` 仍为 `62e65e5a05ed6b39afba5b224c073bb8ee2ce8a91d632d7e8b0915a304d6e3ac`；f8源码与#388 `f4d75f59fa044e634f5c06fbe6abb6bfcd37ab8a` 字节一致，实际SHA256为 `0ac7044d7d65aef23006fdccd33c2527193c8d8ee309a4208f5f5509fddc0821`。
+本地root同一组合修复槽新增四条精确测试路径，均前缀 `chengyinhub-admin/src/test/java/com/chengyinhub/business/`：`longrun/OWN_C03_21Test.java`、`longrun/OWN_C03_24Test.java`、`community/CommunityPostAuditLevelTest.java`、`service/TopicSaleReviewDecouplingTest.java`。仅复用已有真实内容安全夹具、canonical媒体夹具、成功chapter／node身份生成夹具；保方法数／业务断言。C03_24仅允许既有合同要求的指定主题select一次，并禁止全部写入及其余交互，不能放松写负控。
 
-仅授权本地root在同一独立组合分支／修复槽修改 `ci/prelaunch-seed-provenance.json` 的这一条sourceFiles指纹及必要来源说明。先核sourceFiles／viewCoverage差异与实际权限真源；不批量刷新其他指纹，不改viewCoverage、menuRows、roleRows、权限、SQL、测试或门禁。新增不一致须另列，不在此授权内。既有五路径修复仍冻结；新指纹修复SHA尚未交付，无新增Cloud作者。精确授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.seed_provenance_repair_authority`。
+原已授权 `ApiTopicController.java` 仅恢复两处明确内容拒绝为 `AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage())`，保新TopicTextSafety门禁及操作者／主体隔离；不改Service／其他生产。Journey原测试只读，不改400断言为500。此前来源指纹仅改单hash仍未commit，6静态合同报告通过只属未冻结补丁。原来源／锁保留，无新增Cloud作者、入口或CI配置变更。精确授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.backend_fixture_repair_authority`。
 
-既有f8 HTTP [39433391973](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433391973)、Backend／Funds当前最终结果仍待签收；不取消或重复触发，不从旧源继承结果。Cloud仅源码只读与控制文档登记，不编译／测试／触发CI。其余原来源冻结、master／部署／迁移／入口／网络限制保持。
+同固定f8的 [HTTP39433391973](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433391973) 已SUCCESS；工件12268773420由验证者核得五链PASS、problems=[]、harnessdrift=[]。C00核读运行及工件目录，不重跑／重解析summary。[Funds39433312735](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735) 已SUCCESS／全PASS报告，未另推测试数。两者仅属于f8，不能继承给下一修复SHA，完整组合仍未验收。支付／内容安全出站stub、真实微信／设备／持久迁移／生产未验边界保持，旧95f失败及其Java实际0／HTTP未跑历史保留。Cloud仅控制文档，不编译／测试／触发CI。
 
-## 当前固定修复：PR394的f8fe6a，源码冻结WAIT_CI
+## f8首次修复交付与当时WAIT_CI历史
 
 [PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 已更新固定源码 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1`，直接父提交为 `95f038ae57ac38d35d532a07fbd82375c74d887f`。C00直接核读公开diff：仅授权五路径，24行新增／8行删除；七处require复用既有举报工具，E01_12仅改setUp的合法上架主题／10参依赖／真实policy预审配置true和显式HOLD，allowlist仅新增4+2实名理由，冻结72不变。3方法及后续断言逐字未变由集成写者比对报告；公开差异未触及这些方法。未新增工具、生产Java、SQL或CI配置。
 
 集成写者报告固定新源17项JS全PASS／0失败／0跳过、silent门禁PASS；既有行动账重建4755且与95f逐字不变，实际commit未包含行动账差异。迁移静态与14迁移依赖顺序报告PASS；先前一次ryTask缺SQL登记源于稀疏checkout缺根sql目录，补齐只读目录后通过，属于准备范围问题，不是业务失败或新增SQL。以上仅签收该源报告，C00未执行检查，不从旧源继承。
 
-固定f8的既有 [CI39433312461](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461)、[Funds39433312735](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735) 当前核读IN_PROGRESS，状态 **WAIT_CI**；同固定源HTTP39433391973已启动／IN_PROGRESS，最终结果待签收。root唯一修复槽停写待反馈，原来源／三队冻结，不派其他作者。旧95f的JS11100项（11090通过／5失败／2跳过／3TODO）、构造testCompile失败、Java业务实际0和HTTP五链MISSING／NOT_RUN均保留历史，不移给f8。
+固定f8的既有 [CI39433312461](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312461)、[Funds39433312735](https://github.com/liboyang42-cpu/hengyin/actions/runs/39433312735) 当时核读IN_PROGRESS／WAIT_CI；现已取得完整Backend失败与同源Funds／HTTP通过，见当前分层，不再以旧pending覆盖结果。root唯一修复槽停写待反馈，原来源／三队冻结，不派其他作者。旧95f的JS11100项（11090通过／5失败／2跳过／3TODO）、构造testCompile失败、Java业务实际0和HTTP五链MISSING／NOT_RUN均保留历史，不移给f8。
 
-最终组合后端／真库／HTTP尚未验收，旧41f83真库及8bc728 HTTP／CI不继承；支付／内容安全出站stub、真实微信／设备、持久迁移与生产边界保持。不合master、不部署、不执行生产迁移、不新增入口或修改212／CI／网络；Cloud仅控制文档，不运行验证。当前精确交付与运行索引见 `LONGRUN_REMAINING.json.independent_backend_acceptance`。
+最终组合整体尚未验收；f8的Funds／HTTP同源通过见当前段，旧41f83真库及8bc728 HTTP／CI不继承；支付／内容安全出站stub、真实微信／设备、持久迁移与生产边界保持。不合master、不部署、不执行生产迁移、不新增入口或修改212／CI／网络；Cloud仅控制文档，不运行验证。当前精确交付与运行索引见 `LONGRUN_REMAINING.json.independent_backend_acceptance`。
 
 ## 先前组合95f源码交付与失败历史：不作为f8验收
 
