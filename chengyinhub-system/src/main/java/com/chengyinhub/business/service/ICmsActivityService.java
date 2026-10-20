@@ -147,7 +147,11 @@ public interface ICmsActivityService
     /**
      * 小程序更新活动内容（未开卖）。票务改动不得把已删票 del_flag 改回 0。
      */
-    int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username);
+    /**
+     * @param preReview 本次编辑按先审处理(ActivityReviewPolicy=PRE_REVIEW 或门禁 HOLD):
+     *                  改了名称/简介/图片/时间/地点即退回待审并刷新审核单。已驳回的活动无论模式改完都重提。
+     */
+    int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username, boolean preReview);
 
 
     /**

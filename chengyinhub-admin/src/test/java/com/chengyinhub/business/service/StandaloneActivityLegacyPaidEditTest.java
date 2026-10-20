@@ -113,7 +113,7 @@ class StandaloneActivityLegacyPaidEditTest {
 
     private void assertRejected(CmsActivityPublishRequest request) {
         ServiceException e = assertThrows(ServiceException.class,
-                () -> service.updateActivityByOwner(request, OWNER, "owner"));
+                () -> service.updateActivityByOwner(request, OWNER, "owner", false));
         assertTrue(e.getMessage().contains("票价只能是 0"), e.getMessage());
         verify(ticketMapper, never()).updateOmsTicket(any(OmsTicket.class));
         verify(ticketMapper, never()).insertOmsTicket(any(OmsTicket.class));
@@ -123,14 +123,14 @@ class StandaloneActivityLegacyPaidEditTest {
     @Test
     void legacyPaid_textOnlyEdit_passes() {
         assertEquals(1, service.updateActivityByOwner(
-                request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "0")), OWNER, "owner"));
+                request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "0")), OWNER, "owner", false));
         verify(activityMapper).updateCmsActivityByOwner(any());
     }
 
     @Test
     void legacyPaid_lowerPrice_passes() {
         assertEquals(1, service.updateActivityByOwner(
-                request(req(PAID_TICKET, "149.00"), req(FREE_TICKET, "0")), OWNER, "owner"));
+                request(req(PAID_TICKET, "149.00"), req(FREE_TICKET, "0")), OWNER, "owner", false));
     }
 
     @Test
@@ -153,6 +153,6 @@ class StandaloneActivityLegacyPaidEditTest {
         ReflectionTestUtils.setField(service, "platformMemberId", OWNER);
         assertEquals(1, service.updateActivityByOwner(
                 request(req(PAID_TICKET, "299.00"), req(FREE_TICKET, "10.00"), req(null, "50.00")),
-                OWNER, "owner"));
+                OWNER, "owner", false));
     }
 }
