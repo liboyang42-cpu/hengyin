@@ -487,6 +487,30 @@ class AuditAppealRevertContentTest {
         verify(tasks, never()).revertAuditTaskDecisionCas(any(), any(), any(), any(), any());
     }
 
+    /**
+     * AUDIT-INT-3(#376/#380 × #384):先发后审的内容在抽检单(post_review_flag)「通过」前已经在架。
+     * 撤销通过会把它 CAS 回 0/0/0 待审,造出一个从未存在过的「下架待审」态(活动已售票也照样下架)。
+     * 抽检通过不开放撤销;抽检驳回(已把内容下架)的撤销仍照常回待审。
+     */
+    @Test
+    void postReviewSpotCheckApprovalIsNotRevertableButRejectionStillIs() {
+        AuditTask approved = task(REJECTED_TASK, AuditTask.STATUS_APPROVED, "post_review_flag");
+        revertable(approved, AuditRecord.ACTION_APPROVE, 60L);
+        when(activities.reopenAuditDecision(any(), any(), any(), any(), any())).thenReturn(1);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.revert(REJECTED_TASK, REVIEWER, true, revertRequest()));
+        assertEquals(AuditTaskServiceImpl.ERROR_REVERT_TYPE, error.getDetailMessage());
+        verify(activities, never()).reopenAuditDecision(any(), any(), any(), any(), any());
+
+        AuditTask rejected = task(REJECTED_TASK, AuditTask.STATUS_REJECTED, "post_review_flag");
+        AuditRecord decision = revertable(rejected, AuditRecord.ACTION_REJECT, 60L);
+        when(activities.reopenAuditDecision(BIZ_ID, 2L, 2, 0L, decision.getCreateTime())).thenReturn(1);
+
+        assertEquals(AuditTask.STATUS_PENDING,
+                service.revert(REJECTED_TASK, REVIEWER, true, revertRequest()).getStatus());
+    }
+
     // ───────────────────────── 作者时间线 ─────────────────────────
 
     @Test

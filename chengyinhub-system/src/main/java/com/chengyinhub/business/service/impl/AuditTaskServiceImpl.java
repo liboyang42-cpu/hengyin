@@ -1868,9 +1868,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         // 申诉裁决的真源是申诉单(每内容每人一次)，撤销会让申诉单与内容状态分叉，不开放。
         // 举报单/内容安全复核上架单裁决的是已公开(或被机审扣下)的内容，不是作者提交的待审版本：
         // reopenContent 写回的「待审」不是它们的决定前状态，撤销后再判也回不到原状(举报不成立早退不动内容)，不开放。
+        // 先发后审抽检单(post_review_flag)决定前内容已在架：撤销「通过」会把在架内容下成待审，只开放撤销「驳回」。
         String source = task.getSourceType();
         if (SOURCE_APPEAL.equals(source) || SOURCE_REPORT.equals(source)
                 || TopicContentSafetyHold.SOURCE_RELIST.equals(source)) {
+            return false;
+        }
+        if (SOURCE_POST_REVIEW_FLAG.equals(source) && AuditTask.STATUS_APPROVED.equals(task.getStatus())) {
             return false;
         }
         return isContentDecisionType(task.getBizType()) && isTerminalDecision(task.getStatus());
