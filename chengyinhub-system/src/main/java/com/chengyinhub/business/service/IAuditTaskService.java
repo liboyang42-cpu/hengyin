@@ -33,6 +33,14 @@ public interface IAuditTaskService {
     Long reportContent(String bizType, Long bizId, Long reporterId, String reasonText);
 
     /**
+     * 用户端举报入口(主题/模板广场/个人玩法):同一举报人对同一轮未结单只记一次,其余同 {@link #reportContent}。
+     *
+     * @return true=本次已记录;false=该举报人本轮已举报过,未重复记录
+     * @throws IllegalArgumentException 举报原因为空或超长
+     */
+    boolean reportContentOnce(String bizType, Long bizId, Long reporterId, String reasonText);
+
+    /**
      * 安全门禁 HOLD → 生成待审任务(sourceType=auto_gate),幂等:同 bizType+bizId 已有未结单(PENDING/ESCALATED)则复用不重复建。
      * 返回审核单 id。供 ContentSafetyGate 在 HOLD 时调用,复用现有审核工作台,不新建第二套审核系统。
      */

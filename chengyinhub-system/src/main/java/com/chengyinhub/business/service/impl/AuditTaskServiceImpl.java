@@ -372,6 +372,30 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return taskId;
     }
 
+    /** 用户端举报原因长度上限(与广场举报同口径) */
+    private static final int MAX_REPORT_REASON_LENGTH = 64;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reportContentOnce(String bizType, Long bizId, Long reporterId, String reasonText) {
+        String reason = reasonText == null ? "" : reasonText.trim();
+        if (reason.isEmpty() || reason.length() > MAX_REPORT_REASON_LENGTH) {
+            throw new IllegalArgumentException("请选择举报原因");
+        }
+        Long open = findOpenTaskId(bizType, bizId);
+        if (open != null && reporterId != null) {
+            AuditRecord query = new AuditRecord();
+            query.setTaskId(open);
+            query.setAction("REPORT");
+            List<AuditRecord> reported = auditRecordMapper.selectAuditRecordList(query);
+            if (reported != null) for (AuditRecord record : reported) {
+                if (reporterId.equals(record.getOperatorId())) return false;
+            }
+        }
+        reportContent(bizType, bizId, reporterId, reason);
+        return true;
+    }
+
     @Override
     public List<AuditRecord> listAuditRecords(Long taskId) {
         AuditRecord q = new AuditRecord();
@@ -473,6 +497,29 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             }
             snap.put("content", content);
         }
+        if (AuditTask.BIZ_TOPIC.equals(bizType) || AuditTask.BIZ_TEMPLATE.equals(bizType)
+                || AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+            // 举报时的公开面留证:作者事后改名换图,审核员仍能看到被举报的那一版。
+            java.util.Map<String, Object> content = new java.util.LinkedHashMap<>();
+            Object[] row = null;
+            if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+                CmsTopic topic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(bizId);
+                if (topic != null) row = new Object[] {topic.getMemberId(), topic.getName(), topic.getImgUrl()};
+            } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                CmsMemberTemplate template = templateMapper == null ? null : templateMapper.selectCmsMemberTemplateById(bizId);
+                if (template != null) row = new Object[] {template.getMemberId(), template.getTitle(), template.getImgUrl()};
+            } else {
+                CmsTemplateLibrary library = libraryMapper == null ? null : libraryMapper.selectCmsTemplateLibraryById(bizId);
+                if (library != null) row = new Object[] {library.getMemberId(), library.getTitle(), library.getImgUrl()};
+            }
+            content.put("available", row != null);
+            if (row != null) {
+                content.put("memberId", row[0]);
+                content.put("title", row[1]);
+                content.put("imgUrl", row[2]);
+            }
+            snap.put("content", content);
+        }
         if (AuditTask.BIZ_TEAM.equals(bizType)) {
             // 只取审核需要的公开信息;邀请码是入队凭证,绝不进快照。
             java.util.Map<String, Object> content = new java.util.LinkedHashMap<>();
@@ -561,7 +608,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
-        if (templateLock != null) assertTemplateReviewCurrent(templateLock, request);
+        // 举报单裁决的是「已公开内容是否违规」,不是作者提交的待审版本:不走待审快照/配置复核。
+        if (templateLock != null && !SOURCE_REPORT.equals(task.getSourceType())) {
+            assertTemplateReviewCurrent(templateLock, request);
+        }
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -1055,6 +1105,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
                 imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
+                // AUDIT-G2-2:举报不成立 = 内容维持原状(不重发、不进 Beta);留置中的主题例外,过审即人工复核通过。
+                if (up && SOURCE_REPORT.equals(task.getSourceType())
+                        && !TopicContentSafetyHold.isHeld(cmsTopicMapper.selectCmsTopicById(bizId))) {
+                    return;
+                }
                 if (up) mediaPublicationGuard.requireTopicPublication(bizId);
                 if (isTopicBundle(task)) {
                     topicBundleReviewService.applyDecision(bizId, task.getSubmitterId(), task.getSnapshotJson(), up);
@@ -1129,6 +1184,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 a.setReason(down ? reasonText : "");
                 a.setPublishStatus(down ? 0L : 1L);
                 cmsActivityMapper.updateCmsActivity(a);
+            } else if (AuditTask.BIZ_TEMPLATE.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
+                // AUDIT-G2-2:个人玩法举报。不成立不动;成立 = 下架个人玩法及其广场投影(可由作者修改重提)。
+                if (up) return;
+                if (templateMapper.takeDownReported(bizId, reasonText) != 1) {
+                    logger.warn("举报成立但个人玩法已不在公开态,跳过下架 templateId={}", bizId);
+                }
+                libraryMapper.takeDownReportedByMemberTemplate(bizId, reasonText);
+            } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType) && SOURCE_REPORT.equals(task.getSourceType())) {
+                // AUDIT-G2-2:模板广场举报。不成立不动;成立 = 只下架这条广场记录,不动作者的个人玩法。
+                if (up) return;
+                if (libraryMapper.takeDownReported(bizId, reasonText) != 1) {
+                    logger.warn("举报成立但模板广场记录已不在公开态,跳过下架 libraryId={}", bizId);
+                }
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。

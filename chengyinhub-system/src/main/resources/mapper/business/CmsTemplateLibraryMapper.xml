@@ -298,6 +298,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{row.id} and member_id = #{ownerId} and del_flag = 0 and status = 0 and member_template_id = #{row.memberTemplateId}
     </update>
 
+    <!-- AUDIT-G2-2:举报成立下架(审核台举报单 REJECT);只动公开中的行,幂等 -->
+    <update id="takeDownReported">
+        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
+        where id = #{id} and del_flag = 0 and status = 1
+    </update>
+
+    <update id="takeDownReportedByMemberTemplate">
+        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
+        where member_template_id = #{memberTemplateId} and del_flag = 0 and status = 1
+    </update>
+
     <update id="updateCmsTemplateLibrary" parameterType="CmsTemplateLibrary">
         update cms_template_library
         <trim prefix="SET" suffixOverrides=",">
