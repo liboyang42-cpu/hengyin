@@ -428,7 +428,7 @@ Page({
   setViewMode(e) { const mode = e.currentTarget.dataset.mode === 'list' ? 'list' : 'map'; if (mode !== this.data.viewMode) this.setData({ viewMode: mode }); },
   onListRowTap(e) { this.openTeam(e.currentTarget.dataset.id); },
   // 我的队伍改为独立页面(带队 / 已通过 / 审核中 / 未通过 + 附近招募);P6 半屏保留给 sheet=mine 旧链接
-  openMyTeamsPage() { wx.navigateTo({ url: '/subpackageRoam/my-teams/index' }); },
+  openMyTeamsPage() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/my-teams/index', complete: () => { this._navigating = false; } }); },
   closeRange() { this.setData({ rangeSheetShow: false }); },
   onRangePick(e) {
     const idx = Number(e.detail && e.detail.index);

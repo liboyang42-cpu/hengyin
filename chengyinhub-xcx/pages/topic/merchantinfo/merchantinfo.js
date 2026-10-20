@@ -944,7 +944,7 @@ Page({
   goTopicDetail() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!id) return;
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
   bmClick2(e) {
@@ -2481,11 +2481,11 @@ Page({
     // CU-C-64:主题名在 /api/topic/info-to-user 里是 info.name(TopicInfoVO 没有 topicName),
     // 原来读 info.topicName 恒为空 —— 名字一路丢到邀请表单,最后只剩裸主题编号。
     const name = (this.data.hostTopic && this.data.hostTopic.name) || (this.data.info && this.data.info.name) || '';
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/merchant/relation/index?tab=club&topicId=' + topicId
         + '&topicName=' + encodeURIComponent(name)
         + (this.chapterRecruitChapter() ? '&chapterId=' + this.chapterRecruitChapter().id : '')
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2509,10 +2509,10 @@ Page({
   goAddStations() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!id) { app.tips('这条路线还没读到，稍后再试'); return; }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/publish/fabu/index?id=' + id
         + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
-      fail: () => app.tips('编辑器暂时打不开，稍后重试'),
+      fail: () => app.tips('编辑器暂时打不开，稍后重试'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2521,10 +2521,10 @@ Page({
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId) || '';
     // CU-C-64:同上,读 name 不读不存在的 topicName
     const name = (this.data.hostTopic && this.data.hostTopic.name) || (this.data.info && this.data.info.name) || '';
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/coop/nearby/index?topicId=' + topicId + '&topicName=' + encodeURIComponent(name)
         + (this.chapterRecruitChapter() ? '&chapterId=' + this.chapterRecruitChapter().id : '')
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2533,10 +2533,10 @@ Page({
       管理员判断不了这条主题到底有没有申请。 */
   goReceivedApplies() {
     const topicId = this.data.topicId || '';
-    wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
       + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')
       + (topicId ? '&topicId=' + topicId + '&topicName='
-        + encodeURIComponent((this.data.info && this.data.info.name) || '') : '') });
+        + encodeURIComponent((this.data.info && this.data.info.name) || '') : ''), complete: () => { this._navigating = false; } });
   },
 
   reviewCircleSupplies() {
@@ -2614,8 +2614,8 @@ Page({
   /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。 */
   goFinance() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    wx.navigateTo({
-      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''),
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -3650,9 +3650,9 @@ Page({
   openStation(activityId, focus) {
     // focus=pause 让 game-node 落地后直接把「暂停接待」抽屉打开 —— 抽屉里点的就是这件事,
     // 再让人在那一页自己找一遍按钮是白绕一圈。其余三档只是同一页的不同段落,不传。
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/merchant/game-node/index?activityId=' + activityId
-        + (focus === 'pause' ? '&focus=pause' : ''),
+        + (focus === 'pause' ? '&focus=pause' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -3788,9 +3788,9 @@ Page({
         : '该报名已通过审核,内容不能再修改');
       return;
     }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/topic/merchantapply/index?mode=1&id=' + this.data.regId,
-      events: { registrationSaved: () => this.loadDetail() },
+      events: { registrationSaved: () => this.loadDetail() }, complete: () => { this._navigating = false; },
     });
   },
 
@@ -3948,10 +3948,10 @@ Page({
       const clubId = Number((this.data.info && this.data.info.clubId) || 0);
       const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
       if (!clubId || !topicId) { app.tips('这条主题没有关联俱乐部'); return; }
-      wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId, complete: () => { this._navigating = false; } });
       return;
     }
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions', complete: () => { this._navigating = false; } });
   },
 
   /* 「查看结算报告」去的是结算明细页,不是核销台账 —— 稿 468:1086 标的就是 coop/settlement-detail。
@@ -3960,7 +3960,7 @@ Page({
   goSettlementReport() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!id) { app.tips('还没读到主题标识，稍后再试'); return; }
-    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=finance&topicId=' + id });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=finance&topicId=' + id, complete: () => { this._navigating = false; } });
   },
 
   formatShortDate(dateVal) {
@@ -4032,6 +4032,6 @@ Page({
   },
 
   contactService() {
-    wx.navigateTo({ url: '/pages/shezhi/shezhi' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
 });

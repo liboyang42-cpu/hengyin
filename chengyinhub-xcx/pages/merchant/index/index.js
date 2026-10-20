@@ -1075,7 +1075,7 @@ Page({
 
   // 入口名「协作邀请」= 合作中心铃铛那一页(收到的/我发出的);聊天与系统通知在 ledger 的「站内消息」。旧的「消息与动态」是空兼容页(M-07)。
   goMessages() {
-    wx.navigateTo({ url: '/pages/coop/list/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index', complete: () => { this._navigating = false; } });
   },
 
   // 「我的消息」是收入到账/核销流水,按类型去各自明细;「全部」与未知类型落核销记录(同时有待结算/已入账)。

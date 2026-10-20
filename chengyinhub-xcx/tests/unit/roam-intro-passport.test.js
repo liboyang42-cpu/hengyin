@@ -129,7 +129,7 @@ test('护照只统计当前玩家的漫游记录，不认领旧共享缓存或�
 test('三个首页卡分别开始漫游、打开地图和直接打开我的队伍', () => {
   const { page, wxMock } = loadRoamPage([])
   const navigations = []
-  wxMock.navigateTo = options => navigations.push(options.url)
+  wxMock.navigateTo = options => { navigations.push(options.url); if (options.complete) options.complete() } // 入口有跳转中保护,桩回调 complete 才放下一跳
   let starts = 0
   page.goStart = () => { starts += 1 }
   const oldWx = global.wx

@@ -788,13 +788,13 @@ Page({
 
   // 漫游记录里的那年今日 / 月度回顾 / 导出(2026-10-14 随漫游上线):弹窗组件只发事件,跳转在宿主页
   openRoamTool(e) {
-    const key = e && e.detail && e.detail.key;
-    if (key === 'anniversary') wx.navigateTo({ url: '/subpackageTools/anniversary/index' });
-    else if (key === 'recap') wx.navigateTo({ url: '/subpackageTools/monthly-recap/index' });
-    else if (key === 'export') wx.navigateTo({ url: '/subpackageTools/exploration-export/index' });
+    const key = e && e.detail && e.detail.key; if (this._navigating) return; // 三个工具入口共用跳转锁,连点只开一层
+    if (key === 'anniversary') { this._navigating = true; wx.navigateTo({ url: '/subpackageTools/anniversary/index', complete: () => { this._navigating = false; } }); }
+    else if (key === 'recap') { this._navigating = true; wx.navigateTo({ url: '/subpackageTools/monthly-recap/index', complete: () => { this._navigating = false; } }); }
+    else if (key === 'export') { this._navigating = true; wx.navigateTo({ url: '/subpackageTools/exploration-export/index', complete: () => { this._navigating = false; } }); }
   },
-  openNearbyMap() { wx.navigateTo({ url: '/subpackageRoam/nearby/index' }); },
-  openMyTeams() { wx.navigateTo({ url: '/subpackageRoam/my-teams/index' }); },
+  openNearbyMap() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/nearby/index', complete: () => { this._navigating = false; } }); },
+  openMyTeams() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/my-teams/index', complete: () => { this._navigating = false; } }); },
   /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机 roam_sessions(与 passport/history 两页同源)。
    *  storage 读不出来 = 真的没有记录 ⇒ trips 空、三格全 0,由 wxml 出空态文案;不编数字。 */
   /* 设置页的权限状态:位置权限(scope.userLocation)与后台持续定位(scope.userLocationBackground)

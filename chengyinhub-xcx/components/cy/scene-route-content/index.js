@@ -401,7 +401,7 @@ Component({
     onNestedTransferOwner() {
       const clubId = this.data.params && (this.data.params.id || this.data.params.clubId)
       if (!clubId) return
-      wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId, complete: () => { this._navigating = false } })
     },
     onNestedDirtyChange(event) {
       this.triggerEvent('dirtychange', { dirty: !!(event.detail && event.detail.dirty) })

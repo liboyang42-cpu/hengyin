@@ -13,6 +13,7 @@ Page({
     backGuardOff: false,
   },
   onUnload() { this._destroyed = true; },
+  onShow() { this._navigating = false; }, // 从治理页返回时兜底清跳转锁
   onLoad(options) { this.setData({ clubId: (options && (options.id || options.clubId)) || '', routeReady: true }); },
   onDirtyChange(event) { this.setData({ dirty: !!(event.detail && event.detail.dirty) }); },
   onSaved() { this.setData({ dirty: false }); },
@@ -26,7 +27,7 @@ Page({
   // 解散确认框的 alt「改为转让主理人」→ 治理页(转让链路真源)。原来事件没人接,点了只关框。
   goGovernance() {
     if (!this.data.clubId) return;
-    wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + this.data.clubId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
   },
   requestBack() {
     if (this.data.dirty) {

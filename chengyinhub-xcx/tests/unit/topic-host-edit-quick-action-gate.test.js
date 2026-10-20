@@ -181,7 +181,7 @@ test('更多里的本站四行都跳 game-node，且 activityId 取自 merchant/
   const page = makePage();
   global.getApp = realGetApp;
   page.data.topicId = 77;
-  global.wx.navigateTo = (options) => { navigations.push(options.url); };
+  global.wx.navigateTo = (options) => { navigations.push(options.url); if (options.complete) options.complete(); };
   global.wx.showActionSheet = (options) => { sheets.push(options); };
 
   // 单场次:直接进,不多问一步
@@ -246,7 +246,7 @@ test('主办方章节控制:邀请其他商家真的走出去,结束本章走危
   page.data.topicId = 42;
   page.data.info = { topicName: '苏州河的回声' };
   page.data.moreSheet = { show: true, groups: [] };
-  global.wx.navigateTo = (options) => { navigations.push(options.url); };
+  global.wx.navigateTo = (options) => { navigations.push(options.url); if (options.complete) options.complete(); };
 
   page.onMorePick({ currentTarget: { dataset: { key: 'chapterInvite' } } });
   assert.match(navigations[0], /^\/pages\/coop\/nearby\/index\?topicId=42/);
