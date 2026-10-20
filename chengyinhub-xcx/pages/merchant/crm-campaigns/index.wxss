@@ -7,6 +7,7 @@ page { background: var(--cy-bg-page); }
 .ccl-scroll { flex: 1; min-height: 0; }
 .ccl-shell { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
 .ccl-row { min-height: var(--cy-btn-h); }
+.fin-card .ccl-row + .ccl-row { margin-top: var(--cy-space-5); } /* 三行条目,行距比共享的 40rpx 放宽一档,仍不加分隔线 */
 .ccl-arrow { flex-shrink: 0; color: var(--cy-text-secondary); }
 .ccl-status--success { color: var(--cy-color-status-success); }
 .ccl-status--warning { color: var(--cy-color-status-warning); }

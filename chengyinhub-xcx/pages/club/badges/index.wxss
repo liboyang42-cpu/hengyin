@@ -6,8 +6,9 @@ page { background: var(--cy-bg-page); }
 .ds-card { margin-top: var(--cy-space-4); padding: 0 var(--cy-space-3-5); border-radius: var(--cy-comp-card-radius); background: var(--cy-comp-card-bg); }
 .badge-refreshing { display: block; margin: var(--cy-space-2-5) var(--cy-page-x) 0; color: var(--cy-text-tertiary); font-size: var(--cy-font-caption); }
 
-.badge-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; }
-.badge-row + .badge-row { border-top: 1rpx solid var(--cy-color-border-subtle); }
+.badge-row { position: relative; display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; }
+/* 分隔线从文字列起(图标 88rpx + 间距),与 Revolut 分组列表一致 */
+.badge-row + .badge-row::before { content: ""; position: absolute; top: 0; left: calc(88rpx + var(--cy-space-3)); right: 0; border-top: 1rpx solid var(--cy-color-border-subtle); }
 .badge-icon { display: flex; flex: none; width: 88rpx; height: 88rpx; align-items: center; justify-content: center;
   overflow: hidden; border-radius: var(--cy-radius-md); background: var(--cy-comp-field-idle-bg); color: var(--cy-accent); }
 .badge-icon-img { width: 100%; height: 100%; }
@@ -15,8 +16,8 @@ page { background: var(--cy-bg-page); }
 .badge-name { overflow: hidden; color: var(--cy-text-title); font-size: var(--cy-font-body); text-overflow: ellipsis; white-space: nowrap; }
 .badge-desc { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   color: var(--cy-text-tertiary); font-size: var(--cy-font-caption); line-height: 1.5; }
-.badge-grant { display: flex; flex: none; min-width: 88rpx; min-height: 88rpx; align-items: center; justify-content: center;
-  padding: 0 var(--cy-space-2-5); color: var(--cy-accent); font-size: var(--cy-font-label); font-weight: 700; }
+.badge-grant { display: flex; flex: none; min-width: 88rpx; min-height: 88rpx; align-items: center;
+  justify-content: flex-end; padding: 0 0 0 var(--cy-space-2-5); color: var(--cy-accent); font-size: var(--cy-font-label); font-weight: 700; }
 .is-disabled { opacity: .45; pointer-events: none; }
 .page-note { display: block; margin: var(--cy-space-2-5) var(--cy-page-x) 0; color: var(--cy-text-tertiary); font-size: var(--cy-font-caption); line-height: 1.5; }
 

@@ -773000,7 +773000,7 @@
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:178:bindtap:pickNicknameSuggestion:26",
+      "id": "pages/gerenziliao/gerenziliao.wxml:178:bindtap:moreNicknameSuggestions:26",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -773022,48 +773022,90 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "pickNicknameSuggestion",
+        "handler": "moreNicknameSuggestions",
         "line": 178,
-        "selectorHint": ".profile-name-chip",
+        "selectorHint": ".profile-name-link",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "使用昵称 {{item}}",
+        "ariaLabel": "换一批推荐昵称",
+        "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{nicknameSuggesting || saving}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/suggest"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/user/nickname/suggest"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:326"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:322"
       }
     },
     {
@@ -773188,7 +773230,7 @@
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:182:bindtap:moreNicknameSuggestions:27",
+      "id": "pages/gerenziliao/gerenziliao.wxml:183:bindtap:pickNicknameSuggestion:27",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -773210,90 +773252,48 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "moreNicknameSuggestions",
-        "line": 182,
-        "selectorHint": ".profile-name-link",
+        "handler": "pickNicknameSuggestion",
+        "line": 183,
+        "selectorHint": ".profile-name-chip",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "换一批推荐昵称",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "使用昵称 {{item}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{nicknameSuggesting || saving}}",
+        "ariaDisabledExpression": null,
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/suggest"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/user/nickname/suggest"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:322"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:326"
       }
     },
     {

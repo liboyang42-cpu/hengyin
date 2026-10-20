@@ -1,6 +1,6 @@
 page { background: var(--cy-color-bg-page); }
 .rd { min-height: 100vh; color: var(--cy-color-text-primary); }
-.rd__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); display: flex; flex-direction: column; gap: var(--cy-space-4); }
+.rd__body { padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) calc(var(--cy-space-6) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: var(--cy-space-5); }
 .rd-card { display: flex; flex-direction: column; gap: var(--cy-space-2); padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface); }
 .rd-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
 .rd-card__title { flex: 1; min-width: 0; font-size: var(--cy-type-card-title); font-weight: 600; word-break: break-all; }
@@ -11,10 +11,10 @@ page { background: var(--cy-color-bg-page); }
 .rd-section__label { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rd-section__text { font-size: var(--cy-type-body); line-height: 1.6; word-break: break-all; white-space: pre-wrap; }
 .rd-section__text--muted { color: var(--cy-color-text-tertiary); }
-.rd-actions { display: flex; flex-direction: column; gap: var(--cy-space-3); padding-top: var(--cy-space-2); }
+.rd-actions { display: flex; flex-direction: column; gap: var(--cy-space-3); }
 .rd-actions__hint { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rd-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
-.rd-sheet { display: flex; flex-direction: column; gap: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) var(--cy-space-6); }
+.rd-sheet { display: flex; flex-direction: column; gap: var(--cy-space-4); padding: var(--cy-space-3) 0 var(--cy-space-2); } /* cy-sheet 面板已带页边距与底部安全区 */
 .rd-sheet__note { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rd-sheet__text { font-size: var(--cy-type-body); line-height: 1.6; color: var(--cy-color-text-primary); word-break: break-all; }
 .rd-sheet__quote { font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); white-space: pre-wrap; word-break: break-all; }

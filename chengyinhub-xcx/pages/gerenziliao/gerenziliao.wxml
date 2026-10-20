@@ -173,15 +173,15 @@
               aria-role="button" aria-label="重新检查昵称" hover-class="cy-pressed" hover-stay-time="80">重新检查</view>
       </view>
       <view wx:if="{{nicknameState === 'taken' || nicknameSuggestions.length}}" class="profile-name-suggest">
-        <text class="profile-name-suggest-title">{{nicknameSuggesting && !nicknameSuggestions.length ? '正在找可用的昵称…' : '可以用这些昵称'}}</text>
-        <view class="profile-name-chips">
-          <view wx:for="{{nicknameSuggestions}}" wx:key="*this" class="profile-name-chip" data-name="{{item}}" bindtap="pickNicknameSuggestion"
-                aria-role="button" aria-label="使用昵称 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
-        </view>
-        <view class="profile-name-actions">
+        <view class="profile-name-suggest-head">
+          <text class="profile-name-suggest-title">{{nicknameSuggesting && !nicknameSuggestions.length ? '正在找可用的昵称…' : '可以用这些昵称'}}</text>
           <view class="profile-name-link {{nicknameSuggesting || saving ? 'is-disabled' : ''}}" bindtap="moreNicknameSuggestions"
                 aria-role="button" aria-label="换一批推荐昵称" aria-disabled="{{nicknameSuggesting || saving}}"
                 hover-class="{{nicknameSuggesting || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{nicknameSuggesting ? '正在推荐…' : '换一批'}}</view>
+        </view>
+        <view class="profile-name-chips">
+          <view wx:for="{{nicknameSuggestions}}" wx:key="*this" class="profile-name-chip" data-name="{{item}}" bindtap="pickNicknameSuggestion"
+                aria-role="button" aria-label="使用昵称 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
         </view>
       </view>
       <cy-inline-error wx:if="{{nicknameSuggestError}}" title="没拿到推荐" sub="{{nicknameSuggestError}}"
