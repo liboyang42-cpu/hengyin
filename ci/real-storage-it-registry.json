@@ -77,7 +77,7 @@
     "extra-storage": {
       "lineage": "EXTRA codex/extra-six-rolling-20261015",
       "registered_source": "6c44636974220ca9876386ee638c99981488db42",
-      "note": "Remaining delivered EXTRA real-storage regressions: tokens and competition, token lifecycle, schedule readback, ending snapshot, journey flow, share snapshot concurrency.",
+      "note": "Remaining delivered EXTRA and reviewed legacy real-storage regressions: tokens and competition, token lifecycle, schedule readback, ending snapshot, journey flow, share snapshot concurrency.",
       "classes": [
         "com.chengyinhub.business.longrun.E01_06Test",
         "com.chengyinhub.business.longrun.E01_09Test",
@@ -101,7 +101,16 @@
         "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
         "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
         "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest",
-        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest"
+        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest",
+        "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT",
+        "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT",
+        "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT",
+        "com.chengyinhub.business.it.CoopServiceRealDbIT",
+        "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT",
+        "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT",
+        "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT",
+        "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+        "com.chengyinhub.business.it.UmsMemberRankMySqlIT"
       ]
     },
     "port-core-funds": {
@@ -176,7 +185,7 @@
     "port-extra-storage": {
       "lineage": "PORT port/extra-be-20261019: EXTRA 1e403b13..8822ab38 + B05 2ac55d20 + #231 backend re-applied on master (Java 21 / Boot 4)",
       "registered_source": "e4b720e9493d1510649dfbb263bd7fbae90d551c",
-      "note": "Master-side port of extra-storage, same 23 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions; the three gated asset/capacity/IM suites use the same current-source registration as extra-storage.",
+      "note": "Master-side port of extra-storage, same 32 classes. CouponLifecycleMybatisIntegrationTest (16), RoamShareSnapshotConcurrencyMySqlIT (3) and JourneyFullFlowMySqlIT (4) are master's versions; the gated asset/capacity/IM suites and nine reviewed implicit IT suites use the same current-source registration as extra-storage.",
       "classes": [
         "com.chengyinhub.business.longrun.E01_06Test",
         "com.chengyinhub.business.longrun.E01_09Test",
@@ -200,7 +209,16 @@
         "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
         "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest",
         "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest",
-        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest"
+        "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest",
+        "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT",
+        "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT",
+        "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT",
+        "com.chengyinhub.business.it.CoopServiceRealDbIT",
+        "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT",
+        "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT",
+        "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT",
+        "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+        "com.chengyinhub.business.it.UmsMemberRankMySqlIT"
       ]
     },
     "funnel-max-date": {
@@ -438,6 +456,60 @@
       "tests": 4,
       "storage": ["mysql"],
       "gates": {"CHENGYIN_IM_FOUNDATION_B_MYSQL_IT": "1"},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_SELFCREATE_IT_MYSQL": "1"},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": {
+      "tests": 5,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT": "1"},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.CoopServiceRealDbIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
+      "tests": 4,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": {
+      "tests": 3,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {},
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.UmsMemberRankMySqlIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
