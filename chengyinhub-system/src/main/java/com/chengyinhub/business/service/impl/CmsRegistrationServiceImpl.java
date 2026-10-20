@@ -1199,6 +1199,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
     }
 
+    private static boolean isLiveParentTopic(CmsTopic topic) {
+        return topic != null
+                && Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus())
+                && Integer.valueOf(0).equals(topic.getDelFlag());
+    }
+
     /**
      * 验证并获取活动信息
      */
@@ -1218,6 +1225,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         if (activity.getDelFlag() == 2) {
             throw new RuntimeException("活动已下架");
+        }
+
+        // 父主题被驳回/作者下架/违规下架后,其场次不再接新单(已有订单不动)。口径与公开列表的
+        // livePublicParentTopic 一致:status=1 · user_status=1 · del_flag=0。
+        if (activity.getTopicId() != null && activity.getTopicId() > 0
+                && !isLiveParentTopic(cmsTopicMapper.selectCmsTopicById(activity.getTopicId()))) {
+            throw new RuntimeException("活动所属主题已下架");
         }
 
         Date now = new Date();

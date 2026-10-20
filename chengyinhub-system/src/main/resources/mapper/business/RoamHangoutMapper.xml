@@ -114,6 +114,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from cms_activity a
         left join cms_topic t on t.id = a.topic_id and t.del_flag = 0
         where a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.cancel_time is null
+          and (a.topic_id is null or a.topic_id = 0 or exists (
+              select 1 from cms_topic live_parent
+              where live_parent.id = a.topic_id and live_parent.del_flag = 0
+                and live_parent.status = 1 and live_parent.user_status = 1))
           and a.latitude is not null and a.latitude &lt;&gt; ''
           and a.longitude is not null and a.longitude &lt;&gt; ''
           and cast(a.latitude as decimal(12,7)) between #{minLat} and #{maxLat}
