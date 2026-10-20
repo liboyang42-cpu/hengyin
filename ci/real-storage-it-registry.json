@@ -269,7 +269,7 @@
       "note": "No class gate: *IT is only run when selected by name, then missing configuration must fail."
     },
     "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest": {
-      "tests": 4,
+      "tests": 5,
       "storage": ["mysql"],
       "gates": {}
     },
