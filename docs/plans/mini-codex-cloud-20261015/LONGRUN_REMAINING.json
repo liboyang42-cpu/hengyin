@@ -2642,7 +2642,7 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
+    "state": "AUTHORIZED_FIVE_EXACT_CONFLICT_PATHS_REMAINING_PREVIEW_PENDING",
     "creation_or_candidate_sha": "NOT_REPORTED",
     "port_source": {
       "pr": 386,
@@ -2702,17 +2702,24 @@
     "conflict_write_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "AUTHORIZED_TWO_EXACT_CONFLICT_PATHS",
+      "state": "AUTHORIZED_FIVE_EXACT_CONFLICT_PATHS",
       "authorized_exact_paths": [
         "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
-        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+        "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
       ],
-      "scope": "Resolve only actual #385 merge conflicts while preserving both sources existing contracts and validation. No independent feature or policy change.",
+      "scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
       "blanket_source_write_grant": false,
-      "regression_file_write_authorized": false,
       "additional_paths": "List actual new conflicts or required regression paths for separate C00 registration before editing.",
       "original_source_ownership": "Retained; three-team sources stay frozen. This branch-scoped integration grant creates no Cloud writer and does not transfer original development ownership.",
-      "excluded": "No master write, deployment, production migration, new entry, network/212/CI change, Cloud build/test/CI execution."
+      "excluded": "No master write, deployment, production migration, new entry, network/212/CI change, Cloud build/test/CI execution.",
+      "authorized_existing_test_conflicts": [
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+        "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
+      ],
+      "new_or_unlisted_regression_file_write_authorized": false
     },
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer or team",
     "C00_scope": "Global documentation and exact conflict ownership registration only; no business source, compilation, tests or CI execution.",
@@ -2746,15 +2753,26 @@
           "conflict_paths": [
             "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
             "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
-          ]
+          ],
+          "resolution": "Integration writer reports both conflicts resolved preserving both source contracts; no test result inferred."
+        },
+        {
+          "pr": 387,
+          "source_sha": "0f8d1796983b3a0300462e818efba3f02aa6d2d3",
+          "result": "EXACTLY_THREE_ADDITIONAL_CONFLICTS",
+          "conflict_paths": [
+            "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+            "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+            "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
+          ],
+          "resolution": "AUTHORIZED_NOT_REPORTED_COMPLETE"
         }
       ],
       "remaining_prs": [
-        387,
         388,
         390
       ],
-      "remaining_preview": "NOT_REPORTED; no additional conflict paths authorized",
+      "remaining_preview": "#388/#390 NOT_REPORTED; no additional conflict paths authorized",
       "combined_candidate": "NOT_REPORTED/NOT_RUN; no prior result inherited"
     }
   }
