@@ -244,8 +244,8 @@ Page({
   // 「投一张」:scene-roam-poi-detail 只发事件,由宿主收场景再进分包城市签(3-24)
   openCityStamp(e) {
     const place = (e && e.detail && e.detail.place) || '这一站';
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this.closeScene(); // 跳转中不响应连点,免得叠两层城市签页
+    this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   closeScene() { this.setData({ sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } }); },
   requestSceneClose() {
@@ -282,8 +282,8 @@ Page({
   },
   openCityStamp(event) {
     const place = (event && event.detail && event.detail.place) || '这一站';
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this.closeScene(); // 跳转中不响应连点,免得叠两层城市签页
+    this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   submitSceneForm() {
     const content = this.selectComponent('#sceneRouteContent');
