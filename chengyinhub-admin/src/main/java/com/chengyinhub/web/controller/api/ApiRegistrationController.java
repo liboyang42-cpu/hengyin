@@ -1243,6 +1243,19 @@ public class ApiRegistrationController extends BaseController {
                 merchantOwnerMemberId, operatorMemberId, actorRoleCode);
     }
 
+    /** 核销回包的章节名;核销已成立,查名失败只降级为「章节 id」,与 describeChapters 的兜底一致。 */
+    private String chapterDisplayName(Long chapterId) {
+        try {
+            CmsTopicChapter chapter = topicChapterService.selectCmsTopicChapterById(chapterId);
+            if (chapter != null && StringUtils.isNotEmpty(chapter.getName())) {
+                return chapter.getName();
+            }
+        } catch (RuntimeException e) {
+            logger.warn("核销回包章节名读取失败 chapterId={}", chapterId, e);
+        }
+        return "章节 " + chapterId;
+    }
+
     /**
      * [P0-2] 候选章节 id → {@code {id, name}}:**商家认的是章节名,不是数据库 id**。
      * 只给他「请选择:101 / 102」等于没给选项 —— 而选错章**不可逆**(entitlement 当场消费、
@@ -1532,6 +1545,8 @@ public class ApiRegistrationController extends BaseController {
         Map<String, Object> d = new HashMap<>();
         d.put("redemptionId", redemption.getRedemptionId());
         d.put("chapterId", chapterId);
+        // 首次与重放共用同一个 chapterName 字段:商家认章节名,回包丢失重试后也要看得到核的是哪一章。
+        d.put("chapterName", chapterDisplayName(chapterId));
         if (redemption.isReplayed()) {
             d.put("replayed", true);
             return AjaxResult.success("该章节已核销，请勿重复提供权益", d);

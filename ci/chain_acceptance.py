@@ -56,7 +56,13 @@ REDIS_HOST, REDIS_PORT, REDIS_DB = "127.0.0.1", 6379, 9
 APP_BASE = "http://127.0.0.1:8099"
 APP_READY_LINE = "Started RuoYiApplication"
 FAULT_MARKER = "e2e 注入"
-STUBS = ("E2eWechatPayStub", "E2eFaultInjectionFilter")
+STUBS = ("E2eWechatPayStub", "E2eFaultInjectionFilter", "E2eWxContentSecurityStub")
+CONTENT_SECURITY_STUB = "E2eWxContentSecurityStub"
+CONTENT_SECURITY_GATE = "EXTERNAL_GATE: content security stubbed"
+# 内容安全桩只许改写两次出站调用;回调验签、nonce、结论落地必须走真实实现。
+CONTENT_SECURITY_REAL_METHODS = ("processMediaCheckCallback", "verifyMediaCheckCallback", "handleMediaCheckResult",
+                                 "tryAcquireCallbackNonce", "releaseCallbackNonce", "submitMediaCheck",
+                                 "submitMediaCheckOne", "isEnabled")
 CHAIN_TIMEOUT_SECONDS = 900
 APP_READY_SECONDS = 300
 PLAYER_MEMBER = 9009
@@ -64,7 +70,9 @@ PROBE_PHONE = "13900000004"
 DEFAULT_FAULT_PROBE_PATH = "/api/play/checkin"
 NOT_COVERED = [
     "external WeChat Pay channel (stubbed at the channel layer only; callback path is real)",
-    "WeChat content security, SMS, AI providers and other external services",
+    CONTENT_SECURITY_GATE + " (WeChat msg_sec_check / media_check_async calls only; "
+    "callback verification, nonce and business side are real)",
+    "SMS, AI providers and other external services",
     "device / WeChat DevTools / real-phone behaviour",
     "integrated cross-branch candidate unless SOURCE_SHA is that candidate",
     "production data, persistent-database migration execution, merge or deployment",
@@ -242,6 +250,26 @@ def harness_files(directory):
     return found
 
 
+def stub_problems(directory):
+    """桩必须齐全且贴着自己的口径;缺桩或越权改写真实回调路径一律让 explode 变红。"""
+    root = Path(directory) / "scripts" / "e2e"
+    problems = []
+    for name in STUBS:
+        if not (root / ("%s.java.stub" % name)).is_file():
+            problems.append("缺桩 %s.java.stub" % name)
+    source = root / ("%s.java.stub" % CONTENT_SECURITY_STUB)
+    if source.is_file():
+        text = source.read_text(encoding="utf-8")
+        if CONTENT_SECURITY_GATE not in text:
+            problems.append("内容安全桩缺少口径标签 %r" % CONTENT_SECURITY_GATE)
+        if "extends WxContentSecurityServiceImpl" not in text:
+            problems.append("内容安全桩必须继承真实 WxContentSecurityServiceImpl")
+        for method in CONTENT_SECURITY_REAL_METHODS:
+            if re.search(r"(?:public|protected)[^;{}=]*\b%s\s*\(" % method, text):
+                problems.append("内容安全桩不得改写真实路径 %s" % method)
+    return problems
+
+
 # ---------------------------------------------------------------- 回执
 
 def receipt_path(out_dir):
@@ -396,6 +424,26 @@ def query(sql, args=()):
         return rows
     finally:
         connection.close()
+
+
+def execute(sql, args=()):
+    connection = connect()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(sql, args)
+        count = cursor.rowcount
+        connection.commit()
+        cursor.close()
+        return count
+    finally:
+        connection.close()
+
+
+# 小程序会员登录必然带 openid;内容安全 msgSecCheck v2 缺 openid 会 fail-close(WxContentSecurityServiceImpl
+# checkText)。候选的 seed_fixtures.py 指纹被 prelaunch-seed-provenance 钉住,所以由门禁在建库后补,只写 cy_e2e_51
+# 的九个夹具会员;出站微信调用由 E2eWxContentSecurityStub 桩掉。
+FIXTURE_OPENID_SQL = ("UPDATE ums_member SET wx_open_id=CONCAT('e2e-openid-', id) "
+                      "WHERE id BETWEEN 9001 AND 9009 AND (wx_open_id IS NULL OR wx_open_id='')")
 
 
 def jsonable(rows):
@@ -763,6 +811,9 @@ def cmd_explode(args, environ):
         raise GateError("不是 Spring Boot fat jar（缺 BOOT-INF/classes 或 lib）")
     stub_src = Path(args.work) / "stub-src" / "com" / "chengyinhub" / "e2e"
     stub_src.mkdir(parents=True, exist_ok=True)
+    missing = stub_problems(args.gate)
+    if missing:
+        raise GateError("桩检查失败: %s" % "; ".join(missing))
     stubs = {}
     for name in STUBS:
         source = Path(args.gate) / "scripts" / "e2e" / ("%s.java.stub" % name)
@@ -849,10 +900,13 @@ def cmd_schema(args, environ):
         problems.append("seed_fixtures 退出码 %s" % seed_code)
     readback = {}
     if not problems:
+        readback["fixture_openid_bound"] = execute(FIXTURE_OPENID_SQL)
         expected = {
             "tables": ("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (SCHEMA,), None),
             "sys_user": ("SELECT COUNT(*) FROM sys_user WHERE del_flag='0'", (), None),
             "ums_member_fixture": ("SELECT COUNT(*) FROM ums_member WHERE id BETWEEN 9001 AND 9009", (), 9),
+            "ums_member_openid": ("SELECT COUNT(*) FROM ums_member WHERE id BETWEEN 9001 AND 9009 "
+                                  "AND wx_open_id LIKE %s", ("e2e-openid-%",), 9),
             "mms_merchant_fixture": ("SELECT COUNT(*) FROM mms_merchant WHERE id BETWEEN 8001 AND 8005", (), 5),
             "club_fixture": ("SELECT COUNT(*) FROM club WHERE id IN (7001,7002)", (), 2),
             "captcha_disabled": ("SELECT COUNT(*) FROM sys_config WHERE config_key='sys.account.captchaEnabled' "

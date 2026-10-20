@@ -25,7 +25,7 @@ mvn -B clean test
 #   密码由 .github/workflows/ci.yml 的 backend 步注入(本机 root 空口令,service 是 root/root)。
 # 这几套连的是 CI 的 backend job 用 services 起的那个空 MySQL8,
 # 各自建表或加载 test/resources/it-schema 里【生产导出的真实 DDL】,跑完即弃。
-# ⚠️ 不在此清单里的两套 Explore*RealDbIT 连的是 chengyin_explore_it,
+# ⚠️ 不在此清单里的三套 Explore*RealDbIT 连的是 chengyin_explore_it,
 #   由自托管的 ci/funds-mysql-it-gate.sh 负责;CoopServiceRealDbIT 已烂透,见其类注释。
 MYBATIS_ITS=(
   WechatMemberRegistrationMySqlIT
@@ -66,6 +66,10 @@ MYBATIS_ITS=(
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT
   GameSessionIndependentRevisionMySqlIT
+  # 2026-10-19 SC-SCAN-LEGAL / SC-CITY-END:商家核验只完成本站且玩家投影/订单/接待记录一致;
+  #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
+  GameSessionScanLegalMySqlIT
+  GameSessionCityEndMySqlIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
   PredictLateBetRaceMySqlIT

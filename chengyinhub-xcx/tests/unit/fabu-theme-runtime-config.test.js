@@ -29,6 +29,10 @@ function page() {
 const event = (field, value) => ({ currentTarget: { dataset: { field } }, detail: { value } });
 const hpEvent = (dataset = {}, value) => ({ currentTarget: { dataset }, detail: { value } });
 const pickHp = (p, key) => p.pickZeroHpPolicy(hpEvent({}, p.data.runtimeZeroHpOptions.findIndex(row => row.key === key)));
+function roleEvent(p, nodeId, value) {
+  return { currentTarget: { dataset: { nodeid: nodeId } }, detail: { value: p.data.storyRoleOptions.findIndex(o => o.value === value) } };
+}
+
 test('归零策略使用服务器矩阵，通用局回填 BLOCK_PAID，旧局保留 LEGACY_END', () => {
   const p = page();
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER', survival: { zeroHpPolicy: 'BLOCK_PAID' } } });
@@ -77,7 +81,9 @@ test('内置数值改名写入主题 JSON，回读及作者文案有默认值', 
   loaded.onRuntimeName(event('hpName', '甲'.repeat(25)));
   assert.equal(loaded._runtimeConfig().hpName.length, 20);
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
-  assert.match(wxml, /\{\{runtimeHpLabel\}\}消耗/);
+  // 2026-10-12 用户定:数值消耗是通用的,章节弹窗不再单设「{{runtimeHpLabel}}消耗」;改名后的标签仍用于章末配给的扣减项
+  assert.doesNotMatch(wxml, /\{\{runtimeHpLabel\}\}消耗/);
+  assert.match(wxml, /\|\| runtimeHpLabel\}\}<\/text>/);
   assert.match(wxml, /开局\{\{runtimeHpInitialLabel\}\}/);
   assert.match(fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/runtime-editor.wxml'), 'utf8'), /item.statLabel \+ '变化'/);
   const detail = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8');
@@ -278,7 +284,7 @@ test('删除或停用时列明章节、物品、关联、玩法绑定的引用',
 test('章节默认完成规则不写入主题配置，值域页面不显示内部标识', () => {
   const p = page();
   p._openChapterRules(0);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '1' } });
   p._openChapterRules(0);
   assert.equal(p.data.runtimeChapterRules.completionType, 'ALL');
@@ -286,9 +292,12 @@ test('章节默认完成规则不写入主题配置，值域页面不显示内�
   assert.equal(p._saveChapterRules(), true);
   assert.equal(p.data.formData.themeRuntimeConfig, '');
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
-  assert.match(wxml, /本章完成要求/);
+  assert.match(wxml, /完成要求/);
+  assert.match(wxml, /bindchange="onChapterCompleteAll"/);
   assert.match(wxml, /互斥选项/);
-  assert.match(wxml, /额外节点/);
+  // 2026-10-12 用户定:额外站点在故事流站点块上标,章节弹窗不再列「额外节点」,也不再单设数值消耗
+  assert.match(wxml, /bind:change="onStoryNodeRole"/);
+  assert.doesNotMatch(wxml, /addChapterExtraNode|onRuntimeChapterCost/);
   assert.doesNotMatch(wxml, /标识 \{\{valueEditor\.row\.key\}\}/);
   assert.match(wxml, /仅支持此值下降时扣减已启用的\{\{runtimeHpLabel\}\}/);
 });
@@ -297,19 +306,24 @@ test('任选数量计入未保存站点，已有规则的章节恢复全部完�
   const p = page();
   p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }, { id: 102, name: '乙' }, { _localId: 'draft', name: '未保存' }];
   p._openChapterRules(0);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '4' } });
   assert.equal(p._saveChapterRules(), false);
   p.onChapterQuantity({ detail: { value: '3' } });
   assert.equal(p._saveChapterRules(), true);
   assert.deepEqual(JSON.parse(p._runtimePayload()).chapters[0].completion, { type: 'ANY_N', quantity: 3 });
   assert.equal(Object.hasOwn(JSON.parse(p._runtimePayload()), 'gameplayRuntime'), false);
-  p.addChapterExtraNode();
-  p.onChapterExtraSlot({ currentTarget: { dataset: { index: 0 } }, detail: { value: 'mobile' } });
-  assert.equal(p._saveChapterRules(), false);
+  // 任选 3 时把一站标成额外站点:计入完成只剩 2 站(第 3 站未保存),标记被拒,原规则不变
+  p.setData(p._storyRolePatch());
+  p.onStoryNodeRole(roleEvent(p, 101, '__own'));
+  assert.equal(p._runtimeConfig().chapters[0].extraNodes, undefined);
+  p._openChapterRules(0);
   p.onChapterQuantity({ detail: { value: '1' } });
   assert.equal(p._saveChapterRules(), true);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ALL' } } });
+  p.onStoryNodeRole(roleEvent(p, 101, '__own'));
+  assert.deepEqual(p._runtimeConfig().chapters[0].extraNodes, [{ nodeId: 101, slot: 'extra_101' }]);
+  p._openChapterRules(0);
+  p.onChapterCompleteAll({ detail: { value: true } });
   assert.equal(p._saveChapterRules(), true);
   assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ALL' });
 });
@@ -324,38 +338,36 @@ test('新主题可以按草稿站点设置任选数量，但节点引用仍须�
   assert.match(p._chapterRuleIssue(0, { extraNodes: [{ nodeId: 101, slot: 'shared' }] }), /须先保存/);
 });
 
-test('超量任务槽仅随任选规则写入，校验名称并可跨章复用', () => {
+test('超出后补做一站:可选不允许/单独额度/与既有额度共用，只随至少完成 N 站写入，开回全部完成即清除', () => {
   const p = page();
   p.data.formData.chapters = [
     { nodes: [{ id: 101, name: '甲' }, { id: 102, name: '乙' }] },
     { nodes: [{ id: 201, name: '丙' }, { id: 202, name: '丁' }] },
   ];
+  const pick = value => p.onChapterOverflowPick({ detail: { value: p.data.runtimeOverflowOptions.findIndex(o => o.value === value) } });
   p._openChapterRules(0);
-  p.onChapterOverflowSlot({ detail: { value: 'shared_slot' } });
-  assert.equal(p._saveChapterRules(), true);
-  assert.equal(p.data.formData.themeRuntimeConfig, '');
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '1' } });
-  p.onChapterOverflowSlot({ detail: { value: 'Bad Slot' } });
-  assert.equal(p._saveChapterRules(), false);
-  p.onChapterOverflowSlot({ detail: { value: ' shared_slot ' } });
+  assert.deepEqual(p.data.runtimeOverflowOptions.map(o => o.value), ['', '__own']);
+  pick('__own');
+  assert.equal(p.data.runtimeChapterRules.overflowSlot, 'overflow_1');
   assert.equal(p._saveChapterRules(), true);
-  assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ANY_N', quantity: 1, overflowSlot: 'shared_slot' });
+  assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ANY_N', quantity: 1, overflowSlot: 'overflow_1' });
+  // 第二章选择与第一章共用同一份额度
   p._openChapterRules(1);
-  assert.deepEqual(p.data.runtimeChapterRules.slots, ['shared_slot']);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '1' } });
-  p.reuseChapterOverflowSlot({ currentTarget: { dataset: { slot: 'shared_slot' } } });
+  assert.match(p.data.runtimeOverflowOptions[2].label, /第1章补做/);
+  pick('overflow_1');
   assert.equal(p._saveChapterRules(), true);
-  assert.deepEqual(p._runtimeConfig().chapters.map(ch => ch.completion.overflowSlot), ['shared_slot', 'shared_slot']);
+  assert.deepEqual(p._runtimeConfig().chapters.map(ch => ch.completion.overflowSlot), ['overflow_1', 'overflow_1']);
+  // 全部完成开回去:补做随之清除
   p._openChapterRules(0);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ALL' } } });
+  p.onChapterCompleteAll({ detail: { value: true } });
+  assert.equal(p.data.runtimeChapterRules.overflowSlot, '');
   assert.equal(p._saveChapterRules(), true);
   assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ALL' });
   assert.equal(Object.hasOwn(JSON.parse(p._runtimePayload()), 'gameplayRuntime'), false);
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
-  assert.match(wxml, /超出数量后再做的站点消耗任务槽/);
-  assert.match(wxml, /bindtap="reuseChapterOverflowSlot"[^>]*hover-class="cy-pressed"/);
 });
 
 test('已有规则的章节整体恢复默认时保留显式 ALL，清空互斥与额外节点', () => {
@@ -363,14 +375,14 @@ test('已有规则的章节整体恢复默认时保留显式 ALL，清空互斥�
   const p = page();
   p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }, { id: 102, name: '乙' }, { id: 103, name: '丙' }];
   p._openChapterRules(0);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '1' } });
   p.addChapterExclusiveGroup();
   p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 101 } } });
   p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 102 } } });
   assert.equal(p._saveChapterRules(), true);
   p._openChapterRules(0);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ALL' } } });
+  p.onChapterCompleteAll({ detail: { value: true } });
   p.removeChapterExclusiveGroup({ currentTarget: { dataset: { index: 0 } } });
   assert.equal(p._saveChapterRules(), true);
   const row = p._runtimeConfig().chapters[0];
@@ -393,10 +405,10 @@ test('互斥组须两站且不可跨组、跨章或与额外节点重叠', () =>
   p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 102 } } });
   assert.equal(p._saveChapterRules(), true);
   assert.deepEqual(p._runtimeConfig().chapters[0].exclusiveGroups, [[101, 102]]);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ANY_N' } } });
+  p.onChapterCompleteAll({ detail: { value: false } });
   p.onChapterQuantity({ detail: { value: '3' } });
   assert.equal(p._saveChapterRules(), false);
-  p.onChapterCompletion({ currentTarget: { dataset: { type: 'ALL' } } });
+  p.onChapterCompleteAll({ detail: { value: true } });
   p.addChapterExclusiveGroup();
   p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 1, id: 101 } } });
   assert.deepEqual(p.data.runtimeChapterRules.groups[1].ids, []);
@@ -405,40 +417,87 @@ test('互斥组须两站且不可跨组、跨章或与额外节点重叠', () =>
   p.data.runtimeChapterRules.groups[1].ids = [201, 103];
   assert.equal(p._saveChapterRules(), false);
   p.removeChapterExclusiveGroup({ currentTarget: { dataset: { index: 1 } } });
-  p.addChapterExtraNode();
-  p.onChapterExtraSlot({ currentTarget: { dataset: { index: 0 } }, detail: { value: 'mobile' } });
-  assert.equal(p._saveChapterRules(), false);
+  // 互斥组里的站点不能再在故事流里标成额外站点
+  p.setData(p._storyRolePatch());
+  p.onStoryNodeRole(roleEvent(p, 101, '__own'));
+  assert.equal(p._runtimeConfig().chapters[0].extraNodes, undefined);
 });
 
-test('额外任务槽跨章节复用，插入开篇及删除章节后配置跟随原章', () => {
+test('故事流额度:两站共用一份、另一站单独一份，不写参数即可配置；跨章共用，插入开篇与删章后跟随原章', () => {
   const p = page();
   p.data.formData.chapters = [
-    // 每章另有一个计入完成的站点：额外节点不能占满本章（A08 计数规则）
-    { nodes: [{ id: 101, name: '甲' }, { id: 102, name: '甲二' }] },
+    // 每章另有计入完成的站点：额外站点不能占满本章（A08 计数规则）
+    { nodes: [{ id: 101, name: '甲' }, { id: 102, name: '甲二' }, { id: 103, name: '甲三' }] },
     { nodes: [{ id: 201, name: '乙' }, { id: 202, name: '乙二' }] },
   ];
-  p._openChapterRules(0); p.addChapterExtraNode();
-  p.onChapterExtraSlot({ currentTarget: { dataset: { index: 0 } }, detail: { value: 'mobile' } });
-  assert.equal(p._saveChapterRules(), true);
-  p._openChapterRules(1);
-  assert.deepEqual(p.data.runtimeChapterRules.slots, ['mobile']);
-  p.addChapterExtraNode();
-  p.reuseChapterExtraSlot({ currentTarget: { dataset: { index: 0, slot: 'mobile' } } });
-  assert.equal(p._saveChapterRules(), true);
-  assert.deepEqual(p._runtimeConfig().chapters.map(row => row.extraNodes), [[{ nodeId: 101, slot: 'mobile' }], [{ nodeId: 201, slot: 'mobile' }]]);
+  p.data.formData.themeRuntimeConfig = JSON.stringify({ chapters: [], gameplayRuntime: { runtimeScope: 'TEAM', worldMode: 'TEAM_INDEPENDENT' } });
+  p.setData(p._storyRolePatch());
+  p.onStoryNodeRole(roleEvent(p, 101, '__own'));
+  p.onStoryNodeRole(roleEvent(p, 102, '__own'));
+  const slots = () => p._runtimeConfig().chapters.flatMap(ch => (ch.extraNodes || []).map(x => [x.nodeId, x.slot]));
+  assert.deepEqual(slots(), [[101, 'extra_101'], [102, 'extra_102']], '两站各自单独一份');
+  // 乙 选择与「甲」共用
+  p.onStoryNodeRole(roleEvent(p, 201, 'extra_101'));
+  assert.deepEqual(slots(), [[101, 'extra_101'], [102, 'extra_102'], [201, 'extra_101']]);
+  assert.match(p.data.storyNodeRoles[101], /与1处共用（每队共一次）/);
+  assert.match(p.data.storyNodeRoles[102], /额外 · 每队一次/);
+  // 共用中的站点改选「单独额度」:新开一份,不拖走另一站
+  p.onStoryNodeRole(roleEvent(p, 201, '__own'));
+  assert.deepEqual(slots(), [[101, 'extra_101'], [102, 'extra_102'], [201, 'extra_201']]);
+  p.onStoryNodeRole(roleEvent(p, 201, 'extra_101'));
   p._prependRuntimeChapter();
-  assert.deepEqual(p._runtimeConfig().chapters.map(row => [row.index, row.extraNodes[0].nodeId]), [[1, 101], [2, 201]]);
-  p._removeRuntimeChapter(1);
-  assert.deepEqual(p._runtimeConfig().chapters.map(row => [row.index, row.extraNodes[0].nodeId]), [[1, 201]]);
+  assert.deepEqual(p._runtimeConfig().chapters.filter(r => r.extraNodes).map(row => [row.index, row.extraNodes[0].slot]), [[1, 'extra_101'], [2, 'extra_101']]);
+});
+
+test('存量共用额度(既有槽名)原样保留：重选同一份不改名，回到计入完成写显式 ALL；未保存站点不能标', () => {
+  const p = page();
+  p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }, { id: 102, name: '乙' }, { id: 103, name: '丙' }, { _localId: 'draft', name: '未保存' }];
+  p.data.formData.themeRuntimeConfig = JSON.stringify({ chapters: [{ index: 0, hpCost: 0, luckCost: 0, grants: [], eggs: [], extraNodes: [{ nodeId: 101, slot: 'mobile' }, { nodeId: 102, slot: 'mobile' }] }] });
+  p.setData(p._storyRolePatch());
+  assert.equal(p.data.storyRoleOptions.find(o => o.value === 'mobile').label.includes('甲、乙'), true);
+  // 单独额度对共用中的站点:新开,不把共用槽改名
+  p.onStoryNodeRole(roleEvent(p, 102, 'mobile'));
+  assert.deepEqual(p._runtimeConfig().chapters[0].extraNodes, [{ nodeId: 101, slot: 'mobile' }, { nodeId: 102, slot: 'mobile' }]);
+  p.onStoryNodeRole(roleEvent(p, 0, ''));
+  p.onStoryNodeRole(roleEvent(p, 101, ''));
+  p.onStoryNodeRole(roleEvent(p, 102, ''));
+  const row = p._runtimeConfig().chapters[0];
+  assert.equal(Object.hasOwn(row, 'extraNodes'), false);
+  assert.deepEqual(row.completion, { type: 'ALL' });
+  assert.deepEqual(p.data.storyNodeRoles, {});
+});
+
+test('章末消耗：存量生命/自定义数值消耗在章节弹窗可见可改可删，停用数值标出；保存写回 hpCost/statCosts', () => {
+  const p = page(), key = 'counter.value_1';
+  p.data.formData.journeyRules = initial.serialize({ stateEnabled: true, hp: { enabled: true, init: 10, max: 10 }, luck: { enabled: false, init: 3, max: 3 }, attributes: [{ key, label: '温度', min: 0, max: 10, initial: 5, visible: true }] });
+  p.data.formData.themeRuntimeConfig = JSON.stringify({ chapters: [{ index: 0, hpCost: 2, luckCost: 1, grants: [], eggs: [], statCosts: [{ statKey: key, amount: 3 }] }] });
+  p._openChapterRules(0);
+  assert.deepEqual(p.data.runtimeChapterCostRows.map(r => [r.key, r.amount, r.inactive]), [['HP', '2', false], ['LUCK', '1', true], [key, '3', false]]);
+  p.onChapterCostAmount({ currentTarget: { dataset: { index: 0 } }, detail: { value: '4' } });
+  p.removeChapterCost({ currentTarget: { dataset: { index: 1 } } });
+  assert.equal(p._saveChapterRules(), true);
+  let row = p._runtimeConfig().chapters[0];
+  assert.deepEqual([row.hpCost, row.luckCost, row.statCosts], [4, 0, [{ statKey: key, amount: 3 }]]);
+  p._openChapterRules(0);
+  p.removeChapterCost({ currentTarget: { dataset: { index: 1 } } });
+  p.onChapterCostAmount({ currentTarget: { dataset: { index: 0 } }, detail: { value: '1000' } });
+  assert.equal(p._saveChapterRules(), false, '超出 0-999 不保存');
+  p.onChapterCostAmount({ currentTarget: { dataset: { index: 0 } }, detail: { value: '0' } });
+  assert.equal(p._saveChapterRules(), true);
+  row = p._runtimeConfig().chapters[0];
+  assert.deepEqual([row.hpCost, row.luckCost, row.statCosts], [0, 0, undefined]);
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
+  assert.match(wxml, /章末消耗/);
+  assert.match(wxml, /bind:change="addChapterCost"/);
 });
 
 test('额外节点不能占满本章全部站点（与后端“本章没有计数任务”一致）', () => {
   const p = page();
   p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }];
-  p._openChapterRules(0);
-  p.addChapterExtraNode();
-  p.onChapterExtraNode && p.onChapterExtraNode({ currentTarget: { dataset: { index: 0 } }, detail: { value: 0 } });
-  p.onChapterExtraSlot({ currentTarget: { dataset: { index: 0 } }, detail: { value: 'mobile' } });
+  // 唯一的站点不能标成额外站点
+  p.setData(p._storyRolePatch());
+  p.onStoryNodeRole(roleEvent(p, 101, '__own'));
+  assert.equal(p.data.formData.themeRuntimeConfig, '');
   const issue = p._chapterRuleIssue(0, { completion: null, exclusiveGroups: [], extraNodes: [{ nodeId: 101, slot: 'mobile' }] });
   assert.match(issue, /额外节点不能占满本章全部站点/);
   p.data.formData.chapters[0].nodes.push({ id: 102, name: '乙' });
@@ -494,7 +553,7 @@ test('章末配给：写入既有 survival.rations（本章 actKey），每章�
   const settings = wxml.slice(wxml.indexOf('pop-chapter-settings'));
   assert.match(settings, /章末配给<\/text>[\s\S]*?bindchange="onChapterRationToggle"/);
   assert.match(settings, /bind:change="onChapterRationItem"/);
-  assert.match(settings, /没有时减少<\/text><cy-dropdown[^>]*bind:change="onChapterRationValue"/);
+  assert.match(settings, /bind:change="onChapterRationValue"[^>]*>\s*<view class="ch-pill-row"><text>物品不够时减少<\/text>/);
 });
 
 test('章末配给不足时可扣自定义数值（温度），扣 0 不要求生命；旧 fallbackHpCost 按生命回显', () => {

@@ -33,7 +33,7 @@ class OWN_C05_18Test {
             ReflectionTestUtils.setField(gateway, "wxContentSecurityService", security);
             AiProviderResultReceivedException failure = assertThrows(AiProviderResultReceivedException.class,
                     () -> gateway.generate(7L, "merchant", "merchant_plan", "system", "user"));
-            assertEquals(mode == 2 ? AiServiceException.Reason.UNKNOWN : AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+            assertEquals(mode == 2 ? AiServiceException.Reason.OUTPUT_BLOCKED : AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     failure.getReason());
             assertFalse(failure.getMessage().contains("PRIVATE_MODEL_TEXT"));
             verify(client, times(1)).chat("system", "user");

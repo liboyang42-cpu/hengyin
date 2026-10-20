@@ -8,8 +8,9 @@
       "chengyinhub.com",
       "www.chengyinhub.com",
       "api.chengyinhub.com",
-      "47.103.124.64",
-      "47.100.84.122"
+      "sha256:d8c695fe7dd5f6ffc048b72c96621f7e7d13d3ec23b76aab523514183e7474d9",
+      "sha256:ce1a8527392b68bab1ab6a91238a5e6909cbbb937b9eb077d1025499a59f03fe",
+      "env:CHENGYIN_FORBIDDEN_DB_HOSTS"
     ],
     "write_load_requires": [
       "non-production target",

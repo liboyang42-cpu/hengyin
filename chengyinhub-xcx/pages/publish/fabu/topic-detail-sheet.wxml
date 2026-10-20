@@ -5,7 +5,7 @@
      .node-card / .node-pill,不再造第二套。
      ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
      不传 title 时那段整段不渲染,头完全在这里画。 -->
-<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail">
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
   <view class="pd-topic-detail node-sheet">
     <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
          原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。

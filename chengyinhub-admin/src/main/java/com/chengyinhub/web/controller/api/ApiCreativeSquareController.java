@@ -25,6 +25,7 @@ import com.chengyinhub.common.constant.ProductType;
 import com.github.pagehelper.PageHelper;
 import com.chengyinhub.common.config.WxPayConfig;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import com.chengyinhub.common.core.redis.RedisCache;
@@ -81,7 +82,7 @@ public class ApiCreativeSquareController extends BaseController {
     private boolean legacyCommunityWritesEnabled;
 
     private AjaxResult legacyWriteDisabled() {
-        return error("广场发布已升级，请更新客户端后重试");
+        return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, "广场发布已升级，请更新客户端后重试");
     }
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
     @Autowired

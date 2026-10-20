@@ -6,38 +6,117 @@
 //  - 发布:先按「保存草稿」存下最新内容并回读确认,再调 /api/topic/publish-draft 发布这份已持久化的草稿。
 //
 // 依赖注入(页面保留各自 UI):
-//  save(payload, cb)      cb({ ok, data?, msg?, networkError? }),data 为 topicId 或 { topicId, ... }
+//  save(payload, cb)      cb({ ok, data?, msg?, networkError? }),data 为 topicId 或 { topicId, recovered?, ... }
 //  readback(topicId, cb)  cb({ ok, data?, msg?, networkError? }),data 为 edit-detail 的回包
 //  publish(topicId, cb)   cb({ ok, data?, msg?, networkError? })
 //
 // handlers:onSaved(topicId) 服务端已接受(拿到主题号,后续保存走 update,避免重复建题);
-//           onSuccess({ topicId, detail, published? }) / onFail({ stage, topicId?, detail?, msg?, networkError? })。
+//           onSuccess({ topicId, detail, published? }) / onFail({ stage, topicId?, detail?, msg?, networkError?, unknown? })。
+//
+// 结果不确定(网络中断/回包丢失)与确定失败要分开:
+//  - 首次建草稿丢回包:页面用同一个意图键重试,服务端认出已建的那份并回 recovered;这里随即用最新内容再存一次;
+//  - 发布丢回包,或重试时服务端说「不是草稿」:先回读真实状态,已发布就按已发布展示,不再说「没发布出去」。
+
+const templateBinding = require('./template-binding.js');
+const initial = require('./story-initial-state.js');
 
 function topicIdOf(data) {
   const id = data && typeof data === 'object' ? data.topicId : data;
   return Number(id) > 0 ? Number(id) : 0;
 }
 
-function nodeNames(chapters, listKey) {
-  const names = [];
-  (chapters || []).forEach(chapter => ((chapter && chapter[listKey]) || []).forEach(node => {
-    names.push(String((node && node.name) || '').trim());
+function parseConfig(raw) {
+  try { return templateBinding.parse(raw) || {}; } catch (error) { return null; }
+}
+
+/* 站点身份 → 位置(第几章.第几站)。服务端重建站点会换编号、不回传 clientNodeKey,
+   章节顺序与站点顺序是两边都持久的,所以按位置对齐,而不是比生编号。 */
+function positionsOf(chapters, listKey, keyOf) {
+  const map = new Map();
+  (chapters || []).forEach((chapter, ci) => ((chapter && chapter[listKey]) || []).forEach((node, ni) => {
+    const key = keyOf(node);
+    if (key) map.set(key, ci + '.' + ni);
+    if (Number(node && node.id) > 0) map.set(String(Number(node.id)), ci + '.' + ni);
   }));
-  return names.sort();
+  return map;
+}
+
+function sorted(obj) {
+  return JSON.stringify(Object.keys(obj || {}).sort().map(key => [key, obj[key]]));
+}
+
+/* 只比作者写下的规则;编号、slotDigest、服务端编译出的字段不参与。 */
+function authoredConfig(cfg, pos) {
+  const at = id => pos.get(String(id)) || ('?' + id);
+  const chapters = (cfg.chapters || []).map((ch) => {
+    const completion = ch.completion && ch.completion.type === 'ANY_N'
+      ? 'ANY_N:' + ch.completion.quantity + ':' + (ch.completion.overflowSlot || '') : 'ALL';
+    const row = {
+      index: ch.index,
+      completion,
+      groups: (ch.exclusiveGroups || []).map(group => group.map(at).sort().join(',')).sort(),
+      extra: (ch.extraNodes || []).map(item => at(item.nodeId) + '=' + item.slot).sort(),
+      costs: [Number(ch.hpCost) || 0, Number(ch.luckCost) || 0].concat((ch.statCosts || []).map(c => c.statKey + '=' + c.amount).sort()),
+      grants: (ch.grants || []).map(g => g.itemId + 'x' + g.quantity + '@' + (g.timing || '')).sort(),
+    };
+    const empty = completion === 'ALL' && !row.groups.length && !row.extra.length && !row.grants.length
+      && row.costs.length === 2 && !row.costs[0] && !row.costs[1];
+    return empty ? null : row;
+  }).filter(Boolean).sort((a, b) => a.index - b.index);
+  const bindings = Object.keys(cfg.templateBindings || {}).map((key) => {
+    const value = cfg.templateBindings[key] || {};
+    return at(key) + ':' + Number(value.templateId) + ':' + sorted(value.values) + sorted(value.items);
+  }).sort();
+  const game = cfg.gameplayRuntime || {};
+  return {
+    chapters,
+    bindings,
+    quests: (game.quests || []).map(q => at(q.nodeId) + '>' + q.actKey).sort(),
+    rations: ((game.survival || {}).rations || []).map(r => [r.actKey, r.itemId, r.quantity, r.fallbackHpCost || 0,
+      r.fallback ? r.fallback.statKey + '=' + r.fallback.amount : ''].join('|')).sort(),
+    items: (cfg.items || []).map(i => i.id + ':' + (i.name || '') + ':' + (i.slotCost || 1)).sort(),
+    mode: (game.runtimeScope || '') + '/' + (game.worldMode || ''),
+  };
+}
+
+const CONFIG_LABELS = { chapters: '章节规则', bindings: '站点玩法资源对应', quests: '站点与章节的对应', rations: '章末配给', items: '物品', mode: '进行方式' };
+
+function initialOf(raw) {
+  try {
+    const rules = initial.parse(raw || '');
+    const pick = s => (s && s.enabled ? [s.init, s.max] : []);
+    return JSON.stringify([pick(rules.hp), pick(rules.luck), (rules.attributes || []).map(a => [a.key, a.initial, a.max])]);
+  } catch (error) { return 'invalid'; }
 }
 
 /** 回读与刚保存的内容是否对得上;对不上返回一句原因,对得上返回 ''。 */
 function readbackIssue(sent, detail, expectDraft) {
-  if (!detail || !detail.topic) return '回读不到已保存的主题';
-  if (expectDraft && detail.isDraft !== true) return '回读到的主题不是草稿';
-  if (String(detail.topic.name || '') !== String((sent && sent.name) || '')) return '回读到的主题名与本机不一致';
+  if (!detail || !detail.topic) return '没能取回云端保存的主题';
+  if (expectDraft && detail.isDraft !== true) return '云端保存的主题不是草稿';
+  if (String(detail.topic.name || '') !== String((sent && sent.name) || '')) return '云端保存的主题名与本机不一致';
+  const sentChapters = (sent && sent.chapters) || [];
   const got = detail.chapters || [];
-  if (got.some(chapter => (chapter.cmsTopicNodeList || []).some(node => !(Number(node && node.id) > 0)))) {
-    return '回读到的站点缺少编号';
+  if (sentChapters.length !== got.length) return '云端保存的章节数与本机不一致';
+  for (let ci = 0; ci < got.length; ci++) {
+    const a = sentChapters[ci] || {}, b = got[ci] || {};
+    if (String(a.name || '') !== String(b.name || '')) return '第' + (ci + 1) + '章名称或顺序与本机不一致';
+    const an = a.nodes || [], bn = b.cmsTopicNodeList || [];
+    if (an.length !== bn.length) return '第' + (ci + 1) + '章站点数与本机不一致';
+    for (let ni = 0; ni < bn.length; ni++) {
+      if (!(Number(bn[ni] && bn[ni].id) > 0)) return '云端保存的站点缺少编号';
+      if (String(an[ni].name || '').trim() !== String(bn[ni].name || '').trim()) return '第' + (ci + 1) + '章站点顺序或名称与本机不一致';
+      if ((Number(an[ni].templateId) || 0) !== (Number(bn[ni].templateId) || 0)) return '第' + (ci + 1) + '章「' + (bn[ni].name || '') + '」的玩法与本机不一致';
+    }
   }
-  const want = nodeNames(sent && sent.chapters, 'nodes');
-  const have = nodeNames(got, 'cmsTopicNodeList');
-  if (want.length !== have.length || want.some((name, i) => name !== have[i])) return '回读到的站点与本机不一致';
+  const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
+  const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
+  if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
+  const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey));
+  const have = authoredConfig(gotConfig, positionsOf(got, 'cmsTopicNodeList', node => String(Number(node && node.id) || '')));
+  for (const key of Object.keys(CONFIG_LABELS)) {
+    if (JSON.stringify(want[key]) !== JSON.stringify(have[key])) return '云端保存的' + CONFIG_LABELS[key] + '与本机不一致';
+  }
+  if (initialOf(sent && sent.journeyRules) !== initialOf(detail.journeyRules || detail.topic.journeyRulesJson)) return '云端保存的初始状态与本机不一致';
   return '';
 }
 
@@ -49,6 +128,7 @@ function createServerDraftSaver(deps) {
   let busy = false;
   let published = false;
   let destroyed = false;
+  let unconfirmedPublish = 0; // 上次发布结果不确定的主题号:下次发布前先查真实状态,别对已发布主题再存草稿
 
   function run(payload, publish, handlers) {
     handlers = handlers || {};
@@ -59,15 +139,27 @@ function createServerDraftSaver(deps) {
       busy = false;
       if (!destroyed && typeof fn === 'function') fn(arg);
     };
-    deps.save(Object.assign({}, payload, { saveDraft: 1 }), (res) => {
-      if (destroyed) return;
-      const topicId = res && res.ok ? topicIdOf(res.data) : 0;
-      if (!topicId) {
-        finish(handlers.onFail, Object.assign({ stage: 'save' }, res || {},
-          res && res.ok ? { msg: '保存结果缺少主题编号' } : {}));
-        return;
-      }
-      if (typeof handlers.onSaved === 'function') handlers.onSaved(topicId);
+    const draftPayload = Object.assign({}, payload, { saveDraft: 1 });
+
+    const reconcilePublish = (topicId, savedDetail, pub) => {
+      // 发布结果不确定(丢回包),或重试时服务端说「不是草稿」:回读真实状态再说话
+      deps.readback(topicId, (back) => {
+        if (destroyed) return;
+        if (back && back.ok && back.data && back.data.isDraft === false) {
+          published = true;
+          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status } });
+          return;
+        }
+        if (back && back.ok && back.data && back.data.isDraft === true) {
+          finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}, { unknown: false }));
+          return;
+        }
+        unconfirmedPublish = topicId;
+        finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: savedDetail }, pub || {}, { unknown: true }));
+      });
+    };
+
+    const afterSaved = (topicId) => {
       deps.readback(topicId, (back) => {
         if (destroyed) return;
         const issue = back && back.ok ? readbackIssue(payload, back.data, true) : '';
@@ -81,15 +173,53 @@ function createServerDraftSaver(deps) {
         }
         deps.publish(topicId, (pub) => {
           if (destroyed) return;
-          if (!pub || !pub.ok) {
-            finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}));
+          if (pub && pub.ok) {
+            published = true;
+            finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
             return;
           }
-          published = true;
-          finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+          if (!pub || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
+          finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
         });
       });
+    };
+
+    const start = () => deps.save(draftPayload, (res) => {
+      if (destroyed) return;
+      const topicId = res && res.ok ? topicIdOf(res.data) : 0;
+      if (!topicId) {
+        finish(handlers.onFail, Object.assign({ stage: 'save' }, res || {},
+          res && res.ok ? { msg: '保存结果缺少主题编号' } : {}, { unknown: !!(res && res.networkError) }));
+        return;
+      }
+      if (typeof handlers.onSaved === 'function') handlers.onSaved(topicId);
+      // 丢回包后的重试被服务端认出:那份草稿是上次的内容,随即用当前内容再存一次(此时已按主题号走 update)
+      if (res.data && res.data.recovered) {
+        deps.save(draftPayload, (again) => {
+          if (destroyed) return;
+          if (!again || !again.ok) {
+            finish(handlers.onFail, Object.assign({ stage: 'save', topicId }, again || {}, { unknown: !!(again && again.networkError) }));
+            return;
+          }
+          afterSaved(topicId);
+        });
+        return;
+      }
+      afterSaved(topicId);
     });
+    if (unconfirmedPublish) {
+      const topicId = unconfirmedPublish;
+      deps.readback(topicId, (back) => {
+        if (destroyed) return;
+        if (back && back.ok && back.data && back.data.isDraft === false) {
+          published = true; unconfirmedPublish = 0;
+          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status } });
+          return;
+        }
+        if (back && back.ok) { unconfirmedPublish = 0; start(); return; }
+        finish(handlers.onFail, Object.assign({ stage: 'publish', topicId }, back || {}, { unknown: true }));
+      });
+    } else start();
     return true;
   }
 

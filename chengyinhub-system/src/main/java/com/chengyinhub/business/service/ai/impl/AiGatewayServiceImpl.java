@@ -155,11 +155,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
             retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
             saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
-            // 人工复核及未知拒绝仍沿用 UNKNOWN；只有现有微信明确违规文案改变分类。
-            if ("内容包含违规信息，请修改后重试".equals(secIn)) {
-                throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
-            }
-            throw new AiServiceException(secIn);
+            // 与 master #322 统一：微信审核拒绝（含人工复核/未知拒绝）一律按入参被拦截返回，小程序给出同一条“请修改内容”提示。
+            throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
         }
 
         // 3. 选模型(场景路由)
@@ -250,7 +247,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
             retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
-                    AiServiceException.Reason.UNKNOWN, "生成内容未通过安全检测,请调整后重试");
+                    AiServiceException.Reason.OUTPUT_BLOCKED, "生成内容未通过安全检测,请调整后重试");
         }
 
         // 5. 落日志

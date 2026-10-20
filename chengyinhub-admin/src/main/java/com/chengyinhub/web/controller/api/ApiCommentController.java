@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.config.WxPayConfig;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import com.chengyinhub.common.core.redis.RedisCache;
@@ -55,7 +56,7 @@ public class ApiCommentController extends BaseController {
     private boolean legacyCommunityWritesEnabled;
 
     private AjaxResult legacySquareWriteDisabled() {
-        return error("广场互动已升级，请更新客户端后重试");
+        return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, "广场互动已升级，请更新客户端后重试");
     }
 
     @Autowired
