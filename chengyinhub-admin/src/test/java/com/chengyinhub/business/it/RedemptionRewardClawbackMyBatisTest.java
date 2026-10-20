@@ -70,8 +70,8 @@ class RedemptionRewardClawbackMyBatisTest {
                     "INSERT INTO store_verify_growth_delivery (registration_id, member_id, missions_json, create_time, next_attempt_at, processed_at)"
                             + " VALUES (" + REGISTRATION + ", " + MEMBER + ", '[]', NOW(), NOW(), NOW())",
                     "INSERT INTO topic_completion_xp_award (member_id, topic_id, xp_amount, granted_at) VALUES (" + MEMBER + ", " + TOPIC + ", 15, NOW())",
-                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, created_at)"
-                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, NOW())",
+                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, history_id, created_at)"
+                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, 41, NOW())",
                     "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
                             + " VALUES (40, 30, " + MEMBER + ", 'C40-node', 0, NOW(), 0),"
                             + " (41, 30, " + MEMBER + ", 'C41', 0, NOW(), 0),"
@@ -164,8 +164,8 @@ class RedemptionRewardClawbackMyBatisTest {
             Connection c = session.getConnection();
             createTables(c);
             exec(c, "INSERT INTO ums_member (id, point, del_flag) VALUES (" + MEMBER + ", 0, 0)",
-                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, created_at)"
-                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, NOW())",
+                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, history_id, created_at)"
+                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, 41, NOW())",
                     "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
                             + " VALUES (41, 30, " + MEMBER + ", 'C41', 1, NOW(), 0)");
 
@@ -175,6 +175,28 @@ class RedemptionRewardClawbackMyBatisTest {
             assertTrue(text(c, "SELECT after_json FROM business_audit_event").contains("USED_NOT_RECOVERED"));
             assertEquals(0, number(c, "SELECT COUNT(*) FROM growth_mission_progress WHERE biz_type='topic_completion_clawback'"),
                     "积分/XP 从没发过、券已使用没作废 ⇒ 一项都没真冲回,不写冲回标记(否则再通关会倒补)");
+        }
+    }
+
+    @Test
+    void laterUnrelatedSameTemplateCouponNeverSubstitutesTheOriginalReceipt() throws Exception {
+        try (SqlSession session = openSession("redemption_clawback_identity")) {
+            Connection c = session.getConnection();
+            createTables(c);
+            exec(c, "INSERT INTO ums_member (id, point, del_flag) VALUES (" + MEMBER + ", 0, 0)",
+                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, history_id, created_at)"
+                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, 41, NOW())",
+                    "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
+                            + " VALUES (41, 30, " + MEMBER + ", 'original', 0, NOW(), 0),"
+                            + " (43, 30, " + MEMBER + ", 'unrelated-later', 0, NOW(), 0)");
+            service(session).clawback(redemption(61L), registration(), false, true, "原券冲回", 1L);
+            assertEquals(2, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=41"));
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=43"),
+                    "同玩家同模板同一分钟的新领取也不能替代原通关券");
+            service(session).clawback(redemption(62L), registration(), false, true, "重复冲回", 1L);
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=43"));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM growth_mission_progress"
+                    + " WHERE mission_code='COMPLETION_CLAWBACK_COUPON'"));
         }
     }
 
@@ -252,15 +274,21 @@ class RedemptionRewardClawbackMyBatisTest {
 
         com.chengyinhub.business.service.ISmsCouponHistoryService couponHistory = mock(com.chengyinhub.business.service.ISmsCouponHistoryService.class);
         java.util.concurrent.atomic.AtomicLong nextHistoryId = new java.util.concurrent.atomic.AtomicLong(100);
-        when(couponHistory.grantCouponById(anyLong(), anyLong())).thenAnswer(i -> {
+        when(couponHistory.grantCouponWithReceipt(anyLong(), any())).thenAnswer(i -> {
             long id = nextHistoryId.incrementAndGet();
             exec(c, "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
-                    + " VALUES (" + id + ", " + i.getArgument(1) + ", " + i.getArgument(0) + ", 'C" + id + "', 0, NOW(), 0)");
-            return true;
+                    + " VALUES (" + id + ", " + ((com.chengyinhub.business.domain.SmsCoupon) i.getArgument(1)).getId() + ", " + i.getArgument(0) + ", 'C" + id + "', 0, NOW(), 0)");
+            return id;
         });
         com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl coupons =
                 new com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl();
         ReflectionTestUtils.setField(coupons, "rewardMapper", session.getMapper(CmsTopicCompletionCouponRewardMapper.class));
+        com.chengyinhub.business.mapper.SmsCouponMapper couponMapper =
+                mock(com.chengyinhub.business.mapper.SmsCouponMapper.class);
+        com.chengyinhub.business.domain.SmsCoupon coupon = new com.chengyinhub.business.domain.SmsCoupon();
+        coupon.setId(30L);
+        when(couponMapper.selectSmsCouponById(30L)).thenReturn(coupon);
+        ReflectionTestUtils.setField(coupons, "smsCouponMapper", couponMapper);
         ReflectionTestUtils.setField(coupons, "smsCouponHistoryService", couponHistory);
 
         com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
@@ -355,6 +383,7 @@ class RedemptionRewardClawbackMyBatisTest {
                 "member_growth", "sms_coupon_history", "cms_topic_completion_coupon_reward_log"}) {
             exec(c, ddl(base, table));
         }
+        ItSchema.applyMigrations(c, "sql/migration_topic_completion_coupon_history_receipt_20261016.sql");
         // base_schema 快照晚于 migration_app_open_id.sql 之前导出;UmsMemberMapper 的通用查询要这一列
         exec(c, "ALTER TABLE ums_member ADD COLUMN app_open_id varchar(64) NULL AFTER wx_open_id");
         exec(c, ddl(read("chengyinhub-admin/sql/migration_store_verify_growth_delivery_20260913.sql"), "store_verify_growth_delivery"),

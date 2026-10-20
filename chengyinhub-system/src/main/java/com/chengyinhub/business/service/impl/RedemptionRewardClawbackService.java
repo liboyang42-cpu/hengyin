@@ -268,8 +268,11 @@ public class RedemptionRewardClawbackService {
         Long historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
         SmsCouponHistory history = historyId == null ? null
                 : smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
-        if (history == null) {
-            out.put("result", "NOT_FOUND");
+        // 加锁后的归属再次核对，不能把管理员随后修改过的领取记录当成原奖励。
+        if (history == null || !memberId.equals(history.getMemberId())
+                || !couponId.equals(history.getCouponId())
+                || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
             return out;
         }
         out.put("historyId", history.getId());
