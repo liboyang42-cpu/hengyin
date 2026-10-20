@@ -174,9 +174,15 @@ class ContentSafetyImageTakedownNoticeTest {
         live.setAuthorMemberId(AUTHOR);
         live.setContent("今晚集合");
         live.setDelFlag(0);
-        when(posts.selectClubPostById(ID)).thenReturn(live);
+        ClubPost removed = new ClubPost();
+        removed.setId(ID);
+        removed.setAuthorMemberId(AUTHOR);
+        removed.setDelFlag(2);
+        when(posts.selectClubPostByIdForUpdate(ID)).thenReturn(live, removed);
+        // 软删 SQL 无 del_flag 条件,驱动按 found rows 计数:已删的再删也回 1
         when(posts.deleteClubPostById(ID)).thenReturn(1);
 
+        assertTrue(risky(IWxContentSecurityService.BIZ_TYPE_CLUB_POST));
         assertTrue(risky(IWxContentSecurityService.BIZ_TYPE_CLUB_POST));
 
         assertTrue(noticeTo(AUTHOR).contains("俱乐部动态「今晚集合」"));

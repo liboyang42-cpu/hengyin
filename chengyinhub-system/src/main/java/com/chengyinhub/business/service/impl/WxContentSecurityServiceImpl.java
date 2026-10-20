@@ -668,7 +668,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             }
             else if (bizType == BIZ_TYPE_CLUB_POST)
             {
-                ClubPost before = clubPostService.selectClubPostById(bizId);
+                // 软删 SQL 不带 del_flag 条件(驱动按 found rows 计数,已删也回 1),先读下架前状态判断本次是否真正下架。
+                ClubPost before = clubPostService.selectClubPostByIdForUpdate(bizId);
                 int affected = clubPostService.deleteClubPostById(bizId); // del_flag=2 软下架(可逆)
                 if (affected <= 0)
                 {
