@@ -58,8 +58,8 @@ test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发�
   assert.equal(events.at(-1)[1].stage, 'publish'); assert.ok(events.at(-1)[1].detail);
   assert.equal(saver.saveAndPublish(payload, h), true);
   calls[9][2]({ ok: true, data: { topicId: 501 } }); calls[10][2]({ ok: true, data: detail() });
-  calls[11][2]({ ok: true, data: { published: true } });
-  assert.equal(events.at(-1)[0], 'ok'); assert.deepEqual(events.at(-1)[1].published, { published: true });
+  calls[11][2]({ ok: true, data: { topicId: 501, published: true } });
+  assert.equal(events.at(-1)[0], 'ok'); assert.deepEqual(events.at(-1)[1].published, { topicId: 501, published: true });
   assert.equal(saver.saveAndPublish(payload, h), false, '发布成功后不再重复发布');
 });
 
@@ -124,7 +124,7 @@ test('编辑页：首次保存草稿走 create，回读后才清本机恢复稿�
   assert.equal(sent[8].url, '/api/topic/publish-draft'); assert.equal(sent[8].data.id, 501);
   page._doSubmit();
   assert.equal(sent.length, 9, '发布在途不重复');
-  sent[8].success({ code: 200, data: { published: true, reviewState: 'NOT_REQUIRED' } });
+  sent[8].success({ code: 200, data: { topicId: 501, published: true, reviewState: 'NOT_REQUIRED' } });
   assert.equal(page.data.resultSheet.title, '城市路线已发布'); assert.equal(page.data.editIsDraft, false);
 });
 
@@ -404,6 +404,225 @@ test('发布200但仍DRAFT、UNKNOWN回读空或异主题不得当成成功', ()
     assert.equal(t.page.data.editIsDraft, true);
     assert.equal(t.page.data.resultSheet.title, '发布结果待确认');
     assert.equal(t.page._publishAttempt.status, 'UNKNOWN');
+  }
+});
+
+
+
+test('保存草稿的回读也必须对应原主题，异号内容相同仍不能发布或清稿', () => {
+  const t = loadPage();
+  Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
+  t.page._persistDraftEnvelope();
+  t.page._doSubmit();
+  t.sent[0].success({ code: 200, data: 501 });
+  t.sent[1].success({ code: 200, data: detail({ topic: { id: 999 } }) });
+  assert.equal(t.sent.length, 2);
+  assert.equal(t.page.data.resultSheet.kind, 'fail');
+  assert.match(t.page.data.resultSheet.why, /编号与本次不一致/);
+  const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+  assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.formData.name, '寒冬');
+});
+
+test('UNKNOWN原号回读审核拒绝：明确失败并保留修改，不能误称提交审核或自动重发', () => {
+  for (const reload of [false, true]) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
+    t.page._doSubmit();
+    t.sent[0].success({ code: 200, data: 501 });
+    t.sent[1].success({ code: 200, data: detail() });
+    t.sent[2].fail({});
+    if (reload) {
+      t.sent[3].fail({});
+      t.page._doSubmit();
+    }
+    t.sent.at(-1).success({ code: 200, data: detail({
+      isDraft: false, topic: { status: 2, reason: '请补充规则' }
+    }) });
+    assert.equal(t.page.data.resultSheet.title, '审核未通过');
+    assert.equal(t.page.data.resultSheet.kind, 'fail');
+    assert.match(t.page.data.resultSheet.why, /请补充规则/);
+    assert.equal(t.page._publishAttempt, null, '已核实拒审，不再保留UNKNOWN');
+    assert.equal(t.page.data.editIsDraft, false, '拒审实体不能冒充可自动发布的草稿');
+    const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+    assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.formData.name, '寒冬');
+    assert.equal(t.sent.length, reload ? 5 : 4, '仅回读原号，不自动重发写请求');
+  }
+});
+
+test('缺失或异主题发布回执先按原号回读，确认前不清稿且不能凭空认成功', () => {
+  for (const receipt of [{ published: true }, { topicId: 999, published: true },
+    { topicId: 0, published: true }, { topicId: false, published: true }]) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
+    t.page._doSubmit();
+    t.sent[0].success({ code: 200, data: 501 });
+    t.sent[1].success({ code: 200, data: detail() });
+    t.sent[2].success({ code: 200, data: receipt });
+    assert.equal(t.sent.length, 4, '未绑定原topicId的回执不得直接结算');
+    assert.equal(t.sent[3].url, '/api/topic/edit-detail');
+    assert.equal(t.sent[3].data.id, 501);
+    const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+    assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.publishAttempt.status, 'UNKNOWN');
+    t.sent[3].success({ code: 200, data: detail({ isDraft: false, topic: { status: 1 } }) });
+    assert.equal(t.page.data.resultSheet.title, '城市路线已发布');
+    assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).status, 'missing');
+    assert.equal(t.sent.length, 4, '确认只读原主题，不重复publish');
+  }
+});
+
+test('服务端草稿发布A在途时自动保存B，成功仅结算A而保留B和后续自动保存', () => {
+  const t = loadPage();
+  Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
+  t.page._draftAutosaveReady = true;
+  t.page._installDraftAutosave();
+  t.page._doSubmit();
+  t.sent[0].success({ code: 200, data: 501 });
+  t.sent[1].success({ code: 200, data: detail() });
+  t.page.setData({ formData: Object.assign({}, t.page.data.formData, { name: '后续B' }) });
+  t.sent[2].success({ code: 200, data: { topicId: 501, published: true } });
+  const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+  let saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
+  assert.equal(saved.envelope.formData.name, '后续B');
+  assert.equal(saved.envelope.publishAttempt, undefined);
+  assert.equal(t.page.data.resultSheet.meta, '草稿仍在本机');
+  t.page.setData({ formData: Object.assign({}, t.page.data.formData, { name: '后续C' }) });
+  saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
+  assert.equal(saved.envelope.formData.name, '后续C');
+  assert.equal(t.sent.length, 3, '不得把B或C自动再发布');
+});
+
+test('普通创建和编辑发布A在途时自动保存B，成功不清B也不保留旧UNKNOWN', () => {
+  for (const editingTopicId of ['', '501']) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId, editLoaded: true, editIsDraft: false });
+    t.page._draftAutosaveReady = true;
+    t.page._installDraftAutosave();
+    t.page.sendData(payload);
+    t.page.setData({ formData: Object.assign({}, t.page.data.formData, { name: '后续B' }) });
+    t.sent[0].success({ code: 200, data: { topicId: 501, published: true } });
+    const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+    const identity = editingTopicId ? { topicId: '501' } : { draftUuid: 'u-1' };
+    const saved = drafts.loadDraft(wx, identity, { memberId: 7 });
+    assert.equal(saved.envelope.formData.name, '后续B');
+    assert.equal(saved.envelope.publishAttempt, undefined);
+    assert.equal(t.page.data.resultSheet.meta, '草稿仍在本机');
+    assert.equal(t.page._draftAutosaveReady, true);
+    assert.equal(t.sent.length, 1);
+  }
+});
+
+
+
+test('发布已确认但新修改遇存储故障：不假称已本机保存，不清旧稿，保留内存和离开警告', () => {
+  for (const kind of ['ordinary', 'server-draft', 'rejected']) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: kind !== 'ordinary' });
+    t.page._draftAutosaveReady = true;
+    t.page._installDraftAutosave();
+    if (kind === 'ordinary') t.page.sendData(payload);
+    else {
+      t.page._doSubmit();
+      t.sent[0].success({ code: 200, data: 501 });
+      t.sent[1].success({ code: 200, data: detail() });
+    }
+    const storedBefore = JSON.stringify(t.stored);
+    const originalSet = wx.setStorageSync;
+    wx.setStorageSync = () => { throw new Error('storage full'); };
+    try {
+      t.page.setData({ formData: Object.assign({}, t.page.data.formData, { name: '仅内存B' }) });
+      if (kind === 'rejected') {
+        t.sent[2].fail({});
+        t.sent[3].success({ code: 200, data: detail({ isDraft: false, topic: { status: 2 } }) });
+      } else t.sent.at(-1).success({ code: 200, data: { topicId: 501, published: true } });
+    } finally { wx.setStorageSync = originalSet; }
+    assert.equal(t.page.data.formData.name, '仅内存B');
+    assert.equal(t.page.data.resultSheet.kind, 'fail');
+    assert.match(t.page.data.resultSheet.title, /尚未保存/);
+    assert.notEqual(t.page.data.resultSheet.meta, '草稿仍在本机');
+    assert.match(t.page.data.submitError, /未能保存到本机/);
+    assert.equal(t.page._resultSheetNext, '', '不能自动跳走丢掉仅在内存中的B');
+    assert.equal(t.page._draftAutosaveReady, true, '原有goBack保存失败警告仍然生效');
+    assert.equal(JSON.stringify(t.stored), storedBefore, '既有A及原号UNKNOWN不被删除或覆盖');
+    const writes = t.sent.length;
+    assert.equal(t.page._persistDraftEnvelope(), true, '存储恢复后仍可用原自动保存机制保存B');
+    const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+    assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.formData.name, '仅内存B');
+    assert.equal(t.sent.length, writes, '重存本机不重复发布');
+  }
+});
+
+test('普通发布200缺身份或未确认发布状态仍UNKNOWN，更新还必须是原主题', () => {
+  const malformed = [undefined, null, {}, true, false, 0, -1, '', 501.5,
+    { published: true }, { topicId: 501 }, { topicId: 501, published: false, reviewState: 'DRAFT' },
+    { topicId: 501, published: false, reviewState: 'REJECTED' }];
+  for (const editingTopicId of ['', '501']) {
+    for (const receipt of malformed.concat(editingTopicId ? [502, { topicId: 502, published: true }] : [])) {
+      const t = loadPage();
+      Object.assign(t.page.data, { editingTopicId, editLoaded: true, editIsDraft: false });
+      t.page.sendData(payload);
+      t.sent[0].success({ code: 200, data: receipt });
+      assert.equal(t.page.data.resultSheet.title, '发布结果待确认', JSON.stringify(receipt));
+      assert.equal(t.page._publishAttempt.status, 'UNKNOWN');
+      const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+      const saved = drafts.loadDraft(wx, editingTopicId ? { topicId: '501' } : { draftUuid: 'u-1' }, { memberId: 7 });
+      assert.equal(saved.envelope.formData.name, '寒冬');
+      assert.equal(saved.envelope.publishAttempt.status, 'UNKNOWN');
+      t.page.sendData(payload);
+      assert.equal(t.sent.length, 1, '不因畸形200重复创建或更新');
+    }
+  }
+});
+
+test('普通发布真实legacy数字和v2明确发布或待审回执仍能结算原稿', () => {
+  const receipts = [501, { topicId: 501, published: true },
+    { topicId: 501, published: false, reviewState: 'PENDING' },
+    { topicId: 501, published: false, reviewState: 'ESCALATED' },
+    { topicId: 501, published: false, commercialAwaitingReview: true }];
+  for (const editingTopicId of ['', '501']) {
+    for (const receipt of receipts) {
+      const t = loadPage();
+      Object.assign(t.page.data, { editingTopicId, editLoaded: true, editIsDraft: false });
+      t.page.sendData(payload);
+      t.sent[0].success({ code: 200, data: receipt });
+      const pending = receipt && receipt.published === false;
+      assert.equal(t.page.data.resultSheet.title, pending ? '已提交审核' : editingTopicId ? '已发布' : '城市路线已发布');
+      assert.equal(t.page._publishAttempt, null);
+      const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+      assert.equal(drafts.loadDraft(wx, editingTopicId ? { topicId: '501' } : { draftUuid: 'u-1' }, { memberId: 7 }).status, 'missing');
+      assert.equal(t.sent.length, 1);
+    }
+  }
+});
+
+test('普通发布迟到回执同样不能结算别的scope、草稿所属账号或baseRevision', () => {
+  for (const field of ['operationScope', 'draftMemberId', 'baseRevision']) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: false });
+    t.page.sendData(payload);
+    t.page.data[field] = field === 'operationScope' ? 'MERCHANT' : 'changed';
+    const before = JSON.stringify(t.stored);
+    const uiBefore = JSON.stringify(t.page.data);
+    t.sent[0].success({ code: 200, data: { topicId: 501, published: true } });
+    assert.equal(JSON.stringify(t.stored), before);
+    assert.equal(JSON.stringify(t.page.data), uiBefore);
+  }
+});
+
+test('服务端草稿的迟到发布回包不能结算别的账号、scope、主题或编辑版本', () => {
+  for (const field of ['member', 'draftMemberId', 'operationScope', 'editingTopicId', 'draftUuid', 'baseRevision', '_editLoadToken']) {
+    const t = loadPage();
+    Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
+    t.page._doSubmit();
+    t.sent[0].success({ code: 200, data: 501 });
+    t.sent[1].success({ code: 200, data: detail() });
+    if (field === 'member') t.switchMember(8);
+    else if (field === '_editLoadToken') t.page._editLoadToken = 'new-load';
+    else t.page.data[field] = field === 'operationScope' ? 'MERCHANT' : 'changed';
+    const before = JSON.stringify(t.stored);
+    const uiBefore = JSON.stringify(t.page.data);
+    t.sent[2].success({ code: 200, data: { topicId: 501, published: true } });
+    assert.equal(JSON.stringify(t.stored), before, field + '变化后不清稿或写到另一个信封');
+    assert.equal(JSON.stringify(t.page.data), uiBefore, field + '变化后不改当前UI');
   }
 });
 
