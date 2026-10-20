@@ -13,10 +13,20 @@ public class SafetyDecision {
     private String reasonCode;
     private Long auditTaskId;
     private boolean visible;
+    /** 先发后审时「审不了」的内容照常公开,但打标留待抽检 */
+    private boolean flagged;
+    private String flagReason;
 
     public static SafetyDecision pass() {
         SafetyDecision d = new SafetyDecision();
         d.decision = PASS; d.visible = true; d.reasonCode = "OK";
+        return d;
+    }
+
+    /** 先发后审:公开可见,但自动检测没给出确定结论,打标供事后抽检 */
+    public static SafetyDecision passFlagged(String reasonCode) {
+        SafetyDecision d = pass();
+        d.reasonCode = reasonCode; d.flagged = true; d.flagReason = reasonCode;
         return d;
     }
 
@@ -44,4 +54,6 @@ public class SafetyDecision {
     public void setAuditTaskId(Long auditTaskId) { this.auditTaskId = auditTaskId; }
     public boolean isVisible() { return visible; }
     public void setVisible(boolean visible) { this.visible = visible; }
+    public boolean isFlagged() { return flagged; }
+    public String getFlagReason() { return flagReason; }
 }

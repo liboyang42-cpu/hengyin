@@ -140,8 +140,9 @@ public interface ICmsActivityService
 
     /**
      * 发布活动
+     * @param preReview true=先审后发(待审 + BIZ_ACTIVITY 审核单);false=先发后审(直接上架)
      */
-    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username);
+    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username, boolean preReview);
 
     /**
      * 小程序更新活动内容（未开卖）。票务改动不得把已删票 del_flag 改回 0。
