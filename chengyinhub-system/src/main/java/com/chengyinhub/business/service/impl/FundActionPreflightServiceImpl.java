@@ -123,7 +123,7 @@ public class FundActionPreflightServiceImpl implements IFundActionPreflightServi
         Date now = new Date();
         if (mapper.consumeIfConfirmed(challengeId, memberId, BANK_WITHDRAWAL, actualRequest.getRequestId(),
                 fingerprint, now) != 1) {
-            FundActionPreflight current = mapper.selectById(challengeId);
+            FundActionPreflight current = mapper.selectOwnedByIdForUpdate(challengeId, memberId);
             if (current == null || !memberId.equals(current.getMemberId())) {
                 throw new FundActionPreflightException("PREFLIGHT_NOT_FOUND", "确认请求不存在或无权访问");
             }

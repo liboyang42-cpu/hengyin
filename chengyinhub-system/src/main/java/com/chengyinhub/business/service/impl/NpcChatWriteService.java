@@ -1,0 +1,93 @@
+package com.chengyinhub.business.service.impl;
+
+import com.chengyinhub.business.domain.NpcChatLog;
+import com.chengyinhub.business.domain.NpcChatRequest;
+import com.chengyinhub.business.mapper.NpcChatLogMapper;
+import com.chengyinhub.business.mapper.NpcChatRequestMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
+import java.util.function.Supplier;
+
+/** Short per-user database transactions. Never hold this lock across provider calls. */
+@Service
+public class NpcChatWriteService
+{
+    /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
+    static final long LEASE_MILLIS = 20_000L;
+    private final NpcChatRequestMapper requests;
+    private final NpcChatLogMapper logs;
+    private final TransactionTemplate transaction;
+
+    public NpcChatWriteService(NpcChatRequestMapper requests, NpcChatLogMapper logs,
+                               PlatformTransactionManager transactionManager)
+    {
+        this.requests = requests;
+        this.logs = logs;
+        transaction = new TransactionTemplate(transactionManager);
+        transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    private <T> T locked(Long userId, Supplier<T> operation)
+    {
+        return transaction.execute(status -> {
+            if (userId == null || requests.lockChatUser(userId) == null)
+                throw new IllegalStateException("NPC chat user persistence unavailable");
+            return operation.get();
+        });
+    }
+
+    public NpcChatRequest read(Long userId, String requestId)
+    {
+        return locked(userId, () -> requests.selectByUserAndRequestId(userId, requestId));
+    }
+
+    public NpcChatRequest admit(NpcChatRequest request, String timeoutText)
+    {
+        return locked(request.getUserId(), () -> {
+            NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+            if (existing != null) return existing;
+            requests.expireProcessingByUserAndSession(request.getUserId(), request.getSessionId(), timeoutText);
+            // Waiting for the per-user lock must not consume a new request's entire initial lease.
+            // Existing rows returned above are never renewed here, including expired/deleted tombstones.
+            request.setLeaseUntil(new java.util.Date(System.currentTimeMillis() + LEASE_MILLIS));
+            if (requests.insertNpcChatRequest(request) != 1) throw new IllegalStateException("NPC request admission failed");
+            return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+        });
+    }
+
+    public NpcChatRequest insertTerminal(NpcChatRequest request)
+    {
+        return locked(request.getUserId(), () -> {
+            NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+            if (existing != null) return existing;
+            if (requests.insertNpcChatRequest(request) != 1) throw new IllegalStateException("NPC request persistence failed");
+            return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+        });
+    }
+
+    public NpcChatRequest finish(NpcChatRequest request, NpcChatLog entry)
+    {
+        return locked(request.getUserId(), () -> {
+            if (requests.finishIfLeaseOwned(request) == 1 && entry != null)
+            {
+                if (!request.getUserId().equals(entry.getUserId())
+                        || !request.getSessionId().equals(entry.getActivityId()))
+                    throw new IllegalArgumentException("NPC log scope mismatch");
+                if (logs.insertNpcChatLog(entry) != 1) throw new IllegalStateException("NPC log persistence failed");
+            }
+            // Never return the worker's in-memory answer after its lease was revoked by deletion.
+            return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+        });
+    }
+
+    public int deleteForUser(Long userId)
+    {
+        return locked(userId, () -> {
+            requests.redactChatRequestsByUserId(userId);
+            // This count retains the existing HTTP contract: log rows only, not receipt tombstones.
+            return logs.deleteNpcChatLogsByUserId(userId);
+        });
+    }
+}

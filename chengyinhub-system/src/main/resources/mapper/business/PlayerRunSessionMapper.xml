@@ -7,11 +7,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="upsertPaused">
         insert into player_run_session (member_id, activity_id, topic_id, run_state, elapsed_seconds, saved_at, create_time, update_time)
         values (#{memberId}, #{activityId}, #{topicId}, 'PAUSED', #{elapsedSeconds}, #{savedAt}, now(), now())
+        <!-- Keep saved_at last: MySQL evaluates assignments left-to-right. An ENDED tie wins. -->
         on duplicate key update
-            run_state = if(values(saved_at) &gt;= saved_at, values(run_state), run_state),
-            elapsed_seconds = if(values(saved_at) &gt;= saved_at, values(elapsed_seconds), elapsed_seconds),
-            update_time = if(values(saved_at) &gt;= saved_at, values(update_time), update_time),
-            saved_at = if(values(saved_at) &gt;= saved_at, values(saved_at), saved_at)
+            run_state = if(values(saved_at) &gt; saved_at
+                        or (values(saved_at) = saved_at and run_state = 'PAUSED'), values(run_state), run_state),
+            elapsed_seconds = if(values(saved_at) &gt; saved_at
+                        or (values(saved_at) = saved_at and run_state = 'PAUSED'), values(elapsed_seconds), elapsed_seconds),
+            update_time = if(values(saved_at) &gt; saved_at
+                        or (values(saved_at) = saved_at and run_state = 'PAUSED'), values(update_time), update_time),
+            saved_at = if(values(saved_at) &gt; saved_at
+                        or (values(saved_at) = saved_at and run_state = 'PAUSED'), values(saved_at), saved_at)
     </insert>
 
     <sql id="scopeWhere">

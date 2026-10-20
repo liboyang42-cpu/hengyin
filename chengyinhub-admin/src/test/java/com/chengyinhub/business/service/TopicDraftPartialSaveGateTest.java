@@ -118,6 +118,21 @@ class TopicDraftPartialSaveGateTest {
                 .thenReturn(Collections.<CmsTopicNode>emptyList());
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Collections.<OmsTicket>emptyList());
+        // CORE OWN-C03-13/15：章节、自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(600L);
+        org.mockito.Mockito.lenient().when(chapterMapper.insertCmsTopicChapter(any(CmsTopicChapter.class))).thenAnswer(inv -> {
+            ((CmsTopicChapter) inv.getArgument(0)).setId(ids.incrementAndGet());
+            return 1;
+        });
+        org.mockito.Mockito.lenient().when(nodeMapper.insertCmsTopicNode(any(CmsTopicNode.class))).thenAnswer(inv -> {
+            ((CmsTopicNode) inv.getArgument(0)).setId(ids.incrementAndGet());
+            return 1;
+        });
+        CmsActivityMapper shellActivities = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
+        org.mockito.Mockito.lenient().when(shellActivities.insertCmsActivity(any(CmsActivity.class))).thenAnswer(inv -> {
+            ((CmsActivity) inv.getArgument(0)).setId(880001L);
+            return 1;
+        });
     }
 
     // ---------- 夹具 ----------

@@ -55,6 +55,8 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -499,20 +501,20 @@ public class ApiTopicController extends BaseController {
             String secText = IWxContentSecurityService.joinText(dto.getName(), dto.getSubtitle(), dto.getDescription());
             String secMsg = wxContentSecurityService.checkText(secText, openid);
             if (secMsg != null) {
-                return error(secMsg);
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, secMsg);
             }
             // R12:主题级剧情配置的叙事文本与上面三个既有字段同一道闸;命中时提示里带字段名。
             String storySecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
                     combinedThemeReviewTexts(dto));
             if (storySecMsg != null) {
-                return error(storySecMsg);
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, storySecMsg);
             }
             // R19:叙事搬进章节故事流后,beat 块正文与剧情配置同一道闸(非 V2 请求没有 blocks,自然跳过)。
             if (chapterFlowV2) {
                 String flowSecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
                         JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
                 if (flowSecMsg != null) {
-                    return error(flowSecMsg);
+                    return AjaxResult.error(HttpStatus.BAD_REQUEST, flowSecMsg);
                 }
             }
 
@@ -650,20 +652,20 @@ public class ApiTopicController extends BaseController {
         String secText = IWxContentSecurityService.joinText(dto.getName(), dto.getSubtitle(), dto.getDescription());
         String secMsg = wxContentSecurityService.checkText(secText, openid);
         if (secMsg != null) {
-            return error(secMsg);
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, secMsg);
         }
         // R12:主题级剧情配置的叙事文本与 /create 同一道闸;命中时提示里带字段名。
         String storySecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
                 combinedThemeReviewTexts(dto));
         if (storySecMsg != null) {
-            return error(storySecMsg);
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, storySecMsg);
         }
         // R19:叙事搬进章节故事流后,beat 块正文与 /create 同一道闸(非 V2 请求没有 blocks,自然跳过)。
         if (chapterFlowV2) {
             String flowSecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
                     JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
             if (flowSecMsg != null) {
-                return error(flowSecMsg);
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, flowSecMsg);
             }
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
@@ -749,6 +751,7 @@ public class ApiTopicController extends BaseController {
     @Operation(summary = "编辑器回填:主题全量详情(仅创作者本人)")
     @PostMapping("/edit-detail")
     @Parameters({@Parameter(name = "id", description = "主题id")})
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult topicEditDetail(String id, String scope) {
         Long topicId = Convert.toLong(id, 0L);
         if (topicId < 1) {
