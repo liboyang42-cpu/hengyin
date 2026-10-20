@@ -1,4 +1,6 @@
 # U5 silentError 白名单册子 —— ci/silent-error-gate.js 读这个文件。
+chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 举报原因读取和主题/广场模板/个人玩法三处提交：业务拒绝及网络失败均由当前页面显式 toast，结束在途状态；关闭通道 toast 避免双弹与换号后的旧响应提示，followup-a1-content-report-entries 覆盖失败和页面/身份失效。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 审核记录读取失败落弹层 error 并 toast，可重试；申诉业务拒绝/网络失败明确 toast 且释放在途，关闭通道 toast 避免双弹，离页/换号后不提示旧结果，followup-a2-audit-appeal-timeline 覆盖失败恢复。
 chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读取失败由 cy-inline-error 显示取回失败并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。
 #
 # 一行一条:<仓库根相对路径> <该行认领的 silentError:true 处数>   # 为什么这里可以静默
