@@ -205,7 +205,7 @@ class NodeNpcStationScopeAcceptanceTest {
                 assertEquals("点位不存在或无权操作", assertThrows(IllegalStateException.class,
                         () -> service.save(actor, nodeId, draft("冒名", "我来改"), "o_x")).getMessage());
                 assertEquals("点位不存在或无权操作", assertThrows(IllegalStateException.class,
-                        () -> service.voiceEnroll(actor, nodeId, "/profile/a.mp3")).getMessage());
+                        () -> service.voiceEnroll(actor, actor, nodeId, "/profile/a.mp3")).getMessage());
                 assertEquals("点位不存在或无权操作", assertThrows(IllegalStateException.class,
                         () -> service.voiceReset(actor, nodeId)).getMessage());
             }
@@ -226,7 +226,7 @@ class NodeNpcStationScopeAcceptanceTest {
         when(gate.requireOwnLiveNode(71L, STATION_A)).thenThrow(new IllegalStateException("点位不存在或无权操作"));
 
         assertThrows(IllegalStateException.class, () -> service.voiceReset(71L, STATION_A));
-        assertThrows(IllegalStateException.class, () -> service.voiceEnroll(71L, STATION_A, "/profile/b.mp3"));
+        assertThrows(IllegalStateException.class, () -> service.voiceEnroll(71L, 71L, STATION_A, "/profile/b.mp3"));
         assertThrows(IllegalStateException.class, () -> service.save(71L, STATION_A, draft("冒名", "x"), "o_x"));
 
         verify(mapper, never()).updateNodeNpcVoice(any());
